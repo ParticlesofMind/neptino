@@ -8,7 +8,7 @@ export class AsideNavigation {
 
   constructor() {
     this.asideLinks = document.querySelectorAll('.aside__link');
-    this.contentSections = document.querySelectorAll('.content__section');
+    this.contentSections = document.querySelectorAll('.article');
     
     console.log('Aside links found:', this.asideLinks.length);
     console.log('Content sections found:', this.contentSections.length);
@@ -61,7 +61,7 @@ export class AsideNavigation {
     });
     
     this.contentSections.forEach((section: HTMLElement) => {
-      section.classList.remove('content__section--active');
+      section.classList.remove('article--active');
     });
     
     console.log('Removed all active states');
@@ -72,7 +72,7 @@ export class AsideNavigation {
     
     const targetSection = document.getElementById(targetSectionId);
     if (targetSection) {
-      targetSection.classList.add('content__section--active');
+      targetSection.classList.add('article--active');
       console.log('Activated section:', targetSectionId);
     } else {
       console.error('Target section not found:', targetSectionId);

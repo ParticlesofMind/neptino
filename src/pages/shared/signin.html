@@ -33,52 +33,50 @@
     </header>
  
     <main class="main grid__main">
-        <div class="container container--narrow">
-            <div class="auth-form">
-                <header class="auth-form__header">
-                    <h1 class="heading heading--primary">Welcome back</h1>
-                    <p class="text text--lead">Sign in to your Neptino account</p>
-                </header>
+        <div class="auth-form">
+            <header class="auth-form__header">
+                <h1 class="heading heading--primary">Welcome back</h1>
+                <p class="text text--lead">Sign in to your Neptino account</p>
+            </header>
+            
+            <form class="form" id="signin-form" method="post" action="#">
+                <div class="form__group">
+                    <label for="email" class="form__label">Email address</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        class="form__input" 
+                        placeholder="Enter your email"
+                        autocomplete="email"
+                        required
+                    >
+                </div>
                 
-                <form class="form" id="signin-form" method="post" action="#">
-                    <div class="form__group">
-                        <label for="email" class="form__label">Email address</label>
-                        <input 
-                            type="email" 
-                            id="email" 
-                            name="email" 
-                            class="form__input" 
-                            placeholder="Enter your email"
-                            autocomplete="email"
-                            required
-                        >
-                    </div>
-                    
-                    <div class="form__group">
-                        <label for="password" class="form__label">Password</label>
-                        <input 
-                            type="password" 
-                            id="password" 
-                            name="password" 
-                            class="form__input" 
-                            placeholder="Enter your password"
-                            autocomplete="current-password"
-                            required
-                        >
-                    </div>
-                    
-                    <button type="submit" class="button button--primary button--large">
-                        Sign In
-                    </button>
-                </form>
+                <div class="form__group">
+                    <label for="password" class="form__label">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form__input" 
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
                 
-                <footer class="auth-form__footer">
-                    <p class="text text--small">
-                        Don't have an account yet? 
-                        <a href="/src/pages/shared/signup.html" class="link link--primary">Sign up</a>
-                    </p>
-                </footer>
-            </div>
+                <button type="submit" class="button button--primary button--large">
+                    Sign In
+                </button>
+            </form>
+            
+            <footer class="auth-form__footer">
+                <p class="text text--small">
+                    Don't have an account yet? 
+                    <a href="/src/pages/shared/signup.html" class="link link--primary">Sign up</a>
+                </p>
+            </footer>
         </div>
     </main>
 

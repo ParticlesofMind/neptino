@@ -1,1 +1,27 @@
-// Card component styles
+// ==========================================================================
+// CARD COMPONENTS
+// ==========================================================================
+
+@use '../abstracts/variables' as *;
+
+.card {
+  background: $white;
+  border-radius: $border-radius;
+  box-shadow: $shadow;
+  overflow: hidden;
+  
+  &__header {
+    padding: $spacing-4 $spacing-5;
+    border-bottom: 1px solid $gray-200;
+  }
+  
+  &__content {
+    padding: $spacing-5;
+  }
+  
+  &__footer {
+    padding: $spacing-4 $spacing-5;
+    border-top: 1px solid $gray-200;
+    background: $gray-50;
+  }
+}

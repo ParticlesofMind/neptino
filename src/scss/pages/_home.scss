@@ -1,1 +1,142 @@
-// Home page styles
+// ==========================================================================
+// HOME PAGE STYLES
+// ==========================================================================
+
+@use '../abstracts/variables' as *;
+
+// ==========================================================================
+// ARTICLE SECTIONS
+// ==========================================================================
+
+.article {
+  display: none;
+  
+  &--active {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-6;
+    
+    @media (min-width: $breakpoint-md) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (min-width: $breakpoint-lg) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+}
+
+// ==========================================================================
+// METRICS DISPLAY
+// ==========================================================================
+
+.metrics {
+  display: flex;
+  gap: $spacing-4;
+  margin: $spacing-4 0;
+  flex-wrap: wrap;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+
+  &__number {
+    font-size: $font-size-2xl;
+    font-weight: $font-weight-bold;
+    color: $primary-color;
+    line-height: 1;
+  }
+
+  &__label {
+    font-size: $font-size-sm;
+    color: $text-secondary;
+    margin-top: $spacing-1;
+  }
+}
+
+// ==========================================================================
+// USAGE STATISTICS
+// ==========================================================================
+
+.usage-stats {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+}
+
+.progress-bar {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+
+  &__label {
+    min-width: 120px;
+    font-size: $font-size-sm;
+    color: $text-secondary;
+  }
+
+  &__track {
+    flex: 1;
+    height: 8px;
+    background-color: $bg-secondary;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  &__fill {
+    height: 100%;
+    background-color: $primary-color;
+    transition: width 0.3s ease;
+  }
+
+  &__value {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $text-primary;
+    min-width: 60px;
+    text-align: right;
+  }
+}
+
+// ==========================================================================
+// SECURITY SECTION
+// ==========================================================================
+
+.security {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+
+  &__item {
+    padding: $spacing-4;
+    border: 1px solid $gray-200;
+    border-radius: $border-radius;
+    
+    h4 {
+      margin: 0 0 $spacing-2 0;
+      color: $text-primary;
+      font-size: $font-size-lg;
+    }
+    
+    p {
+      margin: 0 0 $spacing-3 0;
+    }
+  }
+}
+
+// ==========================================================================
+// FORM STYLES
+// ==========================================================================
+
+.form {
+  &__group {
+    &--checkbox {
+      display: flex;
+      align-items: center;
+      gap: $spacing-2;
+    }
+  }
+}

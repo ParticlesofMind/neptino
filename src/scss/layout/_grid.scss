@@ -12,61 +12,60 @@
   min-height: 100vh;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  grid-template-areas: 
+  grid-template-areas:
     "header"
     "main"
     "footer";
-  
+
   // Ensure proper spacing and overflow handling
   overflow-x: hidden;
+
+
+  &__header {
+    grid-area: header;
+    position: sticky;
+    top: 0;
+    z-index: $z-sticky;
+    background-color: $bg-primary;
+    border-bottom: 1px solid $gray-200;
+  }
+
+  &__main {
+    grid-area: main;
+    padding: $spacing-8 $spacing-4;
+
+    // Dashboard layout with aside navigation
+    &:has(.aside) {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: $spacing-6;
+      padding: $spacing-4;
+
+      @media (max-width: #{$breakpoint-md - 1px}) {
+        grid-template-columns: 1fr;
+      }
+
+    }
+  }
+
+  &__footer {
+    grid-area: footer;
+    background-color: $bg-secondary;
+    border-top: 1px solid $gray-200;
+    padding: $spacing-6 $spacing-4;
+
+    // Responsive footer padding
+    @media (min-width: $breakpoint-sm) {
+      padding: $spacing-8 $spacing-6;
+    }
+
+    @media (min-width: $breakpoint-md) {
+      padding: $spacing-8 $spacing-8;
+    }
+
+  }
 }
 
-// ==========================================================================
-// GRID AREAS
-// ==========================================================================
-
-.grid__header {
-  grid-area: header;
-  position: sticky;
-  top: 0;
-  z-index: $z-sticky;
-  background-color: $bg-primary;
-  border-bottom: 1px solid $gray-200;
-}
-
-.grid__main {
-  grid-area: main;
-  padding: $spacing-8 $spacing-4;
-  
-  // Responsive padding
-  @media (min-width: $breakpoint-sm) {
-    padding: $spacing-12 $spacing-6;
-  }
-  
-  @media (min-width: $breakpoint-md) {
-    padding: $spacing-16 $spacing-8;
-  }
-  
-  @media (min-width: $breakpoint-lg) {
-    padding: $spacing-20 $spacing-12;
-  }
-}
-
-.grid__footer {
-  grid-area: footer;
-  background-color: $bg-secondary;
-  border-top: 1px solid $gray-200;
-  padding: $spacing-6 $spacing-4;
-  
-  // Responsive footer padding
-  @media (min-width: $breakpoint-sm) {
-    padding: $spacing-8 $spacing-6;
-  }
-  
-  @media (min-width: $breakpoint-md) {
-    padding: $spacing-8 $spacing-8;
-  }
-}
 
 // ==========================================================================
 // CONTENT CONTAINERS
@@ -79,35 +78,35 @@
   margin-right: auto;
   padding-left: $spacing-4;
   padding-right: $spacing-4;
-  
+
   // Responsive container widths
   @media (min-width: $breakpoint-sm) {
     max-width: $container-sm;
     padding-left: $spacing-6;
     padding-right: $spacing-6;
   }
-  
+
   @media (min-width: $breakpoint-md) {
     max-width: $container-md;
     padding-left: $spacing-8;
     padding-right: $spacing-8;
   }
-  
+
   @media (min-width: $breakpoint-lg) {
     max-width: $container-lg;
   }
-  
+
   @media (min-width: $breakpoint-xl) {
     max-width: $container-xl;
   }
-  
+
   // Container modifiers for different content types
   &--narrow {
     @media (min-width: $breakpoint-md) {
       max-width: $container-sm;
     }
   }
-  
+
   &--wide {
     @media (min-width: $breakpoint-xl) {
       max-width: none;
@@ -120,6 +119,25 @@
 // ==========================================================================
 // RESPONSIVE UTILITIES
 // ==========================================================================
+
+// Dashboard Grid Layout
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $spacing-6;
+
+  @media (min-width: $breakpoint-md) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: $breakpoint-lg) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (min-width: $breakpoint-xl) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
 
 // Hide elements on specific breakpoints
 .hidden-mobile {
@@ -149,7 +167,7 @@
 
 .show-tablet {
   display: none !important;
-  
+
   @media (min-width: $breakpoint-sm) and (max-width: #{$breakpoint-lg - 1px}) {
     display: block !important;
   }
@@ -157,7 +175,7 @@
 
 .show-desktop {
   display: none !important;
-  
+
   @media (min-width: $breakpoint-lg) {
     display: block !important;
   }
