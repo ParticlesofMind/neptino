@@ -55,6 +55,8 @@ coverage/
 # CSS output (if auto-generated)
 src/scss/**/*.css
 src/scss/**/*.css.map
+# BUT we want main.css in dist/ folder for production
+!dist/**/*.css
 
 # TypeScript compiled files
 src/ts/**/*.js

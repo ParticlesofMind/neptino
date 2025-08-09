@@ -1,0 +1,13 @@
+// ==========================================================================
+// FUNCTIONS - SCSS Helper Functions
+// ==========================================================================
+
+// Convert pixels to rem
+@function rem($pixels, $base: 16px) {
+  @return ($pixels / $base) * 1rem;
+}
+
+// Color functions
+@function alpha($color, $opacity) {
+  @return rgba($color, $opacity);
+}
