@@ -37,9 +37,10 @@
     // Dashboard layout with aside navigation
     &:has(.aside) {
       display: grid;
-      grid-template-columns: 250px 1fr;
-      gap: $spacing-6;
-      padding: $spacing-4;
+      grid-template-columns: 300px 1fr;
+      gap: $spacing-8;
+      padding: $spacing-6;
+      max-width: none;
 
       @media (max-width: #{$breakpoint-md - 1px}) {
         grid-template-columns: 1fr;

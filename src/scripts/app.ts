@@ -5,27 +5,29 @@
 
 import { signIn, signUp, signOut, initAuth } from './backend/auth/auth'
 
-// Check if we're on a dashboard page
-function isDashboardPage() {
+// Check if we're on a protected page that requires authentication
+function isProtectedPage() {
   const path = window.location.pathname
   return path.includes('/pages/student/home.html') || 
          path.includes('/pages/teacher/home.html') || 
+         path.includes('/pages/teacher/courses.html') ||
+         path.includes('/pages/teacher/coursebuilder.html') ||
          path.includes('/pages/admin/home.html')
 }
 
-// Initialize authentication - but only redirect if not on dashboard
-if (!isDashboardPage()) {
+// Initialize authentication - but only redirect if not on protected page
+if (!isProtectedPage()) {
   initAuth()
 } else {
-  // On dashboard pages, just check auth without redirecting
-  console.log('📍 On dashboard page, initializing auth without redirects')
+  // On protected pages, just check auth without redirecting
+  console.log('📍 On protected page, initializing auth without redirects')
   import('./backend/supabase').then(({ supabase }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session?.user) {
-        console.log('❌ No session on dashboard page, redirecting to signin')
+        console.log('❌ No session on protected page, redirecting to signin')
         window.location.href = '/src/pages/shared/signin.html'
       } else {
-        console.log('✅ Valid session on dashboard page')
+        console.log('✅ Valid session on protected page')
       }
     })
   })

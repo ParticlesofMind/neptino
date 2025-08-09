@@ -3,6 +3,7 @@
 // ==========================================================================
 
 import { AsideNavigation } from './aside/aside';
+import { CourseBuilderNavigation } from './coursebuilder/coursebuilder';
 
 // Navigation initialization based on page type
 export function initNavigation(): void {
@@ -13,17 +14,23 @@ export function initNavigation(): void {
     new AsideNavigation();
   }
   
-  // Add other navigation types here as needed
-  // if (hasHeaderNavigation(path)) {
-  //   new HeaderNavigation();
-  // }
+  // Initialize course builder navigation
+  if (isCourseBuilderPage(path)) {
+    new CourseBuilderNavigation();
+  }
 }
 
 // Check if current page has aside navigation
 function hasAsideNavigation(path: string): boolean {
   return path.includes('/pages/teacher/home.html') ||
+         path.includes('/pages/teacher/coursebuilder.html') ||
          path.includes('/pages/student/home.html') ||
          path.includes('/pages/admin/home.html');
+}
+
+// Check if current page is course builder
+function isCourseBuilderPage(path: string): boolean {
+  return path.includes('/pages/teacher/coursebuilder.html');
 }
 
 // Initialize when DOM is loaded

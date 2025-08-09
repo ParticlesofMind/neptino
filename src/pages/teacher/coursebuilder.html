@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Builder - Neptino</title>
+    <link rel="stylesheet" href="/src/scss/main.scss">
+</head>
+<body class="body grid">
+    <!-- Special Course Builder Header -->
+    <header class="header grid__header">
+        <nav class="nav">
+            <div class="nav__logo-section">
+                <a href="/src/pages/teacher/home.html" class="logo logo--header">
+                    <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image">
+                </a>
+            </div>
+            
+            <div class="nav__links-section">
+                <h1 class="heading heading--secondary">Course Builder</h1>
+            </div>
+            
+            <div class="nav__actions-section">
+                <button id="previous-btn" class="button button--previous">Previous</button>
+                <button id="next-btn" class="button button--succeeding">Next</button>
+            </div>
+        </nav>
+    </header>
+ 
+    <main class="main grid__main">
+        <!-- Setup Section (with aside navigation) -->
+        <section id="setup" class="section section--active">
+            <aside class="aside">
+                <nav class="aside__nav">
+                    <ul class="aside__menu">
+                        <li class="aside__item">
+                            <a href="#essentials" class="aside__link aside__link--active" data-section="essentials">Essentials</a>
+                        </li>
+                        <li class="aside__item">
+                            <a href="#classification" class="aside__link" data-section="classification">Classification</a>
+                        </li>
+                        <li class="aside__item">
+                            <a href="#templates" class="aside__link" data-section="templates">Templates</a>
+                        </li>
+                        <li class="aside__item">
+                            <a href="#schedule" class="aside__link" data-section="schedule">Schedule</a>
+                        </li>
+                        <li class="aside__item">
+                            <a href="#curriculum" class="aside__link" data-section="curriculum">Curriculum</a>
+                        </li>
+                        <li class="aside__item">
+                            <a href="#settings" class="aside__link" data-section="settings">Settings</a>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <!-- Essentials Article -->
+            <article id="essentials" class="article article--active">
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Course Essentials</h2>
+                        <p class="text">Define the fundamental details of your course.</p>
+                    </header>
+                    <form class="form">
+                        <div class="form__group">
+                            <label class="form__label" for="course-name">Course Name</label>
+                            <input class="form__input" type="text" id="course-name" placeholder="Enter course name">
+                        </div>
+                        <div class="form__group">
+                            <label class="form__label" for="course-description">Course Description</label>
+                            <textarea class="form__input" id="course-description" rows="4" placeholder="Describe what students will learn"></textarea>
+                        </div>
+                        <div class="form__group">
+                            <label class="form__label" for="course-language">Course Language</label>
+                            <select class="form__input" id="course-language">
+                                <option value="">Select language</option>
+                                <option value="en">English</option>
+                                <option value="es">Spanish</option>
+                                <option value="fr">French</option>
+                                <option value="de">German</option>
+                                <option value="pt">Portuguese</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form__group">
+                            <label class="form__label" for="teacher">Teacher</label>
+                            <input class="form__input" type="text" id="teacher" placeholder="Teacher name">
+                        </div>
+                        <div class="form__group">
+                            <label class="form__label" for="institution">Institution</label>
+                            <input class="form__input" type="text" id="institution" placeholder="School or institution name">
+                        </div>
+                    </form>
+                </section>
+            </article>
+
+            <!-- Classification Article -->
+            <article id="classification" class="article">
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Course Classification</h2>
+                        <p class="text">Classify your course within the academic framework.</p>
+                    </header>
+                    <form class="form">
+                        <div class="form__group">
+                            <label class="form__label" for="class-year">Class Year</label>
+                            <select class="form__input" id="class-year">
+                                <option value="">Select class year</option>
+                                <option value="1">Year 1</option>
+                                <option value="2">Year 2</option>
+                                <option value="3">Year 3</option>
+                                <option value="4">Year 4</option>
+                                <option value="graduate">Graduate</option>
+                            </select>
+                        </div>
+                        <div class="form__group">
+                            <label class="form__label" for="curricular-framework">Curricular Framework / Domain</label>
+                            <input class="form__input" type="text" id="curricular-framework" placeholder="e.g., Computer Science, Mathematics">
+                        </div>
+                        <div class="form__group">
+                            <label class="form__label" for="subject">Subject</label>
+                            <input class="form__input" type="text" id="subject" placeholder="e.g., Programming, Algorithms">
+                        </div>
+                        <div class="form__group">
+                            <label class="form__label" for="topic">Topic</label>
+                            <input class="form__input" type="text" id="topic" placeholder="e.g., Web Development, Data Structures">
+                        </div>
+                        <div class="form__group">
+                            <label class="form__label" for="subtopic">Subtopic</label>
+                            <input class="form__input" type="text" id="subtopic" placeholder="e.g., React, Binary Trees">
+                        </div>
+                        <div class="form__group">
+                            <label class="form__label" for="previous-course">Previous Course</label>
+                            <input class="form__input" type="text" id="previous-course" placeholder="Prerequisite course (optional)">
+                        </div>
+                        <div class="form__group">
+                            <label class="form__label" for="current-course">Current Course</label>
+                            <input class="form__input" type="text" id="current-course" placeholder="This course title">
+                        </div>
+                        <div class="form__group">
+                            <label class="form__label" for="next-course">Next Course</label>
+                            <input class="form__input" type="text" id="next-course" placeholder="Follow-up course (optional)">
+                        </div>
+                    </form>
+                </section>
+            </article>
+
+            <!-- Templates Article -->
+            <article id="templates" class="article">
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Course Templates</h2>
+                        <p class="text">Choose and configure course templates.</p>
+                    </header>
+                    <div class="template-layout">
+                        <div class="template-config">
+                            <h3 class="heading heading--tertiary">Template Configuration</h3>
+                            <form class="form">
+                                <div class="form__group">
+                                    <label class="form__label" for="template-type">Template Type</label>
+                                    <select class="form__input" id="template-type">
+                                        <option value="">Select template</option>
+                                        <option value="programming">Programming Course</option>
+                                        <option value="mathematics">Mathematics Course</option>
+                                        <option value="science">Science Course</option>
+                                        <option value="language">Language Course</option>
+                                        <option value="custom">Custom Template</option>
+                                    </select>
+                                </div>
+                                <div class="form__group">
+                                    <label class="form__label" for="template-style">Template Style</label>
+                                    <select class="form__input" id="template-style">
+                                        <option value="">Select style</option>
+                                        <option value="modern">Modern</option>
+                                        <option value="classic">Classic</option>
+                                        <option value="minimal">Minimal</option>
+                                        <option value="colorful">Colorful</option>
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="template-preview">
+                            <h3 class="heading heading--tertiary">Template Preview</h3>
+                            <div class="preview-container">
+                                <p class="text">Template preview will appear here...</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </article>
+
+            <!-- Schedule Article -->
+            <article id="schedule" class="article">
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Course Schedule</h2>
+                        <p class="text">Configure and preview your course schedule.</p>
+                    </header>
+                    <div class="schedule-layout">
+                        <div class="schedule-config">
+                            <h3 class="heading heading--tertiary">Schedule Configuration</h3>
+                            <form class="form">
+                                <div class="form__group">
+                                    <label class="form__label" for="start-date">Start Date</label>
+                                    <input class="form__input" type="date" id="start-date">
+                                </div>
+                                <div class="form__group">
+                                    <label class="form__label" for="end-date">End Date</label>
+                                    <input class="form__input" type="date" id="end-date">
+                                </div>
+                                <div class="form__group">
+                                    <label class="form__label" for="schedule-type">Schedule Type</label>
+                                    <select class="form__input" id="schedule-type">
+                                        <option value="">Select schedule type</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="bi-weekly">Bi-weekly</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                </div>
+                                <div class="form__group">
+                                    <label class="form__label" for="class-time">Class Time</label>
+                                    <input class="form__input" type="time" id="class-time">
+                                </div>
+                                <div class="form__group">
+                                    <label class="form__label" for="class-duration">Duration (minutes)</label>
+                                    <input class="form__input" type="number" id="class-duration" placeholder="e.g., 90">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="schedule-preview">
+                            <h3 class="heading heading--tertiary">Schedule Preview</h3>
+                            <div class="preview-container">
+                                <p class="text">Schedule preview will appear here...</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </article>
+
+            <!-- Curriculum Article -->
+            <article id="curriculum" class="article">
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Course Curriculum</h2>
+                        <p class="text">Design and preview your course curriculum.</p>
+                    </header>
+                    <div class="curriculum-layout">
+                        <div class="curriculum-config">
+                            <h3 class="heading heading--tertiary">Curriculum Configuration</h3>
+                            <form class="form">
+                                <div class="form__group">
+                                    <label class="form__label" for="curriculum-approach">Curriculum Approach</label>
+                                    <select class="form__input" id="curriculum-approach">
+                                        <option value="">Select approach</option>
+                                        <option value="modular">Modular</option>
+                                        <option value="linear">Linear</option>
+                                        <option value="spiral">Spiral</option>
+                                        <option value="project-based">Project-Based</option>
+                                    </select>
+                                </div>
+                                <div class="form__group">
+                                    <label class="form__label" for="learning-objectives">Learning Objectives</label>
+                                    <textarea class="form__input" id="learning-objectives" rows="4" placeholder="List the main learning objectives"></textarea>
+                                </div>
+                                <div class="form__group">
+                                    <label class="form__label" for="assessment-methods">Assessment Methods</label>
+                                    <textarea class="form__input" id="assessment-methods" rows="3" placeholder="Describe assessment methods"></textarea>
+                                </div>
+                                <div class="form__group">
+                                    <label class="form__label" for="required-materials">Required Materials</label>
+                                    <textarea class="form__input" id="required-materials" rows="3" placeholder="List required textbooks, software, etc."></textarea>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="curriculum-preview">
+                            <h3 class="heading heading--tertiary">Curriculum Preview</h3>
+                            <div class="preview-container">
+                                <p class="text">Curriculum structure will appear here...</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </article>
+
+            <!-- Settings Article -->
+            <article id="settings" class="article">
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Course Settings</h2>
+                        <p class="text">Manage course settings and danger zone.</p>
+                    </header>
+                    <form class="form">
+                        <div class="form__group form__group--checkbox">
+                            <input class="form__checkbox" type="checkbox" id="course-visible">
+                            <label class="form__label" for="course-visible">Course visible to students</label>
+                        </div>
+                        <div class="form__group form__group--checkbox">
+                            <input class="form__checkbox" type="checkbox" id="allow-enrollment">
+                            <label class="form__label" for="allow-enrollment">Allow new enrollments</label>
+                        </div>
+                        <div class="form__group form__group--checkbox">
+                            <input class="form__checkbox" type="checkbox" id="require-approval">
+                            <label class="form__label" for="require-approval">Require enrollment approval</label>
+                        </div>
+                    </form>
+                    
+                    <div class="danger-zone">
+                        <h3 class="heading heading--tertiary">Danger Zone</h3>
+                        <p class="text text--danger">Once you delete a course, there is no going back. Please be certain.</p>
+                        <button class="button button--danger">Delete Course</button>
+                    </div>
+                </section>
+            </article>
+        </section>
+
+        <!-- Create Section (no aside navigation) -->
+        <section id="create" class="section">
+            <article class="article article--active">
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Create Course Content</h2>
+                        <p class="text">Add lessons, modules, and content to your course.</p>
+                    </header>
+                    <p class="text">Course content creation tools will go here...</p>
+                </section>
+            </article>
+        </section>
+
+        <!-- Preview Section (no aside navigation) -->
+        <section id="preview" class="section">
+            <article class="article article--active">
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Preview Your Course</h2>
+                        <p class="text">Review how your course will appear to students.</p>
+                    </header>
+                    <p class="text">Course preview will be displayed here...</p>
+                </section>
+            </article>
+        </section>
+
+        <!-- Launch Section (no aside navigation) -->
+        <section id="launch" class="section">
+            <article class="article article--active">
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Launch Your Course</h2>
+                        <p class="text">Final steps to publish and launch your course.</p>
+                    </header>
+                    <p class="text">Course launch options will be available here...</p>
+                </section>
+            </article>
+        </section>
+    </main>
+
+    <script type="module" src="/src/scripts/app.ts"></script>
+    <script type="module" src="/src/scripts/navigation/index.ts"></script>
+</body>
+</html>

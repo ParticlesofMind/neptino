@@ -1,0 +1,168 @@
+// ==========================================================================
+// COURSE BUILDER PAGE STYLES
+// ==========================================================================
+
+@use '../abstracts/variables' as *;
+
+// ==========================================================================
+// COURSE BUILDER LAYOUT
+// ==========================================================================
+
+// Course builder specific grid layout
+.grid__main:has(.section) {
+  padding: $spacing-4;
+  max-width: none;
+  
+  // Ensure full width utilization
+  .section {
+    width: 100%;
+    display: none; // Hide all sections by default
+    
+    // Show only the active section
+    &--active {
+      display: block;
+    }
+    
+    // Setup section with aside navigation
+    &#setup {
+      display: none; // Reset default display
+      
+      &.section--active {
+        display: grid; // Use grid layout when active
+        grid-template-columns: 300px 1fr;
+        gap: $spacing-8;
+        
+        @media (max-width: #{$breakpoint-md - 1px}) {
+          grid-template-columns: 1fr;
+        }
+      }
+    }
+    
+    // Other sections without aside navigation
+    &#create,
+    &#preview,
+    &#launch {
+      padding: 0 $spacing-4;
+      
+      &.section--active {
+        display: block; // Standard block display when active
+      }
+    }
+  }
+}
+
+// ==========================================================================
+// SPLIT PANEL LAYOUTS
+// ==========================================================================
+
+.template-layout,
+.schedule-layout,
+.curriculum-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-6;
+  margin-top: $spacing-4;
+  
+  @media (max-width: #{$breakpoint-lg - 1px}) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.template-config,
+.schedule-config,
+.curriculum-config,
+.template-preview,
+.schedule-preview,
+.curriculum-preview {
+  .heading--tertiary {
+    margin-bottom: $spacing-4;
+    color: $text-primary;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+.preview-container {
+  min-height: 200px;
+  background-color: $bg-secondary;
+  border: 1px solid $gray-200;
+  border-radius: $border-radius;
+  padding: $spacing-4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  .text {
+    color: $text-secondary;
+    font-style: italic;
+  }
+}
+
+// ==========================================================================
+// COURSE BUILDER ARTICLES
+// ==========================================================================
+
+.article {
+  // Ensure articles take full width
+  width: 100%;
+  
+  .card {
+    width: 100%;
+    max-width: none;
+  }
+  
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+    
+    &__group {
+      margin-bottom: 0; // Reset any existing margin
+    }
+  }
+}
+
+// ==========================================================================
+// DANGER ZONE STYLING
+// ==========================================================================
+
+.danger-zone {
+  margin-top: $spacing-8;
+  padding: $spacing-6;
+  border: 2px solid $error;
+  border-radius: $border-radius;
+  background-color: rgba($error, 0.05);
+  
+  .heading--tertiary {
+    color: $error;
+    margin-bottom: $spacing-2;
+  }
+  
+  .text--danger {
+    color: $error;
+    margin-bottom: $spacing-4;
+  }
+  
+  .button--danger {
+    background-color: $error;
+    color: white;
+    border: none;
+    
+    &:hover {
+      background-color: #dc2626;
+    }
+  }
+}
+
+// ==========================================================================
+// COURSE BUILDER SPECIFIC OVERRIDES
+// ==========================================================================
+
+// Override the home page article styles for course builder
+.section .article {
+  display: none; // Hide all articles by default
+  
+  &--active {
+    display: block; // Show only the active article
+  }
+}

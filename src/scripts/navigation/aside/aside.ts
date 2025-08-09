@@ -39,12 +39,20 @@ export class AsideNavigation {
   }
 
   private handleLinkClick(e: Event): void {
-    e.preventDefault();
-    
     const target = e.target as HTMLAnchorElement;
+    const href = target.getAttribute('href');
     const targetSection = target.getAttribute('data-section');
     
-    console.log('Link clicked:', target.textContent, 'Target section:', targetSection);
+    console.log('Link clicked:', target.textContent, 'Href:', href, 'Target section:', targetSection);
+    
+    // If the href is a full page URL (not a hash), allow normal navigation
+    if (href && href.startsWith('/') && !href.startsWith('#')) {
+      console.log('Full page navigation detected, allowing default behavior');
+      return; // Don't prevent default, let the browser navigate
+    }
+    
+    // For hash navigation (single-page), prevent default and handle manually
+    e.preventDefault();
     
     if (!targetSection) {
       console.error('No data-section attribute found');
