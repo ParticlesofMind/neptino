@@ -58,20 +58,10 @@ export async function signIn(email: string, password: string) {
   try {
     console.log('Attempting to sign in user:', email)
     
-    // Add a timeout to see if the request is hanging
-    console.log('🚀 Calling supabase.auth.signInWithPassword...')
-    
-    const signInPromise = supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     })
-    
-    // Race the auth call with a timeout
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Sign-in request timed out after 10 seconds')), 10000)
-    })
-    
-    const { data, error } = await Promise.race([signInPromise, timeoutPromise]) as any
 
     console.log('📋 SignIn response - data:', data)
     console.log('📋 SignIn response - error:', error)
