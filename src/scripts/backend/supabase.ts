@@ -1,5 +1,6 @@
 /**
- * Simple Supabase Client Setup
+ * Supabase Client Configuration
+ * Backend configuration for database and authentication services
  */
 
 import { createClient } from '@supabase/supabase-js'

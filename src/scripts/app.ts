@@ -1,11 +1,61 @@
 /**
- * Main application entry point
+ * Application Entry Point
+ * Main script that initializes the application and handles page-specific functionality
  */
 
-import { signIn, signUp, initAuth } from './auth'
+import { signIn, signUp, signOut, initAuth } from './backend/auth/auth'
 
-// Initialize authentication state listener
-initAuth()
+// Check if we're on a dashboard page
+function isDashboardPage() {
+  const path = window.location.pathname
+  return path.includes('/pages/student/home.html') || 
+         path.includes('/pages/teacher/home.html') || 
+         path.includes('/pages/admin/home.html')
+}
+
+// Initialize authentication - but only redirect if not on dashboard
+if (!isDashboardPage()) {
+  initAuth()
+} else {
+  // On dashboard pages, just check auth without redirecting
+  console.log('📍 On dashboard page, initializing auth without redirects')
+  import('./backend/supabase').then(({ supabase }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session?.user) {
+        console.log('❌ No session on dashboard page, redirecting to signin')
+        window.location.href = '/src/pages/shared/signin.html'
+      } else {
+        console.log('✅ Valid session on dashboard page')
+      }
+    })
+  })
+}
+
+// Handle logout functionality
+function handleLogout() {
+  const logoutBtn = document.getElementById('logout-btn')
+  if (!logoutBtn) return
+
+  logoutBtn.addEventListener('click', async (e) => {
+    e.preventDefault()
+    
+    try {
+      const result = await signOut()
+      if (result.success) {
+        // Redirect to signin page
+        window.location.href = '/src/pages/shared/signin.html'
+      } else {
+        console.error('Logout failed:', result.error)
+        // Still redirect even if logout fails
+        window.location.href = '/src/pages/shared/signin.html'
+      }
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Still redirect even if logout fails
+      window.location.href = '/src/pages/shared/signin.html'
+    }
+  })
+}
 
 // Handle sign-in form
 function handleSignInForm() {
@@ -162,4 +212,5 @@ function removeMessages() {
 document.addEventListener('DOMContentLoaded', () => {
   handleSignInForm()
   handleSignUpForm()
+  handleLogout()
 })
