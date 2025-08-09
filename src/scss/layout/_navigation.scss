@@ -1,1 +1,85 @@
-// Navigation layout styles
+// ==========================================================================
+// NAVIGATION LAYOUT
+// ==========================================================================
+
+@use '../abstracts/variables' as *;
+
+// ==========================================================================
+// BASE NAVIGATION
+// ==========================================================================
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: $spacing-4 $spacing-6;
+  
+  // Responsive padding
+  @media (min-width: $breakpoint-md) {
+    padding: $spacing-4 $spacing-8;
+  }
+  
+  @media (min-width: $breakpoint-lg) {
+    padding: $spacing-4 $spacing-12;
+  }
+  
+  // Navigation in footer has different styling
+  &--footer {
+    padding: $spacing-3 $spacing-6;
+    
+    @media (min-width: $breakpoint-md) {
+      padding: $spacing-3 $spacing-8;
+    }
+    
+    @media (min-width: $breakpoint-lg) {
+      padding: $spacing-3 $spacing-12;
+    }
+  }
+}
+
+// ==========================================================================
+// NAVIGATION SECTIONS
+// ==========================================================================
+
+// Left section: Logo
+.nav__logo-section {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0; // Don't shrink the logo
+}
+
+// Center section: Navigation links
+.nav__links-section {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+  
+  // On mobile, hide the center links to make room
+  @media (max-width: #{$breakpoint-md - 1px}) {
+    display: none;
+  }
+}
+
+// Right section: Actions (Sign In button)
+.nav__actions-section {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0; // Don't shrink the actions
+}
+
+// ==========================================================================
+// RESPONSIVE NAVIGATION
+// ==========================================================================
+
+// Mobile navigation adjustments
+@media (max-width: #{$breakpoint-md - 1px}) {
+  .nav {
+    // On mobile, space out logo and button more
+    padding: $spacing-3 $spacing-4;
+    
+    // Ensure proper spacing between logo and button
+    gap: $spacing-4;
+  }
+}

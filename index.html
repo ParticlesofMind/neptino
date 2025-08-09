@@ -9,15 +9,64 @@
 <body class="body grid">
 
     <header class="header grid__header">
-
+        <nav class="nav">
+            <div class="nav__logo-section">
+                <a href="index.html" class="logo logo--header">
+                    <img src="src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image">
+                </a>
+            </div>
+            
+            <div class="nav__links-section">
+                <ul class="list list--nav">
+                    <li class="list__item">
+                        <a href="src/pages/shared/about.html" class="link link--nav">About</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="src/pages/shared/pricing.html" class="link link--nav">Pricing</a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="nav__actions-section">
+                <a href="src/pages/shared/signin.html" class="button button--primary">Sign In</a>
+            </div>
+        </nav>
     </header>
  
     <main class="main grid__main">
-        
+        <h1 class="heading heading--primary">Transform Learning with Neptino</h1>
+        <p class="text text--lead">An innovative educational platform that brings teachers, students, and administrators together in a seamless learning experience.</p>
     </main>
 
     <footer class="footer grid__footer">
-
+        <nav class="nav nav--footer">
+            <div class="nav__logo-section">
+                <a href="index.html" class="logo logo--footer">
+                    <img src="src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image logo__image--small">
+                </a>
+            </div>
+            
+            <div class="nav__links-section">
+                <ul class="list list--nav list--footer">
+                    <li class="list__item">
+                        <a href="#" class="link link--footer">Privacy Policy</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#" class="link link--footer">Terms of Service</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#" class="link link--footer">Support</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#" class="link link--footer">Contact</a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="nav__actions-section">
+                <!-- Footer doesn't need action buttons, but keeping structure consistent -->
+            </div>
+        </nav>
     </footer>
 
     <script type="module" src="src/ts/main.ts"></script>

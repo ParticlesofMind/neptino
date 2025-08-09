@@ -1,1 +1,164 @@
-// Grid layout styles
+// ==========================================================================
+// GRID LAYOUT - Modern Responsive Layout
+// ==========================================================================
+
+@use '../abstracts/variables' as *;
+
+// ==========================================================================
+// MAIN GRID CONTAINER
+// ==========================================================================
+
+.grid {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas: 
+    "header"
+    "main"
+    "footer";
+  
+  // Ensure proper spacing and overflow handling
+  overflow-x: hidden;
+}
+
+// ==========================================================================
+// GRID AREAS
+// ==========================================================================
+
+.grid__header {
+  grid-area: header;
+  position: sticky;
+  top: 0;
+  z-index: $z-sticky;
+  background-color: $bg-primary;
+  border-bottom: 1px solid $gray-200;
+}
+
+.grid__main {
+  grid-area: main;
+  padding: $spacing-8 $spacing-4;
+  
+  // Responsive padding
+  @media (min-width: $breakpoint-sm) {
+    padding: $spacing-12 $spacing-6;
+  }
+  
+  @media (min-width: $breakpoint-md) {
+    padding: $spacing-16 $spacing-8;
+  }
+  
+  @media (min-width: $breakpoint-lg) {
+    padding: $spacing-20 $spacing-12;
+  }
+}
+
+.grid__footer {
+  grid-area: footer;
+  background-color: $bg-secondary;
+  border-top: 1px solid $gray-200;
+  padding: $spacing-6 $spacing-4;
+  
+  // Responsive footer padding
+  @media (min-width: $breakpoint-sm) {
+    padding: $spacing-8 $spacing-6;
+  }
+  
+  @media (min-width: $breakpoint-md) {
+    padding: $spacing-8 $spacing-8;
+  }
+}
+
+// ==========================================================================
+// CONTENT CONTAINERS
+// ==========================================================================
+
+// Main content container with max-width constraints
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: $spacing-4;
+  padding-right: $spacing-4;
+  
+  // Responsive container widths
+  @media (min-width: $breakpoint-sm) {
+    max-width: $container-sm;
+    padding-left: $spacing-6;
+    padding-right: $spacing-6;
+  }
+  
+  @media (min-width: $breakpoint-md) {
+    max-width: $container-md;
+    padding-left: $spacing-8;
+    padding-right: $spacing-8;
+  }
+  
+  @media (min-width: $breakpoint-lg) {
+    max-width: $container-lg;
+  }
+  
+  @media (min-width: $breakpoint-xl) {
+    max-width: $container-xl;
+  }
+  
+  // Container modifiers for different content types
+  &--narrow {
+    @media (min-width: $breakpoint-md) {
+      max-width: $container-sm;
+    }
+  }
+  
+  &--wide {
+    @media (min-width: $breakpoint-xl) {
+      max-width: none;
+      padding-left: $spacing-12;
+      padding-right: $spacing-12;
+    }
+  }
+}
+
+// ==========================================================================
+// RESPONSIVE UTILITIES
+// ==========================================================================
+
+// Hide elements on specific breakpoints
+.hidden-mobile {
+  @media (max-width: #{$breakpoint-sm - 1px}) {
+    display: none !important;
+  }
+}
+
+.hidden-tablet {
+  @media (min-width: $breakpoint-sm) and (max-width: #{$breakpoint-lg - 1px}) {
+    display: none !important;
+  }
+}
+
+.hidden-desktop {
+  @media (min-width: $breakpoint-lg) {
+    display: none !important;
+  }
+}
+
+// Show elements only on specific breakpoints
+.show-mobile {
+  @media (min-width: $breakpoint-sm) {
+    display: none !important;
+  }
+}
+
+.show-tablet {
+  display: none !important;
+  
+  @media (min-width: $breakpoint-sm) and (max-width: #{$breakpoint-lg - 1px}) {
+    display: block !important;
+  }
+}
+
+.show-desktop {
+  display: none !important;
+  
+  @media (min-width: $breakpoint-lg) {
+    display: block !important;
+  }
+}

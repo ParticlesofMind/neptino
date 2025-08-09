@@ -1,1 +1,47 @@
-// Button component styles
+// ==========================================================================
+// BUTTON COMPONENT
+// ==========================================================================
+
+@use '../abstracts/variables' as *;
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-3 $spacing-6;
+  border: none;
+  border-radius: $border-radius;
+  font-weight: $font-weight-medium;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  font-size: $font-size-sm;
+  
+  &--primary {
+    background-color: $primary-color;
+    color: $white;
+    
+    &:hover {
+      background-color: darken($primary-color, 10%);
+    }
+  }
+  
+  &--secondary {
+    background-color: $gray-100;
+    color: $text-secondary;
+    
+    &:hover {
+      background-color: $gray-200;
+    }
+  }
+  
+  &--outline {
+    background-color: transparent;
+    border: 1px solid $gray-300;
+    color: $text-secondary;
+    
+    &:hover {
+      background-color: $gray-50;
+    }
+  }
+}

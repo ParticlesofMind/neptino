@@ -2,8 +2,117 @@
 // BASE TYPOGRAPHY
 // ==========================================================================
 
+@use '../abstracts/variables' as *;
+
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.5;
-  color: #1f2937;
+  font-family: $font-family-base;
+  line-height: $line-height-normal;
+  color: $text-primary;
+}
+
+// ==========================================================================
+// HEADINGS
+// ==========================================================================
+
+.heading {
+  font-weight: $font-weight-bold;
+  line-height: $line-height-tight;
+  margin: 0;
+  
+  &--primary {
+    font-size: $font-size-4xl;
+    color: $text-primary;
+  }
+  
+  &--secondary {
+    font-size: $font-size-2xl;
+    color: $text-secondary;
+  }
+}
+
+// ==========================================================================
+// TEXT
+// ==========================================================================
+
+.text {
+  margin: 0;
+  
+  &--lead {
+    font-size: $font-size-xl;
+    color: $text-secondary;
+    font-weight: $font-weight-normal;
+  }
+  
+  &--body {
+    font-size: $font-size-base;
+    color: $text-secondary;
+  }
+  
+  &--small {
+    font-size: $font-size-sm;
+    color: $text-muted;
+  }
+}
+
+// ==========================================================================
+// LINKS
+// ==========================================================================
+
+.link {
+  text-decoration: none;
+  transition: color 0.2s ease;
+  
+  &--nav {
+    color: $text-secondary;
+    font-weight: $font-weight-medium;
+    
+    &:hover {
+      color: $text-primary;
+    }
+  }
+  
+  &--footer {
+    color: $text-muted;
+    font-size: $font-size-sm;
+    
+    &:hover {
+      color: $text-secondary;
+    }
+  }
+}
+
+// ==========================================================================
+// LISTS
+// ==========================================================================
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  
+  &--nav {
+    display: flex;
+    gap: $spacing-8;
+  }
+  
+  &--footer {
+    gap: $spacing-6;
+  }
+}
+
+// ==========================================================================
+// LOGO
+// ==========================================================================
+
+.logo {
+  display: inline-block;
+  
+  &__image {
+    height: $spacing-10;
+    width: auto;
+    
+    &--small {
+      height: $spacing-8;
+    }
+  }
 }
