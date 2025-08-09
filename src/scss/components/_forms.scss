@@ -120,14 +120,14 @@
   line-height: 1.4;
 
   &--success {
-    background-color: lighten($success-color, 45%);
-    color: darken($success-color, 10%);
-    border: 1px solid $success-color;
+    background-color: lighten($success, 45%);
+    color: darken($success, 10%);
+    border: 1px solid $success;
   }
 
   &--error {
-    background-color: lighten($error-color, 45%);
-    color: darken($error-color, 10%);
-    border: 1px solid $error-color;
+    background-color: lighten($error, 45%);
+    color: darken($error, 10%);
+    border: 1px solid $error;
   }
 }

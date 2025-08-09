@@ -40,7 +40,7 @@
                     <p class="text text--lead">Create your account to get started</p>
                 </header>
                 
-                <form class="form" id="signup-form">
+                <form class="form" id="signup-form" method="post" action="#">
                     <div class="form__group">
                         <label for="first-name" class="form__label">First name</label>
                         <input 
@@ -49,7 +49,7 @@
                             name="firstName" 
                             class="form__input" 
                             placeholder="Enter your first name"
-                            autocomplete="off"
+                            autocomplete="given-name"
                             required
                         >
                     </div>
@@ -62,7 +62,7 @@
                             name="lastName" 
                             class="form__input" 
                             placeholder="Enter your last name"
-                            autocomplete="off"
+                            autocomplete="family-name"
                         >
                     </div>
                     
@@ -74,7 +74,7 @@
                             name="email" 
                             class="form__input" 
                             placeholder="Enter your email"
-                            autocomplete="off"
+                            autocomplete="email"
                             required
                         >
                     </div>

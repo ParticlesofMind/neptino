@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Neptino</title>
+    <link rel="stylesheet" href="../../scss/main.scss">
+</head>
+<body class="body grid">
+    <header class="header grid__header">
+        <nav class="nav">
+            <div class="nav__logo-section">
+                <a href="../../index.html" class="logo logo--header">
+                    <img src="../../assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image">
+                </a>
+            </div>
+            
+            <div class="nav__links-section">
+                <ul class="list list--nav">
+                    <li class="list__item">
+                        <a href="#users" class="link link--nav">Users</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#courses" class="link link--nav">Courses</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#analytics" class="link link--nav">Analytics</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#settings" class="link link--nav">Settings</a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="nav__actions-section">
+                <button id="logout-btn" class="button button--secondary">Sign Out</button>
+            </div>
+        </nav>
+    </header>
+ 
+    <main class="main grid__main">
+        <div class="container">
+            <header class="page-header">
+                <h1 class="heading heading--primary">Admin Dashboard</h1>
+                <p class="text text--lead">Manage your educational platform</p>
+            </header>
+            
+            <div class="dashboard-grid">
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">User Management</h2>
+                    </header>
+                    <div class="card__content">
+                        <p class="text">Manage students, teachers, and other administrators.</p>
+                        <div class="stats">
+                            <div class="stat">
+                                <span class="stat__number">247</span>
+                                <span class="stat__label">Total Users</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat__number">189</span>
+                                <span class="stat__label">Students</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat__number">52</span>
+                                <span class="stat__label">Teachers</span>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="card__footer">
+                        <a href="#users" class="button button--primary">Manage Users</a>
+                    </footer>
+                </section>
+                
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Course Management</h2>
+                    </header>
+                    <div class="card__content">
+                        <p class="text">Create and manage educational courses.</p>
+                        <div class="stats">
+                            <div class="stat">
+                                <span class="stat__number">34</span>
+                                <span class="stat__label">Active Courses</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat__number">12</span>
+                                <span class="stat__label">Draft Courses</span>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="card__footer">
+                        <a href="#courses" class="button button--primary">Manage Courses</a>
+                    </footer>
+                </section>
+                
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Platform Analytics</h2>
+                    </header>
+                    <div class="card__content">
+                        <p class="text">View platform usage and performance metrics.</p>
+                        <div class="stats">
+                            <div class="stat">
+                                <span class="stat__number">1,234</span>
+                                <span class="stat__label">Active Sessions</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat__number">89%</span>
+                                <span class="stat__label">Completion Rate</span>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="card__footer">
+                        <a href="#analytics" class="button button--primary">View Analytics</a>
+                    </footer>
+                </section>
+                
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">System Settings</h2>
+                    </header>
+                    <div class="card__content">
+                        <p class="text">Configure platform settings and preferences.</p>
+                    </div>
+                    <footer class="card__footer">
+                        <a href="#settings" class="button button--primary">System Settings</a>
+                    </footer>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer grid__footer">
+        <nav class="nav nav--footer">
+            <div class="nav__logo-section">
+                <a href="../../index.html" class="logo logo--footer">
+                    <img src="../../assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image logo__image--small">
+                </a>
+            </div>
+            
+            <div class="nav__links-section">
+                <ul class="list list--nav list--footer">
+                    <li class="list__item">
+                        <a href="#" class="link link--footer">Privacy Policy</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#" class="link link--footer">Terms of Service</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#" class="link link--footer">Support</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#" class="link link--footer">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </footer>
+
+    <script type="module" src="../../ts/main.ts"></script>
+</body>
+</html>

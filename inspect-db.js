@@ -3,7 +3,7 @@
  * Check what tables and schema already exist
  */
 
-import { supabase } from './src/ts/supabase.js'
+import { supabase } from './src/ts/supabase'
 
 async function inspectDatabase() {
   console.log('🔍 Inspecting Supabase database...')

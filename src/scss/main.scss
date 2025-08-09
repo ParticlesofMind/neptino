@@ -27,11 +27,12 @@
 @use 'components/forms';
 @use 'components/cards';
 @use 'components/modals';
+@use 'components/dashboard';
 
 // 6. PAGES
 @use 'pages/home';
 @use 'pages/auth';
-@use 'pages/dashboard';
+@use 'pages/dashboard' as page-dashboard;
 
 // 7. THEMES
 @use 'themes/default';

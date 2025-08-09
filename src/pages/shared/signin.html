@@ -40,7 +40,7 @@
                     <p class="text text--lead">Sign in to your Neptino account</p>
                 </header>
                 
-                <form class="form" id="signin-form">
+                <form class="form" id="signin-form" method="post" action="#">
                     <div class="form__group">
                         <label for="email" class="form__label">Email address</label>
                         <input 
@@ -49,7 +49,7 @@
                             name="email" 
                             class="form__input" 
                             placeholder="Enter your email"
-                            autocomplete="off"
+                            autocomplete="email"
                             required
                         >
                     </div>
@@ -62,7 +62,7 @@
                             name="password" 
                             class="form__input" 
                             placeholder="Enter your password"
-                            autocomplete="off"
+                            autocomplete="current-password"
                             required
                         >
                     </div>

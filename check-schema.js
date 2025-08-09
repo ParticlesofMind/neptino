@@ -2,7 +2,7 @@
  * Check existing users table structure
  */
 
-import { supabase } from './src/ts/supabase.js'
+import { supabase } from './src/ts/supabase'
 
 async function checkUsersTable() {
   console.log('🔍 Checking existing users table structure...')

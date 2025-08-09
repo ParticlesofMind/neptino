@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Neptino</title>
+    <link rel="stylesheet" href="../../scss/main.scss">
+</head>
+<body class="body grid">
+    <header class="header grid__header">
+        <nav class="nav">
+            <div class="nav__logo-section">
+                <a href="../../index.html" class="logo logo--header">
+                    <img src="../../assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image">
+                </a>
+            </div>
+            
+            <div class="nav__links-section">
+                <ul class="list list--nav">
+                    <li class="list__item">
+                        <a href="#courses" class="link link--nav">My Courses</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#students" class="link link--nav">Students</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#assignments" class="link link--nav">Assignments</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#analytics" class="link link--nav">Analytics</a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="nav__actions-section">
+                <button id="logout-btn" class="button button--secondary">Sign Out</button>
+            </div>
+        </nav>
+    </header>
+ 
+    <main class="main grid__main">
+        <div class="container">
+            <header class="page-header">
+                <h1 class="heading heading--primary">Teacher Dashboard</h1>
+                <p class="text text--lead">Manage your courses and track student progress</p>
+            </header>
+            
+            <div class="dashboard-grid">
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">My Courses</h2>
+                    </header>
+                    <div class="card__content">
+                        <p class="text">Create and manage your teaching courses.</p>
+                        <div class="stats">
+                            <div class="stat">
+                                <span class="stat__number">5</span>
+                                <span class="stat__label">Active Courses</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat__number">127</span>
+                                <span class="stat__label">Enrolled Students</span>
+                            </div>
+                        </div>
+                        <div class="course-list">
+                            <div class="course-item">
+                                <h3 class="course-item__title">Introduction to Programming</h3>
+                                <span class="course-item__students">45 students</span>
+                            </div>
+                            <div class="course-item">
+                                <h3 class="course-item__title">Web Development Fundamentals</h3>
+                                <span class="course-item__students">32 students</span>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="card__footer">
+                        <a href="#courses" class="button button--primary">Manage Courses</a>
+                        <a href="#" class="button button--secondary">Create Course</a>
+                    </footer>
+                </section>
+                
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Student Progress</h2>
+                    </header>
+                    <div class="card__content">
+                        <p class="text">Monitor your students' learning progress and performance.</p>
+                        <div class="stats">
+                            <div class="stat">
+                                <span class="stat__number">78%</span>
+                                <span class="stat__label">Avg. Completion</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat__number">4.2</span>
+                                <span class="stat__label">Avg. Rating</span>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="card__footer">
+                        <a href="#students" class="button button--primary">View Students</a>
+                    </footer>
+                </section>
+                
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Recent Activity</h2>
+                    </header>
+                    <div class="card__content">
+                        <p class="text">Latest submissions and student activities.</p>
+                        <div class="activity-list">
+                            <div class="activity-item">
+                                <span class="activity-item__icon">📝</span>
+                                <div class="activity-item__content">
+                                    <h4>New submission: HTML Assignment</h4>
+                                    <span class="activity-item__time">30 minutes ago</span>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <span class="activity-item__icon">💬</span>
+                                <div class="activity-item__content">
+                                    <h4>Student question in Programming 101</h4>
+                                    <span class="activity-item__time">2 hours ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="card__footer">
+                        <a href="#" class="button button--primary">View All Activity</a>
+                    </footer>
+                </section>
+                
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Assignment Management</h2>
+                    </header>
+                    <div class="card__content">
+                        <p class="text">Create and grade assignments for your students.</p>
+                        <div class="stats">
+                            <div class="stat">
+                                <span class="stat__number">12</span>
+                                <span class="stat__label">Pending Reviews</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat__number">8</span>
+                                <span class="stat__label">Due This Week</span>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="card__footer">
+                        <a href="#assignments" class="button button--primary">Manage Assignments</a>
+                        <a href="#" class="button button--secondary">Create Assignment</a>
+                    </footer>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer grid__footer">
+        <nav class="nav nav--footer">
+            <div class="nav__logo-section">
+                <a href="../../index.html" class="logo logo--footer">
+                    <img src="../../assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image logo__image--small">
+                </a>
+            </div>
+            
+            <div class="nav__links-section">
+                <ul class="list list--nav list--footer">
+                    <li class="list__item">
+                        <a href="#" class="link link--footer">Privacy Policy</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#" class="link link--footer">Terms of Service</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#" class="link link--footer">Support</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#" class="link link--footer">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </footer>
+
+    <script type="module" src="../../ts/main.ts"></script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Neptino</title>
+    <link rel="stylesheet" href="../../scss/main.scss">
+</head>
+<body class="body grid">
+    <header class="header grid__header">
+        <nav class="nav">
+            <div class="nav__logo-section">
+                <a href="../../index.html" class="logo logo--header">
+                    <img src="../../assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image">
+                </a>
+            </div>
+            
+            <div class="nav__links-section">
+                <ul class="list list--nav">
+                    <li class="list__item">
+                        <a href="#courses" class="link link--nav">My Courses</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#progress" class="link link--nav">Progress</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#assignments" class="link link--nav">Assignments</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#profile" class="link link--nav">Profile</a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="nav__actions-section">
+                <button id="logout-btn" class="button button--secondary">Sign Out</button>
+            </div>
+        </nav>
+    </header>
+ 
+    <main class="main grid__main">
+        <div class="container">
+            <header class="page-header">
+                <h1 class="heading heading--primary">Welcome back, Student!</h1>
+                <p class="text text--lead">Continue your learning journey</p>
+            </header>
+            
+            <div class="dashboard-grid">
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">My Courses</h2>
+                    </header>
+                    <div class="card__content">
+                        <p class="text">Access your enrolled courses and track your progress.</p>
+                        <div class="course-list">
+                            <div class="course-item">
+                                <h3 class="course-item__title">Introduction to Programming</h3>
+                                <div class="progress-bar">
+                                    <div class="progress-bar__fill" style="width: 75%"></div>
+                                </div>
+                                <span class="progress-text">75% Complete</span>
+                            </div>
+                            <div class="course-item">
+                                <h3 class="course-item__title">Web Development Basics</h3>
+                                <div class="progress-bar">
+                                    <div class="progress-bar__fill" style="width: 45%"></div>
+                                </div>
+                                <span class="progress-text">45% Complete</span>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="card__footer">
+                        <a href="#courses" class="button button--primary">View All Courses</a>
+                    </footer>
+                </section>
+                
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Recent Activity</h2>
+                    </header>
+                    <div class="card__content">
+                        <p class="text">Your recent learning activities and achievements.</p>
+                        <div class="activity-list">
+                            <div class="activity-item">
+                                <span class="activity-item__icon">📚</span>
+                                <div class="activity-item__content">
+                                    <h4>Completed: Variables and Data Types</h4>
+                                    <span class="activity-item__time">2 hours ago</span>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <span class="activity-item__icon">✅</span>
+                                <div class="activity-item__content">
+                                    <h4>Assignment Submitted: HTML Basics Quiz</h4>
+                                    <span class="activity-item__time">1 day ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="card__footer">
+                        <a href="#progress" class="button button--primary">View Progress</a>
+                    </footer>
+                </section>
+                
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Upcoming Assignments</h2>
+                    </header>
+                    <div class="card__content">
+                        <p class="text">Stay on track with your upcoming deadlines.</p>
+                        <div class="assignment-list">
+                            <div class="assignment-item">
+                                <h4>JavaScript Functions Assignment</h4>
+                                <span class="assignment-item__due">Due: Tomorrow</span>
+                            </div>
+                            <div class="assignment-item">
+                                <h4>CSS Layout Project</h4>
+                                <span class="assignment-item__due">Due: In 3 days</span>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="card__footer">
+                        <a href="#assignments" class="button button--primary">View All Assignments</a>
+                    </footer>
+                </section>
+                
+                <section class="card">
+                    <header class="card__header">
+                        <h2 class="heading heading--secondary">Quick Actions</h2>
+                    </header>
+                    <div class="card__content">
+                        <p class="text">Common actions to help you learn more effectively.</p>
+                    </div>
+                    <footer class="card__footer">
+                        <a href="#" class="button button--primary">Continue Learning</a>
+                        <a href="#profile" class="button button--secondary">Update Profile</a>
+                    </footer>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer grid__footer">
+        <nav class="nav nav--footer">
+            <div class="nav__logo-section">
+                <a href="../../index.html" class="logo logo--footer">
+                    <img src="../../assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image logo__image--small">
+                </a>
+            </div>
+            
+            <div class="nav__links-section">
+                <ul class="list list--nav list--footer">
+                    <li class="list__item">
+                        <a href="#" class="link link--footer">Privacy Policy</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#" class="link link--footer">Terms of Service</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#" class="link link--footer">Support</a>
+                    </li>
+                    <li class="list__item">
+                        <a href="#" class="link link--footer">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </footer>
+
+    <script type="module" src="../../ts/main.ts"></script>
+</body>
+</html>
