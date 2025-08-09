@@ -1,1 +1,111 @@
-// Sidebar layout styles
+// ==========================================================================
+// SIDEBAR LAYOUT
+// ==========================================================================
+
+@use '../abstracts/variables' as *;
+
+.dashboard-layout {
+  display: flex;
+  gap: $spacing-8;
+  min-height: calc(100vh - 200px);
+}
+
+.aside {
+  flex: 0 0 240px;
+  background: $white;
+  border-radius: $border-radius;
+  box-shadow: $shadow-md;
+  padding: $spacing-6;
+  height: fit-content;
+  
+  &__nav {
+    width: 100%;
+  }
+  
+  &__menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  &__item {
+    margin-bottom: $spacing-2;
+  }
+  
+  &__link {
+    display: block;
+    padding: $spacing-3 $spacing-4;
+    text-decoration: none;
+    color: $text-secondary;
+    border-radius: $border-radius-sm;
+    transition: all 0.2s ease;
+    font-weight: $font-weight-medium;
+    
+    &:hover {
+      background: $gray-100;
+      color: $primary-color;
+      transform: translateX(2px);
+    }
+    
+    &--active {
+      background: $primary-color;
+      color: $white;
+      
+      &:hover {
+        background: $primary-color;
+        color: $white;
+        transform: translateX(0);
+      }
+    }
+  }
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  
+  &__section {
+    display: none;
+    
+    &--active {
+      display: block;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: $breakpoint-lg) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+  
+  .aside {
+    flex: none;
+    
+    &__menu {
+      display: flex;
+      gap: $spacing-2;
+      overflow-x: auto;
+    }
+    
+    &__item {
+      margin-bottom: 0;
+      flex: 0 0 auto;
+    }
+    
+    &__link {
+      white-space: nowrap;
+    }
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .aside {
+    padding: $spacing-4;
+    
+    &__link {
+      padding: $spacing-3;
+      font-size: $font-size-sm;
+    }
+  }
+}

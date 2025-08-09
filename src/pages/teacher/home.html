@@ -45,112 +45,391 @@
                 <p class="text text--lead">Manage your courses and track student progress</p>
             </header>
             
-            <div class="dashboard-grid">
-                <section class="card">
-                    <header class="card__header">
-                        <h2 class="heading heading--secondary">My Courses</h2>
-                    </header>
-                    <div class="card__content">
-                        <p class="text">Create and manage your teaching courses.</p>
-                        <div class="stats">
-                            <div class="stat">
-                                <span class="stat__number">5</span>
-                                <span class="stat__label">Active Courses</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat__number">127</span>
-                                <span class="stat__label">Enrolled Students</span>
-                            </div>
-                        </div>
-                        <div class="course-list">
-                            <div class="course-item">
-                                <h3 class="course-item__title">Introduction to Programming</h3>
-                                <span class="course-item__students">45 students</span>
-                            </div>
-                            <div class="course-item">
-                                <h3 class="course-item__title">Web Development Fundamentals</h3>
-                                <span class="course-item__students">32 students</span>
-                            </div>
-                        </div>
-                    </div>
-                    <footer class="card__footer">
-                        <a href="#courses" class="button button--primary">Manage Courses</a>
-                        <a href="#" class="button button--secondary">Create Course</a>
-                    </footer>
-                </section>
-                
-                <section class="card">
-                    <header class="card__header">
-                        <h2 class="heading heading--secondary">Student Progress</h2>
-                    </header>
-                    <div class="card__content">
-                        <p class="text">Monitor your students' learning progress and performance.</p>
-                        <div class="stats">
-                            <div class="stat">
-                                <span class="stat__number">78%</span>
-                                <span class="stat__label">Avg. Completion</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat__number">4.2</span>
-                                <span class="stat__label">Avg. Rating</span>
-                            </div>
-                        </div>
-                    </div>
-                    <footer class="card__footer">
-                        <a href="#students" class="button button--primary">View Students</a>
-                    </footer>
-                </section>
-                
-                <section class="card">
-                    <header class="card__header">
-                        <h2 class="heading heading--secondary">Recent Activity</h2>
-                    </header>
-                    <div class="card__content">
-                        <p class="text">Latest submissions and student activities.</p>
-                        <div class="activity-list">
-                            <div class="activity-item">
-                                <span class="activity-item__icon">📝</span>
-                                <div class="activity-item__content">
-                                    <h4>New submission: HTML Assignment</h4>
-                                    <span class="activity-item__time">30 minutes ago</span>
+            <div class="dashboard-layout">
+                <aside class="aside">
+                    <nav class="aside__nav">
+                        <ul class="aside__menu">
+                            <li class="aside__item">
+                                <a href="#home" class="aside__link aside__link--active" data-section="home">Home</a>
+                            </li>
+                            <li class="aside__item">
+                                <a href="#courses" class="aside__link" data-section="courses">Courses</a>
+                            </li>
+                            <li class="aside__item">
+                                <a href="#subscription" class="aside__link" data-section="subscription">Subscription</a>
+                            </li>
+                            <li class="aside__item">
+                                <a href="#settings" class="aside__link" data-section="settings">Settings</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </aside>
+
+                <div class="content">
+                    <!-- Home Section -->
+                    <article id="home" class="content__section content__section--active">
+                        <div class="dashboard-grid">
+                            <section class="card">
+                                <header class="card__header">
+                                    <h2 class="heading heading--secondary">Welcome Back!</h2>
+                                </header>
+                                <div class="card__content">
+                                    <p class="text">Here's what's happening with your courses today.</p>
+                                    <div class="stats">
+                                        <div class="stat">
+                                            <span class="stat__number">5</span>
+                                            <span class="stat__label">Active Courses</span>
+                                        </div>
+                                        <div class="stat">
+                                            <span class="stat__number">127</span>
+                                            <span class="stat__label">Total Students</span>
+                                        </div>
+                                        <div class="stat">
+                                            <span class="stat__number">12</span>
+                                            <span class="stat__label">Pending Reviews</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="activity-item">
-                                <span class="activity-item__icon">💬</span>
-                                <div class="activity-item__content">
-                                    <h4>Student question in Programming 101</h4>
-                                    <span class="activity-item__time">2 hours ago</span>
+                            </section>
+
+                            <section class="card">
+                                <header class="card__header">
+                                    <h2 class="heading heading--secondary">Recent Activity</h2>
+                                </header>
+                                <div class="card__content">
+                                    <p class="text">Latest submissions and student activities.</p>
+                                    <div class="activity-list">
+                                        <div class="activity-item">
+                                            <span class="activity-item__icon">📝</span>
+                                            <div class="activity-item__content">
+                                                <h4>New submission: HTML Assignment</h4>
+                                                <span class="activity-item__time">30 minutes ago</span>
+                                            </div>
+                                        </div>
+                                        <div class="activity-item">
+                                            <span class="activity-item__icon">💬</span>
+                                            <div class="activity-item__content">
+                                                <h4>Student question in Programming 101</h4>
+                                                <span class="activity-item__time">2 hours ago</span>
+                                            </div>
+                                        </div>
+                                        <div class="activity-item">
+                                            <span class="activity-item__icon">✅</span>
+                                            <div class="activity-item__content">
+                                                <h4>Assignment graded: JavaScript Basics</h4>
+                                                <span class="activity-item__time">4 hours ago</span>
+                                            </div>
+                                        </div>
+                                        <div class="activity-item">
+                                            <span class="activity-item__icon">👥</span>
+                                            <div class="activity-item__content">
+                                                <h4>New student enrolled: Web Development</h4>
+                                                <span class="activity-item__time">1 day ago</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                                <footer class="card__footer">
+                                    <a href="#" class="button button--primary">View All Activity</a>
+                                </footer>
+                            </section>
+
+                            <section class="card">
+                                <header class="card__header">
+                                    <h2 class="heading heading--secondary">Quick Actions</h2>
+                                </header>
+                                <div class="card__content">
+                                    <div class="quick-actions">
+                                        <button class="button button--primary">Create Assignment</button>
+                                        <button class="button button--secondary">Grade Submissions</button>
+                                        <button class="button button--secondary">Message Students</button>
+                                        <button class="button button--secondary">View Analytics</button>
+                                    </div>
+                                </div>
+                            </section>
                         </div>
-                    </div>
-                    <footer class="card__footer">
-                        <a href="#" class="button button--primary">View All Activity</a>
-                    </footer>
-                </section>
-                
-                <section class="card">
-                    <header class="card__header">
-                        <h2 class="heading heading--secondary">Assignment Management</h2>
-                    </header>
-                    <div class="card__content">
-                        <p class="text">Create and grade assignments for your students.</p>
-                        <div class="stats">
-                            <div class="stat">
-                                <span class="stat__number">12</span>
-                                <span class="stat__label">Pending Reviews</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat__number">8</span>
-                                <span class="stat__label">Due This Week</span>
-                            </div>
+                    </article>
+
+                    <!-- Courses Section -->
+                    <article id="courses" class="content__section">
+                        <div class="dashboard-grid">
+                            <section class="card">
+                                <header class="card__header">
+                                    <h2 class="heading heading--secondary">My Courses</h2>
+                                </header>
+                                <div class="card__content">
+                                    <p class="text">Create and manage your teaching courses.</p>
+                                    <div class="stats">
+                                        <div class="stat">
+                                            <span class="stat__number">5</span>
+                                            <span class="stat__label">Active Courses</span>
+                                        </div>
+                                        <div class="stat">
+                                            <span class="stat__number">127</span>
+                                            <span class="stat__label">Enrolled Students</span>
+                                        </div>
+                                    </div>
+                                    <div class="course-list">
+                                        <div class="course-item">
+                                            <h3 class="course-item__title">Introduction to Programming</h3>
+                                            <span class="course-item__students">45 students</span>
+                                            <div class="course-item__actions">
+                                                <button class="button button--small">Edit</button>
+                                                <button class="button button--small button--secondary">View</button>
+                                            </div>
+                                        </div>
+                                        <div class="course-item">
+                                            <h3 class="course-item__title">Web Development Fundamentals</h3>
+                                            <span class="course-item__students">32 students</span>
+                                            <div class="course-item__actions">
+                                                <button class="button button--small">Edit</button>
+                                                <button class="button button--small button--secondary">View</button>
+                                            </div>
+                                        </div>
+                                        <div class="course-item">
+                                            <h3 class="course-item__title">Advanced JavaScript</h3>
+                                            <span class="course-item__students">28 students</span>
+                                            <div class="course-item__actions">
+                                                <button class="button button--small">Edit</button>
+                                                <button class="button button--small button--secondary">View</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <footer class="card__footer">
+                                    <a href="#" class="button button--primary">Create New Course</a>
+                                    <a href="#" class="button button--secondary">Import Course</a>
+                                </footer>
+                            </section>
+                            
+                            <section class="card">
+                                <header class="card__header">
+                                    <h2 class="heading heading--secondary">Student Progress</h2>
+                                </header>
+                                <div class="card__content">
+                                    <p class="text">Monitor your students' learning progress and performance.</p>
+                                    <div class="stats">
+                                        <div class="stat">
+                                            <span class="stat__number">78%</span>
+                                            <span class="stat__label">Avg. Completion</span>
+                                        </div>
+                                        <div class="stat">
+                                            <span class="stat__number">4.2</span>
+                                            <span class="stat__label">Avg. Rating</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <footer class="card__footer">
+                                    <a href="#students" class="button button--primary">View All Students</a>
+                                </footer>
+                            </section>
+                            
+                            <section class="card">
+                                <header class="card__header">
+                                    <h2 class="heading heading--secondary">Assignment Management</h2>
+                                </header>
+                                <div class="card__content">
+                                    <p class="text">Create and grade assignments for your students.</p>
+                                    <div class="stats">
+                                        <div class="stat">
+                                            <span class="stat__number">12</span>
+                                            <span class="stat__label">Pending Reviews</span>
+                                        </div>
+                                        <div class="stat">
+                                            <span class="stat__number">8</span>
+                                            <span class="stat__label">Due This Week</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <footer class="card__footer">
+                                    <a href="#assignments" class="button button--primary">Manage Assignments</a>
+                                    <a href="#" class="button button--secondary">Create Assignment</a>
+                                </footer>
+                            </section>
                         </div>
-                    </div>
-                    <footer class="card__footer">
-                        <a href="#assignments" class="button button--primary">Manage Assignments</a>
-                        <a href="#" class="button button--secondary">Create Assignment</a>
-                    </footer>
-                </section>
+                    </article>
+
+                    <!-- Subscription Section -->
+                    <article id="subscription" class="content__section">
+                        <div class="dashboard-grid">
+                            <section class="card">
+                                <header class="card__header">
+                                    <h2 class="heading heading--secondary">Current Plan</h2>
+                                </header>
+                                <div class="card__content">
+                                    <div class="subscription-info">
+                                        <h3 class="subscription-info__plan">Teacher Pro Plan</h3>
+                                        <p class="subscription-info__price">$29.99/month</p>
+                                        <p class="subscription-info__status">Active until March 15, 2026</p>
+                                    </div>
+                                    <div class="features-list">
+                                        <h4>Plan Features:</h4>
+                                        <ul>
+                                            <li>✅ Unlimited courses</li>
+                                            <li>✅ Up to 200 students per course</li>
+                                            <li>✅ Advanced analytics</li>
+                                            <li>✅ Priority support</li>
+                                            <li>✅ Custom branding</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <footer class="card__footer">
+                                    <button class="button button--primary">Upgrade Plan</button>
+                                    <button class="button button--secondary">Change Plan</button>
+                                </footer>
+                            </section>
+
+                            <section class="card">
+                                <header class="card__header">
+                                    <h2 class="heading heading--secondary">Usage Statistics</h2>
+                                </header>
+                                <div class="card__content">
+                                    <div class="usage-stats">
+                                        <div class="usage-item">
+                                            <span class="usage-item__label">Courses Created</span>
+                                            <div class="usage-item__bar">
+                                                <div class="usage-item__progress" style="width: 25%"></div>
+                                            </div>
+                                            <span class="usage-item__value">5 / 20</span>
+                                        </div>
+                                        <div class="usage-item">
+                                            <span class="usage-item__label">Students Enrolled</span>
+                                            <div class="usage-item__bar">
+                                                <div class="usage-item__progress" style="width: 63%"></div>
+                                            </div>
+                                            <span class="usage-item__value">127 / 200</span>
+                                        </div>
+                                        <div class="usage-item">
+                                            <span class="usage-item__label">Storage Used</span>
+                                            <div class="usage-item__bar">
+                                                <div class="usage-item__progress" style="width: 45%"></div>
+                                            </div>
+                                            <span class="usage-item__value">2.3GB / 5GB</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="card">
+                                <header class="card__header">
+                                    <h2 class="heading heading--secondary">Billing History</h2>
+                                </header>
+                                <div class="card__content">
+                                    <div class="billing-history">
+                                        <div class="billing-item">
+                                            <span class="billing-item__date">Feb 15, 2026</span>
+                                            <span class="billing-item__amount">$29.99</span>
+                                            <span class="billing-item__status billing-item__status--paid">Paid</span>
+                                        </div>
+                                        <div class="billing-item">
+                                            <span class="billing-item__date">Jan 15, 2026</span>
+                                            <span class="billing-item__amount">$29.99</span>
+                                            <span class="billing-item__status billing-item__status--paid">Paid</span>
+                                        </div>
+                                        <div class="billing-item">
+                                            <span class="billing-item__date">Dec 15, 2025</span>
+                                            <span class="billing-item__amount">$29.99</span>
+                                            <span class="billing-item__status billing-item__status--paid">Paid</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <footer class="card__footer">
+                                    <button class="button button--secondary">Download Invoice</button>
+                                    <button class="button button--secondary">Update Payment Method</button>
+                                </footer>
+                            </section>
+                        </div>
+                    </article>
+
+                    <!-- Settings Section -->
+                    <article id="settings" class="content__section">
+                        <div class="dashboard-grid">
+                            <section class="card">
+                                <header class="card__header">
+                                    <h2 class="heading heading--secondary">Profile Settings</h2>
+                                </header>
+                                <div class="card__content">
+                                    <form class="form">
+                                        <div class="form__group">
+                                            <label class="form__label" for="first-name">First Name</label>
+                                            <input class="form__input" type="text" id="first-name" value="John">
+                                        </div>
+                                        <div class="form__group">
+                                            <label class="form__label" for="last-name">Last Name</label>
+                                            <input class="form__input" type="text" id="last-name" value="Doe">
+                                        </div>
+                                        <div class="form__group">
+                                            <label class="form__label" for="email">Email</label>
+                                            <input class="form__input" type="email" id="email" value="john.doe@example.com">
+                                        </div>
+                                        <div class="form__group">
+                                            <label class="form__label" for="bio">Bio</label>
+                                            <textarea class="form__input" id="bio" rows="3">Experienced programming instructor with 10+ years in education.</textarea>
+                                        </div>
+                                    </form>
+                                </div>
+                                <footer class="card__footer">
+                                    <button class="button button--primary">Save Changes</button>
+                                    <button class="button button--secondary">Cancel</button>
+                                </footer>
+                            </section>
+
+                            <section class="card">
+                                <header class="card__header">
+                                    <h2 class="heading heading--secondary">Notification Preferences</h2>
+                                </header>
+                                <div class="card__content">
+                                    <form class="form">
+                                        <div class="form__group form__group--checkbox">
+                                            <input class="form__checkbox" type="checkbox" id="email-notifications" checked>
+                                            <label class="form__label" for="email-notifications">Email notifications</label>
+                                        </div>
+                                        <div class="form__group form__group--checkbox">
+                                            <input class="form__checkbox" type="checkbox" id="student-submissions" checked>
+                                            <label class="form__label" for="student-submissions">New student submissions</label>
+                                        </div>
+                                        <div class="form__group form__group--checkbox">
+                                            <input class="form__checkbox" type="checkbox" id="course-enrollments" checked>
+                                            <label class="form__label" for="course-enrollments">Course enrollments</label>
+                                        </div>
+                                        <div class="form__group form__group--checkbox">
+                                            <input class="form__checkbox" type="checkbox" id="weekly-reports">
+                                            <label class="form__label" for="weekly-reports">Weekly progress reports</label>
+                                        </div>
+                                    </form>
+                                </div>
+                                <footer class="card__footer">
+                                    <button class="button button--primary">Update Preferences</button>
+                                </footer>
+                            </section>
+
+                            <section class="card">
+                                <header class="card__header">
+                                    <h2 class="heading heading--secondary">Security</h2>
+                                </header>
+                                <div class="card__content">
+                                    <div class="security-options">
+                                        <div class="security-item">
+                                            <h4>Change Password</h4>
+                                            <p class="text text--small">Update your password to keep your account secure</p>
+                                            <button class="button button--secondary">Change Password</button>
+                                        </div>
+                                        <div class="security-item">
+                                            <h4>Two-Factor Authentication</h4>
+                                            <p class="text text--small">Add an extra layer of security to your account</p>
+                                            <button class="button button--secondary">Enable 2FA</button>
+                                        </div>
+                                        <div class="security-item">
+                                            <h4>Login Sessions</h4>
+                                            <p class="text text--small">Manage your active login sessions</p>
+                                            <button class="button button--secondary">View Sessions</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </article>
+                </div>
             </div>
         </div>
     </main>
@@ -183,5 +462,6 @@
     </footer>
 
     <script type="module" src="/src/scripts/app.ts"></script>
+    <script type="module" src="/src/scripts/navigation/index.ts"></script>
 </body>
 </html>

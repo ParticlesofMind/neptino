@@ -7,11 +7,6 @@ export default defineConfig({
     open: true,
     strictPort: true, // Exit if port 3000 is already in use
     cors: true,
-    // Fix HMR configuration to prevent WebSocket issues
-    hmr: {
-      port: 3001,
-      host: 'localhost'
-    },
     // Improve watch options for better file watching
     watch: {
       usePolling: false, // Better performance on macOS
