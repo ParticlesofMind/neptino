@@ -1,0 +1,41 @@
+{
+  "name": "neptino",
+  "version": "1.0.0",
+  "description": "An interactive learning experience platform designed for seamless education delivery",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .ts,.tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,scss,css,html}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,scss,css,html}\""
+  },
+  "keywords": [
+    "education",
+    "learning-platform",
+    "typescript",
+    "scss",
+    "educational-technology"
+  ],
+  "author": "Benjamin Jack Laubacher",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0",
+    "sass": "^1.70.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.45.0",
+    "prettier": "^3.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/[your-username]/neptino.git"
+  },
+  "bugs": {
+    "url": "https://github.com/[your-username]/neptino/issues"
+  },
+  "homepage": "https://github.com/[your-username]/neptino#readme"
+}

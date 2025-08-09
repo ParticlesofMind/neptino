@@ -1,0 +1,37 @@
+// ==========================================================================
+// MAIN SCSS - 7-1 ARCHITECTURE
+// ==========================================================================
+
+// 1. ABSTRACTS
+@use 'abstracts/variables';
+@use 'abstracts/functions';
+@use 'abstracts/mixins';
+
+// 2. VENDORS
+@use 'vendors/normalize';
+
+// 3. BASE
+@use 'base/reset';
+@use 'base/typography';
+@use 'base/base';
+
+// 4. LAYOUT
+@use 'layout/header';
+@use 'layout/navigation';
+@use 'layout/sidebar';
+@use 'layout/footer';
+@use 'layout/grid';
+
+// 5. COMPONENTS
+@use 'components/buttons';
+@use 'components/forms';
+@use 'components/cards';
+@use 'components/modals';
+
+// 6. PAGES
+@use 'pages/home';
+@use 'pages/auth';
+@use 'pages/dashboard';
+
+// 7. THEMES
+@use 'themes/default';
