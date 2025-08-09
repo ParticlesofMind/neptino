@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In - Neptino</title>
+    <title>Sign Up - Neptino</title>
     <link rel="stylesheet" href="../../scss/main.scss">
 </head>
 <body class="body grid">
@@ -27,7 +27,7 @@
             </div>
             
             <div class="nav__actions-section">
-                <a href="signup.html" class="button button--secondary">Sign Up</a>
+                <a href="signin.html" class="button button--secondary">Sign In</a>
             </div>
         </nav>
     </header>
@@ -36,11 +36,36 @@
         <div class="container container--narrow">
             <div class="auth-form">
                 <header class="auth-form__header">
-                    <h1 class="heading heading--primary">Welcome back</h1>
-                    <p class="text text--lead">Sign in to your Neptino account</p>
+                    <h1 class="heading heading--primary">Join Neptino</h1>
+                    <p class="text text--lead">Create your account to get started</p>
                 </header>
                 
-                <form class="form" id="signin-form">
+                <form class="form" id="signup-form">
+                    <div class="form__group">
+                        <label for="first-name" class="form__label">First name</label>
+                        <input 
+                            type="text" 
+                            id="first-name" 
+                            name="firstName" 
+                            class="form__input" 
+                            placeholder="Enter your first name"
+                            autocomplete="off"
+                            required
+                        >
+                    </div>
+                    
+                    <div class="form__group">
+                        <label for="last-name" class="form__label">Last name</label>
+                        <input 
+                            type="text" 
+                            id="last-name" 
+                            name="lastName" 
+                            class="form__input" 
+                            placeholder="Enter your last name"
+                            autocomplete="off"
+                        >
+                    </div>
+                    
                     <div class="form__group">
                         <label for="email" class="form__label">Email address</label>
                         <input 
@@ -55,27 +80,37 @@
                     </div>
                     
                     <div class="form__group">
+                        <label for="role" class="form__label">I am a</label>
+                        <select id="role" name="role" class="form__select" required>
+                            <option value="">Select your role</option>
+                            <option value="student">Student</option>
+                            <option value="teacher">Teacher</option>
+                            <option value="administrator">Administrator</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form__group">
                         <label for="password" class="form__label">Password</label>
                         <input 
                             type="password" 
                             id="password" 
                             name="password" 
                             class="form__input" 
-                            placeholder="Enter your password"
-                            autocomplete="off"
+                            placeholder="Create a password"
+                            autocomplete="new-password"
                             required
                         >
                     </div>
                     
                     <button type="submit" class="button button--primary button--large">
-                        Sign In
+                        Create Account
                     </button>
                 </form>
                 
                 <footer class="auth-form__footer">
                     <p class="text text--small">
-                        Don't have an account yet? 
-                        <a href="signup.html" class="link link--primary">Sign up</a>
+                        Already have an account? 
+                        <a href="signin.html" class="link link--primary">Sign in</a>
                     </p>
                 </footer>
             </div>

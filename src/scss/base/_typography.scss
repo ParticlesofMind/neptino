@@ -79,6 +79,15 @@ body {
       color: $text-secondary;
     }
   }
+  
+  &--primary {
+    color: $primary-color;
+    font-weight: $font-weight-medium;
+    
+    &:hover {
+      color: darken($primary-color, 10%);
+    }
+  }
 }
 
 // ==========================================================================
