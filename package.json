@@ -22,13 +22,13 @@
   "author": "Benjamin Jack Laubacher",
   "license": "MIT",
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "vite": "^5.0.0",
-    "sass": "^1.70.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.45.0",
-    "prettier": "^3.0.0"
+    "prettier": "^3.0.0",
+    "sass": "^1.70.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0"
   },
   "repository": {
     "type": "git",
@@ -37,5 +37,8 @@
   "bugs": {
     "url": "https://github.com/[your-username]/neptino/issues"
   },
-  "homepage": "https://github.com/[your-username]/neptino#readme"
+  "homepage": "https://github.com/[your-username]/neptino#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.54.0"
+  }
 }
