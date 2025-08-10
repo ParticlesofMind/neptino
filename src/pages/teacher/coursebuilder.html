@@ -77,35 +77,48 @@
                 <!-- Essentials Article -->
                 <article id="essentials" class="article article--active">
                 <section class="card">
-             
-                    <form class="form">
+                    <form class="form" id="course-essentials-form">
                         <div class="form__group">
                             <label class="form__label" for="course-name">Course Name</label>
-                            <input class="form__input" type="text" id="course-name" placeholder="Enter course name">
+                            <input class="form__input" type="text" id="course-name" name="course_name" placeholder="Enter course name" required>
                         </div>
                         <div class="form__group">
                             <label class="form__label" for="course-description">Course Description</label>
-                            <textarea class="form__input" id="course-description" rows="4" placeholder="Describe what students will learn"></textarea>
+                            <textarea class="form__input" id="course-description" name="course_description" rows="4" placeholder="Describe what students will learn" required></textarea>
                         </div>
                         <div class="form__group">
-                            <label class="form__label" for="course-language">Course Language</label>
-                            <select class="form__input" id="course-language">
-                                <option value="">Select language</option>
-                                <option value="en">English</option>
-                                <option value="es">Spanish</option>
-                                <option value="fr">French</option>
-                                <option value="de">German</option>
-                                <option value="pt">Portuguese</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                        <div class="form__group">
-                            <label class="form__label" for="teacher">Teacher</label>
-                            <input class="form__input" type="text" id="teacher" placeholder="Teacher name">
+                            <label class="form__label" for="teacher-id">Teacher</label>
+                            <input class="form__input" type="text" id="teacher-id" name="teacher_id" placeholder="Loading..." readonly>
                         </div>
                         <div class="form__group">
                             <label class="form__label" for="institution">Institution</label>
-                            <input class="form__input" type="text" id="institution" placeholder="School or institution name">
+                            <input class="form__input" type="text" id="institution" name="institution" placeholder="Loading..." readonly>
+                        </div>
+                        <div class="form__group">
+                            <label class="form__label" for="course-language">Course Language</label>
+                            <select class="form__input" id="course-language" name="course_language" required>
+                                <option value="">Select language...</option>
+                            </select>
+                        </div>
+                        <div class="form__group">
+                            <label class="form__label" for="course-image">Course Image</label>
+                            <div class="file-upload">
+                                <input type="file" id="course-image" name="course_image" accept="image/*" class="file-upload__input" required>
+                                <label for="course-image" class="file-upload__label">
+                                    <span class="file-upload__icon">📁</span>
+                                    <span class="file-upload__text">Choose course image</span>
+                                </label>
+                                <div class="file-upload__preview" id="image-preview" style="display: none;">
+                                    <img id="preview-img" src="" alt="Course preview" class="file-upload__preview-image">
+                                    <button type="button" class="file-upload__remove" id="remove-image">×</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form__actions">
+                            <button type="submit" id="create-course-btn" class="button button--primary button--disabled" disabled>
+                                Create Course
+                            </button>
+                            <div class="form__status" id="form-status"></div>
                         </div>
                     </form>
                 </section>
@@ -359,5 +372,6 @@
 
     <script type="module" src="/src/scripts/app.ts"></script>
     <script type="module" src="/src/scripts/navigation/index.ts"></script>
+    <script type="module" src="/src/scripts/backend/courses/index.ts"></script>
 </body>
 </html>
