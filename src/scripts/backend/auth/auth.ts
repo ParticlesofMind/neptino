@@ -111,8 +111,9 @@ export function redirectUser(userRole: string) {
       window.location.href = studentUrl
       break
     default:
-      const defaultUrl = `${origin}/src/pages/shared/signin.html`
-      console.log('🔗 Redirecting to default (signin):', defaultUrl)
+      console.warn('❌ Unknown role, defaulting to student:', userRole)
+      const defaultUrl = `${origin}/src/pages/student/home.html`
+      console.log('🔗 Redirecting to default (student):', defaultUrl)
       window.location.href = defaultUrl
   }
 }
@@ -177,45 +178,18 @@ export function initAuth() {
       
       console.log('📍 On signin/signup page, proceeding with role-based redirect')
       
+      // Get role from user metadata - this is where the role is actually stored!
+      const userMetadata = session.user.user_metadata || {}
+      const userRole = userMetadata.user_role || 'student'
+      
+      console.log('📋 User metadata:', userMetadata)
+      console.log('� User role from metadata:', userRole)
+      
       // Add a small delay to ensure everything is ready
-      setTimeout(async () => {
-        try {
-          // Fetch user profile to get role
-          console.log('Fetching user profile for auth state change...')
-          const { data: profile, error: profileError } = await supabase
-            .from('users')
-            .select('role, first_name, last_name')
-            .eq('id', session.user.id)
-            .single()
-          
-          console.log('📋 Profile query (auth state) - data:', profile)
-          console.log('📋 Profile query (auth state) - error:', profileError)
-          
-          if (profileError) {
-            console.error('❌ Profile query error:', profileError.message, profileError.code)
-            
-            if (profileError.code === 'PGRST116') {
-              console.log('🔧 No profile found, creating one...')
-              await createUserProfile(session.user)
-            } else {
-              console.error('❌ Unexpected profile error, redirecting to student home as fallback')
-              redirectUser('student')
-            }
-          } else if (!profile) {
-            console.log('🔧 Profile is null, creating one...')
-            await createUserProfile(session.user)
-          } else if (profile?.role) {
-            console.log('✅ Profile found, redirecting to:', profile.role)
-            redirectUser(profile.role)
-          } else {
-            console.error('❌ Profile exists but no role found, redirecting to student home as fallback')
-            redirectUser('student')
-          }
-        } catch (error) {
-          console.error('❌ Unexpected error in auth state change:', error)
-          redirectUser('student') // Fallback to student
-        }
-      }, 500) // 500ms delay to ensure everything is ready
+      setTimeout(() => {
+        console.log('✅ Redirecting based on metadata role:', userRole)
+        redirectUser(userRole)
+      }, 500)
       
     } else if (event === 'SIGNED_OUT') {
       currentUser = null

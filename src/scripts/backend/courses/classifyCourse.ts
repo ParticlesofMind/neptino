@@ -141,6 +141,82 @@ export function isValidClassification(validation: ClassificationValidation): boo
 // COURSE CLASSIFICATION CRUD OPERATIONS
 // ==========================================================================
 
+export async function savePartialCourseClassification(
+  courseId: string, 
+  data: Partial<CourseClassificationData>
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Enhanced authentication check with session validation
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+      return { success: false, error: 'Authentication session error' };
+    }
+
+    if (!session?.user) {
+      console.error('No valid session or user found');
+      return { success: false, error: 'User not authenticated - please sign in again' };
+    }
+
+    const user = session.user;
+    console.log('Saving partial course classification for user:', user.id, 'course:', courseId);
+
+    // Verify course ownership
+    const { data: courseData, error: courseError } = await supabase
+      .from('courses')
+      .select('teacher_id')
+      .eq('id', courseId)
+      .single();
+
+    if (courseError) {
+      console.error('Error fetching course:', courseError);
+      return { success: false, error: 'Course not found' };
+    }
+
+    if (courseData.teacher_id !== user.id) {
+      return { success: false, error: 'Unauthorized - you can only modify your own courses' };
+    }
+
+    // Prepare classification data for JSONB column (allow partial data)
+    const classificationData: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    // Only include fields that have values
+    if (data.class_year?.trim()) classificationData.class_year = data.class_year.trim();
+    if (data.curricular_framework?.trim()) classificationData.curricular_framework = data.curricular_framework.trim();
+    if (data.domain?.trim()) classificationData.domain = data.domain.trim();
+    if (data.subject?.trim()) classificationData.subject = data.subject.trim();
+    if (data.topic?.trim()) classificationData.topic = data.topic.trim();
+    if (data.subtopic?.trim()) classificationData.subtopic = data.subtopic.trim();
+    if (data.previous_course?.trim()) classificationData.previous_course = data.previous_course.trim();
+    if (data.current_course?.trim()) classificationData.current_course = data.current_course.trim();
+    if (data.next_course?.trim()) classificationData.next_course = data.next_course.trim();
+
+    console.log('Saving partial course classification data:', classificationData);
+
+    // Update course with classification data in the JSONB column
+    const { error: updateError } = await supabase
+      .from('courses')
+      .update({ 
+        classification_data: classificationData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', courseId);
+
+    if (updateError) {
+      console.error('Error updating course classification:', updateError);
+      return { success: false, error: `Failed to update classification: ${updateError.message}` };
+    }
+
+    console.log('Partial course classification saved successfully');
+    return { success: true };
+  } catch (error) {
+    console.error('Error in savePartialCourseClassification:', error);
+    return { success: false, error: 'Unexpected error occurred' };
+  }
+}
+
 export async function updateCourseClassification(
   courseId: string, 
   data: CourseClassificationData
@@ -183,8 +259,8 @@ export async function updateCourseClassification(
       return { success: false, error: 'Unauthorized - you can only modify your own courses' };
     }
 
-    // Prepare classification update data
-    const classificationUpdateData = {
+    // Prepare classification data for JSONB column
+    const classificationData = {
       class_year: data.class_year.trim(),
       curricular_framework: data.curricular_framework.trim(),
       domain: data.domain.trim(),
@@ -197,12 +273,15 @@ export async function updateCourseClassification(
       updated_at: new Date().toISOString(),
     };
 
-    console.log('Updating course classification:', classificationUpdateData);
+    console.log('Updating course classification data:', classificationData);
 
-    // Update course with classification data
+    // Update course with classification data in the JSONB column
     const { error: updateError } = await supabase
       .from('courses')
-      .update(classificationUpdateData)
+      .update({ 
+        classification_data: classificationData,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', courseId);
 
     if (updateError) {
@@ -222,17 +301,7 @@ export async function getCourseClassification(courseId: string): Promise<CourseC
   try {
     const { data, error } = await supabase
       .from('courses')
-      .select(`
-        class_year,
-        curricular_framework,
-        domain,
-        subject,
-        topic,
-        subtopic,
-        previous_course,
-        current_course,
-        next_course
-      `)
+      .select('classification_data')
       .eq('id', courseId)
       .single();
 
@@ -241,7 +310,21 @@ export async function getCourseClassification(courseId: string): Promise<CourseC
       return null;
     }
 
-    return data;
+    // Extract classification data from JSONB column
+    const classificationData = data?.classification_data || {};
+    
+    // Return the classification data with proper structure
+    return {
+      class_year: classificationData.class_year || '',
+      curricular_framework: classificationData.curricular_framework || '',
+      domain: classificationData.domain || '',
+      subject: classificationData.subject || '',
+      topic: classificationData.topic || '',
+      subtopic: classificationData.subtopic || undefined,
+      previous_course: classificationData.previous_course || undefined,
+      current_course: classificationData.current_course || undefined,
+      next_course: classificationData.next_course || undefined,
+    };
   } catch (error) {
     console.error('Error in getCourseClassification:', error);
     return null;

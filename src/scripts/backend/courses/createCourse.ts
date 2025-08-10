@@ -111,9 +111,7 @@ export async function createCourse(data: CourseCreationData): Promise<{ success:
       course_language: data.course_language.trim(),
       teacher_id: user.id, // Use teacher_id from your schema
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      canvas_count: 1, // Default value
-      lesson_days_count: 1 // Default value
+      updated_at: new Date().toISOString()
     };
 
     console.log('Inserting course data:', courseInsertData);

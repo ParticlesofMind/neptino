@@ -102,16 +102,22 @@ export const SECTION_CONFIGS: { [key: string]: SectionConfig } = {
   
   classification: {
     section: 'classification',
-    requiredFields: ['class_year', 'subject'],
+    requiredFields: ['class_year', 'domain', 'subject'],
     jsonbField: 'classification_data',
     fields: [
       { 
         name: 'class_year', 
         type: 'select', 
         required: true,
-        options: ['1', '2', '3', '4', 'graduate']
+        options: ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6', 'Year 7', 'Year 8', 'Year 9', 'Year 10', 'Year 11', 'Year 12', 'Undergraduate', 'Graduate', 'Postgraduate']
       },
-      { name: 'curricular_framework', type: 'text', required: false },
+      { 
+        name: 'curricular_framework', 
+        type: 'select', 
+        required: false,
+        options: ['National Curriculum', 'International Baccalaureate', 'Cambridge International', 'Advanced Placement', 'Custom Framework', 'Other']
+      },
+      { name: 'domain', type: 'text', required: true },
       { name: 'subject', type: 'text', required: true },
       { name: 'topic', type: 'text', required: false },
       { name: 'subtopic', type: 'text', required: false },

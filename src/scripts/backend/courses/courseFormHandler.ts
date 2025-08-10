@@ -116,6 +116,11 @@ export class CourseFormHandler {
       console.log(`✅ Loaded course data:`, courseData);
       this.populateFormFields(courseData);
 
+      // Show course code if we're in essentials section and have a course ID
+      if (this.sectionConfig.section === 'essentials') {
+        this.showCourseCode(this.currentCourseId);
+      }
+
       setTimeout(() => this.validateForm(), 100);
     } catch (error) {
       console.error('Error loading existing course data:', error);
@@ -131,6 +136,20 @@ export class CourseFormHandler {
       if (courseData.course_image) {
         this.displayExistingImage(courseData.course_image);
       }
+    } else if (this.sectionConfig.section === 'classification') {
+      // Handle classification data from classification_data JSONB field
+      if (courseData.classification_data) {
+        const classificationData = courseData.classification_data;
+        this.setFieldValue('class_year', classificationData.class_year);
+        this.setFieldValue('curricular_framework', classificationData.curricular_framework);
+        this.setFieldValue('domain', classificationData.domain);
+        this.setFieldValue('subject', classificationData.subject);
+        this.setFieldValue('topic', classificationData.topic);
+        this.setFieldValue('subtopic', classificationData.subtopic);
+        this.setFieldValue('previous_course', classificationData.previous_course);
+        this.setFieldValue('current_course', classificationData.current_course);
+        this.setFieldValue('next_course', classificationData.next_course);
+      }
     } else if (this.sectionConfig.jsonbField && courseData[this.sectionConfig.jsonbField]) {
       const sectionData = courseData[this.sectionConfig.jsonbField];
       
@@ -145,6 +164,22 @@ export class CourseFormHandler {
   private setFieldValue(fieldName: string, value: any): void {
     if (!this.form || value === null || value === undefined) return;
 
+    // Handle classification dropdown fields
+    if (this.sectionConfig.section === 'classification') {
+      const hiddenInput = this.form.querySelector(`#${fieldName}-value`) as HTMLInputElement;
+      const dropdownTrigger = this.form.querySelector(`#${fieldName}-dropdown`);
+      const dropdownLabel = dropdownTrigger?.querySelector('.dropdown__label');
+      
+      if (hiddenInput && dropdownTrigger && dropdownLabel) {
+        hiddenInput.value = value;
+        dropdownLabel.textContent = this.getDisplayTextForValue(fieldName, value);
+        dropdownLabel.classList.remove('dropdown__label--placeholder');
+        dropdownTrigger.classList.add('dropdown__trigger--success');
+        return;
+      }
+    }
+
+    // Handle regular form fields
     const field = this.form.querySelector(`[name="${fieldName}"]`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
     if (!field) return;
 
@@ -160,6 +195,21 @@ export class CourseFormHandler {
     } catch (error) {
       console.warn(`Failed to set field ${fieldName}:`, error);
     }
+  }
+
+  private getDisplayTextForValue(fieldName: string, value: string): string {
+    // For class year, return the value as is since it's user-friendly
+    if (fieldName === 'class_year') {
+      return value;
+    }
+    
+    // For curricular framework, return the value as is
+    if (fieldName === 'curricular_framework') {
+      return value;
+    }
+    
+    // For other fields, return the value (can be enhanced with lookup tables later)
+    return value || '';
   }
 
   // ==========================================================================
@@ -296,6 +346,7 @@ export class CourseFormHandler {
         sessionStorage.setItem('currentCourseId', result.courseId);
         
         this.showStatus('Course created successfully! 🎉', 'success');
+        this.showCourseCode(result.courseId);
         this.navigateToNextSection();
       } else {
         throw new Error(result.error || 'Failed to create course');
@@ -386,6 +437,54 @@ export class CourseFormHandler {
       statusDiv.textContent = message;
       statusDiv.className = `form__status form__status--${type}`;
     }
+  }
+
+  private showCourseCode(courseId: string): void {
+    const courseCodeDisplay = this.form?.querySelector('#course-code-display') as HTMLElement;
+    const courseCodeValue = this.form?.querySelector('#course-code-value') as HTMLElement;
+    const courseCodeCopyBtn = this.form?.querySelector('#course-code-copy-btn') as HTMLElement;
+
+    if (courseCodeDisplay && courseCodeValue && courseCodeCopyBtn) {
+      courseCodeValue.textContent = courseId;
+      courseCodeDisplay.style.display = 'block';
+
+      // Only add copy functionality if not already added
+      if (!courseCodeCopyBtn.hasAttribute('data-copy-listener')) {
+        courseCodeCopyBtn.setAttribute('data-copy-listener', 'true');
+        
+        courseCodeCopyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(courseId);
+            this.showCopyFeedback(courseCodeCopyBtn);
+          } catch (err) {
+            console.error('Failed to copy course code:', err);
+            // Fallback for older browsers
+            this.fallbackCopy(courseId);
+            this.showCopyFeedback(courseCodeCopyBtn);
+          }
+        });
+      }
+    }
+  }
+
+  private showCopyFeedback(button: HTMLElement): void {
+    const originalContent = button.innerHTML;
+    button.innerHTML = '<span>✓</span>';
+    button.style.color = '#10b981'; // green
+    
+    setTimeout(() => {
+      button.innerHTML = originalContent;
+      button.style.color = '';
+    }, 1500);
+  }
+
+  private fallbackCopy(text: string): void {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
   }
 
   private navigateToNextSection(): void {

@@ -10,8 +10,7 @@
 
 .dropdown {
   position: relative;
-  display: inline-block;
-  width: 100%;
+  width: 250px;
 
   &__trigger {
     width: 100%;
@@ -274,8 +273,35 @@
   // ==========================================================================
 
   &--classification {
+    width: 100%;
+    min-width: 180px; // Ensure consistent minimum width
+    
+    .dropdown__trigger {
+      font-size: $font-size-sm; // Smaller font to prevent resizing
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-height: 44px; // Fixed height
+    }
+    
+    .dropdown__label {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      text-align: left;
+    }
+    
     .dropdown__menu {
       max-height: 400px;
+      font-size: $font-size-sm; // Consistent font size in options
+    }
+
+    .dropdown__option {
+      font-size: $font-size-sm;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .dropdown__option-group {
@@ -312,10 +338,44 @@
       margin-bottom: 0;
     }
   }
+  
+  &--with-arrows {
+    align-items: flex-end; // Align arrows with dropdown buttons
+    gap: $spacing-3;
+  }
 
   @media (max-width: #{$breakpoint-md - 1px}) {
     flex-direction: column;
     gap: $spacing-3;
+    
+    &--with-arrows {
+      .dropdown-arrow {
+        display: none; // Hide arrows on mobile
+      }
+    }
+  }
+}
+
+// ==========================================================================
+// DROPDOWN ARROWS
+// ==========================================================================
+
+.dropdown-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $primary-color;
+  margin-bottom: 32px; // Align with dropdown trigger buttons
+  padding: 0 $spacing-2;
+  user-select: none;
+  min-width: 24px;
+  
+  @media (max-width: #{$breakpoint-md - 1px}) {
+    transform: rotate(90deg); // Turn arrows vertical on mobile
+    margin-bottom: 0;
+    margin: $spacing-1 0;
   }
 }
 

@@ -117,9 +117,23 @@
                             </div>
                         </div>
                         <div class="form__actions">
-                            <button type="submit" id="create-course-btn" class="button button--primary button--disabled" disabled>
-                                Create Course
-                            </button>
+                            <div class="form__actions-row">
+                                <button type="submit" id="create-course-btn" class="button button--primary button--disabled" disabled>
+                                    Create Course
+                                </button>
+                                <div class="course-code-display" id="course-code-display" style="display: none;">
+                                    <div class="course-code-container">
+                                        <span class="course-code-label">Course Code:</span>
+                                        <span class="course-code-value" id="course-code-value"></span>
+                                        <button type="button" class="course-code-copy-btn" id="course-code-copy-btn" title="Copy course code">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="form__status" id="form-status"></div>
                         </div>
                     </form>
@@ -162,7 +176,7 @@
                         </div>
 
                         <!-- Row 2: Domain + Subject + Topic + Subtopic -->
-                        <div class="dropdown-group dropdown-group--classification-row">
+                        <div class="dropdown-group dropdown-group--classification-row dropdown-group--with-arrows">
                             <div class="form__group">
                                 <label class="form__label" for="domain-dropdown">Domain</label>
                                 <div class="dropdown dropdown--classification">
@@ -176,6 +190,8 @@
                                 </div>
                                 <input type="hidden" name="domain" id="domain-value">
                             </div>
+                            
+                            <div class="dropdown-arrow">→</div>
                             
                             <div class="form__group">
                                 <label class="form__label" for="subject-dropdown">Subject</label>
@@ -191,6 +207,8 @@
                                 <input type="hidden" name="subject" id="subject-value">
                             </div>
                             
+                            <div class="dropdown-arrow">→</div>
+                            
                             <div class="form__group">
                                 <label class="form__label" for="topic-dropdown">Topic</label>
                                 <div class="dropdown dropdown--classification">
@@ -204,6 +222,8 @@
                                 </div>
                                 <input type="hidden" name="topic" id="topic-value">
                             </div>
+                            
+                            <div class="dropdown-arrow">→</div>
                             
                             <div class="form__group">
                                 <label class="form__label" for="subtopic-dropdown">Subtopic <span class="text text--muted">(Optional)</span></label>
@@ -268,11 +288,11 @@
                             </div>
                         </div>
 
-                        <div class="form__actions">
-                            <button type="submit" id="save-classification-btn" class="button button--primary">
-                                Save Classification
-                            </button>
-                            <div class="form__status" id="classification-form-status"></div>
+                        <!-- Last saved indicator -->
+                        <div class="form__footer">
+                            <div class="save-indicator" id="classification-last-saved">
+                                <span class="save-indicator__text" id="classification-save-status">Changes will be saved automatically</span>
+                            </div>
                         </div>
                     </form>
                 </section>
@@ -479,6 +499,6 @@
     <script type="module" src="/src/scripts/app.ts"></script>
     <script type="module" src="/src/scripts/navigation/index.ts"></script>
     <script type="module" src="/src/scripts/backend/courses/index.ts"></script>
-    <script type="module" src="/src/scripts/pages/classificationFormHandler.ts"></script>
+    <script type="module" src="/src/scripts/backend/courses/classificationFormHandler.ts"></script>
 </body>
 </html>

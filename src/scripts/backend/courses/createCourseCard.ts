@@ -2,7 +2,7 @@
 // COURSES PAGE - Load and display user courses with navigation
 // ==========================================================================
 
-import { getUserCourses } from '../backend/courses/createCourse';
+import { getUserCourses } from './createCourse';
 
 interface Course {
   id: string;
