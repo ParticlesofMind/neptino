@@ -301,7 +301,19 @@
             <!-- Templates Article -->
             <article id="templates" class="article">
                 <section class="card">
-                    <!-- Create Template Button -->
+                    <!-- Template Action Buttons -->
+                    <div class="template-header">
+                        <div class="template-header__actions">
+                            <button id="create-template-btn" class="button button--primary">
+                                <span class="button__icon">+</span>
+                                Create New Template
+                            </button>
+                            <button id="load-template-btn" class="button button--secondary">
+                                <span class="button__icon">↗</span>
+                                Load Template
+                            </button>
+                        </div>
+                    </div>
                
                     <!-- Template Builder Layout -->
                     <div class="template-layout">
@@ -309,15 +321,10 @@
                             <div class="template-config-placeholder">
                                 <h3 class="heading heading--tertiary">Template Configuration</h3>
                                 <p class="text">Select or create a template to configure its settings.</p>
-                                <div class="template-actions">
-                                    <button class="btn btn--secondary btn--small" onclick="TemplateManager.loadExistingTemplates()">
-                                        📋 Load Existing Templates
-                                    </button>
-                                </div>
                             </div>
                         </div>
                         <div class="template-preview">
-                            <h3 class="heading heading--tertiary">Template Preview</h3>
+                        
                             <div class="preview-container">
                                 <div class="preview-placeholder">
                                     <h4 class="preview-placeholder__title">No Template Selected</h4>
@@ -334,7 +341,7 @@
                 <div class="modal__content">
                     <div class="modal__header">
                         <h2 class="modal__title">Create New Template</h2>
-                        <button class="modal__close" type="button">&times;</button>
+                        <button class="modal__close" type="button" onclick="TemplateManager.hideCreateTemplateModal()">&times;</button>
                     </div>
                     <div class="modal__body">
                         <form id="create-template-form" class="form">
@@ -354,10 +361,63 @@
                                 <textarea id="template-description" name="template-description" class="form__input" rows="3" placeholder="Describe your template..."></textarea>
                             </div>
                             <div class="form__actions">
-                                <button type="button" class="btn btn--secondary modal__close">Cancel</button>
+                                <button type="button" class="btn btn--secondary modal__close" onclick="TemplateManager.hideCreateTemplateModal()">Cancel</button>
                                 <button type="submit" class="btn btn--primary">Create Template</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Load Template Modal -->
+            <div id="load-template-modal" class="modal" style="display: none;">
+                <div class="modal__content modal__content--large">
+                    <div class="modal__header">
+                        <h2 class="modal__title">Load Existing Template</h2>
+                        <button class="modal__close" type="button" onclick="TemplateManager.hideLoadTemplateModal()">&times;</button>
+                    </div>
+                    <div class="modal__body">
+                        <div class="template-loader">
+                            <div class="template-loader__search">
+                                <input type="text" id="template-search" class="form__input" placeholder="Search templates..." />
+                                <div class="template-filters">
+                                    <select id="template-type-filter" class="form__input form__input--small">
+                                        <option value="">All Types</option>
+                                        <option value="lesson">Lesson</option>
+                                    </select>
+                                    <select id="template-sort" class="form__input form__input--small">
+                                        <option value="created_at">Newest First</option>
+                                        <option value="name">Name (A-Z)</option>
+                                        <option value="modified_at">Recently Modified</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="template-list-container">
+                                <div id="template-loading" class="template-loading" style="display: none;">
+                                    <div class="loading-spinner"></div>
+                                    <p>Loading your templates...</p>
+                                </div>
+                                <div id="template-list-content" class="template-list-grid">
+                                    <!-- Templates will be loaded here -->
+                                </div>
+                                <div id="no-templates-message" class="no-templates" style="display: none;">
+                                    <div class="no-templates__icon">!</div>
+                                    <h3>No Templates Found</h3>
+                                    <p>You haven't created any templates yet. Create your first template to get started!</p>
+                                    <button class="button button--primary" onclick="TemplateManager.hideLoadTemplateModal(); TemplateManager.showCreateTemplateModal();">
+                                        Create First Template
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal__footer">
+                        <button type="button" class="button button--secondary" onclick="TemplateManager.hideLoadTemplateModal()">
+                            Cancel
+                        </button>
+                        <button type="button" id="load-selected-template" class="button button--primary" disabled onclick="TemplateManager.loadSelectedTemplate()">
+                            Load Template
+                        </button>
                     </div>
                 </div>
             </div>

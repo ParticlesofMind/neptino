@@ -5,6 +5,7 @@
 export class AsideNavigation {
   private asideLinks: NodeListOf<HTMLAnchorElement>;
   private contentSections: NodeListOf<HTMLElement>;
+  private readonly STORAGE_KEY = 'coursebuilder_active_section';
 
   constructor() {
     this.asideLinks = document.querySelectorAll('.aside__link');
@@ -27,8 +28,48 @@ export class AsideNavigation {
       return;
     }
     
+    // Restore last active section before binding events
+    this.restoreActiveSection();
+    
     this.bindEvents();
     console.log('Aside navigation initialized');
+  }
+
+  /**
+   * Restores the last active section from localStorage
+   */
+  private restoreActiveSection(): void {
+    const savedSection = localStorage.getItem(this.STORAGE_KEY);
+    
+    if (savedSection) {
+      console.log('Restoring saved section:', savedSection);
+      
+      // Find the link and section elements
+      const savedLink = document.querySelector(`[data-section="${savedSection}"]`) as HTMLAnchorElement;
+      const savedSectionElement = document.getElementById(savedSection);
+      
+      if (savedLink && savedSectionElement) {
+        // Remove all active states first
+        this.removeActiveStates();
+        
+        // Set the saved section as active
+        this.setActiveStates(savedLink, savedSection);
+        
+        console.log('Successfully restored section:', savedSection);
+      } else {
+        console.warn('Saved section not found in DOM:', savedSection);
+      }
+    } else {
+      console.log('No saved section found, using default');
+    }
+  }
+
+  /**
+   * Saves the active section to localStorage
+   */
+  private saveActiveSection(sectionId: string): void {
+    localStorage.setItem(this.STORAGE_KEY, sectionId);
+    console.log('Saved active section to localStorage:', sectionId);
   }
 
   private bindEvents(): void {
@@ -63,10 +104,16 @@ export class AsideNavigation {
     if (this.isInCourseBuilderSetup()) {
       this.removeActiveStates();
       this.setActiveStates(target, targetSection);
+      
+      // Save the active section to localStorage
+      this.saveActiveSection(targetSection);
     } else {
       // For home page or other contexts, handle normally
       this.removeActiveStates();
       this.setActiveStates(target, targetSection);
+      
+      // Save the active section to localStorage
+      this.saveActiveSection(targetSection);
     }
   }
 
