@@ -115,10 +115,14 @@ export class CourseBuilder {
 // AUTO-INITIALIZATION
 // ==========================================================================
 
-// Initialize when DOM is ready
+// Initialize when DOM is ready - but only once
+let courseBuilderInitialized = false;
+
 document.addEventListener('DOMContentLoaded', () => {
-  // Only initialize if we're on the coursebuilder page
-  if (document.querySelector('.section#setup')) {
+  // Only initialize if we're on the coursebuilder page and not already initialized
+  if (document.querySelector('.section#setup') && !courseBuilderInitialized) {
+    courseBuilderInitialized = true;
     new CourseBuilder();
+    console.log('CourseBuilder initialized from index.ts');
   }
 });

@@ -8,6 +8,7 @@ import { supabase } from '../supabase';
 export interface CourseCreationData {
   course_name: string;
   course_description: string;
+  course_language: string;
   course_image?: File | null;
   // teacher_id will be auto-filled from auth
   // Other fields will have defaults or be added later
@@ -17,6 +18,7 @@ export interface CourseCreationData {
 export interface CourseValidation {
   course_name: boolean;
   course_description: boolean;
+  course_language: boolean;
   course_image: boolean;
 }
 
@@ -28,6 +30,7 @@ export function validateCourseData(data: Partial<CourseCreationData>): CourseVal
   return {
     course_name: Boolean(data.course_name && data.course_name.trim().length >= 3),
     course_description: Boolean(data.course_description && data.course_description.trim().length >= 10),
+    course_language: Boolean(data.course_language && data.course_language.trim()),
     course_image: Boolean(data.course_image) // Course image is required
   };
 }
@@ -105,6 +108,7 @@ export async function createCourse(data: CourseCreationData): Promise<{ success:
     const courseInsertData = {
       course_name: data.course_name.trim(),
       course_description: data.course_description.trim(),
+      course_language: data.course_language.trim(),
       teacher_id: user.id, // Use teacher_id from your schema
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
