@@ -361,32 +361,73 @@ export class CourseFormHandler {
     try {
       this.showStatus('Creating course...', 'loading');
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      // Enhanced authentication check with session validation
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error('Authentication session error');
+      }
+
+      if (!session?.user) {
+        console.error('No valid session or user found');
+        throw new Error('User not authenticated - please sign in again');
+      }
+
+      const user = session.user;
+      console.log('Creating course for user:', user.id);
+
+      // Ensure user profile exists in users table
+      try {
+        console.log('Ensuring user profile exists...');
+        const { error: profileError } = await supabase.rpc('ensure_user_profile', {
+          user_id: user.id,
+          user_email: user.email,
+          user_role: 'teacher'
+        });
+
+        if (profileError) {
+          console.warn('Error ensuring user profile:', profileError);
+          // Try to create profile manually as fallback
+          await this.ensureUserProfileFallback(user);
+        }
+      } catch (profileErr) {
+        console.warn('RPC call failed, using fallback method:', profileErr);
+        await this.ensureUserProfileFallback(user);
+      }
 
       const formData = this.getFormData();
       
       // Create course record
+      const courseInsertData = {
+        course_name: formData.course_name,
+        course_description: formData.course_description,
+        teacher_id: user.id,
+        canvas_count: 1,
+        lesson_days_count: 1
+      };
+
+      console.log('Inserting course data:', courseInsertData);
+
       const { data: courseData, error } = await supabase
         .from('courses')
-        .insert({
-          course_name: formData.course_name,
-          course_description: formData.course_description,
-          teacher_id: user.id,
-          canvas_count: 1,
-          lesson_days_count: 1
-        })
+        .insert(courseInsertData)
         .select('id')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error creating course:', error);
+        throw new Error(`Failed to create course: ${error.message}`);
+      }
 
       const courseId = courseData.id;
       this.currentCourseId = courseId;
       sessionStorage.setItem('currentCourseId', courseId);
 
+      console.log('Course created successfully with ID:', courseId);
+
       // Upload image if provided
       if (formData.course_image instanceof File) {
+        console.log('Uploading course image...');
         await this.uploadCourseImage(formData.course_image, courseId);
       }
 
@@ -395,7 +436,42 @@ export class CourseFormHandler {
 
     } catch (error) {
       console.error('Error creating course:', error);
-      this.showStatus('Failed to create course', 'error');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      this.showStatus(`Failed to create course: ${errorMessage}`, 'error');
+    }
+  }
+
+  // Fallback method to ensure user profile exists
+  private async ensureUserProfileFallback(user: any): Promise<void> {
+    try {
+      const userMetadata = user.user_metadata || {};
+      const fullName = userMetadata.full_name || user.email?.split('@')[0] || 'User';
+      const userRole = userMetadata.user_role || 'teacher';
+      
+      const nameParts = fullName.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      const { error } = await supabase
+        .from('users')
+        .upsert({
+          id: user.id,
+          first_name: firstName,
+          last_name: lastName,
+          email: user.email,
+          role: userRole,
+          institution: 'Independent'
+        }, {
+          onConflict: 'id'
+        });
+
+      if (error) {
+        console.error('Failed to create user profile:', error);
+      } else {
+        console.log('User profile ensured via fallback method');
+      }
+    } catch (error) {
+      console.error('Error in ensureUserProfileFallback:', error);
     }
   }
 
