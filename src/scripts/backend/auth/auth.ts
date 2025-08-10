@@ -162,16 +162,20 @@ export function initAuth() {
     if (event === 'SIGNED_IN' && session?.user) {
       currentUser = session.user
       
-      // Check if we're already on a dashboard page to prevent infinite redirects
+      // Check current page context - ONLY redirect from actual signin/signup pages
       const currentPath = window.location.pathname
-      const isDashboardPage = currentPath.includes('/pages/student/home.html') || 
-                             currentPath.includes('/pages/teacher/home.html') || 
-                             currentPath.includes('/pages/admin/home.html')
+      console.log('Current path:', currentPath)
       
-      if (isDashboardPage) {
-        console.log('✅ Already on dashboard page, skipping redirect')
+      // ONLY redirect from signin and signup pages - nowhere else!
+      const shouldRedirect = currentPath.includes('/pages/shared/signin.html') ||
+                            currentPath.includes('/pages/shared/signup.html')
+      
+      if (!shouldRedirect) {
+        console.log('✅ Not on signin/signup page, skipping auto-redirect')
         return
       }
+      
+      console.log('📍 On signin/signup page, proceeding with role-based redirect')
       
       // Add a small delay to ensure everything is ready
       setTimeout(async () => {
@@ -215,14 +219,19 @@ export function initAuth() {
       
     } else if (event === 'SIGNED_OUT') {
       currentUser = null
-      console.log('🚪 User signed out, redirecting to signin')
+      console.log('🚪 User signed out')
       
-      // Only redirect if not already on a public page
+      // Only redirect to signin if we're on a protected page
       const currentPath = window.location.pathname
-      const isPublicPage = currentPath.includes('/pages/shared/') || currentPath === '/' || currentPath.includes('/index.html')
+      const isProtectedPage = currentPath.includes('/pages/student/') || 
+                             currentPath.includes('/pages/teacher/') || 
+                             currentPath.includes('/pages/admin/')
       
-      if (!isPublicPage) {
+      if (isProtectedPage) {
+        console.log('📍 On protected page after sign out, redirecting to signin')
         window.location.href = '/src/pages/shared/signin.html'
+      } else {
+        console.log('📍 Not on protected page, staying put')
       }
     }
   })
