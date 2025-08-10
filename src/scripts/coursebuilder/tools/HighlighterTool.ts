@@ -13,53 +13,74 @@ interface HighlighterSettings {
 }
 
 export class HighlighterTool extends BaseTool {
-  private isDrawing: boolean = false;
+  public isDrawing: boolean = false; // Changed to public so ToolManager can access it
   private currentStroke: Graphics | null = null;
 
   constructor() {
     super('highlighter', 'crosshair');
     this.settings = {
-      color: '#ffff00',
-      opacity: 0.5,
-      size: 12
+      color: '#ffff00', // Bright yellow
+      opacity: 0.8, // Increased opacity for better visibility
+      size: 20 // Larger size for better visibility
     };
   }
 
   onPointerDown(event: FederatedPointerEvent, container: Container): void {
     this.isDrawing = true;
+    console.log(`🖍️ HIGHLIGHTER: Started drawing at (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`);
+    console.log(`🖍️ HIGHLIGHTER: Settings - Color: ${this.settings.color}, Size: ${this.settings.size}, Opacity: ${this.settings.opacity}`);
     
     // Create new graphics object for this stroke
     this.currentStroke = new Graphics();
     this.currentStroke.eventMode = 'static';
     this.currentStroke.alpha = this.settings.opacity;
     
-    const point = event.global;
+    // Use local coordinates relative to the container
+    const localPoint = container.toLocal(event.global);
+    console.log(`🖍️ HIGHLIGHTER: Container local point: (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`);
     
-    // Set stroke style with larger width for highlighter effect
+    // Set stroke style with proper PixiJS v8 syntax
     const color = this.hexToNumber(this.settings.color);
-    this.currentStroke.stroke({ 
-      width: this.settings.size, 
-      color,
-      cap: 'round',
-      join: 'round'
-    });
+    console.log(`🖍️ HIGHLIGHTER: Setting stroke - color: ${color} (from ${this.settings.color}), width: ${this.settings.size}, opacity: ${this.settings.opacity}`);
     
-    // Start the path
-    this.currentStroke.moveTo(point.x, point.y);
+    // Start the drawing path
+    this.currentStroke
+      .moveTo(localPoint.x, localPoint.y)
+      .stroke({ 
+        width: this.settings.size, 
+        color,
+        cap: 'round',
+        join: 'round'
+      });
     
     // Add to container
     container.addChild(this.currentStroke);
+    console.log(`🖍️ HIGHLIGHTER: Graphics object created and added to container with ${container.children.length} total children`);
   }
 
   onPointerMove(event: FederatedPointerEvent, container: Container): void {
+    // Only respond to move events when actively drawing
     if (!this.isDrawing || !this.currentStroke) return;
     
-    const point = event.global;
-    // Draw line to new point
-    this.currentStroke.lineTo(point.x, point.y);
+    // Use local coordinates relative to the container
+    const localPoint = container.toLocal(event.global);
+    console.log(`🖍️ HIGHLIGHTER: Drawing to (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`);
+    
+    // Continue the stroke with proper PixiJS v8 syntax
+    this.currentStroke
+      .lineTo(localPoint.x, localPoint.y)
+      .stroke({ 
+        width: this.settings.size, 
+        color: this.hexToNumber(this.settings.color),
+        cap: 'round',
+        join: 'round'
+      });
   }
 
   onPointerUp(): void {
+    if (this.isDrawing) {
+      console.log(`🖍️ HIGHLIGHTER: Finished drawing stroke`);
+    }
     this.isDrawing = false;
     this.currentStroke = null;
   }

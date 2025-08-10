@@ -8,7 +8,7 @@ import { BaseTool } from './ToolInterface';
 
 export class SelectionTool extends BaseTool {
   private selectedObject: Graphics | null = null;
-  private isDragging: boolean = false;
+  public isDragging: boolean = false; // Changed to public so ToolManager can access it
   private dragOffset: { x: number; y: number } = { x: 0, y: 0 };
 
   constructor() {
@@ -16,10 +16,13 @@ export class SelectionTool extends BaseTool {
   }
 
   onPointerDown(event: FederatedPointerEvent, container: Container): void {
+    console.log(`🎯 SELECTION: Pointer down at (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`);
+    
     // Find the object under the pointer
     const hitObject = this.findHitObject(event, container);
     
     if (hitObject && hitObject !== container) {
+      console.log(`🎯 SELECTION: Found object to select`);
       this.selectObject(hitObject);
       this.isDragging = true;
       
@@ -29,12 +32,15 @@ export class SelectionTool extends BaseTool {
         x: point.x - hitObject.x,
         y: point.y - hitObject.y
       };
+      console.log(`🎯 SELECTION: Started dragging with offset (${Math.round(this.dragOffset.x)}, ${Math.round(this.dragOffset.y)})`);
     } else {
+      console.log(`🎯 SELECTION: No object found, deselecting`);
       this.deselectObject();
     }
   }
 
-  onPointerMove(event: FederatedPointerEvent, container: Container): void {
+  onPointerMove(event: FederatedPointerEvent, _container: Container): void {
+    // Only respond to move events when actively dragging
     if (this.isDragging && this.selectedObject) {
       const point = event.global;
       this.selectedObject.x = point.x - this.dragOffset.x;
@@ -42,7 +48,7 @@ export class SelectionTool extends BaseTool {
     }
   }
 
-  onPointerUp(event: FederatedPointerEvent, container: Container): void {
+  onPointerUp(_event: FederatedPointerEvent, _container: Container): void {
     this.isDragging = false;
   }
 
@@ -70,14 +76,14 @@ export class SelectionTool extends BaseTool {
     
     // Visual feedback for selection (you can customize this)
     object.alpha = 0.8;
-    console.log('Object selected:', object);
+    console.log(`🎯 SELECTION: Object selected and highlighted`);
   }
 
   private deselectObject(): void {
     if (this.selectedObject) {
       this.selectedObject.alpha = 1.0;
       this.selectedObject = null;
-      console.log('Object deselected');
+      console.log(`🎯 SELECTION: Object deselected`);
     }
   }
 

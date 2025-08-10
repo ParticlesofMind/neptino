@@ -33,8 +33,8 @@ export class CourseBuilder {
   constructor() {
     this.toolSettings = {
       pen: {
-        color: '#000000',
-        size: 2
+        color: '#000000', // Black for good visibility
+        size: 4 // Increased size for better visibility
       },
       text: {
         fontFamily: 'Arial',
@@ -42,8 +42,8 @@ export class CourseBuilder {
         color: '#000000'
       },
       highlighter: {
-        color: '#ffff00',
-        opacity: 0.5
+        color: '#ffff00', // Bright yellow
+        opacity: 0.8 // Increased opacity for better visibility
       }
     };
 
@@ -111,6 +111,8 @@ export class CourseBuilder {
     
     if (!toolName) return;
 
+    console.log(`🔧 COURSEBUILDER: Tool selection requested - ${toolName}`);
+
     // Remove selected state from all tools
     document.querySelectorAll('.tool').forEach(t => t.classList.remove('tool--selected'));
     
@@ -126,6 +128,7 @@ export class CourseBuilder {
     const toolSettings = document.querySelector(`.tool-settings[data-tool="${toolName}"]`) as HTMLElement;
     if (toolSettings) {
       toolSettings.classList.add('tool-settings--active');
+      console.log(`🔧 COURSEBUILDER: Tool settings panel activated for ${toolName}`);
     }
     
     this.currentTool = toolName;
@@ -133,10 +136,11 @@ export class CourseBuilder {
     
     // Update PixiJS canvas tool
     if (this.pixiCanvas) {
-      this.pixiCanvas.setTool(toolName);
+      const success = this.pixiCanvas.setTool(toolName);
+      console.log(`🔧 COURSEBUILDER: PixiJS tool switch ${success ? 'successful' : 'failed'} for ${toolName}`);
     }
     
-    console.log(`Selected tool: ${toolName}`);
+    console.log(`🔧 COURSEBUILDER: Tool selection completed - ${toolName}`);
   }
 
   private handleColorSelection(event: Event): void {
@@ -144,6 +148,8 @@ export class CourseBuilder {
     const selectedColor = colorSquare.dataset.color;
     
     if (!selectedColor) return;
+
+    console.log(`🎨 COURSEBUILDER: Color selection requested - ${selectedColor} for tool ${this.currentTool}`);
 
     // Remove active state from all colors in the same palette
     const palette = colorSquare.closest('.color-palette');
@@ -172,9 +178,10 @@ export class CourseBuilder {
     // Update PixiJS canvas tool color
     if (this.pixiCanvas) {
       this.pixiCanvas.updateToolColor(selectedColor);
+      console.log(`🎨 COURSEBUILDER: Color updated in PixiJS canvas`);
     }
     
-    console.log(`Selected color: ${selectedColor} for tool: ${this.currentTool}`);
+    console.log(`🎨 COURSEBUILDER: Color selection completed - ${selectedColor} for tool ${this.currentTool}`);
   }
 
   public clearCanvas(): void {

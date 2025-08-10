@@ -20,8 +20,8 @@ export class ToolManager {
   constructor() {
     this.settings = {
       pen: {
-        color: '#000000',
-        size: 2
+        color: '#000000', // Black for good visibility
+        size: 4 // Increased size for better visibility
       },
       text: {
         fontFamily: 'Arial',
@@ -29,9 +29,9 @@ export class ToolManager {
         color: '#000000'
       },
       highlighter: {
-        color: '#ffff00',
-        opacity: 0.5,
-        size: 12
+        color: '#ffff00', // Bright yellow
+        opacity: 0.8, // Increased opacity for better visibility
+        size: 20 // Larger size for better visibility
       },
       shapes: {
         color: '#000000',
@@ -66,12 +66,13 @@ export class ToolManager {
   public setActiveTool(toolName: string): boolean {
     const newTool = this.tools.get(toolName);
     if (!newTool) {
-      console.warn(`Tool '${toolName}' not found`);
+      console.warn(`❌ Tool '${toolName}' not found`);
       return false;
     }
 
     // Deactivate current tool
     if (this.activeTool) {
+      console.log(`🔄 Deactivating tool: ${this.activeTool.name}`);
       this.activeTool.onDeactivate();
     }
 
@@ -82,7 +83,9 @@ export class ToolManager {
     // Update tool settings
     this.updateToolSettings(toolName);
 
-    console.log(`Switched to ${toolName} tool`);
+    console.log(`✅ Switched to ${toolName} tool`);
+    console.log(`🔧 Tool settings:`, this.settings[toolName as keyof ToolSettings]);
+    console.log(`🔧 Applied settings to tool (${this.activeTool.name})`);
     return true;
   }
 
@@ -96,20 +99,48 @@ export class ToolManager {
 
   public onPointerDown(event: FederatedPointerEvent, container: Container): void {
     if (this.activeTool) {
+      console.log(`👆 Pointer DOWN - Tool: ${this.activeTool.name}, Position: (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`);
       this.activeTool.onPointerDown(event, container);
     }
   }
 
   public onPointerMove(event: FederatedPointerEvent, container: Container): void {
     if (this.activeTool) {
+      // Only log move events for drawing tools when they're actually drawing
+      if (this.shouldLogMove()) {
+        console.log(`👈 Pointer MOVE [DRAWING] - Tool: ${this.activeTool.name}, Position: (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`);
+      }
       this.activeTool.onPointerMove(event, container);
     }
   }
 
   public onPointerUp(event: FederatedPointerEvent, container: Container): void {
     if (this.activeTool) {
+      console.log(`👆 Pointer UP - Tool: ${this.activeTool.name}, Position: (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`);
       this.activeTool.onPointerUp(event, container);
     }
+  }
+
+  private shouldLogMove(): boolean {
+    if (!this.activeTool) return false;
+    
+    // Only log move events for drawing tools when they're actively drawing
+    const toolName = this.activeTool.name;
+    
+    // Check if the tool is actively drawing
+    if (toolName === 'pen' || toolName === 'highlighter') {
+      // Only log if the tool is currently drawing (we need to check the tool's state)
+      const tool = this.activeTool as any;
+      return tool.isDrawing === true;
+    }
+    
+    if (toolName === 'selection') {
+      // Only log for selection tool when dragging
+      const tool = this.activeTool as any;
+      return tool.isDragging === true;
+    }
+    
+    return false;
   }
 
   public updateToolSettings(toolName: string, newSettings?: any): void {
@@ -130,6 +161,7 @@ export class ToolManager {
     if (!this.activeTool) return;
 
     const toolName = this.activeTool.name;
+    console.log(`🎨 Updating color for ${toolName} tool to: ${color}`);
     
     switch (toolName) {
       case 'pen':

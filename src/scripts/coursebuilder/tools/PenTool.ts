@@ -12,57 +12,80 @@ interface PenSettings {
 }
 
 export class PenTool extends BaseTool {
-  private isDrawing: boolean = false;
+  public isDrawing: boolean = false; // Changed to public so ToolManager can access it
   private currentStroke: Graphics | null = null;
   private points: { x: number; y: number }[] = [];
 
   constructor() {
     super('pen', 'crosshair');
     this.settings = {
-      color: '#000000',
-      size: 2
+      color: '#000000', // Black
+      size: 4 // Increased size for better visibility
     };
   }
 
   onPointerDown(event: FederatedPointerEvent, container: Container): void {
     this.isDrawing = true;
     this.points = [];
+    console.log(`✏️ PEN: Started drawing at (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`);
+    console.log(`✏️ PEN: Settings - Color: ${this.settings.color}, Size: ${this.settings.size}`);
     
     // Create new graphics object for this stroke
     this.currentStroke = new Graphics();
     this.currentStroke.eventMode = 'static'; // Make it selectable
     
-    const point = event.global;
-    this.points.push({ x: point.x, y: point.y });
+    // Use local coordinates relative to the container
+    const localPoint = container.toLocal(event.global);
+    console.log(`✏️ PEN: Container local point: (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`);
+    this.points.push({ x: localPoint.x, y: localPoint.y });
     
-    // Set stroke style
+    // Set stroke style PROPERLY for PixiJS v8
     const color = this.hexToNumber(this.settings.color);
-    this.currentStroke.stroke({ width: this.settings.size, color });
+    console.log(`✏️ PEN: Setting stroke - color: ${color} (from ${this.settings.color}), width: ${this.settings.size}`);
     
-    // Start the path
-    this.currentStroke.moveTo(point.x, point.y);
+    // Start the drawing path with proper PixiJS v8 syntax
+    this.currentStroke
+      .moveTo(localPoint.x, localPoint.y)
+      .stroke({
+        width: this.settings.size,
+        color: color,
+        cap: 'round',
+        join: 'round'
+      });
     
     // Add to container
     container.addChild(this.currentStroke);
+    console.log(`✏️ PEN: Graphics object created and added to container with ${container.children.length} total children`);
   }
 
   onPointerMove(event: FederatedPointerEvent, container: Container): void {
+    // Only respond to move events when actively drawing
     if (!this.isDrawing || !this.currentStroke) return;
     
-    const point = event.global;
-    this.points.push({ x: point.x, y: point.y });
+    // Use local coordinates relative to the container
+    const localPoint = container.toLocal(event.global);
+    this.points.push({ x: localPoint.x, y: localPoint.y });
     
-    // Draw line to new point
-    this.currentStroke.lineTo(point.x, point.y);
+    // Continue the stroke path with proper PixiJS v8 syntax
+    this.currentStroke
+      .lineTo(localPoint.x, localPoint.y)
+      .stroke({
+        width: this.settings.size,
+        color: this.hexToNumber(this.settings.color),
+        cap: 'round',
+        join: 'round'
+      });
   }
 
-  onPointerUp(event: FederatedPointerEvent, container: Container): void {
+  onPointerUp(_event: FederatedPointerEvent, _container: Container): void {
     if (!this.isDrawing) return;
     
+    console.log(`✏️ PEN: Finished drawing stroke with ${this.points.length} points`);
     this.isDrawing = false;
     
     // Optional: Smooth the stroke
     if (this.points.length > 2) {
+      console.log(`✏️ PEN: Applying smoothing to stroke`);
       this.smoothStroke();
     }
     
@@ -76,7 +99,6 @@ export class PenTool extends BaseTool {
     // Clear and redraw with smoothing
     this.currentStroke.clear();
     const color = this.hexToNumber(this.settings.color);
-    this.currentStroke.stroke({ width: this.settings.size, color });
     
     // Start at first point
     this.currentStroke.moveTo(this.points[0].x, this.points[0].y);
@@ -91,12 +113,22 @@ export class PenTool extends BaseTool {
       this.currentStroke.quadraticCurveTo(current.x, current.y, midX, midY);
     }
     
-    // Draw to the last point
+    // Draw to the last point and apply stroke
     const lastPoint = this.points[this.points.length - 1];
-    this.currentStroke.lineTo(lastPoint.x, lastPoint.y);
+    this.currentStroke
+      .lineTo(lastPoint.x, lastPoint.y)
+      .stroke({ 
+        width: this.settings.size, 
+        color,
+        cap: 'round',
+        join: 'round'
+      });
   }
 
   updateSettings(settings: PenSettings): void {
+    console.log(`✏️ PEN: Updating settings from:`, this.settings);
+    console.log(`✏️ PEN: Updating settings to:`, settings);
     this.settings = { ...this.settings, ...settings };
+    console.log(`✏️ PEN: Final settings:`, this.settings);
   }
 }
