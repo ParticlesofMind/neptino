@@ -3,6 +3,8 @@
  * Handles tool selection, media management, and canvas interactions
  */
 
+import { PixiCanvas } from './PixiCanvas';
+
 interface ToolSettings {
   pen: {
     color: string;
@@ -24,6 +26,9 @@ export class CourseBuilder {
   private selectedMedia: string | null = null;
   private toolSettings: ToolSettings;
   private canvasContainer: HTMLElement | null = null;
+  
+  // PixiJS Canvas
+  private pixiCanvas: PixiCanvas | null = null;
 
   constructor() {
     this.toolSettings = {
@@ -42,13 +47,31 @@ export class CourseBuilder {
       }
     };
 
-    this.init();
+    this.init().catch(error => {
+      console.error('Failed to initialize Course Builder:', error);
+    });
   }
 
-  private init(): void {
+  private async init(): Promise<void> {
     this.canvasContainer = document.getElementById('coursebuilder-canvas-container');
+    await this.initPixiCanvas();
     this.bindEvents();
-    console.log('Course Builder initialized');
+    console.log('Course Builder initialized with PixiJS');
+  }
+
+  private async initPixiCanvas(): Promise<void> {
+    if (!this.canvasContainer) {
+      console.error('Canvas container not found');
+      return;
+    }
+
+    try {
+      this.pixiCanvas = new PixiCanvas('coursebuilder-canvas-container');
+      await this.pixiCanvas.init();
+      console.log('PixiJS Canvas initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize PixiJS Canvas:', error);
+    }
   }
 
   private bindEvents(): void {
@@ -108,6 +131,11 @@ export class CourseBuilder {
     this.currentTool = toolName;
     this.updateCanvasCursor();
     
+    // Update PixiJS canvas tool
+    if (this.pixiCanvas) {
+      this.pixiCanvas.setTool(toolName);
+    }
+    
     console.log(`Selected tool: ${toolName}`);
   }
 
@@ -141,7 +169,24 @@ export class CourseBuilder {
         break;
     }
     
+    // Update PixiJS canvas tool color
+    if (this.pixiCanvas) {
+      this.pixiCanvas.updateToolColor(selectedColor);
+    }
+    
     console.log(`Selected color: ${selectedColor} for tool: ${this.currentTool}`);
+  }
+
+  public clearCanvas(): void {
+    if (this.pixiCanvas) {
+      this.pixiCanvas.clearCanvas();
+    }
+  }
+
+  public resizeCanvas(width: number, height: number): void {
+    if (this.pixiCanvas) {
+      this.pixiCanvas.resize(width, height);
+    }
   }
 
   private handleMediaSelection(event: Event): void {
@@ -173,6 +218,8 @@ export class CourseBuilder {
       this.addNewPage();
     } else if (title === 'Page Settings') {
       this.openPageSettings();
+    } else if (title === 'Clear Canvas') {
+      this.clearCanvas();
     }
   }
 
@@ -238,6 +285,13 @@ export class CourseBuilder {
 
   public getSelectedMedia(): string | null {
     return this.selectedMedia;
+  }
+
+  public destroy(): void {
+    if (this.pixiCanvas) {
+      this.pixiCanvas.destroy();
+      this.pixiCanvas = null;
+    }
   }
 }
 
