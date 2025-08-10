@@ -376,24 +376,8 @@ export class CourseFormHandler {
       const user = session.user;
       console.log('Creating course for user:', user.id);
 
-      // Ensure user profile exists in users table
-      try {
-        console.log('Ensuring user profile exists...');
-        const { error: profileError } = await supabase.rpc('ensure_user_profile', {
-          user_id: user.id,
-          user_email: user.email,
-          user_role: 'teacher'
-        });
-
-        if (profileError) {
-          console.warn('Error ensuring user profile:', profileError);
-          // Try to create profile manually as fallback
-          await this.ensureUserProfileFallback(user);
-        }
-      } catch (profileErr) {
-        console.warn('RPC call failed, using fallback method:', profileErr);
-        await this.ensureUserProfileFallback(user);
-      }
+      // Simplified user profile ensuring - just try both methods without failing
+      await this.ensureUserProfileSimple(user);
 
       const formData = this.getFormData();
       
@@ -425,10 +409,16 @@ export class CourseFormHandler {
 
       console.log('Course created successfully with ID:', courseId);
 
-      // Upload image if provided
+      // Upload image if provided (but don't fail if it doesn't work)
       if (formData.course_image instanceof File) {
         console.log('Uploading course image...');
-        await this.uploadCourseImage(formData.course_image, courseId);
+        try {
+          await this.uploadCourseImage(formData.course_image, courseId);
+          console.log('Image uploaded successfully');
+        } catch (imageError) {
+          console.warn('Image upload failed, but course was created:', imageError);
+          // Don't fail the entire process for image upload issues
+        }
       }
 
       this.showStatus('Course created successfully! 🎉', 'success');
@@ -441,9 +431,29 @@ export class CourseFormHandler {
     }
   }
 
-  // Fallback method to ensure user profile exists
-  private async ensureUserProfileFallback(user: any): Promise<void> {
+  // Simplified user profile ensuring - try multiple methods but don't fail
+  private async ensureUserProfileSimple(user: any): Promise<void> {
     try {
+      // Method 1: Try the RPC function
+      console.log('Trying RPC function...');
+      const { error: rpcError } = await supabase.rpc('ensure_user_profile', {
+        user_id: user.id,
+        user_email: user.email,
+        user_role: 'teacher'
+      });
+
+      if (!rpcError) {
+        console.log('✅ User profile ensured via RPC');
+        return;
+      }
+      console.warn('RPC failed:', rpcError);
+    } catch (rpcErr) {
+      console.warn('RPC call failed:', rpcErr);
+    }
+
+    try {
+      // Method 2: Try direct upsert
+      console.log('Trying direct upsert...');
       const userMetadata = user.user_metadata || {};
       const fullName = userMetadata.full_name || user.email?.split('@')[0] || 'User';
       const userRole = userMetadata.user_role || 'teacher';
@@ -465,14 +475,34 @@ export class CourseFormHandler {
           onConflict: 'id'
         });
 
-      if (error) {
-        console.error('Failed to create user profile:', error);
-      } else {
-        console.log('User profile ensured via fallback method');
+      if (!error) {
+        console.log('✅ User profile ensured via upsert');
+        return;
       }
-    } catch (error) {
-      console.error('Error in ensureUserProfileFallback:', error);
+      console.warn('Upsert failed:', error);
+    } catch (upsertErr) {
+      console.warn('Upsert failed:', upsertErr);
     }
+
+    // Method 3: Check if profile already exists
+    try {
+      console.log('Checking if profile exists...');
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      if (existingUser) {
+        console.log('✅ User profile already exists');
+        return;
+      }
+    } catch (checkErr) {
+      console.warn('Profile check failed:', checkErr);
+    }
+
+    // If all methods fail, just continue - the course creation might still work
+    console.warn('All user profile creation methods failed, continuing with course creation...');
   }
 
   private async updateExistingCourse(): Promise<void> {

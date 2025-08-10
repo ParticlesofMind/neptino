@@ -2,93 +2,58 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'http://localhost:54321';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
-const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
-const supabaseService = createClient(supabaseUrl, serviceRoleKey);
 
-async function createTestUserAndProfile() {
+async function testFixes() {
   try {
-    console.log('Creating a test user...');
+    console.log('🧪 Testing the fixes...');
     
-    // First, create a user in auth.users
-    const { data: authData, error: authError } = await supabaseService.auth.admin.createUser({
-      email: 'testteacher@example.com',
-      password: 'password123',
-      email_confirm: true,
-      user_metadata: {
-        full_name: 'Test Teacher',
-        user_role: 'teacher'
-      }
+    // Test 1: Check if RPC function exists and works
+    console.log('\n1. Testing RPC function...');
+    const { data: rpcData, error: rpcError } = await supabase.rpc('ensure_user_profile', {
+      user_id: '4c277c6a-ed35-440f-92d2-86e7ec67e633', // The user from your error
+      user_email: 'test@example.com',
+      user_role: 'teacher'
     });
     
-    console.log('Auth user creation result:', authData);
-    console.log('Auth user creation error:', authError);
+    console.log('RPC result:', rpcData);
+    console.log('RPC error:', rpcError);
     
-    if (authData?.user) {
-      console.log('✅ Auth user created with ID:', authData.user.id);
-      
-      // Now create the profile in public.users
-      const { data: profileData, error: profileError } = await supabaseService
-        .from('users')
-        .insert({
-          id: authData.user.id,
-          first_name: 'Test',
-          last_name: 'Teacher',
-          email: 'testteacher@example.com',
-          role: 'teacher',
-          institution: 'Independent'
-        });
-      
-      console.log('Profile creation result:', profileData);
-      console.log('Profile creation error:', profileError);
-      
-      if (!profileError) {
-        console.log('✅ User profile created successfully!');
-        
-        // Test course creation with this user
-        console.log('\nTesting course creation...');
-        
-        // Sign in as this user first
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email: 'testteacher@example.com',
-          password: 'password123'
-        });
-        
-        console.log('Sign in result:', signInData);
-        console.log('Sign in error:', signInError);
-        
-        if (signInData?.user) {
-          console.log('✅ Signed in successfully');
-          
-          // Try to create a course
-          const { data: courseData, error: courseError } = await supabase
-            .from('courses')
-            .insert({
-              course_name: 'Test Course',
-              course_description: 'This is a test course',
-              teacher_id: signInData.user.id,
-              canvas_count: 1,
-              lesson_days_count: 1
-            })
-            .select('id')
-            .single();
-          
-          console.log('Course creation result:', courseData);
-          console.log('Course creation error:', courseError);
-          
-          if (!courseError) {
-            console.log('🎉 Course created successfully!');
-          }
-        }
-      }
+    if (!rpcError) {
+      console.log('✅ RPC function is working!');
+    } else {
+      console.log('❌ RPC function still has issues:', rpcError.message);
+    }
+    
+    // Test 2: Check if user profile was created/exists
+    console.log('\n2. Checking user profile...');
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', '4c277c6a-ed35-440f-92d2-86e7ec67e633');
+    
+    console.log('User data:', userData);
+    console.log('User error:', userError);
+    
+    // Test 3: Check storage buckets
+    console.log('\n3. Testing storage bucket...');
+    const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+    console.log('Available buckets:', buckets?.map(b => b.name));
+    console.log('Bucket error:', bucketError);
+    
+    const coursesBucket = buckets?.find(b => b.name === 'courses');
+    if (coursesBucket) {
+      console.log('✅ Courses storage bucket exists!');
+    } else {
+      console.log('❌ Courses storage bucket missing');
     }
     
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Test error:', error);
   }
 }
 
-createTestUserAndProfile();
+testFixes();
 
-createTestUserAndProfile();
+testFixes();
