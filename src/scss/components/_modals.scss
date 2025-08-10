@@ -1,1 +1,120 @@
-// Modal component styles
+// ==========================================================================
+// MODAL COMPONENT
+// ==========================================================================
+
+@use '../abstracts/variables' as *;
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  
+  &--active {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+.modal__backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.modal__content {
+  position: relative;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  background: $white;
+  border-radius: $border-radius-lg;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transform: scale(0.9) translateY(20px);
+  transition: all 0.3s ease;
+  
+  .modal--active & {
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-6;
+  border-bottom: 1px solid $gray-200;
+  background: $gray-50;
+  
+  h3 {
+    margin: 0;
+    color: $text-primary;
+    font-weight: $font-weight-medium;
+  }
+}
+
+.modal__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  color: $text-secondary;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: $gray-100;
+    color: $text-primary;
+  }
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.modal__body {
+  padding: $spacing-6;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-3;
+  padding: $spacing-6;
+  border-top: 1px solid $gray-200;
+  background: $gray-50;
+}
+
+// Screen reader only class
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

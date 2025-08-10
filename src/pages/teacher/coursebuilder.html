@@ -301,42 +301,66 @@
             <!-- Templates Article -->
             <article id="templates" class="article">
                 <section class="card">
-                 
+                    <!-- Create Template Button -->
+               
+                    <!-- Template Builder Layout -->
                     <div class="template-layout">
                         <div class="template-config">
-                            <form class="form">
-                                <div class="form__group">
-                                    <label class="form__label" for="template-type">Template Type</label>
-                                    <select class="form__input" id="template-type">
-                                        <option value="">Select template</option>
-                                        <option value="programming">Programming Course</option>
-                                        <option value="mathematics">Mathematics Course</option>
-                                        <option value="science">Science Course</option>
-                                        <option value="language">Language Course</option>
-                                        <option value="custom">Custom Template</option>
-                                    </select>
+                            <div class="template-config-placeholder">
+                                <h3 class="heading heading--tertiary">Template Configuration</h3>
+                                <p class="text">Select or create a template to configure its settings.</p>
+                                <div class="template-actions">
+                                    <button class="btn btn--secondary btn--small" onclick="TemplateManager.loadExistingTemplates()">
+                                        📋 Load Existing Templates
+                                    </button>
                                 </div>
-                                <div class="form__group">
-                                    <label class="form__label" for="template-style">Template Style</label>
-                                    <select class="form__input" id="template-style">
-                                        <option value="">Select style</option>
-                                        <option value="modern">Modern</option>
-                                        <option value="classic">Classic</option>
-                                        <option value="minimal">Minimal</option>
-                                        <option value="colorful">Colorful</option>
-                                    </select>
-                                </div>
-                            </form>
+                            </div>
                         </div>
                         <div class="template-preview">
                             <h3 class="heading heading--tertiary">Template Preview</h3>
                             <div class="preview-container">
-                                <p class="text">Template preview will appear here...</p>
+                                <div class="preview-placeholder">
+                                    <h4 class="preview-placeholder__title">No Template Selected</h4>
+                                    <p class="preview-placeholder__text">Create a new template or select an existing one to see the preview here.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </section>
             </article>
+
+            <!-- Create Template Modal -->
+            <div id="create-template-modal" class="modal" style="display: none;">
+                <div class="modal__content">
+                    <div class="modal__header">
+                        <h2 class="modal__title">Create New Template</h2>
+                        <button class="modal__close" type="button">&times;</button>
+                    </div>
+                    <div class="modal__body">
+                        <form id="create-template-form" class="form">
+                            <div class="form__group">
+                                <label class="form__label" for="template-name">Template Name*</label>
+                                <input type="text" id="template-name" name="template-name" class="form__input" required placeholder="Enter template name">
+                            </div>
+                            <div class="form__group">
+                                <label class="form__label" for="template-type">Template Type*</label>
+                                <select id="template-type" name="template-type" class="form__input" required>
+                                    <option value="">Select template type</option>
+                                    <option value="lesson">Lesson</option>
+                                </select>
+                            </div>
+                            <div class="form__group">
+                                <label class="form__label" for="template-description">Description (Optional)</label>
+                                <textarea id="template-description" name="template-description" class="form__input" rows="3" placeholder="Describe your template..."></textarea>
+                            </div>
+                            <div class="form__actions">
+                                <button type="button" class="btn btn--secondary modal__close">Cancel</button>
+                                <button type="submit" class="btn btn--primary">Create Template</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
             <!-- Schedule Article -->
             <article id="schedule" class="article">
@@ -500,5 +524,8 @@
     <script type="module" src="/src/scripts/navigation/index.ts"></script>
     <script type="module" src="/src/scripts/backend/courses/index.ts"></script>
     <script type="module" src="/src/scripts/backend/courses/classificationFormHandler.ts"></script>
+    <script type="module" src="/src/scripts/backend/courses/createTemplate.ts"></script>
+    <script type="module" src="/src/scripts/backend/courses/templates/templateConfigHandler.ts"></script>
+    <script type="module" src="/src/scripts/backend/courses/templates/templatePreviewHandler.ts"></script>
 </body>
 </html>
