@@ -16,10 +16,8 @@
                 </a>
             </div>
             
-            <div class="nav__links-section">
-                <h1 class="heading heading--secondary">Course Builder</h1>
-            </div>
-            
+      
+    
             <div class="nav__actions-section">
                 <button id="previous-btn" class="button button--previous">Previous</button>
                 <button id="next-btn" class="button button--succeeding">Next</button>
@@ -32,36 +30,54 @@
         <section id="setup" class="section section--active">
             <aside class="aside">
                 <nav class="aside__nav">
-                    <ul class="aside__menu">
-                        <li class="aside__item">
-                            <a href="#essentials" class="aside__link aside__link--active" data-section="essentials">Essentials</a>
-                        </li>
-                        <li class="aside__item">
-                            <a href="#classification" class="aside__link" data-section="classification">Classification</a>
-                        </li>
-                        <li class="aside__item">
-                            <a href="#templates" class="aside__link" data-section="templates">Templates</a>
-                        </li>
-                        <li class="aside__item">
-                            <a href="#schedule" class="aside__link" data-section="schedule">Schedule</a>
-                        </li>
-                        <li class="aside__item">
-                            <a href="#curriculum" class="aside__link" data-section="curriculum">Curriculum</a>
-                        </li>
-                        <li class="aside__item">
-                            <a href="#settings" class="aside__link" data-section="settings">Settings</a>
-                        </li>
-                    </ul>
+                    <div class="aside__group aside__group--required">
+                        <h3 class="aside__group-title">Required</h3>
+                        <ul class="aside__menu">
+                            <li class="aside__item">
+                                <a href="#essentials" class="aside__link aside__link--active" data-section="essentials">Essentials</a>
+                            </li>
+                            <li class="aside__item">
+                                <a href="#classification" class="aside__link" data-section="classification">Classification</a>
+                            </li>
+                            <li class="aside__item">
+                                <a href="#templates" class="aside__link" data-section="templates">Templates</a>
+                            </li>
+                            <li class="aside__item">
+                                <a href="#schedule" class="aside__link" data-section="schedule">Schedule</a>
+                            </li>
+                            <li class="aside__item">
+                                <a href="#curriculum" class="aside__link" data-section="curriculum">Curriculum</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="aside__group aside__group--optional">
+                        <h3 class="aside__group-title">Optional</h3>
+                        <ul class="aside__menu">
+                            <li class="aside__item">
+                                <a href="#marketplace" class="aside__link" data-section="marketplace">Marketplace</a>
+                            </li>
+                            <li class="aside__item">
+                                <a href="#resources" class="aside__link" data-section="resources">Resources</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="aside__group aside__group--settings">
+                        <ul class="aside__menu">
+                            <li class="aside__item">
+                                <a href="#settings" class="aside__link" data-section="settings">Settings</a>
+                            </li>
+                        </ul>
+                    </div>
                 </nav>
             </aside>
 
-            <!-- Essentials Article -->
-            <article id="essentials" class="article article--active">
+        
+                <!-- Essentials Article -->
+                <article id="essentials" class="article article--active">
                 <section class="card">
-                    <header class="card__header">
-                        <h2 class="heading heading--secondary">Course Essentials</h2>
-                        <p class="text">Define the fundamental details of your course.</p>
-                    </header>
+             
                     <form class="form">
                         <div class="form__group">
                             <label class="form__label" for="course-name">Course Name</label>
@@ -98,10 +114,7 @@
             <!-- Classification Article -->
             <article id="classification" class="article">
                 <section class="card">
-                    <header class="card__header">
-                        <h2 class="heading heading--secondary">Course Classification</h2>
-                        <p class="text">Classify your course within the academic framework.</p>
-                    </header>
+               
                     <form class="form">
                         <div class="form__group">
                             <label class="form__label" for="class-year">Class Year</label>
@@ -149,13 +162,9 @@
             <!-- Templates Article -->
             <article id="templates" class="article">
                 <section class="card">
-                    <header class="card__header">
-                        <h2 class="heading heading--secondary">Course Templates</h2>
-                        <p class="text">Choose and configure course templates.</p>
-                    </header>
+                 
                     <div class="template-layout">
                         <div class="template-config">
-                            <h3 class="heading heading--tertiary">Template Configuration</h3>
                             <form class="form">
                                 <div class="form__group">
                                     <label class="form__label" for="template-type">Template Type</label>
@@ -193,13 +202,9 @@
             <!-- Schedule Article -->
             <article id="schedule" class="article">
                 <section class="card">
-                    <header class="card__header">
-                        <h2 class="heading heading--secondary">Course Schedule</h2>
-                        <p class="text">Configure and preview your course schedule.</p>
-                    </header>
+            
                     <div class="schedule-layout">
                         <div class="schedule-config">
-                            <h3 class="heading heading--tertiary">Schedule Configuration</h3>
                             <form class="form">
                                 <div class="form__group">
                                     <label class="form__label" for="start-date">Start Date</label>
@@ -242,13 +247,9 @@
             <!-- Curriculum Article -->
             <article id="curriculum" class="article">
                 <section class="card">
-                    <header class="card__header">
-                        <h2 class="heading heading--secondary">Course Curriculum</h2>
-                        <p class="text">Design and preview your course curriculum.</p>
-                    </header>
+                 
                     <div class="curriculum-layout">
                         <div class="curriculum-config">
-                            <h3 class="heading heading--tertiary">Curriculum Configuration</h3>
                             <form class="form">
                                 <div class="form__group">
                                     <label class="form__label" for="curriculum-approach">Curriculum Approach</label>
@@ -287,10 +288,7 @@
             <!-- Settings Article -->
             <article id="settings" class="article">
                 <section class="card">
-                    <header class="card__header">
-                        <h2 class="heading heading--secondary">Course Settings</h2>
-                        <p class="text">Manage course settings and danger zone.</p>
-                    </header>
+             
                     <form class="form">
                         <div class="form__group form__group--checkbox">
                             <input class="form__checkbox" type="checkbox" id="course-visible">
@@ -313,16 +311,28 @@
                     </div>
                 </section>
             </article>
+
+            <!-- Marketplace Article -->
+            <article id="marketplace" class="article">
+                <section class="card">
+                
+                    <p class="text">Marketplace integration features will be available here...</p>
+                </section>
+            </article>
+
+            <!-- Resources Article -->
+            <article id="resources" class="article">
+                <section class="card">
+              
+                </section>
+            </article>
         </section>
 
         <!-- Create Section (no aside navigation) -->
         <section id="create" class="section">
             <article class="article article--active">
                 <section class="card">
-                    <header class="card__header">
-                        <h2 class="heading heading--secondary">Create Course Content</h2>
-                        <p class="text">Add lessons, modules, and content to your course.</p>
-                    </header>
+             
                     <p class="text">Course content creation tools will go here...</p>
                 </section>
             </article>
@@ -332,10 +342,6 @@
         <section id="preview" class="section">
             <article class="article article--active">
                 <section class="card">
-                    <header class="card__header">
-                        <h2 class="heading heading--secondary">Preview Your Course</h2>
-                        <p class="text">Review how your course will appear to students.</p>
-                    </header>
                     <p class="text">Course preview will be displayed here...</p>
                 </section>
             </article>
@@ -345,10 +351,6 @@
         <section id="launch" class="section">
             <article class="article article--active">
                 <section class="card">
-                    <header class="card__header">
-                        <h2 class="heading heading--secondary">Launch Your Course</h2>
-                        <p class="text">Final steps to publish and launch your course.</p>
-                    </header>
                     <p class="text">Course launch options will be available here...</p>
                 </section>
             </article>

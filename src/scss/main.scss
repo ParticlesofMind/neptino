@@ -32,8 +32,7 @@
 // 6. PAGES
 @use 'pages/home';
 @use 'pages/auth';
-@use 'pages/dashboard' as page-dashboard;
-@use 'pages/coursebuilder';
+
 
 // 7. THEMES
 @use 'themes/default';

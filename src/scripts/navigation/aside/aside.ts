@@ -59,8 +59,20 @@ export class AsideNavigation {
       return;
     }
 
-    this.removeActiveStates();
-    this.setActiveStates(target, targetSection);
+    // Only handle aside navigation if we're in course builder setup section
+    if (this.isInCourseBuilderSetup()) {
+      this.removeActiveStates();
+      this.setActiveStates(target, targetSection);
+    } else {
+      // For home page or other contexts, handle normally
+      this.removeActiveStates();
+      this.setActiveStates(target, targetSection);
+    }
+  }
+
+  private isInCourseBuilderSetup(): boolean {
+    const setupSection = document.getElementById('setup');
+    return setupSection ? setupSection.classList.contains('section--active') : false;
   }
 
   private removeActiveStates(): void {
