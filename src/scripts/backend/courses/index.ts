@@ -4,6 +4,10 @@
 
 import { CourseFormHandler } from './courseFormHandler';
 
+// Re-export course creation and classification functions
+export * from './createCourse';
+export * from './classifyCourse';
+
 // ==========================================================================
 // COURSE BUILDER CLASS
 // ==========================================================================

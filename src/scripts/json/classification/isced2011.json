@@ -1,0 +1,343 @@
+{
+  "domains": [
+    {
+      "value": "00-generic",
+      "label": "Generic programmes and qualifications",
+      "code": "00",
+      "subjects": []
+    },
+    {
+      "value": "01-education",
+      "label": "Education",
+      "code": "01",
+      "subjects": [
+        {
+          "value": "011-education-general",
+          "label": "Education - General",
+          "code": "011",
+          "topics": [
+            {
+              "value": "0111-education-science",
+              "label": "Education science",
+              "code": "0111"
+            },
+            {
+              "value": "0112-training-teachers",
+              "label": "Training for pre-school teachers",
+              "code": "0112"
+            },
+            {
+              "value": "0113-teacher-training-primary",
+              "label": "Teacher training without subject specialisation",
+              "code": "0113"
+            },
+            {
+              "value": "0114-teacher-training-subject",
+              "label": "Teacher training with subject specialisation",
+              "code": "0114"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "02-arts-humanities",
+      "label": "Arts and humanities",
+      "code": "02",
+      "subjects": [
+        {
+          "value": "021-arts",
+          "label": "Arts",
+          "code": "021",
+          "topics": [
+            {
+              "value": "0211-audio-visual",
+              "label": "Audio-visual techniques and media production",
+              "code": "0211"
+            },
+            {
+              "value": "0212-fashion-interior",
+              "label": "Fashion, interior and industrial design",
+              "code": "0212"
+            },
+            {
+              "value": "0213-fine-arts",
+              "label": "Fine arts",
+              "code": "0213"
+            },
+            {
+              "value": "0214-handicrafts",
+              "label": "Handicrafts",
+              "code": "0214"
+            },
+            {
+              "value": "0215-music-performing",
+              "label": "Music and performing arts",
+              "code": "0215"
+            }
+          ]
+        },
+        {
+          "value": "022-humanities",
+          "label": "Humanities (except languages)",
+          "code": "022",
+          "topics": [
+            {
+              "value": "0221-religion-theology",
+              "label": "Religion and theology",
+              "code": "0221"
+            },
+            {
+              "value": "0222-history-archaeology",
+              "label": "History and archaeology",
+              "code": "0222"
+            },
+            {
+              "value": "0223-philosophy-ethics",
+              "label": "Philosophy and ethics",
+              "code": "0223"
+            }
+          ]
+        },
+        {
+          "value": "023-languages",
+          "label": "Languages",
+          "code": "023",
+          "topics": [
+            {
+              "value": "0231-language-acquisition",
+              "label": "Language acquisition",
+              "code": "0231"
+            },
+            {
+              "value": "0232-literature-linguistics",
+              "label": "Literature and linguistics",
+              "code": "0232"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "03-social-sciences",
+      "label": "Social sciences, journalism and information",
+      "code": "03",
+      "subjects": [
+        {
+          "value": "031-social-behavioural",
+          "label": "Social and behavioural sciences",
+          "code": "031",
+          "topics": [
+            {
+              "value": "0311-economics",
+              "label": "Economics",
+              "code": "0311"
+            },
+            {
+              "value": "0312-political-science",
+              "label": "Political sciences and civics",
+              "code": "0312"
+            },
+            {
+              "value": "0313-psychology",
+              "label": "Psychology",
+              "code": "0313"
+            },
+            {
+              "value": "0314-sociology-anthropology",
+              "label": "Sociology and cultural studies",
+              "code": "0314"
+            }
+          ]
+        },
+        {
+          "value": "032-journalism",
+          "label": "Journalism and information",
+          "code": "032",
+          "topics": [
+            {
+              "value": "0321-journalism-reporting",
+              "label": "Journalism and reporting",
+              "code": "0321"
+            },
+            {
+              "value": "0322-library-information",
+              "label": "Library, information and archival studies",
+              "code": "0322"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "04-business",
+      "label": "Business, administration and law",
+      "code": "04",
+      "subjects": [
+        {
+          "value": "041-business-administration",
+          "label": "Business and administration",
+          "code": "041",
+          "topics": [
+            {
+              "value": "0411-accounting-taxation",
+              "label": "Accounting and taxation",
+              "code": "0411"
+            },
+            {
+              "value": "0412-finance-banking",
+              "label": "Finance, banking and insurance",
+              "code": "0412"
+            },
+            {
+              "value": "0413-management-administration",
+              "label": "Management and administration",
+              "code": "0413"
+            },
+            {
+              "value": "0414-marketing-advertising",
+              "label": "Marketing and advertising",
+              "code": "0414"
+            },
+            {
+              "value": "0415-secretarial-clerical",
+              "label": "Secretarial and clerical work",
+              "code": "0415"
+            },
+            {
+              "value": "0416-wholesale-retail",
+              "label": "Wholesale and retail sales",
+              "code": "0416"
+            },
+            {
+              "value": "0417-work-counselling",
+              "label": "Work skills",
+              "code": "0417"
+            }
+          ]
+        },
+        {
+          "value": "042-law",
+          "label": "Law",
+          "code": "042",
+          "topics": [
+            {
+              "value": "0421-law",
+              "label": "Law",
+              "code": "0421"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "05-natural-sciences",
+      "label": "Natural sciences, mathematics and statistics",
+      "code": "05",
+      "subjects": [
+        {
+          "value": "051-biological",
+          "label": "Biological and related sciences",
+          "code": "051",
+          "topics": [
+            {
+              "value": "0511-biology",
+              "label": "Biology",
+              "code": "0511"
+            },
+            {
+              "value": "0512-biochemistry",
+              "label": "Biochemistry",
+              "code": "0512"
+            }
+          ]
+        },
+        {
+          "value": "052-environment",
+          "label": "Environment",
+          "code": "052",
+          "topics": [
+            {
+              "value": "0521-environmental-sciences",
+              "label": "Environmental sciences",
+              "code": "0521"
+            },
+            {
+              "value": "0522-natural-environments",
+              "label": "Natural environments and wildlife",
+              "code": "0522"
+            }
+          ]
+        },
+        {
+          "value": "053-physical-sciences",
+          "label": "Physical sciences",
+          "code": "053",
+          "topics": [
+            {
+              "value": "0531-chemistry",
+              "label": "Chemistry",
+              "code": "0531"
+            },
+            {
+              "value": "0532-earth-sciences",
+              "label": "Earth sciences",
+              "code": "0532"
+            },
+            {
+              "value": "0533-physics",
+              "label": "Physics",
+              "code": "0533"
+            }
+          ]
+        },
+        {
+          "value": "054-mathematics-statistics",
+          "label": "Mathematics and statistics",
+          "code": "054",
+          "topics": [
+            {
+              "value": "0541-mathematics",
+              "label": "Mathematics",
+              "code": "0541"
+            },
+            {
+              "value": "0542-statistics",
+              "label": "Statistics",
+              "code": "0542"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "06-ict",
+      "label": "Information and Communication Technologies (ICTs)",
+      "code": "06",
+      "subjects": [
+        {
+          "value": "061-ict",
+          "label": "Information and Communication Technologies",
+          "code": "061",
+          "topics": [
+            {
+              "value": "0611-computer-use",
+              "label": "Computer use",
+              "code": "0611"
+            },
+            {
+              "value": "0612-database-network",
+              "label": "Database and network design and administration",
+              "code": "0612"
+            },
+            {
+              "value": "0613-software-applications",
+              "label": "Software and applications development and analysis",
+              "code": "0613"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

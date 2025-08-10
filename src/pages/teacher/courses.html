@@ -41,7 +41,17 @@
     </header>
 
     <main class="main grid__main">
-        <a href="/src/pages/teacher/coursebuilder.html#setup" id="create-course-btn" class="button button--primary button--primary">Create New Course</a>
+        <div class="courses-header">
+            <h1 class="heading heading--primary">My Courses</h1>
+            <a href="/src/pages/teacher/coursebuilder.html#setup" id="create-course-btn" class="button button--primary">Create New Course</a>
+        </div>
+        
+        <div class="courses-container" id="courses-container">
+            <!-- Course cards will be dynamically loaded here -->
+            <div id="no-courses-message" class="no-courses">
+                <p class="text text--muted">No courses yet. Create your first course to get started!</p>
+            </div>
+        </div>
     </main>
 
     <footer class="footer grid__footer">
@@ -73,6 +83,7 @@
     </footer>
 
     <script type="module" src="/src/scripts/app.ts"></script>
+    <script type="module" src="/src/scripts/pages/courses.ts"></script>
 </body>
 
 </html>

@@ -25,3 +25,126 @@
     background: $gray-50;
   }
 }
+
+// ==========================================================================
+// COURSE CARD COMPONENT
+// ==========================================================================
+
+.course-card {
+  background: $white;
+  border-radius: $border-radius;
+  box-shadow: $shadow;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  max-width: 350px;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
+  }
+  
+  &__image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background: $gray-100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $gray-500;
+    font-size: 0.875rem;
+  }
+  
+  &__image-placeholder {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, lighten($primary-color, 20%), $primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $white;
+    font-size: 1.125rem;
+    font-weight: $font-weight-medium;
+  }
+  
+  &__content {
+    padding: $spacing-4;
+  }
+  
+  &__title {
+    font-size: 1.125rem;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+    margin-bottom: $spacing-3;
+    line-height: 1.4;
+  }
+  
+  &__navigation {
+    display: flex;
+    border-top: 1px solid $gray-200;
+    background: $gray-50;
+  }
+  
+  &__nav-item {
+    flex: 1;
+    padding: $spacing-3 $spacing-2;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: $font-weight-medium;
+    color: $text-secondary;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    
+    &:not(:last-child) {
+      border-right: 1px solid $gray-200;
+    }
+    
+    &:hover {
+      background: $gray-100;
+      color: $text-primary;
+    }
+  }
+}
+
+// ==========================================================================
+// COURSES LAYOUT
+// ==========================================================================
+
+.courses-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-6;
+  padding-bottom: $spacing-4;
+  border-bottom: 1px solid $gray-200;
+  
+  @media (max-width: #{$breakpoint-sm - 1px}) {
+    flex-direction: column;
+    gap: $spacing-4;
+    align-items: stretch;
+    text-align: center;
+  }
+}
+
+.courses-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: $spacing-6;
+  
+  @media (max-width: #{$breakpoint-sm - 1px}) {
+    grid-template-columns: 1fr;
+    gap: $spacing-4;
+  }
+}
+
+.no-courses {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: $spacing-8 $spacing-4;
+  
+  .text {
+    font-size: 1.125rem;
+  }
+}

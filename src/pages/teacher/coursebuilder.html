@@ -9,17 +9,18 @@
 <body class="body grid">
     <!-- Special Course Builder Header -->
     <header class="header grid__header">
-        <nav class="nav">
-            <div class="nav__logo-section">
+        <nav class="nav nav--coursebuilder">
+            <div class="nav__left-section">
+                <button id="previous-btn" class="button button--previous">Courses</button>
+            </div>
+            
+            <div class="nav__center-section">
                 <a href="/src/pages/teacher/home.html" class="logo logo--header">
                     <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image">
                 </a>
             </div>
             
-      
-    
-            <div class="nav__actions-section">
-                <button id="previous-btn" class="button button--previous">Previous</button>
+            <div class="nav__right-section">
                 <button id="next-btn" class="button button--succeeding">Next</button>
             </div>
         </nav>
@@ -128,46 +129,150 @@
             <!-- Classification Article -->
             <article id="classification" class="article">
                 <section class="card">
-               
-                    <form class="form">
-                        <div class="form__group">
-                            <label class="form__label" for="class-year">Class Year</label>
-                            <select class="form__input" id="class-year">
-                                <option value="">Select class year</option>
-                                <option value="1">Year 1</option>
-                                <option value="2">Year 2</option>
-                                <option value="3">Year 3</option>
-                                <option value="4">Year 4</option>
-                                <option value="graduate">Graduate</option>
-                            </select>
+                    <form class="form" id="course-classification-form">
+                        <!-- Row 1: Class Year + Curricular Framework -->
+                        <div class="dropdown-group dropdown-group--classification-row">
+                            <div class="form__group">
+                                <label class="form__label" for="class-year-dropdown">Class Year</label>
+                                <div class="dropdown dropdown--classification">
+                                    <button type="button" class="dropdown__trigger" id="class-year-dropdown" aria-haspopup="listbox" aria-expanded="false">
+                                        <span class="dropdown__label dropdown__label--placeholder">Select class year...</span>
+                                        <span class="dropdown__icon">▼</span>
+                                    </button>
+                                    <div class="dropdown__menu" role="listbox" id="class-year-menu">
+                                        <!-- Options will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                                <input type="hidden" name="class_year" id="class-year-value">
+                            </div>
+                            
+                            <div class="form__group">
+                                <label class="form__label" for="curricular-framework-dropdown">Curricular Framework</label>
+                                <div class="dropdown dropdown--classification">
+                                    <button type="button" class="dropdown__trigger" id="curricular-framework-dropdown" aria-haspopup="listbox" aria-expanded="false">
+                                        <span class="dropdown__label dropdown__label--placeholder">Select framework...</span>
+                                        <span class="dropdown__icon">▼</span>
+                                    </button>
+                                    <div class="dropdown__menu" role="listbox" id="curricular-framework-menu">
+                                        <!-- Options will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                                <input type="hidden" name="curricular_framework" id="curricular-framework-value">
+                            </div>
                         </div>
-                        <div class="form__group">
-                            <label class="form__label" for="curricular-framework">Curricular Framework / Domain</label>
-                            <input class="form__input" type="text" id="curricular-framework" placeholder="e.g., Computer Science, Mathematics">
+
+                        <!-- Row 2: Domain + Subject + Topic + Subtopic -->
+                        <div class="dropdown-group dropdown-group--classification-row">
+                            <div class="form__group">
+                                <label class="form__label" for="domain-dropdown">Domain</label>
+                                <div class="dropdown dropdown--classification">
+                                    <button type="button" class="dropdown__trigger" id="domain-dropdown" aria-haspopup="listbox" aria-expanded="false">
+                                        <span class="dropdown__label dropdown__label--placeholder">Select domain...</span>
+                                        <span class="dropdown__icon">▼</span>
+                                    </button>
+                                    <div class="dropdown__menu" role="listbox" id="domain-menu">
+                                        <!-- Options will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                                <input type="hidden" name="domain" id="domain-value">
+                            </div>
+                            
+                            <div class="form__group">
+                                <label class="form__label" for="subject-dropdown">Subject</label>
+                                <div class="dropdown dropdown--classification">
+                                    <button type="button" class="dropdown__trigger dropdown__trigger--disabled" id="subject-dropdown" aria-haspopup="listbox" aria-expanded="false" disabled>
+                                        <span class="dropdown__label dropdown__label--placeholder">Select domain first...</span>
+                                        <span class="dropdown__icon">▼</span>
+                                    </button>
+                                    <div class="dropdown__menu" role="listbox" id="subject-menu">
+                                        <!-- Options will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                                <input type="hidden" name="subject" id="subject-value">
+                            </div>
+                            
+                            <div class="form__group">
+                                <label class="form__label" for="topic-dropdown">Topic</label>
+                                <div class="dropdown dropdown--classification">
+                                    <button type="button" class="dropdown__trigger dropdown__trigger--disabled" id="topic-dropdown" aria-haspopup="listbox" aria-expanded="false" disabled>
+                                        <span class="dropdown__label dropdown__label--placeholder">Select subject first...</span>
+                                        <span class="dropdown__icon">▼</span>
+                                    </button>
+                                    <div class="dropdown__menu" role="listbox" id="topic-menu">
+                                        <!-- Options will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                                <input type="hidden" name="topic" id="topic-value">
+                            </div>
+                            
+                            <div class="form__group">
+                                <label class="form__label" for="subtopic-dropdown">Subtopic <span class="text text--muted">(Optional)</span></label>
+                                <div class="dropdown dropdown--classification">
+                                    <button type="button" class="dropdown__trigger dropdown__trigger--disabled" id="subtopic-dropdown" aria-haspopup="listbox" aria-expanded="false" disabled>
+                                        <span class="dropdown__label dropdown__label--placeholder">Select topic first...</span>
+                                        <span class="dropdown__icon">▼</span>
+                                    </button>
+                                    <div class="dropdown__menu" role="listbox" id="subtopic-menu">
+                                        <!-- Options will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                                <input type="hidden" name="subtopic" id="subtopic-value">
+                            </div>
                         </div>
-                        <div class="form__group">
-                            <label class="form__label" for="subject">Subject</label>
-                            <input class="form__input" type="text" id="subject" placeholder="e.g., Programming, Algorithms">
+
+                        <!-- Row 3: Course Sequence -->
+                        <div class="dropdown-group dropdown-group--classification-row">
+                            <div class="form__group">
+                                <label class="form__label" for="previous-course-dropdown">Previous Course <span class="text text--muted">(Optional)</span></label>
+                                <div class="dropdown dropdown--classification">
+                                    <button type="button" class="dropdown__trigger" id="previous-course-dropdown" aria-haspopup="listbox" aria-expanded="false">
+                                        <span class="dropdown__label dropdown__label--placeholder">Select previous course...</span>
+                                        <span class="dropdown__icon">▼</span>
+                                    </button>
+                                    <div class="dropdown__menu" role="listbox" id="previous-course-menu">
+                                        <div class="dropdown__option dropdown__option--header">Your Courses</div>
+                                        <!-- Options will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                                <input type="hidden" name="previous_course" id="previous-course-value">
+                            </div>
+                            
+                            <div class="form__group">
+                                <label class="form__label" for="current-course-dropdown">Current Course <span class="text text--muted">(Optional)</span></label>
+                                <div class="dropdown dropdown--classification">
+                                    <button type="button" class="dropdown__trigger" id="current-course-dropdown" aria-haspopup="listbox" aria-expanded="false">
+                                        <span class="dropdown__label dropdown__label--placeholder">Select current course...</span>
+                                        <span class="dropdown__icon">▼</span>
+                                    </button>
+                                    <div class="dropdown__menu" role="listbox" id="current-course-menu">
+                                        <div class="dropdown__option dropdown__option--header">Your Courses</div>
+                                        <!-- Options will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                                <input type="hidden" name="current_course" id="current-course-value">
+                            </div>
+                            
+                            <div class="form__group">
+                                <label class="form__label" for="next-course-dropdown">Next Course <span class="text text--muted">(Optional)</span></label>
+                                <div class="dropdown dropdown--classification">
+                                    <button type="button" class="dropdown__trigger" id="next-course-dropdown" aria-haspopup="listbox" aria-expanded="false">
+                                        <span class="dropdown__label dropdown__label--placeholder">Select next course...</span>
+                                        <span class="dropdown__icon">▼</span>
+                                    </button>
+                                    <div class="dropdown__menu" role="listbox" id="next-course-menu">
+                                        <div class="dropdown__option dropdown__option--header">Your Courses</div>
+                                        <!-- Options will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                                <input type="hidden" name="next_course" id="next-course-value">
+                            </div>
                         </div>
-                        <div class="form__group">
-                            <label class="form__label" for="topic">Topic</label>
-                            <input class="form__input" type="text" id="topic" placeholder="e.g., Web Development, Data Structures">
-                        </div>
-                        <div class="form__group">
-                            <label class="form__label" for="subtopic">Subtopic</label>
-                            <input class="form__input" type="text" id="subtopic" placeholder="e.g., React, Binary Trees">
-                        </div>
-                        <div class="form__group">
-                            <label class="form__label" for="previous-course">Previous Course</label>
-                            <input class="form__input" type="text" id="previous-course" placeholder="Prerequisite course (optional)">
-                        </div>
-                        <div class="form__group">
-                            <label class="form__label" for="current-course">Current Course</label>
-                            <input class="form__input" type="text" id="current-course" placeholder="This course title">
-                        </div>
-                        <div class="form__group">
-                            <label class="form__label" for="next-course">Next Course</label>
-                            <input class="form__input" type="text" id="next-course" placeholder="Follow-up course (optional)">
+
+                        <div class="form__actions">
+                            <button type="submit" id="save-classification-btn" class="button button--primary">
+                                Save Classification
+                            </button>
+                            <div class="form__status" id="classification-form-status"></div>
                         </div>
                     </form>
                 </section>
@@ -374,5 +479,6 @@
     <script type="module" src="/src/scripts/app.ts"></script>
     <script type="module" src="/src/scripts/navigation/index.ts"></script>
     <script type="module" src="/src/scripts/backend/courses/index.ts"></script>
+    <script type="module" src="/src/scripts/pages/classificationFormHandler.ts"></script>
 </body>
 </html>

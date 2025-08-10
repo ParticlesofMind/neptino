@@ -28,10 +28,12 @@
 @use 'components/cards';
 @use 'components/modals';
 @use 'components/alerts';
+@use 'components/dropdown';
 
 // 6. PAGES
 @use 'pages/home';
 @use 'pages/auth';
+@use 'pages/pricing';
 
 
 // 7. THEMES
