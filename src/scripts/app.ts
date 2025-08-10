@@ -5,6 +5,9 @@
 
 import { signIn, signUp, signOut, initAuth } from './backend/auth/auth'
 
+// Import coursebuilder for the course creation page
+import './coursebuilder/coursebuilder'
+
 // Check if we're on a protected page that requires authentication
 function isProtectedPage() {
   const path = window.location.pathname

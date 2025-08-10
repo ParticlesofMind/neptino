@@ -9,14 +9,25 @@ import { CourseBuilderNavigation } from './coursebuilder/coursebuilder';
 export function initNavigation(): void {
   const path = window.location.pathname;
   
-  // Initialize aside navigation for pages that have it
-  if (hasAsideNavigation(path)) {
-    new AsideNavigation();
-  }
-  
-  // Initialize course builder navigation
+  // Initialize course builder navigation first (it handles section switching)
   if (isCourseBuilderPage(path)) {
     new CourseBuilderNavigation();
+  }
+  
+  // Initialize aside navigation for pages that have it
+  // But NOT for coursebuilder unless we're specifically in the setup section
+  if (hasAsideNavigation(path)) {
+    if (isCourseBuilderPage(path)) {
+      // On coursebuilder, only init aside navigation if we're in setup section
+      // or if the hash indicates we should be in setup
+      const hash = window.location.hash.substring(1);
+      if (!hash || hash === 'setup') {
+        new AsideNavigation();
+      }
+    } else {
+      // On other pages, always init aside navigation
+      new AsideNavigation();
+    }
   }
 }
 
