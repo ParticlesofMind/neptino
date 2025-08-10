@@ -3,6 +3,7 @@
 // ==========================================================================
 
 import { CourseFormHandler } from './courseFormHandler';
+import { ScheduleCourseManager } from './scheduleCourse';
 
 // Re-export course creation and classification functions
 export * from './createCourse';
@@ -14,6 +15,7 @@ export * from './classifyCourse';
 
 export class CourseBuilder {
   private currentFormHandler: CourseFormHandler | null = null;
+  private scheduleManager: ScheduleCourseManager | null = null;
   private currentSection: string = 'essentials';
 
   constructor() {
@@ -78,13 +80,20 @@ export class CourseBuilder {
 
   private loadSection(sectionId: string): void {
     try {
-      // Clean up previous handler
+      // Clean up previous handlers
       this.currentFormHandler = null;
+      this.scheduleManager = null;
       
-      // Initialize generic form handler for any section
-      this.currentFormHandler = new CourseFormHandler(sectionId);
+      // Initialize appropriate handler based on section
+      if (sectionId === 'schedule') {
+        // Initialize schedule manager - it will auto-detect course ID from session storage
+        this.scheduleManager = new ScheduleCourseManager();
+      } else {
+        // Initialize generic form handler for other sections
+        this.currentFormHandler = new CourseFormHandler(sectionId);
+      }
     } catch (error) {
-      console.warn(`No form handler available for section: ${sectionId}`, error);
+      console.warn(`No handler available for section: ${sectionId}`, error);
     }
   }
 

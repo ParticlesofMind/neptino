@@ -425,42 +425,83 @@
             <!-- Schedule Article -->
             <article id="schedule" class="article">
                 <section class="card">
-            
+                    <!-- Schedule Layout -->
                     <div class="schedule-layout">
-                        <div class="schedule-config">
+                        <!-- Schedule Configuration -->
+                        <div id="schedule-config" class="schedule-config">
+                            <h3 class="heading heading--tertiary">Schedule Configuration</h3>
+                            
                             <form class="form">
-                                <div class="form__group">
-                                    <label class="form__label" for="start-date">Start Date</label>
-                                    <input class="form__input" type="date" id="start-date">
+                                <!-- Date Range Row -->
+                                <div class="form__row">
+                                    <div class="form__group">
+                                        <label class="form__label" for="start-date">Start Date</label>
+                                        <input class="form__input" type="date" id="start-date" required>
+                                    </div>
+                                    <div class="form__group">
+                                        <label class="form__label" for="end-date">End Date</label>
+                                        <input class="form__input" type="date" id="end-date" required>
+                                    </div>
                                 </div>
+
+                                <!-- Days of Week Selection -->
                                 <div class="form__group">
-                                    <label class="form__label" for="end-date">End Date</label>
-                                    <input class="form__input" type="date" id="end-date">
+                                    <label class="form__label">Days of the Week</label>
+                                    <div class="day-buttons">
+                                        <button type="button" class="day-button" data-day="monday">Mon</button>
+                                        <button type="button" class="day-button" data-day="tuesday">Tue</button>
+                                        <button type="button" class="day-button" data-day="wednesday">Wed</button>
+                                        <button type="button" class="day-button" data-day="thursday">Thu</button>
+                                        <button type="button" class="day-button" data-day="friday">Fri</button>
+                                        <button type="button" class="day-button" data-day="saturday">Sat</button>
+                                        <button type="button" class="day-button" data-day="sunday">Sun</button>
+                                    </div>
                                 </div>
-                                <div class="form__group">
-                                    <label class="form__label" for="schedule-type">Schedule Type</label>
-                                    <select class="form__input" id="schedule-type">
-                                        <option value="">Select schedule type</option>
-                                        <option value="weekly">Weekly</option>
-                                        <option value="bi-weekly">Bi-weekly</option>
-                                        <option value="daily">Daily</option>
-                                        <option value="custom">Custom</option>
-                                    </select>
+
+                                <!-- Time Range Row -->
+                                <div class="form__row">
+                                    <div class="form__group">
+                                        <label class="form__label" for="start-time">Start Time</label>
+                                        <input class="form__input" type="time" id="start-time" required>
+                                    </div>
+                                    <div class="form__group">
+                                        <label class="form__label" for="end-time">End Time</label>
+                                        <input class="form__input" type="time" id="end-time" required>
+                                    </div>
                                 </div>
-                                <div class="form__group">
-                                    <label class="form__label" for="class-time">Class Time</label>
-                                    <input class="form__input" type="time" id="class-time">
-                                </div>
-                                <div class="form__group">
-                                    <label class="form__label" for="class-duration">Duration (minutes)</label>
-                                    <input class="form__input" type="number" id="class-duration" placeholder="e.g., 90">
+
+                                <!-- Schedule Action Buttons -->
+                                <div class="form__actions">
+                                    <button type="button" id="schedule-course-btn" class="button button--primary button--disabled" disabled>
+                                        Schedule Course
+                                    </button>
+                                    <button type="button" id="delete-schedule-btn" class="button button--danger hidden">
+                                        Delete Schedule
+                                    </button>
                                 </div>
                             </form>
                         </div>
-                        <div class="schedule-preview">
+
+                        <!-- Schedule Preview -->
+                        <div id="schedule-preview" class="schedule-preview hidden">
                             <h3 class="heading heading--tertiary">Schedule Preview</h3>
-                            <div class="preview-container">
-                                <p class="text">Schedule preview will appear here...</p>
+                            
+                            <div class="schedule-list-container">
+                                <div class="schedule-list-header">
+                                    <span class="header-lesson">Lesson #</span>
+                                    <span class="header-day">Day</span>
+                                    <span class="header-start">Start Time</span>
+                                    <span class="header-end">End Time</span>
+                                    <span class="header-actions">Actions</span>
+                                </div>
+                                
+                                <div class="schedule-list">
+                                    <!-- Schedule rows will be generated here -->
+                                </div>
+                                
+                                <div class="schedule-summary">
+                                    <div class="total-lessons">Total lessons: 0</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -587,5 +628,6 @@
     <script type="module" src="/src/scripts/backend/courses/createTemplate.ts"></script>
     <script type="module" src="/src/scripts/backend/courses/templates/templateConfigHandler.ts"></script>
     <script type="module" src="/src/scripts/backend/courses/templates/templatePreviewHandler.ts"></script>
+    <script type="module" src="/src/scripts/backend/courses/scheduleCourse.ts"></script>
 </body>
 </html>
