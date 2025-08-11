@@ -673,30 +673,140 @@
                             <div class="toolbar__settings">
                                 <!-- Pen Tool Settings -->
                                 <div class="tool-settings tool-settings--active" data-tool="pen">
-                                    <div class="color-palette">
-                                        <div class="color-palette__color color-palette__color--active" data-color="#000000" style="background-color: #000000;" title="Black"></div>
-                                        <div class="color-palette__color" data-color="#ff0000" style="background-color: #ff0000;" title="Red"></div>
-                                        <div class="color-palette__color" data-color="#0066ff" style="background-color: #0066ff;" title="Blue"></div>
-                                        <div class="color-palette__color" data-color="#ffffff" style="background-color: #ffffff; border: 1px solid #ccc;" title="White"></div>
-                                        <div class="color-palette__color" data-color="#808080" style="background-color: #808080;" title="Grey"></div>
-                                        <div class="color-palette__color" data-color="#00cc00" style="background-color: #00cc00;" title="Green"></div>
+                                    <div class="settings-section">
+                                        <span class="settings-section__label">Color:</span>
+                                        <div class="color-palette">
+                                            <div class="color-palette__color color-palette__color--active" data-color="#000000" style="background-color: #000000;" title="Black"></div>
+                                            <div class="color-palette__color" data-color="#ff0000" style="background-color: #ff0000;" title="Red"></div>
+                                            <div class="color-palette__color" data-color="#0066ff" style="background-color: #0066ff;" title="Blue"></div>
+                                            <div class="color-palette__color" data-color="#00cc00" style="background-color: #00cc00;" title="Green"></div>
+                                            <div class="color-palette__color" data-color="#ff6600" style="background-color: #ff6600;" title="Orange"></div>
+                                            <div class="color-palette__color" data-color="#800080" style="background-color: #800080;" title="Purple"></div>
+                                        </div>
+                                    </div>
+                                    <div class="settings-section">
+                                        <span class="settings-section__label">Size:</span>
+                                        <div class="size-slider">
+                                            <input type="range" min="1" max="20" value="4" data-setting="size">
+                                            <span class="size-slider__value">4px</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Highlighter Tool Settings -->
+                                <div class="tool-settings" data-tool="highlighter">
+                                    <div class="settings-section">
+                                        <span class="settings-section__label">Color:</span>
+                                        <div class="color-palette">
+                                            <div class="color-palette__color color-palette__color--active" data-color="#ffff00" style="background-color: #ffff00;" title="Yellow"></div>
+                                            <div class="color-palette__color" data-color="#00ffff" style="background-color: #00ffff;" title="Cyan"></div>
+                                            <div class="color-palette__color" data-color="#ff69b4" style="background-color: #ff69b4;" title="Pink"></div>
+                                            <div class="color-palette__color" data-color="#90ee90" style="background-color: #90ee90;" title="Light Green"></div>
+                                            <div class="color-palette__color" data-color="#ffa500" style="background-color: #ffa500;" title="Orange"></div>
+                                            <div class="color-palette__color" data-color="#dda0dd" style="background-color: #dda0dd;" title="Plum"></div>
+                                        </div>
+                                    </div>
+                                    <div class="settings-section">
+                                        <span class="settings-section__label">Size:</span>
+                                        <div class="size-slider">
+                                            <input type="range" min="10" max="50" value="20" data-setting="size">
+                                            <span class="size-slider__value">20px</span>
+                                        </div>
+                                    </div>
+                                    <div class="settings-section">
+                                        <span class="settings-section__label">Opacity:</span>
+                                        <div class="size-slider">
+                                            <input type="range" min="0.1" max="1" step="0.1" value="0.8" data-setting="opacity">
+                                            <span class="size-slider__value">80%</span>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- Text Tool Settings -->
                                 <div class="tool-settings" data-tool="text">
-                                    <div class="font-controls">
-                                        <select class="font-controls__select">
+                                    <div class="settings-section">
+                                        <span class="settings-section__label">Font:</span>
+                                        <select class="font-controls__select" data-setting="fontFamily">
                                             <option value="Arial">Arial</option>
                                             <option value="Helvetica">Helvetica</option>
                                             <option value="Times New Roman">Times New Roman</option>
                                             <option value="Georgia">Georgia</option>
+                                            <option value="Courier New">Courier New</option>
                                         </select>
                                     </div>
-                                    <div class="color-palette">
-                                        <div class="color-palette__color color-palette__color--active" data-color="#000000" style="background-color: #000000;" title="Black"></div>
-                                        <div class="color-palette__color" data-color="#ff0000" style="background-color: #ff0000;" title="Red"></div>
-                                        <div class="color-palette__color" data-color="#0066ff" style="background-color: #0066ff;" title="Blue"></div>
+                                    <div class="settings-section">
+                                        <span class="settings-section__label">Size:</span>
+                                        <div class="size-slider">
+                                            <input type="range" min="8" max="72" value="16" data-setting="fontSize">
+                                            <span class="size-slider__value">16px</span>
+                                        </div>
+                                    </div>
+                                    <div class="settings-section">
+                                        <span class="settings-section__label">Color:</span>
+                                        <div class="color-palette">
+                                            <div class="color-palette__color color-palette__color--active" data-color="#000000" style="background-color: #000000;" title="Black"></div>
+                                            <div class="color-palette__color" data-color="#ff0000" style="background-color: #ff0000;" title="Red"></div>
+                                            <div class="color-palette__color" data-color="#0066ff" style="background-color: #0066ff;" title="Blue"></div>
+                                            <div class="color-palette__color" data-color="#00cc00" style="background-color: #00cc00;" title="Green"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Shapes Tool Settings -->
+                                <div class="tool-settings" data-tool="shapes">
+                                    <div class="settings-section">
+                                        <span class="settings-section__label">Shape:</span>
+                                        <div class="shape-buttons">
+                                            <button class="shape-btn shape-btn--active" data-shape="rectangle" title="Rectangle">
+                                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                                    <rect x="3" y="6" width="18" height="12" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none"/>
+                                                </svg>
+                                            </button>
+                                            <button class="shape-btn" data-shape="triangle" title="Triangle">
+                                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                                    <polygon points="12,3 21,18 3,18" stroke="currentColor" stroke-width="2" fill="none"/>
+                                                </svg>
+                                            </button>
+                                            <button class="shape-btn" data-shape="circle" title="Circle">
+                                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                                    <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="settings-section">
+                                        <span class="settings-section__label">Stroke:</span>
+                                        <div class="color-palette">
+                                            <div class="color-palette__color color-palette__color--active" data-color="#000000" style="background-color: #000000;" title="Black"></div>
+                                            <div class="color-palette__color" data-color="#ff0000" style="background-color: #ff0000;" title="Red"></div>
+                                            <div class="color-palette__color" data-color="#0066ff" style="background-color: #0066ff;" title="Blue"></div>
+                                            <div class="color-palette__color" data-color="#00cc00" style="background-color: #00cc00;" title="Green"></div>
+                                        </div>
+                                    </div>
+                                    <div class="settings-section">
+                                        <span class="settings-section__label">Width:</span>
+                                        <div class="size-slider">
+                                            <input type="range" min="1" max="10" value="2" data-setting="strokeWidth">
+                                            <span class="size-slider__value">2px</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Eraser Tool Settings -->
+                                <div class="tool-settings" data-tool="eraser">
+                                    <div class="settings-section">
+                                        <span class="settings-section__label">Size:</span>
+                                        <div class="size-slider">
+                                            <input type="range" min="5" max="100" value="20" data-setting="size">
+                                            <span class="size-slider__value">20px</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Selection Tool Settings -->
+                                <div class="tool-settings" data-tool="selection">
+                                    <div class="settings-section">
+                                        <span class="settings-section__label">Selection tool active</span>
                                     </div>
                                 </div>
                             </div>
@@ -774,18 +884,16 @@
                         </div>
                     </div>
 
-                    <!-- Main Canvas Area -->
+                    <!-- Main Canvas Area (Simplified Structure) -->
                     <div class="coursebuilder__canvas">
-                        <div class="canvas-wrapper">
-                            <div class="canvas-page" id="coursebuilder-canvas-container">
-                                <!-- PixiJS canvas will be inserted here -->
-                                <div class="canvas-placeholder">
-                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="#ccc">
-                                        <path d="M12,2A2,2 0 0,1 14,4A2,2 0 0,1 12,6A2,2 0 0,1 10,4A2,2 0 0,1 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V21A2,2 0 0,0 5,23H19A2,2 0 0,0 21,21V9M19,9H14V4H19V9Z"/>
-                                    </svg>
-                                    <div class="canvas-placeholder__title">Interactive Canvas</div>
-                                    <div class="canvas-placeholder__subtitle">Start drawing or drag media here</div>
-                                </div>
+                        <div id="coursebuilder-canvas-container">
+                            <!-- PixiJS canvas will be inserted here -->
+                            <div class="canvas-placeholder">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="#ccc">
+                                    <path d="M12,2A2,2 0 0,1 14,4A2,2 0 0,1 12,6A2,2 0 0,1 10,4A2,2 0 0,1 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V21A2,2 0 0,0 5,23H19A2,2 0 0,0 21,21V9M19,9H14V4H19V9Z"/>
+                                </svg>
+                                <div class="canvas-placeholder__title">Interactive Canvas</div>
+                                <div class="canvas-placeholder__subtitle">Start drawing or drag media here</div>
                             </div>
                         </div>
                     </div>

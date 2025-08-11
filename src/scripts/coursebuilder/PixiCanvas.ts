@@ -3,7 +3,7 @@
  * Handles the PixiJS application and canvas interactions for the course builder
  */
 
-import { Application, Container, FederatedPointerEvent, Graphics } from 'pixi.js';
+import { Application, Container, FederatedPointerEvent, Graphics, Text } from 'pixi.js';
 import { ToolManager } from './tools/ToolManager';
 
 export class PixiCanvas {
@@ -28,14 +28,18 @@ export class PixiCanvas {
       // Create PixiJS application
       this.app = new Application();
       
-      // Get A4 dimensions
-      const a4Width = 794;  // A4 width in pixels at 96 DPI
-      const a4Height = 1123; // A4 height in pixels at 96 DPI
+      // Use fixed A4 dimensions since container is now properly sized in CSS
+      const canvasWidth = 794;
+      const canvasHeight = 1123;
+      const a4AspectRatio = canvasWidth / canvasHeight;
+
+      console.log(`🎨 Using fixed A4 dimensions: ${canvasWidth}x${canvasHeight}`);
+      console.log(`🎨 A4 aspect ratio: ${a4AspectRatio}`);
 
       // Initialize the application with A4 dimensions
       await this.app.init({
-        width: a4Width,
-        height: a4Height,
+        width: canvasWidth,
+        height: canvasHeight,
         backgroundColor: 0xffffff, // White background
         antialias: true,
         autoDensity: true,
@@ -46,11 +50,20 @@ export class PixiCanvas {
       this.canvasElement!.innerHTML = '';
       this.canvasElement!.appendChild(this.app.canvas);
 
-      // Style the canvas to fit the A4 container perfectly
-      this.app.canvas.style.width = '100%';
-      this.app.canvas.style.height = '100%';
+      // Style the canvas to be centered in container
       this.app.canvas.style.display = 'block';
-      this.app.canvas.style.border = 'none'; // Remove any default border
+      this.app.canvas.style.margin = 'auto';
+      this.app.canvas.style.border = '2px solid #6495ed';
+      this.app.canvas.style.borderRadius = '8px';
+      this.app.canvas.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+
+      // Store the scale factor for layout calculations
+      (this.app as any).scaleToA4 = {
+        width: 794 / canvasWidth,
+        height: 1123 / canvasHeight,
+        canvasWidth,
+        canvasHeight
+      };
 
       // Create a main drawing container
       this.drawingContainer = new Container();
@@ -67,15 +80,11 @@ export class PixiCanvas {
       this.setupEvents();
 
       console.log('🎨 PixiJS Canvas initialized successfully');
-      console.log(`🎨 Canvas dimensions: ${a4Width}x${a4Height} (A4 format)`);
+      console.log(`🎨 Canvas dimensions: ${canvasWidth}x${canvasHeight} (A4 dimensions)`);
       console.log(`🎨 Canvas screen bounds:`, this.app.screen);
-      console.log(`🎨 Canvas element bounds:`, this.canvasElement!.getBoundingClientRect());
       console.log('🎨 Background grid added');
       console.log('🎨 Event listeners attached');
       console.log('🎨 Drawing container ready');
-      
-      // Add a test rectangle to verify visibility
-      this.addTestRectangle();
     } catch (error) {
       console.error('❌ Failed to initialize PixiJS Canvas:', error);
       throw error;
@@ -140,37 +149,6 @@ export class PixiCanvas {
   }
 
   /**
-   * Add a test rectangle to verify canvas is working
-   */
-  private addTestRectangle(): void {
-    if (!this.app || !this.drawingContainer) return;
-
-    console.log('🧪 Adding test rectangle to verify visibility...');
-    
-    const testRect = new Graphics();
-    
-    // Draw a bright red rectangle that should be clearly visible
-    testRect.rect(50, 50, 100, 100);
-    testRect.fill(0xff0000); // Bright red
-    testRect.stroke({ width: 3, color: 0x000000 }); // Black border
-    
-    // Add it to the drawing container
-    this.drawingContainer.addChild(testRect);
-    
-    console.log('🧪 Test rectangle added at (50,50) with size 100x100');
-    console.log('🧪 Drawing container info:', {
-      visible: this.drawingContainer.visible,
-      alpha: this.drawingContainer.alpha,
-      position: this.drawingContainer.position,
-      scale: this.drawingContainer.scale,
-      rotation: this.drawingContainer.rotation,
-      children: this.drawingContainer.children.length,
-      bounds: this.drawingContainer.getBounds()
-    });
-    console.log(`🧪 Drawing container now has ${this.drawingContainer.children.length} children`);
-  }
-
-  /**
    * Set the active tool
    */
   public setTool(toolName: string): boolean {
@@ -223,9 +201,6 @@ export class PixiCanvas {
       console.log(`🧹 Clearing ${this.drawingContainer.children.length} objects from canvas`);
       this.drawingContainer.removeChildren();
       console.log('🧹 Canvas cleared');
-      
-      // Re-add test rectangle after clearing
-      this.addTestRectangle();
     }
   }
 
@@ -292,6 +267,53 @@ export class PixiCanvas {
   }
 
   /**
+   * Get the actual canvas dimensions
+   */
+  public getCanvasDimensions(): { width: number; height: number } {
+    if (this.app) {
+      return {
+        width: this.app.screen.width,
+        height: this.app.screen.height
+      };
+    }
+    return { width: 794, height: 1123 }; // A4 fallback
+  }
+
+  /**
+   * Get detailed canvas information for debugging
+   */
+  public getCanvasInfo(): any {
+    if (!this.app || !this.canvasElement) {
+      return { error: 'Canvas not initialized' };
+    }
+
+    const containerRect = this.canvasElement.getBoundingClientRect();
+    const appScreen = this.app.screen;
+    const canvasElement = this.app.canvas;
+
+    return {
+      container: {
+        width: containerRect.width,
+        height: containerRect.height,
+        x: containerRect.x,
+        y: containerRect.y
+      },
+      pixiScreen: {
+        width: appScreen.width,
+        height: appScreen.height
+      },
+      canvasElement: {
+        width: canvasElement.width,
+        height: canvasElement.height,
+        styleWidth: canvasElement.style.width,
+        styleHeight: canvasElement.style.height
+      },
+      aspectRatio: appScreen.width / appScreen.height,
+      a4AspectRatio: 794 / 1123
+    };
+  }
+
+  /**
    * Get the drawing container (for adding custom elements)
    */
   public getDrawingContainer(): Container | null {
@@ -303,5 +325,99 @@ export class PixiCanvas {
    */
   public getToolManager(): ToolManager {
     return this.toolManager;
+  }
+
+  /**
+   * Render layout as canvas background structure
+   */
+  public renderLayoutAsBackground(layoutBlocks: any[]): void {
+    if (!this.app) return;
+
+    // Clear any existing background
+    this.app.stage.removeChildren();
+
+    // Create main background
+    const background = new Graphics();
+    background.rect(0, 0, this.app.screen.width, this.app.screen.height);
+    background.fill(0xffffff);
+    this.app.stage.addChild(background);
+
+    // Render each layout block as a background section
+    console.log(`🎨 Rendering ${layoutBlocks.length} layout blocks:`, layoutBlocks.map(b => `${b.blockId}: ${b.width}x${b.height}`));
+    
+    for (const block of layoutBlocks) {
+      console.log(`🎨 Rendering block ${block.blockId}: ${block.width}x${block.height} at (${block.x}, ${block.y})`);
+      
+      const blockGraphics = new Graphics();
+      
+      // Block colors for different sections
+      const blockColors = {
+        header: 0xE3F2FD,    // Light blue
+        program: 0xF3E5F5,   // Light purple  
+        resources: 0xE8F5E8, // Light green
+        content: 0xFFF8E1,   // Light yellow/cream
+        assignment: 0xFCE4EC, // Light pink
+        footer: 0xF5F5F5     // Light gray
+      };
+      
+      const bgColor = blockColors[block.blockId as keyof typeof blockColors] || 0xF9F9F9;
+      
+      // Fill block area with color
+      blockGraphics.rect(block.x, block.y, block.width, block.height);
+      blockGraphics.fill({ color: bgColor, alpha: 0.3 });
+      
+      // Add border
+      blockGraphics.rect(block.x, block.y, block.width, block.height);
+      blockGraphics.stroke({ width: 1, color: 0xcccccc, alpha: 0.8 });
+      
+      this.app.stage.addChild(blockGraphics);
+
+      // Add block title
+      const blockTitle = new Text({
+        text: block.blockId.charAt(0).toUpperCase() + block.blockId.slice(1),
+        style: {
+          fontFamily: 'Arial',
+          fontSize: Math.max(16, block.height * 0.12), // Increased minimum font size and ratio
+          fill: 0x333333, // Darker text for better visibility
+          fontWeight: 'bold'
+        }
+      });
+      
+      blockTitle.position.set(block.x + 15, block.y + 12); // Increased padding
+      this.app.stage.addChild(blockTitle);
+
+      // Render sub-areas if they exist
+      for (const area of block.areas || []) {
+        const areaGraphics = new Graphics();
+        
+        // Dashed border for areas
+        areaGraphics.rect(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
+        areaGraphics.stroke({ width: 1, color: 0x999999, alpha: 0.4 });
+        
+        this.app.stage.addChild(areaGraphics);
+
+        // Area title (smaller text)
+        if (area.height > 20) { // Reduced threshold
+          const areaTitle = new Text({
+            text: area.areaId.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+            style: {
+              fontFamily: 'Arial',
+              fontSize: Math.max(11, area.height * 0.15), // Increased minimum and ratio
+              fill: 0x555555, // Darker for better visibility
+              fontStyle: 'italic'
+            }
+          });
+          
+          areaTitle.position.set(area.x + 20, area.y + area.height / 2 - 6);
+          this.app.stage.addChild(areaTitle);
+        }
+      }
+    }
+
+    // Recreate drawing container on top
+    this.drawingContainer = new Container();
+    this.app.stage.addChild(this.drawingContainer);
+
+    console.log('🎨 Layout rendered as canvas background structure');
   }
 }

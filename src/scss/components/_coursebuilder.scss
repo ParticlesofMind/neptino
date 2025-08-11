@@ -8,15 +8,12 @@
 /* Course Builder Component */
 .coursebuilder {
   display: grid;
-  grid-template-columns: 60px 1fr 950px 250px;
-  grid-template-rows: 60px 1fr;
+  grid-template-columns: 60px 1fr 900px 250px; /* Increased canvas area to 900px for proper A4 display */
+  grid-template-rows: auto 1fr; /* Define explicit row heights */
   gap: 0.5rem;
-  height: 100vh; /* Full viewport height */
   width: 100%;
-  min-width: 100%;
-  overflow: hidden; /* Prevent page scrolling */
+  height: 100%; /* Fill the available container space */
   box-sizing: border-box;
-  padding: 0.5rem;
   background-color: vars.$gray-50;
   
   > * {
@@ -25,7 +22,6 @@
     border-radius: 4px;
     background-color: vars.$white;
     box-sizing: border-box;
-    overflow: hidden;
   }
   
   /* Options Bar (spans media bar and media search areas only) */
@@ -35,7 +31,6 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    overflow: hidden;
     padding: 0.25rem;
   }
   
@@ -46,10 +41,8 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    overflow-x: auto;
     padding: 0.25rem;
-    min-height: 60px;
-    max-height: 60px;
+
   }
   
   /* Table of Contents Options (separate top right area) */
@@ -62,8 +55,7 @@
     align-items: center;
     gap: 1rem;
     padding: 0.5rem;
-    max-height: 60px;
-    overflow: hidden;
+
   }
   
   /* Media Bar (Left Sidebar) */
@@ -75,8 +67,8 @@
     gap: 1rem;
     align-items: center;
     justify-content: flex-start;
-    height: 100%;
-    overflow-y: auto;
+    height: 100%; /* Ensure it fills the grid area */
+    overflow-y: auto; /* Allow scrolling if content overflows */
     padding: 0.5rem 0.25rem;
   }
   
@@ -86,29 +78,45 @@
     grid-row: 2;
     display: flex;
     flex-direction: column;
-    height: 100%;
-    overflow: hidden;
     width: 100%;
+    height: 100%; /* Ensure it fills the grid area */
+    overflow-y: auto; /* Allow scrolling if content overflows */
   }
   
-  /* Main Canvas Area (now positioned under the canvas toolbar) */
+  /* Main Canvas Area (simplified structure) */
   &__canvas {
     grid-column: 3;
     grid-row: 2;
-    min-width: 0;
-    min-height: 0;
-    width: 100%;
-    height: 100%;
-    background: vars.$gray-50;
+    background: vars.$gray-100;
     border: 1px solid vars.$gray-200;
     position: relative;
-    overflow: auto; /* Only the canvas area scrolls */
     box-sizing: border-box;
     display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
+    justify-content: center;
+    align-items: flex-start; /* Align to top */
     padding: 20px;
+    height: 100%; /* Fill grid area */
+    overflow: auto; /* Only the canvas area scrolls */
+    
+    /* Direct canvas container - A4 proportions */
+    #coursebuilder-canvas-container {
+      width: 794px;
+      height: 1123px;
+      background: vars.$white;
+      flex-shrink: 0; /* Prevent shrinking of A4 canvas */
+      border: 2px solid vars.$primary-color;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+      
+      /* PixiJS canvas fills the container */
+      canvas {
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 6px;
+      }
+    }
   }
   
   /* Table of Contents Sidebar */
@@ -117,9 +125,11 @@
     grid-row: 2;
     width: 100%;
     min-width: 180px;
-    height: 100%;
-    overflow-y: auto;
-    padding: 1rem;
+    height: 100%; /* Ensure it fills the grid area */
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Allow scrolling if content overflows */
   }
 }
 
@@ -129,8 +139,6 @@
   align-items: center;
   gap: 1rem;
   padding: 0.5rem;
-  min-height: 60px;
-  max-height: 60px;
   overflow: hidden;
   justify-content: flex-start;
   width: 100%;
@@ -141,15 +149,21 @@
     align-items: center;
     justify-content: flex-start;
     padding: 0;
+    flex-shrink: 0; // Don't shrink the tools
   }
   
   &__settings {
+    flex: 1; // Take up remaining space
     background: vars.$white;
     border: 1px solid vars.$gray-200;
     border-radius: 0.5rem;
-    padding: 1rem;
-    margin: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-left: 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow-x: auto; // Allow horizontal scrolling if needed
+    display: flex;
+    align-items: center;
+    gap: 1rem;
   }
 }
 
@@ -236,23 +250,126 @@
 /* Tool settings styling */
 .tool-settings {
   display: none;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
   
   &--active {
-    display: block;
+    display: flex;
+  }
+}
+
+/* Settings sections */
+.settings-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: vars.$gray-600;
+    white-space: nowrap;
+  }
+}
+
+/* Shape selection buttons */
+.shape-buttons {
+  display: flex;
+  gap: 0.25rem;
+  background: vars.$gray-100;
+  border-radius: 0.375rem;
+  padding: 0.25rem;
+}
+
+.shape-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  
+  svg {
+    width: 16px;
+    height: 16px;
+    color: vars.$gray-600;
+  }
+  
+  &:hover {
+    background: vars.$white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    
+    svg {
+      color: vars.$primary-color;
+    }
+  }
+  
+  &--active {
+    background: vars.$primary-color;
+    
+    svg {
+      color: white;
+    }
+  }
+}
+
+/* Size slider */
+.size-slider {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  input[type="range"] {
+    width: 80px;
+    height: 4px;
+    border-radius: 2px;
+    background: vars.$gray-200;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: vars.$primary-color;
+      cursor: pointer;
+    }
+    
+    &::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: vars.$primary-color;
+      cursor: pointer;
+      border: none;
+    }
+  }
+  
+  &__value {
+    font-size: 0.75rem;
+    color: vars.$gray-600;
+    min-width: 20px;
+    text-align: center;
   }
 }
 
 /* Color palette styling */
 .color-palette {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.25rem;
   flex-wrap: wrap;
-  margin: 0.5rem 0;
   
   &__color {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
     cursor: pointer;
     border: 2px solid transparent;
     transition: all 0.2s ease;
@@ -264,7 +381,25 @@
     
     &--active {
       border-color: vars.$primary-color;
-      box-shadow: 0 0 0 2px rgba(100, 149, 237, 0.3);
+      box-shadow: 0 0 0 1px rgba(100, 149, 237, 0.3);
+    }
+  }
+}
+
+/* Font controls */
+.font-controls {
+  &__select {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid vars.$gray-300;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    background: white;
+    color: vars.$gray-700;
+    
+    &:focus {
+      outline: none;
+      border-color: vars.$primary-color;
+      box-shadow: 0 0 0 2px rgba(100, 149, 237, 0.2);
     }
   }
 }
@@ -427,38 +562,7 @@
   }
 }
 
-/* Canvas wrapper for A4 simulation */
-.canvas-wrapper {
-  position: relative;
-  width: 100%;
-  min-height: 100%; /* Use min-height instead of height */
-  display: flex;
-  justify-content: center;
-  align-items: flex-start; /* Align to top instead of center */
-  background: vars.$gray-100;
-  padding: 20px;
-  box-sizing: border-box;
-}
-
-.canvas-page {
-  width: 794px;
-  height: 1123px; /* Keep A4 aspect ratio */
-  background: vars.$white;
-  border: 2px solid vars.$primary-color; /* Changed from dashed to solid for better visibility */
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-shrink: 0; /* Prevent shrinking */
-  
-  /* Ensure PixiJS canvas fills the container */
-  canvas {
-    border-radius: 6px; /* Slightly smaller radius to fit within the container border */
-  }
-}
+/* Removed redundant canvas wrapper styles - now using simplified structure */
 
 .canvas-placeholder {
   display: flex;
@@ -636,19 +740,43 @@
 /* Section-specific overrides for coursebuilder */
 .section {
   &#create {
-    height: 100vh; /* Full viewport height */
     overflow: hidden; /* Prevent section scrolling */
+    margin: 0; /* Remove any margin */
+    padding: 0; /* Remove any padding */
+    height: calc(100vh - 120px); /* Account for header and some margin */
+    max-height: calc(100vh - 120px); /* Ensure it never exceeds */
     
     .article {
       background-color: vars.$white;
       padding: 0;
       height: 100%;
       overflow: hidden; /* Prevent article scrolling */
+      margin: 0; /* Remove any margin */
       
       &--active {
         display: block;
         height: 100%;
       }
     }
+  }
+}
+
+/* Ensure body has no margins when coursebuilder is active */
+body:has(.coursebuilder) {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Alternative approach for browsers that don't support :has() */
+.coursebuilder-page {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  
+  body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
   }
 }

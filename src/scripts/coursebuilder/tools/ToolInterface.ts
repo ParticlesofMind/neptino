@@ -24,7 +24,7 @@ export interface ToolSettings {
     color: string;
     strokeWidth: number;
     fillColor?: string;
-    shapeType: 'rectangle' | 'circle' | 'line';
+    shapeType: 'rectangle' | 'triangle' | 'circle';
   };
   eraser: {
     size: number;

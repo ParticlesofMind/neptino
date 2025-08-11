@@ -11,6 +11,7 @@ interface EraserSettings {
 }
 
 export class EraserTool extends BaseTool {
+  public isErasing: boolean = false; // Track whether we're actively erasing
   private eraserCursor: Graphics | null = null;
 
   constructor() {
@@ -21,17 +22,20 @@ export class EraserTool extends BaseTool {
   }
 
   onPointerDown(event: FederatedPointerEvent, container: Container): void {
+    this.isErasing = true;
     this.eraseAtPoint(event, container);
   }
 
   onPointerMove(event: FederatedPointerEvent, container: Container): void {
     this.updateCursorPosition(event);
-    // Continue erasing while mouse is down
-    this.eraseAtPoint(event, container);
+    // Only erase if we're actively erasing (mouse button is pressed)
+    if (this.isErasing) {
+      this.eraseAtPoint(event, container);
+    }
   }
 
   onPointerUp(): void {
-    // Nothing special needed for pointer up
+    this.isErasing = false;
   }
 
   onActivate(): void {
@@ -41,6 +45,7 @@ export class EraserTool extends BaseTool {
 
   onDeactivate(): void {
     super.onDeactivate();
+    this.isErasing = false; // Stop any active erasing
     this.removeEraserCursor();
   }
 
@@ -109,8 +114,11 @@ export class EraserTool extends BaseTool {
   private updateCursorPosition(event: FederatedPointerEvent): void {
     const cursorElement = document.getElementById('eraser-cursor');
     if (cursorElement) {
-      cursorElement.style.left = `${event.global.x - this.settings.size / 2}px`;
-      cursorElement.style.top = `${event.global.y - this.settings.size / 2}px`;
+      // Use clientX/Y for proper screen positioning
+      const x = event.client.x;
+      const y = event.client.y;
+      cursorElement.style.left = `${x - this.settings.size / 2}px`;
+      cursorElement.style.top = `${y - this.settings.size / 2}px`;
     }
   }
 
@@ -119,7 +127,14 @@ export class EraserTool extends BaseTool {
     if (cursorElement) {
       cursorElement.remove();
     }
+    // Reset cursor to default for the entire document
     document.body.style.cursor = 'default';
+    
+    // Also reset cursor on the canvas container if it exists
+    const canvasContainer = document.getElementById('coursebuilder-canvas-container');
+    if (canvasContainer) {
+      canvasContainer.style.cursor = 'default';
+    }
   }
 
   updateSettings(settings: EraserSettings): void {

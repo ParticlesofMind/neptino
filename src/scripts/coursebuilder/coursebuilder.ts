@@ -4,6 +4,7 @@
  */
 
 import { PixiCanvas } from './PixiCanvas';
+import { LayoutManager, CanvasNavigator, type CourseLayout } from './layout';
 
 interface ToolSettings {
   pen: {
@@ -29,6 +30,12 @@ export class CourseBuilder {
   
   // PixiJS Canvas
   private pixiCanvas: PixiCanvas | null = null;
+  
+  // Layout System
+  private layoutManager: LayoutManager | null = null;
+  private canvasNavigator: CanvasNavigator | null = null;
+  private currentLayout: CourseLayout | null = null;
+  private layoutVisible: boolean = false;
 
   constructor() {
     this.toolSettings = {
@@ -55,8 +62,9 @@ export class CourseBuilder {
   private async init(): Promise<void> {
     this.canvasContainer = document.getElementById('coursebuilder-canvas-container');
     await this.initPixiCanvas();
+    this.initLayoutSystem();
     this.bindEvents();
-    console.log('Course Builder initialized with PixiJS');
+    console.log('Course Builder initialized with PixiJS and Layout System');
   }
 
   private async initPixiCanvas(): Promise<void> {
@@ -85,6 +93,14 @@ export class CourseBuilder {
       const target = e.target as HTMLElement;
       if (target.classList.contains('color-palette__color')) {
         this.handleColorSelection(e);
+      }
+    });
+
+    // Shape selection events
+    document.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('shape-btn') || target.closest('.shape-btn')) {
+        this.handleShapeSelection(e);
       }
     });
 
@@ -182,6 +198,38 @@ export class CourseBuilder {
     }
     
     console.log(`🎨 COURSEBUILDER: Color selection completed - ${selectedColor} for tool ${this.currentTool}`);
+  }
+
+  private handleShapeSelection(event: Event): void {
+    const target = event.target as HTMLElement;
+    const shapeButton = target.closest('.shape-btn') as HTMLButtonElement;
+    
+    if (!shapeButton) return;
+
+    const selectedShape = shapeButton.dataset.shape;
+    if (!selectedShape) return;
+
+    console.log(`🔶 COURSEBUILDER: Shape selection requested - ${selectedShape}`);
+
+    // Remove active state from all shape buttons
+    document.querySelectorAll('.shape-btn').forEach(btn => 
+      btn.classList.remove('shape-btn--active')
+    );
+    
+    // Add active state to clicked shape button
+    shapeButton.classList.add('shape-btn--active');
+    
+    // Update the shapes tool with the selected shape
+    if (this.pixiCanvas && this.currentTool === 'shapes') {
+      const toolManager = this.pixiCanvas.getToolManager();
+      const shapesTool = toolManager.getActiveTool();
+      if (shapesTool && 'setShapeType' in shapesTool) {
+        (shapesTool as any).setShapeType(selectedShape);
+        console.log(`🔶 COURSEBUILDER: Shape type updated in ShapesTool`);
+      }
+    }
+    
+    console.log(`🔶 COURSEBUILDER: Shape selection completed - ${selectedShape}`);
   }
 
   public clearCanvas(): void {
@@ -294,7 +342,149 @@ export class CourseBuilder {
     return this.selectedMedia;
   }
 
+  // Layout System Methods
+  
+  private initLayoutSystem(): void {
+    console.log('🏗️ Initializing layout system...');
+    
+    // Get detailed canvas information for debugging
+    const canvasInfo = this.pixiCanvas?.getCanvasInfo();
+    console.log('🏗️ Canvas Info:', canvasInfo);
+    
+    // Get actual canvas dimensions using the new method
+    const dimensions = this.pixiCanvas?.getCanvasDimensions() || { width: 794, height: 1123 };
+    const { width: canvasWidth, height: canvasHeight } = dimensions;
+    
+    console.log(`🏗️ Canvas dimensions from getCanvasDimensions(): ${canvasWidth}x${canvasHeight}`);
+    console.log(`🏗️ PixiJS screen from getApp():`, this.pixiCanvas?.getApp()?.screen);
+    
+    // Initialize layout manager with actual canvas dimensions
+    this.layoutManager = new LayoutManager(canvasWidth, canvasHeight, this.pixiCanvas?.getApp());
+    
+    // Initialize canvas navigator
+    this.canvasNavigator = new CanvasNavigator('coursebuilder__toc');
+    
+    // Set up canvas change callback
+    this.canvasNavigator.onCanvasChange((canvasIndex: number) => {
+      this.handleCanvasChange(canvasIndex);
+    });
+    
+    console.log('🏗️ Layout system initialized');
+    
+    // Force update dimensions to make sure layout uses correct size
+    if (this.layoutManager && canvasWidth > 0 && canvasHeight > 0) {
+      this.layoutManager.updateDimensions(canvasWidth, canvasHeight, this.pixiCanvas?.getApp());
+    }
+  }
+
+  public initializeCourseLayout(
+    courseId: string,
+    scheduledSessions: number = 1,
+    lessonDurationMinutes: number = 30
+  ): void {
+    if (!this.layoutManager || !this.canvasNavigator) {
+      console.error('Layout system not initialized');
+      return;
+    }
+
+    console.log(`🏗️ Creating course layout: ${scheduledSessions} sessions, ${lessonDurationMinutes} min each`);
+    
+    // Create course layout
+    this.currentLayout = this.layoutManager.createCourseLayout(
+      courseId,
+      'default-template',
+      scheduledSessions,
+      lessonDurationMinutes
+    );
+    
+    // Initialize navigator with the layout
+    this.canvasNavigator.init(this.currentLayout);
+    
+    // Show layout structure by default
+    this.showLayoutStructure();
+    
+    console.log(`🏗️ Course layout created with ${this.currentLayout.totalCanvases} canvases`);
+  }
+
+  private handleCanvasChange(canvasIndex: number): void {
+    console.log(`🧭 Switched to canvas ${canvasIndex + 1}`);
+    
+    // Here you could implement canvas-specific content loading
+    // For now, we'll just update the layout structure if visible
+    if (this.layoutVisible && this.layoutManager && this.pixiCanvas && this.currentLayout) {
+      if (this.currentLayout.canvases.length > 0) {
+        const canvasLayout = this.currentLayout.canvases[Math.min(canvasIndex, this.currentLayout.canvases.length - 1)];
+        this.pixiCanvas.renderLayoutAsBackground(canvasLayout.blocks);
+      }
+    }
+  }
+
+  public showLayoutStructure(): void {
+    if (!this.layoutManager || !this.pixiCanvas) return;
+
+    // Get the current layout blocks from the first canvas
+    if (!this.currentLayout || !this.currentLayout.canvases.length) {
+      console.warn('No layout available to render');
+      return;
+    }
+
+    const canvasLayout = this.currentLayout.canvases[0];
+    
+    // Use the new background rendering method instead of overlay graphics
+    this.pixiCanvas.renderLayoutAsBackground(canvasLayout.blocks);
+    this.layoutVisible = true;
+    
+    console.log('🏗️ Layout structure rendered as canvas background');
+  }
+
+  public hideLayoutStructure(): void {
+    if (!this.layoutManager) return;
+
+    this.layoutManager.hideLayoutStructure();
+    this.layoutVisible = false;
+    
+    console.log('🏗️ Layout structure hidden');
+  }
+
+  public toggleLayoutStructure(): void {
+    if (this.layoutVisible) {
+      this.hideLayoutStructure();
+    } else {
+      this.showLayoutStructure();
+    }
+  }
+
+  public navigateToCanvas(canvasIndex: number): void {
+    if (this.canvasNavigator) {
+      this.canvasNavigator.navigateToCanvas(canvasIndex);
+    }
+  }
+
+  public navigateToSession(sessionNumber: number): void {
+    if (this.canvasNavigator) {
+      this.canvasNavigator.navigateToSession(sessionNumber);
+    }
+  }
+
+  public getCurrentCanvasIndex(): number {
+    return this.canvasNavigator?.getCurrentCanvasIndex() || 0;
+  }
+
   public destroy(): void {
+    // Clean up layout system
+    if (this.layoutManager) {
+      this.layoutManager.destroy();
+      this.layoutManager = null;
+    }
+    
+    if (this.canvasNavigator) {
+      this.canvasNavigator.destroy();
+      this.canvasNavigator = null;
+    }
+    
+    this.currentLayout = null;
+    
+    // Clean up PixiJS
     if (this.pixiCanvas) {
       this.pixiCanvas.destroy();
       this.pixiCanvas = null;
@@ -306,6 +496,14 @@ export class CourseBuilder {
 document.addEventListener('DOMContentLoaded', () => {
   // Only initialize if we're on the coursebuilder page
   if (document.querySelector('.coursebuilder')) {
-    new CourseBuilder();
+    const courseBuilder = new CourseBuilder();
+    
+    // Demo: Initialize with a sample course layout
+    // This would normally be triggered from the course setup flow
+    setTimeout(() => {
+      // Demo layout: 3 sessions of 60 minutes each (regular lessons = 2 canvases per session)
+      courseBuilder.initializeCourseLayout('demo-course-123', 3, 60);
+      console.log('🎯 Demo layout initialized: 3 sessions × 2 canvases = 6 total canvases');
+    }, 1000);
   }
 });
