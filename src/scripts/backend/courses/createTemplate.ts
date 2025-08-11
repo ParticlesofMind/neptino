@@ -992,17 +992,10 @@ export class TemplateManager {
     // Handle both full template object and just template_data
     const actualData = templateData.template_data || templateData;
     const blocks = actualData.blocks || [];
-    const templateName = actualData.name || 'Untitled Template';
     const templateId = templateData.id || this.currentlyLoadedTemplateId;
     const fieldConfig = this.getBlockFieldConfiguration();
 
     const blocksHtml = `
-      <div class="template-config__header">
-        <h3 class="heading heading--tertiary">Configure: ${templateName}</h3>
-        <div class="template-config__status" id="template-save-status">
-          <span class="save-indicator__text">Changes saved automatically</span>
-        </div>
-      </div>
       <div class="template-blocks">
         ${blocks.map((block: TemplateBlock) => {
           const fields = fieldConfig[block.type] || [];
@@ -1150,13 +1143,10 @@ export class TemplateManager {
     }).join('');
 
     previewContainer.innerHTML = `
-      <div class="template-preview-header">
-        <h4>Preview: ${templateName}</h4>
-        <p>This is how your template will appear to users</p>
-      </div>
-      <div class="template-preview__frame">
+
+
         ${blocksHtml}
-      </div>
+    
     `;
   }
 
