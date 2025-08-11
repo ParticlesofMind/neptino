@@ -535,6 +535,28 @@ export class PixiCanvas {
           areaTitle.interactive = false; // Prevent user interaction
           this.layoutContainer.addChild(areaTitle);
         }
+
+        // Render template content if available
+        if (area.content && typeof area.content === 'string' && area.content.trim()) {
+          const contentText = new Text({
+            text: area.content,
+            style: {
+              fontFamily: 'Arial',
+              fontSize: 10,
+              fill: 0x666666,
+              wordWrap: true,
+              wordWrapWidth: area.width - 40, // Leave padding
+              breakWords: true
+            }
+          });
+          
+          // Position content below the area title if it exists, otherwise at the top
+          const contentY = area.height > 20 ? area.y + 30 : area.y + 10;
+          contentText.position.set(area.x + 20, contentY);
+          contentText.name = `layout-content-${area.areaId}`;
+          contentText.interactive = false; // Prevent user interaction
+          this.layoutContainer.addChild(contentText);
+        }
       }
     }
 

@@ -5,6 +5,7 @@
 
 import { PixiCanvas } from './PixiCanvas';
 import { LayoutManager, type CourseLayout } from './layout';
+import { TemplateRenderer } from './TemplateRenderer';
 import { marginSettingsHandler } from '../backend/courses/marginSettings';
 
 interface ToolSettings {
@@ -429,8 +430,42 @@ export class CourseBuilder {
     if (this.layoutVisible && this.layoutManager && this.pixiCanvas && this.currentLayout) {
       if (this.currentLayout.canvases.length > 0) {
         const canvasLayout = this.currentLayout.canvases[Math.min(canvasIndex, this.currentLayout.canvases.length - 1)];
-        this.pixiCanvas.renderLayoutAsBackground(canvasLayout.blocks);
+        
+        // Get the course ID to load template data
+        const courseId = sessionStorage.getItem('currentCourseId');
+        if (courseId) {
+          // Load template configuration and populate blocks
+          this.loadAndRenderTemplateContent(canvasLayout.blocks);
+        } else {
+          // Render without template data
+          this.pixiCanvas.renderLayoutAsBackground(canvasLayout.blocks);
+        }
       }
+    }
+  }
+
+  /**
+   * Load template configuration and render field labels
+   */
+  private async loadAndRenderTemplateContent(blocks: any[]): Promise<void> {
+    if (!this.pixiCanvas) return;
+
+    const courseId = sessionStorage.getItem('currentCourseId');
+    if (!courseId) {
+      console.log('📄 No course ID, rendering basic layout');
+      this.pixiCanvas.renderLayoutAsBackground(blocks);
+      return;
+    }
+
+    try {
+      // Fetch template configuration directly from Supabase
+      const configuredBlocks = await TemplateRenderer.getConfiguredLayoutBlocks(blocks, courseId);
+      console.log('📄 Rendering layout with template field configuration');
+      this.pixiCanvas.renderLayoutAsBackground(configuredBlocks);
+    } catch (error) {
+      console.error('📄 Error loading template configuration:', error);
+      // Fallback to basic layout
+      this.pixiCanvas.renderLayoutAsBackground(blocks);
     }
   }
 
@@ -445,11 +480,11 @@ export class CourseBuilder {
 
     const canvasLayout = this.currentLayout.canvases[0];
     
-    // Use the new background rendering method instead of overlay graphics
-    this.pixiCanvas.renderLayoutAsBackground(canvasLayout.blocks);
+    // Load and render with template content
+    this.loadAndRenderTemplateContent(canvasLayout.blocks);
     this.layoutVisible = true;
     
-    console.log('🏗️ Layout structure rendered as canvas background');
+    console.log('🏗️ Layout structure rendered as canvas background with template field configuration');
   }
 
   public hideLayoutStructure(): void {
