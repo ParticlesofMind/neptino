@@ -4,6 +4,7 @@
 
 // Primary Colors - Educational Theme
 $primary-color: #5083f1;          // Blue - Professional and trustworthy
+$primary-color-light: #dbeafe;    // Light blue variant
 $secondary-color: #059669;        // Green - Success and growth
 $accent-color: #f59e0b;           // Amber - Warm and inviting
 
@@ -28,8 +29,11 @@ $gray-900: #111827;
 
 // Status Colors
 $success: #10b981;
+$success-color: #10b981;          // Alias for consistency
 $warning: #f59e0b;
+$warning-color: #f59e0b;          // Alias for consistency  
 $error: #ef4444;
+$danger-color: #ef4444;           // Alias for consistency
 $info: #3b82f6;
 
 // Background Colors

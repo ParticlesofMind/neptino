@@ -8,9 +8,11 @@ import { ToolManager } from './tools/ToolManager';
 
 export class PixiCanvas {
   private app: Application | null = null;
-  private drawingContainer: Container | null = null;
+  private layoutContainer: Container | null = null; // Protected layout layer
+  private drawingContainer: Container | null = null; // User drawing layer
   private toolManager: ToolManager;
   private canvasElement: HTMLElement | null = null;
+  private layoutBlocks: any[] = []; // Store current layout for protection
 
   constructor(containerSelector: string) {
     // Handle both ID (#id) and class (.class) selectors
@@ -72,11 +74,10 @@ export class PixiCanvas {
         canvasHeight
       };
 
-      // Create a main drawing container
-      this.drawingContainer = new Container();
-      this.app.stage.addChild(this.drawingContainer);
+      // Create layered container structure for layout protection
+      this.initializeLayers();
 
-      // Add a background grid to help with visual orientation
+      // Add a background grid to the layout layer
       this.addBackgroundGrid();
 
       // Make the stage interactive
@@ -104,11 +105,11 @@ export class PixiCanvas {
   private setupEvents(): void {
     if (!this.app || !this.drawingContainer) return;
 
-    // TEMPORARY DEBUG: Use stage directly instead of drawingContainer
-    const targetContainer = this.app.stage; // Changed from this.drawingContainer
+    // CRITICAL: Use drawingContainer to protect layout from erasure
+    const targetContainer = this.drawingContainer; // Only user drawings, NOT layout
 
     this.app.stage.on('pointerdown', (event: FederatedPointerEvent) => {
-      console.log('🎯 EVENT: Passing stage as container to tools');
+      console.log('🎯 EVENT: Passing drawingContainer (layout protected)');
       this.toolManager.onPointerDown(event, targetContainer);
     });
 
@@ -151,8 +152,28 @@ export class PixiCanvas {
     // Style the grid lines
     grid.stroke({ width: 0.5, color: 0xe0e0e0, alpha: 0.3 });
 
-    // Add grid to stage (behind drawing container)
-    this.app.stage.addChildAt(grid, 0);
+    // Add grid to layout layer (behind everything)
+    if (this.layoutContainer) {
+      this.layoutContainer.addChild(grid);
+    }
+  }
+
+  /**
+   * Initialize the layered container structure
+   */
+  private initializeLayers(): void {
+    if (!this.app) return;
+
+    // Create layout container (protected layer)
+    this.layoutContainer = new Container();
+    this.layoutContainer.name = 'layout-layer';
+    this.layoutContainer.interactive = false; // Prevent direct interaction
+    this.app.stage.addChild(this.layoutContainer);
+
+    // Create drawing container (user content layer)
+    this.drawingContainer = new Container();
+    this.drawingContainer.name = 'drawing-layer';
+    this.app.stage.addChild(this.drawingContainer);
   }
 
   /**
@@ -201,17 +222,37 @@ export class PixiCanvas {
   }
 
   /**
-   * Clear all drawings from the canvas
+   * Clear all user drawings from the canvas (LAYOUT PROTECTED)
+   * This will NOT erase the pedagogical layout structure
    */
   public clearCanvas(): void {
     if (this.drawingContainer) {
-      console.log(`🧹 Clearing ${this.drawingContainer.children.length} objects from canvas`);
+      // Only clear user drawings, preserve layout
       this.drawingContainer.removeChildren();
-      console.log('🧹 Canvas cleared');
+      console.log('🗑️ User drawings cleared (layout protected)');
     }
   }
 
   /**
+   * DANGEROUS: Clear everything including layout (admin only)
+   * This method should be restricted to authorized users
+   */
+  public clearAll(): void {
+    if (this.app) {
+      // Clear everything including layout
+      this.app.stage.removeChildren();
+      
+      // Recreate layer structure
+      this.initializeLayers();
+      
+      // Restore layout if it exists
+      if (this.layoutBlocks.length > 0) {
+        this.renderLayoutAsBackground(this.layoutBlocks);
+      }
+      
+      console.log('⚠️ Everything cleared and restored');
+    }
+  }  /**
    * Resize the canvas
    */
   public resize(width: number, height: number): void {
@@ -261,8 +302,10 @@ export class PixiCanvas {
     if (this.app) {
       this.app.destroy(true);
       this.app = null;
+      this.layoutContainer = null;
       this.drawingContainer = null;
-      console.log('PixiJS Canvas destroyed');
+      this.layoutBlocks = [];
+      console.log('PixiJS Canvas destroyed (layout protection cleared)');
     }
   }
 
@@ -328,6 +371,63 @@ export class PixiCanvas {
   }
 
   /**
+   * Get the layout container (READ-ONLY - for inspection only)
+   * WARNING: Do not modify this container directly!
+   */
+  public getLayoutContainer(): Container | null {
+    console.warn('⚠️ Layout container is READ-ONLY and protected from modification');
+    return this.layoutContainer;
+  }
+
+  /**
+   * Check if the layout is currently protected
+   */
+  public isLayoutProtected(): boolean {
+    return this.layoutBlocks.length > 0;
+  }
+
+  /**
+   * Get current protected layout blocks (READ-ONLY)
+   */
+  public getProtectedLayout(): readonly any[] {
+    return Object.freeze([...this.layoutBlocks]);
+  }
+
+  /**
+   * Check if a coordinate is within a user-editable area
+   * Returns the area information if editable, null if in protected layout area
+   */
+  public isCoordinateEditable(x: number, y: number): { editable: boolean; area?: any; reason?: string } {
+    if (!this.isLayoutProtected()) {
+      return { editable: true, reason: 'No layout protection active' };
+    }
+
+    // Check if coordinates are within any layout area that allows user content
+    for (const block of this.layoutBlocks) {
+      if (block.areas) {
+        for (const area of block.areas) {
+          if (x >= area.x && x <= area.x + area.width && 
+              y >= area.y && y <= area.y + area.height) {
+            // Found the area - check if it allows user content
+            return {
+              editable: area.allowsDrawing || area.allowsMedia || area.allowsText,
+              area: area,
+              reason: area.allowsDrawing || area.allowsMedia || area.allowsText 
+                ? `Within editable area: ${area.areaId}`
+                : `Within protected area: ${area.areaId}`
+            };
+          }
+        }
+      }
+    }
+
+    return { 
+      editable: false, 
+      reason: 'Outside defined layout areas - layout structure is protected' 
+    };
+  }
+
+  /**
    * Get the tool manager (for advanced tool operations)
    */
   public getToolManager(): ToolManager {
@@ -335,25 +435,32 @@ export class PixiCanvas {
   }
 
   /**
-   * Render layout as canvas background structure
+   * Render layout as PROTECTED background structure
+   * This layout cannot be erased by normal user actions
    */
   public renderLayoutAsBackground(layoutBlocks: any[]): void {
-    if (!this.app) return;
+    if (!this.app || !this.layoutContainer) return;
 
-    // Clear any existing background
-    this.app.stage.removeChildren();
+    // Store layout blocks for protection and restoration
+    this.layoutBlocks = [...layoutBlocks];
+
+    // Clear only the layout container, not user drawings
+    this.layoutContainer.removeChildren();
 
     // Create main background
     const background = new Graphics();
     background.rect(0, 0, this.app.screen.width, this.app.screen.height);
     background.fill(0xffffff);
-    this.app.stage.addChild(background);
+    this.layoutContainer.addChild(background);
 
-    // Render each layout block as a background section
-    console.log(`🎨 Rendering ${layoutBlocks.length} layout blocks:`, layoutBlocks.map(b => `${b.blockId}: ${b.width}x${b.height}`));
+    // Add grid to layout layer
+    this.addBackgroundGrid();
+
+    // Render each layout block as a PROTECTED background section
+    console.log(`🔒 Rendering ${layoutBlocks.length} PROTECTED layout blocks:`, layoutBlocks.map(b => `${b.blockId}: ${b.width}x${b.height}`));
     
     for (const block of layoutBlocks) {
-      console.log(`🎨 Rendering block ${block.blockId}: ${block.width}x${block.height} at (${block.x}, ${block.y})`);
+      console.log(`🔒 Rendering PROTECTED block ${block.blockId}: ${block.width}x${block.height} at (${block.x}, ${block.y})`);
       
       const blockGraphics = new Graphics();
       
@@ -377,21 +484,27 @@ export class PixiCanvas {
       blockGraphics.rect(block.x, block.y, block.width, block.height);
       blockGraphics.stroke({ width: 1, color: 0xcccccc, alpha: 0.8 });
       
-      this.app.stage.addChild(blockGraphics);
+      // Mark this as protected layout content
+      blockGraphics.name = `layout-block-${block.blockId}`;
+      blockGraphics.interactive = false; // Prevent user interaction
+      
+      this.layoutContainer.addChild(blockGraphics);
 
-      // Add block title
+      // Add block title - use consistent font size regardless of block height
       const blockTitle = new Text({
         text: block.blockId.charAt(0).toUpperCase() + block.blockId.slice(1),
         style: {
           fontFamily: 'Arial',
-          fontSize: Math.max(16, block.height * 0.12), // Increased minimum font size and ratio
+          fontSize: 16, // Fixed font size for consistency across all blocks
           fill: 0x333333, // Darker text for better visibility
           fontWeight: 'bold'
         }
       });
       
       blockTitle.position.set(block.x + 15, block.y + 12); // Increased padding
-      this.app.stage.addChild(blockTitle);
+      blockTitle.name = `layout-title-${block.blockId}`;
+      blockTitle.interactive = false; // Prevent user interaction
+      this.layoutContainer.addChild(blockTitle);
 
       // Render sub-areas if they exist
       for (const area of block.areas || []) {
@@ -401,30 +514,98 @@ export class PixiCanvas {
         areaGraphics.rect(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
         areaGraphics.stroke({ width: 1, color: 0x999999, alpha: 0.4 });
         
-        this.app.stage.addChild(areaGraphics);
+        areaGraphics.name = `layout-area-${area.areaId}`;
+        areaGraphics.interactive = false; // Prevent user interaction
+        this.layoutContainer.addChild(areaGraphics);
 
-        // Area title (smaller text)
+        // Area title (smaller text) - use consistent font size regardless of area height
         if (area.height > 20) { // Reduced threshold
           const areaTitle = new Text({
             text: area.areaId.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
             style: {
               fontFamily: 'Arial',
-              fontSize: Math.max(11, area.height * 0.15), // Increased minimum and ratio
+              fontSize: 12, // Fixed font size for consistency across all areas
               fill: 0x555555, // Darker for better visibility
               fontStyle: 'italic'
             }
           });
           
           areaTitle.position.set(area.x + 20, area.y + area.height / 2 - 6);
-          this.app.stage.addChild(areaTitle);
+          areaTitle.name = `layout-area-title-${area.areaId}`;
+          areaTitle.interactive = false; // Prevent user interaction
+          this.layoutContainer.addChild(areaTitle);
         }
       }
     }
 
-    // Recreate drawing container on top
-    this.drawingContainer = new Container();
-    this.app.stage.addChild(this.drawingContainer);
+    console.log('🔒 PROTECTED layout structure rendered - cannot be erased by users');
+  }
 
-    console.log('🎨 Layout rendered as canvas background structure');
+  /**
+   * Update canvas margins - this affects the overall canvas drawing area
+   */
+  public updateMargins(margins: { top: number; bottom: number; left: number; right: number }): void {
+    console.log('📏 PixiCanvas: Updating margins', margins);
+    
+    // For now, we'll store the margins for future use
+    // The main layout adjustment is handled by the LayoutManager
+    // This method can be extended to add visual margin indicators if needed
+    
+    // Optional: Add visual margin guides
+    this.renderMarginGuides(margins);
+  }
+
+  /**
+   * Render visual margin guides on the canvas
+   */
+  private renderMarginGuides(margins: { top: number; bottom: number; left: number; right: number }): void {
+    if (!this.app || !this.layoutContainer) return;
+
+    // Remove existing margin guides
+    const existingGuides = this.layoutContainer.children.filter(child => child.name?.startsWith('margin-guide'));
+    existingGuides.forEach(guide => this.layoutContainer?.removeChild(guide));
+
+    // Create margin guide graphics
+    const marginGuides = new Graphics();
+    marginGuides.name = 'margin-guides';
+
+    // Draw margin boundaries with subtle lines
+    const guideColor = 0xcccccc;
+    const guideAlpha = 0.3;
+    
+    const canvasWidth = this.app.screen.width;
+    const canvasHeight = this.app.screen.height;
+
+    // Top margin line
+    if (margins.top > 0) {
+      marginGuides.moveTo(0, margins.top);
+      marginGuides.lineTo(canvasWidth, margins.top);
+    }
+
+    // Bottom margin line  
+    if (margins.bottom > 0) {
+      marginGuides.moveTo(0, canvasHeight - margins.bottom);
+      marginGuides.lineTo(canvasWidth, canvasHeight - margins.bottom);
+    }
+
+    // Left margin line
+    if (margins.left > 0) {
+      marginGuides.moveTo(margins.left, 0);
+      marginGuides.lineTo(margins.left, canvasHeight);
+    }
+
+    // Right margin line
+    if (margins.right > 0) {
+      marginGuides.moveTo(canvasWidth - margins.right, 0);
+      marginGuides.lineTo(canvasWidth - margins.right, canvasHeight);
+    }
+
+    marginGuides.stroke({ width: 1, color: guideColor, alpha: guideAlpha });
+    marginGuides.interactive = false; // Prevent user interaction
+    
+    // Add to layout container so it appears behind user content but above background
+    this.layoutContainer.addChildAt(marginGuides, 0);
+
+    console.log('📏 PixiCanvas: Margin guides rendered');
   }
 }

@@ -556,26 +556,91 @@
             <!-- Settings Article -->
             <article id="settings" class="article">
                 <section class="card">
+                    <!-- Margins Section -->
+                    <div class="margins-section">
+                        <h4 class="margins-title">Margins</h4>
+                        
+                        <!-- Display Unit Selection -->
+                        <div class="margins-unit-selection">
+                            <span class="unit-label">Display in</span>
+                            <div class="unit-toggle">
+                                <input type="radio" id="unit-inches" name="margin-unit" value="inches" class="unit-toggle__input">
+                                <label for="unit-inches" class="unit-toggle__label">Inches</label>
+                                
+                                <input type="radio" id="unit-centimeters" name="margin-unit" value="centimeters" class="unit-toggle__input" checked>
+                                <label for="unit-centimeters" class="unit-toggle__label">Centimeters</label>
+                            </div>
+                        </div>
+
+                        <!-- Margin Inputs Grid -->
+                        <div class="margins-input-grid">
+                            <div class="margin-input-item">
+                                <label class="margin-label" for="margin-top">Top</label>
+                                <div class="margin-input-group">
+                                    <input class="margin-input" type="number" id="margin-top" name="margin_top" value="2.54" step="0.01" min="0">
+                                    <span class="margin-unit-display">cm</span>
+                                </div>
+                            </div>
+                            
+                            <div class="margin-input-item">
+                                <label class="margin-label" for="margin-bottom">Bottom</label>
+                                <div class="margin-input-group">
+                                    <input class="margin-input" type="number" id="margin-bottom" name="margin_bottom" value="2.54" step="0.01" min="0">
+                                    <span class="margin-unit-display">cm</span>
+                                </div>
+                            </div>
+                            
+                            <div class="margin-input-item">
+                                <label class="margin-label" for="margin-left">Left</label>
+                                <div class="margin-input-group">
+                                    <input class="margin-input" type="number" id="margin-left" name="margin_left" value="2.54" step="0.01" min="0">
+                                    <span class="margin-unit-display">cm</span>
+                                </div>
+                            </div>
+                            
+                            <div class="margin-input-item">
+                                <label class="margin-label" for="margin-right">Right</label>
+                                <div class="margin-input-group">
+                                    <input class="margin-input" type="number" id="margin-right" name="margin_right" value="2.54" step="0.01" min="0">
+                                    <span class="margin-unit-display">cm</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Save Status -->
+                        <div class="margins-save-status">
+                            <div class="save-indicator" id="margins-save-status">
+                                <span class="save-indicator__text">Margins will be saved automatically</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Course Visibility Settings -->
              
-                    <form class="form">
-                        <div class="form__group form__group--checkbox">
-                            <input class="form__checkbox" type="checkbox" id="course-visible">
-                            <label class="form__label" for="course-visible">Course visible to students</label>
-                        </div>
-                        <div class="form__group form__group--checkbox">
-                            <input class="form__checkbox" type="checkbox" id="allow-enrollment">
-                            <label class="form__label" for="allow-enrollment">Allow new enrollments</label>
-                        </div>
-                        <div class="form__group form__group--checkbox">
-                            <input class="form__checkbox" type="checkbox" id="require-approval">
-                            <label class="form__label" for="require-approval">Require enrollment approval</label>
-                        </div>
-                    </form>
+                    <!-- Course Visibility Settings -->
+                    <div class="course-settings-section">
+                        <form class="settings-form">
+                            <div class="settings-checkbox-group">
+                                <div class="settings-checkbox-item">
+                                    <input class="settings-checkbox" type="checkbox" id="course-visible">
+                                    <label class="settings-checkbox-label" for="course-visible">Course visible to students</label>
+                                </div>
+                                <div class="settings-checkbox-item">
+                                    <input class="settings-checkbox" type="checkbox" id="allow-enrollment">
+                                    <label class="settings-checkbox-label" for="allow-enrollment">Allow new enrollments</label>
+                                </div>
+                                <div class="settings-checkbox-item">
+                                    <input class="settings-checkbox" type="checkbox" id="require-approval">
+                                    <label class="settings-checkbox-label" for="require-approval">Require enrollment approval</label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                     
                     <div class="danger-zone">
-                        <h3 class="heading heading--tertiary">Danger Zone</h3>
-                        <p class="text text--danger">Once you delete a course, there is no going back. Please be certain.</p>
-                        <button class="button button--danger">Delete Course</button>
+                        <h3 class="danger-zone-title">Danger Zone</h3>
+                        <p class="danger-zone-text">Once you delete a course, there is no going back. Please be certain.</p>
+                        <button class="danger-zone-button">Delete Course</button>
                     </div>
                 </section>
             </article>
@@ -884,17 +949,20 @@
                         </div>
                     </div>
 
-                    <!-- Main Canvas Area (Simplified Structure) -->
+                    <!-- Main Canvas Area (Layout Protected) -->
                     <div class="coursebuilder__canvas">
                         <!-- PixiJS canvas will be inserted here directly -->
                         <div class="canvas-placeholder">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="#ccc">
                                 <path d="M12,2A2,2 0 0,1 14,4A2,2 0 0,1 12,6A2,2 0 0,1 10,4A2,2 0 0,1 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V21A2,2 0 0,0 5,23H19A2,2 0 0,0 21,21V9M19,9H14V4H19V9Z"/>
                             </svg>
-                            <div class="canvas-placeholder__title">Interactive Canvas</div>
-                                <div class="canvas-placeholder__subtitle">Start drawing or drag media here</div>
+                            <div class="canvas-placeholder__title">🔒 Layout-Protected Canvas</div>
+                            <div class="canvas-placeholder__subtitle">
+                                Draw within pedagogical areas only<br>
+                                <small>Layout structure cannot be erased</small>
                             </div>
                         </div>
+                    </div>
                     </div>
 
                     <!-- Table of Contents Sidebar -->
@@ -943,5 +1011,6 @@
     <script type="module" src="/src/scripts/backend/courses/templates/templateConfigHandler.ts"></script>
     <script type="module" src="/src/scripts/backend/courses/templates/templatePreviewHandler.ts"></script>
     <script type="module" src="/src/scripts/backend/courses/scheduleCourse.ts"></script>
+    <script type="module" src="/src/scripts/backend/courses/marginSettings.ts"></script>
 </body>
 </html>

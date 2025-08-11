@@ -258,13 +258,13 @@ export class LayoutManager {
 
     this.layoutContainer.addChild(blockGraphics);
 
-    // Add block label if requested
+    // Add block label if requested - use consistent font size
     if (showLabels) {
       const blockLabel = new Text({
         text: block.blockId.charAt(0).toUpperCase() + block.blockId.slice(1),
         style: new TextStyle({
           fontFamily: 'Arial',
-          fontSize: Math.max(16, block.height * 0.1), // Scale font with block size
+          fontSize: 16, // Fixed font size for consistency across all blocks
           fill: 0x333333,
           fontWeight: 'bold'
         })
@@ -274,7 +274,7 @@ export class LayoutManager {
       blockLabel.y = block.y + 10;
       this.layoutContainer.addChild(blockLabel);
       
-      console.log(`📐 Added label "${blockLabel.text}" at (${blockLabel.x}, ${blockLabel.y}) with font size ${blockLabel.style.fontSize}`);
+      console.log(`📐 Added label "${blockLabel.text}" at (${blockLabel.x}, ${blockLabel.y}) with fixed font size 16`);
     }
 
     // Render areas within the block
@@ -327,13 +327,13 @@ export class LayoutManager {
     areaGraphics.stroke({ width: 1, color: 0x999999, alpha: 0.5 });
     this.layoutContainer.addChild(areaGraphics);
 
-    // Add area label if requested and area is large enough
+    // Add area label if requested and area is large enough - use consistent font size
     if (showLabels && area.height > 20) {
       const areaLabel = new Text({
         text: area.areaId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
         style: new TextStyle({
           fontFamily: 'Arial',
-          fontSize: 10,
+          fontSize: 12, // Fixed font size for consistency across all areas
           fill: 0x888888,
           fontStyle: 'italic'
         })
@@ -721,6 +721,108 @@ export class LayoutManager {
   public getCurrentCanvas(): CanvasLayout | null {
     if (!this.currentLayout) return null;
     return this.currentLayout.canvases[this.currentCanvasIndex] || null;
+  }
+
+  /**
+   * Update canvas margins - this affects how layout blocks are positioned
+   */
+  public updateMargins(margins: { top: number; bottom: number; left: number; right: number }): void {
+    console.log('📏 LayoutManager: Updating margins', margins);
+    
+    // If we have a current layout, recreate all canvas layouts with new margins
+    if (this.currentLayout) {
+      // Recreate canvas layouts with new margins
+      this.currentLayout.canvases = this.currentLayout.canvases.map(canvas => {
+        return this.createCanvasLayoutWithMargins(canvas.sessionNumber, canvas.canvasNumber, margins);
+      });
+      
+      console.log('📏 LayoutManager: Canvas layouts updated with new margins');
+    }
+  }
+
+  /**
+   * Create a canvas layout with specific margins
+   */
+  private createCanvasLayoutWithMargins(
+    sessionNumber: number, 
+    canvasNumber: number, 
+    margins: { top: number; bottom: number; left: number; right: number }
+  ): CanvasLayout {
+    const canvasId = `session-${sessionNumber}-canvas-${canvasNumber}`;
+    
+    // Calculate available content area (excludes header and footer)
+    const contentAreaHeight = this.canvasHeight - margins.top - margins.bottom;
+    const availableWidth = this.canvasWidth - margins.left - margins.right;
+    
+    // Create blocks within the available space
+    const blocks: RenderedBlock[] = [];
+    let currentY = margins.top; // Start content blocks after header
+    
+    console.log(`📐 Layout setup: Canvas ${this.canvasWidth}x${this.canvasHeight}, Content area ${availableWidth}x${contentAreaHeight}, Margins: ${JSON.stringify(margins)}`);
+    
+    DEFAULT_BLOCKS.forEach(block => {
+      let blockHeight: number;
+      let blockY: number;
+      let blockWidth: number;
+      let blockX: number;
+      
+      if (block.name === 'Header') {
+        // Header spans full width at top, uses margin height
+        blockHeight = margins.top;
+        blockY = 0;
+        blockWidth = this.canvasWidth;
+        blockX = 0;
+      } else if (block.name === 'Footer') {
+        // Footer spans full width at bottom, uses margin height
+        blockHeight = margins.bottom;
+        blockY = this.canvasHeight - margins.bottom;
+        blockWidth = this.canvasWidth;
+        blockX = 0;
+      } else {
+        // Content blocks use percentage of content area
+        const contentBlockPercentage = block.heightPercentage / 87; // Total content blocks = 87%
+        blockHeight = contentAreaHeight * contentBlockPercentage;
+        blockY = currentY;
+        blockWidth = availableWidth;
+        blockX = margins.left;
+        currentY += blockHeight;
+      }
+      
+      const areas: RenderedArea[] = block.canvasAreas?.map(area => ({
+        areaId: area.id,
+        x: blockX + 10, // Small padding
+        y: blockY + 10,
+        width: blockWidth - 20,
+        height: blockHeight - 20
+      })) || [];
+      
+      blocks.push({
+        blockId: block.id,
+        x: blockX,
+        y: blockY,
+        width: blockWidth,
+        height: blockHeight,
+        areas
+      });
+      
+      console.log(`📐 Block ${block.id}: positioned at (${blockX}, ${blockY}) with size ${blockWidth}x${blockHeight} (${block.heightPercentage}%)`);
+    });
+
+    // Verify layout integrity - all blocks should use proportional heights
+    const totalPercentage = blocks.reduce((sum, b) => {
+      const blockId = b.blockId;
+      const blockDef = DEFAULT_BLOCKS.find(def => def.id === blockId);
+      return sum + (blockDef?.heightPercentage || 0);
+    }, 0);
+    console.log(`📐 Layout verification: Total block percentages: ${totalPercentage}% (should be 100%)`);
+    console.log(`📐 Canvas height: ${this.canvasHeight}, Margins: top=${margins.top}, bottom=${margins.bottom}`);
+    
+    return {
+      id: canvasId,
+      sessionNumber,
+      canvasNumber,
+      blocks
+    };
   }
 
   /**

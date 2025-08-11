@@ -5,6 +5,7 @@
 
 import { PixiCanvas } from './PixiCanvas';
 import { LayoutManager, type CourseLayout } from './layout';
+import { marginSettingsHandler } from '../backend/courses/marginSettings';
 
 interface ToolSettings {
   pen: {
@@ -36,6 +37,14 @@ export class CourseBuilder {
   private currentLayout: CourseLayout | null = null;
   private layoutVisible: boolean = false;
 
+  // Margin settings
+  private currentMargins: { top: number; bottom: number; left: number; right: number } = {
+    top: 72.58, // 2.54cm in pixels (96 DPI)
+    bottom: 72.58,
+    left: 72.58,
+    right: 72.58
+  };
+
   constructor() {
     this.toolSettings = {
       pen: {
@@ -63,6 +72,7 @@ export class CourseBuilder {
     await this.initPixiCanvas();
     this.initLayoutSystem();
     this.bindEvents();
+    this.initMarginSettings();
     console.log('Course Builder initialized with PixiJS and Layout System');
   }
 
@@ -233,7 +243,19 @@ export class CourseBuilder {
 
   public clearCanvas(): void {
     if (this.pixiCanvas) {
-      this.pixiCanvas.clearCanvas();
+      this.pixiCanvas.clearCanvas(); // Only clears user content, layout is protected
+      console.log('🔒 User content cleared (pedagogical layout protected)');
+    }
+  }
+
+  /**
+   * ADMIN ONLY: Clear everything including layout structure
+   * This should be restricted to authorized users only
+   */
+  public clearAll(): void {
+    if (this.pixiCanvas) {
+      this.pixiCanvas.clearAll();
+      console.log('⚠️ ADMIN: Everything cleared (including layout)');
     }
   }
 
@@ -463,6 +485,88 @@ export class CourseBuilder {
     return this.layoutManager?.getCurrentCanvasIndex() || 0;
   }
 
+  // Margin Settings Methods
+  
+  private initMarginSettings(): void {
+    // Set up connection with margin settings handler
+    marginSettingsHandler.setCourseBuilder(this);
+    console.log('📏 Margin settings initialized');
+  }
+
+  public updateCanvasMargins(margins: { top: number; bottom: number; left: number; right: number }): void {
+    console.log('📏 Updating canvas margins:', margins);
+    
+    // Store current margins
+    this.currentMargins = { ...margins };
+    
+    // Update layout manager if available
+    if (this.layoutManager) {
+      this.layoutManager.updateMargins(margins);
+    }
+    
+    // Update PixiJS canvas if available
+    if (this.pixiCanvas) {
+      this.pixiCanvas.updateMargins(margins);
+    }
+    
+    // Re-render layout with new margins if layout is visible
+    if (this.layoutVisible && this.currentLayout) {
+      this.showLayoutStructure();
+    }
+    
+    console.log('📏 Canvas margins updated successfully');
+  }
+
+  public loadCourseMargins(courseId: string): void {
+    // Load margin settings from database
+    marginSettingsHandler.loadSettingsFromDatabase(courseId);
+  }
+
+  public getCurrentMargins(): { top: number; bottom: number; left: number; right: number } {
+    return { ...this.currentMargins };
+  }
+
+  /**
+   * Load course schedule settings from database
+   */
+  public async loadCourseScheduleSettings(courseId: string): Promise<{ sessions: number; durationMinutes: number }> {
+    try {
+      // Import supabase here to avoid circular dependencies
+      const { supabase } = await import('../backend/supabase.js');
+      
+      const { data, error } = await supabase
+        .from('courses')
+        .select('schedule_settings, course_days')
+        .eq('id', courseId)
+        .single();
+
+      if (error) {
+        console.warn('No schedule settings found for course, using defaults:', error);
+        return { sessions: 3, durationMinutes: 60 }; // Fallback defaults
+      }
+
+      if (data?.schedule_settings && Array.isArray(data.schedule_settings) && data.schedule_settings.length > 0) {
+        const scheduleSettings = data.schedule_settings;
+        const totalSessions = scheduleSettings.length;
+        
+        // Calculate lesson duration from first lesson
+        const firstLesson = scheduleSettings[0];
+        const startTime = new Date(`2000-01-01T${firstLesson.startTime}`);
+        const endTime = new Date(`2000-01-01T${firstLesson.endTime}`);
+        const durationMinutes = Math.abs(endTime.getTime() - startTime.getTime()) / (1000 * 60);
+        
+        console.log(`📅 Loaded course schedule: ${totalSessions} sessions of ${durationMinutes} minutes each`);
+        return { sessions: totalSessions, durationMinutes };
+      } else {
+        console.log('📅 No schedule configured yet, using defaults');
+        return { sessions: 3, durationMinutes: 60 }; // Fallback defaults
+      }
+    } catch (error) {
+      console.error('Error loading course schedule settings:', error);
+      return { sessions: 3, durationMinutes: 60 }; // Fallback defaults
+    }
+  }
+
   public destroy(): void {
     // Clean up layout system (includes navigation)
     if (this.layoutManager) {
@@ -486,12 +590,47 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.querySelector('.coursebuilder')) {
     const courseBuilder = new CourseBuilder();
     
-    // Demo: Initialize with a sample course layout
-    // This would normally be triggered from the course setup flow
-    setTimeout(() => {
-      // Demo layout: 3 sessions of 60 minutes each (regular lessons = 2 canvases per session)
-      courseBuilder.initializeCourseLayout('demo-course-123', 3, 60);
-      console.log('🎯 Demo layout initialized: 3 sessions × 2 canvases = 6 total canvases');
+    // Get the actual course ID from session storage instead of using a hardcoded demo ID
+    setTimeout(async () => {
+      // Try to get course ID from session storage (set during course setup)
+      const currentCourseId = sessionStorage.getItem('currentCourseId');
+      
+      if (currentCourseId) {
+        console.log(`🎯 Using course from session: ${currentCourseId}`);
+        
+        // Load actual schedule settings from the database
+        const scheduleSettings = await courseBuilder.loadCourseScheduleSettings(currentCourseId);
+        
+        // Initialize layout with real course data
+        courseBuilder.initializeCourseLayout(
+          currentCourseId, 
+          scheduleSettings.sessions, 
+          scheduleSettings.durationMinutes
+        );
+        
+        // Load margin settings for the actual course (will load from database)
+        courseBuilder.loadCourseMargins(currentCourseId);
+        
+        console.log(`🎯 Course layout initialized: ${scheduleSettings.sessions} sessions × ${scheduleSettings.durationMinutes}min = ${scheduleSettings.sessions * 2} total canvases`);
+        console.log('📏 Margin settings loaded for actual course');
+      } else {
+        console.warn('⚠️ No course ID found in session storage. Please create or select a course first.');
+        console.log('💡 To create a course, go to the Setup section and complete the course essentials form.');
+        
+        // Optionally show a message to the user
+        const canvasContainer = document.querySelector('.coursebuilder__canvas');
+        if (canvasContainer) {
+          canvasContainer.innerHTML = `
+            <div class="canvas-placeholder">
+              <div class="canvas-placeholder__content">
+                <h3>No Course Selected</h3>
+                <p>Please create or select a course from the Setup section first.</p>
+                <a href="#setup" class="button button--primary">Go to Setup</a>
+              </div>
+            </div>
+          `;
+        }
+      }
     }, 1000);
   }
 });

@@ -463,3 +463,345 @@
     }
   }
 }
+
+// ==========================================================================
+// MARGIN SETTINGS
+// ==========================================================================
+
+.margins-section {
+  background-color: $white;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+}
+
+.margins-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: $gray-800;
+  margin: 0 0 $spacing-6 0;
+  padding: 0;
+  border: none;
+}
+
+.margins-unit-selection {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+  margin-bottom: $spacing-6;
+  
+  .unit-label {
+    font-size: 0.95rem;
+    color: $gray-700;
+    font-weight: 500;
+    min-width: 80px;
+  }
+}
+
+.unit-toggle {
+  display: flex;
+  background-color: $gray-100;
+  border-radius: $border-radius-md;
+  padding: 2px;
+  gap: 0;
+  
+  &__input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    
+    &:checked + &__label {
+      background-color: $white;
+      color: $gray-900;
+      box-shadow: $shadow-sm;
+      border-color: transparent;
+    }
+  }
+  
+  &__label {
+    padding: $spacing-2 $spacing-4;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: $border-radius-sm;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: $gray-600;
+    transition: all 0.15s ease;
+    
+    &:hover {
+      color: $gray-800;
+    }
+    
+    &:first-of-type {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    
+    &:last-of-type {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+  }
+}
+
+.margins-input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-4 $spacing-6;
+  margin-bottom: $spacing-6;
+  
+  @media (max-width: #{$breakpoint-sm - 1px}) {
+    grid-template-columns: 1fr;
+    gap: $spacing-4;
+  }
+}
+
+.margin-input-item {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2;
+}
+
+.margin-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: $gray-700;
+  margin: 0;
+}
+
+.margin-input-group {
+  display: flex;
+  align-items: center;
+  background-color: $white;
+  border: 1px solid $gray-300;
+  border-radius: $border-radius;
+  padding: 0;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  
+  &:focus-within {
+    border-color: $primary-color;
+    box-shadow: 0 0 0 3px rgba(80, 131, 241, 0.1);
+  }
+  
+  .margin-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: $spacing-3;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: $gray-900;
+    min-width: 0;
+    
+    &:focus {
+      outline: none;
+    }
+    
+    &::placeholder {
+      color: $gray-400;
+    }
+  }
+  
+  .margin-unit-display {
+    padding: 0 $spacing-3;
+    font-size: 0.875rem;
+    color: $gray-500;
+    font-weight: 500;
+    background-color: $gray-50;
+    border-left: 1px solid $gray-200;
+    min-width: 32px;
+    text-align: center;
+  }
+}
+
+.margins-save-status {
+  .save-indicator {
+    &__text {
+      font-size: 0.8rem;
+      color: $gray-500;
+      font-style: italic;
+      
+      &.saved {
+        color: $success-color;
+      }
+      
+      &.saving {
+        color: $warning-color;
+      }
+      
+      &.error {
+        color: $danger-color;
+      }
+    }
+  }
+}
+
+.settings-section {
+  margin-bottom: $spacing-8;
+  
+  .heading--tertiary {
+    margin-bottom: $spacing-6;
+    color: $primary-color;
+    border-bottom: 2px solid $primary-color;
+    padding-bottom: $spacing-2;
+  }
+  
+  .heading--quaternary {
+    margin-bottom: $spacing-4;
+    color: $gray-700;
+    font-size: 1.1rem;
+  }
+}
+
+.margins-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-4;
+  margin-bottom: $spacing-4;
+  
+  @media (max-width: #{$breakpoint-sm - 1px}) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.save-indicator {
+  &__text {
+    font-size: 0.875rem;
+    color: $gray-600;
+    
+    &.saved {
+      color: $success-color;
+    }
+    
+    &.saving {
+      color: $warning-color;
+    }
+    
+    &.error {
+      color: $danger-color;
+    }
+  }
+}
+
+// ==========================================================================
+// COURSE SETTINGS SECTION
+// ==========================================================================
+
+.course-settings-section {
+  margin: $spacing-8 0;
+  padding: $spacing-6 0;
+  border-top: 1px solid $gray-200;
+}
+
+.settings-form {
+  margin: 0;
+}
+
+.settings-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+}
+
+.settings-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+  padding: $spacing-3;
+  border-radius: $border-radius;
+  transition: background-color 0.15s ease;
+  
+  &:hover {
+    background-color: $gray-50;
+  }
+}
+
+.settings-checkbox {
+  width: 18px;
+  height: 18px;
+  border: 2px solid $gray-300;
+  border-radius: $border-radius-sm;
+  background-color: $white;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+  
+  &:checked {
+    background-color: $primary-color;
+    border-color: $primary-color;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 5px;
+      width: 6px;
+      height: 10px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+  }
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(80, 131, 241, 0.2);
+  }
+}
+
+.settings-checkbox-label {
+  font-size: 0.95rem;
+  color: $gray-700;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  flex: 1;
+}
+
+// ==========================================================================
+// DANGER ZONE
+// ==========================================================================
+
+.danger-zone {
+  margin-top: $spacing-8;
+  padding: $spacing-6;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: $border-radius-md;
+}
+
+.danger-zone-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #dc2626;
+  margin: 0 0 $spacing-3 0;
+}
+
+.danger-zone-text {
+  font-size: 0.875rem;
+  color: #7f1d1d;
+  margin: 0 0 $spacing-4 0;
+  line-height: 1.5;
+}
+
+.danger-zone-button {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  padding: $spacing-3 $spacing-4;
+  border-radius: $border-radius;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  
+  &:hover {
+    background-color: #b91c1c;
+  }
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+  }
+}

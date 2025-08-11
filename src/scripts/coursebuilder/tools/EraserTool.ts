@@ -41,6 +41,7 @@ export class EraserTool extends BaseTool {
   onActivate(): void {
     super.onActivate();
     this.createEraserCursor();
+    console.log('🔒 ERASER: Activated with layout protection enabled');
   }
 
   onDeactivate(): void {
@@ -53,9 +54,16 @@ export class EraserTool extends BaseTool {
     const point = event.global;
     const eraserRadius = this.settings.size / 2;
 
-    // Check all objects in the container
+    // Check all objects in the container (should only be user drawings now)
     for (let i = container.children.length - 1; i >= 0; i--) {
       const child = container.children[i];
+      
+      // LAYOUT PROTECTION: Skip objects that have layout-related names
+      if (child.name && child.name.includes('layout-')) {
+        console.log(`🔒 ERASER: Skipping protected layout element: ${child.name}`);
+        continue;
+      }
+      
       const bounds = child.getBounds();
 
       // Simple collision detection - check if eraser overlaps with object bounds
@@ -63,6 +71,7 @@ export class EraserTool extends BaseTool {
         point.x, point.y, eraserRadius,
         bounds.x, bounds.y, bounds.width, bounds.height
       )) {
+        console.log(`🗑️ ERASER: Removing user drawing (${child.constructor.name})`);
         container.removeChild(child);
         child.destroy();
       }
@@ -100,10 +109,14 @@ export class EraserTool extends BaseTool {
     cursorElement.style.zIndex = '10000';
     cursorElement.style.width = `${this.settings.size}px`;
     cursorElement.style.height = `${this.settings.size}px`;
-    cursorElement.style.border = '1px solid #000';
+    cursorElement.style.border = '2px solid #ff6b6b'; // Red border for layout-protected mode
     cursorElement.style.borderRadius = '50%';
-    cursorElement.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
+    cursorElement.style.backgroundColor = 'rgba(255, 107, 107, 0.2)'; // Light red background
+    cursorElement.style.boxShadow = '0 0 8px rgba(255, 107, 107, 0.4)'; // Red glow
     cursorElement.id = 'eraser-cursor';
+    
+    // Add protection indicator
+    cursorElement.title = '🔒 Layout-Protected Eraser - Only user drawings can be erased';
     
     document.body.appendChild(cursorElement);
 
