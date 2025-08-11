@@ -518,26 +518,192 @@ export class PixiCanvas {
         areaGraphics.interactive = false; // Prevent user interaction
         this.layoutContainer.addChild(areaGraphics);
 
-        // Area title (smaller text) - use consistent font size regardless of area height
-        if (area.height > 20) { // Reduced threshold
-          const areaTitle = new Text({
-            text: area.areaId.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
-            style: {
-              fontFamily: 'Arial',
-              fontSize: 12, // Fixed font size for consistency across all areas
-              fill: 0x555555, // Darker for better visibility
-              fontStyle: 'italic'
-            }
-          });
+        // Render template content if available (interactive input field representations)
+        if (area.content && Array.isArray(area.content) && area.content.length > 0) {
+          // Check if this is header content area for row layout
+          const isHeaderContentArea = area.areaId === 'header-content-area';
+          console.log(`🔍 Debug - Block: "${block.id}", Area: "${area.areaId}", isHeaderContentArea: ${isHeaderContentArea}, fields: ${area.content.length}`);
           
-          areaTitle.position.set(area.x + 20, area.y + area.height / 2 - 6);
-          areaTitle.name = `layout-area-title-${area.areaId}`;
-          areaTitle.interactive = false; // Prevent user interaction
-          this.layoutContainer.addChild(areaTitle);
-        }
-
-        // Render template content if available
-        if (area.content && typeof area.content === 'string' && area.content.trim()) {
+          // Also update document title for debugging
+          document.title = `Block: ${block.id}, Area: ${area.areaId}, HeaderContentArea: ${isHeaderContentArea}`;
+          
+          if (isHeaderContentArea) {
+            // Header: Horizontal row layout
+            console.log(`🎯 Using HORIZONTAL layout for header content area with ${area.content.length} fields`);
+            let xOffset = 10;
+            
+            for (const field of area.content) {
+              // Calculate field width based on type
+              const fieldWidth = field.inputType === 'checkbox' ? 80 : 120;
+              
+              // Check if field fits in current row
+              if (xOffset + fieldWidth > area.width - 10) break;
+              
+              // Create field label
+              const fieldLabel = new Text({
+                text: field.label + (field.required ? ' *' : ''),
+                style: {
+                  fontFamily: 'Arial',
+                  fontSize: 8,
+                  fill: 0x333333,
+                  fontWeight: field.required ? 'bold' : 'normal'
+                }
+              });
+              
+              fieldLabel.position.set(area.x + xOffset, area.y + 5);
+              fieldLabel.name = `field-label-${area.areaId}-${field.key}`;
+              fieldLabel.interactive = false;
+              this.layoutContainer.addChild(fieldLabel);
+              
+              // Create interactive input field representation
+              const inputContainer = new Container();
+              inputContainer.name = `field-container-${area.areaId}-${field.key}`;
+              
+              const inputBg = new Graphics();
+              const inputWidth = field.inputType === 'checkbox' ? 12 : Math.min(fieldWidth - 20, 100);
+              const inputHeight = field.inputType === 'checkbox' ? 12 : 16;
+              
+              // Different visual styles for different input types
+              if (field.inputType === 'checkbox') {
+                // Checkbox representation
+                inputBg.rect(0, 0, 12, 12);
+                inputBg.stroke({ width: 1, color: 0x666666 });
+                inputBg.fill(0xffffff);
+                
+                // Make checkbox interactive
+                inputBg.interactive = true;
+                inputBg.cursor = 'pointer';
+                inputBg.on('pointerdown', () => this.handleCheckboxClick(field, inputBg));
+                
+              } else {
+                // Text/number input representation
+                inputBg.rect(0, 0, inputWidth, inputHeight);
+                inputBg.stroke({ width: 1, color: 0x999999 });
+                inputBg.fill(0xfafafa);
+                
+                // Make input interactive
+                inputBg.interactive = true;
+                inputBg.cursor = 'text';
+                inputBg.on('pointerdown', () => this.handleInputClick(field, area, inputContainer));
+              }
+              
+              inputContainer.addChild(inputBg);
+              inputContainer.position.set(area.x + xOffset, area.y + 18);
+              this.layoutContainer.addChild(inputContainer);
+              
+              // Add current value or placeholder text (non-checkbox only)
+              if (field.inputType !== 'checkbox') {
+                const displayText = field.value || field.placeholder;
+                const textColor = field.value ? 0x333333 : 0x999999;
+                const textStyle = field.value ? 'normal' : 'italic';
+                
+                const inputText = new Text({
+                  text: displayText,
+                  style: {
+                    fontFamily: 'Arial',
+                    fontSize: 7,
+                    fill: textColor,
+                    fontStyle: textStyle
+                  }
+                });
+                
+                inputText.position.set(3, 2);
+                inputText.name = `field-text-${area.areaId}-${field.key}`;
+                inputContainer.addChild(inputText);
+              }
+              
+              // Move to next horizontal position
+              xOffset += fieldWidth;
+            }
+            
+          } else {
+            // Other areas: Vertical column layout
+            console.log(`📋 Using VERTICAL layout for area "${area.areaId}" with ${area.content.length} fields`);
+            let yOffset = 10;
+            
+            for (const field of area.content) {
+              // Create field label
+              const fieldLabel = new Text({
+                text: field.label + (field.required ? ' *' : ''),
+                style: {
+                  fontFamily: 'Arial',
+                  fontSize: 9,
+                  fill: 0x333333,
+                  fontWeight: field.required ? 'bold' : 'normal'
+                }
+              });
+              
+              fieldLabel.position.set(area.x + 10, area.y + yOffset);
+              fieldLabel.name = `field-label-${area.areaId}-${field.key}`;
+              fieldLabel.interactive = false;
+              this.layoutContainer.addChild(fieldLabel);
+              
+              // Create interactive input field representation
+              const inputContainer = new Container();
+              inputContainer.name = `field-container-${area.areaId}-${field.key}`;
+              
+              const inputBg = new Graphics();
+              const inputWidth = Math.min(area.width - 20, 150);
+              const inputHeight = field.inputType === 'checkbox' ? 16 : 20;
+              
+              // Different visual styles for different input types
+              if (field.inputType === 'checkbox') {
+                // Checkbox representation
+                inputBg.rect(0, 0, 12, 12);
+                inputBg.stroke({ width: 1, color: 0x666666 });
+                inputBg.fill(0xffffff);
+                
+                // Make checkbox interactive
+                inputBg.interactive = true;
+                inputBg.cursor = 'pointer';
+                inputBg.on('pointerdown', () => this.handleCheckboxClick(field, inputBg));
+                
+              } else {
+                // Text/number input representation
+                inputBg.rect(0, 0, inputWidth, inputHeight);
+                inputBg.stroke({ width: 1, color: 0x999999 });
+                inputBg.fill(0xfafafa);
+                
+                // Make input interactive
+                inputBg.interactive = true;
+                inputBg.cursor = 'text';
+                inputBg.on('pointerdown', () => this.handleInputClick(field, area, inputContainer));
+              }
+              
+              inputContainer.addChild(inputBg);
+              inputContainer.position.set(area.x + 10, area.y + yOffset + 15);
+              this.layoutContainer.addChild(inputContainer);
+              
+              // Add current value or placeholder text
+              if (field.inputType !== 'checkbox') {
+                const displayText = field.value || field.placeholder;
+                const textColor = field.value ? 0x333333 : 0x999999;
+                const textStyle = field.value ? 'normal' : 'italic';
+                
+                const inputText = new Text({
+                  text: displayText,
+                  style: {
+                    fontFamily: 'Arial',
+                    fontSize: 8,
+                    fill: textColor,
+                    fontStyle: textStyle
+                  }
+                });
+                
+                inputText.position.set(5, 3);
+                inputText.name = `field-text-${area.areaId}-${field.key}`;
+                inputContainer.addChild(inputText);
+              }
+              
+              // Move to next field position
+              yOffset += field.inputType === 'checkbox' ? 35 : 45;
+              
+              // Break if we're running out of space
+              if (yOffset + 30 > area.height) break;
+            }
+          }
+        } else if (area.content && typeof area.content === 'string' && area.content.trim()) {
+          // Fallback to simple text rendering for non-array content
           const contentText = new Text({
             text: area.content,
             style: {
@@ -545,22 +711,127 @@ export class PixiCanvas {
               fontSize: 10,
               fill: 0x666666,
               wordWrap: true,
-              wordWrapWidth: area.width - 40, // Leave padding
+              wordWrapWidth: area.width - 40,
               breakWords: true
             }
           });
           
-          // Position content below the area title if it exists, otherwise at the top
-          const contentY = area.height > 20 ? area.y + 30 : area.y + 10;
-          contentText.position.set(area.x + 20, contentY);
+          contentText.position.set(area.x + 20, area.y + 10);
           contentText.name = `layout-content-${area.areaId}`;
-          contentText.interactive = false; // Prevent user interaction
+          contentText.interactive = false;
           this.layoutContainer.addChild(contentText);
         }
       }
     }
 
     console.log('🔒 PROTECTED layout structure rendered - cannot be erased by users');
+  }
+
+  /**
+   * Handle click on text/number input field
+   */
+  private handleInputClick(field: any, area: any, inputContainer: Container): void {
+    console.log(`🔤 Input clicked: ${field.key} (${field.inputType})`);
+    
+    // Find the text element within the container
+    const textElement = inputContainer.getChildByName(`field-text-${area.areaId}-${field.key}`) as Text;
+    if (!textElement) return;
+
+    // Create a temporary HTML input for editing
+    this.createTemporaryInput(field, area, inputContainer, textElement);
+  }
+
+  /**
+   * Handle click on checkbox field
+   */
+  private handleCheckboxClick(field: any, checkboxBg: Graphics): void {
+    console.log(`☑️ Checkbox clicked: ${field.key}`);
+    
+    // Toggle checkbox state
+    field.checked = !field.checked;
+    
+    // Update visual appearance
+    checkboxBg.clear();
+    checkboxBg.rect(0, 0, 12, 12);
+    checkboxBg.stroke({ width: 1, color: 0x666666 });
+    checkboxBg.fill(field.checked ? 0x007acc : 0xffffff);
+    
+    // Add checkmark if checked
+    if (field.checked) {
+      checkboxBg.moveTo(2, 6);
+      checkboxBg.lineTo(5, 9);
+      checkboxBg.lineTo(10, 3);
+      checkboxBg.stroke({ width: 2, color: 0xffffff });
+    }
+    
+    console.log(`☑️ Checkbox ${field.key} is now: ${field.checked}`);
+  }
+
+  /**
+   * Create temporary HTML input overlay for text editing
+   */
+  private createTemporaryInput(field: any, area: any, inputContainer: Container, textElement: Text): void {
+    // Get the global position of the input container
+    const globalPos = inputContainer.toGlobal({ x: 0, y: 0 });
+    
+    if (!this.app?.canvas) {
+      console.error('Canvas element not available for input overlay');
+      return;
+    }
+    
+    const canvasRect = this.app.canvas.getBoundingClientRect();
+    
+    // Create HTML input element
+    const input = document.createElement('input');
+    input.type = field.inputType === 'number' ? 'number' : 'text';
+    input.value = field.value || '';
+    input.placeholder = field.placeholder;
+    
+    // Style the input to match the canvas element
+    input.style.position = 'absolute';
+    input.style.left = `${canvasRect.left + globalPos.x + 5}px`;
+    input.style.top = `${canvasRect.top + globalPos.y + 3}px`;
+    input.style.width = `${Math.min(area.width - 30, 140)}px`;
+    input.style.height = '14px';
+    input.style.fontSize = '8px';
+    input.style.fontFamily = 'Arial';
+    input.style.border = '1px solid #007acc';
+    input.style.padding = '2px';
+    input.style.zIndex = '1000';
+    input.style.backgroundColor = '#ffffff';
+    
+    // Add to document
+    document.body.appendChild(input);
+    input.focus();
+    input.select();
+    
+    // Handle input completion
+    const finishEditing = () => {
+      const newValue = input.value.trim();
+      
+      // Update field value
+      field.value = newValue;
+      
+      // Update text element
+      textElement.text = newValue || field.placeholder;
+      textElement.style.fill = newValue ? 0x333333 : 0x999999;
+      textElement.style.fontStyle = newValue ? 'normal' : 'italic';
+      
+      // Remove HTML input
+      document.body.removeChild(input);
+      
+      console.log(`🔤 Field ${field.key} updated to: "${newValue}"`);
+    };
+    
+    // Event listeners
+    input.addEventListener('blur', finishEditing);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        finishEditing();
+      } else if (e.key === 'Escape') {
+        document.body.removeChild(input);
+      }
+    });
   }
 
   /**

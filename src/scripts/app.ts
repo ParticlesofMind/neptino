@@ -4,9 +4,40 @@
  */
 
 import { signIn, signUp, signOut, initAuth } from './backend/auth/auth'
+import { supabase } from './backend/supabase'
 
-// Import coursebuilder for the course creation page
-import './coursebuilder/coursebuilder'
+// Dynamically import coursebuilder only when needed
+// import { CourseBuilder } from './coursebuilder/index.js'
+
+// Global PixiJS setup for devtools (on coursebuilder pages)
+// Note: PixiJS is statically imported in devtools-setup.ts, no need for dynamic import here
+
+// Initialize CourseBuilder if we're on the coursebuilder page
+async function initCourseBuilder() {
+  // Check if we're on the coursebuilder page
+  if (window.location.pathname.includes('coursebuilder.html')) {
+    try {
+      // Dynamically import CourseBuilder to reduce initial bundle size
+      const { CourseBuilder } = await import('./coursebuilder/index.js');
+      
+      function createCourseBuilder() {
+        console.log('🚀 Initializing CourseBuilder...')
+        const courseBuilder = new CourseBuilder()
+        // Expose for debugging and devtools
+        ;(window as any).courseBuilder = courseBuilder
+      }
+      
+      // Wait for DOM to be ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', createCourseBuilder)
+      } else {
+        createCourseBuilder()
+      }
+    } catch (error) {
+      console.error('❌ Failed to load CourseBuilder:', error);
+    }
+  }
+}
 
 // Check if we're on a protected page that requires authentication
 function isProtectedPage() {
@@ -23,15 +54,13 @@ initAuth()
 // On protected pages, also check session immediately
 if (isProtectedPage()) {
   console.log('📍 On protected page, checking session...')
-  import('./backend/supabase').then(({ supabase }) => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) {
-        console.log('❌ No session on protected page, redirecting to signin')
-        window.location.href = '/src/pages/shared/signin.html'
-      } else {
-        console.log('✅ Valid session on protected page')
-      }
-    })
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (!session?.user) {
+      console.log('❌ No session on protected page, redirecting to signin')
+      window.location.href = '/src/pages/shared/signin.html'
+    } else {
+      console.log('✅ Valid session on protected page')
+    }
   })
 }
 
@@ -217,4 +246,5 @@ document.addEventListener('DOMContentLoaded', () => {
   handleSignInForm()
   handleSignUpForm()
   handleLogout()
+  initCourseBuilder()
 })

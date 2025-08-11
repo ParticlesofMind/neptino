@@ -99,6 +99,14 @@ export const DEFAULT_BLOCKS: LayoutBlock[] = [
         allowsDrawing: false,
         allowsMedia: false,
         allowsText: true
+      },
+      {
+        id: 'header-content-area',
+        name: 'Header Content',
+        type: 'teacher',
+        allowsDrawing: false,
+        allowsMedia: false,
+        allowsText: true
       }
     ]
   },
@@ -187,7 +195,16 @@ export const DEFAULT_BLOCKS: LayoutBlock[] = [
     name: 'Footer',
     heightPercentage: 5,
     isRequired: true,
-    canvasAreas: []
+    canvasAreas: [
+      {
+        id: 'footer-content-area',
+        name: 'Footer Content',
+        type: 'instruction',
+        allowsDrawing: false,
+        allowsMedia: false,
+        allowsText: true
+      }
+    ]
   }
 ];
 

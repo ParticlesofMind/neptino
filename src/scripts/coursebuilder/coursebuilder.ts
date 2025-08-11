@@ -1,701 +1,250 @@
 /**
  * Course Builder Main Controller
- * Handles tool selection, media management, and canvas interactions
+ * Coordinates all coursebuilder components using modern modular architecture
+ * Single Responsibility: Component coordination and initialization only
  */
 
-import { PixiCanvas } from './PixiCanvas';
-import { LayoutManager, type CourseLayout } from './layout';
-import { TemplateRenderer } from './TemplateRenderer';
-import { marginSettingsHandler } from '../backend/courses/marginSettings';
-
-interface ToolSettings {
-  pen: {
-    color: string;
-    size: number;
-  };
-  text: {
-    fontFamily: string;
-    fontSize: number;
-    color: string;
-  };
-  highlighter: {
-    color: string;
-    opacity: number;
-  };
-}
+import { PixiCanvas } from './canvas/index.js';
+import { ToolStateManager, UIEventHandler } from './ui/index.js';
+import { MarginSettingsManager, PageManager, MediaManager } from './managers/index.js';
+import { FontManager } from './font/index.js';
 
 export class CourseBuilder {
-  private currentTool: string = 'selection';
-  private selectedMedia: string | null = null;
-  private toolSettings: ToolSettings;
-  private canvasContainer: HTMLElement | null = null;
-  
-  // PixiJS Canvas
   private pixiCanvas: PixiCanvas | null = null;
-  
-  // Layout System
-  private layoutManager: LayoutManager | null = null;
-  private currentLayout: CourseLayout | null = null;
-  private layoutVisible: boolean = false;
-
-  // Margin settings
-  private currentMargins: { top: number; bottom: number; left: number; right: number } = {
-    top: 72.58, // 2.54cm in pixels (96 DPI)
-    bottom: 72.58,
-    left: 72.58,
-    right: 72.58
-  };
+  private toolStateManager: ToolStateManager;
+  private uiEventHandler: UIEventHandler;
+  private marginSettings: MarginSettingsManager;
+  private pageManager: PageManager;
+  private mediaManager: MediaManager;
+  private fontManager: FontManager;
+  private canvasContainer: HTMLElement | null = null;
 
   constructor() {
-    this.toolSettings = {
-      pen: {
-        color: '#000000', // Black for good visibility
-        size: 4 // Increased size for better visibility
-      },
-      text: {
-        fontFamily: 'Arial',
-        fontSize: 16,
-        color: '#000000'
-      },
-      highlighter: {
-        color: '#ffff00', // Bright yellow
-        opacity: 0.8 // Increased opacity for better visibility
-      }
-    };
-
-    this.init().catch(error => {
-      console.error('Failed to initialize Course Builder:', error);
-    });
+    this.canvasContainer = document.getElementById('canvas-container');
+    
+    // Initialize all managers (removed legacy CanvasManager)
+    this.toolStateManager = new ToolStateManager();
+    this.marginSettings = new MarginSettingsManager();
+    this.pageManager = new PageManager();
+    this.mediaManager = new MediaManager();
+    this.fontManager = new FontManager();
+    this.uiEventHandler = new UIEventHandler(this.toolStateManager);
+    
+    this.init();
   }
 
+  /**
+   * Initialize the coursebuilder
+   */
   private async init(): Promise<void> {
-    this.canvasContainer = document.querySelector('.coursebuilder__canvas');
-    await this.initPixiCanvas();
-    this.initLayoutSystem();
-    this.bindEvents();
-    this.initMarginSettings();
-    console.log('Course Builder initialized with PixiJS and Layout System');
+    console.log('🚀 Initializing CourseBuilder with modular architecture');
+    
+    await this.initializePixiCanvas();
+    this.setupComponentCallbacks();
+    this.bindGlobalEvents();
+    
+    console.log('✅ CourseBuilder initialization complete');
   }
 
-  private async initPixiCanvas(): Promise<void> {
+  /**
+   * Initialize PIXI canvas
+   */
+  private async initializePixiCanvas(): Promise<void> {
     if (!this.canvasContainer) {
-      console.error('Canvas container not found');
+      console.error('❌ Canvas container not found');
       return;
     }
 
     try {
-      this.pixiCanvas = new PixiCanvas('.coursebuilder__canvas');
+      this.pixiCanvas = new PixiCanvas('canvas-container');
       await this.pixiCanvas.init();
-      console.log('PixiJS Canvas initialized successfully');
+      
+      console.log('🎨 PIXI Canvas initialized');
     } catch (error) {
-      console.error('Failed to initialize PixiJS Canvas:', error);
-    }
-  }
-
-  private bindEvents(): void {
-    // Tool selection events
-    document.querySelectorAll('.tool').forEach(tool => {
-      tool.addEventListener('click', (e) => this.handleToolSelection(e));
-    });
-
-    // Color selection events
-    document.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement;
-      if (target.classList.contains('color-palette__color')) {
-        this.handleColorSelection(e);
-      }
-    });
-
-    // Shape selection events
-    document.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement;
-      if (target.classList.contains('shape-btn') || target.closest('.shape-btn')) {
-        this.handleShapeSelection(e);
-      }
-    });
-
-    // Media selection events
-    document.querySelectorAll('.media-btn').forEach(media => {
-      media.addEventListener('click', (e) => this.handleMediaSelection(e));
-    });
-
-    // Action button events
-    document.querySelectorAll('.action-btn').forEach(action => {
-      action.addEventListener('click', (e) => this.handleActionButton(e));
-    });
-
-    // Font selection events
-    const fontSelect = document.querySelector('.font-controls__select') as HTMLSelectElement;
-    if (fontSelect) {
-      fontSelect.addEventListener('change', (e) => this.handleFontChange(e));
-    }
-  }
-
-  private handleToolSelection(event: Event): void {
-    const button = event.currentTarget as HTMLButtonElement;
-    const toolName = button.dataset.tool;
-    
-    if (!toolName) return;
-
-    console.log(`🔧 COURSEBUILDER: Tool selection requested - ${toolName}`);
-
-    // Remove selected state from all tools
-    document.querySelectorAll('.tool').forEach(t => t.classList.remove('tool--selected'));
-    
-    // Add selected state to clicked tool
-    button.classList.add('tool--selected');
-    
-    // Hide all tool settings
-    document.querySelectorAll('.tool-settings').forEach(settings => {
-      settings.classList.remove('tool-settings--active');
-    });
-    
-    // Show settings for selected tool
-    const toolSettings = document.querySelector(`.tool-settings[data-tool="${toolName}"]`) as HTMLElement;
-    if (toolSettings) {
-      toolSettings.classList.add('tool-settings--active');
-      console.log(`🔧 COURSEBUILDER: Tool settings panel activated for ${toolName}`);
-    }
-    
-    this.currentTool = toolName;
-    this.updateCanvasCursor();
-    
-    // Update PixiJS canvas tool
-    if (this.pixiCanvas) {
-      const success = this.pixiCanvas.setTool(toolName);
-      console.log(`🔧 COURSEBUILDER: PixiJS tool switch ${success ? 'successful' : 'failed'} for ${toolName}`);
-    }
-    
-    console.log(`🔧 COURSEBUILDER: Tool selection completed - ${toolName}`);
-  }
-
-  private handleColorSelection(event: Event): void {
-    const colorSquare = event.target as HTMLElement;
-    const selectedColor = colorSquare.dataset.color;
-    
-    if (!selectedColor) return;
-
-    console.log(`🎨 COURSEBUILDER: Color selection requested - ${selectedColor} for tool ${this.currentTool}`);
-
-    // Remove active state from all colors in the same palette
-    const palette = colorSquare.closest('.color-palette');
-    if (palette) {
-      palette.querySelectorAll('.color-palette__color').forEach(color => 
-        color.classList.remove('color-palette__color--active')
-      );
-    }
-    
-    // Add active state to clicked color
-    colorSquare.classList.add('color-palette__color--active');
-    
-    // Update tool settings based on current tool
-    switch (this.currentTool) {
-      case 'pen':
-        this.toolSettings.pen.color = selectedColor;
-        break;
-      case 'text':
-        this.toolSettings.text.color = selectedColor;
-        break;
-      case 'highlighter':
-        this.toolSettings.highlighter.color = selectedColor;
-        break;
-    }
-    
-    // Update PixiJS canvas tool color
-    if (this.pixiCanvas) {
-      this.pixiCanvas.updateToolColor(selectedColor);
-      console.log(`🎨 COURSEBUILDER: Color updated in PixiJS canvas`);
-    }
-    
-    console.log(`🎨 COURSEBUILDER: Color selection completed - ${selectedColor} for tool ${this.currentTool}`);
-  }
-
-  private handleShapeSelection(event: Event): void {
-    const target = event.target as HTMLElement;
-    const shapeButton = target.closest('.shape-btn') as HTMLButtonElement;
-    
-    if (!shapeButton) return;
-
-    const selectedShape = shapeButton.dataset.shape;
-    if (!selectedShape) return;
-
-    console.log(`🔶 COURSEBUILDER: Shape selection requested - ${selectedShape}`);
-
-    // Remove active state from all shape buttons
-    document.querySelectorAll('.shape-btn').forEach(btn => 
-      btn.classList.remove('shape-btn--active')
-    );
-    
-    // Add active state to clicked shape button
-    shapeButton.classList.add('shape-btn--active');
-    
-    // Update the shapes tool with the selected shape
-    if (this.pixiCanvas && this.currentTool === 'shapes') {
-      const toolManager = this.pixiCanvas.getToolManager();
-      const shapesTool = toolManager.getActiveTool();
-      if (shapesTool && 'setShapeType' in shapesTool) {
-        (shapesTool as any).setShapeType(selectedShape);
-        console.log(`🔶 COURSEBUILDER: Shape type updated in ShapesTool`);
-      }
-    }
-    
-    console.log(`🔶 COURSEBUILDER: Shape selection completed - ${selectedShape}`);
-  }
-
-  public clearCanvas(): void {
-    if (this.pixiCanvas) {
-      this.pixiCanvas.clearCanvas(); // Only clears user content, layout is protected
-      console.log('🔒 User content cleared (pedagogical layout protected)');
+      console.error('❌ Failed to initialize PIXI Canvas:', error);
     }
   }
 
   /**
-   * ADMIN ONLY: Clear everything including layout structure
-   * This should be restricted to authorized users only
+   * Setup callbacks between components
+   */
+  private setupComponentCallbacks(): void {
+    // Tool state changes
+    this.uiEventHandler.setOnToolChange((toolName: string) => {
+      if (this.pixiCanvas) {
+        this.pixiCanvas.setTool(toolName);
+      }
+    });
+
+    // Color changes
+    this.uiEventHandler.setOnColorChange((color: string) => {
+      if (this.pixiCanvas) {
+        this.pixiCanvas.updateToolColor(color);
+      }
+    });
+
+    // Page changes
+    this.pageManager.setOnPageChange((page: any) => {
+      console.log('📄 Page changed:', page.name);
+      // Handle page change logic here
+    });
+
+    // Margin changes
+    this.marginSettings.setOnMarginChange((margins) => {
+      console.log('📐 Margins updated:', margins);
+      // Handle margin changes here
+    });
+
+    // Font changes
+    this.fontManager.setOnFontChange((fontFamily: string) => {
+      console.log('🔤 Font changed:', fontFamily);
+      // Handle font changes here
+    });
+
+    // Media selection
+    this.mediaManager.setOnMediaSelection((mediaType: string) => {
+      console.log('🎬 Media type selected:', mediaType);
+      // Handle media selection here
+    });
+  }
+
+  /**
+   * Bind global events
+   */
+  private bindGlobalEvents(): void {
+    // Canvas actions
+    document.addEventListener('clearCanvas', () => this.clearCanvas());
+    document.addEventListener('clearAll', () => this.clearAll());
+    document.addEventListener('addPage', () => this.addNewPage());
+    document.addEventListener('toggleLayout', () => this.toggleLayout());
+    
+    // Media integration
+    document.addEventListener('addMediaToCanvas', (event: any) => {
+      this.addMediaToCanvas(event.detail.url, event.detail.type);
+    });
+  }
+
+  /**
+   * Clear canvas content
+   */
+  public clearCanvas(): void {
+    if (this.pixiCanvas) {
+      this.pixiCanvas.clearCanvas();
+      console.log('🧹 Canvas cleared');
+    }
+  }
+
+  /**
+   * Clear all content
    */
   public clearAll(): void {
     if (this.pixiCanvas) {
       this.pixiCanvas.clearAll();
-      console.log('⚠️ ADMIN: Everything cleared (including layout)');
+    }
+    console.log('🧹 All content cleared');
+  }
+
+  /**
+   * Add new page
+   */
+  private addNewPage(): void {
+    this.pageManager.addNewPage();
+  }
+
+  /**
+   * Toggle layout visibility
+   */
+  private toggleLayout(): void {
+    if (this.pixiCanvas) {
+      // PIXI.js doesn't have the same layout visibility concept
+      // This could be implemented as layer visibility in PIXI
+      console.log('🔄 Layout visibility toggle requested');
     }
   }
 
+  /**
+   * Add media to canvas
+   */
+  private addMediaToCanvas(url: string, type: string): void {
+    if (this.pixiCanvas) {
+      // Add media to canvas (implement based on media type)
+      console.log(`➕ Adding ${type} to canvas:`, url);
+    }
+  }
+
+  /**
+   * Resize canvas
+   */
   public resizeCanvas(width: number, height: number): void {
     if (this.pixiCanvas) {
       this.pixiCanvas.resize(width, height);
     }
   }
 
-  private handleMediaSelection(event: Event): void {
-    const button = event.currentTarget as HTMLButtonElement;
-    const mediaType = button.dataset.media;
-    
-    if (!mediaType) return;
-
-    // Remove selected state from all media buttons
-    document.querySelectorAll('.media-btn').forEach(m => m.classList.remove('media-btn--selected'));
-    
-    // Add selected state to clicked media
-    button.classList.add('media-btn--selected');
-    
-    this.selectedMedia = mediaType;
-    this.updateMediaSearchPanel(mediaType);
-    
-    console.log(`Selected media: ${mediaType}`);
-  }
-
-  private handleActionButton(event: Event): void {
-    const button = event.currentTarget as HTMLButtonElement;
-    const title = button.getAttribute('title');
-    
-    console.log(`Action button clicked: ${title}`);
-    
-    // Handle specific actions
-    if (title === 'Add Page') {
-      this.addNewPage();
-    } else if (title === 'Page Settings') {
-      this.openPageSettings();
-    } else if (title === 'Clear Canvas') {
-      this.clearCanvas();
-    }
-  }
-
-  private handleFontChange(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    this.toolSettings.text.fontFamily = select.value;
-    console.log(`Font changed to: ${select.value}`);
-  }
-
-  private updateCanvasCursor(): void {
-    if (!this.canvasContainer) return;
-
-    // Update cursor based on selected tool
-    const cursorMap: Record<string, string> = {
-      selection: 'default',
-      pen: 'crosshair',
-      highlighter: 'crosshair',
-      text: 'text',
-      shapes: 'crosshair',
-      eraser: 'crosshair'
-    };
-
-    this.canvasContainer.style.cursor = cursorMap[this.currentTool] || 'default';
-  }
-
-  private updateMediaSearchPanel(mediaType: string): void {
-    const searchPanel = document.querySelector('.coursebuilder__media-search');
-    if (!searchPanel) return;
-
-    const mediaTypeCapitalized = mediaType.charAt(0).toUpperCase() + mediaType.slice(1);
-    
-    searchPanel.innerHTML = `
-      <div class="media-search">
-        <h3 class="media-search__title">${mediaTypeCapitalized}</h3>
-        <input type="search" class="media-search__input" placeholder="Search ${mediaType}...">
-        <div class="media-search__content">
-          Loading ${mediaType}...
-        </div>
-      </div>
-    `;
-  }
-
-  private addNewPage(): void {
-    console.log('Adding new page...');
-    // TODO: Implement page addition logic
-    // This could involve adding a new page to the table of contents
-    // and updating the canvas to show the new page
-  }
-
-  private openPageSettings(): void {
-    console.log('Opening page settings...');
-    // TODO: Implement page settings modal or panel
-    // This could show options for page size, orientation, background, etc.
-  }
-
+  /**
+   * Get current tool
+   */
   public getCurrentTool(): string {
-    return this.currentTool;
-  }
-
-  public getToolSettings(): ToolSettings {
-    return this.toolSettings;
-  }
-
-  public getSelectedMedia(): string | null {
-    return this.selectedMedia;
-  }
-
-  // Layout System Methods
-  
-  private initLayoutSystem(): void {
-    console.log('🏗️ Initializing layout system...');
-    
-    // Get detailed canvas information for debugging
-    const canvasInfo = this.pixiCanvas?.getCanvasInfo();
-    console.log('🏗️ Canvas Info:', canvasInfo);
-    
-    // Get actual canvas dimensions using the new method
-    const dimensions = this.pixiCanvas?.getCanvasDimensions() || { width: 794, height: 1123 };
-    const { width: canvasWidth, height: canvasHeight } = dimensions;
-    
-    console.log(`🏗️ Canvas dimensions from getCanvasDimensions(): ${canvasWidth}x${canvasHeight}`);
-    console.log(`🏗️ PixiJS screen from getApp():`, this.pixiCanvas?.getApp()?.screen);
-    
-    // Initialize unified layout manager with navigation
-    this.layoutManager = new LayoutManager(canvasWidth, canvasHeight, 'coursebuilder__toc');
-    
-    // Set up canvas change callback
-    this.layoutManager.onCanvasChange((canvasIndex: number) => {
-      this.handleCanvasChange(canvasIndex);
-    });
-    
-    console.log('🏗️ Unified layout system initialized');
-    
-    // Force update dimensions to make sure layout uses correct size
-    if (this.layoutManager && canvasWidth > 0 && canvasHeight > 0) {
-      this.layoutManager.updateDimensions(canvasWidth, canvasHeight);
-    }
-  }
-
-  public initializeCourseLayout(
-    courseId: string,
-    scheduledSessions: number = 1,
-    lessonDurationMinutes: number = 30
-  ): void {
-    if (!this.layoutManager) {
-      console.error('Layout system not initialized');
-      return;
-    }
-
-    console.log(`🏗️ Creating course layout: ${scheduledSessions} sessions, ${lessonDurationMinutes} min each`);
-    
-    // Create course layout (navigation is auto-initialized within LayoutManager)
-    this.currentLayout = this.layoutManager.createCourseLayout(
-      courseId,
-      'default-template',
-      scheduledSessions,
-      lessonDurationMinutes
-    );
-    
-    // Show layout structure by default
-    this.showLayoutStructure();
-    
-    console.log(`🏗️ Course layout created with ${this.currentLayout.totalCanvases} canvases`);
-  }
-
-  private handleCanvasChange(canvasIndex: number): void {
-    console.log(`🧭 Switched to canvas ${canvasIndex + 1}`);
-    
-    // Here you could implement canvas-specific content loading
-    // For now, we'll just update the layout structure if visible
-    if (this.layoutVisible && this.layoutManager && this.pixiCanvas && this.currentLayout) {
-      if (this.currentLayout.canvases.length > 0) {
-        const canvasLayout = this.currentLayout.canvases[Math.min(canvasIndex, this.currentLayout.canvases.length - 1)];
-        
-        // Get the course ID to load template data
-        const courseId = sessionStorage.getItem('currentCourseId');
-        if (courseId) {
-          // Load template configuration and populate blocks
-          this.loadAndRenderTemplateContent(canvasLayout.blocks);
-        } else {
-          // Render without template data
-          this.pixiCanvas.renderLayoutAsBackground(canvasLayout.blocks);
-        }
-      }
-    }
+    return this.toolStateManager.getCurrentTool();
   }
 
   /**
-   * Load template configuration and render field labels
+   * Get tool settings
    */
-  private async loadAndRenderTemplateContent(blocks: any[]): Promise<void> {
-    if (!this.pixiCanvas) return;
-
-    const courseId = sessionStorage.getItem('currentCourseId');
-    if (!courseId) {
-      console.log('📄 No course ID, rendering basic layout');
-      this.pixiCanvas.renderLayoutAsBackground(blocks);
-      return;
-    }
-
-    try {
-      // Fetch template configuration directly from Supabase
-      const configuredBlocks = await TemplateRenderer.getConfiguredLayoutBlocks(blocks, courseId);
-      console.log('📄 Rendering layout with template field configuration');
-      this.pixiCanvas.renderLayoutAsBackground(configuredBlocks);
-    } catch (error) {
-      console.error('📄 Error loading template configuration:', error);
-      // Fallback to basic layout
-      this.pixiCanvas.renderLayoutAsBackground(blocks);
-    }
-  }
-
-  public showLayoutStructure(): void {
-    if (!this.layoutManager || !this.pixiCanvas) return;
-
-    // Get the current layout blocks from the first canvas
-    if (!this.currentLayout || !this.currentLayout.canvases.length) {
-      console.warn('No layout available to render');
-      return;
-    }
-
-    const canvasLayout = this.currentLayout.canvases[0];
-    
-    // Load and render with template content
-    this.loadAndRenderTemplateContent(canvasLayout.blocks);
-    this.layoutVisible = true;
-    
-    console.log('🏗️ Layout structure rendered as canvas background with template field configuration');
-  }
-
-  public hideLayoutStructure(): void {
-    if (!this.layoutManager) return;
-
-    this.layoutManager.hideLayoutStructure();
-    this.layoutVisible = false;
-    
-    console.log('🏗️ Layout structure hidden');
-  }
-
-  public toggleLayoutStructure(): void {
-    if (this.layoutVisible) {
-      this.hideLayoutStructure();
-    } else {
-      this.showLayoutStructure();
-    }
-  }
-
-  public navigateToCanvas(canvasIndex: number): void {
-    if (this.layoutManager) {
-      this.layoutManager.navigateToCanvas(canvasIndex);
-    }
-  }
-
-  public navigateToSession(sessionNumber: number): void {
-    if (this.layoutManager) {
-      this.layoutManager.navigateToSession(sessionNumber);
-    }
-  }
-
-  public getCurrentCanvasIndex(): number {
-    return this.layoutManager?.getCurrentCanvasIndex() || 0;
-  }
-
-  // Margin Settings Methods
-  
-  private initMarginSettings(): void {
-    // Set up connection with margin settings handler
-    marginSettingsHandler.setCourseBuilder(this);
-    console.log('📏 Margin settings initialized');
-  }
-
-  public updateCanvasMargins(margins: { top: number; bottom: number; left: number; right: number }): void {
-    console.log('📏 Updating canvas margins:', margins);
-    
-    // Store current margins
-    this.currentMargins = { ...margins };
-    
-    // Update layout manager if available
-    if (this.layoutManager) {
-      this.layoutManager.updateMargins(margins);
-    }
-    
-    // Update PixiJS canvas if available
-    if (this.pixiCanvas) {
-      this.pixiCanvas.updateMargins(margins);
-    }
-    
-    // Re-render layout with new margins if layout is visible
-    if (this.layoutVisible && this.currentLayout) {
-      this.showLayoutStructure();
-    }
-    
-    console.log('📏 Canvas margins updated successfully');
-  }
-
-  public loadCourseMargins(courseId: string): void {
-    // Load margin settings from database
-    marginSettingsHandler.loadSettingsFromDatabase(courseId);
-  }
-
-  public getCurrentMargins(): { top: number; bottom: number; left: number; right: number } {
-    return { ...this.currentMargins };
+  public getToolSettings(): any {
+    return this.toolStateManager.getToolSettings();
   }
 
   /**
-   * Load course schedule settings from database
+   * Get page manager
    */
-  public async loadCourseScheduleSettings(courseId: string): Promise<{ sessions: number; durationMinutes: number }> {
-    try {
-      // Import supabase here to avoid circular dependencies
-      const { supabase } = await import('../backend/supabase.js');
-      
-      const { data, error } = await supabase
-        .from('courses')
-        .select('schedule_settings, course_days')
-        .eq('id', courseId)
-        .single();
-
-      if (error) {
-        console.warn('No schedule settings found for course, using defaults:', error);
-        return { sessions: 3, durationMinutes: 60 }; // Fallback defaults
-      }
-
-      if (data?.schedule_settings && Array.isArray(data.schedule_settings) && data.schedule_settings.length > 0) {
-        const scheduleSettings = data.schedule_settings;
-        const totalSessions = scheduleSettings.length;
-        
-        // Calculate lesson duration from first lesson
-        const firstLesson = scheduleSettings[0];
-        const startTime = new Date(`2000-01-01T${firstLesson.startTime}`);
-        const endTime = new Date(`2000-01-01T${firstLesson.endTime}`);
-        const durationMinutes = Math.abs(endTime.getTime() - startTime.getTime()) / (1000 * 60);
-        
-        console.log(`📅 Loaded course schedule: ${totalSessions} sessions of ${durationMinutes} minutes each`);
-        return { sessions: totalSessions, durationMinutes };
-      } else {
-        console.log('📅 No schedule configured yet, using defaults');
-        return { sessions: 3, durationMinutes: 60 }; // Fallback defaults
-      }
-    } catch (error) {
-      console.error('Error loading course schedule settings:', error);
-      return { sessions: 3, durationMinutes: 60 }; // Fallback defaults
-    }
+  public getPageManager(): PageManager {
+    return this.pageManager;
   }
 
+  /**
+   * Get PIXI canvas instance
+   */
+  public getPixiCanvas(): PixiCanvas | null {
+    return this.pixiCanvas;
+  }
+
+  /**
+   * Cleanup
+   */
   public destroy(): void {
-    // Clean up layout system (includes navigation)
-    if (this.layoutManager) {
-      this.layoutManager.destroy();
-      this.layoutManager = null;
-    }
-    
-    this.currentLayout = null;
-    
-    // Clean up PixiJS
+    // Only destroy components that have destroy methods
+    this.uiEventHandler.destroy();
     if (this.pixiCanvas) {
       this.pixiCanvas.destroy();
-      this.pixiCanvas = null;
     }
+    this.marginSettings.destroy();
+    this.pageManager.destroy();
+    this.mediaManager.destroy();
+    this.fontManager.destroy();
+    
+    if (this.pixiCanvas) {
+      this.pixiCanvas.destroy();
+    }
+    
+    console.log('🗑️ CourseBuilder destroyed');
   }
 }
 
-// Initialize course builder when the DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  // Only initialize if we're on the coursebuilder page
-  if (document.querySelector('.coursebuilder')) {
-    const courseBuilder = new CourseBuilder();
+// Global debug helper
+(window as any).courseBuilderDebug = {
+  getInstance: () => {
+    return (window as any).courseBuilder;
+  },
+  getState: () => {
+    const instance = (window as any).courseBuilder;
+    if (!instance) return null;
     
-    // Get the actual course ID from session storage instead of using a hardcoded demo ID
-    setTimeout(async () => {
-      // Try to get course ID from session storage (set during course setup)
-      const currentCourseId = sessionStorage.getItem('currentCourseId');
-      
-      if (currentCourseId) {
-        console.log(`🎯 Using course from session: ${currentCourseId}`);
-        
-        // Load actual schedule settings from the database
-        const scheduleSettings = await courseBuilder.loadCourseScheduleSettings(currentCourseId);
-        
-        // Initialize layout with real course data
-        courseBuilder.initializeCourseLayout(
-          currentCourseId, 
-          scheduleSettings.sessions, 
-          scheduleSettings.durationMinutes
-        );
-        
-        // Load margin settings for the actual course (will load from database)
-        courseBuilder.loadCourseMargins(currentCourseId);
-        
-        console.log(`🎯 Course layout initialized: ${scheduleSettings.sessions} sessions × ${scheduleSettings.durationMinutes}min = ${scheduleSettings.sessions * 2} total canvases`);
-        console.log('📏 Margin settings loaded for actual course');
-      } else {
-        console.warn('⚠️ No course ID found in session storage. Please create or select a course first.');
-        console.log('💡 To create a course, go to the Setup section and complete the course essentials form.');
-        
-        // Optionally show a message to the user
-        const canvasContainer = document.querySelector('.coursebuilder__canvas');
-        if (canvasContainer) {
-          canvasContainer.innerHTML = `
-            <div class="canvas-placeholder">
-              <div class="canvas-placeholder__content">
-                <h3>No Course Selected</h3>
-                <p>Please create or select a course from the Setup section first.</p>
-                <a href="#setup" class="button button--primary">Go to Setup</a>
-              </div>
-            </div>
-          `;
-        }
-      }
-    }, 1000);
+    return {
+      currentTool: instance.getCurrentTool(),
+      toolSettings: instance.getToolSettings(),
+      pageCount: instance.getPageManager().getPageCount(),
+      currentPage: instance.getPageManager().getCurrentPageIndex()
+    };
   }
-});
-
-// DEBUG: Add window function to manually check CourseBuilder state
-(window as any).debugCourseBuilder = () => {
-  const createSection = document.getElementById('create');
-  const courseBuilderElement = document.querySelector('.coursebuilder');
-  const canvasContainer = document.querySelector('.coursebuilder__canvas');
-  const toolsContainer = document.querySelector('.coursebuilder__canvas-toolbar');
-  
-  console.log('🔍 CourseBuilder Debug Check:', {
-    createSectionExists: !!createSection,
-    createSectionActive: createSection?.classList.contains('section--active'),
-    createSectionDisplay: createSection ? window.getComputedStyle(createSection).display : 'none',
-    courseBuilderExists: !!courseBuilderElement,
-    courseBuilderDisplay: courseBuilderElement ? window.getComputedStyle(courseBuilderElement).display : 'none',
-    canvasContainerExists: !!canvasContainer,
-    canvasContainerDisplay: canvasContainer ? window.getComputedStyle(canvasContainer).display : 'none',
-    canvasContainerDimensions: canvasContainer ? canvasContainer.getBoundingClientRect() : 'none',
-    toolsExists: !!toolsContainer,
-    toolsDisplay: toolsContainer ? window.getComputedStyle(toolsContainer).display : 'none',
-    pixiCanvasExists: !!canvasContainer?.querySelector('canvas'),
-    placeholderExists: !!canvasContainer?.querySelector('.canvas-placeholder')
-  });
-  
-  return {
-    createSection,
-    courseBuilderElement,
-    canvasContainer,
-    toolsContainer
-  };
 };

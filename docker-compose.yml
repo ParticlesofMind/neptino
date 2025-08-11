@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Development server
+  neptino-dev:
+    build:
+      context: .
+      target: development
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    networks:
+      - neptino-network
+
+  # Production build and serve
+  neptino-prod:
+    build:
+      context: .
+      target: production
+    ports:
+      - "8080:80"
+    networks:
+      - neptino-network
+
+  # Supabase local development (optional)
+  supabase:
+    image: supabase/postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - supabase_data:/var/lib/postgresql/data
+    networks:
+      - neptino-network
+
+networks:
+  neptino-network:
+    driver: bridge
+
+volumes:
+  supabase_data:

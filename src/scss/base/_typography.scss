@@ -3,6 +3,7 @@
 // ==========================================================================
 
 @use '../abstracts/variables' as *;
+@use 'sass:color';
 
 body {
   font-family: $font-family-base;
@@ -85,7 +86,7 @@ body {
     font-weight: $font-weight-medium;
     
     &:hover {
-      color: darken($primary-color, 10%);
+      color: color.adjust($primary-color, $lightness: -10%);
     }
   }
 }

@@ -1,9 +1,13 @@
 /**
- * Unified Layout System Exports
- * Main entry point for the consolidated pedagogical layout system
+ * Layout System Module Exports
+ * Exports the new modular layout architecture components
  */
 
-export { LayoutManager } from './LayoutManager';
+export { CourseLayoutFactory } from './CourseLayoutFactory';
+export { LayoutCalculator } from './LayoutCalculator';
+export { CanvasNavigator } from './CanvasNavigator';
+export { LayoutRenderer } from './LayoutRenderer';
+
 export type { 
   LayoutBlock, 
   CanvasArea, 
@@ -14,6 +18,7 @@ export type {
   RenderedBlock,
   RenderedArea
 } from './LayoutTypes';
+
 export { 
   DEFAULT_BLOCKS,
   LESSON_DURATIONS 

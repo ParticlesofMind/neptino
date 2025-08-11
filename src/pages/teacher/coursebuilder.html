@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="pixi-devtools" content="enabled">
     <title>Course Builder - Neptino</title>
     <link rel="stylesheet" href="/src/scss/main.scss">
 </head>
@@ -518,7 +519,6 @@
                 
                             
                             <div class="content-load-section">
-                                <h4 class="heading heading--quaternary">Content Load</h4>
                                 <div id="content-load-display" class="content-load-display">
                                     <!-- Content load info will be displayed here -->
                                 </div>
@@ -528,8 +528,7 @@
                         <!-- Curriculum Preview -->
                         <div id="curriculum-preview" class="curriculum-preview hidden">
                             <div class="curriculum-preview-header">
-                                <h3 class="heading heading--tertiary">Curriculum Preview</h3>
-                                
+                          
                                 <!-- Preview Mode Buttons -->
                                 <div class="preview-mode-controls">
                                     <span class="preview-mode-label">Display:</span>
@@ -950,7 +949,7 @@
                     </div>
 
                     <!-- Main Canvas Area (Layout Protected) -->
-                    <div class="coursebuilder__canvas">
+                    <div class="coursebuilder__canvas" id="canvas-container">
                         <!-- PixiJS canvas will be inserted here directly -->
                         <div class="canvas-placeholder">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="#ccc">
@@ -1003,6 +1002,7 @@
         </section>
     </main>
 
+    <script type="module" src="/src/scripts/coursebuilder/devtools-setup.ts"></script>
     <script type="module" src="/src/scripts/app.ts"></script>
     <script type="module" src="/src/scripts/navigation/index.ts"></script>
     <script type="module" src="/src/scripts/backend/courses/index.ts"></script>
