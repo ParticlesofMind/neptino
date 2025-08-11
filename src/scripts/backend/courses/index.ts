@@ -138,10 +138,25 @@ export class CourseBuilder {
 let courseBuilderInitialized = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Only initialize if we're on the coursebuilder page and not already initialized
-  if (document.querySelector('.section#setup') && !courseBuilderInitialized) {
+  // Only initialize if we're on the coursebuilder page, in the setup section, and not already initialized
+  const isInSetupSection = document.querySelector('.section#setup.section--active') || window.location.hash === '#setup' || window.location.hash === '';
+  const hasSetupSection = document.querySelector('.section#setup');
+  
+  if (hasSetupSection && isInSetupSection && !courseBuilderInitialized) {
     courseBuilderInitialized = true;
     new CourseBuilder();
-    console.log('CourseBuilder initialized from index.ts');
+    console.log('CourseBuilder (form handler) initialized from courses/index.ts');
+  }
+});
+
+// Also listen for hash changes to initialize when entering setup
+window.addEventListener('hashchange', () => {
+  const isInSetupSection = window.location.hash === '#setup' || window.location.hash === '';
+  const hasSetupSection = document.querySelector('.section#setup');
+  
+  if (hasSetupSection && isInSetupSection && !courseBuilderInitialized) {
+    courseBuilderInitialized = true;
+    new CourseBuilder();
+    console.log('CourseBuilder (form handler) initialized on hash change to setup');
   }
 });

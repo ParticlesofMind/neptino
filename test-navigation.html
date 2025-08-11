@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Navigation Test</title>
+    <style>
+        .section { 
+            display: none; 
+            padding: 20px;
+            border: 2px solid red;
+            margin: 10px;
+        }
+        .section--active { 
+            display: block; 
+        }
+        .debug-info {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info">
+        <h3>Navigation Debug Test</h3>
+        <button onclick="testNavigation('setup')">Go to Setup</button>
+        <button onclick="testNavigation('create')">Go to Create</button>
+        <button onclick="testNavigation('preview')">Go to Preview</button>
+        <button onclick="testNavigation('launch')">Go to Launch</button>
+        <button onclick="debugState()">Debug State</button>
+    </div>
+
+    <section id="setup" class="section section--active">
+        <h2>Setup Section</h2>
+        <p>This is the setup section content.</p>
+    </section>
+
+    <section id="create" class="section">
+        <h2>Create Section</h2>
+        <p>This is the create section content.</p>
+    </section>
+
+    <section id="preview" class="section">
+        <h2>Preview Section</h2>
+        <p>This is the preview section content.</p>
+    </section>
+
+    <section id="launch" class="section">
+        <h2>Launch Section</h2>
+        <p>This is the launch section content.</p>
+    </section>
+
+    <script>
+        function testNavigation(targetSection) {
+            console.log(`Testing navigation to: ${targetSection}`);
+            
+            const sections = ['setup', 'create', 'preview', 'launch'];
+            
+            // Hide all sections
+            sections.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    section.classList.remove('section--active');
+                    console.log(`Removed active class from: ${sectionId}`);
+                }
+            });
+            
+            // Show target section
+            const activeSection = document.getElementById(targetSection);
+            if (activeSection) {
+                activeSection.classList.add('section--active');
+                console.log(`Added active class to: ${targetSection}`);
+                
+                // Update hash
+                window.location.hash = targetSection;
+                
+                // Debug the result
+                setTimeout(() => {
+                    const computedStyle = window.getComputedStyle(activeSection);
+                    console.log(`Section ${targetSection} display: ${computedStyle.display}`);
+                    console.log(`Section ${targetSection} classes: ${Array.from(activeSection.classList).join(', ')}`);
+                }, 50);
+            }
+        }
+
+        function debugState() {
+            const sections = ['setup', 'create', 'preview', 'launch'];
+            console.log('=== CURRENT STATE ===');
+            sections.forEach(sectionId => {
+                const element = document.getElementById(sectionId);
+                if (element) {
+                    const hasActive = element.classList.contains('section--active');
+                    const computedStyle = window.getComputedStyle(element);
+                    console.log(`${sectionId}: active=${hasActive}, display=${computedStyle.display}`);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

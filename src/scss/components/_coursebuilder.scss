@@ -386,20 +386,22 @@
   }
 }
 
-/* Font controls */
+/* Font controls - unified version */
 .font-controls {
+  margin-bottom: 1rem;
+  
   &__select {
-    padding: 0.25rem 0.5rem;
+    width: 100%;
+    padding: 0.5rem;
     border: 1px solid vars.$gray-300;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
-    background: white;
-    color: vars.$gray-700;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    background-color: vars.$white;
     
     &:focus {
       outline: none;
       border-color: vars.$primary-color;
-      box-shadow: 0 0 0 2px rgba(100, 149, 237, 0.2);
+      box-shadow: 0 0 0 3px rgba(100, 149, 237, 0.1);
     }
   }
 }
@@ -639,26 +641,6 @@
   }
 }
 
-/* Font controls */
-.font-controls {
-  margin-bottom: 1rem;
-  
-  &__select {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid vars.$gray-300;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    background-color: vars.$white;
-    
-    &:focus {
-      outline: none;
-      border-color: vars.$primary-color;
-      box-shadow: 0 0 0 3px rgba(100, 149, 237, 0.1);
-    }
-  }
-}
-
 /* Responsive design */
 @media (max-width: 1400px) {
   .coursebuilder {
@@ -739,6 +721,58 @@
 
 /* Section-specific overrides for coursebuilder */
 .section {
+  &#setup {
+    &.section--active {
+      display: grid;
+      grid-template-columns: minmax(280px, 300px) 1fr;
+      gap: vars.$spacing-4;
+      padding: vars.$spacing-6;
+      min-height: calc(100vh - #{vars.$spacing-6} * 2 - 80px);
+      align-items: start;
+      
+      .aside {
+        height: 100%;
+        min-height: calc(100vh - #{vars.$spacing-6} * 2 - 80px);
+        position: sticky;
+        top: vars.$spacing-6;
+      }
+      
+      .article {
+        min-width: 0;
+        height: 100%;
+        min-height: calc(100vh - #{vars.$spacing-6} * 2 - 80px);
+        
+        .card {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          padding: vars.$spacing-6;
+        }
+      }
+
+      // Natural responsive behavior
+      @container (max-width: 768px) {
+        grid-template-columns: 1fr;
+        min-height: auto;
+        
+        .aside {
+          height: auto;
+          min-height: auto;
+          position: static;
+        }
+        
+        .article {
+          height: auto;
+          min-height: auto;
+          
+          .card {
+            height: auto;
+          }
+        }
+      }
+    }
+  }
+
   &#create {
     overflow: hidden; /* Prevent section scrolling */
     margin: 0; /* Remove any margin */
@@ -766,17 +800,4 @@ body:has(.coursebuilder) {
   margin: 0;
   padding: 0;
   overflow: hidden;
-}
-
-/* Alternative approach for browsers that don't support :has() */
-.coursebuilder-page {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  
-  body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-  }
 }

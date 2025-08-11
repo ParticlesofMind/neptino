@@ -6,10 +6,12 @@ export class AsideNavigation {
   private asideLinks: NodeListOf<HTMLAnchorElement>;
   private contentSections: NodeListOf<HTMLElement>;
   private readonly STORAGE_KEY = 'coursebuilder_active_section';
+  private boundHandleLinkClick: (e: Event) => void;
 
   constructor() {
     this.asideLinks = document.querySelectorAll('.aside__link');
     this.contentSections = document.querySelectorAll('.article');
+    this.boundHandleLinkClick = this.handleLinkClick.bind(this);
     
     console.log('Aside links found:', this.asideLinks.length);
     console.log('Content sections found:', this.contentSections.length);
@@ -75,7 +77,7 @@ export class AsideNavigation {
   private bindEvents(): void {
     this.asideLinks.forEach((link: HTMLAnchorElement, index: number) => {
       console.log(`Binding event to link ${index}:`, link.textContent);
-      link.addEventListener('click', (e: Event) => this.handleLinkClick(e));
+      link.addEventListener('click', this.boundHandleLinkClick);
     });
   }
 
@@ -84,7 +86,18 @@ export class AsideNavigation {
     const href = target.getAttribute('href');
     const targetSection = target.getAttribute('data-section');
     
-    console.log('Link clicked:', target.textContent, 'Href:', href, 'Target section:', targetSection);
+    console.log('Aside link clicked:', target.textContent, 'Href:', href, 'Target section:', targetSection);
+    
+    // Only handle aside navigation if we're currently in the setup section
+    const currentHash = window.location.hash.substring(1);
+    const setupSection = document.getElementById('setup');
+    const isInSetupSection = (currentHash === 'setup' || !currentHash) && 
+                            setupSection?.classList.contains('section--active');
+    
+    if (!isInSetupSection) {
+      console.log('🚫 Aside navigation: Not in setup section, ignoring click');
+      return; // Don't handle clicks when not in setup section
+    }
     
     // If the href is a full page URL (not a hash), allow normal navigation
     if (href && href.startsWith('/') && !href.startsWith('#')) {
@@ -144,5 +157,17 @@ export class AsideNavigation {
     } else {
       console.error('Target section not found:', targetSectionId);
     }
+  }
+
+  /**
+   * Clean up event listeners and references
+   */
+  public destroy(): void {
+    // Remove event listeners
+    this.asideLinks.forEach((link: HTMLAnchorElement) => {
+      link.removeEventListener('click', this.boundHandleLinkClick);
+    });
+    
+    console.log('AsideNavigation destroyed');
   }
 }

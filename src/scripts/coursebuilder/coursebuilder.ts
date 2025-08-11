@@ -507,3 +507,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
   }
 });
+
+// DEBUG: Add window function to manually check CourseBuilder state
+(window as any).debugCourseBuilder = () => {
+  const createSection = document.getElementById('create');
+  const courseBuilderElement = document.querySelector('.coursebuilder');
+  const canvasContainer = document.getElementById('coursebuilder-canvas-container');
+  const toolsContainer = document.querySelector('.coursebuilder__canvas-toolbar');
+  
+  console.log('🔍 CourseBuilder Debug Check:', {
+    createSectionExists: !!createSection,
+    createSectionActive: createSection?.classList.contains('section--active'),
+    createSectionDisplay: createSection ? window.getComputedStyle(createSection).display : 'none',
+    courseBuilderExists: !!courseBuilderElement,
+    courseBuilderDisplay: courseBuilderElement ? window.getComputedStyle(courseBuilderElement).display : 'none',
+    canvasContainerExists: !!canvasContainer,
+    canvasContainerDisplay: canvasContainer ? window.getComputedStyle(canvasContainer).display : 'none',
+    canvasContainerDimensions: canvasContainer ? canvasContainer.getBoundingClientRect() : 'none',
+    toolsExists: !!toolsContainer,
+    toolsDisplay: toolsContainer ? window.getComputedStyle(toolsContainer).display : 'none',
+    pixiCanvasExists: !!canvasContainer?.querySelector('canvas'),
+    placeholderExists: !!canvasContainer?.querySelector('.canvas-placeholder')
+  });
+  
+  return {
+    createSection,
+    courseBuilderElement,
+    canvasContainer,
+    toolsContainer
+  };
+};
