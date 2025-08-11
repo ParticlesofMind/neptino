@@ -12,10 +12,17 @@ export class PixiCanvas {
   private toolManager: ToolManager;
   private canvasElement: HTMLElement | null = null;
 
-  constructor(containerId: string) {
-    this.canvasElement = document.getElementById(containerId);
+  constructor(containerSelector: string) {
+    // Handle both ID (#id) and class (.class) selectors
+    if (containerSelector.startsWith('#') || containerSelector.startsWith('.')) {
+      this.canvasElement = document.querySelector(containerSelector);
+    } else {
+      // Fallback for plain ID strings (legacy compatibility)
+      this.canvasElement = document.getElementById(containerSelector);
+    }
+    
     if (!this.canvasElement) {
-      throw new Error(`Canvas container with id "${containerId}" not found`);
+      throw new Error(`Canvas container with selector "${containerSelector}" not found`);
     }
     this.toolManager = new ToolManager();
   }

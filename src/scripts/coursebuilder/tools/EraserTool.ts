@@ -131,7 +131,7 @@ export class EraserTool extends BaseTool {
     document.body.style.cursor = 'default';
     
     // Also reset cursor on the canvas container if it exists
-    const canvasContainer = document.getElementById('coursebuilder-canvas-container');
+    const canvasContainer = document.querySelector('.coursebuilder__canvas') as HTMLElement;
     if (canvasContainer) {
       canvasContainer.style.cursor = 'default';
     }

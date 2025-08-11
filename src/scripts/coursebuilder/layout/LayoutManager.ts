@@ -1,6 +1,7 @@
 /**
- * Layout Manager
- * Handles the creation and management of pedagogical layouts for canvases
+ * Unified Layout Manager
+ * Handles creation, management, and navigation of pedagogical layouts for canvases
+ * Combines LayoutManager + CanvasNavigator + PixiJS Layout v3 features
  */
 
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
@@ -15,17 +16,37 @@ import {
   LESSON_DURATIONS
 } from './LayoutTypes';
 
+// Navigation types
+interface CanvasThumbnail {
+  id: string;
+  sessionNumber: number;
+  canvasNumber: number;
+  element: HTMLElement;
+  isActive: boolean;
+}
+
 export class LayoutManager {
+  // Layout properties
   private canvasWidth: number;
   private canvasHeight: number;
   private currentLayout: CourseLayout | null = null;
   private layoutContainer: Container | null = null;
-  private pixiApp: any = null; // Reference to PixiJS app for scaling
+  
+  // Navigation properties  
+  private thumbnails: CanvasThumbnail[] = [];
+  private currentCanvasIndex: number = 0;
+  private tocContainer: HTMLElement | null = null;
+  private onCanvasChangeCallback: ((canvasIndex: number) => void) | null = null;
 
-  constructor(canvasWidth: number = 794, canvasHeight: number = 1123, pixiApp?: any) {
+  constructor(canvasWidth: number = 794, canvasHeight: number = 1123, tocContainerId: string = 'coursebuilder__toc') {
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
-    this.pixiApp = pixiApp;
+    
+    // Initialize navigation
+    this.tocContainer = document.getElementById(tocContainerId);
+    if (!this.tocContainer) {
+      console.warn(`TOC container with id "${tocContainerId}" not found`);
+    }
     
     console.log(`📐 LayoutManager created with dimensions: ${this.canvasWidth}x${this.canvasHeight}`);
   }
@@ -33,13 +54,10 @@ export class LayoutManager {
   /**
    * Update canvas dimensions (used when canvas is resized or scaled)
    */
-  public updateDimensions(width: number, height: number, pixiApp?: any): void {
+  public updateDimensions(width: number, height: number): void {
     console.log(`📐 Updating LayoutManager dimensions from ${this.canvasWidth}x${this.canvasHeight} to ${width}x${height}`);
     this.canvasWidth = width;
     this.canvasHeight = height;
-    if (pixiApp) {
-      this.pixiApp = pixiApp;
-    }
     
     // Recreate the current layout with new dimensions
     if (this.currentLayout) {
@@ -107,6 +125,9 @@ export class LayoutManager {
       lessonDuration,
       canvases
     };
+
+    // Auto-initialize navigation
+    this.initNavigation(this.currentLayout);
 
     console.log(`📐 Created course layout: ${scheduledSessions} sessions × ${lessonDuration.canvasMultiplier} canvases = ${totalCanvases} total canvases`);
     return this.currentLayout;
@@ -403,14 +424,340 @@ export class LayoutManager {
     return this.currentLayout;
   }
 
+  // ========================================
+  // NAVIGATION METHODS (formerly CanvasNavigator)
+  // ========================================
+
+  /**
+   * Set callback for canvas change events
+   */
+  public onCanvasChange(callback: (canvasIndex: number) => void): void {
+    this.onCanvasChangeCallback = callback;
+  }
+
+  /**
+   * Initialize navigation with course layout
+   */
+  public initNavigation(courseLayout: CourseLayout): void {
+    this.currentLayout = courseLayout;
+    this.currentCanvasIndex = 0;
+    this.generateThumbnails();
+    this.renderTOC();
+    
+    console.log(`🧭 Navigation initialized with ${courseLayout.totalCanvases} canvases`);
+  }
+
+  /**
+   * Generate thumbnail data for all canvases
+   */
+  private generateThumbnails(): void {
+    if (!this.currentLayout) return;
+
+    this.thumbnails = [];
+    
+    for (let i = 0; i < this.currentLayout.canvases.length; i++) {
+      const canvas = this.currentLayout.canvases[i];
+      
+      const thumbnail: CanvasThumbnail = {
+        id: canvas.id,
+        sessionNumber: canvas.sessionNumber,
+        canvasNumber: canvas.canvasNumber,
+        element: this.createThumbnailElement(canvas, i),
+        isActive: i === 0
+      };
+      
+      this.thumbnails.push(thumbnail);
+    }
+  }
+
+  /**
+   * Create HTML element for a canvas thumbnail
+   */
+  private createThumbnailElement(canvas: CanvasLayout, index: number): HTMLElement {
+    const thumbnail = document.createElement('div');
+    thumbnail.className = 'canvas-thumbnail';
+    thumbnail.dataset.canvasIndex = index.toString();
+    
+    // Create thumbnail preview (simplified layout representation)
+    const preview = document.createElement('div');
+    preview.className = 'canvas-thumbnail__preview';
+    
+    // Add blocks as colored segments
+    let currentHeight = 0;
+    for (const block of canvas.blocks) {
+      const blockElement = document.createElement('div');
+      blockElement.className = `canvas-thumbnail__block canvas-thumbnail__block--${block.blockId}`;
+      
+      const heightPercent = (block.height / 1123) * 100; // Assuming A4 height
+      blockElement.style.height = `${heightPercent}%`;
+      blockElement.style.top = `${currentHeight}%`;
+      currentHeight += heightPercent;
+      
+      preview.appendChild(blockElement);
+    }
+    
+    thumbnail.appendChild(preview);
+    
+    // Add label
+    const label = document.createElement('div');
+    label.className = 'canvas-thumbnail__label';
+    
+    // Determine canvas type based on position within session
+    const canvasInSession = ((canvas.canvasNumber - 1) % this.currentLayout!.lessonDuration.canvasMultiplier) + 1;
+    const canvasTypeName = this.getCanvasTypeName(canvasInSession);
+    
+    label.innerHTML = `
+      <div class="canvas-thumbnail__session">Session ${canvas.sessionNumber}</div>
+      <div class="canvas-thumbnail__type">${canvasTypeName}</div>
+      <div class="canvas-thumbnail__number">${canvas.canvasNumber}</div>
+    `;
+    
+    thumbnail.appendChild(label);
+    
+    // Add click handler
+    thumbnail.addEventListener('click', () => {
+      this.navigateToCanvas(index);
+    });
+    
+    return thumbnail;
+  }
+
+  /**
+   * Get descriptive name for canvas based on its position in session
+   */
+  private getCanvasTypeName(canvasInSession: number): string {
+    if (!this.currentLayout) return 'Canvas';
+    
+    const multiplier = this.currentLayout.lessonDuration.canvasMultiplier;
+    
+    if (multiplier === 1) return 'Main';
+    if (multiplier === 2) {
+      return canvasInSession === 1 ? 'Intro' : 'Main';
+    }
+    if (multiplier === 4) {
+      const names = ['Intro', 'Content A', 'Content B', 'Wrap-up'];
+      return names[canvasInSession - 1] || `Canvas ${canvasInSession}`;
+    }
+    if (multiplier === 8) {
+      const names = ['Intro', 'Warm-up', 'Content A', 'Activity A', 'Content B', 'Activity B', 'Review', 'Wrap-up'];
+      return names[canvasInSession - 1] || `Canvas ${canvasInSession}`;
+    }
+    
+    return `Canvas ${canvasInSession}`;
+  }
+
+  /**
+   * Render the table of contents
+   */
+  private renderTOC(): void {
+    if (!this.tocContainer || !this.currentLayout) {
+      console.warn('TOC container not available or no layout');
+      return;
+    }
+
+    // Clear existing content
+    this.tocContainer.innerHTML = '';
+    
+    // Add header
+    const header = document.createElement('div');
+    header.className = 'canvas-toc__header';
+    header.innerHTML = `
+      <h3>Canvas Navigation</h3>
+      <div class="canvas-toc__summary">
+        ${this.currentLayout.totalCanvases} canvases across ${this.currentLayout.scheduledSessions} sessions
+      </div>
+    `;
+    this.tocContainer.appendChild(header);
+    
+    // Add navigation controls
+    const controls = document.createElement('div');
+    controls.className = 'canvas-toc__controls';
+    controls.innerHTML = `
+      <button class="canvas-nav-btn canvas-nav-btn--prev" title="Previous Canvas">
+        <span class="canvas-nav-btn__icon">←</span>
+      </button>
+      <span class="canvas-nav-current">
+        Canvas ${this.currentCanvasIndex + 1} of ${this.currentLayout.totalCanvases}
+      </span>
+      <button class="canvas-nav-btn canvas-nav-btn--next" title="Next Canvas">
+        <span class="canvas-nav-btn__icon">→</span>
+      </button>
+    `;
+    this.tocContainer.appendChild(controls);
+    
+    // Add event listeners for navigation buttons
+    const prevBtn = controls.querySelector('.canvas-nav-btn--prev') as HTMLButtonElement;
+    const nextBtn = controls.querySelector('.canvas-nav-btn--next') as HTMLButtonElement;
+    
+    prevBtn.addEventListener('click', () => this.navigateToPrevious());
+    nextBtn.addEventListener('click', () => this.navigateToNext());
+    
+    // Add scrollable thumbnails container
+    const scrollContainer = document.createElement('div');
+    scrollContainer.className = 'canvas-toc__scroll';
+    
+    const thumbnailsContainer = document.createElement('div');
+    thumbnailsContainer.className = 'canvas-toc__thumbnails';
+    
+    // Add all thumbnails
+    for (const thumbnail of this.thumbnails) {
+      thumbnailsContainer.appendChild(thumbnail.element);
+    }
+    
+    scrollContainer.appendChild(thumbnailsContainer);
+    this.tocContainer.appendChild(scrollContainer);
+    
+    // Set initial active state
+    this.updateActiveCanvas(0);
+  }
+
+  /**
+   * Navigate to specific canvas by index
+   */
+  public navigateToCanvas(index: number): void {
+    if (!this.currentLayout || index < 0 || index >= this.currentLayout.canvases.length) {
+      console.warn(`Invalid canvas index: ${index}`);
+      return;
+    }
+
+    const previousIndex = this.currentCanvasIndex;
+    this.currentCanvasIndex = index;
+    
+    this.updateActiveCanvas(index);
+    this.scrollToActiveThumbnail();
+    
+    // Trigger callback
+    if (this.onCanvasChangeCallback) {
+      this.onCanvasChangeCallback(index);
+    }
+    
+    console.log(`🧭 Navigated from canvas ${previousIndex + 1} to canvas ${index + 1}`);
+  }
+
+  /**
+   * Navigate to previous canvas
+   */
+  public navigateToPrevious(): void {
+    if (this.currentCanvasIndex > 0) {
+      this.navigateToCanvas(this.currentCanvasIndex - 1);
+    }
+  }
+
+  /**
+   * Navigate to next canvas
+   */
+  public navigateToNext(): void {
+    if (this.currentLayout && this.currentCanvasIndex < this.currentLayout.canvases.length - 1) {
+      this.navigateToCanvas(this.currentCanvasIndex + 1);
+    }
+  }
+
+  /**
+   * Update visual state of active canvas
+   */
+  private updateActiveCanvas(index: number): void {
+    if (!this.currentLayout) return;
+
+    // Update thumbnail states
+    for (let i = 0; i < this.thumbnails.length; i++) {
+      const thumbnail = this.thumbnails[i];
+      thumbnail.isActive = i === index;
+      
+      if (thumbnail.isActive) {
+        thumbnail.element.classList.add('canvas-thumbnail--active');
+      } else {
+        thumbnail.element.classList.remove('canvas-thumbnail--active');
+      }
+    }
+    
+    // Update navigation counter
+    const currentIndicator = this.tocContainer?.querySelector('.canvas-nav-current');
+    if (currentIndicator) {
+      currentIndicator.textContent = `Canvas ${index + 1} of ${this.currentLayout.totalCanvases}`;
+    }
+    
+    // Update navigation button states
+    const prevBtn = this.tocContainer?.querySelector('.canvas-nav-btn--prev') as HTMLButtonElement;
+    const nextBtn = this.tocContainer?.querySelector('.canvas-nav-btn--next') as HTMLButtonElement;
+    
+    if (prevBtn) prevBtn.disabled = index === 0;
+    if (nextBtn) nextBtn.disabled = index === this.currentLayout.totalCanvases - 1;
+  }
+
+  /**
+   * Scroll TOC to show active thumbnail
+   */
+  private scrollToActiveThumbnail(): void {
+    const activeThumbnail = this.thumbnails[this.currentCanvasIndex];
+    if (!activeThumbnail) return;
+
+    const scrollContainer = this.tocContainer?.querySelector('.canvas-toc__scroll');
+    if (!scrollContainer) return;
+
+    // Calculate scroll position to center the active thumbnail
+    const thumbnailElement = activeThumbnail.element;
+    const containerHeight = scrollContainer.clientHeight;
+    const thumbnailTop = thumbnailElement.offsetTop;
+    const thumbnailHeight = thumbnailElement.offsetHeight;
+    
+    const scrollTop = thumbnailTop - (containerHeight / 2) + (thumbnailHeight / 2);
+    
+    scrollContainer.scrollTo({
+      top: Math.max(0, scrollTop),
+      behavior: 'smooth'
+    });
+  }
+
+  /**
+   * Get current canvas index
+   */
+  public getCurrentCanvasIndex(): number {
+    return this.currentCanvasIndex;
+  }
+
+  /**
+   * Get current canvas layout
+   */
+  public getCurrentCanvas(): CanvasLayout | null {
+    if (!this.currentLayout) return null;
+    return this.currentLayout.canvases[this.currentCanvasIndex] || null;
+  }
+
+  /**
+   * Jump to specific session
+   */
+  public navigateToSession(sessionNumber: number): void {
+    if (!this.currentLayout) return;
+
+    const firstCanvasOfSession = this.currentLayout.canvases.find(
+      canvas => canvas.sessionNumber === sessionNumber
+    );
+    
+    if (firstCanvasOfSession) {
+      const index = this.currentLayout.canvases.indexOf(firstCanvasOfSession);
+      this.navigateToCanvas(index);
+    }
+  }
+
   /**
    * Clean up resources
    */
   public destroy(): void {
+    // Clean up layout resources
     if (this.layoutContainer) {
       this.layoutContainer.destroy();
       this.layoutContainer = null;
     }
+    
+    // Clean up navigation resources
+    this.thumbnails = [];
+    this.currentCanvasIndex = 0;
+    this.onCanvasChangeCallback = null;
+    
+    if (this.tocContainer) {
+      this.tocContainer.innerHTML = '';
+    }
+    
     this.currentLayout = null;
   }
 }

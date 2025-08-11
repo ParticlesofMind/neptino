@@ -1,10 +1,9 @@
 /**
- * Layout System Exports
- * Main entry point for the pedagogical layout system
+ * Unified Layout System Exports
+ * Main entry point for the consolidated pedagogical layout system
  */
 
 export { LayoutManager } from './LayoutManager';
-export { CanvasNavigator } from './CanvasNavigator';
 export type { 
   LayoutBlock, 
   CanvasArea, 

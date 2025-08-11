@@ -1,6 +1,6 @@
 /**
- * Layout System Types
- * Defines the structure and types for the pedagogical layout system
+ * Unified Layout System Types
+ * Combines the best of custom pedagogical layouts with PixiJS Layout v3 integration
  */
 
 export interface LayoutBlock {
@@ -9,6 +9,21 @@ export interface LayoutBlock {
   heightPercentage: number;
   isRequired: boolean;
   canvasAreas?: CanvasArea[];
+  // PixiJS Layout v3 compatibility
+  type?: 'header' | 'content' | 'resources' | 'assignment' | 'footer';
+  styles?: {
+    display?: 'flex' | 'none';
+    flexDirection?: 'row' | 'column';
+    justifyContent?: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around';
+    alignItems?: 'flex-start' | 'flex-end' | 'center' | 'stretch';
+    backgroundColor?: string;
+    borderRadius?: number;
+    padding?: number;
+    gap?: number;
+    flex?: number;
+    width?: string | number;
+    height?: string | number;
+  };
 }
 
 export interface CanvasArea {

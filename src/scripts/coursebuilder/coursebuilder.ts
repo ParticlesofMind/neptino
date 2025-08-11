@@ -4,7 +4,7 @@
  */
 
 import { PixiCanvas } from './PixiCanvas';
-import { LayoutManager, CanvasNavigator, type CourseLayout } from './layout';
+import { LayoutManager, type CourseLayout } from './layout';
 
 interface ToolSettings {
   pen: {
@@ -33,7 +33,6 @@ export class CourseBuilder {
   
   // Layout System
   private layoutManager: LayoutManager | null = null;
-  private canvasNavigator: CanvasNavigator | null = null;
   private currentLayout: CourseLayout | null = null;
   private layoutVisible: boolean = false;
 
@@ -60,7 +59,7 @@ export class CourseBuilder {
   }
 
   private async init(): Promise<void> {
-    this.canvasContainer = document.getElementById('coursebuilder-canvas-container');
+    this.canvasContainer = document.querySelector('.coursebuilder__canvas');
     await this.initPixiCanvas();
     this.initLayoutSystem();
     this.bindEvents();
@@ -74,7 +73,7 @@ export class CourseBuilder {
     }
 
     try {
-      this.pixiCanvas = new PixiCanvas('coursebuilder-canvas-container');
+      this.pixiCanvas = new PixiCanvas('.coursebuilder__canvas');
       await this.pixiCanvas.init();
       console.log('PixiJS Canvas initialized successfully');
     } catch (error) {
@@ -358,22 +357,19 @@ export class CourseBuilder {
     console.log(`🏗️ Canvas dimensions from getCanvasDimensions(): ${canvasWidth}x${canvasHeight}`);
     console.log(`🏗️ PixiJS screen from getApp():`, this.pixiCanvas?.getApp()?.screen);
     
-    // Initialize layout manager with actual canvas dimensions
-    this.layoutManager = new LayoutManager(canvasWidth, canvasHeight, this.pixiCanvas?.getApp());
-    
-    // Initialize canvas navigator
-    this.canvasNavigator = new CanvasNavigator('coursebuilder__toc');
+    // Initialize unified layout manager with navigation
+    this.layoutManager = new LayoutManager(canvasWidth, canvasHeight, 'coursebuilder__toc');
     
     // Set up canvas change callback
-    this.canvasNavigator.onCanvasChange((canvasIndex: number) => {
+    this.layoutManager.onCanvasChange((canvasIndex: number) => {
       this.handleCanvasChange(canvasIndex);
     });
     
-    console.log('🏗️ Layout system initialized');
+    console.log('🏗️ Unified layout system initialized');
     
     // Force update dimensions to make sure layout uses correct size
     if (this.layoutManager && canvasWidth > 0 && canvasHeight > 0) {
-      this.layoutManager.updateDimensions(canvasWidth, canvasHeight, this.pixiCanvas?.getApp());
+      this.layoutManager.updateDimensions(canvasWidth, canvasHeight);
     }
   }
 
@@ -382,23 +378,20 @@ export class CourseBuilder {
     scheduledSessions: number = 1,
     lessonDurationMinutes: number = 30
   ): void {
-    if (!this.layoutManager || !this.canvasNavigator) {
+    if (!this.layoutManager) {
       console.error('Layout system not initialized');
       return;
     }
 
     console.log(`🏗️ Creating course layout: ${scheduledSessions} sessions, ${lessonDurationMinutes} min each`);
     
-    // Create course layout
+    // Create course layout (navigation is auto-initialized within LayoutManager)
     this.currentLayout = this.layoutManager.createCourseLayout(
       courseId,
       'default-template',
       scheduledSessions,
       lessonDurationMinutes
     );
-    
-    // Initialize navigator with the layout
-    this.canvasNavigator.init(this.currentLayout);
     
     // Show layout structure by default
     this.showLayoutStructure();
@@ -455,31 +448,26 @@ export class CourseBuilder {
   }
 
   public navigateToCanvas(canvasIndex: number): void {
-    if (this.canvasNavigator) {
-      this.canvasNavigator.navigateToCanvas(canvasIndex);
+    if (this.layoutManager) {
+      this.layoutManager.navigateToCanvas(canvasIndex);
     }
   }
 
   public navigateToSession(sessionNumber: number): void {
-    if (this.canvasNavigator) {
-      this.canvasNavigator.navigateToSession(sessionNumber);
+    if (this.layoutManager) {
+      this.layoutManager.navigateToSession(sessionNumber);
     }
   }
 
   public getCurrentCanvasIndex(): number {
-    return this.canvasNavigator?.getCurrentCanvasIndex() || 0;
+    return this.layoutManager?.getCurrentCanvasIndex() || 0;
   }
 
   public destroy(): void {
-    // Clean up layout system
+    // Clean up layout system (includes navigation)
     if (this.layoutManager) {
       this.layoutManager.destroy();
       this.layoutManager = null;
-    }
-    
-    if (this.canvasNavigator) {
-      this.canvasNavigator.destroy();
-      this.canvasNavigator = null;
     }
     
     this.currentLayout = null;
@@ -512,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
 (window as any).debugCourseBuilder = () => {
   const createSection = document.getElementById('create');
   const courseBuilderElement = document.querySelector('.coursebuilder');
-  const canvasContainer = document.getElementById('coursebuilder-canvas-container');
+  const canvasContainer = document.querySelector('.coursebuilder__canvas');
   const toolsContainer = document.querySelector('.coursebuilder__canvas-toolbar');
   
   console.log('🔍 CourseBuilder Debug Check:', {

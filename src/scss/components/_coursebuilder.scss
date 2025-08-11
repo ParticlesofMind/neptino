@@ -83,7 +83,7 @@
     overflow-y: auto; /* Allow scrolling if content overflows */
   }
   
-  /* Main Canvas Area (simplified structure) */
+  /* Main Canvas Area - simplified with direct canvas styling */
   &__canvas {
     grid-column: 3;
     grid-row: 2;
@@ -98,24 +98,17 @@
     height: 100%; /* Fill grid area */
     overflow: auto; /* Only the canvas area scrolls */
     
-    /* Direct canvas container - A4 proportions */
-    #coursebuilder-canvas-container {
-      width: 794px;
-      height: 1123px;
+    /* Direct canvas styling - A4 proportions */
+    canvas {
+      width: 794px !important;
+      height: 1123px !important;
       background: vars.$white;
       flex-shrink: 0; /* Prevent shrinking of A4 canvas */
       border: 2px solid vars.$primary-color;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      position: relative;
-      overflow: hidden;
-      
-      /* PixiJS canvas fills the container */
-      canvas {
-        width: 100% !important;
-        height: 100% !important;
-        border-radius: 6px;
-      }
+      display: block;
+      touch-action: none;
     }
   }
   
