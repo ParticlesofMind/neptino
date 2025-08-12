@@ -4,8 +4,8 @@
  * Pure functions - no state, no side effects
  */
 
-import type { LayoutBlock, RenderedBlock, RenderedArea, LessonDuration } from './LayoutTypes.js';
-import { LESSON_DURATIONS } from './LayoutTypes.js';
+import type { LayoutBlock, RenderedBlock, RenderedArea, LessonDuration } from './LayoutTypes';
+import { LESSON_DURATIONS } from './LayoutTypes';
 
 export class LayoutCalculator {
   /**

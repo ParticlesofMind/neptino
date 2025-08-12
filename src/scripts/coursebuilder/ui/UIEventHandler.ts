@@ -4,7 +4,7 @@
  * Single Responsibility: Event handling and UI interactions only
  */
 
-import { ToolStateManager } from './ToolStateManager.js';
+import { ToolStateManager } from './ToolStateManager';
 
 export class UIEventHandler {
   private toolStateManager: ToolStateManager;

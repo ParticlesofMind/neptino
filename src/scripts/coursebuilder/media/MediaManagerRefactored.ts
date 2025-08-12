@@ -4,9 +4,9 @@
  * Single Responsibility: High-level media coordination only
  */
 
-import { MediaSelectionController } from './MediaSelectionController.js';
-import { MediaSearchController } from './MediaSearchController.js';
-import { MediaPanelManager } from './MediaPanelManager.js';
+import { MediaSelectionController } from './MediaSelectionController';
+import { MediaSearchController } from './MediaSearchController';
+import { MediaPanelManager } from './MediaPanelManager';
 
 export class MediaManagerRefactored {
   private selectionController: MediaSelectionController;

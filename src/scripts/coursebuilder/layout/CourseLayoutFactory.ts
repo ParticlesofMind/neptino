@@ -4,11 +4,11 @@
  * This is the main interface that replaces the monolithic LayoutManager
  */
 
-import type { CourseLayout, CanvasLayout, LayoutBlock } from './LayoutTypes.js';
-import { LayoutCalculator } from './LayoutCalculator.js';
-import { CanvasNavigator } from './CanvasNavigator.js';
-import { LayoutRenderer } from './LayoutRenderer.js';
-import { DEFAULT_BLOCKS } from './LayoutTypes.js';
+import type { CourseLayout, CanvasLayout, LayoutBlock } from './LayoutTypes';
+import { LayoutCalculator } from './LayoutCalculator';
+import { CanvasNavigator } from './CanvasNavigator';
+import { LayoutRenderer } from './LayoutRenderer';
+import { DEFAULT_BLOCKS } from './LayoutTypes';
 import { Container } from 'pixi.js';
 
 export class CourseLayoutFactory {

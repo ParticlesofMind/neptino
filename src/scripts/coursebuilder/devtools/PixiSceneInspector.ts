@@ -80,7 +80,7 @@ export class PixiSceneInspector {
     this.walkScene(stage, (object: any, depth: number) => {
       const type = object.constructor.name.toLowerCase();
       const objectInfo = {
-        name: object.name || 'unnamed',
+        name: object.label || object.name || 'unnamed',
         type: object.constructor.name,
         depth: depth,
         children: object.children?.length || 0,
@@ -126,7 +126,7 @@ export class PixiSceneInspector {
    */
   private buildHierarchy(object: any, depth: number = 0): any {
     const hierarchy = {
-      name: object.name || 'unnamed',
+      name: object.label || object.name || 'unnamed',
       type: object.constructor.name,
       depth: depth,
       children: [] as any[]
@@ -247,9 +247,10 @@ export class PixiSceneInspector {
       : namePattern;
 
     this.walkScene(this.app.stage, (object: any) => {
-      if (pattern.test(object.name || '')) {
+      const objectName = object.label || object.name || '';
+      if (pattern.test(objectName)) {
         found.push({
-          name: object.name,
+          name: objectName,
           type: object.constructor.name,
           object: object
         });

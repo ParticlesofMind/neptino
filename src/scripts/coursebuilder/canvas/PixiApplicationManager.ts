@@ -73,22 +73,42 @@ export class PixiApplicationManager {
       // Safely expose on PIXI object for devtools detection
       try {
         if ((window as any).PIXI && typeof (window as any).PIXI === 'object') {
-          // Try to add properties safely
-          Object.defineProperty((window as any).PIXI, 'app', {
-            value: this.app,
-            writable: true,
-            configurable: true
-          });
+          // Use getOwnPropertyDescriptor to check if property exists and is configurable
+          const appDescriptor = Object.getOwnPropertyDescriptor((window as any).PIXI, 'app');
           
-          // Create apps array if it doesn't exist
-          if (!(window as any).PIXI.apps) {
+          if (!appDescriptor) {
+            // Property doesn't exist, create it
+            Object.defineProperty((window as any).PIXI, 'app', {
+              value: this.app,
+              writable: true,
+              configurable: true
+            });
+          } else if (appDescriptor.configurable || appDescriptor.writable) {
+            // Property exists and can be modified
+            (window as any).PIXI.app = this.app;
+          } else {
+            // Property exists but is sealed/frozen, skip modification
+            console.warn('PIXI.app property exists but is not configurable/writable, skipping modification');
+          }
+          
+          // Handle apps array similarly
+          const appsDescriptor = Object.getOwnPropertyDescriptor((window as any).PIXI, 'apps');
+          
+          if (!appsDescriptor) {
             Object.defineProperty((window as any).PIXI, 'apps', {
               value: [this.app],
               writable: true,
               configurable: true
             });
           } else if (Array.isArray((window as any).PIXI.apps)) {
-            (window as any).PIXI.apps.push(this.app);
+            // Check if this app is already in the array to avoid duplicates
+            if (!(window as any).PIXI.apps.includes(this.app)) {
+              try {
+                (window as any).PIXI.apps.push(this.app);
+              } catch (pushError) {
+                console.warn('Could not add to PIXI.apps array:', pushError);
+              }
+            }
           }
         }
       } catch (error) {

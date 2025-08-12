@@ -5,7 +5,7 @@
  */
 
 import { Application, Container, FederatedPointerEvent } from 'pixi.js';
-import { ToolManager } from '../tools/ToolManager.js';
+import { ToolManager } from '../tools/ToolManager';
 
 export class CanvasEventHandler {
   private app: Application;

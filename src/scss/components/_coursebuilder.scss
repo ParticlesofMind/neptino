@@ -116,9 +116,6 @@
   &__toc {
     grid-column: 4;
     grid-row: 2;
-    width: 100%;
-    min-width: 180px;
-    height: 100%; /* Ensure it fills the grid area */
     padding: 0.5rem;
     display: flex;
     flex-direction: column;

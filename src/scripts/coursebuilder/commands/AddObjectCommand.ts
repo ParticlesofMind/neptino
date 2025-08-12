@@ -1,5 +1,8 @@
 import { Command } from './Command';
-import { Container, DisplayObject } from 'pixi.js';
+import { Container, Graphics, Sprite, Text } from 'pixi.js';
+
+// Union type for common PIXI display objects
+type DisplayObject = Container | Graphics | Sprite | Text;
 
 /**
  * A command to add a DisplayObject to a PIXI.Container.

@@ -4,15 +4,14 @@
  * Single Responsibility: Canvas lifecycle and state management only
  */
 
-import { LayoutRenderer } from '../layout/LayoutRenderer.js';
-import { CanvasNavigator } from '../layout/CanvasNavigator.js';
+import * as PIXI from 'pixi.js';
+import { LayoutRenderer } from '../layout/LayoutRenderer';
 
 export class CanvasManager {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private pixiApp: any; // PIXI.Application
   private layoutRenderer: LayoutRenderer | null = null;
-  private canvasNavigator: CanvasNavigator | null = null;
   private currentTemplate: any = null;
   private isLayoutVisible: boolean = true;
 
@@ -86,24 +85,17 @@ export class CanvasManager {
   }
 
   /**
-   * Set canvas navigator
-   */
-  setCanvasNavigator(navigator: CanvasNavigator): void {
-    this.canvasNavigator = navigator;
-  }
-
-  /**
    * Load and render template
    */
   async loadTemplate(template: any): Promise<void> {
     this.currentTemplate = template;
     
     if (this.layoutRenderer) {
-      await this.layoutRenderer.renderTemplate(template);
+      // Note: LayoutRenderer doesn't have renderTemplate method
+      // Template data should be processed before calling renderLayoutStructure
+      console.log('📋 Template loaded:', template.name);
       this.renderLayout();
     }
-
-    console.log('📋 Template loaded:', template.name);
   }
 
   /**
@@ -115,7 +107,9 @@ export class CanvasManager {
     this.clearCanvas();
     
     if (this.isLayoutVisible) {
-      this.layoutRenderer.renderLayout();
+      // Use renderLayoutStructure with blocks from template
+      const blocks = this.currentTemplate.blocks || [];
+      this.layoutRenderer.renderLayoutStructure(blocks, true);
     }
   }
 
@@ -148,7 +142,7 @@ export class CanvasManager {
     this.currentTemplate = null;
     
     if (this.layoutRenderer) {
-      this.layoutRenderer.clearLayout();
+      this.layoutRenderer.clear();
     }
     
     console.log('🧹 Canvas and layout cleared');
@@ -248,7 +242,6 @@ export class CanvasManager {
     }
     
     this.layoutRenderer = null;
-    this.canvasNavigator = null;
     this.currentTemplate = null;
   }
 }

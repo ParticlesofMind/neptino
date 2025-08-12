@@ -5,7 +5,7 @@
  */
 
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
-import type { RenderedBlock, RenderedArea } from './LayoutTypes.js';
+import type { RenderedBlock, RenderedArea } from './LayoutTypes';
 
 export class LayoutRenderer {
   private layoutContainer: Container;
@@ -39,7 +39,7 @@ export class LayoutRenderer {
     blockGraphics.fill({ color: this.getBlockColor(block.blockId), alpha: 0.1 });
     blockGraphics.stroke({ width: 2, color: this.getBlockColor(block.blockId), alpha: 0.8 });
     
-    blockGraphics.name = `layout-block-${block.blockId}`;
+    blockGraphics.label = `layout-block-${block.blockId}`;
     blockGraphics.interactive = false; // Prevent user interaction
     this.layoutContainer.addChild(blockGraphics);
 
@@ -56,7 +56,7 @@ export class LayoutRenderer {
       });
       
       blockLabel.position.set(block.x + 10, block.y + 5);
-      blockLabel.name = `layout-block-label-${block.blockId}`;
+      blockLabel.label = `layout-block-label-${block.blockId}`;
       blockLabel.interactive = false;
       this.layoutContainer.addChild(blockLabel);
     }
@@ -77,7 +77,7 @@ export class LayoutRenderer {
     areaGraphics.fill({ color: 0xffffff, alpha: 0.5 });
     areaGraphics.stroke({ width: 1, color: 0x999999, alpha: 0.4 });
     
-    areaGraphics.name = `layout-area-${area.areaId}`;
+    areaGraphics.label = `layout-area-${area.areaId}`;
     areaGraphics.interactive = false; // Prevent user interaction
     this.layoutContainer.addChild(areaGraphics);
 
@@ -93,7 +93,7 @@ export class LayoutRenderer {
       });
       
       areaLabel.position.set(area.x + 5, area.y + 5);
-      areaLabel.name = `layout-area-label-${area.areaId}`;
+      areaLabel.label = `layout-area-label-${area.areaId}`;
       areaLabel.interactive = false;
       this.layoutContainer.addChild(areaLabel);
     }

@@ -5,11 +5,10 @@
  */
 
 import { Application, Container } from 'pixi.js';
-import { ToolManager } from '../tools/ToolManager.js';
-import { PixiApplicationManager } from './PixiApplicationManager.js';
-import { CanvasLayerManager } from './CanvasLayerManager.js';
-import { CanvasEventHandler } from './CanvasEventHandler.js';
-import { CommandManager } from '../commands/CommandManager.js';
+import { ToolManager } from '../tools/ToolManager';
+import { PixiApplicationManager } from './PixiApplicationManager';
+import { CanvasLayerManager } from './CanvasLayerManager';
+import { CanvasEventHandler } from './CanvasEventHandler';
 
 export class PixiCanvas {
   private appManager: PixiApplicationManager;
@@ -18,9 +17,9 @@ export class PixiCanvas {
   private toolManager: ToolManager;
   private app: Application | null = null;
 
-  constructor(containerSelector: string, commandManager: CommandManager) {
+  constructor(containerSelector: string) {
     this.appManager = new PixiApplicationManager(containerSelector);
-    this.toolManager = new ToolManager(commandManager);
+    this.toolManager = new ToolManager();
   }
 
   /**

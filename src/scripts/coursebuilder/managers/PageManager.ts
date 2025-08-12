@@ -4,7 +4,7 @@
  * Single Responsibility: Page data structure and core operations only
  */
 
-import { PageSettingsModal } from '../modals/PageSettingsModal.js';
+import { PageSettingsModal } from '../modals/PageSettingsModal';
 import { PageNavigationController } from './PageNavigationController.js';
 
 export class PageManager {

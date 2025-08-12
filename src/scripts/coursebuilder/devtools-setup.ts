@@ -5,7 +5,7 @@
 
 import * as PIXI from 'pixi.js';
 import { initDevtools } from '@pixi/devtools';
-import PixiSceneInspector from './devtools/PixiSceneInspector.js';
+import PixiSceneInspector from './devtools/PixiSceneInspector';
 
 // Global exposure for devtools compatibility
 try {

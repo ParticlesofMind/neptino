@@ -4,14 +4,14 @@
  * Single Responsibility: Component coordination and initialization only
  */
 
-import { PixiCanvas } from './canvas/PixiCanvas.js';
-import { ToolStateManager } from './ui/ToolStateManager.js';
-import { UIEventHandler } from './ui/UIEventHandler.js';
-import { MarginSettingsManager } from './managers/MarginSettingsManager.js';
-import { PageManager } from './managers/PageManager.js';
-import { MediaManagerRefactored as MediaManager } from './media/MediaManagerRefactored.js';
-import { FontManager } from './font/FontManager.js';
-import { CommandManager } from './commands/CommandManager.js';
+import { PixiCanvas } from './canvas/PixiCanvas';
+import { ToolStateManager } from './ui/ToolStateManager';
+import { UIEventHandler } from './ui/UIEventHandler';
+import { MarginSettingsManager } from './managers/MarginSettingsManager';
+import { PageManager } from './managers/PageManager';
+import { MediaManagerRefactored as MediaManager } from './media/MediaManagerRefactored';
+import { FontManager } from './font/FontManager';
+import { CommandManager } from './commands/CommandManager';
 
 export class CourseBuilder {
   private pixiCanvas: PixiCanvas | null = null;
@@ -62,7 +62,7 @@ export class CourseBuilder {
     }
 
     try {
-      this.pixiCanvas = new PixiCanvas('canvas-container', this.commandManager);
+      this.pixiCanvas = new PixiCanvas('canvas-container');
       await this.pixiCanvas.init();
       
       console.log('🎨 PIXI Canvas initialized');

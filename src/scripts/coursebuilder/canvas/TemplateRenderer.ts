@@ -3,8 +3,8 @@
  * Handles loading and applying template configuration to layout blocks
  */
 
-import { supabase } from '../../backend/supabase.js';
-import type { RenderedBlock } from '../layout/LayoutTypes.js';
+import { supabase } from '../../backend/supabase';
+import type { RenderedBlock } from '../layout/LayoutTypes';
 
 export class TemplateRenderer {
   /**

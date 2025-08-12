@@ -22,13 +22,13 @@ export class CanvasLayerManager {
   public initializeLayers(): void {
     // Create layout container (bottom layer - protected)
     this.layoutContainer = new Container();
-    this.layoutContainer.name = 'layout-layer';
+    this.layoutContainer.label = 'layout-layer';
     this.layoutContainer.zIndex = 0;
     this.app.stage.addChild(this.layoutContainer);
 
     // Create drawing container (top layer - user editable)
     this.drawingContainer = new Container();
-    this.drawingContainer.name = 'drawing-layer';
+    this.drawingContainer.label = 'drawing-layer';
     this.drawingContainer.zIndex = 1;
     this.app.stage.addChild(this.drawingContainer);
 
@@ -75,7 +75,7 @@ export class CanvasLayerManager {
 
     graphics.stroke({ width: 1, color: 0xe0e0e0, alpha: 0.8 });
 
-    graphics.name = 'background-grid';
+    graphics.label = 'background-grid';
     
     this.layoutContainer.addChild(graphics);
 

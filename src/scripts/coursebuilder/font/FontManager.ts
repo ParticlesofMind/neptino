@@ -222,7 +222,7 @@ export class FontManager {
    */
   resetToDefaults(): void {
     this.setCurrentFont('Arial');
-    this.fontSizeController.resetToDefault();
+    this.fontSizeController.reset();
     this.fontStyleController.resetStyles();
   }
 
