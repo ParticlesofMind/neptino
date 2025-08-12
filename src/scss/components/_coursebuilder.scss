@@ -147,12 +147,6 @@
   
   &__settings {
     flex: 1; // Take up remaining space
-    background: vars.$white;
-    border: 1px solid vars.$gray-200;
-    border-radius: 0.5rem;
-    padding: 0.75rem 1rem;
-    margin-left: 1rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     overflow-x: auto; // Allow horizontal scrolling if needed
     display: flex;
     align-items: center;

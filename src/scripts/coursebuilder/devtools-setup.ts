@@ -5,6 +5,7 @@
 
 import * as PIXI from 'pixi.js';
 import { initDevtools } from '@pixi/devtools';
+import PixiSceneInspector from './devtools/PixiSceneInspector.js';
 
 // Global exposure for devtools compatibility
 try {
@@ -19,6 +20,10 @@ export function setupPixiDevtools() {
   console.log('🔧 Setting up PixiJS devtools environment...');
   console.log('🔧 PIXI version:', PIXI.VERSION);
   console.log('🔧 PIXI globally available:', !!(window as any).PIXI);
+  
+  // Initialize Scene Inspector
+  const inspector = new PixiSceneInspector();
+  (window as any).pixiInspector = inspector;
   
   // Initialize Spector.js WebGL debugger
   initializeSpectorJS();
@@ -49,6 +54,12 @@ export function setupPixiDevtools() {
   window.addEventListener('pixi-app-ready', (event: any) => {
     console.log('🔧 PixiJS app ready event received');
     const app = event.detail;
+    
+    // Setup inspector with the app
+    if ((window as any).pixiInspector) {
+      (window as any).pixiInspector.setApp(app);
+      console.log('🔍 Scene Inspector ready! Try: window.pixiInspector.inspectScene()');
+    }
     
     if ((window as any).__PIXI_DEVTOOLS_GLOBAL_HOOK__) {
       (window as any).__PIXI_DEVTOOLS_GLOBAL_HOOK__.register(app);

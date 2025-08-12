@@ -17,6 +17,16 @@ interface ToolSettings {
   highlighter: {
     color: string;
     opacity: number;
+    size: number;
+  };
+  shapes: {
+    color: string;
+    strokeWidth: number;
+    fillColor?: string;
+    shapeType: 'rectangle' | 'triangle' | 'circle';
+  };
+  eraser: {
+    size: number;
   };
 }
 
@@ -38,7 +48,16 @@ export class ToolStateManager {
       },
       highlighter: {
         color: '#ffff00',
-        opacity: 0.3
+        opacity: 0.3,
+        size: 20
+      },
+      shapes: {
+        color: '#000000',
+        strokeWidth: 2,
+        shapeType: 'rectangle'
+      },
+      eraser: {
+        size: 20
       }
     };
   }
@@ -108,8 +127,8 @@ export class ToolStateManager {
       settings.classList.remove('tool-settings--active');
     });
 
-    // Show settings for current tool
-    const toolSettings = document.querySelector(`[data-tool-settings="${toolName}"]`);
+    // Show settings for current tool - look for the div with data-tool attribute matching the tool name
+    const toolSettings = document.querySelector(`.tool-settings[data-tool="${toolName}"]`);
     if (toolSettings) {
       toolSettings.classList.add('tool-settings--active');
     }
