@@ -4,10 +4,14 @@
  * Single Responsibility: Component coordination and initialization only
  */
 
-import { PixiCanvas } from './canvas/index.js';
-import { ToolStateManager, UIEventHandler } from './ui/index.js';
-import { MarginSettingsManager, PageManager, MediaManager } from './managers/index.js';
-import { FontManager } from './font/index.js';
+import { PixiCanvas } from './canvas/PixiCanvas.js';
+import { ToolStateManager } from './ui/ToolStateManager.js';
+import { UIEventHandler } from './ui/UIEventHandler.js';
+import { MarginSettingsManager } from './managers/MarginSettingsManager.js';
+import { PageManager } from './managers/PageManager.js';
+import { MediaManagerRefactored as MediaManager } from './media/MediaManagerRefactored.js';
+import { FontManager } from './font/FontManager.js';
+import { CommandManager } from './commands/CommandManager.js';
 
 export class CourseBuilder {
   private pixiCanvas: PixiCanvas | null = null;
@@ -17,12 +21,14 @@ export class CourseBuilder {
   private pageManager: PageManager;
   private mediaManager: MediaManager;
   private fontManager: FontManager;
+  private commandManager: CommandManager;
   private canvasContainer: HTMLElement | null = null;
 
   constructor() {
     this.canvasContainer = document.getElementById('canvas-container');
     
-    // Initialize all managers (removed legacy CanvasManager)
+    // Initialize all managers
+    this.commandManager = new CommandManager();
     this.toolStateManager = new ToolStateManager();
     this.marginSettings = new MarginSettingsManager();
     this.pageManager = new PageManager();
@@ -56,7 +62,7 @@ export class CourseBuilder {
     }
 
     try {
-      this.pixiCanvas = new PixiCanvas('canvas-container');
+      this.pixiCanvas = new PixiCanvas('canvas-container', this.commandManager);
       await this.pixiCanvas.init();
       
       console.log('🎨 PIXI Canvas initialized');
@@ -122,6 +128,35 @@ export class CourseBuilder {
     document.addEventListener('addMediaToCanvas', (event: any) => {
       this.addMediaToCanvas(event.detail.url, event.detail.type);
     });
+
+    // Keyboard shortcuts for undo/redo
+    document.addEventListener('keydown', (event) => {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const undoKeyPressed = (isMac ? event.metaKey : event.ctrlKey) && event.key === 'z';
+      const redoKeyPressed = (isMac ? event.metaKey : event.ctrlKey) && event.key === 'y';
+
+      if (undoKeyPressed) {
+        event.preventDefault();
+        this.undo();
+      } else if (redoKeyPressed) {
+        event.preventDefault();
+        this.redo();
+      }
+    });
+  }
+
+  /**
+   * Undo the last command
+   */
+  public undo(): void {
+    this.commandManager.undo();
+  }
+
+  /**
+   * Redo the last undone command
+   */
+  public redo(): void {
+    this.commandManager.redo();
   }
 
   /**
@@ -207,6 +242,13 @@ export class CourseBuilder {
    */
   public getPixiCanvas(): PixiCanvas | null {
     return this.pixiCanvas;
+  }
+
+  /**
+   * Get command manager
+   */
+  public getCommandManager(): CommandManager {
+    return this.commandManager;
   }
 
   /**
