@@ -222,7 +222,6 @@ export class PixiApplicationManager {
     this.app.renderer.on("resize", () => {
       // Silent hook for devtools detection
     });
-
   }
 
   /**
