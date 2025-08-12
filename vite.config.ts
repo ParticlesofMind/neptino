@@ -1,8 +1,12 @@
 import { defineConfig } from 'vite'
 import { visualizer } from 'rollup-plugin-visualizer'
+import tsconfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig({
   plugins: [
+    // Automatically map path aliases from tsconfig.json
+    tsconfigPaths(),
+
     // Bundle analysis visualization (only when ANALYZE env var is set)
     ...(process.env.ANALYZE ? [visualizer({
       filename: 'dist/bundle-analysis.html',
@@ -38,39 +42,5 @@ export default defineConfig({
     target: 'esnext',
     sourcemap: true,
     chunkSizeWarningLimit: 600, // Increase threshold slightly
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // Vendor libraries
-          'vendor-supabase': ['@supabase/supabase-js'],
-          'vendor-pixi': ['pixi.js', '@pixi/devtools', '@pixi/layout'],
-          
-          // Course builder modules
-          'coursebuilder-core': [
-            './src/scripts/coursebuilder/index.ts',
-            './src/scripts/coursebuilder/coursebuilder.ts'
-          ],
-          'coursebuilder-canvas': [
-            './src/scripts/coursebuilder/canvas/index.ts',
-            './src/scripts/coursebuilder/canvas/PixiCanvas.ts',
-            './src/scripts/coursebuilder/canvas/PixiApplicationManager.ts',
-            './src/scripts/coursebuilder/canvas/CanvasLayerManager.ts',
-            './src/scripts/coursebuilder/canvas/CanvasEventHandler.ts'
-          ],
-          'coursebuilder-tools': [
-            './src/scripts/coursebuilder/tools/index.ts',
-            './src/scripts/coursebuilder/tools/ToolManager.ts'
-          ],
-          'coursebuilder-ui': [
-            './src/scripts/coursebuilder/ui/index.ts',
-            './src/scripts/coursebuilder/managers/index.ts'
-          ],
-          
-          // Backend modules
-          'backend-auth': ['./src/scripts/backend/auth/auth.ts'],
-          'backend-courses': ['./src/scripts/backend/courses/index.ts']
-        }
-      }
-    }
   }
 })

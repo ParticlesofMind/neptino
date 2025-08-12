@@ -18,7 +18,7 @@ async function initCourseBuilder() {
   if (window.location.pathname.includes('coursebuilder.html')) {
     try {
       // Dynamically import CourseBuilder to reduce initial bundle size
-      const { CourseBuilder } = await import('./coursebuilder/index.js');
+      const { CourseBuilder } = await import('./coursebuilder/coursebuilder.js');
       
       function createCourseBuilder() {
         console.log('🚀 Initializing CourseBuilder...')
