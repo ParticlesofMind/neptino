@@ -23,6 +23,7 @@ export class CourseBuilder {
   private fontManager: FontManager;
   private commandManager: CommandManager;
   private canvasContainer: HTMLElement | null = null;
+  private currentCourseId: string | null = null;
 
   constructor() {
     this.canvasContainer = document.getElementById('canvas-container');
@@ -157,6 +158,24 @@ export class CourseBuilder {
    */
   public redo(): void {
     this.commandManager.redo();
+  }
+
+  /**
+   * Set the current course ID and pass it to margin settings
+   */
+  public setCourseId(courseId: string): void {
+    this.currentCourseId = courseId;
+    console.log(`📚 Course ID set to: ${courseId}`);
+    
+    // Pass the course ID to margin settings so it can load/save to database
+    this.marginSettings.setCourseId(courseId);
+  }
+
+  /**
+   * Get the current course ID
+   */
+  public getCourseId(): string | null {
+    return this.currentCourseId;
   }
 
   /**

@@ -4,6 +4,8 @@
  * Single Responsibility: Margin configuration and UI updates only
  */
 
+import { marginSettingsHandler } from '../../backend/courses/marginSettings';
+
 export class MarginSettingsManager {
   private marginInputs: { [key: string]: HTMLInputElement } = {};
   private marginValues: { [key: string]: number } = {
@@ -24,6 +26,14 @@ export class MarginSettingsManager {
    */
   setOnMarginChange(callback: (margins: { [key: string]: number }) => void): void {
     this.onMarginChangeCallback = callback;
+  }
+
+  /**
+   * Set course ID for database persistence
+   */
+  setCourseId(courseId: string): void {
+    console.log(`📏 MarginSettingsManager: Setting course ID to ${courseId}`);
+    marginSettingsHandler.setCourseId(courseId);
   }
 
   /**

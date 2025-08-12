@@ -144,12 +144,12 @@ export function createStrokeSizeSelector(
  */
 export const SELECTION_CONSTANTS = {
   HANDLE_SIZE: 6,
-  HANDLE_COLOR: 0x5083f1,
-  SELECTION_COLOR: 0x5083f1,
-  SELECTION_ALPHA: 0.8,
+  HANDLE_COLOR: 0x3b82f6,      // Brighter blue for handles
+  SELECTION_COLOR: 0x3b82f6,   // Brighter blue for selection
+  SELECTION_ALPHA: 0.9,        // More opaque selection outline
   SELECTION_LINE_WIDTH: 2,
-  MARQUEE_FILL_ALPHA: 0.1,
-  MARQUEE_STROKE_ALPHA: 0.8,
+  MARQUEE_FILL_ALPHA: 0.25,    // Much more visible fill (25% instead of 10%)
+  MARQUEE_STROKE_ALPHA: 0.9,   // More opaque stroke
   HIT_TOLERANCE: 8,
   SNAP_TOLERANCE: 10
 };

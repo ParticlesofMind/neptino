@@ -23,6 +23,17 @@ async function initCourseBuilder() {
       function createCourseBuilder() {
         console.log('🚀 Initializing CourseBuilder...')
         const courseBuilder = new CourseBuilder()
+        
+        // Extract course ID from session storage
+        const courseId = sessionStorage.getItem('currentCourseId');
+        
+        if (courseId) {
+          console.log(`📚 Setting course ID from session storage: ${courseId}`);
+          courseBuilder.setCourseId(courseId);
+        } else {
+          console.log('📚 No course ID found in session storage');
+        }
+        
         // Expose for debugging and devtools
         ;(window as any).courseBuilder = courseBuilder
       }

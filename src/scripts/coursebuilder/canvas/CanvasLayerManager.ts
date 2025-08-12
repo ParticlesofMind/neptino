@@ -11,6 +11,7 @@ export class CanvasLayerManager {
   private layoutContainer: Container | null = null;
   private drawingContainer: Container | null = null;
   private layoutBlocks: any[] = [];
+  private marginGraphics: Graphics | null = null;
 
   constructor(app: Application) {
     this.app = app;
@@ -80,6 +81,106 @@ export class CanvasLayerManager {
     this.layoutContainer.addChild(graphics);
 
     console.log('🔲 Enhanced background grid added to layout layer');
+  }
+
+  /**
+   * Add or update margin boundaries (blue borders)
+   */
+  public updateMarginBoundaries(margins: { top: number; right: number; bottom: number; left: number }): void {
+    if (!this.layoutContainer) {
+      console.warn('⚠️ Layout container not initialized');
+      return;
+    }
+
+    // Remove existing margin graphics
+    if (this.marginGraphics) {
+      this.layoutContainer.removeChild(this.marginGraphics);
+      this.marginGraphics.destroy();
+    }
+
+    // Create new margin graphics
+    this.marginGraphics = new Graphics();
+    this.marginGraphics.label = 'margin-boundaries';
+
+    const canvasWidth = this.app.screen.width;
+    const canvasHeight = this.app.screen.height;
+
+    // Draw margin boundaries with blue color
+    const marginColor = 0x3b82f6; // Bright blue
+    const marginAlpha = 0.8;
+    const lineWidth = 2;
+
+    // Top margin line
+    if (margins.top > 0) {
+      this.marginGraphics.moveTo(0, margins.top);
+      this.marginGraphics.lineTo(canvasWidth, margins.top);
+    }
+
+    // Bottom margin line
+    if (margins.bottom > 0) {
+      this.marginGraphics.moveTo(0, canvasHeight - margins.bottom);
+      this.marginGraphics.lineTo(canvasWidth, canvasHeight - margins.bottom);
+    }
+
+    // Left margin line
+    if (margins.left > 0) {
+      this.marginGraphics.moveTo(margins.left, 0);
+      this.marginGraphics.lineTo(margins.left, canvasHeight);
+    }
+
+    // Right margin line
+    if (margins.right > 0) {
+      this.marginGraphics.moveTo(canvasWidth - margins.right, 0);
+      this.marginGraphics.lineTo(canvasWidth - margins.right, canvasHeight);
+    }
+
+    // Style the margin lines
+    this.marginGraphics.stroke({ 
+      width: lineWidth, 
+      color: marginColor, 
+      alpha: marginAlpha 
+    });
+
+    // Add margin area overlay (very subtle fill)
+    // Top margin area
+    if (margins.top > 0) {
+      this.marginGraphics.rect(0, 0, canvasWidth, margins.top);
+      this.marginGraphics.fill({ color: marginColor, alpha: 0.05 });
+    }
+
+    // Bottom margin area
+    if (margins.bottom > 0) {
+      this.marginGraphics.rect(0, canvasHeight - margins.bottom, canvasWidth, margins.bottom);
+      this.marginGraphics.fill({ color: marginColor, alpha: 0.05 });
+    }
+
+    // Left margin area
+    if (margins.left > 0) {
+      this.marginGraphics.rect(0, 0, margins.left, canvasHeight);
+      this.marginGraphics.fill({ color: marginColor, alpha: 0.05 });
+    }
+
+    // Right margin area
+    if (margins.right > 0) {
+      this.marginGraphics.rect(canvasWidth - margins.right, 0, margins.right, canvasHeight);
+      this.marginGraphics.fill({ color: marginColor, alpha: 0.05 });
+    }
+
+    this.layoutContainer.addChild(this.marginGraphics);
+
+    console.log('📏 Margin boundaries updated:', margins);
+  }
+
+  /**
+   * Clear margin boundaries
+   */
+  public clearMarginBoundaries(): void {
+    if (this.marginGraphics && this.layoutContainer) {
+      this.layoutContainer.removeChild(this.marginGraphics);
+      this.marginGraphics.destroy();
+      this.marginGraphics = null;
+      console.log('📏 Margin boundaries cleared');
+    }
   }
 
   /**
@@ -178,6 +279,12 @@ export class CanvasLayerManager {
    * Destroy all layers
    */
   public destroy(): void {
+    // Clean up margin graphics
+    if (this.marginGraphics) {
+      this.marginGraphics.destroy();
+      this.marginGraphics = null;
+    }
+    
     if (this.layoutContainer) {
       this.layoutContainer.destroy({ children: true });
       this.layoutContainer = null;

@@ -29,6 +29,7 @@ export class MarginSettingsHandler {
       unit: 'centimeters'
     };
 
+    // Load from local storage if available
     this.init();
   }
 
@@ -131,16 +132,7 @@ export class MarginSettingsHandler {
 
   private async saveSettingsToDatabase(): Promise<void> {
     if (!this.courseId) {
-      console.warn('📏 No course ID available, cannot save margin settings');
-      this.showSaveStatus('error');
-      return;
-    }
-
-    // Check if this is a demo course (not a valid UUID)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(this.courseId)) {
-      console.log('📏 Demo mode detected - settings saved locally only');
-      this.showSaveStatus('saved');
+      console.error('📏 ERROR: No course ID available, cannot save margin settings');
       return;
     }
 
@@ -220,17 +212,6 @@ export class MarginSettingsHandler {
   public async loadSettingsFromDatabase(courseId: string): Promise<void> {
     this.courseId = courseId;
     
-    // Check if this is a demo course (not a valid UUID)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(courseId)) {
-      console.log('📏 Demo mode detected - using default margin settings');
-      // Use default settings for demo and apply to canvas immediately
-      this.updateInputValues();
-      this.updateUnitDisplays();
-      this.updateCanvasMargins();
-      return;
-    }
-    
     try {
       console.log(`📏 Loading margin settings for course: ${courseId}`);
       
@@ -241,32 +222,29 @@ export class MarginSettingsHandler {
         .single();
 
       if (error) {
-        throw error;
+        console.error('📏 Error loading course settings:', error);
+        // Use defaults if loading fails
+        this.updateInputValues();
+        this.updateUnitDisplays();
+        this.updateCanvasMargins();
+        return;
       }
 
-      // Extract margin settings - they should always exist due to database defaults
-      const courseSettings = course?.course_settings || {};
-      if (courseSettings.margins) {
-        this.currentSettings = { ...courseSettings.margins };
+      if (course?.course_settings?.margins) {
+        const margins = course.course_settings.margins;
+        this.currentSettings = { ...this.currentSettings, ...margins };
+        console.log('📏 Loaded margin settings from database:', this.currentSettings);
+      } else {
+        console.log('📏 No margin settings found in database, using defaults');
       }
-      
-      // Update UI with loaded settings
+
+      // Update UI and canvas
       this.updateInputValues();
       this.updateUnitDisplays();
-      
-      // Update unit radio button
-      const unitInput = document.querySelector(`input[value="${this.currentSettings.unit}"]`) as HTMLInputElement;
-      if (unitInput) {
-        unitInput.checked = true;
-      }
-      
-      console.log('📏 Margin settings loaded from database:', this.currentSettings);
-      
-      // Update canvas with loaded margins
       this.updateCanvasMargins();
-      
+
     } catch (error) {
-      console.error('📏 Failed to load margin settings:', error);
+      console.error('📏 Error loading margin settings:', error);
       // Use defaults if loading fails
       this.updateInputValues();
       this.updateUnitDisplays();
@@ -306,6 +284,11 @@ export class MarginSettingsHandler {
     console.log('📏 Course builder reference set');
     // Apply current margins immediately
     this.updateCanvasMargins();
+  }
+
+  public setCourseId(courseId: string): void {
+    console.log(`📏 Setting course ID to: ${courseId}`);
+    this.loadSettingsFromDatabase(courseId);
   }
 
   public getCurrentSettings(): MarginSettings {

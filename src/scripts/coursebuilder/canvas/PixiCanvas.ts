@@ -90,6 +90,17 @@ export class PixiCanvas {
   }
 
   /**
+   * Update canvas margins (visual boundaries)
+   */
+  public updateMargins(margins: { top: number; right: number; bottom: number; left: number }): void {
+    if (this.layerManager) {
+      this.layerManager.updateMarginBoundaries(margins);
+    } else {
+      console.warn('⚠️ Layer manager not initialized');
+    }
+  }
+
+  /**
    * Data Access
    */
   public getDimensions(): { width: number; height: number } {
