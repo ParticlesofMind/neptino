@@ -2,7 +2,7 @@
 // MODAL COMPONENT
 // ==========================================================================
 
-@use '../abstracts/variables' as *;
+@use "../abstracts/variables" as *;
 
 .modal {
   position: fixed;
@@ -17,7 +17,7 @@
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s ease;
-  
+
   &--active {
     opacity: 1;
     visibility: visible;
@@ -45,7 +45,7 @@
   overflow: hidden;
   transform: scale(0.9) translateY(20px);
   transition: all 0.3s ease;
-  
+
   .modal--active & {
     transform: scale(1) translateY(0);
   }
@@ -58,7 +58,7 @@
   padding: $spacing-6;
   border-bottom: 1px solid $gray-200;
   background: $gray-50;
-  
+
   h3 {
     margin: 0;
     color: $text-primary;
@@ -78,12 +78,12 @@
   border-radius: $border-radius;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background: $gray-100;
     color: $text-primary;
   }
-  
+
   svg {
     width: 20px;
     height: 20px;

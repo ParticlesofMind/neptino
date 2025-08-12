@@ -8,19 +8,19 @@ export class CanvasManager {
   private currentTemplate: any = null;
   private isLayoutVisible: boolean = true;
 
-  constructor(canvasId: string = 'canvas') {
+  constructor(canvasId: string = "canvas") {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!this.canvas) {
       throw new Error(`Canvas element with id '${canvasId}' not found`);
     }
-    this.ctx = this.canvas.getContext('2d')!;
+    this.ctx = this.canvas.getContext("2d")!;
     this.initializeCanvas();
   }
 
   private initializeCanvas(): void {
     this.canvas.width = 800;
     this.canvas.height = 600;
-    window.addEventListener('resize', () => this.resizeCanvas());
+    window.addEventListener("resize", () => this.resizeCanvas());
   }
 
   public resizeCanvas(): void {
@@ -50,7 +50,7 @@ export class CanvasManager {
   public renderCurrentState(): void {
     if (!this.isLayoutVisible) return;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.fillStyle = '#f0f0f0';
+    this.ctx.fillStyle = "#f0f0f0";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
@@ -88,7 +88,7 @@ export class CanvasManager {
     return { width: this.canvas.width, height: this.canvas.height };
   }
 
-  public exportAsDataURL(type: string = 'image/png'): string {
+  public exportAsDataURL(type: string = "image/png"): string {
     return this.canvas.toDataURL(type);
   }
 
@@ -96,7 +96,7 @@ export class CanvasManager {
     return {
       dimensions: this.getDimensions(),
       isLayoutVisible: this.isLayoutVisible,
-      hasTemplate: !!this.currentTemplate
+      hasTemplate: !!this.currentTemplate,
     };
   }
 
@@ -114,15 +114,15 @@ export class CanvasManager {
     const rect = this.canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    
-    const canvasClickEvent = new CustomEvent('canvasClick', {
-      detail: { x, y }
+
+    const canvasClickEvent = new CustomEvent("canvasClick", {
+      detail: { x, y },
     });
     this.canvas.dispatchEvent(canvasClickEvent);
   }
 
   public destroy(): void {
-    window.removeEventListener('resize', this.resizeCanvas);
+    window.removeEventListener("resize", this.resizeCanvas);
     this.clearAll();
   }
 }

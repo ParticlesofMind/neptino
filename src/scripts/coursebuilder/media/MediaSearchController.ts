@@ -5,8 +5,8 @@
  */
 
 export class MediaSearchController {
-  private currentQuery: string = '';
-  private currentMediaType: string = '';
+  private currentQuery: string = "";
+  private currentMediaType: string = "";
   private onSearchCallback: ((results: any[]) => void) | null = null;
 
   constructor() {
@@ -25,21 +25,23 @@ export class MediaSearchController {
    */
   private bindSearchEvents(): void {
     // Search input
-    const searchInput = document.getElementById('media-search-input') as HTMLInputElement;
+    const searchInput = document.getElementById(
+      "media-search-input",
+    ) as HTMLInputElement;
     if (searchInput) {
-      searchInput.addEventListener('input', (event) => {
+      searchInput.addEventListener("input", (event) => {
         this.handleSearchInput(event);
       });
-      
-      searchInput.addEventListener('keypress', (event) => {
+
+      searchInput.addEventListener("keypress", (event) => {
         this.handleSearchKeypress(event);
       });
     }
 
     // Search button
-    const searchBtn = document.getElementById('media-search-btn');
+    const searchBtn = document.getElementById("media-search-btn");
     if (searchBtn) {
-      searchBtn.addEventListener('click', () => {
+      searchBtn.addEventListener("click", () => {
         this.performSearch();
       });
     }
@@ -57,7 +59,7 @@ export class MediaSearchController {
    * Handle search keypress (Enter to search)
    */
   private handleSearchKeypress(event: KeyboardEvent): void {
-    if (event.key === 'Enter') {
+    if (event.key === "Enter") {
       event.preventDefault();
       this.performSearch();
     }
@@ -68,15 +70,20 @@ export class MediaSearchController {
    */
   private performSearch(): void {
     if (!this.currentQuery || !this.currentMediaType) {
-      console.warn('⚠️ Search query or media type missing');
+      console.warn("⚠️ Search query or media type missing");
       return;
     }
 
-    console.log(`🔍 Searching for ${this.currentMediaType}: "${this.currentQuery}"`);
-    
+    console.log(
+      `🔍 Searching for ${this.currentMediaType}: "${this.currentQuery}"`,
+    );
+
     // Generate mock results (replace with real API call)
-    const results = this.generateMockResults(this.currentQuery, this.currentMediaType);
-    
+    const results = this.generateMockResults(
+      this.currentQuery,
+      this.currentMediaType,
+    );
+
     // Trigger callback with results
     if (this.onSearchCallback) {
       this.onSearchCallback(results);
@@ -95,12 +102,14 @@ export class MediaSearchController {
    * Clear search
    */
   clearSearch(): void {
-    this.currentQuery = '';
-    this.currentMediaType = '';
-    
-    const searchInput = document.getElementById('media-search-input') as HTMLInputElement;
+    this.currentQuery = "";
+    this.currentMediaType = "";
+
+    const searchInput = document.getElementById(
+      "media-search-input",
+    ) as HTMLInputElement;
     if (searchInput) {
-      searchInput.value = '';
+      searchInput.value = "";
     }
   }
 
@@ -110,32 +119,35 @@ export class MediaSearchController {
   getSearchState(): { query: string; mediaType: string } {
     return {
       query: this.currentQuery,
-      mediaType: this.currentMediaType
+      mediaType: this.currentMediaType,
     };
   }
 
   /**
    * Generate mock search results
    */
-  private generateMockResults(query: string, mediaType: string): Array<{
+  private generateMockResults(
+    query: string,
+    mediaType: string,
+  ): Array<{
     url: string;
     thumbnail: string;
     title: string;
     description: string;
   }> {
     const results = [];
-    const baseUrl = 'https://picsum.photos';
-    
+    const baseUrl = "https://picsum.photos";
+
     for (let i = 1; i <= 8; i++) {
       const imageId = 200 + i;
       results.push({
         url: `${baseUrl}/400/300?random=${imageId}`,
         thumbnail: `${baseUrl}/150/150?random=${imageId}`,
         title: `${mediaType} result ${i} for "${query}"`,
-        description: `Sample ${mediaType} found for search term: ${query}`
+        description: `Sample ${mediaType} found for search term: ${query}`,
       });
     }
-    
+
     return results;
   }
 
@@ -144,21 +156,21 @@ export class MediaSearchController {
    */
   destroy(): void {
     // Remove event listeners
-    const searchInput = document.getElementById('media-search-input');
-    const searchBtn = document.getElementById('media-search-btn');
-    
+    const searchInput = document.getElementById("media-search-input");
+    const searchBtn = document.getElementById("media-search-btn");
+
     if (searchInput) {
-      searchInput.removeEventListener('input', this.handleSearchInput);
-      searchInput.removeEventListener('keypress', this.handleSearchKeypress);
+      searchInput.removeEventListener("input", this.handleSearchInput);
+      searchInput.removeEventListener("keypress", this.handleSearchKeypress);
     }
-    
+
     if (searchBtn) {
-      searchBtn.removeEventListener('click', this.performSearch);
+      searchBtn.removeEventListener("click", this.performSearch);
     }
-    
+
     this.onSearchCallback = null;
     this.clearSearch();
-    
-    console.log('🗑️ Media search controller destroyed');
+
+    console.log("🗑️ Media search controller destroyed");
   }
 }

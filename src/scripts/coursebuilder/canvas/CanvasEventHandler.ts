@@ -4,8 +4,8 @@
  * Single Responsibility: Event handling only
  */
 
-import { Application, Container, FederatedPointerEvent } from 'pixi.js';
-import { ToolManager } from '../tools/ToolManager';
+import { Application, Container, FederatedPointerEvent } from "pixi.js";
+import { ToolManager } from "../tools/ToolManager";
 
 export class CanvasEventHandler {
   private app: Application;
@@ -29,13 +29,13 @@ export class CanvasEventHandler {
    */
   public setupEvents(): void {
     // Make the stage interactive
-    this.app.stage.eventMode = 'static';
+    this.app.stage.eventMode = "static";
     this.app.stage.hitArea = this.app.screen;
 
     // Add pointer events
     this.setupPointerEvents();
 
-    console.log('🎯 Canvas events setup complete');
+    console.log("🎯 Canvas events setup complete");
   }
 
   /**
@@ -43,21 +43,21 @@ export class CanvasEventHandler {
    */
   private setupPointerEvents(): void {
     // Pointer down event
-    this.app.stage.on('pointerdown', (event: FederatedPointerEvent) => {
+    this.app.stage.on("pointerdown", (event: FederatedPointerEvent) => {
       this.handlePointerDown(event);
     });
 
     // Pointer move event
-    this.app.stage.on('pointermove', (event: FederatedPointerEvent) => {
+    this.app.stage.on("pointermove", (event: FederatedPointerEvent) => {
       this.handlePointerMove(event);
     });
 
     // Pointer up event
-    this.app.stage.on('pointerup', (event: FederatedPointerEvent) => {
+    this.app.stage.on("pointerup", (event: FederatedPointerEvent) => {
       this.handlePointerUp(event);
     });
 
-    console.log('🖱️ Pointer events attached');
+    console.log("🖱️ Pointer events attached");
   }
 
   /**
@@ -69,7 +69,7 @@ export class CanvasEventHandler {
       try {
         activeTool.onPointerDown(event, this.drawingContainer);
       } catch (error) {
-        console.error('❌ Error in tool pointer down:', error);
+        console.error("❌ Error in tool pointer down:", error);
       }
     }
   }
@@ -83,7 +83,7 @@ export class CanvasEventHandler {
       try {
         activeTool.onPointerMove(event, this.drawingContainer);
       } catch (error) {
-        console.error('❌ Error in tool pointer move:', error);
+        console.error("❌ Error in tool pointer move:", error);
       }
     }
   }
@@ -97,7 +97,7 @@ export class CanvasEventHandler {
       try {
         activeTool.onPointerUp(event, this.drawingContainer);
       } catch (error) {
-        console.error('❌ Error in tool pointer up:', error);
+        console.error("❌ Error in tool pointer up:", error);
       }
     }
   }
@@ -110,24 +110,30 @@ export class CanvasEventHandler {
     if (!canvas) return;
 
     // Remove all cursor classes
-    canvas.classList.remove('cursor-pen', 'cursor-eraser', 'cursor-text', 'cursor-highlighter', 'cursor-selection');
+    canvas.classList.remove(
+      "cursor-pen",
+      "cursor-eraser",
+      "cursor-text",
+      "cursor-highlighter",
+      "cursor-selection",
+    );
 
     // Add cursor class for current tool
     switch (toolName) {
-      case 'pen':
-        canvas.classList.add('cursor-pen');
+      case "pen":
+        canvas.classList.add("cursor-pen");
         break;
-      case 'eraser':
-        canvas.classList.add('cursor-eraser');
+      case "eraser":
+        canvas.classList.add("cursor-eraser");
         break;
-      case 'text':
-        canvas.classList.add('cursor-text');
+      case "text":
+        canvas.classList.add("cursor-text");
         break;
-      case 'highlighter':
-        canvas.classList.add('cursor-highlighter');
+      case "highlighter":
+        canvas.classList.add("cursor-highlighter");
         break;
       default:
-        canvas.classList.add('cursor-selection');
+        canvas.classList.add("cursor-selection");
     }
 
     console.log(`🖱️ Canvas cursor updated for tool: ${toolName}`);
@@ -137,8 +143,8 @@ export class CanvasEventHandler {
    * Enable/disable events
    */
   public setEventsEnabled(enabled: boolean): void {
-    this.app.stage.eventMode = enabled ? 'static' : 'none';
-    console.log(`🎯 Canvas events ${enabled ? 'enabled' : 'disabled'}`);
+    this.app.stage.eventMode = enabled ? "static" : "none";
+    console.log(`🎯 Canvas events ${enabled ? "enabled" : "disabled"}`);
   }
 
   /**
@@ -146,9 +152,9 @@ export class CanvasEventHandler {
    */
   public getEventInfo(): any {
     return {
-      stageInteractive: this.app.stage.eventMode === 'static',
+      stageInteractive: this.app.stage.eventMode === "static",
       hasHitArea: !!this.app.stage.hitArea,
-      eventMode: this.app.stage.eventMode
+      eventMode: this.app.stage.eventMode,
     };
   }
 
@@ -157,13 +163,13 @@ export class CanvasEventHandler {
    */
   public destroy(): void {
     // Remove all event listeners
-    this.app.stage.off('pointerdown');
-    this.app.stage.off('pointermove');
-    this.app.stage.off('pointerup');
-    
+    this.app.stage.off("pointerdown");
+    this.app.stage.off("pointermove");
+    this.app.stage.off("pointerup");
+
     // Disable events
-    this.app.stage.eventMode = 'none';
-    
-    console.log('🗑️ Canvas event handler destroyed');
+    this.app.stage.eventMode = "none";
+
+    console.log("🗑️ Canvas event handler destroyed");
   }
 }

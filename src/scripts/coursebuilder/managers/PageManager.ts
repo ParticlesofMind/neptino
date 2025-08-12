@@ -4,11 +4,16 @@
  * Single Responsibility: Page data structure and core operations only
  */
 
-import { PageSettingsModal } from '../modals/PageSettingsModal';
-import { PageNavigationController } from './PageNavigationController.js';
+import { PageSettingsModal } from "../modals/PageSettingsModal";
+import { PageNavigationController } from "./PageNavigationController.js";
 
 export class PageManager {
-  private pages: Array<{ id: string; name: string; content: any; description?: string }> = [];
+  private pages: Array<{
+    id: string;
+    name: string;
+    content: any;
+    description?: string;
+  }> = [];
   private pageSettingsModal: PageSettingsModal;
   private navigationController: PageNavigationController;
   private onPageChangeCallback: ((page: any) => void) | null = null;
@@ -17,7 +22,7 @@ export class PageManager {
   constructor() {
     this.pageSettingsModal = new PageSettingsModal();
     this.navigationController = new PageNavigationController();
-    
+
     this.initializeFirstPage();
     this.bindCoreEvents();
     this.setupNavigationCallbacks();
@@ -43,14 +48,14 @@ export class PageManager {
   private initializeFirstPage(): void {
     const firstPage = {
       id: this.generatePageId(),
-      name: 'Page 1',
+      name: "Page 1",
       content: null,
-      description: ''
+      description: "",
     };
-    
+
     this.pages.push(firstPage);
     this.navigationController.setTotalPages(1);
-    console.log('📄 First page initialized:', firstPage.id);
+    console.log("📄 First page initialized:", firstPage.id);
   }
 
   /**
@@ -58,15 +63,18 @@ export class PageManager {
    */
   private bindCoreEvents(): void {
     // Add page button
-    const addPageBtn = document.getElementById('add-page');
+    const addPageBtn = document.getElementById("add-page");
     if (addPageBtn) {
-      addPageBtn.addEventListener('click', this.addNewPage.bind(this));
+      addPageBtn.addEventListener("click", this.addNewPage.bind(this));
     }
 
     // Page settings button
-    const pageSettingsBtn = document.getElementById('page-settings');
+    const pageSettingsBtn = document.getElementById("page-settings");
     if (pageSettingsBtn) {
-      pageSettingsBtn.addEventListener('click', this.openPageSettings.bind(this));
+      pageSettingsBtn.addEventListener(
+        "click",
+        this.openPageSettings.bind(this),
+      );
     }
   }
 
@@ -90,17 +98,17 @@ export class PageManager {
       id: this.generatePageId(),
       name: `Page ${this.pages.length + 1}`,
       content: null,
-      description: ''
+      description: "",
     };
 
     this.pages.push(newPage);
     this.navigationController.setTotalPages(this.pages.length);
     this.navigationController.updatePageSelector(this.pages);
-    
+
     // Switch to new page
     this.navigationController.setCurrentPage(this.pages.length - 1);
-    
-    console.log('📄 New page added:', newPage.id);
+
+    console.log("📄 New page added:", newPage.id);
 
     // Trigger callbacks
     if (this.onPageAddCallback) {
@@ -117,18 +125,18 @@ export class PageManager {
   async openPageSettings(): Promise<void> {
     const currentPage = this.getCurrentPage();
     if (!currentPage) return;
-    
+
     try {
-      console.log('⚙️ Opening page settings for:', currentPage.id);
+      console.log("⚙️ Opening page settings for:", currentPage.id);
       const updatedPage = await this.pageSettingsModal.show(currentPage);
-      
+
       // Update page data
       Object.assign(currentPage, updatedPage);
       this.navigationController.updatePageSelector(this.pages);
-      
-      console.log('💾 Page settings updated:', currentPage.id);
+
+      console.log("💾 Page settings updated:", currentPage.id);
     } catch (error) {
-      console.log('❌ Page settings cancelled');
+      console.log("❌ Page settings cancelled");
     }
   }
 
@@ -172,13 +180,17 @@ export class PageManager {
    * Remove page by index
    */
   removePage(pageIndex: number): void {
-    if (pageIndex >= 0 && pageIndex < this.pages.length && this.pages.length > 1) {
+    if (
+      pageIndex >= 0 &&
+      pageIndex < this.pages.length &&
+      this.pages.length > 1
+    ) {
       const removedPage = this.pages.splice(pageIndex, 1)[0];
-      
+
       this.navigationController.setTotalPages(this.pages.length);
       this.navigationController.updatePageSelector(this.pages);
-      
-      console.log('🗑️ Page removed:', removedPage.id);
+
+      console.log("🗑️ Page removed:", removedPage.id);
     }
   }
 
@@ -189,7 +201,7 @@ export class PageManager {
     const currentPage = this.getCurrentPage();
     if (currentPage) {
       currentPage.content = content;
-      console.log('💾 Page content saved:', currentPage.id);
+      console.log("💾 Page content saved:", currentPage.id);
     }
   }
 
@@ -197,7 +209,7 @@ export class PageManager {
    * Get page by ID
    */
   getPageById(pageId: string): any {
-    return this.pages.find(page => page.id === pageId);
+    return this.pages.find((page) => page.id === pageId);
   }
 
   /**

@@ -4,8 +4,8 @@
  * Single Responsibility: Canvas lifecycle and state management only
  */
 
-import * as PIXI from 'pixi.js';
-import { LayoutRenderer } from '../layout/LayoutRenderer';
+import * as PIXI from "pixi.js";
+import { LayoutRenderer } from "../layout/LayoutRenderer";
 
 export class CanvasManager {
   private canvas: HTMLCanvasElement;
@@ -15,13 +15,13 @@ export class CanvasManager {
   private currentTemplate: any = null;
   private isLayoutVisible: boolean = true;
 
-  constructor(canvasId: string = 'canvas') {
+  constructor(canvasId: string = "canvas") {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!this.canvas) {
       throw new Error(`Canvas element with id '${canvasId}' not found`);
     }
 
-    this.ctx = this.canvas.getContext('2d')!;
+    this.ctx = this.canvas.getContext("2d")!;
     this.initializeCanvas();
   }
 
@@ -31,14 +31,14 @@ export class CanvasManager {
   private initializeCanvas(): void {
     // Set canvas size
     this.resizeCanvas();
-    
+
     // Initialize PIXI if available
-    if (typeof PIXI !== 'undefined') {
+    if (typeof PIXI !== "undefined") {
       this.initializePixi();
     }
 
     // Bind resize events
-    window.addEventListener('resize', this.resizeCanvas.bind(this));
+    window.addEventListener("resize", this.resizeCanvas.bind(this));
   }
 
   /**
@@ -49,11 +49,11 @@ export class CanvasManager {
       view: this.canvas,
       width: this.canvas.width,
       height: this.canvas.height,
-      backgroundColor: 0xFFFFFF,
-      antialias: true
+      backgroundColor: 0xffffff,
+      antialias: true,
     });
 
-    console.log('📱 PIXI application initialized');
+    console.log("📱 PIXI application initialized");
   }
 
   /**
@@ -89,11 +89,11 @@ export class CanvasManager {
    */
   async loadTemplate(template: any): Promise<void> {
     this.currentTemplate = template;
-    
+
     if (this.layoutRenderer) {
       // Note: LayoutRenderer doesn't have renderTemplate method
       // Template data should be processed before calling renderLayoutStructure
-      console.log('📋 Template loaded:', template.name);
+      console.log("📋 Template loaded:", template.name);
       this.renderLayout();
     }
   }
@@ -105,7 +105,7 @@ export class CanvasManager {
     if (!this.layoutRenderer || !this.currentTemplate) return;
 
     this.clearCanvas();
-    
+
     if (this.isLayoutVisible) {
       // Use renderLayoutStructure with blocks from template
       const blocks = this.currentTemplate.blocks || [];
@@ -119,8 +119,8 @@ export class CanvasManager {
   toggleLayoutVisibility(): void {
     this.isLayoutVisible = !this.isLayoutVisible;
     this.renderLayout();
-    
-    console.log(`👁️ Layout visibility: ${this.isLayoutVisible ? 'ON' : 'OFF'}`);
+
+    console.log(`👁️ Layout visibility: ${this.isLayoutVisible ? "ON" : "OFF"}`);
   }
 
   /**
@@ -128,7 +128,7 @@ export class CanvasManager {
    */
   clearCanvas(): void {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    
+
     if (this.pixiApp) {
       this.pixiApp.stage.removeChildren();
     }
@@ -140,12 +140,12 @@ export class CanvasManager {
   clearAll(): void {
     this.clearCanvas();
     this.currentTemplate = null;
-    
+
     if (this.layoutRenderer) {
       this.layoutRenderer.clear();
     }
-    
-    console.log('🧹 Canvas and layout cleared');
+
+    console.log("🧹 Canvas and layout cleared");
   }
 
   /**
@@ -153,13 +153,13 @@ export class CanvasManager {
    */
   addPage(): void {
     if (!this.currentTemplate) {
-      console.warn('No template loaded - cannot add page');
+      console.warn("No template loaded - cannot add page");
       return;
     }
 
     // Logic for adding new page
-    console.log('📄 Adding new page');
-    
+    console.log("📄 Adding new page");
+
     // Trigger re-render with new page
     this.renderLayout();
   }
@@ -170,7 +170,7 @@ export class CanvasManager {
   getDimensions(): { width: number; height: number } {
     return {
       width: this.canvas.width,
-      height: this.canvas.height
+      height: this.canvas.height,
     };
   }
 
@@ -216,7 +216,7 @@ export class CanvasManager {
     const rect = this.canvas.getBoundingClientRect();
     return {
       x: screenX - rect.left,
-      y: screenY - rect.top
+      y: screenY - rect.top,
     };
   }
 
@@ -227,7 +227,7 @@ export class CanvasManager {
     const rect = this.canvas.getBoundingClientRect();
     return {
       x: canvasX + rect.left,
-      y: canvasY + rect.top
+      y: canvasY + rect.top,
     };
   }
 
@@ -235,12 +235,12 @@ export class CanvasManager {
    * Cleanup resources
    */
   destroy(): void {
-    window.removeEventListener('resize', this.resizeCanvas);
-    
+    window.removeEventListener("resize", this.resizeCanvas);
+
     if (this.pixiApp) {
       this.pixiApp.destroy();
     }
-    
+
     this.layoutRenderer = null;
     this.currentTemplate = null;
   }

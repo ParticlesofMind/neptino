@@ -2,7 +2,7 @@
 // NAVIGATION LAYOUT
 // ==========================================================================
 
-@use '../abstracts/variables' as *;
+@use "../abstracts/variables" as *;
 
 // ==========================================================================
 // BASE NAVIGATION
@@ -14,24 +14,24 @@
   justify-content: space-between;
   width: 100%;
   padding: $spacing-4 $spacing-6;
-  
+
   // Responsive padding
   @media (min-width: $breakpoint-md) {
     padding: $spacing-4 $spacing-8;
   }
-  
+
   @media (min-width: $breakpoint-lg) {
     padding: $spacing-4 $spacing-12;
   }
-  
+
   // Navigation in footer has different styling
   &--footer {
     padding: $spacing-3 $spacing-6;
-    
+
     @media (min-width: $breakpoint-md) {
       padding: $spacing-3 $spacing-8;
     }
-    
+
     @media (min-width: $breakpoint-lg) {
       padding: $spacing-3 $spacing-12;
     }
@@ -55,7 +55,7 @@
   align-items: center;
   flex: 1;
   justify-content: center;
-  
+
   // On mobile, hide the center links to make room
   @media (max-width: #{$breakpoint-md - 1px}) {
     display: none;
@@ -78,7 +78,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  
+
   .nav__left-section,
   .nav__right-section {
     display: flex;
@@ -86,15 +86,15 @@
     flex: 0 0 auto;
     min-width: 120px; // Ensure consistent spacing
   }
-  
+
   .nav__left-section {
     justify-content: flex-start;
   }
-  
+
   .nav__right-section {
     justify-content: flex-end;
   }
-  
+
   .nav__center-section {
     display: flex;
     align-items: center;
@@ -112,11 +112,11 @@
   .nav {
     // On mobile, space out logo and button more
     padding: $spacing-3 $spacing-4;
-    
+
     // Ensure proper spacing between logo and button
     gap: $spacing-4;
   }
-  
+
   .nav--coursebuilder {
     .nav__left-section,
     .nav__right-section {

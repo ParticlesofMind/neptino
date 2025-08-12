@@ -23,7 +23,7 @@ interface ToolSettings {
     color: string;
     strokeWidth: number;
     fillColor?: string;
-    shapeType: 'rectangle' | 'triangle' | 'circle';
+    shapeType: "rectangle" | "triangle" | "circle";
   };
   eraser: {
     size: number;
@@ -31,34 +31,34 @@ interface ToolSettings {
 }
 
 export class ToolStateManager {
-  private currentTool: string = 'selection';
+  private currentTool: string = "selection";
   private selectedMedia: string | null = null;
   private toolSettings: ToolSettings;
 
   constructor() {
     this.toolSettings = {
       pen: {
-        color: '#000000',
-        size: 2
+        color: "#000000",
+        size: 2,
       },
       text: {
-        fontFamily: 'Arial',
+        fontFamily: "Arial",
         fontSize: 16,
-        color: '#000000'
+        color: "#000000",
       },
       highlighter: {
-        color: '#ffff00',
+        color: "#ffff00",
         opacity: 0.3,
-        size: 20
+        size: 20,
       },
       shapes: {
-        color: '#000000',
+        color: "#000000",
         strokeWidth: 2,
-        shapeType: 'rectangle'
+        shapeType: "rectangle",
       },
       eraser: {
-        size: 20
-      }
+        size: 20,
+      },
     };
   }
 
@@ -81,9 +81,15 @@ export class ToolStateManager {
   /**
    * Update tool settings
    */
-  updateToolSettings(toolName: string, settings: Partial<ToolSettings[keyof ToolSettings]>): void {
+  updateToolSettings(
+    toolName: string,
+    settings: Partial<ToolSettings[keyof ToolSettings]>,
+  ): void {
     if (toolName in this.toolSettings) {
-      Object.assign(this.toolSettings[toolName as keyof ToolSettings], settings);
+      Object.assign(
+        this.toolSettings[toolName as keyof ToolSettings],
+        settings,
+      );
       console.log(`🔧 Updated ${toolName} settings:`, settings);
     }
   }
@@ -114,23 +120,27 @@ export class ToolStateManager {
    */
   private updateToolUI(toolName: string): void {
     // Remove active class from all tools
-    document.querySelectorAll('.tool').forEach(t => t.classList.remove('tool--selected'));
-    
+    document
+      .querySelectorAll(".tool")
+      .forEach((t) => t.classList.remove("tool--selected"));
+
     // Add active class to selected tool
     const selectedTool = document.querySelector(`[data-tool="${toolName}"]`);
     if (selectedTool) {
-      selectedTool.classList.add('tool--selected');
+      selectedTool.classList.add("tool--selected");
     }
 
     // Hide all tool settings
-    document.querySelectorAll('.tool-settings').forEach(settings => {
-      settings.classList.remove('tool-settings--active');
+    document.querySelectorAll(".tool-settings").forEach((settings) => {
+      settings.classList.remove("tool-settings--active");
     });
 
     // Show settings for current tool - look for the div with data-tool attribute matching the tool name
-    const toolSettings = document.querySelector(`.tool-settings[data-tool="${toolName}"]`);
+    const toolSettings = document.querySelector(
+      `.tool-settings[data-tool="${toolName}"]`,
+    );
     if (toolSettings) {
-      toolSettings.classList.add('tool-settings--active');
+      toolSettings.classList.add("tool-settings--active");
     }
   }
 
@@ -138,28 +148,34 @@ export class ToolStateManager {
    * Update canvas cursor based on current tool
    */
   updateCanvasCursor(): void {
-    const canvas = document.querySelector('#pixi-canvas') as HTMLElement;
+    const canvas = document.querySelector("#pixi-canvas") as HTMLElement;
     if (!canvas) return;
 
     // Remove all cursor classes
-    canvas.classList.remove('cursor-pen', 'cursor-eraser', 'cursor-text', 'cursor-highlighter', 'cursor-selection');
+    canvas.classList.remove(
+      "cursor-pen",
+      "cursor-eraser",
+      "cursor-text",
+      "cursor-highlighter",
+      "cursor-selection",
+    );
 
     // Add cursor class for current tool
     switch (this.currentTool) {
-      case 'pen':
-        canvas.classList.add('cursor-pen');
+      case "pen":
+        canvas.classList.add("cursor-pen");
         break;
-      case 'eraser':
-        canvas.classList.add('cursor-eraser');
+      case "eraser":
+        canvas.classList.add("cursor-eraser");
         break;
-      case 'text':
-        canvas.classList.add('cursor-text');
+      case "text":
+        canvas.classList.add("cursor-text");
         break;
-      case 'highlighter':
-        canvas.classList.add('cursor-highlighter');
+      case "highlighter":
+        canvas.classList.add("cursor-highlighter");
         break;
       default:
-        canvas.classList.add('cursor-selection');
+        canvas.classList.add("cursor-selection");
     }
   }
 }

@@ -3,7 +3,7 @@
  * Defines the structure for all drawing tools
  */
 
-import { FederatedPointerEvent, Container } from 'pixi.js';
+import { FederatedPointerEvent, Container } from "pixi.js";
 
 export interface ToolSettings {
   pen: {
@@ -24,7 +24,7 @@ export interface ToolSettings {
     color: string;
     strokeWidth: number;
     fillColor?: string;
-    shapeType: 'rectangle' | 'triangle' | 'circle';
+    shapeType: "rectangle" | "triangle" | "circle";
   };
   eraser: {
     size: number;
@@ -34,7 +34,7 @@ export interface ToolSettings {
 export interface Tool {
   name: string;
   cursor: string;
-  
+
   onPointerDown(event: FederatedPointerEvent, container: Container): void;
   onPointerMove(event: FederatedPointerEvent, container: Container): void;
   onPointerUp(event: FederatedPointerEvent, container: Container): void;
@@ -49,14 +49,23 @@ export abstract class BaseTool implements Tool {
   protected isActive: boolean = false;
   protected settings: any;
 
-  constructor(name: string, cursor: string = 'default') {
+  constructor(name: string, cursor: string = "default") {
     this.name = name;
     this.cursor = cursor;
   }
 
-  abstract onPointerDown(event: FederatedPointerEvent, container: Container): void;
-  abstract onPointerMove(event: FederatedPointerEvent, container: Container): void;
-  abstract onPointerUp(event: FederatedPointerEvent, container: Container): void;
+  abstract onPointerDown(
+    event: FederatedPointerEvent,
+    container: Container,
+  ): void;
+  abstract onPointerMove(
+    event: FederatedPointerEvent,
+    container: Container,
+  ): void;
+  abstract onPointerUp(
+    event: FederatedPointerEvent,
+    container: Container,
+  ): void;
 
   onActivate(): void {
     this.isActive = true;
@@ -73,6 +82,6 @@ export abstract class BaseTool implements Tool {
   }
 
   protected hexToNumber(hex: string): number {
-    return parseInt(hex.replace('#', ''), 16);
+    return parseInt(hex.replace("#", ""), 16);
   }
 }

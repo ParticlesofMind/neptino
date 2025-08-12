@@ -2,7 +2,7 @@ export class TemplatePreviewHandler {
   private previewContainer: HTMLElement | null = null;
 
   constructor() {
-    this.previewContainer = document.querySelector('.preview-container');
+    this.previewContainer = document.querySelector(".preview-container");
     this.setupEventListeners();
   }
 
@@ -10,7 +10,7 @@ export class TemplatePreviewHandler {
    * Sets up event listeners for template preview updates
    */
   private setupEventListeners(): void {
-    document.addEventListener('templateConfigChanged', (e: any) => {
+    document.addEventListener("templateConfigChanged", (e: any) => {
       this.updatePreview(e.detail.template, e.detail.activeBlocks);
     });
   }
@@ -58,7 +58,9 @@ export class TemplatePreviewHandler {
         return aIndex - bIndex;
       });
 
-    const blocksHtml = sortedBlocks.map((block: any) => this.renderBlock(block)).join('');
+    const blocksHtml = sortedBlocks
+      .map((block: any) => this.renderBlock(block))
+      .join("");
 
     return `
       <div class="template-preview-content">
@@ -82,19 +84,19 @@ export class TemplatePreviewHandler {
    */
   private renderBlock(block: any): string {
     const config = block.config || {};
-    
+
     switch (block.type) {
-      case 'header':
+      case "header":
         return this.renderHeaderBlock(config);
-      case 'program':
+      case "program":
         return this.renderProgramBlock(config);
-      case 'resources':
+      case "resources":
         return this.renderResourcesBlock(config);
-      case 'content':
+      case "content":
         return this.renderContentBlock(config);
-      case 'assignment':
+      case "assignment":
         return this.renderAssignmentBlock(config);
-      case 'footer':
+      case "footer":
         return this.renderFooterBlock(config);
       default:
         return `<div class="preview-block preview-block--unknown">Unknown block type: ${block.type}</div>`;
@@ -105,8 +107,8 @@ export class TemplatePreviewHandler {
    * Renders header block preview
    */
   private renderHeaderBlock(config: any): string {
-    const backgroundColor = config.backgroundColor || '#ffffff';
-    const textColor = config.textColor || '#333333';
+    const backgroundColor = config.backgroundColor || "#ffffff";
+    const textColor = config.textColor || "#333333";
     const showTitle = config.showTitle !== false;
     const showSubtitle = config.showSubtitle !== false;
 
@@ -114,8 +116,8 @@ export class TemplatePreviewHandler {
       <div class="preview-block preview-block--header" style="background-color: ${backgroundColor}; color: ${textColor};">
         <div class="preview-block__label">📋 Header</div>
         <div class="preview-block__content">
-          ${showTitle ? '<h1 class="preview-title">Course Title</h1>' : ''}
-          ${showSubtitle ? '<h2 class="preview-subtitle">Course Subtitle</h2>' : ''}
+          ${showTitle ? '<h1 class="preview-title">Course Title</h1>' : ""}
+          ${showSubtitle ? '<h2 class="preview-subtitle">Course Subtitle</h2>' : ""}
         </div>
       </div>
     `;
@@ -133,9 +135,9 @@ export class TemplatePreviewHandler {
       <div class="preview-block preview-block--program">
         <div class="preview-block__label">🎯 Program</div>
         <div class="preview-block__content">
-          ${showObjectives ? '<div class="preview-section"><strong>Learning Objectives:</strong> <span class="preview-placeholder">Objectives will be displayed here</span></div>' : ''}
-          ${showOutcomes ? '<div class="preview-section"><strong>Learning Outcomes:</strong> <span class="preview-placeholder">Outcomes will be displayed here</span></div>' : ''}
-          ${showPrerequisites ? '<div class="preview-section"><strong>Prerequisites:</strong> <span class="preview-placeholder">Prerequisites will be displayed here</span></div>' : ''}
+          ${showObjectives ? '<div class="preview-section"><strong>Learning Objectives:</strong> <span class="preview-placeholder">Objectives will be displayed here</span></div>' : ""}
+          ${showOutcomes ? '<div class="preview-section"><strong>Learning Outcomes:</strong> <span class="preview-placeholder">Outcomes will be displayed here</span></div>' : ""}
+          ${showPrerequisites ? '<div class="preview-section"><strong>Prerequisites:</strong> <span class="preview-placeholder">Prerequisites will be displayed here</span></div>' : ""}
         </div>
       </div>
     `;
@@ -155,9 +157,9 @@ export class TemplatePreviewHandler {
         <div class="preview-block__label">📚 Resources</div>
         <div class="preview-block__content">
           <div class="preview-section">
-            ${allowFiles ? `<div class="preview-resource">📎 File uploads (max: ${maxFiles})</div>` : ''}
-            ${allowLinks ? '<div class="preview-resource">🔗 External links</div>' : ''}
-            ${allowVideos ? '<div class="preview-resource">🎥 Video embeds</div>' : ''}
+            ${allowFiles ? `<div class="preview-resource">📎 File uploads (max: ${maxFiles})</div>` : ""}
+            ${allowLinks ? '<div class="preview-resource">🔗 External links</div>' : ""}
+            ${allowVideos ? '<div class="preview-resource">🎥 Video embeds</div>' : ""}
           </div>
         </div>
       </div>
@@ -168,7 +170,7 @@ export class TemplatePreviewHandler {
    * Renders content block preview
    */
   private renderContentBlock(config: any): string {
-    const editor = config.editor || 'rich-text';
+    const editor = config.editor || "rich-text";
     const allowMedia = config.allowMedia !== false;
     const allowTables = config.allowTables !== false;
 
@@ -178,8 +180,8 @@ export class TemplatePreviewHandler {
         <div class="preview-block__content">
           <div class="preview-section">
             <div class="preview-editor">Editor: ${editor}</div>
-            ${allowMedia ? '<div class="preview-feature">✓ Media uploads enabled</div>' : ''}
-            ${allowTables ? '<div class="preview-feature">✓ Tables enabled</div>' : ''}
+            ${allowMedia ? '<div class="preview-feature">✓ Media uploads enabled</div>' : ""}
+            ${allowTables ? '<div class="preview-feature">✓ Tables enabled</div>' : ""}
             <div class="preview-placeholder">Course content will be displayed here...</div>
           </div>
         </div>
@@ -201,9 +203,9 @@ export class TemplatePreviewHandler {
         <div class="preview-block__label">✅ Assignment</div>
         <div class="preview-block__content">
           <div class="preview-section">
-            ${allowSubmissions ? `<div class="preview-feature">✓ Student submissions (max: ${maxSubmissions})</div>` : ''}
-            ${requireDueDate ? '<div class="preview-feature">✓ Due date required</div>' : ''}
-            ${enableGrading ? '<div class="preview-feature">✓ Grading enabled</div>' : ''}
+            ${allowSubmissions ? `<div class="preview-feature">✓ Student submissions (max: ${maxSubmissions})</div>` : ""}
+            ${requireDueDate ? '<div class="preview-feature">✓ Due date required</div>' : ""}
+            ${enableGrading ? '<div class="preview-feature">✓ Grading enabled</div>' : ""}
             <div class="preview-placeholder">Assignment details will be displayed here...</div>
           </div>
         </div>
@@ -224,9 +226,9 @@ export class TemplatePreviewHandler {
         <div class="preview-block__label">🔖 Footer</div>
         <div class="preview-block__content">
           <div class="preview-section">
-            ${showCredits ? '<div class="preview-feature">✓ Credits displayed</div>' : ''}
-            ${showDate ? '<div class="preview-feature">✓ Creation date displayed</div>' : ''}
-            ${showContact ? '<div class="preview-feature">✓ Contact information displayed</div>' : ''}
+            ${showCredits ? '<div class="preview-feature">✓ Credits displayed</div>' : ""}
+            ${showDate ? '<div class="preview-feature">✓ Creation date displayed</div>' : ""}
+            ${showContact ? '<div class="preview-feature">✓ Contact information displayed</div>' : ""}
           </div>
         </div>
       </div>
@@ -238,7 +240,7 @@ export class TemplatePreviewHandler {
    */
   exportTemplate(): void {
     // This would open an export modal or trigger a download
-    console.log('Exporting template...');
+    console.log("Exporting template...");
     // Implementation for template export functionality
   }
 }

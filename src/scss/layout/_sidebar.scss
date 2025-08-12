@@ -2,7 +2,7 @@
 // SIDEBAR STYLING ONLY - NO LAYOUT!
 // ==========================================================================
 
-@use '../abstracts/variables' as *;
+@use "../abstracts/variables" as *;
 
 .aside {
   background: $white;
@@ -11,23 +11,23 @@
   padding: $spacing-6;
   display: flex;
   flex-direction: column;
-  
+
   &__nav {
     width: 100%;
     flex: 1;
     display: flex;
     flex-direction: column;
   }
-  
+
   &__group {
     margin-bottom: $spacing-6;
-    
+
     &--settings {
       margin-top: auto;
       margin-bottom: 0;
     }
   }
-  
+
   &__group-title {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
@@ -37,17 +37,17 @@
     margin-bottom: $spacing-3;
     padding: 0 $spacing-3;
   }
-  
+
   &__menu {
     list-style: none;
     padding: 0;
     margin: 0;
   }
-  
+
   &__item {
     margin-bottom: $spacing-2;
   }
-  
+
   &__link {
     display: block;
     padding: $spacing-3 $spacing-4;
@@ -56,17 +56,17 @@
     border-radius: $border-radius-sm;
     transition: all 0.2s ease;
     font-weight: $font-weight-medium;
-    
+
     &:hover {
       background: $gray-100;
       color: $primary-color;
       transform: translateX(2px);
     }
-    
+
     &--active {
       background: $primary-color;
       color: $white;
-      
+
       &:hover {
         background: $primary-color;
         color: $white;
@@ -82,7 +82,7 @@
 
 .article {
   display: none;
-  
+
   &--active {
     display: block;
   }
@@ -91,7 +91,7 @@
 // Course builder sections
 .section {
   display: none;
-  
+
   &--active {
     display: block;
   }
@@ -103,32 +103,32 @@
     flex-direction: row;
     height: auto !important;
     min-height: auto !important;
-    
+
     &__nav {
       width: 100%;
       flex-direction: row;
     }
-    
+
     &__menu {
       display: flex;
       gap: $spacing-2;
       overflow-x: auto;
     }
-    
+
     &__item {
       margin-bottom: 0;
       flex: 0 0 auto;
     }
-    
+
     &__link {
       white-space: nowrap;
       padding: $spacing-3;
     }
-    
+
     &__group {
       margin-bottom: 0;
       margin-right: $spacing-4;
-      
+
       &--settings {
         margin-top: 0;
         margin-left: auto;

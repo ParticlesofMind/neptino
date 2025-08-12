@@ -2,7 +2,7 @@
 // DROPDOWN COMPONENTS
 // ==========================================================================
 
-@use '../abstracts/variables' as *;
+@use "../abstracts/variables" as *;
 
 // ==========================================================================
 // DROPDOWN BASE
@@ -45,7 +45,7 @@
       background-color: $gray-50;
       color: $text-muted;
       cursor: not-allowed;
-      
+
       &:hover {
         border-color: $gray-300;
       }
@@ -53,7 +53,7 @@
 
     &--success {
       border-color: $success;
-      
+
       &:focus {
         border-color: $success;
         box-shadow: 0 0 0 3px rgba($success, 0.1);
@@ -62,7 +62,7 @@
 
     &--error {
       border-color: $error;
-      
+
       &:focus {
         border-color: $error;
         box-shadow: 0 0 0 3px rgba($error, 0.1);
@@ -275,7 +275,7 @@
   &--classification {
     width: 100%;
     min-width: 180px; // Ensure consistent minimum width
-    
+
     .dropdown__trigger {
       font-size: $font-size-sm; // Smaller font to prevent resizing
       white-space: nowrap;
@@ -283,7 +283,7 @@
       text-overflow: ellipsis;
       min-height: 44px; // Fixed height
     }
-    
+
     .dropdown__label {
       white-space: nowrap;
       overflow: hidden;
@@ -291,7 +291,7 @@
       flex: 1;
       text-align: left;
     }
-    
+
     .dropdown__menu {
       max-height: 400px;
       font-size: $font-size-sm; // Consistent font size in options
@@ -338,7 +338,7 @@
       margin-bottom: 0;
     }
   }
-  
+
   &--with-arrows {
     align-items: flex-end; // Align arrows with dropdown buttons
     gap: $spacing-3;
@@ -347,7 +347,7 @@
   @media (max-width: #{$breakpoint-md - 1px}) {
     flex-direction: column;
     gap: $spacing-3;
-    
+
     &--with-arrows {
       .dropdown-arrow {
         display: none; // Hide arrows on mobile
@@ -371,7 +371,7 @@
   padding: 0 $spacing-2;
   user-select: none;
   min-width: 24px;
-  
+
   @media (max-width: #{$breakpoint-md - 1px}) {
     transform: rotate(90deg); // Turn arrows vertical on mobile
     margin-bottom: 0;
@@ -389,7 +389,7 @@
     overflow: hidden;
 
     &::after {
-      content: '';
+      content: "";
       position: absolute;
       top: 0;
       left: -100%;

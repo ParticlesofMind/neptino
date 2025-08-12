@@ -2,8 +2,8 @@
 // BASE TYPOGRAPHY
 // ==========================================================================
 
-@use '../abstracts/variables' as *;
-@use 'sass:color';
+@use "../abstracts/variables" as *;
+@use "sass:color";
 
 body {
   font-family: $font-family-base;
@@ -19,12 +19,12 @@ body {
   font-weight: $font-weight-bold;
   line-height: $line-height-tight;
   margin: 0;
-  
+
   &--primary {
     font-size: $font-size-4xl;
     color: $text-primary;
   }
-  
+
   &--secondary {
     font-size: $font-size-2xl;
     color: $text-secondary;
@@ -37,18 +37,18 @@ body {
 
 .text {
   margin: 0;
-  
+
   &--lead {
     font-size: $font-size-xl;
     color: $text-secondary;
     font-weight: $font-weight-normal;
   }
-  
+
   &--body {
     font-size: $font-size-base;
     color: $text-secondary;
   }
-  
+
   &--small {
     font-size: $font-size-sm;
     color: $text-muted;
@@ -62,29 +62,29 @@ body {
 .link {
   text-decoration: none;
   transition: color 0.2s ease;
-  
+
   &--nav {
     color: $text-secondary;
     font-weight: $font-weight-medium;
-    
+
     &:hover {
       color: $text-primary;
     }
   }
-  
+
   &--footer {
     color: $text-muted;
     font-size: $font-size-sm;
-    
+
     &:hover {
       color: $text-secondary;
     }
   }
-  
+
   &--primary {
     color: $primary-color;
     font-weight: $font-weight-medium;
-    
+
     &:hover {
       color: color.adjust($primary-color, $lightness: -10%);
     }
@@ -99,12 +99,12 @@ body {
   list-style: none;
   margin: 0;
   padding: 0;
-  
+
   &--nav {
     display: flex;
     gap: $spacing-8;
   }
-  
+
   &--footer {
     gap: $spacing-6;
   }
@@ -116,11 +116,11 @@ body {
 
 .logo {
   display: inline-block;
-  
+
   &__image {
     height: $spacing-10;
     width: auto;
-    
+
     &--small {
       height: $spacing-8;
     }

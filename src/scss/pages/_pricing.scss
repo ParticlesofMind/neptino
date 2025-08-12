@@ -2,7 +2,7 @@
 // PRICING PAGE STYLES
 // ==========================================================================
 
-@use '../abstracts/variables' as *;
+@use "../abstracts/variables" as *;
 
 // Pricing Grid
 .pricing-grid {
@@ -10,12 +10,12 @@
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: $spacing-6;
   margin: $spacing-8 0;
-  
+
   @media (max-width: #{$breakpoint-lg - 1px}) {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: $spacing-4;
   }
-  
+
   @media (max-width: #{$breakpoint-sm - 1px}) {
     grid-template-columns: 1fr;
     gap: $spacing-4;
@@ -28,22 +28,26 @@
   text-align: center;
   border: 2px solid $gray-200;
   transition: all 0.3s ease;
-  
+
   &:hover {
     transform: translateY(-4px);
     box-shadow: $shadow-lg;
     border-color: $primary-color;
   }
-  
+
   &--featured {
     border-color: $primary-color;
     box-shadow: $shadow-lg;
-    
+
     .card__header {
-      background: linear-gradient(135deg, $primary-color, lighten($primary-color, 10%));
+      background: linear-gradient(
+        135deg,
+        $primary-color,
+        lighten($primary-color, 10%)
+      );
       color: $white;
       position: relative;
-      
+
       .badge {
         position: absolute;
         top: -12px;
@@ -64,22 +68,22 @@
 // Price Display
 .price {
   margin: $spacing-4 0;
-  
+
   &__amount {
     font-size: 3rem;
     font-weight: $font-weight-bold;
     color: $primary-color;
-    
+
     .pricing-card--featured & {
       color: $white;
     }
   }
-  
+
   &__period {
     font-size: 1rem;
     color: $text-secondary;
     margin-left: $spacing-1;
-    
+
     .pricing-card--featured & {
       color: rgba($white, 0.8);
     }
@@ -92,11 +96,11 @@
   padding: 0;
   margin: 0;
   text-align: left;
-  
+
   .feature {
     padding: $spacing-2 0;
     border-bottom: 1px solid $gray-100;
-    
+
     &:last-child {
       border-bottom: none;
     }
@@ -119,18 +123,18 @@
 .hero {
   text-align: center;
   padding: $spacing-8 0;
-  
+
   &__content {
     max-width: 800px;
     margin: 0 auto;
   }
-  
+
   &__actions {
     margin-top: $spacing-6;
     display: flex;
     gap: $spacing-4;
     justify-content: center;
-    
+
     @media (max-width: #{$breakpoint-sm - 1px}) {
       flex-direction: column;
       align-items: center;
@@ -144,7 +148,7 @@
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: $spacing-6;
   margin: $spacing-8 0;
-  
+
   @media (max-width: #{$breakpoint-sm - 1px}) {
     grid-template-columns: 1fr;
     gap: $spacing-4;
@@ -157,14 +161,14 @@
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: $spacing-4;
   margin: $spacing-6 0;
-  
+
   .stat-number {
     font-size: 2.5rem;
     font-weight: $font-weight-bold;
     color: $primary-color;
     line-height: 1;
   }
-  
+
   .stat-label {
     font-size: 1rem;
     color: $text-secondary;
@@ -187,7 +191,7 @@
     line-height: 1.6;
     margin-bottom: $spacing-4;
   }
-  
+
   &--cite {
     font-size: 0.875rem;
     color: $text-secondary;
@@ -202,13 +206,13 @@
   background: $gray-50;
   border-radius: $border-radius;
   margin: $spacing-8 0;
-  
+
   &__actions {
     margin-top: $spacing-6;
     display: flex;
     gap: $spacing-4;
     justify-content: center;
-    
+
     @media (max-width: #{$breakpoint-sm - 1px}) {
       flex-direction: column;
       align-items: center;
@@ -247,7 +251,7 @@
   &--full {
     width: 100%;
   }
-  
+
   &--large {
     padding: $spacing-3 $spacing-5;
     font-size: 1rem;

@@ -2,7 +2,7 @@
 // GRID LAYOUT - Modern Responsive Layout
 // ==========================================================================
 
-@use '../abstracts/variables' as *;
+@use "../abstracts/variables" as *;
 
 // ==========================================================================
 // MAIN GRID CONTAINER
@@ -19,7 +19,6 @@
 
   // Ensure proper spacing and overflow handling
   overflow-x: hidden;
-
 
   &__header {
     grid-area: header;
@@ -53,7 +52,7 @@
       // Natural responsive behavior - grid will collapse when content is too narrow
       @container (max-width: 768px) {
         grid-template-columns: 1fr;
-        
+
         .aside {
           height: auto;
           min-height: auto;
@@ -77,7 +76,6 @@
     @media (min-width: $breakpoint-md) {
       padding: $spacing-8 $spacing-8;
     }
-
   }
 }
 
@@ -99,11 +97,9 @@
   }
 }
 
-
 // ==========================================================================
 // CONTENT CONTAINERS
 // ==========================================================================
-
 
 // ==========================================================================
 // RESPONSIVE UTILITIES

@@ -4,11 +4,11 @@
  * Single Responsibility: High-level canvas coordination only (under 250 lines)
  */
 
-import { Application, Container } from 'pixi.js';
-import { ToolManager } from '../tools/ToolManager';
-import { PixiApplicationManager } from './PixiApplicationManager';
-import { CanvasLayerManager } from './CanvasLayerManager';
-import { CanvasEventHandler } from './CanvasEventHandler';
+import { Application, Container } from "pixi.js";
+import { ToolManager } from "../tools/ToolManager";
+import { PixiApplicationManager } from "./PixiApplicationManager";
+import { CanvasLayerManager } from "./CanvasLayerManager";
+import { CanvasEventHandler } from "./CanvasEventHandler";
 
 export class PixiCanvas {
   private appManager: PixiApplicationManager;
@@ -29,20 +29,22 @@ export class PixiCanvas {
     try {
       // Initialize PIXI application
       this.app = await this.appManager.initializeApplication();
-      
+
       // Initialize layer management
       this.layerManager = new CanvasLayerManager(this.app);
       this.layerManager.initializeLayers();
       this.layerManager.addBackgroundGrid();
-      
+
       // Initialize event handling
       this.eventHandler = new CanvasEventHandler(this.app, this.toolManager);
-      this.eventHandler.setDrawingContainer(this.layerManager.getDrawingContainer()!);
+      this.eventHandler.setDrawingContainer(
+        this.layerManager.getDrawingContainer()!,
+      );
       this.eventHandler.setupEvents();
-      
-      console.log('🎨 PixiCanvas system fully initialized');
+
+      console.log("🎨 PixiCanvas system fully initialized");
     } catch (error) {
-      console.error('❌ Failed to initialize PixiCanvas system:', error);
+      console.error("❌ Failed to initialize PixiCanvas system:", error);
       throw error;
     }
   }
@@ -92,11 +94,16 @@ export class PixiCanvas {
   /**
    * Update canvas margins (visual boundaries)
    */
-  public updateMargins(margins: { top: number; right: number; bottom: number; left: number }): void {
+  public updateMargins(margins: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  }): void {
     if (this.layerManager) {
       this.layerManager.updateMarginBoundaries(margins);
     } else {
-      console.warn('⚠️ Layer manager not initialized');
+      console.warn("⚠️ Layer manager not initialized");
     }
   }
 
@@ -127,15 +134,15 @@ export class PixiCanvas {
     const appInfo = this.appManager.getCanvasInfo();
     const layerInfo = this.layerManager?.getLayerInfo();
     const eventInfo = this.eventHandler?.getEventInfo();
-    
+
     return {
       application: appInfo,
       layers: layerInfo,
       events: eventInfo,
       tools: {
         activeTool: this.toolManager.getActiveToolName(),
-        toolSettings: this.toolManager.getToolSettings()
-      }
+        toolSettings: this.toolManager.getToolSettings(),
+      },
     };
   }
 
@@ -183,16 +190,16 @@ export class PixiCanvas {
       this.eventHandler.destroy();
       this.eventHandler = null;
     }
-    
+
     if (this.layerManager) {
       this.layerManager.destroy();
       this.layerManager = null;
     }
-    
+
     this.toolManager.destroy();
     this.appManager.destroy();
     this.app = null;
-    
-    console.log('🗑️ PixiCanvas system destroyed');
+
+    console.log("🗑️ PixiCanvas system destroyed");
   }
 }

@@ -3,7 +3,7 @@
  * Handles navigation between multiple canvases, thumbnails, and table of contents
  */
 
-import type { CourseLayout, CanvasLayout } from './LayoutTypes';
+import type { CourseLayout, CanvasLayout } from "./LayoutTypes";
 
 interface CanvasThumbnail {
   id: string;
@@ -19,7 +19,7 @@ export class CanvasNavigator {
   private tocContainer: HTMLElement | null = null;
   private onCanvasChangeCallback: ((canvasIndex: number) => void) | null = null;
 
-  constructor(tocContainerId: string = 'coursebuilder__toc') {
+  constructor(tocContainerId: string = "coursebuilder__toc") {
     this.tocContainer = document.getElementById(tocContainerId);
     if (!this.tocContainer) {
       console.warn(`TOC container with id "${tocContainerId}" not found`);
@@ -39,7 +39,7 @@ export class CanvasNavigator {
   generateNavigation(courseLayout: CourseLayout): void {
     if (!this.tocContainer) return;
 
-    this.tocContainer.innerHTML = '';
+    this.tocContainer.innerHTML = "";
     this.thumbnails = [];
 
     // Create header with course summary
@@ -62,8 +62,8 @@ export class CanvasNavigator {
    * Create navigation header with course summary
    */
   private createNavigationHeader(courseLayout: CourseLayout): void {
-    const header = document.createElement('div');
-    header.className = 'canvas-toc__header';
+    const header = document.createElement("div");
+    header.className = "canvas-toc__header";
     header.innerHTML = `
       <h3>Course Navigation</h3>
       <div class="canvas-toc__summary">
@@ -73,8 +73,8 @@ export class CanvasNavigator {
       </div>
     `;
 
-    const controls = document.createElement('div');
-    controls.className = 'canvas-toc__controls';
+    const controls = document.createElement("div");
+    controls.className = "canvas-toc__controls";
     controls.innerHTML = `
       <button class="canvas-nav-btn canvas-nav-btn--prev" title="Previous Canvas">
         <span class="canvas-nav-btn__icon">←</span>
@@ -88,11 +88,19 @@ export class CanvasNavigator {
     `;
 
     // Add event listeners
-    const prevBtn = controls.querySelector('.canvas-nav-btn--prev') as HTMLElement;
-    const nextBtn = controls.querySelector('.canvas-nav-btn--next') as HTMLElement;
+    const prevBtn = controls.querySelector(
+      ".canvas-nav-btn--prev",
+    ) as HTMLElement;
+    const nextBtn = controls.querySelector(
+      ".canvas-nav-btn--next",
+    ) as HTMLElement;
 
-    prevBtn?.addEventListener('click', () => this.navigateToCanvas(this.currentCanvasIndex - 1));
-    nextBtn?.addEventListener('click', () => this.navigateToCanvas(this.currentCanvasIndex + 1));
+    prevBtn?.addEventListener("click", () =>
+      this.navigateToCanvas(this.currentCanvasIndex - 1),
+    );
+    nextBtn?.addEventListener("click", () =>
+      this.navigateToCanvas(this.currentCanvasIndex + 1),
+    );
 
     header.appendChild(controls);
     this.tocContainer!.appendChild(header);
@@ -101,24 +109,27 @@ export class CanvasNavigator {
   /**
    * Create thumbnail for a canvas
    */
-  private createCanvasThumbnail(canvas: CanvasLayout, index: number): CanvasThumbnail {
-    const thumbnail = document.createElement('div');
-    thumbnail.className = 'canvas-thumbnail';
+  private createCanvasThumbnail(
+    canvas: CanvasLayout,
+    index: number,
+  ): CanvasThumbnail {
+    const thumbnail = document.createElement("div");
+    thumbnail.className = "canvas-thumbnail";
     thumbnail.dataset.canvasIndex = index.toString();
 
     // Create visual preview of canvas layout
-    const preview = document.createElement('div');
-    preview.className = 'canvas-thumbnail__preview';
+    const preview = document.createElement("div");
+    preview.className = "canvas-thumbnail__preview";
 
     // Add miniature blocks
-    canvas.blocks.forEach(block => {
-      const blockElement = document.createElement('div');
+    canvas.blocks.forEach((block) => {
+      const blockElement = document.createElement("div");
       blockElement.className = `canvas-thumbnail__block canvas-thumbnail__block--${block.blockId}`;
-      
+
       // Scale down the block proportionally
       const scaleX = 0.1; // 10% of original width
       const scaleY = 0.1; // 10% of original height
-      
+
       blockElement.style.cssText = `
         position: absolute;
         left: ${block.x * scaleX}px;
@@ -126,15 +137,18 @@ export class CanvasNavigator {
         width: ${block.width * scaleX}px;
         height: ${block.height * scaleY}px;
       `;
-      
+
       preview.appendChild(blockElement);
     });
 
     // Create label
-    const label = document.createElement('div');
-    label.className = 'canvas-thumbnail__label';
-    
-    const canvasTypeName = this.getCanvasTypeName(canvas.sessionNumber, canvas.canvasNumber);
+    const label = document.createElement("div");
+    label.className = "canvas-thumbnail__label";
+
+    const canvasTypeName = this.getCanvasTypeName(
+      canvas.sessionNumber,
+      canvas.canvasNumber,
+    );
     label.innerHTML = `
       <div class="canvas-thumbnail__session">Session ${canvas.sessionNumber}</div>
       <div class="canvas-thumbnail__type">${canvasTypeName}</div>
@@ -145,7 +159,7 @@ export class CanvasNavigator {
     thumbnail.appendChild(label);
 
     // Add click handler
-    thumbnail.addEventListener('click', () => {
+    thumbnail.addEventListener("click", () => {
       this.navigateToCanvas(index);
     });
 
@@ -154,7 +168,7 @@ export class CanvasNavigator {
       sessionNumber: canvas.sessionNumber,
       canvasNumber: canvas.canvasNumber,
       element: thumbnail,
-      isActive: false
+      isActive: false,
     };
   }
 
@@ -168,7 +182,8 @@ export class CanvasNavigator {
     this.setActiveCanvas(index);
 
     // Update current canvas counter
-    const currentNumberSpan = this.tocContainer?.querySelector('.current-number');
+    const currentNumberSpan =
+      this.tocContainer?.querySelector(".current-number");
     if (currentNumberSpan) {
       currentNumberSpan.textContent = (index + 1).toString();
     }
@@ -184,15 +199,15 @@ export class CanvasNavigator {
    */
   private setActiveCanvas(index: number): void {
     // Remove active class from all thumbnails
-    this.thumbnails.forEach(thumbnail => {
+    this.thumbnails.forEach((thumbnail) => {
       thumbnail.isActive = false;
-      thumbnail.element.classList.remove('canvas-thumbnail--active');
+      thumbnail.element.classList.remove("canvas-thumbnail--active");
     });
 
     // Set new active canvas
     if (this.thumbnails[index]) {
       this.thumbnails[index].isActive = true;
-      this.thumbnails[index].element.classList.add('canvas-thumbnail--active');
+      this.thumbnails[index].element.classList.add("canvas-thumbnail--active");
       this.currentCanvasIndex = index;
     }
   }
@@ -200,10 +215,13 @@ export class CanvasNavigator {
   /**
    * Get canvas type name for display
    */
-  private getCanvasTypeName(_sessionNumber: number, canvasNumber: number): string {
-    if (canvasNumber === 1) return 'Opening';
-    if (canvasNumber === 2) return 'Development';
-    if (canvasNumber === 3) return 'Closing';
+  private getCanvasTypeName(
+    _sessionNumber: number,
+    canvasNumber: number,
+  ): string {
+    if (canvasNumber === 1) return "Opening";
+    if (canvasNumber === 2) return "Development";
+    if (canvasNumber === 3) return "Closing";
     return `Canvas ${canvasNumber}`;
   }
 

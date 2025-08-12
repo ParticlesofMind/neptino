@@ -1,4 +1,4 @@
-import { Command } from './Command';
+import { Command } from "./Command";
 
 /**
  * Manages the execution, undoing, and redoing of commands.
@@ -27,9 +27,11 @@ export class CommandManager {
     if (command) {
       command.undo();
       this.redoStack.push(command);
-      console.log(`Command undone, undo stack size: ${this.undoStack.length}, redo stack size: ${this.redoStack.length}`);
+      console.log(
+        `Command undone, undo stack size: ${this.undoStack.length}, redo stack size: ${this.redoStack.length}`,
+      );
     } else {
-      console.log('Nothing to undo.');
+      console.log("Nothing to undo.");
     }
   }
 
@@ -41,9 +43,11 @@ export class CommandManager {
     if (command) {
       command.execute();
       this.undoStack.push(command);
-      console.log(`Command redone, undo stack size: ${this.undoStack.length}, redo stack size: ${this.redoStack.length}`);
+      console.log(
+        `Command redone, undo stack size: ${this.undoStack.length}, redo stack size: ${this.redoStack.length}`,
+      );
     } else {
-      console.log('Nothing to redo.');
+      console.log("Nothing to redo.");
     }
   }
 

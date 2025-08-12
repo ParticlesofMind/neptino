@@ -24,9 +24,9 @@ export class MediaSelectionController {
    */
   private bindMediaEvents(): void {
     // Media type buttons (image, video, audio, etc.)
-    const mediaButtons = document.querySelectorAll('[data-media-type]');
-    mediaButtons.forEach(button => {
-      button.addEventListener('click', (event) => {
+    const mediaButtons = document.querySelectorAll("[data-media-type]");
+    mediaButtons.forEach((button) => {
+      button.addEventListener("click", (event) => {
         this.handleMediaSelection(event);
       });
     });
@@ -37,21 +37,21 @@ export class MediaSelectionController {
    */
   private handleMediaSelection(event: Event): void {
     const target = event.target as HTMLElement;
-    const mediaType = target.getAttribute('data-media-type');
-    
+    const mediaType = target.getAttribute("data-media-type");
+
     if (!mediaType) return;
 
     // Update visual selection
     this.updateSelectionUI(mediaType);
-    
+
     // Store selected media type
     this.selectedMediaType = mediaType;
-    
+
     // Trigger callback
     if (this.onMediaSelectionCallback) {
       this.onMediaSelectionCallback(mediaType);
     }
-    
+
     console.log(`📱 Media type selected: ${mediaType}`);
   }
 
@@ -60,15 +60,17 @@ export class MediaSelectionController {
    */
   private updateSelectionUI(selectedType: string): void {
     // Remove active class from all media buttons
-    const mediaButtons = document.querySelectorAll('[data-media-type]');
-    mediaButtons.forEach(button => {
-      button.classList.remove('media-type--selected');
+    const mediaButtons = document.querySelectorAll("[data-media-type]");
+    mediaButtons.forEach((button) => {
+      button.classList.remove("media-type--selected");
     });
 
     // Add active class to selected button
-    const selectedButton = document.querySelector(`[data-media-type="${selectedType}"]`);
+    const selectedButton = document.querySelector(
+      `[data-media-type="${selectedType}"]`,
+    );
     if (selectedButton) {
-      selectedButton.classList.add('media-type--selected');
+      selectedButton.classList.add("media-type--selected");
     }
   }
 
@@ -84,11 +86,11 @@ export class MediaSelectionController {
    */
   clearSelection(): void {
     this.selectedMediaType = null;
-    
+
     // Remove all active classes
-    const mediaButtons = document.querySelectorAll('[data-media-type]');
-    mediaButtons.forEach(button => {
-      button.classList.remove('media-type--selected');
+    const mediaButtons = document.querySelectorAll("[data-media-type]");
+    mediaButtons.forEach((button) => {
+      button.classList.remove("media-type--selected");
     });
   }
 
@@ -96,10 +98,10 @@ export class MediaSelectionController {
    * Get available media types
    */
   getAvailableMediaTypes(): string[] {
-    const buttons = document.querySelectorAll('[data-media-type]');
-    return Array.from(buttons).map(button => 
-      button.getAttribute('data-media-type')
-    ).filter(type => type !== null) as string[];
+    const buttons = document.querySelectorAll("[data-media-type]");
+    return Array.from(buttons)
+      .map((button) => button.getAttribute("data-media-type"))
+      .filter((type) => type !== null) as string[];
   }
 
   /**
@@ -107,14 +109,14 @@ export class MediaSelectionController {
    */
   destroy(): void {
     // Remove event listeners
-    const mediaButtons = document.querySelectorAll('[data-media-type]');
-    mediaButtons.forEach(button => {
-      button.removeEventListener('click', this.handleMediaSelection);
+    const mediaButtons = document.querySelectorAll("[data-media-type]");
+    mediaButtons.forEach((button) => {
+      button.removeEventListener("click", this.handleMediaSelection);
     });
-    
+
     this.onMediaSelectionCallback = null;
     this.selectedMediaType = null;
-    
-    console.log('🗑️ Media selection controller destroyed');
+
+    console.log("🗑️ Media selection controller destroyed");
   }
 }
