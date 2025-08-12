@@ -172,6 +172,7 @@ export class PixiSceneInspector {
     console.group(`🎭 Scene Inspection Report (${stats.timestamp})`);
 
     // Summary
+    console.log(`📊 Total objects: ${total}`);
     console.log("📈 Breakdown:", {
       Containers: stats.totals.containers,
       Graphics: stats.totals.graphics,
@@ -217,6 +218,9 @@ export class PixiSceneInspector {
   ): void {
     const connector = isLast ? "└── " : "├── ";
     const display = `${node.name} (${node.type})`;
+
+    // Log the node information
+    console.log(`${prefix}${connector}${display}`);
 
     if (node.children && node.children.length > 0) {
       const newPrefix = prefix + (isLast ? "    " : "│   ");

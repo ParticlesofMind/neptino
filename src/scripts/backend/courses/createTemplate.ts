@@ -366,7 +366,7 @@ export class TemplateManager {
   /**
    * Saves changes to a template
    */
-  static async saveTemplateChanges(templateId: string): Promise<void> {
+  static async saveTemplateChanges(): Promise<void> {
     try {
       // This would typically gather data from the configuration forms
       // For now, just show a success message
@@ -1268,7 +1268,7 @@ export class TemplateManager {
   /**
    * Populates the template configuration form
    */
-  static populateTemplateConfig(templateData: any): void {
+  static populateTemplateConfig(): void {
     // Implementation will be added in template configuration handler
   }
 
@@ -1296,7 +1296,6 @@ export class TemplateManager {
     }
 
     const blocks = actualData.blocks || [];
-    const templateName = actualData.name || "Untitled Template";
 
     // Sort blocks by order and render them
     const sortedBlocks = blocks.sort(

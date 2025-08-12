@@ -180,7 +180,7 @@ export class PageManager {
       pageIndex < this.pages.length &&
       this.pages.length > 1
     ) {
-      const removedPage = this.pages.splice(pageIndex, 1)[0];
+      this.pages.splice(pageIndex, 1);
 
       this.navigationController.setTotalPages(this.pages.length);
       this.navigationController.updatePageSelector(this.pages);

@@ -190,17 +190,6 @@ export class MarginSettingsManager {
   }
 
   /**
-   * Validate margin input
-   */
-  private validateMarginInput(value: string): number {
-    const numValue = parseInt(value);
-    if (isNaN(numValue) || numValue < 0) {
-      return 0;
-    }
-    return Math.min(numValue, 200); // Max margin of 200px
-  }
-
-  /**
    * Export margins configuration
    */
   exportMargins(): { [key: string]: number } {

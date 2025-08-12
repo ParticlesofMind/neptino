@@ -303,7 +303,7 @@ export class PenTool extends BaseTool {
     this.removePreviewLine();
   }
 
-  private handleKeyDown = (event: KeyboardEvent): void => {
+  private handleKeyDown = (): void => {
     // This would need to be handled by the tool manager to get container reference
   };
 

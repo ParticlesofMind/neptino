@@ -88,22 +88,22 @@ export class CourseBuilder {
     });
 
     // Page changes
-    this.pageManager.setOnPageChange((page: any) => {
+    this.pageManager.setOnPageChange(() => {
       // Handle page change logic here
     });
 
     // Margin changes
-    this.marginSettings.setOnMarginChange((margins) => {
+    this.marginSettings.setOnMarginChange(() => {
       // Handle margin changes here
     });
 
     // Font changes
-    this.fontManager.setOnFontChange((fontFamily: string) => {
+    this.fontManager.setOnFontChange(() => {
       // Handle font changes here
     });
 
     // Media selection
-    this.mediaManager.setOnMediaSelection((mediaType: string) => {
+    this.mediaManager.setOnMediaSelection(() => {
       // Handle media selection here
     });
   }
@@ -213,6 +213,7 @@ export class CourseBuilder {
   private addMediaToCanvas(url: string, type: string): void {
     if (this.pixiCanvas) {
       // Add media to canvas (implement based on media type)
+      console.log(`Adding media to canvas: ${url} (${type})`);
     }
   }
 

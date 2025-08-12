@@ -52,7 +52,6 @@ export class PixiApplicationManager {
       // Use fixed A4 dimensions since container is now properly sized in CSS
       const canvasWidth = 794;
       const canvasHeight = 1123;
-      const a4AspectRatio = canvasWidth / canvasHeight;
 
       console.log(
         `🎨 Using fixed A4 dimensions: ${canvasWidth}x${canvasHeight}`,
@@ -137,7 +136,6 @@ export class PixiApplicationManager {
 
       // Initialize PIXI devtools - for v8.2+ use no-parameter call
       try {
-
         // For PIXI v8.2+, try with app parameter first
         initDevtools({ app: this.app });
 

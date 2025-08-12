@@ -79,11 +79,13 @@ export class FontManager {
    */
   private setupControllerCallbacks(): void {
     // Font style changes
-    this.fontStyleController.setOnStyleChange((styles) => {
+    this.fontStyleController.setOnStyleChange(() => {
+      // Handle style changes
     });
 
     // Font size changes
-    this.fontSizeController.setOnSizeChange((size) => {
+    this.fontSizeController.setOnSizeChange(() => {
+      // Handle size changes
     });
   }
 

@@ -2,9 +2,9 @@
 // COURSE BUILDER MAIN CONTROLLER - Uses Generic Form Handler
 // ==========================================================================
 
-import { CourseFormHandler } from "./courseFormHandler";
-import { ScheduleCourseManager } from "./scheduleCourse";
-import { CurriculumManager } from "./curriculumManager";
+// import { CourseFormHandler } from "./courseFormHandler";
+// import { ScheduleCourseManager } from "./scheduleCourse";
+// import { CurriculumManager } from "./curriculumManager";
 
 // Re-export course creation and classification functions
 export * from "./createCourse";
@@ -15,9 +15,9 @@ export * from "./classifyCourse";
 // ==========================================================================
 
 export class CourseBuilder {
-  private currentFormHandler: CourseFormHandler | null = null;
-  private scheduleManager: ScheduleCourseManager | null = null;
-  private curriculumManager: CurriculumManager | null = null;
+  // private currentFormHandler: CourseFormHandler | null = null;
+  // private scheduleManager: ScheduleCourseManager | null = null;
+  // private curriculumManager: CurriculumManager | null = null;
   private currentSection: string = "essentials";
 
   constructor() {
@@ -82,20 +82,20 @@ export class CourseBuilder {
   private loadSection(sectionId: string): void {
     try {
       // Clean up previous handlers
-      this.currentFormHandler = null;
-      this.scheduleManager = null;
-      this.curriculumManager = null;
+      // this.currentFormHandler = null;
+      // this.scheduleManager = null;
+      // this.curriculumManager = null;
 
       // Initialize appropriate handler based on section
       if (sectionId === "schedule") {
         // Initialize schedule manager - it will auto-detect course ID from session storage
-        this.scheduleManager = new ScheduleCourseManager();
+        // this.scheduleManager = new ScheduleCourseManager();
       } else if (sectionId === "curriculum") {
         // Initialize curriculum manager - it will auto-detect course ID from session storage
-        this.curriculumManager = new CurriculumManager();
+        // this.curriculumManager = new CurriculumManager();
       } else {
         // Initialize generic form handler for other sections
-        this.currentFormHandler = new CourseFormHandler(sectionId);
+        // this.currentFormHandler = new CourseFormHandler(sectionId);
       }
     } catch (error) {
       console.warn(`No handler available for section: ${sectionId}`, error);

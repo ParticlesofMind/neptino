@@ -70,7 +70,7 @@ export class AsideNavigation {
   }
 
   private bindEvents(): void {
-    this.asideLinks.forEach((link: HTMLAnchorElement, index: number) => {
+    this.asideLinks.forEach((link: HTMLAnchorElement) => {
       link.addEventListener("click", this.boundHandleLinkClick);
     });
   }
