@@ -168,7 +168,7 @@ export class CourseBuilderNavigation {
       if (currentIndex === sectionOrder.length - 1) {
         this.nextButton.innerHTML = `
           <span class="button__text">Launch Course</span>
-          <span class="button__icon">🚀</span>
+  
         `;
       } else {
         const nextSection = sectionOrder[currentIndex + 1];

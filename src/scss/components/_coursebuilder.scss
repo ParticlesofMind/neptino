@@ -5,10 +5,10 @@
 @use "../abstracts/variables" as vars;
 @use "../abstracts/mixins" as mixins;
 
-/* Course Builder Component */
-.coursebuilder {
+/* Course Builder Component - Now applied to #create section when active */
+#create.section.section--active {
   display: grid;
-  grid-template-columns: 60px 1fr 900px 250px; /* Increased canvas area to 900px for proper A4 display */
+  grid-template-columns: 80px 1fr 900px 250px; /* Increased canvas area to 900px for proper A4 display */
   grid-template-rows: auto 1fr; /* Define explicit row heights */
   gap: 0.5rem;
   width: 100%;
@@ -23,7 +23,10 @@
     background-color: vars.$white;
     box-sizing: border-box;
   }
+}
 
+/* Course Builder Layout Elements */
+.coursebuilder {
   /* Options Bar (spans media bar and media search areas only) */
   &__options-bar {
     grid-column: 1 / 3;
@@ -629,25 +632,25 @@
 
 /* Responsive design */
 @media (max-width: 1400px) {
-  .coursebuilder {
+  #create.section.section--active {
     grid-template-columns: 80px 1fr 850px 180px;
   }
 }
 
 @media (max-width: 1200px) {
-  .coursebuilder {
+  #create.section.section--active {
     grid-template-columns: 60px 1fr 794px 160px;
   }
 }
 
 @media (max-width: 1024px) {
-  .coursebuilder {
+  #create.section.section--active {
     grid-template-columns: 50px 1fr 600px 150px;
   }
 }
 
 @media (max-width: 768px) {
-  .coursebuilder {
+  #create.section.section--active {
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto auto auto;
@@ -655,7 +658,7 @@
     height: 100vh;
     padding: 0.25rem;
 
-    &__options-bar {
+    .coursebuilder__options-bar {
       grid-column: 1;
       grid-row: 1;
       height: auto;
@@ -663,14 +666,14 @@
       padding: 0.5rem;
     }
 
-    &__toc-options {
+    .coursebuilder__toc-options {
       grid-column: 1;
       grid-row: 2;
       height: auto;
       min-height: 40px;
     }
 
-    &__media-bar {
+    .coursebuilder__media-bar {
       grid-column: 1;
       grid-row: 3;
       flex-direction: row;
@@ -682,7 +685,7 @@
       padding: 0.5rem;
     }
 
-    &__canvas {
+    .coursebuilder__canvas {
       grid-column: 1;
       grid-row: 4;
       height: 50vh;
@@ -691,7 +694,7 @@
       padding: 10px;
     }
 
-    &__media-search {
+    .coursebuilder__media-search {
       grid-column: 1;
       grid-row: 5;
       height: auto;
@@ -699,7 +702,7 @@
       flex: 1;
     }
 
-    &__toc {
+    .coursebuilder__toc {
       display: none;
     }
   }
@@ -712,7 +715,7 @@
       display: grid;
       grid-template-columns: minmax(280px, 300px) 1fr;
       gap: vars.$spacing-4;
-      padding: vars.$spacing-6;
+ 
       min-height: calc(100vh - #{vars.$spacing-6} * 2 - 80px);
       align-items: start;
 
@@ -765,25 +768,7 @@
     padding: 0; /* Remove any padding */
     height: calc(100vh - 120px); /* Account for header and some margin */
     max-height: calc(100vh - 120px); /* Ensure it never exceeds */
-
-    .article {
-      background-color: vars.$white;
-      padding: 0;
-      height: 100%;
-      overflow: hidden; /* Prevent article scrolling */
-      margin: 0; /* Remove any margin */
-
-      &--active {
-        display: block;
-        height: 100%;
-      }
-    }
   }
 }
 
-/* Ensure body has no margins when coursebuilder is active */
-body:has(.coursebuilder) {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
+/* Remove the old body override since we're not using .coursebuilder wrapper anymore */

@@ -31,7 +31,7 @@
 
   &__main {
     grid-area: main;
-    padding: $spacing-8 $spacing-4;
+    padding: $spacing-3 $spacing-4;
 
     // Home page - has aside navigation
     &:has(.aside):not(:has(.section)) {

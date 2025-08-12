@@ -1,221 +1,76 @@
 /**
- * PixiJS Devtools Setup
- * Ensures proper devtools initialization and global exposure
+ * PixiJS DevTools Setup
+ * Initializes PixiJS development tools for debugging and inspection
  */
 
-import * as PIXI from "pixi.js";
-import { initDevtools } from "@pixi/devtools";
-import PixiSceneInspector from "./devtools/PixiSceneInspector";
+import { initDevtools } from '@pixi/devtools';
+import { PixiSceneInspector } from './devtools/PixiSceneInspector';
 
-// Global exposure for devtools compatibility
-try {
-  // Only set if not already set
-  if (!(window as any).PIXI) {
-    (window as any).PIXI = PIXI;
-  }
-  if (!(globalThis as any).PIXI) {
-    (globalThis as any).PIXI = PIXI;
-  }
-} catch (error) {
-  console.warn("Could not expose PIXI globally in devtools setup:", error);
-}
+// Development environment check
+const isDevelopment = import.meta.env.DEV;
 
-// Enhanced devtools setup function
-export function setupPixiDevtools() {
+console.log('🔧 DevTools setup - Development mode:', isDevelopment);
 
-  // Initialize Scene Inspector
-  const inspector = new PixiSceneInspector();
-  (window as any).pixiInspector = inspector;
-
-  // Initialize Spector.js WebGL debugger
-  initializeSpectorJS();
-
-  // Create global hook for devtools detection
-  if (!(window as any).__PIXI_DEVTOOLS_GLOBAL_HOOK__) {
-    (window as any).__PIXI_DEVTOOLS_GLOBAL_HOOK__ = {
-      renderers: new Map(),
-      apps: new Map(),
-
-      // Method called by devtools to register
-      register: function (app: any) {
-        this.apps.set(app, app);
-        if (app.renderer) {
-          this.renderers.set(app.renderer, app.renderer);
-        }
-      },
-
-      // Method to get all registered apps
-      getApps: function () {
-        return Array.from(this.apps.keys());
-      },
-    };
+if (isDevelopment) {
+  // Initialize official PixiJS DevTools
+  try {
+    console.log('🔧 Initializing PixiJS DevTools...');
+    initDevtools({
+      app: undefined // Will be set when app is ready
+    });
+    console.log('✅ PixiJS DevTools initialized successfully');
+  } catch (error) {
+    console.warn('⚠️ Failed to initialize PixiJS DevTools:', error);
   }
 
-  // Listen for app ready events
-  window.addEventListener("pixi-app-ready", (event: any) => {
-    const app = event.detail;
-
-    // Setup inspector with the app
-    if ((window as any).pixiInspector) {
-      (window as any).pixiInspector.setApp(app);
-      console.log(
-        "🔍 Scene Inspector ready! Try: window.pixiInspector.inspectScene()",
-      );
-    }
-
-    if ((window as any).__PIXI_DEVTOOLS_GLOBAL_HOOK__) {
-      (window as any).__PIXI_DEVTOOLS_GLOBAL_HOOK__.register(app);
-    }
-
-    // Try to initialize devtools again when app is ready
-    setTimeout(() => {
-      try {
-        initDevtools({ app });
-      } catch (error) {
-        console.warn(
-          "⚠️ Could not initialize devtools after app ready:",
-          error,
-        );
+  // Initialize custom scene inspector
+  console.log('🔧 Setting up custom scene inspector...');
+  const sceneInspector = new PixiSceneInspector();
+  
+  // Make inspector globally available for console access
+  (window as any).sceneInspector = sceneInspector;
+  
+  // Listen for PixiJS app ready event
+  window.addEventListener('pixi-app-ready', (event: Event) => {
+    console.log('🎯 PixiJS app detected, connecting devtools...');
+    const customEvent = event as CustomEvent;
+    const app = customEvent.detail;
+    
+    // Connect official devtools
+    try {
+      if ((window as any).__PIXI_DEVTOOLS__) {
+        (window as any).__PIXI_DEVTOOLS__.app = app;
+        console.log('✅ PixiJS DevTools connected to app');
       }
-    }, 100);
+    } catch (error) {
+      console.warn('⚠️ Failed to connect PixiJS DevTools to app:', error);
+    }
+    
+    // Connect custom scene inspector
+    sceneInspector.setApp(app);
+    console.log('✅ Scene inspector connected to app');
+    
+    // Provide console commands
+    console.log('🎮 DevTools commands available:');
+    console.log('  sceneInspector.inspectScene() - One-time scene inspection');
+    console.log('  sceneInspector.startInspection() - Continuous monitoring');
+    console.log('  sceneInspector.stopInspection() - Stop monitoring');
+    console.log('  sceneInspector.findObjects("name") - Find objects by name');
+    console.log('  sceneInspector.countByType() - Count objects by type');
+    console.log('  sceneInspector.exportSceneStructure() - Export scene as JSON');
   });
-
-}
-
-// Initialize Spector.js for WebGL debugging
-function initializeSpectorJS() {
-  try {
-
-    // Method 1: Try to load from node_modules using dynamic import
-    import("spectorjs")
-      .then((SPECTOR) => {
-        if (SPECTOR && SPECTOR.Spector) {
-          const spector = new SPECTOR.Spector();
-          (window as any).spector = spector;
-          (window as any).SPECTOR = SPECTOR;
-
-          console.log(
-            "✅ Spector.js WebGL debugger initialized successfully (ES Module)",
-          );
-          logSpectorUsage();
-          addSpectorIndicator();
-        }
-      })
-      .catch(() => {
-        loadSpectorScript();
-      });
-  } catch (error) {
-    console.warn("⚠️ Error initializing Spector.js:", error);
-    loadSpectorScript();
-  }
-}
-
-// Fallback: Load Spector.js via script tag
-function loadSpectorScript() {
-  // Load Spector.js script dynamically
-  const script = document.createElement("script");
-  script.src = "/node_modules/spectorjs/dist/spector.bundle.js";
-  script.onload = () => {
-    // @ts-ignore - Spector is loaded globally by the script
-    if (window.SPECTOR) {
-      // @ts-ignore
-      const spector = new window.SPECTOR.Spector();
-      (window as any).spector = spector;
-
-      console.log(
-        "✅ Spector.js WebGL debugger initialized successfully (Script)",
-      );
-      logSpectorUsage();
-      addSpectorIndicator();
+  
+  // Listen for any PixiJS errors
+  window.addEventListener('error', (event) => {
+    if (event.message && event.message.includes('pixi')) {
+      console.error('🚨 PixiJS Error detected:', event.error);
     }
-  };
-  script.onerror = () => {
-    console.warn(
-      "⚠️ Could not load Spector.js from node_modules, trying CDN...",
-    );
-    loadSpectorFromCDN();
-  };
-
-  document.head.appendChild(script);
+  });
+  
+  console.log('✅ DevTools setup completed');
+} else {
+  console.log('📦 Production mode - DevTools disabled');
 }
 
-// Last resort: Load from CDN
-function loadSpectorFromCDN() {
-  const script = document.createElement("script");
-  script.src = "https://spectorcdn.babylonjs.com/spector.bundle.js";
-  script.onload = () => {
-    // @ts-ignore
-    if (window.SPECTOR) {
-      // @ts-ignore
-      const spector = new window.SPECTOR.Spector();
-      (window as any).spector = spector;
-
-      console.log(
-        "✅ Spector.js WebGL debugger initialized successfully (CDN)",
-      );
-      logSpectorUsage();
-      addSpectorIndicator();
-    }
-  };
-  script.onerror = () => {
-    console.warn("❌ Could not load Spector.js from any source");
-    console.log(
-      '   <script src="https://spectorcdn.babylonjs.com/spector.bundle.js"></script>',
-    );
-  };
-
-  document.head.appendChild(script);
-}
-
-// Log usage instructions
-function logSpectorUsage() {
-  console.log(
-    "   window.spector.captureCanvas(canvas) - Capture specific canvas",
-  );
-}
-
-// Add visual indicator that Spector.js is available
-function addSpectorIndicator() {
-  try {
-    // Create a small indicator in the corner
-    const indicator = document.createElement("div");
-    indicator.id = "spector-indicator";
-    indicator.innerHTML = `
-      <div style="
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        background: #4CAF50;
-        color: white;
-        padding: 8px 12px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-family: monospace;
-        z-index: 10000;
-        cursor: pointer;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      " onclick="window.spector?.displayUI()" title="Click to open Spector.js WebGL debugger">
-        🔍 Spector.js Ready
-      </div>
-    `;
-
-    document.body.appendChild(indicator);
-
-    // Auto-remove indicator after 5 seconds
-    setTimeout(() => {
-      const elem = document.getElementById("spector-indicator");
-      if (elem) {
-        elem.style.transition = "opacity 0.5s";
-        elem.style.opacity = "0";
-        setTimeout(() => elem.remove(), 500);
-      }
-    }, 5000);
-  } catch (error) {
-    console.warn("Could not add Spector.js indicator:", error);
-  }
-}
-
-// Auto-setup if on coursebuilder page
-if (window.location.pathname.includes("coursebuilder.html")) {
-  setupPixiDevtools();
-}
+// Export for potential programmatic access
+export { PixiSceneInspector };
