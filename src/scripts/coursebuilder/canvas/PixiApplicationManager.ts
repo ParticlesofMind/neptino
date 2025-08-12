@@ -10,13 +10,13 @@ import { initDevtools } from "@pixi/devtools";
 // Expose PIXI globally for devtools (PIXI v8.2+ requirement)
 import * as PIXI from "pixi.js";
 
-// Safely expose PIXI globally
+// Safely expose PIXI globally without trying to extend it
 try {
   // Only set if not already set to avoid conflicts
-  if (!(window as any).PIXI) {
+  if (typeof window !== 'undefined' && !(window as any).PIXI) {
     (window as any).PIXI = PIXI;
   }
-  if (!(globalThis as any).PIXI) {
+  if (typeof globalThis !== 'undefined' && !(globalThis as any).PIXI) {
     (globalThis as any).PIXI = PIXI;
   }
 } catch (error) {
@@ -76,81 +76,17 @@ export class PixiApplicationManager {
       this.canvasElement!.innerHTML = "";
       this.canvasElement!.appendChild(this.app.canvas);
 
-      // Expose app globally for PIXI devtools with multiple approaches
-      (window as any).__PIXI_APP__ = this.app;
-      (globalThis as any).__PIXI_APP__ = this.app;
-
-      // Safely expose on PIXI object for devtools detection
-      try {
-        if ((window as any).PIXI && typeof (window as any).PIXI === "object") {
-          // Check if PIXI object is extensible first
-          const pixiObj = (window as any).PIXI;
-          
-          // Try to extend PIXI object only if it's extensible
-          if (Object.isExtensible(pixiObj)) {
-            try {
-              pixiObj.app = this.app;
-              
-              if (!Array.isArray(pixiObj.apps)) {
-                pixiObj.apps = [];
-              }
-              if (!pixiObj.apps.includes(this.app)) {
-                pixiObj.apps.push(this.app);
-              }
-            } catch (assignError) {
-              console.warn("Could not assign to PIXI object:", assignError);
-            }
-          } else {
-            console.warn("PIXI object is not extensible, using alternative approach");
-          }
-        }
-      } catch (error) {
-        console.warn("Could not extend PIXI object (it may be sealed):", error);
-      }
-      
-      // Always create alternative global references for devtools
-      (window as any).PIXI_APP_INSTANCE = this.app;
-      (window as any).PIXI_APPS = [
-        ...((window as any).PIXI_APPS || []),
-        this.app,
-      ];
-
-      // Initialize PIXI devtools - for v8.2+ use no-parameter call
-      try {
-        // For PIXI v8.2+, try with app parameter first
-        initDevtools({ app: this.app });
-
-        // Dispatch custom event for additional devtools support
-        window.dispatchEvent(
-          new CustomEvent("pixi-app-ready", { detail: this.app }),
-        );
-      } catch (error) {
-        console.error(
-          "❌ Failed to initialize PIXI devtools with global hooks:",
-          error,
-        );
-
-        // Fallback to explicit configuration
-        try {
-          initDevtools({
-            app: this.app,
-          });
-        } catch (fallbackError) {
-          try {
-            initDevtools({
-              renderer: this.app.renderer,
-              stage: this.app.stage,
-            });
-          } catch (finalError) {
-            console.error(
-              "❌ All devtools initialization methods failed:",
-              finalError,
-            );
-          }
-        }
+      // Expose app globally for PIXI devtools using alternative approach
+      // Instead of trying to extend PIXI object, use separate properties
+      if (typeof window !== 'undefined') {
+        (window as any).__PIXI_APP__ = this.app;
+        (window as any).__NEPTINO_PIXI_APP__ = this.app; // Backup reference
       }
 
-      // Style the canvas to be centered in container
+      // Enhanced devtools compatibility
+      this.enhanceDevtoolsCompatibility();
+
+      // Style the canvas
       this.styleCanvas();
 
       // Store the scale factor for layout calculations
@@ -169,9 +105,6 @@ export class PixiApplicationManager {
         !!(window as any).__PIXI_APP__,
       );
 
-      // Enhanced devtools compatibility
-      this.enhanceDevtoolsCompatibility();
-
       return this.app;
     } catch (error) {
       console.error("❌ Failed to initialize PixiJS Application:", error);
@@ -185,24 +118,43 @@ export class PixiApplicationManager {
   private enhanceDevtoolsCompatibility(): void {
     if (!this.app) return;
 
-    // Register with global hook if available
-    if ((window as any).__PIXI_DEVTOOLS_GLOBAL_HOOK__) {
-      (window as any).__PIXI_DEVTOOLS_GLOBAL_HOOK__.register(this.app);
-    }
-
-    // Make app detectable by various methods
-    const globalTargets = [window, globalThis];
-    globalTargets.forEach((target) => {
-      if (!(target as any).pixiApps) (target as any).pixiApps = [];
-      if (!(target as any).pixiApps.includes(this.app)) {
-        (target as any).pixiApps.push(this.app);
+    try {
+      // Register with global hook if available
+      if ((window as any).__PIXI_DEVTOOLS_GLOBAL_HOOK__) {
+        (window as any).__PIXI_DEVTOOLS_GLOBAL_HOOK__.register(this.app);
       }
-    });
 
-    // Add event listeners for devtools frame detection
-    this.app.renderer.on("resize", () => {
-      // Silent hook for devtools detection
-    });
+      // Make app detectable by various methods
+      const globalTargets = [window, globalThis];
+      globalTargets.forEach((target) => {
+        try {
+          if (!(target as any).pixiApps) (target as any).pixiApps = [];
+          if (!(target as any).pixiApps.includes(this.app)) {
+            (target as any).pixiApps.push(this.app);
+          }
+        } catch (error) {
+          console.warn("Could not register with global target:", error);
+        }
+      });
+
+      // Add event listeners for devtools frame detection
+      this.app.renderer.on("resize", () => {
+        // Silent hook for devtools detection
+      });
+
+      // Try to initialize devtools
+      setTimeout(() => {
+        try {
+          initDevtools({ app: this.app! });
+          console.log("✅ PIXI Devtools initialized successfully");
+        } catch (error) {
+          console.warn("⚠️ Could not initialize PIXI devtools:", error);
+        }
+      }, 100);
+
+    } catch (error) {
+      console.warn("⚠️ Error in devtools compatibility setup:", error);
+    }
   }
 
   /**
@@ -211,11 +163,15 @@ export class PixiApplicationManager {
   private styleCanvas(): void {
     if (!this.app) return;
 
-    this.app.canvas.style.display = "block";
-    this.app.canvas.style.margin = "auto";
-    this.app.canvas.style.border = "2px solid #6495ed";
-    this.app.canvas.style.borderRadius = "8px";
-    this.app.canvas.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.1)";
+    try {
+      this.app.canvas.style.display = "block";
+      this.app.canvas.style.margin = "auto";
+      this.app.canvas.style.border = "2px solid #6495ed";
+      this.app.canvas.style.borderRadius = "8px";
+      this.app.canvas.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.1)";
+    } catch (error) {
+      console.warn("Could not style canvas:", error);
+    }
   }
 
   /**
@@ -223,7 +179,11 @@ export class PixiApplicationManager {
    */
   public resize(width: number, height: number): void {
     if (this.app) {
-      this.app.renderer.resize(width, height);
+      try {
+        this.app.renderer.resize(width, height);
+      } catch (error) {
+        console.error("Error resizing PIXI application:", error);
+      }
     }
   }
 
@@ -264,7 +224,6 @@ export class PixiApplicationManager {
         children: this.app.stage.children.length,
         interactive: this.app.stage.eventMode === "static",
       },
-      scaleToA4: (this.app as any).scaleToA4,
     };
   }
 
@@ -291,8 +250,12 @@ export class PixiApplicationManager {
    */
   public destroy(): void {
     if (this.app) {
-      this.app.destroy(true, { children: true, texture: true });
-      this.app = null;
+      try {
+        this.app.destroy(true, { children: true, texture: true });
+        this.app = null;
+      } catch (error) {
+        console.error("Error destroying PIXI application:", error);
+      }
     }
   }
 }
