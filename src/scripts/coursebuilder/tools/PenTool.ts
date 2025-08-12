@@ -56,7 +56,7 @@ export class PenTool extends BaseTool {
       
       if (distance <= PEN_CONSTANTS.PATH_CLOSE_TOLERANCE) {
         console.log(`✏️ PEN: Closing path - clicked near start node`);
-        this.completePath(container, true);
+        this.completePath(true);
         return;
       }
     }
@@ -183,7 +183,7 @@ export class PenTool extends BaseTool {
     }
   }
 
-  private completePath(container: Container, closeShape: boolean = false): void {
+  private completePath(closeShape: boolean = false): void {
     if (!this.currentPath) return;
     
     if (closeShape && this.currentPath.nodes.length >= 3) {
@@ -220,29 +220,29 @@ export class PenTool extends BaseTool {
   }
 
   // Handle keyboard events for path completion
-  public onKeyDown(event: KeyboardEvent, container: Container): void {
+  public onKeyDown(event: KeyboardEvent): void {
     if (!this.currentPath) return;
     
     switch (event.key) {
       case 'Enter':
         // Complete current path without closing
-        this.completePath(container, false);
+        this.completePath(false);
         break;
       case 'Escape':
         // Cancel current path
-        this.cancelPath(container);
+        this.cancelPath();
         break;
       case ' ': // Spacebar
         // Complete and close current path
         if (this.currentPath.nodes.length >= 3) {
-          this.completePath(container, true);
+          this.completePath(true);
         }
         event.preventDefault();
         break;
     }
   }
 
-  private cancelPath(container: Container): void {
+  private cancelPath(): void {
     if (!this.currentPath) return;
     
     // Remove all node graphics

@@ -118,7 +118,7 @@ export class ShapesTool extends BaseTool {
         break;
 
       case 'arrow':
-        this.drawArrow(strokeStyle, fillStyle);
+        this.drawArrow(strokeStyle);
         break;
 
       case 'polygon':
@@ -206,7 +206,7 @@ export class ShapesTool extends BaseTool {
       .stroke(strokeStyle);
   }
 
-  private drawArrow(strokeStyle: any, fillStyle: any): void {
+  private drawArrow(strokeStyle: any): void {
     if (!this.currentShape) return;
 
     const dx = this.currentPoint.x - this.startPoint.x;

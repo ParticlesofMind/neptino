@@ -14,7 +14,6 @@ interface EraserSettings {
 
 export class EraserTool extends BaseTool {
   public isErasing: boolean = false;
-  private eraserCursor: Graphics | null = null;
   private lastErasePoint: Point = new Point(0, 0);
   private erasePreview: Graphics | null = null;
 

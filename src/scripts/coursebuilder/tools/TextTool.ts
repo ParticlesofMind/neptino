@@ -5,7 +5,7 @@
 
 import { FederatedPointerEvent, Container, Text, TextStyle, Point } from 'pixi.js';
 import { BaseTool } from './ToolInterface';
-import { PROFESSIONAL_COLORS, TEXT_SIZES, FONT_FAMILIES, TEXT_CONSTANTS, hexToNumber } from './SharedResources';
+import { PROFESSIONAL_COLORS, TEXT_SIZES, FONT_FAMILIES, TEXT_CONSTANTS } from './SharedResources';
 
 interface TextSettings {
   fontFamily: string;
