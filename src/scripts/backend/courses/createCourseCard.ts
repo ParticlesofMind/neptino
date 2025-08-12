@@ -124,12 +124,8 @@ export class CoursesManager {
   }
 
   private navigateToCourseSection(courseId: string, section: string): void {
-
-    // Store the course ID in session storage for the course builder
-    sessionStorage.setItem("currentCourseId", courseId);
-
-    // Navigate to the course builder with the specific section
-    const url = `/src/pages/teacher/coursebuilder.html#${section}`;
+    // Navigate to the course builder with the course ID as URL parameter and hash for section
+    const url = `/src/pages/teacher/coursebuilder.html?courseId=${courseId}#${section}`;
     window.location.href = url;
   }
 

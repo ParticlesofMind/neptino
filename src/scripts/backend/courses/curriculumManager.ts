@@ -32,8 +32,8 @@ export class CurriculumManager {
   private currentPreviewMode: PreviewMode = "titles";
 
   constructor(courseId?: string) {
-    // Get course ID from parameter or session storage
-    this.courseId = courseId || sessionStorage.getItem("currentCourseId") || "";
+    // Get course ID from parameter, URL, or session storage
+    this.courseId = courseId || this.getCourseId();
 
     if (!this.courseId) {
       console.error("No course ID available for curriculum management");
@@ -43,6 +43,27 @@ export class CurriculumManager {
     this.initializeElements();
     this.bindEvents();
     this.initializeCurriculum();
+  }
+
+  private getCourseId(): string {
+    // First try to get course ID from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseIdFromUrl = urlParams.get('courseId') || urlParams.get('id');
+    
+    if (courseIdFromUrl) {
+      console.log('📚 Course ID from URL:', courseIdFromUrl);
+      return courseIdFromUrl;
+    }
+
+    // Fallback to session storage (for backward compatibility)
+    const courseIdFromSession = sessionStorage.getItem("currentCourseId");
+    if (courseIdFromSession) {
+      console.log('📚 Course ID from session storage:', courseIdFromSession);
+      return courseIdFromSession;
+    }
+
+    console.log('📚 No course ID found for curriculum manager');
+    return "";
   }
 
   private async initializeCurriculum(): Promise<void> {

@@ -28,8 +28,33 @@ export class CourseFormHandler {
     }
 
     this.sectionConfig = config;
-    this.currentCourseId = sessionStorage.getItem("currentCourseId");
+    this.currentCourseId = this.getCourseId();
     this.initialize();
+  }
+
+  // ==========================================================================
+  // COURSE ID MANAGEMENT
+  // ==========================================================================
+
+  private getCourseId(): string | null {
+    // First try to get course ID from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseIdFromUrl = urlParams.get('courseId') || urlParams.get('id');
+    
+    if (courseIdFromUrl) {
+      console.log('📋 Course ID from URL:', courseIdFromUrl);
+      return courseIdFromUrl;
+    }
+
+    // Fallback to session storage (for backward compatibility)
+    const courseIdFromSession = sessionStorage.getItem("currentCourseId");
+    if (courseIdFromSession) {
+      console.log('📋 Course ID from session storage:', courseIdFromSession);
+      return courseIdFromSession;
+    }
+
+    console.log('📋 No course ID found - this is likely a new course creation');
+    return null;
   }
 
   // ==========================================================================

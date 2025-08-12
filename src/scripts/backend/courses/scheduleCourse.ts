@@ -25,8 +25,8 @@ export class ScheduleCourseManager {
   private currentSchedule: ScheduleSession[] = [];
 
   constructor(courseId?: string) {
-    // Get course ID from parameter or session storage
-    this.courseId = courseId || sessionStorage.getItem("currentCourseId") || "";
+    // Get course ID from parameter, URL, or session storage
+    this.courseId = courseId || this.getCourseId();
 
     if (!this.courseId) {
       console.error("No course ID available for schedule management");
@@ -39,6 +39,27 @@ export class ScheduleCourseManager {
 
     // Run initial validation to set proper button state
     this.validateScheduleForm();
+  }
+
+  private getCourseId(): string {
+    // First try to get course ID from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseIdFromUrl = urlParams.get('courseId') || urlParams.get('id');
+    
+    if (courseIdFromUrl) {
+      console.log('📅 Course ID from URL:', courseIdFromUrl);
+      return courseIdFromUrl;
+    }
+
+    // Fallback to session storage (for backward compatibility)
+    const courseIdFromSession = sessionStorage.getItem("currentCourseId");
+    if (courseIdFromSession) {
+      console.log('📅 Course ID from session storage:', courseIdFromSession);
+      return courseIdFromSession;
+    }
+
+    console.log('📅 No course ID found for schedule manager');
+    return "";
   }
 
   private initializeElements(): void {

@@ -818,7 +818,7 @@
                   Schedule Configuration
                 </h3>
 
-                <form class="form">
+                <form class="form" id="course-schedule-form">
                   <!-- Date Range Row -->
                   <div class="form__row">
                     <div class="form__group">
@@ -973,6 +973,7 @@
         <!-- Curriculum Article -->
         <article id="curriculum" class="article">
           <section class="card">
+
             <!-- Curriculum Layout -->
             <div class="curriculum-layout">
               <!-- Curriculum Configuration -->
@@ -1139,13 +1140,14 @@
 
             <!-- Course Visibility Settings -->
             <div class="course-settings-section">
-              <form class="settings-form">
+              <form class="form" id="course-settings-form">
                 <div class="settings-checkbox-group">
                   <div class="settings-checkbox-item">
                     <input
                       class="settings-checkbox"
                       type="checkbox"
                       id="course-visible"
+                      name="course_visible"
                     />
                     <label class="settings-checkbox-label" for="course-visible"
                       >Course visible to students</label
@@ -1156,6 +1158,7 @@
                       class="settings-checkbox"
                       type="checkbox"
                       id="allow-enrollment"
+                      name="allow_enrollment"
                     />
                     <label
                       class="settings-checkbox-label"
@@ -1168,11 +1171,19 @@
                       class="settings-checkbox"
                       type="checkbox"
                       id="require-approval"
+                      name="require_approval"
                     />
                     <label
                       class="settings-checkbox-label"
                       for="require-approval"
                       >Require enrollment approval</label
+                    >
+                  </div>
+                </div>
+                <div class="form__footer">
+                  <div class="save-indicator" id="settings-last-saved">
+                    <span class="save-indicator__text" id="settings-save-status"
+                      >Changes will be saved automatically</span
                     >
                   </div>
                 </div>
