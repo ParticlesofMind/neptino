@@ -13,7 +13,6 @@ export class AsideNavigation {
     this.contentSections = document.querySelectorAll(".article");
     this.boundHandleLinkClick = this.handleLinkClick.bind(this);
 
-
     this.init();
   }
 
@@ -41,6 +40,7 @@ export class AsideNavigation {
     const savedSection = localStorage.getItem(this.STORAGE_KEY);
 
     if (savedSection) {
+      console.log('🧭 Restoring saved section:', savedSection);
 
       // Find the link and section elements
       const savedLink = document.querySelector(
@@ -54,11 +54,29 @@ export class AsideNavigation {
 
         // Set the saved section as active
         this.setActiveStates(savedLink, savedSection);
-
       } else {
         console.warn("Saved section not found in DOM:", savedSection);
+        // Default to essentials if saved section not found
+        this.setDefaultSection();
       }
     } else {
+      console.log('🧭 No saved section, defaulting to essentials');
+      this.setDefaultSection();
+    }
+  }
+
+  /**
+   * Set default section (essentials) as active
+   */
+  private setDefaultSection(): void {
+    const defaultLink = document.querySelector(
+      '[data-section="essentials"]'
+    ) as HTMLAnchorElement;
+    const defaultSection = document.getElementById('essentials');
+
+    if (defaultLink && defaultSection) {
+      this.removeActiveStates();
+      this.setActiveStates(defaultLink, 'essentials');
     }
   }
 
@@ -67,6 +85,7 @@ export class AsideNavigation {
    */
   private saveActiveSection(sectionId: string): void {
     localStorage.setItem(this.STORAGE_KEY, sectionId);
+    console.log('🧭 Saved active section to localStorage:', sectionId);
   }
 
   private bindEvents(): void {
@@ -81,7 +100,7 @@ export class AsideNavigation {
     const targetSection = target.getAttribute("data-section");
 
     console.log(
-      "Aside link clicked:",
+      "🧭 Aside link clicked:",
       target.textContent,
       "Href:",
       href,
@@ -113,28 +132,12 @@ export class AsideNavigation {
       return;
     }
 
-    // Only handle aside navigation if we're in course builder setup section
-    if (this.isInCourseBuilderSetup()) {
-      this.removeActiveStates();
-      this.setActiveStates(target, targetSection);
+    // Handle aside navigation for course builder setup section
+    this.removeActiveStates();
+    this.setActiveStates(target, targetSection);
 
-      // Save the active section to localStorage
-      this.saveActiveSection(targetSection);
-    } else {
-      // For home page or other contexts, handle normally
-      this.removeActiveStates();
-      this.setActiveStates(target, targetSection);
-
-      // Save the active section to localStorage
-      this.saveActiveSection(targetSection);
-    }
-  }
-
-  private isInCourseBuilderSetup(): boolean {
-    const setupSection = document.getElementById("setup");
-    return setupSection
-      ? setupSection.classList.contains("section--active")
-      : false;
+    // Save the active section to localStorage for next visit
+    this.saveActiveSection(targetSection);
   }
 
   private removeActiveStates(): void {
@@ -145,7 +148,6 @@ export class AsideNavigation {
     this.contentSections.forEach((section: HTMLElement) => {
       section.classList.remove("article--active");
     });
-
   }
 
   private setActiveStates(
@@ -170,6 +172,5 @@ export class AsideNavigation {
     this.asideLinks.forEach((link: HTMLAnchorElement) => {
       link.removeEventListener("click", this.boundHandleLinkClick);
     });
-
   }
 }

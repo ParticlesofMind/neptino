@@ -74,12 +74,28 @@ export class CourseBuilderNavigation {
     // Hide all sections
     this.sections.forEach(section => {
       section.classList.remove('section--active');
+      
+      // Also deactivate all articles in all sections
+      const articles = section.querySelectorAll('.article');
+      articles.forEach(article => {
+        article.classList.remove('article--active');
+      });
     });
 
     // Show the target section
     const targetSection = document.getElementById(sectionId);
     if (targetSection) {
       targetSection.classList.add('section--active');
+      
+      // For sections that don't use aside navigation (like create, preview, launch),
+      // activate the main article automatically
+      if (sectionId !== 'setup') {
+        const mainArticle = targetSection.querySelector('.article');
+        if (mainArticle) {
+          mainArticle.classList.add('article--active');
+        }
+      }
+      
       console.log(`🎯 Navigated to section: ${sectionId}`);
     }
   }

@@ -28,8 +28,13 @@ export class ScheduleCourseManager {
     // Get course ID from parameter, URL, or session storage
     this.courseId = courseId || this.getCourseId();
 
+    console.log('📅 ScheduleCourseManager initializing with course ID:', this.courseId);
+
     if (!this.courseId) {
-      console.error("No course ID available for schedule management");
+      console.warn("⚠️ No course ID available for schedule management - some features may be limited");
+      // Still initialize elements and basic functionality
+      this.initializeElements();
+      this.bindEvents();
       return;
     }
 
@@ -257,6 +262,11 @@ export class ScheduleCourseManager {
   private async saveScheduleToDatabase(
     sessions: ScheduleSession[],
   ): Promise<void> {
+    if (!this.courseId) {
+      console.warn('📅 Cannot save schedule: no course ID available');
+      throw new Error('No course ID available for saving schedule');
+    }
+
     const { error } = await supabase
       .from("courses")
       .update({
@@ -395,6 +405,15 @@ export class ScheduleCourseManager {
   }
 
   private async loadExistingSchedule(): Promise<void> {
+    if (!this.courseId) {
+      console.warn('📅 Cannot load schedule: no course ID available');
+      this.currentSchedule = [];
+      this.hideSchedulePreview();
+      this.unlockScheduleConfig();
+      this.hideDeleteScheduleButton();
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from("courses")
@@ -464,6 +483,37 @@ export class ScheduleCourseManager {
       this.schedulePreviewSection.querySelector(".total-lessons");
     if (totalDisplay) {
       totalDisplay.textContent = `Total lessons: ${this.currentSchedule.length}`;
+    }
+  }
+
+  /**
+   * Set course ID after initialization
+   */
+  public setCourseId(courseId: string): void {
+    if (this.courseId === courseId) {
+      return; // No change needed
+    }
+    
+    this.courseId = courseId;
+    console.log('📅 Course ID updated for schedule manager:', courseId);
+    
+    // Reload data with new course ID
+    this.loadExistingSchedule();
+    this.validateScheduleForm();
+  }
+
+  /**
+   * Refresh the display to show current state
+   */
+  public refreshDisplay(): void {
+    if (this.currentSchedule && this.currentSchedule.length > 0) {
+      this.renderSchedulePreview();
+      this.lockScheduleConfig();
+      this.showDeleteScheduleButton();
+    } else {
+      this.hideSchedulePreview();
+      this.unlockScheduleConfig();
+      this.hideDeleteScheduleButton();
     }
   }
 

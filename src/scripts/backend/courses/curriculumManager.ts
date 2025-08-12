@@ -35,8 +35,13 @@ export class CurriculumManager {
     // Get course ID from parameter, URL, or session storage
     this.courseId = courseId || this.getCourseId();
 
+    console.log('📚 CurriculumManager initializing with course ID:', this.courseId);
+
     if (!this.courseId) {
-      console.error("No course ID available for curriculum management");
+      console.warn("⚠️ No course ID available for curriculum management - some features may be limited");
+      // Still initialize elements and basic functionality
+      this.initializeElements();
+      this.bindEvents();
       return;
     }
 
@@ -130,6 +135,12 @@ export class CurriculumManager {
   }
 
   private async loadScheduleData(): Promise<void> {
+    if (!this.courseId) {
+      console.warn('📚 Cannot load schedule data: no course ID available');
+      this.displayNoScheduleWarning();
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from("courses")
@@ -316,6 +327,11 @@ export class CurriculumManager {
   private async saveCurriculumToDatabase(
     curriculum: CurriculumLesson[],
   ): Promise<void> {
+    if (!this.courseId) {
+      console.warn('📚 Cannot save curriculum: no course ID available');
+      throw new Error('No course ID available for saving curriculum');
+    }
+
     const { error } = await supabase
       .from("courses")
       .update({
@@ -430,6 +446,12 @@ export class CurriculumManager {
   }
 
   private async loadExistingCurriculum(): Promise<void> {
+    if (!this.courseId) {
+      console.warn('📚 Cannot load curriculum: no course ID available');
+      this.hideCurriculumPreview();
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from("courses")
@@ -447,6 +469,32 @@ export class CurriculumManager {
       }
     } catch (error) {
       console.error("Error loading existing curriculum:", error);
+      this.hideCurriculumPreview();
+    }
+  }
+
+  /**
+   * Set course ID after initialization
+   */
+  public setCourseId(courseId: string): void {
+    if (this.courseId === courseId) {
+      return; // No change needed
+    }
+    
+    this.courseId = courseId;
+    console.log('📚 Course ID updated for curriculum manager:', courseId);
+    
+    // Reload data with new course ID
+    this.initializeCurriculum();
+  }
+
+  /**
+   * Refresh the display to show current state
+   */
+  public refreshDisplay(): void {
+    if (this.currentCurriculum && this.currentCurriculum.length > 0) {
+      this.showPreview();
+    } else {
       this.hideCurriculumPreview();
     }
   }

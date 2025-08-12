@@ -413,6 +413,12 @@ export class CourseFormHandler {
         this.currentCourseId = result.courseId;
         sessionStorage.setItem("currentCourseId", result.courseId);
 
+        // Notify the CourseBuilder instance about the new course ID
+        if (typeof window !== 'undefined' && (window as any).courseBuilderInstance) {
+          (window as any).courseBuilderInstance.setCourseId(result.courseId);
+          console.log('📋 Notified CourseBuilder of new course ID:', result.courseId);
+        }
+
         this.showStatus("Course created successfully! 🎉", "success");
         this.showCourseCode(result.courseId);
         this.navigateToNextSection();

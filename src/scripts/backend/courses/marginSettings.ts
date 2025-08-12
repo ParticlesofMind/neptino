@@ -325,7 +325,12 @@ export class MarginSettingsHandler {
     this.updateCanvasMargins();
   }
 
+  /**
+   * Set course ID and load settings from database
+   */
   public setCourseId(courseId: string): void {
+    this.courseId = courseId;
+    console.log('📏 Setting course ID for margin settings:', courseId);
     this.loadSettingsFromDatabase(courseId);
   }
 

@@ -156,13 +156,15 @@ export class CourseBuilder {
   }
 
   /**
-   * Set the current course ID and pass it to margin settings
+   * Set the current course ID and pass it to all managers
    */
   public setCourseId(courseId: string): void {
     this.currentCourseId = courseId;
 
     // Pass the course ID to margin settings so it can load/save to database
     this.marginSettings.setCourseId(courseId);
+    
+    console.log('🎨 Course ID set for coursebuilder:', courseId);
   }
 
   /**
