@@ -55,7 +55,6 @@ export class PageManager {
 
     this.pages.push(firstPage);
     this.navigationController.setTotalPages(1);
-    console.log("📄 First page initialized:", firstPage.id);
   }
 
   /**
@@ -108,7 +107,6 @@ export class PageManager {
     // Switch to new page
     this.navigationController.setCurrentPage(this.pages.length - 1);
 
-    console.log("📄 New page added:", newPage.id);
 
     // Trigger callbacks
     if (this.onPageAddCallback) {
@@ -127,16 +125,13 @@ export class PageManager {
     if (!currentPage) return;
 
     try {
-      console.log("⚙️ Opening page settings for:", currentPage.id);
       const updatedPage = await this.pageSettingsModal.show(currentPage);
 
       // Update page data
       Object.assign(currentPage, updatedPage);
       this.navigationController.updatePageSelector(this.pages);
 
-      console.log("💾 Page settings updated:", currentPage.id);
     } catch (error) {
-      console.log("❌ Page settings cancelled");
     }
   }
 
@@ -190,7 +185,6 @@ export class PageManager {
       this.navigationController.setTotalPages(this.pages.length);
       this.navigationController.updatePageSelector(this.pages);
 
-      console.log("🗑️ Page removed:", removedPage.id);
     }
   }
 
@@ -201,7 +195,6 @@ export class PageManager {
     const currentPage = this.getCurrentPage();
     if (currentPage) {
       currentPage.content = content;
-      console.log("💾 Page content saved:", currentPage.id);
     }
   }
 

@@ -36,9 +36,6 @@ export class CanvasLayerManager {
     // Enable sorting by zIndex
     this.app.stage.sortableChildren = true;
 
-    console.log("🏗️ Canvas layers initialized");
-    console.log("📐 Layout container (protected) created");
-    console.log("✏️ Drawing container (editable) created");
   }
 
   /**
@@ -80,7 +77,6 @@ export class CanvasLayerManager {
 
     this.layoutContainer.addChild(graphics);
 
-    console.log("🔲 Enhanced background grid added to layout layer");
   }
 
   /**
@@ -183,7 +179,6 @@ export class CanvasLayerManager {
 
     this.layoutContainer.addChild(this.marginGraphics);
 
-    console.log("📏 Margin boundaries updated:", margins);
   }
 
   /**
@@ -194,7 +189,6 @@ export class CanvasLayerManager {
       this.layoutContainer.removeChild(this.marginGraphics);
       this.marginGraphics.destroy();
       this.marginGraphics = null;
-      console.log("📏 Margin boundaries cleared");
     }
   }
 
@@ -204,7 +198,6 @@ export class CanvasLayerManager {
   public clearDrawingLayer(): void {
     if (this.drawingContainer) {
       this.drawingContainer.removeChildren();
-      console.log("🗑️ Drawing layer cleared (layout protected)");
     }
   }
 
@@ -223,7 +216,6 @@ export class CanvasLayerManager {
     // Restore background grid
     this.addBackgroundGrid();
 
-    console.log("⚠️ All layers cleared and background grid restored");
   }
 
   /**
@@ -245,7 +237,6 @@ export class CanvasLayerManager {
    */
   public addLayoutBlock(block: any): void {
     this.layoutBlocks.push(block);
-    console.log("📐 Layout block added:", block.name || "unnamed");
   }
 
   /**
@@ -255,7 +246,6 @@ export class CanvasLayerManager {
     this.layoutBlocks = this.layoutBlocks.filter(
       (block) => block.id !== blockId,
     );
-    console.log("📐 Layout block removed:", blockId);
   }
 
   /**
@@ -270,7 +260,6 @@ export class CanvasLayerManager {
    */
   public clearLayoutBlocks(): void {
     this.layoutBlocks = [];
-    console.log("📐 Layout blocks cleared");
   }
 
   /**
@@ -311,6 +300,5 @@ export class CanvasLayerManager {
       this.drawingContainer = null;
     }
     this.layoutBlocks = [];
-    console.log("🗑️ Canvas layers destroyed");
   }
 }

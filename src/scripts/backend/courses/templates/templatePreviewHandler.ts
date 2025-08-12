@@ -240,7 +240,6 @@ export class TemplatePreviewHandler {
    */
   exportTemplate(): void {
     // This would open an export modal or trigger a download
-    console.log("Exporting template...");
     // Implementation for template export functionality
   }
 }

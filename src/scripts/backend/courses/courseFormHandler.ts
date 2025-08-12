@@ -43,7 +43,6 @@ export class CourseFormHandler {
       await this.loadExistingData();
       this.setupEventListeners();
       this.validateForm();
-      console.log(`${this.sectionConfig.section} form handler initialized`);
     }
   }
 
@@ -129,7 +128,6 @@ export class CourseFormHandler {
       const courseData = await getCourse(this.currentCourseId);
       if (!courseData) return;
 
-      console.log(`✅ Loaded course data:`, courseData);
       this.populateFormFields(courseData);
 
       // Show course code if we're in essentials section and have a course ID

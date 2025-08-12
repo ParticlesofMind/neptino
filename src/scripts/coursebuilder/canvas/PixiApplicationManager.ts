@@ -57,7 +57,6 @@ export class PixiApplicationManager {
       console.log(
         `🎨 Using fixed A4 dimensions: ${canvasWidth}x${canvasHeight}`,
       );
-      console.log(`🎨 A4 aspect ratio: ${a4AspectRatio}`);
 
       // Initialize the application with A4 dimensions
       await this.app.init({
@@ -138,15 +137,9 @@ export class PixiApplicationManager {
 
       // Initialize PIXI devtools - for v8.2+ use no-parameter call
       try {
-        console.log("🔧 Initializing PIXI devtools...");
-        console.log("🔧 Renderer available:", !!this.app.renderer);
-        console.log("🔧 Stage available:", !!this.app.stage);
-        console.log("🔧 PIXI globally available:", !!(window as any).PIXI);
-        console.log("🔧 PIXI version:", PIXI.VERSION);
 
         // For PIXI v8.2+, try with app parameter first
         initDevtools({ app: this.app });
-        console.log("✅ PIXI devtools initialized with app parameter");
 
         // Dispatch custom event for additional devtools support
         window.dispatchEvent(
@@ -163,14 +156,12 @@ export class PixiApplicationManager {
           initDevtools({
             app: this.app,
           });
-          console.log("✅ PIXI devtools initialized with explicit app");
         } catch (fallbackError) {
           try {
             initDevtools({
               renderer: this.app.renderer,
               stage: this.app.stage,
             });
-            console.log("✅ PIXI devtools initialized with renderer/stage");
           } catch (finalError) {
             console.error(
               "❌ All devtools initialization methods failed:",
@@ -191,20 +182,13 @@ export class PixiApplicationManager {
         canvasHeight,
       };
 
-      console.log("🎨 PixiJS Application initialized successfully");
       console.log(
         `🎨 Canvas dimensions: ${canvasWidth}x${canvasHeight} (A4 dimensions)`,
       );
-      console.log(`🎨 Canvas screen bounds:`, this.app.screen);
-      console.log("🎨 PIXI.js version:", PIXI.VERSION);
-      console.log("🎨 PIXI.js globally available:", !!(window as any).PIXI);
       console.log(
         "🎨 PIXI Application exposed as window.__PIXI_APP__:",
         !!(window as any).__PIXI_APP__,
       );
-      console.log("🎨 Renderer type:", this.app.renderer.type);
-      console.log("🎨 Renderer resolution:", this.app.renderer.resolution);
-      console.log("🎨 Stage children count:", this.app.stage.children.length);
 
       // Enhanced devtools compatibility
       this.enhanceDevtoolsCompatibility();
@@ -241,7 +225,6 @@ export class PixiApplicationManager {
       // Silent hook for devtools detection
     });
 
-    console.log("🔧 Enhanced devtools compatibility measures applied");
   }
 
   /**
@@ -263,7 +246,6 @@ export class PixiApplicationManager {
   public resize(width: number, height: number): void {
     if (this.app) {
       this.app.renderer.resize(width, height);
-      console.log(`🎨 Application resized to: ${width}x${height}`);
     }
   }
 
@@ -319,7 +301,6 @@ export class PixiApplicationManager {
     try {
       // Extract the canvas as base64
       const base64 = await this.app.renderer.extract.base64(this.app.stage);
-      console.log("📸 Canvas exported as image");
       return base64;
     } catch (error) {
       console.error("❌ Failed to export canvas as image:", error);
@@ -334,7 +315,6 @@ export class PixiApplicationManager {
     if (this.app) {
       this.app.destroy(true, { children: true, texture: true });
       this.app = null;
-      console.log("🗑️ PixiJS Application destroyed");
     }
   }
 }

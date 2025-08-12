@@ -73,7 +73,6 @@ export class ScheduleCourseManager {
       return;
     }
 
-    console.log("All schedule elements found successfully");
   }
 
   private bindEvents(): void {
@@ -123,7 +122,6 @@ export class ScheduleCourseManager {
       this.deleteSchedule();
     });
 
-    console.log("Schedule events bound successfully");
   }
 
   private validateScheduleForm(): void {
@@ -189,13 +187,10 @@ export class ScheduleCourseManager {
   }
 
   private async generateSchedule(): Promise<void> {
-    console.log("Generate schedule clicked");
 
     const config = this.getScheduleConfig();
-    console.log("Schedule config:", config);
 
     const sessions = this.calculateScheduleSessions(config);
-    console.log("Calculated sessions:", sessions);
 
     try {
       await this.saveScheduleToDatabase(sessions);
@@ -203,7 +198,6 @@ export class ScheduleCourseManager {
       this.renderSchedulePreview();
       this.lockScheduleConfig();
       this.showDeleteScheduleButton();
-      console.log("Schedule generated successfully");
     } catch (error) {
       console.error("Error generating schedule:", error);
       alert("Failed to generate schedule. Please try again.");
@@ -434,12 +428,10 @@ export class ScheduleCourseManager {
     this.deleteScheduleButton.classList.remove("hidden");
     this.deleteScheduleButton.disabled = false;
     this.deleteScheduleButton.style.pointerEvents = "auto";
-    console.log("Delete button shown and enabled");
   }
 
   private hideDeleteScheduleButton(): void {
     this.deleteScheduleButton.classList.add("hidden");
-    console.log("Delete button hidden");
   }
 
   private hideSchedulePreview(): void {

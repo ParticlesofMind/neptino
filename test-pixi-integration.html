@@ -180,7 +180,7 @@
 
             // Test 4: Module imports
             try {
-                const coursebuilderModule = await import('/src/scripts/coursebuilder/index.js');
+                const coursebuilderModule = await import('/src/scripts/coursebuilder/coursebuilder.js');
                 if (coursebuilderModule.CourseBuilder) {
                     testResults.modules = true;
                     updateTestResult('module-check', true, 'CourseBuilder module imports successfully');

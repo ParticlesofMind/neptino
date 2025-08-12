@@ -95,7 +95,6 @@ export class MediaSearchController {
    */
   setMediaType(mediaType: string): void {
     this.currentMediaType = mediaType;
-    console.log(`🔍 Search context set to: ${mediaType}`);
   }
 
   /**
@@ -171,6 +170,5 @@ export class MediaSearchController {
     this.onSearchCallback = null;
     this.clearSearch();
 
-    console.log("🗑️ Media search controller destroyed");
   }
 }

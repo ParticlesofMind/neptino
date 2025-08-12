@@ -44,13 +44,11 @@ export class CourseBuilder {
    * Initialize the coursebuilder
    */
   private async init(): Promise<void> {
-    console.log("🚀 Initializing CourseBuilder with modular architecture");
 
     await this.initializePixiCanvas();
     this.setupComponentCallbacks();
     this.bindGlobalEvents();
 
-    console.log("✅ CourseBuilder initialization complete");
   }
 
   /**
@@ -66,7 +64,6 @@ export class CourseBuilder {
       this.pixiCanvas = new PixiCanvas("canvas-container");
       await this.pixiCanvas.init();
 
-      console.log("🎨 PIXI Canvas initialized");
     } catch (error) {
       console.error("❌ Failed to initialize PIXI Canvas:", error);
     }
@@ -92,25 +89,21 @@ export class CourseBuilder {
 
     // Page changes
     this.pageManager.setOnPageChange((page: any) => {
-      console.log("📄 Page changed:", page.name);
       // Handle page change logic here
     });
 
     // Margin changes
     this.marginSettings.setOnMarginChange((margins) => {
-      console.log("📐 Margins updated:", margins);
       // Handle margin changes here
     });
 
     // Font changes
     this.fontManager.setOnFontChange((fontFamily: string) => {
-      console.log("🔤 Font changed:", fontFamily);
       // Handle font changes here
     });
 
     // Media selection
     this.mediaManager.setOnMediaSelection((mediaType: string) => {
-      console.log("🎬 Media type selected:", mediaType);
       // Handle media selection here
     });
   }
@@ -167,7 +160,6 @@ export class CourseBuilder {
    */
   public setCourseId(courseId: string): void {
     this.currentCourseId = courseId;
-    console.log(`📚 Course ID set to: ${courseId}`);
 
     // Pass the course ID to margin settings so it can load/save to database
     this.marginSettings.setCourseId(courseId);
@@ -186,7 +178,6 @@ export class CourseBuilder {
   public clearCanvas(): void {
     if (this.pixiCanvas) {
       this.pixiCanvas.clearCanvas();
-      console.log("🧹 Canvas cleared");
     }
   }
 
@@ -197,7 +188,6 @@ export class CourseBuilder {
     if (this.pixiCanvas) {
       this.pixiCanvas.clearAll();
     }
-    console.log("🧹 All content cleared");
   }
 
   /**
@@ -214,7 +204,6 @@ export class CourseBuilder {
     if (this.pixiCanvas) {
       // PIXI.js doesn't have the same layout visibility concept
       // This could be implemented as layer visibility in PIXI
-      console.log("🔄 Layout visibility toggle requested");
     }
   }
 
@@ -224,7 +213,6 @@ export class CourseBuilder {
   private addMediaToCanvas(url: string, type: string): void {
     if (this.pixiCanvas) {
       // Add media to canvas (implement based on media type)
-      console.log(`➕ Adding ${type} to canvas:`, url);
     }
   }
 
@@ -290,7 +278,6 @@ export class CourseBuilder {
       this.pixiCanvas.destroy();
     }
 
-    console.log("🗑️ CourseBuilder destroyed");
   }
 }
 

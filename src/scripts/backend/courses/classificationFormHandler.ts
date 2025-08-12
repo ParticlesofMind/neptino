@@ -34,7 +34,6 @@ export class ClassificationFormHandler {
   // ==========================================================================
 
   private async initialize(): Promise<void> {
-    console.log("Initializing Classification Form Handler");
 
     try {
       // Get course ID from sessionStorage (set when course is created)
@@ -63,7 +62,6 @@ export class ClassificationFormHandler {
         this.updateSaveStatus("Waiting for course creation...");
       }
 
-      console.log("Classification Form Handler initialized successfully");
     } catch (error) {
       console.error("Error initializing Classification Form Handler:", error);
       this.updateSaveStatus("Error loading data", true);
@@ -207,7 +205,6 @@ export class ClassificationFormHandler {
     // Trigger auto-save
     this.triggerAutoSave();
 
-    console.log(`Selected ${dropdownId}: ${value} (${text})`);
   }
 
   // ==========================================================================
@@ -761,6 +758,5 @@ export class ClassificationFormHandler {
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("course-classification-form")) {
     new ClassificationFormHandler();
-    console.log("ClassificationFormHandler initialized");
   }
 });

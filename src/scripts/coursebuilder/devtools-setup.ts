@@ -17,9 +17,6 @@ try {
 
 // Enhanced devtools setup function
 export function setupPixiDevtools() {
-  console.log("🔧 Setting up PixiJS devtools environment...");
-  console.log("🔧 PIXI version:", PIXI.VERSION);
-  console.log("🔧 PIXI globally available:", !!(window as any).PIXI);
 
   // Initialize Scene Inspector
   const inspector = new PixiSceneInspector();
@@ -36,7 +33,6 @@ export function setupPixiDevtools() {
 
       // Method called by devtools to register
       register: function (app: any) {
-        console.log("🔧 Devtools registering app:", app);
         this.apps.set(app, app);
         if (app.renderer) {
           this.renderers.set(app.renderer, app.renderer);
@@ -52,7 +48,6 @@ export function setupPixiDevtools() {
 
   // Listen for app ready events
   window.addEventListener("pixi-app-ready", (event: any) => {
-    console.log("🔧 PixiJS app ready event received");
     const app = event.detail;
 
     // Setup inspector with the app
@@ -71,7 +66,6 @@ export function setupPixiDevtools() {
     setTimeout(() => {
       try {
         initDevtools({ app });
-        console.log("✅ Devtools initialized after app ready event");
       } catch (error) {
         console.warn(
           "⚠️ Could not initialize devtools after app ready:",
@@ -81,13 +75,11 @@ export function setupPixiDevtools() {
     }, 100);
   });
 
-  console.log("✅ PixiJS devtools environment setup complete");
 }
 
 // Initialize Spector.js for WebGL debugging
 function initializeSpectorJS() {
   try {
-    console.log("🔍 Initializing Spector.js WebGL debugger...");
 
     // Method 1: Try to load from node_modules using dynamic import
     import("spectorjs")
@@ -105,7 +97,6 @@ function initializeSpectorJS() {
         }
       })
       .catch(() => {
-        console.log("📦 ES Module import failed, trying script injection...");
         loadSpectorScript();
       });
   } catch (error) {
@@ -163,7 +154,6 @@ function loadSpectorFromCDN() {
   };
   script.onerror = () => {
     console.warn("❌ Could not load Spector.js from any source");
-    console.log("💡 Manual setup: Add this to your HTML:");
     console.log(
       '   <script src="https://spectorcdn.babylonjs.com/spector.bundle.js"></script>',
     );
@@ -174,14 +164,9 @@ function loadSpectorFromCDN() {
 
 // Log usage instructions
 function logSpectorUsage() {
-  console.log("🔍 Spector.js Usage Commands:");
-  console.log("   window.spector.displayUI() - Show Spector UI overlay");
   console.log(
     "   window.spector.captureCanvas(canvas) - Capture specific canvas",
   );
-  console.log("   window.spector.spyCanvases() - Monitor all canvases");
-  console.log("   window.spector.startCapture() - Start capture session");
-  console.log("   window.spector.stopCapture() - Stop capture session");
 }
 
 // Add visual indicator that Spector.js is available

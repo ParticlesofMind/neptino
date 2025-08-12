@@ -69,12 +69,10 @@ export abstract class BaseTool implements Tool {
 
   onActivate(): void {
     this.isActive = true;
-    console.log(`${this.name} tool activated`);
   }
 
   onDeactivate(): void {
     this.isActive = false;
-    console.log(`${this.name} tool deactivated`);
   }
 
   updateSettings(settings: any): void {

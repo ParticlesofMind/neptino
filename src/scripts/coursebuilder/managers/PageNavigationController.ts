@@ -86,7 +86,6 @@ export class PageNavigationController {
   goToPreviousPage(): void {
     if (this.currentPageIndex > 0) {
       this.setCurrentPage(this.currentPageIndex - 1);
-      console.log("⬅️ Previous page");
     }
   }
 
@@ -96,7 +95,6 @@ export class PageNavigationController {
   goToNextPage(): void {
     if (this.currentPageIndex < this.totalPages - 1) {
       this.setCurrentPage(this.currentPageIndex + 1);
-      console.log("➡️ Next page");
     }
   }
 
@@ -109,7 +107,6 @@ export class PageNavigationController {
 
     if (selectedIndex >= 0 && selectedIndex < this.totalPages) {
       this.setCurrentPage(selectedIndex);
-      console.log("🎯 Page selected:", selectedIndex + 1);
     }
   }
 

@@ -60,7 +60,6 @@ export class FontManager {
     this.availableFonts = [...systemFonts];
     this.populateFontSelector();
 
-    console.log("🔤 Default fonts initialized:", this.availableFonts.length);
   }
 
   /**
@@ -81,12 +80,10 @@ export class FontManager {
   private setupControllerCallbacks(): void {
     // Font style changes
     this.fontStyleController.setOnStyleChange((styles) => {
-      console.log("🎨 Font styles changed:", styles);
     });
 
     // Font size changes
     this.fontSizeController.setOnSizeChange((size) => {
-      console.log("📏 Font size changed:", size);
     });
   }
 
@@ -101,7 +98,6 @@ export class FontManager {
 
     if (selectedFont) {
       this.currentFont = selectedFont.name;
-      console.log("🔤 Font changed to:", selectedFont.name);
 
       // Trigger callback
       if (this.onFontChangeCallback) {
@@ -146,7 +142,6 @@ export class FontManager {
       this.availableFonts.push(customFont);
       this.populateFontSelector();
 
-      console.log("📥 Custom font loaded:", fontName);
     } catch (error) {
       console.error("❌ Failed to load custom font:", fontName, error);
     }
@@ -185,7 +180,6 @@ export class FontManager {
         fontSelect.value = fontName;
       }
 
-      console.log("🔤 Font set to:", fontName);
 
       // Trigger callback
       if (this.onFontChangeCallback) {

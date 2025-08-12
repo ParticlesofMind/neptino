@@ -42,7 +42,6 @@ export class PixiCanvasRefactored {
       );
       this.eventHandler.setupEvents();
 
-      console.log("🎨 PixiCanvas system fully initialized");
     } catch (error) {
       console.error("❌ Failed to initialize PixiCanvas system:", error);
       throw error;
@@ -184,6 +183,5 @@ export class PixiCanvasRefactored {
     this.appManager.destroy();
     this.app = null;
 
-    console.log("🗑️ PixiCanvas system destroyed");
   }
 }

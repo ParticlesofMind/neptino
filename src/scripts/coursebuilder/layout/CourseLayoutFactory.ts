@@ -154,7 +154,6 @@ export class CourseLayoutFactory {
   updateDimensions(width: number, height: number): void {
     this.canvasWidth = width;
     this.canvasHeight = height;
-    console.log(`📐 Updated dimensions: ${width}x${height}`);
   }
 
   /**

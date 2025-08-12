@@ -64,7 +64,6 @@ export class PenTool extends BaseTool {
       );
 
       if (distance <= PEN_CONSTANTS.PATH_CLOSE_TOLERANCE) {
-        console.log(`✏️ PEN: Closing path - clicked near start node`);
         this.completePath(true);
         return;
       }
@@ -99,7 +98,6 @@ export class PenTool extends BaseTool {
 
       this.currentPath.pathGraphics.eventMode = "static";
       container.addChild(this.currentPath.pathGraphics);
-      console.log(`✏️ PEN: Started new vector path`);
     }
 
     // Create node graphics
@@ -234,7 +232,6 @@ export class PenTool extends BaseTool {
     this.removePreviewLine();
     this.currentPath = null;
 
-    console.log(`✏️ PEN: Path completed`);
   }
 
   // Handle keyboard events for path completion
@@ -281,7 +278,6 @@ export class PenTool extends BaseTool {
     this.removePreviewLine();
 
     this.currentPath = null;
-    console.log(`✏️ PEN: Path cancelled`);
   }
 
   onActivate(): void {
@@ -296,7 +292,6 @@ export class PenTool extends BaseTool {
 
     // Complete any active path
     if (this.currentPath) {
-      console.log(`✏️ PEN: Tool deactivated, completing active path`);
       this.removePreviewLine();
       this.currentPath = null;
     }
@@ -310,14 +305,10 @@ export class PenTool extends BaseTool {
 
   private handleKeyDown = (event: KeyboardEvent): void => {
     // This would need to be handled by the tool manager to get container reference
-    console.log(`✏️ PEN: Key pressed: ${event.key}`);
   };
 
   updateSettings(settings: PenSettings): void {
-    console.log(`✏️ PEN: Updating settings from:`, this.settings);
-    console.log(`✏️ PEN: Updating settings to:`, settings);
     this.settings = { ...this.settings, ...settings };
-    console.log(`✏️ PEN: Final settings:`, this.settings);
 
     // Update current path settings if drawing
     if (this.currentPath) {

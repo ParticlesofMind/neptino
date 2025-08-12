@@ -258,7 +258,6 @@ export class TemplateManager {
       await this.loadTemplate(this.selectedTemplateId);
       this.hideLoadTemplateModal();
       // The template is now loaded in the config and preview areas
-      console.log("Template loaded successfully for editing");
     } catch (error) {
       console.error("Failed to load selected template:", error);
       alert("Failed to load template. Please try again.");
@@ -371,7 +370,6 @@ export class TemplateManager {
     try {
       // This would typically gather data from the configuration forms
       // For now, just show a success message
-      console.log("Saving template changes for:", templateId);
       alert("Template changes saved successfully!");
     } catch (error) {
       console.error("Failed to save template changes:", error);
@@ -447,7 +445,6 @@ export class TemplateManager {
       // Reload templates in modal
       await this.loadTemplatesForModal();
 
-      console.log("Template deleted successfully");
     } catch (error) {
       console.error("Failed to delete template:", error);
       alert("Failed to delete template. Please try again.");
@@ -697,7 +694,6 @@ export class TemplateManager {
         throw error;
       }
 
-      console.log("Template created successfully:", data.id);
       return data.id;
     } catch (error) {
       console.error("Failed to create template:", error);
@@ -730,10 +726,8 @@ export class TemplateManager {
 
         // If templateId is provided, load the template
         if (templateId) {
-          console.log("Loading template with ID:", templateId);
           this.loadTemplate(templateId);
         } else {
-          console.log("Initializing empty template");
           this.initializeEmptyTemplate();
         }
       }, 100);
@@ -777,7 +771,6 @@ export class TemplateManager {
         throw error;
       }
 
-      console.log("Loaded templates:", data);
       this.displayTemplateList(data || []);
     } catch (error) {
       console.error("Failed to load templates:", error);
@@ -831,7 +824,6 @@ export class TemplateManager {
         throw error;
       }
 
-      console.log("Previewing template:", data);
       this.updateTemplatePreview(data);
     } catch (error) {
       console.error("Failed to preview template:", error);
@@ -928,12 +920,10 @@ export class TemplateManager {
         throw error;
       }
 
-      console.log("Loaded template:", data);
 
       // Get current course ID and associate template with it
       const courseId = sessionStorage.getItem("currentCourseId");
       if (courseId && data.course_id !== courseId) {
-        console.log("Associating template with current course:", courseId);
 
         // Update the template to be associated with current course
         const { error: updateError } = await supabase
@@ -947,7 +937,6 @@ export class TemplateManager {
             updateError,
           );
         } else {
-          console.log("Template successfully associated with course");
         }
       }
 
@@ -971,10 +960,8 @@ export class TemplateManager {
   static async loadCourseTemplate(): Promise<void> {
     try {
       const courseId = sessionStorage.getItem("currentCourseId");
-      console.log("Attempting to load template for course ID:", courseId);
 
       if (!courseId) {
-        console.log("No current course ID found in sessionStorage");
         // Try to get the most recent course if no courseId is set
         const { data: recentCourse, error: courseError } = await supabase
           .from("courses")
@@ -984,17 +971,14 @@ export class TemplateManager {
           .single();
 
         if (!courseError && recentCourse) {
-          console.log("Using most recent course:", recentCourse.id);
           sessionStorage.setItem("currentCourseId", recentCourse.id);
           return this.loadCourseTemplate(); // Recursive call with course ID now set
         } else {
-          console.log("No courses found, showing template selection");
           this.loadExistingTemplates();
           return;
         }
       }
 
-      console.log("Loading template for course:", courseId);
 
       // Query database for template associated with this course
       const { data: template, error } = await supabase
@@ -1026,7 +1010,6 @@ export class TemplateManager {
         // Update the preview area with template content
         this.updateTemplatePreview(template.template_data);
       } else {
-        console.log("No template found for course, showing template selection");
         this.loadExistingTemplates();
       }
     } catch (error) {
@@ -1219,7 +1202,6 @@ export class TemplateManager {
    * Initializes an empty template configuration
    */
   static initializeEmptyTemplate(): void {
-    console.log("Initializing empty template interface");
 
     // Clear any existing configuration forms
     const forms = document.querySelectorAll(".template-config form");
@@ -1288,7 +1270,6 @@ export class TemplateManager {
    */
   static populateTemplateConfig(templateData: any): void {
     // Implementation will be added in template configuration handler
-    console.log("Populating template config:", templateData);
   }
 
   /**
@@ -1659,7 +1640,6 @@ export class TemplateManager {
         required: formData.get("block-required") === "on",
       };
 
-      console.log(`Saving ${blockType} block configuration:`, config);
 
       // Here you would save the configuration to the template
       // For now, just show success and close modal
@@ -1742,7 +1722,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Also check if templates section is already active on page load
     if (templatesSection.classList.contains("article--active")) {
-      console.log("Templates section already active on page load");
 
       // Check if there's a template for the current course
       TemplateManager.loadCourseTemplate();
@@ -1788,11 +1767,9 @@ document.addEventListener("DOMContentLoaded", () => {
           (formData.get("template-description") as string) || undefined,
       };
 
-      console.log("Creating template with data:", templateFormData);
 
       const templateId = await TemplateManager.createTemplate(templateFormData);
       if (templateId) {
-        console.log("Template created with ID:", templateId);
         TemplateManager.hideCreateTemplateModal();
         TemplateManager.showTemplateBuilder(templateId);
         // Reload the template list to show the new template

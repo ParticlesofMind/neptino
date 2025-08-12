@@ -43,15 +43,12 @@ export async function signUp(
 // Sign in existing user
 export async function signIn(email: string, password: string) {
   try {
-    console.log("Attempting to sign in user:", email);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    console.log("📋 SignIn response - data:", data);
-    console.log("📋 SignIn response - error:", error);
 
     if (error) {
       console.error("Sign in error:", error);
@@ -59,7 +56,6 @@ export async function signIn(email: string, password: string) {
     }
 
     if (data.user) {
-      console.log("User signed in successfully:", data.user.id);
       currentUser = data.user;
 
       // Don't redirect immediately - let the auth state listener handle it
@@ -97,30 +93,24 @@ export function getCurrentUser() {
 
 // Redirect based on user role
 export function redirectUser(userRole: string) {
-  console.log("🔄 Redirecting user with role:", userRole);
   const origin = window.location.origin;
-  console.log("🌐 Origin:", origin);
 
   switch (userRole) {
     case "administrator":
       const adminUrl = `${origin}/src/pages/admin/home.html`;
-      console.log("🔗 Redirecting to admin:", adminUrl);
       window.location.href = adminUrl;
       break;
     case "teacher":
       const teacherUrl = `${origin}/src/pages/teacher/home.html`;
-      console.log("🔗 Redirecting to teacher:", teacherUrl);
       window.location.href = teacherUrl;
       break;
     case "student":
       const studentUrl = `${origin}/src/pages/student/home.html`;
-      console.log("🔗 Redirecting to student:", studentUrl);
       window.location.href = studentUrl;
       break;
     default:
       console.warn("❌ Unknown role, defaulting to student:", userRole);
       const defaultUrl = `${origin}/src/pages/student/home.html`;
-      console.log("🔗 Redirecting to default (student):", defaultUrl);
       window.location.href = defaultUrl;
   }
 }
@@ -128,7 +118,6 @@ export function redirectUser(userRole: string) {
 // Helper function to create user profile
 async function createUserProfile(user: any) {
   try {
-    console.log("🔧 Creating user profile for:", user.id);
 
     const userMetadata = user.user_metadata || {};
     const fullName =
@@ -148,7 +137,6 @@ async function createUserProfile(user: any) {
     });
 
     if (!insertError) {
-      console.log("✅ Profile created successfully, redirecting to:", userRole);
       redirectUser(userRole);
     } else {
       console.error("❌ Failed to create profile:", insertError);
@@ -164,14 +152,12 @@ async function createUserProfile(user: any) {
 // Initialize auth state listener
 export function initAuth() {
   supabase.auth.onAuthStateChange(async (event, session) => {
-    console.log("🔐 Auth state change:", event, session?.user?.id);
 
     if (event === "SIGNED_IN" && session?.user) {
       currentUser = session.user;
 
       // Check current page context - ONLY redirect from actual signin/signup pages
       const currentPath = window.location.pathname;
-      console.log("Current path:", currentPath);
 
       // ONLY redirect from signin and signup pages - nowhere else!
       const shouldRedirect =
@@ -179,7 +165,6 @@ export function initAuth() {
         currentPath.includes("/pages/shared/signup.html");
 
       if (!shouldRedirect) {
-        console.log("✅ Not on signin/signup page, skipping auto-redirect");
         return;
       }
 
@@ -191,17 +176,13 @@ export function initAuth() {
       const userMetadata = session.user.user_metadata || {};
       const userRole = userMetadata.user_role || "student";
 
-      console.log("📋 User metadata:", userMetadata);
-      console.log("� User role from metadata:", userRole);
 
       // Add a small delay to ensure everything is ready
       setTimeout(() => {
-        console.log("✅ Redirecting based on metadata role:", userRole);
         redirectUser(userRole);
       }, 500);
     } else if (event === "SIGNED_OUT") {
       currentUser = null;
-      console.log("🚪 User signed out");
 
       // Only redirect to signin if we're on a protected page
       const currentPath = window.location.pathname;
@@ -216,7 +197,6 @@ export function initAuth() {
         );
         window.location.href = "/src/pages/shared/signin.html";
       } else {
-        console.log("📍 Not on protected page, staying put");
       }
     }
   });
@@ -225,7 +205,6 @@ export function initAuth() {
   supabase.auth.getSession().then(({ data: { session } }) => {
     if (session?.user) {
       currentUser = session.user;
-      console.log("🔍 Found existing session for user:", session.user.id);
     }
   });
 }

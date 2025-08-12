@@ -326,17 +326,14 @@ export class ShapesTool extends BaseTool {
       | "polygon",
   ): void {
     this.settings.shapeType = shapeType;
-    console.log(`🔶 SHAPES: Professional shape type set to ${shapeType}`);
   }
 
   setCornerRadius(radius: number): void {
     this.settings.cornerRadius = Math.max(0, radius);
-    console.log(`🔶 SHAPES: Corner radius set to ${radius}px`);
   }
 
   setPolygonSides(sides: number): void {
     this.settings.sides = Math.max(3, sides);
-    console.log(`🔶 SHAPES: Polygon sides set to ${sides}`);
   }
 
   toggleFill(): void {
@@ -347,10 +344,7 @@ export class ShapesTool extends BaseTool {
   }
 
   updateSettings(settings: ShapesSettings): void {
-    console.log(`🔶 SHAPES: Updating settings from:`, this.settings);
-    console.log(`🔶 SHAPES: Updating settings to:`, settings);
     this.settings = { ...this.settings, ...settings };
-    console.log(`🔶 SHAPES: Final shape settings:`, this.settings);
   }
 
   // Get available colors for UI

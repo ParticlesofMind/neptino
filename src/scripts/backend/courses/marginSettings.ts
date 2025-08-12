@@ -62,7 +62,6 @@ export class MarginSettingsHandler {
     const input = event.target as HTMLInputElement;
     const newUnit = input.value as "inches" | "centimeters";
 
-    console.log(`📏 Unit changed to: ${newUnit}`);
 
     // Convert current values to new unit
     if (newUnit !== this.currentSettings.unit) {
@@ -200,7 +199,6 @@ export class MarginSettingsHandler {
         throw error;
       }
 
-      console.log("📏 Margin settings saved successfully");
       this.showSaveStatus("saved");
     } catch (error) {
       console.error("📏 Failed to save margin settings:", error);
@@ -247,7 +245,6 @@ export class MarginSettingsHandler {
     this.courseId = courseId;
 
     try {
-      console.log(`📏 Loading margin settings for course: ${courseId}`);
 
       const { data: course, error } = await supabase
         .from("courses")
@@ -272,7 +269,6 @@ export class MarginSettingsHandler {
           this.currentSettings,
         );
       } else {
-        console.log("📏 No margin settings found in database, using defaults");
       }
 
       // Update UI and canvas
@@ -315,7 +311,6 @@ export class MarginSettingsHandler {
             : (this.currentSettings.right / 2.54) * dpi,
       };
 
-      console.log("📏 Updating canvas margins:", marginsInPixels);
       this.courseBuilder.updateCanvasMargins(marginsInPixels);
     } else {
       console.log(
@@ -326,13 +321,11 @@ export class MarginSettingsHandler {
 
   public setCourseBuilder(courseBuilder: any): void {
     this.courseBuilder = courseBuilder;
-    console.log("📏 Course builder reference set");
     // Apply current margins immediately
     this.updateCanvasMargins();
   }
 
   public setCourseId(courseId: string): void {
-    console.log(`📏 Setting course ID to: ${courseId}`);
     this.loadSettingsFromDatabase(courseId);
   }
 

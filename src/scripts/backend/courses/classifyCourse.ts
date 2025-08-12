@@ -257,7 +257,6 @@ export async function savePartialCourseClassification(
       };
     }
 
-    console.log("Partial course classification saved successfully");
     return { success: true };
   } catch (error) {
     console.error("Error in savePartialCourseClassification:", error);
@@ -338,7 +337,6 @@ export async function updateCourseClassification(
       updated_at: new Date().toISOString(),
     };
 
-    console.log("Updating course classification data:", classificationData);
 
     // Update course with classification data in the JSONB column
     const { error: updateError } = await supabase
@@ -357,7 +355,6 @@ export async function updateCourseClassification(
       };
     }
 
-    console.log("Course classification updated successfully");
     return { success: true };
   } catch (error) {
     console.error("Error in updateCourseClassification:", error);
@@ -522,7 +519,6 @@ export async function initializeClassificationData(): Promise<void> {
       loadIscedData(),
     ]);
 
-    console.log("Classification data initialized successfully");
   } catch (error) {
     console.error("Error initializing classification data:", error);
   }

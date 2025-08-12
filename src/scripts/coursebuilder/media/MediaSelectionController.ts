@@ -52,7 +52,6 @@ export class MediaSelectionController {
       this.onMediaSelectionCallback(mediaType);
     }
 
-    console.log(`📱 Media type selected: ${mediaType}`);
   }
 
   /**
@@ -117,6 +116,5 @@ export class MediaSelectionController {
     this.onMediaSelectionCallback = null;
     this.selectedMediaType = null;
 
-    console.log("🗑️ Media selection controller destroyed");
   }
 }

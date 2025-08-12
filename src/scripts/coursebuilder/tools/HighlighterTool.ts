@@ -139,10 +139,7 @@ export class HighlighterTool extends BaseTool {
   }
 
   updateSettings(settings: HighlighterSettings): void {
-    console.log(`🖍️ HIGHLIGHTER: Updating settings from:`, this.settings);
-    console.log(`🖍️ HIGHLIGHTER: Updating settings to:`, settings);
     this.settings = { ...this.settings, ...settings };
-    console.log(`🖍️ HIGHLIGHTER: Final marker settings:`, this.settings);
   }
 
   // Get available highlighter colors for UI

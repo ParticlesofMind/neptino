@@ -25,7 +25,6 @@ export class AddObjectCommand implements Command {
    */
   public execute(): void {
     this.parentContainer.addChild(this.objectToAdd);
-    console.log("AddObjectCommand: executed");
   }
 
   /**
@@ -33,6 +32,5 @@ export class AddObjectCommand implements Command {
    */
   public undo(): void {
     this.parentContainer.removeChild(this.objectToAdd);
-    console.log("AddObjectCommand: undone");
   }
 }

@@ -55,7 +55,6 @@ export class CurriculumManager {
 
       // Auto-generate curriculum if we have schedule data but no curriculum
       if (!this.currentCurriculum.length && this.contentLoadConfig) {
-        console.log("Auto-generating curriculum based on schedule data");
         await this.generateCurriculum();
       }
 
@@ -89,7 +88,6 @@ export class CurriculumManager {
       return;
     }
 
-    console.log("All curriculum elements found successfully");
   }
 
   private bindEvents(): void {
@@ -108,7 +106,6 @@ export class CurriculumManager {
       });
     });
 
-    console.log("Curriculum events bound successfully");
   }
 
   private async loadScheduleData(): Promise<void> {
@@ -235,7 +232,6 @@ export class CurriculumManager {
       return;
     }
 
-    console.log("Generating curriculum with config:", this.contentLoadConfig);
 
     try {
       // Get the number of lessons from schedule
@@ -252,7 +248,6 @@ export class CurriculumManager {
       this.currentCurriculum = curriculum;
       this.renderCurriculumPreview();
 
-      console.log("Curriculum generated successfully");
     } catch (error) {
       console.error("Error generating curriculum:", error);
       alert("Failed to generate curriculum. Please try again.");

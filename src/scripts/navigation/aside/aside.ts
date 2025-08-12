@@ -13,8 +13,6 @@ export class AsideNavigation {
     this.contentSections = document.querySelectorAll(".article");
     this.boundHandleLinkClick = this.handleLinkClick.bind(this);
 
-    console.log("Aside links found:", this.asideLinks.length);
-    console.log("Content sections found:", this.contentSections.length);
 
     this.init();
   }
@@ -34,7 +32,6 @@ export class AsideNavigation {
     this.restoreActiveSection();
 
     this.bindEvents();
-    console.log("Aside navigation initialized");
   }
 
   /**
@@ -44,7 +41,6 @@ export class AsideNavigation {
     const savedSection = localStorage.getItem(this.STORAGE_KEY);
 
     if (savedSection) {
-      console.log("Restoring saved section:", savedSection);
 
       // Find the link and section elements
       const savedLink = document.querySelector(
@@ -59,12 +55,10 @@ export class AsideNavigation {
         // Set the saved section as active
         this.setActiveStates(savedLink, savedSection);
 
-        console.log("Successfully restored section:", savedSection);
       } else {
         console.warn("Saved section not found in DOM:", savedSection);
       }
     } else {
-      console.log("No saved section found, using default");
     }
   }
 
@@ -73,12 +67,10 @@ export class AsideNavigation {
    */
   private saveActiveSection(sectionId: string): void {
     localStorage.setItem(this.STORAGE_KEY, sectionId);
-    console.log("Saved active section to localStorage:", sectionId);
   }
 
   private bindEvents(): void {
     this.asideLinks.forEach((link: HTMLAnchorElement, index: number) => {
-      console.log(`Binding event to link ${index}:`, link.textContent);
       link.addEventListener("click", this.boundHandleLinkClick);
     });
   }
@@ -105,13 +97,11 @@ export class AsideNavigation {
       setupSection?.classList.contains("section--active");
 
     if (!isInSetupSection) {
-      console.log("🚫 Aside navigation: Not in setup section, ignoring click");
       return; // Don't handle clicks when not in setup section
     }
 
     // If the href is a full page URL (not a hash), allow normal navigation
     if (href && href.startsWith("/") && !href.startsWith("#")) {
-      console.log("Full page navigation detected, allowing default behavior");
       return; // Don't prevent default, let the browser navigate
     }
 
@@ -156,7 +146,6 @@ export class AsideNavigation {
       section.classList.remove("article--active");
     });
 
-    console.log("Removed all active states");
   }
 
   private setActiveStates(
@@ -168,7 +157,6 @@ export class AsideNavigation {
     const targetSection = document.getElementById(targetSectionId);
     if (targetSection) {
       targetSection.classList.add("article--active");
-      console.log("Activated section:", targetSectionId);
     } else {
       console.error("Target section not found:", targetSectionId);
     }
@@ -183,6 +171,5 @@ export class AsideNavigation {
       link.removeEventListener("click", this.boundHandleLinkClick);
     });
 
-    console.log("AsideNavigation destroyed");
   }
 }

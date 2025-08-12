@@ -68,7 +68,6 @@ export class ToolStateManager {
   setTool(toolName: string): void {
     this.currentTool = toolName;
     this.updateToolUI(toolName);
-    console.log(`🔧 Tool changed to: ${toolName}`);
   }
 
   /**
@@ -90,7 +89,6 @@ export class ToolStateManager {
         this.toolSettings[toolName as keyof ToolSettings],
         settings,
       );
-      console.log(`🔧 Updated ${toolName} settings:`, settings);
     }
   }
 

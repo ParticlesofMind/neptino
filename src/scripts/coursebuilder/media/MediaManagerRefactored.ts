@@ -59,7 +59,6 @@ export class MediaManagerRefactored {
    * Add media to canvas
    */
   private addMediaToCanvas(mediaUrl: string): void {
-    console.log(`➕ Adding media to canvas: ${mediaUrl}`);
 
     // Dispatch event for canvas integration
     const event = new CustomEvent("addMediaToCanvas", {
@@ -90,7 +89,6 @@ export class MediaManagerRefactored {
     this.selectionController.clearSelection();
     this.searchController.clearSearch();
     this.panelManager.closePanel();
-    console.log("🧹 Media manager cleared");
   }
 
   /**
@@ -101,6 +99,5 @@ export class MediaManagerRefactored {
     this.searchController.destroy();
     this.panelManager.destroy();
     this.onMediaSelectionCallback = null;
-    console.log("🗑️ Media manager destroyed");
   }
 }

@@ -64,7 +64,6 @@ export class EraserTool extends BaseTool {
   onPointerUp(): void {
     this.isErasing = false;
     this.hideErasePreview();
-    console.log(`🗑️ ERASER: Finished precision erasing`);
   }
 
   onActivate(): void {
@@ -80,7 +79,6 @@ export class EraserTool extends BaseTool {
     this.isErasing = false;
     this.removeEraserCursor();
     this.hideErasePreview();
-    console.log(`🗑️ ERASER: Deactivated and cleaned up`);
   }
 
   private eraseAtPoint(
@@ -192,13 +190,11 @@ export class EraserTool extends BaseTool {
         child.name.includes("background-") ||
         child.name.includes("system-"))
     ) {
-      console.log(`� ERASER: Skipping protected object: ${child.name}`);
       return true;
     }
 
     // Skip objects with special tags
     if (child.tag && child.tag.includes("protected")) {
-      console.log(`🔒 ERASER: Skipping tagged protected object`);
       return true;
     }
 
@@ -297,7 +293,6 @@ export class EraserTool extends BaseTool {
 
   setMode(mode: "brush" | "object"): void {
     this.settings.mode = mode;
-    console.log(`🗑️ ERASER: Mode set to ${mode}`);
 
     // Update cursor tooltip
     const cursorElement = document.getElementById("precision-eraser-cursor");
@@ -307,10 +302,7 @@ export class EraserTool extends BaseTool {
   }
 
   updateSettings(settings: EraserSettings): void {
-    console.log(`🗑️ ERASER: Updating settings from:`, this.settings);
-    console.log(`🗑️ ERASER: Updating settings to:`, settings);
     this.settings = { ...this.settings, ...settings };
-    console.log(`🗑️ ERASER: Final eraser settings:`, this.settings);
 
     // Update cursor size if it exists
     const cursorElement = document.getElementById("precision-eraser-cursor");

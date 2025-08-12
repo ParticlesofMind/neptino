@@ -46,7 +46,6 @@ export class MediaPanelManager {
     // Show placeholder
     this.showSearchPlaceholder();
 
-    console.log(`📱 Media search panel updated for: ${mediaType}`);
   }
 
   /**
@@ -71,7 +70,6 @@ export class MediaPanelManager {
       }
     });
 
-    console.log(`📱 Displayed ${results.length} search results`);
   }
 
   /**
@@ -107,7 +105,6 @@ export class MediaPanelManager {
 
     if (!mediaUrl) return;
 
-    console.log(`📱 Media item selected: ${mediaUrl}`);
 
     // Trigger callback
     if (this.onMediaSelectionCallback) {
@@ -157,7 +154,6 @@ export class MediaPanelManager {
       this.resultsContainer.innerHTML = "";
     }
 
-    console.log("📱 Media search panel closed");
   }
 
   /**
@@ -185,6 +181,5 @@ export class MediaPanelManager {
     this.closePanel();
     this.onMediaSelectionCallback = null;
 
-    console.log("🗑️ Media panel manager destroyed");
   }
 }

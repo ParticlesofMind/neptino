@@ -53,7 +53,6 @@ export class CanvasManager {
       antialias: true,
     });
 
-    console.log("📱 PIXI application initialized");
   }
 
   /**
@@ -93,7 +92,6 @@ export class CanvasManager {
     if (this.layoutRenderer) {
       // Note: LayoutRenderer doesn't have renderTemplate method
       // Template data should be processed before calling renderLayoutStructure
-      console.log("📋 Template loaded:", template.name);
       this.renderLayout();
     }
   }
@@ -120,7 +118,6 @@ export class CanvasManager {
     this.isLayoutVisible = !this.isLayoutVisible;
     this.renderLayout();
 
-    console.log(`👁️ Layout visibility: ${this.isLayoutVisible ? "ON" : "OFF"}`);
   }
 
   /**
@@ -145,7 +142,6 @@ export class CanvasManager {
       this.layoutRenderer.clear();
     }
 
-    console.log("🧹 Canvas and layout cleared");
   }
 
   /**
@@ -158,7 +154,6 @@ export class CanvasManager {
     }
 
     // Logic for adding new page
-    console.log("📄 Adding new page");
 
     // Trigger re-render with new page
     this.renderLayout();

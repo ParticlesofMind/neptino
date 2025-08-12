@@ -16,7 +16,6 @@ export class CommandManager {
     this.undoStack.push(command);
     // When a new command is executed, the redo stack must be cleared.
     this.redoStack = [];
-    console.log(`Command executed, undo stack size: ${this.undoStack.length}`);
   }
 
   /**
@@ -31,7 +30,6 @@ export class CommandManager {
         `Command undone, undo stack size: ${this.undoStack.length}, redo stack size: ${this.redoStack.length}`,
       );
     } else {
-      console.log("Nothing to undo.");
     }
   }
 
@@ -47,7 +45,6 @@ export class CommandManager {
         `Command redone, undo stack size: ${this.undoStack.length}, redo stack size: ${this.redoStack.length}`,
       );
     } else {
-      console.log("Nothing to redo.");
     }
   }
 

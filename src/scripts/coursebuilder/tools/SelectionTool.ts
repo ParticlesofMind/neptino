@@ -66,7 +66,6 @@ export class SelectionTool extends BaseTool {
     // Check if clicking on a selected object (for dragging)
     const clickedObject = this.getObjectAtPoint(localPoint, container);
     if (clickedObject && this.selectedObjects.includes(clickedObject)) {
-      console.log(`🎯 SELECTION: Starting drag of selected object`);
       this.isTransforming = true;
       this.transformStart.copyFrom(localPoint);
       return;
@@ -96,7 +95,6 @@ export class SelectionTool extends BaseTool {
     const localPoint = container.toLocal(event.global);
 
     if (this.isTransforming) {
-      console.log(`🎯 SELECTION: Finished transformation`);
       this.isTransforming = false;
       this.activeHandle = null;
     } else if (this.isSelecting) {
@@ -119,7 +117,6 @@ export class SelectionTool extends BaseTool {
     this.marqueeGraphics.alpha = SELECTION_CONSTANTS.MARQUEE_FILL_ALPHA;
     container.addChild(this.marqueeGraphics);
 
-    console.log(`🎯 SELECTION: Started marquee selection`);
   }
 
   private updateMarqueeSelection(currentPoint: Point): void {
@@ -197,7 +194,6 @@ export class SelectionTool extends BaseTool {
     } else if (!shiftKey) {
       // Clear selection if not holding shift
       this.clearSelection();
-      console.log(`🎯 SELECTION: Cleared selection`);
     }
   }
 
@@ -205,7 +201,6 @@ export class SelectionTool extends BaseTool {
     this.clearSelection();
     this.selectedObjects = [...objects];
     this.createSelectionGroup();
-    console.log(`🎯 SELECTION: Selected ${objects.length} objects`);
   }
 
   private toggleObjectSelection(object: any): void {
@@ -579,7 +574,6 @@ export class SelectionTool extends BaseTool {
 
     this.isSelecting = false;
     this.isTransforming = false;
-    console.log(`🎯 SELECTION: Tool deactivated and cleaned up`);
   }
 
   updateSettings(settings: SelectionSettings): void {

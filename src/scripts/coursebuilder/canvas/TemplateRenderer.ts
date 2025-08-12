@@ -16,7 +16,6 @@ export class TemplateRenderer {
     courseId: string,
   ): Promise<RenderedBlock[]> {
     try {
-      console.log("📄 Fetching template configuration for course:", courseId);
 
       const { data: template, error } = await supabase
         .from("templates")
@@ -37,7 +36,6 @@ export class TemplateRenderer {
         return renderedBlocks;
       }
 
-      console.log("📄 Template data loaded:", template.template_data);
 
       const configuredBlocks = renderedBlocks.map((renderedBlock) => {
         // Find matching template block
@@ -80,7 +78,6 @@ export class TemplateRenderer {
         };
       });
 
-      console.log("📄 Layout blocks configured with template fields");
       return configuredBlocks;
     } catch (error) {
       console.error("📄 Failed to fetch template configuration:", error);

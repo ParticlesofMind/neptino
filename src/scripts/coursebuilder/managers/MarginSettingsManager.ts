@@ -36,7 +36,6 @@ export class MarginSettingsManager {
    * Set course ID for database persistence
    */
   setCourseId(courseId: string): void {
-    console.log(`📏 MarginSettingsManager: Setting course ID to ${courseId}`);
     marginSettingsHandler.setCourseId(courseId);
   }
 
@@ -88,7 +87,6 @@ export class MarginSettingsManager {
     // Update input value to reflect clamped value
     input.value = this.marginValues[marginKey].toString();
 
-    console.log(`📐 Margin ${marginKey}: ${this.marginValues[marginKey]}px`);
 
     // Trigger callback
     if (this.onMarginChangeCallback) {
@@ -118,7 +116,6 @@ export class MarginSettingsManager {
       }
     });
 
-    console.log("📐 Margins updated:", this.marginValues);
 
     // Trigger callback
     if (this.onMarginChangeCallback) {
@@ -139,7 +136,6 @@ export class MarginSettingsManager {
           this.marginValues[marginKey].toString();
       }
 
-      console.log(`📐 Margin ${marginKey}: ${this.marginValues[marginKey]}px`);
 
       // Trigger callback
       if (this.onMarginChangeCallback) {

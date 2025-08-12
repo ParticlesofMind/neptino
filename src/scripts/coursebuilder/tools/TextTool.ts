@@ -121,7 +121,6 @@ export class TextTool extends BaseTool {
     this.activeTextArea.focus();
     this.activeTextArea.select(); // Select all text for immediate editing
 
-    console.log(`📝 TEXT: Professional text area created and focused`);
 
     // Handle text completion with improved events
     this.activeTextArea.addEventListener("blur", () => {
@@ -171,7 +170,6 @@ export class TextTool extends BaseTool {
 
     const textContent = this.activeTextArea.value.trim();
 
-    console.log(`📝 TEXT: Finalizing text: "${textContent}"`);
 
     if (textContent) {
       // Create professional PixiJS text object
@@ -206,21 +204,16 @@ export class TextTool extends BaseTool {
     if (this.activeTextArea && this.activeTextArea.parentNode) {
       this.activeTextArea.parentNode.removeChild(this.activeTextArea);
       this.activeTextArea = null;
-      console.log(`📝 TEXT: Text area removed`);
     }
   }
 
   onDeactivate(): void {
     super.onDeactivate();
     this.removeTextArea();
-    console.log(`📝 TEXT: Tool deactivated, cleaned up text area`);
   }
 
   updateSettings(settings: TextSettings): void {
-    console.log(`📝 TEXT: Updating settings from:`, this.settings);
-    console.log(`📝 TEXT: Updating settings to:`, settings);
     this.settings = { ...this.settings, ...settings };
-    console.log(`📝 TEXT: Final text settings:`, this.settings);
 
     // Update active text area if it exists
     if (this.activeTextArea) {

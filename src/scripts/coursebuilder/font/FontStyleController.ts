@@ -62,7 +62,6 @@ export class FontStyleController {
       boldBtn.classList.toggle("active");
       const isActive = boldBtn.classList.contains("active");
 
-      console.log("💪 Bold toggled:", isActive ? "ON" : "OFF");
 
       // Trigger callback
       if (this.onStyleChangeCallback) {
@@ -86,7 +85,6 @@ export class FontStyleController {
       italicBtn.classList.toggle("active");
       const isActive = italicBtn.classList.contains("active");
 
-      console.log("📐 Italic toggled:", isActive ? "ON" : "OFF");
 
       // Trigger callback
       if (this.onStyleChangeCallback) {
@@ -110,7 +108,6 @@ export class FontStyleController {
       underlineBtn.classList.toggle("active");
       const isActive = underlineBtn.classList.contains("active");
 
-      console.log("📝 Underline toggled:", isActive ? "ON" : "OFF");
 
       // Trigger callback
       if (this.onStyleChangeCallback) {

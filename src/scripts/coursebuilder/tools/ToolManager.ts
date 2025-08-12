@@ -72,7 +72,6 @@ export class ToolManager {
 
     // Deactivate current tool
     if (this.activeTool) {
-      console.log(`🔄 Deactivating tool: ${this.activeTool.name}`);
       this.activeTool.onDeactivate();
     }
 
@@ -83,12 +82,10 @@ export class ToolManager {
     // Update tool settings
     this.updateToolSettings(toolName);
 
-    console.log(`✅ Switched to ${toolName} tool`);
     console.log(
       `🔧 Tool settings:`,
       this.settings[toolName as keyof ToolSettings],
     );
-    console.log(`🔧 Applied settings to tool (${this.activeTool.name})`);
     return true;
   }
 
@@ -176,7 +173,6 @@ export class ToolManager {
     if (!this.activeTool) return;
 
     const toolName = this.activeTool.name;
-    console.log(`🎨 Updating color for ${toolName} tool to: ${color}`);
 
     switch (toolName) {
       case "pen":

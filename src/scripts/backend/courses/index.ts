@@ -31,7 +31,6 @@ export class CourseBuilder {
   private initialize(): void {
     this.initializeCurrentSection();
     this.setupSectionNavigation();
-    console.log("Course Builder initialized with generic form handler");
   }
 
   private initializeCurrentSection(): void {

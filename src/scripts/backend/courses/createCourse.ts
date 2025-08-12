@@ -112,7 +112,6 @@ export async function createCourse(
     }
 
     const user = session.user;
-    console.log("Creating course for user:", user.id);
 
     // Ensure user profile exists in users table
     await ensureUserProfile(user);
@@ -133,7 +132,6 @@ export async function createCourse(
       updated_at: new Date().toISOString(),
     };
 
-    console.log("Inserting course data:", courseInsertData);
 
     const { data: courseData, error: courseError } = await supabase
       .from("courses")
@@ -150,14 +148,11 @@ export async function createCourse(
     }
 
     const courseId = courseData.id;
-    console.log("Course created successfully with ID:", courseId);
 
     // Upload image if provided
     if (data.course_image) {
-      console.log("Uploading course image...");
       const imageUrl = await uploadCourseImage(data.course_image, courseId);
       if (imageUrl) {
-        console.log("Updating course with image URL:", imageUrl);
         // Update course with image URL using course_image field
         const { error: updateError } = await supabase
           .from("courses")
@@ -229,7 +224,6 @@ async function ensureUserProfileFallback(user: any): Promise<void> {
     if (error) {
       console.error("Failed to create user profile:", error);
     } else {
-      console.log("User profile ensured via fallback method");
     }
   } catch (error) {
     console.error("Error in ensureUserProfileFallback:", error);

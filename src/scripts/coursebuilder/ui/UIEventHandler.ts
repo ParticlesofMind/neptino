@@ -250,7 +250,6 @@ export class UIEventHandler {
     });
     this.toolStateManager.updateCanvasCursor();
 
-    console.log(`🔷 Shape selected: ${shapeType}`);
 
     // Trigger tool change callback
     if (this.onToolChangeCallback) {

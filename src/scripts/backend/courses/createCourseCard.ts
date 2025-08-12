@@ -31,14 +31,12 @@ export class CoursesManager {
   }
 
   private async initialize(): Promise<void> {
-    console.log("Initializing courses manager...");
     await this.loadCourses();
   }
 
   private async loadCourses(): Promise<void> {
     try {
       const courses = await getUserCourses();
-      console.log("Loaded courses:", courses);
 
       if (courses && courses.length > 0) {
         this.displayCourses(courses);
@@ -126,14 +124,12 @@ export class CoursesManager {
   }
 
   private navigateToCourseSection(courseId: string, section: string): void {
-    console.log(`Navigating to course ${courseId}, section: ${section}`);
 
     // Store the course ID in session storage for the course builder
     sessionStorage.setItem("currentCourseId", courseId);
 
     // Navigate to the course builder with the specific section
     const url = `/src/pages/teacher/coursebuilder.html#${section}`;
-    console.log(`Navigating to: ${url}`);
     window.location.href = url;
   }
 

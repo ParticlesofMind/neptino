@@ -24,12 +24,10 @@ export class PixiSceneInspector {
    */
   public startInspection(intervalMs: number = 2000): void {
     if (this.isInspecting) {
-      console.log("🔍 Scene inspection already running");
       return;
     }
 
     this.isInspecting = true;
-    console.log("🔍 Starting PixiJS Scene Inspector...");
 
     // Initial inspection
     this.inspectScene();
@@ -49,7 +47,6 @@ export class PixiSceneInspector {
       this.intervalId = null;
     }
     this.isInspecting = false;
-    console.log("🔍 Scene inspection stopped");
   }
 
   /**
@@ -175,7 +172,6 @@ export class PixiSceneInspector {
     console.group(`🎭 Scene Inspection Report (${stats.timestamp})`);
 
     // Summary
-    console.log(`📊 Total Objects: ${total}`);
     console.log("📈 Breakdown:", {
       Containers: stats.totals.containers,
       Graphics: stats.totals.graphics,
@@ -221,7 +217,6 @@ export class PixiSceneInspector {
   ): void {
     const connector = isLast ? "└── " : "├── ";
     const display = `${node.name} (${node.type})`;
-    console.log(prefix + connector + display);
 
     if (node.children && node.children.length > 0) {
       const newPrefix = prefix + (isLast ? "    " : "│   ");
@@ -299,16 +294,12 @@ window.addEventListener("pixi-app-ready", (event: any) => {
   const app = event.detail;
   (window as any).pixiInspector.setApp(app);
 
-  console.log("🔍 PixiJS Scene Inspector ready! Use these commands:");
-  console.log("  window.pixiInspector.inspectScene() - One-time inspection");
   console.log(
     "  window.pixiInspector.startInspection() - Start continuous monitoring",
   );
-  console.log("  window.pixiInspector.stopInspection() - Stop monitoring");
   console.log(
     '  window.pixiInspector.findObjects("grid") - Find objects by name',
   );
-  console.log("  window.pixiInspector.countByType() - Count objects by type");
 });
 
 export default PixiSceneInspector;

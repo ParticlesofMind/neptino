@@ -35,7 +35,6 @@ export class CanvasEventHandler {
     // Add pointer events
     this.setupPointerEvents();
 
-    console.log("🎯 Canvas events setup complete");
   }
 
   /**
@@ -57,7 +56,6 @@ export class CanvasEventHandler {
       this.handlePointerUp(event);
     });
 
-    console.log("🖱️ Pointer events attached");
   }
 
   /**
@@ -136,7 +134,6 @@ export class CanvasEventHandler {
         canvas.classList.add("cursor-selection");
     }
 
-    console.log(`🖱️ Canvas cursor updated for tool: ${toolName}`);
   }
 
   /**
@@ -144,7 +141,6 @@ export class CanvasEventHandler {
    */
   public setEventsEnabled(enabled: boolean): void {
     this.app.stage.eventMode = enabled ? "static" : "none";
-    console.log(`🎯 Canvas events ${enabled ? "enabled" : "disabled"}`);
   }
 
   /**
@@ -170,6 +166,5 @@ export class CanvasEventHandler {
     // Disable events
     this.app.stage.eventMode = "none";
 
-    console.log("🗑️ Canvas event handler destroyed");
   }
 }
