@@ -4,9 +4,9 @@
  * Single Responsibility: High-level media coordination only
  */
 
-import { MediaSelectionController } from './MediaSelectionController';
-import { MediaSearchController } from './MediaSearchController';
-import { MediaPanelManager } from './MediaPanelManager';
+import { MediaSelectionController } from "./MediaSelectionController";
+import { MediaSearchController } from "./MediaSearchController";
+import { MediaPanelManager } from "./MediaPanelManager";
 
 export class MediaManagerRefactored {
   private selectionController: MediaSelectionController;
@@ -18,7 +18,7 @@ export class MediaManagerRefactored {
     this.selectionController = new MediaSelectionController();
     this.searchController = new MediaSearchController();
     this.panelManager = new MediaPanelManager();
-    
+
     this.setupComponentCallbacks();
   }
 
@@ -30,7 +30,7 @@ export class MediaManagerRefactored {
     this.selectionController.setOnMediaSelection((mediaType: string) => {
       this.searchController.setMediaType(mediaType);
       this.panelManager.updateSearchPanel(mediaType);
-      
+
       // Trigger external callback
       if (this.onMediaSelectionCallback) {
         this.onMediaSelectionCallback(mediaType);
@@ -60,13 +60,13 @@ export class MediaManagerRefactored {
    */
   private addMediaToCanvas(mediaUrl: string): void {
     console.log(`➕ Adding media to canvas: ${mediaUrl}`);
-    
+
     // Dispatch event for canvas integration
-    const event = new CustomEvent('addMediaToCanvas', {
+    const event = new CustomEvent("addMediaToCanvas", {
       detail: {
         url: mediaUrl,
-        type: this.selectionController.getSelectedMediaType()
-      }
+        type: this.selectionController.getSelectedMediaType(),
+      },
     });
     document.dispatchEvent(event);
   }
@@ -79,7 +79,7 @@ export class MediaManagerRefactored {
       selectedMediaType: this.selectionController.getSelectedMediaType(),
       searchState: this.searchController.getSearchState(),
       panelOpen: this.panelManager.isPanelOpen(),
-      availableMediaTypes: this.selectionController.getAvailableMediaTypes()
+      availableMediaTypes: this.selectionController.getAvailableMediaTypes(),
     };
   }
 
@@ -90,7 +90,7 @@ export class MediaManagerRefactored {
     this.selectionController.clearSelection();
     this.searchController.clearSearch();
     this.panelManager.closePanel();
-    console.log('🧹 Media manager cleared');
+    console.log("🧹 Media manager cleared");
   }
 
   /**
@@ -101,6 +101,6 @@ export class MediaManagerRefactored {
     this.searchController.destroy();
     this.panelManager.destroy();
     this.onMediaSelectionCallback = null;
-    console.log('🗑️ Media manager destroyed');
+    console.log("🗑️ Media manager destroyed");
   }
 }

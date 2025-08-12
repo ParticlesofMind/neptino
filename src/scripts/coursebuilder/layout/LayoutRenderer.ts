@@ -4,8 +4,8 @@
  * Focused on visual rendering only
  */
 
-import { Container, Graphics, Text, TextStyle } from 'pixi.js';
-import type { RenderedBlock, RenderedArea } from './LayoutTypes';
+import { Container, Graphics, Text, TextStyle } from "pixi.js";
+import type { RenderedBlock, RenderedArea } from "./LayoutTypes";
 
 export class LayoutRenderer {
   private layoutContainer: Container;
@@ -17,14 +17,19 @@ export class LayoutRenderer {
   /**
    * Render complete layout structure
    */
-  renderLayoutStructure(renderedBlocks: RenderedBlock[], showLabels: boolean = true): void {
+  renderLayoutStructure(
+    renderedBlocks: RenderedBlock[],
+    showLabels: boolean = true,
+  ): void {
     // Clear previous rendering
     this.layoutContainer.removeChildren();
 
-    console.log(`🎨 Rendering ${renderedBlocks.length} blocks with labels: ${showLabels}`);
+    console.log(
+      `🎨 Rendering ${renderedBlocks.length} blocks with labels: ${showLabels}`,
+    );
 
     // Render each block
-    renderedBlocks.forEach(block => {
+    renderedBlocks.forEach((block) => {
       this.renderBlock(block, showLabels);
     });
   }
@@ -36,9 +41,16 @@ export class LayoutRenderer {
     // Block background
     const blockGraphics = new Graphics();
     blockGraphics.rect(block.x, block.y, block.width, block.height);
-    blockGraphics.fill({ color: this.getBlockColor(block.blockId), alpha: 0.1 });
-    blockGraphics.stroke({ width: 2, color: this.getBlockColor(block.blockId), alpha: 0.8 });
-    
+    blockGraphics.fill({
+      color: this.getBlockColor(block.blockId),
+      alpha: 0.1,
+    });
+    blockGraphics.stroke({
+      width: 2,
+      color: this.getBlockColor(block.blockId),
+      alpha: 0.8,
+    });
+
     blockGraphics.label = `layout-block-${block.blockId}`;
     blockGraphics.interactive = false; // Prevent user interaction
     this.layoutContainer.addChild(blockGraphics);
@@ -50,11 +62,11 @@ export class LayoutRenderer {
         style: new TextStyle({
           fontSize: 16,
           fill: this.getBlockColor(block.blockId),
-          fontWeight: 'bold',
-          fontFamily: 'Arial'
-        })
+          fontWeight: "bold",
+          fontFamily: "Arial",
+        }),
       });
-      
+
       blockLabel.position.set(block.x + 10, block.y + 5);
       blockLabel.label = `layout-block-label-${block.blockId}`;
       blockLabel.interactive = false;
@@ -62,7 +74,7 @@ export class LayoutRenderer {
     }
 
     // Render areas within the block
-    block.areas.forEach(area => {
+    block.areas.forEach((area) => {
       this.renderArea(area, showLabels);
     });
   }
@@ -76,7 +88,7 @@ export class LayoutRenderer {
     areaGraphics.rect(area.x, area.y, area.width, area.height);
     areaGraphics.fill({ color: 0xffffff, alpha: 0.5 });
     areaGraphics.stroke({ width: 1, color: 0x999999, alpha: 0.4 });
-    
+
     areaGraphics.label = `layout-area-${area.areaId}`;
     areaGraphics.interactive = false; // Prevent user interaction
     this.layoutContainer.addChild(areaGraphics);
@@ -88,10 +100,10 @@ export class LayoutRenderer {
         style: new TextStyle({
           fontSize: 12,
           fill: 0x666666,
-          fontFamily: 'Arial'
-        })
+          fontFamily: "Arial",
+        }),
       });
-      
+
       areaLabel.position.set(area.x + 5, area.y + 5);
       areaLabel.label = `layout-area-label-${area.areaId}`;
       areaLabel.interactive = false;
@@ -109,7 +121,7 @@ export class LayoutRenderer {
       resources: 0xf5a623,
       content: 0xd0021b,
       assignment: 0x9013fe,
-      footer: 0x50e3c2
+      footer: 0x50e3c2,
     };
     return colors[blockId] || 0x999999;
   }
@@ -119,12 +131,12 @@ export class LayoutRenderer {
    */
   private getBlockDisplayName(blockId: string): string {
     const names: Record<string, string> = {
-      header: 'Header',
-      program: 'Program',
-      resources: 'Resources', 
-      content: 'Content',
-      assignment: 'Assignment',
-      footer: 'Footer'
+      header: "Header",
+      program: "Program",
+      resources: "Resources",
+      content: "Content",
+      assignment: "Assignment",
+      footer: "Footer",
     };
     return names[blockId] || blockId;
   }
@@ -135,9 +147,9 @@ export class LayoutRenderer {
   private getAreaDisplayName(areaId: string): string {
     // Convert kebab-case to Title Case
     return areaId
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   }
 
   /**

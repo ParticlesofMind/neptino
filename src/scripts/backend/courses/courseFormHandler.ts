@@ -2,9 +2,13 @@
 // COURSE FORM HANDLER - Generic form UI controller for all course sections
 // ==========================================================================
 
-import { SectionConfig, ValidationState, getSectionConfig } from './courseFormConfig';
-import { validateFormSection, isFormSectionValid } from './courseFormValidator';
-import { createCourse, updateCourse, getCourse } from './createCourse';
+import {
+  SectionConfig,
+  ValidationState,
+  getSectionConfig,
+} from "./courseFormConfig";
+import { validateFormSection, isFormSectionValid } from "./courseFormValidator";
+import { createCourse, updateCourse, getCourse } from "./createCourse";
 
 // ==========================================================================
 // COURSE FORM HANDLER CLASS
@@ -22,9 +26,9 @@ export class CourseFormHandler {
     if (!config) {
       throw new Error(`No configuration found for section: ${sectionName}`);
     }
-    
+
     this.sectionConfig = config;
-    this.currentCourseId = sessionStorage.getItem('currentCourseId');
+    this.currentCourseId = sessionStorage.getItem("currentCourseId");
     this.initialize();
   }
 
@@ -44,9 +48,9 @@ export class CourseFormHandler {
   }
 
   private findForm(): void {
-    const activeArticle = document.querySelector('.article--active');
+    const activeArticle = document.querySelector(".article--active");
     if (activeArticle) {
-      this.form = activeArticle.querySelector('form');
+      this.form = activeArticle.querySelector("form");
     }
   }
 
@@ -54,29 +58,38 @@ export class CourseFormHandler {
     if (!this.form) return;
 
     for (const fieldConfig of this.sectionConfig.fields) {
-      const field = this.form.querySelector(`[name="${fieldConfig.name}"]`) as HTMLElement;
-      
+      const field = this.form.querySelector(
+        `[name="${fieldConfig.name}"]`,
+      ) as HTMLElement;
+
       if (!field) continue;
 
       // Handle display fields
-      if (fieldConfig.type === 'display' && fieldConfig.displayFunction) {
+      if (fieldConfig.type === "display" && fieldConfig.displayFunction) {
         try {
           const displayValue = await fieldConfig.displayFunction();
           this.setDisplayField(field, displayValue);
         } catch (error) {
-          console.error(`Error setting display field ${fieldConfig.name}:`, error);
+          console.error(
+            `Error setting display field ${fieldConfig.name}:`,
+            error,
+          );
         }
       }
 
       // Handle select fields with options
-      if (fieldConfig.type === 'select' && fieldConfig.options && field.tagName === 'SELECT') {
+      if (
+        fieldConfig.type === "select" &&
+        fieldConfig.options &&
+        field.tagName === "SELECT"
+      ) {
         this.populateSelectField(field as HTMLSelectElement, fieldConfig);
       }
     }
   }
 
   private setDisplayField(field: HTMLElement, value: string): void {
-    if (field.tagName === 'INPUT') {
+    if (field.tagName === "INPUT") {
       (field as HTMLInputElement).value = value;
       (field as HTMLInputElement).readOnly = true;
     } else {
@@ -84,18 +97,21 @@ export class CourseFormHandler {
     }
   }
 
-  private populateSelectField(select: HTMLSelectElement, fieldConfig: any): void {
-    select.innerHTML = '';
-    
+  private populateSelectField(
+    select: HTMLSelectElement,
+    fieldConfig: any,
+  ): void {
+    select.innerHTML = "";
+
     // Add default option
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = `Select ${fieldConfig.name.replace('_', ' ')}...`;
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = `Select ${fieldConfig.name.replace("_", " ")}...`;
     select.appendChild(defaultOption);
-    
+
     // Add options
     fieldConfig.options.forEach((option: string) => {
-      const optionElement = document.createElement('option');
+      const optionElement = document.createElement("option");
       optionElement.value = option;
       optionElement.textContent = option;
       select.appendChild(optionElement);
@@ -117,43 +133,52 @@ export class CourseFormHandler {
       this.populateFormFields(courseData);
 
       // Show course code if we're in essentials section and have a course ID
-      if (this.sectionConfig.section === 'essentials') {
+      if (this.sectionConfig.section === "essentials") {
         this.showCourseCode(this.currentCourseId);
       }
 
       setTimeout(() => this.validateForm(), 100);
     } catch (error) {
-      console.error('Error loading existing course data:', error);
+      console.error("Error loading existing course data:", error);
     }
   }
 
   private populateFormFields(courseData: any): void {
-    if (this.sectionConfig.section === 'essentials') {
-      this.setFieldValue('course_name', courseData.course_name);
-      this.setFieldValue('course_description', courseData.course_description);
-      this.setFieldValue('course_language', courseData.course_language);
-      
+    if (this.sectionConfig.section === "essentials") {
+      this.setFieldValue("course_name", courseData.course_name);
+      this.setFieldValue("course_description", courseData.course_description);
+      this.setFieldValue("course_language", courseData.course_language);
+
       if (courseData.course_image) {
         this.displayExistingImage(courseData.course_image);
       }
-    } else if (this.sectionConfig.section === 'classification') {
+    } else if (this.sectionConfig.section === "classification") {
       // Handle classification data from classification_data JSONB field
       if (courseData.classification_data) {
         const classificationData = courseData.classification_data;
-        this.setFieldValue('class_year', classificationData.class_year);
-        this.setFieldValue('curricular_framework', classificationData.curricular_framework);
-        this.setFieldValue('domain', classificationData.domain);
-        this.setFieldValue('subject', classificationData.subject);
-        this.setFieldValue('topic', classificationData.topic);
-        this.setFieldValue('subtopic', classificationData.subtopic);
-        this.setFieldValue('previous_course', classificationData.previous_course);
-        this.setFieldValue('current_course', classificationData.current_course);
-        this.setFieldValue('next_course', classificationData.next_course);
+        this.setFieldValue("class_year", classificationData.class_year);
+        this.setFieldValue(
+          "curricular_framework",
+          classificationData.curricular_framework,
+        );
+        this.setFieldValue("domain", classificationData.domain);
+        this.setFieldValue("subject", classificationData.subject);
+        this.setFieldValue("topic", classificationData.topic);
+        this.setFieldValue("subtopic", classificationData.subtopic);
+        this.setFieldValue(
+          "previous_course",
+          classificationData.previous_course,
+        );
+        this.setFieldValue("current_course", classificationData.current_course);
+        this.setFieldValue("next_course", classificationData.next_course);
       }
-    } else if (this.sectionConfig.jsonbField && courseData[this.sectionConfig.jsonbField]) {
+    } else if (
+      this.sectionConfig.jsonbField &&
+      courseData[this.sectionConfig.jsonbField]
+    ) {
       const sectionData = courseData[this.sectionConfig.jsonbField];
-      
-      this.sectionConfig.fields.forEach(fieldConfig => {
+
+      this.sectionConfig.fields.forEach((fieldConfig) => {
         if (sectionData[fieldConfig.name]) {
           this.setFieldValue(fieldConfig.name, sectionData[fieldConfig.name]);
         }
@@ -165,33 +190,41 @@ export class CourseFormHandler {
     if (!this.form || value === null || value === undefined) return;
 
     // Handle classification dropdown fields
-    if (this.sectionConfig.section === 'classification') {
-      const hiddenInput = this.form.querySelector(`#${fieldName}-value`) as HTMLInputElement;
+    if (this.sectionConfig.section === "classification") {
+      const hiddenInput = this.form.querySelector(
+        `#${fieldName}-value`,
+      ) as HTMLInputElement;
       const dropdownTrigger = this.form.querySelector(`#${fieldName}-dropdown`);
-      const dropdownLabel = dropdownTrigger?.querySelector('.dropdown__label');
-      
+      const dropdownLabel = dropdownTrigger?.querySelector(".dropdown__label");
+
       if (hiddenInput && dropdownTrigger && dropdownLabel) {
         hiddenInput.value = value;
-        dropdownLabel.textContent = this.getDisplayTextForValue(fieldName, value);
-        dropdownLabel.classList.remove('dropdown__label--placeholder');
-        dropdownTrigger.classList.add('dropdown__trigger--success');
+        dropdownLabel.textContent = this.getDisplayTextForValue(
+          fieldName,
+          value,
+        );
+        dropdownLabel.classList.remove("dropdown__label--placeholder");
+        dropdownTrigger.classList.add("dropdown__trigger--success");
         return;
       }
     }
 
     // Handle regular form fields
-    const field = this.form.querySelector(`[name="${fieldName}"]`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+    const field = this.form.querySelector(`[name="${fieldName}"]`) as
+      | HTMLInputElement
+      | HTMLSelectElement
+      | HTMLTextAreaElement;
     if (!field) return;
 
     try {
-      if (field.tagName === 'SELECT') {
+      if (field.tagName === "SELECT") {
         (field as HTMLSelectElement).value = value;
-      } else if (field.type !== 'file') {
+      } else if (field.type !== "file") {
         field.value = value;
       }
 
-      field.dispatchEvent(new Event('input', { bubbles: true }));
-      field.dispatchEvent(new Event('change', { bubbles: true }));
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+      field.dispatchEvent(new Event("change", { bubbles: true }));
     } catch (error) {
       console.warn(`Failed to set field ${fieldName}:`, error);
     }
@@ -199,17 +232,17 @@ export class CourseFormHandler {
 
   private getDisplayTextForValue(fieldName: string, value: string): string {
     // For class year, return the value as is since it's user-friendly
-    if (fieldName === 'class_year') {
+    if (fieldName === "class_year") {
       return value;
     }
-    
+
     // For curricular framework, return the value as is
-    if (fieldName === 'curricular_framework') {
+    if (fieldName === "curricular_framework") {
       return value;
     }
-    
+
     // For other fields, return the value (can be enhanced with lookup tables later)
-    return value || '';
+    return value || "";
   }
 
   // ==========================================================================
@@ -217,34 +250,36 @@ export class CourseFormHandler {
   // ==========================================================================
 
   private setupEventListeners(): void {
-    if (!this.form || this.form.dataset.listenersAttached === 'true') return;
+    if (!this.form || this.form.dataset.listenersAttached === "true") return;
 
-    const inputs = this.form.querySelectorAll('input, textarea, select');
-    
-    inputs.forEach(input => {
+    const inputs = this.form.querySelectorAll("input, textarea, select");
+
+    inputs.forEach((input) => {
       const inputElement = input as HTMLInputElement;
-      if (inputElement.type === 'file') {
-        input.addEventListener('change', () => this.handleFileChange(inputElement));
+      if (inputElement.type === "file") {
+        input.addEventListener("change", () =>
+          this.handleFileChange(inputElement),
+        );
       } else {
-        input.addEventListener('input', () => this.handleInputChange());
-        input.addEventListener('change', () => this.handleInputChange());
+        input.addEventListener("input", () => this.handleInputChange());
+        input.addEventListener("change", () => this.handleInputChange());
       }
     });
 
-    this.form.addEventListener('submit', (e) => this.handleSubmit(e));
-    
+    this.form.addEventListener("submit", (e) => this.handleSubmit(e));
+
     // Handle remove image button
-    const removeImageBtn = this.form.querySelector('#remove-image');
+    const removeImageBtn = this.form.querySelector("#remove-image");
     if (removeImageBtn) {
-      removeImageBtn.addEventListener('click', () => this.handleRemoveImage());
+      removeImageBtn.addEventListener("click", () => this.handleRemoveImage());
     }
-    
-    this.form.dataset.listenersAttached = 'true';
+
+    this.form.dataset.listenersAttached = "true";
   }
 
   private handleInputChange(): void {
     this.validateForm();
-    
+
     if (this.sectionConfig.autoSave && this.currentCourseId) {
       this.debouncedSave();
     }
@@ -259,38 +294,42 @@ export class CourseFormHandler {
   }
 
   private handleRemoveImage(): void {
-    const imagePreview = document.getElementById('image-preview');
-    const previewImg = document.getElementById('preview-img') as HTMLImageElement;
-    const fileInput = document.getElementById('course-image') as HTMLInputElement;
-    
+    const imagePreview = document.getElementById("image-preview");
+    const previewImg = document.getElementById(
+      "preview-img",
+    ) as HTMLImageElement;
+    const fileInput = document.getElementById(
+      "course-image",
+    ) as HTMLInputElement;
+
     if (imagePreview && previewImg && fileInput) {
-      imagePreview.style.display = 'none';
-      fileInput.value = '';
-      previewImg.src = '';
+      imagePreview.style.display = "none";
+      fileInput.value = "";
+      previewImg.src = "";
       this.validateForm();
     }
   }
 
   private async handleSubmit(event: Event): Promise<void> {
     event.preventDefault();
-    
-    if (this.form?.dataset.submitting === 'true') return;
-    
+
+    if (this.form?.dataset.submitting === "true") return;
+
     if (!this.isFormValid()) {
-      this.showStatus('Please fill in all required fields', 'error');
+      this.showStatus("Please fill in all required fields", "error");
       return;
     }
 
-    if (this.form) this.form.dataset.submitting = 'true';
+    if (this.form) this.form.dataset.submitting = "true";
 
     try {
-      if (this.sectionConfig.section === 'essentials') {
+      if (this.sectionConfig.section === "essentials") {
         await this.createNewCourse();
       } else {
         await this.updateExistingCourse();
       }
     } finally {
-      if (this.form) this.form.dataset.submitting = 'false';
+      if (this.form) this.form.dataset.submitting = "false";
     }
   }
 
@@ -302,12 +341,18 @@ export class CourseFormHandler {
     if (!this.form) return;
 
     const formData = this.getFormData();
-    this.validationState = validateFormSection(this.sectionConfig.fields, formData);
+    this.validationState = validateFormSection(
+      this.sectionConfig.fields,
+      formData,
+    );
     this.updateUI();
   }
 
   private isFormValid(): boolean {
-    return isFormSectionValid(this.sectionConfig.requiredFields, this.validationState);
+    return isFormSectionValid(
+      this.sectionConfig.requiredFields,
+      this.validationState,
+    );
   }
 
   private getFormData(): { [key: string]: any } {
@@ -329,32 +374,33 @@ export class CourseFormHandler {
 
   private async createNewCourse(): Promise<void> {
     try {
-      this.showStatus('Creating course...', 'loading');
-      
+      this.showStatus("Creating course...", "loading");
+
       const formData = this.getFormData();
       const courseData = {
         course_name: formData.course_name,
         course_description: formData.course_description,
         course_language: formData.course_language,
-        course_image: formData.course_image
+        course_image: formData.course_image,
       };
 
       const result = await createCourse(courseData);
 
       if (result.success && result.courseId) {
         this.currentCourseId = result.courseId;
-        sessionStorage.setItem('currentCourseId', result.courseId);
-        
-        this.showStatus('Course created successfully! 🎉', 'success');
+        sessionStorage.setItem("currentCourseId", result.courseId);
+
+        this.showStatus("Course created successfully! 🎉", "success");
         this.showCourseCode(result.courseId);
         this.navigateToNextSection();
       } else {
-        throw new Error(result.error || 'Failed to create course');
+        throw new Error(result.error || "Failed to create course");
       }
     } catch (error) {
-      console.error('Error creating course:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      this.showStatus(`Failed to create course: ${errorMessage}`, 'error');
+      console.error("Error creating course:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      this.showStatus(`Failed to create course: ${errorMessage}`, "error");
     }
   }
 
@@ -374,13 +420,13 @@ export class CourseFormHandler {
       const result = await updateCourse(this.currentCourseId, updateData);
 
       if (result.success) {
-        this.showStatus('Saved ✓', 'success');
+        this.showStatus("Saved ✓", "success");
       } else {
-        throw new Error(result.error || 'Failed to save');
+        throw new Error(result.error || "Failed to save");
       }
     } catch (error) {
-      console.error('Error updating course:', error);
-      this.showStatus('Failed to save', 'error');
+      console.error("Error updating course:", error);
+      this.showStatus("Failed to save", "error");
     }
   }
 
@@ -389,50 +435,59 @@ export class CourseFormHandler {
   // ==========================================================================
 
   private displayExistingImage(imageUrl: string): void {
-    const imagePreview = document.getElementById('image-preview');
-    const previewImg = document.getElementById('preview-img') as HTMLImageElement;
-    const fileUploadLabel = this.form?.querySelector('.file-upload__compact-label');
-    
+    const imagePreview = document.getElementById("image-preview");
+    const previewImg = document.getElementById(
+      "preview-img",
+    ) as HTMLImageElement;
+    const fileUploadLabel = this.form?.querySelector(
+      ".file-upload__compact-label",
+    );
+
     if (imagePreview && previewImg) {
       previewImg.src = imageUrl;
-      imagePreview.style.display = 'block';
-      
+      imagePreview.style.display = "block";
+
       if (fileUploadLabel) {
-        const textElement = fileUploadLabel.querySelector('.file-upload__text');
+        const textElement = fileUploadLabel.querySelector(".file-upload__text");
         if (textElement) {
-          textElement.textContent = 'Change course image';
+          textElement.textContent = "Change course image";
         }
       }
     }
   }
 
   private showFilePreview(file: File): void {
-    const preview = document.getElementById('image-preview');
-    const img = document.getElementById('preview-img') as HTMLImageElement;
-    
+    const preview = document.getElementById("image-preview");
+    const img = document.getElementById("preview-img") as HTMLImageElement;
+
     if (preview && img) {
       const reader = new FileReader();
       reader.onload = (e) => {
         img.src = e.target?.result as string;
-        preview.style.display = 'block';
+        preview.style.display = "block";
       };
       reader.readAsDataURL(file);
     }
   }
 
   private updateUI(): void {
-    const submitBtn = this.form?.querySelector('button[type="submit"]') as HTMLButtonElement;
-    
+    const submitBtn = this.form?.querySelector(
+      'button[type="submit"]',
+    ) as HTMLButtonElement;
+
     if (submitBtn) {
       const isValid = this.isFormValid();
       submitBtn.disabled = !isValid;
-      submitBtn.classList.toggle('button--disabled', !isValid);
-      submitBtn.classList.toggle('button--primary', isValid);
+      submitBtn.classList.toggle("button--disabled", !isValid);
+      submitBtn.classList.toggle("button--primary", isValid);
     }
   }
 
-  private showStatus(message: string, type: 'success' | 'error' | 'loading'): void {
-    const statusDiv = this.form?.querySelector('.form__status') as HTMLElement;
+  private showStatus(
+    message: string,
+    type: "success" | "error" | "loading",
+  ): void {
+    const statusDiv = this.form?.querySelector(".form__status") as HTMLElement;
     if (statusDiv) {
       statusDiv.textContent = message;
       statusDiv.className = `form__status form__status--${type}`;
@@ -440,24 +495,30 @@ export class CourseFormHandler {
   }
 
   private showCourseCode(courseId: string): void {
-    const courseCodeDisplay = this.form?.querySelector('#course-code-display') as HTMLElement;
-    const courseCodeValue = this.form?.querySelector('#course-code-value') as HTMLElement;
-    const courseCodeCopyBtn = this.form?.querySelector('#course-code-copy-btn') as HTMLElement;
+    const courseCodeDisplay = this.form?.querySelector(
+      "#course-code-display",
+    ) as HTMLElement;
+    const courseCodeValue = this.form?.querySelector(
+      "#course-code-value",
+    ) as HTMLElement;
+    const courseCodeCopyBtn = this.form?.querySelector(
+      "#course-code-copy-btn",
+    ) as HTMLElement;
 
     if (courseCodeDisplay && courseCodeValue && courseCodeCopyBtn) {
       courseCodeValue.textContent = courseId;
-      courseCodeDisplay.style.display = 'block';
+      courseCodeDisplay.style.display = "block";
 
       // Only add copy functionality if not already added
-      if (!courseCodeCopyBtn.hasAttribute('data-copy-listener')) {
-        courseCodeCopyBtn.setAttribute('data-copy-listener', 'true');
-        
-        courseCodeCopyBtn.addEventListener('click', async () => {
+      if (!courseCodeCopyBtn.hasAttribute("data-copy-listener")) {
+        courseCodeCopyBtn.setAttribute("data-copy-listener", "true");
+
+        courseCodeCopyBtn.addEventListener("click", async () => {
           try {
             await navigator.clipboard.writeText(courseId);
             this.showCopyFeedback(courseCodeCopyBtn);
           } catch (err) {
-            console.error('Failed to copy course code:', err);
+            console.error("Failed to copy course code:", err);
             // Fallback for older browsers
             this.fallbackCopy(courseId);
             this.showCopyFeedback(courseCodeCopyBtn);
@@ -469,27 +530,29 @@ export class CourseFormHandler {
 
   private showCopyFeedback(button: HTMLElement): void {
     const originalContent = button.innerHTML;
-    button.innerHTML = '<span>✓</span>';
-    button.style.color = '#10b981'; // green
-    
+    button.innerHTML = "<span>✓</span>";
+    button.style.color = "#10b981"; // green
+
     setTimeout(() => {
       button.innerHTML = originalContent;
-      button.style.color = '';
+      button.style.color = "";
     }, 1500);
   }
 
   private fallbackCopy(text: string): void {
-    const textArea = document.createElement('textarea');
+    const textArea = document.createElement("textarea");
     textArea.value = text;
     document.body.appendChild(textArea);
     textArea.select();
-    document.execCommand('copy');
+    document.execCommand("copy");
     document.body.removeChild(textArea);
   }
 
   private navigateToNextSection(): void {
     setTimeout(() => {
-      const nextLink = document.querySelector('[data-section="classification"]') as HTMLElement;
+      const nextLink = document.querySelector(
+        '[data-section="classification"]',
+      ) as HTMLElement;
       nextLink?.click();
     }, 1500);
   }

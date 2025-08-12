@@ -3,16 +3,27 @@
  * Multi-geometry creation with professional styling and advanced shape options
  */
 
-import { FederatedPointerEvent, Container, Graphics, Point } from 'pixi.js';
-import { BaseTool } from './ToolInterface';
-import { PROFESSIONAL_COLORS, STROKE_SIZES, hexToNumber } from './SharedResources';
+import { FederatedPointerEvent, Container, Graphics, Point } from "pixi.js";
+import { BaseTool } from "./ToolInterface";
+import {
+  PROFESSIONAL_COLORS,
+  STROKE_SIZES,
+  hexToNumber,
+} from "./SharedResources";
 
 interface ShapesSettings {
   color: string;
   strokeWidth: number;
   fillColor?: string;
   fillEnabled: boolean;
-  shapeType: 'rectangle' | 'triangle' | 'circle' | 'ellipse' | 'line' | 'arrow' | 'polygon';
+  shapeType:
+    | "rectangle"
+    | "triangle"
+    | "circle"
+    | "ellipse"
+    | "line"
+    | "arrow"
+    | "polygon";
   cornerRadius?: number; // For rounded rectangles
   sides?: number; // For polygons
 }
@@ -24,23 +35,27 @@ export class ShapesTool extends BaseTool {
   private currentPoint: Point = new Point(0, 0);
 
   constructor() {
-    super('shapes', 'crosshair');
+    super("shapes", "crosshair");
     this.settings = {
-      color: PROFESSIONAL_COLORS[0],        // Dark charcoal stroke
-      strokeWidth: STROKE_SIZES.SHAPES[2],  // 4px stroke
-      fillColor: PROFESSIONAL_COLORS[13],   // Light gray fill
+      color: PROFESSIONAL_COLORS[0], // Dark charcoal stroke
+      strokeWidth: STROKE_SIZES.SHAPES[2], // 4px stroke
+      fillColor: PROFESSIONAL_COLORS[13], // Light gray fill
       fillEnabled: false,
-      shapeType: 'rectangle',
+      shapeType: "rectangle",
       cornerRadius: 0,
-      sides: 6 // For hexagon default
+      sides: 6, // For hexagon default
     };
   }
 
   onPointerDown(event: FederatedPointerEvent, container: Container): void {
     this.isDrawing = true;
-    console.log(`🔶 SHAPES: Started drawing ${this.settings.shapeType} at (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`);
-    console.log(`🔶 SHAPES: Settings - Color: ${this.settings.color}, Stroke: ${this.settings.strokeWidth}px, Fill: ${this.settings.fillEnabled ? this.settings.fillColor : 'none'}`);
-    
+    console.log(
+      `🔶 SHAPES: Started drawing ${this.settings.shapeType} at (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
+    );
+    console.log(
+      `🔶 SHAPES: Settings - Color: ${this.settings.color}, Stroke: ${this.settings.strokeWidth}px, Fill: ${this.settings.fillEnabled ? this.settings.fillColor : "none"}`,
+    );
+
     // Use local coordinates relative to the container
     const localPoint = container.toLocal(event.global);
     this.startPoint.copyFrom(localPoint);
@@ -48,10 +63,12 @@ export class ShapesTool extends BaseTool {
 
     // Create new graphics object with professional styling
     this.currentShape = new Graphics();
-    this.currentShape.eventMode = 'static';
-    
+    this.currentShape.eventMode = "static";
+
     container.addChild(this.currentShape);
-    console.log(`🔶 SHAPES: Professional ${this.settings.shapeType} graphics object created`);
+    console.log(
+      `🔶 SHAPES: Professional ${this.settings.shapeType} graphics object created`,
+    );
   }
 
   onPointerMove(event: FederatedPointerEvent, container: Container): void {
@@ -60,13 +77,15 @@ export class ShapesTool extends BaseTool {
     // Use local coordinates relative to the container
     const localPoint = container.toLocal(event.global);
     this.currentPoint.copyFrom(localPoint);
-    
+
     this.drawShape();
   }
 
   onPointerUp(): void {
     if (this.isDrawing) {
-      console.log(`🔶 SHAPES: Finished drawing professional ${this.settings.shapeType}`);
+      console.log(
+        `🔶 SHAPES: Finished drawing professional ${this.settings.shapeType}`,
+      );
     }
     this.isDrawing = false;
     this.currentShape = null;
@@ -83,11 +102,11 @@ export class ShapesTool extends BaseTool {
     const height = this.currentPoint.y - this.startPoint.y;
 
     // Apply stroke style
-    const strokeStyle = { 
-      width: this.settings.strokeWidth, 
+    const strokeStyle = {
+      width: this.settings.strokeWidth,
       color: strokeColor,
-      cap: 'round' as const,
-      join: 'round' as const
+      cap: "round" as const,
+      join: "round" as const,
     };
 
     // Apply fill if enabled
@@ -97,58 +116,73 @@ export class ShapesTool extends BaseTool {
     }
 
     switch (this.settings.shapeType) {
-      case 'rectangle':
+      case "rectangle":
         this.drawRectangle(width, height, strokeStyle, fillStyle);
         break;
 
-      case 'triangle':
+      case "triangle":
         this.drawTriangle(width, height, strokeStyle, fillStyle);
         break;
 
-      case 'circle':
+      case "circle":
         this.drawCircle(width, height, strokeStyle, fillStyle);
         break;
 
-      case 'ellipse':
+      case "ellipse":
         this.drawEllipse(width, height, strokeStyle, fillStyle);
         break;
 
-      case 'line':
+      case "line":
         this.drawLine(strokeStyle);
         break;
 
-      case 'arrow':
+      case "arrow":
         this.drawArrow(strokeStyle);
         break;
 
-      case 'polygon':
+      case "polygon":
         this.drawPolygon(width, height, strokeStyle, fillStyle);
         break;
     }
   }
 
-  private drawRectangle(width: number, height: number, strokeStyle: any, fillStyle: any): void {
+  private drawRectangle(
+    width: number,
+    height: number,
+    strokeStyle: any,
+    fillStyle: any,
+  ): void {
     if (!this.currentShape) return;
 
     if (this.settings.cornerRadius && this.settings.cornerRadius > 0) {
       // Rounded rectangle
       this.currentShape.roundRect(
-        this.startPoint.x, 
-        this.startPoint.y, 
-        width, 
-        height, 
-        this.settings.cornerRadius
+        this.startPoint.x,
+        this.startPoint.y,
+        width,
+        height,
+        this.settings.cornerRadius,
       );
     } else {
       // Standard rectangle
-      this.currentShape.rect(this.startPoint.x, this.startPoint.y, width, height);
+      this.currentShape.rect(
+        this.startPoint.x,
+        this.startPoint.y,
+        width,
+        height,
+      );
     }
 
     if (fillStyle) this.currentShape.fill(fillStyle);
     this.currentShape.stroke(strokeStyle);
   }
 
-  private drawTriangle(width: number, height: number, strokeStyle: any, fillStyle: any): void {
+  private drawTriangle(
+    width: number,
+    height: number,
+    strokeStyle: any,
+    fillStyle: any,
+  ): void {
     if (!this.currentShape) return;
 
     // Equilateral triangle pointing up
@@ -158,41 +192,51 @@ export class ShapesTool extends BaseTool {
     const bottomLeftY = this.startPoint.y + height;
     const bottomRightX = this.startPoint.x + width;
     const bottomRightY = this.startPoint.y + height;
-    
+
     this.currentShape
       .moveTo(topX, topY)
       .lineTo(bottomLeftX, bottomLeftY)
       .lineTo(bottomRightX, bottomRightY)
       .closePath();
-    
+
     if (fillStyle) this.currentShape.fill(fillStyle);
     this.currentShape.stroke(strokeStyle);
   }
 
-  private drawCircle(width: number, height: number, strokeStyle: any, fillStyle: any): void {
+  private drawCircle(
+    width: number,
+    height: number,
+    strokeStyle: any,
+    fillStyle: any,
+  ): void {
     if (!this.currentShape) return;
 
     // Perfect circle using the larger dimension
     const radius = Math.max(Math.abs(width), Math.abs(height)) / 2;
     const centerX = this.startPoint.x + width / 2;
     const centerY = this.startPoint.y + height / 2;
-    
+
     this.currentShape.circle(centerX, centerY, radius);
-    
+
     if (fillStyle) this.currentShape.fill(fillStyle);
     this.currentShape.stroke(strokeStyle);
   }
 
-  private drawEllipse(width: number, height: number, strokeStyle: any, fillStyle: any): void {
+  private drawEllipse(
+    width: number,
+    height: number,
+    strokeStyle: any,
+    fillStyle: any,
+  ): void {
     if (!this.currentShape) return;
 
     const centerX = this.startPoint.x + width / 2;
     const centerY = this.startPoint.y + height / 2;
     const radiusX = Math.abs(width) / 2;
     const radiusY = Math.abs(height) / 2;
-    
+
     this.currentShape.ellipse(centerX, centerY, radiusX, radiusY);
-    
+
     if (fillStyle) this.currentShape.fill(fillStyle);
     this.currentShape.stroke(strokeStyle);
   }
@@ -213,23 +257,27 @@ export class ShapesTool extends BaseTool {
     const dy = this.currentPoint.y - this.startPoint.y;
     const angle = Math.atan2(dy, dx);
     const length = Math.sqrt(dx * dx + dy * dy);
-    
+
     // Arrow head size
     const headLength = Math.min(20, length * 0.3);
     const headAngle = Math.PI / 6; // 30 degrees
-    
+
     // Draw line
     this.currentShape
       .moveTo(this.startPoint.x, this.startPoint.y)
       .lineTo(this.currentPoint.x, this.currentPoint.y)
       .stroke(strokeStyle);
-    
+
     // Draw arrow head
-    const headX1 = this.currentPoint.x - headLength * Math.cos(angle - headAngle);
-    const headY1 = this.currentPoint.y - headLength * Math.sin(angle - headAngle);
-    const headX2 = this.currentPoint.x - headLength * Math.cos(angle + headAngle);
-    const headY2 = this.currentPoint.y - headLength * Math.sin(angle + headAngle);
-    
+    const headX1 =
+      this.currentPoint.x - headLength * Math.cos(angle - headAngle);
+    const headY1 =
+      this.currentPoint.y - headLength * Math.sin(angle - headAngle);
+    const headX2 =
+      this.currentPoint.x - headLength * Math.cos(angle + headAngle);
+    const headY2 =
+      this.currentPoint.y - headLength * Math.sin(angle + headAngle);
+
     this.currentShape
       .moveTo(this.currentPoint.x, this.currentPoint.y)
       .lineTo(headX1, headY1)
@@ -238,14 +286,20 @@ export class ShapesTool extends BaseTool {
       .stroke(strokeStyle);
   }
 
-  private drawPolygon(width: number, height: number, strokeStyle: any, fillStyle: any): void {
-    if (!this.currentShape || !this.settings.sides || this.settings.sides < 3) return;
+  private drawPolygon(
+    width: number,
+    height: number,
+    strokeStyle: any,
+    fillStyle: any,
+  ): void {
+    if (!this.currentShape || !this.settings.sides || this.settings.sides < 3)
+      return;
 
     const centerX = this.startPoint.x + width / 2;
     const centerY = this.startPoint.y + height / 2;
     const radius = Math.max(Math.abs(width), Math.abs(height)) / 2;
     const sides = this.settings.sides;
-    
+
     // Generate polygon points
     const points: number[] = [];
     for (let i = 0; i < sides; i++) {
@@ -254,14 +308,23 @@ export class ShapesTool extends BaseTool {
       const y = centerY + radius * Math.sin(angle);
       points.push(x, y);
     }
-    
+
     this.currentShape.poly(points);
-    
+
     if (fillStyle) this.currentShape.fill(fillStyle);
     this.currentShape.stroke(strokeStyle);
   }
 
-  setShapeType(shapeType: 'rectangle' | 'triangle' | 'circle' | 'ellipse' | 'line' | 'arrow' | 'polygon'): void {
+  setShapeType(
+    shapeType:
+      | "rectangle"
+      | "triangle"
+      | "circle"
+      | "ellipse"
+      | "line"
+      | "arrow"
+      | "polygon",
+  ): void {
     this.settings.shapeType = shapeType;
     console.log(`🔶 SHAPES: Professional shape type set to ${shapeType}`);
   }
@@ -278,7 +341,9 @@ export class ShapesTool extends BaseTool {
 
   toggleFill(): void {
     this.settings.fillEnabled = !this.settings.fillEnabled;
-    console.log(`🔶 SHAPES: Fill ${this.settings.fillEnabled ? 'enabled' : 'disabled'}`);
+    console.log(
+      `🔶 SHAPES: Fill ${this.settings.fillEnabled ? "enabled" : "disabled"}`,
+    );
   }
 
   updateSettings(settings: ShapesSettings): void {
@@ -300,19 +365,27 @@ export class ShapesTool extends BaseTool {
 
   // Get available shape types
   static getShapeTypes(): string[] {
-    return ['rectangle', 'triangle', 'circle', 'ellipse', 'line', 'arrow', 'polygon'];
+    return [
+      "rectangle",
+      "triangle",
+      "circle",
+      "ellipse",
+      "line",
+      "arrow",
+      "polygon",
+    ];
   }
 
   // Get shape type display names
   static getShapeTypeNames(): { [key: string]: string } {
     return {
-      'rectangle': 'Rectangle',
-      'triangle': 'Triangle', 
-      'circle': 'Circle',
-      'ellipse': 'Ellipse',
-      'line': 'Line',
-      'arrow': 'Arrow',
-      'polygon': 'Polygon'
+      rectangle: "Rectangle",
+      triangle: "Triangle",
+      circle: "Circle",
+      ellipse: "Ellipse",
+      line: "Line",
+      arrow: "Arrow",
+      polygon: "Polygon",
     };
   }
 }

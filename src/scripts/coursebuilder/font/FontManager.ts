@@ -4,12 +4,16 @@
  * Single Responsibility: Font family management and coordination only
  */
 
-import { FontStyleController } from './FontStyleController.js';
-import { FontSizeController } from './FontSizeController.js';
+import { FontStyleController } from "./FontStyleController.js";
+import { FontSizeController } from "./FontSizeController.js";
 
 export class FontManager {
-  private currentFont: string = 'Arial';
-  private availableFonts: Array<{ name: string; family: string; loaded: boolean }> = [];
+  private currentFont: string = "Arial";
+  private availableFonts: Array<{
+    name: string;
+    family: string;
+    loaded: boolean;
+  }> = [];
   private fontStyleController: FontStyleController;
   private fontSizeController: FontSizeController;
   private onFontChangeCallback: ((fontFamily: string) => void) | null = null;
@@ -17,7 +21,7 @@ export class FontManager {
   constructor() {
     this.fontStyleController = new FontStyleController();
     this.fontSizeController = new FontSizeController();
-    
+
     this.initializeDefaultFonts();
     this.bindFontFamilyEvents();
     this.setupControllerCallbacks();
@@ -35,29 +39,39 @@ export class FontManager {
    */
   private initializeDefaultFonts(): void {
     const systemFonts = [
-      { name: 'Arial', family: 'Arial, sans-serif', loaded: true },
-      { name: 'Times New Roman', family: 'Times New Roman, serif', loaded: true },
-      { name: 'Courier New', family: 'Courier New, monospace', loaded: true },
-      { name: 'Helvetica', family: 'Helvetica, Arial, sans-serif', loaded: true },
-      { name: 'Georgia', family: 'Georgia, serif', loaded: true },
-      { name: 'Verdana', family: 'Verdana, sans-serif', loaded: true },
-      { name: 'Comic Sans MS', family: 'Comic Sans MS, cursive', loaded: true },
-      { name: 'Impact', family: 'Impact, sans-serif', loaded: true }
+      { name: "Arial", family: "Arial, sans-serif", loaded: true },
+      {
+        name: "Times New Roman",
+        family: "Times New Roman, serif",
+        loaded: true,
+      },
+      { name: "Courier New", family: "Courier New, monospace", loaded: true },
+      {
+        name: "Helvetica",
+        family: "Helvetica, Arial, sans-serif",
+        loaded: true,
+      },
+      { name: "Georgia", family: "Georgia, serif", loaded: true },
+      { name: "Verdana", family: "Verdana, sans-serif", loaded: true },
+      { name: "Comic Sans MS", family: "Comic Sans MS, cursive", loaded: true },
+      { name: "Impact", family: "Impact, sans-serif", loaded: true },
     ];
 
     this.availableFonts = [...systemFonts];
     this.populateFontSelector();
-    
-    console.log('🔤 Default fonts initialized:', this.availableFonts.length);
+
+    console.log("🔤 Default fonts initialized:", this.availableFonts.length);
   }
 
   /**
    * Bind font family selection events
    */
   private bindFontFamilyEvents(): void {
-    const fontSelect = document.getElementById('font-family') as HTMLSelectElement;
+    const fontSelect = document.getElementById(
+      "font-family",
+    ) as HTMLSelectElement;
     if (fontSelect) {
-      fontSelect.addEventListener('change', this.handleFontChange.bind(this));
+      fontSelect.addEventListener("change", this.handleFontChange.bind(this));
     }
   }
 
@@ -67,12 +81,12 @@ export class FontManager {
   private setupControllerCallbacks(): void {
     // Font style changes
     this.fontStyleController.setOnStyleChange((styles) => {
-      console.log('🎨 Font styles changed:', styles);
+      console.log("🎨 Font styles changed:", styles);
     });
 
     // Font size changes
     this.fontSizeController.setOnSizeChange((size) => {
-      console.log('📏 Font size changed:', size);
+      console.log("📏 Font size changed:", size);
     });
   }
 
@@ -81,12 +95,14 @@ export class FontManager {
    */
   private handleFontChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
-    const selectedFont = this.availableFonts.find(font => font.name === select.value);
-    
+    const selectedFont = this.availableFonts.find(
+      (font) => font.name === select.value,
+    );
+
     if (selectedFont) {
       this.currentFont = selectedFont.name;
-      console.log('🔤 Font changed to:', selectedFont.name);
-      
+      console.log("🔤 Font changed to:", selectedFont.name);
+
       // Trigger callback
       if (this.onFontChangeCallback) {
         this.onFontChangeCallback(selectedFont.family);
@@ -98,12 +114,17 @@ export class FontManager {
    * Populate font selector dropdown
    */
   private populateFontSelector(): void {
-    const fontSelect = document.getElementById('font-family') as HTMLSelectElement;
+    const fontSelect = document.getElementById(
+      "font-family",
+    ) as HTMLSelectElement;
     if (!fontSelect) return;
 
-    fontSelect.innerHTML = this.availableFonts.map(font => 
-      `<option value="${font.name}" ${font.name === this.currentFont ? 'selected' : ''}>${font.name}</option>`
-    ).join('');
+    fontSelect.innerHTML = this.availableFonts
+      .map(
+        (font) =>
+          `<option value="${font.name}" ${font.name === this.currentFont ? "selected" : ""}>${font.name}</option>`,
+      )
+      .join("");
   }
 
   /**
@@ -114,20 +135,20 @@ export class FontManager {
       const font = new FontFace(fontName, `url(${fontUrl})`);
       await font.load();
       document.fonts.add(font);
-      
+
       // Add to available fonts
       const customFont = {
         name: fontName,
         family: `${fontName}, sans-serif`,
-        loaded: true
+        loaded: true,
       };
-      
+
       this.availableFonts.push(customFont);
       this.populateFontSelector();
-      
-      console.log('📥 Custom font loaded:', fontName);
+
+      console.log("📥 Custom font loaded:", fontName);
     } catch (error) {
-      console.error('❌ Failed to load custom font:', fontName, error);
+      console.error("❌ Failed to load custom font:", fontName, error);
     }
   }
 
@@ -142,26 +163,30 @@ export class FontManager {
    * Get current font family
    */
   getCurrentFontFamily(): string {
-    const currentFontObj = this.availableFonts.find(font => font.name === this.currentFont);
-    return currentFontObj?.family || 'Arial, sans-serif';
+    const currentFontObj = this.availableFonts.find(
+      (font) => font.name === this.currentFont,
+    );
+    return currentFontObj?.family || "Arial, sans-serif";
   }
 
   /**
    * Set current font
    */
   setCurrentFont(fontName: string): void {
-    const font = this.availableFonts.find(f => f.name === fontName);
+    const font = this.availableFonts.find((f) => f.name === fontName);
     if (font) {
       this.currentFont = fontName;
-      
+
       // Update selector
-      const fontSelect = document.getElementById('font-family') as HTMLSelectElement;
+      const fontSelect = document.getElementById(
+        "font-family",
+      ) as HTMLSelectElement;
       if (fontSelect) {
         fontSelect.value = fontName;
       }
-      
-      console.log('🔤 Font set to:', fontName);
-      
+
+      console.log("🔤 Font set to:", fontName);
+
       // Trigger callback
       if (this.onFontChangeCallback) {
         this.onFontChangeCallback(font.family);
@@ -172,7 +197,11 @@ export class FontManager {
   /**
    * Get available fonts
    */
-  getAvailableFonts(): Array<{ name: string; family: string; loaded: boolean }> {
+  getAvailableFonts(): Array<{
+    name: string;
+    family: string;
+    loaded: boolean;
+  }> {
     return [...this.availableFonts];
   }
 
@@ -201,7 +230,7 @@ export class FontManager {
     return {
       family: this.getCurrentFontFamily(),
       size: this.fontSizeController.getCurrentSize(),
-      styles: this.fontStyleController.getCurrentStyles()
+      styles: this.fontStyleController.getCurrentStyles(),
     };
   }
 
@@ -210,10 +239,10 @@ export class FontManager {
    */
   applyFontToElement(element: HTMLElement): void {
     const config = this.getCurrentFontConfig();
-    
+
     element.style.fontFamily = config.family;
     element.style.fontSize = `${config.size}px`;
-    
+
     this.fontStyleController.applyStylesToElement(element);
   }
 
@@ -221,7 +250,7 @@ export class FontManager {
    * Reset all font settings to defaults
    */
   resetToDefaults(): void {
-    this.setCurrentFont('Arial');
+    this.setCurrentFont("Arial");
     this.fontSizeController.reset();
     this.fontStyleController.resetStyles();
   }

@@ -17,8 +17,8 @@ export class MediaPanelManager {
    * Initialize panel elements
    */
   private initializePanelElements(): void {
-    this.panelElement = document.getElementById('media-search-panel');
-    this.resultsContainer = document.getElementById('media-search-results');
+    this.panelElement = document.getElementById("media-search-panel");
+    this.resultsContainer = document.getElementById("media-search-results");
   }
 
   /**
@@ -35,17 +35,17 @@ export class MediaPanelManager {
     if (!this.panelElement) return;
 
     // Update panel title
-    const panelTitle = this.panelElement.querySelector('.media-panel-title');
+    const panelTitle = this.panelElement.querySelector(".media-panel-title");
     if (panelTitle) {
       panelTitle.textContent = `Search ${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)}`;
     }
 
     // Show panel
-    this.panelElement.classList.add('media-panel--active');
-    
+    this.panelElement.classList.add("media-panel--active");
+
     // Show placeholder
     this.showSearchPlaceholder();
-    
+
     console.log(`📱 Media search panel updated for: ${mediaType}`);
   }
 
@@ -56,7 +56,7 @@ export class MediaPanelManager {
     if (!this.resultsContainer) return;
 
     // Clear previous results
-    this.resultsContainer.innerHTML = '';
+    this.resultsContainer.innerHTML = "";
 
     if (results.length === 0) {
       this.showNoResults();
@@ -64,7 +64,7 @@ export class MediaPanelManager {
     }
 
     // Create result items
-    results.forEach(result => {
+    results.forEach((result) => {
       const resultItem = this.createResultItem(result);
       if (this.resultsContainer) {
         this.resultsContainer.appendChild(resultItem);
@@ -78,10 +78,10 @@ export class MediaPanelManager {
    * Create a result item element
    */
   private createResultItem(result: any): HTMLElement {
-    const item = document.createElement('div');
-    item.className = 'media-result-item';
-    item.setAttribute('data-media-url', result.url);
-    
+    const item = document.createElement("div");
+    item.className = "media-result-item";
+    item.setAttribute("data-media-url", result.url);
+
     item.innerHTML = `
       <img src="${result.thumbnail}" alt="${result.title}" class="media-result-thumbnail">
       <div class="media-result-info">
@@ -91,7 +91,7 @@ export class MediaPanelManager {
     `;
 
     // Add click handler
-    item.addEventListener('click', (event) => {
+    item.addEventListener("click", (event) => {
       this.handleMediaItemSelection(event);
     });
 
@@ -103,17 +103,17 @@ export class MediaPanelManager {
    */
   private handleMediaItemSelection(event: Event): void {
     const target = event.currentTarget as HTMLElement;
-    const mediaUrl = target.getAttribute('data-media-url');
-    
+    const mediaUrl = target.getAttribute("data-media-url");
+
     if (!mediaUrl) return;
 
     console.log(`📱 Media item selected: ${mediaUrl}`);
-    
+
     // Trigger callback
     if (this.onMediaSelectionCallback) {
       this.onMediaSelectionCallback(mediaUrl);
     }
-    
+
     // Close panel
     this.closePanel();
   }
@@ -150,21 +150,23 @@ export class MediaPanelManager {
   closePanel(): void {
     if (!this.panelElement) return;
 
-    this.panelElement.classList.remove('media-panel--active');
-    
+    this.panelElement.classList.remove("media-panel--active");
+
     // Clear results
     if (this.resultsContainer) {
-      this.resultsContainer.innerHTML = '';
+      this.resultsContainer.innerHTML = "";
     }
-    
-    console.log('📱 Media search panel closed');
+
+    console.log("📱 Media search panel closed");
   }
 
   /**
    * Check if panel is open
    */
   isPanelOpen(): boolean {
-    return this.panelElement?.classList.contains('media-panel--active') || false;
+    return (
+      this.panelElement?.classList.contains("media-panel--active") || false
+    );
   }
 
   /**
@@ -173,15 +175,16 @@ export class MediaPanelManager {
   destroy(): void {
     // Remove event listeners from result items
     if (this.resultsContainer) {
-      const resultItems = this.resultsContainer.querySelectorAll('.media-result-item');
-      resultItems.forEach(item => {
-        item.removeEventListener('click', this.handleMediaItemSelection);
+      const resultItems =
+        this.resultsContainer.querySelectorAll(".media-result-item");
+      resultItems.forEach((item) => {
+        item.removeEventListener("click", this.handleMediaItemSelection);
       });
     }
-    
+
     this.closePanel();
     this.onMediaSelectionCallback = null;
-    
-    console.log('🗑️ Media panel manager destroyed');
+
+    console.log("🗑️ Media panel manager destroyed");
   }
 }

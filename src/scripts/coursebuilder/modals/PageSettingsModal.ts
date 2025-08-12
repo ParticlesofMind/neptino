@@ -15,9 +15,11 @@ export class PageSettingsModal {
       const modal = this.createModal(page);
       document.body.appendChild(modal);
       this.currentModal = modal;
-      
+
       // Focus on page name input
-      const nameInput = modal.querySelector('#page-name-input') as HTMLInputElement;
+      const nameInput = modal.querySelector(
+        "#page-name-input",
+      ) as HTMLInputElement;
       if (nameInput) {
         nameInput.focus();
         nameInput.select();
@@ -33,8 +35,8 @@ export class PageSettingsModal {
    * Create page settings modal
    */
   private createModal(page: any): HTMLElement {
-    const modal = document.createElement('div');
-    modal.className = 'modal modal--page-settings';
+    const modal = document.createElement("div");
+    modal.className = "modal modal--page-settings";
     modal.innerHTML = `
       <div class="modal__backdrop"></div>
       <div class="modal__content">
@@ -49,7 +51,7 @@ export class PageSettingsModal {
           </div>
           <div class="form-group">
             <label for="page-description-input">Description (optional)</label>
-            <textarea id="page-description-input" class="form-control" rows="3" placeholder="Page description...">${page.description || ''}</textarea>
+            <textarea id="page-description-input" class="form-control" rows="3" placeholder="Page description...">${page.description || ""}</textarea>
           </div>
         </div>
         <div class="modal__footer">
@@ -71,27 +73,27 @@ export class PageSettingsModal {
     const reject = (modal as any).__reject;
 
     // Close button
-    const closeBtn = modal.querySelector('.modal__close');
+    const closeBtn = modal.querySelector(".modal__close");
     if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
+      closeBtn.addEventListener("click", () => {
         this.close();
-        reject(new Error('Modal cancelled'));
+        reject(new Error("Modal cancelled"));
       });
     }
 
     // Cancel button
-    const cancelBtn = modal.querySelector('.modal-cancel');
+    const cancelBtn = modal.querySelector(".modal-cancel");
     if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => {
+      cancelBtn.addEventListener("click", () => {
         this.close();
-        reject(new Error('Modal cancelled'));
+        reject(new Error("Modal cancelled"));
       });
     }
 
     // Save button
-    const saveBtn = modal.querySelector('.modal-save');
+    const saveBtn = modal.querySelector(".modal-save");
     if (saveBtn) {
-      saveBtn.addEventListener('click', () => {
+      saveBtn.addEventListener("click", () => {
         const result = this.collectFormData(modal, page);
         if (result) {
           this.close();
@@ -101,34 +103,38 @@ export class PageSettingsModal {
     }
 
     // Backdrop click
-    const backdrop = modal.querySelector('.modal__backdrop');
+    const backdrop = modal.querySelector(".modal__backdrop");
     if (backdrop) {
-      backdrop.addEventListener('click', () => {
+      backdrop.addEventListener("click", () => {
         this.close();
-        reject(new Error('Modal cancelled'));
+        reject(new Error("Modal cancelled"));
       });
     }
 
     // Escape key
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         this.close();
-        reject(new Error('Modal cancelled'));
-        document.removeEventListener('keydown', handleEscape);
+        reject(new Error("Modal cancelled"));
+        document.removeEventListener("keydown", handleEscape);
       }
     };
-    document.addEventListener('keydown', handleEscape);
+    document.addEventListener("keydown", handleEscape);
   }
 
   /**
    * Collect form data from modal
    */
   private collectFormData(modal: HTMLElement, page: any): any | null {
-    const nameInput = modal.querySelector('#page-name-input') as HTMLInputElement;
-    const descriptionInput = modal.querySelector('#page-description-input') as HTMLTextAreaElement;
-    
+    const nameInput = modal.querySelector(
+      "#page-name-input",
+    ) as HTMLInputElement;
+    const descriptionInput = modal.querySelector(
+      "#page-description-input",
+    ) as HTMLTextAreaElement;
+
     if (!nameInput || !nameInput.value.trim()) {
-      alert('Page name is required');
+      alert("Page name is required");
       nameInput?.focus();
       return null;
     }
@@ -136,7 +142,7 @@ export class PageSettingsModal {
     return {
       ...page,
       name: nameInput.value.trim(),
-      description: descriptionInput?.value.trim() || ''
+      description: descriptionInput?.value.trim() || "",
     };
   }
 

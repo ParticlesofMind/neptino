@@ -1,89 +1,110 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Courses - Neptino</title>
-    <link rel="stylesheet" href="/src/scss/main.scss">
-</head>
+    <link rel="stylesheet" href="/src/scss/main.scss" />
+  </head>
 
-<body class="body grid">
+  <body class="body grid">
     <header class="header grid__header">
-        <nav class="nav">
-            <div class="nav__logo-section">
-                <a href="/src/pages/teacher/home.html" class="logo logo--header">
-                    <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image">
-                </a>
-            </div>
+      <nav class="nav">
+        <div class="nav__logo-section">
+          <a href="/src/pages/teacher/home.html" class="logo logo--header">
+            <img
+              src="/src/assets/logo/octopus-logo.png"
+              alt="Neptino Logo"
+              class="logo__image"
+            />
+          </a>
+        </div>
 
-            <div class="nav__links-section">
-                <ul class="list list--nav">
-                    <li class="list__item">
-                        <a href="/src/pages/teacher/courses.html" class="link link--nav link--active">My Courses</a>
-                    </li>
-                    <li class="list__item">
-                        <a href="#students" class="link link--nav">Students</a>
-                    </li>
-                    <li class="list__item">
-                        <a href="#assignments" class="link link--nav">Assignments</a>
-                    </li>
-                    <li class="list__item">
-                        <a href="#analytics" class="link link--nav">Analytics</a>
-                    </li>
-                </ul>
-            </div>
+        <div class="nav__links-section">
+          <ul class="list list--nav">
+            <li class="list__item">
+              <a
+                href="/src/pages/teacher/courses.html"
+                class="link link--nav link--active"
+                >My Courses</a
+              >
+            </li>
+            <li class="list__item">
+              <a href="#students" class="link link--nav">Students</a>
+            </li>
+            <li class="list__item">
+              <a href="#assignments" class="link link--nav">Assignments</a>
+            </li>
+            <li class="list__item">
+              <a href="#analytics" class="link link--nav">Analytics</a>
+            </li>
+          </ul>
+        </div>
 
-            <div class="nav__actions-section">
-                <button id="logout-btn" class="button button--secondary">Sign Out</button>
-            </div>
-        </nav>
+        <div class="nav__actions-section">
+          <button id="logout-btn" class="button button--secondary">
+            Sign Out
+          </button>
+        </div>
+      </nav>
     </header>
 
     <main class="main grid__main">
-        <div class="courses-header">
-            <h1 class="heading heading--primary">My Courses</h1>
-            <a href="/src/pages/teacher/coursebuilder.html#setup" id="create-course-btn" class="button button--primary">Create New Course</a>
+      <div class="courses-header">
+        <h1 class="heading heading--primary">My Courses</h1>
+        <a
+          href="/src/pages/teacher/coursebuilder.html#setup"
+          id="create-course-btn"
+          class="button button--primary"
+          >Create New Course</a
+        >
+      </div>
+
+      <div class="courses-container" id="courses-container">
+        <!-- Course cards will be dynamically loaded here -->
+        <div id="no-courses-message" class="no-courses">
+          <p class="text text--muted">
+            No courses yet. Create your first course to get started!
+          </p>
         </div>
-        
-        <div class="courses-container" id="courses-container">
-            <!-- Course cards will be dynamically loaded here -->
-            <div id="no-courses-message" class="no-courses">
-                <p class="text text--muted">No courses yet. Create your first course to get started!</p>
-            </div>
-        </div>
+      </div>
     </main>
 
     <footer class="footer grid__footer">
-        <nav class="nav nav--footer">
-            <div class="nav__logo-section">
-                <a href="/src/pages/teacher/home.html" class="logo logo--footer">
-                    <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo"
-                        class="logo__image logo__image--small">
-                </a>
-            </div>
+      <nav class="nav nav--footer">
+        <div class="nav__logo-section">
+          <a href="/src/pages/teacher/home.html" class="logo logo--footer">
+            <img
+              src="/src/assets/logo/octopus-logo.png"
+              alt="Neptino Logo"
+              class="logo__image logo__image--small"
+            />
+          </a>
+        </div>
 
-            <div class="nav__links-section">
-                <ul class="list list--nav list--footer">
-                    <li class="list__item">
-                        <a href="#" class="link link--footer">Privacy Policy</a>
-                    </li>
-                    <li class="list__item">
-                        <a href="#" class="link link--footer">Terms of Service</a>
-                    </li>
-                    <li class="list__item">
-                        <a href="#" class="link link--footer">Support</a>
-                    </li>
-                    <li class="list__item">
-                        <a href="#" class="link link--footer">Contact</a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
+        <div class="nav__links-section">
+          <ul class="list list--nav list--footer">
+            <li class="list__item">
+              <a href="#" class="link link--footer">Privacy Policy</a>
+            </li>
+            <li class="list__item">
+              <a href="#" class="link link--footer">Terms of Service</a>
+            </li>
+            <li class="list__item">
+              <a href="#" class="link link--footer">Support</a>
+            </li>
+            <li class="list__item">
+              <a href="#" class="link link--footer">Contact</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
     </footer>
 
     <script type="module" src="/src/scripts/app.ts"></script>
-    <script type="module" src="/src/scripts/backend/courses/createCourseCard.ts"></script>
-</body>
-
+    <script
+      type="module"
+      src="/src/scripts/backend/courses/createCourseCard.ts"
+    ></script>
+  </body>
 </html>

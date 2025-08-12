@@ -4,7 +4,7 @@
  * Single Responsibility: Layer creation and management only
  */
 
-import { Application, Container, Graphics } from 'pixi.js';
+import { Application, Container, Graphics } from "pixi.js";
 
 export class CanvasLayerManager {
   private app: Application;
@@ -23,22 +23,22 @@ export class CanvasLayerManager {
   public initializeLayers(): void {
     // Create layout container (bottom layer - protected)
     this.layoutContainer = new Container();
-    this.layoutContainer.label = 'layout-layer';
+    this.layoutContainer.label = "layout-layer";
     this.layoutContainer.zIndex = 0;
     this.app.stage.addChild(this.layoutContainer);
 
     // Create drawing container (top layer - user editable)
     this.drawingContainer = new Container();
-    this.drawingContainer.label = 'drawing-layer';
+    this.drawingContainer.label = "drawing-layer";
     this.drawingContainer.zIndex = 1;
     this.app.stage.addChild(this.drawingContainer);
 
     // Enable sorting by zIndex
     this.app.stage.sortableChildren = true;
 
-    console.log('🏗️ Canvas layers initialized');
-    console.log('📐 Layout container (protected) created');
-    console.log('✏️ Drawing container (editable) created');
+    console.log("🏗️ Canvas layers initialized");
+    console.log("📐 Layout container (protected) created");
+    console.log("✏️ Drawing container (editable) created");
   }
 
   /**
@@ -46,7 +46,7 @@ export class CanvasLayerManager {
    */
   public addBackgroundGrid(): void {
     if (!this.layoutContainer) {
-      console.warn('⚠️ Layout container not initialized');
+      console.warn("⚠️ Layout container not initialized");
       return;
     }
 
@@ -61,7 +61,7 @@ export class CanvasLayerManager {
 
     // Draw grid lines
     graphics.moveTo(0, 0);
-    
+
     // Draw vertical lines
     for (let x = 0; x <= canvasWidth; x += gridSize) {
       graphics.moveTo(x, 0);
@@ -76,19 +76,24 @@ export class CanvasLayerManager {
 
     graphics.stroke({ width: 1, color: 0xe0e0e0, alpha: 0.8 });
 
-    graphics.label = 'background-grid';
-    
+    graphics.label = "background-grid";
+
     this.layoutContainer.addChild(graphics);
 
-    console.log('🔲 Enhanced background grid added to layout layer');
+    console.log("🔲 Enhanced background grid added to layout layer");
   }
 
   /**
    * Add or update margin boundaries (blue borders)
    */
-  public updateMarginBoundaries(margins: { top: number; right: number; bottom: number; left: number }): void {
+  public updateMarginBoundaries(margins: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  }): void {
     if (!this.layoutContainer) {
-      console.warn('⚠️ Layout container not initialized');
+      console.warn("⚠️ Layout container not initialized");
       return;
     }
 
@@ -100,7 +105,7 @@ export class CanvasLayerManager {
 
     // Create new margin graphics
     this.marginGraphics = new Graphics();
-    this.marginGraphics.label = 'margin-boundaries';
+    this.marginGraphics.label = "margin-boundaries";
 
     const canvasWidth = this.app.screen.width;
     const canvasHeight = this.app.screen.height;
@@ -135,10 +140,10 @@ export class CanvasLayerManager {
     }
 
     // Style the margin lines
-    this.marginGraphics.stroke({ 
-      width: lineWidth, 
-      color: marginColor, 
-      alpha: marginAlpha 
+    this.marginGraphics.stroke({
+      width: lineWidth,
+      color: marginColor,
+      alpha: marginAlpha,
     });
 
     // Add margin area overlay (very subtle fill)
@@ -150,7 +155,12 @@ export class CanvasLayerManager {
 
     // Bottom margin area
     if (margins.bottom > 0) {
-      this.marginGraphics.rect(0, canvasHeight - margins.bottom, canvasWidth, margins.bottom);
+      this.marginGraphics.rect(
+        0,
+        canvasHeight - margins.bottom,
+        canvasWidth,
+        margins.bottom,
+      );
       this.marginGraphics.fill({ color: marginColor, alpha: 0.05 });
     }
 
@@ -162,13 +172,18 @@ export class CanvasLayerManager {
 
     // Right margin area
     if (margins.right > 0) {
-      this.marginGraphics.rect(canvasWidth - margins.right, 0, margins.right, canvasHeight);
+      this.marginGraphics.rect(
+        canvasWidth - margins.right,
+        0,
+        margins.right,
+        canvasHeight,
+      );
       this.marginGraphics.fill({ color: marginColor, alpha: 0.05 });
     }
 
     this.layoutContainer.addChild(this.marginGraphics);
 
-    console.log('📏 Margin boundaries updated:', margins);
+    console.log("📏 Margin boundaries updated:", margins);
   }
 
   /**
@@ -179,7 +194,7 @@ export class CanvasLayerManager {
       this.layoutContainer.removeChild(this.marginGraphics);
       this.marginGraphics.destroy();
       this.marginGraphics = null;
-      console.log('📏 Margin boundaries cleared');
+      console.log("📏 Margin boundaries cleared");
     }
   }
 
@@ -189,7 +204,7 @@ export class CanvasLayerManager {
   public clearDrawingLayer(): void {
     if (this.drawingContainer) {
       this.drawingContainer.removeChildren();
-      console.log('🗑️ Drawing layer cleared (layout protected)');
+      console.log("🗑️ Drawing layer cleared (layout protected)");
     }
   }
 
@@ -204,11 +219,11 @@ export class CanvasLayerManager {
       this.drawingContainer.removeChildren();
     }
     this.layoutBlocks = [];
-    
+
     // Restore background grid
     this.addBackgroundGrid();
-    
-    console.log('⚠️ All layers cleared and background grid restored');
+
+    console.log("⚠️ All layers cleared and background grid restored");
   }
 
   /**
@@ -230,15 +245,17 @@ export class CanvasLayerManager {
    */
   public addLayoutBlock(block: any): void {
     this.layoutBlocks.push(block);
-    console.log('📐 Layout block added:', block.name || 'unnamed');
+    console.log("📐 Layout block added:", block.name || "unnamed");
   }
 
   /**
    * Remove layout block
    */
   public removeLayoutBlock(blockId: string): void {
-    this.layoutBlocks = this.layoutBlocks.filter(block => block.id !== blockId);
-    console.log('📐 Layout block removed:', blockId);
+    this.layoutBlocks = this.layoutBlocks.filter(
+      (block) => block.id !== blockId,
+    );
+    console.log("📐 Layout block removed:", blockId);
   }
 
   /**
@@ -253,7 +270,7 @@ export class CanvasLayerManager {
    */
   public clearLayoutBlocks(): void {
     this.layoutBlocks = [];
-    console.log('📐 Layout blocks cleared');
+    console.log("📐 Layout blocks cleared");
   }
 
   /**
@@ -264,14 +281,14 @@ export class CanvasLayerManager {
       layoutContainer: {
         exists: !!this.layoutContainer,
         children: this.layoutContainer?.children.length || 0,
-        name: this.layoutContainer?.name || 'none'
+        name: this.layoutContainer?.name || "none",
       },
       drawingContainer: {
         exists: !!this.drawingContainer,
         children: this.drawingContainer?.children.length || 0,
-        name: this.drawingContainer?.name || 'none'
+        name: this.drawingContainer?.name || "none",
       },
-      layoutBlocks: this.layoutBlocks.length
+      layoutBlocks: this.layoutBlocks.length,
     };
   }
 
@@ -284,7 +301,7 @@ export class CanvasLayerManager {
       this.marginGraphics.destroy();
       this.marginGraphics = null;
     }
-    
+
     if (this.layoutContainer) {
       this.layoutContainer.destroy({ children: true });
       this.layoutContainer = null;
@@ -294,6 +311,6 @@ export class CanvasLayerManager {
       this.drawingContainer = null;
     }
     this.layoutBlocks = [];
-    console.log('🗑️ Canvas layers destroyed');
+    console.log("🗑️ Canvas layers destroyed");
   }
 }

@@ -2,7 +2,7 @@
 // COURSES PAGE - Load and display user courses with navigation
 // ==========================================================================
 
-import { getUserCourses } from './createCourse';
+import { getUserCourses } from "./createCourse";
 
 interface Course {
   id: string;
@@ -20,22 +20,26 @@ export class CoursesManager {
   private noCoursesMessage: HTMLElement;
 
   constructor() {
-    this.coursesContainer = document.getElementById('courses-container') as HTMLElement;
-    this.noCoursesMessage = document.getElementById('no-courses-message') as HTMLElement;
-    
+    this.coursesContainer = document.getElementById(
+      "courses-container",
+    ) as HTMLElement;
+    this.noCoursesMessage = document.getElementById(
+      "no-courses-message",
+    ) as HTMLElement;
+
     this.initialize();
   }
 
   private async initialize(): Promise<void> {
-    console.log('Initializing courses manager...');
+    console.log("Initializing courses manager...");
     await this.loadCourses();
   }
 
   private async loadCourses(): Promise<void> {
     try {
       const courses = await getUserCourses();
-      console.log('Loaded courses:', courses);
-      
+      console.log("Loaded courses:", courses);
+
       if (courses && courses.length > 0) {
         this.displayCourses(courses);
         this.hideNoCoursesMessage();
@@ -43,32 +47,34 @@ export class CoursesManager {
         this.showNoCoursesMessage();
       }
     } catch (error) {
-      console.error('Error loading courses:', error);
+      console.error("Error loading courses:", error);
       this.showNoCoursesMessage();
     }
   }
 
   private displayCourses(courses: Course[]): void {
     // Clear existing courses (except no-courses message)
-    const existingCards = this.coursesContainer.querySelectorAll('.course-card');
-    existingCards.forEach(card => card.remove());
+    const existingCards =
+      this.coursesContainer.querySelectorAll(".course-card");
+    existingCards.forEach((card) => card.remove());
 
-    courses.forEach(course => {
+    courses.forEach((course) => {
       const courseCard = this.createCourseCard(course);
       this.coursesContainer.appendChild(courseCard);
     });
   }
 
   private createCourseCard(course: Course): HTMLElement {
-    const cardElement = document.createElement('div');
-    cardElement.className = 'course-card';
+    const cardElement = document.createElement("div");
+    cardElement.className = "course-card";
     cardElement.dataset.courseId = course.id;
 
     cardElement.innerHTML = `
       <div class="course-card__image-container">
-        ${course.course_image 
-          ? `<img src="${course.course_image}" alt="${course.course_name}" class="course-card__image">`
-          : `<div class="course-card__image-placeholder">${this.getInitials(course.course_name)}</div>`
+        ${
+          course.course_image
+            ? `<img src="${course.course_image}" alt="${course.course_name}" class="course-card__image">`
+            : `<div class="course-card__image-placeholder">${this.getInitials(course.course_name)}</div>`
         }
       </div>
       
@@ -103,15 +109,15 @@ export class CoursesManager {
   }
 
   private addNavigationEventListeners(cardElement: HTMLElement): void {
-    const navItems = cardElement.querySelectorAll('.course-card__nav-item');
-    
-    navItems.forEach(item => {
-      item.addEventListener('click', (e) => {
+    const navItems = cardElement.querySelectorAll(".course-card__nav-item");
+
+    navItems.forEach((item) => {
+      item.addEventListener("click", (e) => {
         e.stopPropagation();
-        
+
         const section = (item as HTMLElement).dataset.section;
         const courseId = (item as HTMLElement).dataset.courseId;
-        
+
         if (section && courseId) {
           this.navigateToCourseSection(courseId, section);
         }
@@ -121,10 +127,10 @@ export class CoursesManager {
 
   private navigateToCourseSection(courseId: string, section: string): void {
     console.log(`Navigating to course ${courseId}, section: ${section}`);
-    
+
     // Store the course ID in session storage for the course builder
-    sessionStorage.setItem('currentCourseId', courseId);
-    
+    sessionStorage.setItem("currentCourseId", courseId);
+
     // Navigate to the course builder with the specific section
     const url = `/src/pages/teacher/coursebuilder.html#${section}`;
     console.log(`Navigating to: ${url}`);
@@ -133,21 +139,21 @@ export class CoursesManager {
 
   private getInitials(courseName: string): string {
     return courseName
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase())
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase())
       .slice(0, 2)
-      .join('');
+      .join("");
   }
 
   private showNoCoursesMessage(): void {
     if (this.noCoursesMessage) {
-      this.noCoursesMessage.style.display = 'block';
+      this.noCoursesMessage.style.display = "block";
     }
   }
 
   private hideNoCoursesMessage(): void {
     if (this.noCoursesMessage) {
-      this.noCoursesMessage.style.display = 'none';
+      this.noCoursesMessage.style.display = "none";
     }
   }
 
@@ -162,7 +168,7 @@ export class CoursesManager {
 // ==========================================================================
 
 // Auto-initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   new CoursesManager();
 });
 

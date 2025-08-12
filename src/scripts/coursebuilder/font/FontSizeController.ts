@@ -6,7 +6,9 @@ export class FontSizeController {
   private currentSize: number = 16;
   private minSize: number = 8;
   private maxSize: number = 72;
-  private sizeOptions: number[] = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72];
+  private sizeOptions: number[] = [
+    8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72,
+  ];
   private onSizeChangeCallback: ((size: number) => void) | null = null;
 
   constructor() {
@@ -19,35 +21,52 @@ export class FontSizeController {
   }
 
   private bindEvents(): void {
-    const increaseBtns = document.querySelectorAll('[data-font-action="increase"]');
-    const decreaseBtns = document.querySelectorAll('[data-font-action="decrease"]');
-    increaseBtns.forEach(btn => btn.addEventListener('click', () => this.increaseSize()));
-    decreaseBtns.forEach(btn => btn.addEventListener('click', () => this.decreaseSize()));
+    const increaseBtns = document.querySelectorAll(
+      '[data-font-action="increase"]',
+    );
+    const decreaseBtns = document.querySelectorAll(
+      '[data-font-action="decrease"]',
+    );
+    increaseBtns.forEach((btn) =>
+      btn.addEventListener("click", () => this.increaseSize()),
+    );
+    decreaseBtns.forEach((btn) =>
+      btn.addEventListener("click", () => this.decreaseSize()),
+    );
 
-    const sizeSelects = document.querySelectorAll('select[data-font-property="size"]');
-    sizeSelects.forEach(select => {
-      select.addEventListener('change', (e) => this.handleSizeSelect(e));
+    const sizeSelects = document.querySelectorAll(
+      'select[data-font-property="size"]',
+    );
+    sizeSelects.forEach((select) => {
+      select.addEventListener("change", (e) => this.handleSizeSelect(e));
     });
 
-    const sizeInputs = document.querySelectorAll('input[data-font-property="size"]');
-    sizeInputs.forEach(input => {
-      input.addEventListener('input', (e) => this.handleSizeInput(e));
-      input.addEventListener('blur', (e) => this.handleSizeBlur(e));
+    const sizeInputs = document.querySelectorAll(
+      'input[data-font-property="size"]',
+    );
+    sizeInputs.forEach((input) => {
+      input.addEventListener("input", (e) => this.handleSizeInput(e));
+      input.addEventListener("blur", (e) => this.handleSizeBlur(e));
     });
 
-    document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
+    document.addEventListener("keydown", (e) =>
+      this.handleKeyboardShortcuts(e),
+    );
   }
 
   private handleKeyboardShortcuts(event: KeyboardEvent): void {
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+    if (
+      event.target instanceof HTMLInputElement ||
+      event.target instanceof HTMLTextAreaElement
+    ) {
       return;
     }
 
-    if ((event.ctrlKey || event.metaKey)) {
-      if (event.key === '=') {
+    if (event.ctrlKey || event.metaKey) {
+      if (event.key === "=") {
         event.preventDefault();
         this.increaseSize();
-      } else if (event.key === '-') {
+      } else if (event.key === "-") {
         event.preventDefault();
         this.decreaseSize();
       }
@@ -65,11 +84,14 @@ export class FontSizeController {
   private handleSizeInput(event: Event): void {
     const target = event.target as HTMLInputElement;
     const value = target.value.trim();
-    if (value === '') return;
-    
+    if (value === "") return;
+
     const newSize = parseInt(value);
     if (!isNaN(newSize) && newSize !== this.currentSize) {
-      const clampedSize = Math.min(Math.max(newSize, this.minSize), this.maxSize);
+      const clampedSize = Math.min(
+        Math.max(newSize, this.minSize),
+        this.maxSize,
+      );
       if (clampedSize !== newSize) {
         target.value = clampedSize.toString();
       }
@@ -79,7 +101,7 @@ export class FontSizeController {
 
   private handleSizeBlur(event: Event): void {
     const target = event.target as HTMLInputElement;
-    if (target.value.trim() === '') {
+    if (target.value.trim() === "") {
       target.value = this.currentSize.toString();
     }
   }
@@ -108,17 +130,19 @@ export class FontSizeController {
 
     this.currentSize = clampedSize;
     this.updateUI();
-    
+
     if (this.onSizeChangeCallback) {
       this.onSizeChangeCallback(this.currentSize);
     }
   }
 
   private updateUI(): void {
-    const selects = document.querySelectorAll('select[data-font-property="size"]') as NodeListOf<HTMLSelectElement>;
-    selects.forEach(select => {
+    const selects = document.querySelectorAll(
+      'select[data-font-property="size"]',
+    ) as NodeListOf<HTMLSelectElement>;
+    selects.forEach((select) => {
       if (!select.querySelector(`option[value="${this.currentSize}"]`)) {
-        const option = document.createElement('option');
+        const option = document.createElement("option");
         option.value = this.currentSize.toString();
         option.textContent = this.currentSize.toString();
         select.appendChild(option);
@@ -126,21 +150,23 @@ export class FontSizeController {
       select.value = this.currentSize.toString();
     });
 
-    const inputs = document.querySelectorAll('input[data-font-property="size"]') as NodeListOf<HTMLInputElement>;
-    inputs.forEach(input => {
+    const inputs = document.querySelectorAll(
+      'input[data-font-property="size"]',
+    ) as NodeListOf<HTMLInputElement>;
+    inputs.forEach((input) => {
       input.value = this.currentSize.toString();
     });
 
-    const displays = document.querySelectorAll('[data-font-size-display]');
-    displays.forEach(display => {
+    const displays = document.querySelectorAll("[data-font-size-display]");
+    displays.forEach((display) => {
       display.textContent = `${this.currentSize}px`;
     });
   }
 
   private populateSizeOptions(select: HTMLSelectElement): void {
-    select.innerHTML = '';
-    this.sizeOptions.forEach(size => {
-      const option = document.createElement('option');
+    select.innerHTML = "";
+    this.sizeOptions.forEach((size) => {
+      const option = document.createElement("option");
       option.value = size.toString();
       option.textContent = size.toString();
       if (size === this.currentSize) {
@@ -190,25 +216,33 @@ export class FontSizeController {
   }
 
   destroy(): void {
-    const increaseBtns = document.querySelectorAll('[data-font-action="increase"]');
-    const decreaseBtns = document.querySelectorAll('[data-font-action="decrease"]');
-    const selects = document.querySelectorAll('select[data-font-property="size"]');
-    const inputs = document.querySelectorAll('input[data-font-property="size"]');
+    const increaseBtns = document.querySelectorAll(
+      '[data-font-action="increase"]',
+    );
+    const decreaseBtns = document.querySelectorAll(
+      '[data-font-action="decrease"]',
+    );
+    const selects = document.querySelectorAll(
+      'select[data-font-property="size"]',
+    );
+    const inputs = document.querySelectorAll(
+      'input[data-font-property="size"]',
+    );
 
-    [...increaseBtns, ...decreaseBtns].forEach(btn => {
-      btn.removeEventListener('click', () => this.increaseSize());
+    [...increaseBtns, ...decreaseBtns].forEach((btn) => {
+      btn.removeEventListener("click", () => this.increaseSize());
     });
-    
-    selects.forEach(select => {
-      select.removeEventListener('change', this.handleSizeSelect);
+
+    selects.forEach((select) => {
+      select.removeEventListener("change", this.handleSizeSelect);
     });
-    
-    inputs.forEach(input => {
-      input.removeEventListener('input', this.handleSizeInput);
-      input.removeEventListener('blur', this.handleSizeBlur);
+
+    inputs.forEach((input) => {
+      input.removeEventListener("input", this.handleSizeInput);
+      input.removeEventListener("blur", this.handleSizeBlur);
     });
-    
-    document.removeEventListener('keydown', this.handleKeyboardShortcuts);
+
+    document.removeEventListener("keydown", this.handleKeyboardShortcuts);
     this.onSizeChangeCallback = null;
   }
 }

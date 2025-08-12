@@ -4,7 +4,7 @@
  * Single Responsibility: Margin configuration and UI updates only
  */
 
-import { marginSettingsHandler } from '../../backend/courses/marginSettings';
+import { marginSettingsHandler } from "../../backend/courses/marginSettings";
 
 export class MarginSettingsManager {
   private marginInputs: { [key: string]: HTMLInputElement } = {};
@@ -12,9 +12,11 @@ export class MarginSettingsManager {
     top: 20,
     right: 20,
     bottom: 20,
-    left: 20
+    left: 20,
   };
-  private onMarginChangeCallback: ((margins: { [key: string]: number }) => void) | null = null;
+  private onMarginChangeCallback:
+    | ((margins: { [key: string]: number }) => void)
+    | null = null;
 
   constructor() {
     this.initializeMarginInputs();
@@ -24,7 +26,9 @@ export class MarginSettingsManager {
   /**
    * Set callback for margin changes
    */
-  setOnMarginChange(callback: (margins: { [key: string]: number }) => void): void {
+  setOnMarginChange(
+    callback: (margins: { [key: string]: number }) => void,
+  ): void {
     this.onMarginChangeCallback = callback;
   }
 
@@ -40,12 +44,17 @@ export class MarginSettingsManager {
    * Initialize margin input elements
    */
   private initializeMarginInputs(): void {
-    const marginInputIds = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
-    
-    marginInputIds.forEach(id => {
+    const marginInputIds = [
+      "marginTop",
+      "marginRight",
+      "marginBottom",
+      "marginLeft",
+    ];
+
+    marginInputIds.forEach((id) => {
       const input = document.getElementById(id) as HTMLInputElement;
       if (input) {
-        const marginKey = id.replace('margin', '').toLowerCase();
+        const marginKey = id.replace("margin", "").toLowerCase();
         this.marginInputs[marginKey] = input;
         input.value = this.marginValues[marginKey].toString();
       }
@@ -59,10 +68,10 @@ export class MarginSettingsManager {
     Object.entries(this.marginInputs).forEach(([key, input]) => {
       const inputHandler = () => this.handleMarginChange(key, input);
       const changeHandler = () => this.handleMarginChange(key, input);
-      
-      input.addEventListener('input', inputHandler);
-      input.addEventListener('change', changeHandler);
-      
+
+      input.addEventListener("input", inputHandler);
+      input.addEventListener("change", changeHandler);
+
       // Store handlers for cleanup
       (input as any).__inputHandler = inputHandler;
       (input as any).__changeHandler = changeHandler;
@@ -75,12 +84,12 @@ export class MarginSettingsManager {
   private handleMarginChange(marginKey: string, input: HTMLInputElement): void {
     const value = parseInt(input.value) || 0;
     this.marginValues[marginKey] = Math.max(0, value); // Ensure non-negative
-    
+
     // Update input value to reflect clamped value
     input.value = this.marginValues[marginKey].toString();
-    
+
     console.log(`📐 Margin ${marginKey}: ${this.marginValues[marginKey]}px`);
-    
+
     // Trigger callback
     if (this.onMarginChangeCallback) {
       this.onMarginChangeCallback({ ...this.marginValues });
@@ -101,16 +110,16 @@ export class MarginSettingsManager {
     Object.entries(margins).forEach(([key, value]) => {
       if (key in this.marginValues) {
         this.marginValues[key] = Math.max(0, value);
-        
+
         // Update input if it exists
         if (this.marginInputs[key]) {
           this.marginInputs[key].value = this.marginValues[key].toString();
         }
       }
     });
-    
-    console.log('📐 Margins updated:', this.marginValues);
-    
+
+    console.log("📐 Margins updated:", this.marginValues);
+
     // Trigger callback
     if (this.onMarginChangeCallback) {
       this.onMarginChangeCallback({ ...this.marginValues });
@@ -123,14 +132,15 @@ export class MarginSettingsManager {
   setMargin(marginKey: string, value: number): void {
     if (marginKey in this.marginValues) {
       this.marginValues[marginKey] = Math.max(0, value);
-      
+
       // Update input if it exists
       if (this.marginInputs[marginKey]) {
-        this.marginInputs[marginKey].value = this.marginValues[marginKey].toString();
+        this.marginInputs[marginKey].value =
+          this.marginValues[marginKey].toString();
       }
-      
+
       console.log(`📐 Margin ${marginKey}: ${this.marginValues[marginKey]}px`);
-      
+
       // Trigger callback
       if (this.onMarginChangeCallback) {
         this.onMarginChangeCallback({ ...this.marginValues });
@@ -166,7 +176,7 @@ export class MarginSettingsManager {
    */
   areMarginosUniform(): boolean {
     const values = Object.values(this.marginValues);
-    return values.every(value => value === values[0]);
+    return values.every((value) => value === values[0]);
   }
 
   /**
@@ -180,7 +190,7 @@ export class MarginSettingsManager {
    * Remove margins from element
    */
   removeMarginsFromElement(element: HTMLElement): void {
-    element.style.margin = '';
+    element.style.margin = "";
   }
 
   /**
@@ -213,18 +223,18 @@ export class MarginSettingsManager {
    */
   destroy(): void {
     // Remove event listeners
-    Object.values(this.marginInputs).forEach(input => {
+    Object.values(this.marginInputs).forEach((input) => {
       const inputHandler = (input as any).__inputHandler;
       const changeHandler = (input as any).__changeHandler;
-      
+
       if (inputHandler) {
-        input.removeEventListener('input', inputHandler);
+        input.removeEventListener("input", inputHandler);
       }
       if (changeHandler) {
-        input.removeEventListener('change', changeHandler);
+        input.removeEventListener("change", changeHandler);
       }
     });
-    
+
     this.marginInputs = {};
     this.onMarginChangeCallback = null;
   }

@@ -3,14 +3,14 @@
  * Handles margin settings UI and database persistence for course canvas
  */
 
-import { supabase } from '../../backend/supabase';
+import { supabase } from "../../backend/supabase";
 
 export interface MarginSettings {
   top: number;
   bottom: number;
   left: number;
   right: number;
-  unit: 'inches' | 'centimeters';
+  unit: "inches" | "centimeters";
 }
 
 export class MarginSettingsHandler {
@@ -26,7 +26,7 @@ export class MarginSettingsHandler {
       bottom: 2.54,
       left: 2.54,
       right: 2.54,
-      unit: 'centimeters'
+      unit: "centimeters",
     };
 
     // Load from local storage if available
@@ -37,30 +37,33 @@ export class MarginSettingsHandler {
     this.bindEvents();
     this.updateUnitDisplays();
     this.updateInputValues(); // Ensure UI shows default values
-    console.log('📏 Margin Settings Handler initialized with defaults:', this.currentSettings);
+    console.log(
+      "📏 Margin Settings Handler initialized with defaults:",
+      this.currentSettings,
+    );
   }
 
   private bindEvents(): void {
     // Unit toggle events
     const unitInputs = document.querySelectorAll('input[name="margin-unit"]');
-    unitInputs.forEach(input => {
-      input.addEventListener('change', (e) => this.handleUnitChange(e));
+    unitInputs.forEach((input) => {
+      input.addEventListener("change", (e) => this.handleUnitChange(e));
     });
 
     // Margin input events
-    const marginInputs = document.querySelectorAll('.margin-input');
-    marginInputs.forEach(input => {
-      input.addEventListener('input', (e) => this.handleMarginChange(e));
-      input.addEventListener('change', (e) => this.handleMarginChange(e)); // For when user leaves field
+    const marginInputs = document.querySelectorAll(".margin-input");
+    marginInputs.forEach((input) => {
+      input.addEventListener("input", (e) => this.handleMarginChange(e));
+      input.addEventListener("change", (e) => this.handleMarginChange(e)); // For when user leaves field
     });
   }
 
   private handleUnitChange(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const newUnit = input.value as 'inches' | 'centimeters';
-    
+    const newUnit = input.value as "inches" | "centimeters";
+
     console.log(`📏 Unit changed to: ${newUnit}`);
-    
+
     // Convert current values to new unit
     if (newUnit !== this.currentSettings.unit) {
       this.convertMarginUnits(this.currentSettings.unit, newUnit);
@@ -74,47 +77,72 @@ export class MarginSettingsHandler {
 
   private handleMarginChange(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const marginType = input.name.replace('margin_', '') as keyof Omit<MarginSettings, 'unit'>;
+    const marginType = input.name.replace("margin_", "") as keyof Omit<
+      MarginSettings,
+      "unit"
+    >;
     const value = parseFloat(input.value) || 0;
-    
-    console.log(`📏 Margin ${marginType} changed to: ${value} ${this.currentSettings.unit}`);
-    
+
+    console.log(
+      `📏 Margin ${marginType} changed to: ${value} ${this.currentSettings.unit}`,
+    );
+
     // Update current settings
     this.currentSettings[marginType] = value;
-    
+
     // Show saving status
-    this.showSaveStatus('saving');
-    
+    this.showSaveStatus("saving");
+
     // Debounce saving to database
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout);
     }
-    
+
     this.saveTimeout = setTimeout(() => {
       this.saveSettingsToDatabase();
       this.updateCanvasMargins();
     }, 500); // Save after 500ms of no changes
   }
 
-  private convertMarginUnits(fromUnit: 'inches' | 'centimeters', toUnit: 'inches' | 'centimeters'): void {
+  private convertMarginUnits(
+    fromUnit: "inches" | "centimeters",
+    toUnit: "inches" | "centimeters",
+  ): void {
     if (fromUnit === toUnit) return;
-    
-    const conversionFactor = fromUnit === 'inches' ? 2.54 : 1 / 2.54; // inches to cm or cm to inches
-    
-    this.currentSettings.top = parseFloat((this.currentSettings.top * conversionFactor).toFixed(2));
-    this.currentSettings.bottom = parseFloat((this.currentSettings.bottom * conversionFactor).toFixed(2));
-    this.currentSettings.left = parseFloat((this.currentSettings.left * conversionFactor).toFixed(2));
-    this.currentSettings.right = parseFloat((this.currentSettings.right * conversionFactor).toFixed(2));
-    
-    console.log(`📏 Converted margins from ${fromUnit} to ${toUnit}:`, this.currentSettings);
+
+    const conversionFactor = fromUnit === "inches" ? 2.54 : 1 / 2.54; // inches to cm or cm to inches
+
+    this.currentSettings.top = parseFloat(
+      (this.currentSettings.top * conversionFactor).toFixed(2),
+    );
+    this.currentSettings.bottom = parseFloat(
+      (this.currentSettings.bottom * conversionFactor).toFixed(2),
+    );
+    this.currentSettings.left = parseFloat(
+      (this.currentSettings.left * conversionFactor).toFixed(2),
+    );
+    this.currentSettings.right = parseFloat(
+      (this.currentSettings.right * conversionFactor).toFixed(2),
+    );
+
+    console.log(
+      `📏 Converted margins from ${fromUnit} to ${toUnit}:`,
+      this.currentSettings,
+    );
   }
 
   private updateInputValues(): void {
-    const topInput = document.getElementById('margin-top') as HTMLInputElement;
-    const bottomInput = document.getElementById('margin-bottom') as HTMLInputElement;
-    const leftInput = document.getElementById('margin-left') as HTMLInputElement;
-    const rightInput = document.getElementById('margin-right') as HTMLInputElement;
-    
+    const topInput = document.getElementById("margin-top") as HTMLInputElement;
+    const bottomInput = document.getElementById(
+      "margin-bottom",
+    ) as HTMLInputElement;
+    const leftInput = document.getElementById(
+      "margin-left",
+    ) as HTMLInputElement;
+    const rightInput = document.getElementById(
+      "margin-right",
+    ) as HTMLInputElement;
+
     if (topInput) topInput.value = this.currentSettings.top.toString();
     if (bottomInput) bottomInput.value = this.currentSettings.bottom.toString();
     if (leftInput) leftInput.value = this.currentSettings.left.toString();
@@ -122,28 +150,33 @@ export class MarginSettingsHandler {
   }
 
   private updateUnitDisplays(): void {
-    const unitDisplays = document.querySelectorAll('.margin-unit-display');
-    const displayUnit = this.currentSettings.unit === 'inches' ? 'in' : 'cm';
-    
-    unitDisplays.forEach(display => {
+    const unitDisplays = document.querySelectorAll(".margin-unit-display");
+    const displayUnit = this.currentSettings.unit === "inches" ? "in" : "cm";
+
+    unitDisplays.forEach((display) => {
       display.textContent = displayUnit;
     });
   }
 
   private async saveSettingsToDatabase(): Promise<void> {
     if (!this.courseId) {
-      console.error('📏 ERROR: No course ID available, cannot save margin settings');
+      console.error(
+        "📏 ERROR: No course ID available, cannot save margin settings",
+      );
       return;
     }
 
     try {
-      console.log('📏 Saving margin settings to database...', this.currentSettings);
-      
+      console.log(
+        "📏 Saving margin settings to database...",
+        this.currentSettings,
+      );
+
       // Get current course settings
       const { data: course, error: fetchError } = await supabase
-        .from('courses')
-        .select('course_settings')
-        .eq('id', this.courseId)
+        .from("courses")
+        .select("course_settings")
+        .eq("id", this.courseId)
         .single();
 
       if (fetchError) {
@@ -154,56 +187,57 @@ export class MarginSettingsHandler {
       const existingSettings = course?.course_settings || {};
       const updatedSettings = {
         ...existingSettings,
-        margins: this.currentSettings
+        margins: this.currentSettings,
       };
 
       // Save to database
       const { error } = await supabase
-        .from('courses')
+        .from("courses")
         .update({ course_settings: updatedSettings })
-        .eq('id', this.courseId);
+        .eq("id", this.courseId);
 
       if (error) {
         throw error;
       }
 
-      console.log('📏 Margin settings saved successfully');
-      this.showSaveStatus('saved');
-      
+      console.log("📏 Margin settings saved successfully");
+      this.showSaveStatus("saved");
     } catch (error) {
-      console.error('📏 Failed to save margin settings:', error);
-      this.showSaveStatus('error');
+      console.error("📏 Failed to save margin settings:", error);
+      this.showSaveStatus("error");
     }
   }
 
-  private showSaveStatus(status: 'saving' | 'saved' | 'error'): void {
-    const statusElement = document.querySelector('#margins-save-status .save-indicator__text') as HTMLElement;
+  private showSaveStatus(status: "saving" | "saved" | "error"): void {
+    const statusElement = document.querySelector(
+      "#margins-save-status .save-indicator__text",
+    ) as HTMLElement;
     if (!statusElement) return;
 
     // Remove existing status classes
-    statusElement.classList.remove('saved', 'saving', 'error');
-    
+    statusElement.classList.remove("saved", "saving", "error");
+
     switch (status) {
-      case 'saving':
-        statusElement.textContent = 'Saving margins...';
-        statusElement.classList.add('saving');
+      case "saving":
+        statusElement.textContent = "Saving margins...";
+        statusElement.classList.add("saving");
         break;
-      case 'saved':
-        statusElement.textContent = 'Margins saved successfully';
-        statusElement.classList.add('saved');
+      case "saved":
+        statusElement.textContent = "Margins saved successfully";
+        statusElement.classList.add("saved");
         // Reset to default message after 3 seconds
         setTimeout(() => {
-          statusElement.textContent = 'Margins will be saved automatically';
-          statusElement.classList.remove('saved');
+          statusElement.textContent = "Margins will be saved automatically";
+          statusElement.classList.remove("saved");
         }, 3000);
         break;
-      case 'error':
-        statusElement.textContent = 'Failed to save margins';
-        statusElement.classList.add('error');
+      case "error":
+        statusElement.textContent = "Failed to save margins";
+        statusElement.classList.add("error");
         // Reset to default message after 5 seconds
         setTimeout(() => {
-          statusElement.textContent = 'Margins will be saved automatically';
-          statusElement.classList.remove('error');
+          statusElement.textContent = "Margins will be saved automatically";
+          statusElement.classList.remove("error");
         }, 5000);
         break;
     }
@@ -211,18 +245,18 @@ export class MarginSettingsHandler {
 
   public async loadSettingsFromDatabase(courseId: string): Promise<void> {
     this.courseId = courseId;
-    
+
     try {
       console.log(`📏 Loading margin settings for course: ${courseId}`);
-      
+
       const { data: course, error } = await supabase
-        .from('courses')
-        .select('course_settings')
-        .eq('id', courseId)
+        .from("courses")
+        .select("course_settings")
+        .eq("id", courseId)
         .single();
 
       if (error) {
-        console.error('📏 Error loading course settings:', error);
+        console.error("📏 Error loading course settings:", error);
         // Use defaults if loading fails
         this.updateInputValues();
         this.updateUnitDisplays();
@@ -233,18 +267,20 @@ export class MarginSettingsHandler {
       if (course?.course_settings?.margins) {
         const margins = course.course_settings.margins;
         this.currentSettings = { ...this.currentSettings, ...margins };
-        console.log('📏 Loaded margin settings from database:', this.currentSettings);
+        console.log(
+          "📏 Loaded margin settings from database:",
+          this.currentSettings,
+        );
       } else {
-        console.log('📏 No margin settings found in database, using defaults');
+        console.log("📏 No margin settings found in database, using defaults");
       }
 
       // Update UI and canvas
       this.updateInputValues();
       this.updateUnitDisplays();
       this.updateCanvasMargins();
-
     } catch (error) {
-      console.error('📏 Error loading margin settings:', error);
+      console.error("📏 Error loading margin settings:", error);
       // Use defaults if loading fails
       this.updateInputValues();
       this.updateUnitDisplays();
@@ -254,34 +290,43 @@ export class MarginSettingsHandler {
 
   private updateCanvasMargins(): void {
     // This will communicate with the course builder to update canvas margins
-    if (this.courseBuilder && typeof this.courseBuilder.updateCanvasMargins === 'function') {
+    if (
+      this.courseBuilder &&
+      typeof this.courseBuilder.updateCanvasMargins === "function"
+    ) {
       // Convert to pixels (assuming 96 DPI)
       const dpi = 96;
       const marginsInPixels = {
-        top: this.currentSettings.unit === 'inches' 
-          ? this.currentSettings.top * dpi 
-          : (this.currentSettings.top / 2.54) * dpi,
-        bottom: this.currentSettings.unit === 'inches' 
-          ? this.currentSettings.bottom * dpi 
-          : (this.currentSettings.bottom / 2.54) * dpi,
-        left: this.currentSettings.unit === 'inches' 
-          ? this.currentSettings.left * dpi 
-          : (this.currentSettings.left / 2.54) * dpi,
-        right: this.currentSettings.unit === 'inches' 
-          ? this.currentSettings.right * dpi 
-          : (this.currentSettings.right / 2.54) * dpi,
+        top:
+          this.currentSettings.unit === "inches"
+            ? this.currentSettings.top * dpi
+            : (this.currentSettings.top / 2.54) * dpi,
+        bottom:
+          this.currentSettings.unit === "inches"
+            ? this.currentSettings.bottom * dpi
+            : (this.currentSettings.bottom / 2.54) * dpi,
+        left:
+          this.currentSettings.unit === "inches"
+            ? this.currentSettings.left * dpi
+            : (this.currentSettings.left / 2.54) * dpi,
+        right:
+          this.currentSettings.unit === "inches"
+            ? this.currentSettings.right * dpi
+            : (this.currentSettings.right / 2.54) * dpi,
       };
-      
-      console.log('📏 Updating canvas margins:', marginsInPixels);
+
+      console.log("📏 Updating canvas margins:", marginsInPixels);
       this.courseBuilder.updateCanvasMargins(marginsInPixels);
     } else {
-      console.log('📏 Course builder not available yet, margins will be applied when canvas is ready');
+      console.log(
+        "📏 Course builder not available yet, margins will be applied when canvas is ready",
+      );
     }
   }
 
   public setCourseBuilder(courseBuilder: any): void {
     this.courseBuilder = courseBuilder;
-    console.log('📏 Course builder reference set');
+    console.log("📏 Course builder reference set");
     // Apply current margins immediately
     this.updateCanvasMargins();
   }
@@ -304,21 +349,30 @@ export class MarginSettingsHandler {
     }
   }
 
-  public getMarginPixels(): { top: number; bottom: number; left: number; right: number } {
+  public getMarginPixels(): {
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+  } {
     const dpi = 96;
     return {
-      top: this.currentSettings.unit === 'inches' 
-        ? this.currentSettings.top * dpi 
-        : (this.currentSettings.top / 2.54) * dpi,
-      bottom: this.currentSettings.unit === 'inches' 
-        ? this.currentSettings.bottom * dpi 
-        : (this.currentSettings.bottom / 2.54) * dpi,
-      left: this.currentSettings.unit === 'inches' 
-        ? this.currentSettings.left * dpi 
-        : (this.currentSettings.left / 2.54) * dpi,
-      right: this.currentSettings.unit === 'inches' 
-        ? this.currentSettings.right * dpi 
-        : (this.currentSettings.right / 2.54) * dpi,
+      top:
+        this.currentSettings.unit === "inches"
+          ? this.currentSettings.top * dpi
+          : (this.currentSettings.top / 2.54) * dpi,
+      bottom:
+        this.currentSettings.unit === "inches"
+          ? this.currentSettings.bottom * dpi
+          : (this.currentSettings.bottom / 2.54) * dpi,
+      left:
+        this.currentSettings.unit === "inches"
+          ? this.currentSettings.left * dpi
+          : (this.currentSettings.left / 2.54) * dpi,
+      right:
+        this.currentSettings.unit === "inches"
+          ? this.currentSettings.right * dpi
+          : (this.currentSettings.right / 2.54) * dpi,
     };
   }
 

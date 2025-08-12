@@ -2,8 +2,8 @@
 // COURSEBUILDER COMPONENT
 // ==========================================================================
 
-@use '../abstracts/variables' as vars;
-@use '../abstracts/mixins' as mixins;
+@use "../abstracts/variables" as vars;
+@use "../abstracts/mixins" as mixins;
 
 /* Course Builder Component */
 .coursebuilder {
@@ -15,7 +15,7 @@
   height: 100%; /* Fill the available container space */
   box-sizing: border-box;
   background-color: vars.$gray-50;
-  
+
   > * {
     border: 1px solid vars.$gray-200;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -23,7 +23,7 @@
     background-color: vars.$white;
     box-sizing: border-box;
   }
-  
+
   /* Options Bar (spans media bar and media search areas only) */
   &__options-bar {
     grid-column: 1 / 3;
@@ -33,7 +33,7 @@
     justify-content: flex-start;
     padding: 0.25rem;
   }
-  
+
   /* Canvas Toolbar (above canvas area - row 1, column 3) */
   &__canvas-toolbar {
     grid-column: 3;
@@ -42,9 +42,8 @@
     align-items: center;
     justify-content: flex-start;
     padding: 0.25rem;
-
   }
-  
+
   /* Table of Contents Options (separate top right area) */
   &__toc-options {
     grid-column: 4;
@@ -55,9 +54,8 @@
     align-items: center;
     gap: 1rem;
     padding: 0.5rem;
-
   }
-  
+
   /* Media Bar (Left Sidebar) */
   &__media-bar {
     grid-column: 1;
@@ -71,7 +69,7 @@
     overflow-y: auto; /* Allow scrolling if content overflows */
     padding: 0.5rem 0.25rem;
   }
-  
+
   /* Media Search Panel */
   &__media-search {
     grid-column: 2;
@@ -82,7 +80,7 @@
     height: 100%; /* Ensure it fills the grid area */
     overflow-y: auto; /* Allow scrolling if content overflows */
   }
-  
+
   /* Main Canvas Area - simplified with direct canvas styling */
   &__canvas {
     grid-column: 3;
@@ -97,7 +95,7 @@
     padding: 20px;
     height: 100%; /* Fill grid area */
     overflow: auto; /* Only the canvas area scrolls */
-    
+
     /* Direct canvas styling - A4 proportions */
     canvas {
       width: 794px !important;
@@ -111,7 +109,7 @@
       touch-action: none;
     }
   }
-  
+
   /* Table of Contents Sidebar */
   &__toc {
     grid-column: 4;
@@ -132,7 +130,7 @@
   overflow: hidden;
   justify-content: flex-start;
   width: 100%;
-  
+
   &__tools {
     display: flex;
     gap: 1rem;
@@ -141,7 +139,7 @@
     padding: 0;
     flex-shrink: 0; // Don't shrink the tools
   }
-  
+
   &__settings {
     flex: 1; // Take up remaining space
     overflow-x: auto; // Allow horizontal scrolling if needed
@@ -167,7 +165,7 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   gap: 0.25rem;
   position: relative;
-  
+
   &__icon {
     width: 2.5rem;
     height: 2.5rem;
@@ -177,7 +175,7 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(100, 149, 237, 0.1);
-    
+
     svg {
       width: 85%;
       height: 85%;
@@ -185,7 +183,7 @@
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
   }
-  
+
   &__label {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: 0.75rem;
@@ -193,37 +191,39 @@
     text-align: center;
     color: vars.$gray-700;
   }
-  
+
   &:hover {
     transform: translateY(-1px);
-    
+
     .tool__icon {
       background: rgba(100, 149, 237, 0.15);
       border-color: rgba(100, 149, 237, 0.3);
       box-shadow: 0 4px 12px rgba(100, 149, 237, 0.2);
-      
+
       svg {
         transform: scale(1.05);
       }
     }
-    
+
     .tool__label {
       color: vars.$primary-color;
     }
   }
-  
+
   &--selected {
     .tool__icon {
       background: linear-gradient(135deg, vars.$primary-color 0%, #91b4f2 100%);
       border-color: vars.$primary-color;
-      box-shadow: 0 6px 20px rgba(100, 149, 237, 0.3), 0 0 0 2px rgba(100, 149, 237, 0.2);
-      
+      box-shadow:
+        0 6px 20px rgba(100, 149, 237, 0.3),
+        0 0 0 2px rgba(100, 149, 237, 0.2);
+
       svg {
         filter: brightness(0) invert(1);
         transform: scale(1.1);
       }
     }
-    
+
     .tool__label {
       color: vars.$primary-color;
       font-weight: 600;
@@ -237,7 +237,7 @@
   align-items: center;
   gap: 1rem;
   flex: 1;
-  
+
   &--active {
     display: flex;
   }
@@ -248,7 +248,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  
+
   &__label {
     font-size: 0.75rem;
     font-weight: 500;
@@ -277,25 +277,25 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  
+
   svg {
     width: 16px;
     height: 16px;
     color: vars.$gray-600;
   }
-  
+
   &:hover {
     background: vars.$white;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    
+
     svg {
       color: vars.$primary-color;
     }
   }
-  
+
   &--active {
     background: vars.$primary-color;
-    
+
     svg {
       color: white;
     }
@@ -307,7 +307,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  
+
   input[type="range"] {
     width: 80px;
     height: 4px;
@@ -316,7 +316,7 @@
     outline: none;
     appearance: none;
     -webkit-appearance: none;
-    
+
     &::-webkit-slider-thumb {
       -webkit-appearance: none;
       width: 16px;
@@ -325,7 +325,7 @@
       background: vars.$primary-color;
       cursor: pointer;
     }
-    
+
     &::-moz-range-thumb {
       width: 16px;
       height: 16px;
@@ -335,7 +335,7 @@
       border: none;
     }
   }
-  
+
   &__value {
     font-size: 0.75rem;
     color: vars.$gray-600;
@@ -349,7 +349,7 @@
   display: flex;
   gap: 0.25rem;
   flex-wrap: wrap;
-  
+
   &__color {
     width: 20px;
     height: 20px;
@@ -357,12 +357,12 @@
     cursor: pointer;
     border: 2px solid transparent;
     transition: all 0.2s ease;
-    
+
     &:hover {
       transform: scale(1.1);
       border-color: vars.$primary-color;
     }
-    
+
     &--active {
       border-color: vars.$primary-color;
       box-shadow: 0 0 0 1px rgba(100, 149, 237, 0.3);
@@ -373,7 +373,7 @@
 /* Font controls - unified version */
 .font-controls {
   margin-bottom: 1rem;
-  
+
   &__select {
     width: 100%;
     padding: 0.5rem;
@@ -381,7 +381,7 @@
     border-radius: 4px;
     font-size: 0.875rem;
     background-color: vars.$white;
-    
+
     &:focus {
       outline: none;
       border-color: vars.$primary-color;
@@ -400,7 +400,7 @@
   background: none;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
+
   &__icon {
     width: 2.5rem;
     height: 2.5rem;
@@ -410,33 +410,33 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(100, 149, 237, 0.1);
-    
+
     svg {
       width: 85%;
       height: 85%;
     }
   }
-  
+
   &__label {
     font-size: 0.75rem;
     font-weight: 500;
     text-align: center;
     color: vars.$gray-700;
   }
-  
+
   &:hover {
     transform: translateY(-1px);
-    
+
     .action-btn__icon {
       background: rgba(100, 149, 237, 0.15);
       border-color: rgba(100, 149, 237, 0.3);
       box-shadow: 0 4px 12px rgba(100, 149, 237, 0.2);
-      
+
       svg {
         transform: scale(1.05);
       }
     }
-    
+
     .action-btn__label {
       color: vars.$primary-color;
     }
@@ -453,7 +453,7 @@
   background: none;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
+
   &__icon {
     width: 2.5rem;
     height: 2.5rem;
@@ -463,50 +463,52 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(100, 149, 237, 0.1);
-    
+
     svg {
       width: 85%;
       height: 85%;
     }
   }
-  
+
   &__label {
     font-size: 0.75rem;
     font-weight: 500;
     text-align: center;
     color: vars.$gray-700;
   }
-  
+
   &:hover {
     transform: translateY(-1px);
-    
+
     .media-btn__icon {
       background: rgba(100, 149, 237, 0.15);
       border-color: rgba(100, 149, 237, 0.3);
       box-shadow: 0 4px 12px rgba(100, 149, 237, 0.2);
-      
+
       svg {
         transform: scale(1.05);
       }
     }
-    
+
     .media-btn__label {
       color: vars.$primary-color;
     }
   }
-  
+
   &--selected {
     .media-btn__icon {
       background: linear-gradient(135deg, vars.$primary-color 0%, #91b4f2 100%);
       border-color: vars.$primary-color;
-      box-shadow: 0 6px 20px rgba(100, 149, 237, 0.3), 0 0 0 2px rgba(100, 149, 237, 0.2);
-      
+      box-shadow:
+        0 6px 20px rgba(100, 149, 237, 0.3),
+        0 0 0 2px rgba(100, 149, 237, 0.2);
+
       svg {
         filter: brightness(0) invert(1);
         transform: scale(1.1);
       }
     }
-    
+
     .media-btn__label {
       color: vars.$primary-color;
       font-weight: 600;
@@ -517,14 +519,14 @@
 /* Media search panel */
 .media-search {
   padding: 1rem;
-  
+
   &__title {
     font-size: 1.125rem;
     font-weight: 600;
     margin: 0 0 1rem 0;
     color: vars.$gray-900;
   }
-  
+
   &__input {
     width: 100%;
     padding: 0.5rem;
@@ -532,14 +534,14 @@
     border-radius: 4px;
     font-size: 0.875rem;
     margin-bottom: 1rem;
-    
+
     &:focus {
       outline: none;
       border-color: vars.$primary-color;
       box-shadow: 0 0 0 3px rgba(100, 149, 237, 0.1);
     }
   }
-  
+
   &__content {
     padding: 2rem;
     text-align: center;
@@ -558,12 +560,12 @@
   gap: 10px;
   color: vars.$gray-400;
   text-align: center;
-  
+
   &__title {
     font-size: 18px;
     font-weight: 500;
   }
-  
+
   &__subtitle {
     font-size: 14px;
     opacity: 0.7;
@@ -578,35 +580,35 @@
     margin: 0 0 1rem 0;
     color: vars.$gray-900;
   }
-  
+
   &__page {
     border: 1px solid vars.$gray-300;
     border-radius: 4px;
     padding: 1rem;
     margin-bottom: 1rem;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
   }
-  
+
   &__page-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 0.5rem;
   }
-  
+
   &__page-name {
     font-weight: 500;
     color: vars.$gray-900;
   }
-  
+
   &__page-format {
     font-size: 0.8rem;
     color: vars.$gray-600;
   }
-  
+
   &__page-preview {
     width: 100%;
     height: 120px;
@@ -618,7 +620,7 @@
     justify-content: center;
     align-items: center;
   }
-  
+
   &__page-preview-content {
     font-size: 12px;
     color: vars.$gray-500;
@@ -652,7 +654,7 @@
     gap: 0.5rem;
     height: 100vh;
     padding: 0.25rem;
-    
+
     &__options-bar {
       grid-column: 1;
       grid-row: 1;
@@ -660,14 +662,14 @@
       min-height: 50px;
       padding: 0.5rem;
     }
-    
+
     &__toc-options {
       grid-column: 1;
       grid-row: 2;
       height: auto;
       min-height: 40px;
     }
-    
+
     &__media-bar {
       grid-column: 1;
       grid-row: 3;
@@ -679,7 +681,7 @@
       justify-content: flex-start;
       padding: 0.5rem;
     }
-    
+
     &__canvas {
       grid-column: 1;
       grid-row: 4;
@@ -688,7 +690,7 @@
       min-height: 300px;
       padding: 10px;
     }
-    
+
     &__media-search {
       grid-column: 1;
       grid-row: 5;
@@ -696,7 +698,7 @@
       max-height: 200px;
       flex: 1;
     }
-    
+
     &__toc {
       display: none;
     }
@@ -713,19 +715,19 @@
       padding: vars.$spacing-6;
       min-height: calc(100vh - #{vars.$spacing-6} * 2 - 80px);
       align-items: start;
-      
+
       .aside {
         height: 100%;
         min-height: calc(100vh - #{vars.$spacing-6} * 2 - 80px);
         position: sticky;
         top: vars.$spacing-6;
       }
-      
+
       .article {
         min-width: 0;
         height: 100%;
         min-height: calc(100vh - #{vars.$spacing-6} * 2 - 80px);
-        
+
         .card {
           height: 100%;
           display: flex;
@@ -738,17 +740,17 @@
       @container (max-width: 768px) {
         grid-template-columns: 1fr;
         min-height: auto;
-        
+
         .aside {
           height: auto;
           min-height: auto;
           position: static;
         }
-        
+
         .article {
           height: auto;
           min-height: auto;
-          
+
           .card {
             height: auto;
           }
@@ -763,14 +765,14 @@
     padding: 0; /* Remove any padding */
     height: calc(100vh - 120px); /* Account for header and some margin */
     max-height: calc(100vh - 120px); /* Ensure it never exceeds */
-    
+
     .article {
       background-color: vars.$white;
       padding: 0;
       height: 100%;
       overflow: hidden; /* Prevent article scrolling */
       margin: 0; /* Remove any margin */
-      
+
       &--active {
         display: block;
         height: 100%;

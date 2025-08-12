@@ -3,14 +3,14 @@
  * Manages all drawing tools and their interactions with the canvas
  */
 
-import { FederatedPointerEvent, Container } from 'pixi.js';
-import { Tool, ToolSettings } from './ToolInterface';
-import { SelectionTool } from './SelectionTool';
-import { PenTool } from './PenTool';
-import { HighlighterTool } from './HighlighterTool';
-import { TextTool } from './TextTool';
-import { ShapesTool } from './ShapesTool';
-import { EraserTool } from './EraserTool';
+import { FederatedPointerEvent, Container } from "pixi.js";
+import { Tool, ToolSettings } from "./ToolInterface";
+import { SelectionTool } from "./SelectionTool";
+import { PenTool } from "./PenTool";
+import { HighlighterTool } from "./HighlighterTool";
+import { TextTool } from "./TextTool";
+import { ShapesTool } from "./ShapesTool";
+import { EraserTool } from "./EraserTool";
 
 export class ToolManager {
   private tools: Map<string, Tool> = new Map();
@@ -20,28 +20,28 @@ export class ToolManager {
   constructor() {
     this.settings = {
       pen: {
-        color: '#000000', // Black for good visibility
-        size: 4 // Increased size for better visibility
+        color: "#000000", // Black for good visibility
+        size: 4, // Increased size for better visibility
       },
       text: {
-        fontFamily: 'Arial',
+        fontFamily: "Arial",
         fontSize: 16,
-        color: '#000000'
+        color: "#000000",
       },
       highlighter: {
-        color: '#ffff00', // Bright yellow
+        color: "#ffff00", // Bright yellow
         opacity: 0.8, // Increased opacity for better visibility
-        size: 20 // Larger size for better visibility
+        size: 20, // Larger size for better visibility
       },
       shapes: {
-        color: '#000000',
+        color: "#000000",
         strokeWidth: 2,
         fillColor: undefined,
-        shapeType: 'rectangle'
+        shapeType: "rectangle",
       },
       eraser: {
-        size: 20
-      }
+        size: 20,
+      },
     };
 
     this.initializeTools();
@@ -49,15 +49,15 @@ export class ToolManager {
 
   private initializeTools(): void {
     // Register all tools
-    this.tools.set('selection', new SelectionTool());
-    this.tools.set('pen', new PenTool());
-    this.tools.set('highlighter', new HighlighterTool());
-    this.tools.set('text', new TextTool());
-    this.tools.set('shapes', new ShapesTool());
-    this.tools.set('eraser', new EraserTool());
+    this.tools.set("selection", new SelectionTool());
+    this.tools.set("pen", new PenTool());
+    this.tools.set("highlighter", new HighlighterTool());
+    this.tools.set("text", new TextTool());
+    this.tools.set("shapes", new ShapesTool());
+    this.tools.set("eraser", new EraserTool());
 
     // Set default tool
-    this.activeTool = this.tools.get('selection') || null;
+    this.activeTool = this.tools.get("selection") || null;
     if (this.activeTool) {
       this.activeTool.onActivate();
     }
@@ -84,7 +84,10 @@ export class ToolManager {
     this.updateToolSettings(toolName);
 
     console.log(`✅ Switched to ${toolName} tool`);
-    console.log(`🔧 Tool settings:`, this.settings[toolName as keyof ToolSettings]);
+    console.log(
+      `🔧 Tool settings:`,
+      this.settings[toolName as keyof ToolSettings],
+    );
     console.log(`🔧 Applied settings to tool (${this.activeTool.name})`);
     return true;
   }
@@ -94,21 +97,31 @@ export class ToolManager {
   }
 
   public getActiveToolName(): string {
-    return this.activeTool?.name || 'none';
+    return this.activeTool?.name || "none";
   }
 
-  public onPointerDown(event: FederatedPointerEvent, container: Container): void {
+  public onPointerDown(
+    event: FederatedPointerEvent,
+    container: Container,
+  ): void {
     if (this.activeTool) {
-      console.log(`👆 Pointer DOWN - Tool: ${this.activeTool.name}, Position: (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`);
+      console.log(
+        `👆 Pointer DOWN - Tool: ${this.activeTool.name}, Position: (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
+      );
       this.activeTool.onPointerDown(event, container);
     }
   }
 
-  public onPointerMove(event: FederatedPointerEvent, container: Container): void {
+  public onPointerMove(
+    event: FederatedPointerEvent,
+    container: Container,
+  ): void {
     if (this.activeTool) {
       // Only log move events for drawing tools when they're actually drawing
       if (this.shouldLogMove()) {
-        console.log(`👈 Pointer MOVE [DRAWING] - Tool: ${this.activeTool.name}, Position: (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`);
+        console.log(
+          `👈 Pointer MOVE [DRAWING] - Tool: ${this.activeTool.name}, Position: (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
+        );
       }
       this.activeTool.onPointerMove(event, container);
     }
@@ -116,30 +129,32 @@ export class ToolManager {
 
   public onPointerUp(event: FederatedPointerEvent, container: Container): void {
     if (this.activeTool) {
-      console.log(`👆 Pointer UP - Tool: ${this.activeTool.name}, Position: (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`);
+      console.log(
+        `👆 Pointer UP - Tool: ${this.activeTool.name}, Position: (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
+      );
       this.activeTool.onPointerUp(event, container);
     }
   }
 
   private shouldLogMove(): boolean {
     if (!this.activeTool) return false;
-    
+
     // Only log move events for drawing tools when they're actively drawing
     const toolName = this.activeTool.name;
-    
+
     // Check if the tool is actively drawing
-    if (toolName === 'pen' || toolName === 'highlighter') {
+    if (toolName === "pen" || toolName === "highlighter") {
       // Only log if the tool is currently drawing (we need to check the tool's state)
       const tool = this.activeTool as any;
       return tool.isDrawing === true;
     }
-    
-    if (toolName === 'selection') {
+
+    if (toolName === "selection") {
       // Only log for selection tool when dragging
       const tool = this.activeTool as any;
       return tool.isDragging === true;
     }
-    
+
     return false;
   }
 
@@ -162,19 +177,19 @@ export class ToolManager {
 
     const toolName = this.activeTool.name;
     console.log(`🎨 Updating color for ${toolName} tool to: ${color}`);
-    
+
     switch (toolName) {
-      case 'pen':
-        this.updateToolSettings('pen', { color });
+      case "pen":
+        this.updateToolSettings("pen", { color });
         break;
-      case 'highlighter':
-        this.updateToolSettings('highlighter', { color });
+      case "highlighter":
+        this.updateToolSettings("highlighter", { color });
         break;
-      case 'text':
-        this.updateToolSettings('text', { color });
+      case "text":
+        this.updateToolSettings("text", { color });
         break;
-      case 'shapes':
-        this.updateToolSettings('shapes', { color });
+      case "shapes":
+        this.updateToolSettings("shapes", { color });
         break;
     }
   }
@@ -184,7 +199,7 @@ export class ToolManager {
   }
 
   public getCursor(): string {
-    return this.activeTool?.cursor || 'default';
+    return this.activeTool?.cursor || "default";
   }
 
   public destroy(): void {

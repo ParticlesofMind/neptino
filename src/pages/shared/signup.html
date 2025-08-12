@@ -1,144 +1,158 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sign Up - Neptino</title>
-    <link rel="stylesheet" href="/src/scss/main.scss">
-</head>
-<body class="body grid">
+    <link rel="stylesheet" href="/src/scss/main.scss" />
+  </head>
+  <body class="body grid">
     <header class="header grid__header">
-        <nav class="nav">
-            <div class="nav__logo-section">
-                <a href="/" class="logo logo--header">
-                    <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image">
-                </a>
-            </div>
-            
-            <div class="nav__links-section">
-                <!-- No navigation links on auth pages -->
-            </div>
-            
-            <div class="nav__actions-section">
-                <a href="/src/pages/shared/signin.html" class="button button--secondary">Sign In</a>
-            </div>
-        </nav>
-    </header>
- 
-    <main class="main grid__main">
-        <div class="auth-form">
-            <header class="auth-form__header">
-                <h1 class="heading heading--primary">Join Neptino</h1>
-                <p class="text text--lead">Create your account to get started</p>
-            </header>
-            
-            <form class="form" id="signup-form" method="post" action="#">
-                <div class="form__group">
-                    <label for="first-name" class="form__label">First name</label>
-                    <input 
-                        type="text" 
-                        id="first-name" 
-                        name="firstName" 
-                        class="form__input" 
-                        placeholder="Enter your first name"
-                        autocomplete="given-name"
-                        required
-                    >
-                </div>
-                
-                <div class="form__group">
-                    <label for="last-name" class="form__label">Last name</label>
-                    <input 
-                        type="text" 
-                        id="last-name" 
-                        name="lastName" 
-                        class="form__input" 
-                        placeholder="Enter your last name"
-                        autocomplete="family-name"
-                    >
-                </div>
-                
-                <div class="form__group">
-                    <label for="email" class="form__label">Email address</label>
-                    <input 
-                        type="email" 
-                        id="email" 
-                        name="email" 
-                        class="form__input" 
-                        placeholder="Enter your email"
-                        autocomplete="email"
-                        required
-                    >
-                </div>
-                
-                <div class="form__group">
-                    <label for="role" class="form__label">I am a</label>
-                    <select id="role" name="role" class="form__select" required>
-                        <option value="">Select your role</option>
-                        <option value="student">Student</option>
-                        <option value="teacher">Teacher</option>
-                        <option value="administrator">Administrator</option>
-                    </select>
-                </div>
-                
-                <div class="form__group">
-                    <label for="password" class="form__label">Password</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        class="form__input" 
-                        placeholder="Create a password"
-                        autocomplete="new-password"
-                        required
-                    >
-                </div>
-                
-                <button type="submit" class="button button--primary">
-                    Create Account
-                </button>
-            </form>
-            
-            <footer class="auth-form__footer">
-                <p class="text text--small">
-                    Already have an account? 
-                    <a href="/src/pages/shared/signin.html" class="link link--primary">Sign in</a>
-                </p>
-            </footer>
+      <nav class="nav">
+        <div class="nav__logo-section">
+          <a href="/" class="logo logo--header">
+            <img
+              src="/src/assets/logo/octopus-logo.png"
+              alt="Neptino Logo"
+              class="logo__image"
+            />
+          </a>
         </div>
+
+        <div class="nav__links-section">
+          <!-- No navigation links on auth pages -->
+        </div>
+
+        <div class="nav__actions-section">
+          <a
+            href="/src/pages/shared/signin.html"
+            class="button button--secondary"
+            >Sign In</a
+          >
+        </div>
+      </nav>
+    </header>
+
+    <main class="main grid__main">
+      <div class="auth-form">
+        <header class="auth-form__header">
+          <h1 class="heading heading--primary">Join Neptino</h1>
+          <p class="text text--lead">Create your account to get started</p>
+        </header>
+
+        <form class="form" id="signup-form" method="post" action="#">
+          <div class="form__group">
+            <label for="first-name" class="form__label">First name</label>
+            <input
+              type="text"
+              id="first-name"
+              name="firstName"
+              class="form__input"
+              placeholder="Enter your first name"
+              autocomplete="given-name"
+              required
+            />
+          </div>
+
+          <div class="form__group">
+            <label for="last-name" class="form__label">Last name</label>
+            <input
+              type="text"
+              id="last-name"
+              name="lastName"
+              class="form__input"
+              placeholder="Enter your last name"
+              autocomplete="family-name"
+            />
+          </div>
+
+          <div class="form__group">
+            <label for="email" class="form__label">Email address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="form__input"
+              placeholder="Enter your email"
+              autocomplete="email"
+              required
+            />
+          </div>
+
+          <div class="form__group">
+            <label for="role" class="form__label">I am a</label>
+            <select id="role" name="role" class="form__select" required>
+              <option value="">Select your role</option>
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+              <option value="administrator">Administrator</option>
+            </select>
+          </div>
+
+          <div class="form__group">
+            <label for="password" class="form__label">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="form__input"
+              placeholder="Create a password"
+              autocomplete="new-password"
+              required
+            />
+          </div>
+
+          <button type="submit" class="button button--primary">
+            Create Account
+          </button>
+        </form>
+
+        <footer class="auth-form__footer">
+          <p class="text text--small">
+            Already have an account?
+            <a href="/src/pages/shared/signin.html" class="link link--primary"
+              >Sign in</a
+            >
+          </p>
+        </footer>
+      </div>
     </main>
 
     <footer class="footer grid__footer">
-        <nav class="nav nav--footer">
-            <div class="nav__logo-section">
-                <a href="/" class="logo logo--footer">
-                    <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image logo__image--small">
-                </a>
-            </div>
-            
-            <div class="nav__links-section">
-                <ul class="list list--nav list--footer">
-                    <li class="list__item">
-                        <a href="#" class="link link--footer">Privacy Policy</a>
-                    </li>
-                    <li class="list__item">
-                        <a href="#" class="link link--footer">Terms of Service</a>
-                    </li>
-                    <li class="list__item">
-                        <a href="#" class="link link--footer">Support</a>
-                    </li>
-                    <li class="list__item">
-                        <a href="#" class="link link--footer">Contact</a>
-                    </li>
-                </ul>
-            </div>
-            
-            <div class="nav__actions-section">
-                <!-- Footer doesn't need action buttons, but keeping structure consistent -->
-            </div>
-        </nav>
+      <nav class="nav nav--footer">
+        <div class="nav__logo-section">
+          <a href="/" class="logo logo--footer">
+            <img
+              src="/src/assets/logo/octopus-logo.png"
+              alt="Neptino Logo"
+              class="logo__image logo__image--small"
+            />
+          </a>
+        </div>
+
+        <div class="nav__links-section">
+          <ul class="list list--nav list--footer">
+            <li class="list__item">
+              <a href="#" class="link link--footer">Privacy Policy</a>
+            </li>
+            <li class="list__item">
+              <a href="#" class="link link--footer">Terms of Service</a>
+            </li>
+            <li class="list__item">
+              <a href="#" class="link link--footer">Support</a>
+            </li>
+            <li class="list__item">
+              <a href="#" class="link link--footer">Contact</a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav__actions-section">
+          <!-- Footer doesn't need action buttons, but keeping structure consistent -->
+        </div>
+      </nav>
     </footer>
 
     <script type="module" src="/src/scripts/app.ts"></script>
-</body>
+  </body>
 </html>

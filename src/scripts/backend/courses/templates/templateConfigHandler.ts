@@ -1,4 +1,4 @@
-import { TEMPLATE_BLOCKS } from './templateBlocks.js';
+import { TEMPLATE_BLOCKS } from "./templateBlocks.js";
 
 export class TemplateConfigHandler {
   private currentTemplate: any = null;
@@ -16,14 +16,15 @@ export class TemplateConfigHandler {
    * Renders the block selector interface
    */
   private renderBlockSelector(): void {
-    const configContainer = document.querySelector('.template-config');
+    const configContainer = document.querySelector(".template-config");
     if (!configContainer) return;
 
     const blockSelectorHtml = `
       <div class="template-blocks-selector">
         <h3 class="heading heading--tertiary">Template Blocks</h3>
         <div class="blocks-grid">
-          ${TEMPLATE_BLOCKS.map(block => `
+          ${TEMPLATE_BLOCKS.map(
+            (block) => `
             <div class="block-option" data-block-type="${block.type}">
               <div class="block-option__icon">${block.icon}</div>
               <div class="block-option__label">${block.label}</div>
@@ -32,7 +33,8 @@ export class TemplateConfigHandler {
                 <label for="toggle-${block.type}"></label>
               </div>
             </div>
-          `).join('')}
+          `,
+          ).join("")}
         </div>
       </div>
       <div class="template-block-config">
@@ -51,20 +53,22 @@ export class TemplateConfigHandler {
    */
   private setupEventListeners(): void {
     // Block toggle listeners
-    document.querySelectorAll('.block-option input[type="checkbox"]').forEach(checkbox => {
-      checkbox.addEventListener('change', (e) => {
-        const target = e.target as HTMLInputElement;
-        const blockType = target.id.replace('toggle-', '');
-        this.toggleBlock(blockType, target.checked);
+    document
+      .querySelectorAll('.block-option input[type="checkbox"]')
+      .forEach((checkbox) => {
+        checkbox.addEventListener("change", (e) => {
+          const target = e.target as HTMLInputElement;
+          const blockType = target.id.replace("toggle-", "");
+          this.toggleBlock(blockType, target.checked);
+        });
       });
-    });
 
     // Block selection listeners
-    document.querySelectorAll('.block-option').forEach(option => {
-      option.addEventListener('click', (e) => {
+    document.querySelectorAll(".block-option").forEach((option) => {
+      option.addEventListener("click", (e) => {
         // Avoid triggering when clicking the checkbox
-        if ((e.target as HTMLElement).tagName !== 'INPUT') {
-          const blockType = option.getAttribute('data-block-type');
+        if ((e.target as HTMLElement).tagName !== "INPUT") {
+          const blockType = option.getAttribute("data-block-type");
           if (blockType) {
             this.selectBlock(blockType);
           }
@@ -82,7 +86,9 @@ export class TemplateConfigHandler {
         this.activeBlocks.push(blockType);
       }
     } else {
-      this.activeBlocks = this.activeBlocks.filter(type => type !== blockType);
+      this.activeBlocks = this.activeBlocks.filter(
+        (type) => type !== blockType,
+      );
     }
 
     this.updatePreview();
@@ -93,14 +99,16 @@ export class TemplateConfigHandler {
    */
   private selectBlock(blockType: string): void {
     // Remove previous selection
-    document.querySelectorAll('.block-option').forEach(option => {
-      option.classList.remove('block-option--selected');
+    document.querySelectorAll(".block-option").forEach((option) => {
+      option.classList.remove("block-option--selected");
     });
 
     // Add selection to current block
-    const selectedOption = document.querySelector(`[data-block-type="${blockType}"]`);
+    const selectedOption = document.querySelector(
+      `[data-block-type="${blockType}"]`,
+    );
     if (selectedOption) {
-      selectedOption.classList.add('block-option--selected');
+      selectedOption.classList.add("block-option--selected");
     }
 
     // Load block configuration
@@ -111,16 +119,18 @@ export class TemplateConfigHandler {
    * Loads configuration form for a specific block
    */
   private loadBlockConfig(blockType: string): void {
-    const blockConfig = TEMPLATE_BLOCKS.find(block => block.type === blockType);
+    const blockConfig = TEMPLATE_BLOCKS.find(
+      (block) => block.type === blockType,
+    );
     if (!blockConfig) return;
 
-    const configContent = document.querySelector('.block-config-content');
+    const configContent = document.querySelector(".block-config-content");
     if (!configContent) return;
 
     const configFormHtml = `
       <form class="form" data-block-type="${blockType}">
         <h4 class="heading heading--quaternary">${blockConfig.label} Settings</h4>
-        ${blockConfig.configFields.map(field => this.renderConfigField(field)).join('')}
+        ${blockConfig.configFields.map((field) => this.renderConfigField(field)).join("")}
         <div class="form__group">
           <button type="button" class="btn btn--secondary btn--small" onclick="templateConfigHandler.resetBlockConfig('${blockType}')">
             Reset to Default
@@ -132,11 +142,13 @@ export class TemplateConfigHandler {
     configContent.innerHTML = configFormHtml;
 
     // Setup field change listeners
-    configContent.querySelectorAll('input, select, textarea').forEach(input => {
-      input.addEventListener('change', () => {
-        this.updateBlockConfig(blockType);
+    configContent
+      .querySelectorAll("input, select, textarea")
+      .forEach((input) => {
+        input.addEventListener("change", () => {
+          this.updateBlockConfig(blockType);
+        });
       });
-    });
   }
 
   /**
@@ -144,52 +156,57 @@ export class TemplateConfigHandler {
    */
   private renderConfigField(field: any): string {
     switch (field.type) {
-      case 'checkbox':
+      case "checkbox":
         return `
           <div class="form__group">
             <label class="form__label form__label--checkbox">
-              <input type="checkbox" name="${field.name}" ${field.defaultValue ? 'checked' : ''}>
+              <input type="checkbox" name="${field.name}" ${field.defaultValue ? "checked" : ""}>
               ${field.label}
             </label>
           </div>
         `;
-      case 'select':
+      case "select":
         return `
           <div class="form__group">
             <label class="form__label" for="${field.name}">${field.label}</label>
             <select class="form__input" name="${field.name}">
-              ${field.options?.map((option: any) => 
-                `<option value="${option.value}" ${option.value === field.defaultValue ? 'selected' : ''}>${option.label}</option>`
-              ).join('') || ''}
+              ${
+                field.options
+                  ?.map(
+                    (option: any) =>
+                      `<option value="${option.value}" ${option.value === field.defaultValue ? "selected" : ""}>${option.label}</option>`,
+                  )
+                  .join("") || ""
+              }
             </select>
           </div>
         `;
-      case 'color':
+      case "color":
         return `
           <div class="form__group">
             <label class="form__label" for="${field.name}">${field.label}</label>
-            <input type="color" class="form__input form__input--color" name="${field.name}" value="${field.defaultValue || '#000000'}">
+            <input type="color" class="form__input form__input--color" name="${field.name}" value="${field.defaultValue || "#000000"}">
           </div>
         `;
-      case 'number':
+      case "number":
         return `
           <div class="form__group">
             <label class="form__label" for="${field.name}">${field.label}</label>
             <input type="number" class="form__input" name="${field.name}" value="${field.defaultValue || 0}">
           </div>
         `;
-      case 'textarea':
+      case "textarea":
         return `
           <div class="form__group">
             <label class="form__label" for="${field.name}">${field.label}</label>
-            <textarea class="form__input" name="${field.name}" rows="3">${field.defaultValue || ''}</textarea>
+            <textarea class="form__input" name="${field.name}" rows="3">${field.defaultValue || ""}</textarea>
           </div>
         `;
       default:
         return `
           <div class="form__group">
             <label class="form__label" for="${field.name}">${field.label}</label>
-            <input type="text" class="form__input" name="${field.name}" value="${field.defaultValue || ''}">
+            <input type="text" class="form__input" name="${field.name}" value="${field.defaultValue || ""}">
           </div>
         `;
     }
@@ -199,7 +216,9 @@ export class TemplateConfigHandler {
    * Updates block configuration based on form values
    */
   private updateBlockConfig(blockType: string): void {
-    const form = document.querySelector(`form[data-block-type="${blockType}"]`) as HTMLFormElement;
+    const form = document.querySelector(
+      `form[data-block-type="${blockType}"]`,
+    ) as HTMLFormElement;
     if (!form) return;
 
     const formData = new FormData(form);
@@ -211,7 +230,7 @@ export class TemplateConfigHandler {
     }
 
     // Handle checkboxes (they don't appear in FormData when unchecked)
-    form.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+    form.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
       const input = checkbox as HTMLInputElement;
       config[input.name] = input.checked;
     });
@@ -221,14 +240,16 @@ export class TemplateConfigHandler {
       this.currentTemplate = { blocks: [] };
     }
 
-    const blockIndex = this.currentTemplate.blocks.findIndex((block: any) => block.type === blockType);
+    const blockIndex = this.currentTemplate.blocks.findIndex(
+      (block: any) => block.type === blockType,
+    );
     if (blockIndex >= 0) {
       this.currentTemplate.blocks[blockIndex].config = config;
     } else {
       this.currentTemplate.blocks.push({
         type: blockType,
         config: config,
-        order: this.activeBlocks.indexOf(blockType) + 1
+        order: this.activeBlocks.indexOf(blockType) + 1,
       });
     }
 
@@ -239,19 +260,25 @@ export class TemplateConfigHandler {
    * Resets a block to its default configuration
    */
   resetBlockConfig(blockType: string): void {
-    const blockConfig = TEMPLATE_BLOCKS.find(block => block.type === blockType);
+    const blockConfig = TEMPLATE_BLOCKS.find(
+      (block) => block.type === blockType,
+    );
     if (!blockConfig) return;
 
     // Update form with default values
-    const form = document.querySelector(`form[data-block-type="${blockType}"]`) as HTMLFormElement;
+    const form = document.querySelector(
+      `form[data-block-type="${blockType}"]`,
+    ) as HTMLFormElement;
     if (form) {
-      blockConfig.configFields.forEach(field => {
-        const input = form.querySelector(`[name="${field.name}"]`) as HTMLInputElement;
+      blockConfig.configFields.forEach((field) => {
+        const input = form.querySelector(
+          `[name="${field.name}"]`,
+        ) as HTMLInputElement;
         if (input) {
-          if (input.type === 'checkbox') {
+          if (input.type === "checkbox") {
             input.checked = field.defaultValue || false;
           } else {
-            input.value = field.defaultValue || '';
+            input.value = field.defaultValue || "";
           }
         }
       });
@@ -266,11 +293,11 @@ export class TemplateConfigHandler {
    */
   private updatePreview(): void {
     // This will trigger the preview update in the main template manager
-    const event = new CustomEvent('templateConfigChanged', {
+    const event = new CustomEvent("templateConfigChanged", {
       detail: {
         template: this.currentTemplate,
-        activeBlocks: this.activeBlocks
-      }
+        activeBlocks: this.activeBlocks,
+      },
     });
     document.dispatchEvent(event);
   }
