@@ -111,7 +111,10 @@ export class UIEventHandler {
     const colorSquare = event.currentTarget as HTMLElement;
     const colorValue = colorSquare.dataset.color;
     
-    if (!colorValue) return;
+    if (!colorValue) {
+      console.warn('🎨 Color selection failed: no color data found');
+      return;
+    }
 
     // Update UI - find the parent color palette and update active state
     const parentPalette = colorSquare.closest('.color-palette');

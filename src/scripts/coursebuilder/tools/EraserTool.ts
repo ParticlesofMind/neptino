@@ -1,87 +1,191 @@
 /**
  * Eraser Tool
- * Removes objects from the canvas
+ * Precision brush-based deletion with professional visual feedback
  */
 
-import { FederatedPointerEvent, Container, Graphics } from 'pixi.js';
+import { FederatedPointerEvent, Container, Graphics, Point } from 'pixi.js';
 import { BaseTool } from './ToolInterface';
+import { STROKE_SIZES } from './SharedResources';
 
 interface EraserSettings {
   size: number;
+  mode: 'brush' | 'object'; // Brush mode for partial deletion, object mode for complete removal
 }
 
 export class EraserTool extends BaseTool {
-  public isErasing: boolean = false; // Track whether we're actively erasing
+  public isErasing: boolean = false;
   private eraserCursor: Graphics | null = null;
+  private lastErasePoint: Point = new Point(0, 0);
+  private erasePreview: Graphics | null = null;
 
   constructor() {
-    super('eraser', 'none'); // We'll create a custom cursor
+    super('eraser', 'none'); // Custom cursor
     this.settings = {
-      size: 20
+      size: STROKE_SIZES.ERASER[2], // Start with 20px
+      mode: 'brush' // Default to brush mode for precision
     };
   }
 
   onPointerDown(event: FederatedPointerEvent, container: Container): void {
     this.isErasing = true;
+    console.log(`🗑️ ERASER: Started precision erasing at (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`);
+    console.log(`🗑️ ERASER: Settings - Size: ${this.settings.size}px, Mode: ${this.settings.mode}`);
+    
+    const localPoint = container.toLocal(event.global);
+    this.lastErasePoint.copyFrom(localPoint);
+    
     this.eraseAtPoint(event, container);
   }
 
   onPointerMove(event: FederatedPointerEvent, container: Container): void {
     this.updateCursorPosition(event);
+    
+    // Show preview of what would be erased
+    this.showErasePreview(event, container);
+    
     // Only erase if we're actively erasing (mouse button is pressed)
     if (this.isErasing) {
-      this.eraseAtPoint(event, container);
+      const localPoint = container.toLocal(event.global);
+      
+      // Brush mode: continuous erasing along the path
+      if (this.settings.mode === 'brush') {
+        this.brushErase(this.lastErasePoint, localPoint, container);
+      } else {
+        this.eraseAtPoint(event, container);
+      }
+      
+      this.lastErasePoint.copyFrom(localPoint);
     }
   }
 
   onPointerUp(): void {
     this.isErasing = false;
+    this.hideErasePreview();
+    console.log(`🗑️ ERASER: Finished precision erasing`);
   }
 
   onActivate(): void {
     super.onActivate();
-    this.createEraserCursor();
-    console.log('🔒 ERASER: Activated with layout protection enabled');
+    this.createProfessionalEraserCursor();
+    console.log(`�️ ERASER: Activated precision brush eraser - Size: ${this.settings.size}px, Mode: ${this.settings.mode}`);
   }
 
   onDeactivate(): void {
     super.onDeactivate();
-    this.isErasing = false; // Stop any active erasing
+    this.isErasing = false;
     this.removeEraserCursor();
+    this.hideErasePreview();
+    console.log(`🗑️ ERASER: Deactivated and cleaned up`);
   }
 
   private eraseAtPoint(event: FederatedPointerEvent, container: Container): void {
-    const point = event.global;
+    const globalPoint = event.global;
     const eraserRadius = this.settings.size / 2;
 
-    // Check all objects in the container (should only be user drawings now)
+    console.log(`🗑️ ERASER: Precision erasing at point (${Math.round(globalPoint.x)}, ${Math.round(globalPoint.y)}) with radius ${eraserRadius}px`);
+
+    // Check all objects in the container
     for (let i = container.children.length - 1; i >= 0; i--) {
       const child = container.children[i];
       
-      // LAYOUT PROTECTION: Skip objects that have layout-related names
-      if (child.name && child.name.includes('layout-')) {
-        console.log(`🔒 ERASER: Skipping protected layout element: ${child.name}`);
+      // LAYOUT PROTECTION: Skip protected objects
+      if (this.isProtectedObject(child)) {
         continue;
       }
       
+      // Get accurate bounds
       const bounds = child.getBounds();
 
-      // Simple collision detection - check if eraser overlaps with object bounds
-      if (this.circleRectCollision(
-        point.x, point.y, eraserRadius,
+      // Enhanced collision detection for precision
+      if (this.precisionCollisionDetection(
+        globalPoint.x, globalPoint.y, eraserRadius,
         bounds.x, bounds.y, bounds.width, bounds.height
       )) {
-        console.log(`🗑️ ERASER: Removing user drawing (${child.constructor.name})`);
+        console.log(`�️ ERASER: Removing object (${child.constructor.name}) at bounds (${Math.round(bounds.x)}, ${Math.round(bounds.y)}, ${Math.round(bounds.width)}x${Math.round(bounds.height)})`);
         container.removeChild(child);
         child.destroy();
       }
     }
   }
 
-  private circleRectCollision(
+  private brushErase(fromPoint: Point, toPoint: Point, container: Container): void {
+    // Create a path between the two points and erase along it
+    const distance = Math.sqrt(
+      Math.pow(toPoint.x - fromPoint.x, 2) + 
+      Math.pow(toPoint.y - fromPoint.y, 2)
+    );
+    
+    // Sample points along the path for smooth erasing
+    const steps = Math.max(1, Math.floor(distance / 5)); // Every 5 pixels
+    
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const x = fromPoint.x + (toPoint.x - fromPoint.x) * t;
+      const y = fromPoint.y + (toPoint.y - fromPoint.y) * t;
+      
+      // Convert to global coordinates for erasing
+      const globalPoint = container.toGlobal({ x, y });
+      const mockEvent = { global: globalPoint, client: globalPoint } as FederatedPointerEvent;
+      
+      this.eraseAtPoint(mockEvent, container);
+    }
+  }
+
+  private showErasePreview(event: FederatedPointerEvent, container: Container): void {
+    if (!this.erasePreview) {
+      this.erasePreview = new Graphics();
+      this.erasePreview.alpha = 0.3;
+      container.addChild(this.erasePreview);
+    }
+
+    const localPoint = container.toLocal(event.global);
+    const radius = this.settings.size / 2;
+
+    this.erasePreview.clear();
+    this.erasePreview.circle(localPoint.x, localPoint.y, radius);
+    this.erasePreview.fill({ color: 0xff4444 }); // Red preview
+    this.erasePreview.stroke({ width: 1, color: 0xff0000 });
+  }
+
+  private hideErasePreview(): void {
+    if (this.erasePreview && this.erasePreview.parent) {
+      this.erasePreview.parent.removeChild(this.erasePreview);
+      this.erasePreview = null;
+    }
+  }
+
+  private isProtectedObject(child: any): boolean {
+    // LAYOUT PROTECTION: Skip objects that have layout-related names or are system objects
+    if (child.name && (
+      child.name.includes('layout-') ||
+      child.name.includes('grid-') ||
+      child.name.includes('background-') ||
+      child.name.includes('system-')
+    )) {
+      console.log(`� ERASER: Skipping protected object: ${child.name}`);
+      return true;
+    }
+    
+    // Skip objects with special tags
+    if (child.tag && child.tag.includes('protected')) {
+      console.log(`🔒 ERASER: Skipping tagged protected object`);
+      return true;
+    }
+    
+    return false;
+  }
+
+  private precisionCollisionDetection(
     circleX: number, circleY: number, radius: number,
     rectX: number, rectY: number, rectWidth: number, rectHeight: number
   ): boolean {
+    // Enhanced collision detection for better precision
+    
+    // Handle zero-width or zero-height objects
+    if (rectWidth <= 0 || rectHeight <= 0) {
+      return false;
+    }
+    
     // Find the closest point to the circle within the rectangle
     const closestX = Math.max(rectX, Math.min(circleX, rectX + rectWidth));
     const closestY = Math.max(rectY, Math.min(circleY, rectY + rectHeight));
@@ -92,31 +196,38 @@ export class EraserTool extends BaseTool {
 
     // If the distance is less than the circle's radius, an intersection occurs
     const distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
-    return distanceSquared < (radius * radius);
+    return distanceSquared <= (radius * radius);
   }
 
-  private createEraserCursor(): void {
-    // Create a visual cursor for the eraser
-    this.eraserCursor = new Graphics();
-    this.eraserCursor.circle(0, 0, this.settings.size / 2);
-    this.eraserCursor.stroke({ width: 1, color: 0x000000 });
-    this.eraserCursor.alpha = 0.5;
-
-    // Add to document body as an overlay
+  private createProfessionalEraserCursor(): void {
+    // Create a professional visual cursor for the eraser
     const cursorElement = document.createElement('div');
     cursorElement.style.position = 'fixed';
     cursorElement.style.pointerEvents = 'none';
     cursorElement.style.zIndex = '10000';
     cursorElement.style.width = `${this.settings.size}px`;
     cursorElement.style.height = `${this.settings.size}px`;
-    cursorElement.style.border = '2px solid #ff6b6b'; // Red border for layout-protected mode
+    cursorElement.style.border = '2px solid #ff6b6b';
     cursorElement.style.borderRadius = '50%';
-    cursorElement.style.backgroundColor = 'rgba(255, 107, 107, 0.2)'; // Light red background
-    cursorElement.style.boxShadow = '0 0 8px rgba(255, 107, 107, 0.4)'; // Red glow
-    cursorElement.id = 'eraser-cursor';
+    cursorElement.style.backgroundColor = 'rgba(255, 107, 107, 0.15)';
+    cursorElement.style.boxShadow = '0 0 8px rgba(255, 107, 107, 0.3)';
+    cursorElement.style.transform = 'translate(-50%, -50%)';
+    cursorElement.id = 'precision-eraser-cursor';
     
-    // Add protection indicator
-    cursorElement.title = '🔒 Layout-Protected Eraser - Only user drawings can be erased';
+    // Add inner dot for precision
+    const innerDot = document.createElement('div');
+    innerDot.style.position = 'absolute';
+    innerDot.style.top = '50%';
+    innerDot.style.left = '50%';
+    innerDot.style.width = '2px';
+    innerDot.style.height = '2px';
+    innerDot.style.backgroundColor = '#ff0000';
+    innerDot.style.borderRadius = '50%';
+    innerDot.style.transform = 'translate(-50%, -50%)';
+    cursorElement.appendChild(innerDot);
+    
+    // Add mode indicator
+    cursorElement.title = `🗑️ Precision Eraser - ${this.settings.mode} mode, ${this.settings.size}px`;
     
     document.body.appendChild(cursorElement);
 
@@ -125,39 +236,69 @@ export class EraserTool extends BaseTool {
   }
 
   private updateCursorPosition(event: FederatedPointerEvent): void {
-    const cursorElement = document.getElementById('eraser-cursor');
+    const cursorElement = document.getElementById('precision-eraser-cursor');
     if (cursorElement) {
-      // Use clientX/Y for proper screen positioning
-      const x = event.client.x;
-      const y = event.client.y;
-      cursorElement.style.left = `${x - this.settings.size / 2}px`;
-      cursorElement.style.top = `${y - this.settings.size / 2}px`;
+      cursorElement.style.left = `${event.client.x}px`;
+      cursorElement.style.top = `${event.client.y}px`;
     }
   }
 
   private removeEraserCursor(): void {
-    const cursorElement = document.getElementById('eraser-cursor');
+    const cursorElement = document.getElementById('precision-eraser-cursor');
     if (cursorElement) {
       cursorElement.remove();
     }
-    // Reset cursor to default for the entire document
+    
+    // Reset cursor
     document.body.style.cursor = 'default';
     
-    // Also reset cursor on the canvas container if it exists
     const canvasContainer = document.querySelector('.coursebuilder__canvas') as HTMLElement;
     if (canvasContainer) {
       canvasContainer.style.cursor = 'default';
     }
   }
 
+  setMode(mode: 'brush' | 'object'): void {
+    this.settings.mode = mode;
+    console.log(`🗑️ ERASER: Mode set to ${mode}`);
+    
+    // Update cursor tooltip
+    const cursorElement = document.getElementById('precision-eraser-cursor');
+    if (cursorElement) {
+      cursorElement.title = `🗑️ Precision Eraser - ${mode} mode, ${this.settings.size}px`;
+    }
+  }
+
   updateSettings(settings: EraserSettings): void {
+    console.log(`🗑️ ERASER: Updating settings from:`, this.settings);
+    console.log(`🗑️ ERASER: Updating settings to:`, settings);
     this.settings = { ...this.settings, ...settings };
+    console.log(`🗑️ ERASER: Final eraser settings:`, this.settings);
     
     // Update cursor size if it exists
-    const cursorElement = document.getElementById('eraser-cursor');
+    const cursorElement = document.getElementById('precision-eraser-cursor');
     if (cursorElement) {
       cursorElement.style.width = `${this.settings.size}px`;
       cursorElement.style.height = `${this.settings.size}px`;
+      cursorElement.title = `🗑️ Precision Eraser - ${this.settings.mode} mode, ${this.settings.size}px`;
     }
+  }
+
+  // Get available eraser sizes for UI
+  static getAvailableEraserSizes(): number[] {
+    return STROKE_SIZES.ERASER;
+  }
+
+  // Get available eraser modes
+  static getEraserModes(): string[] {
+    return ['brush', 'object'];
+  }
+
+  // Get eraser mode display names
+  static getEraserModeNames(): { [key: string]: string } {
+    return {
+      'brush': 'Brush Mode (Continuous)',
+      'object': 'Object Mode (Click to Delete)'
+    };
   }
 }
