@@ -3,16 +3,22 @@
  * Handles navigation between main sections: setup, create, preview, launch
  */
 
+import { AsideNavigation } from './aside';
+
 export class CourseBuilderNavigation {
   private currentSection: string = 'setup';
   private sections: NodeListOf<HTMLElement>;
   private nextButton: HTMLElement | null;
   private previousButton: HTMLElement | null;
+  private asideNavigation: AsideNavigation;
 
   constructor() {
     this.sections = document.querySelectorAll('.section');
     this.nextButton = document.getElementById('next-btn');
     this.previousButton = document.getElementById('previous-btn');
+    
+    // Initialize aside navigation for setup section
+    this.asideNavigation = new AsideNavigation();
     
     this.initialize();
   }
@@ -46,12 +52,18 @@ export class CourseBuilderNavigation {
 
   private initializeFromHash(): void {
     const hash = window.location.hash.substring(1); // Remove #
+    console.log('🧭 Initializing from hash:', hash);
+    
     if (hash && this.isValidSection(hash)) {
       this.currentSection = hash;
+      console.log('🧭 Valid hash detected, setting current section to:', hash);
     } else {
       this.currentSection = 'setup'; // Default section
-      // Update URL without triggering hashchange
-      history.replaceState(null, '', '#setup');
+      console.log('🧭 No valid hash, defaulting to setup');
+      // Only update URL if there's no hash at all
+      if (!hash) {
+        history.replaceState(null, '', '#setup');
+      }
     }
     this.activateSection(this.currentSection);
   }
@@ -71,6 +83,8 @@ export class CourseBuilderNavigation {
   }
 
   private activateSection(sectionId: string): void {
+    console.log(`🧭 Activating section: ${sectionId}`);
+    
     // Hide all sections
     this.sections.forEach(section => {
       section.classList.remove('section--active');
@@ -93,10 +107,13 @@ export class CourseBuilderNavigation {
         const mainArticle = targetSection.querySelector('.article');
         if (mainArticle) {
           mainArticle.classList.add('article--active');
+          console.log(`🧭 Article activated for section: ${sectionId}`);
         }
       }
       
-      console.log(`🎯 Navigated to section: ${sectionId}`);
+      console.log(`🎯 Successfully navigated to section: ${sectionId}`);
+    } else {
+      console.error(`❌ Section not found: ${sectionId}`);
     }
   }
 
@@ -184,8 +201,47 @@ export class CourseBuilderNavigation {
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   // Only initialize on coursebuilder page
-  if (document.querySelector('.nav--coursebuilder')) {
+  const navElement = document.querySelector('.nav--coursebuilder');
+  console.log('🧭 DOM loaded, looking for .nav--coursebuilder:', !!navElement);
+  
+  if (navElement) {
+    console.log('🧭 Initializing CourseBuilder Navigation...');
     new CourseBuilderNavigation();
     console.log('🧭 Course Builder Navigation initialized');
+  } else {
+    console.log('🧭 Not on coursebuilder page - navigation not initialized');
+  }
+});
+
+// FALLBACK: Force hash navigation to work immediately if navigation fails
+window.addEventListener('load', () => {
+  if (window.location.pathname.includes('coursebuilder.html')) {
+    const hash = window.location.hash.substring(1);
+    if (hash && ['setup', 'create', 'preview', 'launch'].includes(hash)) {
+      console.log('🧭 FALLBACK: Forcing hash navigation to:', hash);
+      
+      // Hide all sections
+      document.querySelectorAll('.section').forEach(section => {
+        section.classList.remove('section--active');
+        section.querySelectorAll('.article').forEach(article => {
+          article.classList.remove('article--active');
+        });
+      });
+      
+      // Show target section
+      const targetSection = document.getElementById(hash);
+      if (targetSection) {
+        targetSection.classList.add('section--active');
+        
+        if (hash !== 'setup') {
+          const mainArticle = targetSection.querySelector('.article');
+          if (mainArticle) {
+            mainArticle.classList.add('article--active');
+          }
+        }
+        
+        console.log('🧭 FALLBACK: Successfully forced navigation to:', hash);
+      }
+    }
   }
 });

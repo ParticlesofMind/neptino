@@ -9,8 +9,13 @@ import PixiSceneInspector from "./devtools/PixiSceneInspector";
 
 // Global exposure for devtools compatibility
 try {
-  (window as any).PIXI = PIXI;
-  (globalThis as any).PIXI = PIXI;
+  // Only set if not already set
+  if (!(window as any).PIXI) {
+    (window as any).PIXI = PIXI;
+  }
+  if (!(globalThis as any).PIXI) {
+    (globalThis as any).PIXI = PIXI;
+  }
 } catch (error) {
   console.warn("Could not expose PIXI globally in devtools setup:", error);
 }

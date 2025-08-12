@@ -12,8 +12,13 @@ import * as PIXI from "pixi.js";
 
 // Safely expose PIXI globally
 try {
-  (window as any).PIXI = PIXI;
-  (globalThis as any).PIXI = PIXI;
+  // Only set if not already set to avoid conflicts
+  if (!(window as any).PIXI) {
+    (window as any).PIXI = PIXI;
+  }
+  if (!(globalThis as any).PIXI) {
+    (globalThis as any).PIXI = PIXI;
+  }
 } catch (error) {
   console.warn("Could not expose PIXI globally:", error);
 }
@@ -78,61 +83,37 @@ export class PixiApplicationManager {
       // Safely expose on PIXI object for devtools detection
       try {
         if ((window as any).PIXI && typeof (window as any).PIXI === "object") {
-          // Use getOwnPropertyDescriptor to check if property exists and is configurable
-          const appDescriptor = Object.getOwnPropertyDescriptor(
-            (window as any).PIXI,
-            "app",
-          );
-
-          if (!appDescriptor) {
-            // Property doesn't exist, create it
-            Object.defineProperty((window as any).PIXI, "app", {
-              value: this.app,
-              writable: true,
-              configurable: true,
-            });
-          } else if (appDescriptor.configurable || appDescriptor.writable) {
-            // Property exists and can be modified
-            (window as any).PIXI.app = this.app;
-          } else {
-            // Property exists but is sealed/frozen, skip modification
-            console.warn(
-              "PIXI.app property exists but is not configurable/writable, skipping modification",
-            );
-          }
-
-          // Handle apps array similarly
-          const appsDescriptor = Object.getOwnPropertyDescriptor(
-            (window as any).PIXI,
-            "apps",
-          );
-
-          if (!appsDescriptor) {
-            Object.defineProperty((window as any).PIXI, "apps", {
-              value: [this.app],
-              writable: true,
-              configurable: true,
-            });
-          } else if (Array.isArray((window as any).PIXI.apps)) {
-            // Check if this app is already in the array to avoid duplicates
-            if (!(window as any).PIXI.apps.includes(this.app)) {
-              try {
-                (window as any).PIXI.apps.push(this.app);
-              } catch (pushError) {
-                console.warn("Could not add to PIXI.apps array:", pushError);
+          // Check if PIXI object is extensible first
+          const pixiObj = (window as any).PIXI;
+          
+          // Try to extend PIXI object only if it's extensible
+          if (Object.isExtensible(pixiObj)) {
+            try {
+              pixiObj.app = this.app;
+              
+              if (!Array.isArray(pixiObj.apps)) {
+                pixiObj.apps = [];
               }
+              if (!pixiObj.apps.includes(this.app)) {
+                pixiObj.apps.push(this.app);
+              }
+            } catch (assignError) {
+              console.warn("Could not assign to PIXI object:", assignError);
             }
+          } else {
+            console.warn("PIXI object is not extensible, using alternative approach");
           }
         }
       } catch (error) {
         console.warn("Could not extend PIXI object (it may be sealed):", error);
-        // Create alternative global references
-        (window as any).PIXI_APP_INSTANCE = this.app;
-        (window as any).PIXI_APPS = [
-          (window as any).PIXI_APPS || [],
-          this.app,
-        ].flat();
       }
+      
+      // Always create alternative global references for devtools
+      (window as any).PIXI_APP_INSTANCE = this.app;
+      (window as any).PIXI_APPS = [
+        ...((window as any).PIXI_APPS || []),
+        this.app,
+      ];
 
       // Initialize PIXI devtools - for v8.2+ use no-parameter call
       try {

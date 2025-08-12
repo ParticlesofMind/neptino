@@ -1,12 +1,8 @@
 import { defineConfig } from 'vite'
 import { visualizer } from 'rollup-plugin-visualizer'
-import tsconfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig({
   plugins: [
-    // Automatically map path aliases from tsconfig.json
-    tsconfigPaths(),
-
     // Bundle analysis visualization (only when ANALYZE env var is set)
     ...(process.env.ANALYZE ? [visualizer({
       filename: 'dist/bundle-analysis.html',

@@ -1,19 +1,10 @@
 /**
- * Navigation Index
- * Main entry point for navigation functionality
+ * Centralized Navigation System
+ * Clean, unified navigation for the entire Neptino platform
  */
 
-export { CourseBuilderNavigation } from './coursebuilder-navigation.js';
-export { AsideNavigation } from './aside.js';
+// Global navigation for all pages
+export { GlobalNavigation, initializeGlobalNavigation } from './GlobalNavigation';
 
-// Initialize AsideNavigation when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  // Check if we're on a page that needs aside navigation
-  const aside = document.querySelector('.aside');
-  if (aside) {
-    import('./aside.js').then(({ AsideNavigation }) => {
-      new AsideNavigation();
-      console.log('🧭 Aside Navigation initialized');
-    });
-  }
-});
+// Specialized CourseBuilder navigation
+export { CourseBuilderNavigation, AsideNavigation } from './CourseBuilderNavigation';

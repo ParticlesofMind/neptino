@@ -301,3 +301,55 @@ export class CourseBuilder {
     };
   },
 };
+
+// Auto-initialize if on coursebuilder page and in create section
+if (typeof window !== 'undefined' && window.location.pathname.includes('coursebuilder.html')) {
+  let canvasBuilderInitialized = false;
+  
+  function initCanvasBuilder() {
+    if (canvasBuilderInitialized) return;
+    
+    // Check if we're in the create section (where the canvas should be)
+    const currentSection = window.location.hash?.replace('#', '') || 'setup';
+    const hasCanvasContainer = document.getElementById('canvas-container');
+    const createSection = document.getElementById('create');
+    const isCreateSectionActive = createSection?.classList.contains('section--active');
+    
+    console.log('🎨 Canvas init check:', {
+      currentSection,
+      hasCanvasContainer: !!hasCanvasContainer,
+      isCreateSectionActive
+    });
+    
+    if (currentSection === 'create' && hasCanvasContainer && isCreateSectionActive) {
+      canvasBuilderInitialized = true;
+      
+      // Initialize the canvas CourseBuilder
+      const courseBuilder = new CourseBuilder();
+      (window as any).courseBuilder = courseBuilder;
+      
+      console.log('🎨 Canvas CourseBuilder initialized');
+      
+      // If there's an existing course ID from the backend CourseBuilder, set it
+      if ((window as any).courseBuilderInstance?.getCourseId) {
+        const courseId = (window as any).courseBuilderInstance.getCourseId();
+        if (courseId) {
+          courseBuilder.setCourseId(courseId);
+        }
+      }
+    } else if (currentSection === 'create' && hasCanvasContainer && !isCreateSectionActive) {
+      // Section exists but not active yet - wait a bit for navigation to complete
+      setTimeout(initCanvasBuilder, 100);
+    }
+  }
+  
+  // Initialize when page loads
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCanvasBuilder);
+  } else {
+    initCanvasBuilder();
+  }
+  
+  // Also initialize when hash changes to create section
+  window.addEventListener('hashchange', initCanvasBuilder);
+}

@@ -201,8 +201,8 @@ export class CourseBuilder {
       this.loadSection(sectionId);
     }
 
-    // Update aside navigation
-    this.updateAsideNavigation(sectionId);
+    // Update aside navigation - Now handled by AsideNavigation class
+    // this.updateAsideNavigation(sectionId);
   }
 
   private loadSection(sectionId: string): void {
@@ -242,21 +242,22 @@ export class CourseBuilder {
     }
   }
 
-  private updateAsideNavigation(activeSectionId: string): void {
-    // Remove active class from all links
-    const asideLinks = document.querySelectorAll(".aside__link");
-    asideLinks.forEach((link) => {
-      link.classList.remove("aside__link--active");
-    });
+  // NOTE: Aside navigation is now handled by the AsideNavigation class
+  // private updateAsideNavigation(activeSectionId: string): void {
+  //   // Remove active class from all links
+  //   const asideLinks = document.querySelectorAll(".aside__link");
+  //   asideLinks.forEach((link) => {
+  //     link.classList.remove("aside__link--active");
+  //   });
 
-    // Add active class to current link
-    const activeLink = document.querySelector(
-      `[data-section="${activeSectionId}"]`,
-    );
-    if (activeLink) {
-      activeLink.classList.add("aside__link--active");
-    }
-  }
+  //   // Add active class to current link
+  //   const activeLink = document.querySelector(
+  //     `[data-section="${activeSectionId}"]`,
+  //   );
+  //   if (activeLink) {
+  //     activeLink.classList.add("aside__link--active");
+  //   }
+  // }
 
   // ==========================================================================
   // PUBLIC METHODS

@@ -7,6 +7,8 @@ export class AsideNavigation {
   private contentSections: NodeListOf<HTMLElement>;
   private readonly STORAGE_KEY = "coursebuilder_active_section";
   private boundHandleLinkClick: (e: Event) => void;
+  private initRetryCount = 0;
+  private readonly MAX_INIT_RETRIES = 20; // 2 seconds max
 
   constructor() {
     this.asideLinks = document.querySelectorAll(".aside__link");
@@ -17,6 +19,20 @@ export class AsideNavigation {
   }
 
   private init(): void {
+    // Check if setup section is active, retry if not
+    const setupSection = document.getElementById('setup');
+    if (!setupSection?.classList.contains('section--active')) {
+      this.initRetryCount++;
+      if (this.initRetryCount < this.MAX_INIT_RETRIES) {
+        console.log(`🧭 Setup section not active yet, retrying aside navigation init (${this.initRetryCount}/${this.MAX_INIT_RETRIES})...`);
+        setTimeout(() => this.init(), 100);
+        return;
+      } else {
+        console.warn('🧭 Max retries reached for aside navigation initialization');
+        // Continue with initialization anyway in case elements are available
+      }
+    }
+
     if (this.asideLinks.length === 0) {
       console.error("No aside links found");
       return;
@@ -26,6 +42,8 @@ export class AsideNavigation {
       console.error("No content sections found");
       return;
     }
+
+    console.log('🧭 Aside navigation initializing with', this.asideLinks.length, 'links and', this.contentSections.length, 'sections');
 
     // Restore last active section before binding events
     this.restoreActiveSection();
