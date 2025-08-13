@@ -23,7 +23,7 @@ interface ToolSettings {
     color: string;
     strokeWidth: number;
     fillColor?: string;
-    shapeType: "rectangle" | "triangle" | "circle";
+    shapeType: "rectangle" | "triangle" | "circle" | "ellipse" | "line" | "arrow" | "polygon";
   };
   eraser: {
     size: number;

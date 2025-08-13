@@ -1,1850 +1,1122 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="pixi-devtools" content="enabled" />
-    <title>Course Builder - Neptino</title>
-    <link rel="stylesheet" href="/src/scss/main.scss" />
-  </head>
-  <body class="body grid">
-    <!-- Special Course Builder Header -->
-    <header class="header grid__header">
-      <nav class="nav nav--coursebuilder">
-        <div class="nav__left-section">
-          <button id="previous-btn" class="button button--previous">
-            Courses
-          </button>
-        </div>
 
-        <div class="nav__center-section">
-          <a href="/src/pages/teacher/home.html" class="logo logo--header">
-            <img
-              src="/src/assets/logo/octopus-logo.png"
-              alt="Neptino Logo"
-              class="logo__image"
-            />
-          </a>
-        </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="pixi-devtools" content="enabled" />
+  <title>Course Builder - Neptino</title>
+  <link rel="stylesheet" href="/src/scss/main.scss" />
+</head>
 
-        <div class="nav__right-section">
-          <button id="next-btn" class="button button--succeeding">Next</button>
-        </div>
-      </nav>
-    </header>
+<body class="body grid">
+  <!-- Special Course Builder Header -->
+  <header class="header grid__header">
+    <nav class="nav nav--coursebuilder">
+      <div class="nav__left-section">
+        <button id="previous-btn" class="button button--previous">
+          Courses
+        </button>
+      </div>
 
-    <main class="main grid__main">
-      <!-- Setup Section (with aside navigation) -->
-      <section id="setup" class="section section--active">
-        <aside class="aside">
-          <nav class="aside__nav">
-            <div class="aside__group aside__group--required">
-              <h3 class="aside__group-title">Required</h3>
-              <ul class="aside__menu">
-                <li class="aside__item">
-                  <a
-                    href="#essentials"
-                    class="aside__link aside__link--active"
-                    data-section="essentials"
-                    >Essentials</a
-                  >
-                </li>
-                <li class="aside__item">
-                  <a
-                    href="#classification"
-                    class="aside__link"
-                    data-section="classification"
-                    >Classification</a
-                  >
-                </li>
-                <li class="aside__item">
-                  <a
-                    href="#templates"
-                    class="aside__link"
-                    data-section="templates"
-                    >Templates</a
-                  >
-                </li>
-                <li class="aside__item">
-                  <a
-                    href="#schedule"
-                    class="aside__link"
-                    data-section="schedule"
-                    >Schedule</a
-                  >
-                </li>
-                <li class="aside__item">
-                  <a
-                    href="#curriculum"
-                    class="aside__link"
-                    data-section="curriculum"
-                    >Curriculum</a
-                  >
-                </li>
-              </ul>
-            </div>
+      <div class="nav__center-section">
+        <a href="/src/pages/teacher/home.html" class="logo logo--header">
+          <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image" />
+        </a>
+      </div>
 
-            <div class="aside__group aside__group--optional">
-              <h3 class="aside__group-title">Optional</h3>
-              <ul class="aside__menu">
-                <li class="aside__item">
-                  <a
-                    href="#marketplace"
-                    class="aside__link"
-                    data-section="marketplace"
-                    >Marketplace</a
-                  >
-                </li>
-                <li class="aside__item">
-                  <a
-                    href="#resources"
-                    class="aside__link"
-                    data-section="resources"
-                    >Resources</a
-                  >
-                </li>
-              </ul>
-            </div>
+      <div class="nav__right-section">
+        <button id="next-btn" class="button button--succeeding">Next</button>
+      </div>
+    </nav>
+  </header>
 
-            <div class="aside__group aside__group--settings">
-              <ul class="aside__menu">
-                <li class="aside__item">
-                  <a
-                    href="#settings"
-                    class="aside__link"
-                    data-section="settings"
-                    >Settings</a
-                  >
-                </li>
-              </ul>
-            </div>
-          </nav>
-        </aside>
-
-        <!-- Essentials Article -->
-        <article id="essentials" class="article article--active">
-          <section class="card">
-            <form class="form" id="course-essentials-form">
-              <div class="form__group">
-                <label class="form__label" for="course-name">Course Name</label>
-                <input
-                  class="form__input"
-                  type="text"
-                  id="course-name"
-                  name="course_name"
-                  placeholder="Enter course name"
-                  required
-                />
-              </div>
-              <div class="form__group">
-                <label class="form__label" for="course-description"
-                  >Course Description</label
-                >
-                <textarea
-                  class="form__input"
-                  id="course-description"
-                  name="course_description"
-                  rows="4"
-                  placeholder="Describe what students will learn"
-                  required
-                ></textarea>
-              </div>
-              <div class="form__group">
-                <label class="form__label" for="teacher-id">Teacher</label>
-                <input
-                  class="form__input"
-                  type="text"
-                  id="teacher-id"
-                  name="teacher_id"
-                  placeholder="Loading..."
-                  readonly
-                />
-              </div>
-              <div class="form__group">
-                <label class="form__label" for="institution">Institution</label>
-                <input
-                  class="form__input"
-                  type="text"
-                  id="institution"
-                  name="institution"
-                  placeholder="Loading..."
-                  readonly
-                />
-              </div>
-              <div class="form__group">
-                <label class="form__label" for="course-language"
-                  >Course Language</label
-                >
-                <select
-                  class="form__input"
-                  id="course-language"
-                  name="course_language"
-                  required
-                >
-                  <option value="">Select language...</option>
-                </select>
-              </div>
-              <div class="form__group">
-                <label class="form__label" for="course-image"
-                  >Course Image</label
-                >
-                <div class="file-upload file-upload--compact">
-                  <input
-                    type="file"
-                    id="course-image"
-                    name="course_image"
-                    accept="image/*"
-                    class="file-upload__input"
-                    required
-                  />
-                  <div class="file-upload__compact-layout">
-                    <label
-                      for="course-image"
-                      class="file-upload__compact-label"
-                    >
-                      <span class="file-upload__text">Change course image</span>
-                    </label>
-                    <div
-                      class="file-upload__thumbnail"
-                      id="image-preview"
-                      style="display: none"
-                    >
-                      <img
-                        id="preview-img"
-                        src=""
-                        alt="Course preview"
-                        class="file-upload__thumbnail-image"
-                      />
-                      <button
-                        type="button"
-                        class="file-upload__remove file-upload__remove--compact"
-                        id="remove-image"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="form__actions">
-                <div class="form__actions-row">
-                  <button
-                    type="submit"
-                    id="create-course-btn"
-                    class="button button--primary button--disabled"
-                    disabled
-                  >
-                    Create Course
-                  </button>
-                  <div
-                    class="course-code-display"
-                    id="course-code-display"
-                    style="display: none"
-                  >
-                    <div class="course-code-container">
-                      <span class="course-code-label">Course Code:</span>
-                      <span
-                        class="course-code-value"
-                        id="course-code-value"
-                      ></span>
-                      <button
-                        type="button"
-                        class="course-code-copy-btn"
-                        id="course-code-copy-btn"
-                        title="Copy course code"
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        >
-                          <rect
-                            x="9"
-                            y="9"
-                            width="13"
-                            height="13"
-                            rx="2"
-                            ry="2"
-                          ></rect>
-                          <path
-                            d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-                          ></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div class="form__status" id="form-status"></div>
-              </div>
-            </form>
-          </section>
-        </article>
-
-        <!-- Classification Article -->
-        <article id="classification" class="article">
-          <section class="card">
-            <form class="form" id="course-classification-form">
-              <!-- Row 1: Class Year + Curricular Framework -->
-              <div class="dropdown-group dropdown-group--classification-row">
-                <div class="form__group">
-                  <label class="form__label" for="class-year-dropdown"
-                    >Class Year</label
-                  >
-                  <div class="dropdown dropdown--classification">
-                    <button
-                      type="button"
-                      class="dropdown__trigger"
-                      id="class-year-dropdown"
-                      aria-haspopup="listbox"
-                      aria-expanded="false"
-                    >
-                      <span class="dropdown__label dropdown__label--placeholder"
-                        >Select class year...</span
-                      >
-                      <span class="dropdown__icon">▼</span>
-                    </button>
-                    <div
-                      class="dropdown__menu"
-                      role="listbox"
-                      id="class-year-menu"
-                    >
-                      <!-- Options will be populated by JavaScript -->
-                    </div>
-                  </div>
-                  <input
-                    type="hidden"
-                    name="class_year"
-                    id="class-year-value"
-                  />
-                </div>
-
-                <div class="form__group">
-                  <label class="form__label" for="curricular-framework-dropdown"
-                    >Curricular Framework</label
-                  >
-                  <div class="dropdown dropdown--classification">
-                    <button
-                      type="button"
-                      class="dropdown__trigger"
-                      id="curricular-framework-dropdown"
-                      aria-haspopup="listbox"
-                      aria-expanded="false"
-                    >
-                      <span class="dropdown__label dropdown__label--placeholder"
-                        >Select framework...</span
-                      >
-                      <span class="dropdown__icon">▼</span>
-                    </button>
-                    <div
-                      class="dropdown__menu"
-                      role="listbox"
-                      id="curricular-framework-menu"
-                    >
-                      <!-- Options will be populated by JavaScript -->
-                    </div>
-                  </div>
-                  <input
-                    type="hidden"
-                    name="curricular_framework"
-                    id="curricular-framework-value"
-                  />
-                </div>
-              </div>
-
-              <!-- Row 2: Domain + Subject + Topic + Subtopic -->
-              <div
-                class="dropdown-group dropdown-group--classification-row dropdown-group--with-arrows"
-              >
-                <div class="form__group">
-                  <label class="form__label" for="domain-dropdown"
-                    >Domain</label
-                  >
-                  <div class="dropdown dropdown--classification">
-                    <button
-                      type="button"
-                      class="dropdown__trigger"
-                      id="domain-dropdown"
-                      aria-haspopup="listbox"
-                      aria-expanded="false"
-                    >
-                      <span class="dropdown__label dropdown__label--placeholder"
-                        >Select domain...</span
-                      >
-                      <span class="dropdown__icon">▼</span>
-                    </button>
-                    <div class="dropdown__menu" role="listbox" id="domain-menu">
-                      <!-- Options will be populated by JavaScript -->
-                    </div>
-                  </div>
-                  <input type="hidden" name="domain" id="domain-value" />
-                </div>
-
-                <div class="dropdown-arrow">→</div>
-
-                <div class="form__group">
-                  <label class="form__label" for="subject-dropdown"
-                    >Subject</label
-                  >
-                  <div class="dropdown dropdown--classification">
-                    <button
-                      type="button"
-                      class="dropdown__trigger dropdown__trigger--disabled"
-                      id="subject-dropdown"
-                      aria-haspopup="listbox"
-                      aria-expanded="false"
-                      disabled
-                    >
-                      <span class="dropdown__label dropdown__label--placeholder"
-                        >Select domain first...</span
-                      >
-                      <span class="dropdown__icon">▼</span>
-                    </button>
-                    <div
-                      class="dropdown__menu"
-                      role="listbox"
-                      id="subject-menu"
-                    >
-                      <!-- Options will be populated by JavaScript -->
-                    </div>
-                  </div>
-                  <input type="hidden" name="subject" id="subject-value" />
-                </div>
-
-                <div class="dropdown-arrow">→</div>
-
-                <div class="form__group">
-                  <label class="form__label" for="topic-dropdown">Topic</label>
-                  <div class="dropdown dropdown--classification">
-                    <button
-                      type="button"
-                      class="dropdown__trigger dropdown__trigger--disabled"
-                      id="topic-dropdown"
-                      aria-haspopup="listbox"
-                      aria-expanded="false"
-                      disabled
-                    >
-                      <span class="dropdown__label dropdown__label--placeholder"
-                        >Select subject first...</span
-                      >
-                      <span class="dropdown__icon">▼</span>
-                    </button>
-                    <div class="dropdown__menu" role="listbox" id="topic-menu">
-                      <!-- Options will be populated by JavaScript -->
-                    </div>
-                  </div>
-                  <input type="hidden" name="topic" id="topic-value" />
-                </div>
-
-                <div class="dropdown-arrow">→</div>
-
-                <div class="form__group">
-                  <label class="form__label" for="subtopic-dropdown"
-                    >Subtopic
-                    <span class="text text--muted">(Optional)</span></label
-                  >
-                  <div class="dropdown dropdown--classification">
-                    <button
-                      type="button"
-                      class="dropdown__trigger dropdown__trigger--disabled"
-                      id="subtopic-dropdown"
-                      aria-haspopup="listbox"
-                      aria-expanded="false"
-                      disabled
-                    >
-                      <span class="dropdown__label dropdown__label--placeholder"
-                        >Select topic first...</span
-                      >
-                      <span class="dropdown__icon">▼</span>
-                    </button>
-                    <div
-                      class="dropdown__menu"
-                      role="listbox"
-                      id="subtopic-menu"
-                    >
-                      <!-- Options will be populated by JavaScript -->
-                    </div>
-                  </div>
-                  <input type="hidden" name="subtopic" id="subtopic-value" />
-                </div>
-              </div>
-
-              <!-- Row 3: Course Sequence -->
-              <div class="dropdown-group dropdown-group--classification-row">
-                <div class="form__group">
-                  <label class="form__label" for="previous-course-dropdown"
-                    >Previous Course
-                    <span class="text text--muted">(Optional)</span></label
-                  >
-                  <div class="dropdown dropdown--classification">
-                    <button
-                      type="button"
-                      class="dropdown__trigger"
-                      id="previous-course-dropdown"
-                      aria-haspopup="listbox"
-                      aria-expanded="false"
-                    >
-                      <span class="dropdown__label dropdown__label--placeholder"
-                        >Select previous course...</span
-                      >
-                      <span class="dropdown__icon">▼</span>
-                    </button>
-                    <div
-                      class="dropdown__menu"
-                      role="listbox"
-                      id="previous-course-menu"
-                    >
-                      <div class="dropdown__option dropdown__option--header">
-                        Your Courses
-                      </div>
-                      <!-- Options will be populated by JavaScript -->
-                    </div>
-                  </div>
-                  <input
-                    type="hidden"
-                    name="previous_course"
-                    id="previous-course-value"
-                  />
-                </div>
-
-                <div class="form__group">
-                  <label class="form__label" for="current-course-dropdown"
-                    >Current Course
-                    <span class="text text--muted">(Optional)</span></label
-                  >
-                  <div class="dropdown dropdown--classification">
-                    <button
-                      type="button"
-                      class="dropdown__trigger"
-                      id="current-course-dropdown"
-                      aria-haspopup="listbox"
-                      aria-expanded="false"
-                    >
-                      <span class="dropdown__label dropdown__label--placeholder"
-                        >Select current course...</span
-                      >
-                      <span class="dropdown__icon">▼</span>
-                    </button>
-                    <div
-                      class="dropdown__menu"
-                      role="listbox"
-                      id="current-course-menu"
-                    >
-                      <div class="dropdown__option dropdown__option--header">
-                        Your Courses
-                      </div>
-                      <!-- Options will be populated by JavaScript -->
-                    </div>
-                  </div>
-                  <input
-                    type="hidden"
-                    name="current_course"
-                    id="current-course-value"
-                  />
-                </div>
-
-                <div class="form__group">
-                  <label class="form__label" for="next-course-dropdown"
-                    >Next Course
-                    <span class="text text--muted">(Optional)</span></label
-                  >
-                  <div class="dropdown dropdown--classification">
-                    <button
-                      type="button"
-                      class="dropdown__trigger"
-                      id="next-course-dropdown"
-                      aria-haspopup="listbox"
-                      aria-expanded="false"
-                    >
-                      <span class="dropdown__label dropdown__label--placeholder"
-                        >Select next course...</span
-                      >
-                      <span class="dropdown__icon">▼</span>
-                    </button>
-                    <div
-                      class="dropdown__menu"
-                      role="listbox"
-                      id="next-course-menu"
-                    >
-                      <div class="dropdown__option dropdown__option--header">
-                        Your Courses
-                      </div>
-                      <!-- Options will be populated by JavaScript -->
-                    </div>
-                  </div>
-                  <input
-                    type="hidden"
-                    name="next_course"
-                    id="next-course-value"
-                  />
-                </div>
-              </div>
-
-              <!-- Last saved indicator -->
-              <div class="form__footer">
-                <div class="save-indicator" id="classification-last-saved">
-                  <span
-                    class="save-indicator__text"
-                    id="classification-save-status"
-                    >Changes will be saved automatically</span
-                  >
-                </div>
-              </div>
-            </form>
-          </section>
-        </article>
-
-        <!-- Templates Article -->
-        <article id="templates" class="article">
-          <section class="card">
-            <!-- Template Action Buttons -->
-            <div class="template-header">
-              <div class="template-header__actions">
-                <button id="create-template-btn" class="button button--primary">
-                  <span class="button__icon">+</span>
-                  Create New Template
-                </button>
-                <button id="load-template-btn" class="button button--secondary">
-                  <span class="button__icon">↗</span>
-                  Load Template
-                </button>
-              </div>
-            </div>
-
-            <!-- Template Builder Layout -->
-            <div class="template-layout">
-              <div class="template-config">
-                <div class="template-config-placeholder">
-                  <h3 class="heading heading--tertiary">
-                    Template Configuration
-                  </h3>
-                  <p class="text">
-                    Select or create a template to configure its settings.
-                  </p>
-                </div>
-              </div>
-              <div class="template-preview">
-                <div class="preview-container">
-                  <div class="preview-placeholder">
-                    <h4 class="preview-placeholder__title">
-                      No Template Selected
-                    </h4>
-                    <p class="preview-placeholder__text">
-                      Create a new template or select an existing one to see the
-                      preview here.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </article>
-
-        <!-- Create Template Modal -->
-        <div id="create-template-modal" class="modal" style="display: none">
-          <div class="modal__content">
-            <div class="modal__header">
-              <h2 class="modal__title">Create New Template</h2>
-              <button
-                class="modal__close"
-                type="button"
-                onclick="TemplateManager.hideCreateTemplateModal()"
-              >
-                &times;
-              </button>
-            </div>
-            <div class="modal__body">
-              <form id="create-template-form" class="form">
-                <div class="form__group">
-                  <label class="form__label" for="template-name"
-                    >Template Name*</label
-                  >
-                  <input
-                    type="text"
-                    id="template-name"
-                    name="template-name"
-                    class="form__input"
-                    required
-                    placeholder="Enter template name"
-                  />
-                </div>
-                <div class="form__group">
-                  <label class="form__label" for="template-type"
-                    >Template Type*</label
-                  >
-                  <select
-                    id="template-type"
-                    name="template-type"
-                    class="form__input"
-                    required
-                  >
-                    <option value="">Select template type</option>
-                    <option value="lesson">Lesson</option>
-                  </select>
-                </div>
-                <div class="form__group">
-                  <label class="form__label" for="template-description"
-                    >Description (Optional)</label
-                  >
-                  <textarea
-                    id="template-description"
-                    name="template-description"
-                    class="form__input"
-                    rows="3"
-                    placeholder="Describe your template..."
-                  ></textarea>
-                </div>
-                <div class="form__actions">
-                  <button
-                    type="button"
-                    class="btn btn--secondary modal__close"
-                    onclick="TemplateManager.hideCreateTemplateModal()"
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" class="btn btn--primary">
-                    Create Template
-                  </button>
-                </div>
-              </form>
-            </div>
+  <main class="main grid__main">
+    <!-- Setup Section (with aside navigation) -->
+    <section id="setup" class="section section--active">
+      <aside class="aside">
+        <nav class="aside__nav">
+          <div class="aside__group aside__group--required">
+            <h3 class="aside__group-title">Required</h3>
+            <ul class="aside__menu">
+              <li class="aside__item">
+                <a href="#essentials" class="aside__link aside__link--active" data-section="essentials">Essentials</a>
+              </li>
+              <li class="aside__item">
+                <a href="#classification" class="aside__link" data-section="classification">Classification</a>
+              </li>
+              <li class="aside__item">
+                <a href="#templates" class="aside__link" data-section="templates">Templates</a>
+              </li>
+              <li class="aside__item">
+                <a href="#schedule" class="aside__link" data-section="schedule">Schedule</a>
+              </li>
+              <li class="aside__item">
+                <a href="#curriculum" class="aside__link" data-section="curriculum">Curriculum</a>
+              </li>
+            </ul>
           </div>
-        </div>
 
-        <!-- Load Template Modal -->
-        <div id="load-template-modal" class="modal" style="display: none">
-          <div class="modal__content modal__content--large">
-            <div class="modal__header">
-              <h2 class="modal__title">Load Existing Template</h2>
-              <button
-                class="modal__close"
-                type="button"
-                onclick="TemplateManager.hideLoadTemplateModal()"
-              >
-                &times;
-              </button>
+          <div class="aside__group aside__group--optional">
+            <h3 class="aside__group-title">Optional</h3>
+            <ul class="aside__menu">
+              <li class="aside__item">
+                <a href="#marketplace" class="aside__link" data-section="marketplace">Marketplace</a>
+              </li>
+              <li class="aside__item">
+                <a href="#resources" class="aside__link" data-section="resources">Resources</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="aside__group aside__group--settings">
+            <ul class="aside__menu">
+              <li class="aside__item">
+                <a href="#settings" class="aside__link" data-section="settings">Settings</a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Essentials Article -->
+      <article id="essentials" class="article article--active">
+        <section class="card">
+          <form class="form" id="course-essentials-form">
+            <div class="form__group">
+              <label class="form__label" for="course-name">Course Name</label>
+              <input class="form__input" type="text" id="course-name" name="course_name" placeholder="Enter course name"
+                required />
             </div>
-            <div class="modal__body">
-              <div class="template-loader">
-                <div class="template-loader__search">
-                  <input
-                    type="text"
-                    id="template-search"
-                    class="form__input"
-                    placeholder="Search templates..."
-                  />
-                  <div class="template-filters">
-                    <select
-                      id="template-type-filter"
-                      class="form__input form__input--small"
-                    >
-                      <option value="">All Types</option>
-                      <option value="lesson">Lesson</option>
-                    </select>
-                    <select
-                      id="template-sort"
-                      class="form__input form__input--small"
-                    >
-                      <option value="created_at">Newest First</option>
-                      <option value="name">Name (A-Z)</option>
-                      <option value="modified_at">Recently Modified</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="template-list-container">
-                  <div
-                    id="template-loading"
-                    class="template-loading"
-                    style="display: none"
-                  >
-                    <div class="loading-spinner"></div>
-                    <p>Loading your templates...</p>
-                  </div>
-                  <div id="template-list-content" class="template-list-grid">
-                    <!-- Templates will be loaded here -->
-                  </div>
-                  <div
-                    id="no-templates-message"
-                    class="no-templates"
-                    style="display: none"
-                  >
-                    <div class="no-templates__icon">!</div>
-                    <h3>No Templates Found</h3>
-                    <p>
-                      You haven't created any templates yet. Create your first
-                      template to get started!
-                    </p>
-                    <button
-                      class="button button--primary"
-                      onclick="TemplateManager.hideLoadTemplateModal(); TemplateManager.showCreateTemplateModal();"
-                    >
-                      Create First Template
+            <div class="form__group">
+              <label class="form__label" for="course-description">Course Description</label>
+              <textarea class="form__input" id="course-description" name="course_description" rows="4"
+                placeholder="Describe what students will learn" required></textarea>
+            </div>
+            <div class="form__group">
+              <label class="form__label" for="teacher-id">Teacher</label>
+              <input class="form__input" type="text" id="teacher-id" name="teacher_id" placeholder="Loading..."
+                readonly />
+            </div>
+            <div class="form__group">
+              <label class="form__label" for="institution">Institution</label>
+              <input class="form__input" type="text" id="institution" name="institution" placeholder="Loading..."
+                readonly />
+            </div>
+            <div class="form__group">
+              <label class="form__label" for="course-language">Course Language</label>
+              <select class="form__input" id="course-language" name="course_language" required>
+                <option value="">Select language...</option>
+              </select>
+            </div>
+            <div class="form__group">
+              <label class="form__label" for="course-image">Course Image</label>
+              <div class="file-upload file-upload--compact">
+                <input type="file" id="course-image" name="course_image" accept="image/*" class="file-upload__input"
+                  required />
+                <div class="file-upload__compact-layout">
+                  <label for="course-image" class="file-upload__compact-label">
+                    <span class="file-upload__text">Change course image</span>
+                  </label>
+                  <div class="file-upload__thumbnail" id="image-preview" style="display: none">
+                    <img id="preview-img" src="" alt="Course preview" class="file-upload__thumbnail-image" />
+                    <button type="button" class="file-upload__remove file-upload__remove--compact" id="remove-image">
+                      ×
                     </button>
                   </div>
                 </div>
               </div>
             </div>
-            <div class="modal__footer">
-              <button
-                type="button"
-                class="button button--secondary"
-                onclick="TemplateManager.hideLoadTemplateModal()"
-              >
-                Cancel
+            <div class="form__actions">
+              <div class="form__actions-row">
+                <button type="submit" id="create-course-btn" class="button button--primary button--disabled" disabled>
+                  Create Course
+                </button>
+                <div class="course-code-display" id="course-code-display" style="display: none">
+                  <div class="course-code-container">
+                    <span class="course-code-label">Course Code:</span>
+                    <span class="course-code-value" id="course-code-value"></span>
+                    <button type="button" class="course-code-copy-btn" id="course-code-copy-btn"
+                      title="Copy course code">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="form__status" id="form-status"></div>
+            </div>
+          </form>
+        </section>
+      </article>
+
+      <!-- Classification Article -->
+      <article id="classification" class="article">
+        <section class="card">
+          <form class="form" id="course-classification-form">
+            <!-- Row 1: Class Year + Curricular Framework -->
+            <div class="dropdown-group dropdown-group--classification-row">
+              <div class="form__group">
+                <label class="form__label" for="class-year-dropdown">Class Year</label>
+                <div class="dropdown dropdown--classification">
+                  <button type="button" class="dropdown__trigger" id="class-year-dropdown" aria-haspopup="listbox"
+                    aria-expanded="false">
+                    <span class="dropdown__label dropdown__label--placeholder">Select class year...</span>
+                    <span class="dropdown__icon">▼</span>
+                  </button>
+                  <div class="dropdown__menu" role="listbox" id="class-year-menu">
+                    <!-- Options will be populated by JavaScript -->
+                  </div>
+                </div>
+                <input type="hidden" name="class_year" id="class-year-value" />
+              </div>
+
+              <div class="form__group">
+                <label class="form__label" for="curricular-framework-dropdown">Curricular Framework</label>
+                <div class="dropdown dropdown--classification">
+                  <button type="button" class="dropdown__trigger" id="curricular-framework-dropdown"
+                    aria-haspopup="listbox" aria-expanded="false">
+                    <span class="dropdown__label dropdown__label--placeholder">Select framework...</span>
+                    <span class="dropdown__icon">▼</span>
+                  </button>
+                  <div class="dropdown__menu" role="listbox" id="curricular-framework-menu">
+                    <!-- Options will be populated by JavaScript -->
+                  </div>
+                </div>
+                <input type="hidden" name="curricular_framework" id="curricular-framework-value" />
+              </div>
+            </div>
+
+            <!-- Row 2: Domain + Subject + Topic + Subtopic -->
+            <div class="dropdown-group dropdown-group--classification-row dropdown-group--with-arrows">
+              <div class="form__group">
+                <label class="form__label" for="domain-dropdown">Domain</label>
+                <div class="dropdown dropdown--classification">
+                  <button type="button" class="dropdown__trigger" id="domain-dropdown" aria-haspopup="listbox"
+                    aria-expanded="false">
+                    <span class="dropdown__label dropdown__label--placeholder">Select domain...</span>
+                    <span class="dropdown__icon">▼</span>
+                  </button>
+                  <div class="dropdown__menu" role="listbox" id="domain-menu">
+                    <!-- Options will be populated by JavaScript -->
+                  </div>
+                </div>
+                <input type="hidden" name="domain" id="domain-value" />
+              </div>
+
+              <div class="dropdown-arrow">→</div>
+
+              <div class="form__group">
+                <label class="form__label" for="subject-dropdown">Subject</label>
+                <div class="dropdown dropdown--classification">
+                  <button type="button" class="dropdown__trigger dropdown__trigger--disabled" id="subject-dropdown"
+                    aria-haspopup="listbox" aria-expanded="false" disabled>
+                    <span class="dropdown__label dropdown__label--placeholder">Select domain first...</span>
+                    <span class="dropdown__icon">▼</span>
+                  </button>
+                  <div class="dropdown__menu" role="listbox" id="subject-menu">
+                    <!-- Options will be populated by JavaScript -->
+                  </div>
+                </div>
+                <input type="hidden" name="subject" id="subject-value" />
+              </div>
+
+              <div class="dropdown-arrow">→</div>
+
+              <div class="form__group">
+                <label class="form__label" for="topic-dropdown">Topic</label>
+                <div class="dropdown dropdown--classification">
+                  <button type="button" class="dropdown__trigger dropdown__trigger--disabled" id="topic-dropdown"
+                    aria-haspopup="listbox" aria-expanded="false" disabled>
+                    <span class="dropdown__label dropdown__label--placeholder">Select subject first...</span>
+                    <span class="dropdown__icon">▼</span>
+                  </button>
+                  <div class="dropdown__menu" role="listbox" id="topic-menu">
+                    <!-- Options will be populated by JavaScript -->
+                  </div>
+                </div>
+                <input type="hidden" name="topic" id="topic-value" />
+              </div>
+
+              <div class="dropdown-arrow">→</div>
+
+              <div class="form__group">
+                <label class="form__label" for="subtopic-dropdown">Subtopic
+                  <span class="text text--muted">(Optional)</span></label>
+                <div class="dropdown dropdown--classification">
+                  <button type="button" class="dropdown__trigger dropdown__trigger--disabled" id="subtopic-dropdown"
+                    aria-haspopup="listbox" aria-expanded="false" disabled>
+                    <span class="dropdown__label dropdown__label--placeholder">Select topic first...</span>
+                    <span class="dropdown__icon">▼</span>
+                  </button>
+                  <div class="dropdown__menu" role="listbox" id="subtopic-menu">
+                    <!-- Options will be populated by JavaScript -->
+                  </div>
+                </div>
+                <input type="hidden" name="subtopic" id="subtopic-value" />
+              </div>
+            </div>
+
+            <!-- Row 3: Course Sequence -->
+            <div class="dropdown-group dropdown-group--classification-row">
+              <div class="form__group">
+                <label class="form__label" for="previous-course-dropdown">Previous Course
+                  <span class="text text--muted">(Optional)</span></label>
+                <div class="dropdown dropdown--classification">
+                  <button type="button" class="dropdown__trigger" id="previous-course-dropdown" aria-haspopup="listbox"
+                    aria-expanded="false">
+                    <span class="dropdown__label dropdown__label--placeholder">Select previous course...</span>
+                    <span class="dropdown__icon">▼</span>
+                  </button>
+                  <div class="dropdown__menu" role="listbox" id="previous-course-menu">
+                    <div class="dropdown__option dropdown__option--header">
+                      Your Courses
+                    </div>
+                    <!-- Options will be populated by JavaScript -->
+                  </div>
+                </div>
+                <input type="hidden" name="previous_course" id="previous-course-value" />
+              </div>
+
+              <div class="form__group">
+                <label class="form__label" for="current-course-dropdown">Current Course
+                  <span class="text text--muted">(Optional)</span></label>
+                <div class="dropdown dropdown--classification">
+                  <button type="button" class="dropdown__trigger" id="current-course-dropdown" aria-haspopup="listbox"
+                    aria-expanded="false">
+                    <span class="dropdown__label dropdown__label--placeholder">Select current course...</span>
+                    <span class="dropdown__icon">▼</span>
+                  </button>
+                  <div class="dropdown__menu" role="listbox" id="current-course-menu">
+                    <div class="dropdown__option dropdown__option--header">
+                      Your Courses
+                    </div>
+                    <!-- Options will be populated by JavaScript -->
+                  </div>
+                </div>
+                <input type="hidden" name="current_course" id="current-course-value" />
+              </div>
+
+              <div class="form__group">
+                <label class="form__label" for="next-course-dropdown">Next Course
+                  <span class="text text--muted">(Optional)</span></label>
+                <div class="dropdown dropdown--classification">
+                  <button type="button" class="dropdown__trigger" id="next-course-dropdown" aria-haspopup="listbox"
+                    aria-expanded="false">
+                    <span class="dropdown__label dropdown__label--placeholder">Select next course...</span>
+                    <span class="dropdown__icon">▼</span>
+                  </button>
+                  <div class="dropdown__menu" role="listbox" id="next-course-menu">
+                    <div class="dropdown__option dropdown__option--header">
+                      Your Courses
+                    </div>
+                    <!-- Options will be populated by JavaScript -->
+                  </div>
+                </div>
+                <input type="hidden" name="next_course" id="next-course-value" />
+              </div>
+            </div>
+
+            <!-- Last saved indicator -->
+            <div class="form__footer">
+              <div class="save-indicator" id="classification-last-saved">
+                <span class="save-indicator__text" id="classification-save-status">Changes will be saved
+                  automatically</span>
+              </div>
+            </div>
+          </form>
+        </section>
+      </article>
+
+      <!-- Templates Article -->
+      <article id="templates" class="article">
+        <section class="card">
+          <!-- Template Action Buttons -->
+          <div class="template-header">
+            <div class="template-header__actions">
+              <button id="create-template-btn" class="button button--primary">
+                <span class="button__icon">+</span>
+                Create New Template
               </button>
-              <button
-                type="button"
-                id="load-selected-template"
-                class="button button--primary"
-                disabled
-                onclick="TemplateManager.loadSelectedTemplate()"
-              >
+              <button id="load-template-btn" class="button button--secondary">
+                <span class="button__icon">↗</span>
                 Load Template
               </button>
             </div>
           </div>
-        </div>
 
-        <!-- Schedule Article -->
-        <article id="schedule" class="article">
-          <section class="card">
-            <!-- Schedule Layout -->
-            <div class="schedule-layout">
-              <!-- Schedule Configuration -->
-              <div id="schedule-config" class="schedule-config">
+          <!-- Template Builder Layout -->
+          <div class="template-layout">
+            <div class="template-config">
+              <div class="template-config-placeholder">
                 <h3 class="heading heading--tertiary">
-                  Schedule Configuration
+                  Template Configuration
                 </h3>
+                <p class="text">
+                  Select or create a template to configure its settings.
+                </p>
+              </div>
+            </div>
+            <div class="template-preview">
+              <div class="preview-container">
+                <div class="preview-placeholder">
+                  <h4 class="preview-placeholder__title">
+                    No Template Selected
+                  </h4>
+                  <p class="preview-placeholder__text">
+                    Create a new template or select an existing one to see the
+                    preview here.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </article>
 
-                <form class="form" id="course-schedule-form">
-                  <!-- Date Range Row -->
-                  <div class="form__row">
-                    <div class="form__group">
-                      <label class="form__label" for="start-date"
-                        >Start Date</label
-                      >
-                      <input
-                        class="form__input"
-                        type="date"
-                        id="start-date"
-                        required
-                      />
-                    </div>
-                    <div class="form__group">
-                      <label class="form__label" for="end-date">End Date</label>
-                      <input
-                        class="form__input"
-                        type="date"
-                        id="end-date"
-                        required
-                      />
-                    </div>
-                  </div>
+      <!-- Create Template Modal -->
+      <div id="create-template-modal" class="modal" style="display: none">
+        <div class="modal__content">
+          <div class="modal__header">
+            <h2 class="modal__title">Create New Template</h2>
+            <button class="modal__close" type="button" onclick="TemplateManager.hideCreateTemplateModal()">
+              &times;
+            </button>
+          </div>
+          <div class="modal__body">
+            <form id="create-template-form" class="form">
+              <div class="form__group">
+                <label class="form__label" for="template-name">Template Name*</label>
+                <input type="text" id="template-name" name="template-name" class="form__input" required
+                  placeholder="Enter template name" />
+              </div>
+              <div class="form__group">
+                <label class="form__label" for="template-type">Template Type*</label>
+                <select id="template-type" name="template-type" class="form__input" required>
+                  <option value="">Select template type</option>
+                  <option value="lesson">Lesson</option>
+                </select>
+              </div>
+              <div class="form__group">
+                <label class="form__label" for="template-description">Description (Optional)</label>
+                <textarea id="template-description" name="template-description" class="form__input" rows="3"
+                  placeholder="Describe your template..."></textarea>
+              </div>
+              <div class="form__actions">
+                <button type="button" class="btn btn--secondary modal__close"
+                  onclick="TemplateManager.hideCreateTemplateModal()">
+                  Cancel
+                </button>
+                <button type="submit" class="btn btn--primary">
+                  Create Template
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
 
-                  <!-- Days of Week Selection -->
+      <!-- Load Template Modal -->
+      <div id="load-template-modal" class="modal" style="display: none">
+        <div class="modal__content modal__content--large">
+          <div class="modal__header">
+            <h2 class="modal__title">Load Existing Template</h2>
+            <button class="modal__close" type="button" onclick="TemplateManager.hideLoadTemplateModal()">
+              &times;
+            </button>
+          </div>
+          <div class="modal__body">
+            <div class="template-loader">
+              <div class="template-loader__search">
+                <input type="text" id="template-search" class="form__input" placeholder="Search templates..." />
+                <div class="template-filters">
+                  <select id="template-type-filter" class="form__input form__input--small">
+                    <option value="">All Types</option>
+                    <option value="lesson">Lesson</option>
+                  </select>
+                  <select id="template-sort" class="form__input form__input--small">
+                    <option value="created_at">Newest First</option>
+                    <option value="name">Name (A-Z)</option>
+                    <option value="modified_at">Recently Modified</option>
+                  </select>
+                </div>
+              </div>
+              <div class="template-list-container">
+                <div id="template-loading" class="template-loading" style="display: none">
+                  <div class="loading-spinner"></div>
+                  <p>Loading your templates...</p>
+                </div>
+                <div id="template-list-content" class="template-list-grid">
+                  <!-- Templates will be loaded here -->
+                </div>
+                <div id="no-templates-message" class="no-templates" style="display: none">
+                  <div class="no-templates__icon">!</div>
+                  <h3>No Templates Found</h3>
+                  <p>
+                    You haven't created any templates yet. Create your first
+                    template to get started!
+                  </p>
+                  <button class="button button--primary"
+                    onclick="TemplateManager.hideLoadTemplateModal(); TemplateManager.showCreateTemplateModal();">
+                    Create First Template
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal__footer">
+            <button type="button" class="button button--secondary" onclick="TemplateManager.hideLoadTemplateModal()">
+              Cancel
+            </button>
+            <button type="button" id="load-selected-template" class="button button--primary" disabled
+              onclick="TemplateManager.loadSelectedTemplate()">
+              Load Template
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Schedule Article -->
+      <article id="schedule" class="article">
+        <section class="card">
+          <!-- Schedule Layout -->
+          <div class="schedule-layout">
+            <!-- Schedule Configuration -->
+            <div id="schedule-config" class="schedule-config">
+              <h3 class="heading heading--tertiary">
+                Schedule Configuration
+              </h3>
+
+              <form class="form" id="course-schedule-form">
+                <!-- Date Range Row -->
+                <div class="form__row">
                   <div class="form__group">
-                    <label class="form__label">Days of the Week</label>
-                    <div class="day-buttons">
-                      <button
-                        type="button"
-                        class="day-button"
-                        data-day="monday"
-                      >
-                        Mon
-                      </button>
-                      <button
-                        type="button"
-                        class="day-button"
-                        data-day="tuesday"
-                      >
-                        Tue
-                      </button>
-                      <button
-                        type="button"
-                        class="day-button"
-                        data-day="wednesday"
-                      >
-                        Wed
-                      </button>
-                      <button
-                        type="button"
-                        class="day-button"
-                        data-day="thursday"
-                      >
-                        Thu
-                      </button>
-                      <button
-                        type="button"
-                        class="day-button"
-                        data-day="friday"
-                      >
-                        Fri
-                      </button>
-                      <button
-                        type="button"
-                        class="day-button"
-                        data-day="saturday"
-                      >
-                        Sat
-                      </button>
-                      <button
-                        type="button"
-                        class="day-button"
-                        data-day="sunday"
-                      >
-                        Sun
-                      </button>
-                    </div>
+                    <label class="form__label" for="start-date">Start Date</label>
+                    <input class="form__input" type="date" id="start-date" required />
                   </div>
-
-                  <!-- Time Range Row -->
-                  <div class="form__row">
-                    <div class="form__group">
-                      <label class="form__label" for="start-time"
-                        >Start Time</label
-                      >
-                      <input
-                        class="form__input"
-                        type="time"
-                        id="start-time"
-                        required
-                      />
-                    </div>
-                    <div class="form__group">
-                      <label class="form__label" for="end-time">End Time</label>
-                      <input
-                        class="form__input"
-                        type="time"
-                        id="end-time"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Schedule Action Buttons -->
-                  <div class="form__actions">
-                    <button
-                      type="button"
-                      id="schedule-course-btn"
-                      class="button button--primary button--disabled"
-                      disabled
-                    >
-                      Schedule Course
-                    </button>
-                    <button
-                      type="button"
-                      id="delete-schedule-btn"
-                      class="button button--danger hidden"
-                    >
-                      Delete Schedule
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              <!-- Schedule Preview -->
-              <div id="schedule-preview" class="schedule-preview hidden">
-                <h3 class="heading heading--tertiary">Schedule Preview</h3>
-
-                <div class="schedule-list-container">
-                  <div class="schedule-list-header">
-                    <span class="header-lesson">Lesson #</span>
-                    <span class="header-day">Day</span>
-                    <span class="header-start">Start Time</span>
-                    <span class="header-end">End Time</span>
-                    <span class="header-actions">Actions</span>
-                  </div>
-
-                  <div class="schedule-list">
-                    <!-- Schedule rows will be generated here -->
-                  </div>
-
-                  <div class="schedule-summary">
-                    <div class="total-lessons">Total lessons: 0</div>
+                  <div class="form__group">
+                    <label class="form__label" for="end-date">End Date</label>
+                    <input class="form__input" type="date" id="end-date" required />
                   </div>
                 </div>
-              </div>
-            </div>
-          </section>
-        </article>
 
-        <!-- Curriculum Article -->
-        <article id="curriculum" class="article">
-          <section class="card">
-
-            <!-- Curriculum Layout -->
-            <div class="curriculum-layout">
-              <!-- Curriculum Configuration -->
-              <div id="curriculum-config" class="curriculum-config">
-                <div class="content-load-section">
-                  <div id="content-load-display" class="content-load-display">
-                    <!-- Content load info will be displayed here -->
-                  </div>
-                </div>
-              </div>
-
-              <!-- Curriculum Preview -->
-              <div id="curriculum-preview" class="curriculum-preview hidden">
-                <div class="curriculum-preview-header">
-                  <!-- Preview Mode Buttons -->
-                  <div class="preview-mode-controls">
-                    <span class="preview-mode-label">Display:</span>
-                    <button
-                      type="button"
-                      class="preview-mode-btn active"
-                      data-mode="titles"
-                    >
-                      Lesson Titles
+                <!-- Days of Week Selection -->
+                <div class="form__group">
+                  <label class="form__label">Days of the Week</label>
+                  <div class="day-buttons">
+                    <button type="button" class="day-button" data-day="monday">
+                      Mon
                     </button>
-                    <button
-                      type="button"
-                      class="preview-mode-btn"
-                      data-mode="topics"
-                    >
-                      Lesson Topics
+                    <button type="button" class="day-button" data-day="tuesday">
+                      Tue
                     </button>
-                    <button
-                      type="button"
-                      class="preview-mode-btn"
-                      data-mode="objectives"
-                    >
-                      Lesson Objectives
+                    <button type="button" class="day-button" data-day="wednesday">
+                      Wed
+                    </button>
+                    <button type="button" class="day-button" data-day="thursday">
+                      Thu
+                    </button>
+                    <button type="button" class="day-button" data-day="friday">
+                      Fri
+                    </button>
+                    <button type="button" class="day-button" data-day="saturday">
+                      Sat
+                    </button>
+                    <button type="button" class="day-button" data-day="sunday">
+                      Sun
                     </button>
                   </div>
                 </div>
 
-                <div class="curriculum-preview-content">
-                  <!-- Curriculum content will be rendered here -->
-                </div>
-              </div>
-            </div>
-          </section>
-        </article>
-
-        <!-- Settings Article -->
-        <article id="settings" class="article">
-          <section class="card">
-            <!-- Margins Section -->
-            <div class="margins-section">
-              <h4 class="margins-title">Margins</h4>
-
-              <!-- Display Unit Selection -->
-              <div class="margins-unit-selection">
-                <span class="unit-label">Display in</span>
-                <div class="unit-toggle">
-                  <input
-                    type="radio"
-                    id="unit-inches"
-                    name="margin-unit"
-                    value="inches"
-                    class="unit-toggle__input"
-                  />
-                  <label for="unit-inches" class="unit-toggle__label"
-                    >Inches</label
-                  >
-
-                  <input
-                    type="radio"
-                    id="unit-centimeters"
-                    name="margin-unit"
-                    value="centimeters"
-                    class="unit-toggle__input"
-                    checked
-                  />
-                  <label for="unit-centimeters" class="unit-toggle__label"
-                    >Centimeters</label
-                  >
-                </div>
-              </div>
-
-              <!-- Margin Inputs Grid -->
-              <div class="margins-input-grid">
-                <div class="margin-input-item">
-                  <label class="margin-label" for="margin-top">Top</label>
-                  <div class="margin-input-group">
-                    <input
-                      class="margin-input"
-                      type="number"
-                      id="margin-top"
-                      name="margin_top"
-                      value="2.54"
-                      step="0.01"
-                      min="0"
-                    />
-                    <span class="margin-unit-display">cm</span>
+                <!-- Time Range Row -->
+                <div class="form__row">
+                  <div class="form__group">
+                    <label class="form__label" for="start-time">Start Time</label>
+                    <input class="form__input" type="time" id="start-time" required />
+                  </div>
+                  <div class="form__group">
+                    <label class="form__label" for="end-time">End Time</label>
+                    <input class="form__input" type="time" id="end-time" required />
                   </div>
                 </div>
 
-                <div class="margin-input-item">
-                  <label class="margin-label" for="margin-bottom">Bottom</label>
-                  <div class="margin-input-group">
-                    <input
-                      class="margin-input"
-                      type="number"
-                      id="margin-bottom"
-                      name="margin_bottom"
-                      value="2.54"
-                      step="0.01"
-                      min="0"
-                    />
-                    <span class="margin-unit-display">cm</span>
-                  </div>
-                </div>
-
-                <div class="margin-input-item">
-                  <label class="margin-label" for="margin-left">Left</label>
-                  <div class="margin-input-group">
-                    <input
-                      class="margin-input"
-                      type="number"
-                      id="margin-left"
-                      name="margin_left"
-                      value="2.54"
-                      step="0.01"
-                      min="0"
-                    />
-                    <span class="margin-unit-display">cm</span>
-                  </div>
-                </div>
-
-                <div class="margin-input-item">
-                  <label class="margin-label" for="margin-right">Right</label>
-                  <div class="margin-input-group">
-                    <input
-                      class="margin-input"
-                      type="number"
-                      id="margin-right"
-                      name="margin_right"
-                      value="2.54"
-                      step="0.01"
-                      min="0"
-                    />
-                    <span class="margin-unit-display">cm</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Save Status -->
-              <div class="margins-save-status">
-                <div class="save-indicator" id="margins-save-status">
-                  <span class="save-indicator__text"
-                    >Margins will be saved automatically</span
-                  >
-                </div>
-              </div>
-            </div>
-
-            <!-- Course Visibility Settings -->
-
-            <!-- Course Visibility Settings -->
-            <div class="course-settings-section">
-              <form class="form" id="course-settings-form">
-                <div class="settings-checkbox-group">
-                  <div class="settings-checkbox-item">
-                    <input
-                      class="settings-checkbox"
-                      type="checkbox"
-                      id="course-visible"
-                      name="course_visible"
-                    />
-                    <label class="settings-checkbox-label" for="course-visible"
-                      >Course visible to students</label
-                    >
-                  </div>
-                  <div class="settings-checkbox-item">
-                    <input
-                      class="settings-checkbox"
-                      type="checkbox"
-                      id="allow-enrollment"
-                      name="allow_enrollment"
-                    />
-                    <label
-                      class="settings-checkbox-label"
-                      for="allow-enrollment"
-                      >Allow new enrollments</label
-                    >
-                  </div>
-                  <div class="settings-checkbox-item">
-                    <input
-                      class="settings-checkbox"
-                      type="checkbox"
-                      id="require-approval"
-                      name="require_approval"
-                    />
-                    <label
-                      class="settings-checkbox-label"
-                      for="require-approval"
-                      >Require enrollment approval</label
-                    >
-                  </div>
-                </div>
-                <div class="form__footer">
-                  <div class="save-indicator" id="settings-last-saved">
-                    <span class="save-indicator__text" id="settings-save-status"
-                      >Changes will be saved automatically</span
-                    >
-                  </div>
+                <!-- Schedule Action Buttons -->
+                <div class="form__actions">
+                  <button type="button" id="schedule-course-btn" class="button button--primary button--disabled"
+                    disabled>
+                    Schedule Course
+                  </button>
+                  <button type="button" id="delete-schedule-btn" class="button button--danger hidden">
+                    Delete Schedule
+                  </button>
                 </div>
               </form>
             </div>
 
-            <div class="danger-zone">
-              <h3 class="danger-zone-title">Danger Zone</h3>
-              <p class="danger-zone-text">
-                Once you delete a course, there is no going back. Please be
-                certain.
-              </p>
-              <button class="danger-zone-button">Delete Course</button>
-            </div>
-          </section>
-        </article>
+            <!-- Schedule Preview -->
+            <div id="schedule-preview" class="schedule-preview hidden">
+              <h3 class="heading heading--tertiary">Schedule Preview</h3>
 
-        <!-- Marketplace Article -->
-        <article id="marketplace" class="article">
-          <section class="card">
-            <p class="text">
-              Marketplace integration features will be available here...
-            </p>
-          </section>
-        </article>
-
-        <!-- Resources Article -->
-        <article id="resources" class="article">
-          <section class="card"></section>
-        </article>
-      </section>
-
-      <!-- Create Section (no aside navigation) -->
-      <section id="create" class="section">
-        <!-- Course Builder Layout -->
-        <!-- Options Bar (Top Left - above media areas) -->
-        <div class="coursebuilder__options-bar">
-              <!-- This area can be used for general course options -->
-              <div class="course-options">
-                <span>Course Builder</span>
-              </div>
-            </div>
-
-            <!-- Canvas Toolbar (Top Center - above canvas) -->
-            <div class="coursebuilder__canvas-toolbar">
-              <div class="toolbar">
-                <div class="toolbar__tools">
-                  <!-- Drawing Tools -->
-                  <button
-                    class="tool tool--selected"
-                    data-tool="selection"
-                    title="Selection Tool"
-                  >
-                    <div class="tool__icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
-                      </svg>
-                    </div>
-                    <span class="tool__label">Select</span>
-                  </button>
-
-                  <button class="tool" data-tool="pen" title="Pen Tool">
-                    <div class="tool__icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path
-                          d="M20.71 7.04C21.1 6.65 21.1 6 20.71 5.63L18.37 3.29C18 2.9 17.35 2.9 16.96 3.29L15.12 5.12L18.87 8.87M3 17.25V21H6.75L17.81 9.93L14.06 6.18L3 17.25Z"
-                        />
-                      </svg>
-                    </div>
-                    <span class="tool__label">Pen</span>
-                  </button>
-
-                  <button
-                    class="tool"
-                    data-tool="highlighter"
-                    title="Highlighter Tool"
-                  >
-                    <div class="tool__icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path
-                          d="M18.5 1.15L20.85 3.5L17.5 6.85L15.15 4.5L18.5 1.15M12.5 6.15L14.85 8.5L4.85 18.5L2.5 16.15L12.5 6.15M22 23H2V21H22V23Z"
-                        />
-                      </svg>
-                    </div>
-                    <span class="tool__label">Highlight</span>
-                  </button>
-
-                  <button class="tool" data-tool="text" title="Text Tool">
-                    <div class="tool__icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M5 4V7H10.5V19H13.5V7H19V4H5Z" />
-                      </svg>
-                    </div>
-                    <span class="tool__label">Text</span>
-                  </button>
-
-                  <button class="tool" data-tool="shapes" title="Shapes Tool">
-                    <div class="tool__icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path
-                          d="M12,2A2,2 0 0,1 14,4A2,2 0 0,1 12,6A2,2 0 0,1 10,4A2,2 0 0,1 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V21A2,2 0 0,0 5,23H19A2,2 0 0,0 21,21V9M19,9H14V4H19V9Z"
-                        />
-                      </svg>
-                    </div>
-                    <span class="tool__label">Shapes</span>
-                  </button>
-
-                  <button class="tool" data-tool="eraser" title="Eraser Tool">
-                    <div class="tool__icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path
-                          d="M16.24 3.56L21.19 8.5C21.97 9.29 21.97 10.55 21.19 11.34L12 20.53C10.44 22.09 7.91 22.09 6.34 20.53L2.81 17C2.03 16.21 2.03 14.95 2.81 14.16L13.41 3.56C14.2 2.78 15.46 2.78 16.24 3.56M4.22 15.58L7.76 19.11C8.54 19.9 9.8 19.9 10.59 19.11L14.12 15.58L9.17 10.63L4.22 15.58Z"
-                        />
-                      </svg>
-                    </div>
-                    <span class="tool__label">Eraser</span>
-                  </button>
+              <div class="schedule-list-container">
+                <div class="schedule-list-header">
+                  <span class="header-lesson">Lesson #</span>
+                  <span class="header-day">Day</span>
+                  <span class="header-start">Start Time</span>
+                  <span class="header-end">End Time</span>
+                  <span class="header-actions">Actions</span>
                 </div>
 
-                <!-- Tool Settings Panel -->
-                <div class="toolbar__settings">
-                  <!-- Pen Tool Settings -->
-                  <div class="tool-settings" data-tool="pen">
-                    <div class="settings-section">
-                      <span class="settings-section__label">Color:</span>
-                      <div class="color-palette">
-                        <div
-                          class="color-palette__color color-palette__color--active"
-                          data-color="#000000"
-                          style="background-color: #000000"
-                          title="Black"
-                        ></div>
-                        <div
-                          class="color-palette__color"
-                          data-color="#ff0000"
-                          style="background-color: #ff0000"
-                          title="Red"
-                        ></div>
-                        <div
-                          class="color-palette__color"
-                          data-color="#0066ff"
-                          style="background-color: #0066ff"
-                          title="Blue"
-                        ></div>
-                        <div
-                          class="color-palette__color"
-                          data-color="#00cc00"
-                          style="background-color: #00cc00"
-                          title="Green"
-                        ></div>
-                        <div
-                          class="color-palette__color"
-                          data-color="#ff6600"
-                          style="background-color: #ff6600"
-                          title="Orange"
-                        ></div>
-                        <div
-                          class="color-palette__color"
-                          data-color="#800080"
-                          style="background-color: #800080"
-                          title="Purple"
-                        ></div>
-                      </div>
-                    </div>
-                    <div class="settings-section">
-                      <span class="settings-section__label">Size:</span>
-                      <div class="size-slider">
-                        <input
-                          type="range"
-                          min="1"
-                          max="20"
-                          value="4"
-                          data-setting="size"
-                        />
-                        <span class="size-slider__value">4px</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Highlighter Tool Settings -->
-                  <div class="tool-settings" data-tool="highlighter">
-                    <div class="settings-section">
-                      <span class="settings-section__label">Color:</span>
-                      <div class="color-palette">
-                        <div
-                          class="color-palette__color color-palette__color--active"
-                          data-color="#ffff00"
-                          style="background-color: #ffff00"
-                          title="Yellow"
-                        ></div>
-                        <div
-                          class="color-palette__color"
-                          data-color="#00ffff"
-                          style="background-color: #00ffff"
-                          title="Cyan"
-                        ></div>
-                        <div
-                          class="color-palette__color"
-                          data-color="#ff69b4"
-                          style="background-color: #ff69b4"
-                          title="Pink"
-                        ></div>
-                        <div
-                          class="color-palette__color"
-                          data-color="#90ee90"
-                          style="background-color: #90ee90"
-                          title="Light Green"
-                        ></div>
-                        <div
-                          class="color-palette__color"
-                          data-color="#ffa500"
-                          style="background-color: #ffa500"
-                          title="Orange"
-                        ></div>
-                        <div
-                          class="color-palette__color"
-                          data-color="#dda0dd"
-                          style="background-color: #dda0dd"
-                          title="Plum"
-                        ></div>
-                      </div>
-                    </div>
-                    <div class="settings-section">
-                      <span class="settings-section__label">Size:</span>
-                      <div class="size-slider">
-                        <input
-                          type="range"
-                          min="10"
-                          max="50"
-                          value="20"
-                          data-setting="size"
-                        />
-                        <span class="size-slider__value">20px</span>
-                      </div>
-                    </div>
-                    <div class="settings-section">
-                      <span class="settings-section__label">Opacity:</span>
-                      <div class="size-slider">
-                        <input
-                          type="range"
-                          min="0.1"
-                          max="1"
-                          step="0.1"
-                          value="0.8"
-                          data-setting="opacity"
-                        />
-                        <span class="size-slider__value">80%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Text Tool Settings -->
-                  <div class="tool-settings" data-tool="text">
-                    <div class="settings-section">
-                      <span class="settings-section__label">Font:</span>
-                      <select
-                        class="font-controls__select"
-                        data-setting="fontFamily"
-                      >
-                        <option value="Arial">Arial</option>
-                        <option value="Helvetica">Helvetica</option>
-                        <option value="Times New Roman">Times New Roman</option>
-                        <option value="Georgia">Georgia</option>
-                        <option value="Courier New">Courier New</option>
-                      </select>
-                    </div>
-                    <div class="settings-section">
-                      <span class="settings-section__label">Size:</span>
-                      <div class="size-slider">
-                        <input
-                          type="range"
-                          min="8"
-                          max="72"
-                          value="16"
-                          data-setting="fontSize"
-                        />
-                        <span class="size-slider__value">16px</span>
-                      </div>
-                    </div>
-                    <div class="settings-section">
-                      <span class="settings-section__label">Color:</span>
-                      <div class="color-palette">
-                        <div
-                          class="color-palette__color color-palette__color--active"
-                          data-color="#000000"
-                          style="background-color: #000000"
-                          title="Black"
-                        ></div>
-                        <div
-                          class="color-palette__color"
-                          data-color="#ff0000"
-                          style="background-color: #ff0000"
-                          title="Red"
-                        ></div>
-                        <div
-                          class="color-palette__color"
-                          data-color="#0066ff"
-                          style="background-color: #0066ff"
-                          title="Blue"
-                        ></div>
-                        <div
-                          class="color-palette__color"
-                          data-color="#00cc00"
-                          style="background-color: #00cc00"
-                          title="Green"
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Shapes Tool Settings -->
-                  <div class="tool-settings" data-tool="shapes">
-                    <div class="settings-section">
-                      <span class="settings-section__label">Shape:</span>
-                      <div class="shape-buttons">
-                        <button
-                          class="shape-btn shape-btn--active"
-                          data-shape="rectangle"
-                          title="Rectangle"
-                        >
-                          <svg viewBox="0 0 24 24" fill="currentColor">
-                            <rect
-                              x="3"
-                              y="6"
-                              width="18"
-                              height="12"
-                              rx="2"
-                              ry="2"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              fill="none"
-                            />
-                          </svg>
-                        </button>
-                        <button
-                          class="shape-btn"
-                          data-shape="triangle"
-                          title="Triangle"
-                        >
-                          <svg viewBox="0 0 24 24" fill="currentColor">
-                            <polygon
-                              points="12,3 21,18 3,18"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              fill="none"
-                            />
-                          </svg>
-                        </button>
-                        <button
-                          class="shape-btn"
-                          data-shape="circle"
-                          title="Circle"
-                        >
-                          <svg viewBox="0 0 24 24" fill="currentColor">
-                            <circle
-                              cx="12"
-                              cy="12"
-                              r="8"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              fill="none"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                    <div class="settings-section">
-                      <span class="settings-section__label">Stroke:</span>
-                      <div class="color-palette">
-                        <div
-                          class="color-palette__color color-palette__color--active"
-                          data-color="#000000"
-                          style="background-color: #000000"
-                          title="Black"
-                        ></div>
-                        <div
-                          class="color-palette__color"
-                          data-color="#ff0000"
-                          style="background-color: #ff0000"
-                          title="Red"
-                        ></div>
-                        <div
-                          class="color-palette__color"
-                          data-color="#0066ff"
-                          style="background-color: #0066ff"
-                          title="Blue"
-                        ></div>
-                        <div
-                          class="color-palette__color"
-                          data-color="#00cc00"
-                          style="background-color: #00cc00"
-                          title="Green"
-                        ></div>
-                      </div>
-                    </div>
-                    <div class="settings-section">
-                      <span class="settings-section__label">Width:</span>
-                      <div class="size-slider">
-                        <input
-                          type="range"
-                          min="1"
-                          max="10"
-                          value="2"
-                          data-setting="strokeWidth"
-                        />
-                        <span class="size-slider__value">2px</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Eraser Tool Settings -->
-                  <div class="tool-settings" data-tool="eraser">
-                    <div class="settings-section">
-                      <span class="settings-section__label">Size:</span>
-                      <div class="size-slider">
-                        <input
-                          type="range"
-                          min="5"
-                          max="100"
-                          value="20"
-                          data-setting="size"
-                        />
-                        <span class="size-slider__value">20px</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Selection Tool Settings -->
-                  <div
-                    class="tool-settings tool-settings--active"
-                    data-tool="selection"
-                  >
-                    <div class="settings-section">
-                      <span class="settings-section__label"
-                        >Selection tool active</span
-                      >
-                    </div>
-                  </div>
+                <div class="schedule-list">
+                  <!-- Schedule rows will be generated here -->
                 </div>
-              </div>
-            </div>
 
-            <!-- Table of Contents Options -->
-            <div class="coursebuilder__toc-options">
-              <button class="action-btn" title="Add Page">
-                <div class="action-btn__icon">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
-                  </svg>
+                <div class="schedule-summary">
+                  <div class="total-lessons">Total lessons: 0</div>
                 </div>
-                <span class="action-btn__label">Add Page</span>
-              </button>
-
-              <button class="action-btn" title="Page Settings">
-                <div class="action-btn__icon">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path
-                      d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"
-                    />
-                  </svg>
-                </div>
-                <span class="action-btn__label">Settings</span>
-              </button>
-            </div>
-
-            <!-- Media Bar (Left Sidebar) -->
-            <div class="coursebuilder__media-bar">
-              <button class="media-btn" data-media="images" title="Images">
-                <div class="media-btn__icon">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path
-                      d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"
-                    />
-                  </svg>
-                </div>
-                <span class="media-btn__label">Images</span>
-              </button>
-
-              <button class="media-btn" data-media="videos" title="Videos">
-                <div class="media-btn__icon">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path
-                      d="M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V17A1,1 0 0,0 4,18H16A1,1 0 0,0 17,17V13.5L21,17.5V6.5L17,10.5Z"
-                    />
-                  </svg>
-                </div>
-                <span class="media-btn__label">Videos</span>
-              </button>
-
-              <button class="media-btn" data-media="audio" title="Audio">
-                <div class="media-btn__icon">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path
-                      d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z"
-                    />
-                  </svg>
-                </div>
-                <span class="media-btn__label">Audio</span>
-              </button>
-
-              <button
-                class="media-btn"
-                data-media="templates"
-                title="Templates"
-              >
-                <div class="media-btn__icon">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path
-                      d="M5,3C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H5M5,5H19V19H5V5Z"
-                    />
-                  </svg>
-                </div>
-                <span class="media-btn__label">Templates</span>
-              </button>
-            </div>
-
-            <!-- Media Search Panel -->
-            <div class="coursebuilder__media-search">
-              <div class="media-search">
-                <h3 class="media-search__title">Media Library</h3>
-                <input
-                  type="search"
-                  class="media-search__input"
-                  placeholder="Search media..."
-                />
-                <div class="media-search__content">
-                  Select a media type from the sidebar to browse available
-                  content.
-                </div>
-              </div>
-            </div>
-
-            <!-- Main Canvas Area (Layout Protected) -->
-            <div class="coursebuilder__canvas" id="canvas-container">
-              <!-- PixiJS canvas will be inserted here directly -->
-              <div class="canvas-placeholder">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="#ccc">
-                  <path
-                    d="M12,2A2,2 0 0,1 14,4A2,2 0 0,1 12,6A2,2 0 0,1 10,4A2,2 0 0,1 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V21A2,2 0 0,0 5,23H19A2,2 0 0,0 21,21V9M19,9H14V4H19V9Z"
-                  />
-                </svg>
-                <div class="canvas-placeholder__title">
-                  🔒 Layout-Protected Canvas
-                </div>
-                <div class="canvas-placeholder__subtitle">
-                  Draw within pedagogical areas only<br />
-                  <small>Layout structure cannot be erased</small>
-                </div>
-              </div>
-            </div>
-
-            <!-- Table of Contents Sidebar -->
-            <div class="coursebuilder__toc">
-              <div class="toc">
-                <h3 class="toc__title">Pages</h3>
-                <div class="toc__page">
-                  <div class="toc__page-header">
-                    <span class="toc__page-name">Page 1</span>
-                    <span class="toc__page-format">A4</span>
-                  </div>
-                  <div class="toc__page-preview">
-                    <div class="toc__page-preview-content">Preview</div>
               </div>
             </div>
           </div>
+        </section>
+      </article>
+
+      <!-- Curriculum Article -->
+      <article id="curriculum" class="article">
+        <section class="card">
+
+          <!-- Curriculum Layout -->
+          <div class="curriculum-layout">
+            <!-- Curriculum Configuration -->
+            <div id="curriculum-config" class="curriculum-config">
+              <div class="content-load-section">
+                <div id="content-load-display" class="content-load-display">
+                  <!-- Content load info will be displayed here -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Curriculum Preview -->
+            <div id="curriculum-preview" class="curriculum-preview hidden">
+              <div class="curriculum-preview-header">
+                <!-- Preview Mode Buttons -->
+                <div class="preview-mode-controls">
+                  <span class="preview-mode-label">Display:</span>
+                  <button type="button" class="preview-mode-btn active" data-mode="titles">
+                    Lesson Titles
+                  </button>
+                  <button type="button" class="preview-mode-btn" data-mode="topics">
+                    Lesson Topics
+                  </button>
+                  <button type="button" class="preview-mode-btn" data-mode="objectives">
+                    Lesson Objectives
+                  </button>
+                </div>
+              </div>
+
+              <div class="curriculum-preview-content">
+                <!-- Curriculum content will be rendered here -->
+              </div>
+            </div>
+          </div>
+        </section>
+      </article>
+
+      <!-- Settings Article -->
+      <article id="settings" class="article">
+        <section class="card">
+          <!-- Margins Section -->
+          <div class="margins-section">
+            <h4 class="margins-title">Margins</h4>
+
+            <!-- Display Unit Selection -->
+            <div class="margins-unit-selection">
+              <span class="unit-label">Display in</span>
+              <div class="unit-toggle">
+                <input type="radio" id="unit-inches" name="margin-unit" value="inches" class="unit-toggle__input" />
+                <label for="unit-inches" class="unit-toggle__label">Inches</label>
+
+                <input type="radio" id="unit-centimeters" name="margin-unit" value="centimeters"
+                  class="unit-toggle__input" checked />
+                <label for="unit-centimeters" class="unit-toggle__label">Centimeters</label>
+              </div>
+            </div>
+
+            <!-- Margin Inputs Grid -->
+            <div class="margins-input-grid">
+              <div class="margin-input-item">
+                <label class="margin-label" for="margin-top">Top</label>
+                <div class="margin-input-group">
+                  <input class="margin-input" type="number" id="margin-top" name="margin_top" value="2.54" step="0.01"
+                    min="0" />
+                  <span class="margin-unit-display">cm</span>
+                </div>
+              </div>
+
+              <div class="margin-input-item">
+                <label class="margin-label" for="margin-bottom">Bottom</label>
+                <div class="margin-input-group">
+                  <input class="margin-input" type="number" id="margin-bottom" name="margin_bottom" value="2.54"
+                    step="0.01" min="0" />
+                  <span class="margin-unit-display">cm</span>
+                </div>
+              </div>
+
+              <div class="margin-input-item">
+                <label class="margin-label" for="margin-left">Left</label>
+                <div class="margin-input-group">
+                  <input class="margin-input" type="number" id="margin-left" name="margin_left" value="2.54" step="0.01"
+                    min="0" />
+                  <span class="margin-unit-display">cm</span>
+                </div>
+              </div>
+
+              <div class="margin-input-item">
+                <label class="margin-label" for="margin-right">Right</label>
+                <div class="margin-input-group">
+                  <input class="margin-input" type="number" id="margin-right" name="margin_right" value="2.54"
+                    step="0.01" min="0" />
+                  <span class="margin-unit-display">cm</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Save Status -->
+            <div class="margins-save-status">
+              <div class="save-indicator" id="margins-save-status">
+                <span class="save-indicator__text">Margins will be saved automatically</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Course Visibility Settings -->
+
+          <!-- Course Visibility Settings -->
+          <div class="course-settings-section">
+            <form class="form" id="course-settings-form">
+              <div class="settings-checkbox-group">
+                <div class="settings-checkbox-item">
+                  <input class="settings-checkbox" type="checkbox" id="course-visible" name="course_visible" />
+                  <label class="settings-checkbox-label" for="course-visible">Course visible to students</label>
+                </div>
+                <div class="settings-checkbox-item">
+                  <input class="settings-checkbox" type="checkbox" id="allow-enrollment" name="allow_enrollment" />
+                  <label class="settings-checkbox-label" for="allow-enrollment">Allow new enrollments</label>
+                </div>
+                <div class="settings-checkbox-item">
+                  <input class="settings-checkbox" type="checkbox" id="require-approval" name="require_approval" />
+                  <label class="settings-checkbox-label" for="require-approval">Require enrollment approval</label>
+                </div>
+              </div>
+              <div class="form__footer">
+                <div class="save-indicator" id="settings-last-saved">
+                  <span class="save-indicator__text" id="settings-save-status">Changes will be saved
+                    automatically</span>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div class="danger-zone">
+            <h3 class="danger-zone-title">Danger Zone</h3>
+            <p class="danger-zone-text">
+              Once you delete a course, there is no going back. Please be
+              certain.
+            </p>
+            <button class="danger-zone-button">Delete Course</button>
+          </div>
+        </section>
+      </article>
+
+      <!-- Marketplace Article -->
+      <article id="marketplace" class="article">
+        <section class="card">
+          <p class="text">
+            Marketplace integration features will be available here...
+          </p>
+        </section>
+      </article>
+
+      <!-- Resources Article -->
+      <article id="resources" class="article">
+        <section class="card"></section>
+      </article>
+    </section>
+
+    <section id="create" class="section">
+      <!-- Course Builder Layout -->
+      <!-- Options Bar (Top Left - above media areas) -->
+
+      <div class="coursebuilder">
+        <div class="coursebuilder__modes">
+          <!-- This area can be used for general course options -->
+
         </div>
-      </section>      <!-- Preview Section (no aside navigation) -->
-      <section id="preview" class="section">
-        <article class="article article--active">
-          <section class="card">
-            <p class="text">Course preview will be displayed here...</p>
-          </section>
-        </article>
-      </section>
 
-      <!-- Launch Section (no aside navigation) -->
-      <section id="launch" class="section">
-        <article class="article article--active">
-          <section class="card">
-            <p class="text">Course launch options will be available here...</p>
-          </section>
-        </article>
-      </section>
-    </main>
+        <!-- Canvas Toolbar (Top Center - above canvas) -->
+        <div class="coursebuilder__tools">
+          <!-- Drawing Tools -->
+          <button class="tool tool--selected" data-tool="selection" title="Selection Tool">
+            <div class="tool__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
+              </svg>
+            </div>
+            <span class="tool__label">Select</span>
+          </button>
 
-    <!-- Core application scripts -->
-    <script type="module" src="/src/scripts/app.ts"></script>
-    
-    <!-- PIXI and PixiJS devtools -->
-    <script type="module" src="/src/scripts/coursebuilder/devtools-setup.ts"></script>
-    
-    <!-- CourseBuilder application -->
-    <script type="module" src="/src/scripts/coursebuilder/coursebuilder.ts"></script>
-    
-    <!-- Backend services -->
-    <script type="module" src="/src/scripts/backend/courses/index.ts"></script>
-    <script type="module" src="/src/scripts/backend/courses/classificationFormHandler.ts"></script>
-    <script type="module" src="/src/scripts/backend/courses/createTemplate.ts"></script>
-    <script type="module" src="/src/scripts/backend/courses/templates/templateConfigHandler.ts"></script>
-    <script type="module" src="/src/scripts/backend/courses/templates/templatePreviewHandler.ts"></script>
-    <script type="module" src="/src/scripts/backend/courses/scheduleCourse.ts"></script>
-    <script type="module" src="/src/scripts/backend/courses/marginSettings.ts"></script>
-  </body>
+          <button class="tool" data-tool="pen" title="Pen Tool">
+            <div class="tool__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M20.71 7.04C21.1 6.65 21.1 6 20.71 5.63L18.37 3.29C18 2.9 17.35 2.9 16.96 3.29L15.12 5.12L18.87 8.87M3 17.25V21H6.75L17.81 9.93L14.06 6.18L3 17.25Z" />
+              </svg>
+            </div>
+            <span class="tool__label">Pen</span>
+          </button>
+
+          <button class="tool" data-tool="highlighter" title="Highlighter Tool">
+            <div class="tool__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M18.5 1.15L20.85 3.5L17.5 6.85L15.15 4.5L18.5 1.15M12.5 6.15L14.85 8.5L4.85 18.5L2.5 16.15L12.5 6.15M22 23H2V21H22V23Z" />
+              </svg>
+            </div>
+            <span class="tool__label">Highlight</span>
+          </button>
+
+          <button class="tool" data-tool="text" title="Text Tool">
+            <div class="tool__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M5 4V7H10.5V19H13.5V7H19V4H5Z" />
+              </svg>
+            </div>
+            <span class="tool__label">Text</span>
+          </button>
+
+          <button class="tool" data-tool="shapes" title="Shapes Tool">
+            <div class="tool__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12,2A2,2 0 0,1 14,4A2,2 0 0,1 12,6A2,2 0 0,1 10,4A2,2 0 0,1 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V21A2,2 0 0,0 5,23H19A2,2 0 0,0 21,21V9M19,9H14V4H19V9Z" />
+              </svg>
+            </div>
+            <span class="tool__label">Shapes</span>
+          </button>
+
+          <button class="tool" data-tool="eraser" title="Eraser Tool">
+            <div class="tool__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M16.24 3.56L21.19 8.5C21.97 9.29 21.97 10.55 21.19 11.34L12 20.53C10.44 22.09 7.91 22.09 6.34 20.53L2.81 17C2.03 16.21 2.03 14.95 2.81 14.16L13.41 3.56C14.2 2.78 15.46 2.78 16.24 3.56M4.22 15.58L7.76 19.11C8.54 19.9 9.8 19.9 10.59 19.11L14.12 15.58L9.17 10.63L4.22 15.58Z" />
+              </svg>
+            </div>
+            <span class="tool__label">Eraser</span>
+          </button>
+   
+
+        <!-- Tool Settings Panel -->
+        <div class="toolbar__settings">
+          <!-- Pen Tool Settings -->
+          <div class="tool-settings" data-tool="pen">
+            <div class="settings-section">
+              <span class="settings-section__label">Color:</span>
+              <div class="color-palette">
+                <div class="color-palette__color color-palette__color--active" data-color="#000000"
+                  style="background-color: #000000" title="Black"></div>
+                <div class="color-palette__color" data-color="#ff0000" style="background-color: #ff0000" title="Red">
+                </div>
+                <div class="color-palette__color" data-color="#0066ff" style="background-color: #0066ff" title="Blue">
+                </div>
+                <div class="color-palette__color" data-color="#00cc00" style="background-color: #00cc00" title="Green">
+                </div>
+                <div class="color-palette__color" data-color="#ff6600" style="background-color: #ff6600" title="Orange">
+                </div>
+                <div class="color-palette__color" data-color="#800080" style="background-color: #800080" title="Purple">
+                </div>
+              </div>
+            </div>
+            <div class="settings-section">
+              <span class="settings-section__label">Size:</span>
+              <div class="size-slider">
+                <input type="range" min="1" max="20" value="4" data-setting="size" />
+                <span class="size-slider__value">4px</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Highlighter Tool Settings -->
+          <div class="tool-settings" data-tool="highlighter">
+            <div class="settings-section">
+              <span class="settings-section__label">Color:</span>
+              <div class="color-palette">
+                <div class="color-palette__color color-palette__color--active" data-color="#ffff00"
+                  style="background-color: #ffff00" title="Yellow"></div>
+                <div class="color-palette__color" data-color="#00ffff" style="background-color: #00ffff" title="Cyan">
+                </div>
+                <div class="color-palette__color" data-color="#ff69b4" style="background-color: #ff69b4" title="Pink">
+                </div>
+                <div class="color-palette__color" data-color="#90ee90" style="background-color: #90ee90"
+                  title="Light Green"></div>
+                <div class="color-palette__color" data-color="#ffa500" style="background-color: #ffa500" title="Orange">
+                </div>
+                <div class="color-palette__color" data-color="#dda0dd" style="background-color: #dda0dd" title="Plum">
+                </div>
+              </div>
+            </div>
+            <div class="settings-section">
+              <span class="settings-section__label">Size:</span>
+              <div class="size-slider">
+                <input type="range" min="10" max="50" value="20" data-setting="size" />
+                <span class="size-slider__value">20px</span>
+              </div>
+            </div>
+            <div class="settings-section">
+              <span class="settings-section__label">Opacity:</span>
+              <div class="size-slider">
+                <input type="range" min="0.1" max="1" step="0.1" value="0.8" data-setting="opacity" />
+                <span class="size-slider__value">80%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Text Tool Settings -->
+          <div class="tool-settings" data-tool="text">
+            <div class="settings-section">
+              <span class="settings-section__label">Font:</span>
+              <select class="font-controls__select" data-setting="fontFamily">
+                <option value="Arial">Arial</option>
+                <option value="Helvetica">Helvetica</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Courier New">Courier New</option>
+              </select>
+            </div>
+            <div class="settings-section">
+              <span class="settings-section__label">Size:</span>
+              <div class="size-slider">
+                <input type="range" min="8" max="72" value="16" data-setting="fontSize" />
+                <span class="size-slider__value">16px</span>
+              </div>
+            </div>
+            <div class="settings-section">
+              <span class="settings-section__label">Color:</span>
+              <div class="color-palette">
+                <div class="color-palette__color color-palette__color--active" data-color="#000000"
+                  style="background-color: #000000" title="Black"></div>
+                <div class="color-palette__color" data-color="#ff0000" style="background-color: #ff0000" title="Red">
+                </div>
+                <div class="color-palette__color" data-color="#0066ff" style="background-color: #0066ff" title="Blue">
+                </div>
+                <div class="color-palette__color" data-color="#00cc00" style="background-color: #00cc00" title="Green">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Shapes Tool Settings -->
+          <div class="tool-settings" data-tool="shapes">
+            <div class="settings-section">
+              <span class="settings-section__label">Shape:</span>
+              <div class="shape-buttons">
+                <button class="shape-btn shape-btn--active" data-shape="rectangle" title="Rectangle">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="3" y="6" width="18" height="12" rx="2" ry="2" stroke="currentColor" stroke-width="2"
+                      fill="none" />
+                  </svg>
+                </button>
+                <button class="shape-btn" data-shape="triangle" title="Triangle">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="12,3 21,18 3,18" stroke="currentColor" stroke-width="2" fill="none" />
+                  </svg>
+                </button>
+                <button class="shape-btn" data-shape="circle" title="Circle">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="settings-section">
+              <span class="settings-section__label">Stroke:</span>
+              <div class="color-palette">
+                <div class="color-palette__color color-palette__color--active" data-color="#000000"
+                  style="background-color: #000000" title="Black"></div>
+                <div class="color-palette__color" data-color="#ff0000" style="background-color: #ff0000" title="Red">
+                </div>
+                <div class="color-palette__color" data-color="#0066ff" style="background-color: #0066ff" title="Blue">
+                </div>
+                <div class="color-palette__color" data-color="#00cc00" style="background-color: #00cc00" title="Green">
+                </div>
+              </div>
+            </div>
+            <div class="settings-section">
+              <span class="settings-section__label">Width:</span>
+              <div class="size-slider">
+                <input type="range" min="1" max="10" value="2" data-setting="strokeWidth" />
+                <span class="size-slider__value">2px</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Eraser Tool Settings -->
+          <div class="tool-settings" data-tool="eraser">
+            <div class="settings-section">
+              <span class="settings-section__label">Size:</span>
+              <div class="size-slider">
+                <input type="range" min="5" max="100" value="20" data-setting="size" />
+                <span class="size-slider__value">20px</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selection Tool Settings -->
+          <div class="tool-settings tool-settings--active" data-tool="selection">
+            <div class="settings-section">
+              <span class="settings-section__label">Selection tool active</span>
+            </div>
+          </div>
+        </div>
+     </div>
+
+        <!-- Media Bar (Left Sidebar) -->
+        <div class="coursebuilder__media">
+          <button class="media-btn" data-media="images" title="Images">
+            <div class="media-btn__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z" />
+              </svg>
+            </div>
+            <span class="media-btn__label">Images</span>
+          </button>
+
+          <button class="media-btn" data-media="videos" title="Videos">
+            <div class="media-btn__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V17A1,1 0 0,0 4,18H16A1,1 0 0,0 17,17V13.5L21,17.5V6.5L17,10.5Z" />
+              </svg>
+            </div>
+            <span class="media-btn__label">Videos</span>
+          </button>
+
+          <button class="media-btn" data-media="audio" title="Audio">
+            <div class="media-btn__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z" />
+              </svg>
+            </div>
+            <span class="media-btn__label">Audio</span>
+          </button>
+
+          <button class="media-btn" data-media="templates" title="Templates">
+            <div class="media-btn__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M5,3C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H5M5,5H19V19H5V5Z" />
+              </svg>
+            </div>
+            <span class="media-btn__label">Templates</span>
+          </button>
+        </div>
+
+        <!-- Media Search Panel -->
+        <div class="coursebuilder__search">
+            <h3 class="media-search__title">Media Library</h3>
+            <input type="search" class="media-search__input" placeholder="Search media..." />
+            <div class="media-search__content">
+              Select a media type from the sidebar to browse available
+              content.
+            </div>
+        </div>
+
+        <!-- Main Canvas Area (Layout Protected) -->
+        <div class="coursebuilder__canvas" id="canvas-container">
+          <!-- PixiJS canvas will be inserted here directly -->
+          <div class="canvas-placeholder">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="#ccc">
+              <path
+                d="M12,2A2,2 0 0,1 14,4A2,2 0 0,1 12,6A2,2 0 0,1 10,4A2,2 0 0,1 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V21A2,2 0 0,0 5,23H19A2,2 0 0,0 21,21V9M19,9H14V4H19V9Z" />
+            </svg>
+            <div class="canvas-placeholder__title">
+              🔒 Layout-Protected Canvas
+            </div>
+            <div class="canvas-placeholder__subtitle">
+              Draw within pedagogical areas only<br />
+              <small>Layout structure cannot be erased</small>
+            </div>
+          </div>
+        </div>
+        
+        <div class="coursebuilder__navigation">
+
+
+        </div>
+
+      <!-- Table of Contents Options -->
+        <div class="coursebuilder__preview">
+
+          <button class="action-btn" title="Add Page">
+            <div class="action-btn__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
+              </svg>
+            </div>
+            <span class="action-btn__label">Add Page</span>
+          </button>
+
+          <button class="action-btn" title="Page Settings">
+            <div class="action-btn__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" />
+              </svg>
+            </div>
+            <span class="action-btn__label">Settings</span>
+          </button>
+        </div>
+
+      </div>
+
+    </section> <!-- Preview Section (no aside navigation) -->
+    <section id="preview" class="section">
+      <article class="article article--active">
+        <section class="card">
+          <p class="text">Course preview will be displayed here...</p>
+        </section>
+      </article>
+    </section>
+
+    <!-- Launch Section (no aside navigation) -->
+    <section id="launch" class="section">
+      <article class="article article--active">
+        <section class="card">
+          <p class="text">Course launch options will be available here...</p>
+        </section>
+      </article>
+    </section>
+  </main>
+
+  <!-- Core application scripts -->
+  <script type="module" src="/src/scripts/app.ts"></script>
+
+  <!-- PIXI and PixiJS devtools -->
+  <script type="module" src="/src/scripts/coursebuilder/devtools-setup.ts"></script>
+
+  <!-- CourseBuilder application -->
+  <script type="module" src="/src/scripts/coursebuilder/coursebuilder.ts"></script>
+
+  <!-- Backend services -->
+  <script type="module" src="/src/scripts/backend/courses/index.ts"></script>
+  <script type="module" src="/src/scripts/backend/courses/classificationFormHandler.ts"></script>
+  <script type="module" src="/src/scripts/backend/courses/createTemplate.ts"></script>
+  <script type="module" src="/src/scripts/backend/courses/templates/templateConfigHandler.ts"></script>
+  <script type="module" src="/src/scripts/backend/courses/templates/templatePreviewHandler.ts"></script>
+  <script type="module" src="/src/scripts/backend/courses/scheduleCourse.ts"></script>
+  <script type="module" src="/src/scripts/backend/courses/marginSettings.ts"></script>
+</body>
+
 </html>

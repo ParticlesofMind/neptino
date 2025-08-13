@@ -10,6 +10,7 @@ export class UIEventHandler {
   private toolStateManager: ToolStateManager;
   private onToolChangeCallback: ((toolName: string) => void) | null = null;
   private onColorChangeCallback: ((color: string) => void) | null = null;
+  private onToolSettingsChangeCallback: ((toolName: string, settings: any) => void) | null = null;
 
   constructor(toolStateManager: ToolStateManager) {
     this.toolStateManager = toolStateManager;
@@ -28,6 +29,13 @@ export class UIEventHandler {
    */
   setOnColorChange(callback: (color: string) => void): void {
     this.onColorChangeCallback = callback;
+  }
+
+  /**
+   * Set callback for tool settings changes
+   */
+  setOnToolSettingsChange(callback: (toolName: string, settings: any) => void): void {
+    this.onToolSettingsChangeCallback = callback;
   }
 
   /**
@@ -79,12 +87,12 @@ export class UIEventHandler {
       return;
     }
 
-    // Handle shape selection
-    if (
-      target.classList.contains("shape-btn") ||
-      target.closest(".shape-btn")
-    ) {
-      this.handleShapeSelection(event);
+    // Handle shape selection - check if target is a shape button or is inside one
+    const shapeButton = target.closest(".shape-btn") as HTMLElement;
+    if (shapeButton) {
+      // Create a new event with the shape button as currentTarget
+      const shapeEvent = { ...event, currentTarget: shapeButton };
+      this.handleShapeSelection(shapeEvent);
       return;
     }
   }
@@ -230,9 +238,18 @@ export class UIEventHandler {
   private handleShapeSelection(event: Event): void {
     event.preventDefault();
     const button = event.currentTarget as HTMLElement;
+    
+    if (!button || !button.dataset) {
+      console.warn("🔶 SHAPES: Invalid button element in shape selection");
+      return;
+    }
+    
     const shapeType = button.dataset.shape;
 
-    if (!shapeType) return;
+    if (!shapeType) {
+      console.warn("🔶 SHAPES: No shape type found on button");
+      return;
+    }
 
     // Update UI - set active state for shape buttons
     const parentShapeButtons = button.closest(".shape-buttons");
@@ -245,11 +262,16 @@ export class UIEventHandler {
 
     // Set tool to shapes and update shape type
     this.toolStateManager.setTool("shapes");
-    this.toolStateManager.updateToolSettings("shapes", {
-      shapeType: shapeType as "rectangle" | "triangle" | "circle",
-    });
+    const shapeSettings = { 
+      shapeType: shapeType as "rectangle" | "triangle" | "circle" | "ellipse" | "line" | "arrow" | "polygon" 
+    };
+    this.toolStateManager.updateToolSettings("shapes", shapeSettings);
     this.toolStateManager.updateCanvasCursor();
 
+    // Trigger tool settings change callback
+    if (this.onToolSettingsChangeCallback) {
+      this.onToolSettingsChangeCallback("shapes", shapeSettings);
+    }
 
     // Trigger tool change callback
     if (this.onToolChangeCallback) {

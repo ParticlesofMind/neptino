@@ -340,6 +340,14 @@ export class CourseBuilderCanvas {
           this.pixiCanvas.updateToolColor(color);
         }
       });
+
+      // Connect UI tool settings changes to canvas
+      this.uiEventHandler.setOnToolSettingsChange((toolName: string, settings: any) => {
+        if (this.pixiCanvas) {
+          console.log(`⚙️ Updating tool settings for ${toolName}:`, settings);
+          this.pixiCanvas.updateToolSettings(toolName, settings);
+        }
+      });
       
       // Stub implementations for managers that don't exist yet
       console.log('⚠️ Using stub implementations for missing managers');

@@ -33,6 +33,9 @@ export class ShapesTool extends BaseTool {
   private currentShape: Graphics | null = null;
   private startPoint: Point = new Point(0, 0);
   private currentPoint: Point = new Point(0, 0);
+  private isProportional: boolean = false;
+  private boundKeyDown: (event: KeyboardEvent) => void;
+  private boundKeyUp: (event: KeyboardEvent) => void;
 
   constructor() {
     super("shapes", "crosshair");
@@ -45,6 +48,11 @@ export class ShapesTool extends BaseTool {
       cornerRadius: 0,
       sides: 6, // For hexagon default
     };
+    
+    // Bind keyboard events for proportional drawing
+    this.boundKeyDown = this.handleKeyDown.bind(this);
+    this.boundKeyUp = this.handleKeyUp.bind(this);
+    this.bindKeyboardEvents();
   }
 
   onPointerDown(event: FederatedPointerEvent, container: Container): void {
@@ -78,17 +86,49 @@ export class ShapesTool extends BaseTool {
     const localPoint = container.toLocal(event.global);
     this.currentPoint.copyFrom(localPoint);
 
+    // Check if shift key is pressed for proportional drawing
+    this.isProportional = event.shiftKey;
+
     this.drawShape();
   }
 
   onPointerUp(): void {
     if (this.isDrawing) {
       console.log(
-        `🔶 SHAPES: Finished drawing professional ${this.settings.shapeType}`,
+        `🔶 SHAPES: Finished drawing professional ${this.settings.shapeType}${this.isProportional ? " (proportional)" : ""}`,
       );
     }
     this.isDrawing = false;
     this.currentShape = null;
+    this.isProportional = false;
+  }
+
+  /**
+   * Bind keyboard events for proportional drawing
+   */
+  private bindKeyboardEvents(): void {
+    document.addEventListener("keydown", this.boundKeyDown);
+    document.addEventListener("keyup", this.boundKeyUp);
+  }
+
+  /**
+   * Handle key down events
+   */
+  private handleKeyDown(event: KeyboardEvent): void {
+    if (event.key === "Shift" && this.isDrawing) {
+      this.isProportional = true;
+      this.drawShape();
+    }
+  }
+
+  /**
+   * Handle key up events
+   */
+  private handleKeyUp(event: KeyboardEvent): void {
+    if (event.key === "Shift" && this.isDrawing) {
+      this.isProportional = false;
+      this.drawShape();
+    }
   }
 
   private drawShape(): void {
@@ -98,8 +138,27 @@ export class ShapesTool extends BaseTool {
     this.currentShape.clear();
 
     const strokeColor = hexToNumber(this.settings.color);
-    const width = this.currentPoint.x - this.startPoint.x;
-    const height = this.currentPoint.y - this.startPoint.y;
+    let width = this.currentPoint.x - this.startPoint.x;
+    let height = this.currentPoint.y - this.startPoint.y;
+
+    // Apply proportional constraints if shift is held
+    if (this.isProportional) {
+      switch (this.settings.shapeType) {
+        case "rectangle":
+          // Make it a square by using the larger dimension
+          const maxDim = Math.max(Math.abs(width), Math.abs(height));
+          width = width >= 0 ? maxDim : -maxDim;
+          height = height >= 0 ? maxDim : -maxDim;
+          break;
+        case "triangle":
+          // Equilateral triangle - width should equal height
+          height = Math.abs(width) * (height >= 0 ? 1 : -1);
+          break;
+        case "circle":
+          // Circle is always proportional, no change needed
+          break;
+      }
+    }
 
     // Apply stroke style
     const strokeStyle = {
@@ -344,7 +403,13 @@ export class ShapesTool extends BaseTool {
   }
 
   updateSettings(settings: ShapesSettings): void {
+    const previousShapeType = this.settings.shapeType;
     this.settings = { ...this.settings, ...settings };
+    
+    // Log shape type changes
+    if (settings.shapeType && settings.shapeType !== previousShapeType) {
+      console.log(`🔶 SHAPES: Shape type changed from ${previousShapeType} to ${settings.shapeType}`);
+    }
   }
 
   // Get available colors for UI
@@ -381,5 +446,13 @@ export class ShapesTool extends BaseTool {
       arrow: "Arrow",
       polygon: "Polygon",
     };
+  }
+
+  /**
+   * Cleanup method to remove event listeners
+   */
+  destroy(): void {
+    document.removeEventListener("keydown", this.boundKeyDown);
+    document.removeEventListener("keyup", this.boundKeyUp);
   }
 }
