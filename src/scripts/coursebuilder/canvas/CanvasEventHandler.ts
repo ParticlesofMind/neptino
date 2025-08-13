@@ -4,13 +4,14 @@
  * Single Responsibility: Event handling only
  */
 
-import { Application, Container, FederatedPointerEvent } from "pixi.js";
+import { Application, FederatedPointerEvent } from "pixi.js";
 import { ToolManager } from "../tools/ToolManager";
+import { DisplayObjectManager } from "./DisplayObjectManager";
 
 export class CanvasEventHandler {
   private app: Application;
   private toolManager: ToolManager;
-  private drawingContainer: Container | null = null;
+  private displayManager: DisplayObjectManager | null = null;
 
   constructor(app: Application, toolManager: ToolManager) {
     this.app = app;
@@ -18,10 +19,10 @@ export class CanvasEventHandler {
   }
 
   /**
-   * Set drawing container for tool interactions
+   * Provide display object manager for tool interactions
    */
-  public setDrawingContainer(container: Container): void {
-    this.drawingContainer = container;
+  public setDisplayManager(manager: DisplayObjectManager): void {
+    this.displayManager = manager;
   }
 
   /**
@@ -63,9 +64,10 @@ export class CanvasEventHandler {
    */
   private handlePointerDown(event: FederatedPointerEvent): void {
     const activeTool = this.toolManager.getActiveTool();
-    if (activeTool && this.drawingContainer) {
+    const container = this.displayManager?.getRoot();
+    if (activeTool && container) {
       try {
-        activeTool.onPointerDown(event, this.drawingContainer);
+        activeTool.onPointerDown(event, container);
       } catch (error) {
         console.error("❌ Error in tool pointer down:", error);
       }
@@ -77,9 +79,10 @@ export class CanvasEventHandler {
    */
   private handlePointerMove(event: FederatedPointerEvent): void {
     const activeTool = this.toolManager.getActiveTool();
-    if (activeTool && this.drawingContainer) {
+    const container = this.displayManager?.getRoot();
+    if (activeTool && container) {
       try {
-        activeTool.onPointerMove(event, this.drawingContainer);
+        activeTool.onPointerMove(event, container);
       } catch (error) {
         console.error("❌ Error in tool pointer move:", error);
       }
@@ -91,9 +94,10 @@ export class CanvasEventHandler {
    */
   private handlePointerUp(event: FederatedPointerEvent): void {
     const activeTool = this.toolManager.getActiveTool();
-    if (activeTool && this.drawingContainer) {
+    const container = this.displayManager?.getRoot();
+    if (activeTool && container) {
       try {
-        activeTool.onPointerUp(event, this.drawingContainer);
+        activeTool.onPointerUp(event, container);
       } catch (error) {
         console.error("❌ Error in tool pointer up:", error);
       }
