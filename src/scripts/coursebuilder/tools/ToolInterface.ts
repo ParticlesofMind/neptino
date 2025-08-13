@@ -4,6 +4,7 @@
  */
 
 import { FederatedPointerEvent, Container } from "pixi.js";
+import { DisplayObjectManager } from "../canvas/DisplayObjectManager";
 
 export interface ToolSettings {
   pen: {
@@ -41,6 +42,7 @@ export interface Tool {
   onActivate(): void;
   onDeactivate(): void;
   updateSettings(settings: any): void;
+  setDisplayObjectManager(manager: DisplayObjectManager): void;
 }
 
 export abstract class BaseTool implements Tool {
@@ -48,6 +50,7 @@ export abstract class BaseTool implements Tool {
   public cursor: string;
   protected isActive: boolean = false;
   protected settings: any;
+  protected displayManager: DisplayObjectManager | null = null;
 
   constructor(name: string, cursor: string = "default") {
     this.name = name;
@@ -77,6 +80,10 @@ export abstract class BaseTool implements Tool {
 
   updateSettings(settings: any): void {
     this.settings = { ...this.settings, ...settings };
+  }
+
+  setDisplayObjectManager(manager: DisplayObjectManager): void {
+    this.displayManager = manager;
   }
 
   protected hexToNumber(hex: string): number {

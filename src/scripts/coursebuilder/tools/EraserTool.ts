@@ -159,15 +159,21 @@ export class EraserTool extends BaseTool {
     event: FederatedPointerEvent,
     container: Container,
   ): void {
-    if (!this.erasePreview) {
+    // Ensure preview graphic exists and hasn't been destroyed
+    if (!this.erasePreview || this.erasePreview.destroyed) {
       this.erasePreview = new Graphics();
       this.erasePreview.alpha = 0.3;
       container.addChild(this.erasePreview);
     }
 
+    if (!this.erasePreview) {
+      return; // bail out if creation somehow failed
+    }
+
     const localPoint = container.toLocal(event.global);
     const radius = this.settings.size / 2;
 
+    // Clear any previous preview and draw the current one
     this.erasePreview.clear();
     this.erasePreview.circle(localPoint.x, localPoint.y, radius);
     this.erasePreview.fill({ color: 0xff4444 }); // Red preview
@@ -175,8 +181,13 @@ export class EraserTool extends BaseTool {
   }
 
   private hideErasePreview(): void {
-    if (this.erasePreview && this.erasePreview.parent) {
-      this.erasePreview.parent.removeChild(this.erasePreview);
+    if (this.erasePreview) {
+      // Remove from display list if still attached
+      if (this.erasePreview.parent) {
+        this.erasePreview.parent.removeChild(this.erasePreview);
+      }
+      // Destroy the graphics object to avoid invalid references
+      this.erasePreview.destroy();
       this.erasePreview = null;
     }
   }

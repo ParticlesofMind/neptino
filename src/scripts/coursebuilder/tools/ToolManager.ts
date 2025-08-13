@@ -3,7 +3,7 @@
  * Manages all drawing tools and their interactions with the canvas
  */
 
-import { FederatedPointerEvent, Container } from "pixi.js";
+import { FederatedPointerEvent, Container, DisplayObject } from "pixi.js";
 import { Tool, ToolSettings } from "./ToolInterface";
 import { SelectionTool } from "./SelectionTool";
 import { PenTool } from "./PenTool";
@@ -11,11 +11,13 @@ import { HighlighterTool } from "./HighlighterTool";
 import { TextTool } from "./TextTool";
 import { ShapesTool } from "./ShapesTool";
 import { EraserTool } from "./EraserTool";
+import { DisplayObjectManager } from "../canvas/DisplayObjectManager";
 
 export class ToolManager {
   private tools: Map<string, Tool> = new Map();
   private activeTool: Tool | null = null;
   private settings: ToolSettings;
+  private displayManager: DisplayObjectManager | null = null;
 
   constructor() {
     this.settings = {
@@ -61,6 +63,16 @@ export class ToolManager {
     if (this.activeTool) {
       this.activeTool.onActivate();
     }
+  }
+
+  /**
+   * Provide the display object manager to all tools
+   */
+  public setDisplayManager(manager: DisplayObjectManager): void {
+    this.displayManager = manager;
+    this.tools.forEach((tool) => {
+      tool.setDisplayObjectManager(manager);
+    });
   }
 
   public setActiveTool(toolName: string): boolean {
@@ -169,6 +181,21 @@ export class ToolManager {
     tool.updateSettings(toolSettings);
   }
 
+  /**
+   * Convenience wrappers for managing display objects through the manager
+   */
+  public addDisplayObject(obj: DisplayObject): void {
+    this.displayManager?.add(obj);
+  }
+
+  public removeDisplayObject(obj: DisplayObject): void {
+    this.displayManager?.remove(obj);
+  }
+
+  public getDisplayObjects(): DisplayObject[] {
+    return this.displayManager?.getObjects() || [];
+  }
+
   public updateColorForCurrentTool(color: string): void {
     if (!this.activeTool) return;
 
@@ -207,5 +234,6 @@ export class ToolManager {
     // Clear all tools
     this.tools.clear();
     this.activeTool = null;
+    this.displayManager = null;
   }
 }

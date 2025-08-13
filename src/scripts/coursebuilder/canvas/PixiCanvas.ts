@@ -9,11 +9,13 @@ import { ToolManager } from "../tools/ToolManager";
 import { PixiApplicationManager } from "./PixiApplicationManager";
 import { CanvasLayerManager } from "./CanvasLayerManager";
 import { CanvasEventHandler } from "./CanvasEventHandler";
+import { DisplayObjectManager } from "./DisplayObjectManager";
 
 export class PixiCanvas {
   private appManager: PixiApplicationManager;
   private layerManager: CanvasLayerManager | null = null;
   private eventHandler: CanvasEventHandler | null = null;
+  private displayManager: DisplayObjectManager | null = null;
   private toolManager: ToolManager;
   private app: Application | null = null;
 
@@ -35,11 +37,17 @@ export class PixiCanvas {
       this.layerManager.initializeLayers();
       this.layerManager.addBackgroundGrid();
 
-      // Initialize event handling
-      this.eventHandler = new CanvasEventHandler(this.app, this.toolManager);
-      this.eventHandler.setDrawingContainer(
+      // Initialize display object manager
+      this.displayManager = new DisplayObjectManager(
         this.layerManager.getDrawingContainer()!,
       );
+
+      // Provide display manager to tools
+      this.toolManager.setDisplayManager(this.displayManager);
+
+      // Initialize event handling
+      this.eventHandler = new CanvasEventHandler(this.app, this.toolManager);
+      this.eventHandler.setDisplayManager(this.displayManager);
       this.eventHandler.setupEvents();
 
     } catch (error) {
