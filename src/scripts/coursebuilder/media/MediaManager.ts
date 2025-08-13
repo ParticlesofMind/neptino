@@ -8,7 +8,7 @@ import { MediaSelectionController } from "./MediaSelectionController";
 import { MediaSearchController } from "./MediaSearchController";
 import { MediaPanelManager } from "./MediaPanelManager";
 
-export class MediaManagerRefactored {
+export class MediaManager {
   private selectionController: MediaSelectionController;
   private searchController: MediaSearchController;
   private panelManager: MediaPanelManager;

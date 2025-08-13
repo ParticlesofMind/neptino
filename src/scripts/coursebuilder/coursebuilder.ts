@@ -17,7 +17,10 @@ import { CurriculumManager } from "../backend/courses/curriculumManager";
 // These will be conditionally imported when available
 type MarginSettingsManager = any;
 type PageManager = any;
-type MediaManagerRefactored = any;
+// Temporary type declarations for unimplemented classes
+type LayoutManager = any;
+type PresentationManager = any;
+type MediaManager = any;
 type FontManager = any;
 type CommandManager = any;
 
@@ -74,7 +77,7 @@ export class CourseBuilderCanvas {
   // Layout and content managers
   private marginSettingsManager: MarginSettingsManager | null = null;
   private pageManager: PageManager | null = null;
-  private mediaManager: MediaManagerRefactored | null = null;
+  private mediaManager: MediaManager | null = null;
   private fontManager: FontManager | null = null;
   
   // Course-specific managers
