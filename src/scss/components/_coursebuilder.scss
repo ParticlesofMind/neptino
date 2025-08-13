@@ -5,14 +5,14 @@
 @use "../abstracts/variables" as vars;
 @use "../abstracts/mixins" as mixins;
 
-/* Course Builder Component - Now applied to #create section when active */
+/* Course Builder Component - Clean BEM Structure */
 #create.section.section--active {
   display: grid;
-  grid-template-columns: 80px 1fr 900px 250px; /* Increased canvas area to 900px for proper A4 display */
-  grid-template-rows: auto 1fr; /* Define explicit row heights */
+  grid-template-columns: 80px 1fr 900px 250px;
+  grid-template-rows: auto 1fr;
   gap: 0.5rem;
   width: 100%;
-  height: 100%; /* Fill the available container space */
+  height: 100%;
   box-sizing: border-box;
   background-color: vars.$gray-50;
 
@@ -25,9 +25,7 @@
   }
 }
 
-/* Course Builder Layout Elements */
 .coursebuilder {
-  /* Options Bar (spans media bar and media search areas only) */
   &__modes {
     grid-column: 1 / 3;
     grid-row: 1;
@@ -35,9 +33,28 @@
     align-items: center;
     justify-content: flex-start;
     padding: 0.25rem;
+    gap: 1rem;
   }
 
-  /* Canvas Toolbar (above canvas area - row 1, column 3) */
+  &__media {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0.5rem;
+    overflow-y: auto;
+  }
+
+  &__search {
+    grid-column: 2;
+    grid-row: 2;
+    padding: 1rem;
+    overflow-y: auto;
+  }
+
   &__tools {
     grid-column: 3;
     grid-row: 1;
@@ -45,10 +62,29 @@
     align-items: center;
     justify-content: flex-start;
     padding: 0.25rem;
+    gap: 1rem;
+    overflow-x: auto;
   }
 
-  /* Table of Contents Options (separate top right area) */
+  &__canvas {
+    grid-column: 3;
+    grid-row: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    overflow: hidden;
+    background: vars.$white;
+  }
+
   &__navigation {
+    grid-column: 4;
+    grid-row: 2;
+    padding: 1rem;
+    overflow-y: auto;
+  }
+
+  &__preview {
     grid-column: 4;
     grid-row: 1;
     display: flex;
@@ -58,146 +94,61 @@
     gap: 1rem;
     padding: 0.5rem;
   }
-
-  /* Media Bar (Left Sidebar) */
-  &__media {
-    grid-column: 1;
-    grid-row: 2;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    align-items: center;
-    justify-content: flex-start;
-    height: 100%; /* Ensure it fills the grid area */
-    overflow-y: auto; /* Allow scrolling if content overflows */
-    padding: 0.5rem 0.25rem;
-  }
-
-  /* Media Search Panel */
-  &__search {
-    grid-column: 2;
-    grid-row: 2;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%; /* Ensure it fills the grid area */
-    overflow-y: auto; /* Allow scrolling if content overflows */
-  }
-
-  /* Main Canvas Area - simplified with direct canvas styling */
-  &__canvas {
-    grid-column: 3;
-    grid-row: 2;
-    background: vars.$gray-100;
-    border: 1px solid vars.$gray-200;
-    position: relative;
-    box-sizing: border-box;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start; /* Align to top */
-    padding: 20px;
-    height: 100%; /* Fill grid area */
-    overflow: auto; /* Only the canvas area scrolls */
-
-    /* Direct canvas styling - A4 proportions */
-    canvas {
-      width: 794px !important;
-      height: 1123px !important;
-      background: vars.$white;
-      flex-shrink: 0; /* Prevent shrinking of A4 canvas */
-      border: 2px solid vars.$primary-color;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      display: block;
-      touch-action: none;
-    }
-  }
 }
 
-/* Toolbar styling */
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.5rem;
-  overflow: hidden;
-  justify-content: flex-start;
-  width: 100%;
-
-  &__tools {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 0;
-    flex-shrink: 0; // Don't shrink the tools
+/* Mode icon styling */
+.mode-icon {
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+  margin-right: 1rem;
+  
+  &:hover {
+    opacity: 0.8;
+    transform: scale(1.1);
   }
-
-  &__settings {
-    flex: 1; // Take up remaining space
-    overflow-x: auto; // Allow horizontal scrolling if needed
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+  
+  &--active {
+    opacity: 1;
+    filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(213deg) brightness(104%) contrast(97%);
   }
 }
 
 /* Tool styling */
 .tool {
-  height: auto;
-  object-fit: contain;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
   cursor: pointer;
   border: none;
   background: none;
-  box-shadow: none;
-  outline: none;
   border-radius: 0.5rem;
-  display: grid;
-  grid-template-rows: auto auto;
-  place-items: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  gap: 0.25rem;
-  position: relative;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
 
   &__icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    display: grid;
-    place-items: center;
-    border-radius: 0.5rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(100, 149, 237, 0.1);
-
-    svg {
-      width: 85%;
-      height: 85%;
-      object-fit: contain;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+    width: 2rem;
+    height: 2rem;
+    opacity: 0.7;
+    transition: all 0.3s ease;
   }
 
   &__label {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: 0.75rem;
     font-weight: 500;
-    text-align: center;
     color: vars.$gray-700;
+    transition: all 0.3s ease;
   }
 
   &:hover {
-    transform: translateY(-1px);
-
     .tool__icon {
-      background: rgba(100, 149, 237, 0.15);
-      border-color: rgba(100, 149, 237, 0.3);
-      box-shadow: 0 4px 12px rgba(100, 149, 237, 0.2);
-
-      svg {
-        transform: scale(1.05);
-      }
+      opacity: 1;
+      transform: scale(1.1);
     }
-
+    
     .tool__label {
       color: vars.$primary-color;
     }
@@ -205,18 +156,10 @@
 
   &--selected {
     .tool__icon {
-      background: linear-gradient(135deg, vars.$primary-color 0%, #91b4f2 100%);
-      border-color: vars.$primary-color;
-      box-shadow:
-        0 6px 20px rgba(100, 149, 237, 0.3),
-        0 0 0 2px rgba(100, 149, 237, 0.2);
-
-      svg {
-        filter: brightness(0) invert(1);
-        transform: scale(1.1);
-      }
+      opacity: 1;
+      filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(213deg) brightness(104%) contrast(97%);
     }
-
+    
     .tool__label {
       color: vars.$primary-color;
       font-weight: 600;
@@ -438,29 +381,21 @@
 
 /* Media button styling */
 .media-btn {
-  display: grid;
-  grid-template-rows: auto auto;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 0.25rem;
   border: none;
   background: none;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.5rem;
+  transition: all 0.3s ease;
 
   &__icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    display: grid;
-    place-items: center;
-    border-radius: 0.5rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(100, 149, 237, 0.1);
-
-    svg {
-      width: 85%;
-      height: 85%;
-    }
+    width: 2rem;
+    height: 2rem;
+    opacity: 0.7;
+    transition: all 0.3s ease;
   }
 
   &__label {
@@ -468,19 +403,13 @@
     font-weight: 500;
     text-align: center;
     color: vars.$gray-700;
+    transition: all 0.3s ease;
   }
 
   &:hover {
-    transform: translateY(-1px);
-
     .media-btn__icon {
-      background: rgba(100, 149, 237, 0.15);
-      border-color: rgba(100, 149, 237, 0.3);
-      box-shadow: 0 4px 12px rgba(100, 149, 237, 0.2);
-
-      svg {
-        transform: scale(1.05);
-      }
+      opacity: 1;
+      transform: scale(1.1);
     }
 
     .media-btn__label {
@@ -488,23 +417,53 @@
     }
   }
 
-  &--selected {
+  &--active {
     .media-btn__icon {
-      background: linear-gradient(135deg, vars.$primary-color 0%, #91b4f2 100%);
-      border-color: vars.$primary-color;
-      box-shadow:
-        0 6px 20px rgba(100, 149, 237, 0.3),
-        0 0 0 2px rgba(100, 149, 237, 0.2);
-
-      svg {
-        filter: brightness(0) invert(1);
-        transform: scale(1.1);
-      }
+      opacity: 1;
+      filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(213deg) brightness(104%) contrast(97%);
     }
 
     .media-btn__label {
       color: vars.$primary-color;
       font-weight: 600;
+    }
+  }
+}
+
+/* Action button styling */
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
+
+  &__icon {
+    width: 2rem;
+    height: 2rem;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: vars.$gray-700;
+    transition: all 0.3s ease;
+  }
+
+  &:hover {
+    .action-btn__icon {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    
+    .action-btn__label {
+      color: vars.$primary-color;
     }
   }
 }
@@ -526,21 +485,6 @@
     border: 1px solid vars.$gray-300;
     border-radius: 4px;
     font-size: 0.875rem;
-    margin-bottom: 1rem;
-
-    &:focus {
-      outline: none;
-      border-color: vars.$primary-color;
-      box-shadow: 0 0 0 3px rgba(100, 149, 237, 0.1);
-    }
-  }
-
-  &__content {
-    padding: 2rem;
-    text-align: center;
-    color: vars.$gray-600;
-    font-size: 0.875rem;
-  }
 }
 
 /* Removed redundant canvas wrapper styles - now using simplified structure */
@@ -759,6 +703,7 @@
     height: calc(100vh - 120px); /* Account for header and some margin */
     max-height: calc(100vh - 120px); /* Ensure it never exceeds */
   }
+}
 }
 
 /* Remove the old body override since we're not using .coursebuilder wrapper anymore */
