@@ -1,0 +1,94 @@
+// ==========================================================================
+// ICONS - Universal Neumorphic Design System
+// ==========================================================================
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  // Universal neumorphic styling
+  border-radius: 12px;
+  background: #f0f0f0;
+  box-shadow: 20px 20px 60px #d5d5d5,
+              -20px -20px 60px #ffffff;
+  
+  // Default padding and sizing
+  padding: 0.75rem;
+  
+  // Hover effects
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 22px 22px 65px #d5d5d5,
+                -22px -22px 65px #ffffff;
+  }
+  
+  // Active/pressed state
+  &:active {
+    transform: translateY(0);
+    box-shadow: inset 10px 10px 30px #d5d5d5,
+                inset -10px -10px 30px #ffffff;
+  }
+  
+  // Selected state
+  &--selected {
+    background: #e8e8e8;
+    box-shadow: inset 15px 15px 45px #d5d5d5,
+                inset -15px -15px 45px #ffffff;
+    
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: inset 18px 18px 50px #d5d5d5,
+                  inset -18px -18px 50px #ffffff;
+    }
+  }
+  
+  // Base icon sizes
+  &--small {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0.5rem;
+    box-shadow: 15px 15px 45px #d5d5d5,
+                -15px -15px 45px #ffffff;
+    
+    &:hover {
+      box-shadow: 17px 17px 50px #d5d5d5,
+                  -17px -17px 50px #ffffff;
+    }
+  }
+  
+  &--medium {
+    width: 3rem;
+    height: 3rem;
+    padding: 0.75rem;
+  }
+  
+  &--large {
+    width: 3.5rem;
+    height: 3.5rem;
+    padding: 1rem;
+    box-shadow: 25px 25px 70px #d5d5d5,
+                -25px -25px 70px #ffffff;
+    
+    &:hover {
+      box-shadow: 27px 27px 75px #d5d5d5,
+                  -27px -27px 75px #ffffff;
+    }
+  }
+  
+  &--xl {
+    width: 4rem;
+    height: 4rem;
+    padding: 1.25rem;
+    box-shadow: 30px 30px 80px #d5d5d5,
+                -30px -30px 80px #ffffff;
+    
+    &:hover {
+      box-shadow: 32px 32px 85px #d5d5d5,
+                  -32px -32px 85px #ffffff;
+    }
+  }
+}

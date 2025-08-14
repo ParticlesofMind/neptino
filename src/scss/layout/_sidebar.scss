@@ -95,6 +95,41 @@
   &--active {
     display: block;
   }
+
+  // Setup section layout - aside to the left of articles
+  &#setup {
+    &.section--active:has(.aside) {
+      display: grid !important;
+      grid-template-columns: minmax(280px, 300px) 1fr;
+      gap: $spacing-4;
+      align-items: start;
+
+      .aside {
+        position: sticky;
+        top: $spacing-3;
+        height: fit-content;
+        max-height: calc(100vh - #{$spacing-3} * 2 - 80px);
+        overflow-y: auto;
+      }
+
+      // Natural responsive behavior - grid will collapse when content is too narrow
+      @container (max-width: 768px) {
+        grid-template-columns: 1fr !important;
+
+        .aside {
+          position: static;
+          height: auto;
+          max-height: none;
+          overflow-y: visible;
+        }
+      }
+    }
+
+    // Ensure setup section is hidden when not active
+    &:not(.section--active) {
+      display: none !important;
+    }
+  }
 }
 
 // Responsive aside adjustments - minimal, grid handles most of it

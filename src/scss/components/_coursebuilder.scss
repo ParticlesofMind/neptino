@@ -1,709 +1,323 @@
-// ==========================================================================
-// COURSEBUILDER COMPONENT
-// ==========================================================================
-
 @use "../abstracts/variables" as vars;
-@use "../abstracts/mixins" as mixins;
 
-/* Course Builder Component - Clean BEM Structure */
-#create.section.section--active {
-  display: grid;
-  grid-template-columns: 80px 1fr 900px 250px;
-  grid-template-rows: auto 1fr;
-  gap: 0.5rem;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  background-color: vars.$gray-50;
-
-  > * {
-    border: 1px solid vars.$gray-200;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
-    background-color: vars.$white;
-    box-sizing: border-box;
-  }
-}
+// ==========================================================================
+// COURSEBUILDER - Neumorphic Interface (White Background)
+// ==========================================================================
 
 .coursebuilder {
+  display: grid;
+  grid-template-columns: 50px 300px 1fr 200px;
+  grid-template-rows: 50px 1fr;
+  height: 100vh;
+  width: 100%;
+  background: #ffffff;
+  font-family: vars.$font-family-base;
+  position: relative;
+  gap: 0.75rem;
+  padding: 0.75rem;
+
+  // Common styling for all coursebuilder sections
+  > div {
+    border: 1px solid #e0e0e0;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: #c0c0c0;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+  }
+
+  // ========================================
+  // TOP BAR LAYOUT
+  // ========================================
+
+  // Modes Section (Top Left - first column only)
   &__modes {
     grid-column: 1 / 3;
     grid-row: 1;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    padding: 0.25rem;
-    gap: 1rem;
+    justify-content: center;
+    padding: 0 vars.$spacing-3;
+    gap: vars.$spacing-4;
+    background: #ffffff;
+    border-radius: 0 0 12px 0;
   }
 
+  // Media Controls (Top - second and third columns)
   &__media {
     grid-column: 1;
     grid-row: 2;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem 0.5rem;
-    overflow-y: auto;
+    justify-content: first baseline;
+    padding: vars.$spacing-4 vars.$spacing-3;
+    gap: vars.$spacing-4;
+    background: #ffffff;
+    border-radius: 0 12px 0 0;
   }
 
+  // Search Panel (Top Right)
   &__search {
     grid-column: 2;
     grid-row: 2;
-    padding: 1rem;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: first baseline;
+    padding: vars.$spacing-3 vars.$spacing-4;
+    background: #ffffff;
+    border-radius: 0 0 0 12px;
   }
 
+  // ========================================
+  // MAIN CONTENT LAYOUT
+  // ========================================
+
+  // Tools Sidebar (Left)
   &__tools {
     grid-column: 3;
     grid-row: 1;
     display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 0.25rem;
+    flex-direction: row;
     gap: 1rem;
-    overflow-x: auto;
+    background: #ffffff;
+    border-radius: 0 0 12px 12px;
+
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+
+    // Tool selection row
+    &--selection {
+      display: flex;
+      flex-direction: row;
+      gap: vars.$spacing-3;
+
+    }
+    
+    // Tool options row
+    &--options {
+      .tool-settings {
+        display: none;
+   
+        
+        &.active,
+        &--active {
+          display: flex; 
+          flex-direction: row; 
+        }
+      }
+    }
   }
 
+  // Main Canvas (Center)
   &__canvas {
-    grid-column: 3;
+    grid-column: 3 / 4;
     grid-row: 2;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 10px;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    padding: vars.$spacing-4;
+    background: #ffffff;
     overflow: hidden;
-    background: vars.$white;
+    position: relative;
+    margin: vars.$spacing-2;
+    border-radius: 16px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(80, 131, 241, 0.005) 0%, transparent 70%);
+      pointer-events: none;
+      border-radius: 12px;
+    }
   }
 
+  // Navigation Area (Left Center) - Currently empty
   &__navigation {
-    grid-column: 4;
-    grid-row: 2;
-    padding: 1rem;
-    overflow-y: auto;
-  }
-
-  &__preview {
     grid-column: 4;
     grid-row: 1;
     display: flex;
+    align-items: center; 
+    justify-items: center; 
     flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.5rem;
+    padding: vars.$spacing-4;
+    gap: vars.$spacing-3;
+    background: #ffffff;
+    border-radius: 0 0 0 12px;
+    overflow-y: auto;
+  }
+
+  // Preview Sidebar (Right)
+  &__preview {
+    grid-column: 4;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: vars.$spacing-4;
+    gap: vars.$spacing-4;
+    background: #ffffff;
+    border-radius: 12px 0 0 0;
+    overflow-y: auto;
   }
 }
 
-/* Mode icon styling */
-.mode-icon {
-  width: 2rem;
-  height: 2rem;
-  cursor: pointer;
-  opacity: 0.6;
-  transition: all 0.3s ease;
-  margin-right: 1rem;
-  
-  &:hover {
-    opacity: 0.8;
-    transform: scale(1.1);
-  }
-  
-  &--active {
-    opacity: 1;
-    filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(213deg) brightness(104%) contrast(97%);
-  }
-}
+// ==========================================================================
+// COURSEBUILDER SPECIFIC STYLING (icons now handled globally in _icons.scss)
+// ==========================================================================
 
-/* Tool styling */
-.tool {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  cursor: pointer;
-  border: none;
-  background: none;
-  border-radius: 0.5rem;
-  padding: 0.5rem;
-  transition: all 0.3s ease;
-
-  &__icon {
-    width: 2rem;
-    height: 2rem;
-    opacity: 0.7;
-    transition: all 0.3s ease;
-  }
-
-  &__label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: vars.$gray-700;
-    transition: all 0.3s ease;
-  }
-
-  &:hover {
-    .tool__icon {
-      opacity: 1;
-      transform: scale(1.1);
-    }
-    
-    .tool__label {
-      color: vars.$primary-color;
-    }
-  }
-
-  &--selected {
-    .tool__icon {
-      opacity: 1;
-      filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(213deg) brightness(104%) contrast(97%);
-    }
-    
-    .tool__label {
-      color: vars.$primary-color;
-      font-weight: 600;
-    }
-  }
-}
-
-/* Tool settings styling */
+// ==========================================================================
+// TOOL SETTINGS PANEL
+// ==========================================================================
 .tool-settings {
   display: none;
-  align-items: center;
-  gap: 1rem;
-  flex: 1;
 
   &--active {
-    display: flex;
+    display: block;
   }
 }
 
-/* Settings sections */
 .settings-section {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  margin-bottom: vars.$spacing-4;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 
   &__label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: vars.$gray-600;
-    white-space: nowrap;
+    display: block;
+    font-size: vars.$font-size-sm;
+    font-weight: vars.$font-weight-medium;
+    color: vars.$text-primary;
+    margin-bottom: vars.$spacing-2;
   }
 }
 
-/* Shape selection buttons */
-.shape-buttons {
-  display: flex;
-  gap: 0.25rem;
-  background: vars.$gray-100;
-  border-radius: 0.375rem;
-  padding: 0.25rem;
-}
-
-.shape-btn {
-  width: 32px;
-  height: 32px;
+// ==========================================================================
+// SEARCH INTERFACE
+// ==========================================================================
+.media-search__input {
+  width: 100%;
+  padding: vars.$spacing-3;
   border: none;
-  background: transparent;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-
-  svg {
-    width: 16px;
-    height: 16px;
-    color: vars.$gray-600;
-  }
-
-  &:hover {
-    background: vars.$white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-
-    svg {
-      color: vars.$primary-color;
-    }
-  }
-
-  &--active {
-    background: vars.$primary-color;
-
-    svg {
-      color: white;
-    }
-  }
-}
-
-/* Size slider */
-.size-slider {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  input[type="range"] {
-    width: 80px;
-    height: 4px;
-    border-radius: 2px;
-    background: vars.$gray-200;
-    outline: none;
-    appearance: none;
-    -webkit-appearance: none;
-
-    &::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: vars.$primary-color;
-      cursor: pointer;
-    }
-
-    &::-moz-range-thumb {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: vars.$primary-color;
-      cursor: pointer;
-      border: none;
-    }
-  }
-
-  &__value {
-    font-size: 0.75rem;
-    color: vars.$gray-600;
-    min-width: 20px;
-    text-align: center;
-  }
-}
-
-/* Color palette styling */
-.color-palette {
-  display: flex;
-  gap: 0.25rem;
-  flex-wrap: wrap;
-
-  &__color {
-    width: 20px;
-    height: 20px;
-    border-radius: 3px;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: all 0.2s ease;
-
-    &:hover {
-      transform: scale(1.1);
-      border-color: vars.$primary-color;
-    }
-
-    &--active {
-      border-color: vars.$primary-color;
-      box-shadow: 0 0 0 1px rgba(100, 149, 237, 0.3);
-    }
-  }
-}
-
-/* Font controls - unified version */
-.font-controls {
-  margin-bottom: 1rem;
-
-  &__select {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid vars.$gray-300;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    background-color: vars.$white;
-
-    &:focus {
-      outline: none;
-      border-color: vars.$primary-color;
-      box-shadow: 0 0 0 3px rgba(100, 149, 237, 0.1);
-    }
-  }
-}
-
-/* Action button styling */
-.action-btn {
-  display: grid;
-  grid-template-rows: auto auto;
-  place-items: center;
-  gap: 0.25rem;
-  border: none;
-  background: none;
-  cursor: pointer;
+  border-radius: 10px;
+  font-size: vars.$font-size-sm;
+  background: #ffffff;
+  box-shadow: 
+    inset 2px 2px 5px rgba(200, 200, 200, 0.3),
+    inset -2px -2px 5px rgba(255, 255, 255, 1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: vars.$text-primary;
 
-  &__icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    display: grid;
-    place-items: center;
-    border-radius: 0.5rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(100, 149, 237, 0.1);
-
-    svg {
-      width: 85%;
-      height: 85%;
-    }
+  &::placeholder {
+    color: vars.$text-muted;
   }
 
-  &__label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    text-align: center;
-    color: vars.$gray-700;
-  }
-
-  &:hover {
-    transform: translateY(-1px);
-
-    .action-btn__icon {
-      background: rgba(100, 149, 237, 0.15);
-      border-color: rgba(100, 149, 237, 0.3);
-      box-shadow: 0 4px 12px rgba(100, 149, 237, 0.2);
-
-      svg {
-        transform: scale(1.05);
-      }
-    }
-
-    .action-btn__label {
-      color: vars.$primary-color;
-    }
+  &:focus {
+    outline: none;
+    box-shadow: 
+      inset 3px 3px 6px rgba(200, 200, 200, 0.4),
+      inset -3px -3px 6px rgba(255, 255, 255, 1),
+      0 0 0 2px rgba(80, 131, 241, 0.2);
+    color: vars.$text-primary;
   }
 }
 
-/* Media button styling */
-.media-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  border: none;
-  background: none;
-  cursor: pointer;
-  padding: 0.5rem;
-  transition: all 0.3s ease;
-
-  &__icon {
-    width: 2rem;
-    height: 2rem;
-    opacity: 0.7;
-    transition: all 0.3s ease;
-  }
-
-  &__label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    text-align: center;
-    color: vars.$gray-700;
-    transition: all 0.3s ease;
-  }
-
-  &:hover {
-    .media-btn__icon {
-      opacity: 1;
-      transform: scale(1.1);
-    }
-
-    .media-btn__label {
-      color: vars.$primary-color;
-    }
-  }
-
-  &--active {
-    .media-btn__icon {
-      opacity: 1;
-      filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(213deg) brightness(104%) contrast(97%);
-    }
-
-    .media-btn__label {
-      color: vars.$primary-color;
-      font-weight: 600;
-    }
-  }
-}
-
-/* Action button styling */
-.action-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  border: none;
-  background: none;
-  cursor: pointer;
-  padding: 0.5rem;
-  transition: all 0.3s ease;
-
-  &__icon {
-    width: 2rem;
-    height: 2rem;
-    opacity: 0.7;
-    transition: all 0.3s ease;
-  }
-
-  &__label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: vars.$gray-700;
-    transition: all 0.3s ease;
-  }
-
-  &:hover {
-    .action-btn__icon {
-      opacity: 1;
-      transform: scale(1.1);
-    }
-    
-    .action-btn__label {
-      color: vars.$primary-color;
-    }
-  }
-}
-
-/* Media search panel */
-.media-search {
-  padding: 1rem;
-
-  &__title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    margin: 0 0 1rem 0;
-    color: vars.$gray-900;
-  }
-
-  &__input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid vars.$gray-300;
-    border-radius: 4px;
-    font-size: 0.875rem;
-}
-
-/* Removed redundant canvas wrapper styles - now using simplified structure */
-
+// ==========================================================================
+// CANVAS PLACEHOLDER
+// ==========================================================================
 .canvas-placeholder {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  gap: 10px;
-  color: vars.$gray-400;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+  border: none;
+  border-radius: 16px;
+  color: vars.$text-secondary;
   text-align: center;
+  gap: vars.$spacing-4;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    inset 1px 1px 3px rgba(200, 200, 200, 0.2),
+    inset -1px -1px 3px rgba(255, 255, 255, 0.8);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(80, 131, 241, 0.02) 0%, transparent 70%);
+    pointer-events: none;
+    border-radius: 16px;
+  }
+
+  &:hover {
+    transform: scale(1.005);
+    
+    svg {
+      opacity: 0.6;
+      transform: scale(1.05);
+    }
+  }
+
+  svg {
+    opacity: 0.4;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
   &__title {
-    font-size: 18px;
-    font-weight: 500;
+    font-size: vars.$font-size-lg;
+    font-weight: vars.$font-weight-semibold;
+    color: vars.$text-primary;
+    margin: 0;
+    letter-spacing: 0.025em;
   }
 
   &__subtitle {
-    font-size: 14px;
-    opacity: 0.7;
-  }
-}
+    font-size: vars.$font-size-sm;
+    line-height: vars.$line-height-relaxed;
+    color: vars.$text-secondary;
+    margin: 0;
 
-/* Table of contents styling */
-.toc {
-  &__title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    margin: 0 0 1rem 0;
-    color: vars.$gray-900;
-  }
-
-  &__page {
-    border: 1px solid vars.$gray-300;
-    border-radius: 4px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  &__page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-  }
-
-  &__page-name {
-    font-weight: 500;
-    color: vars.$gray-900;
-  }
-
-  &__page-format {
-    font-size: 0.8rem;
-    color: vars.$gray-600;
-  }
-
-  &__page-preview {
-    width: 100%;
-    height: 120px;
-    background: vars.$gray-50;
-    border: 1px solid vars.$gray-300;
-    border-radius: 4px;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  &__page-preview-content {
-    font-size: 12px;
-    color: vars.$gray-500;
-  }
-}
-
-/* Responsive design */
-@media (max-width: 1400px) {
-  #create.section.section--active {
-    grid-template-columns: 80px 1fr 850px 180px;
-  }
-}
-
-@media (max-width: 1200px) {
-  #create.section.section--active {
-    grid-template-columns: 60px 1fr 794px 160px;
-  }
-}
-
-@media (max-width: 1024px) {
-  #create.section.section--active {
-    grid-template-columns: 50px 1fr 600px 150px;
-  }
-}
-
-@media (max-width: 768px) {
-  #create.section.section--active {
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto auto auto;
-    gap: 0.5rem;
-    height: 100vh;
-    padding: 0.25rem;
-
-    .coursebuilder__modes {
-      grid-column: 1;
-      grid-row: 1;
-      height: auto;
-      min-height: 50px;
-      padding: 0.5rem;
-    }
-
-    .coursebuilder__toc-options {
-      grid-column: 1;
-      grid-row: 2;
-      height: auto;
-      min-height: 40px;
-    }
-
-    .coursebuilder__media {
-      grid-column: 1;
-      grid-row: 3;
-      flex-direction: row;
-      height: 60px;
-      max-height: 60px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      justify-content: flex-start;
-      padding: 0.5rem;
-    }
-
-    .coursebuilder__canvas {
-      grid-column: 1;
-      grid-row: 4;
-      height: 50vh;
-      max-height: 50vh;
-      min-height: 300px;
-      padding: 10px;
-    }
-
-    .coursebuilder__media-search {
-      grid-column: 1;
-      grid-row: 5;
-      height: auto;
-      max-height: 200px;
-      flex: 1;
-    }
-
-    .coursebuilder__toc {
-      display: none;
+    small {
+      font-size: vars.$font-size-xs;
+      color: vars.$text-muted;
+      font-style: italic;
     }
   }
 }
 
-/* Section-specific overrides for coursebuilder */
-.section {
-  &#setup {
-    &.section--active {
-      display: grid;
-      grid-template-columns: minmax(280px, 300px) 1fr;
-      gap: vars.$spacing-4;
- 
-      min-height: calc(100vh - #{vars.$spacing-6} * 2 - 80px);
-      align-items: start;
+// ==========================================================================
+// COLOR PALETTE STYLING (REMOVED - START FROM SCRATCH)
+// ==========================================================================
 
-      .aside {
-        height: 100%;
-        min-height: calc(100vh - #{vars.$spacing-6} * 2 - 80px);
-        position: sticky;
-        top: vars.$spacing-6;
-      }
+// ==========================================================================
+// SIZE INPUT STYLING (REMOVED - START FROM SCRATCH)
+// ==========================================================================
 
-      .article {
-        min-width: 0;
-        height: 100%;
-        min-height: calc(100vh - #{vars.$spacing-6} * 2 - 80px);
-
-        .card {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          padding: vars.$spacing-6;
-        }
-      }
-
-      // Natural responsive behavior
-      @container (max-width: 768px) {
-        grid-template-columns: 1fr;
-        min-height: auto;
-
-        .aside {
-          height: auto;
-          min-height: auto;
-          position: static;
-        }
-
-        .article {
-          height: auto;
-          min-height: auto;
-
-          .card {
-            height: auto;
-          }
-        }
-      }
-    }
-  }
-
-  &#create {
-    overflow: hidden; /* Prevent section scrolling */
-    margin: 0; /* Remove any margin */
-    padding: 0; /* Remove any padding */
-    height: calc(100vh - 120px); /* Account for header and some margin */
-    max-height: calc(100vh - 120px); /* Ensure it never exceeds */
-  }
-}
-}
-
-/* Remove the old body override since we're not using .coursebuilder wrapper anymore */
+// ==========================================================================
+// SHAPE BUTTONS STYLING (REMOVED - START FROM SCRATCH)
+// ==========================================================================

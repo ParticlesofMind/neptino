@@ -49,6 +49,16 @@ export class UIEventHandler {
       button.addEventListener("click", this.handleToolSelection.bind(this));
     });
 
+    // Mode selection events
+    document.querySelectorAll("[data-mode]").forEach((button) => {
+      button.addEventListener("click", this.handleModeSelection.bind(this));
+    });
+
+    // Media selection events
+    document.querySelectorAll("[data-media]").forEach((button) => {
+      button.addEventListener("click", this.handleMediaSelection.bind(this));
+    });
+
     // Color palette events
     document.querySelectorAll(".color-palette__color").forEach((color) => {
       color.addEventListener("click", this.handleColorSelection.bind(this));
@@ -114,6 +124,32 @@ export class UIEventHandler {
     if (this.onToolChangeCallback) {
       this.onToolChangeCallback(toolName);
     }
+  }
+
+  /**
+   * Handle mode selection
+   */
+  private handleModeSelection(event: Event): void {
+    event.preventDefault();
+    const button = event.currentTarget as HTMLElement;
+    const modeName = button.dataset.mode;
+
+    if (!modeName) return;
+
+    this.toolStateManager.setMode(modeName);
+  }
+
+  /**
+   * Handle media selection
+   */
+  private handleMediaSelection(event: Event): void {
+    event.preventDefault();
+    const button = event.currentTarget as HTMLElement;
+    const mediaType = button.dataset.media;
+
+    if (!mediaType) return;
+
+    this.toolStateManager.setSelectedMedia(mediaType);
   }
 
   /**
