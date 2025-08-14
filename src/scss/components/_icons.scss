@@ -9,13 +9,10 @@
   cursor: pointer;
   position: relative;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
   // Universal neumorphic styling
   border-radius: 12px;
-  background: #f0f0f0;
   box-shadow: 20px 20px 60px #d5d5d5,
               -20px -20px 60px #ffffff;
-  
   // Default padding and sizing
   padding: 0.75rem;
   

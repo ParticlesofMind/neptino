@@ -88,9 +88,10 @@ export function createColorPaletteElement(
     if (color === selectedColor) {
       colorElement.classList.add("color-palette__color--active");
     }
-    colorElement.style.backgroundColor = color;
     colorElement.title = color;
     colorElement.dataset.color = color;
+    // Set background color via CSS custom property for better maintainability
+    colorElement.style.setProperty('--color-value', color);
 
     colorElement.addEventListener("click", () => {
       // Update active state
@@ -172,8 +173,6 @@ export const PEN_CONSTANTS = {
  * Text tool constants
  */
 export const TEXT_CONSTANTS = {
-  TEXTAREA_BORDER: "2px dashed #5083f1",
-  TEXTAREA_BACKGROUND: "rgba(255, 255, 255, 0.9)",
   MIN_TEXT_AREA_SIZE: { width: 100, height: 30 },
 };
 

@@ -73,35 +73,7 @@
 // COURSE BUILDER NAVIGATION LAYOUT
 // ==========================================================================
 
-.nav--coursebuilder {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
 
-  .nav__left-section,
-  .nav__right-section {
-    display: flex;
-    align-items: center;
-    flex: 0 0 auto;
-    min-width: 120px; // Ensure consistent spacing
-  }
-
-  .nav__left-section {
-    justify-content: flex-start;
-  }
-
-  .nav__right-section {
-    justify-content: flex-end;
-  }
-
-  .nav__center-section {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-  }
-}
 
 // ==========================================================================
 // RESPONSIVE NAVIGATION

@@ -164,11 +164,8 @@ export class PixiApplicationManager {
     if (!this.app) return;
 
     try {
-      this.app.canvas.style.display = "block";
-      this.app.canvas.style.margin = "auto";
-      this.app.canvas.style.border = "2px solid #6495ed";
-      this.app.canvas.style.borderRadius = "8px";
-      this.app.canvas.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.1)";
+      // Apply base canvas class for CSS styling
+      this.app.canvas.classList.add('coursebuilder-canvas');
     } catch (error) {
       console.warn("Could not style canvas:", error);
     }

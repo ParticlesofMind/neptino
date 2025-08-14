@@ -90,26 +90,15 @@ export class TextTool extends BaseTool {
     // Create HTML textarea for professional text entry
     this.activeTextArea = document.createElement("textarea");
 
-    // Professional styling
+    // Apply CSS classes for styling instead of inline styles
+    this.activeTextArea.className = "coursebuilder-text-area";
     this.activeTextArea.style.position = "absolute";
     this.activeTextArea.style.left = `${x}px`;
     this.activeTextArea.style.top = `${y}px`;
-    this.activeTextArea.style.minWidth = `${TEXT_CONSTANTS.MIN_TEXT_AREA_SIZE.width}px`;
-    this.activeTextArea.style.minHeight = `${TEXT_CONSTANTS.MIN_TEXT_AREA_SIZE.height}px`;
-    this.activeTextArea.style.fontSize = `${this.settings.fontSize}px`;
-    this.activeTextArea.style.fontFamily = this.settings.fontFamily;
-    this.activeTextArea.style.fontWeight = this.settings.fontWeight;
-    this.activeTextArea.style.fontStyle = this.settings.fontStyle;
-    this.activeTextArea.style.color = this.settings.color;
-    this.activeTextArea.style.textAlign = this.settings.align as any;
-    this.activeTextArea.style.background = TEXT_CONSTANTS.TEXTAREA_BACKGROUND;
-    this.activeTextArea.style.border = TEXT_CONSTANTS.TEXTAREA_BORDER;
-    this.activeTextArea.style.outline = "none";
-    this.activeTextArea.style.resize = "both";
-    this.activeTextArea.style.zIndex = "1000";
-    this.activeTextArea.style.padding = "8px";
-    this.activeTextArea.style.borderRadius = "4px";
-    this.activeTextArea.style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)";
+    
+    // Apply settings through CSS properties
+    this.updateTextAreaSettings();
+    
     this.activeTextArea.placeholder = "Enter your text here...";
 
     // Professional interaction
@@ -229,6 +218,21 @@ export class TextTool extends BaseTool {
   // Get available fonts for UI
   static getAvailableFonts(): string[] {
     return FONT_FAMILIES;
+  }
+
+  /**
+   * Update text area settings based on current tool settings
+   */
+  private updateTextAreaSettings(): void {
+    if (!this.activeTextArea) return;
+    
+    // Only set the dynamic properties that need to change
+    this.activeTextArea.style.fontSize = `${this.settings.fontSize}px`;
+    this.activeTextArea.style.fontFamily = this.settings.fontFamily;
+    this.activeTextArea.style.fontWeight = this.settings.fontWeight;
+    this.activeTextArea.style.fontStyle = this.settings.fontStyle;
+    this.activeTextArea.style.color = this.settings.color;
+    this.activeTextArea.style.textAlign = this.settings.align as any;
   }
 
   // Get available text sizes for UI

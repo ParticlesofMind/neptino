@@ -59,13 +59,18 @@ export class UIEventHandler {
       button.addEventListener("click", this.handleMediaSelection.bind(this));
     });
 
+    // Navigation selection events
+    document.querySelectorAll(".coursebuilder__navigation .icon").forEach((button) => {
+      button.addEventListener("click", this.handleNavigationSelection.bind(this));
+    });
+
     // Color palette events
     document.querySelectorAll(".color-palette__color").forEach((color) => {
       color.addEventListener("click", this.handleColorSelection.bind(this));
     });
 
     // Shape tool events
-    document.querySelectorAll(".shape-btn").forEach((button) => {
+    document.querySelectorAll("[data-shape]").forEach((button) => {
       button.addEventListener("click", this.handleShapeSelection.bind(this));
     });
 
@@ -150,6 +155,19 @@ export class UIEventHandler {
     if (!mediaType) return;
 
     this.toolStateManager.setSelectedMedia(mediaType);
+  }
+
+  /**
+   * Handle navigation selection
+   */
+  private handleNavigationSelection(event: Event): void {
+    event.preventDefault();
+    const button = event.currentTarget as HTMLElement;
+    const navTitle = button.title;
+
+    if (!navTitle) return;
+
+    this.toolStateManager.setSelectedNavigation(navTitle);
   }
 
   /**
@@ -287,31 +305,17 @@ export class UIEventHandler {
       return;
     }
 
-    // Update UI - set active state for shape buttons
-    const parentShapeButtons = button.closest(".shape-buttons");
-    if (parentShapeButtons) {
-      parentShapeButtons.querySelectorAll(".shape-btn").forEach((btn) => {
-        btn.classList.remove("shape-btn--active");
-      });
-      button.classList.add("shape-btn--active");
-    }
+    // Update shape selection in ToolStateManager
+    this.toolStateManager.setSelectedShape(shapeType);
 
-    // Set tool to shapes and update shape type
-    this.toolStateManager.setTool("shapes");
-    const shapeSettings = { 
-      shapeType: shapeType as "rectangle" | "triangle" | "circle" | "ellipse" | "line" | "arrow" | "polygon" 
-    };
-    this.toolStateManager.updateToolSettings("shapes", shapeSettings);
-    this.toolStateManager.updateCanvasCursor();
+    // Update tool settings for the shape tool
+    this.toolStateManager.updateToolSettings("shapes", { 
+      shapeType: shapeType as "rectangle" | "triangle" | "circle" | "ellipse" | "line" | "arrow" | "polygon"
+    });
 
-    // Trigger tool settings change callback
+    // Trigger callback if set
     if (this.onToolSettingsChangeCallback) {
-      this.onToolSettingsChangeCallback("shapes", shapeSettings);
-    }
-
-    // Trigger tool change callback
-    if (this.onToolChangeCallback) {
-      this.onToolChangeCallback("shapes");
+      this.onToolSettingsChangeCallback("shapes", { shapeType });
     }
   }
 
