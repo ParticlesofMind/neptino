@@ -10,97 +10,31 @@
 </head>
 
 <body class="body grid">
-  <!-- Special Course Builder Header -->
+
   <header class="header grid__header">
     <nav class="nav nav--coursebuilder">
-      <div class="nav__left-section">
-        <button id="previous-btn" class="button button--previous">
-          Courses
+      <div class="nav__section nav__section--left">
+        <button class="button button--nav button--previous" id="previous-button" title="Previous Step">
+          <span class="button__icon">‹</span>
+          <span class="button__text">Previous</span>
         </button>
       </div>
 
-      <div class="nav__center-section">
-        <a href="/src/pages/teacher/home.html" class="logo logo--header">
-          <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image">
+      <div class="nav__section nav__section--center">
+        <a href="/src/pages/teacher/home.html" class="logo logo--header" title="Back to Home">
+          <img
+            src="/src/assets/logo/octopus-logo.png"
+            alt="Neptino Logo"
+            class="logo__image"
+          />
         </a>
       </div>
 
-      <div class="nav__right-section">
-        <button class="btn-secondary btn-sm" onclick="window.location.href='/src/pages/shared/signin.html'">
-          Log Out
+      <div class="nav__section nav__section--right">
+        <button class="button button--nav button--next" id="next-button" title="Next Step">
+          <span class="button__text">Next</span>
+          <span class="button__icon">›</span>
         </button>
-      </div>
-    </nav>
-
-    <!-- Main Content with full height handling -->
-    <main class="main-content coursebuilder-page">
-      <div class="coursebuilder">
-        <div class="coursebuilder__modes">
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/modes/mode-build.svg" class="icon icon--medium" data-mode="build">
-            <span class="icon-name">Build</span>
-          </div>
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" class="icon icon--medium"
-              data-mode="animate">
-            <span class="icon-name">Animate</span>
-          </div>
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/modes/mode-workflow.svg" class="icon icon--medium"
-              data-mode="workflow">
-            <span class="icon-name">Workflow</span>
-          </div>
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/modes/mode-optimize.svg" class="icon icon--medium"
-              data-mode="optimize">
-            <span class="icon-name">Optimize</span>
-          </div>
-        </div>
-
-        <div class="coursebuilder__media">
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-files.svg" class="icon icon--medium"
-              data-media="files">
-            <span class="icon-name">My Files</span>
-          </div>
-
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-image.svg" class="icon icon--medium"
-              data-media="images">
-            <span class="icon-name">Images</span>
-          </div>
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-video.svg" class="icon icon--medium"
-              data-media="videos">
-            <span class="icon-name">Videos</span>
-          </div>
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-audio.svg" class="icon icon--medium"
-              data-media="audio">
-            <span class="icon-name">Audio</span>
-          </div>
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-text.svg" class="icon icon--medium" data-media="text">
-            <span class="icon-name">Text</span>
-          </div>
-
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-table.svg" class="icon icon--medium"
-              data-media="tables">
-            <span class="icon-name">Tables</span>
-          </div>
-
-
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-plugins.svg" class="icon icon--medium"
-              data-media="plugins">
-            <span class="icon-name">Plugins</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="nav__right-section">
-        <button id="next-btn" class="button button--succeeding">Next</button>
       </div>
     </nav>
   </header>

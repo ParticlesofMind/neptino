@@ -18,8 +18,6 @@ import { CurriculumManager } from "../backend/courses/curriculumManager";
 type MarginSettingsManager = any;
 type PageManager = any;
 // Temporary type declarations for unimplemented classes
-type LayoutManager = any;
-type PresentationManager = any;
 type MediaManager = any;
 type FontManager = any;
 type CommandManager = any;
@@ -202,6 +200,28 @@ export class CourseBuilderCanvas {
             this.navigateToSection(sectionId);
           }
         });
+      });
+      
+      // Setup header navigation buttons
+      const mainSections = ["setup", "create", "preview", "launch"];
+      const previousBtn = document.getElementById('previous-button');
+      const nextBtn = document.getElementById('next-button');
+      
+      previousBtn?.addEventListener('click', () => {
+        const currentIndex = mainSections.indexOf(this.currentSection);
+        if (currentIndex > 0) {
+          this.navigateToSection(mainSections[currentIndex - 1]);
+        } else if (this.currentSection === 'setup') {
+          // Navigate back to courses page when on first section
+          window.location.href = '/src/pages/teacher/courses.html';
+        }
+      });
+      
+      nextBtn?.addEventListener('click', () => {
+        const currentIndex = mainSections.indexOf(this.currentSection);
+        if (currentIndex < mainSections.length - 1) {
+          this.navigateToSection(mainSections[currentIndex + 1]);
+        }
       });
       
       // Listen for hash changes
