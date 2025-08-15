@@ -2,95 +2,102 @@
 @use "sass:color";
 
 // ==========================================================================
-// TEMPLATE HIERARCHY AND NESTED STRUCTURES
+// TEMPLATE STRUCTURE COMPONENTS - BEM Architecture
 // ==========================================================================
 
-.template-nested-structure {
+// Template Structure - Main Block
+.template-structure {
   border: 1px solid $gray-200;
   border-radius: $border-radius;
   background: $white;
   overflow: hidden;
   padding: $spacing-4;
   margin-bottom: $spacing-4;
-}
 
-.template-hierarchy {
-  font-family: inherit;
-}
+  // Element: Nested structure container
+  &__nested {
+    font-family: inherit;
+  }
 
-.template-hierarchy-level {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: $text-primary;
-  background: $gray-100;
-  margin-bottom: $spacing-2;
-  padding: $spacing-2 $spacing-3;
-  border-radius: $border-radius-sm;
-  transition: background-color 0.2s ease;
-
-  &:hover {
+  // Element: Individual level container
+  &__level {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $text-primary;
     background: $gray-100;
-  }
+    margin-bottom: $spacing-2;
+    padding: $spacing-2 $spacing-3;
+    border-radius: $border-radius-sm;
+    transition: background-color 0.2s ease;
 
-  &--expandable {
-    cursor: pointer;
-    position: relative;
-    
-    &::after {
-      content: "▶";
-      position: absolute;
-      right: $spacing-3;
-      transition: transform 0.2s ease;
+    &:hover {
+      background: $gray-200;
     }
-    
-    &.expanded::after {
-      transform: rotate(90deg);
+
+    // Modifier: Expandable level
+    &--expandable {
+      cursor: pointer;
+      position: relative;
+      
+      &::after {
+        content: "▶";
+        position: absolute;
+        right: $spacing-3;
+        transition: transform 0.2s ease;
+      }
+      
+      // Modifier state: Expanded
+      &--expanded::after {
+        transform: rotate(90deg);
+      }
+    }
+
+    // Modifier: Level variations
+    &--primary {
+      font-weight: $font-weight-semibold;
+      font-size: $font-size-base;
+      margin-left: 0;
+      background: $primary-color;
+      color: white;
+      
+      &:hover {
+        background: color.scale($primary-color, $lightness: -10%);
+      }
+    }
+
+    &--secondary {
+      font-weight: $font-weight-semibold;
+      margin-left: $spacing-6;
+      background: rgba($primary-color, 0.1);
+      color: $primary-color;
+    }
+
+    &--tertiary {
+      font-weight: $font-weight-medium;
+      margin-left: $spacing-12;
+      background: $gray-50;
+    }
+
+    &--quaternary {
+      font-weight: $font-weight-normal;
+      color: $text-secondary;
+      background: transparent;
+      margin-left: $spacing-16;
+      font-size: $font-size-xs;
+      padding: $spacing-1 0;
+      border-bottom: 1px solid $gray-200;
     }
   }
-}
 
-.template-hierarchy-level-1 {
-  font-weight: $font-weight-semibold;
-  font-size: $font-size-base;
-  margin-left: 0;
-  background: $primary-color;
-  color: white;
-  
-  &:hover {
-    background: color.scale($primary-color, $lightness: -10%);
+  // Element: Content fields container
+  &__content-fields {
+    margin-top: $spacing-2;
+    padding-left: $spacing-4;
   }
 }
 
-.template-hierarchy-level-2 {
-  font-weight: $font-weight-semibold;
-  margin-left: $spacing-6;
-  background: rgba($primary-color, 0.1);
-  color: $primary-color;
-}
-
-.template-hierarchy-level-3 {
-  font-weight: $font-weight-medium;
-  margin-left: $spacing-12;
-  background: $gray-50;
-}
-
-.template-hierarchy-level-4 {
-  font-weight: $font-weight-normal;
-  color: $text-secondary;
-  background: transparent;
-  margin-left: $spacing-16;
-  font-size: $font-size-xs;
-  padding: $spacing-1 0;
-  border-bottom: 1px solid $gray-200;
-}
-
-// Content fields within hierarchy
-.template-content-fields {
-  margin-top: $spacing-2;
-  padding-left: $spacing-4;
-}
-
-.template-content-field {
+// Content Field - Child Block
+.content-field {
   margin-bottom: $spacing-1;
   padding: $spacing-1 $spacing-2;
   background: $gray-50;
@@ -99,6 +106,7 @@
   color: $text-secondary;
   border-left: 3px solid $gray-300;
 
+  // Modifier: Required field
   &--required {
     border-left-color: $error;
     
@@ -108,98 +116,110 @@
     }
   }
 
+  // Modifier: Optional field
   &--optional {
     border-left-color: $gray-400;
     opacity: 0.8;
   }
 
-  .field-type {
+  // Element: Field type indicator
+  &__type {
     font-weight: $font-weight-medium;
     color: $text-primary;
   }
 }
 
-// Template structure builder
-.template-structure-builder {
+// Template Builder - Main Block  
+.template-builder {
   background: $white;
   border: 1px solid $gray-200;
   border-radius: $border-radius;
   padding: $spacing-6;
 
-  .structure-header {
+  // Element: Builder header
+  &__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: $spacing-4;
     padding-bottom: $spacing-4;
     border-bottom: 1px solid $gray-200;
+  }
 
-    h3 {
-      margin: 0;
-      font-size: $font-size-lg;
-      color: $text-primary;
-    }
+  // Element: Builder title
+  &__title {
+    margin: 0;
+    font-size: $font-size-lg;
+    color: $text-primary;
+  }
 
-    .add-level-button {
-      background: $success;
-      color: white;
-      border: none;
-      padding: $spacing-2 $spacing-3;
-      border-radius: $border-radius-sm;
-      cursor: pointer;
-      font-size: $font-size-sm;
-      
-      &:hover {
-        background: color.scale($success, $lightness: -10%);
-      }
+  // Element: Add level button
+  &__add-button {
+    background: $success;
+    color: white;
+    border: none;
+    padding: $spacing-2 $spacing-3;
+    border-radius: $border-radius-sm;
+    cursor: pointer;
+    font-size: $font-size-sm;
+    
+    &:hover {
+      background: color.scale($success, $lightness: -10%);
     }
   }
 
-  .structure-controls {
+  // Element: Controls container
+  &__controls {
     display: flex;
     gap: $spacing-2;
     margin-bottom: $spacing-4;
-
-    .control-button {
-      padding: $spacing-1 $spacing-2;
-      border: 1px solid $gray-300;
-      background: $white;
-      border-radius: $border-radius-sm;
-      cursor: pointer;
-      font-size: $font-size-xs;
-      color: $text-secondary;
-
-      &:hover {
-        background: $gray-50;
-        border-color: $gray-400;
-      }
-
-      &.active {
-        background: $primary-color;
-        color: white;
-        border-color: $primary-color;
-      }
-    }
   }
 }
 
-// Drag and drop for hierarchy
+// Control Button - Child Block
+.control-button {
+  padding: $spacing-1 $spacing-2;
+  border: 1px solid $gray-300;
+  background: $white;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  font-size: $font-size-xs;
+  color: $text-secondary;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: $gray-50;
+    border-color: $gray-400;
+  }
+
+  // Modifier: Active state
+  &--active {
+    background: $primary-color;
+    color: white;
+    border-color: $primary-color;
+  }
+}
+
+// Hierarchy Item - Main Block for drag/drop
 .hierarchy-item {
-  &.dragging {
+  // Modifier: Dragging state
+  &--dragging {
     opacity: 0.5;
     transform: rotate(2deg);
   }
 
-  &.drag-over {
+  // Modifier: Drag over state
+  &--drag-over {
     background: rgba($primary-color, 0.1);
     border-left: 4px solid $primary-color;
   }
 }
 
-// Collapsible sections
+// Template Section - Collapsible Block
 .template-section {
   margin-bottom: $spacing-4;
 
+  // Element: Section header
   &__header {
     display: flex;
     align-items: center;
@@ -215,28 +235,34 @@
     }
   }
 
+  // Element: Section title
   &__title {
     font-weight: $font-weight-medium;
     color: $text-primary;
     margin: 0;
   }
 
+  // Element: Toggle indicator
   &__toggle {
     transition: transform 0.2s ease;
     color: $text-secondary;
-    
-    .template-section.collapsed & {
-      transform: rotate(-90deg);
-    }
   }
 
+  // Element: Section content
   &__content {
     padding: $spacing-4;
     border: 1px solid $gray-200;
     border-top: none;
     border-radius: 0 0 $border-radius $border-radius;
+  }
+
+  // Modifier: Collapsed state
+  &--collapsed {
+    .template-section__toggle {
+      transform: rotate(-90deg);
+    }
     
-    .template-section.collapsed & {
+    .template-section__content {
       display: none;
     }
   }

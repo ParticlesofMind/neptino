@@ -269,11 +269,11 @@ export class CurriculumManager {
       // Get the number of lessons from schedule
       const { data: scheduleData } = await supabase
         .from("courses")
-        .select("schedule_settings, course_days")
+        .select("schedule_settings, course_sessions")
         .eq("id", this.courseId)
         .single();
 
-      const numLessons = scheduleData?.course_days || 1;
+      const numLessons = scheduleData?.course_sessions || 1;
       const curriculum = this.createCurriculumStructure(numLessons);
 
       await this.saveCurriculumToDatabase(curriculum);

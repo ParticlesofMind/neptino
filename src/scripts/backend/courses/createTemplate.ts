@@ -392,13 +392,13 @@ export class TemplateManager {
 
       // Create a simple preview modal
       const previewHtml = `
-        <div class="template-preview-modal" onclick="this.remove()">
-          <div class="template-preview-modal__content" onclick="event.stopPropagation()">
-            <div class="template-preview-modal__header">
+        <div class="template-modal template-modal--extra-large template-modal--active" onclick="this.remove()">
+          <div class="template-modal__content" onclick="event.stopPropagation()">
+            <div class="template-modal__header">
               <h3>${data.template_data?.name || "Template Preview"}</h3>
-              <button onclick="this.closest('.template-preview-modal').remove()">&times;</button>
+              <button onclick="this.closest('.template-modal').remove()">&times;</button>
             </div>
-            <div class="template-preview-modal__body">
+            <div class="template-modal__body">
               <div class="template-blocks-preview">
                 ${
                   data.template_data?.blocks
@@ -857,13 +857,13 @@ export class TemplateManager {
           <div class="preview-placeholder">
             <h4 class="preview-placeholder__title">Template Preview</h4>
             <p class="preview-placeholder__text">Create a new template or load an existing one to see the preview here.</p>
-            <div class="template-blocks-default">
-              <div class="template-block template-block--header">Header Block</div>
-              <div class="template-block template-block--program">Program Block</div>
-              <div class="template-block template-block--resources">Resources Block</div>
-              <div class="template-block template-block--content">Content Block</div>
-              <div class="template-block template-block--assignment">Assignment Block</div>
-              <div class="template-block template-block--footer">Footer Block</div>
+            <div class="template-blocks">
+              <div class="block-item block-item--header">Header Block</div>
+              <div class="block-item block-item--program">Program Block</div>
+              <div class="block-item block-item--resources">Resources Block</div>
+              <div class="block-item block-item--content">Content Block</div>
+              <div class="block-item block-item--assignment">Assignment Block</div>
+              <div class="block-item block-item--footer">Footer Block</div>
             </div>
           </div>
         `;
@@ -900,7 +900,7 @@ export class TemplateManager {
     const previewContainer = document.querySelector(".preview-container");
     if (previewContainer) {
       previewContainer.innerHTML = `
-        <div class="template-preview-placeholder">
+        <div class="preview-placeholder">
           <h4>Template Preview</h4>
           <p>Template preview will appear here when you load a template...</p>
         </div>
@@ -1135,9 +1135,9 @@ export class TemplateManager {
             const fields = fieldConfig[block.type] || [];
 
             return `
-            <div class="template-block-config" data-block="${block.type}" data-template-id="${templateId}">
-              <div class="template-block-config__header">
-                <div class="template-block-item__icon template-block-item__icon--${block.type}"></div>
+            <div class="block-config" data-block="${block.type}" data-template-id="${templateId}">
+              <div class="template-card__header">
+                <div class="block-item__icon block-item__icon--${block.type}"></div>
                 <h4 class="template-block-config__title">${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</h4>
               </div>
               <div class="template-block-config__fields" data-block="${block.type}">
@@ -1307,11 +1307,11 @@ export class TemplateManager {
         const checkedFields = this.getCheckedFields(block.type);
 
         return `
-        <div class="template-preview-block template-preview-block--${block.type}">
-          <div class="template-preview-block__header">
-            <h4 class="template-preview-block__title">${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</h4>
+        <div class="preview-block preview-block--${block.type}">
+          <div class="preview-block__header">
+            <h4 class="preview-block__title">${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</h4>
           </div>
-          <div class="template-preview-block__content">
+          <div class="preview-block__content">
             ${this.renderBlockContent(block.type, checkedFields)}
           </div>
         </div>
@@ -1375,21 +1375,21 @@ export class TemplateManager {
 
     // Default table rendering for other blocks
     return `
-      <div class="template-preview-table">
-        <div class="template-preview-table__header">
+      <div class="preview-table">
+        <div class="preview-table__header">
           ${checkedFields
             .map(
               (field) => `
-            <div class="template-preview-table__column-header">${field.label}</div>
+            <div class="preview-table__column-header">${field.label}</div>
           `,
             )
             .join("")}
         </div>
-        <div class="template-preview-table__row">
+        <div class="preview-table__row">
           ${checkedFields
             .map(
               (field) => `
-            <div class="template-preview-table__cell">[${field.label}]</div>
+            <div class="preview-table__cell">[${field.label}]</div>
           `,
             )
             .join("")}
@@ -1405,20 +1405,20 @@ export class TemplateManager {
     _blockType: string,
     checkedFields: Array<{ name: string; label: string }>,
   ): string {
-    let html = `<div class="template-nested-structure">`;
+    let html = `<div class="template-structure">`;
 
     // Add the fixed hierarchy with proper nesting indentation
     html += `
-      <div class="template-hierarchy">
-        <div class="template-hierarchy-level template-hierarchy-level-1">Topic</div>
-        <div class="template-hierarchy-level template-hierarchy-level-2">Objective</div>
-        <div class="template-hierarchy-level template-hierarchy-level-3">Task</div>
+      <div class="template-structure__nested">
+        <div class="template-structure__level template-structure__level--primary">Topic</div>
+        <div class="template-structure__level template-structure__level--secondary">Objective</div>
+        <div class="template-structure__level template-structure__level--tertiary">Task</div>
         
-        <div class="template-content-fields">
+        <div class="template-structure__content-fields">
           ${checkedFields
             .map(
               (field) => `
-            <div class="template-content-field template-hierarchy-level-4">
+            <div class="content-field template-structure__level--quaternary">
               ${field.label}
             </div>
           `,
@@ -1465,21 +1465,21 @@ export class TemplateManager {
     // Main resources table
     if (mainFields.length > 0) {
       html += `
-        <div class="template-preview-table">
-          <div class="template-preview-table__header">
+        <div class="preview-table">
+          <div class="preview-table__header">
             ${mainFields
               .map(
                 (field) => `
-              <div class="template-preview-table__column-header">${field.label}</div>
+              <div class="preview-table__column-header">${field.label}</div>
             `,
               )
               .join("")}
           </div>
-          <div class="template-preview-table__row">
+          <div class="preview-table__row">
             ${mainFields
               .map(
                 (field) => `
-              <div class="template-preview-table__cell">[${field.label}]</div>
+              <div class="preview-table__cell">[${field.label}]</div>
             `,
               )
               .join("")}

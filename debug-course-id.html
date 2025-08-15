@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Course ID</title>
+</head>
+<body>
+    <h1>Course ID Debug</h1>
+    <div id="debug-info">
+        <p>Loading debug info...</p>
+    </div>
+
+    <script>
+        function debugCourseId() {
+            const debugDiv = document.getElementById('debug-info');
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const courseIdFromUrl = urlParams.get('courseId') || urlParams.get('id');
+            const courseIdFromSession = sessionStorage.getItem('currentCourseId');
+            
+            debugDiv.innerHTML = `
+                <h3>Course ID Detection:</h3>
+                <p><strong>URL Parameters:</strong> ${courseIdFromUrl || 'None'}</p>
+                <p><strong>Session Storage:</strong> ${courseIdFromSession || 'None'}</p>
+                <p><strong>Current URL:</strong> ${window.location.href}</p>
+                <h3>Global Objects:</h3>
+                <p><strong>courseBuilderInstance:</strong> ${typeof window.courseBuilderInstance !== 'undefined' ? 'Available' : 'Not Available'}</p>
+                <p><strong>classificationHandler:</strong> ${typeof window.classificationHandler !== 'undefined' ? 'Available' : 'Not Available'}</p>
+                <p><strong>courseBuilder:</strong> ${typeof window.courseBuilder !== 'undefined' ? 'Available' : 'Not Available'}</p>
+            `;
+        }
+
+        // Run debug on load
+        document.addEventListener('DOMContentLoaded', debugCourseId);
+        
+        // Also run every 2 seconds to see changes
+        setInterval(debugCourseId, 2000);
+    </script>
+</body>
+</html>

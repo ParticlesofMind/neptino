@@ -37,10 +37,10 @@ export class TemplatePreviewHandler {
     if (!this.previewContainer) return;
 
     this.previewContainer.innerHTML = `
-      <div class="preview-empty">
-        <div class="preview-empty__icon">📋</div>
-        <h4 class="preview-empty__title">Template Preview</h4>
-        <p class="preview-empty__text">Configure your template blocks to see a preview here.</p>
+      <div class="preview-placeholder">
+        <div class="preview-placeholder__icon">📋</div>
+        <h4 class="preview-placeholder__title">Template Preview</h4>
+        <p class="preview-placeholder__description">Configure your template blocks to see a preview here.</p>
       </div>
     `;
   }
@@ -63,16 +63,16 @@ export class TemplatePreviewHandler {
       .join("");
 
     return `
-      <div class="template-preview-content">
-        <div class="preview-header">
-          <h4 class="preview-title">Template Preview</h4>
-          <div class="preview-actions">
-            <button type="button" class="btn btn--small btn--secondary" onclick="templatePreviewHandler.exportTemplate()">
+      <div class="template-preview__content">
+        <div class="template-preview__header">
+          <h4 class="template-preview__title">Template Preview</h4>
+          <div class="template-preview__actions">
+            <button type="button" class="preview-action preview-action--secondary" onclick="templatePreviewHandler.exportTemplate()">
               Export
             </button>
           </div>
         </div>
-        <div class="preview-body">
+        <div class="template-preview__body">
           ${blocksHtml}
         </div>
       </div>
@@ -114,7 +114,7 @@ export class TemplatePreviewHandler {
 
     return `
       <div class="preview-block preview-block--header" style="background-color: ${backgroundColor}; color: ${textColor};">
-        <div class="preview-block__label">📋 Header</div>
+        <div class="preview-block__type">📋 Header</div>
         <div class="preview-block__content">
           ${showTitle ? '<h1 class="preview-title">Course Title</h1>' : ""}
           ${showSubtitle ? '<h2 class="preview-subtitle">Course Subtitle</h2>' : ""}
@@ -133,7 +133,7 @@ export class TemplatePreviewHandler {
 
     return `
       <div class="preview-block preview-block--program">
-        <div class="preview-block__label">🎯 Program</div>
+        <div class="preview-block__type">🎯 Program</div>
         <div class="preview-block__content">
           ${showObjectives ? '<div class="preview-section"><strong>Learning Objectives:</strong> <span class="preview-placeholder">Objectives will be displayed here</span></div>' : ""}
           ${showOutcomes ? '<div class="preview-section"><strong>Learning Outcomes:</strong> <span class="preview-placeholder">Outcomes will be displayed here</span></div>' : ""}
@@ -154,7 +154,7 @@ export class TemplatePreviewHandler {
 
     return `
       <div class="preview-block preview-block--resources">
-        <div class="preview-block__label">📚 Resources</div>
+        <div class="preview-block__type">📚 Resources</div>
         <div class="preview-block__content">
           <div class="preview-section">
             ${allowFiles ? `<div class="preview-resource">📎 File uploads (max: ${maxFiles})</div>` : ""}
@@ -176,7 +176,7 @@ export class TemplatePreviewHandler {
 
     return `
       <div class="preview-block preview-block--content">
-        <div class="preview-block__label">📝 Content</div>
+        <div class="preview-block__type">📝 Content</div>
         <div class="preview-block__content">
           <div class="preview-section">
             <div class="preview-editor">Editor: ${editor}</div>
@@ -200,7 +200,7 @@ export class TemplatePreviewHandler {
 
     return `
       <div class="preview-block preview-block--assignment">
-        <div class="preview-block__label">✅ Assignment</div>
+        <div class="preview-block__type">✅ Assignment</div>
         <div class="preview-block__content">
           <div class="preview-section">
             ${allowSubmissions ? `<div class="preview-feature">✓ Student submissions (max: ${maxSubmissions})</div>` : ""}
@@ -223,7 +223,7 @@ export class TemplatePreviewHandler {
 
     return `
       <div class="preview-block preview-block--footer">
-        <div class="preview-block__label">🔖 Footer</div>
+        <div class="preview-block__type">🔖 Footer</div>
         <div class="preview-block__content">
           <div class="preview-section">
             ${showCredits ? '<div class="preview-feature">✓ Credits displayed</div>' : ""}

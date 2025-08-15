@@ -410,18 +410,11 @@ export class CourseFormHandler {
       const result = await createCourse(courseData);
 
       if (result.success && result.courseId) {
-        this.currentCourseId = result.courseId;
-        sessionStorage.setItem("currentCourseId", result.courseId);
-
-        // Notify the CourseBuilder instance about the new course ID
-        if (typeof window !== 'undefined' && (window as any).courseBuilderInstance) {
-          (window as any).courseBuilderInstance.setCourseId(result.courseId);
-          console.log('📋 Notified CourseBuilder of new course ID:', result.courseId);
-        }
-
         this.showStatus("Course created successfully! 🎉", "success");
-        this.showCourseCode(result.courseId);
-        this.navigateToNextSection();
+        
+        // Immediately redirect to coursebuilder with courseId in URL
+        const newUrl = `${window.location.pathname}?courseId=${result.courseId}`;
+        window.location.href = newUrl;
       } else {
         throw new Error(result.error || "Failed to create course");
       }

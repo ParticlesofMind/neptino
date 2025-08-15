@@ -119,6 +119,9 @@ export class CourseBuilder {
     this.courseId = courseId;
     console.log('📋 Course ID set to:', courseId);
     
+    // Store in session storage for consistency
+    sessionStorage.setItem("currentCourseId", courseId);
+    
     // If managers aren't initialized yet, initialize them now
     if (!this.scheduleManager && !this.curriculumManager) {
       console.log('📋 Initializing managers for newly created course');
@@ -131,6 +134,12 @@ export class CourseBuilder {
       if (this.curriculumManager) {
         this.curriculumManager.setCourseId(courseId);
       }
+    }
+    
+    // Update classification handler if available
+    if (typeof window !== 'undefined' && (window as any).classificationHandler) {
+      (window as any).classificationHandler.setCourseId(courseId);
+      console.log('📋 Notified classification handler of course ID:', courseId);
     }
     
     // Update margin settings

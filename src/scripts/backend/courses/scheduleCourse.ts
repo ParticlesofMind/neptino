@@ -271,7 +271,7 @@ export class ScheduleCourseManager {
       .from("courses")
       .update({
         schedule_settings: sessions,
-        course_days: sessions.length,
+        course_sessions: sessions.length,
       })
       .eq("id", this.courseId);
 
@@ -391,7 +391,7 @@ export class ScheduleCourseManager {
         .from("courses")
         .update({
           schedule_settings: null,
-          course_days: null,
+          course_sessions: null,
         })
         .eq("id", this.courseId);
 
@@ -417,7 +417,7 @@ export class ScheduleCourseManager {
     try {
       const { data, error } = await supabase
         .from("courses")
-        .select("schedule_settings, course_days")
+        .select("schedule_settings, course_sessions")
         .eq("id", this.courseId)
         .single();
 

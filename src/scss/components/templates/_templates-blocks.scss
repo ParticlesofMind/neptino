@@ -1,16 +1,52 @@
 @use "../../abstracts/variables" as *;
 
 // ==========================================================================
-// TEMPLATE BLOCKS COMPONENTS
+// TEMPLATE BLOCKS COMPONENTS - BEM Architecture
 // ==========================================================================
 
-.template-blocks__list {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-4;
+// Template Blocks Container - Main Block
+.template-blocks {
+  // Element: List container
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  // Element: Empty state
+  &__empty {
+    padding: $spacing-8;
+    text-align: center;
+    color: $text-secondary;
+  }
 }
 
-.template-block-item {
+// Empty State - Child Block
+.empty-state {
+  // Element: Icon
+  &__icon {
+    font-size: 3rem;
+    margin-bottom: $spacing-4;
+    opacity: 0.5;
+  }
+
+  // Element: Title
+  &__title {
+    margin: 0 0 $spacing-2 0;
+    font-size: $font-size-lg;
+    color: $text-primary;
+  }
+
+  // Element: Description
+  &__description {
+    margin: 0;
+    font-size: $font-size-base;
+    line-height: $line-height-relaxed;
+  }
+}
+
+// Block Item - Main Block
+.block-item {
   display: flex;
   align-items: center;
   gap: $spacing-4;
@@ -24,13 +60,19 @@
   &:hover {
     border-color: $primary-color;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .block-item__actions {
+      opacity: 1;
+    }
   }
 
+  // Modifier: Selected state
   &--selected {
     border-color: $primary-color;
     background: rgba($primary-color, 0.05);
   }
 
+  // Modifier: Disabled state
   &--disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -40,182 +82,191 @@
       box-shadow: none;
     }
   }
-}
 
-.template-block-item__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: $border-radius;
-  background: $gray-100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  flex-shrink: 0;
-
-  &::before {
-    content: "";
-    width: 20px;
-    height: 20px;
-    background: $gray-400;
-    border-radius: 2px;
+  // Modifier: Drag states
+  &--dragging {
+    opacity: 0.7;
+    transform: rotate(2deg);
   }
 
-  // Icon variations
-  &--text::before {
-    background: #3b82f6;
+  &--drag-over {
+    border-color: $primary-color;
+    background: rgba($primary-color, 0.1);
+    transform: scale(1.02);
   }
 
-  &--image::before {
-    background: #10b981;
-    border-radius: 4px;
+  // Element: Icon container
+  &__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: $border-radius;
+    background: $gray-100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+
+    &::before {
+      content: "";
+      width: 20px;
+      height: 20px;
+      background: $gray-400;
+      border-radius: 2px;
+    }
+
+    // Modifier: Icon type variations
+    &--text::before {
+      background: #3b82f6;
+    }
+
+    &--image::before {
+      background: #10b981;
+      border-radius: 4px;
+    }
+
+    &--video::before {
+      background: #f59e0b;
+      clip-path: polygon(0 0, 100% 50%, 0 100%);
+    }
+
+    &--audio::before {
+      background: #8b5cf6;
+      border-radius: 50%;
+    }
+
+    &--quiz::before {
+      background: #ef4444;
+      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    }
+
+    &--embed::before {
+      background: #6366f1;
+      border-radius: 2px;
+      width: 16px;
+      height: 16px;
+    }
+
+    &--header::before {
+      background: #059669;
+    }
+
+    &--program::before {
+      background: #0891b2;
+    }
+
+    &--resources::before {
+      background: #7c3aed;
+    }
+
+    &--content::before {
+      background: #dc2626;
+    }
+
+    &--assignment::before {
+      background: #ea580c;
+    }
+
+    &--footer::before {
+      background: #4b5563;
+    }
   }
 
-  &--video::before {
-    background: #f59e0b;
-    clip-path: polygon(0 0, 100% 50%, 0 100%);
+  // Element: Content area
+  &__content {
+    flex: 1;
+    min-width: 0;
   }
 
-  &--audio::before {
-    background: #8b5cf6;
-    border-radius: 50%;
-  }
-
-  &--quiz::before {
-    background: #ef4444;
-    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-  }
-
-  &--embed::before {
-    background: #6366f1;
-    border-radius: 2px;
-    width: 16px;
-    height: 16px;
-  }
-}
-
-.template-block-item__content {
-  flex: 1;
-  min-width: 0;
-
-  h4 {
+  // Element: Title
+  &__title {
     margin: 0 0 $spacing-1 0;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     color: $text-primary;
   }
 
-  p {
+  // Element: Description
+  &__description {
     margin: 0;
     font-size: $font-size-xs;
     color: $text-secondary;
     line-height: $line-height-tight;
   }
-}
 
-.template-block-item__actions {
-  display: flex;
-  gap: $spacing-2;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-
-  .template-block-item:hover & {
-    opacity: 1;
-  }
-
-  button {
-    width: 28px;
-    height: 28px;
-    border: none;
-    border-radius: $border-radius-sm;
-    background: $gray-100;
-    color: $text-secondary;
-    cursor: pointer;
+  // Element: Actions container
+  &__actions {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-
-    &:hover {
-      background: $gray-200;
-      color: $text-primary;
-    }
-
-    &--edit:hover {
-      background: $primary-color;
-      color: white;
-    }
-
-    &--delete:hover {
-      background: $error;
-      color: white;
-    }
+    gap: $spacing-2;
+    opacity: 0;
+    transition: opacity 0.2s ease;
   }
 }
 
-// Block configuration form
-.block-config-form {
+// Block Action Button - Child Block
+.block-action {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: $border-radius-sm;
+  background: $gray-100;
+  color: $text-secondary;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: $gray-200;
+    color: $text-primary;
+  }
+
+  // Modifier: Action types
+  &--edit:hover {
+    background: $primary-color;
+    color: white;
+  }
+
+  &--delete:hover {
+    background: $error;
+    color: white;
+  }
+
+  &--config:hover {
+    background: $info;
+    color: white;
+  }
+}
+
+// Block Configuration - Main Block
+.block-config {
   padding: $spacing-6;
   background: $white;
   border-top: 1px solid $gray-200;
 
-  .form__group {
-    margin-bottom: $spacing-4;
+  // Element: Form container
+  &__form {
+    .form__group {
+      margin-bottom: $spacing-4;
+    }
+
+    .form__label {
+      font-weight: $font-weight-medium;
+      margin-bottom: $spacing-2;
+    }
+
+    .form__input,
+    .form__textarea,
+    .form__select {
+      width: 100%;
+    }
   }
 
-  .form__label {
-    font-weight: $font-weight-medium;
-    margin-bottom: $spacing-2;
-  }
-
-  .form__input,
-  .form__textarea,
-  .form__select {
-    width: 100%;
-  }
-
-  .form__actions {
+  // Element: Actions container
+  &__actions {
     margin-top: $spacing-6;
     padding-top: $spacing-4;
     border-top: 1px solid $gray-200;
-  }
-}
-
-// Drag and drop states
-.template-block-item {
-  &.drag-over {
-    border-color: $primary-color;
-    background: rgba($primary-color, 0.1);
-    transform: scale(1.02);
-  }
-
-  &.dragging {
-    opacity: 0.7;
-    transform: rotate(2deg);
-  }
-}
-
-// Empty state
-.template-blocks__empty {
-  padding: $spacing-8;
-  text-align: center;
-  color: $text-secondary;
-
-  .empty-icon {
-    font-size: 3rem;
-    margin-bottom: $spacing-4;
-    opacity: 0.5;
-  }
-
-  h3 {
-    margin: 0 0 $spacing-2 0;
-    font-size: $font-size-lg;
-    color: $text-primary;
-  }
-
-  p {
-    margin: 0;
-    font-size: $font-size-base;
-    line-height: $line-height-relaxed;
   }
 }

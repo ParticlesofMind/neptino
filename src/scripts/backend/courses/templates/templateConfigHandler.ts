@@ -20,13 +20,13 @@ export class TemplateConfigHandler {
     if (!configContainer) return;
 
     const blockSelectorHtml = `
-      <div class="template-blocks-selector">
-        <h3 class="heading heading--tertiary">Template Blocks</h3>
+      <div class="template-blocks">
+        <h3 class="template__title">Template Blocks</h3>
         <div class="blocks-grid">
           ${TEMPLATE_BLOCKS.map(
             (block) => `
             <div class="block-option" data-block-type="${block.type}">
-              <div class="block-option__icon">${block.icon}</div>
+              <div class="block-item__icon block-item__icon--${block.type}">${block.icon}</div>
               <div class="block-option__label">${block.label}</div>
               <div class="block-option__toggle">
                 <input type="checkbox" id="toggle-${block.type}" checked>
@@ -37,10 +37,10 @@ export class TemplateConfigHandler {
           ).join("")}
         </div>
       </div>
-      <div class="template-block-config">
-        <h3 class="heading heading--tertiary">Block Configuration</h3>
+      <div class="block-config">
+        <h3 class="template__title">Block Configuration</h3>
         <div class="block-config-content">
-          <p class="text">Select a block above to configure its settings.</p>
+          <p class="template-text">Select a block above to configure its settings.</p>
         </div>
       </div>
     `;

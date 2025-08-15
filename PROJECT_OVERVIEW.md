@@ -145,7 +145,7 @@ courses {
   schedule_settings: jsonb
   curriculum_data: jsonb
   course_settings: jsonb
-  course_days: text[]
+  course_sessions: integer
   created_at: timestamptz
   updated_at: timestamptz
 }

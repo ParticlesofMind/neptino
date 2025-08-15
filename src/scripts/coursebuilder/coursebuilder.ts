@@ -151,7 +151,13 @@ export class CourseBuilderCanvas {
       
       if (courseIdFromUrl) {
         this.courseId = courseIdFromUrl;
+        sessionStorage.setItem("currentCourseId", courseIdFromUrl);
         console.log('📋 Course ID from URL:', courseIdFromUrl);
+        
+        // Notify classification handler if available
+        if (window.classificationHandler) {
+          window.classificationHandler.setCourseId(courseIdFromUrl);
+        }
         return;
       }
 
@@ -160,6 +166,11 @@ export class CourseBuilderCanvas {
       if (courseIdFromSession) {
         this.courseId = courseIdFromSession;
         console.log('📋 Course ID from session storage:', courseIdFromSession);
+        
+        // Notify classification handler if available
+        if (window.classificationHandler) {
+          window.classificationHandler.setCourseId(courseIdFromSession);
+        }
         return;
       }
 
@@ -585,6 +596,11 @@ export class CourseBuilderCanvas {
         this.curriculumManager.setCourseId(courseId);
       }
       
+      // Update classification handler if available
+      if (window.classificationHandler) {
+        window.classificationHandler.setCourseId(courseId);
+      }
+      
       // Update URL to include course ID parameter
       this.updateUrlWithCourseId(courseId);
       
@@ -690,6 +706,24 @@ export class CourseBuilderCanvas {
    */
   public getCurrentSection(): string {
     return this.currentSection;
+  }
+
+  /**
+   * Refresh course ID detection for all managers
+   */
+  public refreshCourseId(): void {
+    try {
+      const oldCourseId = this.courseId;
+      this.getCourseId();
+      
+      // If course ID changed, update all managers
+      if (this.courseId && this.courseId !== oldCourseId) {
+        console.log('📋 Course ID updated from refresh:', this.courseId);
+        this.setCourseId(this.courseId);
+      }
+    } catch (error) {
+      this.errorBoundary.handleError(error as Error, 'refreshCourseId');
+    }
   }
 
   /**

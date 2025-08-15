@@ -18,11 +18,26 @@ import {
   CourseClassificationData,
 } from "./classifyCourse";
 
+import { getCourseId, isNewCourseMode } from "../../utils/courseId.js";
+
 export class ClassificationFormHandler {
   private formState: ClassificationFormState;
-  private currentCourseId: string | null = null;
   private autoSaveTimeout: NodeJS.Timeout | null = null;
   private lastSavedData: string = "";
+
+  /**
+   * Get current course ID from URL
+   */
+  private get courseId(): string | null {
+    return getCourseId();
+  }
+
+  /**
+   * Check if we're in new course creation mode
+   */
+  private get isNewCourse(): boolean {
+    return isNewCourseMode();
+  }
 
   constructor() {
     this.formState = initializeClassificationFormState();
@@ -34,11 +49,7 @@ export class ClassificationFormHandler {
   // ==========================================================================
 
   private async initialize(): Promise<void> {
-
     try {
-      // Get course ID from sessionStorage (set when course is created)
-      this.currentCourseId = sessionStorage.getItem("currentCourseId");
-
       // Initialize classification data
       await initializeClassificationData();
 
@@ -55,8 +66,9 @@ export class ClassificationFormHandler {
       await this.populateAvailableCourses();
 
       // Load existing classification if course exists
-      if (this.currentCourseId) {
-        await this.loadExistingClassification(this.currentCourseId);
+      const courseId = this.courseId;
+      if (courseId) {
+        await this.loadExistingClassification(courseId);
         this.updateSaveStatus("Loaded existing data");
       } else {
         this.updateSaveStatus("Waiting for course creation...");
@@ -544,11 +556,11 @@ export class ClassificationFormHandler {
   }
 
   private watchForCourseId(): void {
-    // Check for course ID periodically in case it's set after initialization
+    // Check for course ID changes in URL periodically  
+    // This handles cases where URL changes after initial load
     const checkInterval = setInterval(() => {
-      const courseId = sessionStorage.getItem("currentCourseId");
-      if (courseId && courseId !== this.currentCourseId) {
-        this.currentCourseId = courseId;
+      const currentCourseId = this.courseId;
+      if (currentCourseId) {
         this.updateSaveStatus("Course connected - auto-save enabled");
         clearInterval(checkInterval);
       }
@@ -573,7 +585,8 @@ export class ClassificationFormHandler {
   }
 
   private async performAutoSave(): Promise<void> {
-    if (!this.currentCourseId) {
+    const courseId = this.courseId;
+    if (!courseId) {
       this.updateSaveStatus("Waiting for course creation...", true);
       return;
     }
@@ -589,7 +602,7 @@ export class ClassificationFormHandler {
 
       // Use partial save for auto-save (doesn't require all fields to be filled)
       const result = await savePartialCourseClassification(
-        this.currentCourseId,
+        courseId,
         classificationData,
       );
 
@@ -654,9 +667,29 @@ export class ClassificationFormHandler {
   // ==========================================================================
 
   public setCourseId(courseId: string): void {
-    this.currentCourseId = courseId;
-    sessionStorage.setItem("currentCourseId", courseId);
-    this.updateSaveStatus("Course connected - auto-save enabled");
+    // With URL-based approach, this method redirects to include courseId in URL
+    const url = new URL(window.location.href);
+    url.searchParams.set('courseId', courseId);
+    window.location.href = url.toString();
+  }
+
+  public refreshCourseId(): void {
+    // With URL-based approach, just check current state
+    const courseId = this.courseId;
+    if (courseId) {
+      this.updateSaveStatus("Course connected - auto-save enabled");
+    } else {
+      this.updateSaveStatus("Waiting for course creation...");
+    }
+  }
+
+  public debugState(): void {
+    const courseId = this.courseId;
+    console.log('📋 Classification Handler Debug:', {
+      currentCourseId: courseId,
+      isNewCourse: this.isNewCourse,
+      currentUrl: window.location.href
+    });
   }
 
   public async loadExistingClassification(courseId: string): Promise<void> {
@@ -754,9 +787,21 @@ export class ClassificationFormHandler {
 // AUTO-INITIALIZATION
 // ==========================================================================
 
+// Make ClassificationFormHandler available globally
+declare global {
+  interface Window {
+    ClassificationFormHandler: typeof ClassificationFormHandler;
+    classificationHandler?: ClassificationFormHandler;
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.ClassificationFormHandler = ClassificationFormHandler;
+}
+
 // Initialize when DOM is ready - but only on the classification section
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("course-classification-form")) {
-    new ClassificationFormHandler();
+    window.classificationHandler = new ClassificationFormHandler();
   }
 });

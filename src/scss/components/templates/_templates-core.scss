@@ -1,16 +1,17 @@
 @use "../../abstracts/variables" as *;
 
 // ==========================================================================
-// CORE TEMPLATE STYLES
+// CORE TEMPLATE STYLES - BEM Architecture
 // ==========================================================================
 // This file contains only the essential base template styles.
 // Specific functionality is split into dedicated component files.
 
+// Template - Main Block
 .template {
   position: relative;
   background: $white;
   
-  // Base template state modifiers
+  // Modifier: State variations
   &--loading {
     pointer-events: none;
     opacity: 0.7;
@@ -25,10 +26,8 @@
     outline: 2px solid $primary-color;
     outline-offset: 2px;
   }
-}
 
-// Template type indicators
-.template-type {
+  // Modifier: Type variations
   &--course {
     border-left: 4px solid $success;
   }
@@ -44,9 +43,84 @@
   &--assignment {
     border-left: 4px solid $error;
   }
+
+  // Modifier: Size variations
+  &--compact {
+    padding: $spacing-2;
+  }
+  
+  &--normal {
+    padding: $spacing-4;
+  }
+  
+  &--spacious {
+    padding: $spacing-6;
+  }
+
+  // Element: Template header
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-4;
+    padding-bottom: $spacing-3;
+    border-bottom: 1px solid $gray-200;
+  }
+
+  // Element: Template title
+  &__title {
+    margin: 0;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+
+    // Modifier: Truncated title
+    &--truncated {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  // Element: Template description
+  &__description {
+    margin: 0;
+    color: $text-secondary;
+    font-size: $font-size-sm;
+    line-height: $line-height-relaxed;
+  }
+
+  // Element: Template content area
+  &__content {
+    flex: 1;
+  }
+
+  // Element: Template footer
+  &__footer {
+    margin-top: $spacing-4;
+    padding-top: $spacing-3;
+    border-top: 1px solid $gray-200;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  // Element: Template metadata
+  &__meta {
+    display: flex;
+    gap: $spacing-4;
+    font-size: $font-size-xs;
+    color: $text-secondary;
+  }
+
+  // Element: Template actions
+  &__actions {
+    display: flex;
+    gap: $spacing-2;
+  }
 }
 
-// Template status indicators
+// Template Status - Child Block
 .template-status {
   display: inline-flex;
   align-items: center;
@@ -56,6 +130,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   
+  // Modifier: Status variations
   &--draft {
     color: $text-secondary;
     
@@ -82,39 +157,133 @@
       color: $gray-300;
     }
   }
+
+  &--in-review {
+    color: $warning;
+    
+    &::before {
+      content: "●";
+      color: $warning;
+    }
+  }
+
+  &--rejected {
+    color: $error;
+    
+    &::before {
+      content: "●";
+      color: $error;
+    }
+  }
 }
 
-// Basic template utilities
+// Template Label - Child Block (for categories, tags, etc.)
+.template-label {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-1 $spacing-2;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: $border-radius-sm;
+
+  // Modifier: Label color variations
+  &--primary {
+    background: rgba($primary-color, 0.1);
+    color: $primary-color;
+  }
+
+  &--success {
+    background: rgba($success, 0.1);
+    color: $success;
+  }
+
+  &--warning {
+    background: rgba($warning, 0.1);
+    color: $warning;
+  }
+
+  &--error {
+    background: rgba($error, 0.1);
+    color: $error;
+  }
+
+  &--neutral {
+    background: $gray-100;
+    color: $text-secondary;
+  }
+}
+
+// Template Text - Utility classes for consistent text styling
 .template-text {
+  // Modifier: Text color variations
   &--muted {
     color: $text-secondary;
   }
   
+  &--primary {
+    color: $text-primary;
+  }
+
+  // Modifier: Text size variations
   &--small {
     font-size: $font-size-sm;
   }
+
+  &--large {
+    font-size: $font-size-lg;
+  }
   
-  &--truncate {
+  // Modifier: Text behavior
+  &--truncated {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
+  &--wrapped {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
 }
 
-// Template spacing utilities
-.template-spacing {
-  &--compact {
-    padding: $spacing-2;
-    gap: $spacing-1;
+// Template Badge - Child Block for visual indicators
+.template-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 $spacing-1;
+  border-radius: 50%;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  line-height: 1;
+
+  // Modifier: Badge color variations
+  &--primary {
+    background: $primary-color;
+    color: white;
   }
-  
-  &--normal {
-    padding: $spacing-4;
-    gap: $spacing-3;
+
+  &--success {
+    background: $success;
+    color: white;
   }
-  
-  &--spacious {
-    padding: $spacing-6;
-    gap: $spacing-4;
+
+  &--warning {
+    background: $warning;
+    color: white;
+  }
+
+  &--error {
+    background: $error;
+    color: white;
+  }
+
+  &--neutral {
+    background: $gray-400;
+    color: white;
   }
 }
