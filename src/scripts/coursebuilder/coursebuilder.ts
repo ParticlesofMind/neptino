@@ -171,20 +171,24 @@ export class CourseBuilderCanvas {
 
   private initializeCurrentSection(): void {
     try {
-      // Get section from URL hash or default to essentials
+      // Get section from URL hash or default to setup
       const hash = window.location.hash.substring(1);
-      const validSections = ["essentials", "classification", "schedule", "curriculum", "settings", "create", "preview", "launch"];
+      const validMainSections = ["setup", "create", "preview", "launch"];
+      const validSubSections = ["essentials", "classification", "templates", "schedule", "curriculum", "settings", "marketplace", "resources"];
       
-      if (validSections.includes(hash)) {
+      if (validMainSections.includes(hash)) {
         this.currentSection = hash;
+      } else if (validSubSections.includes(hash)) {
+        // Map subsections to their parent main section
+        this.currentSection = "setup"; // All subsections belong to setup
       } else {
-        this.currentSection = "essentials";
+        this.currentSection = "setup"; // Default to setup instead of essentials
       }
       
       console.log(`📄 Current section: ${this.currentSection}`);
     } catch (error) {
       this.errorBoundary.handleError(error as Error, 'initializeCurrentSection');
-      this.currentSection = "essentials";
+      this.currentSection = "setup";
     }
   }
 
@@ -211,15 +215,15 @@ export class CourseBuilderCanvas {
         const currentIndex = mainSections.indexOf(this.currentSection);
         if (currentIndex > 0) {
           this.navigateToSection(mainSections[currentIndex - 1]);
-        } else if (this.currentSection === 'setup') {
-          // Navigate back to courses page when on first section
+        } else if (currentIndex === 0) {
+          // Navigate back to courses page when on first section (setup)
           window.location.href = '/src/pages/teacher/courses.html';
         }
       });
       
       nextBtn?.addEventListener('click', () => {
         const currentIndex = mainSections.indexOf(this.currentSection);
-        if (currentIndex < mainSections.length - 1) {
+        if (currentIndex >= 0 && currentIndex < mainSections.length - 1) {
           this.navigateToSection(mainSections[currentIndex + 1]);
         }
       });
@@ -433,9 +437,27 @@ export class CourseBuilderCanvas {
 
   private handleHashChange(): void {
     try {
-      const newSection = window.location.hash.substring(1) || "essentials";
-      if (newSection !== this.currentSection) {
-        this.navigateToSection(newSection);
+      const hash = window.location.hash.substring(1);
+      const newSection = hash || "setup";
+      
+      const mainSections = ["setup", "create", "preview", "launch"];
+      const subSections = ["essentials", "classification", "templates", "schedule", "curriculum", "settings", "marketplace", "resources"];
+      
+      if (mainSections.includes(newSection)) {
+        // Direct main section navigation
+        if (newSection !== this.currentSection) {
+          this.currentSection = newSection;
+          this.updateUIForSection(newSection);
+        }
+      } else if (subSections.includes(newSection)) {
+        // Subsection navigation - ensure we're in setup
+        if (this.currentSection !== "setup") {
+          this.currentSection = "setup";
+        }
+        this.updateUIForSection("setup");
+      } else {
+        // Invalid section, default to setup
+        window.location.hash = "setup";
       }
     } catch (error) {
       this.errorBoundary.handleError(error as Error, 'handleHashChange');
@@ -497,17 +519,44 @@ export class CourseBuilderCanvas {
 
   private updateUIForSection(sectionId: string): void {
     try {
-      // Update active nav state
+      // Update active nav state for subsection links (in setup)
       const navLinks = document.querySelectorAll('[data-section]');
       navLinks.forEach(link => {
         link.classList.toggle('active', link.getAttribute('data-section') === sectionId);
       });
       
-      // Update content visibility
+      // Update main section visibility
       const sections = document.querySelectorAll('.section');
       sections.forEach(section => {
-        section.classList.toggle('active', section.id === `${sectionId}-section`);
+        // Show the section that matches the sectionId
+        const shouldBeActive = section.id === sectionId;
+        section.classList.toggle('section--active', shouldBeActive);
+        
+        // Also handle the old 'active' class for backwards compatibility
+        section.classList.toggle('active', shouldBeActive);
       });
+      
+      // If we're in setup, also ensure the correct subsection is shown
+      if (sectionId === 'setup') {
+        // Get the hash to see which subsection we should show
+        const hash = window.location.hash.substring(1);
+        const subSections = ["essentials", "classification", "templates", "schedule", "curriculum", "settings", "marketplace", "resources"];
+        
+        if (subSections.includes(hash)) {
+          // Show the specific subsection article
+          const articles = document.querySelectorAll('#setup .article');
+          articles.forEach(article => {
+            const shouldBeActive = article.id === hash;
+            article.classList.toggle('article--active', shouldBeActive);
+          });
+          
+          // Update the aside navigation
+          const asideLinks = document.querySelectorAll('.aside__link');
+          asideLinks.forEach(link => {
+            link.classList.toggle('aside__link--active', link.getAttribute('data-section') === hash);
+          });
+        }
+      }
     } catch (error) {
       this.errorBoundary.handleError(error as Error, 'updateUIForSection');
     }
