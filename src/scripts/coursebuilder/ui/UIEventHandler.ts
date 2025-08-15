@@ -226,7 +226,7 @@ export class UIEventHandler {
 
     // Update the displayed value
     const valueDisplay = slider.parentElement?.querySelector(
-      ".size-slider__value",
+      ".size-display",
     );
     if (valueDisplay) {
       if (setting === "opacity") {
@@ -246,7 +246,7 @@ export class UIEventHandler {
       this.toolStateManager.updateToolSettings("pen", {
         [setting]: numericValue,
       });
-    } else if (currentTool === "text" && setting === "fontSize") {
+    } else if (currentTool === "text" && (setting === "fontSize")) {
       this.toolStateManager.updateToolSettings("text", {
         [setting]: numericValue,
       });
@@ -266,6 +266,11 @@ export class UIEventHandler {
         [setting]: numericValue,
       });
     }
+
+    // Trigger callback if set
+    if (this.onToolSettingsChangeCallback) {
+      this.onToolSettingsChangeCallback(currentTool, { [setting]: numericValue });
+    }
   }
 
   /**
@@ -283,6 +288,11 @@ export class UIEventHandler {
 
     if (currentTool === "text" && setting === "fontFamily") {
       this.toolStateManager.updateToolSettings("text", { [setting]: value });
+      
+      // Trigger callback if set
+      if (this.onToolSettingsChangeCallback) {
+        this.onToolSettingsChangeCallback("text", { [setting]: value });
+      }
     }
   }
 

@@ -866,7 +866,7 @@
           <div class="coursebuilder__tools--selection">
             <div class="icon-wrapper">
               <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" class="icon icon--medium"
-                data-tool="select">
+                data-tool="selection">
               <span class="icon-name">Select</span>
             </div>
             <div class="icon-wrapper">
@@ -874,8 +874,8 @@
               <span class="icon-name">Pen</span>
             </div>
             <div class="icon-wrapper">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" class="icon icon--medium" data-tool="brush">
-              <span class="icon-name">Brush</span>
+              <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" class="icon icon--medium" data-tool="highlighter">
+              <span class="icon-name">Highlighter</span>
             </div>
             <div class="icon-wrapper">
               <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" class="icon icon--medium" data-tool="text">
@@ -896,37 +896,35 @@
           <div class="coursebuilder__tools--options">
             <!-- Tool options will be added here -->
 
+            <!-- Selection Tool Settings (minimal since selection doesn't need many settings) -->
+            <div class="tool-settings" data-tool="selection">
+              <span class="tool-settings__label">Selection Tool</span>
+            </div>
+
             <!-- Pen Tool Settings -->
             <div class="tool-settings" data-tool="pen">
-              <input type="range" min="1" max="10" value="2" data-setting="size">
-              <span class="size-display">2px</span>
+              <input type="range" min="1" max="10" value="2" data-setting="size" title="Pen Size">
+            </div>
+
+            <!-- Highlighter Tool Settings -->
+            <div class="tool-settings" data-tool="highlighter">
+              <input type="range" min="5" max="50" value="10" data-setting="size" title="Highlighter Size">
+              <input type="range" min="0.1" max="1" step="0.1" value="0.8" data-setting="opacity" title="Opacity">
             </div>
 
             <!-- Text Tool Settings -->
             <div class="tool-settings" data-tool="text">
-
-              <select data-setting="fontFamily">
+              <select data-setting="fontFamily" title="Font Family">
                 <option value="Arial">Arial</option>
                 <option value="Times">Times</option>
                 <option value="Helvetica">Helvetica</option>
               </select>
-
-              <input type="range" min="8" max="72" value="16" data-setting="fontSize">
-              <span class="size-display">16px</span>
-            </div>
-
-            <!-- Brush Tool Settings -->
-            <div class="tool-settings" data-tool="brush">
-              <label>Size:</label>
-              <input type="range" min="5" max="50" value="10" data-setting="size">
-              <span class="size-display">10px</span>
-
-              <input type="range" min="0.1" max="1" step="0.1" value="1" data-setting="opacity">
-              <span class="size-display">100%</span>
+              <input type="range" min="8" max="72" value="16" data-setting="fontSize" title="Font Size">
             </div>
 
             <!-- Shapes Tool Settings -->
             <div class="tool-settings" data-tool="shapes">
+              <div class="shape-selection">
                 <div class="icon-wrapper">
                   <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-rectangle.svg" class="icon icon--medium"
                     data-shape="rectangle" alt="Rectangle">
@@ -941,16 +939,14 @@
                   <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-triangle.svg" class="icon icon--medium"
                     data-shape="triangle" alt="Triangle">
                   <span class="icon-name">Triangle</span>
-         
+                </div>
               </div>
-              <input type="range" min="1" max="10" value="2" data-setting="strokeWidth">
-              <span class="size-display">2px</span>
+              <input type="range" min="1" max="10" value="2" data-setting="strokeWidth" title="Stroke Width">
             </div>
 
             <!-- Eraser Tool Settings -->
             <div class="tool-settings" data-tool="eraser">
-              <input type="range" min="5" max="50" value="20" data-setting="size">
-              <span class="size-display">20px</span>
+              <input type="range" min="5" max="50" value="20" data-setting="size" title="Eraser Size">
             </div>
             
           </div>

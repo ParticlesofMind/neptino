@@ -39,7 +39,7 @@ interface IconState {
 }
 
 export class ToolStateManager {
-  private currentTool: string = "select";
+  private currentTool: string = "selection";
   private currentMode: string = "build";
   private selectedMedia: string | null = null;
   private selectedNavigation: string | null = null;
@@ -115,7 +115,7 @@ export class ToolStateManager {
     const firstShape = document.querySelector('[data-shape]') as HTMLElement;
 
     this.currentMode = firstMode?.dataset.mode || "build";
-    this.currentTool = firstTool?.dataset.tool || "select";
+    this.currentTool = firstTool?.dataset.tool || "selection";
     this.selectedMedia = firstMedia?.dataset.media || null;
     this.selectedNavigation = firstNav?.title || null;
     this.selectedShape = firstShape?.dataset.shape || null;
