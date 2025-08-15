@@ -6,8 +6,8 @@
     <title>My Courses - Neptino</title>
     <link rel="stylesheet" href="/src/scss/main.scss" />
   </head>
-  <body class="body grid">
-    <header class="header grid__header">
+  <body class="student-courses grid grid--student-courses">
+    <header class="student-courses__header card card--student-courses">
       <nav class="nav">
         <div class="nav__logo-section">
           <a href="/src/pages/student/home.html" class="logo logo--header">
@@ -49,17 +49,17 @@
       </nav>
     </header>
 
-    <main class="main grid__main">
-      <section class="courses-header">
+    <main class="student-courses__main card card--student-courses">
+      <section class="student-courses__intro card card--student-courses">
         <h1 class="heading heading--primary">My Courses</h1>
         <p class="text text--lead">
           Manage your enrolled courses and continue learning.
         </p>
       </section>
 
-      <section class="courses-container">
-        <div class="card">
-          <div class="card__content">
+      <section class="student-courses__container card card--student-courses">
+        <div class="student-courses__empty card card--student-courses">
+          <div class="student-courses__empty-content card card--student-courses">
             <h3 class="heading heading--tertiary">No Courses Yet</h3>
             <p class="text">
               You haven't enrolled in any courses yet. Start exploring our
@@ -71,7 +71,7 @@
       </section>
     </main>
 
-    <footer class="footer grid__footer">
+    <footer class="student-courses__footer card card--student-courses">
       <nav class="nav nav--footer">
         <div class="nav__logo-section">
           <a href="/src/pages/student/home.html" class="logo logo--footer">
