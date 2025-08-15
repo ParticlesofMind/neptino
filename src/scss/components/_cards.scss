@@ -3,6 +3,7 @@
 // ==========================================================================
 
 @use "../abstracts/variables" as *;
+@use "sass:color";
 
 .card {
   background: $white;
@@ -61,7 +62,7 @@
     height: 200px;
     background: linear-gradient(
       135deg,
-      lighten($primary-color, 20%),
+      color.scale($primary-color, $lightness: 20%),
       $primary-color
     );
     display: flex;

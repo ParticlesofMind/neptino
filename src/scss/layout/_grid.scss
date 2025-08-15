@@ -126,41 +126,41 @@
 // Hide elements on specific breakpoints
 .hidden-mobile {
   @media (max-width: #{$breakpoint-sm - 1px}) {
-    display: none !important;
+    display: none;
   }
 }
 
 .hidden-tablet {
   @media (min-width: $breakpoint-sm) and (max-width: #{$breakpoint-lg - 1px}) {
-    display: none !important;
+    display: none;
   }
 }
 
 .hidden-desktop {
   @media (min-width: $breakpoint-lg) {
-    display: none !important;
+    display: none;
   }
 }
 
 // Show elements only on specific breakpoints
 .show-mobile {
   @media (min-width: $breakpoint-sm) {
-    display: none !important;
+    display: none;
   }
 }
 
 .show-tablet {
-  display: none !important;
+  display: none;
 
   @media (min-width: $breakpoint-sm) and (max-width: #{$breakpoint-lg - 1px}) {
-    display: block !important;
+    display: block;
   }
 }
 
 .show-desktop {
-  display: none !important;
+  display: none;
 
   @media (min-width: $breakpoint-lg) {
-    display: block !important;
+    display: block;
   }
 }

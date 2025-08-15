@@ -1,0 +1,351 @@
+@use "../../abstracts/variables" as *;
+@use "sass:color";
+
+// ==========================================================================
+// TEMPLATE MODALS AND OVERLAYS
+// ==========================================================================
+
+.template-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: $z-modal;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+
+  &.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  &__content {
+    background: $white;
+    border-radius: $border-radius-lg;
+    padding: $spacing-6;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    box-shadow: $shadow-xl;
+
+    .template-modal.active & {
+      transform: scale(1);
+    }
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-4;
+    padding-bottom: $spacing-4;
+    border-bottom: 1px solid $gray-200;
+
+    h2 {
+      margin: 0;
+      font-size: $font-size-xl;
+      color: $text-primary;
+    }
+  }
+
+  &__close {
+    background: none;
+    border: none;
+    font-size: $font-size-xl;
+    cursor: pointer;
+    color: $text-secondary;
+    padding: $spacing-1;
+    border-radius: $border-radius-sm;
+
+    &:hover {
+      background: $gray-100;
+      color: $text-primary;
+    }
+  }
+
+  &__body {
+    margin-bottom: $spacing-6;
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-3;
+    padding-top: $spacing-4;
+    border-top: 1px solid $gray-200;
+  }
+}
+
+// Specific template modal types
+.template-create-modal {
+  .template-modal__content {
+    width: 600px;
+    max-width: 90vw;
+  }
+
+  .template-form {
+    .form-group {
+      margin-bottom: $spacing-4;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: $spacing-2;
+      font-weight: $font-weight-medium;
+      color: $text-primary;
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+      width: 100%;
+      padding: $spacing-3;
+      border: 1px solid $gray-300;
+      border-radius: $border-radius;
+      font-size: $font-size-base;
+
+      &:focus {
+        outline: none;
+        border-color: $primary-color;
+        box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+      }
+    }
+
+    .form-textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .form-help {
+      font-size: $font-size-sm;
+      color: $text-secondary;
+      margin-top: $spacing-1;
+    }
+  }
+}
+
+.template-settings-modal {
+  .template-modal__content {
+    width: 800px;
+    max-width: 95vw;
+  }
+
+  .settings-tabs {
+    display: flex;
+    margin-bottom: $spacing-6;
+    border-bottom: 1px solid $gray-200;
+
+    .tab {
+      padding: $spacing-3 $spacing-4;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      font-size: $font-size-base;
+      color: $text-secondary;
+      transition: all 0.2s ease;
+
+      &:hover {
+        color: $text-primary;
+        background: $gray-50;
+      }
+
+      &.active {
+        color: $primary-color;
+        border-bottom-color: $primary-color;
+        background: rgba($primary-color, 0.05);
+      }
+    }
+  }
+
+  .settings-content {
+    .setting-group {
+      margin-bottom: $spacing-6;
+      padding-bottom: $spacing-4;
+      border-bottom: 1px solid $gray-100;
+
+      &:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      h3 {
+        margin: 0 0 $spacing-3 0;
+        font-size: $font-size-lg;
+        color: $text-primary;
+      }
+
+      p {
+        margin: 0 0 $spacing-3 0;
+        color: $text-secondary;
+        font-size: $font-size-sm;
+      }
+    }
+
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: $spacing-3;
+
+      .setting-label {
+        font-weight: $font-weight-medium;
+        color: $text-primary;
+      }
+
+      .setting-control {
+        display: flex;
+        align-items: center;
+        gap: $spacing-2;
+      }
+    }
+  }
+}
+
+.template-preview-modal {
+  .template-modal__content {
+    width: 1000px;
+    max-width: 95vw;
+    height: 80vh;
+  }
+
+  .preview-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-4;
+    padding: $spacing-3;
+    background: $gray-50;
+    border-radius: $border-radius;
+
+    .device-selector {
+      display: flex;
+      gap: $spacing-2;
+
+      .device-option {
+        padding: $spacing-2;
+        border: 1px solid $gray-300;
+        background: $white;
+        border-radius: $border-radius-sm;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: $gray-50;
+        }
+
+        &.active {
+          background: $primary-color;
+          color: white;
+          border-color: $primary-color;
+        }
+      }
+    }
+
+    .preview-actions {
+      display: flex;
+      gap: $spacing-2;
+
+      .action-button {
+        padding: $spacing-2 $spacing-3;
+        border: 1px solid $gray-300;
+        background: $white;
+        border-radius: $border-radius-sm;
+        cursor: pointer;
+        font-size: $font-size-sm;
+
+        &:hover {
+          background: $gray-50;
+        }
+      }
+    }
+  }
+
+  .preview-frame {
+    width: 100%;
+    height: calc(100% - 80px);
+    border: 1px solid $gray-300;
+    border-radius: $border-radius;
+    background: $white;
+    position: relative;
+    overflow: hidden;
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .preview-loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: $text-secondary;
+    }
+  }
+}
+
+// Template delete confirmation modal
+.template-delete-modal {
+  .template-modal__content {
+    width: 400px;
+    text-align: center;
+  }
+
+  .warning-icon {
+    font-size: 48px;
+    color: $error;
+    margin-bottom: $spacing-4;
+  }
+
+  .delete-message {
+    margin-bottom: $spacing-6;
+    color: $text-primary;
+
+    .template-name {
+      font-weight: $font-weight-semibold;
+      color: $error;
+    }
+  }
+
+  .delete-actions {
+    display: flex;
+    gap: $spacing-3;
+    justify-content: center;
+
+    .cancel-button {
+      padding: $spacing-3 $spacing-4;
+      border: 1px solid $gray-300;
+      background: $white;
+      border-radius: $border-radius;
+      cursor: pointer;
+
+      &:hover {
+        background: $gray-50;
+      }
+    }
+
+    .delete-button {
+      padding: $spacing-3 $spacing-4;
+      border: none;
+      background: $error;
+      color: white;
+      border-radius: $border-radius;
+      cursor: pointer;
+
+      &:hover {
+        background: color.scale($error, $lightness: -10%);
+      }
+    }
+  }
+}

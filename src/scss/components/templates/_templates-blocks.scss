@@ -1,0 +1,221 @@
+@use "../../abstracts/variables" as *;
+
+// ==========================================================================
+// TEMPLATE BLOCKS COMPONENTS
+// ==========================================================================
+
+.template-blocks__list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+}
+
+.template-block-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+  padding: $spacing-4;
+  border: 1px solid $gray-200;
+  border-radius: $border-radius;
+  background: $white;
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $primary-color;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &--selected {
+    border-color: $primary-color;
+    background: rgba($primary-color, 0.05);
+  }
+
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    
+    &:hover {
+      border-color: $gray-200;
+      box-shadow: none;
+    }
+  }
+}
+
+.template-block-item__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: $border-radius;
+  background: $gray-100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+
+  &::before {
+    content: "";
+    width: 20px;
+    height: 20px;
+    background: $gray-400;
+    border-radius: 2px;
+  }
+
+  // Icon variations
+  &--text::before {
+    background: #3b82f6;
+  }
+
+  &--image::before {
+    background: #10b981;
+    border-radius: 4px;
+  }
+
+  &--video::before {
+    background: #f59e0b;
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+  }
+
+  &--audio::before {
+    background: #8b5cf6;
+    border-radius: 50%;
+  }
+
+  &--quiz::before {
+    background: #ef4444;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  }
+
+  &--embed::before {
+    background: #6366f1;
+    border-radius: 2px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.template-block-item__content {
+  flex: 1;
+  min-width: 0;
+
+  h4 {
+    margin: 0 0 $spacing-1 0;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
+
+  p {
+    margin: 0;
+    font-size: $font-size-xs;
+    color: $text-secondary;
+    line-height: $line-height-tight;
+  }
+}
+
+.template-block-item__actions {
+  display: flex;
+  gap: $spacing-2;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+
+  .template-block-item:hover & {
+    opacity: 1;
+  }
+
+  button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: $border-radius-sm;
+    background: $gray-100;
+    color: $text-secondary;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: $gray-200;
+      color: $text-primary;
+    }
+
+    &--edit:hover {
+      background: $primary-color;
+      color: white;
+    }
+
+    &--delete:hover {
+      background: $error;
+      color: white;
+    }
+  }
+}
+
+// Block configuration form
+.block-config-form {
+  padding: $spacing-6;
+  background: $white;
+  border-top: 1px solid $gray-200;
+
+  .form__group {
+    margin-bottom: $spacing-4;
+  }
+
+  .form__label {
+    font-weight: $font-weight-medium;
+    margin-bottom: $spacing-2;
+  }
+
+  .form__input,
+  .form__textarea,
+  .form__select {
+    width: 100%;
+  }
+
+  .form__actions {
+    margin-top: $spacing-6;
+    padding-top: $spacing-4;
+    border-top: 1px solid $gray-200;
+  }
+}
+
+// Drag and drop states
+.template-block-item {
+  &.drag-over {
+    border-color: $primary-color;
+    background: rgba($primary-color, 0.1);
+    transform: scale(1.02);
+  }
+
+  &.dragging {
+    opacity: 0.7;
+    transform: rotate(2deg);
+  }
+}
+
+// Empty state
+.template-blocks__empty {
+  padding: $spacing-8;
+  text-align: center;
+  color: $text-secondary;
+
+  .empty-icon {
+    font-size: 3rem;
+    margin-bottom: $spacing-4;
+    opacity: 0.5;
+  }
+
+  h3 {
+    margin: 0 0 $spacing-2 0;
+    font-size: $font-size-lg;
+    color: $text-primary;
+  }
+
+  p {
+    margin: 0;
+    font-size: $font-size-base;
+    line-height: $line-height-relaxed;
+  }
+}

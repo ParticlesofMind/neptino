@@ -99,7 +99,7 @@
   // Setup section layout - aside to the left of articles
   &#setup {
     &.section--active:has(.aside) {
-      display: grid !important;
+      display: grid;
       grid-template-columns: minmax(280px, 300px) 1fr;
       gap: $spacing-4;
       align-items: start;
@@ -114,7 +114,7 @@
 
       // Natural responsive behavior - grid will collapse when content is too narrow
       @container (max-width: 768px) {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: 1fr;
 
         .aside {
           position: static;
@@ -127,7 +127,7 @@
 
     // Ensure setup section is hidden when not active
     &:not(.section--active) {
-      display: none !important;
+      display: none;
     }
   }
 }
@@ -136,8 +136,8 @@
 @container (max-width: 768px) {
   .aside {
     flex-direction: row;
-    height: auto !important;
-    min-height: auto !important;
+    height: auto;
+    min-height: auto;
 
     &__nav {
       width: 100%;

@@ -3,6 +3,7 @@
 // ==========================================================================
 
 @use "../abstracts/variables" as *;
+@use "sass:color";
 
 // Pricing Grid
 .pricing-grid {
@@ -43,7 +44,7 @@
       background: linear-gradient(
         135deg,
         $primary-color,
-        lighten($primary-color, 10%)
+        color.scale($primary-color, $lightness: 10%)
       );
       color: $white;
       position: relative;

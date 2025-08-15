@@ -1,0 +1,115 @@
+@use "../../abstracts/variables" as *;
+
+// ==========================================================================
+// AUTH FORM COMPONENTS
+// ==========================================================================
+
+.auth-form {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: $spacing-8;
+  background-color: $white;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-lg;
+
+  &__header {
+    text-align: center;
+    margin-bottom: $spacing-8;
+  }
+
+  &__footer {
+    text-align: center;
+    margin-top: $spacing-6;
+    padding-top: $spacing-6;
+    border-top: 1px solid $gray-200;
+  }
+}
+
+// Auth-specific form styling
+.signin-form,
+.signup-form {
+  .form__group {
+    margin-bottom: $spacing-6;
+  }
+
+  .form__label {
+    font-weight: $font-weight-medium;
+    margin-bottom: $spacing-2;
+  }
+
+  .form__input {
+    width: 100%;
+    padding: $spacing-4;
+    border: 2px solid $gray-200;
+    border-radius: $border-radius;
+    font-size: $font-size-base;
+    transition: border-color 0.3s ease;
+
+    &:focus {
+      border-color: $primary-color;
+      outline: none;
+    }
+
+    &--error {
+      border-color: $error;
+    }
+  }
+
+  .form__error {
+    color: $error;
+    font-size: $font-size-sm;
+    margin-top: $spacing-1;
+  }
+
+  .form__submit {
+    width: 100%;
+    margin-top: $spacing-4;
+  }
+}
+
+// Password strength indicator
+.password-strength {
+  margin-top: $spacing-2;
+
+  &__bar {
+    height: 4px;
+    background-color: $gray-200;
+    border-radius: 2px;
+    overflow: hidden;
+
+    &-fill {
+      height: 100%;
+      transition: width 0.3s ease, background-color 0.3s ease;
+      
+      &--weak {
+        background-color: $error;
+        width: 25%;
+      }
+      
+      &--fair {
+        background-color: #ff9500;
+        width: 50%;
+      }
+      
+      &--good {
+        background-color: #007aff;
+        width: 75%;
+      }
+      
+      &--strong {
+        background-color: $success;
+        width: 100%;
+      }
+    }
+  }
+
+  &__text {
+    font-size: $font-size-xs;
+    margin-top: $spacing-1;
+    
+    &--weak { color: $error; }
+    &--fair { color: #ff9500; }
+    &--good { color: #007aff; }
+    &--strong { color: $success; }
+  }
+}

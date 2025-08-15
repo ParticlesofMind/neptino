@@ -1,0 +1,302 @@
+@use "../../abstracts/variables" as *;
+
+// ==========================================================================
+// TEMPLATE RESPONSIVE STYLES
+// ==========================================================================
+
+// Mobile-first responsive design for templates
+
+// Small screens (up to 480px)
+@media (max-width: 480px) {
+  .template-block {
+    padding: $spacing-3;
+    margin-bottom: $spacing-3;
+  }
+
+  .template-header {
+    flex-direction: column;
+    gap: $spacing-2;
+
+    .template-title {
+      font-size: $font-size-lg;
+    }
+
+    .template-actions {
+      justify-content: flex-start;
+    }
+  }
+
+  .template-sidebar {
+    width: 100%;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid $gray-200;
+    padding-bottom: $spacing-4;
+    margin-bottom: $spacing-4;
+  }
+
+  .template-main-content {
+    padding: 0;
+  }
+
+  .template-grid {
+    grid-template-columns: 1fr;
+    gap: $spacing-3;
+  }
+
+  .template-form {
+    .form-row {
+      flex-direction: column;
+      gap: $spacing-3;
+
+      .form-group {
+        width: 100%;
+      }
+    }
+  }
+
+  .template-modal {
+    &__content {
+      margin: $spacing-4;
+      padding: $spacing-4;
+      max-width: calc(100vw - #{$spacing-8});
+      max-height: calc(100vh - #{$spacing-8});
+    }
+
+    &__header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: $spacing-2;
+
+      h2 {
+        font-size: $font-size-lg;
+      }
+    }
+
+    &__footer {
+      flex-direction: column;
+      gap: $spacing-2;
+
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+
+  .template-toolbar {
+    flex-wrap: wrap;
+    gap: $spacing-2;
+
+    .toolbar-group {
+      flex: 1;
+      min-width: 100%;
+    }
+  }
+
+  .template-list-item {
+    padding: $spacing-3;
+
+    &__header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: $spacing-2;
+    }
+
+    &__actions {
+      width: 100%;
+      justify-content: flex-start;
+    }
+  }
+}
+
+// Medium screens (481px to 768px)
+@media (min-width: 481px) and (max-width: 768px) {
+  .template-container {
+    padding: $spacing-4;
+  }
+
+  .template-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $spacing-4;
+  }
+
+  .template-sidebar {
+    width: 280px;
+  }
+
+  .template-main-content {
+    padding: 0 $spacing-4;
+  }
+
+  .template-modal {
+    &__content {
+      width: 90%;
+      max-width: 600px;
+    }
+  }
+
+  .template-form {
+    .form-row {
+      display: flex;
+      gap: $spacing-4;
+
+      .form-group {
+        flex: 1;
+      }
+
+      &.form-row--single {
+        .form-group {
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  .template-toolbar {
+    .toolbar-group {
+      flex: none;
+    }
+  }
+}
+
+// Large screens (769px to 1024px)
+@media (min-width: 769px) and (max-width: 1024px) {
+  .template-container {
+    max-width: 1000px;
+  }
+
+  .template-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .template-sidebar {
+    width: 320px;
+  }
+
+  .template-main-content {
+    padding: 0 $spacing-6;
+  }
+}
+
+// Extra large screens (1025px and up)
+@media (min-width: 1025px) {
+  .template-container {
+    max-width: 1200px;
+  }
+
+  .template-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .template-sidebar {
+    width: 360px;
+  }
+
+  .template-main-content {
+    padding: 0 $spacing-8;
+  }
+
+  .template-modal {
+    &__content {
+      max-width: 1000px;
+    }
+  }
+}
+
+// Container queries for template blocks
+.template-block {
+  container-type: inline-size;
+  
+  @container (max-width: 300px) {
+    .template-block-header {
+      .template-title {
+        font-size: $font-size-sm;
+      }
+      
+      .template-actions {
+        flex-direction: column;
+        gap: $spacing-1;
+      }
+    }
+    
+    .template-block-content {
+      padding: $spacing-2;
+    }
+  }
+  
+  @container (min-width: 400px) {
+    .template-block-header {
+      .template-actions {
+        flex-direction: row;
+        gap: $spacing-2;
+      }
+    }
+  }
+}
+
+// Print styles for templates
+@media print {
+  .template-sidebar,
+  .template-toolbar,
+  .template-actions,
+  .btn,
+  .template-modal {
+    display: none;
+  }
+
+  .template-container {
+    max-width: none;
+    padding: 0;
+  }
+
+  .template-main-content {
+    padding: 0;
+  }
+
+  .template-block {
+    page-break-inside: avoid;
+    margin-bottom: $spacing-4;
+    border: 1px solid $gray-300;
+  }
+
+  .template-header {
+    border-bottom: 2px solid $gray-800;
+    padding-bottom: $spacing-2;
+    margin-bottom: $spacing-4;
+  }
+
+  .template-title {
+    color: $gray-800;
+  }
+}
+
+// High contrast mode
+@media (prefers-contrast: high) {
+  .template-block {
+    border: 2px solid currentColor;
+  }
+
+  .template-header {
+    border-bottom: 2px solid currentColor;
+  }
+
+  .btn {
+    border: 2px solid currentColor;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+// Reduced motion preferences
+@media (prefers-reduced-motion: reduce) {
+  .template-modal,
+  .template-block,
+  .template-list-item,
+  .btn {
+    transition: none;
+    animation: none;
+  }
+
+  .template-sidebar {
+    transform: none;
+  }
+}

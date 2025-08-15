@@ -23,18 +23,50 @@
 @use "layout/grid";
 
 // 5. COMPONENTS
+
+// Basic Components
 @use "components/buttons";
-@use "components/forms";
 @use "components/cards";
 @use "components/modals";
 @use "components/alerts";
-@use "components/dropdown";
-@use "components/templates";
-@use "components/schedule";
-@use "components/curriculum";
 @use "components/icons";
-@use "components/coursebuilder";
-@use "components/canvas-layout";
+@use "components/schedule";
+
+// Form Components
+@use "components/forms/forms-base";
+@use "components/forms/forms-auth";
+@use "components/forms/forms-special";
+
+// Dropdown Components
+@use "components/dropdown/dropdown-base";
+@use "components/dropdown/dropdown-variants";
+@use "components/dropdown/dropdown-utils";
+@use "components/dropdown/dropdown-core";
+
+// Template Components
+@use "components/templates/templates-layout";
+@use "components/templates/templates-blocks";
+@use "components/templates/templates-preview";
+@use "components/templates/templates-list";
+@use "components/templates/templates-structure";
+@use "components/templates/templates-modals";
+@use "components/templates/templates-responsive";
+@use "components/templates/templates-animations";
+@use "components/templates/templates-core";
+
+// Curriculum Components
+@use "components/curriculum/curriculum-layout";
+@use "components/curriculum/curriculum-config";
+@use "components/curriculum/curriculum-preview";
+@use "components/curriculum/curriculum-lessons";
+@use "components/curriculum/curriculum-states";
+@use "components/curriculum/curriculum-core";
+
+// Course Builder Components
+@use "components/coursebuilder/coursebuilder";
+@use "components/coursebuilder/coursebuilder-tools";
+@use "components/coursebuilder/coursebuilder-canvas";
+@use "components/coursebuilder/canvas-layout";
 
 // 6. PAGES
 @use "pages/home";

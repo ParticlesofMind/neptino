@@ -1,0 +1,211 @@
+@use "../../abstracts/variables" as *;
+
+// ==========================================================================
+// TEMPLATE LIST AND ITEMS
+// ==========================================================================
+
+.template-list {
+  margin-top: $spacing-8;
+}
+
+.template-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: $spacing-6;
+  margin-top: $spacing-6;
+
+  @media (max-width: #{$breakpoint-sm - 1px}) {
+    grid-template-columns: 1fr;
+    gap: $spacing-4;
+  }
+}
+
+.template-item {
+  border: 1px solid $gray-200;
+  border-radius: $border-radius;
+  background: $white;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $primary-color;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
+  &--selected {
+    border-color: $primary-color;
+    box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
+  }
+
+  &--disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    
+    &:hover {
+      transform: none;
+      box-shadow: none;
+      border-color: $gray-200;
+    }
+  }
+}
+
+.template-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: $spacing-6;
+  border-bottom: 1px solid $gray-200;
+  background: $gray-50;
+
+  h4 {
+    margin: 0;
+    color: $text-primary;
+    font-weight: $font-weight-medium;
+    font-size: $font-size-base;
+  }
+
+  .template-type {
+    background: $primary-color;
+    color: $white;
+    padding: $spacing-1 $spacing-2;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    margin-left: $spacing-2;
+  }
+}
+
+.template-description {
+  padding: $spacing-4 $spacing-6;
+  color: $text-secondary;
+  font-size: $font-size-sm;
+  line-height: $line-height-relaxed;
+  margin: 0;
+}
+
+.template-actions {
+  display: flex;
+  gap: $spacing-2;
+  padding: $spacing-4 $spacing-6;
+  border-top: 1px solid $gray-200;
+  background: $gray-50;
+
+  .button {
+    flex: 1;
+    
+    &--secondary {
+      background: $white;
+      color: $text-primary;
+      border: 1px solid $gray-300;
+      
+      &:hover {
+        background: $gray-50;
+        border-color: $gray-400;
+      }
+    }
+  }
+}
+
+// Template metadata
+.template-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-3 $spacing-6;
+  background: $gray-50;
+  border-top: 1px solid $gray-200;
+  font-size: $font-size-xs;
+  color: $text-secondary;
+
+  .template-author {
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+    
+    .author-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: $gray-300;
+    }
+  }
+
+  .template-date {
+    font-style: italic;
+  }
+}
+
+// Empty state for template list
+.template-list-empty {
+  text-align: center;
+  padding: $spacing-12 $spacing-6;
+  color: $text-secondary;
+
+  .empty-icon {
+    font-size: 3rem;
+    margin-bottom: $spacing-4;
+    opacity: 0.5;
+  }
+
+  h3 {
+    margin: 0 0 $spacing-2 0;
+    color: $text-primary;
+    font-size: $font-size-lg;
+  }
+
+  p {
+    margin: 0 0 $spacing-6 0;
+    line-height: $line-height-relaxed;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .button {
+    margin: 0 auto;
+  }
+}
+
+// Template filters and search
+.template-filters {
+  display: flex;
+  gap: $spacing-4;
+  align-items: center;
+  margin-bottom: $spacing-6;
+  flex-wrap: wrap;
+
+  @media (max-width: #{$breakpoint-sm - 1px}) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: $spacing-3;
+  }
+
+  .search-input {
+    flex: 1;
+    min-width: 250px;
+  }
+
+  .filter-select {
+    min-width: 150px;
+  }
+
+  .filter-toggle {
+    display: flex;
+    gap: $spacing-2;
+    
+    .button {
+      padding: $spacing-2 $spacing-3;
+      font-size: $font-size-sm;
+      
+      &--active {
+        background: $primary-color;
+        color: white;
+      }
+    }
+  }
+}

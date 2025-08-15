@@ -242,24 +242,24 @@
 // Button States
 .button--disabled,
 .button:disabled {
-  opacity: 0.5 !important;
-  cursor: not-allowed !important;
-  pointer-events: none !important;
-  background-color: #d1d5db !important; // Gray background when disabled
-  border-color: #d1d5db !important;
-  color: #6b7280 !important;
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  background-color: #d1d5db; // Gray background when disabled
+  border-color: #d1d5db;
+  color: #6b7280;
 }
 
 .button.active:not(:disabled):not(.button--disabled) {
-  opacity: 1 !important;
-  pointer-events: auto !important;
-  background-color: #3b82f6 !important; // Blue background when active
-  border-color: #3b82f6 !important;
-  color: white !important;
+  opacity: 1;
+  pointer-events: auto;
+  background-color: #3b82f6; // Blue background when active
+  border-color: #3b82f6;
+  color: white;
 
   &:hover {
-    background-color: #2563eb !important; // Darker blue on hover
-    border-color: #2563eb !important;
+    background-color: #2563eb; // Darker blue on hover
+    border-color: #2563eb;
   }
 }
 
@@ -275,29 +275,29 @@
   font-size: 1rem;
   font-weight: 600;
   min-width: 180px;
-  background-color: #dc2626 !important; // Red background
-  border-color: #dc2626 !important;
-  color: white !important;
-  cursor: pointer !important;
-  pointer-events: auto !important;
+  background-color: #dc2626; // Red background
+  border-color: #dc2626;
+  color: white;
+  cursor: pointer;
+  pointer-events: auto;
 
   &:hover:not(:disabled) {
-    background-color: #b91c1c !important; // Darker red on hover
-    border-color: #b91c1c !important;
+    background-color: #b91c1c; // Darker red on hover
+    border-color: #b91c1c;
   }
 
   &.hidden {
-    display: none !important;
+    display: none;
   }
 
   // Override any disabled styles
   &:not(.hidden) {
-    opacity: 1 !important;
-    pointer-events: auto !important;
+    opacity: 1;
+    pointer-events: auto;
   }
 }
 
 // Hidden utility
 .hidden {
-  display: none !important;
+  display: none;
 }
