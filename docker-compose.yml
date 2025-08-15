@@ -26,23 +26,30 @@ services:
     networks:
       - neptino-network
 
-  # Supabase local development (optional)
-  supabase:
-    image: supabase/postgres:latest
+  # PostgreSQL database
+  postgres:
+    image: postgres:15
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: postgres
+      POSTGRES_DB: neptino
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - supabase_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d
     networks:
       - neptino-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d neptino"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 networks:
   neptino-network:
     driver: bridge
 
 volumes:
-  supabase_data:
+  postgres_data:
