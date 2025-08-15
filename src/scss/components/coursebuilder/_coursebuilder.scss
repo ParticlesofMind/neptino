@@ -15,12 +15,12 @@
   padding: 1rem;
   
 
-  // Glass styling for all coursebuilder sections
+  // Glass styling for all coursebuilder sections with silver borders
   >div {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid #c0c0c0; // Silver border
     border-radius: 16px;
     box-shadow: 
       0 4px 16px rgba(0, 0, 0, 0.1),
@@ -38,8 +38,9 @@
     grid-row: 1;
     display: flex;
     align-items: center;
-    padding: vars.$spacing-4 vars.$spacing-3;
-    gap: vars.$spacing-4;
+    justify-content: space-evenly; // Distribute modes evenly
+    padding: vars.$spacing-5 vars.$spacing-4; // Increased padding for better spacing
+    gap: vars.$spacing-4; // Reduced from spacing-6 for better balance
   }
 
   // Media Controls (Top - second and third columns)
@@ -49,9 +50,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: first baseline;
-    padding: vars.$spacing-4 vars.$spacing-3;
-    gap: vars.$spacing-4;
+    justify-content: flex-start; // Changed from first baseline to flex-start for better consistency
+    padding: vars.$spacing-5 vars.$spacing-4; // Increased padding for better spacing
+    gap: vars.$spacing-4; // Reduced gap slightly for better visual balance
   }
 
   // Search Panel (Top Right)
@@ -60,7 +61,7 @@
     grid-row: 2;
     display: flex;
     flex-direction: column;
-    padding: vars.$spacing-3 vars.$spacing-4;
+    padding: vars.$spacing-4 vars.$spacing-5; // Increased horizontal padding
   }
 
   // ========================================
@@ -68,27 +69,31 @@
   // ========================================
 
   &__tools {
-    padding-left: vars.$spacing-4;
+    padding: vars.$spacing-4 vars.$spacing-3; // Consistent with other sections
     grid-column: 3;
     grid-row: 1;
-    gap: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
 
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-
-    // Tool selection row
+    // Tool selection row - this contains the icon-wrappers
     &--selection {
       display: flex;
       flex-direction: row;
-      gap: vars.$spacing-3;
+      gap: vars.$spacing-2; // Tighter gap for horizontal layout
       align-items: center;
+      justify-content: center; // Center all the tools
+      flex-wrap: nowrap; // Don't wrap
+      margin-bottom: vars.$spacing-2; // Small margin to separate from options
     }
 
-    // Tool options row
+    // Tool options row - appears below the tools
     &--options {
-      min-height: 40px; // Ensure space is reserved
+      min-height: 30px; // Smaller height
       display: flex;
       align-items: center;
+      justify-content: center;
     }
   }
 
@@ -98,38 +103,38 @@
     grid-row: 2;
     display: flex;
     flex-direction: column;
-    padding: vars.$spacing-4;
+    padding: vars.$spacing-5; // Increased padding for consistency
     overflow: auto;
     max-height: 100%; // Constrain height to grid cell
     min-height: 0; // Allow shrinking below content size
     
-    // Enhanced glass effect for canvas container
+    // Enhanced glass effect for canvas container (will be overridden by silver border from parent)
     background: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid #c0c0c0; // Silver border to match parent styling
     box-shadow: 
       0 8px 32px rgba(0, 0, 0, 0.1),
       inset 0 2px 4px rgba(255, 255, 255, 0.3),
       inset 0 -2px 4px rgba(0, 0, 0, 0.05);
   }
 
-  // Navigation Area (Left Center) - Glass Navigation
+  // Navigation Area (Right) - Glass Navigation
   &__navigation {
     grid-column: 4;
     grid-row: 1;
     display: flex;
     align-items: center;
-    justify-items: center;
+    justify-content: space-evenly; // Distribute navigation items evenly
     flex-direction: row;
-    padding: vars.$spacing-4;
-    gap: vars.$spacing-3;
+    padding: vars.$spacing-5; // Increased padding for consistency
+    gap: vars.$spacing-4; // Increased gap for better spacing
     
-    // Subtle glass effect for navigation
+    // Subtle glass effect for navigation (border will be overridden by parent silver border)
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid #c0c0c0; // Silver border to match parent styling
     border-radius: 12px;
     box-shadow: 
       0 4px 16px rgba(0, 0, 0, 0.05),
@@ -140,15 +145,34 @@
   // COURSEBUILDER ICON STYLING - Glassmorphism Icons
   // ==========================================================================
 
+  // Icon wrapper container for icon + label styling
+  .icon-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: vars.$spacing-1;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    // Make sure icon and span are perfectly aligned
+    .icon {
+      flex-shrink: 0; // Prevent icon from shrinking
+    }
+    
+    .icon-name {
+      flex-shrink: 0; // Prevent text from shrinking
+    }
+  }
+
   // Icon wrapper for labels and improved styling
   .icon-name {
-    font-size: vars.$font-size-xs;
+    font-size: calc(vars.$font-size-xs * 0.9); // Slightly smaller
     color: vars.$text-secondary;
-    margin-top: vars.$spacing-1;
     text-align: center;
     font-weight: vars.$font-weight-medium;
     white-space: nowrap;
     transition: color 0.3s ease;
+    line-height: 1.2; // Tight line height for better alignment
   }
 
   // Base coursebuilder icon styling (overrides universal icons)
@@ -274,7 +298,7 @@
   // Shapes selection container
   .shapes-selection {
     display: flex;
-    gap: vars.$spacing-2;
+    gap: vars.$spacing-4; // Increased from spacing-2 for better spacing
     margin-bottom: vars.$spacing-3;
     
     .icon-wrapper {
