@@ -15,6 +15,10 @@
   width: 100%;
   padding: $spacing-4 $spacing-6;
 
+  &--coursebuilder { 
+    height: 60px;
+  }
+
   // Responsive padding
   @media (min-width: $breakpoint-md) {
     padding: $spacing-4 $spacing-8;

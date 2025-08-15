@@ -8,9 +8,9 @@
 // SEARCH INTERFACE
 // ==========================================================================
 .media-search__input {
-  width: 100%;
+  width: 75%;
   padding: vars.$spacing-3;
-  border: none;
+  border: 1px solid vars.$primary-color;
   border-radius: 10px;
   font-size: vars.$font-size-sm;
   color: vars.$text-primary;
@@ -94,7 +94,7 @@
   display: block;
   margin: auto;
   border: 2px solid #6495ed;
-  border-radius: 8px;
+  border-radius: 5px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   cursor: inherit;
 }
