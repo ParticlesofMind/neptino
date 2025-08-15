@@ -1,0 +1,59 @@
+// ==========================================================================
+// LANDING PAGE STYLES
+// ==========================================================================
+
+@use "../abstracts/variables" as *;
+
+.landing {
+  &__hero {
+    text-align: center;
+    padding: $spacing-8 0;
+  }
+
+  &__hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  &__hero-actions {
+    margin-top: $spacing-6;
+    display: grid;
+    grid-auto-flow: column;
+    gap: $spacing-4;
+    justify-content: center;
+
+    @media (max-width: #{$breakpoint-sm - 1px}) {
+      grid-auto-flow: row;
+    }
+  }
+
+  &__stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: $spacing-4;
+    margin: $spacing-6 0;
+
+    .landing__stat {
+      text-align: center;
+    }
+  }
+
+  &__testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: $spacing-6;
+    margin: $spacing-8 0;
+  }
+
+  &__cta-actions {
+    margin-top: $spacing-6;
+    display: grid;
+    grid-auto-flow: column;
+    gap: $spacing-4;
+    justify-content: center;
+
+    @media (max-width: #{$breakpoint-sm - 1px}) {
+      grid-auto-flow: row;
+    }
+  }
+}

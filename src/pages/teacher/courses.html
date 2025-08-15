@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="/src/scss/main.scss" />
   </head>
 
-  <body class="body grid">
-    <header class="header grid__header">
+  <body class="teacher-courses grid grid--teacher-courses">
+    <header class="teacher-courses__header card card--teacher-courses">
       <nav class="nav">
         <div class="nav__logo-section">
           <a href="/src/pages/teacher/home.html" class="logo logo--header">
@@ -49,8 +49,8 @@
       </nav>
     </header>
 
-    <main class="main grid__main">
-      <div class="courses-header">
+    <main class="teacher-courses__main card card--teacher-courses">
+      <div class="teacher-courses__intro card card--teacher-courses">
         <h1 class="heading heading--primary">My Courses</h1>
         <a
           href="/src/pages/teacher/coursebuilder.html#setup"
@@ -60,17 +60,17 @@
         >
       </div>
 
-      <div class="courses-container" id="courses-container">
+      <div class="teacher-courses__container card card--teacher-courses" id="courses-container">
         <!-- Course cards will be dynamically loaded here -->
-        <div id="no-courses-message" class="no-courses">
-          <p class="text text--muted">
+        <div id="no-courses-message" class="teacher-courses__empty card card--teacher-courses">
+          <p class="teacher-courses__empty-text text text--muted">
             No courses yet. Create your first course to get started!
           </p>
         </div>
       </div>
     </main>
 
-    <footer class="footer grid__footer">
+    <footer class="teacher-courses__footer card card--teacher-courses">
       <nav class="nav nav--footer">
         <div class="nav__logo-section">
           <a href="/src/pages/teacher/home.html" class="logo logo--footer">

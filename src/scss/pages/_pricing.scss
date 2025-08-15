@@ -5,63 +5,87 @@
 @use "../abstracts/variables" as *;
 @use "sass:color";
 
-// Pricing Grid
-.pricing-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: $spacing-6;
-  margin: $spacing-8 0;
-
-  @media (max-width: #{$breakpoint-lg - 1px}) {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: $spacing-4;
+.pricing {
+  &__hero {
+    text-align: center;
+    padding: $spacing-8 0;
   }
 
-  @media (max-width: #{$breakpoint-sm - 1px}) {
-    grid-template-columns: 1fr;
-    gap: $spacing-4;
-  }
-}
+  &__tiers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: $spacing-6;
+    margin: $spacing-8 0;
 
-// Pricing Card
-.pricing-card {
-  position: relative;
-  text-align: center;
-  border: 2px solid $gray-200;
-  transition: all 0.3s ease;
+    @media (max-width: #{$breakpoint-lg - 1px}) {
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: $spacing-4;
+    }
 
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: $shadow-lg;
-    border-color: $primary-color;
+    @media (max-width: #{$breakpoint-sm - 1px}) {
+      grid-template-columns: 1fr;
+      gap: $spacing-4;
+    }
   }
 
-  &--featured {
-    border-color: $primary-color;
-    box-shadow: $shadow-lg;
+  &__tier {
+    position: relative;
+    text-align: center;
+    border: 2px solid $gray-200;
+    transition: all 0.3s ease;
 
-    .card__header {
-      background: linear-gradient(
-        135deg,
-        $primary-color,
-        color.scale($primary-color, $lightness: 10%)
-      );
-      color: $white;
-      position: relative;
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: $shadow-lg;
+      border-color: $primary-color;
+    }
 
-      .badge {
-        position: absolute;
-        top: -12px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: $accent-color;
+    &--featured {
+      border-color: $primary-color;
+      box-shadow: $shadow-lg;
+
+      .card__header {
+        background: linear-gradient(
+          135deg,
+          $primary-color,
+          color.scale($primary-color, $lightness: 10%)
+        );
         color: $white;
-        padding: $spacing-1 $spacing-3;
-        border-radius: $border-radius;
-        font-size: 0.75rem;
-        font-weight: $font-weight-bold;
-        text-transform: uppercase;
+        position: relative;
+
+        .badge {
+          position: absolute;
+          top: -12px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: $accent-color;
+          color: $white;
+          padding: $spacing-1 $spacing-3;
+          border-radius: $border-radius;
+          font-size: 0.75rem;
+          font-weight: $font-weight-bold;
+          text-transform: uppercase;
+        }
       }
+    }
+  }
+
+  &__faq-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: $spacing-6;
+    margin: $spacing-8 0;
+  }
+
+  &__cta-actions {
+    margin-top: $spacing-6;
+    display: grid;
+    grid-auto-flow: column;
+    gap: $spacing-4;
+    justify-content: center;
+
+    @media (max-width: #{$breakpoint-sm - 1px}) {
+      grid-auto-flow: row;
     }
   }
 }
@@ -75,7 +99,7 @@
     font-weight: $font-weight-bold;
     color: $primary-color;
 
-    .pricing-card--featured & {
+    .pricing__tier--featured & {
       color: $white;
     }
   }
@@ -85,7 +109,7 @@
     color: $text-secondary;
     margin-left: $spacing-1;
 
-    .pricing-card--featured & {
+    .pricing__tier--featured & {
       color: rgba($white, 0.8);
     }
   }
@@ -106,145 +130,6 @@
       border-bottom: none;
     }
   }
-}
-
-// FAQ Grid
-.faq-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: $spacing-6;
-  margin: $spacing-8 0;
-}
-
-// ==========================================================================
-// GENERAL PAGE COMPONENTS
-// ==========================================================================
-
-// Hero Section
-.hero {
-  text-align: center;
-  padding: $spacing-8 0;
-
-  &__content {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-
-  &__actions {
-    margin-top: $spacing-6;
-    display: flex;
-    gap: $spacing-4;
-    justify-content: center;
-
-    @media (max-width: #{$breakpoint-sm - 1px}) {
-      flex-direction: column;
-      align-items: center;
-    }
-  }
-}
-
-// Features Grid
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: $spacing-6;
-  margin: $spacing-8 0;
-
-  @media (max-width: #{$breakpoint-sm - 1px}) {
-    grid-template-columns: 1fr;
-    gap: $spacing-4;
-  }
-}
-
-// Stats Grid
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: $spacing-4;
-  margin: $spacing-6 0;
-
-  .stat-number {
-    font-size: 2.5rem;
-    font-weight: $font-weight-bold;
-    color: $primary-color;
-    line-height: 1;
-  }
-
-  .stat-label {
-    font-size: 1rem;
-    color: $text-secondary;
-    margin-top: $spacing-2;
-  }
-}
-
-// Testimonials
-.testimonials-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: $spacing-6;
-  margin: $spacing-8 0;
-}
-
-.text {
-  &--quote {
-    font-style: italic;
-    font-size: 1.125rem;
-    line-height: 1.6;
-    margin-bottom: $spacing-4;
-  }
-
-  &--cite {
-    font-size: 0.875rem;
-    color: $text-secondary;
-    font-weight: $font-weight-medium;
-  }
-}
-
-// CTA Section
-.cta {
-  text-align: center;
-  padding: $spacing-8 0;
-  background: $gray-50;
-  border-radius: $border-radius;
-  margin: $spacing-8 0;
-
-  &__actions {
-    margin-top: $spacing-6;
-    display: flex;
-    gap: $spacing-4;
-    justify-content: center;
-
-    @media (max-width: #{$breakpoint-sm - 1px}) {
-      flex-direction: column;
-      align-items: center;
-    }
-  }
-}
-
-// Pricing Hero
-.pricing-hero {
-  text-align: center;
-  padding: $spacing-6 0 $spacing-4;
-}
-
-// Features List (for institution page)
-.features-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: $spacing-6;
-  margin: $spacing-6 0;
-}
-
-// Badge
-.badge {
-  display: inline-block;
-  background: $accent-color;
-  color: $white;
-  padding: $spacing-1 $spacing-2;
-  border-radius: $border-radius;
-  font-size: 0.75rem;
-  font-weight: $font-weight-bold;
-  text-transform: uppercase;
 }
 
 // Button Modifiers

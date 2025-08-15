@@ -6,8 +6,8 @@
     <title>Sign Up - Neptino</title>
     <link rel="stylesheet" href="/src/scss/main.scss" />
   </head>
-  <body class="body grid">
-    <header class="header grid__header">
+  <body class="signup grid grid--signup">
+    <header class="signup__header card card--signup">
       <nav class="nav">
         <div class="nav__logo-section">
           <a href="/" class="logo logo--header">
@@ -33,14 +33,14 @@
       </nav>
     </header>
 
-    <main class="main grid__main">
-      <div class="auth-form">
-        <header class="auth-form__header">
+    <main class="signup__main card card--signup">
+      <div class="signup__form card card--signup auth-form">
+        <header class="signup__form-header card card--signup">
           <h1 class="heading heading--primary">Join Neptino</h1>
           <p class="text text--lead">Create your account to get started</p>
         </header>
 
-        <form class="form" id="signup-form" method="post" action="#">
+        <form class="signup__form-body form" id="signup-form" method="post" action="#">
           <div class="form__group">
             <label for="first-name" class="form__label">First name</label>
             <input
@@ -107,7 +107,7 @@
           </button>
         </form>
 
-        <footer class="auth-form__footer">
+        <footer class="signup__form-footer card card--signup">
           <p class="text text--small">
             Already have an account?
             <a href="/src/pages/shared/signin.html" class="link link--primary"
@@ -118,7 +118,7 @@
       </div>
     </main>
 
-    <footer class="footer grid__footer">
+    <footer class="signup__footer card card--signup">
       <nav class="nav nav--footer">
         <div class="nav__logo-section">
           <a href="/" class="logo logo--footer">
