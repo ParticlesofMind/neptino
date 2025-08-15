@@ -1,0 +1,535 @@
+@use "../abstracts/variables" as *;
+
+// ==========================================================================
+// TEMPLATES - BEM Architecture
+// ==========================================================================
+
+// Template - Main Block
+.template {
+  display: flex;
+  gap: $spacing-6;
+  height: 100%;
+  background: $gray-50;
+  
+  // Element: Configuration area
+  &__config {
+    flex: 0 0 350px;
+    background: $white;
+    border-radius: $border-radius;
+    border: 1px solid $gray-200;
+    overflow-y: auto;
+    
+    &-placeholder {
+      padding: $spacing-6;
+      text-align: center;
+      color: $text-secondary;
+    }
+  }
+  
+  // Element: Preview area  
+  &__preview {
+    flex: 1;
+    background: $white;
+    border-radius: $border-radius;
+    border: 1px solid $gray-200;
+    overflow-y: auto;
+    
+    &-container {
+      padding: $spacing-6;
+    }
+    
+    &-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      color: $text-secondary;
+      
+      &__title {
+        margin: 0 0 $spacing-2 0;
+        font-size: $font-size-xl;
+        color: $text-primary;
+      }
+      
+      &__text {
+        margin: 0;
+        font-size: $font-size-base;
+        line-height: $line-height-relaxed;
+        max-width: 400px;
+      }
+    }
+  }
+  
+  // Element: Individual template block
+  &__block {
+    margin-bottom: $spacing-4;
+    background: $white;
+    border-radius: $border-radius;
+    border: 1px solid $gray-200;
+    overflow: hidden;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    &-header {
+      padding: $spacing-3 $spacing-4;
+      background: $gray-100;
+      border-bottom: 1px solid $gray-200;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      
+      &__title {
+        margin: 0;
+        font-size: $font-size-base;
+        font-weight: $font-weight-semibold;
+        color: $text-primary;
+      }
+      
+      &__type {
+        font-size: $font-size-sm;
+        font-weight: $font-weight-medium;
+        color: $text-secondary;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+    }
+    
+    &-content {
+      padding: $spacing-4;
+    }
+  }
+  
+  // Element: Block configuration
+  &__config-block {
+    margin-bottom: $spacing-4;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    &-header {
+      display: flex;
+      align-items: center;
+      gap: $spacing-3;
+      margin-bottom: $spacing-3;
+      
+      &__title {
+        margin: 0;
+        font-size: $font-size-base;
+        font-weight: $font-weight-semibold;
+        color: $text-primary;
+      }
+    }
+    
+    &-fields {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: $spacing-2;
+      padding: $spacing-3;
+      background: $gray-50;
+      border-radius: $border-radius-sm;
+      border: 1px solid $gray-200;
+    }
+  }
+  
+  // Element: Form field
+  &__field {
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+    padding: $spacing-2;
+    border-radius: $border-radius-sm;
+    transition: background-color 0.2s ease;
+    
+    &-checkbox {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid $gray-300;
+      border-radius: 3px;
+      background: $white;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+      
+      &:checked {
+        background: $primary-color;
+        border-color: $primary-color;
+        
+        &::after {
+          content: "✓";
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          color: white;
+          font-size: 10px;
+          font-weight: bold;
+        }
+      }
+      
+      &:disabled {
+        background: $gray-100;
+        border-color: $gray-200;
+        cursor: not-allowed;
+        
+        &:checked {
+          background: $gray-400;
+          border-color: $gray-400;
+        }
+      }
+      
+      &:hover:not(:disabled) {
+        border-color: $primary-color;
+      }
+      
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+      }
+    }
+    
+    &-label {
+      font-size: $font-size-sm;
+      color: $text-primary;
+      cursor: pointer;
+      user-select: none;
+      
+      &--checked {
+        color: $primary-color;
+        font-weight: $font-weight-medium;
+      }
+      
+      &--disabled {
+        color: $text-muted;
+        cursor: not-allowed;
+      }
+    }
+    
+    // Modifier: Required field
+    &--required {
+      .template__field-label::after {
+        content: " *";
+        color: $error;
+      }
+    }
+  }
+  
+  // Element: Hierarchical structure
+  &__structure {
+    padding: $spacing-4;
+    
+    &-level {
+      margin-bottom: $spacing-3;
+      padding: $spacing-3;
+      border-radius: $border-radius;
+      font-weight: $font-weight-medium;
+      color: $text-primary;
+      background: $gray-100;
+      border: 1px solid $gray-300;
+      
+      &--primary {
+        font-size: $font-size-base;
+        margin-left: 0;
+        // No hover effects for primary (Topic)
+      }
+      
+      &--secondary {
+        font-size: calc(#{$font-size-base} * 0.9);
+        margin-left: $spacing-4;
+        
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+          transition: all 0.2s ease;
+        }
+      }
+      
+      &--tertiary {
+        font-size: calc(#{$font-size-base} * 0.85);
+        margin-left: $spacing-8;
+        padding: $spacing-2;
+        
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+          transition: all 0.2s ease;
+        }
+      }
+      
+      &--quaternary {
+        font-size: calc(#{$font-size-base} * 0.8);
+        margin-left: $spacing-12;
+        padding: $spacing-2;
+        color: $text-secondary;
+        font-weight: $font-weight-normal;
+        
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+          transition: all 0.2s ease;
+        }
+      }
+    }
+    
+    &-fields {
+      margin-top: $spacing-4;
+      
+      .content-field {
+        margin-bottom: $spacing-2;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+  
+  // Element: Preview fields grid
+  &__preview-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: $spacing-2;
+    
+    &-item {
+      padding: $spacing-2 $spacing-3;
+      background: $gray-50;
+      border: 1px solid $gray-200;
+      border-radius: $border-radius-sm;
+      text-align: center;
+      
+      &__label {
+        font-size: $font-size-sm;
+        color: $text-secondary;
+        font-weight: $font-weight-medium;
+      }
+    }
+  }
+  
+  // Element: Glossary table
+  &__glossary {
+    margin-top: $spacing-4;
+    padding: $spacing-3;
+    background: $gray-50;
+    border-radius: $border-radius-sm;
+    border: 1px solid $gray-200;
+    
+    &-title {
+      margin: 0 0 $spacing-3 0;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    &-table {
+      border: 1px solid $gray-300;
+      border-radius: $border-radius-sm;
+      overflow: hidden;
+      background: $white;
+      
+      &__header {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: $gray-100;
+        border-bottom: 1px solid $gray-300;
+      }
+      
+      &__header-cell {
+        padding: $spacing-2 $spacing-3;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-semibold;
+        color: $text-primary;
+        text-align: left;
+        border-right: 1px solid $gray-300;
+        
+        &:last-child {
+          border-right: none;
+        }
+      }
+      
+      &__row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-bottom: 1px solid $gray-200;
+        
+        &:last-child {
+          border-bottom: none;
+        }
+        
+        &:hover {
+          background: $gray-50;
+        }
+      }
+      
+      &__cell {
+        padding: $spacing-2 $spacing-3;
+        font-size: $font-size-sm;
+        color: $text-secondary;
+        border-right: 1px solid $gray-200;
+        
+        &:last-child {
+          border-right: none;
+          color: $text-muted;
+          font-style: italic;
+        }
+      }
+    }
+  }
+  
+  // Element: Resource table  
+  &__resource-table {
+    border: 1px solid $gray-200;
+    border-radius: $border-radius-sm;
+    overflow: hidden;
+    
+    &__row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: $spacing-2;
+      padding: $spacing-3;
+    }
+    
+    &__cell {
+      padding: $spacing-2;
+      background: $gray-50;
+      border-radius: $border-radius-sm;
+      font-size: $font-size-sm;
+      color: $text-secondary;
+      text-align: center;
+      border: 1px solid $gray-200;
+    }
+  }
+}
+
+// Template Modal - Separate Block
+.template-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  
+  &--active {
+    display: flex;
+  }
+  
+  // Element: Modal content
+  &__content {
+    background: $white;
+    border-radius: $border-radius;
+    padding: $spacing-6;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    
+    &--large {
+      width: 800px;
+    }
+    
+    &--extra-large {
+      width: 1200px;
+    }
+  }
+  
+  // Element: Modal header
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-4;
+    padding-bottom: $spacing-4;
+    border-bottom: 1px solid $gray-200;
+    
+    h3 {
+      margin: 0;
+      color: $text-primary;
+    }
+    
+    button {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: $text-secondary;
+      
+      &:hover {
+        color: $text-primary;
+      }
+    }
+  }
+  
+  // Element: Modal body
+  &__body {
+    margin-bottom: $spacing-4;
+  }
+}
+
+// Responsive Design
+@media (max-width: #{$breakpoint-lg - 1px}) {
+  .template {
+    flex-direction: column;
+    gap: $spacing-4;
+    
+    &__config {
+      flex: none;
+      max-height: 300px;
+    }
+    
+    &__preview {
+      flex: 1;
+      min-height: 400px;
+    }
+  }
+}
+
+@media (max-width: #{$breakpoint-md - 1px}) {
+  .template {
+    &__config-block-fields {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    &__preview-fields {
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    }
+  }
+}
+
+@media (max-width: #{$breakpoint-sm - 1px}) {
+  .template {
+    gap: $spacing-3;
+    
+    &__config-block-fields {
+      grid-template-columns: 1fr;
+    }
+    
+    &__preview-fields {
+      grid-template-columns: 1fr;
+    }
+    
+    &__structure-level {
+      &--secondary {
+        margin-left: $spacing-2;
+      }
+      
+      &--tertiary {
+        margin-left: $spacing-4;
+      }
+      
+      &--quaternary {
+        margin-left: $spacing-6;
+      }
+    }
+  }
+}

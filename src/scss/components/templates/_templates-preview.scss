@@ -148,6 +148,197 @@
   &__content {
     padding: $spacing-4;
 
+    // Better styling for preview fields (replaces preview tables)
+    .preview-fields {
+      &__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: $spacing-2;
+      }
+    }
+    
+    .preview-field {
+      padding: $spacing-2 $spacing-3;
+      background: $gray-50;
+      border: 1px solid $gray-200;
+      border-radius: $border-radius-sm;
+      text-align: center;
+      
+      &__label {
+        font-size: $font-size-sm;
+        color: $text-secondary;
+        font-weight: $font-weight-medium;
+      }
+    }
+
+    // Template preview glossary styling
+    .template-preview-glossary {
+      margin-top: $spacing-4;
+      padding: $spacing-3;
+      background: $gray-50;
+      border-radius: $border-radius-sm;
+      border: 1px solid $gray-200;
+      
+      &__title {
+        margin: 0 0 $spacing-3 0;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-semibold;
+        color: $text-primary;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+    }
+    
+    .template-preview-table {
+      border: 1px solid $gray-300;
+      border-radius: $border-radius-sm;
+      overflow: hidden;
+      background: $white;
+      
+      &__header {
+        display: grid;
+        grid-template-columns: 1fr 1fr; // Equal columns for Type and URL
+        background: $gray-100;
+        border-bottom: 1px solid $gray-300;
+      }
+      
+      &__column-header {
+        padding: $spacing-2 $spacing-3;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-semibold;
+        color: $text-primary;
+        text-align: left;
+        border-right: 1px solid $gray-300;
+        
+        &:last-child {
+          border-right: none;
+        }
+      }
+      
+      &__row {
+        display: grid;
+        grid-template-columns: 1fr 1fr; // Equal columns for Type and URL
+        border-bottom: 1px solid $gray-200;
+        
+        &:last-child {
+          border-bottom: none;
+        }
+        
+        &:hover {
+          background: $gray-50;
+        }
+      }
+      
+      &__cell {
+        padding: $spacing-2 $spacing-3;
+        font-size: $font-size-sm;
+        color: $text-secondary;
+        border-right: 1px solid $gray-200;
+        
+        &:last-child {
+          border-right: none;
+          color: $text-muted;
+          font-style: italic;
+        }
+      }
+    }
+
+    // Legacy preview table styling (kept for compatibility)
+    .preview-table {
+      border: 1px solid $gray-200;
+      border-radius: $border-radius-sm;
+      overflow: hidden;
+      
+      &__header {
+        display: none; // Hide the redundant header row
+      }
+      
+      &__row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: $spacing-2;
+        padding: $spacing-3;
+      }
+      
+      &__cell {
+        padding: $spacing-2;
+        background: $gray-50;
+        border-radius: $border-radius-sm;
+        font-size: $font-size-sm;
+        color: $text-secondary;
+        text-align: center;
+        border: 1px solid $gray-200;
+      }
+    }
+
+    // Template structure styling (for nested content)
+    .template-structure {
+      &__level {
+        margin-bottom: $spacing-3;
+        padding: $spacing-3;
+        border-radius: $border-radius;
+        font-weight: $font-weight-medium;
+        color: $text-primary;
+        background: $gray-100;
+        border: 1px solid $gray-300;
+        
+        &--primary {
+          font-size: $font-size-base;
+          margin-left: 0;
+          // No hover effects for primary (Topic)
+        }
+        
+        &--secondary {
+          font-size: calc(#{$font-size-base} * 0.9);
+          margin-left: $spacing-4;
+          
+          &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+          }
+        }
+        
+        &--tertiary {
+          font-size: calc(#{$font-size-base} * 0.85);
+          margin-left: $spacing-8;
+          padding: $spacing-2;
+          
+          &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+          }
+        }
+        
+        &--quaternary {
+          font-size: calc(#{$font-size-base} * 0.8);
+          margin-left: $spacing-12;
+          padding: $spacing-2;
+          color: $text-secondary;
+          font-weight: $font-weight-normal;
+          
+          &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+          }
+        }
+      }
+      
+      &__content-fields {
+        margin-top: $spacing-4;
+        
+        .content-field {
+          margin-bottom: $spacing-2;
+          
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
+    }
+
     // Modifier: Content type variations
     &--text {
       .content-preview {

@@ -7,8 +7,6 @@
 
 // Template Structure - Main Block
 .template-structure {
-  border: 1px solid $gray-200;
-  border-radius: $border-radius;
   background: $white;
   overflow: hidden;
   padding: $spacing-4;
@@ -57,25 +55,42 @@
       font-weight: $font-weight-semibold;
       font-size: $font-size-base;
       margin-left: 0;
-      background: $primary-color;
-      color: white;
+      background: $gray-100;
+      color: $text-primary;
+      border: 1px solid $gray-300;
+      padding: $spacing-3;
       
-      &:hover {
-        background: color.scale($primary-color, $lightness: -10%);
-      }
+      // No hover effects for primary level (Topic)
     }
 
     &--secondary {
       font-weight: $font-weight-semibold;
       margin-left: $spacing-6;
-      background: rgba($primary-color, 0.1);
-      color: $primary-color;
+      background: $gray-100;
+      color: $text-primary;
+      border: 1px solid $gray-300;
+      padding: $spacing-3;
+      font-size: calc(#{$font-size-base} * 0.9);
+      
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        transition: all 0.2s ease;
+      }
     }
 
     &--tertiary {
       font-weight: $font-weight-medium;
       margin-left: $spacing-12;
-      background: $gray-50;
+      background: $gray-100;
+      padding: $spacing-2;
+      font-size: calc(#{$font-size-base} * 0.85);
+      
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        transition: all 0.2s ease;
+      }
     }
 
     &--quaternary {
