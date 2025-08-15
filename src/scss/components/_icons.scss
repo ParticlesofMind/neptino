@@ -1,6 +1,34 @@
 // ==========================================================================
-// ICONS - Universal Neumorphic Design System
+// ICONS - Universal Neumorphic Design System with BEM Methodology
 // ==========================================================================
+@use "../abstracts/variables" as vars;
+
+// ==========================================================================
+// MIXINS - Size variations to avoid repetition
+// ==========================================================================
+@mixin icon-size-small {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0.5rem;
+}
+
+@mixin icon-size-medium {
+  width: 3rem;
+  height: 3rem;
+  padding: 0.75rem;
+}
+
+@mixin icon-size-large {
+  width: 3.5rem;
+  height: 3.5rem;
+  padding: 1rem;
+}
+
+@mixin icon-size-xl {
+  width: 4rem;
+  height: 4rem;
+  padding: 1.25rem;
+}
 
 .icon {
   display: inline-flex;
@@ -30,7 +58,51 @@
                 inset -10px -10px 30px #ffffff;
   }
   
-  // Selected state
+  // ==========================================================================
+  // MODIFIERS - Size variations
+  // ==========================================================================
+  
+  &--small {
+    @include icon-size-small;
+    box-shadow: 15px 15px 45px #d5d5d5,
+                -15px -15px 45px #ffffff;
+    
+    &:hover {
+      box-shadow: 17px 17px 50px #d5d5d5,
+                  -17px -17px 50px #ffffff;
+    }
+  }
+  
+  &--medium {
+    @include icon-size-medium;
+  }
+  
+  &--large {
+    @include icon-size-large;
+    box-shadow: 25px 25px 70px #d5d5d5,
+                -25px -25px 70px #ffffff;
+    
+    &:hover {
+      box-shadow: 27px 27px 75px #d5d5d5,
+                  -27px -27px 75px #ffffff;
+    }
+  }
+  
+  &--xl {
+    @include icon-size-xl;
+    box-shadow: 30px 30px 80px #d5d5d5,
+                -30px -30px 80px #ffffff;
+    
+    &:hover {
+      box-shadow: 32px 32px 85px #d5d5d5,
+                  -32px -32px 85px #ffffff;
+    }
+  }
+  
+  // ==========================================================================
+  // MODIFIERS - State variations
+  // ==========================================================================
+  
   &--selected {
     background: #e8e8e8;
     box-shadow: inset 15px 15px 45px #d5d5d5,
@@ -42,50 +114,101 @@
                   inset -18px -18px 50px #ffffff;
     }
   }
+}
+
+// ==========================================================================
+// COURSEBUILDER ICON STYLING - Glassmorphism Icons with BEM
+// ==========================================================================
+
+// Icon wrapper container for icon + label styling
+.icon-wrapper {
+  display: grid;
+  grid-template-rows: auto auto;
+  place-items: center;
+  gap: vars.$spacing-1;
+  cursor: pointer;
+  transition: all 0.3s ease;
   
-  // Base icon sizes
-  &--small {
-    width: 2.5rem;
-    height: 2.5rem;
-    padding: 0.5rem;
-    box-shadow: 15px 15px 45px #d5d5d5,
-                -15px -15px 45px #ffffff;
+  // Make sure icon and span are perfectly aligned
+  .icon {
+    grid-row: 1;
+    justify-self: center;
+  }
+  
+  // Icon wrapper selected state
+  &--selected {
+    .icon-name {
+      color: vars.$primary-color;
+      font-weight: vars.$font-weight-semibold;
+    }
+  }
+}
+
+// Icon name element
+.icon-name {
+  font-size: calc(vars.$font-size-xs * 0.9); // Slightly smaller
+  color: vars.$text-secondary;
+  text-align: center;
+  font-weight: vars.$font-weight-medium;
+  white-space: nowrap;
+  transition: color 0.3s ease;
+  line-height: 1.2; // Tight line height for better alignment
+}
+
+// Coursebuilder context - Override universal icon styles
+.coursebuilder {
+  .icon {
+    width: 40px;
+    height: 40px;
+    padding: 5px;
+    border-radius: vars.$border-radius-lg;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    // Override universal icon styles for coursebuilder context
+    box-shadow: none;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    
+    // Default SVG stroke color
+    svg, path {
+      stroke: vars.$text-secondary;
+      transition: stroke 0.3s ease;
+    }
     
     &:hover {
-      box-shadow: 17px 17px 50px #d5d5d5,
-                  -17px -17px 50px #ffffff;
+      border-color: rgba(128, 128, 128, 0.35);
+      transform: translateY(-1px);
+      box-shadow: 
+        8px 8px 16px #d5d5d5,
+        -8px -8px 16px #ffffff,
+        0 2px 8px rgba(128, 128, 128, 0.2);
+    }
+    
+    // ==========================================================================
+    // COURSEBUILDER ICON MODIFIERS - State variations
+    // ==========================================================================
+    
+    &--selected {
+      background: vars.$primary-color;
+      box-shadow: 
+        inset 8px 8px 16px rgba(vars.$primary-color, 0.3),
+        inset -8px -8px 16px rgba(255, 255, 255, 0.8),
+        0 4px 12px rgba(vars.$primary-color, 0.4);
+      border: 1px solid rgba(vars.$primary-color, 0.6);
+      
+      // White stroke for selected icons
+      svg, path {
+        stroke: white;
+        fill: white;
+      }
     }
   }
   
-  &--medium {
-    width: 3rem;
-    height: 3rem;
-    padding: 0.75rem;
-  }
-  
-  &--large {
-    width: 3.5rem;
-    height: 3.5rem;
-    padding: 1rem;
-    box-shadow: 25px 25px 70px #d5d5d5,
-                -25px -25px 70px #ffffff;
+  // Coursebuilder-specific icon class
+  .coursebuilder-icon {
+    @extend .icon;
     
-    &:hover {
-      box-shadow: 27px 27px 75px #d5d5d5,
-                  -27px -27px 75px #ffffff;
-    }
-  }
-  
-  &--xl {
-    width: 4rem;
-    height: 4rem;
-    padding: 1.25rem;
-    box-shadow: 30px 30px 80px #d5d5d5,
-                -30px -30px 80px #ffffff;
-    
-    &:hover {
-      box-shadow: 32px 32px 85px #d5d5d5,
-                  -32px -32px 85px #ffffff;
+    &--selected {
+      @extend .icon--selected;
     }
   }
 }

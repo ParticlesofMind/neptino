@@ -5,18 +5,16 @@
 // ==========================================================================
 .tool-settings {
   display: none;
-  padding: vars.$spacing-3;
+
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.05),
-    inset 0 1px 2px rgba(255, 255, 255, 0.3);
 
   &--active {
-    display: flex;
+    display: grid;
+    grid-auto-flow: column;
   }
 
   label {
@@ -53,31 +51,7 @@
     margin-right: vars.$spacing-3;
   }
   
-  // Shape icon specific styling
-  .icon--shape {
-    padding: 6px;
-    margin: 0 4px;
-    box-shadow: 8px 8px 16px #d5d5d5,
-                -8px -8px 16px #ffffff;
-    
-    &:hover {
-      transform: translateY(-1px);
-      box-shadow: 10px 10px 20px #d5d5d5,
-                  -10px -10px 20px #ffffff;
-    }
-    
-    &--active {
-      background: #f0f4ff;
-      box-shadow: inset 6px 6px 12px #d5d5d5,
-                  inset -6px -6px 12px #ffffff;
-      
-      &:hover {
-        transform: translateY(0);
-        box-shadow: inset 8px 8px 16px #d5d5d5,
-                    inset -8px -8px 16px #ffffff;
-      }
-    }
-  }
+
 }
 
 .settings-section {

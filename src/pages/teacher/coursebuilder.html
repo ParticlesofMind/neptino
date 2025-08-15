@@ -21,8 +21,82 @@
 
       <div class="nav__center-section">
         <a href="/src/pages/teacher/home.html" class="logo logo--header">
-          <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image" />
+          <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image">
         </a>
+      </div>
+
+      <div class="nav__right-section">
+        <button class="btn-secondary btn-sm" onclick="window.location.href='/src/pages/shared/signin.html'">
+          Log Out
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content with full height handling -->
+    <main class="main-content coursebuilder-page">
+      <div class="coursebuilder">
+        <div class="coursebuilder__modes">
+          <div class="icon-wrapper">
+            <img src="/src/assets/icons/coursebuilder/modes/mode-build.svg" class="icon icon--medium" data-mode="build">
+            <span class="icon-name">Build</span>
+          </div>
+          <div class="icon-wrapper">
+            <img src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" class="icon icon--medium"
+              data-mode="animate">
+            <span class="icon-name">Animate</span>
+          </div>
+          <div class="icon-wrapper">
+            <img src="/src/assets/icons/coursebuilder/modes/mode-workflow.svg" class="icon icon--medium"
+              data-mode="workflow">
+            <span class="icon-name">Workflow</span>
+          </div>
+          <div class="icon-wrapper">
+            <img src="/src/assets/icons/coursebuilder/modes/mode-optimize.svg" class="icon icon--medium"
+              data-mode="optimize">
+            <span class="icon-name">Optimize</span>
+          </div>
+        </div>
+
+        <div class="coursebuilder__media">
+          <div class="icon-wrapper">
+            <img src="/src/assets/icons/coursebuilder/media/media-files.svg" class="icon icon--medium"
+              data-media="files">
+            <span class="icon-name">My Files</span>
+          </div>
+
+          <div class="icon-wrapper">
+            <img src="/src/assets/icons/coursebuilder/media/media-image.svg" class="icon icon--medium"
+              data-media="images">
+            <span class="icon-name">Images</span>
+          </div>
+          <div class="icon-wrapper">
+            <img src="/src/assets/icons/coursebuilder/media/media-video.svg" class="icon icon--medium"
+              data-media="videos">
+            <span class="icon-name">Videos</span>
+          </div>
+          <div class="icon-wrapper">
+            <img src="/src/assets/icons/coursebuilder/media/media-audio.svg" class="icon icon--medium"
+              data-media="audio">
+            <span class="icon-name">Audio</span>
+          </div>
+          <div class="icon-wrapper">
+            <img src="/src/assets/icons/coursebuilder/media/media-text.svg" class="icon icon--medium" data-media="text">
+            <span class="icon-name">Text</span>
+          </div>
+
+          <div class="icon-wrapper">
+            <img src="/src/assets/icons/coursebuilder/media/media-table.svg" class="icon icon--medium"
+              data-media="tables">
+            <span class="icon-name">Tables</span>
+          </div>
+
+
+          <div class="icon-wrapper">
+            <img src="/src/assets/icons/coursebuilder/media/media-plugins.svg" class="icon icon--medium"
+              data-media="plugins">
+            <span class="icon-name">Plugins</span>
+          </div>
+        </div>
       </div>
 
       <div class="nav__right-section">
@@ -751,48 +825,65 @@
       <div class="coursebuilder">
         <div class="coursebuilder__modes">
           <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/modes/mode-build.svg" class="icon icon--mode"
-              data-mode="build">
+            <img src="/src/assets/icons/coursebuilder/modes/mode-build.svg" class="icon icon--medium" data-mode="build">
             <span class="icon-name">Build</span>
           </div>
           <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" class="icon icon--mode" data-mode="animate">
+            <img src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" class="icon icon--medium"
+              data-mode="animate">
             <span class="icon-name">Animate</span>
           </div>
           <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/modes/mode-workflow.svg" class="icon icon--mode"
+            <img src="/src/assets/icons/coursebuilder/modes/mode-workflow.svg" class="icon icon--medium"
               data-mode="workflow">
             <span class="icon-name">Workflow</span>
           </div>
           <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/modes/mode-optimize.svg" class="icon icon--mode"
+            <img src="/src/assets/icons/coursebuilder/modes/mode-optimize.svg" class="icon icon--medium"
               data-mode="optimize">
             <span class="icon-name">Optimize</span>
           </div>
         </div>
 
         <div class="coursebuilder__media">
+
           <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-image.svg" class="icon icon--media" data-media="images">
+            <img src="/src/assets/icons/coursebuilder/media/media-files.svg" class="icon icon--medium"
+              data-media="files">
+            <span class="icon-name">My Files</span>
+          </div>
+
+          <div class="icon-wrapper">
+            <img src="/src/assets/icons/coursebuilder/media/media-image.svg" class="icon icon--medium"
+              data-media="images">
             <span class="icon-name">Images</span>
           </div>
           <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-video.svg" class="icon icon--media" data-media="videos">
+            <img src="/src/assets/icons/coursebuilder/media/media-video.svg" class="icon icon--medium"
+              data-media="videos">
             <span class="icon-name">Videos</span>
           </div>
           <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-audio.svg" class="icon icon--media" data-media="audio">
+            <img src="/src/assets/icons/coursebuilder/media/media-audio.svg" class="icon icon--medium"
+              data-media="audio">
             <span class="icon-name">Audio</span>
           </div>
           <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-text.svg" class="icon icon--media" 
-              data-media="text">
+            <img src="/src/assets/icons/coursebuilder/media/media-text.svg" class="icon icon--medium" data-media="text">
             <span class="icon-name">Text</span>
           </div>
+
           <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-extension.svg" class="icon icon--media" 
-              data-media="extension">
-            <span class="icon-name">Extensions</span>
+            <img src="/src/assets/icons/coursebuilder/media/media-table.svg" class="icon icon--medium"
+              data-media="tables">
+            <span class="icon-name">Tables</span>
+          </div>
+
+
+          <div class="icon-wrapper">
+            <img src="/src/assets/icons/coursebuilder/media/media-plugins.svg" class="icon icon--medium"
+              data-media="plugin">
+            <span class="icon-name">Plugins</span>
           </div>
         </div>
 
@@ -814,17 +905,17 @@
 
         <div class="coursebuilder__navigation">
           <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/navigation/navigation-bookmark.svg" class="icon icon--nav"
+            <img src="/src/assets/icons/coursebuilder/navigation/navigation-bookmark.svg" class="icon icon--medium"
               title="Bookmark">
             <span class="icon-name">Bookmark</span>
           </div>
           <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/navigation/navigation-toc.svg" class="icon icon--nav"
+            <img src="/src/assets/icons/coursebuilder/navigation/navigation-toc.svg" class="icon icon--medium"
               title="Page Settings">
             <span class="icon-name">Settings</span>
           </div>
           <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/navigation/navigation-thumbnail.svg" class="icon icon--nav"
+            <img src="/src/assets/icons/coursebuilder/navigation/navigation-thumbnail.svg" class="icon icon--medium"
               title="Thumbnail View">
             <span class="icon-name">Thumbnails</span>
           </div>
@@ -838,98 +929,94 @@
           <!-- Tool Selection -->
           <div class="coursebuilder__tools--selection">
             <div class="icon-wrapper">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" class="icon icon--tool"
+              <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" class="icon icon--medium"
                 data-tool="select">
               <span class="icon-name">Select</span>
             </div>
             <div class="icon-wrapper">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" class="icon icon--tool" data-tool="pen">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" class="icon icon--medium" data-tool="pen">
               <span class="icon-name">Pen</span>
             </div>
             <div class="icon-wrapper">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" class="icon icon--tool" data-tool="brush">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" class="icon icon--medium" data-tool="brush">
               <span class="icon-name">Brush</span>
             </div>
             <div class="icon-wrapper">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" class="icon icon--tool" data-tool="text">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" class="icon icon--medium" data-tool="text">
               <span class="icon-name">Text</span>
             </div>
             <div class="icon-wrapper">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" class="icon icon--tool" data-tool="shapes">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" class="icon icon--medium"
+                data-tool="shapes">
               <span class="icon-name">Shapes</span>
             </div>
             <div class="icon-wrapper">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" class="icon icon--tool" data-tool="eraser">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" class="icon icon--medium"
+                data-tool="eraser">
               <span class="icon-name">Eraser</span>
             </div>
           </div>
 
           <div class="coursebuilder__tools--options">
             <!-- Tool options will be added here -->
-            
+
             <!-- Pen Tool Settings -->
             <div class="tool-settings" data-tool="pen">
               <input type="range" min="1" max="10" value="2" data-setting="size">
               <span class="size-display">2px</span>
             </div>
-            
+
             <!-- Text Tool Settings -->
             <div class="tool-settings" data-tool="text">
-     
+
               <select data-setting="fontFamily">
                 <option value="Arial">Arial</option>
                 <option value="Times">Times</option>
                 <option value="Helvetica">Helvetica</option>
               </select>
-         
+
               <input type="range" min="8" max="72" value="16" data-setting="fontSize">
               <span class="size-display">16px</span>
             </div>
-            
+
             <!-- Brush Tool Settings -->
             <div class="tool-settings" data-tool="brush">
               <label>Size:</label>
               <input type="range" min="5" max="50" value="10" data-setting="size">
               <span class="size-display">10px</span>
-         
+
               <input type="range" min="0.1" max="1" step="0.1" value="1" data-setting="opacity">
               <span class="size-display">100%</span>
             </div>
-            
+
             <!-- Shapes Tool Settings -->
             <div class="tool-settings" data-tool="shapes">
-              <div class="shapes-selection">
                 <div class="icon-wrapper">
-                  <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-rectangle.svg" 
-                       class="icon icon--shape" 
-                       data-shape="rectangle" 
-                       alt="Rectangle">
+                  <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-rectangle.svg" class="icon icon--medium"
+                    data-shape="rectangle" alt="Rectangle">
                   <span class="icon-name">Rectangle</span>
                 </div>
                 <div class="icon-wrapper">
-                  <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-circle.svg" 
-                       class="icon icon--shape" 
-                       data-shape="circle" 
-                       alt="Circle">
+                  <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-circle.svg" class="icon icon--medium"
+                    data-shape="circle" alt="Circle">
                   <span class="icon-name">Circle</span>
                 </div>
                 <div class="icon-wrapper">
-                  <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-triangle.svg" 
-                       class="icon icon--shape" 
-                       data-shape="triangle" 
-                       alt="Triangle">
+                  <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-triangle.svg" class="icon icon--medium"
+                    data-shape="triangle" alt="Triangle">
                   <span class="icon-name">Triangle</span>
-                </div>
+         
               </div>
               <input type="range" min="1" max="10" value="2" data-setting="strokeWidth">
               <span class="size-display">2px</span>
             </div>
-            
+
             <!-- Eraser Tool Settings -->
             <div class="tool-settings" data-tool="eraser">
               <input type="range" min="5" max="50" value="20" data-setting="size">
               <span class="size-display">20px</span>
             </div>
+            
           </div>
         </div>
       </div>
