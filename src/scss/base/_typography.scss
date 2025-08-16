@@ -10,7 +10,7 @@
     --font-family-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
     --font-family-mono: 'Fira Code', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
 
-    // Font Sizes (5-Scale System - Natural Language)
+    // Font Sizes (5-Scale System - Simple rem values that scale with root font size)
     --font-size-extra-small: 0.875rem; // 14px
     --font-size-small: 1rem; // 16px
     --font-size-base: 1.125rem; // 18px (most regular text)
@@ -36,10 +36,11 @@
 // Typography Foundation Styles
 // ==========================================================================
 
-// Set default font for the entire document
+// Set responsive root font size - this scales all rem values automatically
 html {
+    // Responsive root font size: 14px on mobile, scales to 16px on desktop
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
     font-family: var(--font-family-primary);
-    font-size: var(--font-size-base);
     line-height: var(--line-height-normal);
     color: var(--color-text-primary);
 }

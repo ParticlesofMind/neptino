@@ -35,7 +35,7 @@
   --size-image-large: 8rem;            // 128px
   --size-image-extra-large: 12rem;     // 192px
 
-  // BUTTON SIZES (interactive elements)
+  // BUTTON SIZES (interactive elements - scale with root font size)
   // ==========================================================================
   --size-button-extra-small: 2rem;     // 32px
   --size-button-small: 2.25rem;        // 36px
@@ -43,7 +43,7 @@
   --size-button-large: 3rem;           // 48px
   --size-button-extra-large: 3.5rem;   // 56px
 
-  // INPUT SIZES (form elements)
+  // INPUT SIZES (form elements - scale with root font size)
   // ==========================================================================
   --size-input-extra-small: 2rem;      // 32px
   --size-input-small: 2.25rem;         // 36px

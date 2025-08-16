@@ -16,6 +16,9 @@
   cursor: pointer;
   transition: all 0.2s ease;
   
+  // Ensure minimum touch target size for mobile accessibility
+  min-height: var(--size-button-base);
+  
   &:focus {
     outline: 2px solid var(--color-primary-500);
     outline-offset: 2px;
@@ -73,11 +76,13 @@
   &--small {
     padding: var(--spacing-2) var(--spacing-4);
     font-size: var(--font-size-small);
+    min-height: var(--size-button-small);
   }
   
   &--large {
     padding: var(--spacing-4) var(--spacing-8);
     font-size: var(--font-size-large);
+    min-height: var(--size-button-large);
   }
   
   // State modifiers

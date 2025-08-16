@@ -1,0 +1,96 @@
+// ==========================================================================
+// RESPONSIVE TEXT UTILITIES - Fluid Typography Without Media Queries
+// ==========================================================================
+
+// Fluid text sizes for special use cases
+// Using viewport width (vw) with clamp() for smooth scaling
+.text {
+  // Responsive text sizes
+  &--fluid-xs {
+    font-size: clamp(0.625rem, 1.5vw, 0.75rem); // 10px - 12px
+  }
+  
+  &--fluid-sm {
+    font-size: clamp(0.75rem, 2vw, 0.875rem); // 12px - 14px
+  }
+  
+  &--fluid-base {
+    font-size: clamp(0.875rem, 2.5vw, 1rem); // 14px - 16px
+  }
+  
+  &--fluid-lg {
+    font-size: clamp(1rem, 3vw, 1.25rem); // 16px - 20px
+  }
+  
+  &--fluid-xl {
+    font-size: clamp(1.25rem, 4vw, 1.5rem); // 20px - 24px
+  }
+  
+  &--fluid-2xl {
+    font-size: clamp(1.5rem, 5vw, 2rem); // 24px - 32px
+  }
+  
+  &--fluid-3xl {
+    font-size: clamp(2rem, 6vw, 2.5rem); // 32px - 40px
+  }
+  
+  // Hero text - very responsive for landing pages
+  &--hero {
+    font-size: clamp(2rem, 8vw, 4rem); // 32px - 64px
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+  }
+  
+  // Display text - for section headers
+  &--display {
+    font-size: clamp(1.5rem, 6vw, 3rem); // 24px - 48px
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+  }
+  
+  // Subtitle text
+  &--subtitle {
+    font-size: clamp(1rem, 3.5vw, 1.5rem); // 16px - 24px
+    font-weight: var(--font-weight-medium);
+    line-height: var(--line-height-snug);
+  }
+  
+  // Caption text
+  &--caption {
+    font-size: clamp(0.75rem, 2vw, 0.875rem); // 12px - 14px
+    color: var(--color-text-secondary);
+    line-height: var(--line-height-normal);
+  }
+}
+
+// Container-based responsive text (scales with container width)
+.text-container {
+  // Use container queries if supported, fallback to viewport units
+  &--responsive {
+    font-size: clamp(0.875rem, 4cqw, 1.125rem);
+  }
+}
+
+// Touch-friendly text sizes for interactive elements
+.text-touch {
+  &--friendly {
+    font-size: clamp(1rem, 3vw, 1.25rem);
+    line-height: clamp(1.2, 3vw, 1.5);
+    // Ensure minimum 16px to prevent zoom on iOS
+    min-font-size: 1rem;
+  }
+}
+
+// Accessibility helpers
+.text-accessible {
+  // Ensures text never goes below 16px (prevents mobile zoom)
+  &--no-zoom {
+    font-size: clamp(1rem, 3vw, 1.125rem);
+  }
+  
+  // High contrast for better readability
+  &--high-contrast {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+  }
+}
