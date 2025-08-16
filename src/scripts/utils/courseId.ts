@@ -10,14 +10,14 @@
  * @returns Course ID if present in URL, null otherwise
  */
 export function getCourseId(): string | null {
-  const urlParams = new URLSearchParams(window.location.search);
-  const courseId = urlParams.get('courseId') || urlParams.get('id');
-  
-  if (courseId) {
-    console.log('🔍 Course ID detected from URL:', courseId);
-  }
-  
-  return courseId;
+ const urlParams = new URLSearchParams(window.location.search);
+ const courseId = urlParams.get('courseId') || urlParams.get('id');
+ 
+ if (courseId) {
+ console.log('🔍 Course ID detected from URL:', courseId);
+ }
+ 
+ return courseId;
 }
 
 /**
@@ -25,7 +25,7 @@ export function getCourseId(): string | null {
  * @returns True if no course ID is present
  */
 export function isNewCourseMode(): boolean {
-  return getCourseId() === null;
+ return getCourseId() === null;
 }
 
 /**
@@ -34,14 +34,14 @@ export function isNewCourseMode(): boolean {
  * @param section Optional section to navigate to (e.g., 'classification')
  */
 export function navigateToCourse(courseId: string, section?: string): void {
-  const url = new URL(window.location.href);
-  url.searchParams.set('courseId', courseId);
-  
-  if (section) {
-    url.hash = `#${section}`;
-  }
-  
-  window.location.href = url.toString();
+ const url = new URL(window.location.href);
+ url.searchParams.set('courseId', courseId);
+ 
+ if (section) {
+ url.hash = `#${section}`;
+ }
+ 
+ window.location.href = url.toString();
 }
 
 /**
@@ -51,21 +51,21 @@ export function navigateToCourse(courseId: string, section?: string): void {
  * @returns Promise that resolves to true if user has access
  */
 export async function validateCourseAccess(courseId: string): Promise<boolean> {
-  try {
-    // This would make a backend call to verify access
-    const { supabase } = await import('../backend/supabase.js');
-    
-    const { data, error } = await supabase
-      .from('courses')
-      .select('id')
-      .eq('id', courseId)
-      .single();
-      
-    return !error && data !== null;
-  } catch (error) {
-    console.error('Error validating course access:', error);
-    return false;
-  }
+ try {
+ // This would make a backend call to verify access
+ const { supabase } = await import('../backend/supabase.js');
+ 
+ const { data, error } = await supabase
+ .from('courses')
+ .select('id')
+ .eq('id', courseId)
+ .single();
+ 
+ return !error && data !== null;
+ } catch (error) {
+ console.error('Error validating course access:', error);
+ return false;
+ }
 }
 
 /**
@@ -73,17 +73,17 @@ export async function validateCourseAccess(courseId: string): Promise<boolean> {
  * @returns Promise that resolves to course ID if valid, null otherwise
  */
 export async function getValidatedCourseId(): Promise<string | null> {
-  const courseId = getCourseId();
-  
-  if (!courseId) {
-    return null;
-  }
-  
-  const hasAccess = await validateCourseAccess(courseId);
-  if (!hasAccess) {
-    console.warn('⚠️ User does not have access to course:', courseId);
-    return null;
-  }
-  
-  return courseId;
+ const courseId = getCourseId();
+ 
+ if (!courseId) {
+ return null;
+ }
+ 
+ const hasAccess = await validateCourseAccess(courseId);
+ if (!hasAccess) {
+ console.warn('⚠️ User does not have access to course:', courseId);
+ return null;
+ }
+ 
+ return courseId;
 }

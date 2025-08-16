@@ -1,217 +1,144 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>For Teachers - Neptino</title>
-    <link rel="stylesheet" href="/src/scss/main.scss" />
-  </head>
-  <body class="body grid">
-    <header class="header grid__header">
-      <nav class="nav">
-        <div class="nav__logo-section">
-          <a href="/" class="logo logo--header">
-            <img
-              src="/src/assets/logo/octopus-logo.png"
-              alt="Neptino Logo"
-              class="logo__image"
-            />
-          </a>
-        </div>
 
-        <div class="nav__links-section">
-          <ul class="list list--nav">
-            <li class="list__item">
-              <a
-                href="/src/pages/shared/teachers.html"
-                class="link link--nav link--active"
-                >For Teachers</a
-              >
-            </li>
-            <li class="list__item">
-              <a href="/src/pages/shared/students.html" class="link link--nav"
-                >For Students</a
-              >
-            </li>
-            <li class="list__item">
-              <a
-                href="/src/pages/shared/institutions.html"
-                class="link link--nav"
-                >For Institutions</a
-              >
-            </li>
-            <li class="list__item">
-              <a href="/src/pages/shared/pricing.html" class="link link--nav"
-                >Pricing</a
-              >
-            </li>
-          </ul>
-        </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>For Teachers - Neptino</title>
+  <link rel="stylesheet" href="/src/scss/main.scss" />
+</head>
 
-        <div class="nav__actions-section">
-          <a href="/src/pages/shared/signin.html" class="button button--primary"
-            >Sign In</a
-          >
-        </div>
-      </nav>
-    </header>
-
-    <main class="main grid__main">
-      <section class="hero">
-        <div class="hero__content">
-          <h1 class="heading heading--primary">
-            Empower Your Teaching with Neptino
-          </h1>
-          <p class="text text--lead">
-            Create engaging courses, track student progress, and streamline your
-            educational workflow with our comprehensive teaching platform.
+<body>
+  <header>
+    <nav>
+      <a href="/">
+        <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
+      </a>
+      <ul>
+        <li>
+          <a href="/src/pages/shared/teachers.html">For Teachers</a>
+        </li>
+        <li>
+          <a href="/src/pages/shared/students.html">For Students</a>
+        </li>
+        <li>
+          <a href="/src/pages/shared/institutions.html">For Institutions</a>
+        </li>
+        <li>
+          <a href="/src/pages/shared/pricing.html">Pricing</a>
+        </li>
+      </ul>
+      <a href="/src/pages/shared/signin.html">Sign In</a>
+    </nav>
+  </header>
+  <main>
+    <section>
+      <h1>
+        Empower Your Teaching with Neptino
+      </h1>
+      <p>
+        Create engaging courses, track student progress, and streamline your
+        educational workflow with our comprehensive teaching platform.
+      </p>
+      <div>
+        <a href="/src/pages/shared/signup.html">Start Teaching Today</a>
+        <a href="/src/pages/shared/pricing.html">View Plans</a>
+      </div>
+    </section>
+    <section>
+      <h2>Why Teachers Choose Neptino</h2>
+      <div>
+        <div>
+          <h3>Course Builder</h3>
+          <p>
+            Create comprehensive courses with our intuitive drag-and-drop
+            interface. Add multimedia content, quizzes, and interactive
+            elements effortlessly.
           </p>
-          <div class="hero__actions">
-            <a
-              href="/src/pages/shared/signup.html"
-              class="button button--primary"
-              >Start Teaching Today</a
-            >
-            <a
-              href="/src/pages/shared/pricing.html"
-              class="button button--secondary"
-              >View Plans</a
-            >
-          </div>
         </div>
-      </section>
-
-      <section class="features">
-        <h2 class="heading heading--secondary">Why Teachers Choose Neptino</h2>
-        <div class="features-grid">
-          <div class="card">
-            <div class="card__content">
-              <h3 class="heading heading--tertiary">Course Builder</h3>
-              <p class="text">
-                Create comprehensive courses with our intuitive drag-and-drop
-                interface. Add multimedia content, quizzes, and interactive
-                elements effortlessly.
-              </p>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card__content">
-              <h3 class="heading heading--tertiary">Student Analytics</h3>
-              <p class="text">
-                Track student progress with detailed analytics. Identify
-                learning gaps and provide personalized feedback to improve
-                outcomes.
-              </p>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card__content">
-              <h3 class="heading heading--tertiary">Assessment Tools</h3>
-              <p class="text">
-                Create and grade assignments automatically. Support for multiple
-                question types, rubrics, and instant feedback systems.
-              </p>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card__content">
-              <h3 class="heading heading--tertiary">Collaboration Hub</h3>
-              <p class="text">
-                Foster classroom discussions, group projects, and peer-to-peer
-                learning with integrated communication tools.
-              </p>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card__content">
-              <h3 class="heading heading--tertiary">Resource Library</h3>
-              <p class="text">
-                Access thousands of educational resources, templates, and
-                content created by fellow educators worldwide.
-              </p>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card__content">
-              <h3 class="heading heading--tertiary">Mobile Ready</h3>
-              <p class="text">
-                Teach from anywhere with our responsive design. Full
-                functionality on tablets and mobile devices for ultimate
-                flexibility.
-              </p>
-            </div>
-          </div>
+        <div>
+          <h3>Student Analytics</h3>
+          <p>
+            Track student progress with detailed analytics. Identify
+            learning gaps and provide personalized feedback to improve
+            outcomes.
+          </p>
         </div>
-      </section>
-
-      <section class="testimonial">
-        <div class="card">
-          <div class="card__content">
-            <blockquote class="text text--quote">
-              "Neptino has transformed how I teach. The course builder is
-              incredibly intuitive, and my students are more engaged than ever.
-              The analytics help me understand exactly where each student needs
-              support."
-            </blockquote>
-            <cite class="text text--cite"
-              >— Sarah Mitchell, High School Biology Teacher</cite
-            >
-          </div>
+        <div>
+          <h3>Assessment Tools</h3>
+          <p>
+            Create and grade assignments automatically. Support for multiple
+            question types, rubrics, and instant feedback systems.
+          </p>
         </div>
-      </section>
-
-      <section class="cta">
-        <h2 class="heading heading--secondary">
-          Ready to Transform Your Teaching?
-        </h2>
-        <p class="text text--lead">
-          Join thousands of educators who have already enhanced their teaching
-          with Neptino.
-        </p>
-        <div class="cta__actions">
-          <a href="/src/pages/shared/signup.html" class="button button--primary"
-            >Get Started Free</a
-          >
+        <div>
+          <h3>Collaboration Hub</h3>
+          <p>
+            Foster classroom discussions, group projects, and peer-to-peer
+            learning with integrated communication tools.
+          </p>
         </div>
-      </section>
-    </main>
-
-    <footer class="footer grid__footer">
-      <nav class="nav nav--footer">
-        <div class="nav__logo-section">
-          <a href="/" class="logo logo--footer">
-            <img
-              src="/src/assets/logo/octopus-logo.png"
-              alt="Neptino Logo"
-              class="logo__image logo__image--small"
-            />
-          </a>
+        <div>
+          <h3>Resource Library</h3>
+          <p>
+            Access thousands of educational resources, templates, and
+            content created by fellow educators worldwide.
+          </p>
         </div>
-
-        <div class="nav__links-section">
-          <ul class="list list--nav list--footer">
-            <li class="list__item">
-              <a href="#" class="link link--footer">Privacy Policy</a>
-            </li>
-            <li class="list__item">
-              <a href="#" class="link link--footer">Terms of Service</a>
-            </li>
-            <li class="list__item">
-              <a href="#" class="link link--footer">Support</a>
-            </li>
-            <li class="list__item">
-              <a href="#" class="link link--footer">Contact</a>
-            </li>
-          </ul>
+        <div>
+          <h3>Mobile Ready</h3>
+          <p>
+            Teach from anywhere with our responsive design. Full
+            functionality on tablets and mobile devices for ultimate
+            flexibility.
+          </p>
         </div>
-      </nav>
-    </footer>
+      </div>
+    </section>
+    <section>
+      <div>
+        <blockquote>
+          "Neptino has transformed how I teach. The course builder is
+          incredibly intuitive, and my students are more engaged than ever.
+          The analytics help me understand exactly where each student needs
+          support."
+        </blockquote>
+        <cite>— Sarah Mitchell, High School Biology Teacher</cite>
+      </div>
+    </section>
+    <section>
+      <h2>
+        Ready to Transform Your Teaching?
+      </h2>
+      <p>
+        Join thousands of educators who have already enhanced their teaching
+        with Neptino.
+      </p>
+      <a href="/src/pages/shared/signup.html">Get Started Free</a>
+    </section>
+  </main>
+  <footer>
+    <nav>
+      <a href="/">
+        <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
+      </a>
+      <ul>
+        <li>
+          <a href="#">Privacy Policy</a>
+        </li>
+        <li>
+          <a href="#">Terms of Service</a>
+        </li>
+        <li>
+          <a href="#">Support</a>
+        </li>
+        <li>
+          <a href="#">Contact</a>
+        </li>
+      </ul>
+    </nav>
+  </footer>
+  <script type="module" src="/src/scripts/app.ts"></script>
+</body>
 
-    <script type="module" src="/src/scripts/app.ts"></script>
-  </body>
 </html>

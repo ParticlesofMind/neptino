@@ -8,220 +8,219 @@ import { PageSettingsModal } from "../modals/PageSettingsModal";
 import { PageNavigationController } from "./PageNavigationController.js";
 
 export class PageManager {
-  private pages: Array<{
-    id: string;
-    name: string;
-    content: any;
-    description?: string;
-  }> = [];
-  private pageSettingsModal: PageSettingsModal;
-  private navigationController: PageNavigationController;
-  private onPageChangeCallback: ((page: any) => void) | null = null;
-  private onPageAddCallback: ((page: any) => void) | null = null;
+ private pages: Array<{
+ id: string;
+ name: string;
+ content: any;
+ description?: string;
+ }> = [];
+ private pageSettingsModal: PageSettingsModal;
+ private navigationController: PageNavigationController;
+ private onPageChangeCallback: ((page: any) => void) | null = null;
+ private onPageAddCallback: ((page: any) => void) | null = null;
 
-  constructor() {
-    this.pageSettingsModal = new PageSettingsModal();
-    this.navigationController = new PageNavigationController();
+ constructor() {
+ this.pageSettingsModal = new PageSettingsModal();
+ this.navigationController = new PageNavigationController();
 
-    this.initializeFirstPage();
-    this.bindCoreEvents();
-    this.setupNavigationCallbacks();
-  }
+ this.initializeFirstPage();
+ this.bindCoreEvents();
+ this.setupNavigationCallbacks();
+ }
 
-  /**
-   * Set callback for page changes
-   */
-  setOnPageChange(callback: (page: any) => void): void {
-    this.onPageChangeCallback = callback;
-  }
+ /**
+ * Set callback for page changes
+ */
+ setOnPageChange(callback: (page: any) => void): void {
+ this.onPageChangeCallback = callback;
+ }
 
-  /**
-   * Set callback for page additions
-   */
-  setOnPageAdd(callback: (page: any) => void): void {
-    this.onPageAddCallback = callback;
-  }
+ /**
+ * Set callback for page additions
+ */
+ setOnPageAdd(callback: (page: any) => void): void {
+ this.onPageAddCallback = callback;
+ }
 
-  /**
-   * Initialize the first page
-   */
-  private initializeFirstPage(): void {
-    const firstPage = {
-      id: this.generatePageId(),
-      name: "Page 1",
-      content: null,
-      description: "",
-    };
+ /**
+ * Initialize the first page
+ */
+ private initializeFirstPage(): void {
+ const firstPage = {
+ id: this.generatePageId(),
+ name: "Page 1",
+ content: null,
+ description: "",
+ };
 
-    this.pages.push(firstPage);
-    this.navigationController.setTotalPages(1);
-  }
+ this.pages.push(firstPage);
+ this.navigationController.setTotalPages(1);
+ }
 
-  /**
-   * Bind core page events
-   */
-  private bindCoreEvents(): void {
-    // Add page button
-    const addPageBtn = document.getElementById("add-page");
-    if (addPageBtn) {
-      addPageBtn.addEventListener("click", this.addNewPage.bind(this));
-    }
+ /**
+ * Bind core page events
+ */
+ private bindCoreEvents(): void {
+ // Add page button
+ const addPageBtn = document.getElementById("add-page");
+ if (addPageBtn) {
+ addPageBtn.addEventListener("click", this.addNewPage.bind(this));
+ }
 
-    // Page settings button
-    const pageSettingsBtn = document.getElementById("page-settings");
-    if (pageSettingsBtn) {
-      pageSettingsBtn.addEventListener(
-        "click",
-        this.openPageSettings.bind(this),
-      );
-    }
-  }
+ // Page settings button
+ const pageSettingsBtn = document.getElementById("page-settings");
+ if (pageSettingsBtn) {
+ pageSettingsBtn.addEventListener(
+ "click",
+ this.openPageSettings.bind(this),
+ );
+ }
+ }
 
-  /**
-   * Setup navigation controller callbacks
-   */
-  private setupNavigationCallbacks(): void {
-    this.navigationController.setOnPageChange((pageIndex: number) => {
-      const page = this.pages[pageIndex];
-      if (page && this.onPageChangeCallback) {
-        this.onPageChangeCallback(page);
-      }
-    });
-  }
+ /**
+ * Setup navigation controller callbacks
+ */
+ private setupNavigationCallbacks(): void {
+ this.navigationController.setOnPageChange((pageIndex: number) => {
+ const page = this.pages[pageIndex];
+ if (page && this.onPageChangeCallback) {
+ this.onPageChangeCallback(page);
+ }
+ });
+ }
 
-  /**
-   * Add a new page
-   */
-  addNewPage(): void {
-    const newPage = {
-      id: this.generatePageId(),
-      name: `Page ${this.pages.length + 1}`,
-      content: null,
-      description: "",
-    };
+ /**
+ * Add a new page
+ */
+ addNewPage(): void {
+ const newPage = {
+ id: this.generatePageId(),
+ name: `Page ${this.pages.length + 1}`,
+ content: null,
+ description: "",
+ };
 
-    this.pages.push(newPage);
-    this.navigationController.setTotalPages(this.pages.length);
-    this.navigationController.updatePageSelector(this.pages);
+ this.pages.push(newPage);
+ this.navigationController.setTotalPages(this.pages.length);
+ this.navigationController.updatePageSelector(this.pages);
 
-    // Switch to new page
-    this.navigationController.setCurrentPage(this.pages.length - 1);
+ // Switch to new page
+ this.navigationController.setCurrentPage(this.pages.length - 1);
 
+ // Trigger callbacks
+ if (this.onPageAddCallback) {
+ this.onPageAddCallback(newPage);
+ }
+ if (this.onPageChangeCallback) {
+ this.onPageChangeCallback(newPage);
+ }
+ }
 
-    // Trigger callbacks
-    if (this.onPageAddCallback) {
-      this.onPageAddCallback(newPage);
-    }
-    if (this.onPageChangeCallback) {
-      this.onPageChangeCallback(newPage);
-    }
-  }
+ /**
+ * Open page settings modal
+ */
+ async openPageSettings(): Promise<void> {
+ const currentPage = this.getCurrentPage();
+ if (!currentPage) return;
 
-  /**
-   * Open page settings modal
-   */
-  async openPageSettings(): Promise<void> {
-    const currentPage = this.getCurrentPage();
-    if (!currentPage) return;
+ try {
+ const updatedPage = await this.pageSettingsModal.show(currentPage);
 
-    try {
-      const updatedPage = await this.pageSettingsModal.show(currentPage);
+ // Update page data
+ Object.assign(currentPage, updatedPage);
+ this.navigationController.updatePageSelector(this.pages);
 
-      // Update page data
-      Object.assign(currentPage, updatedPage);
-      this.navigationController.updatePageSelector(this.pages);
+ } catch (error) {
+ }
+ }
 
-    } catch (error) {
-    }
-  }
+ /**
+ * Generate unique page ID
+ */
+ private generatePageId(): string {
+ return `page_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+ }
 
-  /**
-   * Generate unique page ID
-   */
-  private generatePageId(): string {
-    return `page_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
+ /**
+ * Get current page
+ */
+ getCurrentPage(): any {
+ const currentIndex = this.navigationController.getCurrentPageIndex();
+ return this.pages[currentIndex];
+ }
 
-  /**
-   * Get current page
-   */
-  getCurrentPage(): any {
-    const currentIndex = this.navigationController.getCurrentPageIndex();
-    return this.pages[currentIndex];
-  }
+ /**
+ * Get current page index
+ */
+ getCurrentPageIndex(): number {
+ return this.navigationController.getCurrentPageIndex();
+ }
 
-  /**
-   * Get current page index
-   */
-  getCurrentPageIndex(): number {
-    return this.navigationController.getCurrentPageIndex();
-  }
+ /**
+ * Get all pages
+ */
+ getAllPages(): Array<any> {
+ return [...this.pages];
+ }
 
-  /**
-   * Get all pages
-   */
-  getAllPages(): Array<any> {
-    return [...this.pages];
-  }
+ /**
+ * Get total page count
+ */
+ getPageCount(): number {
+ return this.pages.length;
+ }
 
-  /**
-   * Get total page count
-   */
-  getPageCount(): number {
-    return this.pages.length;
-  }
+ /**
+ * Remove page by index
+ */
+ removePage(pageIndex: number): void {
+ if (
+ pageIndex >= 0 &&
+ pageIndex < this.pages.length &&
+ this.pages.length > 1
+ ) {
+ this.pages.splice(pageIndex, 1);
 
-  /**
-   * Remove page by index
-   */
-  removePage(pageIndex: number): void {
-    if (
-      pageIndex >= 0 &&
-      pageIndex < this.pages.length &&
-      this.pages.length > 1
-    ) {
-      this.pages.splice(pageIndex, 1);
+ this.navigationController.setTotalPages(this.pages.length);
+ this.navigationController.updatePageSelector(this.pages);
 
-      this.navigationController.setTotalPages(this.pages.length);
-      this.navigationController.updatePageSelector(this.pages);
+ }
+ }
 
-    }
-  }
+ /**
+ * Save page content
+ */
+ savePageContent(content: any): void {
+ const currentPage = this.getCurrentPage();
+ if (currentPage) {
+ currentPage.content = content;
+ }
+ }
 
-  /**
-   * Save page content
-   */
-  savePageContent(content: any): void {
-    const currentPage = this.getCurrentPage();
-    if (currentPage) {
-      currentPage.content = content;
-    }
-  }
+ /**
+ * Get page by ID
+ */
+ getPageById(pageId: string): any {
+ return this.pages.find((page) => page.id === pageId);
+ }
 
-  /**
-   * Get page by ID
-   */
-  getPageById(pageId: string): any {
-    return this.pages.find((page) => page.id === pageId);
-  }
+ /**
+ * Update page name
+ */
+ updatePageName(pageIndex: number, name: string): void {
+ if (pageIndex >= 0 && pageIndex < this.pages.length) {
+ this.pages[pageIndex].name = name;
+ this.navigationController.updatePageSelector(this.pages);
+ }
+ }
 
-  /**
-   * Update page name
-   */
-  updatePageName(pageIndex: number, name: string): void {
-    if (pageIndex >= 0 && pageIndex < this.pages.length) {
-      this.pages[pageIndex].name = name;
-      this.navigationController.updatePageSelector(this.pages);
-    }
-  }
-
-  /**
-   * Cleanup
-   */
-  destroy(): void {
-    this.pageSettingsModal.destroy();
-    this.navigationController.destroy();
-    this.onPageChangeCallback = null;
-    this.onPageAddCallback = null;
-  }
+ /**
+ * Cleanup
+ */
+ destroy(): void {
+ this.pageSettingsModal.destroy();
+ this.navigationController.destroy();
+ this.onPageChangeCallback = null;
+ this.onPageAddCallback = null;
+ }
 }

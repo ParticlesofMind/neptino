@@ -6,151 +6,83 @@
     <title>Neptino - Educational Platform</title>
     <link rel="stylesheet" href="/src/scss/main.scss">
 </head>
-<body class="body grid">
-
-    <header class="header grid__header">
-        <nav class="nav">
-            <div class="nav__logo-section">
-                <a href="/" class="logo logo--header">
-                    <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image">
-                </a>
-            </div>
+<body>
+    <header>
+        <nav>
+            <a href="/">
+                <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo">
+            </a>
             
-            <div class="nav__links-section">
-                <ul class="list list--nav">
-                    <li class="list__item">
-                        <a href="/src/pages/shared/teachers.html" class="link link--nav">For Teachers</a>
-                    </li>
-                    <li class="list__item">
-                        <a href="/src/pages/shared/students.html" class="link link--nav">For Students</a>
-                    </li>
-                    <li class="list__item">
-                        <a href="/src/pages/shared/institutions.html" class="link link--nav">For Institutions</a>
-                    </li>
-                    <li class="list__item">
-                        <a href="/src/pages/shared/pricing.html" class="link link--nav">Pricing</a>
-                    </li>
-                </ul>
-            </div>
+            <ul>
+                <li><a href="/src/pages/shared/teachers.html">For Teachers</a></li>
+                <li><a href="/src/pages/shared/students.html">For Students</a></li>
+                <li><a href="/src/pages/shared/institutions.html">For Institutions</a></li>
+                <li><a href="/src/pages/shared/pricing.html">Pricing</a></li>
+            </ul>
             
-            <div class="nav__actions-section">
-                <a href="/src/pages/shared/signin.html" class="button button--primary">Sign In</a>
-            </div>
+            <a href="/src/pages/shared/signin.html">Sign In</a>
         </nav>
     </header>
  
-    <main class="main grid__main">
-        <section class="hero">
-            <div class="hero__content">
-                <h1 class="heading heading--primary">Transform Learning with Neptino</h1>
-                <p class="text text--lead">An innovative educational platform that brings teachers, students, and institutions together in a seamless learning experience designed for the future of education.</p>
-                <div class="hero__actions">
-                    <a href="/src/pages/shared/signup.html" class="button button--primary">Get Started Free</a>
-                    <a href="/src/pages/shared/pricing.html" class="button button--secondary">View Pricing</a>
-                </div>
-            </div>
+    <main>
+        <section>
+            <h1>Transform Learning with Neptino</h1>
+            <p>An innovative educational platform that brings teachers, students, and institutions together in a seamless learning experience designed for the future of education.</p>
+            <a href="/src/pages/shared/signup.html">Get Started Free</a>
+            <a href="/src/pages/shared/pricing.html">View Pricing</a>
         </section>
 
-
-        <section class="stats">
-            <h2 class="heading heading--secondary">Trusted by Educators Worldwide</h2>
-            <div class="stats-grid">
-                <div class="card">
-                    <div class="card__content">
-                        <div class="stat-number">10,000+</div>
-                        <div class="stat-label">Active Teachers</div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card__content">
-                        <div class="stat-number">500,000+</div>
-                        <div class="stat-label">Students Engaged</div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card__content">
-                        <div class="stat-number">500+</div>
-                        <div class="stat-label">Institutions</div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card__content">
-                        <div class="stat-number">98%</div>
-                        <div class="stat-label">Satisfaction Rate</div>
-                    </div>
-                </div>
-            </div>
+        <section>
+            <h2>Trusted by Educators Worldwide</h2>
+            <dl>
+                <dt>10,000+</dt>
+                <dd>Active Teachers</dd>
+                <dt>500,000+</dt>
+                <dd>Students Engaged</dd>
+                <dt>500+</dt>
+                <dd>Institutions</dd>
+                <dt>98%</dt>
+                <dd>Satisfaction Rate</dd>
+            </dl>
         </section>
 
-        <section class="testimonials">
-            <div class="testimonials-grid">
-                <div class="card">
-                    <div class="card__content">
-                        <blockquote class="text text--quote">
-                            "Neptino has completely transformed how I teach. My students are more engaged than ever, and I can see their progress in real-time."
-                        </blockquote>
-                        <cite class="text text--cite">— Dr. Sarah Johnson, Mathematics Professor</cite>
-                    </div>
-                </div>
+        <section>
+            <blockquote>
+                "Neptino has completely transformed how I teach. My students are more engaged than ever, and I can see their progress in real-time."
+                <cite>— Dr. Sarah Johnson, Mathematics Professor</cite>
+            </blockquote>
                 
-                <div class="card">
-                    <div class="card__content">
-                        <blockquote class="text text--quote">
-                            "The analytics and reporting features give us insights we never had before. We can make data-driven decisions to improve student outcomes."
-                        </blockquote>
-                        <cite class="text text--cite">— Mark Chen, IT Director</cite>
-                    </div>
-                </div>
+            <blockquote>
+                "The analytics and reporting features give us insights we never had before. We can make data-driven decisions to improve student outcomes."
+                <cite>— Mark Chen, IT Director</cite>
+            </blockquote>
                 
-                <div class="card">
-                    <div class="card__content">
-                        <blockquote class="text text--quote">
-                            "As a student, I love how interactive and engaging the courses are. The mobile app lets me learn anywhere, anytime."
-                        </blockquote>
-                        <cite class="text text--cite">— Emma Rodriguez, University Student</cite>
-                    </div>
-                </div>
-            </div>
+            <blockquote>
+                "As a student, I love how interactive and engaging the courses are. The mobile app lets me learn anywhere, anytime."
+                <cite>— Emma Rodriguez, University Student</cite>
+            </blockquote>
         </section>
 
-        <section class="cta">
-            <h2 class="heading heading--secondary">Ready to Transform Your Educational Experience?</h2>
-            <p class="text text--lead">Join thousands of educators and students already using Neptino to enhance teaching and learning.</p>
-            <div class="cta__actions">
-                <a href="/src/pages/shared/signup.html" class="button button--primary">Start Your Free Trial</a>
-                <a href="/src/pages/shared/pricing.html" class="button button--secondary">View All Plans</a>
-            </div>
+        <section>
+            <h2>Ready to Transform Your Educational Experience?</h2>
+            <p>Join thousands of educators and students already using Neptino to enhance teaching and learning.</p>
+            <a href="/src/pages/shared/signup.html">Start Your Free Trial</a>
+            <a href="/src/pages/shared/pricing.html">View All Plans</a>
         </section>
     </main>
 
-    <footer class="footer grid__footer">
-        <nav class="nav nav--footer">
-            <div class="nav__logo-section">
-                <a href="/" class="logo logo--footer">
-                    <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo__image logo__image--small">
-                </a>
-            </div>
+    <footer>
+        <nav>
+            <a href="/">
+                <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo">
+            </a>
             
-            <div class="nav__links-section">
-                <ul class="list list--nav list--footer">
-                    <li class="list__item">
-                        <a href="#" class="link link--footer">Privacy Policy</a>
-                    </li>
-                    <li class="list__item">
-                        <a href="#" class="link link--footer">Terms of Service</a>
-                    </li>
-                    <li class="list__item">
-                        <a href="#" class="link link--footer">Support</a>
-                    </li>
-                    <li class="list__item">
-                        <a href="#" class="link link--footer">Contact</a>
-                    </li>
-                </ul>
-            </div>
-            
-            <div class="nav__actions-section">
-                <!-- Footer doesn't need action buttons, but keeping structure consistent -->
-            </div>
+            <ul>
+                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="#">Terms of Service</a></li>
+                <li><a href="#">Support</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
         </nav>
     </footer>
 

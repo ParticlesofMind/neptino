@@ -9,143 +9,107 @@
   <link rel="stylesheet" href="/src/scss/main.scss" />
 </head>
 
-<body class="body grid">
-
-  <header class="header grid__header">
-    <nav class="nav nav--coursebuilder">
-      <div class="nav__section nav__section--left">
-        <button class="button button--nav button--previous" id="previous-button" title="Previous Step">
-          <span class="button__icon">‹</span>
-          <span class="button__text">Previous</span>
-        </button>
-      </div>
-
-      <div class="nav__section nav__section--center">
-        <a href="/src/pages/teacher/home.html" class="logo logo--header" title="Back to Home">
-          <img
-            src="/src/assets/logo/octopus-logo.png"
-            alt="Neptino Logo"
-            class="logo__image"
-          />
-        </a>
-      </div>
-
-      <div class="nav__section nav__section--right">
-        <button class="button button--nav button--next" id="next-button" title="Next Step">
-          <span class="button__text">Next</span>
-          <span class="button__icon">›</span>
-        </button>
-      </div>
+<body>
+  <header>
+    <nav>
+      <button id="previous-button" title="Previous Step">
+        <span>‹</span>
+        <span>Previous</span>
+      </button>
+      <a href="/src/pages/teacher/home.html" title="Back to Home">
+        <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
+      </a>
+      <button id="next-button" title="Next Step">
+        <span>Next</span>
+        <span>›</span>
+      </button>
     </nav>
   </header>
-
-  <main class="main grid__main">
+  <main>
     <!-- Setup Section (with aside navigation) -->
-    <section id="setup" class="section section--active">
-      <aside class="aside">
-        <nav class="aside__nav">
-          <div class="aside__group aside__group--required">
-            <h3 class="aside__group-title">Required</h3>
-            <ul class="aside__menu">
-              <li class="aside__item">
-                <a href="#essentials" class="aside__link aside__link--active" data-section="essentials">Essentials</a>
-              </li>
-              <li class="aside__item">
-                <a href="#classification" class="aside__link" data-section="classification">Classification</a>
-              </li>
-              <li class="aside__item">
-                <a href="#templates" class="aside__link" data-section="templates">Templates</a>
-              </li>
-              <li class="aside__item">
-                <a href="#schedule" class="aside__link" data-section="schedule">Schedule</a>
-              </li>
-              <li class="aside__item">
-                <a href="#curriculum" class="aside__link" data-section="curriculum">Curriculum</a>
-              </li>
-            </ul>
-          </div>
-
-          <div class="aside__group aside__group--optional">
-            <h3 class="aside__group-title">Optional</h3>
-            <ul class="aside__menu">
-              <li class="aside__item">
-                <a href="#marketplace" class="aside__link" data-section="marketplace">Marketplace</a>
-              </li>
-              <li class="aside__item">
-                <a href="#resources" class="aside__link" data-section="resources">Resources</a>
-              </li>
-            </ul>
-          </div>
-
-          <div class="aside__group aside__group--settings">
-            <ul class="aside__menu">
-              <li class="aside__item">
-                <a href="#settings" class="aside__link" data-section="settings">Settings</a>
-              </li>
-            </ul>
-          </div>
+    <section id="setup">
+      <aside>
+        <nav>
+          <h3>Required</h3>
+          <ul>
+            <li>
+              <a href="#essentials" data-section="essentials">Essentials</a>
+            </li>
+            <li>
+              <a href="#classification" data-section="classification">Classification</a>
+            </li>
+            <li>
+              <a href="#templates" data-section="templates">Templates</a>
+            </li>
+            <li>
+              <a href="#schedule" data-section="schedule">Schedule</a>
+            </li>
+            <li>
+              <a href="#curriculum" data-section="curriculum">Curriculum</a>
+            </li>
+          </ul>
+          <h3>Optional</h3>
+          <ul>
+            <li>
+              <a href="#marketplace" data-section="marketplace">Marketplace</a>
+            </li>
+            <li>
+              <a href="#resources" data-section="resources">Resources</a>
+            </li>
+          </ul>
+          <ul>
+            <li>
+              <a href="#settings" data-section="settings">Settings</a>
+            </li>
+          </ul>
         </nav>
       </aside>
-
       <!-- Essentials Article -->
-      <article id="essentials" class="article article--active">
-        <section class="card">
-          <form class="form" id="course-essentials-form">
-            <div class="form__group">
-              <label class="form__label" for="course-name">Course Name</label>
-              <input class="form__input" type="text" id="course-name" name="course_name" placeholder="Enter course name"
-                required />
+      <article id="essentials">
+        <section>
+          <form id="course-essentials-form">
+            <label for="course-name">Course Name</label>
+            <input type="text" id="course-name" name="course_name" placeholder="Enter course name" required />
             </div>
-            <div class="form__group">
-              <label class="form__label" for="course-description">Course Description</label>
-              <textarea class="form__input" id="course-description" name="course_description" rows="4"
+            <div>
+              <label for="course-description">Course Description</label>
+              <textarea id="course-description" name="course_description" rows="4"
                 placeholder="Describe what students will learn" required></textarea>
+              <label for="teacher-id">Teacher</label>
+              <input type="text" id="teacher-id" name="teacher_id" placeholder="Loading..." readonly />
             </div>
-            <div class="form__group">
-              <label class="form__label" for="teacher-id">Teacher</label>
-              <input class="form__input" type="text" id="teacher-id" name="teacher_id" placeholder="Loading..."
-                readonly />
+            <div>
+              <label for="institution">Institution</label>
+              <input type="text" id="institution" name="institution" placeholder="Loading..." readonly />
             </div>
-            <div class="form__group">
-              <label class="form__label" for="institution">Institution</label>
-              <input class="form__input" type="text" id="institution" name="institution" placeholder="Loading..."
-                readonly />
-            </div>
-            <div class="form__group">
-              <label class="form__label" for="course-language">Course Language</label>
-              <select class="form__input" id="course-language" name="course_language" required>
+            <div>
+              <label for="course-language">Course Language</label>
+              <select id="course-language" name="course_language" required>
                 <option value="">Select language...</option>
               </select>
-            </div>
-            <div class="form__group">
-              <label class="form__label" for="course-image">Course Image</label>
-              <div class="file-upload file-upload--compact">
-                <input type="file" id="course-image" name="course_image" accept="image/*" class="file-upload__input"
-                  required />
-                <div class="file-upload__compact-layout">
-                  <label for="course-image" class="file-upload__compact-label">
-                    <span class="file-upload__text">Change course image</span>
+              <label for="course-image">Course Image</label>
+              <div>
+                <input type="file" id="course-image" name="course_image" accept="image/*" required />
+                <div>
+                  <label for="course-image">
+                    <span>Change course image</span>
                   </label>
-                  <div class="file-upload__thumbnail" id="image-preview" style="display: none">
-                    <img id="preview-img" src="" alt="Course preview" class="file-upload__thumbnail-image" />
-                    <button type="button" class="file-upload__remove file-upload__remove--compact" id="remove-image">
+                  <div id="image-preview" style="display: none">
+                    <img id="preview-img" src="" alt="Course preview" />
+                    <button type="button" id="remove-image">
                       ×
                     </button>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="form__actions">
-              <div class="form__actions-row">
-                <button type="submit" id="create-course-btn" class="button button--primary button--disabled" disabled>
+              <div>
+                <button type="submit" id="create-course-btn" disabled>
                   Create Course
                 </button>
-                <div class="course-code-display" id="course-code-display" style="display: none">
-                  <div class="course-code-container">
-                    <span class="course-code-label">Course Code:</span>
-                    <span class="course-code-value" id="course-code-value"></span>
-                    <button type="button" class="course-code-copy-btn" id="course-code-copy-btn"
-                      title="Copy course code">
+                <div id="course-code-display" style="display: none">
+                  <div>
+                    <span>Course Code:</span>
+                    <button type="button" id="course-code-copy-btn" title="Copy course code">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2">
                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -155,832 +119,577 @@
                   </div>
                 </div>
               </div>
-              <div class="form__status" id="form-status"></div>
             </div>
           </form>
         </section>
       </article>
-
       <!-- Classification Article -->
-      <article id="classification" class="article">
-        <section class="card">
-          <form class="form" id="course-classification-form">
+      <article id="classification">
+        <section>
+          <form id="course-classification-form">
             <!-- Row 1: Class Year + Curricular Framework -->
-            <div class="dropdown-group dropdown-group--classification-row">
-              <div class="form__group">
-                <label class="form__label" for="class-year-dropdown">Class Year</label>
-                <div class="dropdown dropdown--classification">
-                  <button type="button" class="dropdown__trigger" id="class-year-dropdown" aria-haspopup="listbox"
+            <div>
+              <div>
+                <label for="class-year-dropdown">Class Year</label>
+                <div>
+                  <button type="button" id="class-year-dropdown" aria-haspopup="listbox" aria-expanded="false">
+                    <span>Select class year...</span>
+                    <span>▼</span>
+                  </button>
+
+                  <input type="hidden" name="class_year" id="class-year-value" />
+                </div>
+                <label for="curricular-framework-dropdown">Curricular Framework</label>
+                <div>
+                  <button type="button" id="curricular-framework-dropdown" aria-haspopup="listbox"
                     aria-expanded="false">
-                    <span class="dropdown__label dropdown__label--placeholder">Select class year...</span>
-                    <span class="dropdown__icon">▼</span>
+                    <span>Select framework...</span>
+                    <span>▼</span>
                   </button>
-                  <div class="dropdown__menu" role="listbox" id="class-year-menu">
-                    <!-- Options will be populated by JavaScript -->
-                  </div>
+
+                  <input type="hidden" name="curricular_framework" id="curricular-framework-value" />
                 </div>
-                <input type="hidden" name="class_year" id="class-year-value" />
               </div>
-
-              <div class="form__group">
-                <label class="form__label" for="curricular-framework-dropdown">Curricular Framework</label>
-                <div class="dropdown dropdown--classification">
-                  <button type="button" class="dropdown__trigger" id="curricular-framework-dropdown"
-                    aria-haspopup="listbox" aria-expanded="false">
-                    <span class="dropdown__label dropdown__label--placeholder">Select framework...</span>
-                    <span class="dropdown__icon">▼</span>
+              <!-- Row 2: Domain + Subject + Topic + Subtopic -->
+              <div>
+                <label for="domain-dropdown">Domain</label>
+                <div>
+                  <button type="button" id="domain-dropdown" aria-haspopup="listbox" aria-expanded="false">
+                    <span>Select domain...</span>
+                    <span>▼</span>
                   </button>
-                  <div class="dropdown__menu" role="listbox" id="curricular-framework-menu">
-                    <!-- Options will be populated by JavaScript -->
-                  </div>
+
+                  <input type="hidden" name="domain" id="domain-value" />
                 </div>
-                <input type="hidden" name="curricular_framework" id="curricular-framework-value" />
-              </div>
-            </div>
-
-            <!-- Row 2: Domain + Subject + Topic + Subtopic -->
-            <div class="dropdown-group dropdown-group--classification-row dropdown-group--with-arrows">
-              <div class="form__group">
-                <label class="form__label" for="domain-dropdown">Domain</label>
-                <div class="dropdown dropdown--classification">
-                  <button type="button" class="dropdown__trigger" id="domain-dropdown" aria-haspopup="listbox"
-                    aria-expanded="false">
-                    <span class="dropdown__label dropdown__label--placeholder">Select domain...</span>
-                    <span class="dropdown__icon">▼</span>
+                <div>→</div>
+                <label for="subject-dropdown">Subject</label>
+                <div>
+                  <button type="button" id="subject-dropdown" aria-haspopup="listbox" aria-expanded="false" disabled>
+                    <span>Select domain first...</span>
+                    <span>▼</span>
                   </button>
-                  <div class="dropdown__menu" role="listbox" id="domain-menu">
-                    <!-- Options will be populated by JavaScript -->
-                  </div>
+
+                  <input type="hidden" name="subject" id="subject-value" />
                 </div>
-                <input type="hidden" name="domain" id="domain-value" />
-              </div>
-
-              <div class="dropdown-arrow">→</div>
-
-              <div class="form__group">
-                <label class="form__label" for="subject-dropdown">Subject</label>
-                <div class="dropdown dropdown--classification">
-                  <button type="button" class="dropdown__trigger dropdown__trigger--disabled" id="subject-dropdown"
-                    aria-haspopup="listbox" aria-expanded="false" disabled>
-                    <span class="dropdown__label dropdown__label--placeholder">Select domain first...</span>
-                    <span class="dropdown__icon">▼</span>
+                <div>→</div>
+                <label for="topic-dropdown">Topic</label>
+                <div>
+                  <button type="button" id="topic-dropdown" aria-haspopup="listbox" aria-expanded="false" disabled>
+                    <span>Select subject first...</span>
+                    <span>▼</span>
                   </button>
-                  <div class="dropdown__menu" role="listbox" id="subject-menu">
-                    <!-- Options will be populated by JavaScript -->
-                  </div>
+
+                  <input type="hidden" name="topic" id="topic-value" />
                 </div>
-                <input type="hidden" name="subject" id="subject-value" />
-              </div>
-
-              <div class="dropdown-arrow">→</div>
-
-              <div class="form__group">
-                <label class="form__label" for="topic-dropdown">Topic</label>
-                <div class="dropdown dropdown--classification">
-                  <button type="button" class="dropdown__trigger dropdown__trigger--disabled" id="topic-dropdown"
-                    aria-haspopup="listbox" aria-expanded="false" disabled>
-                    <span class="dropdown__label dropdown__label--placeholder">Select subject first...</span>
-                    <span class="dropdown__icon">▼</span>
+                <div>→</div>
+                <label for="subtopic-dropdown">Subtopic
+                  <span>(Optional)</span></label>
+                <div>
+                  <button type="button" id="subtopic-dropdown" aria-haspopup="listbox" aria-expanded="false" disabled>
+                    <span>Select topic first...</span>
+                    <span>▼</span>
                   </button>
-                  <div class="dropdown__menu" role="listbox" id="topic-menu">
-                    <!-- Options will be populated by JavaScript -->
-                  </div>
+
+                  <input type="hidden" name="subtopic" id="subtopic-value" />
                 </div>
-                <input type="hidden" name="topic" id="topic-value" />
               </div>
-
-              <div class="dropdown-arrow">→</div>
-
-              <div class="form__group">
-                <label class="form__label" for="subtopic-dropdown">Subtopic
-                  <span class="text text--muted">(Optional)</span></label>
-                <div class="dropdown dropdown--classification">
-                  <button type="button" class="dropdown__trigger dropdown__trigger--disabled" id="subtopic-dropdown"
-                    aria-haspopup="listbox" aria-expanded="false" disabled>
-                    <span class="dropdown__label dropdown__label--placeholder">Select topic first...</span>
-                    <span class="dropdown__icon">▼</span>
+              <!-- Row 3: Course Sequence -->
+              <div>
+                <label for="previous-course-dropdown">Previous Course
+                  <span>(Optional)</span></label>
+                <div>
+                  <button type="button" id="previous-course-dropdown" aria-haspopup="listbox" aria-expanded="false">
+                    <span>Select previous course...</span>
+                    <span>▼</span>
                   </button>
-                  <div class="dropdown__menu" role="listbox" id="subtopic-menu">
-                    <!-- Options will be populated by JavaScript -->
-                  </div>
-                </div>
-                <input type="hidden" name="subtopic" id="subtopic-value" />
-              </div>
-            </div>
-
-            <!-- Row 3: Course Sequence -->
-            <div class="dropdown-group dropdown-group--classification-row">
-              <div class="form__group">
-                <label class="form__label" for="previous-course-dropdown">Previous Course
-                  <span class="text text--muted">(Optional)</span></label>
-                <div class="dropdown dropdown--classification">
-                  <button type="button" class="dropdown__trigger" id="previous-course-dropdown" aria-haspopup="listbox"
-                    aria-expanded="false">
-                    <span class="dropdown__label dropdown__label--placeholder">Select previous course...</span>
-                    <span class="dropdown__icon">▼</span>
-                  </button>
-                  <div class="dropdown__menu" role="listbox" id="previous-course-menu">
-                    <div class="dropdown__option dropdown__option--header">
+                  <div role="listbox" id="previous-course-menu">
+                    <div>
                       Your Courses
                     </div>
                     <!-- Options will be populated by JavaScript -->
                   </div>
+                  <input type="hidden" name="previous_course" id="previous-course-value" />
                 </div>
-                <input type="hidden" name="previous_course" id="previous-course-value" />
-              </div>
-
-              <div class="form__group">
-                <label class="form__label" for="current-course-dropdown">Current Course
-                  <span class="text text--muted">(Optional)</span></label>
-                <div class="dropdown dropdown--classification">
-                  <button type="button" class="dropdown__trigger" id="current-course-dropdown" aria-haspopup="listbox"
-                    aria-expanded="false">
-                    <span class="dropdown__label dropdown__label--placeholder">Select current course...</span>
-                    <span class="dropdown__icon">▼</span>
+                <label for="current-course-dropdown">Current Course
+                  <span>(Optional)</span></label>
+                <div>
+                  <button type="button" id="current-course-dropdown" aria-haspopup="listbox" aria-expanded="false">
+                    <span>Select current course...</span>
+                    <span>▼</span>
                   </button>
-                  <div class="dropdown__menu" role="listbox" id="current-course-menu">
-                    <div class="dropdown__option dropdown__option--header">
+                  <div role="listbox" id="current-course-menu">
+                    <div>
                       Your Courses
                     </div>
                     <!-- Options will be populated by JavaScript -->
                   </div>
+                  <input type="hidden" name="current_course" id="current-course-value" />
                 </div>
-                <input type="hidden" name="current_course" id="current-course-value" />
-              </div>
-
-              <div class="form__group">
-                <label class="form__label" for="next-course-dropdown">Next Course
-                  <span class="text text--muted">(Optional)</span></label>
-                <div class="dropdown dropdown--classification">
-                  <button type="button" class="dropdown__trigger" id="next-course-dropdown" aria-haspopup="listbox"
-                    aria-expanded="false">
-                    <span class="dropdown__label dropdown__label--placeholder">Select next course...</span>
-                    <span class="dropdown__icon">▼</span>
+                <label for="next-course-dropdown">Next Course
+                  <span>(Optional)</span></label>
+                <div>
+                  <button type="button" id="next-course-dropdown" aria-haspopup="listbox" aria-expanded="false">
+                    <span>Select next course...</span>
+                    <span>▼</span>
                   </button>
-                  <div class="dropdown__menu" role="listbox" id="next-course-menu">
-                    <div class="dropdown__option dropdown__option--header">
+                  <div role="listbox" id="next-course-menu">
+                    <div>
                       Your Courses
                     </div>
                     <!-- Options will be populated by JavaScript -->
                   </div>
+                  <input type="hidden" name="next_course" id="next-course-value" />
                 </div>
-                <input type="hidden" name="next_course" id="next-course-value" />
               </div>
-            </div>
-
-            <!-- Last saved indicator -->
-            <div class="form__footer">
-              <div class="save-indicator" id="classification-last-saved">
-                <span class="save-indicator__text" id="classification-save-status">Changes will be saved
+              <!-- Last saved indicator -->
+              <div id="classification-last-saved">
+                <span id="classification-save-status">Changes will be saved
                   automatically</span>
               </div>
-            </div>
           </form>
         </section>
       </article>
-
       <!-- Templates Article -->
-      <article id="templates" class="article">
-        <section class="card">
+      <article id="templates">
+        <section>
           <!-- Template Action Buttons -->
-          <div class="template-header">
-            <div class="template-header__actions">
-              <button id="create-template-btn" class="button button--primary">
-                <span class="button__icon">+</span>
-                Create New Template
-              </button>
-              <button id="load-template-btn" class="button button--secondary">
-                <span class="button__icon">↗</span>
-                Load Template
-              </button>
-            </div>
-          </div>
-
-          <!-- Template Builder Layout -->
-          <div class="template-layout">
-            <div class="template-config">
-              <div class="template-config-placeholder">
-                <h3 class="heading heading--tertiary">
-                  Template Configuration
-                </h3>
-                <p class="text">
-                  Select or create a template to configure its settings.
-                </p>
-              </div>
-            </div>
-            <div class="template-preview">
-              <div class="preview-container">
-                <div class="preview-placeholder">
-                  <h4 class="preview-placeholder__title">
-                    No Template Selected
-                  </h4>
-                  <p class="preview-placeholder__text">
-                    Create a new template or select an existing one to see the
-                    preview here.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </article>
-
-      <!-- Create Template Modal -->
-      <div id="create-template-modal" class="modal" style="display: none">
-        <div class="modal__content">
-          <div class="modal__header">
-            <h2 class="modal__title">Create New Template</h2>
-            <button class="modal__close" type="button" onclick="TemplateManager.hideCreateTemplateModal()">
-              &times;
+          <div>
+            <button id="create-template-btn">
+              <span>+</span>
+              Create New Template
             </button>
-          </div>
-          <div class="modal__body">
-            <form id="create-template-form" class="form">
-              <div class="form__group">
-                <label class="form__label" for="template-name">Template Name*</label>
-                <input type="text" id="template-name" name="template-name" class="form__input" required
-                  placeholder="Enter template name" />
-              </div>
-              <div class="form__group">
-                <label class="form__label" for="template-type">Template Type*</label>
-                <select id="template-type" name="template-type" class="form__input" required>
-                  <option value="">Select template type</option>
-                  <option value="lesson">Lesson</option>
-                </select>
-              </div>
-              <div class="form__group">
-                <label class="form__label" for="template-description">Description (Optional)</label>
-                <textarea id="template-description" name="template-description" class="form__input" rows="3"
-                  placeholder="Describe your template..."></textarea>
-              </div>
-              <div class="form__actions">
-                <button type="button" class="btn btn--secondary modal__close"
-                  onclick="TemplateManager.hideCreateTemplateModal()">
-                  Cancel
-                </button>
-                <button type="submit" class="btn btn--primary">
-                  Create Template
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <!-- Load Template Modal -->
-      <div id="load-template-modal" class="modal" style="display: none">
-        <div class="modal__content modal__content--large">
-          <div class="modal__header">
-            <h2 class="modal__title">Load Existing Template</h2>
-            <button class="modal__close" type="button" onclick="TemplateManager.hideLoadTemplateModal()">
-              &times;
-            </button>
-          </div>
-          <div class="modal__body">
-            <div class="template-loader">
-              <div class="template-loader__search">
-                <input type="text" id="template-search" class="form__input" placeholder="Search templates..." />
-                <div class="template-filters">
-                  <select id="template-type-filter" class="form__input form__input--small">
-                    <option value="">All Types</option>
-                    <option value="lesson">Lesson</option>
-                  </select>
-                  <select id="template-sort" class="form__input form__input--small">
-                    <option value="created_at">Newest First</option>
-                    <option value="name">Name (A-Z)</option>
-                    <option value="modified_at">Recently Modified</option>
-                  </select>
-                </div>
-              </div>
-              <div class="template-list__container">
-                <div id="template-loading" class="template-loading" style="display: none">
-                  <div class="loading-spinner"></div>
-                  <p>Loading your templates...</p>
-                </div>
-                <div id="template-list-content" class="template-list__grid">
-                  <!-- Templates will be loaded here -->
-                </div>
-                <div id="no-templates-message" class="no-templates" style="display: none">
-                  <div class="no-templates__icon">!</div>
-                  <h3>No Templates Found</h3>
-                  <p>
-                    You haven't created any templates yet. Create your first
-                    template to get started!
-                  </p>
-                  <button class="button button--primary"
-                    onclick="TemplateManager.hideLoadTemplateModal(); TemplateManager.showCreateTemplateModal();">
-                    Create First Template
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal__footer">
-            <button type="button" class="button button--secondary" onclick="TemplateManager.hideLoadTemplateModal()">
-              Cancel
-            </button>
-            <button type="button" id="load-selected-template" class="button button--primary" disabled
-              onclick="TemplateManager.loadSelectedTemplate()">
+            <button id="load-template-btn">
+              <span>↗</span>
               Load Template
             </button>
           </div>
+          <!-- Template Builder Layout -->
+          <div>
+            <div>
+              <h3>
+                Template Configuration
+              </h3>
+              <p>
+                Select or create a template to configure its settings.
+              </p>
+            </div>
+            <div>
+              <div>
+                <h4>
+                  No Template Selected
+                </h4>
+                <p>
+                  Create a new template or select an existing one to see the
+                  preview here.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </article>
+      <!-- Create Template Modal -->
+      <div>
+        <div>
+          <h2>Create New Template</h2>
+          <button type="button" onclick="TemplateManager.hideCreateTemplateModal()">
+            &times;
+          </button>
+          <form id="create-template-form">
+            <div>
+              <label for="template-name">Template Name*</label>
+              <input type="text" id="template-name" name="template-name" required placeholder="Enter template name" />
+            </div>
+            <div>
+              <label for="template-type">Template Type*</label>
+              <select id="template-type" name="template-type" required>
+                <option value="">Select template type</option>
+                <option value="lesson">Lesson</option>
+              </select>
+              <label for="template-description">Description (Optional)</label>
+              <textarea id="template-description" name="template-description" rows="3"
+                placeholder="Describe your template..."></textarea>
+              <button type="button" onclick="TemplateManager.hideCreateTemplateModal()">
+                Cancel
+              </button>
+              <button type="submit">
+                Create Template
+              </button>
+          </form>
         </div>
       </div>
-
+      </div>
+      <!-- Load Template Modal -->
+      <div>
+        <div>
+          <h2>Load Existing Template</h2>
+          <button type="button" onclick="TemplateManager.hideLoadTemplateModal()">
+            &times;
+          </button>
+          <div>
+            <div>
+              <input type="text" id="template-search" placeholder="Search templates..." />
+              <div>
+                <select id="template-type-filter">
+                  <option value="">All Types</option>
+                  <option value="lesson">Lesson</option>
+                </select>
+                <select id="template-sort">
+                  <option value="created_at">Newest First</option>
+                  <option value="name">Name (A-Z)</option>
+                  <option value="modified_at">Recently Modified</option>
+                </select>
+              </div>
+              <div id="template-loading" style="display: none">
+                <p>Loading your templates...</p>
+                <!-- Templates will be loaded here -->
+              </div>
+              <div id="no-templates-message" style="display: none">
+                <div>!</div>
+                <h3>No Templates Found</h3>
+                <p>
+                  You haven't created any templates yet. Create your first
+                  template to get started!
+                </p>
+                <button onclick="TemplateManager.hideLoadTemplateModal(); TemplateManager.showCreateTemplateModal();">
+                  Create First Template
+                </button>
+              </div>
+            </div>
+          </div>
+          <button type="button" onclick="TemplateManager.hideLoadTemplateModal()">
+            Cancel
+          </button>
+          <button type="button" id="load-selected-template" disabled onclick="TemplateManager.loadSelectedTemplate()">
+            Load Template
+          </button>
+        </div>
+      </div>
       <!-- Schedule Article -->
-      <article id="schedule" class="article">
-        <section class="card">
+      <article id="schedule">
+        <section>
           <!-- Schedule Layout -->
-          <div class="schedule-layout">
-            <!-- Schedule Configuration -->
-            <div id="schedule-config" class="schedule-config">
-              <h3 class="heading heading--tertiary">
-                Schedule Configuration
-              </h3>
-
-              <form class="form" id="course-schedule-form">
-                <!-- Date Range Row -->
-                <div class="form__row">
-                  <div class="form__group">
-                    <label class="form__label" for="start-date">Start Date</label>
-                    <input class="form__input" type="date" id="start-date" required />
-                  </div>
-                  <div class="form__group">
-                    <label class="form__label" for="end-date">End Date</label>
-                    <input class="form__input" type="date" id="end-date" required />
-                  </div>
+          <!-- Schedule Configuration -->
+          <div id="schedule-config">
+            <h3>
+              Schedule Configuration
+            </h3>
+            <form id="course-schedule-form">
+              <!-- Date Range Row -->
+              <div>
+                <div>
+                  <label for="start-date">Start Date</label>
+                  <input type="date" id="start-date" required />
                 </div>
-
+                <div>
+                  <label for="end-date">End Date</label>
+                  <input type="date" id="end-date" required />
+                </div>
                 <!-- Days of Week Selection -->
-                <div class="form__group">
-                  <label class="form__label">Days of the Week</label>
-                  <div class="day-buttons">
-                    <button type="button" class="day-button" data-day="monday">
-                      Mon
-                    </button>
-                    <button type="button" class="day-button" data-day="tuesday">
-                      Tue
-                    </button>
-                    <button type="button" class="day-button" data-day="wednesday">
-                      Wed
-                    </button>
-                    <button type="button" class="day-button" data-day="thursday">
-                      Thu
-                    </button>
-                    <button type="button" class="day-button" data-day="friday">
-                      Fri
-                    </button>
-                    <button type="button" class="day-button" data-day="saturday">
-                      Sat
-                    </button>
-                    <button type="button" class="day-button" data-day="sunday">
-                      Sun
-                    </button>
-                  </div>
+                <label>Days of the Week</label>
+                <div>
+                  <button type="button" data-day="monday">
+                    Mon
+                  </button>
+                  <button type="button" data-day="tuesday">
+                    Tue
+                  </button>
+                  <button type="button" data-day="wednesday">
+                    Wed
+                  </button>
+                  <button type="button" data-day="thursday">
+                    Thu
+                  </button>
+                  <button type="button" data-day="friday">
+                    Fri
+                  </button>
+                  <button type="button" data-day="saturday">
+                    Sat
+                  </button>
+                  <button type="button" data-day="sunday">
+                    Sun
+                  </button>
                 </div>
-
                 <!-- Time Range Row -->
-                <div class="form__row">
-                  <div class="form__group">
-                    <label class="form__label" for="start-time">Start Time</label>
-                    <input class="form__input" type="time" id="start-time" required />
-                  </div>
-                  <div class="form__group">
-                    <label class="form__label" for="end-time">End Time</label>
-                    <input class="form__input" type="time" id="end-time" required />
-                  </div>
+                <div>
+                  <label for="start-time">Start Time</label>
+                  <input type="time" id="start-time" required />
                 </div>
-
+                <div>
+                  <label for="end-time">End Time</label>
+                  <input type="time" id="end-time" required />
+                </div>
                 <!-- Schedule Action Buttons -->
-                <div class="form__actions">
-                  <button type="button" id="schedule-course-btn" class="button button--primary button--disabled"
-                    disabled>
-                    Schedule Course
-                  </button>
-                  <button type="button" id="delete-schedule-btn" class="button button--danger hidden">
-                    Delete Schedule
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            <!-- Schedule Preview -->
-            <div id="schedule-preview" class="schedule-preview hidden">
-              <h3 class="heading heading--tertiary">Schedule Preview</h3>
-
-              <div class="schedule-list-container">
-                <div class="schedule-list-header">
-                  <span class="header-lesson">Lesson #</span>
-                  <span class="header-day">Day</span>
-                  <span class="header-start">Start Time</span>
-                  <span class="header-end">End Time</span>
-                  <span class="header-actions">Actions</span>
-                </div>
-
-                <div class="schedule-list">
-                  <!-- Schedule rows will be generated here -->
-                </div>
-
-                <div class="schedule-summary">
-                  <div class="total-lessons">Total lessons: 0</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </article>
-
-      <!-- Curriculum Article -->
-      <article id="curriculum" class="article">
-        <section class="card">
-
-          <!-- Curriculum Layout -->
-          <div class="curriculum-layout">
-            <!-- Curriculum Configuration -->
-            <div id="curriculum-config" class="curriculum-config">
-              <div class="content-load-section">
-                <div id="content-load-display" class="content-load-display">
-                  <!-- Content load info will be displayed here -->
-                </div>
-              </div>
-            </div>
-
-            <!-- Curriculum Preview -->
-            <div id="curriculum-preview" class="curriculum-preview hidden">
-              <div class="curriculum-preview-header">
-                <!-- Preview Mode Buttons -->
-                <div class="preview-mode-controls">
-                  <span class="preview-mode-label">Display:</span>
-                  <button type="button" class="preview-mode-btn active" data-mode="titles">
-                    Lesson Titles
-                  </button>
-                  <button type="button" class="preview-mode-btn" data-mode="topics">
-                    Lesson Topics
-                  </button>
-                  <button type="button" class="preview-mode-btn" data-mode="objectives">
-                    Lesson Objectives
-                  </button>
-                </div>
-              </div>
-
-              <div class="curriculum-preview-content">
-                <!-- Curriculum content will be rendered here -->
-              </div>
-            </div>
-          </div>
-        </section>
-      </article>
-
-      <!-- Settings Article -->
-      <article id="settings" class="article">
-        <section class="card">
-          <!-- Margins Section -->
-          <div class="margins-section">
-            <h4 class="margins-title">Margins</h4>
-
-            <!-- Display Unit Selection -->
-            <div class="margins-unit-selection">
-              <span class="unit-label">Display in</span>
-              <div class="unit-toggle">
-                <input type="radio" id="unit-inches" name="margin-unit" value="inches" class="unit-toggle__input" />
-                <label for="unit-inches" class="unit-toggle__label">Inches</label>
-
-                <input type="radio" id="unit-centimeters" name="margin-unit" value="centimeters"
-                  class="unit-toggle__input" checked />
-                <label for="unit-centimeters" class="unit-toggle__label">Centimeters</label>
-              </div>
-            </div>
-
-            <!-- Margin Inputs Grid -->
-            <div class="margins-input-grid">
-              <div class="margin-input-item">
-                <label class="margin-label" for="margin-top">Top</label>
-                <div class="margin-input-group">
-                  <input class="margin-input" type="number" id="margin-top" name="margin_top" value="2.54" step="0.01"
-                    min="0" />
-                  <span class="margin-unit-display">cm</span>
-                </div>
-              </div>
-
-              <div class="margin-input-item">
-                <label class="margin-label" for="margin-bottom">Bottom</label>
-                <div class="margin-input-group">
-                  <input class="margin-input" type="number" id="margin-bottom" name="margin_bottom" value="2.54"
-                    step="0.01" min="0" />
-                  <span class="margin-unit-display">cm</span>
-                </div>
-              </div>
-
-              <div class="margin-input-item">
-                <label class="margin-label" for="margin-left">Left</label>
-                <div class="margin-input-group">
-                  <input class="margin-input" type="number" id="margin-left" name="margin_left" value="2.54" step="0.01"
-                    min="0" />
-                  <span class="margin-unit-display">cm</span>
-                </div>
-              </div>
-
-              <div class="margin-input-item">
-                <label class="margin-label" for="margin-right">Right</label>
-                <div class="margin-input-group">
-                  <input class="margin-input" type="number" id="margin-right" name="margin_right" value="2.54"
-                    step="0.01" min="0" />
-                  <span class="margin-unit-display">cm</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Save Status -->
-            <div class="margins-save-status">
-              <div class="save-indicator" id="margins-save-status">
-                <span class="save-indicator__text">Margins will be saved automatically</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Course Visibility Settings -->
-
-          <!-- Course Visibility Settings -->
-          <div class="course-settings-section">
-            <form class="form" id="course-settings-form">
-              <div class="settings-checkbox-group">
-                <div class="settings-checkbox-item">
-                  <input class="settings-checkbox" type="checkbox" id="course-visible" name="course_visible" />
-                  <label class="settings-checkbox-label" for="course-visible">Course visible to students</label>
-                </div>
-                <div class="settings-checkbox-item">
-                  <input class="settings-checkbox" type="checkbox" id="allow-enrollment" name="allow_enrollment" />
-                  <label class="settings-checkbox-label" for="allow-enrollment">Allow new enrollments</label>
-                </div>
-                <div class="settings-checkbox-item">
-                  <input class="settings-checkbox" type="checkbox" id="require-approval" name="require_approval" />
-                  <label class="settings-checkbox-label" for="require-approval">Require enrollment approval</label>
-                </div>
-              </div>
-              <div class="form__footer">
-                <div class="save-indicator" id="settings-last-saved">
-                  <span class="save-indicator__text" id="settings-save-status">Changes will be saved
-                    automatically</span>
-                </div>
-              </div>
+                <button type="button" id="schedule-course-btn" disabled>
+                  Schedule Course
+                </button>
+                <button type="button" id="delete-schedule-btn">
+                  Delete Schedule
+                </button>
             </form>
           </div>
-
-          <div class="danger-zone">
-            <h3 class="danger-zone-title">Danger Zone</h3>
-            <p class="danger-zone-text">
-              Once you delete a course, there is no going back. Please be
-              certain.
-            </p>
-            <button class="danger-zone-button">Delete Course</button>
+          <!-- Schedule Preview -->
+          <h3>Schedule Preview</h3>
+          <div>
+            <div>
+              <span>Lesson #</span>
+              <span>Day</span>
+              <span>Start Time</span>
+              <span>End Time</span>
+              <span>Actions</span>
+              <!-- Schedule rows will be generated here -->
+            </div>
+            <div>
+              <div>Total lessons: 0</div>
+            </div>
+          </div>
           </div>
         </section>
       </article>
+      <!-- Curriculum Article -->
+      <article id="curriculum">
+        <section>
+          <!-- Curriculum Layout -->
+          <!-- Curriculum Configuration -->
+          <div id="curriculum-config">
+            <div>
 
+            </div>
+            <!-- Curriculum Preview -->
+            <div>
+              <!-- Preview Mode Buttons -->
+              <div>
+                <span>Display:</span>
+                <button type="button" data-mode="titles">
+                  Lesson Titles
+                </button>
+                <button type="button" data-mode="topics">
+                  Lesson Topics
+                </button>
+                <button type="button" data-mode="objectives">
+                  Lesson Objectives
+                </button>
+              </div>
+              <!-- Curriculum content will be rendered here -->
+            </div>
+          </div>
+        </section>
+      </article>
+      <!-- Settings Article -->
+      <article id="settings">
+        <section>
+          <!-- Margins Section -->
+          <h4>Margins</h4>
+          <!-- Display Unit Selection -->
+          <div>
+            <span>Display in</span>
+            <div>
+              <input type="radio" id="unit-inches" name="margin-unit" value="inches" />
+              <label for="unit-inches">Inches</label>
+              <input type="radio" id="unit-centimeters" name="margin-unit" value="centimeters" checked />
+              <label for="unit-centimeters">Centimeters</label>
+            </div>
+            <!-- Margin Inputs Grid -->
+            <div>
+              <label for="margin-top">Top</label>
+              <div>
+                <input type="number" id="margin-top" name="margin_top" value="2.54" step="0.01" min="0" />
+                <span>cm</span>
+              </div>
+              <label for="margin-bottom">Bottom</label>
+              <div>
+                <input type="number" id="margin-bottom" name="margin_bottom" value="2.54" step="0.01" min="0" />
+                <span>cm</span>
+              </div>
+              <label for="margin-left">Left</label>
+              <div>
+                <input type="number" id="margin-left" name="margin_left" value="2.54" step="0.01" min="0" />
+                <span>cm</span>
+              </div>
+              <label for="margin-right">Right</label>
+              <div>
+                <input type="number" id="margin-right" name="margin_right" value="2.54" step="0.01" min="0" />
+                <span>cm</span>
+              </div>
+            </div>
+            <!-- Save Status -->
+            <div id="margins-save-status">
+              <span>Margins will be saved automatically</span>
+            </div>
+          </div>
+          <!-- Course Visibility Settings -->
+          <!-- Course Visibility Settings -->
+          <form id="course-settings-form">
+            <div>
+              <div>
+                <input type="checkbox" id="course-visible" name="course_visible" />
+                <label for="course-visible">Course visible to students</label>
+                <input type="checkbox" id="allow-enrollment" name="allow_enrollment" />
+                <label for="allow-enrollment">Allow new enrollments</label>
+                <input type="checkbox" id="require-approval" name="require_approval" />
+                <label for="require-approval">Require enrollment approval</label>
+              </div>
+              <div id="settings-last-saved">
+                <span id="settings-save-status">Changes will be saved
+                  automatically</span>
+              </div>
+          </form>
+          </div>
+          <h3>Danger Zone</h3>
+          <p>
+            Once you delete a course, there is no going back. Please be
+            certain.
+          </p>
+          <button>Delete Course</button>
+        </section>
+      </article>
       <!-- Marketplace Article -->
-      <article id="marketplace" class="article">
-        <section class="card">
-          <p class="text">
+      <article id="marketplace">
+        <section>
+          <p>
             Marketplace integration features will be available here...
           </p>
         </section>
       </article>
-
       <!-- Resources Article -->
-      <article id="resources" class="article">
-        <section class="card"></section>
+      <article id="resources">
+        <section></section>
       </article>
     </section>
-
-    <section id="create" class="section">
+    <section id="create">
       <!-- Course Builder Layout -->
       <!-- Options Bar (Top Left - above media areas) -->
-
-      <div class="coursebuilder">
-        <div class="coursebuilder__modes">
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/modes/mode-build.svg" class="icon icon--medium" data-mode="build">
-            <span class="icon-name">Build</span>
-          </div>
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" class="icon icon--medium"
-              data-mode="animate">
-            <span class="icon-name">Animate</span>
-          </div>
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/modes/mode-workflow.svg" class="icon icon--medium"
-              data-mode="workflow">
-            <span class="icon-name">Workflow</span>
-          </div>
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/modes/mode-optimize.svg" class="icon icon--medium"
-              data-mode="optimize">
-            <span class="icon-name">Optimize</span>
+      <div>
+        <div>
+          <img src="/src/assets/icons/coursebuilder/modes/mode-build.svg" data-mode="build">
+          <span>Build</span>
+          <img src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" data-mode="animate">
+          <span>Animate</span>
+          <img src="/src/assets/icons/coursebuilder/modes/mode-workflow.svg" data-mode="workflow">
+          <span>Workflow</span>
+          <img src="/src/assets/icons/coursebuilder/modes/mode-optimize.svg" data-mode="optimize">
+          <span>Optimize</span>
+        </div>
+        <div>
+          <img src="/src/assets/icons/coursebuilder/media/media-files.svg" data-media="files">
+          <span>My Files</span>
+          <img src="/src/assets/icons/coursebuilder/media/media-image.svg" data-media="images">
+          <span>Images</span>
+          <img src="/src/assets/icons/coursebuilder/media/media-video.svg" data-media="videos">
+          <span>Videos</span>
+          <img src="/src/assets/icons/coursebuilder/media/media-audio.svg" data-media="audio">
+          <span>Audio</span>
+          <img src="/src/assets/icons/coursebuilder/media/media-text.svg" data-media="text">
+          <span>Text</span>
+          <img src="/src/assets/icons/coursebuilder/media/media-table.svg" data-media="tables">
+          <span>Tables</span>
+          <img src="/src/assets/icons/coursebuilder/media/media-plugins.svg" data-media="plugin">
+          <span>Plugins</span>
+        </div>
+        <input type="search" placeholder="Search media..." />
+      </div>
+      <div id="canvas-container">
+        <div>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="#ccc">
+            <path
+              d="M12,2A2,2 0 0,1 14,4A2,2 0 0,1 12,6A2,2 0 0,1 10,4A2,2 0 0,1 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V21A2,2 0 0,0 5,23H19A2,2 0 0,0 21,21V9M19,9H14V4H19V9Z" />
+          </svg>
+          <div>🔒 Layout-Protected Canvas</div>
+          <div>Draw within pedagogical areas only<br /><small>Layout structure
+              cannot be erased</small>
           </div>
         </div>
-
-        <div class="coursebuilder__media">
-
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-files.svg" class="icon icon--medium"
-              data-media="files">
-            <span class="icon-name">My Files</span>
-          </div>
-
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-image.svg" class="icon icon--medium"
-              data-media="images">
-            <span class="icon-name">Images</span>
-          </div>
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-video.svg" class="icon icon--medium"
-              data-media="videos">
-            <span class="icon-name">Videos</span>
-          </div>
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-audio.svg" class="icon icon--medium"
-              data-media="audio">
-            <span class="icon-name">Audio</span>
-          </div>
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-text.svg" class="icon icon--medium" data-media="text">
-            <span class="icon-name">Text</span>
-          </div>
-
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-table.svg" class="icon icon--medium"
-              data-media="tables">
-            <span class="icon-name">Tables</span>
-          </div>
-
-
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/media/media-plugins.svg" class="icon icon--medium"
-              data-media="plugin">
-            <span class="icon-name">Plugins</span>
-          </div>
+        <div>
+          <img src="/src/assets/icons/coursebuilder/navigation/navigation-toc.svg" title="Page Settings">
+          <span>Contents</span>
+          <img src="/src/assets/icons/coursebuilder/navigation/navigation-thumbnail.svg" title="Thumbnail View">
+          <span>Thumbnails</span>
+          <img src="/src/assets/icons/coursebuilder/navigation/navigation-bookmark.svg" title="Bookmark">
+          <span>Bookmark</span>
         </div>
-
-        <div class="coursebuilder__search">
-          <input type="search" class="media-search__input" placeholder="Search media..." />
-        </div>
-
-        <div class="coursebuilder__canvas" id="canvas-container">
-          <div class="canvas-placeholder">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="#ccc">
-              <path
-                d="M12,2A2,2 0 0,1 14,4A2,2 0 0,1 12,6A2,2 0 0,1 10,4A2,2 0 0,1 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V21A2,2 0 0,0 5,23H19A2,2 0 0,0 21,21V9M19,9H14V4H19V9Z" />
-            </svg>
-            <div class="canvas-placeholder__title">🔒 Layout-Protected Canvas</div>
-            <div class="canvas-placeholder__subtitle">Draw within pedagogical areas only<br /><small>Layout structure
-                cannot be erased</small></div>
+        <!-- Preview content -->
+      </div>
+      <div>
+        <!-- Tool Selection -->
+        <div>
+          <div>
+            <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" data-tool="selection">
+            <span>Select</span>
+            <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" data-tool="pen">
+            <span>Pen</span>
+            <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" data-tool="highlighter">
+            <span>Highlighter</span>
+            <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" data-tool="text">
+            <span>Text</span>
+            <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" data-tool="shapes">
+            <span>Shapes</span>
+            <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" data-tool="eraser">
+            <span>Eraser</span>
           </div>
-        </div>
-
-        <div class="coursebuilder__navigation">
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/navigation/navigation-toc.svg" class="icon icon--medium"
-              title="Page Settings">
-            <span class="icon-name">Contents</span>
-          </div>
-          <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/navigation/navigation-thumbnail.svg" class="icon icon--medium"
-              title="Thumbnail View">
-            <span class="icon-name">Thumbnails</span>
-          </div>
-
-            <div class="icon-wrapper">
-            <img src="/src/assets/icons/coursebuilder/navigation/navigation-bookmark.svg" class="icon icon--medium"
-              title="Bookmark">
-            <span class="icon-name">Bookmark</span>
-          </div>
-
-        </div>
-
-        <div class="coursebuilder__preview">
-          <!-- Preview content -->
-        </div>
-
-        <div class="coursebuilder__tools">
-          <!-- Tool Selection -->
-          <div class="coursebuilder__tools--selection">
-            <div class="icon-wrapper">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" class="icon icon--medium"
-                data-tool="selection">
-              <span class="icon-name">Select</span>
-            </div>
-            <div class="icon-wrapper">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" class="icon icon--medium" data-tool="pen">
-              <span class="icon-name">Pen</span>
-            </div>
-            <div class="icon-wrapper">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" class="icon icon--medium" data-tool="highlighter">
-              <span class="icon-name">Highlighter</span>
-            </div>
-            <div class="icon-wrapper">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" class="icon icon--medium" data-tool="text">
-              <span class="icon-name">Text</span>
-            </div>
-            <div class="icon-wrapper">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" class="icon icon--medium"
-                data-tool="shapes">
-              <span class="icon-name">Shapes</span>
-            </div>
-            <div class="icon-wrapper">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" class="icon icon--medium"
-                data-tool="eraser">
-              <span class="icon-name">Eraser</span>
-            </div>
-          </div>
-
-          <div class="coursebuilder__tools--options">
-            <!-- Tool options will be added here -->
-
-            <!-- Selection Tool Settings (minimal since selection doesn't need many settings) -->
-            <div class="tool-settings" data-tool="selection">
-              <span class="tool-settings__label">Selection Tool</span>
-            </div>
-
+          <!-- Tool options will be added here -->
+          <!-- Selection Tool Settings (minimal since selection doesn't need many settings) -->
+          <div data-tool="selection">
+            <span>Selection Tool</span>
             <!-- Pen Tool Settings -->
-            <div class="tool-settings" data-tool="pen">
-              <input type="range" min="1" max="10" value="2" data-setting="size" title="Pen Size">
-            </div>
-
-            <!-- Highlighter Tool Settings -->
-            <div class="tool-settings" data-tool="highlighter">
-              <input type="range" min="5" max="50" value="10" data-setting="size" title="Highlighter Size">
-              <input type="range" min="0.1" max="1" step="0.1" value="0.8" data-setting="opacity" title="Opacity">
-            </div>
-
-            <!-- Text Tool Settings -->
-            <div class="tool-settings" data-tool="text">
-              <select data-setting="fontFamily" title="Font Family">
-                <option value="Arial">Arial</option>
-                <option value="Times">Times</option>
-                <option value="Helvetica">Helvetica</option>
-              </select>
-              <input type="range" min="8" max="72" value="16" data-setting="fontSize" title="Font Size">
-            </div>
-
-            <!-- Shapes Tool Settings -->
-            <div class="tool-settings" data-tool="shapes">
-              <div class="shape-selection">
-                <div class="icon-wrapper">
-                  <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-rectangle.svg" class="icon icon--medium"
-                    data-shape="rectangle" alt="Rectangle">
-                  <span class="icon-name">Rectangle</span>
-                </div>
-                <div class="icon-wrapper">
-                  <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-circle.svg" class="icon icon--medium"
-                    data-shape="circle" alt="Circle">
-                  <span class="icon-name">Circle</span>
-                </div>
-                <div class="icon-wrapper">
-                  <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-triangle.svg" class="icon icon--medium"
-                    data-shape="triangle" alt="Triangle">
-                  <span class="icon-name">Triangle</span>
-                </div>
+            <input type="range" min="1" max="10" value="2" data-setting="size" title="Pen Size">
+          </div>
+          <!-- Highlighter Tool Settings -->
+          <div data-tool="highlighter">
+            <input type="range" min="5" max="50" value="10" data-setting="size" title="Highlighter Size">
+            <input type="range" min="0.1" max="1" step="0.1" value="0.8" data-setting="opacity" title="Opacity">
+          </div>
+          <!-- Text Tool Settings -->
+          <div data-tool="text">
+            <select data-setting="fontFamily" title="Font Family">
+              <option value="Arial">Arial</option>
+              <option value="Times">Times</option>
+              <option value="Helvetica">Helvetica</option>
+            </select>
+            <input type="range" min="8" max="72" value="16" data-setting="fontSize" title="Font Size">
+          </div>
+          <!-- Shapes Tool Settings -->
+          <div data-tool="shapes">
+            <div>
+              <div>
+                <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-rectangle.svg" data-shape="rectangle"
+                  alt="Rectangle">
+                <span>Rectangle</span>
+                <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-circle.svg" data-shape="circle"
+                  alt="Circle">
+                <span>Circle</span>
+                <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-triangle.svg" data-shape="triangle"
+                  alt="Triangle">
+                <span>Triangle</span>
               </div>
               <input type="range" min="1" max="10" value="2" data-setting="strokeWidth" title="Stroke Width">
             </div>
-
             <!-- Eraser Tool Settings -->
-            <div class="tool-settings" data-tool="eraser">
-              <input type="range" min="5" max="50" value="20" data-setting="size" title="Eraser Size">
-            </div>
-            
+            <input type="range" min="5" max="50" value="20" data-setting="size" title="Eraser Size">
           </div>
         </div>
       </div>
-
     </section> <!-- Preview Section (no aside navigation) -->
-    <section id="preview" class="section">
-      <article class="article article--active">
-        <section class="card">
-          <p class="text">Course preview will be displayed here...</p>
+    <section id="preview">
+      <article>
+        <section>
+          <p>Course preview will be displayed here...</p>
         </section>
       </article>
     </section>
-
     <!-- Launch Section (no aside navigation) -->
-    <section id="launch" class="section">
-      <article class="article article--active">
-        <section class="card">
-          <p class="text">Course launch options will be available here...</p>
+    <section id="launch">
+      <article>
+        <section>
+          <p>Course launch options will be available here...</p>
         </section>
       </article>
     </section>
   </main>
-
   <!-- Core application scripts -->
   <script type="module" src="/src/scripts/app.ts"></script>
-
   <!-- PIXI and PixiJS devtools -->
   <script type="module" src="/src/scripts/coursebuilder/devtools-setup.ts"></script>
-
   <!-- CourseBuilder application -->
   <script type="module" src="/src/scripts/coursebuilder/coursebuilder.ts"></script>
-
   <!-- Backend services -->
   <script type="module" src="/src/scripts/backend/courses/index.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/classificationFormHandler.ts"></script>

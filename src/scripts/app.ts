@@ -19,14 +19,14 @@ console.log('🧭 Global navigation initialized');
 
 // Initialize auth form handlers on auth pages
 document.addEventListener('DOMContentLoaded', () => {
-  // Check if we're on an auth page
-  const isAuthPage = window.location.pathname.includes('/pages/shared/signin.html') || 
-                     window.location.pathname.includes('/pages/shared/signup.html');
-  
-  if (isAuthPage) {
-    new AuthFormHandler();
-    console.log('🔐 Auth form handler initialized');
-  }
+ // Check if we're on an auth page
+ const isAuthPage = window.location.pathname.includes('/pages/shared/signin.html') || 
+ window.location.pathname.includes('/pages/shared/signup.html');
+ 
+ if (isAuthPage) {
+ new AuthFormHandler();
+ console.log('🔐 Auth form handler initialized');
+ }
 });
 
 // Global app initialization
@@ -34,12 +34,12 @@ console.log('📱 Neptino app initialized');
 
 // Global error handling
 window.addEventListener('error', (event) => {
-  console.error('Global error:', event.error);
+ console.error('Global error:', event.error);
 });
 
 // Global unhandled promise rejection handling
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection:', event.reason);
+ console.error('Unhandled promise rejection:', event.reason);
 });
 
 // Export for module system

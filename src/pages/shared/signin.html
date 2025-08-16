@@ -1,121 +1,51 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sign In - Neptino</title>
-    <link rel="stylesheet" href="/src/scss/main.scss" />
-  </head>
-  <body class="body grid">
-    <header class="header grid__header">
-      <nav class="nav">
-        <div class="nav__logo-section">
-          <a href="/" class="logo logo--header">
-            <img
-              src="/src/assets/logo/octopus-logo.png"
-              alt="Neptino Logo"
-              class="logo__image"
-            />
-          </a>
-        </div>
 
-        <div class="nav__links-section">
-          <!-- No navigation links on auth pages -->
-        </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In - Neptino</title>
+  <link rel="stylesheet" href="/src/scss/main.scss" />
+</head>
 
-        <div class="nav__actions-section">
-          <a
-            href="/src/pages/shared/signup.html"
-            class="button button--secondary"
-            >Sign Up</a
-          >
-        </div>
-      </nav>
-    </header>
+<body>
+  <header>
+    <nav>
+      <a href="/">
+        <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
+      </a>
+      <a href="/src/pages/shared/signup.html">Sign Up</a>
+    </nav>
+  </header>
+  <main>
+    <section>
+      <h1>Welcome back</h1>
+      <p>Sign in to your Neptino account</p>
+      <form id="signin-form" method="post" action="#">
+        <label for="email">Email address</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email" autocomplete="email" required />
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter your password"
+          autocomplete="current-password" required />
+        <button type="submit">Sign In</button>
+      </form>
+      <p>Don't have an account yet? <a href="/src/pages/shared/signup.html">Sign up</a></p>
+    </section>
+  </main>
+  <footer>
+    <nav>
+      <a href="/">
+        <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
+      </a>
+      <ul>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a href="#">Support</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </nav>
+  </footer>
+  <script type="module" src="/src/scripts/app.ts"></script>
+</body>
 
-    <main class="main grid__main">
-      <div class="auth-form">
-        <header class="auth-form__header">
-          <h1 class="heading heading--primary">Welcome back</h1>
-          <p class="text text--lead">Sign in to your Neptino account</p>
-        </header>
-
-        <form class="form" id="signin-form" method="post" action="#">
-          <div class="form__group">
-            <label for="email" class="form__label">Email address</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              class="form__input"
-              placeholder="Enter your email"
-              autocomplete="email"
-              required
-            />
-          </div>
-
-          <div class="form__group">
-            <label for="password" class="form__label">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              class="form__input"
-              placeholder="Enter your password"
-              autocomplete="current-password"
-              required
-            />
-          </div>
-
-          <button type="submit" class="button button--primary">Sign In</button>
-        </form>
-
-        <footer class="auth-form__footer">
-          <p class="text text--small">
-            Don't have an account yet?
-            <a href="/src/pages/shared/signup.html" class="link link--primary"
-              >Sign up</a
-            >
-          </p>
-        </footer>
-      </div>
-    </main>
-
-    <footer class="footer grid__footer">
-      <nav class="nav nav--footer">
-        <div class="nav__logo-section">
-          <a href="/" class="logo logo--footer">
-            <img
-              src="/src/assets/logo/octopus-logo.png"
-              alt="Neptino Logo"
-              class="logo__image logo__image--small"
-            />
-          </a>
-        </div>
-
-        <div class="nav__links-section">
-          <ul class="list list--nav list--footer">
-            <li class="list__item">
-              <a href="#" class="link link--footer">Privacy Policy</a>
-            </li>
-            <li class="list__item">
-              <a href="#" class="link link--footer">Terms of Service</a>
-            </li>
-            <li class="list__item">
-              <a href="#" class="link link--footer">Support</a>
-            </li>
-            <li class="list__item">
-              <a href="#" class="link link--footer">Contact</a>
-            </li>
-          </ul>
-        </div>
-
-        <div class="nav__actions-section">
-          <!-- Footer doesn't need action buttons, but keeping structure consistent -->
-        </div>
-      </nav>
-    </footer>
-
-    <script type="module" src="/src/scripts/app.ts"></script>
-  </body>
 </html>

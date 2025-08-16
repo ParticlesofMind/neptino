@@ -1,137 +1,92 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Progress - Neptino</title>
-    <link rel="stylesheet" href="/src/scss/main.scss" />
-  </head>
-  <body class="body grid">
-    <header class="header grid__header">
-      <nav class="nav">
-        <div class="nav__logo-section">
-          <a href="/src/pages/student/home.html" class="logo logo--header">
-            <img
-              src="/src/assets/logo/octopus-logo.png"
-              alt="Neptino Logo"
-              class="logo__image"
-            />
-          </a>
-        </div>
 
-        <div class="nav__links-section">
-          <ul class="list list--nav">
-            <li class="list__item">
-              <a href="/src/pages/student/home.html" class="link link--nav"
-                >Dashboard</a
-              >
-            </li>
-            <li class="list__item">
-              <a href="/src/pages/student/courses.html" class="link link--nav"
-                >My Courses</a
-              >
-            </li>
-            <li class="list__item">
-              <a
-                href="/src/pages/student/progress.html"
-                class="link link--nav link--active"
-                >Progress</a
-              >
-            </li>
-          </ul>
-        </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Progress - Neptino</title>
+  <link rel="stylesheet" href="/src/scss/main.scss" />
+</head>
 
-        <div class="nav__actions-section">
-          <button id="logout-btn" class="button button--secondary">
-            Logout
-          </button>
+<body>
+  <header>
+    <nav>
+      <a href="/src/pages/student/home.html">
+        <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
+      </a>
+      <ul>
+        <li>
+          <a href="/src/pages/student/home.html">Dashboard</a>
+        </li>
+        <li>
+          <a href="/src/pages/student/courses.html">My Courses</a>
+        </li>
+        <li>
+          <a href="/src/pages/student/progress.html">Progress</a>
+        </li>
+      </ul>
+      <button id="logout-btn">
+        Logout
+      </button>
+    </nav>
+  </header>
+  <main>
+    <section>
+      <h1>Learning Progress</h1>
+      <p>
+        Track your achievements and learning milestones.
+      </p>
+    </section>
+    <section>
+      <div>
+        <div>
+          <div>0</div>
+          <div>Courses Completed</div>
         </div>
-      </nav>
-    </header>
-
-    <main class="main grid__main">
-      <section class="progress-header">
-        <h1 class="heading heading--primary">Learning Progress</h1>
-        <p class="text text--lead">
-          Track your achievements and learning milestones.
+        <div>
+          <div>0</div>
+          <div>Hours Learned</div>
+        </div>
+        <div>
+          <div>0</div>
+          <div>Certificates Earned</div>
+        </div>
+        <div>
+          <div>0</div>
+          <div>Skills Acquired</div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <h2>Course Progress</h2>
+      <div>
+        <p>
+          No course progress to display yet. Enroll in courses to start
+          tracking your learning journey!
         </p>
-      </section>
+        <a href="/src/pages/student/courses.html">View My Courses</a>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <nav>
+      <a href="/src/pages/student/home.html">
+        <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
+      </a>
+      <ul>
+        <li>
+          <a href="#">Help Center</a>
+        </li>
+        <li>
+          <a href="#">Support</a>
+        </li>
+        <li>
+          <a href="#">Contact</a>
+        </li>
+      </ul>
+    </nav>
+  </footer>
+  <script type="module" src="/src/scripts/app.ts"></script>
+</body>
 
-      <section class="progress-overview">
-        <div class="stats-grid">
-          <div class="card">
-            <div class="card__content">
-              <div class="stat-number">0</div>
-              <div class="stat-label">Courses Completed</div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card__content">
-              <div class="stat-number">0</div>
-              <div class="stat-label">Hours Learned</div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card__content">
-              <div class="stat-number">0</div>
-              <div class="stat-label">Certificates Earned</div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card__content">
-              <div class="stat-number">0</div>
-              <div class="stat-label">Skills Acquired</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="progress-details">
-        <h2 class="heading heading--secondary">Course Progress</h2>
-        <div class="card">
-          <div class="card__content">
-            <p class="text">
-              No course progress to display yet. Enroll in courses to start
-              tracking your learning journey!
-            </p>
-            <a
-              href="/src/pages/student/courses.html"
-              class="button button--primary"
-              >View My Courses</a
-            >
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer class="footer grid__footer">
-      <nav class="nav nav--footer">
-        <div class="nav__logo-section">
-          <a href="/src/pages/student/home.html" class="logo logo--footer">
-            <img
-              src="/src/assets/logo/octopus-logo.png"
-              alt="Neptino Logo"
-              class="logo__image logo__image--small"
-            />
-          </a>
-        </div>
-
-        <div class="nav__links-section">
-          <ul class="list list--nav list--footer">
-            <li class="list__item">
-              <a href="#" class="link link--footer">Help Center</a>
-            </li>
-            <li class="list__item">
-              <a href="#" class="link link--footer">Support</a>
-            </li>
-            <li class="list__item">
-              <a href="#" class="link link--footer">Contact</a>
-            </li>
-          </ul>
-        </div>
-      </nav>
-    </footer>
-
-    <script type="module" src="/src/scripts/app.ts"></script>
-  </body>
 </html>
