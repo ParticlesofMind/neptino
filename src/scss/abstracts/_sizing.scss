@@ -1,0 +1,61 @@
+// ==========================================================================
+// UNIFIED SIZING SYSTEM - 5 NATURAL SCALES FOR ALL ELEMENTS
+// ==========================================================================
+
+:root {
+  // ICON SIZES (UI icons, buttons, navigation)
+  // ==========================================================================
+  --size-icon-extra-small: 1rem;       // 16px
+  --size-icon-small: 1.25rem;          // 20px
+  --size-icon-base: 1.5rem;            // 24px (most regular icons)
+  --size-icon-large: 2rem;             // 32px
+  --size-icon-extra-large: 2.5rem;     // 40px
+
+  // LOGO SIZES (branding elements)
+  // ==========================================================================
+  --size-logo-extra-small: 1.5rem;     // 24px
+  --size-logo-small: 2rem;             // 32px
+  --size-logo-base: 2.5rem;            // 40px (most regular logos)
+  --size-logo-large: 4rem;             // 64px
+  --size-logo-extra-large: 6rem;       // 96px
+
+  // AVATAR/PROFILE SIZES
+  // ==========================================================================
+  --size-avatar-extra-small: 1.5rem;   // 24px
+  --size-avatar-small: 2rem;           // 32px
+  --size-avatar-base: 2.5rem;          // 40px (most regular avatars)
+  --size-avatar-large: 4rem;           // 64px
+  --size-avatar-extra-large: 6rem;     // 96px
+
+  // IMAGE SIZES (thumbnails, media, etc.)
+  // ==========================================================================
+  --size-image-extra-small: 3rem;      // 48px
+  --size-image-small: 4rem;            // 64px
+  --size-image-base: 6rem;             // 96px (most regular images)
+  --size-image-large: 8rem;            // 128px
+  --size-image-extra-large: 12rem;     // 192px
+
+  // BUTTON SIZES (interactive elements)
+  // ==========================================================================
+  --size-button-extra-small: 2rem;     // 32px
+  --size-button-small: 2.25rem;        // 36px
+  --size-button-base: 2.5rem;          // 40px (most regular buttons)
+  --size-button-large: 3rem;           // 48px
+  --size-button-extra-large: 3.5rem;   // 56px
+
+  // INPUT SIZES (form elements)
+  // ==========================================================================
+  --size-input-extra-small: 2rem;      // 32px
+  --size-input-small: 2.25rem;         // 36px
+  --size-input-base: 2.5rem;           // 40px (most regular inputs)
+  --size-input-large: 3rem;            // 48px
+  --size-input-extra-large: 3.5rem;    // 56px
+
+  // CONTAINER SIZES (layout widths)
+  // ==========================================================================
+  --size-container-extra-small: 20rem; // 320px
+  --size-container-small: 28rem;       // 448px
+  --size-container-base: 42rem;        // 672px (most regular containers)
+  --size-container-large: 64rem;       // 1024px
+  --size-container-extra-large: 80rem; // 1280px
+}

@@ -217,12 +217,10 @@ export class AsideNavigation {
  this.init();
  }
 
- private isInSetupSection(): boolean {
- const setupSection = document.getElementById('setup');
- return setupSection?
- }
-
- private init(): void {
+    private isInSetupSection(): boolean {
+        const setupSection = document.getElementById('setup');
+        return setupSection ? setupSection.contains(document.activeElement) : false;
+    } private init(): void {
  if (this.asideLinks.length === 0) {
  console.warn("No aside links found - aside navigation disabled");
  return;

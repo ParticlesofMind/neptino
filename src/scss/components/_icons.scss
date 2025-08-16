@@ -1,1 +1,90 @@
-/* Styles cleared */
+// ==========================================================================
+// SIZING UTILITY CLASSES - UNIFIED 5-SCALE SYSTEM
+// ==========================================================================
+
+// Logo Classes
+// ==========================================================================
+.logo {
+  display: block;
+  object-fit: contain;
+  transition: var(--transition-fast);
+  
+  &:hover {
+    opacity: 0.8;
+  }
+  
+  // Logo sizing with 5-scale system
+  &-extra-small { 
+    width: var(--size-logo-extra-small); 
+    height: var(--size-logo-extra-small); 
+  }
+  
+  &-small { 
+    width: var(--size-logo-small); 
+    height: var(--size-logo-small); 
+  }
+  
+  &-base { 
+    width: var(--size-logo-base); 
+    height: var(--size-logo-base); 
+  }
+  
+  &-large { 
+    width: var(--size-logo-large); 
+    height: var(--size-logo-large); 
+  }
+  
+  &-extra-large { 
+    width: var(--size-logo-extra-large); 
+    height: var(--size-logo-extra-large); 
+  }
+}
+
+// Icon Classes
+// ==========================================================================
+.icon {
+  display: inline-block;
+  object-fit: contain;
+  vertical-align: middle;
+  
+  &-extra-small { width: var(--size-icon-extra-small); height: var(--size-icon-extra-small); }
+  &-small { width: var(--size-icon-small); height: var(--size-icon-small); }
+  &-base { width: var(--size-icon-base); height: var(--size-icon-base); }
+  &-large { width: var(--size-icon-large); height: var(--size-icon-large); }
+  &-extra-large { width: var(--size-icon-extra-large); height: var(--size-icon-extra-large); }
+}
+
+// Avatar Classes
+// ==========================================================================
+.avatar {
+  display: inline-block;
+  object-fit: cover;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-neutral-200);
+  
+  &-extra-small { width: var(--size-avatar-extra-small); height: var(--size-avatar-extra-small); }
+  &-small { width: var(--size-avatar-small); height: var(--size-avatar-small); }
+  &-base { width: var(--size-avatar-base); height: var(--size-avatar-base); }
+  &-large { width: var(--size-avatar-large); height: var(--size-avatar-large); }
+  &-extra-large { width: var(--size-avatar-extra-large); height: var(--size-avatar-extra-large); }
+}
+
+// Image Classes
+// ==========================================================================
+.image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  
+  &-extra-small { width: var(--size-image-extra-small); height: var(--size-image-extra-small); }
+  &-small { width: var(--size-image-small); height: var(--size-image-small); }
+  &-base { width: var(--size-image-base); height: var(--size-image-base); }
+  &-large { width: var(--size-image-large); height: var(--size-image-large); }
+  &-extra-large { width: var(--size-image-extra-large); height: var(--size-image-extra-large); }
+  
+  // Image Utilities
+  &--cover { object-fit: cover; }
+  &--contain { object-fit: contain; }
+  &--rounded { border-radius: var(--radius-large); }
+  &--circle { border-radius: var(--radius-full); }
+}

@@ -6,82 +6,82 @@
     <title>Neptino - Educational Platform</title>
     <link rel="stylesheet" href="/src/scss/main.scss">
 </head>
-<body>
-    <header>
-        <nav>
-            <a href="/">
-                <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo">
+<body class="grid body">
+    <header class="grid__header header">
+        <nav class="header__nav nav">
+            <a href="/" class="nav__brand">
+                <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo-base">
             </a>
             
-            <ul>
-                <li><a href="/src/pages/shared/teachers.html">For Teachers</a></li>
-                <li><a href="/src/pages/shared/students.html">For Students</a></li>
-                <li><a href="/src/pages/shared/institutions.html">For Institutions</a></li>
-                <li><a href="/src/pages/shared/pricing.html">Pricing</a></li>
+            <ul class="nav__menu">
+                <li class="nav__item"><a href="/src/pages/shared/teachers.html" class="nav__link">For Teachers</a></li>
+                <li class="nav__item"><a href="/src/pages/shared/students.html" class="nav__link">For Students</a></li>
+                <li class="nav__item"><a href="/src/pages/shared/institutions.html" class="nav__link">For Institutions</a></li>
+                <li class="nav__item"><a href="/src/pages/shared/pricing.html" class="nav__link">Pricing</a></li>
             </ul>
             
-            <a href="/src/pages/shared/signin.html">Sign In</a>
+            <a href="/src/pages/shared/signin.html" class="nav__cta">Sign In</a>
         </nav>
     </header>
  
-    <main>
-        <section>
-            <h1>Transform Learning with Neptino</h1>
-            <p>An innovative educational platform that brings teachers, students, and institutions together in a seamless learning experience designed for the future of education.</p>
-            <a href="/src/pages/shared/signup.html">Get Started Free</a>
-            <a href="/src/pages/shared/pricing.html">View Pricing</a>
+    <main class="grid__main main">
+        <section class="hero">
+            <h1 class="hero__title">Transform Learning with Neptino</h1>
+            <p class="hero__description">An innovative educational platform that brings teachers, students, and institutions together in a seamless learning experience designed for the future of education.</p>
+            <a href="/src/pages/shared/signup.html" class="hero__cta-primary">Get Started Free</a>
+            <a href="/src/pages/shared/pricing.html" class="hero__cta-secondary">View Pricing</a>
         </section>
 
-        <section>
-            <h2>Trusted by Educators Worldwide</h2>
-            <dl>
-                <dt>10,000+</dt>
-                <dd>Active Teachers</dd>
-                <dt>500,000+</dt>
-                <dd>Students Engaged</dd>
-                <dt>500+</dt>
-                <dd>Institutions</dd>
-                <dt>98%</dt>
-                <dd>Satisfaction Rate</dd>
+        <section class="stats">
+            <h2 class="stats__title">Trusted by Educators Worldwide</h2>
+            <dl class="stats__list">
+                <dt class="stats__number">10,000+</dt>
+                <dd class="stats__label">Active Teachers</dd>
+                <dt class="stats__number">500,000+</dt>
+                <dd class="stats__label">Students Engaged</dd>
+                <dt class="stats__number">500+</dt>
+                <dd class="stats__label">Institutions</dd>
+                <dt class="stats__number">98%</dt>
+                <dd class="stats__label">Satisfaction Rate</dd>
             </dl>
         </section>
 
-        <section>
-            <blockquote>
-                "Neptino has completely transformed how I teach. My students are more engaged than ever, and I can see their progress in real-time."
-                <cite>— Dr. Sarah Johnson, Mathematics Professor</cite>
+        <section class="testimonials">
+            <blockquote class="testimonial">
+                <p class="testimonial__quote">"Neptino has completely transformed how I teach. My students are more engaged than ever, and I can see their progress in real-time."</p>
+                <cite class="testimonial__author">— Dr. Sarah Johnson, Mathematics Professor</cite>
             </blockquote>
                 
-            <blockquote>
-                "The analytics and reporting features give us insights we never had before. We can make data-driven decisions to improve student outcomes."
-                <cite>— Mark Chen, IT Director</cite>
+            <blockquote class="testimonial">
+                <p class="testimonial__quote">"The analytics and reporting features give us insights we never had before. We can make data-driven decisions to improve student outcomes."</p>
+                <cite class="testimonial__author">— Mark Chen, IT Director</cite>
             </blockquote>
                 
-            <blockquote>
-                "As a student, I love how interactive and engaging the courses are. The mobile app lets me learn anywhere, anytime."
-                <cite>— Emma Rodriguez, University Student</cite>
+            <blockquote class="testimonial">
+                <p class="testimonial__quote">"As a student, I love how interactive and engaging the courses are. The mobile app lets me learn anywhere, anytime."</p>
+                <cite class="testimonial__author">— Emma Rodriguez, University Student</cite>
             </blockquote>
         </section>
 
-        <section>
-            <h2>Ready to Transform Your Educational Experience?</h2>
-            <p>Join thousands of educators and students already using Neptino to enhance teaching and learning.</p>
-            <a href="/src/pages/shared/signup.html">Start Your Free Trial</a>
-            <a href="/src/pages/shared/pricing.html">View All Plans</a>
+        <section class="cta">
+            <h2 class="cta__title">Ready to Transform Your Educational Experience?</h2>
+            <p class="cta__description">Join thousands of educators and students already using Neptino to enhance teaching and learning.</p>
+            <a href="/src/pages/shared/signup.html" class="cta__button-primary">Start Your Free Trial</a>
+            <a href="/src/pages/shared/pricing.html" class="cta__button-secondary">View All Plans</a>
         </section>
     </main>
 
-    <footer>
-        <nav>
-            <a href="/">
-                <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo">
+    <footer class="grid__footer footer">
+        <nav class="footer__nav nav">
+            <a href="/" class="nav__brand">
+                <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo-small">
             </a>
             
-            <ul>
-                <li><a href="#">Privacy Policy</a></li>
-                <li><a href="#">Terms of Service</a></li>
-                <li><a href="#">Support</a></li>
-                <li><a href="#">Contact</a></li>
+            <ul class="nav__menu nav__menu--footer">
+                <li class="nav__item"><a href="#" class="nav__link">Privacy Policy</a></li>
+                <li class="nav__item"><a href="#" class="nav__link">Terms of Service</a></li>
+                <li class="nav__item"><a href="#" class="nav__link">Support</a></li>
+                <li class="nav__item"><a href="#" class="nav__link">Contact</a></li>
             </ul>
         </nav>
     </footer>

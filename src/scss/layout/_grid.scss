@@ -1,1 +1,21 @@
-/* Styles cleared */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: minmax(100px, auto);
+    gap: 1rem;
+
+    &__header {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    &__main {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    &__footer {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

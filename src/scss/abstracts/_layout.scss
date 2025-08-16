@@ -1,0 +1,60 @@
+// ==========================================================================
+// LAYOUT FUNDAMENTALS
+// ==========================================================================
+
+:root {
+  // BORDER RADIUS
+  // ==========================================================================
+  --radius-none: 0;
+  --radius-small: 0.125rem;       // 2px
+  --radius-medium: 0.25rem;       // 4px
+  --radius-large: 0.5rem;         // 8px
+  --radius-extra-large: 0.75rem;  // 12px
+  --radius-huge: 1rem;            // 16px
+  --radius-full: 9999px;
+
+  // SHADOWS
+  // ==========================================================================
+  --shadow-small: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-medium: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-large: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-extra-large: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  // Z-INDEX SCALE
+  // ==========================================================================
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+
+  // BREAKPOINTS (for responsive design)
+  // ==========================================================================
+  --breakpoint-small: 640px;
+  --breakpoint-medium: 768px;
+  --breakpoint-large: 1024px;
+  --breakpoint-extra-large: 1280px;
+  --breakpoint-huge: 1536px;
+
+  // GRID SYSTEM
+  // ==========================================================================
+  --grid-columns: 12;
+  --grid-gap: var(--spacing-5);
+  --container-padding: var(--spacing-5);
+  --container-max-width: 1280px;
+
+  // ANIMATIONS & TRANSITIONS
+  // ==========================================================================
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+}
+
+// SCSS Variables for calculations
+// ==========================================================================
+
+$container-max-width: var(--container-max-width);
+$grid-columns: 12;

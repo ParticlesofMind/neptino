@@ -1,1 +1,225 @@
-/* Styles cleared */
+// ==========================================================================
+// TYPOGRAPHY SYSTEM - VARIABLES & FOUNDATION STYLES
+// ==========================================================================
+
+// Typography Variables (Design Tokens)
+// ==========================================================================
+:root {
+    // Font Families
+    --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    --font-family-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    --font-family-mono: 'Fira Code', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+
+    // Font Sizes (5-Scale System - Natural Language)
+    --font-size-extra-small: 0.875rem; // 14px
+    --font-size-small: 1rem; // 16px
+    --font-size-base: 1.125rem; // 18px (most regular text)
+    --font-size-large: 1.5rem; // 24px
+    --font-size-extra-large: 2rem; // 32px
+
+    // Font Weights
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 800;
+
+    // Line Heights
+    --line-height-tight: 1.25;
+    --line-height-snug: 1.375;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.625;
+    --line-height-loose: 2;
+}
+
+// Typography Foundation Styles
+// ==========================================================================
+
+// Set default font for the entire document
+html {
+    font-family: var(--font-family-primary);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+    color: var(--color-text-primary);
+}
+
+body {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+}
+
+// Headings
+// ==========================================================================
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-family-heading);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--spacing-5) 0;
+}
+
+h1 {
+    font-size: var(--font-size-extra-large);
+}
+
+// 32px
+h2 {
+    font-size: var(--font-size-large);
+}
+
+// 24px
+h3 {
+    font-size: var(--font-size-base);
+}
+
+// 18px
+h4 {
+    font-size: var(--font-size-small);
+}
+
+// 16px
+h5 {
+    font-size: var(--font-size-extra-small);
+}
+
+// 14px
+h6 {
+    font-size: var(--font-size-extra-small);
+}
+
+// 14px
+
+// Paragraphs and Text Elements
+// ==========================================================================
+
+p {
+    margin: 0 0 var(--spacing-5) 0;
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+}
+
+// Text size utility classes
+.text-extra-small {
+    font-size: var(--font-size-extra-small);
+}
+
+.text-small {
+    font-size: var(--font-size-small);
+}
+
+.text-base {
+    font-size: var(--font-size-base);
+}
+
+.text-large {
+    font-size: var(--font-size-large);
+}
+
+.text-extra-large {
+    font-size: var(--font-size-extra-large);
+}
+
+// Font weight utilities
+.font-light {
+    font-weight: var(--font-weight-light);
+}
+
+.font-normal {
+    font-weight: var(--font-weight-normal);
+}
+
+.font-medium {
+    font-weight: var(--font-weight-medium);
+}
+
+.font-semibold {
+    font-weight: var(--font-weight-semibold);
+}
+
+.font-bold {
+    font-weight: var(--font-weight-bold);
+}
+
+// Text color utilities
+.text-primary {
+    color: var(--color-text-primary);
+}
+
+.text-secondary {
+    color: var(--color-text-secondary);
+}
+
+.text-tertiary {
+    color: var(--color-text-tertiary);
+}
+
+// Links
+// ==========================================================================
+
+a {
+    color: var(--color-primary-500);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+
+    &:hover {
+        color: var(--color-primary-600);
+        text-decoration: underline;
+    }
+
+    &:focus {
+        outline: 2px solid var(--color-primary-500);
+        outline-offset: 2px;
+    }
+}
+
+// Code and Preformatted Text
+// ==========================================================================
+
+code,
+pre {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-small);
+}
+
+code {
+    padding: var(--spacing-1) var(--spacing-2);
+    background-color: var(--color-background-secondary);
+    border-radius: var(--radius-small);
+    color: var(--color-text-primary);
+}
+
+pre {
+    padding: var(--spacing-5);
+    background-color: var(--color-background-secondary);
+    border-radius: var(--radius-medium);
+    overflow-x: auto;
+    line-height: var(--line-height-relaxed);
+
+    code {
+        padding: 0;
+        background: none;
+        border-radius: 0;
+    }
+}
+
+// Lists
+// ==========================================================================
+
+ul,
+ol {
+    margin: 0 0 var(--spacing-5) 0;
+    padding-left: var(--spacing-8);
+}
+
+li {
+    margin-bottom: var(--spacing-2);
+}

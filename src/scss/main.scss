@@ -1,1 +1,36 @@
-/* All styles cleared */
+
+// ==========================================================================
+// NEPTINO MAIN STYLESHEET - CLEAN & ORGANIZED
+// ==========================================================================
+
+// ABSTRACTS (Design tokens, functions, mixins) - No CSS output
+// ==========================================================================
+@use 'abstracts/colors';          // All color definitions
+@use 'abstracts/spacing';         // Spacing scale system
+@use 'abstracts/sizing';          // Element sizing variables
+@use 'abstracts/layout';          // Layout fundamentals (radius, shadows, grid, etc.)
+@use 'abstracts/functions';       // SCSS functions
+@use 'abstracts/mixins';          // SCSS mixins
+
+// BASE (Foundation styles that affect the whole document)
+// ==========================================================================
+@use 'base/normalize';            // Browser normalization
+@use 'base/reset';                // CSS reset
+@use 'base/typography';           // Typography system with font variables
+@use 'base/media';                // Media queries and responsive behavior
+
+// LAYOUT (Major structural components)
+// ==========================================================================
+@use 'layout/grid';               // Grid system
+@use 'layout/header';             // Site header
+@use 'layout/navigation';         // Navigation components
+@use 'layout/sidebar';            // Sidebar layout
+@use 'layout/footer';             // Site footer
+
+// COMPONENTS (Reusable UI components)
+// ==========================================================================
+@use 'components/icons';          // Sizing utilities for images/icons/logos
+@use 'components/buttons';        // Button styles
+@use 'components/inputs';         // Form inputs
+@use 'components/alerts';         // Alert/notification components
+@use 'components/schedule';       // Schedule-related components
