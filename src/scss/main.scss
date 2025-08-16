@@ -3,6 +3,11 @@
 // NEPTINO MAIN STYLESHEET - CLEAN & ORGANIZED
 // ==========================================================================
 
+// VENDORS (External libraries / stylings) - MUST BE FIRST
+// ==========================================================================
+@use 'vendors/normalize';            // Browser normalization
+@use 'vendors/reset';                // CSS reset
+
 // ABSTRACTS (Design tokens, functions, mixins) - No CSS output
 // ==========================================================================
 @use 'abstracts/colors';          // All color definitions
@@ -14,8 +19,6 @@
 
 // BASE (Foundation styles that affect the whole document)
 // ==========================================================================
-@use 'base/normalize';            // Browser normalization
-@use 'base/reset';                // CSS reset
 @use 'base/typography';           // Typography system with font variables
 @use 'base/media';                // Media queries and responsive behavior
 
@@ -24,8 +27,14 @@
 @use 'layout/grid';               // Grid system
 @use 'layout/header';             // Site header
 @use 'layout/navigation';         // Navigation components
+@use 'layout/form';
 @use 'layout/sidebar';            // Sidebar layout
 @use 'layout/footer';             // Site footer
+
+// PAGES (page styling)
+// ==========================================================================
+@use 'pages/signin';
+@use 'pages/signup';
 
 // COMPONENTS (Reusable UI components)
 // ==========================================================================

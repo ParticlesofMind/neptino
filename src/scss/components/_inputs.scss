@@ -1,1 +1,78 @@
-/* Styles cleared */
+// ==========================================================================
+// INPUT COMPONENT - BEM Methodology
+// ==========================================================================
+
+.input {
+    display: block;
+    width: 100%;
+    padding: var(--spacing-4) var(--spacing-5); // 12px vertical, 16px horizontal
+    font-size: var(--font-size-base);
+    font-family: inherit;
+    line-height: var(--line-height-normal);
+    color: var(--color-text-primary);
+    background-color: var(--color-input-background);
+    border: 2px solid var(--color-input-border);
+    border-radius: var(--border-radius-medium);
+    transition: all 0.2s ease;
+
+    // Placeholder styling
+    &::placeholder {
+        color: var(--color-text-tertiary);
+        opacity: 1;
+    }
+
+    // Focus state
+    &:focus {
+        outline: none;
+        border-color: var(--color-input-border-focus);
+        box-shadow: 0 0 0 3px var(--color-primary-100);
+    }
+
+    // Hover state (only when not focused or disabled)
+    &:hover:not(:focus):not(:disabled) {
+        border-color: var(--color-neutral-400);
+    }
+
+    // Disabled state
+    &:disabled {
+        background-color: var(--color-neutral-100);
+        color: var(--color-text-tertiary);
+        border-color: var(--color-neutral-200);
+        cursor: not-allowed;
+        
+        &::placeholder {
+            color: var(--color-text-tertiary);
+        }
+    }
+
+    // Error state
+    &--error {
+        border-color: var(--color-error-500);
+        background-color: var(--color-error-50);
+
+        &:focus {
+            border-color: var(--color-error-500);
+            box-shadow: 0 0 0 3px var(--color-error-100);
+        }
+    }
+
+    // Success state
+    &--success {
+        border-color: var(--color-success-500);
+        background-color: var(--color-success-50);
+
+        &:focus {
+            border-color: var(--color-success-500);
+            box-shadow: 0 0 0 3px var(--color-success-100);
+        }
+    }
+
+    // Type-specific styling
+    &--search {
+        padding-left: var(--spacing-10); // Space for search icon
+        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>');
+        background-repeat: no-repeat;
+        background-position: var(--spacing-4) center;
+        background-size: 16px;
+    }
+}

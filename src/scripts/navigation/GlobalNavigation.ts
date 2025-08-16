@@ -208,7 +208,7 @@ export class GlobalNavigation {
  }
  
  // Sign out button
- if (target.closest('#sign-out-btn')) {
+ if (target.closest('#sign-out-btn') || target.closest('#logout-btn')) {
  e.preventDefault();
  this.handleSignOut();
  }

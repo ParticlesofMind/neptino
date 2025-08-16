@@ -1,90 +1,132 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sign Up - Neptino</title>
-    <link rel="stylesheet" href="/src/scss/main.scss" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - Neptino</title>
+  <link rel="stylesheet" href="/src/scss/main.scss">
 </head>
 
-<body>
-    <header>
-        <nav>
-            <a href="/">
-                <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
-            </a>
-            <!-- No navigation links on auth pages -->
-            <a href="/src/pages/shared/signin.html">Sign In</a>
-        </nav>
-    </header>
-    <main>
-        <header>
-            <h1>Join Neptino</h1>
-            <p>Create your account to get started</p>
-        </header>
-        <form id="signup-form" method="post" action="#">
-            <div>
-                <label for="first-name">First name</label>
-                <input type="text" id="first-name" name="firstName" placeholder="Enter your first name"
-                    autocomplete="given-name" required />
-            </div>
-            <div>
-                <label for="last-name">Last name</label>
-                <input type="text" id="last-name" name="lastName" placeholder="Enter your last name"
-                    autocomplete="family-name" />
-            </div>
-            <div>
-                <label for="email">Email address</label>
-                <input type="email" id="email" name="email" placeholder="Enter your email" autocomplete="email"
-                    required />
-            </div>
-            <div>
-                <label for="role">I am a</label>
-                <select id="role" name="role" required>
-                    <option value="">Select your role</option>
-                    <option value="student">Student</option>
-                    <option value="teacher">Teacher</option>
-                    <option value="administrator">Administrator</option>
-                </select>
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="Create a password"
-                    autocomplete="new-password" required />
-            </div>
-            <button type="submit">
-                Create Account
+<body class="grid body">
+  <header class="grid__header header header--signup">
+    <nav class="header__nav">
+      <ul class="nav nav--header">
+        <li class="nav__item nav__item--brand">
+          <a href="/" class="nav__brand">
+            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
+          </a>
+        </li>
+        <li class="nav__item"><a href="/src/pages/shared/features.html" class="nav__link link">Features</a></li>
+        <li class="nav__item"><a href="/src/pages/shared/about.html" class="nav__link link">About</a></li>
+        <li class="nav__item nav__item--dropdown">
+          <div class="dropdown dropdown--right">
+            <button class="dropdown__toggle" id="language-toggle" aria-expanded="false" aria-haspopup="true">
+              <span class="dropdown__text">EN</span>
+              <svg class="dropdown__icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7 10l5 5 5-5z" />
+              </svg>
             </button>
-        </form>
-        <footer>
-            <p>
-                Already have an account?
-                <a href="/src/pages/shared/signin.html">Sign in</a>
-            </p>
-        </footer>
-    </main>
-    <footer>
-        <nav>
-            <a href="/">
-                <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
-            </a>
-            <ul>
-                <li>
-                    <a href="#">Privacy Policy</a>
-                </li>
-                <li>
-                    <a href="#">Terms of Service</a>
-                </li>
-                <li>
-                    <a href="#">Support</a>
-                </li>
-                <li>
-                    <a href="#">Contact</a>
-                </li>
+            <ul class="dropdown__menu" id="language-menu">
+              <li class="dropdown__item">
+                <button class="dropdown__link" data-lang="en">English</button>
+              </li>
+              <li class="dropdown__item">
+                <button class="dropdown__link" data-lang="es">Español</button>
+              </li>
+              <li class="dropdown__item">
+                <button class="dropdown__link" data-lang="fr">Français</button>
+              </li>
+              <li class="dropdown__item">
+                <button class="dropdown__link" data-lang="de">Deutsch</button>
+              </li>
             </ul>
+          </div>
+        </li>
+        <li class="nav__item nav__item--cta">
+          <a href="/src/pages/shared/signin.html" class="nav__cta button button--outline">Sign In</a>
+        </li>
+      </ul>
+    </nav>
+  </header>
 
-        </nav>
-    </footer>
-    <script type="module" src="/src/scripts/app.ts"></script>
+  <main class="grid__main main">
+    <div class="signup">
+      <h1 class="signup__title heading heading--h1">Join Neptino</h1>
+      <p class="signup__description paragraph paragraph--lead">Create your account to get started</p>
+      <form id="signup-form" class="signup__form form form--signup" method="post" action="#">
+        <div class="signup__input-group">
+          <svg class="signup__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <input type="text" id="first-name" name="firstName" class="signup__input input input--with-icon" placeholder="First name"
+            autocomplete="given-name" required />
+        </div>
+        <div class="signup__input-group">
+          <svg class="signup__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <input type="text" id="last-name" name="lastName" class="signup__input input input--with-icon" placeholder="Last name"
+            autocomplete="family-name" />
+        </div>
+        <div class="signup__input-group">
+          <svg class="signup__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"/>
+            <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <input type="email" id="email" name="email" class="signup__input input input--with-icon" placeholder="Email address"
+            autocomplete="email" required />
+        </div>
+        <div class="signup__input-group">
+          <svg class="signup__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/>
+            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="2"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <select id="role" name="role" class="signup__input input input--with-icon" required>
+            <option value="">Select your role</option>
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="administrator">Administrator</option>
+          </select>
+        </div>
+        <div class="signup__input-group">
+          <svg class="signup__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="16" r="1" stroke="currentColor" stroke-width="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <input type="password" id="password" name="password" class="signup__input input input--with-icon" placeholder="Create a password"
+            autocomplete="new-password" required />
+        </div>
+        <button type="submit" class="signup__submit button button--primary">Create Account</button>
+      </form>
+      <p class="signup__signin-link">Already have an account? <a href="/src/pages/shared/signin.html"
+          class="link">Sign in</a></p>
+    </div>
+  </main>
+
+  <footer class="grid__footer footer">
+    <nav class="footer__nav">
+      <ul class="nav nav--footer">
+        <li class="nav__item nav__item--brand">
+          <a href="/" class="nav__brand">
+            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
+          </a>
+        </li>
+        <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Privacy
+            Policy</a></li>
+        <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Terms of
+            Service</a></li>
+        <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Contact</a></li>
+      </ul>
+    </nav>
+  </footer>
+
+  <script type="module" src="/src/scripts/app.ts"></script>
 </body>
 
 </html>

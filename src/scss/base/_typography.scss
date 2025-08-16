@@ -108,54 +108,6 @@ p {
     line-height: var(--line-height-normal);
 }
 
-// ==========================================================================
-// TYPOGRAPHY COMPONENTS - BEM Methodology (Minimal)
-// ==========================================================================
-
-// Size Component
-.size {
-  &--xs { font-size: var(--font-size-extra-small); }
-  &--sm { font-size: var(--font-size-small); }
-  &--base { font-size: var(--font-size-base); }
-  &--lg { font-size: var(--font-size-large); }
-  &--xl { font-size: var(--font-size-extra-large); }
-}
-
-// Weight Component
-.weight {
-  &--light { font-weight: var(--font-weight-light); }
-  &--normal { font-weight: var(--font-weight-normal); }
-  &--medium { font-weight: var(--font-weight-medium); }
-  &--semibold { font-weight: var(--font-weight-semibold); }
-  &--bold { font-weight: var(--font-weight-bold); }
-}
-
-// Color Component
-.color {
-  &--primary { color: var(--color-text-primary); }
-  &--secondary { color: var(--color-text-secondary); }
-  &--tertiary { color: var(--color-text-tertiary); }
-}
-
-// ==========================================================================
-// SEMANTIC TYPOGRAPHY ELEMENTS
-// ==========================================================================
-
-// Heading Component
-.heading {
-  font-family: var(--font-family-heading);
-  font-weight: var(--font-weight-bold);
-  line-height: var(--line-height-tight);
-  color: var(--color-text-primary);
-  
-  &--h1 { font-size: var(--font-size-extra-large); }
-  &--h2 { font-size: var(--font-size-large); }
-  &--h3 { font-size: var(--font-size-base); }
-  &--h4 { font-size: var(--font-size-small); }
-  &--h5 { font-size: var(--font-size-extra-small); }
-  &--h6 { font-size: var(--font-size-extra-small); }
-}
-
 // Paragraph Component
 .paragraph {
   font-size: var(--font-size-base);

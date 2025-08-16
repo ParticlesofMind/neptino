@@ -5,9 +5,9 @@
 // Main page grid container
 .grid {
     display: grid;
-    min-height: 100vh;
-    grid-template-rows: auto 1fr auto; // header, main, footer
-    grid-template-areas: 
+    min-height: 100vh; // Full viewport height
+    grid-template-rows: auto 1fr auto; // header auto, main fills space, footer auto
+    grid-template-areas:
         "header"
         "main"
         "footer";
@@ -19,8 +19,32 @@
     &__main {
         grid-area: main;
         display: grid;
-        gap: var(--spacing-16); // Space between sections
         padding: var(--spacing-8);
+        align-content: start; // Align content to the top (prevents stretching)
+        justify-content: center; // Center content horizontally
+
+        &--signin {
+            // Simple single column layout for signin form
+            grid-template-columns: 1fr;
+            place-items: center; // This centers the signin container both ways
+            align-content: center; // Center vertically in available space
+        }
+
+        &--with-sidebar {
+            grid-template-columns: repeat(12, 1fr);
+            gap: var(--spacing-8);
+        }
+
+        &--coursebuilder {
+            grid-template-columns: repeat(12, 1fr);
+            gap: var(--spacing-8);
+            padding: 0; // Coursebuilder handles its own spacing
+        }
+
+        &--dashboard {
+            grid-template-columns: repeat(12, 1fr);
+            gap: var(--spacing-8);
+        }
     }
 
     &__footer {
@@ -28,21 +52,3 @@
         padding: var(--spacing-8);
     }
 }
-
-// ==========================================================================
-// UTILITY GRID CLASSES
-// ==========================================================================
-
-// Quick column layouts
-.grid-cols-1 { display: grid; grid-template-columns: 1fr; }
-.grid-cols-2 { display: grid; grid-template-columns: repeat(2, 1fr); }
-.grid-cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); }
-.grid-cols-4 { display: grid; grid-template-columns: repeat(4, 1fr); }
-
-// Responsive columns
-.grid-cols-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
-
-// Gap utilities
-.grid-gap-small { gap: var(--spacing-5); }
-.grid-gap-medium { gap: var(--spacing-8); }
-.grid-gap-large { gap: var(--spacing-12); }
