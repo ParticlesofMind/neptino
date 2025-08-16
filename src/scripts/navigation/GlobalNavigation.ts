@@ -181,9 +181,25 @@ export class GlobalNavigation {
  }
 
  private setupEventListeners(): void {
- // User menu toggle
+ // Language dropdown toggle
  document.addEventListener('click', (e) => {
  const target = e.target as HTMLElement;
+ 
+ // Language dropdown toggle
+ if (target.closest('#language-toggle')) {
+ e.preventDefault();
+ this.toggleLanguageDropdown();
+ }
+ 
+ // Language selection
+ if (target.closest('.dropdown__link[data-lang]')) {
+ e.preventDefault();
+ const langButton = target.closest('.dropdown__link[data-lang]') as HTMLButtonElement;
+ const selectedLang = langButton.getAttribute('data-lang');
+ if (selectedLang) {
+ this.handleLanguageChange(selectedLang);
+ }
+ }
  
  // User menu toggle
  if (target.closest('#user-menu-toggle')) {
@@ -197,9 +213,9 @@ export class GlobalNavigation {
  this.handleSignOut();
  }
  
- // Close user menu when clicking outside
- if (!target.closest('.nav__user-menu')) {
- this.closeUserMenu();
+ // Close dropdowns when clicking outside
+ if (!target.closest('.dropdown') && !target.closest('.nav__user-menu')) {
+ this.closeAllDropdowns();
  }
  });
 
@@ -215,6 +231,13 @@ export class GlobalNavigation {
  });
  }
 
+ // Public method to manually update navigation
+ public updateNavigation(config: Partial<NavigationConfig>): void {
+ this.config = { ...this.config, ...config };
+ this.setupNavigation();
+ this.updateNavigationState();
+ }
+
  private toggleUserMenu(): void {
  const dropdown = document.getElementById('user-dropdown');
  if (dropdown) {
@@ -227,6 +250,55 @@ export class GlobalNavigation {
  if (dropdown) {
  dropdown.style.display = 'none';
  }
+ }
+
+ private toggleLanguageDropdown(): void {
+ const toggle = document.getElementById('language-toggle');
+ const menu = document.getElementById('language-menu');
+ 
+ if (toggle && menu) {
+ const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+ const newState = !isExpanded;
+ 
+ toggle.setAttribute('aria-expanded', newState.toString());
+ menu.classList.toggle('dropdown__menu--active', newState);
+ }
+ }
+
+ private handleLanguageChange(langCode: string): void {
+ const languages = {
+ 'en': 'EN',
+ 'es': 'ES', 
+ 'fr': 'FR',
+ 'de': 'DE'
+ };
+ 
+ // Update the dropdown toggle text
+ const dropdownText = document.querySelector('.dropdown__text');
+ if (dropdownText) {
+ dropdownText.textContent = languages[langCode as keyof typeof languages] || 'EN';
+ }
+ 
+ // Close the dropdown
+ this.closeLanguageDropdown();
+ 
+ // Here you would typically handle the actual language change
+ console.log('Language changed to:', langCode);
+ }
+
+ private closeLanguageDropdown(): void {
+ const toggle = document.getElementById('language-toggle');
+ const menu = document.getElementById('language-menu');
+ 
+ if (toggle && menu) {
+ toggle.setAttribute('aria-expanded', 'false');
+ menu.classList.remove('dropdown__menu--active');
+ }
+ }
+
+ private closeAllDropdowns(): void {
+ this.closeUserMenu();
+ this.closeLanguageDropdown();
  }
 
  private async handleSignOut(): Promise<void> {
@@ -271,13 +343,6 @@ export class GlobalNavigation {
  link
  }
  });
- }
-
- // Public method to manually update navigation
- public updateNavigation(config: Partial<NavigationConfig>): void {
- this.config = { ...this.config, ...config };
- this.setupNavigation();
- this.updateNavigationState();
  }
 }
 

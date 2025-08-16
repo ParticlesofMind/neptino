@@ -14,10 +14,32 @@
             </a>
             
             <ul class="nav__menu">
-                <li class="nav__item"><a href="/src/pages/shared/teachers.html" class="nav__link link">For Teachers</a></li>
-                <li class="nav__item"><a href="/src/pages/shared/students.html" class="nav__link link">For Students</a></li>
-                <li class="nav__item"><a href="/src/pages/shared/institutions.html" class="nav__link link">For Institutions</a></li>
-                <li class="nav__item"><a href="/src/pages/shared/pricing.html" class="nav__link link">Pricing</a></li>
+                <li class="nav__item"><a href="/src/pages/shared/features.html" class="nav__link link">Features</a></li>
+                <li class="nav__item"><a href="/src/pages/shared/about.html" class="nav__link link">About</a></li>
+                <li class="nav__item">
+                    <div class="dropdown dropdown--right">
+                        <button class="dropdown__toggle" id="language-toggle" aria-expanded="false" aria-haspopup="true">
+                            <span class="dropdown__text">EN</span>
+                            <svg class="dropdown__icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7 10l5 5 5-5z"/>
+                            </svg>
+                        </button>
+                        <ul class="dropdown__menu" id="language-menu">
+                            <li class="dropdown__item">
+                                <button class="dropdown__link" data-lang="en">English</button>
+                            </li>
+                            <li class="dropdown__item">
+                                <button class="dropdown__link" data-lang="es">Español</button>
+                            </li>
+                            <li class="dropdown__item">
+                                <button class="dropdown__link" data-lang="fr">Français</button>
+                            </li>
+                            <li class="dropdown__item">
+                                <button class="dropdown__link" data-lang="de">Deutsch</button>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
             </ul>
             
             <a href="/src/pages/shared/signin.html" class="nav__cta button button--outline">Sign In</a>
@@ -26,7 +48,7 @@
  
     <main class="grid__main main">
         <section class="hero">
-            <h1 class="hero__title heading heading--h1">Transform Learning with Neptino</h1>
+            <h1 class="hero__title heading heading--h1">Neptino changes everything.</h1>
             <p class="hero__description paragraph paragraph--lead">An innovative educational platform that brings teachers, students, and institutions together in a seamless learning experience designed for the future of education.</p>
             <a href="/src/pages/shared/signup.html" class="hero__cta-primary button button--primary">Get Started Free</a>
             <a href="/src/pages/shared/pricing.html" class="hero__cta-secondary button button--outline">View Pricing</a>
@@ -88,7 +110,6 @@
             <ul class="nav__menu nav__menu--footer">
                 <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Privacy Policy</a></li>
                 <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Terms of Service</a></li>
-                <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Support</a></li>
                 <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Contact</a></li>
             </ul>
         </nav>
