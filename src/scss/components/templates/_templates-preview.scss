@@ -409,69 +409,23 @@
     }
   }
 
-  // Modifier: Block type variations
-  &--header {
-    .preview-block__header {
-      background: linear-gradient(135deg, #059669, #047857);
-      color: white;
-      
-      .preview-block__type {
-        color: rgba(255, 255, 255, 0.8);
-      }
-    }
-  }
-
-  &--program {
-    .preview-block__header {
-      background: linear-gradient(135deg, #0891b2, #0e7490);
-      color: white;
-      
-      .preview-block__type {
-        color: rgba(255, 255, 255, 0.8);
-      }
-    }
-  }
-
-  &--resources {
-    .preview-block__header {
-      background: linear-gradient(135deg, #7c3aed, #6d28d9);
-      color: white;
-      
-      .preview-block__type {
-        color: rgba(255, 255, 255, 0.8);
-      }
-    }
-  }
-
-  &--content {
-    .preview-block__header {
-      background: linear-gradient(135deg, #dc2626, #b91c1c);
-      color: white;
-      
-      .preview-block__type {
-        color: rgba(255, 255, 255, 0.8);
-      }
-    }
-  }
-
-  &--assignment {
-    .preview-block__header {
-      background: linear-gradient(135deg, #ea580c, #c2410c);
-      color: white;
-      
-      .preview-block__type {
-        color: rgba(255, 255, 255, 0.8);
-      }
-    }
-  }
-
+  // Modifier: Block type variations with consistent gray styling
+  &--header,
+  &--program,
+  &--resources,
+  &--content,
+  &--assignment,
   &--footer {
     .preview-block__header {
-      background: linear-gradient(135deg, #4b5563, #374151);
-      color: white;
+      background: $gray-100;
+      border-bottom-color: $gray-200;
       
       .preview-block__type {
-        color: rgba(255, 255, 255, 0.8);
+        color: $text-secondary;
+      }
+      
+      .preview-block__title {
+        color: $text-primary;
       }
     }
   }

@@ -492,12 +492,16 @@ export class CourseBuilderCanvas {
 
       // Only initialize form handlers for specific sections
       if (sectionId === "schedule") {
-        // Schedule manager is already initialized - just ensure preview is visible
+        // Initialize schedule manager if it doesn't exist
+        if (!this.scheduleManager) {
+          console.log('📅 Initializing schedule manager for navigation');
+          this.scheduleManager = new ScheduleCourseManager(this.courseId || undefined);
+        }
+        
+        // Schedule manager is now available - trigger refresh
         if (this.scheduleManager) {
           // Trigger a refresh to show/hide preview as needed
           this.scheduleManager.refreshDisplay();
-        } else {
-          console.log('📋 Schedule manager not initialized (create new course mode)');
         }
       } else if (sectionId === "curriculum") {
         // Curriculum manager is already initialized - just ensure preview is visible

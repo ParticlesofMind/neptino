@@ -1407,23 +1407,28 @@ export class TemplateManager {
   ): string {
     let html = `<div class="template-structure">`;
 
-    // Add the fixed hierarchy with proper nesting indentation
+    // Add the fixed hierarchy with proper nested containment
     html += `
       <div class="template-structure__nested">
-        <div class="template-structure__level template-structure__level--primary">Topic</div>
-        <div class="template-structure__level template-structure__level--secondary">Objective</div>
-        <div class="template-structure__level template-structure__level--tertiary">Task</div>
-        
-        <div class="template-structure__content-fields">
-          ${checkedFields
-            .map(
-              (field) => `
-            <div class="content-field template-structure__level--quaternary">
-              ${field.label}
+        <div class="template-structure__level template-structure__level--primary">
+          <div class="template-structure__level-title">Topic</div>
+          <div class="template-structure__level template-structure__level--secondary">
+            <div class="template-structure__level-title">Objective</div>
+            <div class="template-structure__level template-structure__level--tertiary">
+              <div class="template-structure__level-title">Task</div>
+              <div class="template-structure__content-fields">
+                ${checkedFields
+                  .map(
+                    (field) => `
+                  <div class="content-field template-structure__level--quaternary">
+                    ${field.label}
+                  </div>
+                `,
+                  )
+                  .join("")}
+              </div>
             </div>
-          `,
-            )
-            .join("")}
+          </div>
         </div>
       </div>
     `;
