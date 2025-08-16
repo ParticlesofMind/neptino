@@ -1,0 +1,94 @@
+// ==========================================================================
+// BUTTON COMPONENT - BEM Methodology
+// ==========================================================================
+
+.button {
+  display: inline-block;
+  padding: var(--spacing-3) var(--spacing-6);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  text-align: center;
+  text-decoration: none;
+  border: none;
+  border-radius: var(--radius-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+  
+  // Primary button (default)
+  &--primary {
+    background: var(--color-primary-500);
+    color: white;
+    
+    &:hover {
+      background: var(--color-primary-600);
+      transform: translateY(-1px);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+  
+  // Secondary button
+  &--secondary {
+    background: var(--color-secondary-500);
+    color: white;
+    
+    &:hover {
+      background: var(--color-secondary-600);
+      transform: translateY(-1px);
+    }
+  }
+  
+  // Outline button
+  &--outline {
+    background: transparent;
+    color: var(--color-primary-500);
+    border: 2px solid var(--color-primary-500);
+    
+    &:hover {
+      background: var(--color-primary-500);
+      color: white;
+    }
+  }
+  
+  // Subtle button
+  &--subtle {
+    background: var(--color-neutral-100);
+    color: var(--color-text-primary);
+    
+    &:hover {
+      background: var(--color-neutral-200);
+    }
+  }
+  
+  // Size modifiers
+  &--small {
+    padding: var(--spacing-2) var(--spacing-4);
+    font-size: var(--font-size-small);
+  }
+  
+  &--large {
+    padding: var(--spacing-4) var(--spacing-8);
+    font-size: var(--font-size-large);
+  }
+  
+  // State modifiers
+  &--disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  
+  &--loading {
+    opacity: 0.8;
+    cursor: wait;
+  }
+}

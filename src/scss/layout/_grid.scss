@@ -14,11 +14,14 @@
 
     &__header {
         grid-area: header;
-        display: grid;
-        grid-template-columns: auto 1fr auto; // logo, nav menu, cta button
-        align-items: center;
-        gap: var(--spacing-8);
         padding: var(--spacing-5) var(--spacing-8);
+        
+        .nav {
+            display: grid;
+            grid-template-columns: 200px 1fr auto; // logo, nav menu, cta button
+            align-items: center;
+            gap: var(--spacing-8);
+        }
     }
 
     &__main {
@@ -30,17 +33,34 @@
 
     &__footer {
         grid-area: footer;
-        display: grid;
-        grid-template-columns: auto 1fr; // logo, nav links
-        align-items: center;
-        gap: var(--spacing-8);
         padding: var(--spacing-8);
+        
+        .nav {
+            display: grid;
+            grid-template-columns: 150px 1fr; // logo, nav links
+            align-items: center;
+            gap: var(--spacing-8);
+        }
     }
 }
 
 // ==========================================================================
 // UTILITY GRID CLASSES
 // ==========================================================================
+
+// Navigation grid layouts
+.nav {
+    &__menu {
+        display: grid;
+        grid-auto-flow: column; // Horizontal layout for nav items
+        gap: var(--spacing-6);
+        align-items: center;
+        
+        &--footer {
+            gap: var(--spacing-4); // Smaller gap for footer nav
+        }
+    }
+}
 
 // Quick column layouts
 .grid-cols-1 { display: grid; grid-template-columns: 1fr; }
