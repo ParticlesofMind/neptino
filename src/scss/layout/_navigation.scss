@@ -1,39 +1,28 @@
-// ==========================================================================
-// SIMPLE NAVIGATION SYSTEM
-// ==========================================================================
-
+// Navigation grid layouts
 .nav {
-  &__brand {
-    display: flex;
+    display: grid;
     align-items: center;
-    text-decoration: none;
-    
-    // Limit logo width to prevent pushing content
-    .logo {
-      max-width: 100px; // Reduced header logo size for mobile
-      height: auto;
-      
-      &--small {
-        max-width: 80px; // Footer logo
-      }
-      
-      &--base {
-        max-width: 100px; // Reduced header logo size for mobile
-      }
+    gap: var(--spacing-4);
+
+    // index.html 
+    &__item {
+        &--dropdown {
+            justify-self: last baseline;
+        }
+
+        &--cta {
+            justify-self: last baseline;
+        }
     }
-  }
-  
-  &__item {
-    position: relative;
-  }
-  
-  &__link {
-    padding: var(--spacing-2) var(--spacing-2); // Reduced horizontal padding for mobile
-    transition: color 0.2s ease;
-    white-space: nowrap;
-    
-    &:hover {
-      color: var(--color-primary-500);
+
+    &--header {
+        grid-template-columns: 1fr auto auto 0.5fr 10rem; // brand, features, about, language, cta
+
     }
-  }
+
+    &--footer {
+        grid-template-columns: 1fr auto auto auto 1fr; // brand, features, about, language, cta
+
+    }
+
 }

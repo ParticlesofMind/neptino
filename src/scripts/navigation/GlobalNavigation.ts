@@ -306,7 +306,7 @@ export class GlobalNavigation {
  const result = await signOut();
  if (result.success) {
  // Redirect to home page
- window.location.href = '/src/pages/shared/signin.html';
+ window.location.href = '/index.html';
  } else {
  console.error('Sign out failed:', result.error);
  }

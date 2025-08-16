@@ -1,27 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Neptino - Educational Platform</title>
     <link rel="stylesheet" href="/src/scss/main.scss">
 </head>
+
 <body class="grid body">
-    <header class="grid__header header">
-        <nav class="header__nav nav">
-            <a href="/" class="nav__brand">
-                <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
-            </a>
-            
-            <ul class="nav__menu">
+    <header class="grid__header header header--index">
+        <nav class="header__nav">
+            <ul class="nav nav--header">
+                <li class="nav__item nav__item--brand">
+                    <a href="/" class="nav__brand">
+                        <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
+                    </a>
+                </li>
                 <li class="nav__item"><a href="/src/pages/shared/features.html" class="nav__link link">Features</a></li>
                 <li class="nav__item"><a href="/src/pages/shared/about.html" class="nav__link link">About</a></li>
-                <li class="nav__item">
+                <li class="nav__item nav__item--dropdown">
                     <div class="dropdown dropdown--right">
-                        <button class="dropdown__toggle" id="language-toggle" aria-expanded="false" aria-haspopup="true">
+                        <button class="dropdown__toggle" id="language-toggle" aria-expanded="false"
+                            aria-haspopup="true">
                             <span class="dropdown__text">EN</span>
                             <svg class="dropdown__icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M7 10l5 5 5-5z"/>
+                                <path d="M7 10l5 5 5-5z" />
                             </svg>
                         </button>
                         <ul class="dropdown__menu" id="language-menu">
@@ -40,17 +44,21 @@
                         </ul>
                     </div>
                 </li>
+                <li class="nav__item nav__item--cta">
+                    <a href="/src/pages/shared/signin.html" class="nav__cta button button--outline">Sign In</a>
+                </li>
             </ul>
-            
-            <a href="/src/pages/shared/signin.html" class="nav__cta button button--outline">Sign In</a>
         </nav>
     </header>
- 
+
     <main class="grid__main main">
         <section class="hero">
             <h1 class="hero__title heading heading--h1">Neptino changes everything.</h1>
-            <p class="hero__description paragraph paragraph--lead">An innovative educational platform that brings teachers, students, and institutions together in a seamless learning experience designed for the future of education.</p>
-            <a href="/src/pages/shared/signup.html" class="hero__cta-primary button button--primary">Get Started Free</a>
+            <p class="hero__description paragraph paragraph--lead">An innovative educational platform that brings
+                teachers, students, and institutions together in a seamless learning experience designed for the future
+                of education.</p>
+            <a href="/src/pages/shared/signup.html" class="hero__cta-primary button button--primary">Get Started
+                Free</a>
             <a href="/src/pages/shared/pricing.html" class="hero__cta-secondary button button--outline">View Pricing</a>
         </section>
 
@@ -78,38 +86,47 @@
 
         <section class="testimonials">
             <blockquote class="testimonial">
-                <p class="testimonial__quote quote">"Neptino has completely transformed how I teach. My students are more engaged than ever, and I can see their progress in real-time."</p>
+                <p class="testimonial__quote quote">"Neptino has completely transformed how I teach. My students are
+                    more engaged than ever, and I can see their progress in real-time."</p>
                 <cite class="testimonial__author citation">Dr. Sarah Johnson, Mathematics Professor</cite>
             </blockquote>
-                
+
             <blockquote class="testimonial">
-                <p class="testimonial__quote quote">"The analytics and reporting features give us insights we never had before. We can make data-driven decisions to improve student outcomes."</p>
+                <p class="testimonial__quote quote">"The analytics and reporting features give us insights we never had
+                    before. We can make data-driven decisions to improve student outcomes."</p>
                 <cite class="testimonial__author citation">Mark Chen, IT Director</cite>
             </blockquote>
-                
+
             <blockquote class="testimonial">
-                <p class="testimonial__quote quote">"As a student, I love how interactive and engaging the courses are. The mobile app lets me learn anywhere, anytime."</p>
+                <p class="testimonial__quote quote">"As a student, I love how interactive and engaging the courses are.
+                    The mobile app lets me learn anywhere, anytime."</p>
                 <cite class="testimonial__author citation">Emma Rodriguez, University Student</cite>
             </blockquote>
         </section>
 
         <section class="cta">
             <h2 class="cta__title heading heading--h2">Ready to Transform Your Educational Experience?</h2>
-            <p class="cta__description paragraph">Join thousands of educators and students already using Neptino to enhance teaching and learning.</p>
-            <a href="/src/pages/shared/signup.html" class="cta__button-primary button button--primary">Start Your Free Trial</a>
-            <a href="/src/pages/shared/pricing.html" class="cta__button-secondary button button--outline">View All Plans</a>
+            <p class="cta__description paragraph">Join thousands of educators and students already using Neptino to
+                enhance teaching and learning.</p>
+            <a href="/src/pages/shared/signup.html" class="cta__button-primary button button--primary">Start Your Free
+                Trial</a>
+            <a href="/src/pages/shared/pricing.html" class="cta__button-secondary button button--outline">View All
+                Plans</a>
         </section>
     </main>
 
     <footer class="grid__footer footer">
-        <nav class="footer__nav nav">
-            <a href="/" class="nav__brand">
-                <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
-            </a>
-            
-            <ul class="nav__menu nav__menu--footer">
-                <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Privacy Policy</a></li>
-                <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Terms of Service</a></li>
+        <nav class="footer__nav">
+            <ul class="nav nav--footer">
+                <li class="nav__item nav__item--brand">
+                    <a href="/" class="nav__brand">
+                        <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
+                    </a>
+                </li>
+                <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Privacy
+                        Policy</a></li>
+                <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Terms of
+                        Service</a></li>
                 <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Contact</a></li>
             </ul>
         </nav>
@@ -117,4 +134,5 @@
 
     <script type="module" src="/src/scripts/app.ts"></script>
 </body>
+
 </html>

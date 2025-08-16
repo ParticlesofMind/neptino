@@ -5,9 +5,11 @@
 // Logo Classes (BEM Component)
 // ==========================================================================
 .logo {
-    display: block;
+    display: grid;
     object-fit: contain;
     transition: var(--transition-fast);
+    max-width: 100%; // Ensure responsive behavior
+    height: auto; // Maintain aspect ratio
 
     &:hover {
         opacity: 0.8;
@@ -16,34 +18,34 @@
     // Size modifiers
     &--extra-small {
         width: var(--size-logo-extra-small);
-        height: var(--size-logo-extra-small);
+        max-width: var(--size-logo-extra-small);
     }
 
     &--small {
         width: var(--size-logo-small);
-        height: var(--size-logo-small);
+        max-width: var(--size-logo-small);
     }
 
     &--base {
         width: var(--size-logo-base);
-        height: var(--size-logo-base);
+        max-width: var(--size-logo-base);
     }
 
     &--large {
         width: var(--size-logo-large);
-        height: var(--size-logo-large);
+        max-width: var(--size-logo-large);
     }
 
     &--extra-large {
         width: var(--size-logo-extra-large);
-        height: var(--size-logo-extra-large);
+        max-width: var(--size-logo-extra-large);
     }
 }
 
 // Icon Classes (BEM Component)
 // ==========================================================================
 .icon {
-    display: inline-block;
+    display: grid;
     object-fit: contain;
     vertical-align: middle;
 
@@ -77,7 +79,7 @@
 // Avatar Classes (BEM Component)
 // ==========================================================================
 .avatar {
-    display: inline-block;
+    display: grid;
     object-fit: cover;
     border-radius: var(--radius-full);
     border: 2px solid var(--color-neutral-200);
@@ -112,7 +114,7 @@
 // Image Classes (BEM Component)
 // ==========================================================================
 .image {
-    display: block;
+    display: grid;
     max-width: 100%;
     height: auto;
 
