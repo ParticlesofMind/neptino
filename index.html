@@ -10,78 +10,86 @@
     <header class="grid__header header">
         <nav class="header__nav nav">
             <a href="/" class="nav__brand">
-                <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo-base">
+                <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
             </a>
             
             <ul class="nav__menu">
-                <li class="nav__item"><a href="/src/pages/shared/teachers.html" class="nav__link">For Teachers</a></li>
-                <li class="nav__item"><a href="/src/pages/shared/students.html" class="nav__link">For Students</a></li>
-                <li class="nav__item"><a href="/src/pages/shared/institutions.html" class="nav__link">For Institutions</a></li>
-                <li class="nav__item"><a href="/src/pages/shared/pricing.html" class="nav__link">Pricing</a></li>
+                <li class="nav__item"><a href="/src/pages/shared/teachers.html" class="nav__link link">For Teachers</a></li>
+                <li class="nav__item"><a href="/src/pages/shared/students.html" class="nav__link link">For Students</a></li>
+                <li class="nav__item"><a href="/src/pages/shared/institutions.html" class="nav__link link">For Institutions</a></li>
+                <li class="nav__item"><a href="/src/pages/shared/pricing.html" class="nav__link link">Pricing</a></li>
             </ul>
             
-            <a href="/src/pages/shared/signin.html" class="nav__cta">Sign In</a>
+            <a href="/src/pages/shared/signin.html" class="nav__cta link link--button">Sign In</a>
         </nav>
     </header>
  
     <main class="grid__main main">
         <section class="hero">
-            <h1 class="hero__title">Transform Learning with Neptino</h1>
-            <p class="hero__description">An innovative educational platform that brings teachers, students, and institutions together in a seamless learning experience designed for the future of education.</p>
-            <a href="/src/pages/shared/signup.html" class="hero__cta-primary">Get Started Free</a>
-            <a href="/src/pages/shared/pricing.html" class="hero__cta-secondary">View Pricing</a>
+            <h1 class="hero__title heading heading--h1">Transform Learning with Neptino</h1>
+            <p class="hero__description paragraph paragraph--lead">An innovative educational platform that brings teachers, students, and institutions together in a seamless learning experience designed for the future of education.</p>
+            <a href="/src/pages/shared/signup.html" class="hero__cta-primary link link--button">Get Started Free</a>
+            <a href="/src/pages/shared/pricing.html" class="hero__cta-secondary link link--button link--subtle">View Pricing</a>
         </section>
 
         <section class="stats">
-            <h2 class="stats__title">Trusted by Educators Worldwide</h2>
-            <dl class="stats__list">
-                <dt class="stats__number">10,000+</dt>
-                <dd class="stats__label">Active Teachers</dd>
-                <dt class="stats__number">500,000+</dt>
-                <dd class="stats__label">Students Engaged</dd>
-                <dt class="stats__number">500+</dt>
-                <dd class="stats__label">Institutions</dd>
-                <dt class="stats__number">98%</dt>
-                <dd class="stats__label">Satisfaction Rate</dd>
-            </dl>
+            <h2 class="stats__title heading heading--h2">Trusted by Educators Worldwide</h2>
+            <div class="card-grid">
+                <div class="card card--metric">
+                    <span class="metric__number">10,000+</span>
+                    <span class="metric__label label">Active Teachers</span>
+                </div>
+                <div class="card card--metric">
+                    <span class="metric__number">500,000+</span>
+                    <span class="metric__label label">Students Engaged</span>
+                </div>
+                <div class="card card--metric">
+                    <span class="metric__number">500+</span>
+                    <span class="metric__label label">Institutions</span>
+                </div>
+                <div class="card card--metric">
+                    <span class="metric__number">98%</span>
+                    <span class="metric__label label">Satisfaction Rate</span>
+                </div>
+            </div>
         </section>
 
         <section class="testimonials">
             <blockquote class="testimonial">
-                <p class="testimonial__quote">"Neptino has completely transformed how I teach. My students are more engaged than ever, and I can see their progress in real-time."</p>
-                <cite class="testimonial__author">— Dr. Sarah Johnson, Mathematics Professor</cite>
+                <p class="testimonial__quote quote">"Neptino has completely transformed how I teach. My students are more engaged than ever, and I can see their progress in real-time."</p>
+                <cite class="testimonial__author citation">Dr. Sarah Johnson, Mathematics Professor</cite>
             </blockquote>
                 
             <blockquote class="testimonial">
-                <p class="testimonial__quote">"The analytics and reporting features give us insights we never had before. We can make data-driven decisions to improve student outcomes."</p>
-                <cite class="testimonial__author">— Mark Chen, IT Director</cite>
+                <p class="testimonial__quote quote">"The analytics and reporting features give us insights we never had before. We can make data-driven decisions to improve student outcomes."</p>
+                <cite class="testimonial__author citation">Mark Chen, IT Director</cite>
             </blockquote>
                 
             <blockquote class="testimonial">
-                <p class="testimonial__quote">"As a student, I love how interactive and engaging the courses are. The mobile app lets me learn anywhere, anytime."</p>
-                <cite class="testimonial__author">— Emma Rodriguez, University Student</cite>
+                <p class="testimonial__quote quote">"As a student, I love how interactive and engaging the courses are. The mobile app lets me learn anywhere, anytime."</p>
+                <cite class="testimonial__author citation">Emma Rodriguez, University Student</cite>
             </blockquote>
         </section>
 
         <section class="cta">
-            <h2 class="cta__title">Ready to Transform Your Educational Experience?</h2>
-            <p class="cta__description">Join thousands of educators and students already using Neptino to enhance teaching and learning.</p>
-            <a href="/src/pages/shared/signup.html" class="cta__button-primary">Start Your Free Trial</a>
-            <a href="/src/pages/shared/pricing.html" class="cta__button-secondary">View All Plans</a>
+            <h2 class="cta__title heading heading--h2">Ready to Transform Your Educational Experience?</h2>
+            <p class="cta__description paragraph">Join thousands of educators and students already using Neptino to enhance teaching and learning.</p>
+            <a href="/src/pages/shared/signup.html" class="cta__button-primary link link--button">Start Your Free Trial</a>
+            <a href="/src/pages/shared/pricing.html" class="cta__button-secondary link link--button link--subtle">View All Plans</a>
         </section>
     </main>
 
     <footer class="grid__footer footer">
         <nav class="footer__nav nav">
             <a href="/" class="nav__brand">
-                <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo-small">
+                <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
             </a>
             
             <ul class="nav__menu nav__menu--footer">
-                <li class="nav__item"><a href="#" class="nav__link">Privacy Policy</a></li>
-                <li class="nav__item"><a href="#" class="nav__link">Terms of Service</a></li>
-                <li class="nav__item"><a href="#" class="nav__link">Support</a></li>
-                <li class="nav__item"><a href="#" class="nav__link">Contact</a></li>
+                <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Privacy Policy</a></li>
+                <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Terms of Service</a></li>
+                <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Support</a></li>
+                <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Contact</a></li>
             </ul>
         </nav>
     </footer>

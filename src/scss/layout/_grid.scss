@@ -1,21 +1,57 @@
+// ==========================================================================
+// PAGE LAYOUT GRID SYSTEM
+// ==========================================================================
+
+// Main page grid container
 .grid {
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    grid-auto-rows: minmax(100px, auto);
-    gap: 1rem;
+    min-height: 100vh;
+    grid-template-rows: auto 1fr auto; // header, main, footer
+    grid-template-areas: 
+        "header"
+        "main"
+        "footer";
 
     &__header {
+        grid-area: header;
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: auto 1fr auto; // logo, nav menu, cta button
+        align-items: center;
+        gap: var(--spacing-8);
+        padding: var(--spacing-5) var(--spacing-8);
     }
 
     &__main {
+        grid-area: main;
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-16); // Space between sections
+        padding: var(--spacing-8);
     }
 
     &__footer {
+        grid-area: footer;
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: auto 1fr; // logo, nav links
+        align-items: center;
+        gap: var(--spacing-8);
+        padding: var(--spacing-8);
     }
 }
+
+// ==========================================================================
+// UTILITY GRID CLASSES
+// ==========================================================================
+
+// Quick column layouts
+.grid-cols-1 { display: grid; grid-template-columns: 1fr; }
+.grid-cols-2 { display: grid; grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); }
+.grid-cols-4 { display: grid; grid-template-columns: repeat(4, 1fr); }
+
+// Responsive columns
+.grid-cols-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+
+// Gap utilities
+.grid-gap-small { gap: var(--spacing-5); }
+.grid-gap-medium { gap: var(--spacing-8); }
+.grid-gap-large { gap: var(--spacing-12); }

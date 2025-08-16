@@ -1,0 +1,58 @@
+// ==========================================================================
+// CARD COMPONENT - Flexible & Reusable Card System
+// ==========================================================================
+
+// Base card component
+.card {
+  background-color: var(--color-background);
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-neutral-200);
+  transition: var(--transition-fast);
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
+  // Card variants
+  &--elevated {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &--bordered {
+    border: 2px solid var(--color-primary-500);
+  }
+
+  &--centered {
+    text-align: center;
+  }
+
+  &--metric {
+    text-align: center;
+    padding: var(--spacing-8);
+  }
+}
+
+// Card grid container
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-8);
+}
+
+.metric {
+  &__number {
+    font-size: var(--font-size-extra-large);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary-500);
+    margin: 0 0 var(--spacing-2) 0;
+    display: block;
+  }
+
+  &__label {
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+}

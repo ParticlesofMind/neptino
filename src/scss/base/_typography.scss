@@ -107,119 +107,132 @@ p {
     line-height: var(--line-height-normal);
 }
 
-// Text size utility classes
-.text-extra-small {
-    font-size: var(--font-size-extra-small);
+// ==========================================================================
+// TYPOGRAPHY COMPONENTS - BEM Methodology (Minimal)
+// ==========================================================================
+
+// Size Component
+.size {
+  &--xs { font-size: var(--font-size-extra-small); }
+  &--sm { font-size: var(--font-size-small); }
+  &--base { font-size: var(--font-size-base); }
+  &--lg { font-size: var(--font-size-large); }
+  &--xl { font-size: var(--font-size-extra-large); }
 }
 
-.text-small {
-    font-size: var(--font-size-small);
+// Weight Component
+.weight {
+  &--light { font-weight: var(--font-weight-light); }
+  &--normal { font-weight: var(--font-weight-normal); }
+  &--medium { font-weight: var(--font-weight-medium); }
+  &--semibold { font-weight: var(--font-weight-semibold); }
+  &--bold { font-weight: var(--font-weight-bold); }
 }
 
-.text-base {
-    font-size: var(--font-size-base);
+// Color Component
+.color {
+  &--primary { color: var(--color-text-primary); }
+  &--secondary { color: var(--color-text-secondary); }
+  &--tertiary { color: var(--color-text-tertiary); }
 }
 
-.text-large {
+// ==========================================================================
+// SEMANTIC TYPOGRAPHY ELEMENTS
+// ==========================================================================
+
+// Heading Component
+.heading {
+  font-family: var(--font-family-heading);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+  
+  &--h1 { font-size: var(--font-size-extra-large); }
+  &--h2 { font-size: var(--font-size-large); }
+  &--h3 { font-size: var(--font-size-base); }
+  &--h4 { font-size: var(--font-size-small); }
+  &--h5 { font-size: var(--font-size-extra-small); }
+  &--h6 { font-size: var(--font-size-extra-small); }
+}
+
+// Paragraph Component
+.paragraph {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  margin: 0 0 var(--spacing-5) 0;
+  
+  &--lead {
     font-size: var(--font-size-large);
-}
-
-.text-extra-large {
-    font-size: var(--font-size-extra-large);
-}
-
-// Font weight utilities
-.font-light {
-    font-weight: var(--font-weight-light);
-}
-
-.font-normal {
-    font-weight: var(--font-weight-normal);
-}
-
-.font-medium {
     font-weight: var(--font-weight-medium);
-}
-
-.font-semibold {
-    font-weight: var(--font-weight-semibold);
-}
-
-.font-bold {
-    font-weight: var(--font-weight-bold);
-}
-
-// Text color utilities
-.text-primary {
-    color: var(--color-text-primary);
-}
-
-.text-secondary {
-    color: var(--color-text-secondary);
-}
-
-.text-tertiary {
-    color: var(--color-text-tertiary);
-}
-
-// Links
-// ==========================================================================
-
-a {
-    color: var(--color-primary-500);
-    text-decoration: none;
-    transition: color var(--transition-fast);
-
-    &:hover {
-        color: var(--color-primary-600);
-        text-decoration: underline;
-    }
-
-    &:focus {
-        outline: 2px solid var(--color-primary-500);
-        outline-offset: 2px;
-    }
-}
-
-// Code and Preformatted Text
-// ==========================================================================
-
-code,
-pre {
-    font-family: var(--font-family-mono);
-    font-size: var(--font-size-small);
-}
-
-code {
-    padding: var(--spacing-1) var(--spacing-2);
-    background-color: var(--color-background-secondary);
-    border-radius: var(--radius-small);
-    color: var(--color-text-primary);
-}
-
-pre {
-    padding: var(--spacing-5);
-    background-color: var(--color-background-secondary);
-    border-radius: var(--radius-medium);
-    overflow-x: auto;
     line-height: var(--line-height-relaxed);
+  }
+}
 
-    code {
-        padding: 0;
-        background: none;
-        border-radius: 0;
+// Quote Component
+.quote {
+  font-size: var(--font-size-large);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-relaxed);
+  font-style: italic;
+}
+
+// Citation Component
+.citation {
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  font-style: normal;
+  
+  &::before {
+    content: "— ";
+  }
+}
+
+// Link Component
+.link {
+  color: var(--color-primary-500);
+  text-decoration: none;
+  transition: color 0.2s ease;
+  
+  &:hover {
+    color: var(--color-primary-600);
+    text-decoration: underline;
+  }
+  
+  &:focus {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+  
+  &--subtle {
+    color: var(--color-text-secondary);
+    
+    &:hover {
+      color: var(--color-text-primary);
     }
+  }
+  
+  &--button {
+    display: inline-block;
+    padding: var(--spacing-3) var(--spacing-6);
+    background: var(--color-primary-500);
+    color: white;
+    border-radius: var(--radius-medium);
+    font-weight: var(--font-weight-medium);
+    
+    &:hover {
+      background: var(--color-primary-600);
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+  }
 }
 
-// Lists
-// ==========================================================================
-
-ul,
-ol {
-    margin: 0 0 var(--spacing-5) 0;
-    padding-left: var(--spacing-8);
-}
-
-li {
-    margin-bottom: var(--spacing-2);
+// Label Component
+.label {
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  display: block;
+  margin-bottom: var(--spacing-2);
 }
