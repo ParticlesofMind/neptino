@@ -5,37 +5,6 @@
     gap: var(--spacing-4);
     padding: var(--spacing-4);
 
-    // index.html 
-    &__item {
-        &--dropdown {
-            justify-self: last baseline;
-        }
-
-        &--cta {
-            justify-self: last baseline;
-        }
-    }
-
-    &--header {
-        grid-template-columns: 1fr auto auto 0.5fr 10rem; // brand, features, about, language, cta
-
-    }
-
-    &--main { 
-        grid-template-columns: auto;
-        
-        // Vertical sidebar navigation variant
-        &.nav--sidebar {
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
-            gap: var(--spacing-2);
-            padding: 0;
-            list-style: none;
-            margin: 0;
-        }
-    }
-    
     &__link {
         display: block;
         padding: var(--spacing-3) var(--spacing-4);
@@ -56,9 +25,84 @@
         }
     }
 
-    &--footer {
-        grid-template-columns: 1fr auto auto auto 1fr; // brand, features, about, language, cta
+    // index.html 
+    &__item {
+        &--dropdown {
+            justify-self: last baseline;
+        }
 
+        &--cta {
+            justify-self: last baseline;
+        }
     }
 
+    &--header {
+        grid-template-columns: 1fr auto auto 0.5fr 10rem; // brand, features, about, language, cta
+    }
+
+    // Coursebuilder navigation - 3 column layout: prev button, centered logo, next button
+    &--coursebuilder {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        padding: 0;
+        gap: var(--spacing-4);
+    }
+
+    &--main { 
+        grid-template-columns: auto;
+        
+        // Vertical sidebar navigation variant
+        &.nav--sidebar {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: var(--spacing-2);
+            padding: 0;
+            list-style: none;
+            margin: 0;
+        }
+    }
+
+    &--footer {
+        grid-template-columns: 1fr auto auto auto 1fr; // brand, features, about, language, cta
+    }
+}
+
+// Coursebuilder-specific navigation elements
+.coursebuilder-nav {
+    &__button {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
+        
+        &--prev {
+            justify-self: start;
+        }
+        
+        &--next {
+            justify-self: end;
+        }
+    }
+
+    &__logo {
+        justify-self: center;
+        display: block;
+    }
+
+    &__logo-img {
+        height: 32px;
+        width: auto;
+        display: block;
+    }
+
+    &__icon {
+        font-size: var(--font-size-large);
+        font-weight: bold;
+    }
+
+    &__text {
+        font-size: var(--font-size-small);
+        font-weight: var(--font-weight-medium);
+    }
 }

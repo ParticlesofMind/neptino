@@ -1,0 +1,462 @@
+// ==========================================================================
+// COURSEBUILDER PAGE LAYOUT
+// ==========================================================================
+
+.coursebuilder-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.coursebuilder-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+// Coursebuilder sections
+.coursebuilder-section {
+  &--setup {
+    display: flex;
+    flex: 1;
+    
+    .coursebuilder-sidebar {
+      flex-shrink: 0;
+    }
+  }
+  
+  &--create {
+    display: none; // Will be shown when active
+    flex: 1;
+    padding: var(--spacing-4);
+  }
+  
+  &--preview,
+  &--launch {
+    display: none; // Will be shown when active
+    flex: 1;
+    padding: var(--spacing-4);
+  }
+}
+
+// Coursebuilder articles and content - only show active article
+.coursebuilder-article {
+  display: none; // Hide all by default
+  flex: 1;
+  padding: var(--spacing-6);
+
+  
+  &--active {
+    display: block; // Show only the active article
+  }
+}
+
+.coursebuilder-content {
+  max-width: none; // Remove width constraint
+  margin: 0;
+  
+  // Classification article gets full width
+  #classification & {
+    max-width: none;
+    width: 100%;
+  }
+}
+
+// Coursebuilder content wrapper for setup section
+.coursebuilder-content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-6); // Add padding to the wrapper
+  
+  // Give classification more space
+  &:has(#classification.coursebuilder-article--active) {
+    padding: var(--spacing-8) var(--spacing-10);
+  }
+}
+
+// Basic placeholder styling for development
+.coursebuilder-placeholder {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  padding: var(--spacing-8);
+}
+
+// ==========================================================================
+// COURSEBUILDER FORM LAYOUT
+// ==========================================================================
+
+.coursebuilder-form {
+  &__row {
+    display: flex;
+    gap: var(--spacing-4);
+    align-items: end;
+    margin-bottom: var(--spacing-8); // Increased spacing between rows
+    
+    // Row 1: Class Year | Curricular Framework (side by side, equal width)
+    &:first-of-type {
+      .form__group {
+        flex: 1;
+      }
+    }
+    
+    // Row 2: Domain → Subject → Topic → Subtopic (hierarchical flow)
+    &--hierarchical {
+      margin-bottom: var(--spacing-10); // Extra spacing after hierarchical row
+      
+      .form__group {
+        flex: 1;
+        min-width: 0; // Allow flex items to shrink
+      }
+    }
+    
+    // Row 3: Previous Course - Current Course - Next Course (equal width sequence)
+    &--sequence {
+      .form__group {
+        flex: 1;
+      }
+    }
+  }
+  
+  &__arrow {
+    color: var(--color-primary-600);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    margin: 0 var(--spacing-2);
+    padding-bottom: var(--spacing-3); // Align with form elements
+    flex-shrink: 0;
+    
+    // Make arrows more prominent
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    
+    // Add subtle animation on hover
+    transition: var(--transition-fast);
+    
+    &:hover {
+      transform: translateX(2px);
+      color: var(--color-primary-700);
+    }
+  }
+  
+    // Classification-specific form styling
+    &--classification {
+      .form__label {
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-text);
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        margin-bottom: var(--spacing-2);
+        
+        &-optional {
+          font-size: var(--font-size-xs);
+          font-weight: var(--font-weight-normal);
+          color: var(--color-text-secondary);
+          text-transform: none;
+          letter-spacing: normal;
+        }
+        
+        &-hint {
+          display: block;
+          font-size: var(--font-size-xs);
+          font-weight: var(--font-weight-normal);
+          color: var(--color-text-secondary);
+          text-transform: none;
+          letter-spacing: normal;
+          margin-top: 2px;
+          font-style: italic;
+        }
+      }    // Add visual separators between rows
+    .coursebuilder-form__row {
+      position: relative;
+      
+      &:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        bottom: calc(-1 * var(--spacing-3));
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          to right,
+          transparent,
+          var(--color-neutral-200) 20%,
+          var(--color-neutral-200) 80%,
+          transparent
+        );
+      }
+    }
+  }
+}
+
+// ==========================================================================
+// COURSEBUILDER SELECT ELEMENTS
+// ==========================================================================
+
+.coursebuilder-select {
+  // Inherit base form select styles - no @extend needed, just apply the styles directly
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-medium);
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  transition: var(--transition-fast);
+  background: var(--color-background);
+  cursor: pointer;
+  
+  // Enhanced styling for coursebuilder select elements
+  min-height: 48px;
+  
+  // Custom arrow styling
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right var(--spacing-3) center;
+  background-repeat: no-repeat;
+  background-size: 16px 12px;
+  padding-right: calc(var(--spacing-4) + 24px);
+  
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary-500);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background-color: var(--color-background);
+  }
+  
+  &:hover:not(:disabled) {
+    border-color: var(--color-primary-400);
+    background-color: var(--color-primary-25);
+  }
+  
+  &:disabled {
+    background-color: var(--color-neutral-50);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%9ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    color: var(--color-text-disabled);
+    cursor: not-allowed;
+    
+    &:hover {
+      border-color: var(--color-neutral-300);
+      background-color: var(--color-neutral-50);
+    }
+  }
+  
+  // Better option styling
+  option {
+    padding: var(--spacing-2);
+    background: var(--color-background);
+    color: var(--color-text);
+    
+    &:checked {
+      background: var(--color-primary-100);
+      color: var(--color-primary-800);
+    }
+  }
+}
+
+// ==========================================================================
+// COURSEBUILDER TEMPLATES LAYOUT
+// ==========================================================================
+
+.coursebuilder-template-layout {
+  display: flex;
+  gap: var(--spacing-6);
+  height: calc(100vh - 300px); // Take remaining height minus header/actions space
+  min-height: 500px; // Ensure minimum usable height
+}
+
+.coursebuilder-template-config,
+.coursebuilder-template-preview {
+  flex: 1; // Equal width (50% each minus gap)
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-large);
+  background: var(--color-background);
+  overflow: hidden; // Contain content within borders
+}
+
+.coursebuilder-template-config {
+  &__heading {
+    margin: 0 0 var(--spacing-3) 0;
+    padding: var(--spacing-4) var(--spacing-5) 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-neutral-100);
+  }
+  
+  &__description {
+    margin: 0;
+    padding: 0 var(--spacing-5) var(--spacing-4);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    border-bottom: 1px solid var(--color-neutral-100);
+  }
+}
+
+.coursebuilder-template-preview {
+  &__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-8);
+    text-align: center;
+  }
+  
+  &__heading {
+    margin: 0 0 var(--spacing-3) 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+  }
+  
+  &__message {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+  }
+}
+
+// Template action buttons styling
+.coursebuilder-template-actions {
+  margin-bottom: var(--spacing-6);
+  justify-content: flex-start;
+  gap: var(--spacing-3);
+  
+  &__button {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+  }
+  
+  &__icon {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+  }
+}
+
+// ==========================================================================
+// COURSEBUILDER SCHEDULE LAYOUT
+// ==========================================================================
+
+.coursebuilder-schedule-layout {
+  display: flex;
+  gap: var(--spacing-6);
+  height: calc(100vh - 300px); // Take remaining height minus header space
+  min-height: 500px; // Ensure minimum usable height
+}
+
+.coursebuilder-schedule-config,
+.coursebuilder-schedule-preview {
+  flex: 1; // Equal width (50% each minus gap)
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-large);
+  background: var(--color-background);
+  overflow: hidden; // Contain content within borders
+}
+
+.coursebuilder-schedule-config {
+  &__heading {
+    margin: 0 0 var(--spacing-4) 0;
+    padding: var(--spacing-4) var(--spacing-5) 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-neutral-100);
+  }
+  
+  .coursebuilder-form {
+    flex: 1;
+    padding: var(--spacing-5);
+    overflow-y: auto;
+  }
+}
+
+.coursebuilder-schedule-preview {
+  &__heading {
+    margin: 0 0 var(--spacing-4) 0;
+    padding: var(--spacing-4) var(--spacing-5);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-neutral-100);
+  }
+}
+
+.coursebuilder-schedule-table {
+  flex: 1;
+  padding: var(--spacing-5);
+  overflow-y: auto;
+}
+
+// ==========================================================================
+// COURSEBUILDER CURRICULUM LAYOUT
+// ==========================================================================
+
+.coursebuilder-curriculum-layout {
+  display: flex;
+  gap: var(--spacing-6);
+  height: calc(100vh - 300px); // Take remaining height minus header space
+  min-height: 500px; // Ensure minimum usable height
+}
+
+.coursebuilder-curriculum-config,
+.coursebuilder-curriculum-preview {
+  flex: 1; // Equal width (50% each minus gap)
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-large);
+  background: var(--color-background);
+  overflow: hidden; // Contain content within borders
+}
+
+.coursebuilder-curriculum-config {
+  &__content {
+    flex: 1;
+    padding: var(--spacing-5);
+    overflow-y: auto;
+  }
+}
+
+.coursebuilder-curriculum-preview {
+  &__controls {
+    padding: var(--spacing-4) var(--spacing-5);
+    border-bottom: 1px solid var(--color-neutral-100);
+    background: var(--color-neutral-25);
+  }
+  
+  &__label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    margin-right: var(--spacing-3);
+  }
+  
+  &__modes {
+    display: inline-flex;
+    gap: var(--spacing-2);
+  }
+  
+  &__mode {
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-1) var(--spacing-2);
+    
+    &--active {
+      background: var(--color-primary-500);
+      color: var(--color-white);
+      border-color: var(--color-primary-500);
+    }
+  }
+  
+  &__content {
+    flex: 1;
+    padding: var(--spacing-5);
+    overflow-y: auto;
+  }
+}

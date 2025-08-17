@@ -36,6 +36,7 @@
 @use 'pages/signup';
 @use 'pages/home';
 @use 'pages/courses';
+@use 'pages/coursebuilder';
 // COMPONENTS (Reusable UI components)
 // ==========================================================================
 @use 'components/icons';          // Sizing utilities for images/icons/logos
@@ -45,4 +46,5 @@
 @use 'components/alerts';         // Alert/notification components
 @use 'components/cards';          // Card component system
 @use 'components/forms';          // Form components
+@use 'components/modals';         // Modal/overlay components
 @use 'components/schedule';       // Schedule-related components

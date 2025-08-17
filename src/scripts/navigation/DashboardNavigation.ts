@@ -9,8 +9,15 @@ export class DashboardNavigation {
   private articles: NodeListOf<HTMLElement>;
 
   constructor() {
-    this.navLinks = document.querySelectorAll('.sidebar .nav__link');
+    this.navLinks = document.querySelectorAll('.sidebar .nav__link[data-section]');
     this.articles = document.querySelectorAll('.dashboard-content__article');
+    
+    // Only initialize if we actually have dashboard elements
+    if (this.articles.length === 0) {
+      console.log('No dashboard articles found - skipping dashboard navigation');
+      return;
+    }
+    
     this.init();
   }
 
@@ -103,8 +110,11 @@ export class DashboardNavigation {
 
 // Auto-initialize dashboard navigation if elements are present
 export function initializeDashboardNavigation(): DashboardNavigation | null {
+  // Only initialize if we have actual dashboard content elements
+  const dashboardArticles = document.querySelectorAll('.dashboard-content__article');
   const dashboardNav = document.querySelector('.nav--main');
-  if (dashboardNav) {
+  
+  if (dashboardNav && dashboardArticles.length > 0) {
     return new DashboardNavigation();
   }
   return null;

@@ -107,11 +107,11 @@ export class ToolStateManager {
  * Set default selections to first icon in each category
  */
  private setDefaultSelections(): void {
- // Get first icons from DOM
- const firstMode = document.querySelector('element') as HTMLElement;
- const firstTool = document.querySelector('element') as HTMLElement;
- const firstMedia = document.querySelector('element') as HTMLElement;
- const firstNav = document.querySelector('element') as HTMLElement;
+ // Get first icons from DOM - using more specific selectors
+ const firstMode = document.querySelector('[data-mode]') as HTMLElement;
+ const firstTool = document.querySelector('[data-tool]') as HTMLElement;
+ const firstMedia = document.querySelector('[data-media]') as HTMLElement;
+ const firstNav = document.querySelector('.coursebuilder__navigation .icon') as HTMLElement;
  const firstShape = document.querySelector('[data-shape]') as HTMLElement;
 
  this.currentMode = firstMode?.dataset.mode || "build";
@@ -347,100 +347,104 @@ export class ToolStateManager {
  * Update shape UI to reflect current selection
  */
  private updateShapeUI(shapeName: string | null): void {
- // Remove selected class from all shape icons and wrappers
- document
- .querySelectorAll("[data-shape]")
- .forEach((icon) => {
- icon
- const wrapper = icon.closest('.icon-wrapper');
- if (wrapper) {
- wrapper
- }
- });
+   // Remove selected class from all shape icons and wrappers
+   document
+     .querySelectorAll("[data-shape]")
+     .forEach((icon) => {
+       icon.classList.remove('selected');
+       const wrapper = icon.closest('.icon-wrapper');
+       if (wrapper) {
+         wrapper.classList.remove('selected');
+       }
+     });
 
- // Add selected class to current shape if one is selected
- if (shapeName) {
- const selectedShape = document.querySelector(`[data-shape="${shapeName}"]`);
- if (selectedShape) {
- selectedShape
- const wrapper = selectedShape.closest('.icon-wrapper');
- if (wrapper) {
- wrapper
- }
- }
- }
+   // Add selected class to current shape if one is selected
+   if (shapeName) {
+     const selectedShape = document.querySelector(`[data-shape="${shapeName}"]`);
+     if (selectedShape) {
+       selectedShape.classList.add('selected');
+       const wrapper = selectedShape.closest('.icon-wrapper');
+       if (wrapper) {
+         wrapper.classList.add('selected');
+       }
+     }
+   }
  }
 
  /**
- * Update tool UI to reflect current selection
- */
+  * Update tool UI to reflect current selection
+  */
  private updateToolUI(toolName: string): void {
- // Remove selected class from ALL icons in coursebuilder (tools, modes, media, navigation) and wrappers
- document
- .querySelectorAll('elements')
- .forEach((icon) => {
- icon
- const wrapper = icon.closest('.icon-wrapper');
- if (wrapper) {
- wrapper
- }
- });
+   // Remove selected class from ALL icons in coursebuilder (tools, modes, media, navigation) and wrappers
+   document
+     .querySelectorAll('.selected')
+     .forEach((icon) => {
+       icon.classList.remove('selected');
+       const wrapper = icon.closest('.icon-wrapper');
+       if (wrapper) {
+         wrapper.classList.remove('selected');
+       }
+     });
 
- // Remove old tool class if it exists
- document
- .querySelectorAll('elements')
- .forEach((t) => t
+   // Remove old tool class if it exists
+   document
+     .querySelectorAll('.icon-wrapper')
+     .forEach((t) => t.classList.remove('selected'));
 
- // Add selected class to current tool icon
- const selectedTool = document.querySelector(`[data-tool="${toolName}"]`);
- if (selectedTool) {
- selectedTool
- const wrapper = selectedTool.closest('.icon-wrapper');
- if (wrapper) {
- wrapper
- }
- }
+   // Add selected class to current tool icon
+   const selectedTool = document.querySelector(`[data-tool="${toolName}"]`);
+   if (selectedTool) {
+     selectedTool.classList.add('selected');
+     const wrapper = selectedTool.closest('.icon-wrapper');
+     if (wrapper) {
+       wrapper.classList.add('selected');
+     }
+   }
 
- // Hide all tool settings
- document.querySelectorAll('elements').forEach((settings) => {
- settings
- });
+   // Hide all tool settings
+   document.querySelectorAll('.tool-settings').forEach((settings) => {
+     (settings as HTMLElement).style.display = 'none';
+   });
 
- // Show settings for current tool - look for the div with data-tool attribute matching the tool name
- const toolSettings = document.querySelector(
- `.tool-settings[data-tool="${toolName}"]`,
- );
- if (toolSettings) {
- toolSettings
- }
+   // Show settings for current tool - look for the div with data-tool attribute matching the tool name
+   const toolSettings = document.querySelector(
+     `.tool-settings[data-tool="${toolName}"]`,
+   ) as HTMLElement;
+   if (toolSettings) {
+     toolSettings.style.display = 'block';
+   }
+
+   // Update canvas cursor
+   this.updateCanvasCursor();
  }
 
  /**
- * Update canvas cursor based on current tool
- */
- updateCanvasCursor(): void {
- const canvas = document.querySelector("#pixi-canvas") as HTMLElement;
- if (!canvas) return;
+  * Update canvas cursor based on current tool
+  */
+ public updateCanvasCursor(): void {
+   const canvas = document.querySelector("#pixi-canvas") as HTMLElement;
+   if (!canvas) return;
 
- // Remove all cursor classes
- canvas
+   // Remove all cursor classes
+   canvas.classList.remove('cursor-pen', 'cursor-eraser', 'cursor-text', 'cursor-highlighter');
 
- // Add cursor class for current tool
- switch (this.currentTool) {
- case "pen":
- canvas
- break;
- case "eraser":
- canvas
- break;
- case "text":
- canvas
- break;
- case "highlighter":
- canvas
- break;
- default:
- canvas
- }
+   // Add cursor class for current tool
+   switch (this.currentTool) {
+     case "pen":
+       canvas.classList.add('cursor-pen');
+       break;
+     case "eraser":
+       canvas.classList.add('cursor-eraser');
+       break;
+     case "text":
+       canvas.classList.add('cursor-text');
+       break;
+     case "highlighter":
+       canvas.classList.add('cursor-highlighter');
+       break;
+     default:
+       canvas.classList.add('cursor-default');
+       break;
+   }
  }
 }

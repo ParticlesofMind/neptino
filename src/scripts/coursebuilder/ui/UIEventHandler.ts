@@ -65,8 +65,8 @@ export class UIEventHandler {
  });
 
  // Color palette events
- document.querySelectorAll('elements').forEach((color) => {
- color.addEventListener("click", this.handleColorSelection.bind(this));
+ document.querySelectorAll('.color-square').forEach((color) => {
+   color.addEventListener("click", this.handleColorSelection.bind(this));
  });
 
  // Shape tool events
@@ -97,8 +97,11 @@ export class UIEventHandler {
  const target = event.target as HTMLElement;
 
  // Handle color selection
- if (target
- return;
+ const colorElement = target.closest('.color-square') as HTMLElement;
+ if (colorElement) {
+   const colorEvent = { ...event, currentTarget: colorElement };
+   this.handleColorSelection(colorEvent);
+   return;
  }
 
  // Handle shape selection - check if target is a shape button or is inside one
@@ -185,12 +188,12 @@ export class UIEventHandler {
  // Update UI - find the parent color palette and update active state
  const parentPalette = colorSquare.closest(".color-palette");
  if (parentPalette) {
- parentPalette
- .querySelectorAll('elements')
- .forEach((color) => {
- color
- });
- colorSquare
+   parentPalette
+     .querySelectorAll('.color-square')
+     .forEach((color) => {
+       color.classList.remove('active');
+     });
+   colorSquare.classList.add('active');
  }
 
  // Update tool settings based on currently active tool

@@ -76,7 +76,7 @@ export class ClassificationFormHandler {
 
  } catch (error) {
  console.error("Error initializing Classification Form Handler:", error);
- this.updateSaveStatus("Error loading data", true);
+       this.updateSaveStatus("Error loading data");
  }
  }
 
@@ -120,18 +120,14 @@ export class ClassificationFormHandler {
  this.toggleDropdown(dropdownId);
  });
 
- // Handle option selection
- menu.addEventListener("click", (e) => {
- const option = (e.target as HTMLElement).closest(
- ".dropdown__option",
- ) as HTMLElement;
- if (
- option &&
- !option
- }
- });
-
- // Close dropdown when clicking outside
+    // Handle option selection
+    menu.addEventListener("click", (e) => {
+      const link = (e.target as HTMLElement).closest(".dropdown__link") as HTMLElement;
+      if (link) {
+        e.preventDefault();
+        this.selectOption(dropdownId, link);
+      }
+    }); // Close dropdown when clicking outside
  document.addEventListener("click", (e) => {
  if (
  !trigger.contains(e.target as Node) &&
@@ -142,81 +138,94 @@ export class ClassificationFormHandler {
  });
  }
 
- private toggleDropdown(dropdownId: string): void {
- const trigger = document.getElementById(`${dropdownId}-dropdown`);
- const menu = document.getElementById(`${dropdownId}-menu`);
+  private toggleDropdown(dropdownId: string): void {
+    const trigger = document.getElementById(`${dropdownId}-dropdown`);
+    const menu = document.getElementById(`${dropdownId}-menu`);
 
- if (!trigger || !menu) return;
+    if (!trigger || !menu) return;
 
- const isOpen = trigger.getAttribute("aria-expanded") === "true";
+    const isOpen = trigger.getAttribute("aria-expanded") === "true";
 
- // Close all other dropdowns first
- this.closeAllDropdowns();
+    // Close all other dropdowns first
+    this.closeAllDropdowns();
 
- if (!isOpen) {
- trigger.setAttribute("aria-expanded", "true");
- trigger
- menu
+    if (!isOpen) {
+      trigger.setAttribute("aria-expanded", "true");
+      menu.classList.add('dropdown__menu--active');
 
- const icon = trigger.querySelector('element');
- if (icon) icon
- }
- }
+      const icon = trigger.querySelector('.dropdown__icon') as HTMLElement;
+      if (icon) icon.style.transform = 'rotate(180deg)';
+    }
+  }
 
- private closeDropdown(dropdownId: string): void {
- const trigger = document.getElementById(`${dropdownId}-dropdown`);
- const menu = document.getElementById(`${dropdownId}-menu`);
+  private closeDropdown(dropdownId: string): void {
+    const trigger = document.getElementById(`${dropdownId}-dropdown`);
+    const menu = document.getElementById(`${dropdownId}-menu`);
 
- if (!trigger || !menu) return;
+    if (!trigger || !menu) return;
 
- trigger.setAttribute("aria-expanded", "false");
- trigger
- menu
+    trigger.setAttribute("aria-expanded", "false");
+    menu.classList.remove('dropdown__menu--active');
 
- const icon = trigger.querySelector('element');
- if (icon) icon
- }
+    const icon = trigger.querySelector('.dropdown__icon') as HTMLElement;
+    if (icon) icon.style.transform = 'rotate(0deg)';
+  }
 
- private closeAllDropdowns(): void {
- const triggers = document.querySelectorAll('elements');
- triggers.forEach((trigger) => {
- const dropdownId = trigger.id.replace("-dropdown", "");
- this.closeDropdown(dropdownId);
- });
- }
+  private closeAllDropdowns(): void {
+    const triggers = document.querySelectorAll('[aria-expanded="true"]');
+    triggers.forEach((trigger) => {
+      const dropdownId = trigger.id.replace("-dropdown", "");
+      this.closeDropdown(dropdownId);
+    });
+  }  private selectOption(dropdownId: string, option: HTMLElement): void {
+    const trigger = document.getElementById(`${dropdownId}-dropdown`);
+    const hiddenInput = document.getElementById(
+      `${dropdownId}-value`,
+    ) as HTMLInputElement;
+    const label = trigger?.querySelector('.dropdown__text') as HTMLElement;
 
- private selectOption(dropdownId: string, option: HTMLElement): void {
- const trigger = document.getElementById(`${dropdownId}-dropdown`);
- const hiddenInput = document.getElementById(
- `${dropdownId}-value`,
- ) as HTMLInputElement;
- const label = trigger?.querySelector('element');
+    if (!trigger || !hiddenInput || !label) return;
 
- if (!trigger || !hiddenInput || !label) return;
+    const value = option.dataset.value || "";
+    const fullText = option.textContent?.trim() || "";
+    
+    // Create a truncated version for display (keep original value for form submission)
+    const displayText = this.truncateText(fullText, 35); // Limit to ~35 characters
 
- const value = option.dataset.value || "";
- const text = option.textContent?.trim() || "";
+    // Update UI
+    hiddenInput.value = value;
+    label.textContent = displayText;
+    label.title = fullText; // Show full text on hover
+    trigger.classList.add('coursebuilder-dropdown__toggle--selected');
 
- // Update UI
- hiddenInput.value = value;
- label.textContent = text;
- label
+    // Handle cascading updates for ISCED hierarchy
+    this.handleCascadingUpdates(dropdownId, value);
 
- // Handle cascading updates for ISCED hierarchy
- this.handleCascadingUpdates(dropdownId, value);
+    // Close dropdown
+    this.closeDropdown(dropdownId);
 
- // Close dropdown
- this.closeDropdown(dropdownId);
+    // Mark as success
+    trigger.classList.add('dropdown__toggle--success');
 
- // Mark as success
- trigger
+    // Trigger auto-save
+    this.triggerAutoSave();
+  }
 
- // Trigger auto-save
- this.triggerAutoSave();
-
- }
-
- // ==========================================================================
+  private truncateText(text: string, maxLength: number): string {
+    if (text.length <= maxLength) return text;
+    
+    // Try to break at word boundaries
+    const truncated = text.substring(0, maxLength);
+    const lastSpaceIndex = truncated.lastIndexOf(' ');
+    
+    if (lastSpaceIndex > maxLength * 0.6) {
+      // If we can break at a word boundary that's not too early, do so
+      return truncated.substring(0, lastSpaceIndex) + '...';
+    } else {
+      // Otherwise just truncate at character boundary
+      return truncated + '...';
+    }
+  } // ==========================================================================
  // CASCADING UPDATES
  // ==========================================================================
 
@@ -259,47 +268,46 @@ export class ClassificationFormHandler {
  }
  }
 
- private resetDropdown(dropdownId: string): void {
- const trigger = document.getElementById(`${dropdownId}-dropdown`);
- const menu = document.getElementById(`${dropdownId}-menu`);
- const hiddenInput = document.getElementById(
- `${dropdownId}-value`,
- ) as HTMLInputElement;
- const label = trigger?.querySelector('element');
+  private resetDropdown(dropdownId: string): void {
+    const trigger = document.getElementById(`${dropdownId}-dropdown`);
+    const menu = document.getElementById(`${dropdownId}-menu`);
+    const hiddenInput = document.getElementById(
+      `${dropdownId}-value`,
+    ) as HTMLInputElement;
+    const label = trigger?.querySelector('.dropdown__text') as HTMLElement;
 
- if (!trigger || !menu || !hiddenInput || !label) return;
+    if (!trigger || !menu || !hiddenInput || !label) return;
 
- // Reset values
- hiddenInput.value = "";
- label
+    // Reset values
+    hiddenInput.value = "";
+    trigger.classList.remove('coursebuilder-dropdown__toggle--selected');
 
- // Clear menu
- menu.innerHTML = "";
+    // Clear menu
+    menu.innerHTML = "";
 
- // Disable trigger
- trigger
- trigger.setAttribute("disabled", "true");
+    // Disable trigger
+    trigger.classList.add('dropdown__toggle--disabled');
+    trigger.setAttribute("disabled", "true");
 
- // Update placeholder text
- switch (dropdownId) {
- case "subject":
- label.textContent = "Select domain first...";
- break;
- case "topic":
- label.textContent = "Select subject first...";
- break;
- case "subtopic":
- label.textContent = "Select topic first...";
- break;
- default:
- label.textContent = `Select ${dropdownId.replace("-", " ")}...`;
- }
+    // Update placeholder text
+    switch (dropdownId) {
+      case "subject":
+        label.textContent = "Select domain first...";
+        break;
+      case "topic":
+        label.textContent = "Select subject first...";
+        break;
+      case "subtopic":
+        label.textContent = "Select topic first...";
+        break;
+      default:
+        label.textContent = `Select ${dropdownId.replace("-", " ")}...`;
+    }
 
- // Remove success styling
- trigger
- }
-
- // ==========================================================================
+    // Remove title attribute and success styling
+    label.removeAttribute('title');
+    trigger.classList.remove('dropdown__toggle--success');
+  } // ==========================================================================
  // DROPDOWN POPULATION
  // ==========================================================================
 
@@ -311,235 +319,255 @@ export class ClassificationFormHandler {
  ]);
  }
 
- private async populateClassYearDropdown(): Promise<void> {
- try {
- const data = await loadClassYearData();
- const menu = document.getElementById("class-year-menu");
+  private async populateClassYearDropdown(): Promise<void> {
+    try {
+      const data = await loadClassYearData();
+      const menu = document.getElementById("class-year-menu");
 
- if (!menu || !data.classYears) return;
+      if (!menu || !data.classYears) return;
 
- menu.innerHTML = data.classYears
- .map(
- (year: any) => `
- <div class="" data-value="${year.value}" role="option">
- <div class="">
- ${year.label}
- ${year.description ? `<div class="">${year.description}</div>` : ""}
- </div>
- </div>
- `,
- )
- .join("");
+      menu.innerHTML = data.classYears
+        .map(
+          (year: any) => `
+          <div class="dropdown__item" role="none">
+            <button class="dropdown__link" data-value="${year.value}" role="option" type="button">
+              <div class="dropdown__option-content">
+                <div class="dropdown__option-title">${year.label}</div>
+                ${year.description ? `<div class="dropdown__option-description">${year.description}</div>` : ""}
+              </div>
+            </button>
+          </div>
+          `,
+        )
+        .join("");
 
- // Enable dropdown
- this.enableDropdown("class-year");
- } catch (error) {
- console.error("Error populating class year dropdown:", error);
- }
- }
+      // Enable dropdown
+      this.enableDropdown("class-year");
+    } catch (error) {
+      console.error("Error populating class year dropdown:", error);
+    }
+  }
 
- private async populateCurricularFrameworkDropdown(): Promise<void> {
- try {
- const data = await loadCurricularFrameworkData();
- const menu = document.getElementById("curricular-framework-menu");
+  private async populateCurricularFrameworkDropdown(): Promise<void> {
+    try {
+      const data = await loadCurricularFrameworkData();
+      const menu = document.getElementById("curricular-framework-menu");
 
- if (!menu || !data.curricularFrameworks) return;
+      if (!menu || !data.curricularFrameworks) return;
 
- menu.innerHTML = data.curricularFrameworks
- .map(
- (framework: any) => `
- <div class="" data-value="${framework.value}" role="option">
- <div class="">
- ${framework.label}
- ${framework.description ? `<div class="">${framework.description}</div>` : ""}
- </div>
- </div>
- `,
- )
- .join("");
+      menu.innerHTML = data.curricularFrameworks
+        .map(
+          (framework: any) => `
+          <div class="dropdown__item" role="none">
+            <button class="dropdown__link" data-value="${framework.value}" role="option" type="button">
+              <div class="dropdown__option-content">
+                <div class="dropdown__option-title">${framework.label}</div>
+                ${framework.description ? `<div class="dropdown__option-description">${framework.description}</div>` : ""}
+              </div>
+            </button>
+          </div>
+          `,
+        )
+        .join("");
 
- // Enable dropdown
- this.enableDropdown("curricular-framework");
- } catch (error) {
- console.error("Error populating curricular framework dropdown:", error);
- }
- }
+      // Enable dropdown
+      this.enableDropdown("curricular-framework");
+    } catch (error) {
+      console.error("Error populating curricular framework dropdown:", error);
+    }
+  }
 
- private async populateDomainDropdown(): Promise<void> {
- try {
- const data = await loadIscedData();
- const menu = document.getElementById("domain-menu");
+  private async populateDomainDropdown(): Promise<void> {
+    try {
+      const data = await loadIscedData();
+      const menu = document.getElementById("domain-menu");
 
- if (!menu || !data.domains) return;
+      if (!menu || !data.domains) return;
 
- menu.innerHTML = data.domains
- .map(
- (domain: any) => `
- <div class="" data-value="${domain.value}" role="option">
- <div class="">
- ${domain.label}
- <div class="">${domain.code}</div>
- </div>
- </div>
- `,
- )
- .join("");
+      menu.innerHTML = data.domains
+        .map(
+          (domain: any) => `
+          <div class="dropdown__item" role="none">
+            <button class="dropdown__link" data-value="${domain.value}" role="option" type="button">
+              <div class="dropdown__option-content">
+                <div class="dropdown__option-title">${domain.label}</div>
+                <div class="dropdown__option-description">Code: ${domain.code}</div>
+              </div>
+            </button>
+          </div>
+          `,
+        )
+        .join("");
 
- // Enable dropdown
- this.enableDropdown("domain");
- } catch (error) {
- console.error("Error populating domain dropdown:", error);
- }
- }
+      // Enable dropdown
+      this.enableDropdown("domain");
+    } catch (error) {
+      console.error("Error populating domain dropdown:", error);
+    }
+  }
 
- private populateSubjectDropdown(): void {
- const subjects = this.formState.availableSubjects;
- const menu = document.getElementById("subject-menu");
+  private populateSubjectDropdown(): void {
+    const subjects = this.formState.availableSubjects;
+    const menu = document.getElementById("subject-menu");
 
- if (!menu) return;
+    if (!menu) return;
 
- if (subjects.length === 0) {
- menu.innerHTML =
- '<div class="dropdown__option dropdown__option--disabled">No subjects available</div>';
- return;
- }
+    if (subjects.length === 0) {
+      menu.innerHTML =
+        '<div class="coursebuilder-dropdown__empty">No subjects available</div>';
+      return;
+    }
 
- menu.innerHTML = subjects
- .map(
- (subject: any) => `
- <div class="" data-value="${subject.value}" role="option">
- <div class="">
- ${subject.label}
- <div class="">${subject.code}</div>
- </div>
- </div>
- `,
- )
- .join("");
+    menu.innerHTML = subjects
+      .map(
+        (subject: any) => `
+        <div class="dropdown__item" role="none">
+          <button class="dropdown__link" data-value="${subject.value}" role="option" type="button">
+            <div class="dropdown__option-content">
+              <div class="dropdown__option-title">${subject.label}</div>
+              <div class="dropdown__option-description">Code: ${subject.code}</div>
+            </div>
+          </button>
+        </div>
+        `,
+      )
+      .join("");
 
- // Enable dropdown
- this.enableDropdown("subject");
- }
+    // Enable dropdown
+    this.enableDropdown("subject");
+  }
 
- private populateTopicDropdown(): void {
- const topics = this.formState.availableTopics;
- const menu = document.getElementById("topic-menu");
+  private populateTopicDropdown(): void {
+    const topics = this.formState.availableTopics;
+    const menu = document.getElementById("topic-menu");
 
- if (!menu) return;
+    if (!menu) return;
 
- if (topics.length === 0) {
- menu.innerHTML =
- '<div class="dropdown__option dropdown__option--disabled">No topics available</div>';
- return;
- }
+    if (topics.length === 0) {
+      menu.innerHTML =
+        '<div class="coursebuilder-dropdown__empty">No topics available</div>';
+      return;
+    }
 
- menu.innerHTML = topics
- .map(
- (topic: any) => `
- <div class="" data-value="${topic.value}" role="option">
- <div class="">
- ${topic.label}
- <div class="">${topic.code}</div>
- </div>
- </div>
- `,
- )
- .join("");
+    menu.innerHTML = topics
+      .map(
+        (topic: any) => `
+        <div class="dropdown__item" role="none">
+          <button class="dropdown__link" data-value="${topic.value}" role="option" type="button">
+            <div class="dropdown__option-content">
+              <div class="dropdown__option-title">${topic.label}</div>
+              <div class="dropdown__option-description">Code: ${topic.code}</div>
+            </div>
+          </button>
+        </div>
+        `,
+      )
+      .join("");
 
- // Enable dropdown
- this.enableDropdown("topic");
- }
+    // Enable dropdown
+    this.enableDropdown("topic");
+  }
 
- private populateSubtopicDropdown(): void {
- const subtopics = this.formState.availableSubtopics;
- const menu = document.getElementById("subtopic-menu");
+  private populateSubtopicDropdown(): void {
+    const subtopics = this.formState.availableSubtopics;
+    const menu = document.getElementById("subtopic-menu");
 
- if (!menu) return;
+    if (!menu) return;
 
- if (subtopics.length === 0) {
- menu.innerHTML =
- '<div class="dropdown__option dropdown__option--disabled">No subtopics available</div>';
- return;
- }
+    if (subtopics.length === 0) {
+      menu.innerHTML =
+        '<div class="coursebuilder-dropdown__empty">No subtopics available</div>';
+      return;
+    }
 
- menu.innerHTML = subtopics
- .map(
- (subtopic: any) => `
- <div class="" data-value="${subtopic.value}" role="option">
- <div class="">
- ${subtopic.label}
- <div class="">${subtopic.code}</div>
- </div>
- </div>
- `,
- )
- .join("");
+    menu.innerHTML = subtopics
+      .map(
+        (subtopic: any) => `
+        <div class="dropdown__item" role="none">
+          <button class="dropdown__link" data-value="${subtopic.value}" role="option" type="button">
+            <div class="dropdown__option-content">
+              <div class="dropdown__option-title">${subtopic.label}</div>
+              <div class="dropdown__option-description">Code: ${subtopic.code}</div>
+            </div>
+          </button>
+        </div>
+        `,
+      )
+      .join("");
 
- // Enable dropdown
- this.enableDropdown("subtopic");
- }
+    // Enable dropdown
+    this.enableDropdown("subtopic");
+  }
 
- private async populateAvailableCourses(): Promise<void> {
- try {
- const courses = await getAvailableCourses();
- const courseDropdowns = [
- "previous-course",
- "current-course",
- "next-course",
- ];
+  private async populateAvailableCourses(): Promise<void> {
+    try {
+      const courses = await getAvailableCourses();
+      const courseDropdowns = [
+        "previous-course",
+        "current-course",
+        "next-course",
+      ];
 
- courseDropdowns.forEach((dropdownId) => {
- const menu = document.getElementById(`${dropdownId}-menu`);
- if (!menu) return;
+      courseDropdowns.forEach((dropdownId) => {
+        const menu = document.getElementById(`${dropdownId}-menu`);
+        if (!menu) return;
 
- const coursesHtml = courses
- .map(
- (course) => `
- <div class="" data-value="${course.id}" role="option">
- <div class="">${course.course_name}</div>
- </div>
- `,
- )
- .join("");
+        const coursesHtml = courses
+          .map(
+            (course) => `
+            <div class="dropdown__item" role="none">
+              <button class="dropdown__link" data-value="${course.id}" role="option" type="button">
+                <div class="dropdown__option-content">
+                  <div class="dropdown__option-title">${course.course_name}</div>
+                </div>
+              </button>
+            </div>
+            `,
+          )
+          .join("");
 
- // Keep the header and add courses
- const existingHeader = menu.querySelector('element');
- if (existingHeader) {
- menu.innerHTML = existingHeader.outerHTML + coursesHtml;
- } else {
- menu.innerHTML = coursesHtml;
- }
+        // Keep the header and add courses
+        const existingHeader = menu.querySelector('.dropdown__header');
+        if (existingHeader) {
+          menu.innerHTML = existingHeader.outerHTML + coursesHtml;
+        } else {
+          menu.innerHTML = `
+            <div class="dropdown__header coursebuilder-dropdown__header">Your Courses</div>
+            ${coursesHtml}
+          `;
+        }
 
- // Enable dropdown
- this.enableDropdown(dropdownId);
- });
- } catch (error) {
- console.error("Error populating available courses:", error);
- }
- }
+        // Enable dropdown
+        this.enableDropdown(dropdownId);
+      });
+    } catch (error) {
+      console.error("Error populating available courses:", error);
+    }
+  }
 
- private enableDropdown(dropdownId: string): void {
- const trigger = document.getElementById(`${dropdownId}-dropdown`);
- if (!trigger) return;
+  private enableDropdown(dropdownId: string): void {
+    const trigger = document.getElementById(`${dropdownId}-dropdown`);
+    if (!trigger) return;
 
- trigger
- trigger.removeAttribute("disabled");
+    trigger.classList.remove("dropdown__toggle--disabled");
+    trigger.removeAttribute("disabled");
 
- // Update placeholder if needed
- const label = trigger.querySelector('element');
- if (label && label
- break;
- case "topic":
- label.textContent = "Select topic...";
- break;
- case "subtopic":
- label.textContent = "Select subtopic...";
- break;
- }
- }
- }
-
- // ==========================================================================
+    // Update placeholder if needed
+    const label = trigger.querySelector('.dropdown__label');
+    if (label && label.textContent === 'Select domain first...') {
+      switch (dropdownId) {
+        case "subject":
+          label.textContent = "Select subject...";
+          break;
+        case "topic":
+          label.textContent = "Select topic...";
+          break;
+        case "subtopic":
+          label.textContent = "Select subtopic...";
+          break;
+      }
+    }
+  } // ==========================================================================
  // FORM HANDLING & AUTO-SAVE
  // ==========================================================================
 
@@ -581,7 +609,7 @@ export class ClassificationFormHandler {
  private async performAutoSave(): Promise<void> {
  const courseId = this.courseId;
  if (!courseId) {
- this.updateSaveStatus("Waiting for course creation...", true);
+       this.updateSaveStatus("Waiting for course creation...");
  return;
  }
 
@@ -613,9 +641,7 @@ export class ClassificationFormHandler {
  }
  } catch (error) {
  console.error("Error in auto-save:", error);
- this.updateSaveStatus("Save failed - will retry", true);
-
- // Retry after 3 seconds
+      this.updateSaveStatus("Save failed - will retry"); // Retry after 3 seconds
  setTimeout(() => {
  this.triggerAutoSave();
  }, 3000);
@@ -643,20 +669,18 @@ export class ClassificationFormHandler {
  };
  }
 
- private updateSaveStatus(message: string, isError: boolean = false): void {
- const statusElement = document.getElementById("classification-save-status");
- if (!statusElement) return;
+  private updateSaveStatus(message: string): void {
+    const statusElement = document.getElementById("classification-save-status");
+    if (!statusElement) return;
 
- statusElement.textContent = message;
+    statusElement.textContent = message;
 
- // Update styling based on status
- const indicator = document.getElementById("classification-last-saved");
- if (indicator) {
- indicator
- }
- }
-
- // ==========================================================================
+    // Update styling based on status
+    const indicator = document.getElementById("classification-last-saved");
+    if (indicator) {
+      indicator.classList.remove('coursebuilder-save-status--error');
+    }
+  } // ==========================================================================
  // UTILITY METHODS
  // ==========================================================================
 
@@ -696,7 +720,7 @@ export class ClassificationFormHandler {
  }
  } catch (error) {
  console.error("Error loading existing classification:", error);
- this.updateSaveStatus("Error loading existing data", true);
+       this.updateSaveStatus("Error loading existing data");
  }
  }
 
@@ -754,27 +778,31 @@ export class ClassificationFormHandler {
  this.setDropdownValue("next-course", data.next_course);
  }
 
- private setDropdownValue(dropdownId: string, value: string): void {
- const trigger = document.getElementById(`${dropdownId}-dropdown`);
- const hiddenInput = document.getElementById(
- `${dropdownId}-value`,
- ) as HTMLInputElement;
- const label = trigger?.querySelector('element');
+  private setDropdownValue(dropdownId: string, value: string): void {
+    const trigger = document.getElementById(`${dropdownId}-dropdown`);
+    const hiddenInput = document.getElementById(
+      `${dropdownId}-value`,
+    ) as HTMLInputElement;
+    const label = trigger?.querySelector('.dropdown__text') as HTMLElement;
 
- if (!trigger || !hiddenInput || !label) return;
+    if (!trigger || !hiddenInput || !label) return;
 
- hiddenInput.value = value;
+    hiddenInput.value = value;
 
- // Find the option with this value to get the display text
- const menu = document.getElementById(`${dropdownId}-menu`);
- const option = menu?.querySelector(`[data-value="${value}"]`);
- if (option) {
- label.textContent = option.textContent?.trim() || value;
- label
- trigger
- this.enableDropdown(dropdownId);
- }
- }
+    // Find the option with this value to get the display text
+    const menu = document.getElementById(`${dropdownId}-menu`);
+    const option = menu?.querySelector(`[data-value="${value}"]`);
+    if (option) {
+      const fullText = option.textContent?.trim() || value;
+      const displayText = this.truncateText(fullText, 35);
+      
+      label.textContent = displayText;
+      label.title = fullText; // Show full text on hover
+      trigger.classList.add('coursebuilder-dropdown__toggle--selected');
+      trigger.classList.add('dropdown__toggle--success');
+      this.enableDropdown(dropdownId);
+    }
+  }
 }
 
 // ==========================================================================

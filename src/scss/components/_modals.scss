@@ -1,1 +1,196 @@
-/* Styles cleared */
+/* ==========================================================================
+   MODALS
+   ====================================  .template-card {
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-medium);
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+
+    &:hover {
+      border-color: var(--color-primary-500);
+      box-shadow: var(--shadow-small);
+    }
+
+    &--selected {
+      border-color: var(--color-primary-500);
+      background-color: var(--color-primary-50);
+    }
+  }===================== */
+
+/**
+ * Modal Component System
+ * - Base modal styles with overlay functionality
+ * - Hidden by default, shown with --active modifier
+ * - Proper z-index layering for overlay
+ * - Accessible backdrop interaction
+ */
+
+/* Modal Base */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-modal);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-normal), visibility var(--transition-normal);
+
+  &--active {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* Modal Backdrop */
+.modal__backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-8);
+}
+
+/* Modal Content */
+.modal__content {
+  background: var(--color-background);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow-extra-large);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  transform: scale(0.95) translateY(-20px);
+  transition: transform var(--transition-normal);
+
+  .modal--active & {
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Modal Header */
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-8);
+  border-bottom: 1px solid var(--color-border-primary);
+}
+
+.modal__title {
+  margin: 0;
+  font-size: var(--font-size-large);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.modal__close {
+  margin-left: auto;
+  
+  &:hover {
+    background-color: var(--color-background-secondary);
+  }
+}
+
+/* Modal Body */
+.modal__body {
+  padding: var(--spacing-8);
+}
+
+/* Modal Footer */
+.modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+  padding: var(--spacing-8);
+  border-top: 1px solid var(--color-border-primary);
+}
+
+/* CourseBuilder Specific Modal Styles */
+.coursebuilder-modal {
+  .modal__content {
+    width: 100%;
+    max-width: 600px;
+  }
+}
+
+/* CourseBuilder Template Browser */
+.coursebuilder-template-browser {
+  .template-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--spacing-5);
+    margin-bottom: var(--spacing-8);
+  }
+
+  .template-card {
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-medium);
+    padding: var(--spacing-5);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+
+    &:hover {
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-small);
+    }
+
+    &--selected {
+      border-color: var(--color-primary);
+      background-color: var(--color-primary-light);
+    }
+  }
+
+  .template-card__title {
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--spacing-2);
+    color: var(--color-text-primary);
+  }
+
+  .template-card__description {
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-3);
+  }
+
+  .template-card__meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--font-size-extra-small);
+    color: var(--color-text-tertiary);
+  }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .modal__backdrop {
+    padding: var(--spacing-3);
+  }
+
+  .modal__content {
+    max-width: 100%;
+    max-height: 95vh;
+  }
+
+  .modal__header,
+  .modal__body,
+  .modal__footer {
+    padding: var(--spacing-5);
+  }
+
+  .coursebuilder-template-browser {
+    .template-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}

@@ -8,6 +8,7 @@ import { PixiCanvas } from "./canvas/PixiCanvas";
 import { ToolStateManager } from "./ui/ToolStateManager";
 import { UIEventHandler } from "./ui/UIEventHandler";
 import { CourseFormHandler } from "../backend/courses/courseFormHandler";
+import { CourseBuilderSelectHandler } from "./selectHandler";
 
 // Course management imports
 import { ScheduleCourseManager } from "../backend/courses/scheduleCourse";
@@ -82,6 +83,7 @@ export class CourseBuilderCanvas {
  private scheduleManager: ScheduleCourseManager | null = null;
  private curriculumManager: CurriculumManager | null = null;
  private currentFormHandler: CourseFormHandler | null = null;
+ private selectHandler: CourseBuilderSelectHandler | null = null;
  
  // State tracking
  private currentSection: string = "essentials";
@@ -153,11 +155,6 @@ export class CourseBuilderCanvas {
  this.courseId = courseIdFromUrl;
  sessionStorage.setItem("currentCourseId", courseIdFromUrl);
  console.log('📋 Course ID from URL:', courseIdFromUrl);
- 
- // Notify classification handler if available
- if (window.classificationHandler) {
- window.classificationHandler.setCourseId(courseIdFromUrl);
- }
  return;
  }
 
@@ -166,11 +163,6 @@ export class CourseBuilderCanvas {
  if (courseIdFromSession) {
  this.courseId = courseIdFromSession;
  console.log('📋 Course ID from session storage:', courseIdFromSession);
- 
- // Notify classification handler if available
- if (window.classificationHandler) {
- window.classificationHandler.setCourseId(courseIdFromSession);
- }
  return;
  }
 
@@ -410,6 +402,12 @@ export class CourseBuilderCanvas {
  console.log('📚 Curriculum manager initialized');
  }
  }
+
+ // Initialize dropdown handler for classification section
+ if (!this.selectHandler) {
+ this.selectHandler = new CourseBuilderSelectHandler();
+ console.log('📋 Select handler initialized');
+ }
  } catch (error) {
  this.errorBoundary.handleError(error as Error, 'initializeCourseManagers');
  }
@@ -544,11 +542,14 @@ export class CourseBuilderCanvas {
  const sections = document.querySelectorAll('elements');
  sections.forEach(section => {
  // Show the section that matches the sectionId
- const shouldBeActive = section.id === sectionId;
- section
+ if (section.id === sectionId) {
+ section.classList.add('active');
+ } else {
+ section.classList.remove('active');
+ }
  
  // Also handle the old 'active' class for backwards compatibility
- section
+ section.classList.toggle('active', section.id === sectionId);
  });
  
  // If we're in setup, also ensure the correct subsection is shown
@@ -561,8 +562,11 @@ export class CourseBuilderCanvas {
  // Show the specific subsection article
  const articles = document.querySelectorAll('elements');
  articles.forEach(article => {
- const shouldBeActive = article.id === hash;
- article
+ if (article.id === hash) {
+ article.classList.add('active');
+ } else {
+ article.classList.remove('active');
+ }
  });
  
  // Update the aside navigation
@@ -600,9 +604,9 @@ export class CourseBuilderCanvas {
  this.curriculumManager.setCourseId(courseId);
  }
  
- // Update classification handler if available
- if (window.classificationHandler) {
- window.classificationHandler.setCourseId(courseId);
+ // Update dropdown handler if available
+ if (this.selectHandler) {
+ this.selectHandler.setCourseId(courseId);
  }
  
  // Update URL to include course ID parameter
@@ -774,6 +778,7 @@ export class CourseBuilderCanvas {
  scheduleManager: this.scheduleManager,
  curriculumManager: this.curriculumManager,
  currentFormHandler: this.currentFormHandler,
+ selectHandler: this.selectHandler,
  };
  }
 
@@ -819,6 +824,13 @@ export class CourseBuilderCanvas {
  // Curriculum manager doesn't have destroy method yet
  console.log('📚 Curriculum manager cleanup - no destroy method available');
  this.curriculumManager = null;
+ }
+
+ // Clean up select handler
+ if (this.selectHandler) {
+ // Select handler doesn't have destroy method yet
+ console.log('📋 Select handler cleanup - no destroy method available');
+ this.selectHandler = null;
  }
 
  // Remove global reference

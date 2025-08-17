@@ -21,7 +21,7 @@ export class CourseBuilderNavigation {
 
  console.log('🧭 Initializing CourseBuilder Navigation...');
  
- this.sections = document.querySelectorAll('elements');
+ this.sections = document.querySelectorAll('section[id]');
  this.nextButton = document.getElementById('next-btn');
  this.previousButton = document.getElementById('previous-btn');
  
@@ -101,13 +101,13 @@ export class CourseBuilderNavigation {
  
  // Hide all sections
  this.sections.forEach(section => {
- section
+ section.classList.remove('section--active');
  });
  
  // Show target section
  const targetSection = document.getElementById(sectionId);
  if (targetSection) {
- targetSection
+ targetSection.classList.add('section--active');
  console.log(`🎯 Successfully navigated to section: ${sectionId}`);
  } else {
  console.error(`❌ Section not found: ${sectionId}`);
@@ -210,8 +210,8 @@ export class AsideNavigation {
 
  console.log('🧭 Initializing Aside Navigation...');
  
- this.asideLinks = document.querySelectorAll('elements');
- this.contentSections = document.querySelectorAll('elements');
+ this.asideLinks = document.querySelectorAll('.coursebuilder-sidebar__link[data-section]');
+ this.contentSections = document.querySelectorAll('.coursebuilder-article[id]');
  this.boundHandleLinkClick = this.handleLinkClick.bind(this);
 
  this.init();
@@ -219,7 +219,7 @@ export class AsideNavigation {
 
     private isInSetupSection(): boolean {
         const setupSection = document.getElementById('setup');
-        return setupSection ? setupSection.contains(document.activeElement) : false;
+        return setupSection !== null;
     } private init(): void {
  if (this.asideLinks.length === 0) {
  console.warn("No aside links found - aside navigation disabled");
@@ -270,20 +270,20 @@ export class AsideNavigation {
 
  private removeActiveStates(): void {
  this.asideLinks.forEach((link: HTMLAnchorElement) => {
- link
+ link.classList.remove('coursebuilder-sidebar__link--active');
  });
 
  this.contentSections.forEach((section: HTMLElement) => {
- section
+ section.classList.remove('coursebuilder-article--active');
  });
  }
 
  private setActiveStates(activeLink: HTMLAnchorElement, targetSectionId: string): void {
- activeLink
+ activeLink.classList.add('coursebuilder-sidebar__link--active');
 
  const targetSection = document.getElementById(targetSectionId);
  if (targetSection) {
- targetSection
+ targetSection.classList.add('coursebuilder-article--active');
  console.log('🎯 Successfully activated article:', targetSectionId);
  } else {
  console.error("Target section not found:", targetSectionId);
@@ -332,9 +332,114 @@ export class AsideNavigation {
  }
 }
 
+/**
+ * Modal Handler for CourseBuilder
+ * Simple utility to show/hide modals with proper overlay behavior
+ */
+export class ModalHandler {
+  private static instance: ModalHandler;
+  private activeModal: HTMLElement | null = null;
+
+  constructor() {
+    if (ModalHandler.instance) {
+      return ModalHandler.instance;
+    }
+    
+    ModalHandler.instance = this;
+    this.init();
+  }
+
+  private init(): void {
+    // Close modal when clicking backdrop
+    document.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('modal__backdrop')) {
+        this.hideModal();
+      }
+    });
+
+    // Close modal when clicking close button
+    document.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('.modal__close')) {
+        e.preventDefault();
+        this.hideModal();
+      }
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.activeModal) {
+        this.hideModal();
+      }
+    });
+
+    // Handle modal trigger buttons
+    this.setupModalTriggers();
+  }
+
+  private setupModalTriggers(): void {
+    // Create Template modal
+    const createTemplateBtn = document.getElementById('create-template-btn');
+    if (createTemplateBtn) {
+      createTemplateBtn.addEventListener('click', () => {
+        this.showModal('create-template-modal');
+      });
+    }
+
+    // Load Template modal  
+    const loadTemplateBtn = document.getElementById('load-template-btn');
+    if (loadTemplateBtn) {
+      loadTemplateBtn.addEventListener('click', () => {
+        this.showModal('load-template-modal');
+      });
+    }
+  }
+
+  public showModal(modalId: string): void {
+    const modal = document.getElementById(modalId);
+    if (!modal) {
+      console.error(`Modal not found: ${modalId}`);
+      return;
+    }
+
+    // Hide any currently active modal
+    this.hideModal();
+
+    // Show the new modal
+    modal.classList.add('modal--active');
+    this.activeModal = modal;
+
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+
+    console.log(`🔄 Modal shown: ${modalId}`);
+  }
+
+  public hideModal(): void {
+    if (!this.activeModal) return;
+
+    this.activeModal.classList.remove('modal--active');
+    this.activeModal = null;
+
+    // Restore body scroll
+    document.body.style.overflow = '';
+
+    console.log('🔄 Modal hidden');
+  }
+
+  public static getInstance(): ModalHandler {
+    if (!ModalHandler.instance) {
+      ModalHandler.instance = new ModalHandler();
+    }
+    return ModalHandler.instance;
+  }
+}
+
 // Initialize CourseBuilder navigation when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
  if (window.location.pathname.includes('coursebuilder.html')) {
  new CourseBuilderNavigation();
+ new ModalHandler();
  }
 });

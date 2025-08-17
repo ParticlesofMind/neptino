@@ -1702,11 +1702,9 @@ document.addEventListener("DOMContentLoaded", () => {
  mutation.attributeName === "class"
  ) {
  const target = mutation.target as HTMLElement;
- if (
- target
-
- // Check if there's a template for the current course
- TemplateManager.loadCourseTemplate();
+ if (target.classList.contains('active')) {
+   // Check if there's a template for the current course
+   TemplateManager.loadCourseTemplate();
  }
  }
  });
@@ -1715,7 +1713,8 @@ document.addEventListener("DOMContentLoaded", () => {
  observer.observe(templatesSection, { attributes: true });
 
  // Also check if templates section is already active on page load
- if (templatesSection
+ if (templatesSection.classList.contains('active')) {
+   TemplateManager.loadCourseTemplate();
  }
  }
 

@@ -131,4 +131,174 @@
     margin: var(--spacing-2) 0;
     border: none;
   }
+
+  // Header for dropdown sections
+  &__header {
+    padding: var(--spacing-1) var(--spacing-3);
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--color-neutral-200);
+    margin-bottom: var(--spacing-1);
+  }
+}
+
+// ==========================================================================
+// COURSEBUILDER DROPDOWN COMPONENT - BEM Methodology
+// ==========================================================================
+
+.coursebuilder-dropdown {
+  // Inherits all base dropdown styles
+  @extend .dropdown;
+  
+  // Coursebuilder-specific toggle styling
+  &__toggle {
+    @extend .dropdown__toggle;
+    
+    // Custom styling for coursebuilder dropdowns
+    border: 1px solid var(--color-neutral-300);
+    border-radius: var(--radius-medium);
+    background: var(--color-background);
+    min-width: 220px; // Increased minimum width
+    max-width: 100%; // Allow it to use available space
+    text-align: left;
+    position: relative;
+    
+    &:hover {
+      border-color: var(--color-primary-400);
+      background: var(--color-primary-25);
+    }
+    
+    &:focus {
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+    }
+    
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: var(--color-neutral-50);
+      color: var(--color-text-disabled);
+      
+      &:hover {
+        border-color: var(--color-neutral-300);
+        background: var(--color-neutral-50);
+      }
+    }
+    
+    // Success state when option is selected
+    &--selected {
+      border-color: var(--color-success-400);
+      background: var(--color-success-25);
+      
+      &:hover {
+        border-color: var(--color-success-500);
+        background: var(--color-success-50);
+      }
+    }
+    
+    .dropdown__text {
+      flex: 1;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0; // Allow text to shrink
+    }
+    
+    .dropdown__icon {
+      margin-left: auto;
+      font-size: var(--font-size-small);
+      flex-shrink: 0; // Prevent icon from being truncated
+      transition: transform 0.2s ease;
+    }
+  }
+  
+  // Coursebuilder-specific menu styling
+  &__menu {
+    @extend .dropdown__menu;
+    
+    // Enhanced menu styling for coursebuilder
+    border: 1px solid var(--color-neutral-200);
+    box-shadow: var(--shadow-large);
+    background: var(--color-background);
+    min-width: 240px;
+    max-height: 280px;
+    overflow-y: auto;
+    
+    // Custom scrollbar
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: var(--color-neutral-100);
+      border-radius: var(--radius-small);
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: var(--color-neutral-300);
+      border-radius: var(--radius-small);
+      
+      &:hover {
+        background: var(--color-neutral-400);
+      }
+    }
+    
+    .dropdown__item {
+      margin: 0;
+      
+      &:not(:last-child) {
+        border-bottom: 1px solid var(--color-neutral-100);
+      }
+    }
+    
+    .dropdown__link {
+      padding: var(--spacing-3) var(--spacing-4);
+      font-size: var(--font-size-base);
+      line-height: 1.4;
+      
+      &:hover {
+        background: var(--color-primary-50);
+        color: var(--color-primary-700);
+      }
+      
+      &--selected {
+        background: var(--color-primary-100);
+        color: var(--color-primary-800);
+        font-weight: var(--font-weight-medium);
+      }
+    }
+  }
+  
+  // Header styling within coursebuilder dropdowns
+  &__header {
+    @extend .dropdown__header;
+    
+    background: var(--color-neutral-50);
+    margin: 0;
+    padding: var(--spacing-2) var(--spacing-4);
+    border-bottom: 1px solid var(--color-neutral-200);
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+  }
+  
+  // Loading state
+  &__loading {
+    padding: var(--spacing-4);
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-style: italic;
+  }
+  
+  // Empty state
+  &__empty {
+    padding: var(--spacing-4);
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-style: italic;
+  }
 }
