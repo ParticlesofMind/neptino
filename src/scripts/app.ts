@@ -3,7 +3,7 @@
  * This file serves as the global initialization for all pages
  */
 
-import { initializeGlobalNavigation } from './navigation';
+import { initializeGlobalNavigation, initializeDashboardNavigation } from './navigation';
 import { initAuth } from './backend/auth/auth';
 import { AuthFormHandler } from './auth/AuthFormHandler';
 import PageTransitions from './navigation/PageTransitions';
@@ -17,6 +17,12 @@ initAuth();
 // Initialize global navigation
 initializeGlobalNavigation();
 console.log('🧭 Global navigation initialized');
+
+// Initialize dashboard navigation if present
+const dashboardNav = initializeDashboardNavigation();
+if (dashboardNav) {
+  console.log('📊 Dashboard navigation initialized');
+}
 
 // Initialize page transitions for smooth navigation
 new PageTransitions();

@@ -27,7 +27,6 @@
 @use 'layout/grid';               // Grid system
 @use 'layout/header';             // Site header
 @use 'layout/navigation';         // Navigation components
-@use 'layout/form';
 @use 'layout/sidebar';            // Sidebar layout
 @use 'layout/footer';             // Site footer
 
@@ -35,7 +34,8 @@
 // ==========================================================================
 @use 'pages/signin';
 @use 'pages/signup';
-
+@use 'pages/home';
+@use 'pages/courses';
 // COMPONENTS (Reusable UI components)
 // ==========================================================================
 @use 'components/icons';          // Sizing utilities for images/icons/logos
@@ -44,4 +44,5 @@
 @use 'components/inputs';         // Form inputs
 @use 'components/alerts';         // Alert/notification components
 @use 'components/cards';          // Card component system
+@use 'components/forms';          // Form components
 @use 'components/schedule';       // Schedule-related components

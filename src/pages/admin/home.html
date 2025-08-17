@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - Neptino</title>
+  <link rel="stylesheet" href="/src/scss/main.scss" />
+</head>
+
+<body class="grid body">
+  <header class="grid__header header header--home">
+    <nav class="header__nav">
+      <ul class="nav nav--header">
+        <li class="nav__item nav__item--brand">
+          <a href="/src/pages/admin/home.html" class="nav__brand">
+            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
+          </a>
+        </li>
+        <li class="nav__item"><a href="/src/pages/admin/courses.html" class="nav__link link">My Courses</a></li>
+        <li class="nav__item"><a href="/src/pages/admin/marketplace.html" class="nav__link link">Marketplace</a></li>
+        <li class="nav__item"><a href="/src/pages/admin/tutorials.html" class="nav__link link">Tutorials</a></li>
+        <li class="nav__item nav__item--cta">
+          <button id="logout-btn" class="nav__cta button button--outline">Logout</button>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="grid__main grid__main--with-sidebar main">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <ul class="nav nav--main">
+          <li class="nav__item">
+            <a href="#dashboard" class="nav__link nav__link--active" data-section="dashboard">Dashboard</a>
+          </li>
+          <li class="nav__item">
+            <a href="#users" class="nav__link" data-section="users">Users</a>
+          </li>
+          <li class="nav__item">
+            <a href="#analytics" class="nav__link" data-section="analytics">Analytics</a>
+          </li>
+          <li class="nav__item">
+            <a href="#settings" class="nav__link" data-section="settings">Settings</a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <div class="dashboard-content">
+      <article id="dashboard" class="dashboard-content__article dashboard-content__article--active">
+        <section>
+          <h1 class="heading heading--h1">Admin Dashboard</h1>
+          <p class="paragraph paragraph--lead">
+            Manage your institution and oversee educational operations.
+          </p>
+        </section>
+        
+        <section>
+          <div class="card-grid">
+            <div class="card card--metric">
+              <span class="metric__number">24</span>
+              <span class="metric__label label">Active Teachers</span>
+            </div>
+            <div class="card card--metric">
+              <span class="metric__number">486</span>
+              <span class="metric__label label">Active Students</span>
+            </div>
+            <div class="card card--metric">
+              <span class="metric__number">127</span>
+              <span class="metric__label label">Total Courses</span>
+            </div>
+            <div class="card card--metric">
+              <span class="metric__number">98%</span>
+              <span class="metric__label label">System Uptime</span>
+            </div>
+          </div>
+        </section>
+        
+        <section>
+          <h2 class="heading heading--h2">Recent Activity</h2>
+          <div class="card">
+            <div class="activity-list">
+              <div class="activity-item">
+                <h4 class="heading heading--h4">New teacher registration: Dr. Sarah Johnson</h4>
+                <time class="activity-time">15 minutes ago</time>
+              </div>
+              <div class="activity-item">
+                <h4 class="heading heading--h4">Course approved: Advanced Mathematics</h4>
+                <time class="activity-time">1 hour ago</time>
+              </div>
+              <div class="activity-item">
+                <h4 class="heading heading--h4">System maintenance completed</h4>
+                <time class="activity-time">3 hours ago</time>
+              </div>
+            </div>
+            <a href="#" class="button button--outline">View All Activity</a>
+          </div>
+        </section>
+        
+        <section>
+          <h2 class="heading heading--h2">Quick Actions</h2>
+          <div class="card-grid">
+            <div class="card card--centered">
+              <h3 class="heading heading--h3">User Management</h3>
+              <p class="paragraph">Manage teachers, students, and permissions.</p>
+              <a href="#users" class="button button--primary" data-section="users">Manage Users</a>
+            </div>
+            <div class="card card--centered">
+              <h3 class="heading heading--h3">System Reports</h3>
+              <p class="paragraph">View detailed analytics and reports.</p>
+              <a href="#analytics" class="button button--outline" data-section="analytics">View Reports</a>
+            </div>
+            <div class="card card--centered">
+              <h3 class="heading heading--h3">Settings</h3>
+              <p class="paragraph">Configure system settings and preferences.</p>
+              <a href="#settings" class="button button--outline" data-section="settings">System Settings</a>
+            </div>
+          </div>
+        </section>
+      </article>
+
+      <article id="users" class="dashboard-content__article">
+        <section>
+          <h1 class="heading heading--h1">User Management</h1>
+          <p class="paragraph paragraph--lead">
+            Manage teachers, students, and system administrators.
+          </p>
+        </section>
+        
+        <section>
+          <div class="card-grid">
+            <div class="card card--metric">
+              <span class="metric__number">24</span>
+              <span class="metric__label label">Teachers</span>
+            </div>
+            <div class="card card--metric">
+              <span class="metric__number">486</span>
+              <span class="metric__label label">Students</span>
+            </div>
+            <div class="card card--metric">
+              <span class="metric__number">3</span>
+              <span class="metric__label label">Administrators</span>
+            </div>
+          </div>
+        </section>
+        
+        <section>
+          <h2 class="heading heading--h2">User Actions</h2>
+          <div class="card-grid">
+            <div class="card card--centered">
+              <button class="button button--primary">Add New User</button>
+            </div>
+            <div class="card card--centered">
+              <button class="button button--outline">Export User Data</button>
+            </div>
+            <div class="card card--centered">
+              <button class="button button--outline">Bulk Operations</button>
+            </div>
+          </div>
+        </section>
+      </article>
+
+      <article id="analytics" class="dashboard-content__article">
+        <section>
+          <h1 class="heading heading--h1">Analytics & Reports</h1>
+          <p class="paragraph paragraph--lead">
+            Monitor institutional performance and generate reports.
+          </p>
+        </section>
+        
+        <section>
+          <div class="card-grid">
+            <div class="card card--metric">
+              <span class="metric__number">89%</span>
+              <span class="metric__label label">Student Satisfaction</span>
+            </div>
+            <div class="card card--metric">
+              <span class="metric__number">76%</span>
+              <span class="metric__label label">Course Completion</span>
+            </div>
+            <div class="card card--metric">
+              <span class="metric__number">4.2</span>
+              <span class="metric__label label">Average Rating</span>
+            </div>
+          </div>
+        </section>
+        
+        <section>
+          <h2 class="heading heading--h2">Generate Reports</h2>
+          <div class="card-grid">
+            <div class="card card--centered">
+              <button class="button button--primary">Usage Report</button>
+            </div>
+            <div class="card card--centered">
+              <button class="button button--outline">Financial Report</button>
+            </div>
+            <div class="card card--centered">
+              <button class="button button--outline">Performance Report</button>
+            </div>
+          </div>
+        </section>
+      </article>
+
+      <article id="settings" class="dashboard-content__article">
+        <section>
+          <h1 class="heading heading--h1">System Settings</h1>
+          <p class="paragraph paragraph--lead">
+            Configure institutional settings and system preferences.
+          </p>
+        </section>
+        
+        <section>
+          <div class="card">
+            <h2 class="heading heading--h2">Institution Settings</h2>
+            <form class="form">
+              <div class="form__group">
+                <label for="institution-name" class="form__label">Institution Name</label>
+                <input type="text" id="institution-name" value="Neptino University" class="form__input input" />
+              </div>
+              <div class="form__group">
+                <label for="institution-email" class="form__label">Contact Email</label>
+                <input type="email" id="institution-email" value="admin@neptino.edu" class="form__input input" />
+              </div>
+              <div class="form__group">
+                <label for="timezone" class="form__label">Timezone</label>
+                <select id="timezone" class="form__input input">
+                  <option>UTC</option>
+                  <option>EST</option>
+                  <option>PST</option>
+                </select>
+              </div>
+              <div class="button-group">
+                <button type="submit" class="button button--primary">Save Settings</button>
+                <button type="button" class="button button--outline">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </section>
+        
+        <section>
+          <h2 class="heading heading--h2">System Maintenance</h2>
+          <div class="card-grid">
+            <div class="card">
+              <h3 class="heading heading--h3">Database Backup</h3>
+              <p class="paragraph">Create a backup of all system data.</p>
+              <button class="button button--outline">Create Backup</button>
+            </div>
+            <div class="card">
+              <h3 class="heading heading--h3">Clear Cache</h3>
+              <p class="paragraph">Clear system cache to improve performance.</p>
+              <button class="button button--outline">Clear Cache</button>
+            </div>
+            <div class="card">
+              <h3 class="heading heading--h3">System Logs</h3>
+              <p class="paragraph">View and download system logs.</p>
+              <button class="button button--outline">View Logs</button>
+            </div>
+          </div>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <footer class="grid__footer footer">
+    <nav class="footer__nav">
+      <ul class="nav nav--footer">
+        <li class="nav__item nav__item--brand">
+          <a href="/src/pages/admin/home.html" class="nav__brand">
+            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
+          </a>
+        </li>
+        <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Privacy Policy</a></li>
+        <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Terms of Service</a></li>
+        <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Contact</a></li>
+      </ul>
+    </nav>
+  </footer>
+
+  <script type="module" src="/src/scripts/app.ts"></script>
+  <script type="module" src="/src/scripts/navigation/index.ts"></script>
+</body>
+
+</html>

@@ -1,0 +1,49 @@
+// ==========================================================================
+// FORM LAYOUT STYLES - BEM Methodology
+// ==========================================================================
+
+.form {
+  &__group {
+    margin-bottom: var(--spacing-4);
+  }
+  
+  &__label {
+    display: block;
+    margin-bottom: var(--spacing-2);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+  }
+  
+  &__input,
+  &__textarea {
+    width: 100%;
+    padding: var(--spacing-3);
+    border: 1px solid var(--color-neutral-300);
+    border-radius: var(--radius-small);
+    font-family: inherit;
+    font-size: var(--font-size-base);
+    transition: var(--transition-fast);
+    
+    &:focus {
+      outline: none;
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+  }
+  
+  &__textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  
+  &__checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    margin-bottom: var(--spacing-3);
+  }
+  
+  &__checkbox {
+    margin: 0;
+  }
+}

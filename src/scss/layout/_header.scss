@@ -3,8 +3,14 @@
 .header {
 
     &--index { 
-            padding: var(--spacing-4) var(--spacing-5);
+        padding: var(--spacing-4) var(--spacing-5);
+    }
 
+    &--signin {
+        padding: var(--spacing-4) var(--spacing-5);
+    }
 
+    &--home {
+        padding: var(--spacing-4) var(--spacing-5);
     }
 }

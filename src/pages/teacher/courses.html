@@ -1,71 +1,107 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Courses - Neptino</title>
-      <link rel="stylesheet" href="/src/scss/main.scss" />
-    </head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Courses - Neptino</title>
+  <link rel="stylesheet" href="/src/scss/main.scss" />
+</head>
 
-    <body>
-      <header>
-        <nav>
-          <a href="/src/pages/teacher/home.html">
-            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
+<body class="grid body">
+  <header class="grid__header header header--home">
+    <nav class="header__nav">
+      <ul class="nav nav--header">
+        <li class="nav__item nav__item--brand">
+          <a href="/src/pages/teacher/home.html" class="nav__brand">
+            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
           </a>
-          <ul>
-            <li>
-              <a href="/src/pages/teacher/courses.html">My Courses</a>
-              </li>
-              <li>
-                <a href="#students">Students</a>
-                </li>
-                <li>
-                  <a href="#assignments">Assignments</a>
-                  </li>
-                  <li>
-                    <a href="#analytics">Analytics</a>
-                    </li>
-                  </ul>
-                  <button id="logout-btn">
-                    Sign Out
-                  </button>
-                </nav>
-              </header>
-              <main>
-                <h1>My Courses</h1>
-                  <a href="/src/pages/teacher/coursebuilder.html#setup" id="create-course-btn">Create New Course</a>
-                    <!-- Course cards will be dynamically loaded here -->
-                    <div id="no-courses-message">
-                      <p>
-                        No courses yet. Create your first course to get started!
-                      </p>
-                    </div>
-                  </main>
-                  <footer>
-                    <nav>
-                      <a href="/src/pages/teacher/home.html">
-                        <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
-                      </a>
-                      <ul>
-                        <li>
-                          <a href="#">Privacy Policy</a>
-                          </li>
-                          <li>
-                            <a href="#">Terms of Service</a>
-                            </li>
-                            <li>
-                              <a href="#">Support</a>
-                              </li>
-                              <li>
-                                <a href="#">Contact</a>
-                                </li>
-                              </ul>
-                            </nav>
-                          </footer>
-                          <script type="module" src="/src/scripts/app.ts"></script>
-                            <script type="module" src="/src/scripts/backend/courses/createCourseCard.ts"></script>
-                            </body>
+        </li>
+        <li class="nav__item"><a href="/src/pages/teacher/courses.html" class="nav__link link nav__link--active">My Courses</a></li>
+        <li class="nav__item"><a href="/src/pages/teacher/marketplace.html" class="nav__link link">Marketplace</a></li>
+        <li class="nav__item"><a href="/src/pages/teacher/tutorials.html" class="nav__link link">Tutorials</a></li>
+        <li class="nav__item nav__item--cta">
+          <button id="logout-btn" class="nav__cta button button--outline">Logout</button>
+        </li>
+      </ul>
+    </nav>
+  </header>
+  <main class="grid__main main courses">
+    <div class="container">
+      <section class="page-header">
+        <a href="/src/pages/teacher/coursebuilder.html#setup" class="button button--primary" id="create-course-btn">
+          <i class="icon icon--plus"></i>
+          Create New Course
+        </a>
+        <h1 class="heading heading--h1">My Courses</h1>
+      </section>
 
-                          </html>
+      <section class="courses-section">
+        <div class="courses-grid" id="courses-container">
+          <!-- Course cards will be dynamically loaded here -->
+
+          <div class="card course-card card--course">
+            <div class="course-card__image">
+              <img src="/src/assets/images/courses/shakespeare-in-love.jpg" alt="Shakespeare in Love Course" class="course-card__img">
+              <div class="course-card__overlay">
+                <span class="course-card__status course-card__status--draft">Draft</span>
+              </div>
+            </div>
+            <div class="course-card__header">
+              <h3 class="heading heading--h3 course-card__title">Shakespeare in Love</h3>
+              <p class="course-card__description">Explore the intersection of literature and romance through Shakespeare's timeless works.</p>
+            </div>
+            <div class="course-card__body">
+              <div class="course-card__meta">
+                <span class="course-card__info">
+                  <i class="icon icon--students"></i>
+                  0 students
+                </span>
+                <span class="course-card__info">
+                  <i class="icon icon--lessons"></i>
+                  12 lessons
+                </span>
+              </div>
+              <div class="course-card__actions">
+                <a href="/src/pages/teacher/coursebuilder.html#setup" class="button button--outline button--small course-card__action">Setup</a>
+                <a href="/src/pages/teacher/coursebuilder.html#create" class="button button--outline button--small course-card__action">Create</a>
+                <a href="/src/pages/teacher/coursebuilder.html#preview" class="button button--outline button--small course-card__action">Preview</a>
+                <a href="/src/pages/teacher/coursebuilder.html#launch" class="button button--primary button--small course-card__action">Launch</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="no-courses-message" class="empty-state" style="display: none;">
+          <div class="empty-state__content">
+            <i class="icon icon--courses icon--large"></i>
+            <h2 class="heading heading--h2">No courses yet</h2>
+            <p class="paragraph">Create your first course to get started teaching with Neptino!</p>
+            <a href="/src/pages/teacher/coursebuilder.html#setup" class="button button--primary">
+              <i class="icon icon--plus"></i>
+              Create Your First Course
+            </a>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer class="grid__footer footer">
+    <nav class="footer__nav">
+      <ul class="nav nav--footer">
+        <li class="nav__item nav__item--brand">
+          <a href="/src/pages/teacher/home.html" class="nav__brand">
+            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
+          </a>
+        </li>
+        <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Privacy Policy</a></li>
+        <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Terms of Service</a></li>
+        <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Contact</a></li>
+      </ul>
+    </nav>
+  </footer>
+  <script type="module" src="/src/scripts/app.ts"></script>
+  <!-- <script type="module" src="/src/scripts/backend/courses/createCourseCard.ts"></script> -->
+</body>
+
+</html>

@@ -1,236 +1,390 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Teacher Dashboard - Neptino</title>
-      <link rel="stylesheet" href="/src/scss/main.scss" />
-    </head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teacher Dashboard - Neptino</title>
+  <link rel="stylesheet" href="/src/scss/main.scss" />
+</head>
 
-    <body>
-      <header>
-        <nav>
-          <a href="/src/pages/teacher/home.html">
-            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
+<body class="grid body">
+  <header class="grid__header header header--home">
+    <nav class="header__nav">
+      <ul class="nav nav--header">
+        <li class="nav__item nav__item--brand">
+          <a href="/src/pages/teacher/home.html" class="nav__brand">
+            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
           </a>
-          <ul>
-            <li><a href="/src/pages/teacher/courses.html">My Courses</a></li>
-              <li><a href="#students">Students</a></li>
-                <li><a href="#assignments">Assignments</a></li>
-                  <li><a href="#analytics">Analytics</a></li>
-                  </ul>
-                  <button id="logout-btn">Sign Out</button>
-                  </nav>
-                </header>
-                <main>
-                  <aside>
-                    <nav>
-                      <ul>
-                        <li><a href="#home" data-section="home">Home</a></li>
-                          <li><a href="#courses" data-section="courses">Courses</a></li>
-                            <li><a href="#subscription" data-section="subscription">Subscription</a></li>
-                              <li><a href="#settings" data-section="settings">Settings</a></li>
-                              </ul>
-                            </nav>
-                          </aside>
-                          <article id="home">
-                            <section>
-                              <h2>Welcome Back!</h2>
-                                <p>Here's what's happening with your courses today.</p>
-                                  <ul>
-                                    <li>5 Active Courses</li>
-                                      <li>127 Total Students</li>
-                                        <li>12 Pending Reviews</li>
-                                        </ul>
-                                      </section>
-                                      <section>
-                                        <h2>Recent Activity</h2>
-                                          <p>Latest submissions and student activities.</p>
-                                            <ul>
-                                              <li>
-                                                <h4>New submission: HTML Assignment</h4>
-                                                  <time>30 minutes ago</time>
-                                                  </li>
-                                                  <li>
-                                                    <h4>Student question in Programming 101</h4>
-                                                      <time>2 hours ago</time>
-                                                      </li>
-                                                      <li>
-                                                        <h4>Assignment graded: JavaScript Basics</h4>
-                                                          <time>4 hours ago</time>
-                                                          </li>
-                                                          <li>
-                                                            <h4>New student enrolled: Web Development</h4>
-                                                              <time>1 day ago</time>
-                                                              </li>
-                                                            </ul>
-                                                            <a href="#">View All Activity</a>
-                                                            </section>
-                                                            <section>
-                                                              <h2>Quick Actions</h2>
-                                                                <ul>
-                                                                  <li><button>Create Assignment</button></li>
-                                                                    <li><button>Grade Submissions</button></li>
-                                                                      <li><button>Message Students</button></li>
-                                                                        <li><button>View Analytics</button></li>
-                                                                        </ul>
-                                                                      </section>
-                                                                    </article>
-                                                                    <article id="courses">
-                                                                      <section>
-                                                                        <h2>My Courses</h2>
-                                                                          <p>Create and manage your teaching courses.</p>
-                                                                            <ul>
-                                                                              <li>5 Active Courses</li>
-                                                                                <li>127 Enrolled Students</li>
-                                                                                </ul>
-                                                                                <ul>
-                                                                                  <li>
-                                                                                    <h3>Introduction to Programming</h3>
-                                                                                      <p>45 students</p>
-                                                                                        <button>Edit</button>
-                                                                                          <button>View</button>
-                                                                                          </li>
-                                                                                          <li>
-                                                                                            <h3>Web Development Fundamentals</h3>
-                                                                                              <p>32 students</p>
-                                                                                                <button>Edit</button>
-                                                                                                  <button>View</button>
-                                                                                                  </li>
-                                                                                                  <li>
-                                                                                                    <h3>Advanced JavaScript</h3>
-                                                                                                      <p>28 students</p>
-                                                                                                        <button>Edit</button>
-                                                                                                          <button>View</button>
-                                                                                                          </li>
-                                                                                                        </ul>
-                                                                                                        <a href="/src/pages/teacher/coursebuilder.html#setup">Create New Course</a>
-                                                                                                          <a href="#">Import Course</a>
-                                                                                                          </section>
-                                                                                                          <section>
-                                                                                                            <h2>Student Progress</h2>
-                                                                                                              <p>Monitor your students' learning progress and performance.</p>
-                                                                                                                <ul>
-                                                                                                                  <li>78% Avg. Completion</li>
-                                                                                                                    <li>4.2 Avg. Rating</li>
-                                                                                                                    </ul>
-                                                                                                                    <a href="#students">View All Students</a>
-                                                                                                                    </section>
-                                                                                                                    <section>
-                                                                                                                      <h2>Assignment Management</h2>
-                                                                                                                        <p>Create and grade assignments for your students.</p>
-                                                                                                                          <ul>
-                                                                                                                            <li>12 Pending Reviews</li>
-                                                                                                                              <li>8 Due This Week</li>
-                                                                                                                              </ul>
-                                                                                                                              <a href="#assignments">Manage Assignments</a>
-                                                                                                                                <a href="#">Create Assignment</a>
-                                                                                                                                </section>
-                                                                                                                              </article>
-                                                                                                                              <article id="subscription">
-                                                                                                                                <section>
-                                                                                                                                  <h2>Current Plan</h2>
-                                                                                                                                    <h3>Teacher Pro Plan</h3>
-                                                                                                                                      <p>$29.99/month</p>
-                                                                                                                                        <p>Active until March 15, 2026</p>
-                                                                                                                                          <h4>Plan Features:</h4>
-                                                                                                                                            <ul>
-                                                                                                                                              <li>Unlimited courses</li>
-                                                                                                                                                <li>Up to 200 students per course</li>
-                                                                                                                                                  <li>Advanced analytics</li>
-                                                                                                                                                    <li>Priority support</li>
-                                                                                                                                                      <li>Custom branding</li>
-                                                                                                                                                      </ul>
-                                                                                                                                                      <button>Upgrade Plan</button>
-                                                                                                                                                        <button>Change Plan</button>
-                                                                                                                                                        </section>
-                                                                                                                                                        <section>
-                                                                                                                                                          <h2>Usage Statistics</h2>
-                                                                                                                                                            <ul>
-                                                                                                                                                              <li>Courses Created: 5 / 20</li>
-                                                                                                                                                                <li>Students Enrolled: 127 / 200</li>
-                                                                                                                                                                  <li>Storage Used: 2.3GB / 5GB</li>
-                                                                                                                                                                  </ul>
-                                                                                                                                                                </section>
-                                                                                                                                                                <section>
-                                                                                                                                                                  <h2>Billing History</h2>
-                                                                                                                                                                    <ul>
-                                                                                                                                                                      <li>Feb 15, 2026 - $29.99 - Paid</li>
-                                                                                                                                                                        <li>Jan 15, 2026 - $29.99 - Paid</li>
-                                                                                                                                                                          <li>Dec 15, 2025 - $29.99 - Paid</li>
-                                                                                                                                                                          </ul>
-                                                                                                                                                                          <button>Download Invoice</button>
-                                                                                                                                                                            <button>Update Payment Method</button>
-                                                                                                                                                                            </section>
-                                                                                                                                                                          </article>
-                                                                                                                                                                          <article id="settings">
-                                                                                                                                                                            <section>
-                                                                                                                                                                              <h2>Profile Settings</h2>
-                                                                                                                                                                                <form>
-                                                                                                                                                                                  <label for="first-name">First Name</label>
-                                                                                                                                                                                    <input type="text" id="first-name" value="John" />
-                                                                                                                                                                                    <label for="last-name">Last Name</label>
-                                                                                                                                                                                      <input type="text" id="last-name" value="Doe" />
-                                                                                                                                                                                      <label for="email">Email</label>
-                                                                                                                                                                                        <input type="email" id="email" value="john.doe@example.com" />
-                                                                                                                                                                                        <label for="bio">Bio</label>
-                                                                                                                                                                                          <textarea id="bio" rows="3">Experienced programming instructor with 10+ years in education.</textarea>
-                                                                                                                                                                                          </form>
-                                                                                                                                                                                          <button>Save Changes</button>
-                                                                                                                                                                                            <button>Cancel</button>
-                                                                                                                                                                                            </section>
-                                                                                                                                                                                            <section>
-                                                                                                                                                                                              <h2>Notification Preferences</h2>
-                                                                                                                                                                                                <form>
-                                                                                                                                                                                                  <input type="checkbox" id="email-notifications" checked />
-                                                                                                                                                                                                  <label for="email-notifications">Email notifications</label>
-                                                                                                                                                                                                    <input type="checkbox" id="student-submissions" checked />
-                                                                                                                                                                                                    <label for="student-submissions">New student submissions</label>
-                                                                                                                                                                                                      <input type="checkbox" id="course-enrollments" checked />
-                                                                                                                                                                                                      <label for="course-enrollments">Course enrollments</label>
-                                                                                                                                                                                                        <input type="checkbox" id="weekly-reports" />
-                                                                                                                                                                                                        <label for="weekly-reports">Weekly progress reports</label>
-                                                                                                                                                                                                        </form>
-                                                                                                                                                                                                        <button>Update Preferences</button>
-                                                                                                                                                                                                        </section>
-                                                                                                                                                                                                        <section>
-                                                                                                                                                                                                          <h2>Security</h2>
-                                                                                                                                                                                                            <ul>
-                                                                                                                                                                                                              <li>
-                                                                                                                                                                                                                <h4>Change Password</h4>
-                                                                                                                                                                                                                  <p>Update your password to keep your account secure</p>
-                                                                                                                                                                                                                    <button>Change Password</button>
-                                                                                                                                                                                                                    </li>
-                                                                                                                                                                                                                    <li>
-                                                                                                                                                                                                                      <h4>Two-Factor Authentication</h4>
-                                                                                                                                                                                                                        <p>Add an extra layer of security to your account</p>
-                                                                                                                                                                                                                          <button>Enable 2FA</button>
-                                                                                                                                                                                                                          </li>
-                                                                                                                                                                                                                          <li>
-                                                                                                                                                                                                                            <h4>Login Sessions</h4>
-                                                                                                                                                                                                                              <p>Manage your active login sessions</p>
-                                                                                                                                                                                                                                <button>View Sessions</button>
-                                                                                                                                                                                                                                </li>
-                                                                                                                                                                                                                              </ul>
-                                                                                                                                                                                                                            </section>
-                                                                                                                                                                                                                          </article>
-                                                                                                                                                                                                                        </main>
-                                                                                                                                                                                                                        <footer>
-                                                                                                                                                                                                                          <nav>
-                                                                                                                                                                                                                            <a href="/src/pages/teacher/home.html">
-                                                                                                                                                                                                                              <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
-                                                                                                                                                                                                                            </a>
-                                                                                                                                                                                                                            <ul>
-                                                                                                                                                                                                                              <li><a href="#">Privacy Policy</a></li>
-                                                                                                                                                                                                                                <li><a href="#">Terms of Service</a></li>
-                                                                                                                                                                                                                                  <li><a href="#">Support</a></li>
-                                                                                                                                                                                                                                    <li><a href="#">Contact</a></li>
-                                                                                                                                                                                                                                    </ul>
-                                                                                                                                                                                                                                  </nav>
-                                                                                                                                                                                                                                </footer>
-                                                                                                                                                                                                                                <script type="module" src="/src/scripts/app.ts"></script>
-                                                                                                                                                                                                                                  <script type="module" src="/src/scripts/navigation/index.ts"></script>
-                                                                                                                                                                                                                                  </body>
+        </li>
+        <li class="nav__item"><a href="/src/pages/teacher/courses.html" class="nav__link link">My Courses</a></li>
+        <li class="nav__item"><a href="/src/pages/teacher/marketplace.html" class="nav__link link">Marketplace</a></li>
+        <li class="nav__item"><a href="/src/pages/teacher/tutorials.html" class="nav__link link">Tutorials</a></li>
+        <li class="nav__item nav__item--cta">
+          <button id="logout-btn" class="nav__cta button button--outline">Logout</button>
+        </li>
+      </ul>
+    </nav>
+  </header>
+  <main class="grid__main main home">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <ul class="nav nav--main">
+          <li class="nav__item">
+            <a href="#home" class="nav__link nav__link--active" data-section="home">Home</a>
+          </li>
+          <li class="nav__item">
+            <a href="#courses" class="nav__link" data-section="courses">Courses</a>
+          </li>
+          <li class="nav__item">
+            <a href="#messages" class="nav__link" data-section="messages">Messages</a>
+          </li>
+          <li class="nav__item">
+            <a href="#contacts" class="nav__link" data-section="contacts">Contacts</a>
+          </li>
+          <li class="nav__item">
+            <a href="#students" class="nav__link" data-section="students">Students</a>
+          </li>
+          <li class="nav__item">
+            <a href="#settings" class="nav__link" data-section="settings">Settings</a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
 
-                                                                                                                                                                                                                                </html>
+    <div class="dashboard-content">
+      <article id="home" class="dashboard-content__article dashboard-content__article--active">
+        <section>
+          <div class="card-grid">
+            <div class="card card--metric">
+              <span class="metric__number">5</span>
+              <span class="metric__label label">Active Courses</span>
+            </div>
+            <div class="card card--metric">
+              <span class="metric__number">127</span>
+              <span class="metric__label label">Total Students</span>
+            </div>
+            <div class="card card--metric">
+              <span class="metric__number">12</span>
+              <span class="metric__label label">Pending Reviews</span>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="card">
+            <div class="activity-list">
+              <div class="activity-item">
+                <h4 class="heading heading--h4">New submission: HTML Assignment</h4>
+                <time class="activity-time">30 minutes ago</time>
+              </div>
+              <div class="activity-item">
+                <h4 class="heading heading--h4">Student question in Programming 101</h4>
+                <time class="activity-time">2 hours ago</time>
+              </div>
+              <div class="activity-item">
+                <h4 class="heading heading--h4">Assignment graded: JavaScript Basics</h4>
+                <time class="activity-time">4 hours ago</time>
+              </div>
+              <div class="activity-item">
+                <h4 class="heading heading--h4">New student enrolled: Web Development</h4>
+                <time class="activity-time">1 day ago</time>
+              </div>
+            </div>
+            <a href="#" class="button button--outline">View All Activity</a>
+          </div>
+        </section>
+
+        <section>
+          <div class="card-grid">
+            <button class="button button--primary">Create Assignment</button>
+            <button class="button button--primary">Grade Submissions</button>
+            <button class="button button--primary">Message Students</button>
+            <button class="button button--primary">View Analytics</button>
+          </div>
+        </section>
+      </article>
+
+      <article id="courses" class="dashboard-content__article">
+        <section>
+          <div class="card-grid">
+            <div class="card card--metric">
+              <span class="metric__number">5</span>
+              <span class="metric__label label">Active Courses</span>
+            </div>
+            <div class="card card--metric">
+              <span class="metric__number">127</span>
+              <span class="metric__label label">Enrolled Students</span>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="card-grid">
+            <div class="card">
+              <h3 class="heading heading--h3">Introduction to Programming</h3>
+              <p class="paragraph">45 students</p>
+              <div class="button-group">
+                <button class="button button--outline">Edit</button>
+                <button class="button button--primary">View</button>
+              </div>
+            </div>
+            <div class="card">
+              <h3 class="heading heading--h3">Web Development Fundamentals</h3>
+              <p class="paragraph">32 students</p>
+              <div class="button-group">
+                <button class="button button--outline">Edit</button>
+                <button class="button button--primary">View</button>
+              </div>
+            </div>
+            <div class="card">
+              <h3 class="heading heading--h3">Advanced JavaScript</h3>
+              <p class="paragraph">28 students</p>
+              <div class="button-group">
+                <button class="button button--outline">Edit</button>
+                <button class="button button--primary">View</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-grid">
+            <a href="/src/pages/teacher/coursebuilder.html#setup" class="button button--primary">Create New Course</a>
+            <a href="#" class="button button--outline">Import Course</a>
+          </div>
+        </section>
+
+        <section>
+          <div class="card-grid">
+            <div class="card card--metric">
+              <span class="metric__number">78%</span>
+              <span class="metric__label label">Avg. Completion</span>
+            </div>
+            <div class="card card--metric">
+              <span class="metric__number">4.2</span>
+              <span class="metric__label label">Avg. Rating</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <a href="#students" class="button button--primary">View All Students</a>
+          </div>
+        </section>
+      </article>
+
+    <article id="messages" class="dashboard-content__article">
+      <section>
+        <div class="card-grid">
+          <div class="card card--metric">
+            <span class="metric__number">8</span>
+            <span class="metric__label label">Unread Messages</span>
+          </div>
+          <div class="card card--metric">
+            <span class="metric__number">23</span>
+            <span class="metric__label label">Total Conversations</span>
+          </div>
+          <div class="card card--metric">
+            <span class="metric__number">156</span>
+            <span class="metric__label label">Messages Sent</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="card">
+          <div class="message-list">
+            <div class="message-item">
+              <h4 class="heading heading--h4">Sarah Johnson</h4>
+              <p class="paragraph">Question about HTML assignment...</p>
+              <time class="message-time">2 hours ago</time>
+            </div>
+            <div class="message-item">
+              <h4 class="heading heading--h4">Mike Chen</h4>
+              <p class="paragraph">Thank you for the feedback on my project...</p>
+              <time class="message-time">4 hours ago</time>
+            </div>
+            <div class="message-item">
+              <h4 class="heading heading--h4">Emma Williams</h4>
+              <p class="paragraph">When is the next office hours session?</p>
+              <time class="message-time">1 day ago</time>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="card-grid">
+          <button class="button button--primary">Compose Message</button>
+          <button class="button button--outline">Broadcast to Class</button>
+          <button class="button button--outline">View All Messages</button>
+        </div>
+      </section>
+    </article>
+
+    <article id="contacts" class="dashboard-content__article">
+      <section>
+        <div class="card-grid">
+          <div class="card card--metric">
+            <span class="metric__number">45</span>
+            <span class="metric__label label">Total Contacts</span>
+          </div>
+          <div class="card card--metric">
+            <span class="metric__number">12</span>
+            <span class="metric__label label">Fellow Teachers</span>
+          </div>
+          <div class="card card--metric">
+            <span class="metric__number">8</span>
+            <span class="metric__label label">Administrators</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="card">
+          <div class="contact-list">
+            <div class="contact-item">
+              <h4 class="heading heading--h4">Dr. Amanda Rodriguez</h4>
+              <p class="paragraph">Computer Science Department Head</p>
+              <span class="badge badge--info">Administrator</span>
+            </div>
+            <div class="contact-item">
+              <h4 class="heading heading--h4">Prof. James Wilson</h4>
+              <p class="paragraph">Mathematics Instructor</p>
+              <span class="badge badge--success">Colleague</span>
+            </div>
+            <div class="contact-item">
+              <h4 class="heading heading--h4">Lisa Parker</h4>
+              <p class="paragraph">Student Support Coordinator</p>
+              <span class="badge badge--warning">Support Staff</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="card-grid">
+          <button class="button button--primary">Add Contact</button>
+          <button class="button button--outline">Import Contacts</button>
+          <button class="button button--outline">View Directory</button>
+        </div>
+      </section>
+    </article>
+
+    <article id="students" class="dashboard-content__article">
+      <section>
+        <div class="card-grid">
+          <div class="card card--metric">
+            <span class="metric__number">127</span>
+            <span class="metric__label label">Total Students</span>
+          </div>
+          <div class="card card--metric">
+            <span class="metric__number">23</span>
+            <span class="metric__label label">New This Month</span>
+          </div>
+          <div class="card card--metric">
+            <span class="metric__number">92%</span>
+            <span class="metric__label label">Active Rate</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="card">
+          <div class="student-list">
+            <div class="student-item">
+              <h4 class="heading heading--h4">Sarah Johnson</h4>
+              <p class="paragraph">Web Development Fundamentals</p>
+              <span class="badge badge--success">Active</span>
+            </div>
+            <div class="student-item">
+              <h4 class="heading heading--h4">Mike Chen</h4>
+              <p class="paragraph">Introduction to Programming</p>
+              <span class="badge badge--warning">Behind</span>
+            </div>
+            <div class="student-item">
+              <h4 class="heading heading--h4">Emma Williams</h4>
+              <p class="paragraph">Advanced JavaScript</p>
+              <span class="badge badge--success">Excellent</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="card-grid">
+          <button class="button button--primary">Send Announcement</button>
+          <button class="button button--outline">Export Student Data</button>
+          <button class="button button--outline">View All Students</button>
+        </div>
+      </section>
+    </article>
+
+    <article id="settings" class="dashboard-content__article">
+      <section>
+        <div class="card">
+          <form class="form">
+            <div class="form__group">
+              <label for="first-name" class="form__label">First Name</label>
+              <input type="text" id="first-name" value="John" class="form__input input" />
+            </div>
+            <div class="form__group">
+              <label for="last-name" class="form__label">Last Name</label>
+              <input type="text" id="last-name" value="Doe" class="form__input input" />
+            </div>
+            <div class="form__group">
+              <label for="email" class="form__label">Email</label>
+              <input type="email" id="email" value="john.doe@example.com" class="form__input input" />
+            </div>
+            <div class="form__group">
+              <label for="bio" class="form__label">Bio</label>
+              <textarea id="bio" rows="3"
+                class="form__textarea">Experienced programming instructor with 10+ years in education.</textarea>
+            </div>
+            <div class="button-group">
+              <button type="submit" class="button button--primary">Save Changes</button>
+              <button type="button" class="button button--outline">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section>
+        <div class="card-grid">
+          <div class="card">
+            <h3 class="heading heading--h3">Change Password</h3>
+            <p class="paragraph">Update your password to keep your account secure</p>
+            <button class="button button--outline">Change Password</button>
+          </div>
+          <div class="card">
+            <h3 class="heading heading--h3">Two-Factor Authentication</h3>
+            <p class="paragraph">Add an extra layer of security to your account</p>
+            <button class="button button--outline">Enable 2FA</button>
+          </div>
+          <div class="card">
+            <h3 class="heading heading--h3">Login Sessions</h3>
+            <p class="paragraph">Manage your active login sessions</p>
+            <button class="button button--outline">View Sessions</button>
+          </div>
+        </div>
+      </section>
+    </article>
+    </div>
+  </main>
+  <footer class="grid__footer footer">
+    <nav class="footer__nav">
+      <ul class="nav nav--footer">
+        <li class="nav__item nav__item--brand">
+          <a href="/src/pages/teacher/home.html" class="nav__brand">
+            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
+          </a>
+        </li>
+        <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Privacy Policy</a></li>
+        <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Terms of Service</a></li>
+        <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Contact</a></li>
+      </ul>
+    </nav>
+  </footer>
+  <script type="module" src="/src/scripts/app.ts"></script>
+  <script type="module" src="/src/scripts/navigation/index.ts"></script>
+</body>
+
+</html>

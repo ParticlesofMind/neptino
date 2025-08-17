@@ -51,9 +51,9 @@ export class CoursesManager {
  }
 
  private displayCourses(courses: Course[]): void {
- // Clear existing courses (except no-courses message)
+ // Clear existing dynamically generated courses only (not static cards)
  const existingCards =
- this.coursesContainer.querySelectorAll('elements');
+ this.coursesContainer.querySelectorAll('[data-dynamic="true"]');
  existingCards.forEach((card) => card.remove());
 
  courses.forEach((course) => {
@@ -64,38 +64,55 @@ export class CoursesManager {
 
  private createCourseCard(course: Course): HTMLElement {
  const cardElement = document.createElement("div");
- cardElement
+ cardElement.className = "card card--course";
  cardElement.dataset.courseId = course.id;
+ cardElement.dataset.dynamic = "true"; // Mark as dynamically generated
 
  cardElement.innerHTML = `
- <div class="">
+ <div class="card__image">
  ${
  course.course_image
- ? `<img src="${course.course_image}" alt="${course.course_name}" class="">`
- : `<div class="">${this.getInitials(course.course_name)}</div>`
+ ? `<img src="${course.course_image}" alt="${course.course_name}" class="card__img">`
+ : `<div class="card__placeholder">${this.getInitials(course.course_name)}</div>`
  }
+ <div class="card__overlay">
+ <span class="card__status card__status--draft">Draft</span>
+ </div>
  </div>
  
- <div class="">
- <h3 class="">${course.course_name}</h3>
+ <div class="card__header">
+ <h3 class="heading heading--h3 card__title">${course.course_name}</h3>
+ <p class="card__description">${course.course_description || 'No description available.'}</p>
  </div>
  
- <div class="">
- <div class="" 
+ <div class="card__body">
+ <div class="card__meta">
+ <span class="card__info">
+ <i class="icon icon--students"></i>
+ 0 students
+ </span>
+ <span class="card__info">
+ <i class="icon icon--lessons"></i>
+ 0 lessons
+ </span>
+ </div>
+ <div class="card__actions">
+ <button class="button button--outline button--small card__action" 
  data-section="setup" data-course-id="${course.id}">
  Setup
- </div>
- <div class="" 
+ </button>
+ <button class="button button--outline button--small card__action" 
  data-section="create" data-course-id="${course.id}">
  Create
- </div>
- <div class="" 
+ </button>
+ <button class="button button--outline button--small card__action" 
  data-section="preview" data-course-id="${course.id}">
  Preview
- </div>
- <div class="" 
+ </button>
+ <button class="button button--primary button--small card__action" 
  data-section="launch" data-course-id="${course.id}">
  Launch
+ </button>
  </div>
  </div>
  `;
@@ -107,7 +124,7 @@ export class CoursesManager {
  }
 
  private addNavigationEventListeners(cardElement: HTMLElement): void {
- const navItems = cardElement.querySelectorAll('elements');
+ const navItems = cardElement.querySelectorAll('[data-section]');
 
  navItems.forEach((item) => {
  item.addEventListener("click", (e) => {

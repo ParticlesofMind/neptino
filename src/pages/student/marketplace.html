@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marketplace - Neptino</title>
+  <link rel="stylesheet" href="/src/scss/main.scss" />
+</head>
+
+<body class="grid body">
+  <header class="grid__header header header--home">
+    <nav class="header__nav">
+      <ul class="nav nav--header">
+        <li class="nav__item nav__item--brand">
+          <a href="/src/pages/student/home.html" class="nav__brand">
+            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
+          </a>
+        </li>
+        <li class="nav__item"><a href="/src/pages/student/courses.html" class="nav__link link">My Courses</a></li>
+        <li class="nav__item"><a href="/src/pages/student/marketplace.html" class="nav__link link">Marketplace</a></li>
+        <li class="nav__item"><a href="/src/pages/student/tutorials.html" class="nav__link link">Tutorials</a></li>
+        <li class="nav__item nav__item--cta">
+          <button id="logout-btn" class="nav__cta button button--outline">Logout</button>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="grid__main main">
+    <section>
+      <h1>Course Marketplace</h1>
+      <p>Discover and enroll in new courses to expand your knowledge.</p>
+    </section>
+  </main>
+
+  <footer class="grid__footer footer">
+    <nav class="footer__nav">
+      <ul class="nav nav--footer">
+        <li class="nav__item nav__item--brand">
+          <a href="/src/pages/student/home.html" class="nav__brand">
+            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
+          </a>
+        </li>
+        <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Privacy Policy</a></li>
+        <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Terms of Service</a></li>
+        <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Contact</a></li>
+      </ul>
+    </nav>
+  </footer>
+
+  <script type="module" src="/src/scripts/app.ts"></script>
+</body>
+
+</html>

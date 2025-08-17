@@ -1,1 +1,13 @@
-/* Styles cleared */
+// ==========================================================================
+// SIDEBAR COMPONENT - Navigation sidebar for dashboard layouts
+// ==========================================================================
+
+.sidebar {
+  padding: var(--spacing-6);
+  border-right: 1px solid var(--color-neutral-200);
+  
+  &__nav {
+    position: sticky;
+    top: var(--spacing-6);
+  }
+}

@@ -97,3 +97,18 @@
     cursor: wait;
   }
 }
+
+// Button group for multiple buttons together
+.button-group {
+  display: flex;
+  gap: var(--spacing-3);
+  flex-wrap: wrap;
+  
+  &--centered {
+    justify-content: center;
+  }
+  
+  &--right {
+    justify-content: flex-end;
+  }
+}
