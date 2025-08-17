@@ -188,12 +188,12 @@ export class TemplateManager {
  template.template_description || "No description provided";
 
  return `
- <div class="template-card" data-template-id="${template.id}" onclick="TemplateManager.selectTemplate('${template.id}')">
- <div class="">
- <h4 class="">${templateName}</h4>
- <span class="">${template.template_type}</span>
+         <div class="template-card" data-template-id="${template.id}" onclick="TemplateManager.selectTemplate('${template.id}')">
+ <div class="template-card__header">
+             <h4 class="template-card__title">${templateName}</h4>
+             <span class="template-card__type">${template.template_type}</span>
  </div>
- <div class="">
+ <div class="template-card__description">
  ${description}
  </div>
  <div class="">
@@ -215,28 +215,26 @@ export class TemplateManager {
  contentEl.innerHTML = templatesHtml;
  }
 
- /**
- * Selects a template in the modal
- */
- static selectTemplate(templateId: string): void {
- // Remove previous selection
- document.querySelectorAll('elements').forEach((card) => {
- card
- });
+  /**
+   * Selects a template in the modal
+   */
+  static selectTemplate(templateId: string): void {
+    // Remove previous selection
+    document.querySelectorAll('.template-card--selected').forEach((card) => {
+      card.classList.remove('template-card--selected');
+    });
 
- // Add selection to current template
- const selectedCard = document.querySelector(
- `[data-template-id="${templateId}"]`,
- );
- if (selectedCard) {
- selectedCard
- }
+    // Add selection to current template
+    const selectedCard = document.querySelector(
+      `[data-template-id="${templateId}"]`,
+    );
+    if (selectedCard) {
+      selectedCard.classList.add('template-card--selected');
+    }
 
- this.selectedTemplateId = templateId;
- this.updateLoadButtonState();
- }
-
- /**
+    this.selectedTemplateId = templateId;
+    this.updateLoadButtonState();
+  } /**
  * Updates the load button state
  */
  static updateLoadButtonState(): void {
@@ -451,36 +449,34 @@ export class TemplateManager {
  }
  }
 
- /**
- * Filters templates based on search term
- */
- static filterTemplates(searchTerm: string): void {
- const templateCards = document.querySelectorAll('elements');
+  /**
+   * Filters templates based on search term
+   */
+  static filterTemplates(searchTerm: string): void {
+    const templateCards = document.querySelectorAll('.template-card');
 
- templateCards.forEach((card) => {
- const title =
- card
- .querySelector('element')
- ?.textContent?.toLowerCase() || "";
- const description =
- card
- .querySelector('element')
- ?.textContent?.toLowerCase() || "";
- const type =
- card
- .querySelector('element')
- ?.textContent?.toLowerCase() || "";
+    templateCards.forEach((card) => {
+      const title =
+        card
+          .querySelector('.coursebuilder-template-card__title')
+          ?.textContent?.toLowerCase() || "";
+      const description =
+        card
+          .querySelector('.coursebuilder-template-card__description')
+          ?.textContent?.toLowerCase() || "";
+      const type =
+        card
+          .querySelector('.coursebuilder-template-card__type')
+          ?.textContent?.toLowerCase() || "";
 
- const matchesSearch =
- title.includes(searchTerm) ||
- description.includes(searchTerm) ||
- type.includes(searchTerm);
+      const matchesSearch =
+        title.includes(searchTerm) ||
+        description.includes(searchTerm) ||
+        type.includes(searchTerm);
 
- (card as HTMLElement).style.display = matchesSearch ? "block" : "none";
- });
- }
-
- /**
+      (card as HTMLElement).style.display = matchesSearch ? "block" : "none";
+    });
+  } /**
  * Applies filters and sorting to templates
  */
  static applyFiltersAndSort(): void {
@@ -500,64 +496,62 @@ export class TemplateManager {
  const sortBy = sortFilter.value;
  const searchTerm = searchInput?.value?.toLowerCase() || "";
 
- const container = document.getElementById("template-list-content");
- if (!container) return;
+    const container = document.getElementById("template-list-content");
+    if (!container) return;
 
- const templateCards = Array.from(
- container.querySelectorAll('elements'),
- ) as HTMLElement[];
+    const templateCards = Array.from(
+      container.querySelectorAll('.coursebuilder-template-card'),
+    ) as HTMLElement[];
 
- // Filter by type and search
- templateCards.forEach((card) => {
- const cardType =
- card
- .querySelector('element')
- ?.textContent?.toLowerCase() || "";
- const title =
- card
- .querySelector('element')
- ?.textContent?.toLowerCase() || "";
- const description =
- card
- .querySelector('element')
- ?.textContent?.toLowerCase() || "";
+    // Filter by type and search
+    templateCards.forEach((card) => {
+      const cardType =
+        card
+          .querySelector('.coursebuilder-template-card__type')
+          ?.textContent?.toLowerCase() || "";
+      const title =
+        card
+          .querySelector('.coursebuilder-template-card__title')
+          ?.textContent?.toLowerCase() || "";
+      const description =
+        card
+          .querySelector('.coursebuilder-template-card__description')
+          ?.textContent?.toLowerCase() || "";
 
- const matchesType = !selectedType || cardType === selectedType;
- const matchesSearch =
- !searchTerm ||
- title.includes(searchTerm) ||
- description.includes(searchTerm) ||
- cardType.includes(searchTerm);
+      const matchesType = !selectedType || cardType === selectedType;
+      const matchesSearch =
+        !searchTerm ||
+        title.includes(searchTerm) ||
+        description.includes(searchTerm) ||
+        cardType.includes(searchTerm);
 
- card.style.display = matchesType && matchesSearch ? "block" : "none";
- });
+      card.style.display = matchesType && matchesSearch ? "block" : "none";
+    });
 
- // Sort visible cards
- const visibleCards = templateCards.filter(
- (card) => card.style.display !== "none",
- );
+    // Sort visible cards
+    const visibleCards = templateCards.filter(
+      (card) => card.style.display !== "none",
+    );
 
- visibleCards.sort((a, b) => {
- switch (sortBy) {
- case "name":
- const nameA =
- a.querySelector('element')?.textContent || "";
- const nameB =
- b.querySelector('element')?.textContent || "";
- return nameA.localeCompare(nameB);
- case "created_at":
- // For created_at, we assume newer templates are shown first by default
- // This would require storing the actual date in a data attribute for proper sorting
- return 0; // Keep original order for now
- case "modified_at":
- // Similar to created_at - would need modification date stored
- return 0; // Keep original order for now
- default:
- return 0;
- }
- });
-
- // Re-append sorted cards
+    visibleCards.sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          const nameA =
+            a.querySelector('.coursebuilder-template-card__title')?.textContent || "";
+          const nameB =
+            b.querySelector('.coursebuilder-template-card__title')?.textContent || "";
+          return nameA.localeCompare(nameB);
+        case "created_at":
+          // For created_at, we assume newer templates are shown first by default
+          // This would require storing the actual date in a data attribute for proper sorting
+          return 0; // Keep original order for now
+        case "modified_at":
+          // Similar to created_at - would need modification date stored
+          return 0; // Keep original order for now
+        default:
+          return 0;
+      }
+    }); // Re-append sorted cards
  visibleCards.forEach((card) => {
  container.appendChild(card);
  });
@@ -777,39 +771,37 @@ export class TemplateManager {
  }
  }
 
- /**
- * Displays the list of available templates
- */
- static displayTemplateList(templates: any[]): void {
- const configArea = document.querySelector('element');
- if (!configArea) return;
+  /**
+   * Displays the list of available templates
+   */
+  static displayTemplateList(templates: any[]): void {
+    const configArea = document.getElementById('template-config-content');
+    if (!configArea) return;
 
- if (templates.length === 0) {
- configArea.innerHTML = `
- <div class="template-config-placeholder">
- <h3 class="heading heading--tertiary">Template Configuration</h3>
- <p class="text">You haven't created any templates yet. Create your first template to get started!</p>
- <div class="template-actions">
- <button class="button button--primary" onclick="TemplateManager.showCreateTemplateModal()">
- Create First Template
- </button>
- </div>
- </div>
- `;
- return;
- }
+    if (templates.length === 0) {
+      configArea.innerHTML = `
+        <div class="template-config-placeholder">
+          <h3 class="heading heading--tertiary">Template Configuration</h3>
+          <p class="text">You haven't created any templates yet. Create your first template to get started!</p>
+          <div class="template-actions">
+            <button class="button button--primary" onclick="TemplateManager.showCreateTemplateModal()">
+              Create First Template
+            </button>
+          </div>
+        </div>
+      `;
+      return;
+    }
 
- // If templates exist, show the configuration interface instead of a list
- // The Load Template button in the header will handle template selection
- configArea.innerHTML = `
- <div class="template-config-placeholder">
- <h3 class="heading heading--tertiary">Template Configuration</h3>
- <p class="text">Use the "Load Template" button above to select and edit an existing template, or create a new one.</p>
- </div>
- `;
- }
-
- /**
+    // If templates exist, show the configuration interface instead of a list
+    // The Load Template button in the header will handle template selection
+    configArea.innerHTML = `
+      <div class="template-config-placeholder">
+        <h3 class="heading heading--tertiary">Template Configuration</h3>
+        <p class="text">Use the "Load Template" button above to select and edit an existing template, or create a new one.</p>
+      </div>
+    `;
+  } /**
  * Previews a template without editing
  */
  static async previewTemplate(templateId: string): Promise<void> {
@@ -830,85 +822,69 @@ export class TemplateManager {
  }
  }
 
- /**
- * Initializes a basic interface when the config handler is not available
- */
- static initializeBasicInterface(): void {
- const configArea = document.querySelector('element');
- const previewArea = document.querySelector('element');
+  /**
+   * Initializes a basic interface when the config handler is not available
+   */
+  static initializeBasicInterface(): void {
+    const configArea = document.getElementById('template-config-content');
+    const previewArea = document.getElementById('template-preview-content');
 
- if (configArea) {
- // Use the existing placeholder structure from HTML instead of generating new HTML
- const placeholder = configArea.querySelector(
- ".template-config-placeholder",
- );
- if (placeholder) {
- placeholder.innerHTML = `
- <h3 class="heading heading--tertiary">Template Configuration</h3>
- <p class="text">Template configuration interface is ready. Use the buttons above to create or load templates.</p>
- `;
- }
- }
+    if (configArea) {
+      configArea.innerHTML = `
+        <div class="template-config-placeholder">
+          <h3 class="heading heading--tertiary">Template Configuration</h3>
+          <p class="text">Template configuration interface is ready. Use the buttons above to create or load templates.</p>
+        </div>
+      `;
+    }
 
- if (previewArea) {
- const previewContainer = previewArea.querySelector('element');
- if (previewContainer) {
- previewContainer.innerHTML = `
- <div class="preview-placeholder">
- <h4 class="">Template Preview</h4>
- <p class="">Create a new template or load an existing one to see the preview here.</p>
- <div class="template-blocks">
- <div class="block-item block-item--header">Header Block</div>
- <div class="block-item block-item--program">Program Block</div>
- <div class="block-item block-item--resources">Resources Block</div>
- <div class="block-item block-item--content">Content Block</div>
- <div class="block-item block-item--assignment">Assignment Block</div>
- <div class="block-item block-item--footer">Footer Block</div>
- </div>
- </div>
- `;
- }
- }
- }
-
- /**
+    if (previewArea) {
+      previewArea.innerHTML = `
+        <div class="preview-placeholder">
+          <h4 class="coursebuilder-template-preview__heading">Template Preview</h4>
+          <p class="coursebuilder-template-preview__message">Create a new template or load an existing one to see the preview here.</p>
+          <div class="template-blocks">
+            <div class="block-item block-item--header">Header Block</div>
+            <div class="block-item block-item--program">Program Block</div>
+            <div class="block-item block-item--resources">Resources Block</div>
+            <div class="block-item block-item--content">Content Block</div>
+            <div class="block-item block-item--assignment">Assignment Block</div>
+            <div class="block-item block-item--footer">Footer Block</div>
+          </div>
+        </div>
+      `;
+    }
+  } /**
  * Loads an existing template for editing
  */
- /**
- * Clears the current template state
- */
- static clearTemplateState(): void {
- this.currentlyLoadedTemplateId = null;
- this.currentlyLoadedTemplateData = null;
+  /**
+   * Clears the current template state
+   */
+  static clearTemplateState(): void {
+    this.currentlyLoadedTemplateId = null;
+    this.currentlyLoadedTemplateData = null;
 
- // Template state is now managed via database
+    // Reset the template areas to placeholder state
+    const templateConfig = document.getElementById('template-config-content');
+    if (templateConfig) {
+      templateConfig.innerHTML = `
+        <div class="template-config-placeholder">
+          <h3 class="heading heading--tertiary">Template Configuration</h3>
+          <p class="text">Select a template to configure or create a new one...</p>
+        </div>
+      `;
+    }
 
- // Reset the template areas to placeholder state
- const templateConfig = document.querySelector('element');
- if (templateConfig) {
- const placeholder = templateConfig.querySelector(
- ".template-config-placeholder",
- );
- if (placeholder) {
- placeholder.innerHTML = `
- <h3 class="heading heading--tertiary">Template Configuration</h3>
- <p class="text">Select a template to configure or create a new one...</p>
- `;
- }
- }
-
- const previewContainer = document.querySelector('element');
- if (previewContainer) {
- previewContainer.innerHTML = `
- <div class="preview-placeholder">
- <h4>Template Preview</h4>
- <p>Template preview will appear here when you load a template...</p>
- </div>
- `;
- }
- }
-
- static async loadTemplate(templateId: string): Promise<void> {
+    const previewContainer = document.getElementById('template-preview-content');
+    if (previewContainer) {
+      previewContainer.innerHTML = `
+        <div class="preview-placeholder">
+          <h4 class="coursebuilder-template-preview__heading">No Template Selected</h4>
+          <p class="coursebuilder-template-preview__message">Template preview will appear here when you load a template...</p>
+        </div>
+      `;
+    }
+  } static async loadTemplate(templateId: string): Promise<void> {
  try {
  const { data, error } = await supabase
  .from("templates")
@@ -1113,20 +1089,21 @@ export class TemplateManager {
  };
  }
 
- /**
- * Displays the template blocks in the configuration area
- */
- static displayTemplateBlocks(templateData: any): void {
- const configArea = document.querySelector('element');
- if (!configArea) return;
+  /**
+   * Displays the template blocks in the configuration area
+   */
+  static displayTemplateBlocks(templateData: any): void {
+    const configArea = document.getElementById('template-config-content');
+    if (!configArea) {
+      console.error('Template config content area not found');
+      return;
+    }
 
- // Handle both full template object and just template_data
- const actualData = templateData.template_data || templateData;
- const blocks = actualData.blocks || [];
- const templateId = templateData.id || this.currentlyLoadedTemplateId;
- const fieldConfig = this.getBlockFieldConfiguration();
-
- const blocksHtml = `
+    // Handle both full template object and just template_data
+    const actualData = templateData.template_data || templateData;
+    const blocks = actualData.blocks || [];
+    const templateId = templateData.id || this.currentlyLoadedTemplateId;
+    const fieldConfig = this.getBlockFieldConfiguration(); const blocksHtml = `
  <div class="template-blocks">
  ${blocks
  .map((block: TemplateBlock) => {
@@ -1270,20 +1247,21 @@ export class TemplateManager {
  // Implementation will be added in template configuration handler
  }
 
- /**
- * Updates the template preview
- */
- static updateTemplatePreview(templateData?: any): void {
- const previewContainer = document.querySelector('element');
- if (!previewContainer) return;
+  /**
+   * Updates the template preview
+   */
+  static updateTemplatePreview(templateData?: any): void {
+    const previewContainer = document.getElementById('template-preview-content');
+    if (!previewContainer) {
+      console.error('Template preview content area not found');
+      return;
+    }
 
- // Use current template data if none provided
- const data = templateData || this.currentlyLoadedTemplateData;
+    // Use current template data if none provided
+    const data = templateData || this.currentlyLoadedTemplateData;
 
- // Handle both full template object and just template_data
- const actualData = data?.template_data || data;
-
- if (!actualData || !actualData.blocks) {
+    // Handle both full template object and just template_data
+    const actualData = data?.template_data || data; if (!actualData || !actualData.blocks) {
  previewContainer.innerHTML = `
  <div class="preview-placeholder">
  <h4 class="">No Template Selected</h4>
@@ -1372,26 +1350,30 @@ export class TemplateManager {
 
  // Default table rendering for other blocks
  return `
- <div class="preview-table">
- <div class="">
+ <table class="preview-table">
+ <thead>
+ <tr>
  ${checkedFields
  .map(
  (field) => `
- <div class="">${field.label}</div>
+ <th>${field.label}</th>
  `,
  )
  .join("")}
- </div>
- <div class="">
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
  ${checkedFields
  .map(
  (field) => `
- <div class="">[${field.label}]</div>
+ <td>[${field.label}]</td>
  `,
  )
  .join("")}
- </div>
- </div>
+ </tr>
+ </tbody>
+ </table>
  `;
  }
 
@@ -1404,33 +1386,80 @@ export class TemplateManager {
  ): string {
  let html = `<div class="template-structure">`;
 
- // Add the fixed hierarchy with proper nested containment
+ // Topic level table
  html += `
- <div class="">
- <div class="template-structure__level template-structure__level--primary">
- <div class="">Topic</div>
- <div class="template-structure__level template-structure__level--secondary">
- <div class="">Objective</div>
- <div class="template-structure__level template-structure__level--tertiary">
- <div class="">Task</div>
- <div class="">
+ <div class="nested-table-container nested-table-container--topic">
+ <table class="preview-table nested-table nested-table--topic">
+ <thead>
+ <tr>
+ <th>Topic</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ </tr>
+ </tbody>
+ </table>
+ `;
+
+ // Objective level table (nested inside Topic)
+ html += `
+ <div class="nested-table-container nested-table-container--objective">
+ <table class="preview-table nested-table nested-table--objective">
+ <thead>
+ <tr>
+ <th>Objective</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ </tr>
+ </tbody>
+ </table>
+ `;
+
+ // Task level table (nested inside Objective)
+ html += `
+ <div class="nested-table-container nested-table-container--task">
+ <table class="preview-table nested-table nested-table--task">
+ <thead>
+ <tr>
+ <th>Task</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ </tr>
+ </tbody>
+ </table>
+ `;
+
+ // Content fields table (nested inside Task) - one row per field
+ if (checkedFields.length > 0) {
+ html += `
+ <div class="nested-table-container nested-table-container--content-fields">
+ <table class="preview-table nested-table nested-table--content-fields">
+ <tbody>
  ${checkedFields
  .map(
  (field) => `
- <div class="content-field template-structure__level--quaternary">
- ${field.label}
- </div>
+ <tr>
+ <td>${field.label}</td>
+ </tr>
  `,
  )
  .join("")}
- </div>
- </div>
- </div>
- </div>
+ </tbody>
+ </table>
  </div>
  `;
+ }
 
- html += `</div>`;
+ // Close nested containers
+ html += `</div>`; // task
+ html += `</div>`; // objective
+ html += `</div>`; // topic
+ html += `</div>`; // template-structure
 
  return html;
  }
@@ -1467,26 +1496,30 @@ export class TemplateManager {
  // Main resources table
  if (mainFields.length > 0) {
  html += `
- <div class="preview-table">
- <div class="">
+ <table class="preview-table">
+ <thead>
+ <tr>
  ${mainFields
  .map(
  (field) => `
- <div class="">${field.label}</div>
+ <th>${field.label}</th>
  `,
  )
  .join("")}
- </div>
- <div class="">
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
  ${mainFields
  .map(
  (field) => `
- <div class="">[${field.label}]</div>
+ <td>[${field.label}]</td>
  `,
  )
  .join("")}
- </div>
- </div>
+ </tr>
+ </tbody>
+ </table>
  `;
  }
 
@@ -1495,22 +1528,30 @@ export class TemplateManager {
  html += `
  <div class="template-preview-glossary">
  <h5 class="">Glossary</h5>
- <div class="template-preview-table">
- <div class="">
- <div class="">Type</div>
- <div class="">URL</div>
- </div>
+ <table class="preview-table">
+ <thead>
+ <tr>
  ${glossaryItems
  .map(
  (item) => `
- <div class="">
- <div class="">${item.label}</div>
- <div class="">[URL]</div>
- </div>
+ <th>${item.label}</th>
  `,
  )
  .join("")}
- </div>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ ${glossaryItems
+ .map(
+ (_item) => `
+ <td>[URL]</td>
+ `,
+ )
+ .join("")}
+ </tr>
+ </tbody>
+ </table>
  </div>
  `;
  }
@@ -1702,7 +1743,7 @@ document.addEventListener("DOMContentLoaded", () => {
  mutation.attributeName === "class"
  ) {
  const target = mutation.target as HTMLElement;
- if (target.classList.contains('active')) {
+              if (target.classList.contains('coursebuilder-article--active')) {
    // Check if there's a template for the current course
    TemplateManager.loadCourseTemplate();
  }
@@ -1713,7 +1754,7 @@ document.addEventListener("DOMContentLoaded", () => {
  observer.observe(templatesSection, { attributes: true });
 
  // Also check if templates section is already active on page load
- if (templatesSection.classList.contains('active')) {
+ if (templatesSection.classList.contains('coursebuilder-article--active')) {
    TemplateManager.loadCourseTemplate();
  }
  }
@@ -1773,7 +1814,7 @@ document.addEventListener("DOMContentLoaded", () => {
  }
 
  // Modal close handlers
- const modalCloseBtn = document.querySelector('element');
+   const modalCloseBtn = document.querySelector('.modal__close');
  const modal = document.getElementById("create-template-modal");
 
  if (modalCloseBtn) {

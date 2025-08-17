@@ -25,6 +25,7 @@ export interface FormFieldConfig {
  accept?: string; // for file inputs
  options?: string[]; // for select dropdowns
  displayFunction?: () => Promise<string>; // for display fields
+ loadDynamically?: boolean; // for fields that need dynamic loading
 }
 
 export interface SectionConfig {
@@ -119,20 +120,7 @@ export const SECTION_CONFIGS: { [key: string]: SectionConfig } = {
  name: "course_language",
  type: "select",
  required: true,
- options: [
- "English",
- "Spanish",
- "French",
- "German",
- "Italian",
- "Portuguese",
- "Dutch",
- "Chinese",
- "Japanese",
- "Korean",
- "Arabic",
- "Other",
- ],
+ loadDynamically: true, // Signal that this should be loaded dynamically
  },
  { name: "course_image", type: "file", required: true, accept: "image/*" },
  ],

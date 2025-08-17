@@ -160,7 +160,8 @@ export class MediaPanelManager {
  */
  isPanelOpen(): boolean {
  return (
- this.panelElement?
+ this.panelElement?.classList.contains('active') || false
+ );
  }
 
  /**

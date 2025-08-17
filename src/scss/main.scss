@@ -29,6 +29,7 @@
 @use 'layout/navigation';         // Navigation components
 @use 'layout/sidebar';            // Sidebar layout
 @use 'layout/footer';             // Site footer
+@use 'layout/templates';
 
 // PAGES (page styling)
 // ==========================================================================
@@ -37,6 +38,7 @@
 @use 'pages/home';
 @use 'pages/courses';
 @use 'pages/coursebuilder';
+
 // COMPONENTS (Reusable UI components)
 // ==========================================================================
 @use 'components/icons';          // Sizing utilities for images/icons/logos

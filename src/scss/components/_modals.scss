@@ -1,31 +1,3 @@
-/* ==========================================================================
-   MODALS
-   ====================================  .template-card {
-    border: 1px solid var(--color-border-primary);
-    border-radius: var(--radius-medium);
-    padding: var(--spacing-md);
-    cursor: pointer;
-    transition: all var(--transition-normal);
-
-    &:hover {
-      border-color: var(--color-primary-500);
-      box-shadow: var(--shadow-small);
-    }
-
-    &--selected {
-      border-color: var(--color-primary-500);
-      background-color: var(--color-primary-50);
-    }
-  }===================== */
-
-/**
- * Modal Component System
- * - Base modal styles with overlay functionality
- * - Hidden by default, shown with --active modifier
- * - Proper z-index layering for overlay
- * - Accessible backdrop interaction
- */
-
 /* Modal Base */
 .modal {
   position: fixed;
@@ -38,29 +10,24 @@
   visibility: hidden;
   transition: opacity var(--transition-normal), visibility var(--transition-normal);
 
-  &--active {
-    opacity: 1;
-    visibility: visible;
+
+  /* Modal Backdrop */
+  &__backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-8);
   }
-}
 
-/* Modal Backdrop */
-.modal__backdrop {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(2px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-8);
-}
-
-/* Modal Content */
-.modal__content {
+  /* Modal Content */
+&__content {
   background: var(--color-background);
   border-radius: var(--radius-large);
   box-shadow: var(--shadow-extra-large);
@@ -75,6 +42,16 @@
     transform: scale(1) translateY(0);
   }
 }
+
+
+
+  &--active {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+
 
 /* Modal Header */
 .modal__header {
@@ -94,7 +71,7 @@
 
 .modal__close {
   margin-left: auto;
-  
+
   &:hover {
     background-color: var(--color-background-secondary);
   }

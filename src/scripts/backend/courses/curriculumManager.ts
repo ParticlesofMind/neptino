@@ -93,18 +93,16 @@ export class CurriculumManager {
  }
  }
 
- private initializeElements(): void {
- this.curriculumConfigSection = document.getElementById(
- "curriculum-config",
- ) as HTMLElement;
- this.curriculumPreviewSection = document.getElementById(
- "curriculum-preview",
- ) as HTMLElement;
- this.contentLoadDisplay = document.getElementById(
- "content-load-display",
- ) as HTMLElement;
-
- // Check if all elements were found
+  private initializeElements(): void {
+    this.curriculumConfigSection = document.getElementById(
+      "curriculum-config",
+    ) as HTMLElement;
+    this.curriculumPreviewSection = document.querySelector(
+      ".coursebuilder-curriculum-preview",
+    ) as HTMLElement;
+    this.contentLoadDisplay = document.querySelector(
+      ".coursebuilder-curriculum-preview__content",
+    ) as HTMLElement; // Check if all elements were found
  if (!this.curriculumConfigSection) {
  console.error("curriculum-config element not found");
  return;

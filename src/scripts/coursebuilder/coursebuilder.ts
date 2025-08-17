@@ -10,6 +10,9 @@ import { UIEventHandler } from "./ui/UIEventHandler";
 import { CourseFormHandler } from "../backend/courses/courseFormHandler";
 import { CourseBuilderSelectHandler } from "./selectHandler";
 
+// Import language loader to initialize languages on page load
+import "../backend/courses/languageLoader";
+
 // Course management imports
 import { ScheduleCourseManager } from "../backend/courses/scheduleCourse";
 import { CurriculumManager } from "../backend/courses/curriculumManager";

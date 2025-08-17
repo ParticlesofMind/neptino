@@ -67,21 +67,19 @@ export class ScheduleCourseManager {
  return "";
  }
 
- private initializeElements(): void {
- this.scheduleConfigSection = document.getElementById(
- "schedule-config",
- ) as HTMLElement;
- this.schedulePreviewSection = document.getElementById(
- "schedule-preview",
- ) as HTMLElement;
- this.scheduleButton = document.getElementById(
- "schedule-course-btn",
- ) as HTMLButtonElement;
- this.deleteScheduleButton = document.getElementById(
- "delete-schedule-btn",
- ) as HTMLButtonElement;
-
- // Check if all elements were found
+  private initializeElements(): void {
+    this.scheduleConfigSection = document.getElementById(
+      "schedule-config",
+    ) as HTMLElement;
+    this.schedulePreviewSection = document.querySelector(
+      ".coursebuilder-schedule-preview",
+    ) as HTMLElement;
+    this.scheduleButton = document.getElementById(
+      "schedule-course-btn",
+    ) as HTMLButtonElement;
+    this.deleteScheduleButton = document.getElementById(
+      "delete-schedule-btn",
+    ) as HTMLButtonElement; // Check if all elements were found
  if (!this.scheduleConfigSection) {
  console.error("schedule-config element not found");
  return;
@@ -121,7 +119,7 @@ export class ScheduleCourseManager {
 
  // Day selection buttons
  const dayButtons =
- this.scheduleConfigSection.querySelectorAll('elements');
+ this.scheduleConfigSection.querySelectorAll('.coursebuilder-day-selector__button');
  dayButtons.forEach((button) => {
  button.addEventListener("click", (e) =>
  this.toggleDaySelection(e.target as HTMLButtonElement),
@@ -172,24 +170,23 @@ export class ScheduleCourseManager {
  });
 
  if (isValid) {
- this.scheduleButton
- this.scheduleButton
+ this.scheduleButton.classList.remove('button--disabled');
  this.scheduleButton.disabled = false;
  } else {
- this.scheduleButton
- this.scheduleButton
+ this.scheduleButton.classList.add('button--disabled');
  this.scheduleButton.disabled = true;
  }
  }
 
  private toggleDaySelection(button: HTMLButtonElement): void {
- button
+ button.classList.toggle('button--primary');
+ button.classList.toggle('button--outline');
  this.validateScheduleForm();
  }
 
  private getSelectedDays(): string[] {
  const selectedButtons = this.scheduleConfigSection.querySelectorAll(
- ".day-button.selected",
+ ".coursebuilder-day-selector__button.button--primary",
  );
  return Array.from(selectedButtons).map(
  (btn) => (btn as HTMLElement).dataset.day || "",
@@ -277,26 +274,35 @@ export class ScheduleCourseManager {
  }
 
  private renderSchedulePreview(): void {
- const previewContainer =
- this.schedulePreviewSection.querySelector('element');
- if (!previewContainer) return;
+   const previewContainer =
+     this.schedulePreviewSection.querySelector('.coursebuilder-schedule-preview__content');
+   if (!previewContainer) return;
 
- previewContainer.innerHTML = "";
+   previewContainer.innerHTML = "";
 
- // Safety check: ensure currentSchedule is an array
- if (!Array.isArray(this.currentSchedule)) {
- console.warn("currentSchedule is not an array:", this.currentSchedule);
- this.currentSchedule = [];
- return;
- }
+   // Safety check: ensure currentSchedule is an array
+   if (!Array.isArray(this.currentSchedule)) {
+     console.warn("currentSchedule is not an array:", this.currentSchedule);
+     this.currentSchedule = [];
+     return;
+   }
 
- this.currentSchedule.forEach((session, index) => {
- const row = this.createScheduleRow(session, index);
- previewContainer.appendChild(row);
- });
+   // Show schedule rows or placeholder
+   if (this.currentSchedule.length > 0) {
+     this.currentSchedule.forEach((session, index) => {
+       const row = this.createScheduleRow(session, index);
+       previewContainer.appendChild(row);
+     });
+   } else {
+     // Show placeholder if no schedule
+     const placeholder = document.createElement('div');
+     placeholder.className = 'coursebuilder-schedule-preview__placeholder';
+     placeholder.innerHTML = '<p>Click "Schedule Course" to generate your lesson schedule</p>';
+     previewContainer.appendChild(placeholder);
+   }
 
- this.updateTotalLessonsDisplay();
- this.schedulePreviewSection
+   this.updateTotalLessonsDisplay();
+   this.schedulePreviewSection.style.display = 'block';
  }
 
  private createScheduleRow(
@@ -304,7 +310,7 @@ export class ScheduleCourseManager {
  index: number,
  ): HTMLElement {
  const row = document.createElement("div");
- row
+ row.className = 'coursebuilder-schedule-preview__row';
  row.innerHTML = `
  <span class="lesson-number">${session.lessonNumber}</span>
  <span class="lesson-day">${this.formatDay(session.day)}</span>
@@ -448,7 +454,7 @@ export class ScheduleCourseManager {
  inputs.forEach((input) => {
  (input as HTMLInputElement | HTMLButtonElement).disabled = true;
  });
- this.scheduleConfigSection
+ this.scheduleConfigSection.classList.add('coursebuilder-form--locked');
  }
 
  private unlockScheduleConfig(): void {
@@ -456,27 +462,27 @@ export class ScheduleCourseManager {
  inputs.forEach((input) => {
  (input as HTMLInputElement | HTMLButtonElement).disabled = false;
  });
- this.scheduleConfigSection
+ this.scheduleConfigSection.classList.remove('coursebuilder-form--locked');
  this.validateScheduleForm();
  }
 
  private showDeleteScheduleButton(): void {
- this.deleteScheduleButton
+ this.deleteScheduleButton.style.display = 'inline-block';
  this.deleteScheduleButton.disabled = false;
  this.deleteScheduleButton.style.pointerEvents = "auto";
  }
 
  private hideDeleteScheduleButton(): void {
- this.deleteScheduleButton
+ this.deleteScheduleButton.style.display = 'none';
  }
 
  private hideSchedulePreview(): void {
- this.schedulePreviewSection
+ this.schedulePreviewSection.style.display = 'none';
  }
 
  private updateTotalLessonsDisplay(): void {
  const totalDisplay =
- this.schedulePreviewSection.querySelector('element');
+ this.schedulePreviewSection.querySelector('.coursebuilder-schedule-preview__total');
  if (totalDisplay) {
  totalDisplay.textContent = `Total lessons: ${this.currentSchedule.length}`;
  }

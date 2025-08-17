@@ -16,32 +16,30 @@ export class TemplateConfigHandler {
  * Renders the block selector interface
  */
  private renderBlockSelector(): void {
- const configContainer = document.querySelector('element');
+ const configContainer = document.querySelector('.template-config__content');
  if (!configContainer) return;
 
  const blockSelectorHtml = `
  <div class="template-blocks">
- <h3 class="">Template Blocks</h3>
- <div class="blocks-grid">
  ${TEMPLATE_BLOCKS.map(
  (block) => `
- <div class="block-option" data-block-type="${block.type}">
- <div class="block-item__icon block-item__icon--${block.type}">${block.icon}</div>
- <div class="">${block.label}</div>
- <div class="">
- <input type="checkbox" id="toggle-${block.type}" checked>
- <label for="toggle-${block.type}"></label>
+ <div class="template-block">
+ <div class="template-block__header">
+ ${block.label}
+ </div>
+ <div class="template-block__content">
+ <div class="template-block__fields">
+ ${block.configFields.map((field: any) => `
+ <div class="template-field">
+ <input type="checkbox" id="field-${block.type}-${field.name}" class="template-field__checkbox" ${field.defaultValue ? 'checked' : ''}>
+ <label for="field-${block.type}-${field.name}" class="template-field__label">${field.label}</label>
+ </div>
+ `).join('')}
+ </div>
  </div>
  </div>
  `,
  ).join("")}
- </div>
- </div>
- <div class="block-config">
- <h3 class="">Block Configuration</h3>
- <div class="block-config-content">
- <p class="template-text">Select a block above to configure its settings.</p>
- </div>
  </div>
  `;
 

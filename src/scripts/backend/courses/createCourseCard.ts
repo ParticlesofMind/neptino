@@ -3,6 +3,7 @@
 // ==========================================================================
 
 import { getUserCourses } from "./createCourse";
+import { getCourseWithStats, CourseWithStats, formatCourseStatus, getStatusClassName } from "../../utils/courseStatistics";
 
 interface Course {
  id: string;
@@ -36,85 +37,234 @@ export class CoursesManager {
 
  private async loadCourses(): Promise<void> {
  try {
+ console.log('🔄 Loading user courses...');
+ 
+ // Show loading state
+ this.showLoadingState();
+ 
  const courses = await getUserCourses();
 
  if (courses && courses.length > 0) {
+ console.log(`✅ Loaded ${courses.length} courses`);
  this.displayCourses(courses);
  this.hideNoCoursesMessage();
  } else {
+ console.log('ℹ️ No courses found for user');
  this.showNoCoursesMessage();
  }
  } catch (error) {
- console.error("Error loading courses:", error);
- this.showNoCoursesMessage();
+ console.error("❌ Error loading courses:", error);
+ this.showErrorState();
+ } finally {
+ this.hideLoadingState();
  }
  }
 
- private displayCourses(courses: Course[]): void {
+ private showLoadingState(): void {
+ // Clear existing content
+ const existingCards = this.coursesContainer.querySelectorAll('[data-dynamic="true"]');
+ existingCards.forEach((card) => card.remove());
+ 
+ // Show loading message
+ const loadingElement = document.createElement('div');
+ loadingElement.className = 'courses-loading';
+ loadingElement.dataset.dynamic = 'true';
+ loadingElement.innerHTML = `
+ <div class="courses-loading__content">
+ <div class="courses-loading__spinner"></div>
+ <p class="courses-loading__text">Loading your courses...</p>
+ </div>
+ `;
+ this.coursesContainer.appendChild(loadingElement);
+ }
+
+ private hideLoadingState(): void {
+ const loadingElement = this.coursesContainer.querySelector('.courses-loading');
+ if (loadingElement) {
+ loadingElement.remove();
+ }
+ }
+
+ private showErrorState(): void {
+ const errorElement = document.createElement('div');
+ errorElement.className = 'courses-error';
+ errorElement.dataset.dynamic = 'true';
+ errorElement.innerHTML = `
+ <div class="courses-error__content">
+ <i class="icon icon--error icon--large"></i>
+ <h3 class="heading heading--h3">Failed to load courses</h3>
+ <p class="paragraph">There was an error loading your courses. Please try refreshing the page.</p>
+ <button class="button button--primary" onclick="window.location.reload()">
+ Refresh Page
+ </button>
+ </div>
+ `;
+ this.coursesContainer.appendChild(errorElement);
+ }
+
+ private async displayCourses(courses: Course[]): Promise<void> {
  // Clear existing dynamically generated courses only (not static cards)
  const existingCards =
  this.coursesContainer.querySelectorAll('[data-dynamic="true"]');
  existingCards.forEach((card) => card.remove());
 
- courses.forEach((course) => {
- const courseCard = this.createCourseCard(course);
+ // Create course cards sequentially to maintain order
+ for (const course of courses) {
+ try {
+ const courseCard = await this.createCourseCard(course);
  this.coursesContainer.appendChild(courseCard);
- });
+ } catch (error) {
+ console.error(`Error creating card for course ${course.course_name}:`, error);
+ // Create a fallback card without statistics
+ const fallbackCard = this.createFallbackCourseCard(course);
+ this.coursesContainer.appendChild(fallbackCard);
+ }
+ }
  }
 
- private createCourseCard(course: Course): HTMLElement {
+ private createFallbackCourseCard(course: Course): HTMLElement {
  const cardElement = document.createElement("div");
- cardElement.className = "card card--course";
+ cardElement.className = "card course-card";
+ cardElement.dataset.courseId = course.id;
+ cardElement.dataset.dynamic = "true";
+
+ const courseImageHtml = course.course_image 
+   ? `<img src="${course.course_image}" alt="${course.course_name} Course" class="course-card__img">`
+   : `<div class="course-card__placeholder">${this.getInitials(course.course_name)}</div>`;
+
+ const courseDescription = course.course_description?.trim() || 'No description available.';
+
+ cardElement.innerHTML = `
+   <div class="course-card__image">
+     ${courseImageHtml}
+     <div class="course-card__overlay">
+       <span class="course-card__status course-card__status--draft">Draft</span>
+     </div>
+   </div>
+   
+   <div class="course-card__header">
+     <h3 class="heading heading--h3 course-card__title">${course.course_name}</h3>
+     <p class="course-card__description">${courseDescription}</p>
+   </div>
+   
+   <div class="course-card__body">
+     <div class="course-card__meta">
+       <span class="course-card__info">
+         <i class="icon icon--students"></i>
+         Loading...
+       </span>
+       <span class="course-card__info">
+         <i class="icon icon--lessons"></i>
+         Loading...
+       </span>
+     </div>
+     
+     <div class="course-card__actions">
+       <button class="button button--outline button--small course-card__action" 
+               data-section="setup" data-course-id="${course.id}">
+         Setup
+       </button>
+       <button class="button button--outline button--small course-card__action" 
+               data-section="create" data-course-id="${course.id}">
+         Create
+       </button>
+       <button class="button button--outline button--small course-card__action" 
+               data-section="preview" data-course-id="${course.id}">
+         Preview
+       </button>
+       <button class="button button--primary button--small course-card__action" 
+               data-section="launch" data-course-id="${course.id}">
+         Launch
+       </button>
+     </div>
+   </div>
+ `;
+
+ this.addNavigationEventListeners(cardElement);
+ return cardElement;
+ }
+
+ private async createCourseCard(course: Course): Promise<HTMLElement> {
+ const cardElement = document.createElement("div");
+ cardElement.className = "card course-card";
  cardElement.dataset.courseId = course.id;
  cardElement.dataset.dynamic = "true"; // Mark as dynamically generated
 
- cardElement.innerHTML = `
- <div class="card__image">
- ${
- course.course_image
- ? `<img src="${course.course_image}" alt="${course.course_name}" class="card__img">`
- : `<div class="card__placeholder">${this.getInitials(course.course_name)}</div>`
+ // Get course statistics
+ let courseStats: CourseWithStats | null = null;
+ try {
+ courseStats = await getCourseWithStats(course.id);
+ } catch (error) {
+ console.warn('Error fetching course statistics for course:', course.id, error);
  }
- <div class="card__overlay">
- <span class="card__status card__status--draft">Draft</span>
- </div>
- </div>
+
+ // Use statistics if available, otherwise use defaults
+ const studentCount = courseStats?.student_count || 0;
+ const lessonCount = courseStats?.lesson_count || 0;
+ const courseStatus = courseStats?.status || 'draft';
+ const statusClass = getStatusClassName(courseStatus);
+ const statusText = formatCourseStatus(courseStatus);
+
+ // Create course image or placeholder
+ const courseImageHtml = course.course_image 
+   ? `<img src="${course.course_image}" alt="${course.course_name} Course" class="course-card__img">`
+   : `<div class="course-card__placeholder">${this.getInitials(course.course_name)}</div>`;
+
+ // Format description with fallback
+ const courseDescription = course.course_description?.trim() || 'No description available.';
  
- <div class="card__header">
- <h3 class="heading heading--h3 card__title">${course.course_name}</h3>
- <p class="card__description">${course.course_description || 'No description available.'}</p>
- </div>
- 
- <div class="card__body">
- <div class="card__meta">
- <span class="card__info">
- <i class="icon icon--students"></i>
- 0 students
- </span>
- <span class="card__info">
- <i class="icon icon--lessons"></i>
- 0 lessons
- </span>
- </div>
- <div class="card__actions">
- <button class="button button--outline button--small card__action" 
- data-section="setup" data-course-id="${course.id}">
- Setup
- </button>
- <button class="button button--outline button--small card__action" 
- data-section="create" data-course-id="${course.id}">
- Create
- </button>
- <button class="button button--outline button--small card__action" 
- data-section="preview" data-course-id="${course.id}">
- Preview
- </button>
- <button class="button button--primary button--small card__action" 
- data-section="launch" data-course-id="${course.id}">
- Launch
- </button>
- </div>
- </div>
+ // Generate student and lesson text with proper pluralization
+ const studentText = `${studentCount} student${studentCount !== 1 ? 's' : ''}`;
+ const lessonText = `${lessonCount} lesson${lessonCount !== 1 ? 's' : ''}`;
+
+ cardElement.innerHTML = `
+   <div class="course-card__image">
+     ${courseImageHtml}
+     <div class="course-card__overlay">
+       <span class="course-card__status ${statusClass}">${statusText}</span>
+     </div>
+   </div>
+   
+   <div class="course-card__header">
+     <h3 class="heading heading--h3 course-card__title">${course.course_name}</h3>
+     <p class="course-card__description">${courseDescription}</p>
+   </div>
+   
+   <div class="course-card__body">
+     <div class="course-card__meta">
+       <span class="course-card__info">
+         <i class="icon icon--students"></i>
+         ${studentText}
+       </span>
+       <span class="course-card__info">
+         <i class="icon icon--lessons"></i>
+         ${lessonText}
+       </span>
+     </div>
+     
+     <div class="course-card__actions">
+       <button class="button button--outline button--small course-card__action" 
+               data-section="setup" data-course-id="${course.id}"
+               title="Configure course settings and details">
+         Setup
+       </button>
+       <button class="button button--outline button--small course-card__action" 
+               data-section="create" data-course-id="${course.id}"
+               title="Create and design course content">
+         Create
+       </button>
+       <button class="button button--outline button--small course-card__action" 
+               data-section="preview" data-course-id="${course.id}"
+               title="Preview course before publishing">
+         Preview
+       </button>
+       <button class="button button--primary button--small course-card__action" 
+               data-section="launch" data-course-id="${course.id}"
+               title="Launch course for students">
+         Launch
+       </button>
+     </div>
+   </div>
  `;
 
  // Add click event listeners to navigation items

@@ -103,8 +103,8 @@ export class FontStyleController {
  private toggleUnderline(): void {
  const underlineBtn = document.getElementById("font-underline");
  if (underlineBtn) {
- underlineBtn
- const isActive = underlineBtn
+ underlineBtn.classList.toggle('active');
+ const isActive = underlineBtn.classList.contains('active');
 
  // Trigger callback
  if (this.onStyleChangeCallback) {
@@ -124,8 +124,10 @@ export class FontStyleController {
  */
  getCurrentStyles(): { bold: boolean; italic: boolean; underline: boolean } {
  return {
- bold:
- document.getElementById("font-bold")?
+ bold: document.getElementById("font-bold")?.classList.contains('active') || false,
+ italic: document.getElementById("font-italic")?.classList.contains('active') || false,
+ underline: document.getElementById("font-underline")?.classList.contains('active') || false
+ };
  }
 
  /**
@@ -139,24 +141,34 @@ export class FontStyleController {
  if (styles.bold !== undefined) {
  const boldBtn = document.getElementById("font-bold");
  if (boldBtn) {
- boldBtn
+ if (styles.bold) {
+ boldBtn.classList.add('active');
+ } else {
+ boldBtn.classList.remove('active');
  }
  }
-
+ }
+ 
  if (styles.italic !== undefined) {
  const italicBtn = document.getElementById("font-italic");
  if (italicBtn) {
- italicBtn
+ if (styles.italic) {
+ italicBtn.classList.add('active');
+ } else {
+ italicBtn.classList.remove('active');
  }
  }
-
+ }
+ 
  if (styles.underline !== undefined) {
  const underlineBtn = document.getElementById("font-underline");
  if (underlineBtn) {
- underlineBtn
+ if (styles.underline) {
+ underlineBtn.classList.add('active');
+ } else {
+ underlineBtn.classList.remove('active');
  }
- }
-
+ 
  // Trigger callback for all applied styles
  if (this.onStyleChangeCallback) {
  this.onStyleChangeCallback(styles);

@@ -39,37 +39,6 @@
       <section class="courses-section">
         <div class="courses-grid" id="courses-container">
           <!-- Course cards will be dynamically loaded here -->
-
-          <div class="card course-card card--course">
-            <div class="course-card__image">
-              <img src="/src/assets/images/courses/shakespeare-in-love.jpg" alt="Shakespeare in Love Course" class="course-card__img">
-              <div class="course-card__overlay">
-                <span class="course-card__status course-card__status--draft">Draft</span>
-              </div>
-            </div>
-            <div class="course-card__header">
-              <h3 class="heading heading--h3 course-card__title">Shakespeare in Love</h3>
-              <p class="course-card__description">Explore the intersection of literature and romance through Shakespeare's timeless works.</p>
-            </div>
-            <div class="course-card__body">
-              <div class="course-card__meta">
-                <span class="course-card__info">
-                  <i class="icon icon--students"></i>
-                  0 students
-                </span>
-                <span class="course-card__info">
-                  <i class="icon icon--lessons"></i>
-                  12 lessons
-                </span>
-              </div>
-              <div class="course-card__actions">
-                <a href="/src/pages/teacher/coursebuilder.html#setup" class="button button--outline button--small course-card__action">Setup</a>
-                <a href="/src/pages/teacher/coursebuilder.html#create" class="button button--outline button--small course-card__action">Create</a>
-                <a href="/src/pages/teacher/coursebuilder.html#preview" class="button button--outline button--small course-card__action">Preview</a>
-                <a href="/src/pages/teacher/coursebuilder.html#launch" class="button button--primary button--small course-card__action">Launch</a>
-              </div>
-            </div>
-          </div>
         </div>
         
         <div id="no-courses-message" class="empty-state" style="display: none;">
@@ -101,7 +70,7 @@
     </nav>
   </footer>
   <script type="module" src="/src/scripts/app.ts"></script>
-  <!-- <script type="module" src="/src/scripts/backend/courses/createCourseCard.ts"></script> -->
+  <script type="module" src="/src/scripts/backend/courses/createCourseCard.ts"></script>
 </body>
 
 </html>

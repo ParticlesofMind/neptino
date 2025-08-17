@@ -270,7 +270,7 @@ export class AsideNavigation {
 
  private removeActiveStates(): void {
  this.asideLinks.forEach((link: HTMLAnchorElement) => {
- link.classList.remove('coursebuilder-sidebar__link--active');
+ link.classList.remove('nav__link--active');
  });
 
  this.contentSections.forEach((section: HTMLElement) => {
@@ -279,7 +279,7 @@ export class AsideNavigation {
  }
 
  private setActiveStates(activeLink: HTMLAnchorElement, targetSectionId: string): void {
- activeLink.classList.add('coursebuilder-sidebar__link--active');
+ activeLink.classList.add('nav__link--active');
 
  const targetSection = document.getElementById(targetSectionId);
  if (targetSection) {
@@ -299,14 +299,14 @@ export class AsideNavigation {
  
  if (savedLink && document.getElementById(savedSection)) {
  this.activateSection(savedLink, savedSection);
+ return;
  } else {
  console.warn("Saved section not found, setting default");
- this.setDefaultSection();
  }
- } else {
+ }
+ 
  console.log('🧭 No saved section, setting default');
  this.setDefaultSection();
- }
  }
 
  private setDefaultSection(): void {

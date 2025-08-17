@@ -2,7 +2,7 @@ export class TemplatePreviewHandler {
  private previewContainer: HTMLElement | null = null;
 
  constructor() {
- this.previewContainer = document.querySelector('element');
+ this.previewContainer = document.querySelector('.template-preview__content');
  this.setupEventListeners();
  }
 
@@ -62,21 +62,7 @@ export class TemplatePreviewHandler {
  .map((block: any) => this.renderBlock(block))
  .join("");
 
- return `
- <div class="">
- <div class="">
- <h4 class="">Template Preview</h4>
- <div class="">
- <button type="button" class="preview-action preview-action--secondary" onclick="templatePreviewHandler.exportTemplate()">
- Export
- </button>
- </div>
- </div>
- <div class="">
- ${blocksHtml}
- </div>
- </div>
- `;
+ return blocksHtml;
  }
 
  /**
@@ -106,18 +92,45 @@ export class TemplatePreviewHandler {
  /**
  * Renders header block preview
  */
- private renderHeaderBlock(config: any): string {
- const backgroundColor = config.backgroundColor || "#ffffff";
- const textColor = config.textColor || "#333333";
- const showTitle = config.showTitle !== false;
- const showSubtitle = config.showSubtitle !== false;
-
+ private renderHeaderBlock(_config: any): string {
  return `
- <div class="preview-block preview-block--header" style="background-color: ${backgroundColor}; color: ${textColor};">
- <div class="">📋 Header</div>
- <div class="">
- ${showTitle ? '<h1 class="preview-title">Course Title</h1>' : ""}
- ${showSubtitle ? '<h2 class="preview-subtitle">Course Subtitle</h2>' : ""}
+ <div class="preview-block preview-block--header">
+ <div class="preview-block__header">Header</div>
+ <div class="preview-block__content">
+ <table class="preview-table">
+ <thead>
+ <tr>
+ <th>Field</th>
+ <th>Content</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td>Lesson Number</td>
+ <td>01</td>
+ </tr>
+ <tr>
+ <td>Lesson Title</td>
+ <td>Introduction to Course Topics</td>
+ </tr>
+ <tr>
+ <td>Module Title</td>
+ <td>Foundation Module</td>
+ </tr>
+ <tr>
+ <td>Course Title</td>
+ <td>Complete Course Name</td>
+ </tr>
+ <tr>
+ <td>Institution Name</td>
+ <td>Your Institution</td>
+ </tr>
+ <tr>
+ <td>Teacher Name</td>
+ <td>Instructor Name</td>
+ </tr>
+ </tbody>
+ </table>
  </div>
  </div>
  `;
@@ -126,18 +139,37 @@ export class TemplatePreviewHandler {
  /**
  * Renders program block preview
  */
- private renderProgramBlock(config: any): string {
- const showObjectives = config.showObjectives !== false;
- const showOutcomes = config.showOutcomes !== false;
- const showPrerequisites = config.showPrerequisites === true;
-
+ private renderProgramBlock(_config: any): string {
  return `
  <div class="preview-block preview-block--program">
- <div class="">🎯 Program</div>
- <div class="">
- ${showObjectives ? '<div class="preview-section"><strong>Learning Objectives:</strong> <span class="preview-placeholder">Objectives will be displayed here</span></div>' : ""}
- ${showOutcomes ? '<div class="preview-section"><strong>Learning Outcomes:</strong> <span class="preview-placeholder">Outcomes will be displayed here</span></div>' : ""}
- ${showPrerequisites ? '<div class="preview-section"><strong>Prerequisites:</strong> <span class="preview-placeholder">Prerequisites will be displayed here</span></div>' : ""}
+ <div class="preview-block__header">Program</div>
+ <div class="preview-block__content">
+ <table class="preview-table">
+ <thead>
+ <tr>
+ <th>Component</th>
+ <th>Details</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td>Competence</td>
+ <td>Core learning competency for this lesson</td>
+ </tr>
+ <tr>
+ <td>Topic</td>
+ <td>Main topic or subject area</td>
+ </tr>
+ <tr>
+ <td>Objective</td>
+ <td>Specific learning objective to achieve</td>
+ </tr>
+ <tr>
+ <td>Task</td>
+ <td>Primary task or activity for students</td>
+ </tr>
+ </tbody>
+ </table>
  </div>
  </div>
  `;
@@ -146,21 +178,57 @@ export class TemplatePreviewHandler {
  /**
  * Renders resources block preview
  */
- private renderResourcesBlock(config: any): string {
- const allowFiles = config.allowFiles !== false;
- const allowLinks = config.allowLinks !== false;
- const allowVideos = config.allowVideos !== false;
- const maxFiles = config.maxFiles || 10;
-
+ private renderResourcesBlock(_config: any): string {
  return `
  <div class="preview-block preview-block--resources">
- <div class="">📚 Resources</div>
- <div class="">
- <div class="preview-section">
- ${allowFiles ? `<div class="preview-resource">📎 File uploads (max: ${maxFiles})</div>` : ""}
- ${allowLinks ? '<div class="preview-resource">🔗 External links</div>' : ""}
- ${allowVideos ? '<div class="preview-resource">🎥 Video embeds</div>' : ""}
- </div>
+ <div class="preview-block__header">Resources</div>
+ <div class="preview-block__content">
+ <table class="preview-table">
+ <thead>
+ <tr>
+ <th>Resource Type</th>
+ <th>Description</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td>Task</td>
+ <td>Learning task or exercise</td>
+ </tr>
+ <tr>
+ <td>Type</td>
+ <td>Resource category (reading, video, activity)</td>
+ </tr>
+ <tr>
+ <td>Origin</td>
+ <td>Source or origin of the resource</td>
+ </tr>
+ <tr>
+ <td>State</td>
+ <td>Current state (available, pending, archived)</td>
+ </tr>
+ <tr>
+ <td>Quality</td>
+ <td>Quality rating or review status</td>
+ </tr>
+ <tr>
+ <td>Include Glossary</td>
+ <td>Whether to include terminology glossary</td>
+ </tr>
+ <tr>
+ <td>Historical Figures</td>
+ <td>Important people related to topic</td>
+ </tr>
+ <tr>
+ <td>Terminology</td>
+ <td>Key terms and definitions</td>
+ </tr>
+ <tr>
+ <td>Concepts</td>
+ <td>Core concepts and ideas</td>
+ </tr>
+ </tbody>
+ </table>
  </div>
  </div>
  `;

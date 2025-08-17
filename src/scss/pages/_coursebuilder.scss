@@ -16,6 +16,65 @@
 
 // Coursebuilder sections
 .coursebuilder-section {
+  display: none;
+  
+  &--active {
+    display: block;
+  }
+
+  &--setup {
+    display: flex;
+    flex: 1;
+  }
+
+  &--setup.coursebuilder-section--active {
+    display: flex;
+  }
+}
+
+// Schedule config specific styling
+.coursebuilder-schedule-config {
+  &__heading {
+    margin: 0 0 var(--spacing-4) 0;
+    padding: var(--spacing-4) var(--spacing-5) 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-neutral-100);
+  }
+}
+
+// Day selector for schedule form
+.coursebuilder-day-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  
+  &__button {
+    min-width: 48px;
+    padding: var(--spacing-2) var(--spacing-3);
+    transition: var(--transition-fast);
+    
+    &:hover {
+      background: var(--color-primary-50);
+      border-color: var(--color-primary-300);
+    }
+    
+    &.button--primary {
+      background: var(--color-primary-500);
+      border-color: var(--color-primary-500);
+      color: var(--color-white);
+      
+      &:hover {
+        background: var(--color-primary-600);
+        border-color: var(--color-primary-600);
+      }
+    }
+  }
+}
+
+// Additional coursebuilder section behaviors
+.coursebuilder-section {
   &--setup {
     display: flex;
     flex: 1;
@@ -343,21 +402,33 @@
 // ==========================================================================
 
 .coursebuilder-schedule-layout {
-  display: flex;
+  display: flex !important;
   gap: var(--spacing-6);
   height: calc(100vh - 300px); // Take remaining height minus header space
   min-height: 500px; // Ensure minimum usable height
+  width: 100%;
 }
 
-.coursebuilder-schedule-config,
-.coursebuilder-schedule-preview {
-  flex: 1; // Equal width (50% each minus gap)
+.coursebuilder-schedule-config {
+  flex: 1 1 50%; // Equal width (50% each minus gap)
   display: flex;
   flex-direction: column;
   border: 1px solid var(--color-neutral-200);
   border-radius: var(--radius-large);
   background: var(--color-background);
   overflow: hidden; // Contain content within borders
+  max-width: calc(50% - var(--spacing-3)); // Ensure it doesn't take full width
+}
+
+.coursebuilder-schedule-preview {
+  flex: 1 1 50%; // Equal width (50% each minus gap)
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-large);
+  background: var(--color-background-secondary); // Different background to see it
+  overflow: hidden; // Contain content within borders
+  max-width: calc(50% - var(--spacing-3)); // Ensure it doesn't take full width
 }
 
 .coursebuilder-schedule-config {
@@ -385,6 +456,79 @@
     font-weight: var(--font-weight-semibold);
     color: var(--color-text);
     border-bottom: 1px solid var(--color-neutral-100);
+  }
+  
+  &__content {
+    flex: 1;
+    padding: var(--spacing-4) var(--spacing-5);
+    overflow-y: auto;
+  }
+  
+  &__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: var(--color-text-secondary);
+    font-style: italic;
+    text-align: center;
+    border: 2px dashed var(--color-neutral-300);
+    border-radius: var(--radius-medium);
+    
+    p {
+      margin: 0;
+    }
+  }
+  
+  &__row {
+    display: grid;
+    grid-template-columns: 60px 80px 1fr 1fr 40px;
+    gap: var(--spacing-3);
+    align-items: center;
+    padding: var(--spacing-2);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-small);
+    margin-bottom: var(--spacing-2);
+    background: var(--color-background);
+    
+    .lesson-number,
+    .lesson-day {
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-primary);
+    }
+    
+    .lesson-start-time,
+    .lesson-end-time {
+      padding: var(--spacing-1) var(--spacing-2);
+      border: 1px solid var(--color-neutral-300);
+      border-radius: var(--radius-small);
+      font-size: var(--font-size-small);
+    }
+    
+    .delete-lesson-btn {
+      background: var(--color-error-500);
+      color: var(--color-white);
+      border: none;
+      border-radius: var(--radius-small);
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      
+      &:hover {
+        background: var(--color-error-600);
+      }
+    }
+  }
+  
+  &__total {
+    padding: var(--spacing-3) var(--spacing-5);
+    border-top: 1px solid var(--color-neutral-200);
+    background: var(--color-neutral-50);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
   }
 }
 

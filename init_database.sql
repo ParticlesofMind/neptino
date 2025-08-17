@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     last_name text,
     role text DEFAULT 'student' CHECK (role IN ('student', 'teacher', 'admin')),
     institution text,
-    language text DEFAULT 'English',
+    language text DEFAULT 'en',
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS public.courses (
     course_description text,
     teacher_id uuid REFERENCES public.users(id),
     institution text,
-    course_language text DEFAULT 'English',
+    course_language text DEFAULT 'en',
     course_image text,
     classification_data jsonb DEFAULT '{}',
     template_settings jsonb DEFAULT '{}',

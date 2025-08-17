@@ -35,7 +35,7 @@
           <h3 class="coursebuilder-sidebar__heading">Required</h3>
           <ul class="coursebuilder-sidebar__list">
             <li class="coursebuilder-sidebar__item">
-              <a class="nav__link coursebuilder-sidebar__link nav__link--active" href="#essentials" data-section="essentials">Essentials</a>
+              <a class="nav__link coursebuilder-sidebar__link" href="#essentials" data-section="essentials">Essentials</a>
             </li>
             <li class="coursebuilder-sidebar__item">
               <a class="nav__link coursebuilder-sidebar__link" href="#classification" data-section="classification">Classification</a>
@@ -118,8 +118,9 @@
               </button>
               <div class="coursebuilder-course-code" id="course-code-display" style="display: none">
                 <div class="coursebuilder-course-code__content">
-                  <span class="coursebuilder-course-code__label">Course Code:</span>
-                  <button class="button button--subtle button--small coursebuilder-course-code__copy" type="button" id="course-code-copy-btn" title="Copy course code">
+                  <span class="coursebuilder-course-code__label">Course ID:</span>
+                  <span class="coursebuilder-course-code__value" id="course-id-value"></span>
+                  <button class="button button--subtle button--small coursebuilder-course-code__copy" type="button" id="course-code-copy-btn" title="Copy course ID">
                     <svg class="coursebuilder-course-code__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -362,36 +363,34 @@
       <!-- Templates Article -->
       <article class="coursebuilder-article" id="templates">
         <section class="coursebuilder-content">
-          <!-- Template Action Buttons -->
-          <div class="button-group coursebuilder-template-actions">
-            <button class="button button--primary coursebuilder-template-actions__button" id="create-template-btn">
-              <span class="coursebuilder-template-actions__icon">+</span>
+          <!-- Template Actions -->
+          <div class="template-actions">
+            <button class="button button--primary template-actions__button" id="create-template-btn">
+              <span class="template-actions__icon">+</span>
               Create New Template
             </button>
-            <button class="button button--outline coursebuilder-template-actions__button" id="load-template-btn">
-              <span class="coursebuilder-template-actions__icon">↗</span>
+            <button class="button button--outline template-actions__button" id="load-template-btn">
+              <span class="template-actions__icon">↗</span>
               Load Template
             </button>
           </div>
           
-          <!-- Template Builder Layout -->
-          <div class="coursebuilder-template-layout">
-            <div class="coursebuilder-template-config">
-              <h3 class="coursebuilder-template-config__heading">
-                Template Configuration
-              </h3>
-              <p class="coursebuilder-template-config__description">
-                Select or create a template to configure its settings.
-              </p>
+          <!-- Template Builder -->
+          <div class="template-builder">
+            <div class="template-config">
+              <h3 class="template-config__title">Template Configuration</h3>
+              <div class="template-config__content" id="template-config-content">
+                <p class="template-config__placeholder">
+                  Select or create a template to configure its settings.
+                </p>
+              </div>
             </div>
-            <div class="coursebuilder-template-preview">
-              <div class="coursebuilder-template-preview__content">
-                <h4 class="coursebuilder-template-preview__heading">
-                  No Template Selected
-                </h4>
-                <p class="coursebuilder-template-preview__message">
-                  Create a new template or select an existing one to see the
-                  preview here.
+            
+            <div class="template-preview">
+              <h3 class="template-preview__title">Template Preview</h3>
+              <div class="template-preview__content" id="template-preview-content">
+                <p class="template-preview__placeholder">
+                  Create a new template or select an existing one to see the preview here.
                 </p>
               </div>
             </div>
@@ -456,37 +455,34 @@
               </button>
             </div>
             
-            <div class="modal__body coursebuilder-template-browser">
-              <div class="coursebuilder-template-browser__controls">
-                <input class="form__input coursebuilder-template-browser__search" 
+            <div class="modal__body template-browser">
+              <div class="template-browser__controls">
+                <input class="form__input template-browser__search" 
                        type="text" id="template-search" placeholder="Search templates..." />
-                <div class="coursebuilder-template-browser__filters">
-                  <select class="form__input form__select coursebuilder-template-browser__filter" id="template-type-filter">
+                <div class="template-browser__filters">
+                  <select class="form__input form__select template-browser__filter" id="template-type-filter">
                     <option value="">All Types</option>
                     <option value="lesson">Lesson</option>
-                  </select>
-                  <select class="form__input form__select coursebuilder-template-browser__filter" id="template-sort">
-                    <option value="created_at">Newest First</option>
-                    <option value="name">Name (A-Z)</option>
-                    <option value="modified_at">Recently Modified</option>
                   </select>
                 </div>
               </div>
               
-              <div class="coursebuilder-template-browser__content">
-                <div class="coursebuilder-template-browser__loading" id="template-loading" style="display: none">
+              <div class="template-browser__content">
+                <div class="template-browser__loading" id="template-loading" style="display: none">
                   <p>Loading your templates...</p>
-                  <!-- Templates will be loaded here -->
                 </div>
                 
-                <div class="coursebuilder-template-browser__empty" id="no-templates-message" style="display: none">
-                  <div class="coursebuilder-template-browser__empty-icon">!</div>
-                  <h3 class="coursebuilder-template-browser__empty-heading">No Templates Found</h3>
-                  <p class="coursebuilder-template-browser__empty-message">
-                    You haven't created any templates yet. Create your first
-                    template to get started!
+                <div class="template-browser__list" id="template-list-content" style="display: none">
+                  <!-- Templates will be populated here by JavaScript -->
+                </div>
+                
+                <div class="template-browser__empty" id="no-templates-message" style="display: none">
+                  <div class="template-browser__empty-icon">📄</div>
+                  <h3 class="template-browser__empty-title">No Templates Found</h3>
+                  <p class="template-browser__empty-text">
+                    You haven't created any templates yet. Create your first template to get started!
                   </p>
-                  <button class="button button--primary coursebuilder-template-browser__empty-action" 
+                  <button class="button button--primary template-browser__empty-action" 
                           onclick="TemplateManager.hideLoadTemplateModal(); TemplateManager.showCreateTemplateModal();">
                     Create First Template
                   </button>
@@ -585,30 +581,24 @@
                   Schedule Course
                 </button>
                 <button class="button button--outline coursebuilder-schedule-actions__button" 
-                        type="button" id="delete-schedule-btn">
+                        type="button" id="delete-schedule-btn" style="display: none;">
                   Delete Schedule
                 </button>
               </div>
             </form>
-          </div>
-          
-          <!-- Schedule Preview -->
-          <div class="coursebuilder-schedule-preview">
-            <h3 class="coursebuilder-schedule-preview__heading">Schedule Preview</h3>
-            <div class="coursebuilder-schedule-table">
-              <div class="coursebuilder-schedule-table__header">
-                <span class="coursebuilder-schedule-table__cell coursebuilder-schedule-table__cell--header">Lesson #</span>
-                <span class="coursebuilder-schedule-table__cell coursebuilder-schedule-table__cell--header">Day</span>
-                <span class="coursebuilder-schedule-table__cell coursebuilder-schedule-table__cell--header">Start Time</span>
-                <span class="coursebuilder-schedule-table__cell coursebuilder-schedule-table__cell--header">End Time</span>
-                <span class="coursebuilder-schedule-table__cell coursebuilder-schedule-table__cell--header">Actions</span>
-                <!-- Schedule rows will be generated here -->
-              </div>
-              <div class="coursebuilder-schedule-table__footer">
-                <div class="coursebuilder-schedule-table__summary">Total lessons: 0</div>
-              </div>
             </div>
-          </div>
+            
+            <!-- Schedule Preview -->
+            <div class="coursebuilder-schedule-preview" id="schedule-preview">
+              <h3 class="coursebuilder-schedule-preview__heading">Schedule Preview</h3>
+              <div class="coursebuilder-schedule-preview__content">
+                <!-- Schedule rows will be generated here by JavaScript -->
+                <div class="coursebuilder-schedule-preview__placeholder">
+                  <p>Click "Schedule Course" to generate your lesson schedule</p>
+                </div>
+              </div>
+              <div class="coursebuilder-schedule-preview__total">Total lessons: 0</div>
+            </div>
           </div>
         </section>
       </article>
@@ -1018,6 +1008,8 @@
   </main>
   <!-- Core application scripts -->
   <script type="module" src="/src/scripts/app.ts"></script>
+  <!-- Language loader for course languages -->
+  <script type="module" src="/src/scripts/backend/courses/languageLoader.ts"></script>
   <!-- PIXI and PixiJS devtools -->
   <script type="module" src="/src/scripts/coursebuilder/devtools-setup.ts"></script>
   <!-- CourseBuilder application -->
@@ -1030,6 +1022,193 @@
   <script type="module" src="/src/scripts/backend/courses/templates/templatePreviewHandler.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/scheduleCourse.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/marginSettings.ts"></script>
+  
+  <!-- Direct language initialization -->
+  <script type="module">
+    import { populateCourseLanguageSelect } from '/src/scripts/backend/courses/languageLoader.ts';
+    import { CourseFormHandler } from '/src/scripts/backend/courses/courseFormHandler.ts';
+    
+    function initLanguages() {
+      const select = document.getElementById('course-language');
+      if (select) {
+        console.log('🌍 Initializing course languages...');
+        populateCourseLanguageSelect(select);
+      } else {
+        console.error('❌ Course language select not found');
+      }
+    }
+    
+    function initFormsWithCourseData() {
+      // Check if there's a courseId in the URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const courseId = urlParams.get('courseId');
+      
+      if (courseId) {
+        console.log('🔄 Course ID found in URL:', courseId, '- Loading existing course data...');
+        
+        // Initialize essentials form handler to load existing data
+        setTimeout(() => {
+          try {
+            console.log('🔄 Creating essentials form handler...');
+            const formHandler = new CourseFormHandler('essentials');
+            window.essentialsFormHandler = formHandler;
+            console.log('✅ Essentials form handler created');
+          } catch (error) {
+            console.error('❌ Failed to initialize essentials form handler:', error);
+          }
+        }, 500); // Give more time for elements to be ready
+      } else {
+        console.log('ℹ️ No course ID in URL - new course mode');
+      }
+      
+      // Add manual test function for debugging
+      window.testLoadCourseData = async function(testCourseId) {
+        console.log('🧪 Testing course data loading for ID:', testCourseId);
+        
+        if (!testCourseId || testCourseId === 'undefined') {
+          console.error('❌ Invalid courseId provided:', testCourseId);
+          return;
+        }
+        
+        try {
+          // Temporarily set course ID in URL FIRST
+          const url = new URL(window.location);
+          url.searchParams.set('courseId', testCourseId);
+          window.history.pushState({}, '', url);
+          
+          console.log('📋 URL updated with courseId:', testCourseId);
+          console.log('🔄 Current URL:', window.location.href);
+          console.log('🔄 Current search params:', window.location.search);
+          
+          // Wait a bit for URL to update
+          setTimeout(() => {
+            console.log('🔄 Creating form handler after URL update...');
+            // Now create form handler - it should pick up the courseId from the URL
+            const formHandler = new CourseFormHandler('essentials');
+            window.testFormHandler = formHandler;
+            console.log('✅ Test form handler created - check if form fields are populated');
+          }, 100);
+          
+        } catch (error) {
+          console.error('❌ Test failed:', error);
+        }
+      };
+      
+      // Also add a function to manually set courseId and reload
+      window.setCourseIdAndReload = function(courseId) {
+        if (!courseId || courseId === 'undefined') {
+          console.error('❌ Invalid courseId provided:', courseId);
+          return;
+        }
+        
+        const url = new URL(window.location);
+        url.searchParams.set('courseId', courseId);
+        window.location.href = url.toString();
+      };
+      
+      // Add function to list existing courses to get real IDs
+      window.listExistingCourses = async function() {
+        try {
+          const response = await fetch('/src/scripts/backend/courses/createCourse.ts');
+          console.log('Fetching courses...');
+          
+          // Import the getUserCourses function dynamically
+          const { getUserCourses } = await import('/src/scripts/backend/courses/createCourse.ts');
+          const courses = await getUserCourses();
+          
+          if (courses && courses.length > 0) {
+            console.log('📚 Existing courses:');
+            courses.forEach((course, index) => {
+              console.log(`${index + 1}. ${course.course_name} (ID: ${course.id})`);
+            });
+            console.log('💡 To test with a course, run: setCourseIdAndReload("COURSE_ID_HERE")');
+            return courses;
+          } else {
+            console.log('⚠️ No courses found. Create a course first.');
+          }
+        } catch (error) {
+          console.error('❌ Error fetching courses:', error);
+        }
+      };
+      
+      // Add function to list existing templates
+      window.listExistingTemplates = async function() {
+        try {
+          console.log('Fetching templates...');
+          // Import createTemplate to access TemplateManager
+          const { TemplateManager } = await import('/src/scripts/backend/courses/createTemplate.ts');
+          await TemplateManager.loadTemplatesForModal();
+          console.log('✅ Templates loaded in modal - check load template modal');
+        } catch (error) {
+          console.error('❌ Error fetching templates:', error);
+        }
+      };
+      
+      // Add function to force refresh language dropdown
+      window.fixLanguageDropdown = async function() {
+        try {
+          console.log('🔧 Fixing language dropdown...');
+          const languageSelect = document.getElementById('course-language');
+          if (languageSelect) {
+            const { populateCourseLanguageSelect } = await import('/src/scripts/backend/courses/languageLoader.ts');
+            await populateCourseLanguageSelect(languageSelect);
+            
+            // Try to set the language value again
+            const urlParams = new URLSearchParams(window.location.search);
+            const courseId = urlParams.get('courseId');
+            if (courseId && courseId !== 'undefined') {
+              const { getCourse } = await import('/src/scripts/backend/courses/createCourse.ts');
+              const courseData = await getCourse(courseId);
+              if (courseData && courseData.course_language) {
+                // Find the option that contains the language
+                for (let i = 0; i < languageSelect.options.length; i++) {
+                  const option = languageSelect.options[i];
+                  if (option.textContent?.toLowerCase().includes(courseData.course_language.toLowerCase()) || 
+                      option.value === courseData.course_language) {
+                    languageSelect.value = option.value;
+                    console.log('✅ Language dropdown fixed:', option.textContent);
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('❌ Error fixing language dropdown:', error);
+        }
+      };
+      
+      // Also add a function to manually load data for existing course ID in URL
+      window.loadExistingCourseData = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('courseId');
+        
+        if (!courseId) {
+          console.error('❌ No courseId in URL. Add ?courseId=your-id to the URL first');
+          return;
+        }
+        
+        console.log('🔄 Loading data for course ID:', courseId);
+        const formHandler = new CourseFormHandler('essentials');
+        window.currentFormHandler = formHandler;
+      };
+    }
+    
+    // Initialize everything
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+          initLanguages();
+          initFormsWithCourseData();
+        }, 200);
+      });
+    } else {
+      setTimeout(() => {
+        initLanguages();
+        initFormsWithCourseData();
+      }, 200);
+    }
+  </script>
 </body>
 
 </html>
