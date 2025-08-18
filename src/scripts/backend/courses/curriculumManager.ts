@@ -13,29 +13,89 @@ interface CurriculumTopic {
 }
 
 interface ContentLoadConfig {
- type: "mini" | "regular" | "double" | "triple" | "long";
+ type: "mini" | "single" | "double" | "triple" | "halfFull";
  duration: number; // in minutes
  topicsPerLesson: number;
  objectivesPerTopic: number;
  tasksPerTopic: number;
+ isRecommended: boolean;
+ recommendationText: string;
 }
 
-type PreviewMode = "titles" | "topics" | "objectives";
+interface DurationPreset {
+  type: "mini" | "single" | "double" | "triple" | "halfFull";
+  maxDuration: number;
+  defaultTopics: number;
+  defaultObjectives: number;
+  defaultTasks: number;
+  rationale: string;
+}
 
-export class CurriculumManager {
+type PreviewMode = "titles" | "topics" | "objectives" | "all";
+
+class CurriculumManager {
  private courseId: string;
  private curriculumConfigSection!: HTMLElement;
  private curriculumPreviewSection!: HTMLElement;
- private contentLoadDisplay!: HTMLElement;
+ private durationConfigSection!: HTMLElement;
  private currentCurriculum: CurriculumLesson[] = [];
  private contentLoadConfig: ContentLoadConfig | null = null;
- private currentPreviewMode: PreviewMode = "titles";
+ private currentPreviewMode: PreviewMode = "all";
+ private scheduledLessonDuration: number = 0; // Store the actual scheduled duration
+ private saveTimeout: number | null = null; // For debouncing saves
+
+ // Duration presets with default values and rationale
+ private readonly durationPresets: Record<string, DurationPreset> = {
+   mini: {
+     type: "mini",
+     maxDuration: 30,
+     defaultTopics: 1,
+     defaultObjectives: 1,
+     defaultTasks: 2,
+     rationale: "Mini lessons need tight focus. One clear learning objective with just enough practice to check understanding."
+   },
+   single: {
+     type: "single", 
+     maxDuration: 60,
+     defaultTopics: 2,
+     defaultObjectives: 2,
+     defaultTasks: 2,
+     rationale: "Standard lesson length allows for two related concepts, each with paired objectives and sufficient practice."
+   },
+   double: {
+     type: "double",
+     maxDuration: 120,
+     defaultTopics: 3,
+     defaultObjectives: 2,
+     defaultTasks: 3,
+     rationale: "Extended time allows deeper exploration but requires consolidation breaks. Three topics prevent cognitive overload while allowing meaningful depth."
+   },
+   triple: {
+     type: "triple",
+     maxDuration: 180,
+     defaultTopics: 4,
+     defaultObjectives: 2,
+     defaultTasks: 3,
+     rationale: "Very long sessions need structured variety. Four topics with regular consolidation activities maintain engagement and retention."
+   },
+   halfFull: {
+     type: "halfFull",
+     maxDuration: 999,
+     defaultTopics: 5,
+     defaultObjectives: 3,
+     defaultTasks: 4,
+     rationale: "Extended sessions can cover more ground but must include multiple consolidation periods, breaks, and varied activities to maintain effectiveness."
+   }
+ };
 
  constructor(courseId?: string) {
- // Get course ID from parameter, URL, or session storage
- this.courseId = courseId || this.getCourseId();
+   // Get course ID from parameter, URL, or session storage
+   this.courseId = courseId || this.getCourseId();
+   
+   // Load saved preview mode from localStorage
+   this.currentPreviewMode = this.getStoredPreviewMode();
 
- console.log('📚 CurriculumManager initializing with course ID:', this.courseId);
+   console.log('📚 CurriculumManager initializing with course ID:', this.courseId);
 
  if (!this.courseId) {
  console.warn("⚠️ No course ID available for curriculum management - some features may be limited");
@@ -93,6 +153,21 @@ export class CurriculumManager {
  }
  }
 
+ private getStoredPreviewMode(): PreviewMode {
+   const stored = localStorage.getItem('curriculum-preview-mode');
+   const validModes: PreviewMode[] = ["titles", "topics", "objectives", "all"];
+   
+   if (stored && validModes.includes(stored as PreviewMode)) {
+     return stored as PreviewMode;
+   }
+   
+   return "all"; // default fallback
+ }
+
+ private savePreviewMode(mode: PreviewMode): void {
+   localStorage.setItem('curriculum-preview-mode', mode);
+ }
+
   private initializeElements(): void {
     this.curriculumConfigSection = document.getElementById(
       "curriculum-config",
@@ -100,39 +175,58 @@ export class CurriculumManager {
     this.curriculumPreviewSection = document.querySelector(
       ".coursebuilder-curriculum-preview",
     ) as HTMLElement;
-    this.contentLoadDisplay = document.querySelector(
-      ".coursebuilder-curriculum-preview__content",
-    ) as HTMLElement; // Check if all elements were found
- if (!this.curriculumConfigSection) {
- console.error("curriculum-config element not found");
- return;
- }
- if (!this.curriculumPreviewSection) {
- console.error("curriculum-preview element not found");
- return;
- }
+    this.durationConfigSection = document.getElementById(
+      "curriculum-duration-config",
+    ) as HTMLElement;
+    
+    // Check if all elements were found
+    if (!this.curriculumConfigSection) {
+      console.error("curriculum-config element not found");
+      return;
+    }
+    if (!this.curriculumPreviewSection) {
+      console.error("curriculum-preview element not found");
+      return;
+    }
+    
+    // Set initial active button for preview mode
+    this.setInitialActiveButton();
+  }
 
- }
+  private setInitialActiveButton(): void {
+    // Use setTimeout to ensure DOM is fully ready
+    setTimeout(() => {
+      console.log('🎯 Setting initial active button for mode:', this.currentPreviewMode);
+      const previewModeButtons = this.curriculumPreviewSection?.querySelectorAll('.coursebuilder-curriculum-preview__mode');
+      console.log('🔘 Found buttons for initial setup:', previewModeButtons?.length);
+      
+      previewModeButtons?.forEach((btn) => {
+        btn.classList.remove('coursebuilder-curriculum-preview__mode--active');
+        if (btn.getAttribute('data-mode') === this.currentPreviewMode) {
+          btn.classList.add('coursebuilder-curriculum-preview__mode--active');
+          console.log('✅ Set initial active class on button:', btn.textContent?.trim());
+        }
+      });
+    }, 100);
+  }
 
  private bindEvents(): void {
- if (!this.curriculumConfigSection) {
- console.error("Cannot bind events: required elements not found");
- return;
- }
+   if (!this.curriculumConfigSection) {
+     console.error("Cannot bind events: required elements not found");
+     return;
+   }
 
- // Preview mode buttons
- const previewModeButtons =
- this.curriculumPreviewSection?.querySelectorAll('elements');
- previewModeButtons?.forEach((button) => {
- button.addEventListener("click", (e) => {
- const mode = (e.target as HTMLElement).dataset.mode as PreviewMode;
- this.setPreviewMode(mode);
- });
- });
+   // Preview mode buttons
+   const previewModeButtons =
+     this.curriculumPreviewSection?.querySelectorAll('.coursebuilder-curriculum-preview__mode');
+   previewModeButtons?.forEach((button) => {
+     button.addEventListener("click", (e) => {
+       const mode = (e.target as HTMLElement).dataset.mode as PreviewMode;
+       this.setPreviewMode(mode);
+     });
+   });
 
- }
-
- private async loadScheduleData(): Promise<void> {
+ } private async loadScheduleData(): Promise<void> {
  if (!this.courseId) {
  console.warn('📚 Cannot load schedule data: no course ID available');
  this.displayNoScheduleWarning();
@@ -177,81 +271,412 @@ export class CurriculumManager {
  }
 
  private determineContentLoad(duration: number): ContentLoadConfig {
- if (duration <= 30) {
- return {
- type: "mini",
- duration,
- topicsPerLesson: 1,
- objectivesPerTopic: 1,
- tasksPerTopic: 2,
- };
- } else if (duration <= 60) {
- return {
- type: "regular",
- duration,
- topicsPerLesson: 2,
- objectivesPerTopic: 2,
- tasksPerTopic: 2,
- };
- } else if (duration <= 120) {
- return {
- type: "double",
- duration,
- topicsPerLesson: 3,
- objectivesPerTopic: 2,
- tasksPerTopic: 3,
- };
- } else if (duration <= 180) {
- return {
- type: "triple",
- duration,
- topicsPerLesson: 4,
- objectivesPerTopic: 3,
- tasksPerTopic: 3,
- };
- } else {
- return {
- type: "long",
- duration,
- topicsPerLesson: 5,
- objectivesPerTopic: 3,
- tasksPerTopic: 4,
- };
- }
+   this.scheduledLessonDuration = duration;
+   
+   let selectedPreset: DurationPreset;
+   let isRecommended = true;
+   let recommendationText = "Recommended";
+   
+   if (duration <= 30) {
+     selectedPreset = this.durationPresets.mini;
+   } else if (duration <= 60) {
+     selectedPreset = this.durationPresets.single;
+   } else if (duration <= 120) {
+     selectedPreset = this.durationPresets.double;
+   } else if (duration <= 180) {
+     selectedPreset = this.durationPresets.triple;
+   } else {
+     selectedPreset = this.durationPresets.halfFull;
+   }
+
+   return {
+     type: selectedPreset.type,
+     duration,
+     topicsPerLesson: selectedPreset.defaultTopics,
+     objectivesPerTopic: selectedPreset.defaultObjectives,
+     tasksPerTopic: selectedPreset.defaultTasks,
+     isRecommended,
+     recommendationText
+   };
  }
 
  private displayContentLoad(): void {
- if (!this.contentLoadDisplay || !this.contentLoadConfig) return;
+   if (!this.contentLoadConfig) return;
 
- this.contentLoadDisplay.innerHTML = `
- <div class="content-load-info">
- <div class="content-load-badge content-load-badge--${this.contentLoadConfig.type}">
- ${this.contentLoadConfig.type.toUpperCase()}
- </div>
- <div class="content-load-details">
- <div class="duration">${this.contentLoadConfig.duration} minutes per lesson</div>
- <div class="structure">
- ${this.contentLoadConfig.topicsPerLesson} topic(s) • 
- ${this.contentLoadConfig.objectivesPerTopic} objective(s) per topic • 
- ${this.contentLoadConfig.tasksPerTopic} task(s) per topic
- </div>
- </div>
- </div>
- `;
+   // Setup the duration configuration immediately
+   this.setupDurationConfiguration();
+ }
+
+ private setupDurationConfiguration(): void {
+   const durationOptions = document.querySelectorAll('.curriculum-duration-option');
+   const recommendationElement = document.getElementById('curriculum-recommendation');
+   const topicsInput = document.getElementById('curriculum-topics') as HTMLInputElement;
+   const objectivesInput = document.getElementById('curriculum-objectives') as HTMLInputElement;
+   const tasksInput = document.getElementById('curriculum-tasks') as HTMLInputElement;
+
+   if (!recommendationElement || !topicsInput || !objectivesInput || !tasksInput) {
+     console.error('Duration configuration elements not found');
+     return;
+   }
+
+   // Set up click handlers for duration options
+   durationOptions.forEach(option => {
+     const button = option as HTMLButtonElement;
+     const durationType = button.dataset.duration as keyof typeof this.durationPresets;
+     
+     button.addEventListener('click', () => {
+       console.log('👆 User clicked duration button:', durationType);
+       
+       // Remove active class from all options
+       durationOptions.forEach(opt => {
+         opt.classList.remove('curriculum-duration-option--active', 
+                             'curriculum-duration-option--recommended', 
+                             'curriculum-duration-option--not-recommended');
+       });
+       
+       // Add active class to clicked option
+       button.classList.add('curriculum-duration-option--active');
+       
+       // Update configuration based on selection
+       this.updateConfigurationFromSelection(durationType, button, recommendationElement);
+       
+       // Update input values and regenerate curriculum (only for user clicks)
+       const preset = this.durationPresets[durationType];
+       topicsInput.value = preset.defaultTopics.toString();
+       objectivesInput.value = preset.defaultObjectives.toString();
+       tasksInput.value = preset.defaultTasks.toString();
+       
+       // Update content load config
+       this.contentLoadConfig = {
+         type: preset.type,
+         duration: this.scheduledLessonDuration,
+         topicsPerLesson: preset.defaultTopics,
+         objectivesPerTopic: preset.defaultObjectives,
+         tasksPerTopic: preset.defaultTasks,
+         isRecommended: this.isRecommendedDuration(durationType, this.scheduledLessonDuration),
+         recommendationText: this.getRecommendationText(durationType, this.scheduledLessonDuration)
+       };
+       
+       console.log('🎯 User selected preset, updating inputs and regenerating curriculum');
+       // Regenerate and save curriculum with new structure
+       this.regenerateAndSaveCurriculum();
+     });
+   });
+
+   // Set up input change handlers to update curriculum in real-time
+   [topicsInput, objectivesInput, tasksInput].forEach(input => {
+     // Use 'input' event for real-time updates as user types
+     input.addEventListener('input', () => {
+       this.handleInputChange(topicsInput, objectivesInput, tasksInput);
+     });
+     
+     // Also listen for 'change' event for when user tabs out
+     input.addEventListener('change', () => {
+       this.handleInputChange(topicsInput, objectivesInput, tasksInput);
+     });
+   });
+
+   // Auto-select the recommended duration option (but don't override existing curriculum structure)
+   this.autoSelectRecommendedDuration();
+   
+   // Populate inputs with current curriculum structure if it exists (this should override defaults)
+   this.populateInputsFromExistingCurriculum();
+ }
+
+ private populateInputsFromExistingCurriculum(): void {
+   const topicsInput = document.getElementById('curriculum-topics') as HTMLInputElement;
+   const objectivesInput = document.getElementById('curriculum-objectives') as HTMLInputElement;
+   const tasksInput = document.getElementById('curriculum-tasks') as HTMLInputElement;
+
+   if (!topicsInput || !objectivesInput || !tasksInput) {
+     console.log('📝 Input elements not found for population');
+     return;
+   }
+
+   // If we have existing curriculum data, use its structure
+   if (this.currentCurriculum && this.currentCurriculum.length > 0) {
+     const firstLesson = this.currentCurriculum[0];
+     if (firstLesson && firstLesson.topics && firstLesson.topics.length > 0) {
+       const topicsCount = firstLesson.topics.length;
+       const objectivesCount = firstLesson.topics[0].objectives ? firstLesson.topics[0].objectives.length : 2;
+       const tasksCount = firstLesson.topics[0].tasks ? firstLesson.topics[0].tasks.length : 2;
+
+       topicsInput.value = topicsCount.toString();
+       objectivesInput.value = objectivesCount.toString();
+       tasksInput.value = tasksCount.toString();
+
+       // Update content load config to match existing structure
+       if (this.contentLoadConfig) {
+         this.contentLoadConfig.topicsPerLesson = topicsCount;
+         this.contentLoadConfig.objectivesPerTopic = objectivesCount;
+         this.contentLoadConfig.tasksPerTopic = tasksCount;
+         
+         console.log('🔧 ContentLoadConfig updated from existing curriculum:', {
+           topics: this.contentLoadConfig.topicsPerLesson,
+           objectives: this.contentLoadConfig.objectivesPerTopic,
+           tasks: this.contentLoadConfig.tasksPerTopic
+         });
+       }
+
+       console.log('📚 Populated inputs from existing curriculum:', {
+         topics: topicsCount,
+         objectives: objectivesCount,
+         tasks: tasksCount
+       });
+     }
+   }
+ }
+
+ private handleInputChange(
+   topicsInput: HTMLInputElement,
+   objectivesInput: HTMLInputElement,
+   tasksInput: HTMLInputElement
+ ): void {
+   if (!this.contentLoadConfig) return;
+
+   // Clear any existing timeout
+   if (this.saveTimeout) {
+     clearTimeout(this.saveTimeout);
+   }
+
+   // Update the config immediately
+   const topics = parseInt(topicsInput.value) || 1;
+   const objectives = parseInt(objectivesInput.value) || 1;
+   const tasks = parseInt(tasksInput.value) || 1;
+
+   this.contentLoadConfig.topicsPerLesson = topics;
+   this.contentLoadConfig.objectivesPerTopic = objectives;
+   this.contentLoadConfig.tasksPerTopic = tasks;
+
+   console.log('📝 Input values changed (before debounce):', {
+     topics: this.contentLoadConfig.topicsPerLesson,
+     objectives: this.contentLoadConfig.objectivesPerTopic,
+     tasks: this.contentLoadConfig.tasksPerTopic
+   });
+
+   // Debounce the actual save operation
+   this.saveTimeout = window.setTimeout(() => {
+     console.log('⏱️ Debounce timeout expired, now saving...');
+     this.regenerateAndSaveCurriculum();
+   }, 500); // Wait 500ms after last change
+ }
+
+ private updateConfigurationFromSelection(
+   durationType: keyof typeof this.durationPresets,
+   selectedButton: HTMLButtonElement,
+   recommendationElement: HTMLElement
+ ): void {
+   const isRecommended = this.isRecommendedDuration(durationType, this.scheduledLessonDuration);
+   const recommendationText = this.getRecommendationText(durationType, this.scheduledLessonDuration);
+   
+   // Update button styling
+   if (isRecommended) {
+     selectedButton.classList.add('curriculum-duration-option--recommended');
+   } else {
+     selectedButton.classList.add('curriculum-duration-option--not-recommended');
+   }
+   
+   // Update recommendation text
+   recommendationElement.className = `curriculum-recommendation ${isRecommended ? 'curriculum-recommendation--recommended' : 'curriculum-recommendation--not-recommended'}`;
+   recommendationElement.innerHTML = `<span class="curriculum-recommendation__text">${recommendationText}</span>`;
+ }
+
+ private isRecommendedDuration(durationType: keyof typeof this.durationPresets, actualDuration: number): boolean {
+   const preset = this.durationPresets[durationType];
+   
+   if (durationType === 'halfFull') {
+     return actualDuration > 180;
+   }
+   
+   const previousMaxDuration = this.getPreviousMaxDuration(durationType);
+   return actualDuration > previousMaxDuration && actualDuration <= preset.maxDuration;
+ }
+
+ private getPreviousMaxDuration(durationType: keyof typeof this.durationPresets): number {
+   switch (durationType) {
+     case 'mini': return 0;
+     case 'single': return 30;
+     case 'double': return 60;
+     case 'triple': return 120;
+     case 'halfFull': return 180;
+     default: return 0;
+   }
+ }
+
+ private getRecommendationText(durationType: keyof typeof this.durationPresets, actualDuration: number): string {
+   if (this.isRecommendedDuration(durationType, actualDuration)) {
+     return "Recommended";
+   }
+   
+   const preset = this.durationPresets[durationType];
+   
+   if (durationType === 'halfFull') {
+     return actualDuration <= 180 ? "Not recommended: too short" : "Recommended";
+   }
+   
+   const previousMaxDuration = this.getPreviousMaxDuration(durationType);
+   
+   if (actualDuration <= previousMaxDuration) {
+     return "Not recommended: too short";
+   } else if (actualDuration > preset.maxDuration) {
+     return "Not recommended: too long";
+   }
+   
+   return "Recommended";
+ }
+
+ private autoSelectRecommendedDuration(): void {
+   if (this.scheduledLessonDuration <= 0) return;
+   
+   // Find the recommended duration type
+   let recommendedType: keyof typeof this.durationPresets = 'single';
+   
+   if (this.scheduledLessonDuration <= 30) {
+     recommendedType = 'mini';
+   } else if (this.scheduledLessonDuration <= 60) {
+     recommendedType = 'single';
+   } else if (this.scheduledLessonDuration <= 120) {
+     recommendedType = 'double';
+   } else if (this.scheduledLessonDuration <= 180) {
+     recommendedType = 'triple';
+   } else {
+     recommendedType = 'halfFull';
+   }
+   
+   // Don't click the button - just set the visual state
+   this.setDurationButtonVisualState(recommendedType);
+ }
+
+ private setDurationButtonVisualState(durationType: keyof typeof this.durationPresets): void {
+   const durationOptions = document.querySelectorAll('.curriculum-duration-option');
+   const recommendationElement = document.getElementById('curriculum-recommendation');
+   
+   if (!recommendationElement) return;
+
+   // Remove active class from all options
+   durationOptions.forEach(opt => {
+     opt.classList.remove('curriculum-duration-option--active', 
+                         'curriculum-duration-option--recommended', 
+                         'curriculum-duration-option--not-recommended');
+   });
+   
+   // Find and activate the correct button
+   const targetButton = document.querySelector(`[data-duration="${durationType}"]`) as HTMLButtonElement;
+   if (targetButton) {
+     targetButton.classList.add('curriculum-duration-option--active');
+     
+     // Update configuration based on selection (visual only, don't update inputs)
+     this.updateConfigurationFromSelection(durationType, targetButton, recommendationElement);
+   }
  }
 
  private displayNoScheduleWarning(): void {
- if (!this.contentLoadDisplay) return;
+   // Just show the setup configuration without a warning
+   this.setupDurationConfiguration();
+ } private async regenerateAndSaveCurriculum(): Promise<void> {
+   if (!this.contentLoadConfig) {
+     console.warn("Content load configuration not available.");
+     return;
+   }
 
- this.contentLoadDisplay.innerHTML = `
- <div class="content-load-warning">
- <div class="warning-icon">⚠️</div>
- <div class="warning-text">
- <strong>Schedule Required</strong>
- <p>Please create a schedule first to determine content load.</p>
- </div>
- </div>
- `;
+   if (!this.courseId) {
+     console.warn("No course ID available for curriculum regeneration.");
+     return;
+   }
+
+   try {
+     console.log('🔄 Regenerating curriculum with new structure:', {
+       topics: this.contentLoadConfig.topicsPerLesson,
+       objectives: this.contentLoadConfig.objectivesPerTopic,
+       tasks: this.contentLoadConfig.tasksPerTopic
+     });
+     
+     // Double-check the content load config values
+     console.log('🔍 Current contentLoadConfig object:', JSON.stringify(this.contentLoadConfig, null, 2));
+
+     // Get the number of lessons from schedule
+     const { data: scheduleData } = await supabase
+       .from("courses")
+       .select("schedule_settings, course_sessions")
+       .eq("id", this.courseId)
+       .single();
+
+     const numLessons = scheduleData?.course_sessions || 1;
+     console.log('📊 Number of lessons:', numLessons);
+     
+     // Create new curriculum structure with current settings
+     const newCurriculum = this.createCurriculumStructure(numLessons);
+     
+     // Debug: Log the actual structure created
+     console.log('🏗️ Created curriculum structure sample:', {
+       firstLesson: newCurriculum[0] ? {
+         topicsCount: newCurriculum[0].topics.length,
+         firstTopic: newCurriculum[0].topics[0] ? {
+           objectivesCount: newCurriculum[0].topics[0].objectives.length,
+           tasksCount: newCurriculum[0].topics[0].tasks.length
+         } : null
+       } : null
+     });
+
+     // Preserve existing lesson and topic titles if they exist
+     if (this.currentCurriculum && this.currentCurriculum.length > 0) {
+       newCurriculum.forEach((newLesson, lessonIndex) => {
+         const existingLesson = this.currentCurriculum[lessonIndex];
+         if (existingLesson) {
+           // Preserve lesson title
+           newLesson.title = existingLesson.title;
+           
+           // Preserve topic titles and content where they exist
+           newLesson.topics.forEach((newTopic, topicIndex) => {
+             const existingTopic = existingLesson.topics[topicIndex];
+             if (existingTopic) {
+               newTopic.title = existingTopic.title;
+               
+               // Preserve objectives where they exist
+               newTopic.objectives.forEach((_, objIndex) => {
+                 if (existingTopic.objectives[objIndex]) {
+                   newTopic.objectives[objIndex] = existingTopic.objectives[objIndex];
+                 }
+               });
+               
+               // Preserve tasks where they exist
+               newTopic.tasks.forEach((_, taskIndex) => {
+                 if (existingTopic.tasks[taskIndex]) {
+                   newTopic.tasks[taskIndex] = existingTopic.tasks[taskIndex];
+                 }
+               });
+             }
+           });
+         }
+       });
+     }
+
+     // Save to database
+     console.log('💾 Saving curriculum to database...');
+     console.log('📋 Final curriculum structure before save:', {
+       lessonsCount: newCurriculum.length,
+       firstLesson: newCurriculum[0] ? {
+         title: newCurriculum[0].title,
+         topicsCount: newCurriculum[0].topics.length,
+         firstTopic: newCurriculum[0].topics[0] ? {
+           title: newCurriculum[0].topics[0].title,
+           objectivesCount: newCurriculum[0].topics[0].objectives.length,
+           tasksCount: newCurriculum[0].topics[0].tasks.length,
+           objectives: newCurriculum[0].topics[0].objectives,
+           tasks: newCurriculum[0].topics[0].tasks
+         } : null
+       } : null
+     });
+     await this.saveCurriculumToDatabase(newCurriculum);
+     
+     // Update current curriculum and refresh display
+     this.currentCurriculum = newCurriculum;
+     this.renderCurriculumPreview();
+
+     console.log('✅ Curriculum regenerated and saved with new structure');
+   } catch (error) {
+     console.error("❌ Error regenerating curriculum:", error);
+   }
  }
 
  private async generateCurriculum(): Promise<void> {
@@ -322,77 +747,137 @@ export class CurriculumManager {
  }
 
  private async saveCurriculumToDatabase(
- curriculum: CurriculumLesson[],
+   curriculum: CurriculumLesson[],
  ): Promise<void> {
- if (!this.courseId) {
- console.warn('📚 Cannot save curriculum: no course ID available');
- throw new Error('No course ID available for saving curriculum');
- }
+   if (!this.courseId) {
+     console.warn('📚 Cannot save curriculum: no course ID available');
+     throw new Error('No course ID available for saving curriculum');
+   }
 
- const { error } = await supabase
- .from("courses")
- .update({
- curriculum_data: curriculum,
- })
- .eq("id", this.courseId);
+   console.log('💾 Saving curriculum structure to database:', {
+     courseId: this.courseId,
+     lessonsCount: curriculum.length,
+     sampleStructure: curriculum[0] ? {
+       topicsCount: curriculum[0].topics.length,
+       objectivesCount: curriculum[0].topics[0]?.objectives.length,
+       tasksCount: curriculum[0].topics[0]?.tasks.length
+     } : null
+   });
 
- if (error) {
- throw error;
- }
- }
+   const { error } = await supabase
+     .from("courses")
+     .update({
+       curriculum_data: curriculum,
+     })
+     .eq("id", this.courseId);
 
- private setPreviewMode(mode: PreviewMode): void {
- this.currentPreviewMode = mode;
+   if (error) {
+     console.error('❌ Database save error:', error);
+     throw error;
+   }
 
- // Update active button
- const previewModeButtons =
- this.curriculumPreviewSection.querySelectorAll('elements');
- previewModeButtons.forEach((btn) => {
- btn
- });
+   console.log('✅ Curriculum saved successfully to database');
+ } private setPreviewMode(mode: PreviewMode): void {
+   console.log('🎛️ Setting preview mode to:', mode);
+   this.currentPreviewMode = mode;
+   
+   // Save to localStorage
+   this.savePreviewMode(mode);
 
- // Re-render preview with new mode
- this.renderCurriculumPreview();
+   // Update active button styling
+   const previewModeButtons = this.curriculumPreviewSection.querySelectorAll('.coursebuilder-curriculum-preview__mode');
+   console.log('🔘 Found preview mode buttons:', previewModeButtons.length);
+   
+   previewModeButtons.forEach((btn) => {
+     btn.classList.remove('coursebuilder-curriculum-preview__mode--active');
+     if (btn.getAttribute('data-mode') === mode) {
+       btn.classList.add('coursebuilder-curriculum-preview__mode--active');
+       console.log('✅ Set active class on button:', btn.textContent?.trim());
+     }
+   });
+
+   // Re-render preview with new mode
+   this.renderCurriculumPreview();
  }
 
  private renderCurriculumPreview(): void {
- const previewContainer = this.curriculumPreviewSection.querySelector(
- ".curriculum-preview-content",
- );
- if (!previewContainer || !Array.isArray(this.currentCurriculum)) return;
+   const previewContainer = this.curriculumPreviewSection.querySelector(
+     ".coursebuilder-curriculum-preview__content",
+   );
+   if (!previewContainer || !Array.isArray(this.currentCurriculum)) return;
+   
+   let html = "";
 
- let html = "";
+   this.currentCurriculum.forEach((lesson) => {
+     if (this.currentPreviewMode === "all") {
+       // Complete lesson template structure
+       html += `
+         <div class="curriculum-lesson curriculum-lesson--full">
+           <div class="curriculum-lesson__title" contenteditable="true" 
+                data-lesson="${lesson.lessonNumber}" data-field="title">
+             ${lesson.title}
+           </div>
+           
+           <div class="curriculum-lesson__body">`;
+       
+       lesson.topics.forEach((topic, topicIndex) => {
+         html += `
+           <div class="curriculum-topic">
+             <div class="curriculum-topic__title" contenteditable="true" 
+                  data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title">
+               ${topic.title}
+             </div>
+             
+             <div class="curriculum-topic__objectives">
+               <div class="curriculum-objectives__header">Learning Objectives:</div>
+               <ul class="curriculum-objectives__list">`;
+         
+         topic.objectives.forEach((objective, objIndex) => {
+           html += `
+                 <li class="curriculum-objective" contenteditable="true" 
+                     data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}">
+                   ${objective}
+                 </li>`;
+         });
+         
+         html += `
+               </ul>
+             </div>
+           </div>`;
+       });
+       
+       html += `
+           </div>
+         </div>`;
+     } else {
+       // Simplified views
+       html += `<div class="curriculum-lesson curriculum-lesson--simple">`;
+       html += `<div class="curriculum-lesson__title" contenteditable="true" 
+                      data-lesson="${lesson.lessonNumber}" data-field="title">${lesson.title}</div>`;
 
- this.currentCurriculum.forEach((lesson) => {
- html += `<div class="curriculum-lesson">`;
+       if (this.currentPreviewMode === "topics" || this.currentPreviewMode === "objectives") {
+         lesson.topics.forEach((topic, topicIndex) => {
+           html += `<div class="curriculum-topic curriculum-topic--simple">`;
+           html += `<div class="curriculum-topic__title" contenteditable="true" 
+                          data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title">${topic.title}</div>`;
 
- // Always show lesson title
- html += `<div class="lesson-title" contenteditable="true" data-lesson="${lesson.lessonNumber}" data-field="title">${lesson.title}</div>`;
+           if (this.currentPreviewMode === "objectives") {
+             html += `<ul class="curriculum-objectives__list curriculum-objectives__list--simple">`;
+             topic.objectives.forEach((objective, objIndex) => {
+               html += `<li class="curriculum-objective" contenteditable="true" 
+                             data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}">${objective}</li>`;
+             });
+             html += `</ul>`;
+           }
+           html += `</div>`;
+         });
+       }
+       html += `</div>`;
+     }
+   });
 
- if (
- this.currentPreviewMode === "topics" ||
- this.currentPreviewMode === "objectives"
- ) {
- lesson.topics.forEach((topic, topicIndex) => {
- html += `<div class="lesson-topic">`;
- html += `<div class="topic-title" contenteditable="true" data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title">${topic.title}</div>`;
-
- if (this.currentPreviewMode === "objectives") {
- topic.objectives.forEach((objective, objIndex) => {
- html += `<div class="topic-objective" contenteditable="true" data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}">${objective}</div>`;
- });
- }
-
- html += `</div>`;
- });
- }
-
- html += `</div>`;
- });
-
- previewContainer.innerHTML = html;
- this.bindEditableEvents();
- this.curriculumPreviewSection
+   previewContainer.innerHTML = html;
+   this.bindEditableEvents();
  }
 
  private bindEditableEvents(): void {
@@ -440,34 +925,45 @@ export class CurriculumManager {
  }
 
  private async loadExistingCurriculum(): Promise<void> {
- if (!this.courseId) {
- console.warn('📚 Cannot load curriculum: no course ID available');
- this.hideCurriculumPreview();
- return;
- }
+   if (!this.courseId) {
+     console.warn('📚 Cannot load curriculum: no course ID available');
+     this.hideCurriculumPreview();
+     return;
+   }
 
- try {
- const { data, error } = await supabase
- .from("courses")
- .select("curriculum_data")
- .eq("id", this.courseId)
- .single();
+   try {
+     console.log('📚 Loading existing curriculum for course:', this.courseId);
+     const { data, error } = await supabase
+       .from("courses")
+       .select("curriculum_data")
+       .eq("id", this.courseId)
+       .single();
 
- if (error) throw error;
+     if (error) throw error;
 
- if (data?.curriculum_data && Array.isArray(data.curriculum_data)) {
- this.currentCurriculum = data.curriculum_data;
- this.renderCurriculumPreview();
- } else {
- this.hideCurriculumPreview();
- }
- } catch (error) {
- console.error("Error loading existing curriculum:", error);
- this.hideCurriculumPreview();
- }
- }
-
- /**
+     if (data?.curriculum_data && Array.isArray(data.curriculum_data)) {
+       this.currentCurriculum = data.curriculum_data;
+       console.log('✅ Loaded existing curriculum:', {
+         lessonsCount: this.currentCurriculum.length,
+         sampleStructure: this.currentCurriculum[0] ? {
+           topicsCount: this.currentCurriculum[0].topics.length,
+           objectivesCount: this.currentCurriculum[0].topics[0]?.objectives.length,
+           tasksCount: this.currentCurriculum[0].topics[0]?.tasks.length
+         } : null
+       });
+       this.renderCurriculumPreview();
+       
+       // Update inputs to match loaded curriculum structure
+       this.populateInputsFromExistingCurriculum();
+     } else {
+       console.log('ℹ️ No existing curriculum found');
+       this.hideCurriculumPreview();
+     }
+   } catch (error) {
+     console.error("❌ Error loading existing curriculum:", error);
+     this.hideCurriculumPreview();
+   }
+ } /**
  * Set course ID after initialization
  */
  public setCourseId(courseId: string): void {
@@ -494,12 +990,12 @@ export class CurriculumManager {
  }
 
  private showPreview(): void {
- this.curriculumPreviewSection
- this.renderCurriculumPreview();
+   this.curriculumPreviewSection.style.display = 'flex';
+   this.renderCurriculumPreview();
  }
 
  private hideCurriculumPreview(): void {
- this.curriculumPreviewSection
+   this.curriculumPreviewSection.style.display = 'none';
  }
 }
 
@@ -513,3 +1009,5 @@ declare global {
 if (typeof window !== "undefined") {
  window.CurriculumManager = CurriculumManager;
 }
+
+export { CurriculumManager };

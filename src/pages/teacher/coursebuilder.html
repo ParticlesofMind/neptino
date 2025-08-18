@@ -609,8 +609,64 @@
           <div class="coursebuilder-curriculum-layout">
             <!-- Curriculum Configuration -->
             <div class="coursebuilder-curriculum-config" id="curriculum-config">
+              <h3 class="coursebuilder-curriculum-config__heading">Curriculum Configuration</h3>
               <div class="coursebuilder-curriculum-config__content">
-                <!-- Configuration content will be added here -->
+                <!-- Duration Options -->
+                <div class="curriculum-duration-options">
+                  <button class="button button--outline curriculum-duration-option" 
+                          type="button" data-duration="mini" data-max="30">
+                    <span class="curriculum-duration-option__label">Mini</span>
+                    <span class="curriculum-duration-option__time">Up to 30'</span>
+                  </button>
+                  <button class="button button--outline curriculum-duration-option" 
+                          type="button" data-duration="single" data-max="60">
+                    <span class="curriculum-duration-option__label">Single</span>
+                    <span class="curriculum-duration-option__time">Up to 60'</span>
+                  </button>
+                  <button class="button button--outline curriculum-duration-option" 
+                          type="button" data-duration="double" data-max="120">
+                    <span class="curriculum-duration-option__label">Double</span>
+                    <span class="curriculum-duration-option__time">Up to 120'</span>
+                  </button>
+                  <button class="button button--outline curriculum-duration-option" 
+                          type="button" data-duration="triple" data-max="180">
+                    <span class="curriculum-duration-option__label">Triple</span>
+                    <span class="curriculum-duration-option__time">Up to 180'</span>
+                  </button>
+                  <button class="button button--outline curriculum-duration-option" 
+                          type="button" data-duration="halfFull" data-max="999">
+                    <span class="curriculum-duration-option__label">Half/Full day</span>
+                    <span class="curriculum-duration-option__time">Longer than 180'</span>
+                  </button>
+                </div>
+                
+                <!-- Recommendation Status -->
+                <div class="curriculum-recommendation" id="curriculum-recommendation">
+                  <span class="curriculum-recommendation__text">Select a lesson duration to see recommendations</span>
+                </div>
+                
+                <!-- Curriculum Structure Inputs -->
+                <div class="curriculum-structure-inputs">
+                  <div class="curriculum-structure-row">
+                    <div class="form__group">
+                      <label class="form__label" for="curriculum-topics">Topics per lesson</label>
+                      <input class="form__input" type="number" id="curriculum-topics" 
+                             min="1" max="10" value="2" />
+                    </div>
+                    
+                    <div class="form__group">
+                      <label class="form__label" for="curriculum-objectives">Objectives per topic</label>
+                      <input class="form__input" type="number" id="curriculum-objectives" 
+                             min="1" max="5" value="2" />
+                    </div>
+                    
+                    <div class="form__group">
+                      <label class="form__label" for="curriculum-tasks">Tasks per objective</label>
+                      <input class="form__input" type="number" id="curriculum-tasks" 
+                             min="1" max="5" value="2" />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -631,6 +687,10 @@
                   <button class="button button--small button--outline coursebuilder-curriculum-preview__mode" 
                           type="button" data-mode="objectives">
                     Lesson Objectives
+                  </button>
+                  <button class="button button--small button--outline coursebuilder-curriculum-preview__mode" 
+                          type="button" data-mode="all">
+                    All Details
                   </button>
                 </div>
               </div>
