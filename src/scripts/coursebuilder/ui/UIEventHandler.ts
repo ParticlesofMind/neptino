@@ -60,7 +60,7 @@ export class UIEventHandler {
  });
 
  // Navigation selection events
- document.querySelectorAll('elements').forEach((button) => {
+ document.querySelectorAll('.builder__nav-course .nav-course__item').forEach((button) => {
  button.addEventListener("click", this.handleNavigationSelection.bind(this));
  });
 
@@ -165,7 +165,8 @@ export class UIEventHandler {
  private handleNavigationSelection(event: Event): void {
  event.preventDefault();
  const button = event.currentTarget as HTMLElement;
- const navTitle = button.title;
+ const label = button.querySelector('.icon-label');
+ const navTitle = label?.textContent;
 
  if (!navTitle) return;
 
@@ -202,8 +203,8 @@ export class UIEventHandler {
  this.toolStateManager.updateToolSettings("pen", { color: colorValue });
  } else if (currentTool === "text") {
  this.toolStateManager.updateToolSettings("text", { color: colorValue });
- } else if (currentTool === "highlighter") {
- this.toolStateManager.updateToolSettings("highlighter", {
+ } else if (currentTool === "brush") {
+ this.toolStateManager.updateToolSettings("brush", {
  color: colorValue,
  });
  } else if (currentTool === "shapes") {
@@ -253,10 +254,10 @@ export class UIEventHandler {
  [setting]: numericValue,
  });
  } else if (
- currentTool === "highlighter" &&
+ currentTool === "brush" &&
  (setting === "size" || setting === "opacity")
  ) {
- this.toolStateManager.updateToolSettings("highlighter", {
+ this.toolStateManager.updateToolSettings("brush", {
  [setting]: numericValue,
  });
  } else if (currentTool === "shapes" && setting === "strokeWidth") {

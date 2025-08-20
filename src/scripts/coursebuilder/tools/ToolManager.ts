@@ -3,11 +3,11 @@
  * Manages all drawing tools and their interactions with the canvas
  */
 
-import { FederatedPointerEvent, Container, DisplayObject } from "pixi.js";
+import { FederatedPointerEvent, Container, Graphics as PixiGraphics } from "pixi.js";
 import { Tool, ToolSettings } from "./ToolInterface";
 import { SelectionTool } from "./SelectionTool";
 import { PenTool } from "./PenTool";
-import { HighlighterTool } from "./HighlighterTool";
+import { BrushTool } from "./BrushTool";
 import { TextTool } from "./TextTool";
 import { ShapesTool } from "./ShapesTool";
 import { EraserTool } from "./EraserTool";
@@ -30,7 +30,7 @@ export class ToolManager {
  fontSize: 16,
  color: "#000000",
  },
- highlighter: {
+ brush: {
  color: "#ffff00", // Bright yellow
  opacity: 0.8, // Increased opacity for better visibility
  size: 20, // Larger size for better visibility
@@ -47,13 +47,40 @@ export class ToolManager {
  };
 
  this.initializeTools();
+ this.setupGlobalKeyboardHandlers();
  }
+
+ /**
+ * Setup global keyboard event handlers
+ */
+ private setupGlobalKeyboardHandlers(): void {
+ document.addEventListener('keydown', this.handleGlobalKeyDown);
+ }
+
+ /**
+ * Bound method for global keyboard handling
+ */
+ private handleGlobalKeyDown = (event: KeyboardEvent): void => {
+ if (!this.activeTool) return;
+
+ // Handle tool-specific keyboard events
+ const toolName = this.activeTool.name;
+ 
+ switch (toolName) {
+ case 'pen':
+ // Pass keyboard events to pen tool
+ if (typeof (this.activeTool as any).onKeyDown === 'function') {
+ (this.activeTool as any).onKeyDown(event);
+ }
+ break;
+ }
+ };
 
  private initializeTools(): void {
  // Register all tools
  this.tools.set("selection", new SelectionTool());
  this.tools.set("pen", new PenTool());
- this.tools.set("highlighter", new HighlighterTool());
+ this.tools.set("brush", new BrushTool());
  this.tools.set("text", new TextTool());
  this.tools.set("shapes", new ShapesTool());
  this.tools.set("eraser", new EraserTool());
@@ -152,7 +179,7 @@ export class ToolManager {
  const toolName = this.activeTool.name;
 
  // Check if the tool is actively drawing
- if (toolName === "pen" || toolName === "highlighter") {
+ if (toolName === "pen" || toolName === "brush") {
  // Only log if the tool is currently drawing (we need to check the tool's state)
  const tool = this.activeTool as any;
  return tool.isDrawing === true;
@@ -184,15 +211,15 @@ export class ToolManager {
  /**
  * Convenience wrappers for managing display objects through the manager
  */
- public addDisplayObject(obj: DisplayObject): void {
+ public addDisplayObject(obj: any): void {
  this.displayManager?.add(obj);
  }
 
- public removeDisplayObject(obj: DisplayObject): void {
+ public removeDisplayObject(obj: any): void {
  this.displayManager?.remove(obj);
  }
 
- public getDisplayObjects(): DisplayObject[] {
+ public getDisplayObjects(): any[] {
  return this.displayManager?.getObjects() || [];
  }
 
@@ -205,8 +232,8 @@ export class ToolManager {
  case "pen":
  this.updateToolSettings("pen", { color });
  break;
- case "highlighter":
- this.updateToolSettings("highlighter", { color });
+ case "brush":
+ this.updateToolSettings("brush", { color });
  break;
  case "text":
  this.updateToolSettings("text", { color });
@@ -230,6 +257,9 @@ export class ToolManager {
  if (this.activeTool) {
  this.activeTool.onDeactivate();
  }
+
+ // Remove keyboard event listeners
+ document.removeEventListener('keydown', this.handleGlobalKeyDown);
 
  // Clear all tools
  this.tools.clear();

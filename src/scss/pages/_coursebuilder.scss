@@ -1,950 +1,426 @@
 // ==========================================================================
-// COURSEBUILDER PAGE LAYOUT
+// COURSEBUILDER MAIN CONTAINER
 // ==========================================================================
 
-.coursebuilder-page {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.coursebuilder-main {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-// Coursebuilder sections
-.coursebuilder-section {
-  display: none;
-  
-  &--active {
-    display: block;
-  }
-
-  &--setup {
+.coursebuilder__main {
     display: flex;
-    flex: 1;
-  }
 
-  &--setup.coursebuilder-section--active {
-    display: flex;
-  }
-}
-
-// Schedule config specific styling
-.coursebuilder-schedule-config {
-  &__heading {
-    margin: 0 0 var(--spacing-4) 0;
-    padding: var(--spacing-4) var(--spacing-5) 0;
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text);
-    border-bottom: 1px solid var(--color-neutral-100);
-  }
-}
-
-// Day selector for schedule form
-.coursebuilder-day-selector {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-2);
-  
-  &__button {
-    min-width: 48px;
-    padding: var(--spacing-2) var(--spacing-3);
-    transition: var(--transition-fast);
-    
-    &:hover {
-      background: var(--color-primary-50);
-      border-color: var(--color-primary-300);
-    }
-    
-    &.button--primary {
-      background: var(--color-primary-500);
-      border-color: var(--color-primary-500);
-      color: var(--color-white);
-      
-      &:hover {
-        background: var(--color-primary-600);
-        border-color: var(--color-primary-600);
-      }
-    }
-  }
-}
-
-// Additional coursebuilder section behaviors
-.coursebuilder-section {
-  &--setup {
-    display: flex;
-    flex: 1;
-    
-    .coursebuilder-sidebar {
-      flex-shrink: 0;
-    }
-  }
-  
-  &--create {
-    display: none; // Will be shown when active
-    flex: 1;
-    padding: var(--spacing-4);
-  }
-  
-  &--preview,
-  &--launch {
-    display: none; // Will be shown when active
-    flex: 1;
-    padding: var(--spacing-4);
-  }
-}
-
-// Coursebuilder articles and content - only show active article
-.coursebuilder-article {
-  display: none; // Hide all by default
-  flex: 1;
-  padding: var(--spacing-6);
-
-  
-  &--active {
-    display: block; // Show only the active article
-  }
-}
-
-.coursebuilder-content {
-  max-width: none; // Remove width constraint
-  margin: 0;
-  
-  // Classification article gets full width
-  #classification & {
-    max-width: none;
-    width: 100%;
-  }
-}
-
-// Coursebuilder content wrapper for setup section
-.coursebuilder-content-wrapper {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--spacing-6); // Add padding to the wrapper
-  
-  // Give classification more space
-  &:has(#classification.coursebuilder-article--active) {
-    padding: var(--spacing-8) var(--spacing-10);
-  }
-}
-
-// Basic placeholder styling for development
-.coursebuilder-placeholder {
-  text-align: center;
-  color: var(--color-text-secondary);
-  font-style: italic;
-  padding: var(--spacing-8);
 }
 
 // ==========================================================================
-// COURSEBUILDER FORM LAYOUT
+// SECTION VISIBILITY CONTROLS
 // ==========================================================================
 
-.coursebuilder-form {
-  &__row {
-    display: flex;
-    gap: var(--spacing-4);
-    align-items: end;
-    margin-bottom: var(--spacing-8); // Increased spacing between rows
-    
-    // Row 1: Class Year | Curricular Framework (side by side, equal width)
-    &:first-of-type {
-      .form__group {
-        flex: 1;
-      }
-    }
-    
-    // Row 2: Domain → Subject → Topic → Subtopic (hierarchical flow)
-    &--hierarchical {
-      margin-bottom: var(--spacing-10); // Extra spacing after hierarchical row
-      
-      .form__group {
-        flex: 1;
-        min-width: 0; // Allow flex items to shrink
-      }
-    }
-    
-    // Row 3: Previous Course - Current Course - Next Course (equal width sequence)
-    &--sequence {
-      .form__group {
-        flex: 1;
-      }
-    }
-  }
-  
-  &__arrow {
-    color: var(--color-primary-600);
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-bold);
-    margin: 0 var(--spacing-2);
-    padding-bottom: var(--spacing-3); // Align with form elements
-    flex-shrink: 0;
-    
-    // Make arrows more prominent
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    
-    // Add subtle animation on hover
-    transition: var(--transition-fast);
-    
-    &:hover {
-      transform: translateX(2px);
-      color: var(--color-primary-700);
-    }
-  }
-  
-    // Classification-specific form styling
-    &--classification {
-      .form__label {
-        font-size: var(--font-size-sm);
-        font-weight: var(--font-weight-semibold);
-        color: var(--color-text);
-        text-transform: uppercase;
-        letter-spacing: 0.025em;
-        margin-bottom: var(--spacing-2);
-        
-        &-optional {
-          font-size: var(--font-size-xs);
-          font-weight: var(--font-weight-normal);
-          color: var(--color-text-secondary);
-          text-transform: none;
-          letter-spacing: normal;
-        }
-        
-        &-hint {
-          display: block;
-          font-size: var(--font-size-xs);
-          font-weight: var(--font-weight-normal);
-          color: var(--color-text-secondary);
-          text-transform: none;
-          letter-spacing: normal;
-          margin-top: 2px;
-          font-style: italic;
-        }
-      }    // Add visual separators between rows
-    .coursebuilder-form__row {
-      position: relative;
-      
-      &:not(:last-child)::after {
-        content: '';
-        position: absolute;
-        bottom: calc(-1 * var(--spacing-3));
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(
-          to right,
-          transparent,
-          var(--color-neutral-200) 20%,
-          var(--color-neutral-200) 80%,
-          transparent
-        );
-      }
-    }
-  }
-}
+.section {
+    display: none;
 
-// ==========================================================================
-// COURSEBUILDER SELECT ELEMENTS
-// ==========================================================================
-
-.coursebuilder-select {
-  // Inherit base form select styles - no @extend needed, just apply the styles directly
-  width: 100%;
-  padding: var(--spacing-3) var(--spacing-4);
-  border: 1px solid var(--color-neutral-300);
-  border-radius: var(--radius-medium);
-  font-family: inherit;
-  font-size: var(--font-size-base);
-  transition: var(--transition-fast);
-  background: var(--color-background);
-  cursor: pointer;
-  
-  // Enhanced styling for coursebuilder select elements
-  min-height: 48px;
-  
-  // Custom arrow styling
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right var(--spacing-3) center;
-  background-repeat: no-repeat;
-  background-size: 16px 12px;
-  padding-right: calc(var(--spacing-4) + 24px);
-  
-  &:focus {
-    outline: none;
-    border-color: var(--color-primary-500);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    background-color: var(--color-background);
-  }
-  
-  &:hover:not(:disabled) {
-    border-color: var(--color-primary-400);
-    background-color: var(--color-primary-25);
-  }
-  
-  &:disabled {
-    background-color: var(--color-neutral-50);
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%9ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-    color: var(--color-text-disabled);
-    cursor: not-allowed;
-    
-    &:hover {
-      border-color: var(--color-neutral-300);
-      background-color: var(--color-neutral-50);
-    }
-  }
-  
-  // Better option styling
-  option {
-    padding: var(--spacing-2);
-    background: var(--color-background);
-    color: var(--color-text);
-    
-    &:checked {
-      background: var(--color-primary-100);
-      color: var(--color-primary-800);
-    }
-  }
-}
-
-// ==========================================================================
-// COURSEBUILDER TEMPLATES LAYOUT
-// ==========================================================================
-
-.coursebuilder-template-layout {
-  display: flex;
-  gap: var(--spacing-6);
-  height: calc(100vh - 300px); // Take remaining height minus header/actions space
-  min-height: 500px; // Ensure minimum usable height
-}
-
-.coursebuilder-template-config,
-.coursebuilder-template-preview {
-  flex: 1; // Equal width (50% each minus gap)
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--color-neutral-200);
-  border-radius: var(--radius-large);
-  background: var(--color-background);
-  overflow: hidden; // Contain content within borders
-}
-
-.coursebuilder-template-config {
-  &__heading {
-    margin: 0 0 var(--spacing-3) 0;
-    padding: var(--spacing-4) var(--spacing-5) 0;
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text);
-    border-bottom: 1px solid var(--color-neutral-100);
-  }
-  
-  &__description {
-    margin: 0;
-    padding: 0 var(--spacing-5) var(--spacing-4);
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-    border-bottom: 1px solid var(--color-neutral-100);
-  }
-}
-
-.coursebuilder-template-preview {
-  &__content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: var(--spacing-8);
-    text-align: center;
-  }
-  
-  &__heading {
-    margin: 0 0 var(--spacing-3) 0;
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text);
-  }
-  
-  &__message {
-    margin: 0;
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-    line-height: 1.6;
-  }
-}
-
-// Template action buttons styling
-.coursebuilder-template-actions {
-  margin-bottom: var(--spacing-6);
-  justify-content: flex-start;
-  gap: var(--spacing-3);
-  
-  &__button {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-2);
-  }
-  
-  &__icon {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-bold);
-  }
-}
-
-// ==========================================================================
-// COURSEBUILDER SCHEDULE LAYOUT
-// ==========================================================================
-
-.coursebuilder-schedule-layout {
-  display: flex !important;
-  gap: var(--spacing-6);
-  height: calc(100vh - 300px); // Take remaining height minus header space
-  min-height: 500px; // Ensure minimum usable height
-  width: 100%;
-}
-
-.coursebuilder-schedule-config {
-  flex: 1 1 50%; // Equal width (50% each minus gap)
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--color-neutral-200);
-  border-radius: var(--radius-large);
-  background: var(--color-background);
-  overflow: hidden; // Contain content within borders
-  max-width: calc(50% - var(--spacing-3)); // Ensure it doesn't take full width
-}
-
-.coursebuilder-schedule-preview {
-  flex: 1 1 50%; // Equal width (50% each minus gap)
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--color-neutral-200);
-  border-radius: var(--radius-large);
-  background: var(--color-background-secondary); // Different background to see it
-  overflow: hidden; // Contain content within borders
-  max-width: calc(50% - var(--spacing-3)); // Ensure it doesn't take full width
-}
-
-.coursebuilder-schedule-config {
-  &__heading {
-    margin: 0 0 var(--spacing-4) 0;
-    padding: var(--spacing-4) var(--spacing-5) 0;
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text);
-    border-bottom: 1px solid var(--color-neutral-100);
-  }
-  
-  .coursebuilder-form {
-    flex: 1;
-    padding: var(--spacing-5);
-    overflow-y: auto;
-  }
-}
-
-.coursebuilder-schedule-preview {
-  &__heading {
-    margin: 0 0 var(--spacing-4) 0;
-    padding: var(--spacing-4) var(--spacing-5);
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text);
-    border-bottom: 1px solid var(--color-neutral-100);
-  }
-  
-  &__content {
-    flex: 1;
-    padding: var(--spacing-4) var(--spacing-5);
-    overflow-y: auto;
-  }
-  
-  &__placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 200px;
-    color: var(--color-text-secondary);
-    font-style: italic;
-    text-align: center;
-    border: 2px dashed var(--color-neutral-300);
-    border-radius: var(--radius-medium);
-    
-    p {
-      margin: 0;
-    }
-  }
-  
-  &__row {
-    display: grid;
-    grid-template-columns: 60px 80px 1fr 1fr 40px;
-    gap: var(--spacing-3);
-    align-items: center;
-    padding: var(--spacing-2);
-    border: 1px solid var(--color-neutral-200);
-    border-radius: var(--radius-small);
-    margin-bottom: var(--spacing-2);
-    background: var(--color-background);
-    
-    .lesson-number,
-    .lesson-day {
-      font-weight: var(--font-weight-medium);
-      color: var(--color-text-primary);
-    }
-    
-    .lesson-start-time,
-    .lesson-end-time {
-      padding: var(--spacing-1) var(--spacing-2);
-      border: 1px solid var(--color-neutral-300);
-      border-radius: var(--radius-small);
-      font-size: var(--font-size-small);
-    }
-    
-    .delete-lesson-btn {
-      background: var(--color-error-500);
-      color: var(--color-white);
-      border: none;
-      border-radius: var(--radius-small);
-      width: 24px;
-      height: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      
-      &:hover {
-        background: var(--color-error-600);
-      }
-    }
-  }
-  
-  &__total {
-    padding: var(--spacing-3) var(--spacing-5);
-    border-top: 1px solid var(--color-neutral-200);
-    background: var(--color-neutral-50);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text-primary);
-  }
-}
-
-.coursebuilder-schedule-table {
-  flex: 1;
-  padding: var(--spacing-5);
-  overflow-y: auto;
-}
-
-// ==========================================================================
-// COURSEBUILDER CURRICULUM LAYOUT
-// ==========================================================================
-
-.coursebuilder-curriculum-layout {
-  display: flex !important;
-  gap: var(--spacing-6);
-  height: calc(100vh - 300px); // Take remaining height minus header space
-  min-height: 500px; // Ensure minimum usable height
-  width: 100%;
-}
-
-.coursebuilder-curriculum-config {
-  flex: 1 1 50%; // Equal width (50% each minus gap)
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--color-neutral-200);
-  border-radius: var(--radius-large);
-  background: var(--color-background);
-  overflow: hidden; // Contain content within borders
-  max-width: calc(50% - var(--spacing-3)); // Ensure it doesn't take full width
-}
-
-.coursebuilder-curriculum-preview {
-  flex: 1 1 50%; // Equal width (50% each minus gap)
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--color-neutral-200);
-  border-radius: var(--radius-large);
-  background: var(--color-background);
-  overflow: hidden; // Contain content within borders
-  max-width: calc(50% - var(--spacing-3)); // Ensure it doesn't take full width
-}
-
-.coursebuilder-curriculum-config {
-  &__heading {
-    margin: 0;
-    padding: var(--spacing-4) var(--spacing-5);
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-primary);
-    border-bottom: 1px solid var(--color-neutral-200);
-    background: var(--color-neutral-50);
-  }
-
-  &__content {
-    flex: 1;
-    padding: var(--spacing-5);
-    overflow-y: auto;
-  }
-}
-
-// Curriculum Duration Configuration
-
-.curriculum-duration-options {
-  display: flex;
-  gap: var(--spacing-3);
-  margin-bottom: var(--spacing-5);
-  
-  // Ensure all buttons are equal width
-  > * {
-    flex: 1;
-  }
-}
-
-.curriculum-duration-option {
-  flex: 1;
-  min-width: 120px;
-  padding: var(--spacing-3);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-1);
-  border: 2px solid var(--color-neutral-200);
-  background: var(--color-white);
-  transition: all 0.2s ease;
-  
-  &__label {
-    font-weight: var(--font-weight-semibold);
-    font-size: var(--font-size-sm);
-    color: var(--color-text-primary);
-  }
-  
-  &__time {
-    font-size: var(--font-size-xs);
-    color: var(--color-text-secondary);
-  }
-  
-  &:hover {
-    border-color: var(--color-primary-300);
-    background: var(--color-primary-25);
-  }
-  
-  &--active {
-    border-color: var(--color-primary-500) !important;
-    background: var(--color-primary-50) !important;
-    
-    .curriculum-duration-option__label {
-      color: var(--color-primary-700);
-    }
-    
-    .curriculum-duration-option__time {
-      color: var(--color-primary-600);
-    }
-  }
-  
-  &--recommended {
-    border-color: var(--color-success-500) !important;
-    background: var(--color-success-50) !important;
-    
-    .curriculum-duration-option__label {
-      color: var(--color-success-700);
-    }
-    
-    .curriculum-duration-option__time {
-      color: var(--color-success-600);
-    }
-  }
-  
-  &--not-recommended {
-    border-color: var(--color-error-500) !important;
-    background: var(--color-error-50) !important;
-    
-    .curriculum-duration-option__label {
-      color: var(--color-error-700);
-    }
-    
-    .curriculum-duration-option__time {
-      color: var(--color-error-600);
-    }
-  }
-}
-
-.curriculum-recommendation {
-  margin-bottom: var(--spacing-4);
-  padding: var(--spacing-3);
-  border-radius: var(--radius-medium);
-  text-align: center;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  background: var(--color-neutral-50);
-  border: 1px solid var(--color-neutral-200);
-  color: var(--color-text-secondary);
-  
-  &--recommended {
-    background: var(--color-success-50);
-    border-color: var(--color-success-200);
-    color: var(--color-success-700);
-  }
-  
-  &--not-recommended {
-    background: var(--color-error-50);
-    border-color: var(--color-error-200);
-    color: var(--color-error-700);
-  }
-  
-  &__text {
-    margin: 0;
-  }
-}
-
-.curriculum-structure-inputs {
-  margin-bottom: var(--spacing-5);
-}
-
-.curriculum-structure-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-4);
-  
-  .form__group {
-    margin-bottom: 0;
-  }
-  
-  .form__label {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    margin-bottom: var(--spacing-2);
-  }
-  
-  .form__input {
-    text-align: center;
-    font-weight: var(--font-weight-semibold);
-  }
-}
-
-.coursebuilder-curriculum-preview {
-  &__controls {
-    padding: var(--spacing-4) var(--spacing-5);
-    border-bottom: 1px solid var(--color-neutral-100);
-    background: var(--color-neutral-25);
-  }
-  
-  &__label {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text-secondary);
-    margin-right: var(--spacing-3);
-  }
-  
-  &__modes {
-    display: inline-flex;
-    gap: var(--spacing-2);
-  }
-  
-  &__mode {
-    font-size: var(--font-size-xs);
-    padding: var(--spacing-1) var(--spacing-2);
-    
     &--active {
-      background: var(--color-primary-500) !important;
-      color: var(--color-white) !important;
-      border-color: var(--color-primary-500) !important;
-      
-      &:hover {
-        background: var(--color-primary-600) !important;
-        border-color: var(--color-primary-600) !important;
-      }
-      
-      &:focus {
-        background: var(--color-primary-500) !important;
-        border-color: var(--color-primary-500) !important;
-        box-shadow: 0 0 0 2px var(--color-primary-200) !important;
-      }
+        display: flex;
+
     }
-  }
 
-// More specific selector to ensure active state works
-.button.button--outline.coursebuilder-curriculum-preview__mode.coursebuilder-curriculum-preview__mode--active {
-  background: var(--color-primary-500) !important;
-  color: var(--color-white) !important;
-  border-color: var(--color-primary-500) !important;
-  
-  &:hover {
-    background: var(--color-primary-600) !important;
-    border-color: var(--color-primary-600) !important;
-  }
-}
-  
-  &__content {
-    flex: 1;
-    padding: var(--spacing-5);
-    overflow-y: auto;
-  }
+    &--setup {
+        display: none;
+
+        &.section--active {
+            display: flex;
+            flex: 1;
+        }
+    }
+
+    &--create {
+        display: none;
+
+        &.section--active {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+    }
 }
 
-// CURRICULUM LESSON TEMPLATES
-.curriculum-lesson {
-  margin-bottom: var(--spacing-6);
-  border: 1px solid var(--color-neutral-200);
-  border-radius: var(--radius-lg);
-  background: var(--color-white);
-  
-  &--full {
-    padding: var(--spacing-6);
-    box-shadow: var(--shadow-sm);
-  }
-  
-  &--simple {
+// ==========================================================================
+// ARTICLE VISIBILITY CONTROLS (for setup section navigation)
+// ==========================================================================
+
+.content__article {
+    display: none;
+
+    &--active {
+        display: block;
+    }
+}
+
+// ==========================================================================
+// CREATE GRID
+// ==========================================================================
+
+.builder {
+    display: grid;
+    grid-template-columns: 70px 300px 1fr 250px;
+    grid-template-rows: 60px 1fr;
+    height: calc(100vh - 6vh);
+    width: 100%;
+    gap: 0.5rem;
+    padding: 1.25rem;
+
+    // Common styling for all grid items
+    >* {
+        background: var(--color-background); // Even lighter - pure white
+        border-radius: var(--radius-large);
+        border: 1px solid var(--color-neutral-200); // Lighter border for modern look
+        padding: var(--spacing-3);
+        box-shadow:
+            0 1px 3px rgba(0, 0, 0, 0.05),
+            0 1px 2px rgba(0, 0, 0, 0.1); // Softer, more subtle shadow
+    }
+
+
+    // ==========================================================================
+    // ROW 1 - SPECIFIC POSITIONING & LAYOUT
+    // ==========================================================================
+
+    &__mode {
+        grid-column: 1 / 3;
+        grid-row: 1;
+    }
+
+    &__tools {
+        grid-column: 3;
+        grid-row: 1;
+    }
+
+    &__nav {
+        grid-column: 4;
+        grid-row: 1;
+        justify-content: flex-start; // Ensure items start from the left, not center
+    }
+
+    // ==========================================================================
+    // ROW 2 - SPECIFIC POSITIONING & LAYOUT
+    // ==========================================================================
+
+    &__media {
+        grid-column: 1;
+        grid-row: 2;
+        flex-direction: column;
+        overflow-y: auto;
+    }
+
+    &__search {
+        grid-column: 2;
+        grid-row: 2;
+        display: flex;
+        align-items: flex-start; // Align to top instead of center
+        padding: var(--spacing-2); // Reduce padding to give input more room
+
+
+    }
+
+    &__canvas {
+        grid-column: 3;
+        grid-row: 2;
+        background: var(--color-background); // Override for canvas
+        overflow: auto;
+        padding: 2rem;
+        box-shadow:
+            inset 6px 6px 12px rgba(0, 0, 0, 0.1),
+            inset -6px -6px 12px rgba(255, 255, 255, 0.8),
+            2px 2px 6px rgba(0, 0, 0, 0.05);
+
+        // Ensure canvas maintains A4 dimensions
+        canvas {
+            width: 794px;
+            height: 1123px;
+            max-width: none; // Override media.scss
+            display: block;
+            margin: 0 auto; // Center the canvas
+        }
+    }
+
+    &__preview {
+        grid-column: 4;
+        grid-row: 2;
+        overflow-y: auto;
+
+        .preview__content {
+            display: none;
+            height: 100%;
+
+            &--active {
+                display: block;
+            }
+        }
+    }
+}
+
+// ==========================================================================
+// PREVIEW CONTENT STYLES
+// ==========================================================================
+
+.outline-preview {
+    padding: var(--spacing-2);
+
+    &__loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100px;
+        color: var(--color-neutral-500);
+        font-style: italic;
+    }
+
+    &__content {
+        .lesson {
+            margin-bottom: var(--spacing-4);
+
+            &__title {
+                font-weight: var(--font-weight-bold);
+                font-size: var(--font-size-base);
+                color: var(--color-text-primary);
+                margin-bottom: var(--spacing-2);
+            }
+
+            &__topics {
+                margin-left: var(--spacing-4);
+
+                .topic {
+                    margin-bottom: var(--spacing-1);
+                    font-size: var(--font-size-sm);
+                    color: var(--color-text-secondary);
+
+                    &:before {
+                        content: "•";
+                        margin-right: var(--spacing-2);
+                        color: var(--color-primary-300);
+                    }
+                }
+            }
+        }
+    }
+}
+
+.canvas-preview,
+.marks-preview {
     padding: var(--spacing-4);
-    border-radius: var(--radius-md);
-  }
-  
-  &__title {
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
-    line-height: var(--line-height-tight);
-    margin-bottom: var(--spacing-5);
-    padding-bottom: var(--spacing-3);
-    border-bottom: 2px solid var(--color-primary-100);
-    
-    &:focus {
-      outline: 2px solid var(--color-primary-500);
-      outline-offset: 2px;
-      border-radius: var(--radius-sm);
-    }
-    
-    // Simple version styling
-    .curriculum-lesson--simple & {
-      font-size: var(--font-size-lg);
-      margin-bottom: var(--spacing-2);
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-  }
-  
-  &__body {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-5);
-  }
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+
+    .placeholder {
+        color: var(--color-neutral-400);
+        font-style: italic;
+        text-align: center;
+    }
 }
 
-.curriculum-topic {
-  background: var(--color-neutral-25);
-  border: 1px solid var(--color-neutral-100);
-  border-radius: var(--radius-md);
-  
-  &:not(:last-child) {
-    margin-bottom: var(--spacing-4);
-  }
-  
-  .curriculum-lesson--full & {
+// ==========================================================================
+// UNIFIED ICON STYLING - NEUMORPHIC DESIGN FOR ALL COURSEBUILDER ICONS
+// ==========================================================================
+
+.mode,
+.media,
+.nav-course,
+.tools {
+    display: flex;
+    gap: var(--spacing-4); // Ensure proper spacing between items
+    align-items: center;
+
+    &__item {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-2);
+        width: 50px; // Corrected size
+        height: 50px; // Corrected size
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-large);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: var(--color-background); // Lighter - pure white
+        border: 1px solid var(--color-neutral-200); // Lighter border
+        box-shadow:
+            0 1px 3px rgba(0, 0, 0, 0.08),
+            0 1px 2px rgba(0, 0, 0, 0.12); // Modern, subtle shadow
+
+        &:hover {
+            transform: translateY(-1px);
+            background: var(--color-neutral-50); // Light grey on hover
+            border-color: var(--color-neutral-300);
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.10),
+                0 1px 3px rgba(0, 0, 0, 0.08); // Enhanced hover shadow
+        }
+
+        &--active {
+            background: var(--color-primary-300); // More subtle, desaturated blue
+            color: var(--color-background);
+            border-color: var(--color-primary-400);
+            box-shadow:
+                0 2px 8px rgba(26, 140, 255, 0.15), // Blue-tinted shadow
+                0 1px 3px rgba(26, 140, 255, 0.10),
+                inset 0 1px 2px rgba(255, 255, 255, 0.2); // Inner light for depth
+
+            .icon {
+                filter: brightness(0) invert(1); // Keep icons white when selected
+            }
+
+            // Keep same background on hover for active items
+            &:hover {
+                background: var(--color-primary-300); // Same background, no color change
+                border-color: var(--color-primary-400); // Same border
+                transform: translateY(-1px);
+                box-shadow:
+                    0 3px 12px rgba(26, 140, 255, 0.20), // Enhanced blue shadow only
+                    0 2px 6px rgba(26, 140, 255, 0.15),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.3); // Slightly brighter inner light
+            }
+        }
+    }
+
+
+    // Target icon labels within active items across all sections
+    &__item--active .icon-label {
+        color: var(--color-background);
+    }
+}
+
+// ==========================================================================
+// CANVAS AREA MODERNIZATION
+// ==========================================================================
+
+// ==========================================================================
+// PREVIEW SYSTEM STYLING
+// ==========================================================================
+
+.preview__content {
     padding: var(--spacing-4);
-  }
-  
-  .curriculum-lesson--simple & {
-    padding: var(--spacing-3);
-    background: transparent;
-    border: none;
-    border-left: 3px solid var(--color-primary-200);
-    border-radius: 0;
-    padding-left: var(--spacing-4);
-  }
-  
-  &__title {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-primary);
-    margin-bottom: var(--spacing-3);
-    
-    &:focus {
-      outline: 2px solid var(--color-secondary-500);
-      outline-offset: 2px;
-      border-radius: var(--radius-sm);
+
+    .loading,
+    .error,
+    .no-curriculum {
+        text-align: center;
+        padding: var(--spacing-6);
+        color: var(--color-neutral-500);
+        font-style: italic;
     }
-    
-    .curriculum-lesson--simple & {
-      font-size: var(--font-size-base);
-      margin-bottom: var(--spacing-2);
+
+    .error {
+        color: var(--color-error, #dc2626);
     }
-  }
-  
-  &__objectives {
-    .curriculum-lesson--full & {
-      background: var(--color-white);
-      padding: var(--spacing-3);
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--color-neutral-100);
+
+    .outline-preview {
+        background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+        border-radius: var(--border-radius-lg);
+        padding: var(--spacing-6);
+        box-shadow:
+            0 1px 3px rgba(0, 0, 0, 0.06),
+            0 1px 2px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+
+        h3 {
+            color: var(--color-primary-700, #1e40af);
+            font-weight: var(--font-weight-bold);
+            margin-bottom: var(--spacing-6);
+            font-size: var(--font-size-xl);
+            text-align: center;
+            position: relative;
+            padding-bottom: var(--spacing-3);
+
+            &::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 60px;
+                height: 3px;
+                background: linear-gradient(90deg, var(--color-primary-400, #60a5fa) 0%, var(--color-primary-600, #2563eb) 100%);
+                border-radius: 2px;
+            }
+        }
+
+        .lesson {
+            margin-bottom: var(--spacing-5);
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-4);
+            border-left: 4px solid var(--color-primary-400, #60a5fa);
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.9);
+                transform: translateX(2px);
+                box-shadow:
+                    0 4px 6px rgba(0, 0, 0, 0.05),
+                    0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+
+            h4 {
+                font-weight: var(--font-weight-bold);
+                color: var(--color-neutral-800);
+                margin-bottom: var(--spacing-3);
+                font-size: var(--font-size-lg);
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-2);
+            }
+
+            .topics {
+                margin: 0;
+                padding: 0;
+                list-style: none;
+                display: grid;
+                gap: var(--spacing-2);
+
+                li {
+                    color: var(--color-neutral-600);
+                    line-height: var(--line-height-relaxed);
+                    padding: var(--spacing-2) var(--spacing-3);
+                    background: rgba(248, 250, 252, 0.8);
+                    border-radius: var(--border-radius-sm);
+                    position: relative;
+                    padding-left: var(--spacing-6);
+                    transition: all 0.15s ease;
+
+                    &::before {
+                        content: '•';
+                        color: var(--color-primary-500, #3b82f6);
+                        font-weight: var(--font-weight-bold);
+                        position: absolute;
+                        left: var(--spacing-3);
+                        top: 50%;
+                        transform: translateY(-50%);
+                        font-size: var(--font-size-lg);
+                    }
+
+                    &:hover {
+                        background: rgba(239, 246, 255, 0.9);
+                        color: var(--color-neutral-700);
+                        transform: translateX(4px);
+                    }
+                }
+            }
+        }
+
+        // Add subtle animation on load
+        animation: fadeInUp 0.6s ease-out;
     }
-  }
 }
 
-.curriculum-objectives {
-  &__header {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-secondary);
-    margin-bottom: var(--spacing-2);
-    
-    .curriculum-lesson--simple & {
-      display: none;
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
     }
-  }
-  
-  &__list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    
-    &--simple {
-      margin-top: var(--spacing-2);
-    }
-  }
-}
 
-.curriculum-objective {
-  padding: var(--spacing-2) 0;
-  color: var(--color-text-primary);
-  line-height: var(--line-height-relaxed);
-  position: relative;
-  
-  &:focus {
-    outline: 2px solid var(--color-accent-500);
-    outline-offset: 2px;
-    border-radius: var(--radius-sm);
-    background: var(--color-accent-25);
-  }
-  
-  .curriculum-lesson--full & {
-    padding: var(--spacing-2) var(--spacing-3);
-    padding-left: var(--spacing-8);
-    
-    &::before {
-      content: "•";
-      position: absolute;
-      left: var(--spacing-3);
-      color: var(--color-accent-500);
-      font-weight: var(--font-weight-bold);
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
-    
-    &:not(:last-child) {
-      border-bottom: 1px solid var(--color-neutral-100);
-    }
-  }
-  
-  .curriculum-lesson--simple & {
-    font-size: var(--font-size-sm);
-    padding: var(--spacing-1) 0;
-    padding-left: var(--spacing-4);
-    
-    &::before {
-      content: "◦";
-      position: absolute;
-      left: 0;
-      color: var(--color-text-tertiary);
-    }
-  }
 }

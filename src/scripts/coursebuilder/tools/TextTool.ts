@@ -75,7 +75,10 @@ export class TextTool extends BaseTool {
  if (canvasElement) {
  this.canvasContainer = canvasElement.parentElement || document.body;
  } else {
- this.canvasContainer = document.body;
+ // Fallback: look for coursebuilder canvas container
+ this.canvasContainer = document.getElementById("canvas-container") || 
+ document.querySelector(".coursebuilder__canvas") || 
+ document.body;
  }
  }
 
@@ -87,14 +90,33 @@ export class TextTool extends BaseTool {
  `📝 TEXT: Creating professional text area at global (${Math.round(x)}, ${Math.round(y)})`,
  );
 
+ // Get canvas bounds for proper positioning
+ const canvasElement = document.querySelector("canvas");
+ let adjustedX = x;
+ let adjustedY = y;
+
+ if (canvasElement && this.canvasContainer) {
+ const canvasRect = canvasElement.getBoundingClientRect();
+ const containerRect = this.canvasContainer.getBoundingClientRect();
+ 
+ // Adjust coordinates relative to the canvas container
+ adjustedX = x - containerRect.left + canvasRect.left;
+ adjustedY = y - containerRect.top + canvasRect.top;
+ 
+ console.log(
+ `📝 TEXT: Adjusted position to (${Math.round(adjustedX)}, ${Math.round(adjustedY)}) relative to canvas bounds`,
+ );
+ }
+
  // Create HTML textarea for professional text entry
  this.activeTextArea = document.createElement("textarea");
 
  // Apply CSS classes for styling instead of inline styles
- this.activeTextArea
+ this.activeTextArea.className = "coursebuilder-text-input";
  this.activeTextArea.style.position = "absolute";
- this.activeTextArea.style.left = `${x}px`;
- this.activeTextArea.style.top = `${y}px`;
+ this.activeTextArea.style.left = `${adjustedX}px`;
+ this.activeTextArea.style.top = `${adjustedY}px`;
+ this.activeTextArea.style.zIndex = "1000"; // Ensure it's above canvas
  
  // Apply settings through CSS properties
  this.updateTextAreaSettings();

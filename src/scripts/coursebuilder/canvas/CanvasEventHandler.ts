@@ -125,7 +125,7 @@ export class CanvasEventHandler {
  case "text":
  canvas
  break;
- case "highlighter":
+ case "brush":
  canvas
  break;
  default:

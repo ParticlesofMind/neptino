@@ -44,6 +44,9 @@ export class SelectionTool extends BaseTool {
  constructor() {
  super("selection", "default");
  this.settings = {};
+ 
+ // Bind keyboard event handlers
+ this.handleKeyDown = this.handleKeyDown.bind(this);
  }
 
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
@@ -361,15 +364,126 @@ export class SelectionTool extends BaseTool {
  private updateTransform(currentPoint: Point): void {
  if (!this.activeHandle || !this.selectionGroup) return;
 
+ const bounds = this.selectionGroup.bounds;
  const dx = currentPoint.x - this.transformStart.x;
  const dy = currentPoint.y - this.transformStart.y;
 
- // Simple scaling for now (can be enhanced with more complex transforms)
+ console.log(`🎯 SELECTION: Transforming with ${this.activeHandle.position} handle, dx: ${dx}, dy: ${dy}`);
+
+ // Enhanced transformation based on handle position
  if (this.activeHandle.type === "corner") {
- this.scaleSelection(dx, dy, this.activeHandle.position);
+ this.performCornerResize(dx, dy, this.activeHandle.position, bounds);
+ } else if (this.activeHandle.type === "edge") {
+ this.performEdgeResize(dx, dy, this.activeHandle.position, bounds);
  }
 
+ // Update selection group after transformation
+ this.createSelectionGroup();
  this.transformStart.copyFrom(currentPoint);
+ }
+
+ private performCornerResize(dx: number, dy: number, corner: string, bounds: Rectangle): void {
+ if (this.selectedObjects.length === 0) return;
+
+ // Calculate scale factors based on corner being dragged
+ let scaleX = 1;
+ let scaleY = 1;
+ let pivotX = bounds.x + bounds.width / 2;
+ let pivotY = bounds.y + bounds.height / 2;
+
+ switch (corner) {
+ case "tl": // Top-left corner
+ scaleX = 1 - dx / bounds.width;
+ scaleY = 1 - dy / bounds.height;
+ pivotX = bounds.x + bounds.width;
+ pivotY = bounds.y + bounds.height;
+ break;
+ case "tr": // Top-right corner
+ scaleX = 1 + dx / bounds.width;
+ scaleY = 1 - dy / bounds.height;
+ pivotX = bounds.x;
+ pivotY = bounds.y + bounds.height;
+ break;
+ case "bl": // Bottom-left corner
+ scaleX = 1 - dx / bounds.width;
+ scaleY = 1 + dy / bounds.height;
+ pivotX = bounds.x + bounds.width;
+ pivotY = bounds.y;
+ break;
+ case "br": // Bottom-right corner
+ scaleX = 1 + dx / bounds.width;
+ scaleY = 1 + dy / bounds.height;
+ pivotX = bounds.x;
+ pivotY = bounds.y;
+ break;
+ }
+
+ // Ensure minimum scale
+ scaleX = Math.max(0.1, scaleX);
+ scaleY = Math.max(0.1, scaleY);
+
+ // Apply transformation to all selected objects
+ this.selectedObjects.forEach(obj => {
+ if (obj.scale && obj.position) {
+ // Store original position relative to pivot
+ const relativeX = obj.position.x - pivotX;
+ const relativeY = obj.position.y - pivotY;
+
+ // Apply scale
+ obj.scale.x = Math.abs(obj.scale.x * scaleX);
+ obj.scale.y = Math.abs(obj.scale.y * scaleY);
+
+ // Adjust position based on new scale
+ obj.position.x = pivotX + relativeX * scaleX;
+ obj.position.y = pivotY + relativeY * scaleY;
+ }
+ });
+ }
+
+ private performEdgeResize(dx: number, dy: number, edge: string, bounds: Rectangle): void {
+ if (this.selectedObjects.length === 0) return;
+
+ let scaleX = 1;
+ let scaleY = 1;
+ let pivotX = bounds.x + bounds.width / 2;
+ let pivotY = bounds.y + bounds.height / 2;
+
+ switch (edge) {
+ case "t": // Top edge
+ scaleY = 1 - dy / bounds.height;
+ pivotY = bounds.y + bounds.height;
+ break;
+ case "r": // Right edge
+ scaleX = 1 + dx / bounds.width;
+ pivotX = bounds.x;
+ break;
+ case "b": // Bottom edge
+ scaleY = 1 + dy / bounds.height;
+ pivotY = bounds.y;
+ break;
+ case "l": // Left edge
+ scaleX = 1 - dx / bounds.width;
+ pivotX = bounds.x + bounds.width;
+ break;
+ }
+
+ // Ensure minimum scale
+ scaleX = Math.max(0.1, scaleX);
+ scaleY = Math.max(0.1, scaleY);
+
+ // Apply transformation to all selected objects
+ this.selectedObjects.forEach(obj => {
+ if (obj.scale && obj.position) {
+ const relativeX = obj.position.x - pivotX;
+ const relativeY = obj.position.y - pivotY;
+
+ obj.scale.x = Math.abs(obj.scale.x * scaleX);
+ obj.scale.y = Math.abs(obj.scale.y * scaleY);
+
+ obj.position.x = pivotX + relativeX * scaleX;
+ obj.position.y = pivotY + relativeY * scaleY;
+ }
+ });
  }
 
  private updateDrag(currentPoint: Point): void {
@@ -390,20 +504,6 @@ export class SelectionTool extends BaseTool {
  this.createSelectionGroup();
 
  this.transformStart.copyFrom(currentPoint);
- }
-
- private scaleSelection(dx: number, dy: number, _corner: string): void {
- // Simplified scaling - can be enhanced
- const scaleFactor = 1 + Math.max(dx, dy) / 100;
-
- this.selectedObjects.forEach((obj) => {
- if (obj.scale) {
- obj.scale.x *= scaleFactor;
- obj.scale.y *= scaleFactor;
- }
- });
-
- this.createSelectionGroup();
  }
 
  private findObjectsInBounds(bounds: Rectangle, container: Container): any[] {
@@ -562,6 +662,14 @@ export class SelectionTool extends BaseTool {
  this.removeSelectionGroup();
  }
 
+ onActivate(): void {
+ super.onActivate();
+ 
+ // Add keyboard event listener for delete functionality
+ document.addEventListener('keydown', this.handleKeyDown);
+ console.log('🎯 SELECTION: Activated with keyboard shortcuts');
+ }
+
  onDeactivate(): void {
  super.onDeactivate();
  this.clearSelection();
@@ -572,8 +680,57 @@ export class SelectionTool extends BaseTool {
  this.marqueeGraphics = null;
  }
 
+ // Remove keyboard event listener
+ document.removeEventListener('keydown', this.handleKeyDown);
+
  this.isSelecting = false;
  this.isTransforming = false;
+ }
+
+ /**
+ * Handle keyboard events for selection operations
+ */
+ private handleKeyDown = (event: KeyboardEvent): void => {
+ // Only handle events when this tool is active
+ if (this.selectedObjects.length === 0) return;
+
+ switch (event.key) {
+ case 'Backspace':
+ case 'Delete':
+ event.preventDefault();
+ this.deleteSelectedObjects();
+ console.log('🎯 SELECTION: Deleted selected objects via keyboard');
+ break;
+ case 'Escape':
+ this.clearSelection();
+ console.log('🎯 SELECTION: Cleared selection via keyboard');
+ break;
+ }
+ };
+
+ /**
+ * Delete all currently selected objects
+ */
+ private deleteSelectedObjects(): void {
+ if (this.selectedObjects.length === 0) return;
+
+ const deletedCount = this.selectedObjects.length;
+ 
+ // Remove objects from their parent containers
+ this.selectedObjects.forEach(obj => {
+ if (obj.parent) {
+ obj.parent.removeChild(obj);
+ }
+ // Destroy the object to free memory
+ if (obj.destroy && typeof obj.destroy === 'function') {
+ obj.destroy();
+ }
+ });
+
+ // Clear selection
+ this.clearSelection();
+ 
+ console.log(`🎯 SELECTION: Deleted ${deletedCount} objects`);
  }
 
  updateSettings(settings: SelectionSettings): void {

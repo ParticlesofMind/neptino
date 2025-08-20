@@ -66,13 +66,35 @@
             box-shadow: 0 0 0 3px var(--color-success-100);
         }
     }
-
-    // Type-specific styling
+        // Modern search input styling
     &--search {
-        padding-left: var(--spacing-10); // Space for search icon
-        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>');
-        background-repeat: no-repeat;
-        background-position: var(--spacing-4) center;
-        background-size: 16px;
+      width: 100%;
+      padding: var(--spacing-3) var(--spacing-4);
+      border: 1px solid var(--color-neutral-200);
+      border-radius: var(--radius-large); // More rounded
+      background: var(--color-background);
+      font-size: var(--font-size-sm);
+      color: var(--color-text-primary);
+      transition: all 0.2s ease;
+      box-sizing: border-box; // Ensure proper sizing within container
+      
+      &::placeholder {
+        color: var(--color-neutral-400);
+        font-style: italic;
+      }
+      
+      &:focus {
+        outline: none;
+        border-color: var(--color-primary-300); // More subtle blue
+        box-shadow: 
+          0 0 0 2px rgba(26, 140, 255, 0.1), // Softer focus ring
+          0 1px 3px rgba(0, 0, 0, 0.1);
+        background: var(--color-background);
+      }
+      
+      &:hover:not(:focus) {
+        border-color: var(--color-neutral-300);
+        background: var(--color-neutral-50);
+      }
     }
 }

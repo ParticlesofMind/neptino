@@ -161,3 +161,17 @@
         border-radius: var(--radius-full);
     }
 }
+
+  // Unified label class for all icon labels
+  .icon-label {
+    font-size: 9pt;
+    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-primary);
+    text-align: center;
+    line-height: 1.2;
+    color: var(--color-text-secondary);
+    transition: color 0.3s ease;
+    margin-top: var(--spacing-1);
+    display: block;
+    width: 100%;
+  }

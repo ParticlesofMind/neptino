@@ -1,0 +1,148 @@
+/**
+ * CourseBuilder Tools Styles
+ * Styles for coursebuilder tool interfaces and interactions
+ */
+
+/* Text Tool Styles */
+.coursebuilder-text-input {
+  /* Reset and base styles */
+  border: 2px solid #3b82f6;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
+  padding: 8px 12px;
+  
+  /* Typography */
+  font-family: inherit;
+  font-size: 16px;
+  color: #1f2937;
+  line-height: 1.4;
+  
+  /* Layout */
+  min-width: 120px;
+  min-height: 60px;
+  resize: both;
+  box-sizing: border-box;
+  
+  /* Focus and interaction */
+  outline: none;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    border-color: #1d4ed8;
+    background-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+  }
+  
+  &::placeholder {
+    color: #6b7280;
+    font-style: italic;
+  }
+}
+
+/* Tool cursors */
+.coursebuilder-canvas {
+  &.cursor-pen {
+    cursor: crosshair;
+  }
+  
+  &.cursor-eraser {
+    cursor: none; /* Custom cursor will be shown */
+  }
+  
+  &.cursor-text {
+    cursor: text;
+  }
+  
+  &.cursor-brush {
+    cursor: crosshair;
+  }
+  
+  &.cursor-selection {
+    cursor: default;
+  }
+}
+
+/* Selection tool styles */
+.selection-marquee {
+  pointer-events: none;
+  fill: rgba(59, 130, 246, 0.1);
+  stroke: #3b82f6;
+  stroke-width: 1;
+  stroke-dasharray: 4, 4;
+}
+
+.selection-handle {
+  fill: #ffffff;
+  stroke: #3b82f6;
+  stroke-width: 2;
+  cursor: grab;
+  
+  &:hover {
+    fill: #dbeafe;
+  }
+  
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+/* Eraser preview */
+.eraser-preview {
+  pointer-events: none;
+  fill: rgba(239, 68, 68, 0.3);
+  stroke: #ef4444;
+  stroke-width: 1;
+}
+
+/* Pen tool node styles */
+.pen-node {
+  fill: #5083f1;
+  stroke: #ffffff;
+  stroke-width: 1;
+  cursor: pointer;
+}
+
+.pen-preview-line {
+  stroke: #5083f1;
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.pen-hover-indicator {
+  fill: #00ff00;
+  stroke: #00aa00;
+  stroke-width: 2;
+  opacity: 0.8;
+  pointer-events: none;
+  
+  /* Simple pulsing animation */
+  animation: penHoverPulse 1s ease-in-out infinite;
+}
+
+@keyframes penHoverPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* Shape tool styles */
+.shape-preview {
+  fill: transparent;
+  stroke: #1f2937;
+  stroke-width: 2;
+  stroke-dasharray: 4, 4;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Tool panel responsiveness */
+@media (max-width: 768px) {
+  .coursebuilder-text-input {
+    min-width: 100px;
+    font-size: 14px;
+    padding: 6px 8px;
+  }
+}

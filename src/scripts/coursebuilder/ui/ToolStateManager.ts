@@ -14,7 +14,7 @@ interface ToolSettings {
  fontSize: number;
  color: string;
  };
- highlighter: {
+ brush: {
  color: string;
  opacity: number;
  size: number;
@@ -41,8 +41,8 @@ interface IconState {
 export class ToolStateManager {
  private currentTool: string = "selection";
  private currentMode: string = "build";
- private selectedMedia: string | null = null;
- private selectedNavigation: string | null = null;
+ private selectedMedia: string | null = "files";
+ private selectedNavigation: string | null = "Outline";
  private selectedShape: string | null = null;
  private toolSettings: ToolSettings;
  private storageKey = "coursebuilder-icon-states";
@@ -58,7 +58,7 @@ export class ToolStateManager {
  fontSize: 16,
  color: "#000000",
  },
- highlighter: {
+ brush: {
  color: "#ffff00",
  opacity: 0.3,
  size: 20,
@@ -89,9 +89,9 @@ export class ToolStateManager {
  if (saved) {
  const iconState: IconState = JSON.parse(saved);
  this.currentMode = iconState.modes || "build";
- this.currentTool = iconState.tools || "select";
- this.selectedMedia = iconState.media;
- this.selectedNavigation = iconState.navigation;
+ this.currentTool = iconState.tools || "selection";
+ this.selectedMedia = iconState.media || "files";
+ this.selectedNavigation = iconState.navigation || "Outline";
  this.selectedShape = iconState.shape;
  } else {
  // Set defaults to first icons if no localStorage exists
@@ -104,24 +104,34 @@ export class ToolStateManager {
  }
 
  /**
- * Set default selections to first icon in each category
- */
+  * Set default selections to first icon in each category
+  */
  private setDefaultSelections(): void {
- // Get first icons from DOM - using more specific selectors
- const firstMode = document.querySelector('[data-mode]') as HTMLElement;
- const firstTool = document.querySelector('[data-tool]') as HTMLElement;
- const firstMedia = document.querySelector('[data-media]') as HTMLElement;
- const firstNav = document.querySelector('.coursebuilder__navigation .icon') as HTMLElement;
- const firstShape = document.querySelector('[data-shape]') as HTMLElement;
+   // Set hardcoded defaults first as fallbacks
+   this.currentMode = "build";
+   this.currentTool = "selection";
+   this.selectedMedia = "files";
+   this.selectedNavigation = "Outline";
 
- this.currentMode = firstMode?.dataset.mode || "build";
- this.currentTool = firstTool?.dataset.tool || "selection";
- this.selectedMedia = firstMedia?.dataset.media || null;
- this.selectedNavigation = firstNav?.title || null;
- this.selectedShape = firstShape?.dataset.shape || null;
- }
+   // Try to get first icons from DOM and override if available
+   const firstMode = document.querySelector('[data-mode]') as HTMLElement;
+   const firstTool = document.querySelector('[data-tool]') as HTMLElement;
+   const firstMedia = document.querySelector('[data-media]') as HTMLElement;
+   const firstNav = document.querySelector('.builder__nav-course .nav-course__item') as HTMLElement;
 
- /**
+   if (firstMode?.dataset.mode) {
+     this.currentMode = firstMode.dataset.mode;
+   }
+   if (firstTool?.dataset.tool) {
+     this.currentTool = firstTool.dataset.tool;
+   }
+   if (firstMedia?.dataset.media) {
+     this.selectedMedia = firstMedia.dataset.media;
+   }
+   if (firstNav?.querySelector('.icon-label')?.textContent) {
+     this.selectedNavigation = firstNav.querySelector('.icon-label')!.textContent;
+   }
+ } /**
  * Save current states to localStorage
  */
  private saveStates(): void {
@@ -147,12 +157,9 @@ export class ToolStateManager {
  setTimeout(() => {
  this.setMode(this.currentMode);
  this.setTool(this.currentTool);
- if (this.selectedMedia) {
+ // Always set media and navigation since they now have default values
  this.setSelectedMedia(this.selectedMedia);
- }
- if (this.selectedNavigation) {
  this.setSelectedNavigation(this.selectedNavigation);
- }
  if (this.selectedShape) {
  this.setSelectedShape(this.selectedShape);
  }
@@ -262,85 +269,78 @@ export class ToolStateManager {
  }
 
  /**
- * Update mode UI to reflect current selection
- */
+  * Update mode UI to reflect current selection
+  */
  private updateModeUI(modeName: string): void {
- // Remove selected class from all mode icons and wrappers
- document
- .querySelectorAll("[data-mode]")
- .forEach((icon) => {
- icon
- const wrapper = icon.closest('.icon-wrapper');
- if (wrapper) {
- wrapper
- }
- });
+   // Remove selected class from all mode items
+   document
+     .querySelectorAll("[data-mode]")
+     .forEach((element) => {
+       element.classList.remove('mode__item--active');
+       const parentItem = element.closest('.mode__item');
+       if (parentItem) {
+         parentItem.classList.remove('mode__item--active');
+       }
+     });
 
- // Add selected class to current mode
- const selectedMode = document.querySelector(`[data-mode="${modeName}"]`);
- if (selectedMode) {
- selectedMode
- const wrapper = selectedMode.closest('.icon-wrapper');
- if (wrapper) {
- wrapper
- }
- }
+   // Add selected class to current mode
+   const selectedMode = document.querySelector(`[data-mode="${modeName}"]`);
+   if (selectedMode) {
+     const parentItem = selectedMode.closest('.mode__item');
+     if (parentItem) {
+       parentItem.classList.add('mode__item--active');
+     }
+   }
  }
 
  /**
- * Update media UI to reflect current selection
- */
+  * Update media UI to reflect current selection
+  */
  private updateMediaUI(mediaId: string | null): void {
- // Remove selected class from all media icons and wrappers
- document
- .querySelectorAll("[data-media]")
- .forEach((icon) => {
- icon
- const wrapper = icon.closest('.icon-wrapper');
- if (wrapper) {
- wrapper
- }
- });
+   // Remove selected class from all media items
+   document
+     .querySelectorAll("[data-media]")
+     .forEach((element) => {
+       element.classList.remove('media__item--active');
+       const parentItem = element.closest('.media__item');
+       if (parentItem) {
+         parentItem.classList.remove('media__item--active');
+       }
+     });
 
- // Add selected class to current media if one is selected
- if (mediaId) {
- const selectedMedia = document.querySelector(`[data-media="${mediaId}"]`);
- if (selectedMedia) {
- selectedMedia
- const wrapper = selectedMedia.closest('.icon-wrapper');
- if (wrapper) {
- wrapper
- }
- }
- }
+   // Add selected class to current media if one is selected
+   if (mediaId) {
+     const selectedMedia = document.querySelector(`[data-media="${mediaId}"]`);
+     if (selectedMedia) {
+       const parentItem = selectedMedia.closest('.media__item');
+       if (parentItem) {
+         parentItem.classList.add('media__item--active');
+       }
+     }
+   }
  }
 
  /**
- * Update navigation UI to reflect current selection
- */
+  * Update navigation UI to reflect current selection
+  */
  private updateNavigationUI(navTitle: string | null): void {
- // Remove selected class from all navigation icons and wrappers
- document
- .querySelectorAll('elements')
- .forEach((icon) => {
- icon
- const wrapper = icon.closest('.icon-wrapper');
- if (wrapper) {
- wrapper
- }
- });
+   // Remove selected class from all navigation items
+   document
+     .querySelectorAll('.builder__nav-course .nav-course__item')
+     .forEach((element) => {
+       element.classList.remove('nav-course__item--active');
+     });
 
- // Add selected class to current navigation if one is selected
- if (navTitle) {
- const selectedNav = document.querySelector(`.coursebuilder__navigation .icon[title="${navTitle}"]`);
- if (selectedNav) {
- selectedNav
- const wrapper = selectedNav.closest('.icon-wrapper');
- if (wrapper) {
- wrapper
- }
- }
- }
+   // Add selected class to current navigation if one is selected
+   if (navTitle) {
+     const navItems = document.querySelectorAll('.builder__nav-course .nav-course__item');
+     navItems.forEach((item) => {
+       const label = item.querySelector('.icon-label');
+       if (label && label.textContent === navTitle) {
+         item.classList.add('nav-course__item--active');
+       }
+     });
+   }
  }
 
  /**
@@ -375,29 +375,19 @@ export class ToolStateManager {
   * Update tool UI to reflect current selection
   */
  private updateToolUI(toolName: string): void {
-   // Remove selected class from ALL icons in coursebuilder (tools, modes, media, navigation) and wrappers
+   // Remove selected class from all tool items
    document
-     .querySelectorAll('.selected')
-     .forEach((icon) => {
-       icon.classList.remove('selected');
-       const wrapper = icon.closest('.icon-wrapper');
-       if (wrapper) {
-         wrapper.classList.remove('selected');
-       }
+     .querySelectorAll('.tools__item')
+     .forEach((element) => {
+       element.classList.remove('tools__item--active');
      });
 
-   // Remove old tool class if it exists
-   document
-     .querySelectorAll('.icon-wrapper')
-     .forEach((t) => t.classList.remove('selected'));
-
-   // Add selected class to current tool icon
+   // Add selected class to current tool item
    const selectedTool = document.querySelector(`[data-tool="${toolName}"]`);
    if (selectedTool) {
-     selectedTool.classList.add('selected');
-     const wrapper = selectedTool.closest('.icon-wrapper');
-     if (wrapper) {
-       wrapper.classList.add('selected');
+     const parentItem = selectedTool.closest('.tools__item');
+     if (parentItem) {
+       parentItem.classList.add('tools__item--active');
      }
    }
 
@@ -406,12 +396,12 @@ export class ToolStateManager {
      (settings as HTMLElement).style.display = 'none';
    });
 
-   // Show settings for current tool - look for the div with data-tool attribute matching the tool name
+   // Show settings for current tool
    const toolSettings = document.querySelector(
      `.tool-settings[data-tool="${toolName}"]`,
    ) as HTMLElement;
    if (toolSettings) {
-     toolSettings.style.display = 'block';
+     toolSettings.style.display = 'flex';
    }
 
    // Update canvas cursor
@@ -426,7 +416,7 @@ export class ToolStateManager {
    if (!canvas) return;
 
    // Remove all cursor classes
-   canvas.classList.remove('cursor-pen', 'cursor-eraser', 'cursor-text', 'cursor-highlighter');
+   canvas.classList.remove('cursor-pen', 'cursor-eraser', 'cursor-text', 'cursor-brush');
 
    // Add cursor class for current tool
    switch (this.currentTool) {
@@ -439,8 +429,8 @@ export class ToolStateManager {
      case "text":
        canvas.classList.add('cursor-text');
        break;
-     case "highlighter":
-       canvas.classList.add('cursor-highlighter');
+     case "brush":
+       canvas.classList.add('cursor-brush');
        break;
      default:
        canvas.classList.add('cursor-default');

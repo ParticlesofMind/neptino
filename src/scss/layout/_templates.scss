@@ -451,3 +451,53 @@ input[type="checkbox"] {
     }
   }
 }
+
+
+// ==========================================================================
+// TEMPLATES
+// ==========================================================================
+
+.template {
+  &__actions {
+    display: flex;
+    gap: var(--spacing-3);
+    margin-bottom: var(--spacing-6);
+  }
+
+  &__layout {
+    display: flex;
+    gap: var(--spacing-6);
+    height: calc(100vh - 300px);
+    min-height: 500px;
+  }
+
+  &__config,
+  &__preview {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-large);
+    background: var(--color-background);
+    overflow: hidden;
+  }
+
+  &__heading {
+    margin: 0;
+    padding: var(--spacing-4) var(--spacing-5);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-neutral-100);
+  }
+
+  &__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-8);
+    text-align: center;
+  }
+}

@@ -34,6 +34,7 @@ export class PenTool extends BaseTool {
  private currentPath: VectorPath | null = null;
  private previewLine: Graphics | null = null;
  private lastMousePosition: Point = new Point(0, 0);
+ private hoverIndicator: Graphics | null = null;
 
  constructor() {
  super("pen", "crosshair");
@@ -76,6 +77,9 @@ export class PenTool extends BaseTool {
  onPointerMove(event: FederatedPointerEvent, container: Container): void {
  const localPoint = container.toLocal(event.global);
  this.lastMousePosition.copyFrom(localPoint);
+
+ // Check for path completion hover
+ this.updatePathCompletionHover(localPoint, container);
 
  // Update preview line if we have an active path
  this.updatePreviewLine(container);
@@ -197,6 +201,102 @@ export class PenTool extends BaseTool {
  }
  }
 
+ /**
+ * Update hover indicator for path completion
+ */
+ private updatePathCompletionHover(point: Point, container: Container): void {
+ // Remove existing hover indicator
+ this.removeHoverIndicator();
+
+ // Only show hover indicator if we have an active path with 2+ nodes
+ if (!this.currentPath || this.currentPath.nodes.length < 2) {
+ return;
+ }
+
+ const firstNode = this.currentPath.nodes[0];
+ const distance = Math.sqrt(
+ Math.pow(point.x - firstNode.position.x, 2) +
+ Math.pow(point.y - firstNode.position.y, 2)
+ );
+
+ // Show green indicator when hovering near first node
+ if (distance <= PEN_CONSTANTS.PATH_CLOSE_TOLERANCE) {
+ this.showHoverIndicator(firstNode.position, container);
+ }
+ }
+
+ /**
+ * Show green hover indicator for path completion
+ */
+ private showHoverIndicator(position: Point, container: Container): void {
+ this.hoverIndicator = new Graphics();
+ 
+ // Create a pulsing green circle
+ this.hoverIndicator.circle(0, 0, PEN_CONSTANTS.NODE_SIZE + 2);
+ this.hoverIndicator.fill({ 
+ color: 0x00ff00, // Bright green
+ alpha: 0.8 
+ });
+ this.hoverIndicator.stroke({
+ width: 2,
+ color: 0x00aa00, // Darker green border
+ alpha: 1.0
+ });
+ 
+ this.hoverIndicator.position.set(position.x, position.y);
+ 
+ // Add pulsing animation
+ this.animateHoverIndicator();
+ 
+ container.addChild(this.hoverIndicator);
+ console.log('✏️ PEN: Showing green completion indicator');
+ }
+
+ /**
+ * Animate the hover indicator with a pulsing effect
+ */
+ private animateHoverIndicator(): void {
+ if (!this.hoverIndicator) return;
+
+ // Simple scale animation - could be enhanced with proper tweening
+ const originalScale = this.hoverIndicator.scale.x;
+ const targetScale = originalScale * 1.3;
+ 
+ // This is a basic animation - in production you might use GSAP or similar
+ let growing = true;
+ const animate = () => {
+ if (!this.hoverIndicator) return;
+ 
+ if (growing) {
+ this.hoverIndicator.scale.x += 0.02;
+ this.hoverIndicator.scale.y += 0.02;
+ if (this.hoverIndicator.scale.x >= targetScale) {
+ growing = false;
+ }
+ } else {
+ this.hoverIndicator.scale.x -= 0.02;
+ this.hoverIndicator.scale.y -= 0.02;
+ if (this.hoverIndicator.scale.x <= originalScale) {
+ growing = true;
+ }
+ }
+ 
+ requestAnimationFrame(animate);
+ };
+ 
+ animate();
+ }
+
+ /**
+ * Remove hover indicator
+ */
+ private removeHoverIndicator(): void {
+ if (this.hoverIndicator && this.hoverIndicator.parent) {
+ this.hoverIndicator.parent.removeChild(this.hoverIndicator);
+ this.hoverIndicator = null;
+ }
+ }
+
  private completePath(closeShape: boolean = false): void {
  if (!this.currentPath) return;
 
@@ -299,13 +399,18 @@ export class PenTool extends BaseTool {
  // Remove keyboard listeners
  document.removeEventListener("keydown", this.handleKeyDown);
 
- // Clean up preview line
+ // Clean up preview line and hover indicator
  this.removePreviewLine();
+ this.removeHoverIndicator();
  }
 
  private handleKeyDown = (): void => {
  // This would need to be handled by the tool manager to get container reference
  };
+
+ /**
+ * Public method to handle key down events from tool manager
+ */
 
  updateSettings(settings: PenSettings): void {
  this.settings = { ...this.settings, ...settings };

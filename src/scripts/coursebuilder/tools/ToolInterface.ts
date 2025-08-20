@@ -16,7 +16,7 @@ export interface ToolSettings {
  fontSize: number;
  color: string;
  };
- highlighter: {
+ brush: {
  color: string;
  opacity: number;
  size: number;

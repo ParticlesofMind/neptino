@@ -23,9 +23,9 @@ export const PROFESSIONAL_COLORS = [
  "#d1d5db", // Gray-300 - Light gray
 ];
 
-// Authentic highlighter colors (marker-style pastels with slight saturation)
-export const HIGHLIGHTER_COLORS = [
- "#ffef3e", // Classic highlighter yellow
+// Authentic brush colors (marker-style pastels with slight saturation)
+export const BRUSH_COLORS = [
+ "#ffef3e", // Classic brush yellow
  "#90ee90", // Light green
  "#ffb3ba", // Light pink
  "#87ceeb", // Sky blue
@@ -40,7 +40,7 @@ export const HIGHLIGHTER_COLORS = [
 // Stroke sizes for different tools
 export const STROKE_SIZES = {
  PEN: [1, 2, 3, 5, 8, 12],
- HIGHLIGHTER: [8, 12, 16, 24, 32],
+ BRUSH: [8, 12, 16, 24, 32],
  SHAPES: [1, 2, 4, 6, 8, 12],
  ERASER: [10, 15, 20, 30, 40, 60],
 };
@@ -177,9 +177,9 @@ export const TEXT_CONSTANTS = {
 };
 
 /**
- * Highlighter tool constants for authentic marker experience
+ * Brush tool constants for authentic marker experience
  */
-export const HIGHLIGHTER_CONSTANTS = {
+export const BRUSH_CONSTANTS = {
  FIXED_OPACITY: 0.4, // Authentic marker transparency
  OVERLAP_OPACITY: 0.6, // When strokes overlap
  MIN_DISTANCE: 3, // Minimum distance between points for smoothing

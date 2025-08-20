@@ -1,49 +1,43 @@
 /**
- * Highlighter Tool
+ * Brush Tool
  * Authentic marker experience with professional colors and realistic behavior
  */
 
 import { FederatedPointerEvent, Container, Graphics, Point } from "pixi.js";
 import { BaseTool } from "./ToolInterface";
 import {
- HIGHLIGHTER_COLORS,
+ BRUSH_COLORS,
  STROKE_SIZES,
- HIGHLIGHTER_CONSTANTS,
+ BRUSH_CONSTANTS,
  hexToNumber,
 } from "./SharedResources";
 
-interface HighlighterSettings {
+interface BrushSettings {
  color: string;
  size: number;
 }
 
-export class HighlighterTool extends BaseTool {
+export class BrushTool extends BaseTool {
  public isDrawing: boolean = false;
  private currentStroke: Graphics | null = null;
  private lastPoint: Point = new Point(0, 0);
  private strokePoints: Point[] = [];
 
  constructor() {
- super("highlighter", "crosshair");
+ super("brush", "crosshair");
  this.settings = {
- color: HIGHLIGHTER_COLORS[0], // Start with classic yellow
- size: STROKE_SIZES.HIGHLIGHTER[1], // Start with 12px
+ color: BRUSH_COLORS[0], // Start with classic yellow
+ size: STROKE_SIZES.BRUSH[1], // Start with 12px
  };
  }
 
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
  this.isDrawing = true;
- console.log(
- `🖍️ HIGHLIGHTER: Started highlighting at (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
- );
- console.log(
- `🖍️ HIGHLIGHTER: Settings - Color: ${this.settings.color}, Size: ${this.settings.size}`,
- );
 
  // Create new graphics object for this stroke with authentic marker properties
  this.currentStroke = new Graphics();
  this.currentStroke.eventMode = "static";
- this.currentStroke.alpha = HIGHLIGHTER_CONSTANTS.FIXED_OPACITY; // Fixed opacity like real markers
+ this.currentStroke.alpha = BRUSH_CONSTANTS.FIXED_OPACITY; // Fixed opacity like real markers
 
  // Use local coordinates relative to the container
  const localPoint = container.toLocal(event.global);
@@ -51,13 +45,13 @@ export class HighlighterTool extends BaseTool {
  this.strokePoints = [localPoint.clone()];
 
  console.log(
- `🖍️ HIGHLIGHTER: Container local point: (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`,
+ `🖍️ BRUSH: Container local point: (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`,
  );
 
  // Set stroke style with authentic marker characteristics
  const color = hexToNumber(this.settings.color);
  console.log(
- `🖍️ HIGHLIGHTER: Setting authentic marker stroke - color: ${color} (from ${this.settings.color}), width: ${this.settings.size}`,
+ `🖍️ BRUSH: Setting authentic marker stroke - color: ${color} (from ${this.settings.color}), width: ${this.settings.size}`,
  );
 
  // Start the drawing path with marker-style properties
@@ -71,7 +65,7 @@ export class HighlighterTool extends BaseTool {
  // Add to container
  container.addChild(this.currentStroke);
  console.log(
- `🖍️ HIGHLIGHTER: Marker stroke started with authentic properties`,
+ `🖍️ BRUSH: Marker stroke started with authentic properties`,
  );
  }
 
@@ -83,26 +77,26 @@ export class HighlighterTool extends BaseTool {
  const localPoint = container.toLocal(event.global);
 
  // Implement stroke smoothing for authentic marker feel
- if (HIGHLIGHTER_CONSTANTS.STROKE_SMOOTHING) {
+ if (BRUSH_CONSTANTS.STROKE_SMOOTHING) {
  const distance = Math.sqrt(
  Math.pow(localPoint.x - this.lastPoint.x, 2) +
  Math.pow(localPoint.y - this.lastPoint.y, 2),
  );
 
  // Only draw if we've moved a minimum distance (reduces jitter)
- if (distance < HIGHLIGHTER_CONSTANTS.MIN_DISTANCE) return;
+ if (distance < BRUSH_CONSTANTS.MIN_DISTANCE) return;
  }
 
  console.log(
- `🖍️ HIGHLIGHTER: Highlighting to (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`,
+ `🖍️ BRUSH: Brushing to (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`,
  );
 
  // Add slight texture variation for authentic marker feel
  const opacityVariation =
- 1 + (Math.random() - 0.5) * HIGHLIGHTER_CONSTANTS.TEXTURE_VARIATION;
+ 1 + (Math.random() - 0.5) * BRUSH_CONSTANTS.TEXTURE_VARIATION;
  const adjustedOpacity = Math.max(
  0.3,
- Math.min(1, HIGHLIGHTER_CONSTANTS.FIXED_OPACITY * opacityVariation),
+ Math.min(1, BRUSH_CONSTANTS.FIXED_OPACITY * opacityVariation),
  );
 
  // Continue the stroke with authentic marker characteristics
@@ -124,12 +118,12 @@ export class HighlighterTool extends BaseTool {
  onPointerUp(): void {
  if (this.isDrawing) {
  console.log(
- `🖍️ HIGHLIGHTER: Finished marker stroke with ${this.strokePoints.length} points`,
+ `🖍️ BRUSH: Finished marker stroke with ${this.strokePoints.length} points`,
  );
 
  // Apply final authentic marker properties
  if (this.currentStroke) {
- this.currentStroke.alpha = HIGHLIGHTER_CONSTANTS.FIXED_OPACITY;
+ this.currentStroke.alpha = BRUSH_CONSTANTS.FIXED_OPACITY;
  }
  }
 
@@ -138,22 +132,22 @@ export class HighlighterTool extends BaseTool {
  this.strokePoints = [];
  }
 
- updateSettings(settings: HighlighterSettings): void {
+ updateSettings(settings: BrushSettings): void {
  this.settings = { ...this.settings, ...settings };
  }
 
- // Get available highlighter colors for UI
+ // Get available brush colors for UI
  static getAvailableColors(): string[] {
- return HIGHLIGHTER_COLORS;
+ return BRUSH_COLORS;
  }
 
- // Get available highlighter sizes for UI
+ // Get available brush sizes for UI
  static getAvailableStrokeSizes(): number[] {
- return STROKE_SIZES.HIGHLIGHTER;
+ return STROKE_SIZES.BRUSH;
  }
 
- // Get authentic marker opacity (fixed like real highlighters)
+ // Get authentic marker opacity (fixed like real brushes)
  static getMarkerOpacity(): number {
- return HIGHLIGHTER_CONSTANTS.FIXED_OPACITY;
+ return BRUSH_CONSTANTS.FIXED_OPACITY;
  }
 }

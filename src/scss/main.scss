@@ -30,6 +30,7 @@
 @use 'layout/sidebar';            // Sidebar layout
 @use 'layout/footer';             // Site footer
 @use 'layout/templates';
+@use 'layout/schedule';
 
 // PAGES (page styling)
 // ==========================================================================
@@ -49,4 +50,4 @@
 @use 'components/cards';          // Card component system
 @use 'components/forms';          // Form components
 @use 'components/modals';         // Modal/overlay components
-@use 'components/schedule';       // Schedule-related components
+@use 'components/coursebuilder-tools'; // CourseBuilder tool styles

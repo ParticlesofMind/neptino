@@ -53,6 +53,8 @@ export class ShapesTool extends BaseTool {
  this.boundKeyDown = this.handleKeyDown.bind(this);
  this.boundKeyUp = this.handleKeyUp.bind(this);
  this.bindKeyboardEvents();
+ 
+ console.log('🔶 SHAPES: Initialized with rectangle, triangle, and circle support');
  }
 
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
@@ -422,12 +424,13 @@ export class ShapesTool extends BaseTool {
  return STROKE_SIZES.SHAPES;
  }
 
- // Get available shape types
+ // Get available shape types - prioritize basic shapes
  static getShapeTypes(): string[] {
  return [
  "rectangle",
- "triangle",
+ "triangle", 
  "circle",
+ // Additional advanced shapes
  "ellipse",
  "line",
  "arrow",
@@ -435,11 +438,11 @@ export class ShapesTool extends BaseTool {
  ];
  }
 
- // Get shape type display names
+ // Get shape type display names - emphasize basic shapes
  static getShapeTypeNames(): { [key: string]: string } {
  return {
  rectangle: "Rectangle",
- triangle: "Triangle",
+ triangle: "Triangle", 
  circle: "Circle",
  ellipse: "Ellipse",
  line: "Line",

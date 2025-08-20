@@ -41,13 +41,18 @@ export class EraserTool extends BaseTool {
  }
 
  onPointerMove(event: FederatedPointerEvent, container: Container): void {
+ // Always update cursor position, even outside canvas bounds
  this.updateCursorPosition(event);
 
- // Show preview of what would be erased
+ // Show preview of what would be erased (only when inside canvas)
+ if (this.isPointInsideCanvas(event, container)) {
  this.showErasePreview(event, container);
+ } else {
+ this.hideErasePreview();
+ }
 
- // Only erase if we're actively erasing (mouse button is pressed)
- if (this.isErasing) {
+ // Only erase if we're actively erasing (mouse button is pressed) and inside canvas
+ if (this.isErasing && this.isPointInsideCanvas(event, container)) {
  const localPoint = container.toLocal(event.global);
 
  // Brush mode: continuous erasing along the path
@@ -254,6 +259,7 @@ export class EraserTool extends BaseTool {
  cursorElement.style.backgroundColor = "rgba(255, 107, 107, 0.15)";
  cursorElement.style.boxShadow = "0 0 8px rgba(255, 107, 107, 0.3)";
  cursorElement.style.transform = "translate(-50%, -50%)";
+ cursorElement.style.transition = "opacity 0.2s ease"; // Smooth fade
  cursorElement.id = "precision-eraser-cursor";
 
  // Add inner dot for precision
@@ -273,8 +279,10 @@ export class EraserTool extends BaseTool {
 
  document.body.appendChild(cursorElement);
 
- // Hide default cursor
+ // Hide default cursor on the entire document when eraser is active
  document.body.style.cursor = "none";
+ 
+ console.log('🗑️ ERASER: Professional cursor created with enhanced canvas boundary detection');
  }
 
  private updateCursorPosition(event: FederatedPointerEvent): void {
@@ -282,7 +290,37 @@ export class EraserTool extends BaseTool {
  if (cursorElement) {
  cursorElement.style.left = `${event.client.x}px`;
  cursorElement.style.top = `${event.client.y}px`;
+ 
+ // Show/hide cursor based on canvas bounds
+ const canvasElement = document.querySelector("canvas");
+ if (canvasElement) {
+ const canvasRect = canvasElement.getBoundingClientRect();
+ const isInsideCanvas = (
+ event.client.x >= canvasRect.left &&
+ event.client.x <= canvasRect.right &&
+ event.client.y >= canvasRect.top &&
+ event.client.y <= canvasRect.bottom
+ );
+ 
+ cursorElement.style.opacity = isInsideCanvas ? "1" : "0.3";
  }
+ }
+ }
+
+ /**
+ * Check if a point is inside the canvas bounds
+ */
+ private isPointInsideCanvas(event: FederatedPointerEvent, _container: Container): boolean {
+ const canvasElement = document.querySelector("canvas");
+ if (!canvasElement) return true; // If no canvas found, assume inside
+ 
+ const canvasRect = canvasElement.getBoundingClientRect();
+ return (
+ event.client.x >= canvasRect.left &&
+ event.client.x <= canvasRect.right &&
+ event.client.y >= canvasRect.top &&
+ event.client.y <= canvasRect.bottom
+ );
  }
 
  private removeEraserCursor(): void {

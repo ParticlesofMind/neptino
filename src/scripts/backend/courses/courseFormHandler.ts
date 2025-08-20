@@ -85,7 +85,7 @@ export class CourseFormHandler {
         console.log('🔍 Looking for form...');
 
         // Try to find the form in the active article first
-        const activeArticle = document.querySelector('.coursebuilder-article--active');
+        const activeArticle = document.querySelector('.content__article--active');
         if (activeArticle) {
             console.log('✅ Found active article:', activeArticle);
             this.form = activeArticle.querySelector("form");

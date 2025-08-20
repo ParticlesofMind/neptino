@@ -989,6 +989,13 @@ class CurriculumManager {
  }
  }
 
+ /**
+ * Get the current curriculum data
+ */
+ public getCurrentCurriculum(): CurriculumLesson[] {
+ return this.currentCurriculum || [];
+ }
+
  private showPreview(): void {
    this.curriculumPreviewSection.style.display = 'flex';
    this.renderCurriculumPreview();

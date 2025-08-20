@@ -210,8 +210,8 @@ export class AsideNavigation {
 
  console.log('🧭 Initializing Aside Navigation...');
  
- this.asideLinks = document.querySelectorAll('.coursebuilder-sidebar__link[data-section]');
- this.contentSections = document.querySelectorAll('.coursebuilder-article[id]');
+ this.asideLinks = document.querySelectorAll('.sidebar__link[data-section]');
+ this.contentSections = document.querySelectorAll('.content__article[id]');
  this.boundHandleLinkClick = this.handleLinkClick.bind(this);
 
  this.init();
@@ -270,20 +270,20 @@ export class AsideNavigation {
 
  private removeActiveStates(): void {
  this.asideLinks.forEach((link: HTMLAnchorElement) => {
- link.classList.remove('nav__link--active');
+ link.classList.remove('sidebar__link--active');
  });
 
  this.contentSections.forEach((section: HTMLElement) => {
- section.classList.remove('coursebuilder-article--active');
+ section.classList.remove('content__article--active');
  });
  }
 
  private setActiveStates(activeLink: HTMLAnchorElement, targetSectionId: string): void {
- activeLink.classList.add('nav__link--active');
+ activeLink.classList.add('sidebar__link--active');
 
  const targetSection = document.getElementById(targetSectionId);
  if (targetSection) {
- targetSection.classList.add('coursebuilder-article--active');
+ targetSection.classList.add('content__article--active');
  console.log('🎯 Successfully activated article:', targetSectionId);
  } else {
  console.error("Target section not found:", targetSectionId);

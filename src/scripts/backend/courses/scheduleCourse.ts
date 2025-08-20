@@ -72,7 +72,7 @@ export class ScheduleCourseManager {
       "schedule-config",
     ) as HTMLElement;
     this.schedulePreviewSection = document.querySelector(
-      ".coursebuilder-schedule-preview",
+      ".schedule__preview",
     ) as HTMLElement;
     this.scheduleButton = document.getElementById(
       "schedule-course-btn",
@@ -119,7 +119,7 @@ export class ScheduleCourseManager {
 
  // Day selection buttons
  const dayButtons =
- this.scheduleConfigSection.querySelectorAll('.coursebuilder-day-selector__button');
+ this.scheduleConfigSection.querySelectorAll('.schedule__days__button');
  dayButtons.forEach((button) => {
  button.addEventListener("click", (e) =>
  this.toggleDaySelection(e.target as HTMLButtonElement),
@@ -186,7 +186,7 @@ export class ScheduleCourseManager {
 
  private getSelectedDays(): string[] {
  const selectedButtons = this.scheduleConfigSection.querySelectorAll(
- ".coursebuilder-day-selector__button.button--primary",
+ ".schedule__days__button.button--primary",
  );
  return Array.from(selectedButtons).map(
  (btn) => (btn as HTMLElement).dataset.day || "",
@@ -275,7 +275,7 @@ export class ScheduleCourseManager {
 
  private renderSchedulePreview(): void {
    const previewContainer =
-     this.schedulePreviewSection.querySelector('.coursebuilder-schedule-preview__content');
+     this.schedulePreviewSection.querySelector('.schedule__content');
    if (!previewContainer) return;
 
    previewContainer.innerHTML = "";
@@ -296,7 +296,7 @@ export class ScheduleCourseManager {
    } else {
      // Show placeholder if no schedule
      const placeholder = document.createElement('div');
-     placeholder.className = 'coursebuilder-schedule-preview__placeholder';
+     placeholder.className = 'schedule__placeholder';
      placeholder.innerHTML = '<p>Click "Schedule Course" to generate your lesson schedule</p>';
      previewContainer.appendChild(placeholder);
    }
@@ -310,7 +310,7 @@ export class ScheduleCourseManager {
  index: number,
  ): HTMLElement {
  const row = document.createElement("div");
- row.className = 'coursebuilder-schedule-preview__row';
+ row.className = 'schedule__row';
  row.innerHTML = `
  <span class="lesson-number">${session.lessonNumber}</span>
  <span class="lesson-day">${this.formatDay(session.day)}</span>
@@ -454,7 +454,7 @@ export class ScheduleCourseManager {
  inputs.forEach((input) => {
  (input as HTMLInputElement | HTMLButtonElement).disabled = true;
  });
- this.scheduleConfigSection.classList.add('coursebuilder-form--locked');
+ this.scheduleConfigSection.classList.add('form--locked');
  }
 
  private unlockScheduleConfig(): void {
@@ -462,7 +462,7 @@ export class ScheduleCourseManager {
  inputs.forEach((input) => {
  (input as HTMLInputElement | HTMLButtonElement).disabled = false;
  });
- this.scheduleConfigSection.classList.remove('coursebuilder-form--locked');
+ this.scheduleConfigSection.classList.remove('form--locked');
  this.validateScheduleForm();
  }
 
@@ -482,7 +482,7 @@ export class ScheduleCourseManager {
 
  private updateTotalLessonsDisplay(): void {
  const totalDisplay =
- this.schedulePreviewSection.querySelector('.coursebuilder-schedule-preview__total');
+ this.schedulePreviewSection.querySelector('.schedule__total');
  if (totalDisplay) {
  totalDisplay.textContent = `Total lessons: ${this.currentSchedule.length}`;
  }
