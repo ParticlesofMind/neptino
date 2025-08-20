@@ -231,62 +231,29 @@ export class PenTool extends BaseTool {
  private showHoverIndicator(position: Point, container: Container): void {
  this.hoverIndicator = new Graphics();
  
- // Create a pulsing green circle
+ // Create a subtle, desaturated green circle (no blinking)
  this.hoverIndicator.circle(0, 0, PEN_CONSTANTS.NODE_SIZE + 2);
  this.hoverIndicator.fill({ 
- color: 0x00ff00, // Bright green
- alpha: 0.8 
+ color: 0x4ade80, // Subtle green (more desaturated)
+ alpha: 0.6 // More subtle opacity
  });
  this.hoverIndicator.stroke({
  width: 2,
- color: 0x00aa00, // Darker green border
- alpha: 1.0
+ color: 0x22c55e, // Slightly darker green border (desaturated)
+ alpha: 0.8
  });
  
  this.hoverIndicator.position.set(position.x, position.y);
  
- // Add pulsing animation
- this.animateHoverIndicator();
+ // No animation - static indicator
  
  container.addChild(this.hoverIndicator);
- console.log('✏️ PEN: Showing green completion indicator');
+ console.log('✏️ PEN: Showing subtle green completion indicator');
  }
 
  /**
  * Animate the hover indicator with a pulsing effect
  */
- private animateHoverIndicator(): void {
- if (!this.hoverIndicator) return;
-
- // Simple scale animation - could be enhanced with proper tweening
- const originalScale = this.hoverIndicator.scale.x;
- const targetScale = originalScale * 1.3;
- 
- // This is a basic animation - in production you might use GSAP or similar
- let growing = true;
- const animate = () => {
- if (!this.hoverIndicator) return;
- 
- if (growing) {
- this.hoverIndicator.scale.x += 0.02;
- this.hoverIndicator.scale.y += 0.02;
- if (this.hoverIndicator.scale.x >= targetScale) {
- growing = false;
- }
- } else {
- this.hoverIndicator.scale.x -= 0.02;
- this.hoverIndicator.scale.y -= 0.02;
- if (this.hoverIndicator.scale.x <= originalScale) {
- growing = true;
- }
- }
- 
- requestAnimationFrame(animate);
- };
- 
- animate();
- }
-
  /**
  * Remove hover indicator
  */

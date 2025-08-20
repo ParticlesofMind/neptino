@@ -347,26 +347,21 @@ export class ToolStateManager {
  * Update shape UI to reflect current selection
  */
  private updateShapeUI(shapeName: string | null): void {
-   // Remove selected class from all shape icons and wrappers
+   // Remove selected class from all shape buttons
    document
-     .querySelectorAll("[data-shape]")
-     .forEach((icon) => {
-       icon.classList.remove('selected');
-       const wrapper = icon.closest('.icon-wrapper');
-       if (wrapper) {
-         wrapper.classList.remove('selected');
-       }
+     .querySelectorAll(".shape-btn")
+     .forEach((button) => {
+       button.classList.remove('selected');
      });
 
    // Add selected class to current shape if one is selected
    if (shapeName) {
-     const selectedShape = document.querySelector(`[data-shape="${shapeName}"]`);
-     if (selectedShape) {
-       selectedShape.classList.add('selected');
-       const wrapper = selectedShape.closest('.icon-wrapper');
-       if (wrapper) {
-         wrapper.classList.add('selected');
-       }
+     const selectedShapeButton = document.querySelector(`.shape-btn[data-shape="${shapeName}"]`);
+     if (selectedShapeButton) {
+       selectedShapeButton.classList.add('selected');
+       console.log(`🔶 SHAPES: Updated UI to show ${shapeName} as selected`);
+     } else {
+       console.warn(`🔶 SHAPES: Could not find button for shape: ${shapeName}`);
      }
    }
  }

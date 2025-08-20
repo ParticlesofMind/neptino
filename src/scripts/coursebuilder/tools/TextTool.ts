@@ -30,7 +30,8 @@ interface TextSettings {
 export class TextTool extends BaseTool {
  private activeTextArea: HTMLTextAreaElement | null = null;
  private textPosition: Point = new Point(0, 0);
- private canvasContainer: HTMLElement | null = null;
+ private currentContainer: Container | null = null;
+ private isTextAreaJustCreated: boolean = false;
 
  constructor() {
  super("text", "text");
@@ -54,9 +55,7 @@ export class TextTool extends BaseTool {
 
  const localPoint = container.toLocal(event.global);
  this.textPosition.copyFrom(localPoint);
-
- // Find canvas container for proper positioning
- this.findCanvasContainer();
+ this.currentContainer = container; // Store the container
 
  this.createTextArea(event.global.x, event.global.y, container);
  }
@@ -67,19 +66,6 @@ export class TextTool extends BaseTool {
 
  onPointerUp(): void {
  // Text tool doesn't need up events for placement
- }
-
- private findCanvasContainer(): void {
- // Try to find the canvas container element for proper positioning
- const canvasElement = document.querySelector("canvas");
- if (canvasElement) {
- this.canvasContainer = canvasElement.parentElement || document.body;
- } else {
- // Fallback: look for coursebuilder canvas container
- this.canvasContainer = document.getElementById("canvas-container") || 
- document.querySelector(".coursebuilder__canvas") || 
- document.body;
- }
  }
 
  private createTextArea(x: number, y: number, container: Container): void {
@@ -95,16 +81,31 @@ export class TextTool extends BaseTool {
  let adjustedX = x;
  let adjustedY = y;
 
- if (canvasElement && this.canvasContainer) {
+ if (canvasElement) {
  const canvasRect = canvasElement.getBoundingClientRect();
- const containerRect = this.canvasContainer.getBoundingClientRect();
  
- // Adjust coordinates relative to the canvas container
- adjustedX = x - containerRect.left + canvasRect.left;
- adjustedY = y - containerRect.top + canvasRect.top;
+ // Ensure text area stays within canvas bounds
+ const textAreaWidth = 240; // Approximate width of text area
+ const textAreaHeight = 80; // Approximate height of text area
+ 
+ // Adjust X coordinate to keep within canvas bounds
+ if (x + textAreaWidth > canvasRect.right) {
+ adjustedX = canvasRect.right - textAreaWidth - 10;
+ }
+ if (adjustedX < canvasRect.left) {
+ adjustedX = canvasRect.left + 10;
+ }
+ 
+ // Adjust Y coordinate to keep within canvas bounds  
+ if (y + textAreaHeight > canvasRect.bottom) {
+ adjustedY = canvasRect.bottom - textAreaHeight - 10;
+ }
+ if (adjustedY < canvasRect.top) {
+ adjustedY = canvasRect.top + 10;
+ }
  
  console.log(
- `📝 TEXT: Adjusted position to (${Math.round(adjustedX)}, ${Math.round(adjustedY)}) relative to canvas bounds`,
+ `📝 TEXT: Adjusted position to (${Math.round(adjustedX)}, ${Math.round(adjustedY)}) within canvas bounds`,
  );
  }
 
@@ -117,6 +118,8 @@ export class TextTool extends BaseTool {
  this.activeTextArea.style.left = `${adjustedX}px`;
  this.activeTextArea.style.top = `${adjustedY}px`;
  this.activeTextArea.style.zIndex = "1000"; // Ensure it's above canvas
+ this.activeTextArea.style.maxWidth = "240px"; // Limit width to prevent overflow
+ this.activeTextArea.style.minWidth = "200px"; // Minimum width for usability
  
  // Apply settings through CSS properties
  this.updateTextAreaSettings();
@@ -127,21 +130,29 @@ export class TextTool extends BaseTool {
  this.activeTextArea.rows = 3;
  this.activeTextArea.cols = 30;
 
- // Add to appropriate container
- this.canvasContainer?.appendChild(this.activeTextArea);
- this.activeTextArea.focus();
- this.activeTextArea.select(); // Select all text for immediate editing
-
- // Handle text completion with improved events
- this.activeTextArea.addEventListener("blur", () => {
- // Small delay to allow other interactions
+ // Add to document body instead of canvas container for better control
+ document.body.appendChild(this.activeTextArea);
+ 
+ // Set flag to prevent immediate blur
+ this.isTextAreaJustCreated = true;
+ 
+ // Focus the text area after a small delay to ensure it's properly mounted
  setTimeout(() => {
  if (this.activeTextArea) {
- this.finalizeText(container);
+ this.activeTextArea.focus();
+ this.activeTextArea.select(); // Select all text for immediate editing
+ 
+ // Clear the "just created" flag after a reasonable delay
+ setTimeout(() => {
+ this.isTextAreaJustCreated = false;
+ }, 500);
+ 
+ // Add blur event listener after focus is established to prevent immediate blur
+ this.activeTextArea.addEventListener("blur", this.handleTextBlur.bind(this));
  }
- }, 100);
- });
+ }, 10);
 
+ // Handle keyboard events immediately
  this.activeTextArea.addEventListener("keydown", (e) => {
  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
  // Ctrl+Enter or Cmd+Enter to finalize
@@ -154,10 +165,36 @@ export class TextTool extends BaseTool {
  // Allow normal Enter for line breaks
  });
 
+ // Prevent the text area from losing focus when clicked
+ this.activeTextArea.addEventListener("mousedown", (e) => {
+ e.stopPropagation(); // Prevent canvas from handling the click
+ });
+
+ this.activeTextArea.addEventListener("click", (e) => {
+ e.stopPropagation(); // Prevent canvas from handling the click
+ });
+
  // Auto-resize textarea as user types
  this.activeTextArea.addEventListener("input", () => {
  this.autoResizeTextArea();
  });
+ }
+
+ private handleTextBlur(): void {
+ // Don't finalize if text area was just created
+ if (this.isTextAreaJustCreated) {
+ console.log('📝 TEXT: Ignoring blur event - text area just created');
+ return;
+ }
+ 
+ // Add a longer delay and check if the text area still exists and has focus
+ setTimeout(() => {
+ if (this.activeTextArea && document.activeElement !== this.activeTextArea && this.currentContainer) {
+ // Only finalize if something else has focus, text area still exists, and we have a container
+ console.log('📝 TEXT: Finalizing text due to blur event');
+ this.finalizeText(this.currentContainer);
+ }
+ }, 200); // Longer delay to prevent accidental blur
  }
 
  private autoResizeTextArea(): void {
@@ -214,11 +251,16 @@ export class TextTool extends BaseTool {
  this.activeTextArea.parentNode.removeChild(this.activeTextArea);
  this.activeTextArea = null;
  }
+ this.currentContainer = null; // Clear the container reference
+ this.isTextAreaJustCreated = false; // Reset the flag
  }
 
  onDeactivate(): void {
  super.onDeactivate();
- this.removeTextArea();
+ // Don't remove text area when switching tools - let it persist
+ // this.removeTextArea(); // Commented out to keep text areas persistent
+ 
+ console.log('📝 TEXT: Tool deactivated - keeping text areas persistent');
  }
 
  updateSettings(settings: TextSettings): void {

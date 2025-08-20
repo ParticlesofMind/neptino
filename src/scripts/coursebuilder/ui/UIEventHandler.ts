@@ -69,8 +69,8 @@ export class UIEventHandler {
    color.addEventListener("click", this.handleColorSelection.bind(this));
  });
 
- // Shape tool events
- document.querySelectorAll("[data-shape]").forEach((button) => {
+ // Shape tool events - directly bind to shape buttons
+ document.querySelectorAll(".shape-btn[data-shape]").forEach((button) => {
  button.addEventListener("click", this.handleShapeSelection.bind(this));
  });
 
@@ -88,6 +88,9 @@ export class UIEventHandler {
 
  // Canvas actions
  this.bindCanvasActions();
+ 
+ // Initialize default shape selection
+ this.initializeDefaultShapeSelection();
  }
 
  /**
@@ -318,6 +321,16 @@ export class UIEventHandler {
  return;
  }
 
+ console.log(`🔶 SHAPES: Selected shape type: ${shapeType}`);
+
+ // Update UI - remove selected class from all shape buttons
+ document.querySelectorAll(".shape-btn").forEach((btn) => {
+ btn.classList.remove('selected');
+ });
+ 
+ // Add selected class to clicked button
+ button.classList.add('selected');
+
  // Update shape selection in ToolStateManager
  this.toolStateManager.setSelectedShape(shapeType);
 
@@ -329,6 +342,18 @@ export class UIEventHandler {
  // Trigger callback if set
  if (this.onToolSettingsChangeCallback) {
  this.onToolSettingsChangeCallback("shapes", { shapeType });
+ }
+ }
+
+ /**
+  * Initialize default shape selection (rectangle)
+  */
+ private initializeDefaultShapeSelection(): void {
+ const defaultShapeButton = document.querySelector('.shape-btn[data-shape="rectangle"]') as HTMLElement;
+ if (defaultShapeButton) {
+ defaultShapeButton.classList.add('selected');
+ this.toolStateManager.setSelectedShape('rectangle');
+ console.log('🔶 SHAPES: Initialized with rectangle as default shape');
  }
  }
 

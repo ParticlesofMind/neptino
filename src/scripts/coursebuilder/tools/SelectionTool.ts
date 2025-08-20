@@ -40,6 +40,11 @@ export class SelectionTool extends BaseTool {
  private isTransforming: boolean = false;
  private activeHandle: TransformHandle | null = null;
  private transformStart: Point = new Point(0, 0);
+ 
+ // Double-click tracking for text editing
+ private lastClickTime: number = 0;
+ private lastClickedObject: any = null;
+ private readonly DOUBLE_CLICK_TIMEOUT = 300; // milliseconds
 
  constructor() {
  super("selection", "default");
@@ -182,6 +187,23 @@ export class SelectionTool extends BaseTool {
  shiftKey: boolean,
  ): void {
  const clickedObject = this.getObjectAtPoint(point, container);
+ const currentTime = Date.now();
+ 
+ // Check for double-click on text objects
+ if (clickedObject && 
+     clickedObject === this.lastClickedObject && 
+     currentTime - this.lastClickTime < this.DOUBLE_CLICK_TIMEOUT &&
+     this.isTextObject(clickedObject)) {
+   
+   // Handle double-click on text - enter edit mode
+   this.enterTextEditMode(clickedObject, point, container);
+   console.log('🎯 SELECTION: Double-clicked text object - entering edit mode');
+   return;
+ }
+ 
+ // Update click tracking
+ this.lastClickTime = currentTime;
+ this.lastClickedObject = clickedObject;
 
  if (clickedObject) {
  if (shiftKey) {
@@ -198,6 +220,103 @@ export class SelectionTool extends BaseTool {
  // Clear selection if not holding shift
  this.clearSelection();
  }
+ }
+
+ /**
+ * Check if an object is a text object that can be edited
+ */
+ private isTextObject(object: any): boolean {
+ // Check if object is a PIXI Text object or has text properties
+ return object && (object.constructor.name === 'Text' || object.text !== undefined);
+ }
+
+ /**
+ * Enter text editing mode for a text object
+ */
+ private enterTextEditMode(textObject: any, _point: Point, container: Container): void {
+ if (!this.isTextObject(textObject)) return;
+
+ // Get the global position of the text object
+ const globalBounds = textObject.getBounds();
+ const globalPoint = container.toGlobal(textObject.position);
+ 
+ // Create a text area positioned over the text object
+ this.createEditableTextArea(
+   globalPoint.x,
+   globalPoint.y,
+   textObject,
+   globalBounds.width,
+   globalBounds.height
+ );
+ }
+
+ /**
+ * Create an editable text area for existing text
+ */
+ private createEditableTextArea(
+ x: number, 
+ y: number, 
+ textObject: any, 
+ width: number,
+ height: number
+ ): void {
+ // Create HTML textarea for editing
+ const textArea = document.createElement("textarea");
+ 
+ // Style the text area to match the text object
+ textArea.className = "coursebuilder-text-input";
+ textArea.style.position = "absolute";
+ textArea.style.left = `${x}px`;
+ textArea.style.top = `${y}px`;
+ textArea.style.width = `${Math.max(width, 120)}px`;
+ textArea.style.height = `${Math.max(height, 30)}px`;
+ textArea.style.zIndex = "1000";
+ textArea.style.fontSize = `${textObject.style?.fontSize || 16}px`;
+ textArea.style.fontFamily = textObject.style?.fontFamily || 'Arial';
+ textArea.style.color = textObject.style?.fill || '#000000';
+ textArea.style.resize = "both";
+ 
+ // Set the current text content
+ textArea.value = textObject.text || '';
+ 
+ // Add to document
+ document.body.appendChild(textArea);
+ textArea.focus();
+ textArea.select();
+ 
+ // Handle completion
+ const finalizeEdit = () => {
+   if (textArea.parentNode) {
+     // Update the text object
+     textObject.text = textArea.value;
+     
+     // Remove text area
+     textArea.parentNode.removeChild(textArea);
+     
+     console.log('🎯 SELECTION: Finished editing text object');
+   }
+ };
+ 
+ // Event listeners
+ textArea.addEventListener("blur", () => {
+   setTimeout(finalizeEdit, 100);
+ });
+ 
+ textArea.addEventListener("keydown", (e) => {
+   if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+     e.preventDefault();
+     finalizeEdit();
+   } else if (e.key === "Escape") {
+     e.preventDefault();
+     if (textArea.parentNode) {
+       textArea.parentNode.removeChild(textArea);
+     }
+   }
+ });
+ 
+ // Prevent canvas interactions
+ textArea.addEventListener("mousedown", (e) => e.stopPropagation());
+ textArea.addEventListener("click", (e) => e.stopPropagation());
  }
 
  private selectObjects(objects: any[]): void {
@@ -418,9 +537,16 @@ export class SelectionTool extends BaseTool {
  break;
  }
 
- // Ensure minimum scale
- scaleX = Math.max(0.1, scaleX);
- scaleY = Math.max(0.1, scaleY);
+ // Calculate minimum scale based on canvas size and object bounds
+ const minPixelSize = 10; // Minimum 10px size
+ const minScaleX = minPixelSize / bounds.width;
+ const minScaleY = minPixelSize / bounds.height;
+ 
+ // Ensure minimum scale - both relative (20%) and absolute (minimum pixel size)
+ scaleX = Math.max(0.2, minScaleX, scaleX);
+ scaleY = Math.max(0.2, minScaleY, scaleY);
+
+ console.log(`🎯 SELECTION: Applied corner resize scale constraints - scaleX: ${scaleX.toFixed(2)}, scaleY: ${scaleY.toFixed(2)}`);
 
  // Apply transformation to all selected objects
  this.selectedObjects.forEach(obj => {
@@ -467,9 +593,16 @@ export class SelectionTool extends BaseTool {
  break;
  }
 
- // Ensure minimum scale
- scaleX = Math.max(0.1, scaleX);
- scaleY = Math.max(0.1, scaleY);
+ // Calculate minimum scale based on canvas size and object bounds
+ const minPixelSize = 10; // Minimum 10px size
+ const minScaleX = minPixelSize / bounds.width;
+ const minScaleY = minPixelSize / bounds.height;
+ 
+ // Ensure minimum scale - both relative (20%) and absolute (minimum pixel size)
+ scaleX = Math.max(0.2, minScaleX, scaleX);
+ scaleY = Math.max(0.2, minScaleY, scaleY);
+
+ console.log(`🎯 SELECTION: Applied edge resize scale constraints - scaleX: ${scaleX.toFixed(2)}, scaleY: ${scaleY.toFixed(2)}`);
 
  // Apply transformation to all selected objects
  this.selectedObjects.forEach(obj => {

@@ -30,7 +30,9 @@
   --color-secondary-900: #00292b;
 
   // Neutral Colors (Clean, professional)
+  --color-neutral-25: #fcfcfc; // Ultra light gray
   --color-neutral-50: #fafafa;
+  --color-neutral-75: #f8f8f8; // Between 50 and 100
   --color-neutral-100: #f5f5f5;
   --color-neutral-200: #e5e5e5;
   --color-neutral-300: #d4d4d4;
@@ -44,20 +46,34 @@
   // SEMANTIC COLORS
   // ==========================================================================
   --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
   --color-success-500: #22c55e;
   --color-success-700: #15803d;
+  --color-success-800: #166534;
 
   --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
   --color-warning-500: #f59e0b;
   --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
 
   --color-error-50: #fef2f2;
+  --color-error-100: #fee2e2;
   --color-error-500: #ef4444;
   --color-error-700: #b91c1c;
+  --color-error-800: #991b1b;
 
   --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
   --color-info-500: #3b82f6;
   --color-info-700: #1d4ed8;
+  --color-info-800: #1e40af;
+
+  --color-purple-50: #faf5ff;
+  --color-purple-100: #f3e8ff;
+  --color-purple-500: #8b5cf6;
+  --color-purple-700: #7c3aed;
+  --color-purple-800: #6b21a8;
 
   // FUNCTIONAL COLORS
   // ==========================================================================

@@ -6,10 +6,10 @@
 /* Text Tool Styles */
 .coursebuilder-text-input {
   /* Reset and base styles */
-  border: 2px solid #3b82f6;
+  border: 2px solid rgba(59, 130, 246, 0.8);
   border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(4px);
+  background-color: transparent; /* Completely transparent background */
+  backdrop-filter: none; /* Remove backdrop blur */
   padding: 8px 12px;
   
   /* Typography */
@@ -30,7 +30,7 @@
   
   &:focus {
     border-color: #1d4ed8;
-    background-color: rgba(255, 255, 255, 1);
+    background-color: rgba(255, 255, 255, 0.1); /* Very subtle background on focus */
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
   }
   
@@ -112,20 +112,13 @@
 }
 
 .pen-hover-indicator {
-  fill: #00ff00;
-  stroke: #00aa00;
+  fill: #4ade80;
+  stroke: #22c55e;
   stroke-width: 2;
-  opacity: 0.8;
+  opacity: 0.6;
   pointer-events: none;
   
-  /* Simple pulsing animation */
-  animation: penHoverPulse 1s ease-in-out infinite;
-}
-
-@keyframes penHoverPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
+  /* Remove blinking animation - static indicator */
 }
 
 /* Shape tool styles */
@@ -136,6 +129,44 @@
   stroke-dasharray: 4, 4;
   opacity: 0.7;
   pointer-events: none;
+}
+
+/* Shape buttons */
+.shape-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.shape-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    background: #f8fafc;
+  }
+  
+  &.selected {
+    border-color: #3b82f6;
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+  
+  svg {
+    width: 18px;
+    height: 18px;
+  }
 }
 
 /* Tool panel responsiveness */
