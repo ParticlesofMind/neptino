@@ -5,7 +5,7 @@
 
 import { FederatedPointerEvent, Container, Graphics as PixiGraphics } from "pixi.js";
 import { Tool, ToolSettings } from "./ToolInterface";
-import { SelectionTool } from "./SelectionTool";
+import { SelectionTool } from "./selection";
 import { PenTool } from "./PenTool";
 import { BrushTool } from "./BrushTool";
 import { TextTool } from "./TextTool";
