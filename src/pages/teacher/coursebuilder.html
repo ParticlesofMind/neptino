@@ -10,58 +10,64 @@
 </head>
 
 <body class="grid body">
-  <header class="header header--coursebuilder">
-    <nav class="nav nav--coursebuilder">
-      <button class="button button--outline button--small coursebuilder-nav__button coursebuilder-nav__button--prev" 
-              id="previous-button" title="Previous Step">
-        <span class="coursebuilder-nav__icon">‹</span>
-        <span class="coursebuilder-nav__text">Previous</span>
-      </button>
-      <a class="coursebuilder-nav__logo" href="/src/pages/teacher/home.html" title="Back to Home">
-        <img class="coursebuilder-nav__logo-img" src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
-      </a>
-      <button class="button button--outline button--small coursebuilder-nav__button coursebuilder-nav__button--next" 
-              id="next-button" title="Next Step">
-        <span class="coursebuilder-nav__text">Next</span>
-        <span class="coursebuilder-nav__icon">›</span>
-      </button>
+  <header class="grid__header header">
+    <nav class="nav">
+      <ul class="ul ul--header">
+        <li class="ul__item">
+          <button class="button button--outline button--small" id="previous-button" title="Previous Step">
+            Previous
+          </button>
+        </li>
+
+        <li class="ul__item">
+          <a class="link link--header" href="/src/pages/teacher/home.html" title="Back to Home">
+            <img class="logo logo--small" src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
+          </a>
+        </li>
+
+        <li class="ul__item">
+          <button class="button button--outline button--small" id="next-button" title="Next Step">
+            Next
+          </button>
+        </li>
+      </ul>
     </nav>
   </header>
-  <main class="coursebuilder__main">
-    <!-- Setup Section (with aside navigation) -->
-    <section class="section section--setup section--active" id="setup">
+  <main class="grid__main coursebuilder">
+    <!-- Setup View -->
+    <div class="coursebuilder__setup" aria-hidden="false" id="setup">
       <aside class="sidebar">
-        <nav class="sidebar__nav">
-          <h3 class="sidebar__heading">Required</h3>
-          <ul class="sidebar__list">
-            <li class="sidebar__item">
-              <a class="sidebar__link" href="#essentials" data-section="essentials">Essentials</a>
+        <nav class="ul ul--sidebar">
+          <ul class="ul ul--menu">
+            <li class="ul__item ul__item--heading">
+              <h3 class="heading heading--sidebar">Required</h3>
             </li>
-            <li class="sidebar__item">
-              <a class="sidebar__link" href="#classification" data-section="classification">Classification</a>
+            <li class="ul__item">
+              <a class="link link--menu" href="#essentials" data-section="essentials">Essentials</a>
             </li>
-            <li class="sidebar__item">
-              <a class="sidebar__link" href="#templates" data-section="templates">Templates</a>
+            <li class="ul__item">
+              <a class="link link--menu" href="#classification" data-section="classification">Classification</a>
             </li>
-            <li class="sidebar__item">
-              <a class="sidebar__link" href="#schedule" data-section="schedule">Schedule</a>
+            <li class="ul__item">
+              <a class="link link--menu" href="#templates" data-section="templates">Templates</a>
             </li>
-            <li class="sidebar__item">
-              <a class="sidebar__link" href="#curriculum" data-section="curriculum">Curriculum</a>
+            <li class="ul__item">
+              <a class="link link--menu" href="#schedule" data-section="schedule">Schedule</a>
             </li>
-          </ul>
-          <h3 class="sidebar__heading">Optional</h3>
-          <ul class="sidebar__list">
-            <li class="sidebar__item">
-              <a class="sidebar__link" href="#marketplace" data-section="marketplace">Marketplace</a>
+            <li class="ul__item">
+              <a class="link link--menu" href="#curriculum" data-section="curriculum">Curriculum</a>
             </li>
-            <li class="sidebar__item">
-              <a class="sidebar__link" href="#resources" data-section="resources">Resources</a>
+            <li class="ul__item ul__item--heading">
+              <h3 class="heading heading--sidebar">Optional</h3>
             </li>
-          </ul>
-          <ul class="sidebar__list">
-            <li class="sidebar__item">
-              <a class="sidebar__link" href="#settings" data-section="settings">Settings</a>
+            <li class="ul__item">
+              <a class="link link--menu" href="#marketplace" data-section="marketplace">Marketplace</a>
+            </li>
+            <li class="ul__item">
+              <a class="link link--menu" href="#resources" data-section="resources">Resources</a>
+            </li>
+            <li class="ul__item">
+              <a class="link link--menu" href="#settings" data-section="settings">Settings</a>
             </li>
           </ul>
         </nav>
@@ -70,11 +76,11 @@
       <div class="content">
         <!-- Essentials Article -->
         <article id="essentials" class="content__article content__article--active">
-        <section class="content__section">
           <form class="form" id="course-essentials-form">
             <div class="form__group">
               <label class="form__label" for="course-name">Course Name</label>
-              <input class="form__input" type="text" id="course-name" name="course_name" placeholder="Enter course name" required />
+              <input class="form__input" type="text" id="course-name" name="course_name" placeholder="Enter course name"
+                required />
             </div>
             <div class="form__group">
               <label class="form__label" for="course-description">Course Description</label>
@@ -83,11 +89,13 @@
             </div>
             <div class="form__group">
               <label class="form__label" for="teacher-id">Teacher</label>
-              <input class="form__input form__input--readonly" type="text" id="teacher-id" name="teacher_id" placeholder="Loading..." readonly />
+              <input class="form__input form__input--readonly" type="text" id="teacher-id" name="teacher_id"
+                placeholder="Loading..." readonly />
             </div>
             <div class="form__group">
               <label class="form__label" for="institution">Institution</label>
-              <input class="form__input form__input--readonly" type="text" id="institution" name="institution" placeholder="Loading..." readonly />
+              <input class="form__input form__input--readonly" type="text" id="institution" name="institution"
+                placeholder="Loading..." readonly />
             </div>
             <div class="form__group">
               <label class="form__label" for="course-language">Course Language</label>
@@ -98,10 +106,11 @@
             <div class="form__group">
               <label class="form__label" for="course-image">Course Image</label>
               <div class="image-upload">
-                <input class="image-upload__input" type="file" id="course-image" name="course_image" accept="image/*" required />
+                <input class="image-upload__input" type="file" id="course-image" name="course_image" accept="image/*"
+                  required />
                 <div class="image-upload__controls">
                   <label class="button button--outline image-upload__button" for="course-image">
-                    <span>Change course image</span>
+                    Change course image
                   </label>
                   <div class="image-upload__preview" id="image-preview" style="display: none">
                     <img class="image-upload__img" id="preview-img" src="" alt="Course preview" />
@@ -118,21 +127,18 @@
               </button>
             </div>
           </form>
-        </section>
-      </article>
-      <!-- Classification Article -->
-      <article class="content__article" id="classification">
-        <section class="content__section content--wide">
-          <form class="form form--classification" id="course-classification-form">
+        </article>
+        <!-- Classification Article -->
+        <article class="content__article" id="classification">
+          <form class="form" id="course-classification-form">
             <!-- Row 1: Class Year | Curricular Framework -->
             <div class="form__row">
               <div class="form__group">
                 <label class="form__label" for="class-year-dropdown">Class Year</label>
                 <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" 
-                          type="button" id="class-year-dropdown" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="dropdown__text">Select class year...</span>
-                    <span class="dropdown__icon">▼</span>
+                  <button class="button button--outline dropdown__toggle" type="button" id="class-year-dropdown"
+                    aria-haspopup="listbox" aria-expanded="false">
+                    Select class year... ▼
                   </button>
                   <div class="dropdown__menu" role="listbox" id="class-year-menu">
                     <div class="dropdown__loading" id="class-year-loading">
@@ -143,14 +149,13 @@
                   <input type="hidden" name="class_year" id="class-year-value" />
                 </div>
               </div>
-              
+
               <div class="form__group">
                 <label class="form__label" for="curricular-framework-dropdown">Curricular Framework</label>
                 <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" 
-                          type="button" id="curricular-framework-dropdown" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="dropdown__text">Select framework...</span>
-                    <span class="dropdown__icon">▼</span>
+                  <button class="button button--outline dropdown__toggle" type="button"
+                    id="curricular-framework-dropdown" aria-haspopup="listbox" aria-expanded="false">
+                    Select framework... ▼
                   </button>
                   <div class="dropdown__menu" role="listbox" id="curricular-framework-menu">
                     <div class="dropdown__loading" id="curricular-framework-loading">
@@ -162,7 +167,7 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- Row 2: Domain → Subject → Topic → Subtopic -->
             <div class="form__row form__row--hierarchical">
               <div class="form__group">
@@ -171,10 +176,9 @@
                   <span class="form__label-hint">Academic field</span>
                 </label>
                 <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" 
-                          type="button" id="domain-dropdown" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="dropdown__text">Select domain...</span>
-                    <span class="dropdown__icon">▼</span>
+                  <button class="button button--outline dropdown__toggle" type="button" id="domain-dropdown"
+                    aria-haspopup="listbox" aria-expanded="false">
+                    Select domain... ▼
                   </button>
                   <div class="dropdown__menu" role="listbox" id="domain-menu">
                     <div class="dropdown__loading" id="domain-loading">
@@ -185,17 +189,16 @@
                   <input type="hidden" name="domain" id="domain-value" />
                 </div>
               </div>
-              
+
               <div class="form__group">
                 <label class="form__label" for="subject-dropdown">
                   Subject
                   <span class="form__label-hint">Specific discipline</span>
                 </label>
                 <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" 
-                          type="button" id="subject-dropdown" aria-haspopup="listbox" aria-expanded="false" disabled>
-                    <span class="dropdown__text">Select domain first...</span>
-                    <span class="dropdown__icon">▼</span>
+                  <button class="button button--outline dropdown__toggle" type="button" id="subject-dropdown"
+                    aria-haspopup="listbox" aria-expanded="false" disabled>
+                    Select domain first... ▼
                   </button>
                   <div class="dropdown__menu" role="listbox" id="subject-menu">
                     <div class="dropdown__empty" id="subject-empty">
@@ -206,17 +209,16 @@
                   <input type="hidden" name="subject" id="subject-value" />
                 </div>
               </div>
-              
+
               <div class="form__group">
                 <label class="form__label" for="topic-dropdown">
                   Topic
                   <span class="form__label-hint">Area of study</span>
                 </label>
                 <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" 
-                          type="button" id="topic-dropdown" aria-haspopup="listbox" aria-expanded="false" disabled>
-                    <span class="dropdown__text">Select subject first...</span>
-                    <span class="dropdown__icon">▼</span>
+                  <button class="button button--outline dropdown__toggle" type="button" id="topic-dropdown"
+                    aria-haspopup="listbox" aria-expanded="false" disabled>
+                    Select subject first... ▼
                   </button>
                   <div class="dropdown__menu" role="listbox" id="topic-menu">
                     <div class="dropdown__empty" id="topic-empty">
@@ -227,7 +229,7 @@
                   <input type="hidden" name="topic" id="topic-value" />
                 </div>
               </div>
-              
+
               <div class="form__group">
                 <label class="form__label" for="subtopic-dropdown">
                   Subtopic
@@ -235,10 +237,9 @@
                   <span class="form__label-hint">Specific focus</span>
                 </label>
                 <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" 
-                          type="button" id="subtopic-dropdown" aria-haspopup="listbox" aria-expanded="false" disabled>
-                    <span class="dropdown__text">Select topic first...</span>
-                    <span class="dropdown__icon">▼</span>
+                  <button class="button button--outline dropdown__toggle" type="button" id="subtopic-dropdown"
+                    aria-haspopup="listbox" aria-expanded="false" disabled>
+                    Select topic first... ▼
                   </button>
                   <div class="dropdown__menu" role="listbox" id="subtopic-menu">
                     <div class="dropdown__empty" id="subtopic-empty">
@@ -250,7 +251,7 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- Row 3: Course Sequence -->
             <div class="form__row form__row--sequence">
               <div class="form__group">
@@ -260,10 +261,9 @@
                   <span class="form__label-hint">Prerequisite</span>
                 </label>
                 <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" 
-                          type="button" id="previous-course-dropdown" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="dropdown__text">Select previous course...</span>
-                    <span class="dropdown__icon">▼</span>
+                  <button class="button button--outline dropdown__toggle" type="button" id="previous-course-dropdown"
+                    aria-haspopup="listbox" aria-expanded="false">
+                    Select previous course... ▼
                   </button>
                   <div class="dropdown__menu" role="listbox" id="previous-course-menu">
                     <div class="dropdown__header">
@@ -277,7 +277,7 @@
                   <input type="hidden" name="previous_course" id="previous-course-value" />
                 </div>
               </div>
-              
+
               <div class="form__group">
                 <label class="form__label" for="current-course-dropdown">
                   Current Course
@@ -285,10 +285,9 @@
                   <span class="form__label-hint">This course</span>
                 </label>
                 <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" 
-                          type="button" id="current-course-dropdown" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="dropdown__text">Select current course...</span>
-                    <span class="dropdown__icon">▼</span>
+                  <button class="button button--outline dropdown__toggle" type="button" id="current-course-dropdown"
+                    aria-haspopup="listbox" aria-expanded="false">
+                    Select current course... ▼
                   </button>
                   <div class="dropdown__menu" role="listbox" id="current-course-menu">
                     <div class="dropdown__header">
@@ -302,7 +301,7 @@
                   <input type="hidden" name="current_course" id="current-course-value" />
                 </div>
               </div>
-              
+
               <div class="form__group">
                 <label class="form__label" for="next-course-dropdown">
                   Next Course
@@ -310,10 +309,9 @@
                   <span class="form__label-hint">Follow-up</span>
                 </label>
                 <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" 
-                          type="button" id="next-course-dropdown" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="dropdown__text">Select next course...</span>
-                    <span class="dropdown__icon">▼</span>
+                  <button class="button button--outline dropdown__toggle" type="button" id="next-course-dropdown"
+                    aria-haspopup="listbox" aria-expanded="false">
+                    Select next course... ▼
                   </button>
                   <div class="dropdown__menu" role="listbox" id="next-course-menu">
                     <div class="dropdown__header">
@@ -328,7 +326,7 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- Last saved indicator -->
             <div class="save-status" id="classification-last-saved">
               <span class="save-status__text" id="classification-save-status">
@@ -336,23 +334,20 @@
               </span>
             </div>
           </form>
-        </section>
-      </article>
-      <!-- Templates Article -->
-      <article class="content__article" id="templates">
-        <section class="content__section">
+        </article>
+        <!-- Templates Article -->
+        <article class="content__article" id="templates">
           <!-- Template Actions -->
           <div class="template__actions">
             <button class="button button--primary" id="create-template-btn">
-              <span>+</span>
-              Create New Template
+              + Create New Template
             </button>
             <button class="button button--outline" id="load-template-btn">
-              <span>↗</span>
-              Load Template
+              ↗ Load Template
+            </button>
             </button>
           </div>
-          
+
           <!-- Template Builder -->
           <div class="template__layout">
             <div class="template__config">
@@ -361,7 +356,7 @@
                 <p>Select or create a template to configure its settings.</p>
               </div>
             </div>
-            
+
             <div class="template__preview">
               <h3 class="template__heading">Template Preview</h3>
               <div class="template__content" id="template-preview-content">
@@ -369,666 +364,649 @@
               </div>
             </div>
           </div>
-        </section>
-      </article>
-      <!-- Create Template Modal -->
-      <div class="modal coursebuilder-modal" id="create-template-modal">
-        <div class="modal__backdrop">
-          <div class="modal__content">
-            <div class="modal__header">
-              <h2 class="modal__title">Create New Template</h2>
-              <button class="button button--subtle button--small modal__close" 
-                      type="button" onclick="TemplateManager.hideCreateTemplateModal()">
-                &times;
+    </section>
+    </article>
+    <!-- Create Template Modal -->
+    <div class="modal coursebuilder-modal" id="create-template-modal">
+      <div class="modal__backdrop">
+        <div class="modal__content">
+          <div class="modal__header">
+            <h2 class="modal__title">Create New Template</h2>
+            <button class="button button--subtle button--small modal__close" type="button"
+              onclick="TemplateManager.hideCreateTemplateModal()">
+              &times;
+            </button>
+          </div>
+
+          <form class="form coursebuilder-form modal__body" id="create-template-form">
+            <div class="form__group">
+              <label class="form__label" for="template-name">Template Name*</label>
+              <input class="form__input" type="text" id="template-name" name="template-name" required
+                placeholder="Enter template name" />
+            </div>
+
+            <div class="form__group">
+              <label class="form__label" for="template-type">Template Type*</label>
+              <select class="form__input form__select" id="template-type" name="template-type" required>
+                <option value="">Select template type</option>
+                <option value="lesson">Lesson</option>
+              </select>
+            </div>
+
+            <div class="form__group">
+              <label class="form__label" for="template-description">Description (Optional)</label>
+              <textarea class="form__textarea" id="template-description" name="template-description" rows="3"
+                placeholder="Describe your template..."></textarea>
+            </div>
+
+            <div class="modal__footer">
+              <button class="button button--outline" type="button" onclick="TemplateManager.hideCreateTemplateModal()">
+                Cancel
+              </button>
+              <button class="button button--primary" type="submit">
+                Create Template
               </button>
             </div>
-            
-            <form class="form coursebuilder-form modal__body" id="create-template-form">
-              <div class="form__group">
-                <label class="form__label" for="template-name">Template Name*</label>
-                <input class="form__input" type="text" id="template-name" name="template-name" 
-                       required placeholder="Enter template name" />
-              </div>
-              
-              <div class="form__group">
-                <label class="form__label" for="template-type">Template Type*</label>
-                <select class="form__input form__select" id="template-type" name="template-type" required>
-                  <option value="">Select template type</option>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- Load Template Modal -->
+    <div class="modal coursebuilder-modal" id="load-template-modal">
+      <div class="modal__backdrop">
+        <div class="modal__content">
+          <div class="modal__header">
+            <h2 class="modal__title">Load Existing Template</h2>
+            <button class="button button--subtle button--small modal__close" type="button"
+              onclick="TemplateManager.hideLoadTemplateModal()">
+              &times;
+            </button>
+          </div>
+
+          <div class="modal__body template-browser">
+            <div class="template-browser__controls">
+              <input class="form__input template-browser__search" type="text" id="template-search"
+                placeholder="Search templates..." />
+              <div class="template-browser__filters">
+                <select class="form__input form__select template-browser__filter" id="template-type-filter">
+                  <option value="">All Types</option>
                   <option value="lesson">Lesson</option>
                 </select>
               </div>
-              
+            </div>
+
+            <div class="template-browser__content">
+              <div class="template-browser__loading" id="template-loading" style="display: none">
+                <p>Loading your templates...</p>
+              </div>
+
+              <div class="template-browser__list" id="template-list-content" style="display: none">
+                <!-- Templates will be populated here by JavaScript -->
+              </div>
+
+              <div class="template-browser__empty" id="no-templates-message" style="display: none">
+                <div class="template-browser__empty-icon">📄</div>
+                <h3 class="template-browser__empty-title">No Templates Found</h3>
+                <p class="template-browser__empty-text">
+                  You haven't created any templates yet. Create your first template to get started!
+                </p>
+                <button class="button button--primary template-browser__empty-action"
+                  onclick="TemplateManager.hideLoadTemplateModal(); TemplateManager.showCreateTemplateModal();">
+                  Create First Template
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal__footer">
+            <button class="button button--outline" type="button" onclick="TemplateManager.hideLoadTemplateModal()">
+              Cancel
+            </button>
+            <button class="button button--primary" type="button" id="load-selected-template" disabled
+              onclick="TemplateManager.loadSelectedTemplate()">
+              Load Template
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Schedule Article -->
+    <article class="content__article" id="schedule">
+      <!-- Schedule Layout -->
+      <div class="schedule__layout">
+        <!-- Schedule Configuration -->
+        <div class="schedule__config" id="schedule-config">
+          <h3 class="schedule__heading">Schedule Configuration</h3>
+
+          <form class="form" id="course-schedule-form">
+            <!-- Date Range Row -->
+            <div class="form__row">
               <div class="form__group">
-                <label class="form__label" for="template-description">Description (Optional)</label>
-                <textarea class="form__textarea" id="template-description" name="template-description" 
-                          rows="3" placeholder="Describe your template..."></textarea>
+                <label class="form__label" for="start-date">Start Date</label>
+                <input class="form__input" type="date" id="start-date" required />
               </div>
-              
-              <div class="modal__footer">
-                <button class="button button--outline" type="button" 
-                        onclick="TemplateManager.hideCreateTemplateModal()">
-                  Cancel
-                </button>
-                <button class="button button--primary" type="submit">
-                  Create Template
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-      <!-- Load Template Modal -->
-      <div class="modal coursebuilder-modal" id="load-template-modal">
-        <div class="modal__backdrop">
-          <div class="modal__content">
-            <div class="modal__header">
-              <h2 class="modal__title">Load Existing Template</h2>
-              <button class="button button--subtle button--small modal__close" 
-                      type="button" onclick="TemplateManager.hideLoadTemplateModal()">
-                &times;
-              </button>
-            </div>
-            
-            <div class="modal__body template-browser">
-              <div class="template-browser__controls">
-                <input class="form__input template-browser__search" 
-                       type="text" id="template-search" placeholder="Search templates..." />
-                <div class="template-browser__filters">
-                  <select class="form__input form__select template-browser__filter" id="template-type-filter">
-                    <option value="">All Types</option>
-                    <option value="lesson">Lesson</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div class="template-browser__content">
-                <div class="template-browser__loading" id="template-loading" style="display: none">
-                  <p>Loading your templates...</p>
-                </div>
-                
-                <div class="template-browser__list" id="template-list-content" style="display: none">
-                  <!-- Templates will be populated here by JavaScript -->
-                </div>
-                
-                <div class="template-browser__empty" id="no-templates-message" style="display: none">
-                  <div class="template-browser__empty-icon">📄</div>
-                  <h3 class="template-browser__empty-title">No Templates Found</h3>
-                  <p class="template-browser__empty-text">
-                    You haven't created any templates yet. Create your first template to get started!
-                  </p>
-                  <button class="button button--primary template-browser__empty-action" 
-                          onclick="TemplateManager.hideLoadTemplateModal(); TemplateManager.showCreateTemplateModal();">
-                    Create First Template
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <div class="modal__footer">
-              <button class="button button--outline" type="button" 
-                      onclick="TemplateManager.hideLoadTemplateModal()">
-                Cancel
-              </button>
-              <button class="button button--primary" type="button" id="load-selected-template" 
-                      disabled onclick="TemplateManager.loadSelectedTemplate()">
-                Load Template
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Schedule Article -->
-      <article class="content__article" id="schedule">
-        <section class="content__section">
-          <!-- Schedule Layout -->
-          <div class="schedule__layout">
-            <!-- Schedule Configuration -->
-            <div class="schedule__config" id="schedule-config">
-              <h3 class="schedule__heading">Schedule Configuration</h3>
-              
-              <form class="form" id="course-schedule-form">
-              <!-- Date Range Row -->
-              <div class="form__row">
-                <div class="form__group">
-                  <label class="form__label" for="start-date">Start Date</label>
-                  <input class="form__input" type="date" id="start-date" required />
-                </div>
-                <div class="form__group">
-                  <label class="form__label" for="end-date">End Date</label>
-                  <input class="form__input" type="date" id="end-date" required />
-                </div>
-              </div>
-              
-              <!-- Days of Week Selection -->
               <div class="form__group">
-                <label class="form__label">Days of the Week</label>
-                <div class="schedule__days">
-                  <button class="button button--outline button--small schedule__days__button" 
-                          type="button" data-day="monday">
-                    Mon
-                  </button>
-                  <button class="button button--outline button--small schedule__days__button" 
-                          type="button" data-day="tuesday">
-                    Tue
-                  </button>
-                  <button class="button button--outline button--small schedule__days__button" 
-                          type="button" data-day="wednesday">
-                    Wed
-                  </button>
-                  <button class="button button--outline button--small schedule__days__button" 
-                          type="button" data-day="thursday">
-                    Thu
-                  </button>
-                  <button class="button button--outline button--small schedule__days__button" 
-                          type="button" data-day="friday">
-                    Fri
-                  </button>
-                  <button class="button button--outline button--small schedule__days__button" 
-                          type="button" data-day="saturday">
-                    Sat
-                  </button>
-                  <button class="button button--outline button--small schedule__days__button" 
-                          type="button" data-day="sunday">
-                    Sun
-                  </button>
-                </div>
+                <label class="form__label" for="end-date">End Date</label>
+                <input class="form__input" type="date" id="end-date" required />
               </div>
-              
-              <!-- Time Range Row -->
-              <div class="form__row">
-                <div class="form__group">
-                  <label class="form__label" for="start-time">Start Time</label>
-                  <input class="form__input" type="time" id="start-time" required />
-                </div>
-                <div class="form__group">
-                  <label class="form__label" for="end-time">End Time</label>
-                  <input class="form__input" type="time" id="end-time" required />
-                </div>
-              </div>
-              
-              <!-- Schedule Action Buttons -->
-              <div class="button-group">
-                <button class="button button--primary" 
-                        type="button" id="schedule-course-btn" disabled>
-                  Schedule Course
+            </div>
+
+            <!-- Days of Week Selection -->
+            <div class="form__group">
+              <label class="form__label">Days of the Week</label>
+              <div class="schedule__days">
+                <button class="button button--outline button--small schedule__days__button" type="button"
+                  data-day="monday">
+                  Mon
                 </button>
-                <button class="button button--outline" 
-                        type="button" id="delete-schedule-btn" style="display: none;">
-                  Delete Schedule
+                <button class="button button--outline button--small schedule__days__button" type="button"
+                  data-day="tuesday">
+                  Tue
+                </button>
+                <button class="button button--outline button--small schedule__days__button" type="button"
+                  data-day="wednesday">
+                  Wed
+                </button>
+                <button class="button button--outline button--small schedule__days__button" type="button"
+                  data-day="thursday">
+                  Thu
+                </button>
+                <button class="button button--outline button--small schedule__days__button" type="button"
+                  data-day="friday">
+                  Fri
+                </button>
+                <button class="button button--outline button--small schedule__days__button" type="button"
+                  data-day="saturday">
+                  Sat
+                </button>
+                <button class="button button--outline button--small schedule__days__button" type="button"
+                  data-day="sunday">
+                  Sun
                 </button>
               </div>
-            </form>
             </div>
-            
-            <!-- Schedule Preview -->
-            <div class="schedule__preview" id="schedule-preview">
-              <h3 class="schedule__heading">Schedule Preview</h3>
-              <div class="schedule__content">
-                <!-- Schedule rows will be generated here by JavaScript -->
-                <div class="schedule__placeholder">
-                  <p>Click "Schedule Course" to generate your lesson schedule</p>
-                </div>
+
+            <!-- Time Range Row -->
+            <div class="form__row">
+              <div class="form__group">
+                <label class="form__label" for="start-time">Start Time</label>
+                <input class="form__input" type="time" id="start-time" required />
               </div>
-              <div class="schedule__total">Total lessons: 0</div>
-            </div>
-          </div>
-        </section>
-      </article>
-      <!-- Curriculum Article -->
-      <article class="content__article" id="curriculum">
-        <section class="content">
-          <!-- Curriculum Layout -->
-          <div class="coursebuilder-curriculum-layout">
-            <!-- Curriculum Configuration -->
-            <div class="coursebuilder-curriculum-config" id="curriculum-config">
-              <h3 class="coursebuilder-curriculum-config__heading">Curriculum Configuration</h3>
-              <div class="coursebuilder-curriculum-config__content">
-                <!-- Duration Options -->
-                <div class="curriculum-duration-options">
-                  <button class="button button--outline curriculum-duration-option" 
-                          type="button" data-duration="mini" data-max="30">
-                    <span class="curriculum-duration-option__label">Mini</span>
-                    <span class="curriculum-duration-option__time">Up to 30'</span>
-                  </button>
-                  <button class="button button--outline curriculum-duration-option" 
-                          type="button" data-duration="single" data-max="60">
-                    <span class="curriculum-duration-option__label">Single</span>
-                    <span class="curriculum-duration-option__time">Up to 60'</span>
-                  </button>
-                  <button class="button button--outline curriculum-duration-option" 
-                          type="button" data-duration="double" data-max="120">
-                    <span class="curriculum-duration-option__label">Double</span>
-                    <span class="curriculum-duration-option__time">Up to 120'</span>
-                  </button>
-                  <button class="button button--outline curriculum-duration-option" 
-                          type="button" data-duration="triple" data-max="180">
-                    <span class="curriculum-duration-option__label">Triple</span>
-                    <span class="curriculum-duration-option__time">Up to 180'</span>
-                  </button>
-                  <button class="button button--outline curriculum-duration-option" 
-                          type="button" data-duration="halfFull" data-max="999">
-                    <span class="curriculum-duration-option__label">Half/Full day</span>
-                    <span class="curriculum-duration-option__time">Longer than 180'</span>
-                  </button>
-                </div>
-                
-                <!-- Recommendation Status -->
-                <div class="curriculum-recommendation" id="curriculum-recommendation">
-                  <span class="curriculum-recommendation__text">Select a lesson duration to see recommendations</span>
-                </div>
-                
-                <!-- Curriculum Structure Inputs -->
-                <div class="curriculum-structure-inputs">
-                  <div class="curriculum-structure-row">
-                    <div class="form__group">
-                      <label class="form__label" for="curriculum-topics">Topics per lesson</label>
-                      <input class="form__input" type="number" id="curriculum-topics" 
-                             min="1" max="10" value="2" />
-                    </div>
-                    
-                    <div class="form__group">
-                      <label class="form__label" for="curriculum-objectives">Objectives per topic</label>
-                      <input class="form__input" type="number" id="curriculum-objectives" 
-                             min="1" max="5" value="2" />
-                    </div>
-                    
-                    <div class="form__group">
-                      <label class="form__label" for="curriculum-tasks">Tasks per objective</label>
-                      <input class="form__input" type="number" id="curriculum-tasks" 
-                             min="1" max="5" value="2" />
-                    </div>
-                  </div>
-                </div>
+              <div class="form__group">
+                <label class="form__label" for="end-time">End Time</label>
+                <input class="form__input" type="time" id="end-time" required />
               </div>
             </div>
-            
-            <!-- Curriculum Preview -->
-            <div class="coursebuilder-curriculum-preview">
-              <!-- Preview Mode Buttons -->
-              <div class="coursebuilder-curriculum-preview__controls">
-                <span class="coursebuilder-curriculum-preview__label">Display:</span>
-                <div class="button-group coursebuilder-curriculum-preview__modes">
-                  <button class="button button--small button--outline coursebuilder-curriculum-preview__mode" 
-                          type="button" data-mode="titles">
-                    Lesson Titles
-                  </button>
-                  <button class="button button--small button--outline coursebuilder-curriculum-preview__mode" 
-                          type="button" data-mode="topics">
-                    Lesson Topics
-                  </button>
-                  <button class="button button--small button--outline coursebuilder-curriculum-preview__mode" 
-                          type="button" data-mode="objectives">
-                    Lesson Objectives
-                  </button>
-                  <button class="button button--small button--outline coursebuilder-curriculum-preview__mode" 
-                          type="button" data-mode="all">
-                    All Details
-                  </button>
-                </div>
-              </div>
-              
-              <!-- Curriculum content will be rendered here -->
-              <div class="coursebuilder-curriculum-preview__content">
-                <!-- Dynamic content -->
-              </div>
+
+            <!-- Schedule Action Buttons -->
+            <div class="button-group">
+              <button class="button button--primary" type="button" id="schedule-course-btn" disabled>
+                Schedule Course
+              </button>
+              <button class="button button--outline" type="button" id="delete-schedule-btn" style="display: none;">
+                Delete Schedule
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Schedule Preview -->
+        <div class="schedule__preview" id="schedule-preview">
+          <h3 class="schedule__heading">Schedule Preview</h3>
+          <div class="schedule__content">
+            <!-- Schedule rows will be generated here by JavaScript -->
+            <div class="schedule__placeholder">
+              <p>Click "Schedule Course" to generate your lesson schedule</p>
             </div>
           </div>
-        </section>
-      </article>
-      <!-- Settings Article -->
-      <article class="content__article" id="settings">
-        <section class="content">
-          <!-- Margins Section -->
-          <div class="coursebuilder-settings-section">
-            <h4 class="coursebuilder-settings-section__heading">Margins</h4>
-            
-            <!-- Display Unit Selection -->
-            <div class="coursebuilder-margin-settings">
-              <div class="coursebuilder-margin-settings__units">
-                <span class="coursebuilder-margin-settings__label">Display in</span>
-                <div class="form__checkbox-group coursebuilder-margin-settings__unit-options">
-                  <input class="form__checkbox" type="radio" id="unit-inches" name="margin-unit" value="inches" />
-                  <label class="form__label" for="unit-inches">Inches</label>
-                  <input class="form__checkbox" type="radio" id="unit-centimeters" name="margin-unit" value="centimeters" checked />
-                  <label class="form__label" for="unit-centimeters">Centimeters</label>
-                </div>
-              </div>
-              
-              <!-- Margin Inputs Grid -->
-              <div class="coursebuilder-margin-settings__grid">
+          <div class="schedule__total">Total lessons: 0</div>
+        </div>
+      </div>
+    </article>
+    <!-- Curriculum Article -->
+    <article class="content__article" id="curriculum">
+      <!-- Curriculum Layout -->
+      <div class="coursebuilder-curriculum-layout">
+        <!-- Curriculum Configuration -->
+        <div class="coursebuilder-curriculum-config" id="curriculum-config">
+          <h3 class="coursebuilder-curriculum-config__heading">Curriculum Configuration</h3>
+          <div class="coursebuilder-curriculum-config__content">
+            <!-- Duration Options -->
+            <div class="curriculum-duration-options">
+              <button class="button button--outline curriculum-duration-option" type="button" data-duration="mini"
+                data-max="30">
+                <span class="curriculum-duration-option__label">Mini</span>
+                <span class="curriculum-duration-option__time">Up to 30'</span>
+              </button>
+              <button class="button button--outline curriculum-duration-option" type="button" data-duration="single"
+                data-max="60">
+                <span class="curriculum-duration-option__label">Single</span>
+                <span class="curriculum-duration-option__time">Up to 60'</span>
+              </button>
+              <button class="button button--outline curriculum-duration-option" type="button" data-duration="double"
+                data-max="120">
+                <span class="curriculum-duration-option__label">Double</span>
+                <span class="curriculum-duration-option__time">Up to 120'</span>
+              </button>
+              <button class="button button--outline curriculum-duration-option" type="button" data-duration="triple"
+                data-max="180">
+                <span class="curriculum-duration-option__label">Triple</span>
+                <span class="curriculum-duration-option__time">Up to 180'</span>
+              </button>
+              <button class="button button--outline curriculum-duration-option" type="button" data-duration="halfFull"
+                data-max="999">
+                <span class="curriculum-duration-option__label">Half/Full day</span>
+                <span class="curriculum-duration-option__time">Longer than 180'</span>
+              </button>
+            </div>
+
+            <!-- Recommendation Status -->
+            <div class="curriculum-recommendation" id="curriculum-recommendation">
+              <span class="curriculum-recommendation__text">Select a lesson duration to see recommendations</span>
+            </div>
+
+            <!-- Curriculum Structure Inputs -->
+            <div class="curriculum-structure-inputs">
+              <div class="curriculum-structure-row">
                 <div class="form__group">
-                  <label class="form__label" for="margin-top">Top</label>
-                  <div class="coursebuilder-margin-settings__input-wrapper">
-                    <input class="form__input coursebuilder-margin-settings__input" 
-                           type="number" id="margin-top" name="margin_top" value="2.54" step="0.01" min="0" />
-                    <span class="coursebuilder-margin-settings__unit">cm</span>
-                  </div>
+                  <label class="form__label" for="curriculum-topics">Topics per lesson</label>
+                  <input class="form__input" type="number" id="curriculum-topics" min="1" max="10" value="2" />
                 </div>
-                
+
                 <div class="form__group">
-                  <label class="form__label" for="margin-bottom">Bottom</label>
-                  <div class="coursebuilder-margin-settings__input-wrapper">
-                    <input class="form__input coursebuilder-margin-settings__input" 
-                           type="number" id="margin-bottom" name="margin_bottom" value="2.54" step="0.01" min="0" />
-                    <span class="coursebuilder-margin-settings__unit">cm</span>
-                  </div>
+                  <label class="form__label" for="curriculum-objectives">Objectives per topic</label>
+                  <input class="form__input" type="number" id="curriculum-objectives" min="1" max="5" value="2" />
                 </div>
-                
+
                 <div class="form__group">
-                  <label class="form__label" for="margin-left">Left</label>
-                  <div class="coursebuilder-margin-settings__input-wrapper">
-                    <input class="form__input coursebuilder-margin-settings__input" 
-                           type="number" id="margin-left" name="margin_left" value="2.54" step="0.01" min="0" />
-                    <span class="coursebuilder-margin-settings__unit">cm</span>
-                  </div>
+                  <label class="form__label" for="curriculum-tasks">Tasks per objective</label>
+                  <input class="form__input" type="number" id="curriculum-tasks" min="1" max="5" value="2" />
                 </div>
-                
-                <div class="form__group">
-                  <label class="form__label" for="margin-right">Right</label>
-                  <div class="coursebuilder-margin-settings__input-wrapper">
-                    <input class="form__input coursebuilder-margin-settings__input" 
-                           type="number" id="margin-right" name="margin_right" value="2.54" step="0.01" min="0" />
-                    <span class="coursebuilder-margin-settings__unit">cm</span>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Save Status -->
-              <div class="coursebuilder-save-status" id="margins-save-status">
-                <span class="coursebuilder-save-status__text">Margins will be saved automatically</span>
               </div>
             </div>
           </div>
-          
-          <!-- Course Visibility Settings -->
-          <div class="coursebuilder-settings-section">
-            <form class="form coursebuilder-form" id="course-settings-form">
-              <div class="coursebuilder-visibility-settings">
-                <div class="coursebuilder-visibility-settings__options">
-                  <div class="form__checkbox-group">
-                    <input class="form__checkbox" type="checkbox" id="course-visible" name="course_visible" />
-                    <label class="form__label" for="course-visible">Course visible to students</label>
-                  </div>
-                  
-                  <div class="form__checkbox-group">
-                    <input class="form__checkbox" type="checkbox" id="allow-enrollment" name="allow_enrollment" />
-                    <label class="form__label" for="allow-enrollment">Allow new enrollments</label>
-                  </div>
-                  
-                  <div class="form__checkbox-group">
-                    <input class="form__checkbox" type="checkbox" id="require-approval" name="require_approval" />
-                    <label class="form__label" for="require-approval">Require enrollment approval</label>
-                  </div>
-                </div>
-                
-                <div class="coursebuilder-save-status" id="settings-last-saved">
-                  <span class="coursebuilder-save-status__text" id="settings-save-status">
-                    Changes will be saved automatically
-                  </span>
-                </div>
+        </div>
+
+        <!-- Curriculum Preview -->
+        <div class="coursebuilder-curriculum-preview">
+          <!-- Preview Mode Buttons -->
+          <div class="coursebuilder-curriculum-preview__controls">
+            <span class="coursebuilder-curriculum-preview__label">Display:</span>
+            <div class="button-group coursebuilder-curriculum-preview__modes">
+              <button class="button button--small button--outline coursebuilder-curriculum-preview__mode" type="button"
+                data-mode="titles">
+                Lesson Titles
+              </button>
+              <button class="button button--small button--outline coursebuilder-curriculum-preview__mode" type="button"
+                data-mode="topics">
+                Lesson Topics
+              </button>
+              <button class="button button--small button--outline coursebuilder-curriculum-preview__mode" type="button"
+                data-mode="objectives">
+                Lesson Objectives
+              </button>
+              <button class="button button--small button--outline coursebuilder-curriculum-preview__mode" type="button"
+                data-mode="all">
+                All Details
+              </button>
+            </div>
+          </div>
+
+          <!-- Curriculum content will be rendered here -->
+          <div class="coursebuilder-curriculum-preview__content">
+            <!-- Dynamic content -->
+          </div>
+        </div>
+      </div>
+    </article>
+    <!-- Settings Article -->
+    <article class="content__article" id="settings">
+      <!-- Margins Section -->
+      <div class="coursebuilder-settings-section">
+        <h4 class="coursebuilder-settings-section__heading">Margins</h4>
+
+        <!-- Display Unit Selection -->
+        <div class="coursebuilder-margin-settings">
+          <div class="coursebuilder-margin-settings__units">
+            <span class="coursebuilder-margin-settings__label">Display in</span>
+            <div class="form__checkbox-group coursebuilder-margin-settings__unit-options">
+              <input class="form__checkbox" type="radio" id="unit-inches" name="margin-unit" value="inches" />
+              <label class="form__label" for="unit-inches">Inches</label>
+              <input class="form__checkbox" type="radio" id="unit-centimeters" name="margin-unit" value="centimeters"
+                checked />
+              <label class="form__label" for="unit-centimeters">Centimeters</label>
+            </div>
+          </div>
+
+          <!-- Margin Inputs Grid -->
+          <div class="coursebuilder-margin-settings__grid">
+            <div class="form__group">
+              <label class="form__label" for="margin-top">Top</label>
+              <div class="coursebuilder-margin-settings__input-wrapper">
+                <input class="form__input coursebuilder-margin-settings__input" type="number" id="margin-top"
+                  name="margin_top" value="2.54" step="0.01" min="0" />
+                <span class="coursebuilder-margin-settings__unit">cm</span>
               </div>
-            </form>
-          </div>
-          
-          <!-- Danger Zone -->
-          <div class="coursebuilder-settings-section coursebuilder-settings-section--danger">
-            <h3 class="coursebuilder-settings-section__heading coursebuilder-settings-section__heading--danger">
-              Danger Zone
-            </h3>
-            <p class="coursebuilder-settings-section__description">
-              Once you delete a course, there is no going back. Please be certain.
-            </p>
-            <button class="button button--outline coursebuilder-settings-section__danger-button">
-              Delete Course
-            </button>
-          </div>
-        </section>
-      </article>
-      <!-- Marketplace Article -->
+            </div>
 
-      <article class="content__article" id="marketplace">
-        <section class="content">
-          <p class="placeholder">
-            Marketplace integration features will be available here...
-          </p>
-        </section>
-      </article>
-      
-      <!-- Resources Article -->
-      <article class="content__article" id="resources">
-        <section class="content">
-          <div class="placeholder">
-            <!-- Resources content will be added here -->
-          </div>
-        </section>
-      </article>
-    </div>
-  </section>
+            <div class="form__group">
+              <label class="form__label" for="margin-bottom">Bottom</label>
+              <div class="coursebuilder-margin-settings__input-wrapper">
+                <input class="form__input coursebuilder-margin-settings__input" type="number" id="margin-bottom"
+                  name="margin_bottom" value="2.54" step="0.01" min="0" />
+                <span class="coursebuilder-margin-settings__unit">cm</span>
+              </div>
+            </div>
 
-  <!-- Create Section -->
-  <section class="section section--create" id="create">
-    <div class="builder">
-      <!-- Mode Selector -->
-      <div class="builder__mode mode">
-        <div class="mode__item" data-mode="build">
-          <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-build.svg" alt="">
-          <span class="icon-label">Build</span>
-        </div>
-        <div class="mode__item" data-mode="animate">
-          <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" alt="">
-          <span class="icon-label">Animate</span>
-        </div>
-        <div class="mode__item" data-mode="workflow">
-          <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-workflow.svg" alt="">
-          <span class="icon-label">Flow</span>
-        </div>
-        <div class="mode__item" data-mode="optimize">
-          <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-optimize.svg" alt="">
-          <span class="icon-label">Improve</span>
-        </div>
-    </div>
-    
-    <!-- Media Selector -->
-    <div class="builder__media media">
-        <div class="media__item" data-media="files">
-          <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-files.svg" alt="">
-          <span class="icon-label">Files</span>
-        </div>
-        <div class="media__item" data-media="images">
-          <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-image.svg" alt="">
-          <span class="icon-label">Images</span>
-        </div>
-        <div class="media__item" data-media="videos">
-          <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-video.svg" alt="">
-          <span class="icon-label">Videos</span>
-        </div>
-        <div class="media__item" data-media="audio">
-          <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-audio.svg" alt="">
-          <span class="icon-label">Audio</span>
-        </div>
-        <div class="media__item" data-media="text">
-          <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-text.svg" alt="">
-          <span class="icon-label">Text</span>
-        </div>
-        <div class="media__item" data-media="tables">
-          <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-table.svg" alt="">
-          <span class="icon-label">Tables</span>
-        </div>
-        <div class="media__item" data-media="plugin">
-          <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-plugins.svg" alt="">
-          <span class="icon-label">Plugins</span>
-        </div>
-    </div>
-    
-    <!-- Search -->
-    <div class="builder__search search">
-      <input class="search__input input input--search" type="search" placeholder="Search media..." id="media-search-input">
-    </div>
-  
-    <!-- Canvas Area -->
-     <div class="builder__canvas canvas" id="canvas-container">
-        <div class="canvas__placeholder">
-          <svg class="canvas__icon" width="48" height="48" viewBox="0 0 24 24" fill="#ccc">
-            <path d="M12,2A2,2 0 0,1 14,4A2,2 0 0,1 12,6A2,2 0 0,1 10,4A2,2 0 0,1 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V21A2,2 0 0,0 5,23H19A2,2 0 0,0 21,21V9M19,9H14V4H19V9Z" />
-          </svg>
-          <div class="canvas__title">🔒 Layout-Protected Canvas</div>
-          <div class="canvas__desc">
-            Draw within pedagogical areas only<br>
-            <small class="canvas__note">Layout structure cannot be erased</small>
-          </div>
-        </div>
-    </div>
+            <div class="form__group">
+              <label class="form__label" for="margin-left">Left</label>
+              <div class="coursebuilder-margin-settings__input-wrapper">
+                <input class="form__input coursebuilder-margin-settings__input" type="number" id="margin-left"
+                  name="margin_left" value="2.54" step="0.01" min="0" />
+                <span class="coursebuilder-margin-settings__unit">cm</span>
+              </div>
+            </div>
 
-    <!-- Canvas Navigation -->
-    <div class="builder__nav-course nav-course">
-      <div class="nav-course__item nav-course__item--active" data-preview="outline">
-        <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-toc.svg" alt="">
-        <span class="icon-label">Outline</span>
-      </div>
-      <div class="nav-course__item" data-preview="preview">
-        <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-thumbnail.svg" alt="">
-        <span class="icon-label">Preview</span>
-      </div>
-      <div class="nav-course__item" data-preview="marks">
-        <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-bookmark.svg" alt="">
-        <span class="icon-label">Marks</span>
-      </div>
-    </div>
-
-    <!-- Canvas Preview -->
-    <div class="builder__preview preview">
-      <!-- Outline Preview -->
-      <div class="preview__content preview__content--active" id="preview-outline">
-        <div class="outline-preview">
-          <div class="outline-preview__loading" style="display: none;">
-            Loading curriculum outline...
+            <div class="form__group">
+              <label class="form__label" for="margin-right">Right</label>
+              <div class="coursebuilder-margin-settings__input-wrapper">
+                <input class="form__input coursebuilder-margin-settings__input" type="number" id="margin-right"
+                  name="margin_right" value="2.54" step="0.01" min="0" />
+                <span class="coursebuilder-margin-settings__unit">cm</span>
+              </div>
+            </div>
           </div>
-          <div class="outline-preview__content">
-            <!-- Curriculum outline will be populated here -->
+
+          <!-- Save Status -->
+          <div class="coursebuilder-save-status" id="margins-save-status">
+            <span class="coursebuilder-save-status__text">Margins will be saved automatically</span>
           </div>
         </div>
       </div>
-      
-      <!-- Canvas Preview -->
-      <div class="preview__content" id="preview-canvas">
-        <div class="canvas-preview">
-          <p class="placeholder">Canvas preview will be displayed here...</p>
-        </div>
-      </div>
-      
-      <!-- Bookmarks/Marks Preview -->
-      <div class="preview__content" id="preview-marks">
-        <div class="marks-preview">
-          <p class="placeholder">Bookmarks and marks will be displayed here...</p>
-        </div>
-      </div>
-    </div>
 
-    <!-- Drawing Tools -->
-    <div class="builder__tools tools">
-      <div class="tools__item tools__item--active" data-tool="selection">
-        <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool" class="tools__icon icon icon--base">
-        <span class="icon-label">Select</span>
-      </div>
-      <div class="tools__item" data-tool="pen">
-        <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Pen Tool" class="tools__icon icon icon--base">
-        <span class="icon-label">Pen</span>
-      </div>
-      <div class="tools__item" data-tool="brush">
-        <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" alt="Brush Tool" class="tools__icon icon icon--base">
-        <span class="icon-label">Brush</span>
-      </div>
-      <div class="tools__item" data-tool="text">
-        <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" alt="Text Tool" class="tools__icon icon icon--base">
-        <span class="icon-label">Text</span>
-      </div>
-      <div class="tools__item" data-tool="shapes">
-        <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" alt="Shapes Tool" class="tools__icon icon icon--base">
-        <span class="icon-label">Shapes</span>
-      </div>
-      <div class="tools__item" data-tool="eraser">
-        <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" alt="Eraser Tool" class="tools__icon icon icon--base">
-        <span class="icon-label">Eraser</span>
-      </div>
+      <!-- Course Visibility Settings -->
+      <div class="coursebuilder-settings-section">
+        <form class="form coursebuilder-form" id="course-settings-form">
+          <div class="coursebuilder-visibility-settings">
+            <div class="coursebuilder-visibility-settings__options">
+              <div class="form__checkbox-group">
+                <input class="form__checkbox" type="checkbox" id="course-visible" name="course_visible" />
+                <label class="form__label" for="course-visible">Course visible to students</label>
+              </div>
 
-      <!-- Tool Settings -->
-      <div class="tools__options">
-        <!-- Pen Settings -->
-        <div class="tool-settings" data-tool="pen" style="display: none;">
-          <input type="color" value="#000000" class="tool-color" title="Pen Color">
-          <input type="range" min="1" max="10" value="2" class="tool-size" title="Pen Size">
-        </div>
-        
-        <!-- Text Settings -->
-        <div class="tool-settings" data-tool="text" style="display: none;">
-          <select class="tool-font" title="Font Family">
-            <option value="Arial">Arial</option>
-            <option value="Times">Times</option>
-            <option value="Georgia">Georgia</option>
-          </select>
-          <input type="color" value="#000000" class="tool-color" title="Text Color">
-        </div>
-        
-        <!-- Brush Settings -->
-        <div class="tool-settings" data-tool="brush" style="display: none;">
-          <input type="color" value="#ffff00" class="tool-color" title="Brush Color">
-          <input type="range" min="10" max="50" value="20" class="tool-size" title="Brush Size">
-        </div>
-        
-        <!-- Shapes Settings -->
-        <div class="tool-settings" data-tool="shapes" style="display: none;">
-          <!-- Shape Selection Buttons -->
-          <div class="shape-buttons">
-            <button class="shape-btn" data-shape="rectangle" title="Rectangle">
-              <svg width="20" height="20" viewBox="0 0 20 20">
-                <rect x="3" y="6" width="14" height="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
-              </svg>
-            </button>
-            <button class="shape-btn" data-shape="triangle" title="Triangle">
-              <svg width="20" height="20" viewBox="0 0 20 20">
-                <path d="M10 4 L17 16 L3 16 Z" fill="none" stroke="currentColor" stroke-width="1.5"/>
-              </svg>
-            </button>
-            <button class="shape-btn" data-shape="circle" title="Circle">
-              <svg width="20" height="20" viewBox="0 0 20 20">
-                <circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/>
-              </svg>
-            </button>
+              <div class="form__checkbox-group">
+                <input class="form__checkbox" type="checkbox" id="allow-enrollment" name="allow_enrollment" />
+                <label class="form__label" for="allow-enrollment">Allow new enrollments</label>
+              </div>
+
+              <div class="form__checkbox-group">
+                <input class="form__checkbox" type="checkbox" id="require-approval" name="require_approval" />
+                <label class="form__label" for="require-approval">Require enrollment approval</label>
+              </div>
+            </div>
+
+            <div class="coursebuilder-save-status" id="settings-last-saved">
+              <span class="coursebuilder-save-status__text" id="settings-save-status">
+                Changes will be saved automatically
+              </span>
+            </div>
           </div>
-          <input type="color" value="#000000" class="tool-color" title="Shape Color">
-        </div>
-        
-        <!-- Eraser Settings -->
-        <div class="tool-settings" data-tool="eraser" style="display: none;">
-          <input type="range" min="5" max="50" value="20" class="tool-size" title="Eraser Size">
-        </div>
+        </form>
       </div>
+
+      <!-- Danger Zone -->
+      <div class="coursebuilder-settings-section coursebuilder-settings-section--danger">
+        <h3 class="coursebuilder-settings-section__heading coursebuilder-settings-section__heading--danger">
+          Danger Zone
+        </h3>
+        <p class="coursebuilder-settings-section__description">
+          Once you delete a course, there is no going back. Please be certain.
+        </p>
+        <button class="button button--outline coursebuilder-settings-section__danger-button">
+          Delete Course
+        </button>
+      </div>
+    </article>
+    <!-- Marketplace Article -->
+
+    <article class="content__article" id="marketplace">
+      <p class="placeholder">
+        Marketplace integration features will be available here...
+      </p>
+    </article>
+
+    <!-- Resources Article -->
+    <article class="content__article" id="resources">
+      <div class="placeholder">
+        <!-- Resources content will be added here -->
+      </div>
+    </article>
     </div>
-  </section>
-  </section>
 
+    <!-- Create View -->
+    <div class="coursebuilder__create" aria-hidden="true" id="create">
+      <div class="engine">
+        <!-- Mode Selector -->
+        <div class="engine__mode mode">
+          <div class="mode__item" data-mode="build">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-build.svg" alt="">
+            <span class="icon-label">Build</span>
+          </div>
+          <div class="mode__item" data-mode="animate">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" alt="">
+            <span class="icon-label">Animate</span>
+          </div>
+          <div class="mode__item" data-mode="workflow">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-workflow.svg" alt="">
+            <span class="icon-label">Flow</span>
+          </div>
+          <div class="mode__item" data-mode="optimize">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-optimize.svg" alt="">
+            <span class="icon-label">Improve</span>
+          </div>
+        </div>
 
-    <!-- Preview Section -->
+        <!-- Media Selector -->
+        <div class="engine__media media">
+          <div class="media__item" data-media="files">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-files.svg" alt="">
+            <span class="icon-label">Files</span>
+          </div>
+          <div class="media__item" data-media="images">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-image.svg" alt="">
+            <span class="icon-label">Images</span>
+          </div>
+          <div class="media__item" data-media="videos">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-video.svg" alt="">
+            <span class="icon-label">Videos</span>
+          </div>
+          <div class="media__item" data-media="audio">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-audio.svg" alt="">
+            <span class="icon-label">Audio</span>
+          </div>
+          <div class="media__item" data-media="text">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-text.svg" alt="">
+            <span class="icon-label">Text</span>
+          </div>
+          <div class="media__item" data-media="tables">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-table.svg" alt="">
+            <span class="icon-label">Tables</span>
+          </div>
+          <div class="media__item" data-media="plugin">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-plugins.svg" alt="">
+            <span class="icon-label">Plugins</span>
+          </div>
+        </div>
 
-    <section class="section section--preview" id="preview">
+        <!-- Search -->
+        <div class="engine__search search">
+          <input class="search__input input input--search" type="search" placeholder="Search media..."
+            id="media-search-input">
+        </div>
+
+        <!-- Canvas Area -->
+        <div class="engine__canvas canvas" id="canvas-container">
+          <div class="canvas__placeholder">
+            <svg class="canvas__icon" width="48" height="48" viewBox="0 0 24 24" fill="#ccc">
+              <path
+                d="M12,2A2,2 0 0,1 14,4A2,2 0 0,1 12,6A2,2 0 0,1 10,4A2,2 0 0,1 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V21A2,2 0 0,0 5,23H19A2,2 0 0,0 21,21V9M19,9H14V4H19V9Z" />
+            </svg>
+            <div class="canvas__title">🔒 Layout-Protected Canvas</div>
+            <div class="canvas__desc">
+              Draw within pedagogical areas only<br>
+              <small class="canvas__note">Layout structure cannot be erased</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Canvas Navigation -->
+        <div class="engine__nav-course nav-course">
+          <div class="nav-course__item nav-course__item--active" data-preview="outline">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-toc.svg" alt="">
+            <span class="icon-label">Outline</span>
+          </div>
+          <div class="nav-course__item" data-preview="preview">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-thumbnail.svg"
+              alt="">
+            <span class="icon-label">Preview</span>
+          </div>
+          <div class="nav-course__item" data-preview="marks">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-bookmark.svg"
+              alt="">
+            <span class="icon-label">Marks</span>
+          </div>
+        </div>
+
+        <!-- Canvas Preview -->
+        <div class="engine__preview preview">
+          <!-- Outline Preview -->
+          <div class="preview__content preview__content--active" id="preview-outline">
+            <div class="outline-preview">
+              <div class="outline-preview__loading" style="display: none;">
+                Loading curriculum outline...
+              </div>
+              <div class="outline-preview__content">
+                <!-- Curriculum outline will be populated here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Canvas Preview -->
+          <div class="preview__content" id="preview-canvas">
+            <div class="canvas-preview">
+              <p class="placeholder">Canvas preview will be displayed here...</p>
+            </div>
+          </div>
+
+          <!-- Bookmarks/Marks Preview -->
+          <div class="preview__content" id="preview-marks">
+            <div class="marks-preview">
+              <p class="placeholder">Bookmarks and marks will be displayed here...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Drawing Tools -->
+        <div class="engine__tools tools">
+          <div class="tools__item tools__item--active" data-tool="selection">
+            <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
+              class="tools__icon icon icon--base">
+            <span class="icon-label">Select</span>
+          </div>
+          <div class="tools__item" data-tool="pen">
+            <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Pen Tool"
+              class="tools__icon icon icon--base">
+            <span class="icon-label">Pen</span>
+          </div>
+          <div class="tools__item" data-tool="brush">
+            <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" alt="Brush Tool"
+              class="tools__icon icon icon--base">
+            <span class="icon-label">Brush</span>
+          </div>
+          <div class="tools__item" data-tool="text">
+            <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" alt="Text Tool"
+              class="tools__icon icon icon--base">
+            <span class="icon-label">Text</span>
+          </div>
+          <div class="tools__item" data-tool="shapes">
+            <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" alt="Shapes Tool"
+              class="tools__icon icon icon--base">
+            <span class="icon-label">Shapes</span>
+          </div>
+          <div class="tools__item" data-tool="eraser">
+            <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" alt="Eraser Tool"
+              class="tools__icon icon icon--base">
+            <span class="icon-label">Eraser</span>
+          </div>
+
+          <!-- Tool Settings -->
+          <div class="tools__options">
+            <!-- Pen Settings -->
+            <div class="tool-settings" data-tool="pen" style="display: none;">
+              <input type="color" value="#000000" class="tool-color" title="Pen Color">
+              <input type="range" min="1" max="10" value="2" class="tool-size" title="Pen Size">
+            </div>
+
+            <!-- Text Settings -->
+            <div class="tool-settings" data-tool="text" style="display: none;">
+              <select class="tool-font" title="Font Family">
+                <option value="Arial">Arial</option>
+                <option value="Times">Times</option>
+                <option value="Georgia">Georgia</option>
+              </select>
+              <input type="color" value="#000000" class="tool-color" title="Text Color">
+            </div>
+
+            <!-- Brush Settings -->
+            <div class="tool-settings" data-tool="brush" style="display: none;">
+              <input type="color" value="#ffff00" class="tool-color" title="Brush Color">
+              <input type="range" min="10" max="50" value="20" class="tool-size" title="Brush Size">
+            </div>
+
+            <!-- Shapes Settings -->
+            <div class="tool-settings" data-tool="shapes" style="display: none;">
+              <!-- Shape Selection Buttons -->
+              <div class="shape-buttons">
+                <button class="shape-btn" data-shape="rectangle" title="Rectangle">
+                  <svg width="20" height="20" viewBox="0 0 20 20">
+                    <rect x="3" y="6" width="14" height="8" fill="none" stroke="currentColor" stroke-width="1.5" />
+                  </svg>
+                </button>
+                <button class="shape-btn" data-shape="triangle" title="Triangle">
+                  <svg width="20" height="20" viewBox="0 0 20 20">
+                    <path d="M10 4 L17 16 L3 16 Z" fill="none" stroke="currentColor" stroke-width="1.5" />
+                  </svg>
+                </button>
+                <button class="shape-btn" data-shape="circle" title="Circle">
+                  <svg width="20" height="20" viewBox="0 0 20 20">
+                    <circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="1.5" />
+                  </svg>
+                </button>
+              </div>
+              <input type="color" value="#000000" class="tool-color" title="Shape Color">
+            </div>
+
+            <!-- Eraser Settings -->
+            <div class="tool-settings" data-tool="eraser" style="display: none;">
+              <input type="range" min="5" max="50" value="20" class="tool-size" title="Eraser Size">
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <!-- Preview View -->
+    <div class="coursebuilder__preview" aria-hidden="true" id="preview">
       <article class="content__article content__article--preview">
-        <section class="content">
-          <p class="placeholder">Course preview will be displayed here...</p>
-        </section>
+        <p class="placeholder">Course preview will be displayed here...</p>
       </article>
-    </section>
-    
+    </div>
 
-    <!-- Launch Section -->
-    <section class="section section--launch" id="launch">
+    <!-- Launch View -->
+    <div class="coursebuilder__launch" aria-hidden="true" id="launch">
       <article class="content__article content__article--launch">
-        <section class="content">
-          <p class="placeholder">Course launch options will be available here...</p>
-        </section>
+        <p class="placeholder">Course launch options will be available here...</p>
       </article>
-    </section>
-
-
+    </div>
   </main>
   <!-- Core application scripts -->
   <script type="module" src="/src/scripts/app.ts"></script>
@@ -1046,12 +1024,12 @@
   <script type="module" src="/src/scripts/backend/courses/templates/templatePreviewHandler.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/scheduleCourse.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/marginSettings.ts"></script>
-  
+
   <!-- Direct language initialization -->
   <script type="module">
     import { populateCourseLanguageSelect } from '/src/scripts/backend/courses/languageLoader.ts';
     import { CourseFormHandler } from '/src/scripts/backend/courses/courseFormHandler.ts';
-    
+
     function initLanguages() {
       const select = document.getElementById('course-language');
       if (select) {
@@ -1061,15 +1039,15 @@
         console.error('❌ Course language select not found');
       }
     }
-    
+
     function initFormsWithCourseData() {
       // Check if there's a courseId in the URL
       const urlParams = new URLSearchParams(window.location.search);
       const courseId = urlParams.get('courseId');
-      
+
       if (courseId) {
         console.log('🔄 Course ID found in URL:', courseId, '- Loading existing course data...');
-        
+
         // Initialize essentials form handler to load existing data
         setTimeout(() => {
           try {
@@ -1084,26 +1062,26 @@
       } else {
         console.log('ℹ️ No course ID in URL - new course mode');
       }
-      
+
       // Add manual test function for debugging
-      window.testLoadCourseData = async function(testCourseId) {
+      window.testLoadCourseData = async function (testCourseId) {
         console.log('🧪 Testing course data loading for ID:', testCourseId);
-        
+
         if (!testCourseId || testCourseId === 'undefined') {
           console.error('❌ Invalid courseId provided:', testCourseId);
           return;
         }
-        
+
         try {
           // Temporarily set course ID in URL FIRST
           const url = new URL(window.location);
           url.searchParams.set('courseId', testCourseId);
           window.history.pushState({}, '', url);
-          
+
           console.log('📋 URL updated with courseId:', testCourseId);
           console.log('🔄 Current URL:', window.location.href);
           console.log('🔄 Current search params:', window.location.search);
-          
+
           // Wait a bit for URL to update
           setTimeout(() => {
             console.log('🔄 Creating form handler after URL update...');
@@ -1112,34 +1090,34 @@
             window.testFormHandler = formHandler;
             console.log('✅ Test form handler created - check if form fields are populated');
           }, 100);
-          
+
         } catch (error) {
           console.error('❌ Test failed:', error);
         }
       };
-      
+
       // Also add a function to manually set courseId and reload
-      window.setCourseIdAndReload = function(courseId) {
+      window.setCourseIdAndReload = function (courseId) {
         if (!courseId || courseId === 'undefined') {
           console.error('❌ Invalid courseId provided:', courseId);
           return;
         }
-        
+
         const url = new URL(window.location);
         url.searchParams.set('courseId', courseId);
         window.location.href = url.toString();
       };
-      
+
       // Add function to list existing courses to get real IDs
-      window.listExistingCourses = async function() {
+      window.listExistingCourses = async function () {
         try {
           const response = await fetch('/src/scripts/backend/courses/createCourse.ts');
           console.log('Fetching courses...');
-          
+
           // Import the getUserCourses function dynamically
           const { getUserCourses } = await import('/src/scripts/backend/courses/createCourse.ts');
           const courses = await getUserCourses();
-          
+
           if (courses && courses.length > 0) {
             console.log('📚 Existing courses:');
             courses.forEach((course, index) => {
@@ -1154,9 +1132,9 @@
           console.error('❌ Error fetching courses:', error);
         }
       };
-      
+
       // Add function to list existing templates
-      window.listExistingTemplates = async function() {
+      window.listExistingTemplates = async function () {
         try {
           console.log('Fetching templates...');
           // Import createTemplate to access TemplateManager
@@ -1167,16 +1145,16 @@
           console.error('❌ Error fetching templates:', error);
         }
       };
-      
+
       // Add function to force refresh language dropdown
-      window.fixLanguageDropdown = async function() {
+      window.fixLanguageDropdown = async function () {
         try {
           console.log('🔧 Fixing language dropdown...');
           const languageSelect = document.getElementById('course-language');
           if (languageSelect) {
             const { populateCourseLanguageSelect } = await import('/src/scripts/backend/courses/languageLoader.ts');
             await populateCourseLanguageSelect(languageSelect);
-            
+
             // Try to set the language value again
             const urlParams = new URLSearchParams(window.location.search);
             const courseId = urlParams.get('courseId');
@@ -1187,8 +1165,8 @@
                 // Find the option that contains the language
                 for (let i = 0; i < languageSelect.options.length; i++) {
                   const option = languageSelect.options[i];
-                  if (option.textContent?.toLowerCase().includes(courseData.course_language.toLowerCase()) || 
-                      option.value === courseData.course_language) {
+                  if (option.textContent?.toLowerCase().includes(courseData.course_language.toLowerCase()) ||
+                    option.value === courseData.course_language) {
                     languageSelect.value = option.value;
                     console.log('✅ Language dropdown fixed:', option.textContent);
                     break;
@@ -1201,23 +1179,23 @@
           console.error('❌ Error fixing language dropdown:', error);
         }
       };
-      
+
       // Also add a function to manually load data for existing course ID in URL
-      window.loadExistingCourseData = function() {
+      window.loadExistingCourseData = function () {
         const urlParams = new URLSearchParams(window.location.search);
         const courseId = urlParams.get('courseId');
-        
+
         if (!courseId) {
           console.error('❌ No courseId in URL. Add ?courseId=your-id to the URL first');
           return;
         }
-        
+
         console.log('🔄 Loading data for course ID:', courseId);
         const formHandler = new CourseFormHandler('essentials');
         window.currentFormHandler = formHandler;
       };
     }
-    
+
     // Initialize everything
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {

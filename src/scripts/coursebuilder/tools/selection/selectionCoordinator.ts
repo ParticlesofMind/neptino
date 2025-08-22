@@ -36,7 +36,7 @@ export class SelectionCoordinator extends BaseTool {
  isTransforming: false,
  activeHandle: null,
  transformStart: new Point(0, 0),
- selectionCenter: new Point(0, 0)
+ selectionCenter: new Point(0, 0),
  };
  
  // Initialize modules
@@ -127,9 +127,10 @@ export class SelectionCoordinator extends BaseTool {
 
  onPointerUp(_event: FederatedPointerEvent, container: Container): void {
  if (this.marqueeSelector.isActive) {
- const marqueeSelection = this.marqueeSelector.completeSelection(container);
- if (marqueeSelection.length > 0) {
- this.selectObjects(marqueeSelection);
+ const marqueeResult = this.marqueeSelector.completeSelection(container);
+ if (marqueeResult.objects.length > 0) {
+ // Use regular selection method - selection visuals will use actual object bounds
+ this.selectObjects(marqueeResult.objects);
  }
  } else if (this.state.isTransforming) {
  if (this.state.activeHandle?.type === "rotation") {

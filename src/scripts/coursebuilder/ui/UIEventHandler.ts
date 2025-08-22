@@ -60,7 +60,7 @@ export class UIEventHandler {
  });
 
  // Navigation selection events
- document.querySelectorAll('.builder__nav-course .nav-course__item').forEach((button) => {
+ document.querySelectorAll('.engine__nav-course .nav-course__item').forEach((button) => {
  button.addEventListener("click", this.handleNavigationSelection.bind(this));
  });
 

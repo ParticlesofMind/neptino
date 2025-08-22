@@ -5,6 +5,7 @@
 
 import { Point, Rectangle } from "pixi.js";
 import { SelectionState } from "./types";
+import { BoundaryUtils } from "../BoundaryUtils";
 
 export class ScaleObjects {
  private state: SelectionState;
@@ -71,9 +72,13 @@ export class ScaleObjects {
  const minScaleX = minPixelSize / bounds.width;
  const minScaleY = minPixelSize / bounds.height;
  
- // Ensure minimum scale - both relative (20%) and absolute (minimum pixel size)
- scaleX = Math.max(0.2, minScaleX, scaleX);
- scaleY = Math.max(0.2, minScaleY, scaleY);
+ // 🎯 BOUNDARY ENFORCEMENT: Calculate maximum scale to keep within canvas bounds
+ const canvasBounds = BoundaryUtils.getCanvasBounds();
+ const maxScale = BoundaryUtils.getMaxAllowedScale(bounds, canvasBounds);
+ 
+ // Apply all constraints: minimum scale, minimum size, and canvas boundaries
+ scaleX = Math.max(0.2, minScaleX, Math.min(maxScale.scaleX, scaleX));
+ scaleY = Math.max(0.2, minScaleY, Math.min(maxScale.scaleY, scaleY));
 
  // Apply transformation to all selected objects
  this.state.selectedObjects.forEach(obj => {
@@ -125,8 +130,12 @@ export class ScaleObjects {
  const minScaleX = minPixelSize / bounds.width;
  const minScaleY = minPixelSize / bounds.height;
  
- scaleX = Math.max(0.2, minScaleX, scaleX);
- scaleY = Math.max(0.2, minScaleY, scaleY);
+ // 🎯 BOUNDARY ENFORCEMENT: Calculate maximum scale to keep within canvas bounds
+ const canvasBounds = BoundaryUtils.getCanvasBounds();
+ const maxScale = BoundaryUtils.getMaxAllowedScale(bounds, canvasBounds);
+ 
+ scaleX = Math.max(0.2, minScaleX, Math.min(maxScale.scaleX, scaleX));
+ scaleY = Math.max(0.2, minScaleY, Math.min(maxScale.scaleY, scaleY));
 
  // Apply transformation to all selected objects
  this.state.selectedObjects.forEach(obj => {
@@ -152,15 +161,42 @@ export class ScaleObjects {
  const dx = currentPoint.x - this.state.transformStart.x;
  const dy = currentPoint.y - this.state.transformStart.y;
 
- // Move all selected objects by the delta
+ // 🎯 BOUNDARY ENFORCEMENT: Calculate new positions and clamp them
+ const canvasBounds = BoundaryUtils.getCanvasBounds();
+ 
+ // Calculate the combined bounds of all selected objects to constrain as a group
+ const combinedBounds = this.calculateCombinedBounds(this.state.selectedObjects);
+ const newX = combinedBounds.x + dx;
+ const newY = combinedBounds.y + dy;
+ 
+ // Clamp the group position to keep it within canvas bounds
+ const clampedX = Math.max(canvasBounds.left, 
+                          Math.min(canvasBounds.right - combinedBounds.width, newX));
+ const clampedY = Math.max(canvasBounds.top, 
+                          Math.min(canvasBounds.bottom - combinedBounds.height, newY));
+ 
+ // Calculate the actual allowed movement delta
+ const clampedDx = clampedX - combinedBounds.x;
+ const clampedDy = clampedY - combinedBounds.y;
+ 
+ // Apply the clamped movement to all selected objects
  this.state.selectedObjects.forEach(obj => {
  if (obj.position) {
- obj.position.x += dx;
- obj.position.y += dy;
+ obj.position.x += clampedDx;
+ obj.position.y += clampedDy;
  }
  });
 
- this.state.transformStart.copyFrom(currentPoint);
+ // Update transform start with the clamped position
+ this.state.transformStart.x += clampedDx;
+ this.state.transformStart.y += clampedDy;
+ 
+ // Log boundary constraint if movement was limited
+ if (Math.abs(dx - clampedDx) > 1 || Math.abs(dy - clampedDy) > 1) {
+ console.log(
+ `🎯 SELECTION: Drag constrained - requested delta (${Math.round(dx)}, ${Math.round(dy)}), applied (${Math.round(clampedDx)}, ${Math.round(clampedDy)})`
+ );
+ }
  }
 
  /**

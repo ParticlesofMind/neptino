@@ -50,15 +50,16 @@ export class MarqueeSelection {
  });
  }
 
- public completeSelection(container: Container): any[] {
+ public completeSelection(container: Container): { objects: any[], marqueeBounds: Rectangle | null } {
  const selectedObjects: any[] = [];
+ let marqueeBounds: Rectangle | null = null;
  
  if (this.marqueeGraphics && this.isSelecting) {
  const bounds = this.marqueeGraphics.getBounds();
- const rect = new Rectangle(bounds.x, bounds.y, bounds.width, bounds.height);
+ marqueeBounds = new Rectangle(bounds.x, bounds.y, bounds.width, bounds.height);
 
  // Find objects within the marquee
- selectedObjects.push(...this.findObjectsInBounds(rect, container));
+ selectedObjects.push(...this.findObjectsInBounds(marqueeBounds, container));
 
  // Remove marquee graphics
  container.removeChild(this.marqueeGraphics);
@@ -66,7 +67,7 @@ export class MarqueeSelection {
  }
 
  this.isSelecting = false;
- return selectedObjects;
+ return { objects: selectedObjects, marqueeBounds };
  }
 
  public cancelSelection(container: Container): void {
@@ -80,14 +81,18 @@ export class MarqueeSelection {
  private findObjectsInBounds(rect: Rectangle, container: Container): any[] {
  const objectsInBounds: any[] = [];
  
- container.children.forEach(child => {
- if (this.isSelectableObject(child)) {
+ container.children.forEach((child) => {
+ const isSelectable = this.isSelectableObject(child);
+ 
+ if (isSelectable) {
  const bounds = child.getBounds();
  // Check if rectangles intersect
- if (!(rect.x > bounds.x + bounds.width || 
+ const intersects = !(rect.x > bounds.x + bounds.width || 
        rect.x + rect.width < bounds.x || 
        rect.y > bounds.y + bounds.height || 
-       rect.y + rect.height < bounds.y)) {
+       rect.y + rect.height < bounds.y);
+ 
+ if (intersects) {
  objectsInBounds.push(child);
  }
  }
@@ -99,8 +104,18 @@ export class MarqueeSelection {
  private isSelectableObject(object: any): boolean {
  // Skip selection graphics and handles
  if (object.name?.startsWith('selection-') || 
-     object.name?.startsWith('transform-')) {
+     object.name?.startsWith('transform-') ||
+     object.name?.startsWith('marquee-')) {
  return false;
+ }
+ 
+ // Skip objects that are too large (likely UI elements or backgrounds)
+ if (object.getBounds && typeof object.getBounds === 'function') {
+ const bounds = object.getBounds();
+ // Skip objects larger than reasonable drawing objects (e.g., > 400px in any dimension)
+ if (bounds.width > 400 || bounds.height > 400) {
+ return false;
+ }
  }
  
  // Check for valid drawable objects

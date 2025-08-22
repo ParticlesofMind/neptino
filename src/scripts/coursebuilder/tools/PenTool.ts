@@ -11,6 +11,7 @@ import {
  PEN_CONSTANTS,
  hexToNumber,
 } from "./SharedResources";
+import { BoundaryUtils } from "./BoundaryUtils";
 
 interface PenSettings {
  color: string;
@@ -53,15 +54,27 @@ export class PenTool extends BaseTool {
  );
 
  const localPoint = container.toLocal(event.global);
- this.lastMousePosition.copyFrom(localPoint);
+ 
+ // 🎯 BOUNDARY ENFORCEMENT: Clamp point to canvas bounds
+ const canvasBounds = BoundaryUtils.getCanvasBounds(container);
+ const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
+ 
+ // Log if point was adjusted
+ if (Math.abs(localPoint.x - clampedPoint.x) > 1 || Math.abs(localPoint.y - clampedPoint.y) > 1) {
+ console.log(
+ `✏️ PEN: 🎯 Point clamped from (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)}) to (${Math.round(clampedPoint.x)}, ${Math.round(clampedPoint.y)})`
+ );
+ }
+ 
+ this.lastMousePosition.copyFrom(clampedPoint);
 
  // Check if we're continuing an existing path or starting a new one
  if (this.currentPath && this.currentPath.nodes.length > 0) {
  // Check if clicking near the first node to close the path
  const firstNode = this.currentPath.nodes[0];
  const distance = Math.sqrt(
- Math.pow(localPoint.x - firstNode.position.x, 2) +
- Math.pow(localPoint.y - firstNode.position.y, 2),
+ Math.pow(clampedPoint.x - firstNode.position.x, 2) +
+ Math.pow(clampedPoint.y - firstNode.position.y, 2),
  );
 
  if (distance <= PEN_CONSTANTS.PATH_CLOSE_TOLERANCE) {
@@ -71,15 +84,20 @@ export class PenTool extends BaseTool {
  }
 
  // Add new node to current path or start new path
- this.addNodeToPath(localPoint, container);
+ this.addNodeToPath(clampedPoint, container);
  }
 
  onPointerMove(event: FederatedPointerEvent, container: Container): void {
  const localPoint = container.toLocal(event.global);
- this.lastMousePosition.copyFrom(localPoint);
+ 
+ // 🎯 BOUNDARY ENFORCEMENT: Clamp mouse position for preview
+ const canvasBounds = BoundaryUtils.getCanvasBounds(container);
+ const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
+ 
+ this.lastMousePosition.copyFrom(clampedPoint);
 
  // Check for path completion hover
- this.updatePathCompletionHover(localPoint, container);
+ this.updatePathCompletionHover(clampedPoint, container);
 
  // Update preview line if we have an active path
  this.updatePreviewLine(container);

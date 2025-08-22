@@ -1,21 +1,7 @@
 /* Styles cleared */
 
+
 .header {
+    padding: var(--spacing-3) var(--spacing-5);
 
-    &--index { 
-        padding: var(--spacing-4) var(--spacing-5);
-    }
-
-    &--signin {
-        padding: var(--spacing-4) var(--spacing-5);
-    }
-
-    &--home {
-        padding: var(--spacing-4) var(--spacing-5);
-    }
-
-    &--coursebuilder {
-        padding: var(--spacing-3) var(--spacing-5);
-        border-bottom: 1px solid var(--color-neutral-200);
-    }
 }

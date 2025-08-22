@@ -542,20 +542,23 @@ export class CourseBuilderCanvas {
  navLinks.forEach(link => {
  const linkSection = link.getAttribute('data-section');
  if (linkSection === sectionId) {
- link.classList.add('sidebar__link--active');
+ link.classList.add('link--menu-active');
  } else {
- link.classList.remove('sidebar__link--active');
+ link.classList.remove('link--menu-active');
  }
  });
  
- // Update main section visibility
- const sections = document.querySelectorAll('.section');
- sections.forEach(section => {
- // Show the section that matches the sectionId
- if (section.id === sectionId) {
- section.classList.add('section--active');
- } else {
- section.classList.remove('section--active');
+ // Update main coursebuilder element visibility
+ const coursebuilderElements = document.querySelectorAll('.coursebuilder__setup, .coursebuilder__create, .coursebuilder__preview, .coursebuilder__launch');
+ coursebuilderElements.forEach(element => {
+ // Hide all elements first
+ element.classList.remove('coursebuilder__setup--active', 'coursebuilder__create--active', 'coursebuilder__preview--active', 'coursebuilder__launch--active');
+ element.setAttribute('aria-hidden', 'true');
+ 
+ // Show the element that matches the sectionId
+ if (element.classList.contains(`coursebuilder__${sectionId}`)) {
+ element.classList.add(`coursebuilder__${sectionId}--active`);
+ element.setAttribute('aria-hidden', 'false');
  }
  });
  
@@ -577,13 +580,13 @@ export class CourseBuilderCanvas {
  });
  
  // Update the aside navigation
- const asideLinks = document.querySelectorAll('.sidebar__link[data-section]');
+ const asideLinks = document.querySelectorAll('.link--menu[data-section]');
  asideLinks.forEach(link => {
  const linkSection = link.getAttribute('data-section');
  if (linkSection === hash) {
- link.classList.add('sidebar__link--active');
+ link.classList.add('link--menu-active');
  } else {
- link.classList.remove('sidebar__link--active');
+ link.classList.remove('link--menu-active');
  }
  });
  }
@@ -891,7 +894,7 @@ class AdaptiveSearchManager {
 
   private initialize(): void {
     // Get DOM elements
-    this.searchInput = document.getElementById('builder__search') as HTMLInputElement;
+    this.searchInput = document.getElementById('engine__search') as HTMLInputElement;
     this.mediaItems = document.querySelectorAll('.media__item');
     this.navCourseItems = document.querySelectorAll('.nav-course__item');
     this.previewContainers = document.querySelectorAll('[id^="preview-"]');

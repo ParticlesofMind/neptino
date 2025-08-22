@@ -1,0 +1,144 @@
+// ==========================================================================
+// HEADER VISIBILITY FIX - Prevent anchor links from hiding header
+// ==========================================================================
+
+
+// ==========================================================================
+// COURSEBUILDER ELEMENT VISIBILITY CONTROLS
+// ==========================================================================
+
+.coursebuilder {
+    
+    &__setup,
+    &__create,
+    &__preview,
+    &__launch {
+        display: none;
+
+        &--active {
+            display: grid;
+            grid-template-columns: 280px 1fr; // Sidebar width + flexible content
+            gap: 0; // No gap between sidebar and content
+            width: 100%;
+            height: 100vh;
+        }
+    }
+
+    &__setup {
+        &.coursebuilder__setup--active {
+            display: grid;
+            gap: 0;
+            width: 100%;
+            height: 100vh;
+        }
+    }
+
+    &__create {
+        &.coursebuilder__create--active {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+    }
+
+    &__preview,
+    &__launch {
+        &.coursebuilder__preview--active,
+        &.coursebuilder__launch--active {
+            display: block;
+            padding: 2rem;
+        }
+    }
+}
+
+// ==========================================================================
+// SETUP COURSEBUILDER ELEMENT LAYOUT
+// ==========================================================================
+
+.coursebuilder__setup {
+    .sidebar {
+        grid-column: 1; // First column
+        width: 280px;
+
+        // On mobile, remove sidebar from grid layout since it's fixed positioned
+        @media (max-width: 768px) {
+            position: fixed;
+            width: 100vw;
+            height: 50px;
+            margin: 0;
+            padding: 0;
+            grid-column: 1 / -1; // Span all columns on mobile
+        }
+    }
+}
+
+// ==========================================================================
+// CONTENT BLOCK (BEM: Block)
+// ==========================================================================
+
+.content {
+    grid-column: 2; // Second column
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    padding: 1rem;
+    border-radius: var(--radius-large);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+    // Mobile styles - account for COMPACT bottom navigation
+    @media (max-width: 768px) {
+        grid-column: 1 / -1; // Span all columns on mobile
+        width: 100vw; // Use full viewport width
+        height: calc(100vh - 60px); // Account for bottom navigation
+        margin: 0; // Remove side margins
+        margin-bottom: 60px; // Space for 50px nav + 10px buffer
+        border-radius: 0; // Remove border radius on mobile for full width
+        box-shadow: none; // Remove shadow for cleaner mobile look
+    }
+
+    // ==========================================================================
+    // CONTENT ELEMENTS (BEM: Elements)
+    // ==========================================================================
+
+    &__article {
+        display: none;
+
+        &--active {
+            display: block;
+            width: 100%; // Ensure active articles also span full width
+        }
+    }
+
+    &__section {
+        &:not(:last-child) {
+            margin-bottom: var(--spacing-8);
+        }
+    }
+}
+
+// ==========================================================================
+// FORM STYLING (BEM: Block for forms within setup)
+// ==========================================================================
+
+.form {
+    max-width: none; // Allow forms to use full content width
+
+    &__group {
+        margin-bottom: var(--spacing-5);
+
+        &--actions {
+            margin-top: var(--spacing-8);
+            border-top: 1px solid var(--color-neutral-200);
+        }
+    }
+
+    &__row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-4);
+
+        @media (max-width: 768px) {
+            grid-template-columns: 1fr;
+        }
+    }
+}
+

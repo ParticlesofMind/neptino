@@ -10,6 +10,7 @@ import {
  STROKE_SIZES,
  hexToNumber,
 } from "./SharedResources";
+import { BoundaryUtils } from "./BoundaryUtils";
 
 interface ShapesSettings {
  color: string;
@@ -68,8 +69,13 @@ export class ShapesTool extends BaseTool {
 
  // Use local coordinates relative to the container
  const localPoint = container.toLocal(event.global);
- this.startPoint.copyFrom(localPoint);
- this.currentPoint.copyFrom(localPoint);
+ 
+ // 🎯 BOUNDARY ENFORCEMENT: Clamp starting point to canvas bounds
+ const canvasBounds = BoundaryUtils.getCanvasBounds(container);
+ const clampedStartPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
+ 
+ this.startPoint.copyFrom(clampedStartPoint);
+ this.currentPoint.copyFrom(clampedStartPoint);
 
  // Create new graphics object with professional styling
  this.currentShape = new Graphics();
@@ -86,7 +92,12 @@ export class ShapesTool extends BaseTool {
 
  // Use local coordinates relative to the container
  const localPoint = container.toLocal(event.global);
- this.currentPoint.copyFrom(localPoint);
+ 
+ // 🎯 BOUNDARY ENFORCEMENT: Clamp current point to canvas bounds
+ const canvasBounds = BoundaryUtils.getCanvasBounds(container);
+ const clampedCurrentPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
+ 
+ this.currentPoint.copyFrom(clampedCurrentPoint);
 
  // Check if shift key is pressed for proportional drawing
  this.isProportional = event.shiftKey;

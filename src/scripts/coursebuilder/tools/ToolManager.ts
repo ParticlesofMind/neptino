@@ -3,7 +3,7 @@
  * Manages all drawing tools and their interactions with the canvas
  */
 
-import { FederatedPointerEvent, Container, Graphics as PixiGraphics } from "pixi.js";
+import { FederatedPointerEvent, Container, Point } from "pixi.js";
 import { Tool, ToolSettings } from "./ToolInterface";
 import { SelectionTool } from "./selection";
 import { PenTool } from "./PenTool";
@@ -12,12 +12,14 @@ import { TextTool } from "./TextTool";
 import { ShapesTool } from "./ShapesTool";
 import { EraserTool } from "./EraserTool";
 import { DisplayObjectManager } from "../canvas/DisplayObjectManager";
+import { BoundaryUtils, CanvasBounds } from "./BoundaryUtils";
 
 export class ToolManager {
  private tools: Map<string, Tool> = new Map();
  private activeTool: Tool | null = null;
  private settings: ToolSettings;
  private displayManager: DisplayObjectManager | null = null;
+ private currentContainer: Container | null = null;
 
  constructor() {
  this.settings = {
@@ -144,6 +146,7 @@ export class ToolManager {
  console.log(
  `👆 Pointer DOWN - Tool: ${this.activeTool.name}, Position: (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
  );
+ this.currentContainer = container; // Store current container for boundary access
  this.activeTool.onPointerDown(event, container);
  }
  }
@@ -250,6 +253,29 @@ export class ToolManager {
 
  public getCursor(): string {
  return this.activeTool?.cursor || "default";
+ }
+
+ /**
+ * Boundary Management
+ * Provides canvas boundary utilities for all tools
+ */
+ public getCanvasBounds(): CanvasBounds {
+ return BoundaryUtils.getCanvasBounds(this.currentContainer || undefined);
+ }
+
+ public clampPointToBounds(point: Point): Point {
+ const bounds = this.getCanvasBounds();
+ return BoundaryUtils.clampPoint(point, bounds);
+ }
+
+ public isPointWithinBounds(point: Point): boolean {
+ const bounds = this.getCanvasBounds();
+ return BoundaryUtils.isPointWithinBounds(point, bounds);
+ }
+
+ public logBoundaryInfo(label: string, point: Point): void {
+ const bounds = this.getCanvasBounds();
+ BoundaryUtils.logBoundaryInfo(label, point, bounds);
  }
 
  public destroy(): void {

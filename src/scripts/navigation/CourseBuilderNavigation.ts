@@ -21,7 +21,7 @@ export class CourseBuilderNavigation {
 
  console.log('🧭 Initializing CourseBuilder Navigation...');
  
- this.sections = document.querySelectorAll('section[id]');
+ this.sections = document.querySelectorAll('.coursebuilder__setup, .coursebuilder__create, .coursebuilder__preview, .coursebuilder__launch');
  this.nextButton = document.getElementById('next-btn');
  this.previousButton = document.getElementById('previous-btn');
  
@@ -99,18 +99,20 @@ export class CourseBuilderNavigation {
  private activateSection(sectionId: string): void {
  console.log(`🧭 Activating section: ${sectionId}`);
  
- // Hide all sections
- this.sections.forEach(section => {
- section.classList.remove('section--active');
+ // Hide all coursebuilder elements
+ this.sections.forEach(element => {
+ element.classList.remove('coursebuilder__setup--active', 'coursebuilder__create--active', 'coursebuilder__preview--active', 'coursebuilder__launch--active');
+ element.setAttribute('aria-hidden', 'true');
  });
  
- // Show target section
- const targetSection = document.getElementById(sectionId);
- if (targetSection) {
- targetSection.classList.add('section--active');
- console.log(`🎯 Successfully navigated to section: ${sectionId}`);
+ // Show target coursebuilder element
+ const targetElement = document.querySelector(`.coursebuilder__${sectionId}`);
+ if (targetElement) {
+ targetElement.classList.add(`coursebuilder__${sectionId}--active`);
+ targetElement.setAttribute('aria-hidden', 'false');
+ console.log(`🎯 Successfully navigated to coursebuilder element: ${sectionId}`);
  } else {
- console.error(`❌ Section not found: ${sectionId}`);
+ console.error(`❌ Coursebuilder element not found: ${sectionId}`);
  }
  }
 
@@ -210,7 +212,7 @@ export class AsideNavigation {
 
  console.log('🧭 Initializing Aside Navigation...');
  
- this.asideLinks = document.querySelectorAll('.sidebar__link[data-section]');
+ this.asideLinks = document.querySelectorAll('.link--menu[data-section]');
  this.contentSections = document.querySelectorAll('.content__article[id]');
  this.boundHandleLinkClick = this.handleLinkClick.bind(this);
 
@@ -218,8 +220,8 @@ export class AsideNavigation {
  }
 
     private isInSetupSection(): boolean {
-        const setupSection = document.getElementById('setup');
-        return setupSection !== null;
+        const setupElement = document.querySelector('.coursebuilder__setup');
+        return setupElement !== null;
     } private init(): void {
  if (this.asideLinks.length === 0) {
  console.warn("No aside links found - aside navigation disabled");
@@ -270,7 +272,7 @@ export class AsideNavigation {
 
  private removeActiveStates(): void {
  this.asideLinks.forEach((link: HTMLAnchorElement) => {
- link.classList.remove('sidebar__link--active');
+ link.classList.remove('link--menu-active');
  });
 
  this.contentSections.forEach((section: HTMLElement) => {
@@ -279,7 +281,7 @@ export class AsideNavigation {
  }
 
  private setActiveStates(activeLink: HTMLAnchorElement, targetSectionId: string): void {
- activeLink.classList.add('sidebar__link--active');
+ activeLink.classList.add('link--menu-active');
 
  const targetSection = document.getElementById(targetSectionId);
  if (targetSection) {

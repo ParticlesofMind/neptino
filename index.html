@@ -8,18 +8,19 @@
     <link rel="stylesheet" href="/src/scss/main.scss">
 </head>
 
+
 <body class="grid body">
     <header class="grid__header header header--index">
-        <nav class="header__nav">
-            <ul class="nav nav--header">
-                <li class="nav__item nav__item--brand">
-                    <a href="/" class="nav__brand">
+        <nav class="nav">
+            <ul class="ul ul--header">
+                <li class="ul__item ul__item--brand">
+                    <a href="/" class="brand">
                         <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
                     </a>
                 </li>
-                <li class="nav__item"><a href="/src/pages/shared/features.html" class="nav__link link">Features</a></li>
-                <li class="nav__item"><a href="/src/pages/shared/about.html" class="nav__link link">About</a></li>
-                <li class="nav__item nav__item--dropdown">
+                <li class="ul__item"><a href="/src/pages/shared/features.html" class="link link--header">Features</a></li>
+                <li class="ul__item"><a href="/src/pages/shared/about.html" class="link link--header">About</a></li>
+                <li class="ul__item ul__item--dropdown">
                     <div class="dropdown dropdown--right">
                         <button class="dropdown__toggle" id="language-toggle" aria-expanded="false"
                             aria-haspopup="true">
@@ -44,8 +45,8 @@
                         </ul>
                     </div>
                 </li>
-                <li class="nav__item nav__item--cta">
-                    <a href="/src/pages/shared/signin.html" class="nav__cta button button--outline">Sign In</a>
+                <li class="ul__item ul__item--cta">
+                    <a href="/src/pages/shared/signin.html" class="cta button button--outline">Sign In</a>
                 </li>
             </ul>
         </nav>
@@ -117,21 +118,20 @@
 
     <footer class="grid__footer footer">
         <nav class="footer__nav">
-            <ul class="nav nav--footer">
-                <li class="nav__item nav__item--brand">
-                    <a href="/" class="nav__brand">
+            <ul class="ul ul--footer">
+                <li class="ul__item ul__item--brand">
+                    <a href="/" class="brand">
                         <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
                     </a>
                 </li>
-                <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Privacy
+                <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Privacy
                         Policy</a></li>
-                <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Terms of
+                <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Terms of
                         Service</a></li>
-                <li class="nav__item"><a href="#" class="nav__link link link--subtle font-size--small">Contact</a></li>
+                <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Contact</a></li>
             </ul>
         </nav>
     </footer>
-
     <script type="module" src="/src/scripts/app.ts"></script>
 </body>
 

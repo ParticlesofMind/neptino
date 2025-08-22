@@ -52,9 +52,15 @@ export class CanvasLayerManager {
  const canvasWidth = this.app.screen.width;
  const canvasHeight = this.app.screen.height;
 
+ console.log(`🎨 Canvas dimensions - Screen: ${canvasWidth}x${canvasHeight}`);
+
  // Create a more visible background
  graphics.rect(0, 0, canvasWidth, canvasHeight);
  graphics.fill({ color: 0xffffff, alpha: 1 }); // White background
+
+ // Add temporary red border to visualize boundaries
+ graphics.rect(0, 0, canvasWidth, canvasHeight);
+ graphics.stroke({ width: 4, color: 0xff0000, alpha: 1 }); // Red border
 
  // Draw grid lines
  graphics.moveTo(0, 0);

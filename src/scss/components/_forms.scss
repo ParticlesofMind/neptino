@@ -1,10 +1,98 @@
 // ==========================================================================
-// FORM LAYOUT STYLES - BEM Methodology
+// FORM COMPONENT - BEM Methodology
 // ==========================================================================
 
 .form {
+  // Base form styles - used as semantic wrapper
+  display: grid;
+  gap: var(--spacing-6);
+  max-width: 400px;
+  margin: 0 auto;
+  padding: var(--spacing-8);
+
+  // Form header (title + description)
+  &__header {
+    display: grid;
+    gap: var(--spacing-3);
+    text-align: center;
+  }
+
+  &__title {
+    // Inherits from .heading component
+    margin-bottom: 0; // Grid gap handles spacing
+  }
+
+  &__description {
+    // Inherits from .paragraph component  
+    margin-bottom: 0; // Grid gap handles spacing
+  }
+
+  // Form body (inputs + submit)
+  &__body {
+    display: grid;
+    gap: var(--spacing-5);
+  }
+
+  // Form icons (for auth forms)
+  &__icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-neutral-400);
+    pointer-events: none;
+    z-index: 1;
+    transition: var(--transition-fast);
+    
+    // Icon sizing to ensure proper alignment
+    width: 20px;
+    height: 20px;
+    
+    // Slight adjustment for better visual alignment with text
+    margin-top: -1px;
+  }
+
+  &__submit {
+    // Inherits from .button component
+    margin-top: var(--spacing-3);
+  }
+
+  // Form footer (links, additional text)
+  &__footer {
+    text-align: center;
+  }
+
+  &__footer-text {
+    // Inherits from .paragraph component
+    margin-bottom: 0; // Grid gap handles spacing
+    font-size: var(--font-size-small);
+  }
+
+  // Form modifiers
+  &--signup,
+  &--signin {
+    // Auth forms - specific styling can be added here if needed
+    .input--auth:focus + .form__icon,
+    .input--auth:focus ~ .form__icon {
+      color: var(--color-primary-500);
+    }
+  }
+
+  // Legacy form structure support
   &__group {
     margin-bottom: var(--spacing-4);
+    
+    // For grouped inputs with icons (auth forms)
+    position: relative;
+    
+    &:focus-within .form__icon {
+      color: var(--color-primary-500);
+    }
+    
+    // Remove margin from form__body groups to let grid handle spacing
+    .form__body & {
+      margin-bottom: 0;
+    }
   }
   
   &__label {

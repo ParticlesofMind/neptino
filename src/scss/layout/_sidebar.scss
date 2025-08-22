@@ -2,19 +2,62 @@
 // SIDEBAR COMPONENT - Navigation sidebar for dashboard layouts
 // ==========================================================================
 
-
 // ==========================================================================
-// SETUP SIDEBAR
+// SETUP SIDEBAR - RESPONSIVE DESIGN
 // ==========================================================================
 
 .sidebar {
+  // Desktop styles (default)
   width: 280px;
-  background: var(--color-neutral-25);
+  max-width: 280px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
   border-right: 1px solid var(--color-neutral-200);
   overflow-y: auto;
+  margin: var(--spacing-4);
+  border-radius: var(--radius-large);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+  // Mobile styles - COMPACT bottom bar
+  @media (max-width: 768px) {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100vw;
+    margin: 0;
+    border-radius: 0;
+    border-right: none;
+    border-top: 1px solid var(--color-neutral-200);
+    z-index: var(--z-sticky);
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(12px);
+    overflow: visible;
+  }
 
   &__nav {
     padding: var(--spacing-5);
+    
+    // Mobile styles - super compact
+    @media (max-width: 768px) {
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-evenly;
+      
+      .sidebar__heading {
+        display: none;
+      }
+      
+      .sidebar__list {
+        display: contents;
+      }
+      
+      .sidebar__item {
+        margin: 0;
+        flex: none;
+      }
+    }
   }
 
   &__heading {
@@ -31,16 +74,36 @@
       padding-top: var(--spacing-3);
       border-top: 1px solid var(--color-neutral-200);
     }
+    
+    // Hide headings on mobile to save space
+    @media (max-width: 768px) {
+      display: none;
+    }
   }
 
   &__list {
     list-style: none;
     padding: 0;
     margin: 0;
+    
+    // Desktop: keep normal styling
+    @media (min-width: 769px) {
+      margin-bottom: var(--spacing-4);
+    }
+    
+    // Mobile: use display: contents (handled in &__nav)
   }
 
   &__item {
     margin-bottom: var(--spacing-1);
+    
+    // Mobile styles
+    @media (max-width: 768px) {
+      margin-bottom: 0;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+    }
   }
 
   &__link {
@@ -51,6 +114,7 @@
     text-decoration: none;
     font-weight: var(--font-weight-medium);
     transition: var(--transition-fast);
+    position: relative;
 
     &:hover {
       background: var(--color-primary-50);
@@ -60,21 +124,74 @@
     &--active {
       background: var(--color-primary-100);
       color: var(--color-primary-700);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    // Mobile - COMPACT ICONS ONLY
+    @media (max-width: 768px) {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      margin: 0 2px;
+      border-radius: var(--radius-medium);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--color-neutral-300);
+      
+      // Hide ALL text completely
+      font-size: 0;
+      line-height: 0;
+      text-indent: -9999px;
+      color: transparent;
+      
+      // Show ONLY emoji icons
+      &::before {
+        content: '';
+        font-size: 16px;
+        line-height: 1;
+        text-indent: 0;
+        color: initial;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      
+      // Icon mappings
+      &[data-section="essentials"]::before { content: "📝"; }
+      &[data-section="classification"]::before { content: "🏷️"; }
+      &[data-section="templates"]::before { content: "📄"; }
+      &[data-section="schedule"]::before { content: "📅"; }
+      &[data-section="curriculum"]::before { content: "📚"; }
+      &[data-section="marketplace"]::before { content: "🛒"; }
+      &[data-section="resources"]::before { content: "📁"; }
+      &[data-section="settings"]::before { content: "⚙️"; }
+      
+      &:hover {
+        background: var(--color-neutral-100);
+        border-color: var(--color-neutral-400);
+        transform: translateY(-1px);
+      }
+      
+      &--active {
+        background: var(--color-primary-500);
+        border-color: var(--color-primary-500);
+        
+        &::before {
+          filter: none; // Keep emoji colors on active
+        }
+        
+        &:hover {
+          background: var(--color-primary-600);
+          border-color: var(--color-primary-600);
+        }
+      }
     }
   }
 }
 
-
-.sidebar {
-  padding: var(--spacing-6);
-  border-right: 1px solid var(--color-neutral-200);
-  background-color: var(--color-background);
-  
-  &__nav {
-    position: sticky;
-    top: var(--spacing-6);
-  }
-}
 
 // Coursebuilder sidebar specific styles
 .coursebuilder-sidebar {

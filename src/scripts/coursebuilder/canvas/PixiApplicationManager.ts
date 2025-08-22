@@ -62,6 +62,14 @@ export class PixiApplicationManager {
  `🎨 Using fixed A4 dimensions: ${canvasWidth}x${canvasHeight}`,
  );
 
+ // Get actual container dimensions for debugging
+ const containerRect = this.canvasElement?.getBoundingClientRect();
+ if (containerRect) {
+ console.log(
+ `📏 Container dimensions: ${containerRect.width}x${containerRect.height}`,
+ );
+ }
+
  // Initialize the application with A4 dimensions
  await this.app.init({
  width: canvasWidth,
@@ -75,6 +83,15 @@ export class PixiApplicationManager {
  // Clear the canvas container and add PixiJS canvas
  this.canvasElement!.innerHTML = "";
  this.canvasElement!.appendChild(this.app.canvas);
+
+ // Add debugging info about canvas element styling
+ const canvasStyle = window.getComputedStyle(this.app.canvas);
+ console.log(
+ `🎨 Canvas element dimensions: ${this.app.canvas.width}x${this.app.canvas.height}`,
+ );
+ console.log(
+ `🎨 Canvas CSS dimensions: ${canvasStyle.width} x ${canvasStyle.height}`,
+ );
 
  // Expose app globally for PIXI devtools using alternative approach
  // Instead of trying to extend PIXI object, use separate properties

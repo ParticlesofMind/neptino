@@ -25,6 +25,8 @@ export class SelectionVisuals {
  ): SelectionGroup | null {
  if (selectedObjects.length === 0) return null;
 
+ // Always calculate actual object bounds for proper selection visuals
+ // Ignore marqueeBounds parameter as it causes visual misalignment
  const bounds = this.calculateCombinedBounds(selectedObjects);
  const selectionBox = this.createSelectionBox(bounds);
  const transformHandles = this.createTransformHandles(bounds);
@@ -80,7 +82,15 @@ export class SelectionVisuals {
  let maxY = -Infinity;
 
  objects.forEach(obj => {
- const bounds = obj.getBounds();
+ // Force bounds recalculation to get accurate current bounds
+ let bounds;
+ try {
+ // Force fresh bounds calculation
+ bounds = obj.getBounds(true) || obj.getBounds();
+ } catch {
+ bounds = obj.getBounds();
+ }
+ 
  minX = Math.min(minX, bounds.x);
  minY = Math.min(minY, bounds.y);
  maxX = Math.max(maxX, bounds.x + bounds.width);

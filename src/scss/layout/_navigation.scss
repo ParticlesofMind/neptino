@@ -1,17 +1,84 @@
-// Navigation grid layouts
-.nav {
-    display: grid;
-    align-items: center;
-    gap: var(--spacing-4);
-    padding: var(--spacing-4);
+// ==========================================================================
+// NAVIGATION SEMANTIC CONTAINER
+// ==========================================================================
+// Note: .nav is a semantic wrapper - styling handled by child components
 
-    &__link {
-        display: block;
+// ==========================================================================
+// UNORDERED LIST COMPONENT (for navigation lists)
+// ==========================================================================
+.ul {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    // Header navigation modifier
+    &--header {
+        grid-auto-flow: column;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    // Footer navigation modifier  
+    &--footer {
+        grid-auto-flow: column;
+        justify-content: center;
+        gap: var(--spacing-6);
+    }
+
+    // Main sidebar navigation modifier
+    &--main {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-2);
+    }
+
+    // Menu navigation modifier (for sidebars)
+    &--menu {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-1);
+    }
+
+    // List item element
+    &__item {
+        display: flex;
+        align-items: center;
+
+        &--cta {
+            // Call-to-action items
+            margin-left: auto;
+        }
+
+        &--dropdown {
+            position: relative;
+        }
+
+        &--heading {
+            // For heading items in lists
+            margin: var(--spacing-4) 0 var(--spacing-2) 0;
+            
+            &:first-child {
+                margin-top: 0;
+            }
+        }
+    }
+}
+
+// ==========================================================================
+// LINK COMPONENT (for navigation links)
+// ==========================================================================
+.link {
+    display: block;
+    color: var(--color-text);
+    text-decoration: none;
+    transition: var(--transition-fast);
+    
+    // Header link modifier
+    &--header {
         padding: var(--spacing-3) var(--spacing-4);
-        color: var(--color-text);
-        text-decoration: none;
         border-radius: var(--radius-small);
-        transition: var(--transition-fast);
         
         &:hover {
             background-color: var(--color-neutral-100);
@@ -25,84 +92,67 @@
         }
     }
 
-    // index.html 
-    &__item {
-        &--dropdown {
-            justify-self: last baseline;
-        }
-
-        &--cta {
-            justify-self: last baseline;
-        }
-    }
-
-    &--header {
-        grid-template-columns: 1fr auto auto 0.5fr 10rem; // brand, features, about, language, cta
-    }
-
-    // Coursebuilder navigation - 3 column layout: prev button, centered logo, next button
-    &--coursebuilder {
-        display: grid;
-        grid-template-columns: 1fr auto 1fr;
-        align-items: center;
-        padding: 0;
-        gap: var(--spacing-4);
-    }
-
-    &--main { 
-        grid-template-columns: auto;
-        
-        // Vertical sidebar navigation variant
-        &.nav--sidebar {
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
-            gap: var(--spacing-2);
-            padding: 0;
-            list-style: none;
-            margin: 0;
-        }
-    }
-
+    // Footer link modifier
     &--footer {
-        grid-template-columns: 1fr auto auto auto 1fr; // brand, features, about, language, cta
-    }
-}
-
-// Coursebuilder-specific navigation elements
-.coursebuilder-nav {
-    &__button {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-2);
+        padding: var(--spacing-2) var(--spacing-3);
         
-        &--prev {
-            justify-self: start;
-        }
-        
-        &--next {
-            justify-self: end;
+        &:hover {
+            color: var(--color-primary-500);
         }
     }
 
-    &__logo {
-        justify-self: center;
-        display: block;
+    // Main navigation link modifier
+    &--main {
+        padding: var(--spacing-3) var(--spacing-4);
+        border-radius: var(--radius-small);
+        
+        &:hover {
+            background-color: var(--color-neutral-100);
+            color: var(--color-primary-500);
+        }
+        
+        &--active {
+            background-color: var(--color-primary-100);
+            color: var(--color-primary-700);
+            font-weight: var(--font-weight-medium);
+        }
     }
 
-    &__logo-img {
-        height: 32px;
-        width: auto;
-        display: block;
-    }
-
-    &__icon {
-        font-size: var(--font-size-large);
-        font-weight: bold;
-    }
-
-    &__text {
-        font-size: var(--font-size-small);
-        font-weight: var(--font-weight-medium);
+    // Menu link modifier (for sidebar menus)
+    &--menu {
+        padding: var(--spacing-2) var(--spacing-3);
+        border-radius: var(--radius-small);
+        
+        &:hover {
+            background-color: var(--color-neutral-50);
+            color: var(--color-primary-600);
+        }
+        
+        &-active {
+            background-color: var(--color-primary-50);
+            color: var(--color-primary-700);
+            font-weight: var(--font-weight-medium);
+            border-left: 3px solid var(--color-primary-500);
+        }
     }
 }
+
+// ==========================================================================
+// BRAND COMPONENT (for brand/logo links)
+// ==========================================================================
+.brand {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--color-text);
+    transition: var(--transition-fast);
+
+    &:hover {
+        opacity: 0.8;
+    }
+}
+
+// ==========================================================================
+// CTA COMPONENT (for call-to-action elements)
+// ==========================================================================
+// Note: .cta styling is typically handled by button classes

@@ -66,7 +66,14 @@
             box-shadow: 0 0 0 3px var(--color-success-100);
         }
     }
-        // Modern search input styling
+
+    // Auth inputs (with icons)
+    &--auth {
+        padding-left: 3rem; // 48px - Space for icon
+        position: relative;
+    }
+
+    // Modern search input styling
     &--search {
       width: 100%;
       padding: var(--spacing-3) var(--spacing-4);

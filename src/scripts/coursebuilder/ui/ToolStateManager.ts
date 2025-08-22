@@ -117,7 +117,7 @@ export class ToolStateManager {
    const firstMode = document.querySelector('[data-mode]') as HTMLElement;
    const firstTool = document.querySelector('[data-tool]') as HTMLElement;
    const firstMedia = document.querySelector('[data-media]') as HTMLElement;
-   const firstNav = document.querySelector('.builder__nav-course .nav-course__item') as HTMLElement;
+   const firstNav = document.querySelector('.engine__nav-course .nav-course__item') as HTMLElement;
 
    if (firstMode?.dataset.mode) {
      this.currentMode = firstMode.dataset.mode;
@@ -326,14 +326,14 @@ export class ToolStateManager {
  private updateNavigationUI(navTitle: string | null): void {
    // Remove selected class from all navigation items
    document
-     .querySelectorAll('.builder__nav-course .nav-course__item')
+     .querySelectorAll('.engine__nav-course .nav-course__item')
      .forEach((element) => {
        element.classList.remove('nav-course__item--active');
      });
 
    // Add selected class to current navigation if one is selected
    if (navTitle) {
-     const navItems = document.querySelectorAll('.builder__nav-course .nav-course__item');
+     const navItems = document.querySelectorAll('.engine__nav-course .nav-course__item');
      navItems.forEach((item) => {
        const label = item.querySelector('.icon-label');
        if (label && label.textContent === navTitle) {
