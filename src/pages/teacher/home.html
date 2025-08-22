@@ -26,7 +26,7 @@
       </ul>
     </nav>
   </header>
-  <main class="grid__main main home">
+  <main class="grid__main main main home">
     <aside class="sidebar">
       <nav class="ul ul--sidebar">
         <ul class="ul ul--main">
@@ -52,321 +52,108 @@
       </nav>
     </aside>
 
-    <div class="dashboard-content">
-      <article id="home" class="dashboard-content__article dashboard-content__article--active">
-        <section>
-          <div class="card-grid">
-            <div class="card card--metric">
-              <span class="metric__number">5</span>
-              <span class="metric__label label">Active Courses</span>
-            </div>
-            <div class="card card--metric">
-              <span class="metric__number">127</span>
-              <span class="metric__label label">Total Students</span>
-            </div>
-            <div class="card card--metric">
-              <span class="metric__number">12</span>
-              <span class="metric__label label">Pending Reviews</span>
-            </div>
-          </div>
-        </section>
-
-        <section>
-          <div class="card">
-            <div class="activity-list">
-              <div class="activity-item">
-                <h4 class="heading heading--h4">New submission: HTML Assignment</h4>
-                <time class="activity-time">30 minutes ago</time>
-              </div>
-              <div class="activity-item">
-                <h4 class="heading heading--h4">Student question in Programming 101</h4>
-                <time class="activity-time">2 hours ago</time>
-              </div>
-              <div class="activity-item">
-                <h4 class="heading heading--h4">Assignment graded: JavaScript Basics</h4>
-                <time class="activity-time">4 hours ago</time>
-              </div>
-              <div class="activity-item">
-                <h4 class="heading heading--h4">New student enrolled: Web Development</h4>
-                <time class="activity-time">1 day ago</time>
-              </div>
-            </div>
-            <a href="#" class="button button--outline">View All Activity</a>
-          </div>
-        </section>
-
-        <section>
-          <div class="card-grid">
-            <button class="button button--primary">Create Assignment</button>
-            <button class="button button--primary">Grade Submissions</button>
-            <button class="button button--primary">Message Students</button>
-            <button class="button button--primary">View Analytics</button>
-          </div>
-        </section>
+    <div class="content">
+      <article id="home" class="content__article content__article--active">
+        <div class="card">
+          <h3>Active Courses</h3>
+          <span class="card-metric__number">5</span>
+        </div>
+        <div class="card">
+          <h3>Total Students</h3>
+          <span class="card-metric__number">127</span>
+        </div>
+        <div class="card">
+          <h3>Pending Reviews</h3>
+          <span class="card-metric__number">12</span>
+        </div>
+        <div class="card">
+          <h3>Quick Actions</h3>
+          <p>Create new course content</p>
+        </div>
+        <div class="card">
+          <h3>Recent Activity</h3>
+          <p>View latest student submissions</p>
+        </div>
+        <div class="card">
+          <h3>Messages</h3>
+          <p>8 unread messages</p>
+        </div>
       </article>
 
-      <article id="courses" class="dashboard-content__article">
-        <section>
-          <div class="card-grid">
-            <div class="card card--metric">
-              <span class="metric__number">5</span>
-              <span class="metric__label label">Active Courses</span>
-            </div>
-            <div class="card card--metric">
-              <span class="metric__number">127</span>
-              <span class="metric__label label">Enrolled Students</span>
-            </div>
-          </div>
-        </section>
-
-        <section>
-          <div class="card-grid">
-            <div class="card">
-              <h3 class="heading heading--h3">Introduction to Programming</h3>
-              <p class="paragraph">45 students</p>
-              <div class="button-group">
-                <button class="button button--outline">Edit</button>
-                <button class="button button--primary">View</button>
-              </div>
-            </div>
-            <div class="card">
-              <h3 class="heading heading--h3">Web Development Fundamentals</h3>
-              <p class="paragraph">32 students</p>
-              <div class="button-group">
-                <button class="button button--outline">Edit</button>
-                <button class="button button--primary">View</button>
-              </div>
-            </div>
-            <div class="card">
-              <h3 class="heading heading--h3">Advanced JavaScript</h3>
-              <p class="paragraph">28 students</p>
-              <div class="button-group">
-                <button class="button button--outline">Edit</button>
-                <button class="button button--primary">View</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="card-grid">
-            <a href="/src/pages/teacher/coursebuilder.html#setup" class="button button--primary">Create New Course</a>
-            <a href="#" class="button button--outline">Import Course</a>
-          </div>
-        </section>
-
-        <section>
-          <div class="card-grid">
-            <div class="card card--metric">
-              <span class="metric__number">78%</span>
-              <span class="metric__label label">Avg. Completion</span>
-            </div>
-            <div class="card card--metric">
-              <span class="metric__number">4.2</span>
-              <span class="metric__label label">Avg. Rating</span>
-            </div>
-          </div>
-
-          <div class="card">
-            <a href="#students" class="button button--primary">View All Students</a>
-          </div>
-        </section>
+      <article id="courses" class="content__article">
+        <div class="card">
+          <h3>My Courses</h3>
+          <p>Manage your courses</p>
+        </div>
+        <div class="card">
+          <h3>Course Analytics</h3>
+          <p>View performance metrics</p>
+        </div>
+        <div class="card">
+          <h3>Create Course</h3>
+          <p>Start a new course</p>
+        </div>
       </article>
 
-    <article id="messages" class="dashboard-content__article">
-      <section>
-        <div class="card-grid">
-          <div class="card card--metric">
-            <span class="metric__number">8</span>
-            <span class="metric__label label">Unread Messages</span>
-          </div>
-          <div class="card card--metric">
-            <span class="metric__number">23</span>
-            <span class="metric__label label">Total Conversations</span>
-          </div>
-          <div class="card card--metric">
-            <span class="metric__number">156</span>
-            <span class="metric__label label">Messages Sent</span>
-          </div>
-        </div>
-      </section>
-
-      <section>
+      <article id="messages" class="content__article">
         <div class="card">
-          <div class="message-list">
-            <div class="message-item">
-              <h4 class="heading heading--h4">Sarah Johnson</h4>
-              <p class="paragraph">Question about HTML assignment...</p>
-              <time class="message-time">2 hours ago</time>
-            </div>
-            <div class="message-item">
-              <h4 class="heading heading--h4">Mike Chen</h4>
-              <p class="paragraph">Thank you for the feedback on my project...</p>
-              <time class="message-time">4 hours ago</time>
-            </div>
-            <div class="message-item">
-              <h4 class="heading heading--h4">Emma Williams</h4>
-              <p class="paragraph">When is the next office hours session?</p>
-              <time class="message-time">1 day ago</time>
-            </div>
-          </div>
+          <h3>Inbox</h3>
+          <p>8 new messages</p>
         </div>
-      </section>
-
-      <section>
-        <div class="card-grid">
-          <button class="button button--primary">Compose Message</button>
-          <button class="button button--outline">Broadcast to Class</button>
-          <button class="button button--outline">View All Messages</button>
-        </div>
-      </section>
-    </article>
-
-    <article id="contacts" class="dashboard-content__article">
-      <section>
-        <div class="card-grid">
-          <div class="card card--metric">
-            <span class="metric__number">45</span>
-            <span class="metric__label label">Total Contacts</span>
-          </div>
-          <div class="card card--metric">
-            <span class="metric__number">12</span>
-            <span class="metric__label label">Fellow Teachers</span>
-          </div>
-          <div class="card card--metric">
-            <span class="metric__number">8</span>
-            <span class="metric__label label">Administrators</span>
-          </div>
-        </div>
-      </section>
-
-      <section>
         <div class="card">
-          <div class="contact-list">
-            <div class="contact-item">
-              <h4 class="heading heading--h4">Dr. Amanda Rodriguez</h4>
-              <p class="paragraph">Computer Science Department Head</p>
-              <span class="badge badge--info">Administrator</span>
-            </div>
-            <div class="contact-item">
-              <h4 class="heading heading--h4">Prof. James Wilson</h4>
-              <p class="paragraph">Mathematics Instructor</p>
-              <span class="badge badge--success">Colleague</span>
-            </div>
-            <div class="contact-item">
-              <h4 class="heading heading--h4">Lisa Parker</h4>
-              <p class="paragraph">Student Support Coordinator</p>
-              <span class="badge badge--warning">Support Staff</span>
-            </div>
-          </div>
+          <h3>Sent</h3>
+          <p>View sent messages</p>
         </div>
-      </section>
-
-      <section>
-        <div class="card-grid">
-          <button class="button button--primary">Add Contact</button>
-          <button class="button button--outline">Import Contacts</button>
-          <button class="button button--outline">View Directory</button>
-        </div>
-      </section>
-    </article>
-
-    <article id="students" class="dashboard-content__article">
-      <section>
-        <div class="card-grid">
-          <div class="card card--metric">
-            <span class="metric__number">127</span>
-            <span class="metric__label label">Total Students</span>
-          </div>
-          <div class="card card--metric">
-            <span class="metric__number">23</span>
-            <span class="metric__label label">New This Month</span>
-          </div>
-          <div class="card card--metric">
-            <span class="metric__number">92%</span>
-            <span class="metric__label label">Active Rate</span>
-          </div>
-        </div>
-      </section>
-
-      <section>
         <div class="card">
-          <div class="student-list">
-            <div class="student-item">
-              <h4 class="heading heading--h4">Sarah Johnson</h4>
-              <p class="paragraph">Web Development Fundamentals</p>
-              <span class="badge badge--success">Active</span>
-            </div>
-            <div class="student-item">
-              <h4 class="heading heading--h4">Mike Chen</h4>
-              <p class="paragraph">Introduction to Programming</p>
-              <span class="badge badge--warning">Behind</span>
-            </div>
-            <div class="student-item">
-              <h4 class="heading heading--h4">Emma Williams</h4>
-              <p class="paragraph">Advanced JavaScript</p>
-              <span class="badge badge--success">Excellent</span>
-            </div>
-          </div>
+          <h3>Compose</h3>
+          <p>Write a new message</p>
         </div>
-      </section>
+      </article>
 
-      <section>
-        <div class="card-grid">
-          <button class="button button--primary">Send Announcement</button>
-          <button class="button button--outline">Export Student Data</button>
-          <button class="button button--outline">View All Students</button>
-        </div>
-      </section>
-    </article>
-
-    <article id="settings" class="dashboard-content__article">
-      <section>
+      <article id="contacts" class="content__article">
         <div class="card">
-          <form class="form">
-            <div class="form__group">
-              <label for="first-name" class="form__label">First Name</label>
-              <input type="text" id="first-name" value="John" class="form__input input" />
-            </div>
-            <div class="form__group">
-              <label for="last-name" class="form__label">Last Name</label>
-              <input type="text" id="last-name" value="Doe" class="form__input input" />
-            </div>
-            <div class="form__group">
-              <label for="email" class="form__label">Email</label>
-              <input type="email" id="email" value="john.doe@example.com" class="form__input input" />
-            </div>
-            <div class="form__group">
-              <label for="bio" class="form__label">Bio</label>
-              <textarea id="bio" rows="3"
-                class="form__textarea">Experienced programming instructor with 10+ years in education.</textarea>
-            </div>
-            <div class="button-group">
-              <button type="submit" class="button button--primary">Save Changes</button>
-              <button type="button" class="button button--outline">Cancel</button>
-            </div>
-          </form>
+          <h3>All Contacts</h3>
+          <p>View all contacts</p>
         </div>
-      </section>
+        <div class="card">
+          <h3>Teachers</h3>
+          <p>Fellow educators</p>
+        </div>
+        <div class="card">
+          <h3>Add Contact</h3>
+          <p>Add new contact</p>
+        </div>
+      </article>
 
-      <section>
-        <div class="card-grid">
-          <div class="card">
-            <h3 class="heading heading--h3">Change Password</h3>
-            <p class="paragraph">Update your password to keep your account secure</p>
-            <button class="button button--outline">Change Password</button>
-          </div>
-          <div class="card">
-            <h3 class="heading heading--h3">Two-Factor Authentication</h3>
-            <p class="paragraph">Add an extra layer of security to your account</p>
-            <button class="button button--outline">Enable 2FA</button>
-          </div>
-          <div class="card">
-            <h3 class="heading heading--h3">Login Sessions</h3>
-            <p class="paragraph">Manage your active login sessions</p>
-            <button class="button button--outline">View Sessions</button>
-          </div>
+      <article id="students" class="content__article">
+        <div class="card">
+          <h3>All Students</h3>
+          <p>127 total students</p>
         </div>
-      </section>
-    </article>
+        <div class="card">
+          <h3>Performance</h3>
+          <p>View student progress</p>
+        </div>
+        <div class="card">
+          <h3>Announcements</h3>
+          <p>Send class updates</p>
+        </div>
+      </article>
+
+      <article id="settings" class="content__article">
+        <div class="card">
+          <h3>Profile Settings</h3>
+          <p>Update your profile</p>
+        </div>
+        <div class="card">
+          <h3>Account Security</h3>
+          <p>Manage passwords & 2FA</p>
+        </div>
+        <div class="card">
+          <h3>Preferences</h3>
+          <p>Customize your experience</p>
+        </div>
+      </article>
     </div>
   </main>
   <footer class="grid__footer footer">

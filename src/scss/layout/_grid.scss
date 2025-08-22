@@ -6,8 +6,7 @@
 .grid {
     display: grid;
     min-height: 100vh; // Full viewport height
-    grid-template-rows: auto 1fr auto; // header auto, main fills space, footer auto
-    padding: var(--spacing-3);
+    grid-template-rows: auto minmax(0, 1fr) auto; // header auto, main flexible but can shrink, footer auto
     grid-template-areas:
         "header"
         "main"
@@ -20,6 +19,7 @@
     &__main {
         grid-area: main;
         display: grid;
+    
         
         // Auth page modifier - center content without stretching
         &--auth {

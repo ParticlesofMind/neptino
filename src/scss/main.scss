@@ -28,6 +28,7 @@
 @use 'layout/header';             // Site header
 @use 'layout/navigation';         // Navigation components
 @use 'layout/sidebar';            // Sidebar layout
+@use 'layout/content';            // Unified content container
 @use 'layout/footer';             // Site footer
 @use 'layout/templates';
 @use 'layout/schedule';

@@ -7,16 +7,14 @@
 // ==========================================================================
 
 .sidebar {
-  // Desktop styles (default)
-  width: 280px;
-  max-width: 280px;
-  background: rgba(255, 255, 255, 0.95);
+  width: 150px;
+  background: rgba(248, 248, 248, 0.95); // Slightly darker than pure white
   backdrop-filter: blur(8px);
   border-right: 1px solid var(--color-neutral-200);
-  overflow-y: auto;
-  margin: var(--spacing-4);
-  border-radius: var(--radius-large);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+  // Span full height of parent container
+  height: 100%;
+
 
   // Mobile styles - COMPACT bottom bar
   @media (max-width: 768px) {
@@ -30,35 +28,12 @@
     border-right: none;
     border-top: 1px solid var(--color-neutral-200);
     z-index: var(--z-sticky);
-    background: rgba(255, 255, 255, 0.98);
+    background: rgba(248, 248, 248, 0.98); // Slightly darker for mobile too
     backdrop-filter: blur(12px);
     overflow: visible;
   }
 
-  &__nav {
-    padding: var(--spacing-5);
-    
-    // Mobile styles - super compact
-    @media (max-width: 768px) {
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-evenly;
-      
-      .sidebar__heading {
-        display: none;
-      }
-      
-      .sidebar__list {
-        display: contents;
-      }
-      
-      .sidebar__item {
-        margin: 0;
-        flex: none;
-      }
-    }
-  }
+
 
   &__heading {
     margin: 0 0 var(--spacing-3) 0;

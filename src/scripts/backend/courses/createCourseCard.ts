@@ -124,55 +124,55 @@ export class CoursesManager {
 
  private createFallbackCourseCard(course: Course): HTMLElement {
  const cardElement = document.createElement("div");
- cardElement.className = "card course-card";
+ cardElement.className = "card card-courses";
  cardElement.dataset.courseId = course.id;
  cardElement.dataset.dynamic = "true";
 
  const courseImageHtml = course.course_image 
-   ? `<img src="${course.course_image}" alt="${course.course_name} Course" class="course-card__img">`
-   : `<div class="course-card__placeholder">${this.getInitials(course.course_name)}</div>`;
+   ? `<img src="${course.course_image}" alt="${course.course_name} Course" class="card-courses__img">`
+   : `<div class="card-courses__placeholder">${this.getInitials(course.course_name)}</div>`;
 
  const courseDescription = course.course_description?.trim() || 'No description available.';
 
  cardElement.innerHTML = `
-   <div class="course-card__image">
+   <div class="card-courses__image">
      ${courseImageHtml}
-     <div class="course-card__overlay">
-       <span class="course-card__status course-card__status--draft">Draft</span>
+     <div class="card-courses__overlay">
+       <span class="card-courses__status card-courses__status--draft">Draft</span>
      </div>
    </div>
    
-   <div class="course-card__header">
-     <h3 class="heading heading--h3 course-card__title">${course.course_name}</h3>
-     <p class="course-card__description">${courseDescription}</p>
+   <div class="card-courses__header">
+     <h3 class="heading heading--h3 card-courses__title">${course.course_name}</h3>
+     <p class="card-courses__description">${courseDescription}</p>
    </div>
    
-   <div class="course-card__body">
-     <div class="course-card__meta">
-       <span class="course-card__info">
+   <div class="card-courses__body">
+     <div class="card-courses__meta">
+       <span class="card-courses__info">
          <i class="icon icon--students"></i>
          Loading...
        </span>
-       <span class="course-card__info">
+       <span class="card-courses__info">
          <i class="icon icon--lessons"></i>
          Loading...
        </span>
      </div>
      
-     <div class="course-card__actions">
-       <button class="button button--outline button--small course-card__action" 
+     <div class="card-courses__actions">
+       <button class="button button--outline button--small card-courses__action" 
                data-section="setup" data-course-id="${course.id}">
          Setup
        </button>
-       <button class="button button--outline button--small course-card__action" 
+       <button class="button button--outline button--small card-courses__action" 
                data-section="create" data-course-id="${course.id}">
          Create
        </button>
-       <button class="button button--outline button--small course-card__action" 
+       <button class="button button--outline button--small card-courses__action" 
                data-section="preview" data-course-id="${course.id}">
          Preview
        </button>
-       <button class="button button--primary button--small course-card__action" 
+       <button class="button button--primary button--small card-courses__action" 
                data-section="launch" data-course-id="${course.id}">
          Launch
        </button>
@@ -186,7 +186,7 @@ export class CoursesManager {
 
  private async createCourseCard(course: Course): Promise<HTMLElement> {
  const cardElement = document.createElement("div");
- cardElement.className = "card course-card";
+ cardElement.className = "card card-courses";
  cardElement.dataset.courseId = course.id;
  cardElement.dataset.dynamic = "true"; // Mark as dynamically generated
 
@@ -207,8 +207,8 @@ export class CoursesManager {
 
  // Create course image or placeholder
  const courseImageHtml = course.course_image 
-   ? `<img src="${course.course_image}" alt="${course.course_name} Course" class="course-card__img">`
-   : `<div class="course-card__placeholder">${this.getInitials(course.course_name)}</div>`;
+   ? `<img src="${course.course_image}" alt="${course.course_name} Course" class="card-courses__img">`
+   : `<div class="card-courses__placeholder">${this.getInitials(course.course_name)}</div>`;
 
  // Format description with fallback
  const courseDescription = course.course_description?.trim() || 'No description available.';
@@ -218,47 +218,47 @@ export class CoursesManager {
  const lessonText = `${lessonCount} lesson${lessonCount !== 1 ? 's' : ''}`;
 
  cardElement.innerHTML = `
-   <div class="course-card__image">
+   <div class="card-courses__image">
      ${courseImageHtml}
-     <div class="course-card__overlay">
-       <span class="course-card__status ${statusClass}">${statusText}</span>
+     <div class="card-courses__overlay">
+       <span class="card-courses__status ${statusClass}">${statusText}</span>
      </div>
    </div>
    
-   <div class="course-card__header">
-     <h3 class="heading heading--h3 course-card__title">${course.course_name}</h3>
-     <p class="course-card__description">${courseDescription}</p>
+   <div class="card-courses__header">
+     <h3 class="heading heading--h3 card-courses__title">${course.course_name}</h3>
+     <p class="card-courses__description">${courseDescription}</p>
    </div>
    
-   <div class="course-card__body">
-     <div class="course-card__meta">
-       <span class="course-card__info">
+   <div class="card-courses__body">
+     <div class="card-courses__meta">
+       <span class="card-courses__info">
          <i class="icon icon--students"></i>
          ${studentText}
        </span>
-       <span class="course-card__info">
+       <span class="card-courses__info">
          <i class="icon icon--lessons"></i>
          ${lessonText}
        </span>
      </div>
      
-     <div class="course-card__actions">
-       <button class="button button--outline button--small course-card__action" 
+     <div class="card-courses__actions">
+       <button class="button button--outline button--small card-courses__action" 
                data-section="setup" data-course-id="${course.id}"
                title="Configure course settings and details">
          Setup
        </button>
-       <button class="button button--outline button--small course-card__action" 
+       <button class="button button--outline button--small card-courses__action" 
                data-section="create" data-course-id="${course.id}"
                title="Create and design course content">
          Create
        </button>
-       <button class="button button--outline button--small course-card__action" 
+       <button class="button button--outline button--small card-courses__action" 
                data-section="preview" data-course-id="${course.id}"
                title="Preview course before publishing">
          Preview
        </button>
-       <button class="button button--primary button--small course-card__action" 
+       <button class="button button--primary button--small card-courses__action" 
                data-section="launch" data-course-id="${course.id}"
                title="Launch course for students">
          Launch

@@ -27,237 +27,109 @@
     </nav>
   </header>
 
-  <main class="grid__main main">
+  <main class="grid__main main home">
     <aside class="sidebar">
-      <nav class="sidebar__nav">
+      <nav class="ul ul--sidebar">
         <ul class="ul ul--main">
           <li class="ul__item">
-            <a href="#dashboard" class="nav__link nav__link--active" data-section="dashboard">Dashboard</a>
+            <a href="#dashboard" class="link link--main link--active" data-section="dashboard">Dashboard</a>
           </li>
           <li class="ul__item">
-            <a href="#users" class="link" data-section="users">Users</a>
+            <a href="#users" class="link link--main" data-section="users">Users</a>
           </li>
           <li class="ul__item">
-            <a href="#analytics" class="link" data-section="analytics">Analytics</a>
+            <a href="#analytics" class="link link--main" data-section="analytics">Analytics</a>
           </li>
           <li class="ul__item">
-            <a href="#settings" class="link" data-section="settings">Settings</a>
+            <a href="#settings" class="link link--main" data-section="settings">Settings</a>
           </li>
         </ul>
       </nav>
     </aside>
 
-    <div class="dashboard-content">
-      <article id="dashboard" class="dashboard-content__article dashboard-content__article--active">
-        <section>
-          <h1 class="heading heading--h1">Admin Dashboard</h1>
-          <p class="paragraph paragraph--lead">
-            Manage your institution and oversee educational operations.
-          </p>
-        </section>
-        
-        <section>
-          <div class="card-grid">
-            <div class="card card--metric">
-              <span class="metric__number">24</span>
-              <span class="metric__label label">Active Teachers</span>
-            </div>
-            <div class="card card--metric">
-              <span class="metric__number">486</span>
-              <span class="metric__label label">Active Students</span>
-            </div>
-            <div class="card card--metric">
-              <span class="metric__number">127</span>
-              <span class="metric__label label">Total Courses</span>
-            </div>
-            <div class="card card--metric">
-              <span class="metric__number">98%</span>
-              <span class="metric__label label">System Uptime</span>
-            </div>
-          </div>
-        </section>
-        
-        <section>
-          <h2 class="heading heading--h2">Recent Activity</h2>
-          <div class="card">
-            <div class="activity-list">
-              <div class="activity-item">
-                <h4 class="heading heading--h4">New teacher registration: Dr. Sarah Johnson</h4>
-                <time class="activity-time">15 minutes ago</time>
-              </div>
-              <div class="activity-item">
-                <h4 class="heading heading--h4">Course approved: Advanced Mathematics</h4>
-                <time class="activity-time">1 hour ago</time>
-              </div>
-              <div class="activity-item">
-                <h4 class="heading heading--h4">System maintenance completed</h4>
-                <time class="activity-time">3 hours ago</time>
-              </div>
-            </div>
-            <a href="#" class="button button--outline">View All Activity</a>
-          </div>
-        </section>
-        
-        <section>
-          <h2 class="heading heading--h2">Quick Actions</h2>
-          <div class="card-grid">
-            <div class="card card--centered">
-              <h3 class="heading heading--h3">User Management</h3>
-              <p class="paragraph">Manage teachers, students, and permissions.</p>
-              <a href="#users" class="button button--primary" data-section="users">Manage Users</a>
-            </div>
-            <div class="card card--centered">
-              <h3 class="heading heading--h3">System Reports</h3>
-              <p class="paragraph">View detailed analytics and reports.</p>
-              <a href="#analytics" class="button button--outline" data-section="analytics">View Reports</a>
-            </div>
-            <div class="card card--centered">
-              <h3 class="heading heading--h3">Settings</h3>
-              <p class="paragraph">Configure system settings and preferences.</p>
-              <a href="#settings" class="button button--outline" data-section="settings">System Settings</a>
-            </div>
-          </div>
-        </section>
+    <div class="content">
+      <article id="dashboard" class="content__article content__article--active">
+        <div class="card">
+          <h3>Active Teachers</h3>
+          <span class="card-metric__number">24</span>
+        </div>
+        <div class="card">
+          <h3>Active Students</h3>
+          <span class="card-metric__number">486</span>
+        </div>
+        <div class="card">
+          <h3>Total Courses</h3>
+          <span class="card-metric__number">127</span>
+        </div>
+        <div class="card">
+          <h3>System Health</h3>
+          <p>All systems operational</p>
+        </div>
+        <div class="card">
+          <h3>Recent Activity</h3>
+          <p>View latest admin actions</p>
+        </div>
+        <div class="card">
+          <h3>Quick Actions</h3>
+          <p>Admin tools and settings</p>
+        </div>
       </article>
 
-      <article id="users" class="dashboard-content__article">
-        <section>
-          <h1 class="heading heading--h1">User Management</h1>
-          <p class="paragraph paragraph--lead">
-            Manage teachers, students, and system administrators.
-          </p>
-        </section>
-        
-        <section>
-          <div class="card-grid">
-            <div class="card card--metric">
-              <span class="metric__number">24</span>
-              <span class="metric__label label">Teachers</span>
-            </div>
-            <div class="card card--metric">
-              <span class="metric__number">486</span>
-              <span class="metric__label label">Students</span>
-            </div>
-            <div class="card card--metric">
-              <span class="metric__number">3</span>
-              <span class="metric__label label">Administrators</span>
-            </div>
-          </div>
-        </section>
-        
-        <section>
-          <h2 class="heading heading--h2">User Actions</h2>
-          <div class="card-grid">
-            <div class="card card--centered">
-              <button class="button button--primary">Add New User</button>
-            </div>
-            <div class="card card--centered">
-              <button class="button button--outline">Export User Data</button>
-            </div>
-            <div class="card card--centered">
-              <button class="button button--outline">Bulk Operations</button>
-            </div>
-          </div>
-        </section>
+      <article id="users" class="content__article">
+        <div class="card">
+          <h3>All Users</h3>
+          <p>Manage all users</p>
+        </div>
+        <div class="card">
+          <h3>Teachers</h3>
+          <p>24 active teachers</p>
+        </div>
+        <div class="card">
+          <h3>Students</h3>
+          <p>486 active students</p>
+        </div>
+        <div class="card">
+          <h3>Add User</h3>
+          <p>Create new account</p>
+        </div>
+        <div class="card">
+          <h3>Bulk Actions</h3>
+          <p>Manage multiple users</p>
+        </div>
+        <div class="card">
+          <h3>User Reports</h3>
+          <p>Export user data</p>
+        </div>
       </article>
 
-      <article id="analytics" class="dashboard-content__article">
-        <section>
-          <h1 class="heading heading--h1">Analytics & Reports</h1>
-          <p class="paragraph paragraph--lead">
-            Monitor institutional performance and generate reports.
-          </p>
-        </section>
-        
-        <section>
-          <div class="card-grid">
-            <div class="card card--metric">
-              <span class="metric__number">89%</span>
-              <span class="metric__label label">Student Satisfaction</span>
-            </div>
-            <div class="card card--metric">
-              <span class="metric__number">76%</span>
-              <span class="metric__label label">Course Completion</span>
-            </div>
-            <div class="card card--metric">
-              <span class="metric__number">4.2</span>
-              <span class="metric__label label">Average Rating</span>
-            </div>
-          </div>
-        </section>
-        
-        <section>
-          <h2 class="heading heading--h2">Generate Reports</h2>
-          <div class="card-grid">
-            <div class="card card--centered">
-              <button class="button button--primary">Usage Report</button>
-            </div>
-            <div class="card card--centered">
-              <button class="button button--outline">Financial Report</button>
-            </div>
-            <div class="card card--centered">
-              <button class="button button--outline">Performance Report</button>
-            </div>
-          </div>
-        </section>
+      <article id="analytics" class="content__article">
+        <div class="card">
+          <h3>Usage Analytics</h3>
+          <p>Platform usage metrics</p>
+        </div>
+        <div class="card">
+          <h3>Course Performance</h3>
+          <p>Course completion rates</p>
+        </div>
+        <div class="card">
+          <h3>Financial Reports</h3>
+          <p>Revenue and costs</p>
+        </div>
       </article>
 
-      <article id="settings" class="dashboard-content__article">
-        <section>
-          <h1 class="heading heading--h1">System Settings</h1>
-          <p class="paragraph paragraph--lead">
-            Configure institutional settings and system preferences.
-          </p>
-        </section>
-        
-        <section>
-          <div class="card">
-            <h2 class="heading heading--h2">Institution Settings</h2>
-            <form class="form">
-              <div class="form__group">
-                <label for="institution-name" class="form__label">Institution Name</label>
-                <input type="text" id="institution-name" value="Neptino University" class="form__input input" />
-              </div>
-              <div class="form__group">
-                <label for="institution-email" class="form__label">Contact Email</label>
-                <input type="email" id="institution-email" value="admin@neptino.edu" class="form__input input" />
-              </div>
-              <div class="form__group">
-                <label for="timezone" class="form__label">Timezone</label>
-                <select id="timezone" class="form__input input">
-                  <option>UTC</option>
-                  <option>EST</option>
-                  <option>PST</option>
-                </select>
-              </div>
-              <div class="button-group">
-                <button type="submit" class="button button--primary">Save Settings</button>
-                <button type="button" class="button button--outline">Cancel</button>
-              </div>
-            </form>
-          </div>
-        </section>
-        
-        <section>
-          <h2 class="heading heading--h2">System Maintenance</h2>
-          <div class="card-grid">
-            <div class="card">
-              <h3 class="heading heading--h3">Database Backup</h3>
-              <p class="paragraph">Create a backup of all system data.</p>
-              <button class="button button--outline">Create Backup</button>
-            </div>
-            <div class="card">
-              <h3 class="heading heading--h3">Clear Cache</h3>
-              <p class="paragraph">Clear system cache to improve performance.</p>
-              <button class="button button--outline">Clear Cache</button>
-            </div>
-            <div class="card">
-              <h3 class="heading heading--h3">System Logs</h3>
-              <p class="paragraph">View and download system logs.</p>
-              <button class="button button--outline">View Logs</button>
-            </div>
-          </div>
-        </section>
+      <article id="settings" class="content__article">
+        <div class="card">
+          <h3>Institution Settings</h3>
+          <p>Configure institution details</p>
+        </div>
+        <div class="card">
+          <h3>System Settings</h3>
+          <p>Platform configuration</p>
+        </div>
+        <div class="card">
+          <h3>Maintenance</h3>
+          <p>System maintenance tools</p>
+        </div>
       </article>
     </div>
   </main>

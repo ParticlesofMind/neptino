@@ -1,22 +1,8 @@
 <!DOCTYPE html>
-<html lang="e    <aside class="sidebar">
-      <nav class="sidebar__nav">
-        <ul class="ul ul--main">
-          <li class="ul__item">
-            <a href="#dashboard" class="nav__link nav__link--active" data-section="dashboard">Dashboard</a>
-          </li>
-          <li class="ul__item">
-            <a href="#courses" class="link" data-section="courses">My Courses</a>
-          </li>
-          <li class="ul__item">
-            <a href="#progress" class="link" data-section="progress">Progress</a>
-          </li>
-          <li class="ul__item">
-            <a href="#settings" class="link" data-section="settings">Settings</a>
-          </li>
-        </ul>
-      </nav>
-    </aside>a charset="UTF-8" />
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Dashboard - Neptino</title>
   <link rel="stylesheet" href="/src/scss/main.scss" />
@@ -40,191 +26,102 @@
       </ul>
     </nav>
   </header>
-  <main class="grid__main main">
-
-    <div class="home">
-
-    <aside class="sidebar sidebar--home">
-      <nav class="sidebar__nav">
+  
+  <main class="grid__main home">
+    <aside class="sidebar">
+      <nav class="ul ul--sidebar">
         <ul class="ul ul--main">
-          <li class="dashboard-ul__item">
-            <a href="#dashboard" class="dashboard-nav__link dashboard-nav__link--active" data-section="dashboard">Dashboard</a>
+          <li class="ul__item">
+            <a href="#dashboard" class="link link--main link--active" data-section="dashboard">Dashboard</a>
           </li>
-          <li class="dashboard-ul__item">
-            <a href="#courses" class="dashboard-link" data-section="courses">My Courses</a>
+          <li class="ul__item">
+            <a href="#courses" class="link link--main" data-section="courses">Courses</a>
           </li>
-          <li class="dashboard-ul__item">
-            <a href="#progress" class="dashboard-link" data-section="progress">Progress</a>
+          <li class="ul__item">
+            <a href="#progress" class="link link--main" data-section="progress">Progress</a>
           </li>
-          <li class="dashboard-ul__item">
-            <a href="#settings" class="dashboard-link" data-section="settings">Settings</a>
+          <li class="ul__item">
+            <a href="#settings" class="link link--main" data-section="settings">Settings</a>
           </li>
         </ul>
       </nav>
     </aside>
 
-    <div class="dashboard-content">
-      <article id="dashboard" class="dashboard-content__article dashboard-content__article--active">
-        <section>
-          <h1 class="heading heading--h1">Welcome to Your Dashboard</h1>
-          <p class="paragraph paragraph--lead">
-            Continue your learning journey with Neptino.
-          </p>
-        </section>
-        
-        <section>
-          <div class="card-grid">
-            <div class="card card-metric">
-              <span class="card-metric__number">0</span>
-              <span class="card-metric__label">Enrolled Courses</span>
-            </div>
-            <div class="card card-metric">
-              <span class="card-metric__number">0%</span>
-              <span class="card-metric__label">Overall Progress</span>
-            </div>
-            <div class="card card-metric">
-              <span class="card-metric__number">0</span>
-              <span class="card-metric__label">Assignments Due</span>
-            </div>
-            <div class="card card-metric">
-              <span class="card-metric__number">0</span>
-              <span class="card-metric__label">Certificates Earned</span>
-            </div>
-          </div>
-        </section>
-        
-        <section>
-          <h2 class="heading heading--h2">Recent Activity</h2>
-          <div class="card">
-            <p class="paragraph">
-              No recent activity. Start by enrolling in your first course!
-            </p>
-            <a href="/src/pages/student/courses.html" class="button button--primary">Browse Courses</a>
-          </div>
-        </section>
-        
-        <section>
-          <h2 class="heading heading--h2">Quick Actions</h2>
-          <div class="card-grid">
-            <div class="card card--centered">
-              <h3 class="heading heading--h3">Browse Courses</h3>
-              <p class="paragraph">
-                Discover new courses and expand your knowledge.
-              </p>
-              <a href="/src/pages/student/courses.html" class="button button--outline">Browse</a>
-            </div>
-            <div class="card card--centered">
-              <h3 class="heading heading--h3">View Progress</h3>
-              <p class="paragraph">Track your learning progress and achievements.</p>
-              <a href="/src/pages/student/progress.html" class="button button--outline">View Progress</a>
-            </div>
-            <div class="card card--centered">
-              <h3 class="heading heading--h3">Update Profile</h3>
-              <p class="paragraph">Manage your account settings and preferences.</p>
-              <a href="/src/pages/student/profile.html" class="button button--outline">Edit Profile</a>
-            </div>
-          </div>
-        </section>
+    <div class="content">
+      <article id="dashboard" class="content__article content__article--active">
+        <div class="card">
+          <h3>Enrolled Courses</h3>
+          <span class="card-metric__number">0</span>
+        </div>
+        <div class="card">
+          <h3>Progress</h3>
+          <span class="card-metric__number">0%</span>
+        </div>
+        <div class="card">
+          <h3>Assignments Due</h3>
+          <span class="card-metric__number">0</span>
+        </div>
+        <div class="card">
+          <h3>Browse Courses</h3>
+          <p>Discover new courses</p>
+        </div>
+        <div class="card">
+          <h3>Recent Activity</h3>
+          <p>No recent activity</p>
+        </div>
+        <div class="card">
+          <h3>Achievements</h3>
+          <p>Unlock your first achievement</p>
+        </div>
       </article>
 
-      <article id="courses" class="dashboard-content__article">
-        <section>
-          <h1 class="heading heading--h1">My Courses</h1>
-          <p class="paragraph paragraph--lead">
-            Manage and access your enrolled courses.
-          </p>
-        </section>
-        
-        <section>
-          <div class="card-grid">
-            <div class="card card-metric">
-              <span class="card-metric__number">0</span>
-              <span class="card-metric__label">Active Courses</span>
-            </div>
-            <div class="card card-metric">
-              <span class="card-metric__number">0</span>
-              <span class="card-metric__label">Completed Courses</span>
-            </div>
-            <div class="card card-metric">
-              <span class="card-metric__number">0%</span>
-              <span class="card-metric__label">Average Progress</span>
-            </div>
-          </div>
-        </section>
-        
-        <section>
-          <h2 class="heading heading--h2">Course List</h2>
-          <div class="card">
-            <p class="paragraph">You haven't enrolled in any courses yet.</p>
-            <a href="/src/pages/student/marketplace.html" class="button button--primary">Browse Marketplace</a>
-          </div>
-        </section>
+      <article id="courses" class="content__article">
+        <div class="card">
+          <h3>My Courses</h3>
+          <p>View enrolled courses</p>
+        </div>
+        <div class="card">
+          <h3>Browse Marketplace</h3>
+          <p>Find new courses</p>
+        </div>
+        <div class="card">
+          <h3>Wishlist</h3>
+          <p>Saved courses</p>
+        </div>
       </article>
 
-      <article id="progress" class="dashboard-content__article">
-        <section>
-          <h1 class="heading heading--h1">Learning Progress</h1>
-          <p class="paragraph paragraph--lead">
-            Track your achievements and learning milestones.
-          </p>
-        </section>
-        
-        <section>
-          <div class="card-grid">
-            <div class="card card-metric">
-              <span class="card-metric__number">0</span>
-              <span class="card-metric__label">Certificates</span>
-            </div>
-            <div class="card card-metric">
-              <span class="card-metric__number">0</span>
-              <span class="card-metric__label">Assignments Completed</span>
-            </div>
-            <div class="card card-metric">
-              <span class="card-metric__number">0</span>
-              <span class="card-metric__label">Study Hours</span>
-            </div>
-          </div>
-        </section>
-        
-        <section>
-          <h2 class="heading heading--h2">Recent Achievements</h2>
-          <div class="card">
-            <p class="paragraph">Complete your first course to unlock achievements!</p>
-          </div>
-        </section>
+      <article id="progress" class="content__article">
+        <div class="card">
+          <h3>Learning Progress</h3>
+          <p>Track your achievements</p>
+        </div>
+        <div class="card">
+          <h3>Certificates</h3>
+          <p>View earned certificates</p>
+        </div>
+        <div class="card">
+          <h3>Study Hours</h3>
+          <p>Time spent learning</p>
+        </div>
       </article>
 
-      <article id="settings" class="dashboard-content__article">
-        <section>
-          <h1 class="heading heading--h1">Account Settings</h1>
-          <p class="paragraph paragraph--lead">
-            Manage your profile and preferences.
-          </p>
-        </section>
-        
-        <section>
-          <div class="card-grid">
-            <div class="card">
-              <h3 class="heading heading--h3">Profile Information</h3>
-              <p class="paragraph">Update your personal information and profile picture.</p>
-              <a href="#" class="button button--outline">Edit Profile</a>
-            </div>
-            <div class="card">
-              <h3 class="heading heading--h3">Notification Settings</h3>
-              <p class="paragraph">Control how and when you receive notifications.</p>
-              <a href="#" class="button button--outline">Manage Notifications</a>
-            </div>
-            <div class="card">
-              <h3 class="heading heading--h3">Privacy & Security</h3>
-              <p class="paragraph">Update your password and privacy settings.</p>
-              <a href="#" class="button button--outline">Security Settings</a>
-            </div>
-          </div>
-        </section>
+      <article id="settings" class="content__article">
+        <div class="card">
+          <h3>Profile Settings</h3>
+          <p>Update your profile</p>
+        </div>
+        <div class="card">
+          <h3>Notifications</h3>
+          <p>Manage notifications</p>
+        </div>
+        <div class="card">
+          <h3>Privacy & Security</h3>
+          <p>Account security settings</p>
+        </div>
       </article>
     </div>
-      </div>
   </main>
+  
   <footer class="grid__footer footer">
     <nav class="footer__nav">
       <ul class="ul ul--footer">
@@ -239,6 +136,7 @@
       </ul>
     </nav>
   </footer>
+  
   <script type="module" src="/src/scripts/app.ts"></script>
   <script type="module" src="/src/scripts/navigation/index.ts"></script>
 </body>

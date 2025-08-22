@@ -73,44 +73,54 @@
 }
 
 // ==========================================================================
-// CONTENT BLOCK (BEM: Block)
+// COURSEBUILDER SETUP - Enhanced with unified content system
 // ==========================================================================
 
-.content {
-    grid-column: 2; // Second column
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(8px);
-    padding: 1rem;
-    border-radius: var(--radius-large);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+.coursebuilder {
+    &__setup {
+        display: grid;
+        grid-template-columns: auto 1fr; // Sidebar and content
+        gap: var(--spacing-4);
+        height: 100%; // Fill parent
+        align-items: stretch; // Sidebar spans full height
 
-    // Mobile styles - account for COMPACT bottom navigation
-    @media (max-width: 768px) {
-        grid-column: 1 / -1; // Span all columns on mobile
-        width: 100vw; // Use full viewport width
-        height: calc(100vh - 60px); // Account for bottom navigation
-        margin: 0; // Remove side margins
-        margin-bottom: 60px; // Space for 50px nav + 10px buffer
-        border-radius: 0; // Remove border radius on mobile for full width
-        box-shadow: none; // Remove shadow for cleaner mobile look
-    }
-
-    // ==========================================================================
-    // CONTENT ELEMENTS (BEM: Elements)
-    // ==========================================================================
-
-    &__article {
-        display: none;
-
-        &--active {
-            display: block;
-            width: 100%; // Ensure active articles also span full width
+        // Mobile responsive
+        @media (max-width: 768px) {
+            grid-template-columns: 1fr;
+            grid-template-rows: 1fr auto;
+            gap: 0;
         }
-    }
 
-    &__section {
-        &:not(:last-child) {
-            margin-bottom: var(--spacing-8);
+        // Enhance content for coursebuilder-specific layout  
+        .content {
+            padding: var(--spacing-6); // More padding for forms
+            
+            // Mobile adjustments
+            @media (max-width: 768px) {
+                width: 100vw;
+                height: calc(100vh - 60px);
+                margin: 0;
+                margin-bottom: 60px;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            // ==========================================================================
+            // CONTENT ELEMENTS (BEM: Elements)
+            // ==========================================================================
+
+            &__article {
+                &--active {
+                    display: block;
+                    width: 100%; // Ensure active articles span full width
+                }
+            }
+
+            &__section {
+                &:not(:last-child) {
+                    margin-bottom: var(--spacing-8);
+                }
+            }
         }
     }
 }

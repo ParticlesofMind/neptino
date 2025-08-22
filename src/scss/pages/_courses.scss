@@ -1,6 +1,7 @@
 
-
-.courses { 
-    display: grid; 
-    grid-template-columns: auto 1fr; 
+.courses {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    padding: var(--spacing-4) var(--spacing-5); // 12px vertical, 16px horizontal
 }
