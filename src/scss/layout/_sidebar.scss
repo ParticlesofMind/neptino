@@ -7,10 +7,11 @@
 // ==========================================================================
 
 .sidebar {
-  width: 150px;
+
   background: rgba(248, 248, 248, 0.95); // Slightly darker than pure white
   backdrop-filter: blur(8px);
   border-right: 1px solid var(--color-neutral-200);
+  padding: 1rem; 
 
   // Span full height of parent container
   height: 100%;
@@ -35,136 +36,7 @@
 
 
 
-  &__heading {
-    margin: 0 0 var(--spacing-3) 0;
-    padding: var(--spacing-2) 0;
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
 
-    &:not(:first-child) {
-      margin-top: var(--spacing-5);
-      padding-top: var(--spacing-3);
-      border-top: 1px solid var(--color-neutral-200);
-    }
-    
-    // Hide headings on mobile to save space
-    @media (max-width: 768px) {
-      display: none;
-    }
-  }
-
-  &__list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    
-    // Desktop: keep normal styling
-    @media (min-width: 769px) {
-      margin-bottom: var(--spacing-4);
-    }
-    
-    // Mobile: use display: contents (handled in &__nav)
-  }
-
-  &__item {
-    margin-bottom: var(--spacing-1);
-    
-    // Mobile styles
-    @media (max-width: 768px) {
-      margin-bottom: 0;
-      flex: 1;
-      display: flex;
-      justify-content: center;
-    }
-  }
-
-  &__link {
-    display: block;
-    padding: var(--spacing-3) var(--spacing-4);
-    border-radius: var(--radius-medium);
-    color: var(--color-text);
-    text-decoration: none;
-    font-weight: var(--font-weight-medium);
-    transition: var(--transition-fast);
-    position: relative;
-
-    &:hover {
-      background: var(--color-primary-50);
-      color: var(--color-primary-700);
-    }
-
-    &--active {
-      background: var(--color-primary-100);
-      color: var(--color-primary-700);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    // Mobile - COMPACT ICONS ONLY
-    @media (max-width: 768px) {
-      width: 36px;
-      height: 36px;
-      padding: 0;
-      margin: 0 2px;
-      border-radius: var(--radius-medium);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: transparent;
-      border: 1px solid var(--color-neutral-300);
-      
-      // Hide ALL text completely
-      font-size: 0;
-      line-height: 0;
-      text-indent: -9999px;
-      color: transparent;
-      
-      // Show ONLY emoji icons
-      &::before {
-        content: '';
-        font-size: 16px;
-        line-height: 1;
-        text-indent: 0;
-        color: initial;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-      }
-      
-      // Icon mappings
-      &[data-section="essentials"]::before { content: "📝"; }
-      &[data-section="classification"]::before { content: "🏷️"; }
-      &[data-section="templates"]::before { content: "📄"; }
-      &[data-section="schedule"]::before { content: "📅"; }
-      &[data-section="curriculum"]::before { content: "📚"; }
-      &[data-section="marketplace"]::before { content: "🛒"; }
-      &[data-section="resources"]::before { content: "📁"; }
-      &[data-section="settings"]::before { content: "⚙️"; }
-      
-      &:hover {
-        background: var(--color-neutral-100);
-        border-color: var(--color-neutral-400);
-        transform: translateY(-1px);
-      }
-      
-      &--active {
-        background: var(--color-primary-500);
-        border-color: var(--color-primary-500);
-        
-        &::before {
-          filter: none; // Keep emoji colors on active
-        }
-        
-        &:hover {
-          background: var(--color-primary-600);
-          border-color: var(--color-primary-600);
-        }
-      }
-    }
-  }
 }
 
 

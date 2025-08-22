@@ -1,4 +1,6 @@
 import { supabase } from "../supabase.js";
+import "./templates/templateConfigHandler.js";
+import "./templates/templatePreviewHandler.js";
 
 export interface TemplateData {
  template_id: string;
@@ -403,8 +405,8 @@ export class TemplateManager {
  ?.map(
  (block: any) => `
  <div class="preview-block preview-block--${block.type}">
- <div class="">${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</div>
- <div class="">${block.content || "No content"}</div>
+ <h4>${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</h4>
+ <div class="preview-block__content">${block.content || "No content"}</div>
  </div>
  `,
  )
@@ -699,12 +701,12 @@ export class TemplateManager {
  * Shows the template configuration and preview areas
  */
  static showTemplateBuilder(templateId?: string): void {
- const templateLayout = document.querySelector(
- ".template-layout",
+ const templateContainer = document.querySelector(
+ ".template",
  ) as HTMLElement;
 
- if (templateLayout) {
- // Template layout is now always visible, no need to change display
+ if (templateContainer) {
+ // Template container is now always visible, no need to change display
 
  // Wait a bit for the layout to be visible, then initialize
  setTimeout(() => {
@@ -726,7 +728,7 @@ export class TemplateManager {
  }
  }, 100);
  } else {
- console.error("Template layout not found");
+ console.error("Template container not found");
  }
  }
 
@@ -841,8 +843,8 @@ export class TemplateManager {
     if (previewArea) {
       previewArea.innerHTML = `
         <div class="preview-placeholder">
-          <h4 class="coursebuilder-template-preview__heading">Template Preview</h4>
-          <p class="coursebuilder-template-preview__message">Create a new template or load an existing one to see the preview here.</p>
+          <h4>Template Preview</h4>
+          <p>Create a new template or load an existing one to see the preview here.</p>
           <div class="template-blocks">
             <div class="block-item block-item--header">Header Block</div>
             <div class="block-item block-item--program">Program Block</div>
@@ -879,8 +881,8 @@ export class TemplateManager {
     if (previewContainer) {
       previewContainer.innerHTML = `
         <div class="preview-placeholder">
-          <h4 class="coursebuilder-template-preview__heading">No Template Selected</h4>
-          <p class="coursebuilder-template-preview__message">Template preview will appear here when you load a template...</p>
+          <h4>No Template Selected</h4>
+          <p>Template preview will appear here when you load a template...</p>
         </div>
       `;
     }
@@ -1284,10 +1286,8 @@ export class TemplateManager {
 
  return `
  <div class="preview-block preview-block--${block.type}">
- <div class="">
- <h4 class="">${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</h4>
- </div>
- <div class="">
+ <h4>${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</h4>
+ <div class="preview-block__content">
  ${this.renderBlockContent(block.type, checkedFields)}
  </div>
  </div>

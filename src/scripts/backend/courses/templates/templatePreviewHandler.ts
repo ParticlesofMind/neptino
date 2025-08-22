@@ -2,7 +2,7 @@ export class TemplatePreviewHandler {
  private previewContainer: HTMLElement | null = null;
 
  constructor() {
- this.previewContainer = document.querySelector('.template-preview__content');
+ this.previewContainer = document.getElementById('template-preview-content');
  this.setupEventListeners();
  }
 
@@ -95,7 +95,7 @@ export class TemplatePreviewHandler {
  private renderHeaderBlock(_config: any): string {
  return `
  <div class="preview-block preview-block--header">
- <div class="preview-block__header">Header</div>
+ <h4>Header</h4>
  <div class="preview-block__content">
  <table class="preview-table">
  <thead>
@@ -142,7 +142,7 @@ export class TemplatePreviewHandler {
  private renderProgramBlock(_config: any): string {
  return `
  <div class="preview-block preview-block--program">
- <div class="preview-block__header">Program</div>
+ <h4>Program</h4>
  <div class="preview-block__content">
  <table class="preview-table">
  <thead>
@@ -181,7 +181,7 @@ export class TemplatePreviewHandler {
  private renderResourcesBlock(_config: any): string {
  return `
  <div class="preview-block preview-block--resources">
- <div class="preview-block__header">Resources</div>
+ <h4>Resources</h4>
  <div class="preview-block__content">
  <table class="preview-table">
  <thead>
@@ -244,8 +244,8 @@ export class TemplatePreviewHandler {
 
  return `
  <div class="preview-block preview-block--content">
- <div class="">📝 Content</div>
- <div class="">
+ <h4>Content</h4>
+ <div class="preview-block__content">
  <div class="preview-section">
  <div class="preview-editor">Editor: ${editor}</div>
  ${allowMedia ? '<div class="preview-feature">✓ Media uploads enabled</div>' : ""}
@@ -268,8 +268,8 @@ export class TemplatePreviewHandler {
 
  return `
  <div class="preview-block preview-block--assignment">
- <div class="">✅ Assignment</div>
- <div class="">
+ <h4>Assignment</h4>
+ <div class="preview-block__content">
  <div class="preview-section">
  ${allowSubmissions ? `<div class="preview-feature">✓ Student submissions (max: ${maxSubmissions})</div>` : ""}
  ${requireDueDate ? '<div class="preview-feature">✓ Due date required</div>' : ""}
@@ -291,8 +291,8 @@ export class TemplatePreviewHandler {
 
  return `
  <div class="preview-block preview-block--footer">
- <div class="">🔖 Footer</div>
- <div class="">
+ <h4>Footer</h4>
+ <div class="preview-block__content">
  <div class="preview-section">
  ${showCredits ? '<div class="preview-feature">✓ Credits displayed</div>' : ""}
  ${showDate ? '<div class="preview-feature">✓ Creation date displayed</div>' : ""}
