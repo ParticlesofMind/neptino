@@ -77,37 +77,32 @@
         <!-- Essentials Article -->
         <article id="essentials" class="content__article content__article--active">
           <form class="form" id="course-essentials-form">
-            <div class="form__group">
-              <label class="form__label" for="course-name">Course Name</label>
-              <input class="form__input" type="text" id="course-name" name="course_name" placeholder="Enter course name"
-                required />
-            </div>
-            <div class="form__group">
-              <label class="form__label" for="course-description">Course Description</label>
-              <textarea class="form__textarea" id="course-description" name="course_description" rows="4"
-                placeholder="Describe what students will learn" required></textarea>
-            </div>
-            <div class="form__group">
-              <label class="form__label" for="teacher-id">Teacher</label>
-              <input class="form__input form__input--readonly" type="text" id="teacher-id" name="teacher_id"
-                placeholder="Loading..." readonly />
-            </div>
-            <div class="form__group">
-              <label class="form__label" for="institution">Institution</label>
-              <input class="form__input form__input--readonly" type="text" id="institution" name="institution"
-                placeholder="Loading..." readonly />
-            </div>
-            <div class="form__group">
-              <label class="form__label" for="course-language">Course Language</label>
-              <select class="form__input form__select" id="course-language" name="course_language" required>
+            <label class="form__label">
+              Course Name
+              <input class="form__input" type="text" name="course_name" placeholder="Enter course name" required />
+            </label>
+            <label class="form__label">
+              Course Description
+              <textarea class="form__textarea" name="course_description" rows="4" placeholder="Describe what students will learn" required></textarea>
+            </label>
+            <label class="form__label">
+              Teacher
+              <input class="form__input form__input--readonly" type="text" name="teacher_id" placeholder="Loading..." readonly />
+            </label>
+            <label class="form__label">
+              Institution
+              <input class="form__input form__input--readonly" type="text" name="institution" placeholder="Loading..." readonly />
+            </label>
+            <label class="form__label">
+              Course Language
+              <select class="form__input form__select" name="course_language" required>
                 <option value="">Select language...</option>
               </select>
-            </div>
-            <div class="form__group">
-              <label class="form__label" for="course-image">Course Image</label>
+            </label>
+            <label class="form__label">
+              Course Image
               <div class="image-upload">
-                <input class="image-upload__input" type="file" id="course-image" name="course_image" accept="image/*"
-                  required />
+                <input class="image-upload__input" type="file" name="course_image" accept="image/*" required />
                 <div class="image-upload__controls">
                   <label class="button button--outline image-upload__button" for="course-image">
                     Change course image
@@ -120,8 +115,8 @@
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="form__group form__group--actions">
+            </label>
+            <div class="form__actions">
               <button class="button button--primary button--large" type="submit" id="save-essentials-btn">
                 Save Course Details
               </button>
@@ -131,203 +126,52 @@
         <!-- Classification Article -->
         <article class="content__article" id="classification">
           <form class="form" id="course-classification-form">
-            <!-- Row 1: Class Year | Curricular Framework -->
             <div class="form__row">
-              <div class="form__group">
-                <label class="form__label" for="class-year-dropdown">Class Year</label>
-                <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" type="button" id="class-year-dropdown"
-                    aria-haspopup="listbox" aria-expanded="false">
-                    Select class year... ▼
-                  </button>
-                  <div class="dropdown__menu" role="listbox" id="class-year-menu">
-                    <div class="dropdown__loading" id="class-year-loading">
-                      Loading class years...
-                    </div>
-                    <!-- Options will be populated by JavaScript -->
-                  </div>
-                  <input type="hidden" name="class_year" id="class-year-value" />
-                </div>
-              </div>
+              <label class="form__label">
+                Class Year
+                <select class="form__input form__select" name="class_year" required>
+                  <option value="">Select class year...</option>
+                </select>
+              </label>
 
-              <div class="form__group">
-                <label class="form__label" for="curricular-framework-dropdown">Curricular Framework</label>
-                <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" type="button"
-                    id="curricular-framework-dropdown" aria-haspopup="listbox" aria-expanded="false">
-                    Select framework... ▼
-                  </button>
-                  <div class="dropdown__menu" role="listbox" id="curricular-framework-menu">
-                    <div class="dropdown__loading" id="curricular-framework-loading">
-                      Loading frameworks...
-                    </div>
-                    <!-- Options will be populated by JavaScript -->
-                  </div>
-                  <input type="hidden" name="curricular_framework" id="curricular-framework-value" />
-                </div>
-              </div>
+              <label class="form__label">
+                Curricular Framework
+                <select class="form__input form__select" name="curricular_framework" required>
+                  <option value="">Select framework...</option>
+                </select>
+              </label>
             </div>
 
-            <!-- Row 2: Domain → Subject → Topic → Subtopic -->
-            <div class="form__row form__row--hierarchical">
-              <div class="form__group">
-                <label class="form__label" for="domain-dropdown">
-                  Domain
-                  <span class="form__label-hint">Academic field</span>
-                </label>
-                <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" type="button" id="domain-dropdown"
-                    aria-haspopup="listbox" aria-expanded="false">
-                    Select domain... ▼
-                  </button>
-                  <div class="dropdown__menu" role="listbox" id="domain-menu">
-                    <div class="dropdown__loading" id="domain-loading">
-                      Loading domains...
-                    </div>
-                    <!-- Options will be populated by JavaScript -->
-                  </div>
-                  <input type="hidden" name="domain" id="domain-value" />
-                </div>
-              </div>
+            <div class="form__row">
+              <label class="form__label">
+                Domain <span class="form__label-hint">Academic field</span>
+                <select class="form__input form__select" name="domain" required>
+                  <option value="">Select domain...</option>
+                </select>
+              </label>
 
-              <div class="form__group">
-                <label class="form__label" for="subject-dropdown">
-                  Subject
-                  <span class="form__label-hint">Specific discipline</span>
-                </label>
-                <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" type="button" id="subject-dropdown"
-                    aria-haspopup="listbox" aria-expanded="false" disabled>
-                    Select domain first... ▼
-                  </button>
-                  <div class="dropdown__menu" role="listbox" id="subject-menu">
-                    <div class="dropdown__empty" id="subject-empty">
-                      Select a domain first
-                    </div>
-                    <!-- Options will be populated by JavaScript -->
-                  </div>
-                  <input type="hidden" name="subject" id="subject-value" />
-                </div>
-              </div>
+              <label class="form__label">
+                Subject <span class="form__label-hint">Specific discipline</span>
+                <select class="form__input form__select" name="subject" required>
+                  <option value="">Select subject...</option>
+                </select>
+              </label>
 
-              <div class="form__group">
-                <label class="form__label" for="topic-dropdown">
-                  Topic
-                  <span class="form__label-hint">Area of study</span>
-                </label>
-                <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" type="button" id="topic-dropdown"
-                    aria-haspopup="listbox" aria-expanded="false" disabled>
-                    Select subject first... ▼
-                  </button>
-                  <div class="dropdown__menu" role="listbox" id="topic-menu">
-                    <div class="dropdown__empty" id="topic-empty">
-                      Select a subject first
-                    </div>
-                    <!-- Options will be populated by JavaScript -->
-                  </div>
-                  <input type="hidden" name="topic" id="topic-value" />
-                </div>
-              </div>
+              <label class="form__label">
+                Topic <span class="form__label-hint">Area of study</span>
+                <select class="form__input form__select" name="topic" required>
+                  <option value="">Select topic...</option>
+                </select>
+              </label>
 
-              <div class="form__group">
-                <label class="form__label" for="subtopic-dropdown">
-                  Subtopic
-                  <span class="form__label-optional">(Optional)</span>
-                  <span class="form__label-hint">Specific focus</span>
-                </label>
-                <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" type="button" id="subtopic-dropdown"
-                    aria-haspopup="listbox" aria-expanded="false" disabled>
-                    Select topic first... ▼
-                  </button>
-                  <div class="dropdown__menu" role="listbox" id="subtopic-menu">
-                    <div class="dropdown__empty" id="subtopic-empty">
-                      Select a topic first
-                    </div>
-                    <!-- Options will be populated by JavaScript -->
-                  </div>
-                  <input type="hidden" name="subtopic" id="subtopic-value" />
-                </div>
-              </div>
+              <label class="form__label">
+                Subtopic <span class="form__label-optional">(Optional)</span> <span class="form__label-hint">Specific focus</span>
+                <select class="form__input form__select" name="subtopic">
+                  <option value="">Select subtopic...</option>
+                </select>
+              </label>
             </div>
 
-            <!-- Row 3: Course Sequence -->
-            <div class="form__row form__row--sequence">
-              <div class="form__group">
-                <label class="form__label" for="previous-course-dropdown">
-                  Previous Course
-                  <span class="form__label-optional">(Optional)</span>
-                  <span class="form__label-hint">Prerequisite</span>
-                </label>
-                <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" type="button" id="previous-course-dropdown"
-                    aria-haspopup="listbox" aria-expanded="false">
-                    Select previous course... ▼
-                  </button>
-                  <div class="dropdown__menu" role="listbox" id="previous-course-menu">
-                    <div class="dropdown__header">
-                      Your Courses
-                    </div>
-                    <div class="dropdown__loading" id="previous-course-loading">
-                      Loading courses...
-                    </div>
-                    <!-- Options will be populated by JavaScript -->
-                  </div>
-                  <input type="hidden" name="previous_course" id="previous-course-value" />
-                </div>
-              </div>
-
-              <div class="form__group">
-                <label class="form__label" for="current-course-dropdown">
-                  Current Course
-                  <span class="form__label-optional">(Optional)</span>
-                  <span class="form__label-hint">This course</span>
-                </label>
-                <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" type="button" id="current-course-dropdown"
-                    aria-haspopup="listbox" aria-expanded="false">
-                    Select current course... ▼
-                  </button>
-                  <div class="dropdown__menu" role="listbox" id="current-course-menu">
-                    <div class="dropdown__header">
-                      Your Courses
-                    </div>
-                    <div class="dropdown__loading" id="current-course-loading">
-                      Loading courses...
-                    </div>
-                    <!-- Options will be populated by JavaScript -->
-                  </div>
-                  <input type="hidden" name="current_course" id="current-course-value" />
-                </div>
-              </div>
-
-              <div class="form__group">
-                <label class="form__label" for="next-course-dropdown">
-                  Next Course
-                  <span class="form__label-optional">(Optional)</span>
-                  <span class="form__label-hint">Follow-up</span>
-                </label>
-                <div class="dropdown">
-                  <button class="button button--outline dropdown__toggle" type="button" id="next-course-dropdown"
-                    aria-haspopup="listbox" aria-expanded="false">
-                    Select next course... ▼
-                  </button>
-                  <div class="dropdown__menu" role="listbox" id="next-course-menu">
-                    <div class="dropdown__header">
-                      Your Courses
-                    </div>
-                    <div class="dropdown__loading" id="next-course-loading">
-                      Loading courses...
-                    </div>
-                    <!-- Options will be populated by JavaScript -->
-                  </div>
-                  <input type="hidden" name="next_course" id="next-course-value" />
-                </div>
-              </div>
-            </div>
-
-            <!-- Last saved indicator -->
             <div class="save-status" id="classification-last-saved">
               <span class="save-status__text" id="classification-save-status">
                 Changes will be saved automatically
@@ -379,25 +223,23 @@
           </div>
 
           <form class="form coursebuilder-form modal__body" id="create-template-form">
-            <div class="form__group">
-              <label class="form__label" for="template-name">Template Name*</label>
-              <input class="form__input" type="text" id="template-name" name="template-name" required
-                placeholder="Enter template name" />
-            </div>
+            <label class="form__label">
+              Template Name*
+              <input class="form__input" type="text" name="template-name" required placeholder="Enter template name" />
+            </label>
 
-            <div class="form__group">
-              <label class="form__label" for="template-type">Template Type*</label>
-              <select class="form__input form__select" id="template-type" name="template-type" required>
+            <label class="form__label">
+              Template Type*
+              <select class="form__input form__select" name="template-type" required>
                 <option value="">Select template type</option>
                 <option value="lesson">Lesson</option>
               </select>
-            </div>
+            </label>
 
-            <div class="form__group">
-              <label class="form__label" for="template-description">Description (Optional)</label>
-              <textarea class="form__textarea" id="template-description" name="template-description" rows="3"
-                placeholder="Describe your template..."></textarea>
-            </div>
+            <label class="form__label">
+              Description (Optional)
+              <textarea class="form__textarea" name="template-description" rows="3" placeholder="Describe your template..."></textarea>
+            </label>
 
             <div class="modal__footer">
               <button class="button button--outline" type="button" onclick="TemplateManager.hideCreateTemplateModal()">
@@ -481,19 +323,19 @@
           <form class="form" id="course-schedule-form">
             <!-- Date Range Row -->
             <div class="form__row">
-              <div class="form__group">
-                <label class="form__label" for="start-date">Start Date</label>
-                <input class="form__input" type="date" id="start-date" required />
-              </div>
-              <div class="form__group">
-                <label class="form__label" for="end-date">End Date</label>
-                <input class="form__input" type="date" id="end-date" required />
-              </div>
+              <label class="form__label">
+                Start Date
+                <input class="form__input" type="date" required />
+              </label>
+              <label class="form__label">
+                End Date
+                <input class="form__input" type="date" required />
+              </label>
             </div>
 
             <!-- Days of Week Selection -->
-            <div class="form__group">
-              <label class="form__label">Days of the Week</label>
+            <label class="form__label">
+              Days of the Week
               <div class="schedule__days">
                 <button class="button button--outline button--small schedule__days__button" type="button"
                   data-day="monday">
@@ -524,18 +366,18 @@
                   Sun
                 </button>
               </div>
-            </div>
+            </label>
 
             <!-- Time Range Row -->
             <div class="form__row">
-              <div class="form__group">
-                <label class="form__label" for="start-time">Start Time</label>
-                <input class="form__input" type="time" id="start-time" required />
-              </div>
-              <div class="form__group">
-                <label class="form__label" for="end-time">End Time</label>
-                <input class="form__input" type="time" id="end-time" required />
-              </div>
+              <label class="form__label">
+                Start Time
+                <input class="form__input" type="time" required />
+              </label>
+              <label class="form__label">
+                End Time
+                <input class="form__input" type="time" required />
+              </label>
             </div>
 
             <!-- Schedule Action Buttons -->
@@ -608,20 +450,20 @@
             <!-- Curriculum Structure Inputs -->
             <div class="curriculum-structure-inputs">
               <div class="curriculum-structure-row">
-                <div class="form__group">
-                  <label class="form__label" for="curriculum-topics">Topics per lesson</label>
-                  <input class="form__input" type="number" id="curriculum-topics" min="1" max="10" value="2" />
-                </div>
+                <label class="form__label">
+                  Topics per lesson
+                  <input class="form__input" type="number" min="1" max="10" value="2" />
+                </label>
 
-                <div class="form__group">
-                  <label class="form__label" for="curriculum-objectives">Objectives per topic</label>
-                  <input class="form__input" type="number" id="curriculum-objectives" min="1" max="5" value="2" />
-                </div>
+                <label class="form__label">
+                  Objectives per topic
+                  <input class="form__input" type="number" min="1" max="5" value="2" />
+                </label>
 
-                <div class="form__group">
-                  <label class="form__label" for="curriculum-tasks">Tasks per objective</label>
-                  <input class="form__input" type="number" id="curriculum-tasks" min="1" max="5" value="2" />
-                </div>
+                <label class="form__label">
+                  Tasks per objective
+                  <input class="form__input" type="number" min="1" max="5" value="2" />
+                </label>
               </div>
             </div>
           </div>
@@ -669,52 +511,51 @@
         <div class="coursebuilder-margin-settings">
           <div class="coursebuilder-margin-settings__units">
             <span class="coursebuilder-margin-settings__label">Display in</span>
-            <div class="form__checkbox-group coursebuilder-margin-settings__unit-options">
-              <input class="form__checkbox" type="radio" id="unit-inches" name="margin-unit" value="inches" />
-              <label class="form__label" for="unit-inches">Inches</label>
-              <input class="form__checkbox" type="radio" id="unit-centimeters" name="margin-unit" value="centimeters"
-                checked />
-              <label class="form__label" for="unit-centimeters">Centimeters</label>
+            <div class="coursebuilder-margin-settings__unit-options">
+              <label class="form__label">
+                <input class="form__checkbox" type="radio" name="margin-unit" value="inches" />
+                Inches
+              </label>
+              <label class="form__label">
+                <input class="form__checkbox" type="radio" name="margin-unit" value="centimeters" checked />
+                Centimeters
+              </label>
             </div>
           </div>
 
           <!-- Margin Inputs Grid -->
           <div class="coursebuilder-margin-settings__grid">
-            <div class="form__group">
-              <label class="form__label" for="margin-top">Top</label>
+            <label class="form__label">
+              Top
               <div class="coursebuilder-margin-settings__input-wrapper">
-                <input class="form__input coursebuilder-margin-settings__input" type="number" id="margin-top"
-                  name="margin_top" value="2.54" step="0.01" min="0" />
+                <input class="form__input coursebuilder-margin-settings__input" type="number" name="margin_top" value="2.54" step="0.01" min="0" />
                 <span class="coursebuilder-margin-settings__unit">cm</span>
               </div>
-            </div>
+            </label>
 
-            <div class="form__group">
-              <label class="form__label" for="margin-bottom">Bottom</label>
+            <label class="form__label">
+              Bottom
               <div class="coursebuilder-margin-settings__input-wrapper">
-                <input class="form__input coursebuilder-margin-settings__input" type="number" id="margin-bottom"
-                  name="margin_bottom" value="2.54" step="0.01" min="0" />
+                <input class="form__input coursebuilder-margin-settings__input" type="number" name="margin_bottom" value="2.54" step="0.01" min="0" />
                 <span class="coursebuilder-margin-settings__unit">cm</span>
               </div>
-            </div>
+            </label>
 
-            <div class="form__group">
-              <label class="form__label" for="margin-left">Left</label>
+            <label class="form__label">
+              Left
               <div class="coursebuilder-margin-settings__input-wrapper">
-                <input class="form__input coursebuilder-margin-settings__input" type="number" id="margin-left"
-                  name="margin_left" value="2.54" step="0.01" min="0" />
+                <input class="form__input coursebuilder-margin-settings__input" type="number" name="margin_left" value="2.54" step="0.01" min="0" />
                 <span class="coursebuilder-margin-settings__unit">cm</span>
               </div>
-            </div>
+            </label>
 
-            <div class="form__group">
-              <label class="form__label" for="margin-right">Right</label>
+            <label class="form__label">
+              Right
               <div class="coursebuilder-margin-settings__input-wrapper">
-                <input class="form__input coursebuilder-margin-settings__input" type="number" id="margin-right"
-                  name="margin_right" value="2.54" step="0.01" min="0" />
+                <input class="form__input coursebuilder-margin-settings__input" type="number" name="margin_right" value="2.54" step="0.01" min="0" />
                 <span class="coursebuilder-margin-settings__unit">cm</span>
               </div>
-            </div>
+            </label>
           </div>
 
           <!-- Save Status -->
@@ -729,20 +570,20 @@
         <form class="form coursebuilder-form" id="course-settings-form">
           <div class="coursebuilder-visibility-settings">
             <div class="coursebuilder-visibility-settings__options">
-              <div class="form__checkbox-group">
-                <input class="form__checkbox" type="checkbox" id="course-visible" name="course_visible" />
-                <label class="form__label" for="course-visible">Course visible to students</label>
-              </div>
+              <label class="form__label">
+                <input class="form__checkbox" type="checkbox" name="course_visible" />
+                Course visible to students
+              </label>
 
-              <div class="form__checkbox-group">
-                <input class="form__checkbox" type="checkbox" id="allow-enrollment" name="allow_enrollment" />
-                <label class="form__label" for="allow-enrollment">Allow new enrollments</label>
-              </div>
+              <label class="form__label">
+                <input class="form__checkbox" type="checkbox" name="allow_enrollment" />
+                Allow new enrollments
+              </label>
 
-              <div class="form__checkbox-group">
-                <input class="form__checkbox" type="checkbox" id="require-approval" name="require_approval" />
-                <label class="form__label" for="require-approval">Require enrollment approval</label>
-              </div>
+              <label class="form__label">
+                <input class="form__checkbox" type="checkbox" name="require_approval" />
+                Require enrollment approval
+              </label>
             </div>
 
             <div class="coursebuilder-save-status" id="settings-last-saved">
@@ -783,6 +624,19 @@
     </article>
     </div>
 
+
+
+
+
+
+
+
+
+
+
+
+
+    
     <!-- Create View -->
     <div class="coursebuilder__create" aria-hidden="true" id="create">
       <div class="engine">
@@ -1026,191 +880,10 @@
   <script type="module" src="/src/scripts/backend/courses/marginSettings.ts"></script>
 
   <!-- Direct language initialization -->
-  <script type="module">
-    import { populateCourseLanguageSelect } from '/src/scripts/backend/courses/languageLoader.ts';
-    import { CourseFormHandler } from '/src/scripts/backend/courses/courseFormHandler.ts';
-
-    function initLanguages() {
-      const select = document.getElementById('course-language');
-      if (select) {
-        console.log('🌍 Initializing course languages...');
-        populateCourseLanguageSelect(select);
-      } else {
-        console.error('❌ Course language select not found');
-      }
-    }
-
-    function initFormsWithCourseData() {
-      // Check if there's a courseId in the URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const courseId = urlParams.get('courseId');
-
-      if (courseId) {
-        console.log('🔄 Course ID found in URL:', courseId, '- Loading existing course data...');
-
-        // Initialize essentials form handler to load existing data
-        setTimeout(() => {
-          try {
-            console.log('🔄 Creating essentials form handler...');
-            const formHandler = new CourseFormHandler('essentials');
-            window.essentialsFormHandler = formHandler;
-            console.log('✅ Essentials form handler created');
-          } catch (error) {
-            console.error('❌ Failed to initialize essentials form handler:', error);
-          }
-        }, 500); // Give more time for elements to be ready
-      } else {
-        console.log('ℹ️ No course ID in URL - new course mode');
-      }
-
-      // Add manual test function for debugging
-      window.testLoadCourseData = async function (testCourseId) {
-        console.log('🧪 Testing course data loading for ID:', testCourseId);
-
-        if (!testCourseId || testCourseId === 'undefined') {
-          console.error('❌ Invalid courseId provided:', testCourseId);
-          return;
-        }
-
-        try {
-          // Temporarily set course ID in URL FIRST
-          const url = new URL(window.location);
-          url.searchParams.set('courseId', testCourseId);
-          window.history.pushState({}, '', url);
-
-          console.log('📋 URL updated with courseId:', testCourseId);
-          console.log('🔄 Current URL:', window.location.href);
-          console.log('🔄 Current search params:', window.location.search);
-
-          // Wait a bit for URL to update
-          setTimeout(() => {
-            console.log('🔄 Creating form handler after URL update...');
-            // Now create form handler - it should pick up the courseId from the URL
-            const formHandler = new CourseFormHandler('essentials');
-            window.testFormHandler = formHandler;
-            console.log('✅ Test form handler created - check if form fields are populated');
-          }, 100);
-
-        } catch (error) {
-          console.error('❌ Test failed:', error);
-        }
-      };
-
-      // Also add a function to manually set courseId and reload
-      window.setCourseIdAndReload = function (courseId) {
-        if (!courseId || courseId === 'undefined') {
-          console.error('❌ Invalid courseId provided:', courseId);
-          return;
-        }
-
-        const url = new URL(window.location);
-        url.searchParams.set('courseId', courseId);
-        window.location.href = url.toString();
-      };
-
-      // Add function to list existing courses to get real IDs
-      window.listExistingCourses = async function () {
-        try {
-          const response = await fetch('/src/scripts/backend/courses/createCourse.ts');
-          console.log('Fetching courses...');
-
-          // Import the getUserCourses function dynamically
-          const { getUserCourses } = await import('/src/scripts/backend/courses/createCourse.ts');
-          const courses = await getUserCourses();
-
-          if (courses && courses.length > 0) {
-            console.log('📚 Existing courses:');
-            courses.forEach((course, index) => {
-              console.log(`${index + 1}. ${course.course_name} (ID: ${course.id})`);
-            });
-            console.log('💡 To test with a course, run: setCourseIdAndReload("COURSE_ID_HERE")');
-            return courses;
-          } else {
-            console.log('⚠️ No courses found. Create a course first.');
-          }
-        } catch (error) {
-          console.error('❌ Error fetching courses:', error);
-        }
-      };
-
-      // Add function to list existing templates
-      window.listExistingTemplates = async function () {
-        try {
-          console.log('Fetching templates...');
-          // Import createTemplate to access TemplateManager
-          const { TemplateManager } = await import('/src/scripts/backend/courses/createTemplate.ts');
-          await TemplateManager.loadTemplatesForModal();
-          console.log('✅ Templates loaded in modal - check load template modal');
-        } catch (error) {
-          console.error('❌ Error fetching templates:', error);
-        }
-      };
-
-      // Add function to force refresh language dropdown
-      window.fixLanguageDropdown = async function () {
-        try {
-          console.log('🔧 Fixing language dropdown...');
-          const languageSelect = document.getElementById('course-language');
-          if (languageSelect) {
-            const { populateCourseLanguageSelect } = await import('/src/scripts/backend/courses/languageLoader.ts');
-            await populateCourseLanguageSelect(languageSelect);
-
-            // Try to set the language value again
-            const urlParams = new URLSearchParams(window.location.search);
-            const courseId = urlParams.get('courseId');
-            if (courseId && courseId !== 'undefined') {
-              const { getCourse } = await import('/src/scripts/backend/courses/createCourse.ts');
-              const courseData = await getCourse(courseId);
-              if (courseData && courseData.course_language) {
-                // Find the option that contains the language
-                for (let i = 0; i < languageSelect.options.length; i++) {
-                  const option = languageSelect.options[i];
-                  if (option.textContent?.toLowerCase().includes(courseData.course_language.toLowerCase()) ||
-                    option.value === courseData.course_language) {
-                    languageSelect.value = option.value;
-                    console.log('✅ Language dropdown fixed:', option.textContent);
-                    break;
-                  }
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.error('❌ Error fixing language dropdown:', error);
-        }
-      };
-
-      // Also add a function to manually load data for existing course ID in URL
-      window.loadExistingCourseData = function () {
-        const urlParams = new URLSearchParams(window.location.search);
-        const courseId = urlParams.get('courseId');
-
-        if (!courseId) {
-          console.error('❌ No courseId in URL. Add ?courseId=your-id to the URL first');
-          return;
-        }
-
-        console.log('🔄 Loading data for course ID:', courseId);
-        const formHandler = new CourseFormHandler('essentials');
-        window.currentFormHandler = formHandler;
-      };
-    }
-
-    // Initialize everything
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-          initLanguages();
-          initFormsWithCourseData();
-        }, 200);
-      });
-    } else {
-      setTimeout(() => {
-        initLanguages();
-        initFormsWithCourseData();
-      }, 200);
-    }
-  </script>
+    <!-- CourseBuilder initialization -->
+  <script type="module" src="/src/scripts/coursebuilder/coursebuilderInit.ts"></script>
+</body>
+</html>
 </body>
 
 </html>

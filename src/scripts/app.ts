@@ -6,7 +6,7 @@
 import { initializeGlobalNavigation, initializeDashboardNavigation } from './navigation';
 import { initAuth } from './backend/auth/auth';
 import { AuthFormHandler } from './auth/AuthFormHandler';
-import PageTransitions from './navigation/PageTransitions';
+// import PageTransitions from './navigation/PageTransitions'; // DISABLED
 
 // Initialize global navigation system
 console.log('📱 Initializing Neptino app...');
@@ -25,8 +25,8 @@ if (dashboardNav) {
 }
 
 // Initialize page transitions for smooth navigation
-new PageTransitions();
-console.log('🔄 Page transitions initialized');
+// new PageTransitions(); // DISABLED - causing script initialization issues
+// console.log('🔄 Page transitions initialized');
 
 // Initialize auth form handlers on auth pages
 document.addEventListener('DOMContentLoaded', () => {

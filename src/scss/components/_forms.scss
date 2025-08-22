@@ -6,7 +6,6 @@
   // Base form styles - used as semantic wrapper
   display: grid;
   gap: var(--spacing-6);
-  max-width: 400px;
   margin: 0 auto;
   padding: var(--spacing-8);
 
@@ -71,6 +70,8 @@
   // Form modifiers
   &--signup,
   &--signin {
+
+    max-width: 400px; 
     // Auth forms - specific styling can be added here if needed
     .input--auth:focus + .form__icon,
     .input--auth:focus ~ .form__icon {

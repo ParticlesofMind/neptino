@@ -1,7 +1,15 @@
 
 .courses {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: auto 1fr;
-    padding: var(--spacing-4) var(--spacing-5); // 12px vertical, 16px horizontal
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: auto 1fr; 
+    gap: var(--spacing-8);
+    padding: var(--spacing-4) var(--spacing-5);
+    align-items: start;
+
+
+    &__card-courses { 
+        grid-row: 2; 
+    }
+
 }
