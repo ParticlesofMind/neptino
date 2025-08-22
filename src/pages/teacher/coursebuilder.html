@@ -126,54 +126,122 @@
         </article>
         <!-- Classification Article -->
         <article class="content__article" id="classification">
-          <form class="form" id="course-classification-form">
-            <label class="form__label">
-              Class Year
-              <select class="form__input form__select" name="class_year" required>
-                <option value="">Select class year...</option>
-              </select>
-            </label>
+          <form class="form classification" id="course-classification-form">
+            
+            <!-- Row 1: Basic Information -->
+            <div class="classification__row classification__row--basic">
+              <div class="classification__field">
+                <label class="form__label" for="class-year-select">
+                  Class Year
+                </label>
+                <select class="form__input form__select" name="class_year" id="class-year-select" required>
+                  <option value="">Loading...</option>
+                </select>
+              </div>
 
-            <label class="form__label">
-              Curricular Framework
-              <select class="form__input form__select" name="curricular_framework" required>
-                <option value="">Select framework...</option>
-              </select>
-            </label>
+              <div class="classification__field">
+                <label class="form__label" for="curricular-framework-select">
+                  Curricular Framework
+                </label>
+                <select class="form__input form__select" name="curricular_framework" id="curricular-framework-select" required>
+                  <option value="">Loading...</option>
+                </select>
+              </div>
+            </div>
 
-            <label class="form__label">
-              Domain <span class="form__label-hint">Academic field</span>
-              <select class="form__input form__select" name="domain" required>
-                <option value="">Select domain...</option>
-              </select>
-            </label>
+            <!-- Row 2: Academic Hierarchy -->
+            <div class="classification__row classification__row--hierarchy">
+              <div class="classification__field">
+                <label class="form__label" for="domain-select">
+                  Domain 
+                  <span class="form__label-hint">Academic field</span>
+                </label>
+                <select class="form__input form__select" name="domain" id="domain-select" required>
+                  <option value="">Loading...</option>
+                </select>
+              </div>
 
-            <label class="form__label">
-              Subject <span class="form__label-hint">Specific discipline</span>
-              <select class="form__input form__select" name="subject" required>
-                <option value="">Select subject...</option>
-              </select>
-            </label>
+              <div class="classification__field">
+                <label class="form__label" for="subject-select">
+                  Subject 
+                  <span class="form__label-hint">Specific discipline</span>
+                </label>
+                <select class="form__input form__select" name="subject" id="subject-select" required disabled>
+                  <option value="">Select domain first...</option>
+                </select>
+              </div>
 
-            <label class="form__label">
-              Topic <span class="form__label-hint">Area of study</span>
-              <select class="form__input form__select" name="topic" required>
-                <option value="">Select topic...</option>
-              </select>
-            </label>
+              <div class="classification__field">
+                <label class="form__label" for="topic-select">
+                  Topic 
+                  <span class="form__label-hint">Area of study</span>
+                </label>
+                <select class="form__input form__select" name="topic" id="topic-select" required disabled>
+                  <option value="">Select subject first...</option>
+                </select>
+              </div>
 
-            <label class="form__label">
-              Subtopic <span class="form__label-optional">(Optional)</span> <span class="form__label-hint">Specific
-                focus</span>
-              <select class="form__input form__select" name="subtopic">
-                <option value="">Select subtopic...</option>
-              </select>
-            </label>
+              <div class="classification__field">
+                <label class="form__label" for="subtopic-select">
+                  Subtopic 
+                  <span class="form__label-optional">(Optional)</span> 
+                  <span class="form__label-hint">Specific focus</span>
+                </label>
+                <select class="form__input form__select" name="subtopic" id="subtopic-select" disabled>
+                  <option value="">Select topic first...</option>
+                </select>
+              </div>
+            </div>
 
-            <div class="save-status" id="classification-last-saved">
-              <span class="save-status__text" id="classification-save-status">
-                Changes will be saved automatically
-              </span>
+            <!-- Course Sequence Section -->
+            <div class="classification__section">
+              <div class="classification__section-header">
+                <h3 class="classification__section-title">
+                  Course Sequence 
+                  <span class="form__label-optional">(Optional)</span>
+                </h3>
+                <p class="classification__section-description">
+                  Define how this course fits into a learning sequence
+                </p>
+              </div>
+
+              <!-- Row 3: Course Sequence -->
+              <div class="classification__row classification__row--sequence">
+                <div class="classification__field">
+                  <label class="form__label" for="previous-course-select">
+                    Previous Course 
+                    <span class="form__label-hint">Course that should come before this one</span>
+                  </label>
+                  <select class="form__input form__select" name="previous_course" id="previous-course-select">
+                    <option value="">Loading courses...</option>
+                  </select>
+                </div>
+
+                <div class="classification__field">
+                  <label class="form__label" for="current-course-select">
+                    Current Course 
+                    <span class="form__label-hint">Other courses at this level</span>
+                  </label>
+                  <select class="form__input form__select" name="current_course" id="current-course-select">
+                    <option value="">Loading courses...</option>
+                  </select>
+                </div>
+
+                <div class="classification__field">
+                  <label class="form__label" for="next-course-select">
+                    Next Course 
+                    <span class="form__label-hint">Course that should come after this one</span>
+                  </label>
+                  <select class="form__input form__select" name="next_course" id="next-course-select">
+                    <option value="">Loading courses...</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Save Status -->
+            <div class="classification__status save-status" id="classification-save-status">
+              <span class="classification__status-text save-status__text">Changes will be saved automatically</span>
             </div>
           </form>
         </article>
@@ -399,97 +467,76 @@
               </div>
               <div class="schedule__total">Total lessons: 0</div>
             </div>
+
+
           </div>
         </article>
         <!-- Curriculum Article -->
         <article class="content__article" id="curriculum">
-          <!-- Curriculum Layout -->
-          <div class="coursebuilder-curriculum-layout">
-            <!-- Curriculum Configuration -->
-            <div class="coursebuilder-curriculum-config" id="curriculum-config">
-              <h3 class="coursebuilder-curriculum-config__heading">Curriculum Configuration</h3>
-              <div class="coursebuilder-curriculum-config__content">
-                <!-- Duration Options -->
-                <div class="curriculum-duration-options">
-                  <button class="button button--outline curriculum-duration-option" type="button" data-duration="mini"
-                    data-max="30">
-                    <span class="curriculum-duration-option__label">Mini</span>
-                    <span class="curriculum-duration-option__time">Up to 30'</span>
-                  </button>
-                  <button class="button button--outline curriculum-duration-option" type="button" data-duration="single"
-                    data-max="60">
-                    <span class="curriculum-duration-option__label">Single</span>
-                    <span class="curriculum-duration-option__time">Up to 60'</span>
-                  </button>
-                  <button class="button button--outline curriculum-duration-option" type="button" data-duration="double"
-                    data-max="120">
-                    <span class="curriculum-duration-option__label">Double</span>
-                    <span class="curriculum-duration-option__time">Up to 120'</span>
-                  </button>
-                  <button class="button button--outline curriculum-duration-option" type="button" data-duration="triple"
-                    data-max="180">
-                    <span class="curriculum-duration-option__label">Triple</span>
-                    <span class="curriculum-duration-option__time">Up to 180'</span>
-                  </button>
-                  <button class="button button--outline curriculum-duration-option" type="button"
-                    data-duration="halfFull" data-max="999">
-                    <span class="curriculum-duration-option__label">Half/Full day</span>
-                    <span class="curriculum-duration-option__time">Longer than 180'</span>
-                  </button>
-                </div>
+          <div class="curriculum">
+            <div class="curriculum__config">
+              <h3 class="heading">Curriculum Configuration</h3>
 
-                <!-- Recommendation Status -->
-                <div class="curriculum-recommendation" id="curriculum-recommendation">
-                  <span class="curriculum-recommendation__text">Select a lesson duration to see recommendations</span>
-                </div>
+              <div class="curriculum__duration">
+                <button class="button button--outline" type="button" data-duration="mini" data-max="30">
+                  Mini - Up to 30'
+                </button>
+                <button class="button button--outline" type="button" data-duration="single" data-max="60">
+                  Single - Up to 60'
+                </button>
+                <button class="button button--outline" type="button" data-duration="double" data-max="120">
+                  Double - Up to 120'
+                </button>
+                <button class="button button--outline" type="button" data-duration="triple" data-max="180">
+                  Triple - Up to 180'
+                </button>
+                <button class="button button--outline" type="button" data-duration="halfFull" data-max="999">
+                  Half/Full day - Longer than 180'
+                </button>
+              </div>
 
-                <!-- Curriculum Structure Inputs -->
-                <div class="curriculum-structure-inputs">
-                  <label class="form__label">
-                    Topics per lesson
-                    <input class="form__input" type="number" min="1" max="10" value="2" />
-                  </label>
+              <div class="curriculum__recommendation" id="curriculum-recommendation">
+                Select a lesson duration to see recommendations
+              </div>
 
-                  <label class="form__label">
-                    Objectives per topic
-                    <input class="form__input" type="number" min="1" max="5" value="2" />
-                  </label>
+              <div class="curriculum__structure">
+                <label class="form__label">
+                  Topics per lesson
+                  <input class="form__input" type="number" min="1" max="10" value="2" />
+                </label>
 
-                  <label class="form__label">
-                    Tasks per objective
-                    <input class="form__input" type="number" min="1" max="5" value="2" />
-                  </label>
-                </div>
+                <label class="form__label">
+                  Objectives per topic
+                  <input class="form__input" type="number" min="1" max="5" value="2" />
+                </label>
+
+                <label class="form__label">
+                  Tasks per objective
+                  <input class="form__input" type="number" min="1" max="5" value="2" />
+                </label>
               </div>
             </div>
 
-            <!-- Curriculum Preview -->
-            <div class="coursebuilder-curriculum-preview">
-              <!-- Preview Mode Buttons -->
-              <div class="coursebuilder-curriculum-preview__controls">
-                <span class="coursebuilder-curriculum-preview__label">Display:</span>
-                <div class="button-group coursebuilder-curriculum-preview__modes">
-                  <button class="button button--small button--outline coursebuilder-curriculum-preview__mode"
-                    type="button" data-mode="titles">
+            <div class="curriculum__preview">
+              <div class="curriculum__controls">
+                Display:
+                <div class="button-group">
+                  <button class="button button--small button--outline" type="button" data-mode="titles">
                     Lesson Titles
                   </button>
-                  <button class="button button--small button--outline coursebuilder-curriculum-preview__mode"
-                    type="button" data-mode="topics">
+                  <button class="button button--small button--outline" type="button" data-mode="topics">
                     Lesson Topics
                   </button>
-                  <button class="button button--small button--outline coursebuilder-curriculum-preview__mode"
-                    type="button" data-mode="objectives">
+                  <button class="button button--small button--outline" type="button" data-mode="objectives">
                     Lesson Objectives
                   </button>
-                  <button class="button button--small button--outline coursebuilder-curriculum-preview__mode"
-                    type="button" data-mode="all">
+                  <button class="button button--small button--outline" type="button" data-mode="all">
                     All Details
                   </button>
                 </div>
               </div>
 
-              <!-- Curriculum content will be rendered here -->
-              <div class="coursebuilder-curriculum-preview__content">
+              <div class="curriculum__content">
                 <!-- Dynamic content -->
               </div>
             </div>
@@ -858,7 +905,7 @@
   <script type="module" src="/src/scripts/coursebuilder/coursebuilder.ts"></script>
   <!-- Backend services -->
   <script type="module" src="/src/scripts/backend/courses/index.ts"></script>
-  <script type="module" src="/src/scripts/backend/courses/classificationFormHandler.ts"></script>
+  <script type="module" src="/src/scripts/backend/courses/simpleClassificationFormHandler.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/createTemplate.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/templates/templateConfigHandler.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/templates/templatePreviewHandler.ts"></script>

@@ -30,6 +30,7 @@ function initFormsWithCourseData(): void {
   if (courseId) {
     console.log('🔄 Course ID found in URL:', courseId, '- Loading existing course data...');
 
+    // Wait for navigation system to complete (100ms) + extra buffer
     // Initialize essentials form handler to load existing data
     setTimeout(() => {
       try {
@@ -40,7 +41,7 @@ function initFormsWithCourseData(): void {
       } catch (error) {
         console.error('❌ Failed to initialize essentials form handler:', error);
       }
-    }, 500); // Give more time for elements to be ready
+    }, 200); // Wait for AsideNavigation (100ms) + buffer
   } else {
     console.log('ℹ️ No course ID in URL - new course mode');
   }
@@ -69,14 +70,14 @@ function initDebugUtilities(): void {
       console.log('🔄 Current URL:', window.location.href);
       console.log('🔄 Current search params:', window.location.search);
 
-      // Wait a bit for URL to update
+      // Wait a bit for URL to update and navigation to complete
       setTimeout(() => {
         console.log('🔄 Creating form handler after URL update...');
         // Now create form handler - it should pick up the courseId from the URL
         const formHandler = new CourseFormHandler('essentials');
         (window as any).testFormHandler = formHandler;
         console.log('✅ Test form handler created - check if form fields are populated');
-      }, 100);
+      }, 200); // Wait for navigation system to complete
 
     } catch (error) {
       console.error('❌ Test failed:', error);

@@ -84,7 +84,16 @@ export class CourseFormHandler {
     private findForm(): void {
         console.log('🔍 Looking for form...');
 
-        // Try to find the form in the active article first
+        // First, try to find form by section name (most reliable)
+        if (this.sectionConfig.section === 'essentials') {
+            this.form = document.querySelector('#course-essentials-form');
+            if (this.form) {
+                console.log('✅ Found essentials form by ID');
+                return;
+            }
+        }
+
+        // Try to find the form in the active article 
         const activeArticle = document.querySelector('.content__article--active');
         if (activeArticle) {
             console.log('✅ Found active article:', activeArticle);
@@ -95,15 +104,6 @@ export class CourseFormHandler {
             }
         } else {
             console.log('❌ No active article found');
-        }
-
-        // If not found, try to find form by section name
-        if (this.sectionConfig.section === 'essentials') {
-            this.form = document.querySelector('#course-essentials-form');
-            if (this.form) {
-                console.log('✅ Found essentials form by ID');
-                return;
-            }
         }
 
         // If still not found, try to find any form in the current section

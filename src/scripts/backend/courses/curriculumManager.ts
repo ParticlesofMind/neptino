@@ -37,7 +37,6 @@ class CurriculumManager {
  private courseId: string;
  private curriculumConfigSection!: HTMLElement;
  private curriculumPreviewSection!: HTMLElement;
- private durationConfigSection!: HTMLElement;
  private currentCurriculum: CurriculumLesson[] = [];
  private contentLoadConfig: ContentLoadConfig | null = null;
  private currentPreviewMode: PreviewMode = "all";
@@ -169,23 +168,20 @@ class CurriculumManager {
  }
 
   private initializeElements(): void {
-    this.curriculumConfigSection = document.getElementById(
-      "curriculum-config",
+    this.curriculumConfigSection = document.querySelector(
+      ".curriculum__config",
     ) as HTMLElement;
     this.curriculumPreviewSection = document.querySelector(
-      ".coursebuilder-curriculum-preview",
-    ) as HTMLElement;
-    this.durationConfigSection = document.getElementById(
-      "curriculum-duration-config",
+      ".curriculum__preview",
     ) as HTMLElement;
     
     // Check if all elements were found
     if (!this.curriculumConfigSection) {
-      console.error("curriculum-config element not found");
+      console.error("curriculum__config element not found");
       return;
     }
     if (!this.curriculumPreviewSection) {
-      console.error("curriculum-preview element not found");
+      console.error("curriculum__preview element not found");
       return;
     }
     
@@ -197,13 +193,13 @@ class CurriculumManager {
     // Use setTimeout to ensure DOM is fully ready
     setTimeout(() => {
       console.log('🎯 Setting initial active button for mode:', this.currentPreviewMode);
-      const previewModeButtons = this.curriculumPreviewSection?.querySelectorAll('.coursebuilder-curriculum-preview__mode');
+      const previewModeButtons = this.curriculumPreviewSection?.querySelectorAll('button[data-mode]');
       console.log('🔘 Found buttons for initial setup:', previewModeButtons?.length);
       
       previewModeButtons?.forEach((btn) => {
-        btn.classList.remove('coursebuilder-curriculum-preview__mode--active');
+        btn.classList.remove('button--active');
         if (btn.getAttribute('data-mode') === this.currentPreviewMode) {
-          btn.classList.add('coursebuilder-curriculum-preview__mode--active');
+          btn.classList.add('button--active');
           console.log('✅ Set initial active class on button:', btn.textContent?.trim());
         }
       });
@@ -218,7 +214,7 @@ class CurriculumManager {
 
    // Preview mode buttons
    const previewModeButtons =
-     this.curriculumPreviewSection?.querySelectorAll('.coursebuilder-curriculum-preview__mode');
+     this.curriculumPreviewSection?.querySelectorAll('button[data-mode]');
    previewModeButtons?.forEach((button) => {
      button.addEventListener("click", (e) => {
        const mode = (e.target as HTMLElement).dataset.mode as PreviewMode;
@@ -308,7 +304,7 @@ class CurriculumManager {
  }
 
  private setupDurationConfiguration(): void {
-   const durationOptions = document.querySelectorAll('.curriculum-duration-option');
+   const durationOptions = document.querySelectorAll('button[data-duration]');
    const recommendationElement = document.getElementById('curriculum-recommendation');
    const topicsInput = document.getElementById('curriculum-topics') as HTMLInputElement;
    const objectivesInput = document.getElementById('curriculum-objectives') as HTMLInputElement;
@@ -329,16 +325,14 @@ class CurriculumManager {
        
        // Remove active class from all options
        durationOptions.forEach(opt => {
-         opt.classList.remove('curriculum-duration-option--active', 
-                             'curriculum-duration-option--recommended', 
-                             'curriculum-duration-option--not-recommended');
+         opt.classList.remove('button--primary');
        });
        
        // Add active class to clicked option
-       button.classList.add('curriculum-duration-option--active');
+       button.classList.add('button--primary');
        
        // Update configuration based on selection
-       this.updateConfigurationFromSelection(durationType, button, recommendationElement);
+       this.updateConfigurationFromSelection(durationType, recommendationElement);
        
        // Update input values and regenerate curriculum (only for user clicks)
        const preset = this.durationPresets[durationType];
@@ -463,22 +457,14 @@ class CurriculumManager {
 
  private updateConfigurationFromSelection(
    durationType: keyof typeof this.durationPresets,
-   selectedButton: HTMLButtonElement,
    recommendationElement: HTMLElement
  ): void {
    const isRecommended = this.isRecommendedDuration(durationType, this.scheduledLessonDuration);
    const recommendationText = this.getRecommendationText(durationType, this.scheduledLessonDuration);
    
-   // Update button styling
-   if (isRecommended) {
-     selectedButton.classList.add('curriculum-duration-option--recommended');
-   } else {
-     selectedButton.classList.add('curriculum-duration-option--not-recommended');
-   }
-   
-   // Update recommendation text
-   recommendationElement.className = `curriculum-recommendation ${isRecommended ? 'curriculum-recommendation--recommended' : 'curriculum-recommendation--not-recommended'}`;
-   recommendationElement.innerHTML = `<span class="curriculum-recommendation__text">${recommendationText}</span>`;
+   // Update recommendation text and styling
+   recommendationElement.className = `curriculum__recommendation ${isRecommended ? 'curriculum__recommendation--recommended' : 'curriculum__recommendation--not-recommended'}`;
+   recommendationElement.textContent = recommendationText;
  }
 
  private isRecommendedDuration(durationType: keyof typeof this.durationPresets, actualDuration: number): boolean {
@@ -548,25 +534,23 @@ class CurriculumManager {
  }
 
  private setDurationButtonVisualState(durationType: keyof typeof this.durationPresets): void {
-   const durationOptions = document.querySelectorAll('.curriculum-duration-option');
+   const durationOptions = document.querySelectorAll('button[data-duration]');
    const recommendationElement = document.getElementById('curriculum-recommendation');
    
    if (!recommendationElement) return;
 
    // Remove active class from all options
    durationOptions.forEach(opt => {
-     opt.classList.remove('curriculum-duration-option--active', 
-                         'curriculum-duration-option--recommended', 
-                         'curriculum-duration-option--not-recommended');
+     opt.classList.remove('button--primary');
    });
    
    // Find and activate the correct button
    const targetButton = document.querySelector(`[data-duration="${durationType}"]`) as HTMLButtonElement;
    if (targetButton) {
-     targetButton.classList.add('curriculum-duration-option--active');
+     targetButton.classList.add('button--primary');
      
      // Update configuration based on selection (visual only, don't update inputs)
-     this.updateConfigurationFromSelection(durationType, targetButton, recommendationElement);
+     this.updateConfigurationFromSelection(durationType, recommendationElement);
    }
  }
 
@@ -785,13 +769,13 @@ class CurriculumManager {
    this.savePreviewMode(mode);
 
    // Update active button styling
-   const previewModeButtons = this.curriculumPreviewSection.querySelectorAll('.coursebuilder-curriculum-preview__mode');
+   const previewModeButtons = this.curriculumPreviewSection.querySelectorAll('button[data-mode]');
    console.log('🔘 Found preview mode buttons:', previewModeButtons.length);
    
    previewModeButtons.forEach((btn) => {
-     btn.classList.remove('coursebuilder-curriculum-preview__mode--active');
+     btn.classList.remove('button--active');
      if (btn.getAttribute('data-mode') === mode) {
-       btn.classList.add('coursebuilder-curriculum-preview__mode--active');
+       btn.classList.add('button--active');
        console.log('✅ Set active class on button:', btn.textContent?.trim());
      }
    });
@@ -802,82 +786,142 @@ class CurriculumManager {
 
  private renderCurriculumPreview(): void {
    const previewContainer = this.curriculumPreviewSection.querySelector(
-     ".coursebuilder-curriculum-preview__content",
+     ".curriculum__content",
    );
    if (!previewContainer || !Array.isArray(this.currentCurriculum)) return;
    
+   // Show loading state first
+   previewContainer.innerHTML = '<div class="loading-state text--secondary">Loading curriculum...</div>';
+   
+   // Generate content based on mode
    let html = "";
 
-   this.currentCurriculum.forEach((lesson) => {
-     if (this.currentPreviewMode === "all") {
-       // Complete lesson template structure
-       html += `
-         <div class="curriculum-lesson curriculum-lesson--full">
-           <div class="curriculum-lesson__title" contenteditable="true" 
-                data-lesson="${lesson.lessonNumber}" data-field="title">
-             ${lesson.title}
-           </div>
-           
-           <div class="curriculum-lesson__body">`;
-       
-       lesson.topics.forEach((topic, topicIndex) => {
+   if (this.currentCurriculum.length === 0) {
+     html = `
+       <div class="empty-state">
+         <div class="empty-state__icon"></div>
+         <div class="empty-state__title heading heading--medium text--secondary">No Curriculum Generated Yet</div>
+         <div class="empty-state__message text--small text--tertiary">
+           Configure your lesson settings and generate a curriculum to see the preview.
+         </div>
+       </div>`;
+   } else {
+     this.currentCurriculum.forEach((lesson) => {
+       if (this.currentPreviewMode === "all") {
+         // Complete lesson template structure
          html += `
-           <div class="curriculum-topic">
-             <div class="curriculum-topic__title" contenteditable="true" 
-                  data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title">
-               ${topic.title}
-             </div>
+           <div class="lesson">
+             <h3 class="lesson__title heading heading--large text--primary" contenteditable="true" 
+                  data-lesson="${lesson.lessonNumber}" data-field="title">
+               Lesson ${lesson.lessonNumber}: ${lesson.title}
+             </h3>
              
-             <div class="curriculum-topic__objectives">
-               <div class="curriculum-objectives__header">Learning Objectives:</div>
-               <ul class="curriculum-objectives__list">`;
+             <div class="lesson__meta">
+               <span class="badge badge--secondary">${this.scheduledLessonDuration} minutes</span>
+               <span class="badge badge--info">${lesson.topics.length} topics</span>
+             </div>`;
          
-         topic.objectives.forEach((objective, objIndex) => {
+         lesson.topics.forEach((topic, topicIndex) => {
            html += `
-                 <li class="curriculum-objective" contenteditable="true" 
+             <div class="topic">
+               <h4 class="topic__title heading heading--medium text--secondary" contenteditable="true" 
+                    data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title">
+                 ${topic.title}
+               </h4>
+               
+               <div class="topic__objectives">
+                 <strong class="text--medium">Learning Objectives:</strong>
+                 <ul class="objectives__list">`;
+           
+           topic.objectives.forEach((objective, objIndex) => {
+             html += `
+                   <li class="text--secondary" contenteditable="true" 
+                       data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}">
+                     ${objective}
+                   </li>`;
+           });
+           
+           html += `
+                 </ul>
+               </div>
+             </div>`;
+         });
+         
+         html += `</div>`;
+         
+       } else if (this.currentPreviewMode === "titles") {
+         // Just lesson titles
+         html += `
+           <div class="lesson lesson--simple">
+             <h3 class="lesson__title heading heading--large text--primary" contenteditable="true" 
+                  data-lesson="${lesson.lessonNumber}" data-field="title">
+               Lesson ${lesson.lessonNumber}: ${lesson.title}
+             </h3>
+           </div>`;
+           
+       } else if (this.currentPreviewMode === "topics") {
+         // Lessons with topics
+         html += `
+           <div class="lesson lesson--medium">
+             <h3 class="lesson__title heading heading--large text--primary" contenteditable="true" 
+                  data-lesson="${lesson.lessonNumber}" data-field="title">
+               Lesson ${lesson.lessonNumber}: ${lesson.title}
+             </h3>`;
+             
+         lesson.topics.forEach((topic, topicIndex) => {
+           html += `
+             <div class="topic topic--simple">
+               <h4 class="topic__title heading heading--medium text--secondary" contenteditable="true" 
+                    data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title">
+                 ${topic.title}
+               </h4>
+             </div>`;
+         });
+         
+         html += `</div>`;
+         
+       } else if (this.currentPreviewMode === "objectives") {
+         // Lessons with topics and objectives
+         html += `
+           <div class="lesson lesson--detailed">
+             <h3 class="lesson__title heading heading--large text--primary" contenteditable="true" 
+                  data-lesson="${lesson.lessonNumber}" data-field="title">
+               Lesson ${lesson.lessonNumber}: ${lesson.title}
+             </h3>`;
+             
+         lesson.topics.forEach((topic, topicIndex) => {
+           html += `
+             <div class="topic">
+               <h4 class="topic__title heading heading--medium text--secondary" contenteditable="true" 
+                    data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title">
+                 ${topic.title}
+               </h4>
+               
+               <ul class="objectives__list">`;
+           
+           topic.objectives.forEach((objective, objIndex) => {
+             html += `
+                 <li class="text--secondary" contenteditable="true" 
                      data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}">
                    ${objective}
                  </li>`;
+           });
+           
+           html += `
+               </ul>
+             </div>`;
          });
          
-         html += `
-               </ul>
-             </div>
-           </div>`;
-       });
-       
-       html += `
-           </div>
-         </div>`;
-     } else {
-       // Simplified views
-       html += `<div class="curriculum-lesson curriculum-lesson--simple">`;
-       html += `<div class="curriculum-lesson__title" contenteditable="true" 
-                      data-lesson="${lesson.lessonNumber}" data-field="title">${lesson.title}</div>`;
-
-       if (this.currentPreviewMode === "topics" || this.currentPreviewMode === "objectives") {
-         lesson.topics.forEach((topic, topicIndex) => {
-           html += `<div class="curriculum-topic curriculum-topic--simple">`;
-           html += `<div class="curriculum-topic__title" contenteditable="true" 
-                          data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title">${topic.title}</div>`;
-
-           if (this.currentPreviewMode === "objectives") {
-             html += `<ul class="curriculum-objectives__list curriculum-objectives__list--simple">`;
-             topic.objectives.forEach((objective, objIndex) => {
-               html += `<li class="curriculum-objective" contenteditable="true" 
-                             data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}">${objective}</li>`;
-             });
-             html += `</ul>`;
-           }
-           html += `</div>`;
-         });
+         html += `</div>`;
        }
-       html += `</div>`;
-     }
-   });
+     });
+   }
 
-   previewContainer.innerHTML = html;
-   this.bindEditableEvents();
+   // Update content with smooth transition
+   setTimeout(() => {
+     previewContainer.innerHTML = html;
+     this.bindEditableEvents();
+   }, 100);
  }
 
  private bindEditableEvents(): void {

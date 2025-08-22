@@ -1,6 +1,6 @@
 /**
  * CourseBuilder Classification Dropdown Handler
- * Handles dropdown functionality for classification forms with proper BEM styling
+ * Refactored to use helper classes for better maintainability
  */
 
 import { 
@@ -13,16 +13,81 @@ import {
   getAvailableCourses 
 } from '../backend/courses/classifyCourse';
 
-export interface DropdownOption {
-  value: string;
-  label: string;
-  description?: string;
-  code?: string;
-}
+import { DropdownDOMHelper } from './helpers/DropdownDOMHelper';
+import { DropdownRenderer } from './helpers/DropdownRenderer';
+import { 
+  DropdownOption, 
+  DropdownDataConfig, 
+  CascadingConfig,
+  DataLoader
+} from './types/DropdownTypes';
 
 export class CourseBuilderDropdownHandler {
   private courseId: string = '';
   private activeDropdownId: string | null = null;
+  
+  // Configuration for all dropdowns
+  private readonly dropdownConfigs: Record<string, DropdownDataConfig> = {
+    'class-year': {
+      loader: loadClassYearData,
+      dataKey: 'classYears',
+      isAsync: true
+    },
+    'curricular-framework': {
+      loader: loadCurricularFrameworkData,
+      dataKey: 'curricularFrameworks', 
+      isAsync: true
+    },
+    'domain': {
+      loader: loadIscedData,
+      dataKey: 'domains',
+      isAsync: true
+    },
+    'subject': {
+      loader: (domainValue: string) => getSubjectsByDomain(domainValue),
+      isAsync: false
+    },
+    'topic': {
+      loader: (domainValue: string, subjectValue: string) => getTopicsBySubject(domainValue, subjectValue),
+      isAsync: false
+    },
+    'subtopic': {
+      loader: (domainValue: string, subjectValue: string, topicValue: string) => 
+        getSubtopicsByTopic(domainValue, subjectValue, topicValue),
+      isAsync: false
+    },
+    'previous-course': {
+      loader: getAvailableCourses,
+      isAsync: true
+    },
+    'current-course': {
+      loader: getAvailableCourses, 
+      isAsync: true
+    },
+    'next-course': {
+      loader: getAvailableCourses,
+      isAsync: true
+    }
+  };
+
+  // Cascading relationships
+  private readonly cascadingConfigs: Record<string, CascadingConfig> = {
+    'domain': {
+      dependsOn: [],
+      resets: ['subject', 'topic', 'subtopic'],
+      populateMethod: (values) => this.populateDropdown('subject', values.domain)
+    },
+    'subject': {
+      dependsOn: ['domain'],
+      resets: ['topic', 'subtopic'], 
+      populateMethod: (values) => this.populateDropdown('topic', values.domain, values.subject)
+    },
+    'topic': {
+      dependsOn: ['domain', 'subject'],
+      resets: ['subtopic'],
+      populateMethod: (values) => this.populateDropdown('subtopic', values.domain, values.subject, values.topic)
+    }
+  };
 
   constructor() {
     this.initialize();
@@ -32,10 +97,7 @@ export class CourseBuilderDropdownHandler {
     try {
       console.log('🔧 Initializing CourseBuilder Dropdown Handler...');
       
-      // Setup event listeners for all dropdowns
-      this.setupDropdownEventListeners();
-      
-      // Populate static dropdowns with data
+      this.setupEventListeners();
       await this.populateStaticDropdowns();
       
       console.log('✅ CourseBuilder Dropdown Handler initialized successfully');
@@ -44,464 +106,160 @@ export class CourseBuilderDropdownHandler {
     }
   }
 
-  private setupDropdownEventListeners(): void {
-    const dropdownIds = [
-      'class-year', 'curricular-framework', 'domain', 
-      'subject', 'topic', 'subtopic',
-      'previous-course', 'current-course', 'next-course'
-    ];
+  private setupEventListeners(): void {
+    const dropdownIds = Object.keys(this.dropdownConfigs);
 
     dropdownIds.forEach(id => {
-      const toggle = document.getElementById(`${id}-dropdown`);
-      const menu = document.getElementById(`${id}-menu`);
+      const elements = DropdownDOMHelper.getDropdownElements(id);
+      if (!elements) return;
 
-      if (toggle && menu) {
-        // Toggle dropdown on button click
-        toggle.addEventListener('click', (e) => {
+      // Toggle dropdown on button click
+      elements.toggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.toggleDropdown(id);
+      });
+
+      // Handle option selection
+      elements.menu.addEventListener('click', (e) => {
+        const link = (e.target as HTMLElement).closest('.dropdown__link') as HTMLElement;
+        if (link) {
           e.preventDefault();
-          this.toggleDropdown(id);
-        });
-
-        // Handle option selection
-        menu.addEventListener('click', (e) => {
-          const link = (e.target as HTMLElement).closest('.dropdown__link') as HTMLElement;
-          if (link) {
-            e.preventDefault();
-            const value = link.dataset.value || '';
-            const text = link.textContent?.trim() || '';
-            this.selectOption(id, value, text);
-          }
-        });
-      }
+          const value = link.dataset.value || '';
+          const text = link.textContent?.trim() || '';
+          this.selectOption(id, value, text);
+        }
+      });
     });
 
     // Close dropdowns when clicking outside
     document.addEventListener('click', (e) => {
       if (!this.activeDropdownId) return;
       
-      const toggle = document.getElementById(`${this.activeDropdownId}-dropdown`);
-      const menu = document.getElementById(`${this.activeDropdownId}-menu`);
-      
-      if (toggle && menu && 
-          !toggle.contains(e.target as Node) && 
-          !menu.contains(e.target as Node)) {
-        this.closeDropdown(this.activeDropdownId);
+      if (!DropdownDOMHelper.isElementPartOfDropdown(e.target as Element, this.activeDropdownId)) {
+        DropdownDOMHelper.closeDropdown(this.activeDropdownId);
+        this.activeDropdownId = null;
       }
     });
   }
 
   private toggleDropdown(dropdownId: string): void {
-    const toggle = document.getElementById(`${dropdownId}-dropdown`);
-    const menu = document.getElementById(`${dropdownId}-menu`);
-
-    if (!toggle || !menu) return;
-
-    const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+    const isOpen = DropdownDOMHelper.isDropdownOpen(dropdownId);
 
     // Close all dropdowns first
-    this.closeAllDropdowns();
+    DropdownDOMHelper.closeAllDropdowns();
+    this.activeDropdownId = null;
 
     if (!isOpen) {
-      // Open this dropdown
-      toggle.setAttribute('aria-expanded', 'true');
-      menu.classList.add('dropdown__menu--active');
+      DropdownDOMHelper.openDropdown(dropdownId);
       this.activeDropdownId = dropdownId;
-
-      // Update icon rotation
-      const icon = toggle.querySelector('.dropdown__icon') as HTMLElement;
-      if (icon) {
-        icon.style.transform = 'rotate(180deg)';
-      }
     }
   }
 
-  private closeDropdown(dropdownId: string): void {
-    const toggle = document.getElementById(`${dropdownId}-dropdown`);
-    const menu = document.getElementById(`${dropdownId}-menu`);
-
-    if (!toggle || !menu) return;
-
-    toggle.setAttribute('aria-expanded', 'false');
-    menu.classList.remove('dropdown__menu--active');
+  private selectOption(dropdownId: string, value: string, text: string): void {
+    DropdownDOMHelper.updateDropdownValue(dropdownId, value, text);
+    this.handleCascadingUpdates(dropdownId, value);
+    DropdownDOMHelper.closeDropdown(dropdownId);
     
     if (this.activeDropdownId === dropdownId) {
       this.activeDropdownId = null;
     }
 
-    // Reset icon rotation
-    const icon = toggle.querySelector('.dropdown__icon') as HTMLElement;
-    if (icon) {
-      icon.style.transform = 'rotate(0deg)';
-    }
-  }
-
-  private closeAllDropdowns(): void {
-    const dropdowns = document.querySelectorAll('.coursebuilder-dropdown [aria-expanded="true"]');
-    dropdowns.forEach(dropdown => {
-      const id = dropdown.id.replace('-dropdown', '');
-      this.closeDropdown(id);
-    });
-  }
-
-  private selectOption(dropdownId: string, value: string, text: string): void {
-    const toggle = document.getElementById(`${dropdownId}-dropdown`);
-    const hiddenInput = document.getElementById(`${dropdownId}-value`) as HTMLInputElement;
-    const textElement = toggle?.querySelector('.dropdown__text');
-
-    if (!toggle || !hiddenInput || !textElement) return;
-
-    // Update the dropdown display
-    textElement.textContent = text;
-    hiddenInput.value = value;
-
-    // Add visual feedback
-    toggle.classList.add('coursebuilder-dropdown__toggle--selected');
-
-    // Handle cascading updates
-    this.handleCascadingUpdates(dropdownId, value);
-
-    // Close the dropdown
-    this.closeDropdown(dropdownId);
-
     console.log(`📝 Selected ${dropdownId}:`, { value, text });
   }
 
   private handleCascadingUpdates(dropdownId: string, value: string): void {
-    switch (dropdownId) {
-      case 'domain':
-        this.resetDependentDropdowns(['subject', 'topic', 'subtopic']);
-        this.populateSubjectDropdown(value);
-        break;
-        
-      case 'subject':
-        this.resetDependentDropdowns(['topic', 'subtopic']);
-        this.populateTopicDropdown(value);
-        break;
-        
-      case 'topic':
-        this.resetDependentDropdowns(['subtopic']);
-        this.populateSubtopicDropdown(value);
-        break;
-    }
-  }
+    const config = this.cascadingConfigs[dropdownId];
+    if (!config) return;
 
-  private resetDependentDropdowns(dropdownIds: string[]): void {
-    dropdownIds.forEach(id => {
-      const toggle = document.getElementById(`${id}-dropdown`);
-      const menu = document.getElementById(`${id}-menu`);
-      const hiddenInput = document.getElementById(`${id}-value`) as HTMLInputElement;
-      const textElement = toggle?.querySelector('.dropdown__text');
+    // Reset dependent dropdowns
+    config.resets.forEach(dependentId => {
+      const placeholderText = DropdownRenderer.getPlaceholderText(dependentId);
+      const emptyMessage = DropdownRenderer.getEmptyStateText(dependentId);
+      
+      DropdownDOMHelper.resetDropdown(dependentId, placeholderText);
+      DropdownDOMHelper.updateDropdownMenu(dependentId, DropdownRenderer.renderEmptyState(emptyMessage));
+      DropdownDOMHelper.disableDropdown(dependentId);
+    });
 
-      if (toggle && menu && hiddenInput && textElement) {
-        // Reset values
-        hiddenInput.value = '';
-        textElement.textContent = this.getPlaceholderText(id);
-        
-        // Clear menu
-        menu.innerHTML = `<div class="coursebuilder-dropdown__empty">${this.getEmptyStateText(id)}</div>`;
-        
-        // Disable dropdown
-        toggle.setAttribute('disabled', 'true');
-        toggle.classList.remove('coursebuilder-dropdown__toggle--selected');
+    // Get current values for cascading
+    const currentValues: Record<string, string> = { [dropdownId]: value };
+    config.dependsOn.forEach(dep => {
+      const elements = DropdownDOMHelper.getDropdownElements(dep);
+      if (elements) {
+        currentValues[dep] = elements.hiddenInput.value;
       }
     });
-  }
 
-  private getPlaceholderText(dropdownId: string): string {
-    const placeholders: { [key: string]: string } = {
-      'subject': 'Select domain first...',
-      'topic': 'Select subject first...',
-      'subtopic': 'Select topic first...'
-    };
-    return placeholders[dropdownId] || `Select ${dropdownId.replace('-', ' ')}...`;
-  }
-
-  private getEmptyStateText(dropdownId: string): string {
-    const emptyStates: { [key: string]: string } = {
-      'subject': 'Select a domain first',
-      'topic': 'Select a subject first',
-      'subtopic': 'Select a topic first'
-    };
-    return emptyStates[dropdownId] || 'No options available';
+    // Populate next level
+    config.populateMethod(currentValues);
   }
 
   private async populateStaticDropdowns(): Promise<void> {
-    await Promise.all([
-      this.populateClassYearDropdown(),
-      this.populateCurricularFrameworkDropdown(),
-      this.populateDomainDropdown(),
-      this.populateAvailableCourses()
-    ]);
-  }
-
-  private async populateClassYearDropdown(): Promise<void> {
-    try {
-      const data = await loadClassYearData();
-      const menu = document.getElementById('class-year-menu');
-      const loading = document.getElementById('class-year-loading');
-
-      if (!menu || !data?.classYears) return;
-
-      // Hide loading
-      if (loading) loading.style.display = 'none';
-
-      // Populate options
-      menu.innerHTML = data.classYears
-        .map((year: any) => `
-          <div class="dropdown__item" role="none">
-            <button class="dropdown__link" data-value="${year.value}" role="option" type="button">
-              <div class="dropdown__option-content">
-                <div class="dropdown__option-title">${year.label}</div>
-                ${year.description ? `<div class="dropdown__option-description">${year.description}</div>` : ''}
-              </div>
-            </button>
-          </div>
-        `)
-        .join('');
-
-      // Enable dropdown
-      this.enableDropdown('class-year');
-
-    } catch (error) {
-      console.error('Error populating class year dropdown:', error);
-      this.showDropdownError('class-year', 'Error loading class years');
-    }
-  }
-
-  private async populateCurricularFrameworkDropdown(): Promise<void> {
-    try {
-      const data = await loadCurricularFrameworkData();
-      const menu = document.getElementById('curricular-framework-menu');
-      const loading = document.getElementById('curricular-framework-loading');
-
-      if (!menu || !data?.curricularFrameworks) return;
-
-      // Hide loading
-      if (loading) loading.style.display = 'none';
-
-      // Populate options
-      menu.innerHTML = data.curricularFrameworks
-        .map((framework: any) => `
-          <div class="dropdown__item" role="none">
-            <button class="dropdown__link" data-value="${framework.value}" role="option" type="button">
-              <div class="dropdown__option-content">
-                <div class="dropdown__option-title">${framework.label}</div>
-                ${framework.description ? `<div class="dropdown__option-description">${framework.description}</div>` : ''}
-              </div>
-            </button>
-          </div>
-        `)
-        .join('');
-
-      // Enable dropdown
-      this.enableDropdown('curricular-framework');
-
-    } catch (error) {
-      console.error('Error populating curricular framework dropdown:', error);
-      this.showDropdownError('curricular-framework', 'Error loading frameworks');
-    }
-  }
-
-  private async populateDomainDropdown(): Promise<void> {
-    try {
-      const data = await loadIscedData();
-      const menu = document.getElementById('domain-menu');
-      const loading = document.getElementById('domain-loading');
-
-      if (!menu || !data?.domains) return;
-
-      // Hide loading
-      if (loading) loading.style.display = 'none';
-
-      // Populate options
-      menu.innerHTML = data.domains
-        .map((domain: any) => `
-          <div class="dropdown__item" role="none">
-            <button class="dropdown__link" data-value="${domain.value}" role="option" type="button">
-              <div class="dropdown__option-content">
-                <div class="dropdown__option-title">${domain.label}</div>
-                <div class="dropdown__option-description">Code: ${domain.code}</div>
-              </div>
-            </button>
-          </div>
-        `)
-        .join('');
-
-      // Enable dropdown
-      this.enableDropdown('domain');
-
-    } catch (error) {
-      console.error('Error populating domain dropdown:', error);
-      this.showDropdownError('domain', 'Error loading domains');
-    }
-  }
-
-  private populateSubjectDropdown(domainValue: string): void {
-    try {
-      const subjects = getSubjectsByDomain(domainValue);
-      const menu = document.getElementById('subject-menu');
-
-      if (!menu) return;
-
-      if (subjects.length === 0) {
-        menu.innerHTML = '<div class="coursebuilder-dropdown__empty">No subjects available</div>';
-        return;
-      }
-
-      menu.innerHTML = subjects
-        .map((subject: any) => `
-          <div class="dropdown__item" role="none">
-            <button class="dropdown__link" data-value="${subject.value}" role="option" type="button">
-              <div class="dropdown__option-content">
-                <div class="dropdown__option-title">${subject.label}</div>
-                <div class="dropdown__option-description">Code: ${subject.code}</div>
-              </div>
-            </button>
-          </div>
-        `)
-        .join('');
-
-      this.enableDropdown('subject');
-
-    } catch (error) {
-      console.error('Error populating subject dropdown:', error);
-      this.showDropdownError('subject', 'Error loading subjects');
-    }
-  }
-
-  private populateTopicDropdown(subjectValue: string): void {
-    try {
-      const domainValue = (document.getElementById('domain-value') as HTMLInputElement)?.value || '';
-      const topics = getTopicsBySubject(domainValue, subjectValue);
-      const menu = document.getElementById('topic-menu');
-
-      if (!menu) return;
-
-      if (topics.length === 0) {
-        menu.innerHTML = '<div class="coursebuilder-dropdown__empty">No topics available</div>';
-        return;
-      }
-
-      menu.innerHTML = topics
-        .map((topic: any) => `
-          <div class="dropdown__item" role="none">
-            <button class="dropdown__link" data-value="${topic.value}" role="option" type="button">
-              <div class="dropdown__option-content">
-                <div class="dropdown__option-title">${topic.label}</div>
-                <div class="dropdown__option-description">Code: ${topic.code}</div>
-              </div>
-            </button>
-          </div>
-        `)
-        .join('');
-
-      this.enableDropdown('topic');
-
-    } catch (error) {
-      console.error('Error populating topic dropdown:', error);
-      this.showDropdownError('topic', 'Error loading topics');
-    }
-  }
-
-  private populateSubtopicDropdown(topicValue: string): void {
-    try {
-      const domainValue = (document.getElementById('domain-value') as HTMLInputElement)?.value || '';
-      const subjectValue = (document.getElementById('subject-value') as HTMLInputElement)?.value || '';
-      const subtopics = getSubtopicsByTopic(domainValue, subjectValue, topicValue);
-      const menu = document.getElementById('subtopic-menu');
-
-      if (!menu) return;
-
-      if (subtopics.length === 0) {
-        menu.innerHTML = '<div class="coursebuilder-dropdown__empty">No subtopics available</div>';
-        return;
-      }
-
-      menu.innerHTML = subtopics
-        .map((subtopic: any) => `
-          <div class="dropdown__item" role="none">
-            <button class="dropdown__link" data-value="${subtopic.value}" role="option" type="button">
-              <div class="dropdown__option-content">
-                <div class="dropdown__option-title">${subtopic.label}</div>
-                <div class="dropdown__option-description">Code: ${subtopic.code}</div>
-              </div>
-            </button>
-          </div>
-        `)
-        .join('');
-
-      this.enableDropdown('subtopic');
-
-    } catch (error) {
-      console.error('Error populating subtopic dropdown:', error);
-      this.showDropdownError('subtopic', 'Error loading subtopics');
-    }
-  }
-
-  private async populateAvailableCourses(): Promise<void> {
-    try {
-      const courses = await getAvailableCourses();
-      
-      // Populate all course sequence dropdowns
-      ['previous-course', 'current-course', 'next-course'].forEach(dropdownId => {
-        const menu = document.getElementById(`${dropdownId}-menu`);
-        const loading = document.getElementById(`${dropdownId}-loading`);
-
-        if (!menu) return;
-
-        // Hide loading
-        if (loading) loading.style.display = 'none';
-
-        if (courses.length === 0) {
-          menu.innerHTML = `
-            <div class="dropdown__header coursebuilder-dropdown__header">Your Courses</div>
-            <div class="coursebuilder-dropdown__empty">No courses available</div>
-          `;
-          return;
-        }
-
-        menu.innerHTML = `
-          <div class="dropdown__header coursebuilder-dropdown__header">Your Courses</div>
-          ${courses
-            .map((course: any) => `
-              <div class="dropdown__item" role="none">
-                <button class="dropdown__link" data-value="${course.id}" role="option" type="button">
-                  <div class="dropdown__option-content">
-                    <div class="dropdown__option-title">${course.course_name}</div>
-                  </div>
-                </button>
-              </div>
-            `)
-            .join('')}
-        `;
-
-        this.enableDropdown(dropdownId);
-      });
-
-    } catch (error) {
-      console.error('Error populating available courses:', error);
-      ['previous-course', 'current-course', 'next-course'].forEach(dropdownId => {
-        this.showDropdownError(dropdownId, 'Error loading courses');
-      });
-    }
-  }
-
-  private enableDropdown(dropdownId: string): void {
-    const toggle = document.getElementById(`${dropdownId}-dropdown`);
-    if (toggle) {
-      toggle.removeAttribute('disabled');
-      toggle.classList.remove('dropdown__toggle--disabled');
-    }
-  }
-
-  private showDropdownError(dropdownId: string, message: string): void {
-    const menu = document.getElementById(`${dropdownId}-menu`);
-    const loading = document.getElementById(`${dropdownId}-loading`);
+    const staticDropdowns = ['class-year', 'curricular-framework', 'domain', 'previous-course', 'current-course', 'next-course'];
     
-    if (loading) loading.style.display = 'none';
-    if (menu) {
-      menu.innerHTML = `<div class="coursebuilder-dropdown__empty">${message}</div>`;
+    await Promise.all(
+      staticDropdowns.map(dropdownId => this.populateDropdown(dropdownId))
+    );
+  }
+
+  private async populateDropdown(dropdownId: string, ...args: any[]): Promise<void> {
+    const config = this.dropdownConfigs[dropdownId];
+    if (!config) {
+      console.error(`No configuration found for dropdown: ${dropdownId}`);
+      return;
     }
+
+    try {
+      DropdownDOMHelper.showLoadingState(dropdownId);
+      
+      let data: any;
+      if (config.isAsync) {
+        data = await (config.loader as DataLoader)(...args);
+      } else {
+        data = (config.loader as DataLoader)(...args);
+      }
+
+      // Extract options from data
+      const options: DropdownOption[] = config.dataKey ? data[config.dataKey] : data;
+      
+      if (!Array.isArray(options)) {
+        throw new Error(`Expected array of options for ${dropdownId}`);
+      }
+
+      // Render dropdown content
+      const html = this.renderDropdownContent(dropdownId, options);
+      DropdownDOMHelper.updateDropdownMenu(dropdownId, html);
+      DropdownDOMHelper.enableDropdown(dropdownId);
+      
+    } catch (error) {
+      console.error(`Error populating ${dropdownId} dropdown:`, error);
+      const errorMessage = `Error loading ${dropdownId.replace('-', ' ')}`;
+      const errorHTML = DropdownRenderer.renderErrorState(errorMessage);
+      DropdownDOMHelper.updateDropdownMenu(dropdownId, errorHTML);
+    } finally {
+      DropdownDOMHelper.hideLoadingState(dropdownId);
+    }
+  }
+
+  private renderDropdownContent(dropdownId: string, options: DropdownOption[]): string {
+    // Special handling for course dropdowns
+    if (['previous-course', 'current-course', 'next-course'].includes(dropdownId)) {
+      const mappedOptions = options.map((course: any) => ({
+        value: course.id,
+        label: course.course_name
+      }));
+      
+      return DropdownRenderer.renderDropdownMenu(mappedOptions, {
+        showHeader: true,
+        headerText: 'Your Courses',
+        emptyMessage: 'No courses available'
+      });
+    }
+
+    // Standard dropdown rendering
+    return DropdownRenderer.renderDropdownMenu(options, {
+      emptyMessage: DropdownRenderer.getEmptyStateText(dropdownId)
+    });
   }
 
   // =============================================================================
@@ -514,9 +272,6 @@ export class CourseBuilderDropdownHandler {
   setCourseId(courseId: string): void {
     this.courseId = courseId;
     console.log(`📋 Dropdown handler updated with course ID: ${courseId}`);
-    
-    // If we have course sequence data, we might want to refresh those dropdowns
-    // This could be expanded to load course-specific data in the future
   }
 
   /**
@@ -524,6 +279,28 @@ export class CourseBuilderDropdownHandler {
    */
   getCourseId(): string {
     return this.courseId;
+  }
+
+  /**
+   * Manually populate a specific dropdown
+   */
+  async refreshDropdown(dropdownId: string, ...args: any[]): Promise<void> {
+    await this.populateDropdown(dropdownId, ...args);
+  }
+
+  /**
+   * Get current value of a dropdown
+   */
+  getDropdownValue(dropdownId: string): string {
+    const elements = DropdownDOMHelper.getDropdownElements(dropdownId);
+    return elements?.hiddenInput.value || '';
+  }
+
+  /**
+   * Set dropdown value programmatically
+   */
+  setDropdownValue(dropdownId: string, value: string, text: string): void {
+    this.selectOption(dropdownId, value, text);
   }
 }
 

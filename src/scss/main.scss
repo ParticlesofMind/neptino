@@ -32,7 +32,8 @@
 @use 'layout/footer';             // Site footer
 @use 'layout/templates';
 @use 'layout/schedule';
-
+@use 'layout/curriculum';
+@use 'layout/classification';
 // PAGES (page styling)
 // ==========================================================================
 @use 'pages/home';

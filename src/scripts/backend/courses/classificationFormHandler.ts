@@ -196,7 +196,7 @@ export class ClassificationFormHandler {
     hiddenInput.value = value;
     label.textContent = displayText;
     label.title = fullText; // Show full text on hover
-    trigger.classList.add('coursebuilder-dropdown__toggle--selected');
+    trigger.classList.add('dropdown__toggle--selected');
 
     // Handle cascading updates for ISCED hierarchy
     this.handleCascadingUpdates(dropdownId, value);
@@ -280,7 +280,7 @@ export class ClassificationFormHandler {
 
     // Reset values
     hiddenInput.value = "";
-    trigger.classList.remove('coursebuilder-dropdown__toggle--selected');
+    trigger.classList.remove('dropdown__toggle--selected');
 
     // Clear menu
     menu.innerHTML = "";
@@ -414,7 +414,7 @@ export class ClassificationFormHandler {
 
     if (subjects.length === 0) {
       menu.innerHTML =
-        '<div class="coursebuilder-dropdown__empty">No subjects available</div>';
+        '<div class="dropdown__empty">No subjects available</div>';
       return;
     }
 
@@ -445,7 +445,7 @@ export class ClassificationFormHandler {
 
     if (topics.length === 0) {
       menu.innerHTML =
-        '<div class="coursebuilder-dropdown__empty">No topics available</div>';
+        '<div class="dropdown__empty">No topics available</div>';
       return;
     }
 
@@ -476,7 +476,7 @@ export class ClassificationFormHandler {
 
     if (subtopics.length === 0) {
       menu.innerHTML =
-        '<div class="coursebuilder-dropdown__empty">No subtopics available</div>';
+        '<div class="dropdown__empty">No subtopics available</div>';
       return;
     }
 
@@ -532,7 +532,7 @@ export class ClassificationFormHandler {
           menu.innerHTML = existingHeader.outerHTML + coursesHtml;
         } else {
           menu.innerHTML = `
-            <div class="dropdown__header coursebuilder-dropdown__header">Your Courses</div>
+            <div class="dropdown__header">Your Courses</div>
             ${coursesHtml}
           `;
         }
@@ -553,7 +553,7 @@ export class ClassificationFormHandler {
     trigger.removeAttribute("disabled");
 
     // Update placeholder if needed
-    const label = trigger.querySelector('.dropdown__label');
+    const label = trigger.querySelector('.dropdown__text');
     if (label && label.textContent === 'Select domain first...') {
       switch (dropdownId) {
         case "subject":
@@ -798,7 +798,7 @@ export class ClassificationFormHandler {
       
       label.textContent = displayText;
       label.title = fullText; // Show full text on hover
-      trigger.classList.add('coursebuilder-dropdown__toggle--selected');
+      trigger.classList.add('dropdown__toggle--selected');
       trigger.classList.add('dropdown__toggle--success');
       this.enableDropdown(dropdownId);
     }
