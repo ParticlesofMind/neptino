@@ -7,6 +7,7 @@ import { initializeGlobalNavigation, initializeDashboardNavigation } from './nav
 import { initAuth } from './backend/auth/auth';
 import { AuthFormHandler } from './auth/AuthFormHandler';
 import './utils/pageSetupPreview';
+import './backend/courses/pageSetupHandler';
 // import PageTransitions from './navigation/PageTransitions'; // DISABLED
 
 // Initialize global navigation system
@@ -38,6 +39,26 @@ document.addEventListener('DOMContentLoaded', () => {
  if (isAuthPage) {
  new AuthFormHandler();
  console.log('🔐 Auth form handler initialized');
+ }
+
+ // Initialize page setup handler for coursebuilder pages
+ const isCourseBuilderPage = window.location.pathname.includes('coursebuilder');
+ if (isCourseBuilderPage) {
+   // Import and initialize page setup handler
+   import('./backend/courses/pageSetupHandler').then(({ pageSetupHandler }) => {
+     // Get course ID from URL or session storage
+     const urlParams = new URLSearchParams(window.location.search);
+     const courseId = urlParams.get('courseId') || urlParams.get('id') || sessionStorage.getItem('currentCourseId');
+     
+     if (courseId) {
+       pageSetupHandler.setCourseId(courseId);
+       console.log('📄 Page setup handler initialized with course ID:', courseId);
+     } else {
+       console.log('📄 Page setup handler initialized (no course ID yet)');
+     }
+   }).catch(error => {
+     console.error('Failed to initialize page setup handler:', error);
+   });
  }
 });
 

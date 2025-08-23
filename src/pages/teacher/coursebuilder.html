@@ -683,6 +683,21 @@
             <div class="page-setup__config">
               <h3 class="header">Page Configuration</h3>
               <div class="page-setup__content">
+                <!-- Units -->
+                <div class="page-setup__section">
+                  <label class="page-setup__label">Units</label>
+                  <div class="page-setup__options page-setup__options--horizontal">
+                    <label class="page-setup__option">
+                      <input class="input input--radio" type="radio" name="units" value="cm" checked />
+                      Metric (cm)
+                    </label>
+                    <label class="page-setup__option">
+                      <input class="input input--radio" type="radio" name="units" value="inches" />
+                      Imperial (inches)
+                    </label>
+                  </div>
+                </div>
+
                 <!-- Orientation -->
                 <div class="page-setup__section">
                   <label class="page-setup__label">Orientation</label>
@@ -704,15 +719,11 @@
                   <div class="page-setup__options">
                     <label class="page-setup__option">
                       <input class="input input--radio" type="radio" name="canvas-size" value="a4" checked />
-                      A4 (210 × 297 mm)
+                      <span class="canvas-size-label" data-cm="A4 (21.0 × 29.7 cm)" data-inches="A4 (8.27&quot; × 11.69&quot;)">A4 (21.0 × 29.7 cm)</span>
                     </label>
                     <label class="page-setup__option">
                       <input class="input input--radio" type="radio" name="canvas-size" value="us-letter" />
-                      US Letter (8.5" × 11" / 216 × 279 mm)
-                    </label>
-                    <label class="page-setup__option">
-                      <input class="input input--radio" type="radio" name="canvas-size" value="a3" />
-                      A3 (297 × 420 mm)
+                      <span class="canvas-size-label" data-cm="US Letter (21.6 × 27.9 cm)" data-inches="US Letter (8.5&quot; × 11&quot;)">US Letter (21.6 × 27.9 cm)</span>
                     </label>
                   </div>
                 </div>
@@ -724,25 +735,25 @@
                     <div class="page-setup__margin-group">
                       <label class="page-setup__margin">
                         Top
-                        <input class="input input--number" type="number" name="margin_top" value="25" step="1" min="0" max="100" />
-                        <span class="page-setup__unit">mm</span>
+                        <input class="input input--number" type="number" name="margin_top" value="2.54" step="0.01" min="0" max="100" />
+                        <span class="page-setup__unit">cm</span>
                       </label>
                       <label class="page-setup__margin">
                         Bottom
-                        <input class="input input--number" type="number" name="margin_bottom" value="25" step="1" min="0" max="100" />
-                        <span class="page-setup__unit">mm</span>
+                        <input class="input input--number" type="number" name="margin_bottom" value="2.54" step="0.01" min="0" max="100" />
+                        <span class="page-setup__unit">cm</span>
                       </label>
                     </div>
                     <div class="page-setup__margin-group">
                       <label class="page-setup__margin">
                         Left
-                        <input class="input input--number" type="number" name="margin_left" value="25" step="1" min="0" max="100" />
-                        <span class="page-setup__unit">mm</span>
+                        <input class="input input--number" type="number" name="margin_left" value="2.54" step="0.01" min="0" max="100" />
+                        <span class="page-setup__unit">cm</span>
                       </label>
                       <label class="page-setup__margin">
                         Right
-                        <input class="input input--number" type="number" name="margin_right" value="25" step="1" min="0" max="100" />
-                        <span class="page-setup__unit">mm</span>
+                        <input class="input input--number" type="number" name="margin_right" value="2.54" step="0.01" min="0" max="100" />
+                        <span class="page-setup__unit">cm</span>
                       </label>
                     </div>
                   </div>
@@ -756,7 +767,7 @@
                 <canvas class="page-setup__canvas" id="page-preview-canvas" width="400" height="500"></canvas>
                 <div class="page-setup__canvas-info">
                   <span class="page-setup__dimensions" id="canvas-dimensions">210 × 297 mm (A4 Portrait)</span>
-                  <span class="page-setup__margins-info" id="margins-info">Margins: 25mm all sides</span>
+                  <span class="page-setup__margins-info" id="margins-info">Margins: 2.54mm all sides</span>
                 </div>
               </div>
             </div>
@@ -1057,7 +1068,7 @@
   <script type="module" src="/src/scripts/backend/courses/templates/templateConfigHandler.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/templates/templatePreviewHandler.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/scheduleCourse.ts"></script>
-  <script type="module" src="/src/scripts/backend/courses/marginSettings.ts"></script>
+  <script type="module" src="/src/scripts/backend/courses/pageSetupHandler.ts"></script>
   <script type="module" src="/src/scripts/coursebuilder/coursebuilderInit.ts"></script>
 </body>
 

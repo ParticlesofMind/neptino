@@ -28,7 +28,17 @@ CREATE TABLE IF NOT EXISTS public.courses (
     template_settings jsonb DEFAULT '{}',
     schedule_settings jsonb DEFAULT '{}',
     curriculum_data jsonb DEFAULT '{}',
-    course_settings jsonb DEFAULT '{}',
+    course_layout jsonb DEFAULT '{
+      "margins": {
+        "top": 25,
+        "bottom": 25,
+        "left": 25,
+        "right": 25,
+        "unit": "mm"
+      },
+      "orientation": "portrait",
+      "canvas_size": "a4"
+    }',
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
@@ -59,15 +69,3 @@ CREATE TABLE IF NOT EXISTS public.course_templates (
 -- Add course_sessions column to courses table
 ALTER TABLE public.courses 
 ADD COLUMN IF NOT EXISTS course_sessions integer DEFAULT NULL;
-
--- Update default course settings with margin values
-UPDATE public.courses 
-SET course_settings = COALESCE(course_settings, '{}'::jsonb) || jsonb_build_object(
-    'margins', jsonb_build_object(
-        'top', 50,
-        'right', 50,
-        'bottom', 50,
-        'left', 50
-    )
-)
-WHERE course_settings IS NULL OR course_settings->>'margins' IS NULL;
