@@ -158,14 +158,8 @@
     color: var(--color-text-primary);
     width: 100%;
 
-    input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      margin-right: var(--spacing-3);
-      accent-color: var(--color-primary-500);
-      cursor: pointer;
-    }
-
+    // Checkbox styling now handled by .input--checkbox in _inputs.scss
+    
     span {
       flex: 1;
     }

@@ -1136,7 +1136,7 @@ export class TemplateManager {
  data-template-id="${templateData.id}"
  ${field.mandatory ? "checked disabled" : isChecked ? "checked" : ""}
  onchange="TemplateManager.updateTemplateField('${templateId}', '${block.type}', '${field.name}', this.checked)"
- class=""
+ class="input input--checkbox"
  >
  <span class="">
  ${field.label}
@@ -1629,11 +1629,11 @@ export class TemplateManager {
  <label class="">Block Options</label>
  <div class="">
  <label class="">
- <input type="checkbox" name="block-visible" checked>
+ <input type="checkbox" name="block-visible" checked class="input input--checkbox">
  <span class="">Visible in template</span>
  </label>
  <label class="">
- <input type="checkbox" name="block-required">
+ <input type="checkbox" name="block-required" class="input input--checkbox">
  <span class="">Required field</span>
  </label>
  </div>

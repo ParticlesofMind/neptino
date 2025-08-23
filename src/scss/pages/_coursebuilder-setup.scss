@@ -2,34 +2,44 @@
 // HEADER VISIBILITY FIX - Prevent anchor links from hiding header
 // ==========================================================================
 
+// Prevent anchor navigation from hiding header
+html {
+    scroll-padding-top: 100px; // Account for header height when navigating to anchors
+}
+
+// Alternative approach - add scroll margin to each section
+.coursebuilder__setup,
+.coursebuilder__create,
+.coursebuilder__preview,
+.coursebuilder__launch {
+    scroll-margin-top: 100px; // Ensure header stays visible when navigating to these sections
+}
 
 // ==========================================================================
 // COURSEBUILDER ELEMENT VISIBILITY CONTROLS
 // ==========================================================================
 
 .coursebuilder {
-    
     &__setup,
     &__create,
     &__preview,
     &__launch {
         display: none;
-
-        &--active {
-            display: grid;
-            grid-template-columns: 280px 1fr; // Sidebar width + flexible content
-            gap: 0; // No gap between sidebar and content
-            width: 100%;
-            height: 100vh;
+        
+        // When aria-hidden="true", force hide everything
+        &[aria-hidden="true"] {
+            display: none !important;
+            visibility: hidden !important;
         }
     }
 
     &__setup {
         &.coursebuilder__setup--active {
             display: grid;
+            grid-template-columns: 280px 1fr; // Sidebar width + flexible content
             gap: 0;
             width: 100%;
-            height: 100vh;
+            height: 100%; // Use available height within grid, not full viewport
         }
     }
 
@@ -38,6 +48,14 @@
             display: flex;
             flex: 1;
             overflow: hidden;
+            width: 100%;
+            height: 100%; // Use available height within grid, not full viewport
+            
+            // Explicitly hide any sidebar that might be showing
+            .sidebar,
+            aside {
+                display: none !important;
+            }
         }
     }
 
@@ -47,6 +65,8 @@
         &.coursebuilder__launch--active {
             display: block;
             padding: 2rem;
+            width: 100%;
+            height: 100%; // Use available height within grid, not full viewport
         }
     }
 }
@@ -98,7 +118,7 @@
             // Mobile adjustments
             @media (max-width: 768px) {
                 width: 100vw;
-                height: calc(100vh - 60px);
+                height: 100%; // Use available height within container
                 margin: 0;
                 margin-bottom: 60px;
                 border-radius: 0;

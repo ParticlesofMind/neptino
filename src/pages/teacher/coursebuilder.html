@@ -479,20 +479,26 @@
 
               <div class="curriculum__duration">
                 <button class="button button--outline" type="button" data-duration="mini" data-max="30">
-                  Mini - Up to 30'
+                  Mini
                 </button>
                 <button class="button button--outline" type="button" data-duration="single" data-max="60">
-                  Single - Up to 60'
+                  Single
                 </button>
                 <button class="button button--outline" type="button" data-duration="double" data-max="120">
-                  Double - Up to 120'
+                  Double
                 </button>
                 <button class="button button--outline" type="button" data-duration="triple" data-max="180">
-                  Triple - Up to 180'
+                  Triple
                 </button>
                 <button class="button button--outline" type="button" data-duration="halfFull" data-max="999">
-                  Half/Full day - Longer than 180'
+                  Half/Full day
                 </button>
+              </div>
+
+              <div class="card card--rounded curriculum__duration-info" id="curriculum-duration-info" style="display: none;">
+                <div class="card__content">
+                  <span class="curriculum__duration-text">Select a lesson duration above to see the ideal lesson length</span>
+                </div>
               </div>
 
               <div class="curriculum__recommendation" id="curriculum-recommendation">
@@ -502,36 +508,39 @@
               <div class="curriculum__structure">
                 <label class="form__label">
                   Topics per lesson
-                  <input class="form__input" type="number" min="1" max="10" value="2" />
+                  <input class="input input--number" type="number" min="1" max="10" value="2" id="curriculum-topics" />
                 </label>
 
                 <label class="form__label">
                   Objectives per topic
-                  <input class="form__input" type="number" min="1" max="5" value="2" />
+                  <input class="input input--number" type="number" min="1" max="5" value="2" id="curriculum-objectives" />
                 </label>
 
                 <label class="form__label">
                   Tasks per objective
-                  <input class="form__input" type="number" min="1" max="5" value="2" />
+                  <input class="input input--number" type="number" min="1" max="5" value="2" id="curriculum-tasks" />
                 </label>
               </div>
             </div>
 
             <div class="curriculum__preview">
               <div class="curriculum__controls">
-                Display:
+            
                 <div class="button-group">
                   <button class="button button--small button--outline" type="button" data-mode="titles">
-                    Lesson Titles
+                     Titles
                   </button>
                   <button class="button button--small button--outline" type="button" data-mode="topics">
-                    Lesson Topics
+                     Topics
                   </button>
                   <button class="button button--small button--outline" type="button" data-mode="objectives">
-                    Lesson Objectives
+                     Objectives
+                  </button>
+                  <button class="button button--small button--outline" type="button" data-mode="tasks">
+                     Tasks
                   </button>
                   <button class="button button--small button--outline" type="button" data-mode="all">
-                    All Details
+                    All
                   </button>
                 </div>
               </div>
@@ -666,12 +675,10 @@
           </div>
         </article>
       </div>
+    </div>
 
-
-
-
-      <!-- Create View -->
-      <div class="coursebuilder__create" aria-hidden="true" id="create">
+    <!-- Create View -->
+    <div class="coursebuilder__create" aria-hidden="true" id="create">
         <div class="engine">
           <!-- Mode Selector -->
           <div class="engine__mode mode">
@@ -880,6 +887,7 @@
             </div>
           </div>
         </div>
+    </div>
 
         <!-- Preview View -->
         <div class="coursebuilder__preview" aria-hidden="true" id="preview">
@@ -912,9 +920,6 @@
   <script type="module" src="/src/scripts/backend/courses/scheduleCourse.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/marginSettings.ts"></script>
   <script type="module" src="/src/scripts/coursebuilder/coursebuilderInit.ts"></script>
-</body>
-
-</html>
 </body>
 
 </html>

@@ -6,7 +6,7 @@
     display: grid;
     grid-template-columns: 70px 300px 1fr 250px;
     grid-template-rows: 60px 1fr;
-    height: calc(100vh - 6vh);
+    height: calc(100vh - 120px); // Constrain to available viewport space minus header
     width: 100%;
     gap: 0.5rem;
 
@@ -67,20 +67,42 @@
         grid-column: 3;
         grid-row: 2;
         background: var(--color-background); // Override for canvas
-        overflow: auto;
+        overflow: auto; // Enable scrolling for large content
         padding: 2rem;
         box-shadow:
             inset 6px 6px 12px rgba(0, 0, 0, 0.1),
             inset -6px -6px 12px rgba(255, 255, 255, 0.8),
             2px 2px 6px rgba(0, 0, 0, 0.05);
+        
+        // Match height with other grid items in row 2
+        height: 100%; // Take full height of grid row (same as engine__search and engine__preview)
+        width: 100%;  // Take full width of grid column
+        min-height: 0; // Allow shrinking below content size
+        min-width: 0;  // Allow shrinking below content size
 
         // Ensure canvas maintains A4 dimensions
         canvas {
-            width: 794px;
-            height: 1123px;
-            max-width: none; // Override media.scss
+            width: 794px !important;
+            height: 1123px !important;
+            max-width: none !important; // Override media.scss more forcefully
+            max-height: none !important; // Ensure height is also not constrained
             display: block;
             margin: 0 auto; // Center the canvas
+            flex-shrink: 0; // Prevent canvas from shrinking
+        }
+        
+        // Canvas placeholder styling
+        .canvas__placeholder {
+            width: 794px;
+            height: 1123px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            border: 2px dashed var(--color-neutral-300);
+            border-radius: var(--radius-large);
+            background: var(--color-neutral-50);
         }
     }
 

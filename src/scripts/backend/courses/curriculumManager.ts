@@ -17,7 +17,7 @@ interface ContentLoadConfig {
  duration: number; // in minutes
  topicsPerLesson: number;
  objectivesPerTopic: number;
- tasksPerTopic: number;
+ tasksPerObjective: number;
  isRecommended: boolean;
  recommendationText: string;
 }
@@ -31,7 +31,7 @@ interface DurationPreset {
   rationale: string;
 }
 
-type PreviewMode = "titles" | "topics" | "objectives" | "all";
+type PreviewMode = "titles" | "topics" | "objectives" | "tasks" | "all";
 
 class CurriculumManager {
  private courseId: string;
@@ -91,22 +91,28 @@ class CurriculumManager {
    // Get course ID from parameter, URL, or session storage
    this.courseId = courseId || this.getCourseId();
    
-   // Load saved preview mode from localStorage
-   this.currentPreviewMode = this.getStoredPreviewMode();
+   // Load saved preview mode from localStorage (or force default to 'all' for better UX)
+   this.currentPreviewMode = "all"; // Force to show full structure by default
+   this.savePreviewMode(this.currentPreviewMode); // Save the default
 
    console.log('📚 CurriculumManager initializing with course ID:', this.courseId);
 
  if (!this.courseId) {
  console.warn("⚠️ No course ID available for curriculum management - some features may be limited");
- // Still initialize elements and basic functionality
- this.initializeElements();
- this.bindEvents();
+ // Still initialize elements and basic functionality but delay slightly for DOM readiness
+ setTimeout(() => {
+   this.initializeElements();
+   this.bindEvents();
+ }, 100);
  return;
  }
 
- this.initializeElements();
- this.bindEvents();
- this.initializeCurriculum();
+ // For existing courses, initialize immediately and then load data
+ setTimeout(() => {
+   this.initializeElements();
+   this.bindEvents();
+   this.initializeCurriculum();
+ }, 100);
  }
 
  private getCourseId(): string {
@@ -150,17 +156,6 @@ class CurriculumManager {
  } catch (error) {
  console.error("Error initializing curriculum:", error);
  }
- }
-
- private getStoredPreviewMode(): PreviewMode {
-   const stored = localStorage.getItem('curriculum-preview-mode');
-   const validModes: PreviewMode[] = ["titles", "topics", "objectives", "all"];
-   
-   if (stored && validModes.includes(stored as PreviewMode)) {
-     return stored as PreviewMode;
-   }
-   
-   return "all"; // default fallback
  }
 
  private savePreviewMode(mode: PreviewMode): void {
@@ -290,7 +285,7 @@ class CurriculumManager {
      duration,
      topicsPerLesson: selectedPreset.defaultTopics,
      objectivesPerTopic: selectedPreset.defaultObjectives,
-     tasksPerTopic: selectedPreset.defaultTasks,
+     tasksPerObjective: selectedPreset.defaultTasks,
      isRecommended,
      recommendationText
    };
@@ -310,8 +305,27 @@ class CurriculumManager {
    const objectivesInput = document.getElementById('curriculum-objectives') as HTMLInputElement;
    const tasksInput = document.getElementById('curriculum-tasks') as HTMLInputElement;
 
+   console.log('🔧 Setting up duration configuration...', {
+     durationOptions: durationOptions.length,
+     recommendationElement: !!recommendationElement,
+     topicsInput: !!topicsInput,
+     objectivesInput: !!objectivesInput,
+     tasksInput: !!tasksInput
+   });
+
    if (!recommendationElement || !topicsInput || !objectivesInput || !tasksInput) {
-     console.error('Duration configuration elements not found');
+     console.error('❌ Duration configuration elements not found:', {
+       recommendationElement: !!recommendationElement,
+       topicsInput: !!topicsInput,
+       objectivesInput: !!objectivesInput,
+       tasksInput: !!tasksInput
+     });
+     
+     // Try again after a short delay in case DOM isn't ready
+     setTimeout(() => {
+       console.log('🔄 Retrying duration configuration setup...');
+       this.setupDurationConfiguration();
+     }, 1000);
      return;
    }
 
@@ -326,9 +340,11 @@ class CurriculumManager {
        // Remove active class from all options
        durationOptions.forEach(opt => {
          opt.classList.remove('button--primary');
+         opt.classList.add('button--outline'); // Ensure outline class is present
        });
        
        // Add active class to clicked option
+       button.classList.remove('button--outline'); // Remove outline class
        button.classList.add('button--primary');
        
        // Update configuration based on selection
@@ -346,7 +362,7 @@ class CurriculumManager {
          duration: this.scheduledLessonDuration,
          topicsPerLesson: preset.defaultTopics,
          objectivesPerTopic: preset.defaultObjectives,
-         tasksPerTopic: preset.defaultTasks,
+         tasksPerObjective: preset.defaultTasks,
          isRecommended: this.isRecommendedDuration(durationType, this.scheduledLessonDuration),
          recommendationText: this.getRecommendationText(durationType, this.scheduledLessonDuration)
        };
@@ -373,7 +389,7 @@ class CurriculumManager {
    // Auto-select the recommended duration option (but don't override existing curriculum structure)
    this.autoSelectRecommendedDuration();
    
-   // Populate inputs with current curriculum structure if it exists (this should override defaults)
+   // Populate inputs with current curriculum structure if it exists, otherwise use recommended defaults
    this.populateInputsFromExistingCurriculum();
  }
 
@@ -393,29 +409,50 @@ class CurriculumManager {
      if (firstLesson && firstLesson.topics && firstLesson.topics.length > 0) {
        const topicsCount = firstLesson.topics.length;
        const objectivesCount = firstLesson.topics[0].objectives ? firstLesson.topics[0].objectives.length : 2;
-       const tasksCount = firstLesson.topics[0].tasks ? firstLesson.topics[0].tasks.length : 2;
+       // Calculate tasks per objective: total tasks divided by objectives
+       const totalTasksInTopic = firstLesson.topics[0].tasks ? firstLesson.topics[0].tasks.length : 4;
+       const tasksPerObjectiveCount = objectivesCount > 0 ? Math.ceil(totalTasksInTopic / objectivesCount) : 2;
+       
+       // Ensure values don't exceed input constraints
+       const validTasksPerObjective = Math.min(Math.max(tasksPerObjectiveCount, 1), 5); // Between 1-5
 
        topicsInput.value = topicsCount.toString();
        objectivesInput.value = objectivesCount.toString();
-       tasksInput.value = tasksCount.toString();
+       tasksInput.value = validTasksPerObjective.toString();
 
-       // Update content load config to match existing structure
-       if (this.contentLoadConfig) {
-         this.contentLoadConfig.topicsPerLesson = topicsCount;
-         this.contentLoadConfig.objectivesPerTopic = objectivesCount;
-         this.contentLoadConfig.tasksPerTopic = tasksCount;
-         
-         console.log('🔧 ContentLoadConfig updated from existing curriculum:', {
-           topics: this.contentLoadConfig.topicsPerLesson,
-           objectives: this.contentLoadConfig.objectivesPerTopic,
-           tasks: this.contentLoadConfig.tasksPerTopic
-         });
-       }
-
-       console.log('📚 Populated inputs from existing curriculum:', {
+         // Update content load config to match existing structure
+         if (this.contentLoadConfig) {
+           this.contentLoadConfig.topicsPerLesson = topicsCount;
+           this.contentLoadConfig.objectivesPerTopic = objectivesCount;
+           this.contentLoadConfig.tasksPerObjective = validTasksPerObjective;
+           
+           console.log('🔧 ContentLoadConfig updated from existing curriculum:', {
+             topics: this.contentLoadConfig.topicsPerLesson,
+             objectives: this.contentLoadConfig.objectivesPerTopic,
+             tasks: this.contentLoadConfig.tasksPerObjective,
+             totalTasksInTopic: totalTasksInTopic,
+             calculatedTasksPerObjective: tasksPerObjectiveCount,
+             validTasksPerObjective: validTasksPerObjective
+           });
+         }       console.log('📚 Populated inputs from existing curriculum:', {
          topics: topicsCount,
          objectives: objectivesCount,
-         tasks: tasksCount
+         tasksPerObjective: validTasksPerObjective,
+         totalTasksInTopic: totalTasksInTopic,
+         calculatedValue: tasksPerObjectiveCount
+       });
+     }
+   } else {
+     // No existing curriculum, set inputs to recommended duration defaults
+     if (this.contentLoadConfig) {
+       topicsInput.value = this.contentLoadConfig.topicsPerLesson.toString();
+       objectivesInput.value = this.contentLoadConfig.objectivesPerTopic.toString();
+       tasksInput.value = this.contentLoadConfig.tasksPerObjective.toString();
+       
+       console.log('📋 Set inputs to default configuration:', {
+         topics: this.contentLoadConfig.topicsPerLesson,
+         objectives: this.contentLoadConfig.objectivesPerTopic,
+         tasks: this.contentLoadConfig.tasksPerObjective
        });
      }
    }
@@ -440,12 +477,12 @@ class CurriculumManager {
 
    this.contentLoadConfig.topicsPerLesson = topics;
    this.contentLoadConfig.objectivesPerTopic = objectives;
-   this.contentLoadConfig.tasksPerTopic = tasks;
+   this.contentLoadConfig.tasksPerObjective = tasks;
 
    console.log('📝 Input values changed (before debounce):', {
      topics: this.contentLoadConfig.topicsPerLesson,
      objectives: this.contentLoadConfig.objectivesPerTopic,
-     tasks: this.contentLoadConfig.tasksPerTopic
+     tasks: this.contentLoadConfig.tasksPerObjective
    });
 
    // Debounce the actual save operation
@@ -461,10 +498,30 @@ class CurriculumManager {
  ): void {
    const isRecommended = this.isRecommendedDuration(durationType, this.scheduledLessonDuration);
    const recommendationText = this.getRecommendationText(durationType, this.scheduledLessonDuration);
+   const preset = this.durationPresets[durationType];
    
    // Update recommendation text and styling
    recommendationElement.className = `curriculum__recommendation ${isRecommended ? 'curriculum__recommendation--recommended' : 'curriculum__recommendation--not-recommended'}`;
    recommendationElement.textContent = recommendationText;
+
+   // Update duration info card
+   const durationInfoCard = document.getElementById('curriculum-duration-info');
+   const durationInfoText = durationInfoCard?.querySelector('.curriculum__duration-text');
+   
+   if (durationInfoCard && durationInfoText) {
+     // Show the card
+     durationInfoCard.style.display = 'block';
+     
+     // Generate duration text based on the preset
+     let durationText = '';
+     if (preset.maxDuration === 999) {
+       durationText = 'Ideal for lessons longer than 180 minutes';
+     } else {
+       durationText = `Ideal for lessons up to ${preset.maxDuration} minutes`;
+     }
+     
+     durationInfoText.textContent = durationText;
+   }
  }
 
  private isRecommendedDuration(durationType: keyof typeof this.durationPresets, actualDuration: number): boolean {
@@ -489,26 +546,9 @@ class CurriculumManager {
    }
  }
 
- private getRecommendationText(durationType: keyof typeof this.durationPresets, actualDuration: number): string {
-   if (this.isRecommendedDuration(durationType, actualDuration)) {
-     return "Recommended";
-   }
-   
-   const preset = this.durationPresets[durationType];
-   
-   if (durationType === 'halfFull') {
-     return actualDuration <= 180 ? "Not recommended: too short" : "Recommended";
-   }
-   
-   const previousMaxDuration = this.getPreviousMaxDuration(durationType);
-   
-   if (actualDuration <= previousMaxDuration) {
-     return "Not recommended: too short";
-   } else if (actualDuration > preset.maxDuration) {
-     return "Not recommended: too long";
-   }
-   
-   return "Recommended";
+ private getRecommendationText(_durationType: keyof typeof this.durationPresets, _actualDuration: number): string {
+   // Return empty string to remove recommendation text
+   return "";
  }
 
  private autoSelectRecommendedDuration(): void {
@@ -529,7 +569,29 @@ class CurriculumManager {
      recommendedType = 'halfFull';
    }
    
-   // Don't click the button - just set the visual state
+   // Update contentLoadConfig with recommended preset values
+   const preset = this.durationPresets[recommendedType];
+   if (!this.contentLoadConfig) {
+     this.contentLoadConfig = {
+       type: preset.type,
+       duration: this.scheduledLessonDuration,
+       topicsPerLesson: preset.defaultTopics,
+       objectivesPerTopic: preset.defaultObjectives,
+       tasksPerObjective: preset.defaultTasks,
+       isRecommended: this.isRecommendedDuration(recommendedType, this.scheduledLessonDuration),
+       recommendationText: this.getRecommendationText(recommendedType, this.scheduledLessonDuration)
+     };
+     
+     console.log('🎯 Auto-selected contentLoadConfig:', {
+       type: recommendedType,
+       duration: this.scheduledLessonDuration,
+       topics: preset.defaultTopics,
+       objectives: preset.defaultObjectives,
+       tasks: preset.defaultTasks
+     });
+   }
+   
+   // Set the visual state
    this.setDurationButtonVisualState(recommendedType);
  }
 
@@ -542,15 +604,19 @@ class CurriculumManager {
    // Remove active class from all options
    durationOptions.forEach(opt => {
      opt.classList.remove('button--primary');
+     opt.classList.add('button--outline'); // Ensure outline class is present
    });
    
    // Find and activate the correct button
    const targetButton = document.querySelector(`[data-duration="${durationType}"]`) as HTMLButtonElement;
    if (targetButton) {
+     targetButton.classList.remove('button--outline'); // Remove outline class
      targetButton.classList.add('button--primary');
      
      // Update configuration based on selection (visual only, don't update inputs)
      this.updateConfigurationFromSelection(durationType, recommendationElement);
+     
+     console.log(`✅ Auto-selected recommended duration: ${durationType} (${this.scheduledLessonDuration} minutes)`);
    }
  }
 
@@ -572,7 +638,7 @@ class CurriculumManager {
      console.log('🔄 Regenerating curriculum with new structure:', {
        topics: this.contentLoadConfig.topicsPerLesson,
        objectives: this.contentLoadConfig.objectivesPerTopic,
-       tasks: this.contentLoadConfig.tasksPerTopic
+       tasks: this.contentLoadConfig.tasksPerObjective
      });
      
      // Double-check the content load config values
@@ -695,37 +761,54 @@ class CurriculumManager {
  private createCurriculumStructure(numLessons: number): CurriculumLesson[] {
  if (!this.contentLoadConfig) return [];
 
+ console.log('🏗️ Creating curriculum structure with:', {
+   numLessons,
+   topicsPerLesson: this.contentLoadConfig.topicsPerLesson,
+   objectivesPerTopic: this.contentLoadConfig.objectivesPerTopic,
+   tasksPerObjective: this.contentLoadConfig.tasksPerObjective
+ });
+
  const curriculum: CurriculumLesson[] = [];
 
  for (let i = 1; i <= numLessons; i++) {
  const lesson: CurriculumLesson = {
  lessonNumber: i,
- title: `Lesson ${i}`,
+ title: "",
  topics: [],
  };
 
+ console.log(`📖 Creating lesson ${i} with ${this.contentLoadConfig.topicsPerLesson} topics`);
+
  for (let j = 1; j <= this.contentLoadConfig.topicsPerLesson; j++) {
  const topic: CurriculumTopic = {
- title: `Topic ${j}`,
+ title: "",
  objectives: [],
  tasks: [],
  };
 
  // Add objectives
  for (let k = 1; k <= this.contentLoadConfig.objectivesPerTopic; k++) {
- topic.objectives.push(`Objective ${k}`);
+ topic.objectives.push("");
  }
 
- // Add tasks
- for (let l = 1; l <= this.contentLoadConfig.tasksPerTopic; l++) {
- topic.tasks.push(`Task ${l}`);
+ // Add tasks - now creating tasksPerObjective for each objective
+ const totalTasksForTopic = this.contentLoadConfig.objectivesPerTopic * this.contentLoadConfig.tasksPerObjective;
+ for (let l = 1; l <= totalTasksForTopic; l++) {
+ topic.tasks.push("");
  }
 
  lesson.topics.push(topic);
+ console.log(`  📋 Added topic ${j} with ${topic.objectives.length} objectives and ${topic.tasks.length} tasks`);
  }
 
  curriculum.push(lesson);
+ console.log(`✅ Completed lesson ${i} with ${lesson.topics.length} topics`);
  }
+
+ console.log('🎯 Final curriculum structure created:', {
+   totalLessons: curriculum.length,
+   eachLessonHasTopics: curriculum.map(lesson => lesson.topics.length)
+ });
 
  return curriculum;
  }
@@ -790,6 +873,24 @@ class CurriculumManager {
    );
    if (!previewContainer || !Array.isArray(this.currentCurriculum)) return;
    
+   // Enhanced debugging for preview rendering
+   console.log('🎨 Rendering curriculum preview with data:', {
+     lessonsCount: this.currentCurriculum.length,
+     previewMode: this.currentPreviewMode,
+     contentLoadConfig: this.contentLoadConfig,
+     detailedStructure: this.currentCurriculum.map((lesson) => ({
+       lessonNumber: lesson.lessonNumber,
+       title: lesson.title,
+       topicsCount: lesson.topics.length,
+       topics: lesson.topics.map((topic, topicIndex) => ({
+         topicIndex,
+         title: topic.title,
+         objectivesCount: topic.objectives.length,
+         tasksCount: topic.tasks.length
+       }))
+     }))
+   });
+   
    // Show loading state first
    previewContainer.innerHTML = '<div class="loading-state text--secondary">Loading curriculum...</div>';
    
@@ -808,12 +909,12 @@ class CurriculumManager {
    } else {
      this.currentCurriculum.forEach((lesson) => {
        if (this.currentPreviewMode === "all") {
-         // Complete lesson template structure
+         // Complete lesson template structure - ALL elements editable
          html += `
            <div class="lesson">
              <h3 class="lesson__title heading heading--large text--primary" contenteditable="true" 
-                  data-lesson="${lesson.lessonNumber}" data-field="title">
-               Lesson ${lesson.lessonNumber}: ${lesson.title}
+                  data-lesson="${lesson.lessonNumber}" data-field="title" placeholder="Enter lesson title...">
+               ${lesson.title || `Lesson ${lesson.lessonNumber}`}
              </h3>
              
              <div class="lesson__meta">
@@ -825,24 +926,58 @@ class CurriculumManager {
            html += `
              <div class="topic">
                <h4 class="topic__title heading heading--medium text--secondary" contenteditable="true" 
-                    data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title">
-                 ${topic.title}
+                    data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title"
+                    data-placeholder="Click to add topic title...">
+                 ${topic.title || `Topic ${topicIndex + 1}`}
                </h4>
                
-               <div class="topic__objectives">
-                 <strong class="text--medium">Learning Objectives:</strong>
-                 <ul class="objectives__list">`;
+               <div class="topic__objectives">`;
            
            topic.objectives.forEach((objective, objIndex) => {
              html += `
-                   <li class="text--secondary" contenteditable="true" 
-                       data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}">
-                     ${objective}
-                   </li>`;
+                 <div class="objective-group">
+                   <div class="objective-title">
+                     <span class="objective-text text--secondary" contenteditable="true" 
+                           data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}"
+                           data-placeholder="Click to add learning objective...">
+                       ${objective || `Objective ${objIndex + 1}`}
+                     </span>
+                   </div>`;
+             
+             // Calculate tasks for this specific objective
+             // tasksPerObjective is how many tasks each objective should have
+             if (topic.tasks && topic.tasks.length > 0 && topic.objectives.length > 0) {
+               const tasksPerObjective = this.contentLoadConfig?.tasksPerObjective || 2;
+               const startTaskIndex = objIndex * tasksPerObjective;
+               const endTaskIndex = Math.min(startTaskIndex + tasksPerObjective, topic.tasks.length);
+               
+               if (startTaskIndex < topic.tasks.length) {
+                 html += `
+                   <div class="objective-tasks">
+                     <ul class="tasks__list">`;
+                 
+                 for (let taskIdx = startTaskIndex; taskIdx < endTaskIndex; taskIdx++) {
+                   if (topic.tasks[taskIdx] !== undefined) {
+                     html += `
+                         <li class="text--tertiary" contenteditable="true" 
+                             data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-task="${taskIdx}"
+                             data-placeholder="Click to add task...">
+                           ${topic.tasks[taskIdx] || `Task ${(taskIdx % tasksPerObjective) + 1}`}
+                         </li>`;
+                   }
+                 }
+                 
+                 html += `
+                     </ul>
+                   </div>`;
+               }
+             }
+             
+             html += `
+                 </div>`;
            });
            
            html += `
-                 </ul>
                </div>
              </div>`;
          });
@@ -850,30 +985,32 @@ class CurriculumManager {
          html += `</div>`;
          
        } else if (this.currentPreviewMode === "titles") {
-         // Just lesson titles
+         // Just lesson titles - ONLY editable lesson titles
          html += `
            <div class="lesson lesson--simple">
              <h3 class="lesson__title heading heading--large text--primary" contenteditable="true" 
-                  data-lesson="${lesson.lessonNumber}" data-field="title">
-               Lesson ${lesson.lessonNumber}: ${lesson.title}
+                  data-lesson="${lesson.lessonNumber}" data-field="title"
+                  data-placeholder="Click to add lesson title...">
+               ${lesson.title || `Lesson ${lesson.lessonNumber}`}
              </h3>
            </div>`;
            
        } else if (this.currentPreviewMode === "topics") {
-         // Lessons with topics
+         // Lessons with topics - lesson titles NOT editable, only topic titles
          html += `
            <div class="lesson lesson--medium">
-             <h3 class="lesson__title heading heading--large text--primary" contenteditable="true" 
+             <h3 class="lesson__title heading heading--large text--primary" contenteditable="false" 
                   data-lesson="${lesson.lessonNumber}" data-field="title">
-               Lesson ${lesson.lessonNumber}: ${lesson.title}
+               ${lesson.title || `Lesson ${lesson.lessonNumber}`}
              </h3>`;
              
          lesson.topics.forEach((topic, topicIndex) => {
            html += `
              <div class="topic topic--simple">
                <h4 class="topic__title heading heading--medium text--secondary" contenteditable="true" 
-                    data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title">
-                 ${topic.title}
+                    data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title"
+                    data-placeholder="Click to add topic title...">
+                 ${topic.title || `Topic ${topicIndex + 1}`}
                </h4>
              </div>`;
          });
@@ -881,34 +1018,105 @@ class CurriculumManager {
          html += `</div>`;
          
        } else if (this.currentPreviewMode === "objectives") {
-         // Lessons with topics and objectives
+         // Lessons with topics and objectives - ONLY objectives editable
          html += `
            <div class="lesson lesson--detailed">
-             <h3 class="lesson__title heading heading--large text--primary" contenteditable="true" 
+             <h3 class="lesson__title heading heading--large text--primary" contenteditable="false" 
                   data-lesson="${lesson.lessonNumber}" data-field="title">
-               Lesson ${lesson.lessonNumber}: ${lesson.title}
+               ${lesson.title || `Lesson ${lesson.lessonNumber}`}
              </h3>`;
              
          lesson.topics.forEach((topic, topicIndex) => {
            html += `
              <div class="topic">
-               <h4 class="topic__title heading heading--medium text--secondary" contenteditable="true" 
+               <h4 class="topic__title heading heading--medium text--secondary" contenteditable="false" 
                     data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title">
-                 ${topic.title}
+                 ${topic.title || `Topic ${topicIndex + 1}`}
                </h4>
                
-               <ul class="objectives__list">`;
+               <div class="topic__objectives">`;
            
            topic.objectives.forEach((objective, objIndex) => {
              html += `
-                 <li class="text--secondary" contenteditable="true" 
-                     data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}">
-                   ${objective}
-                 </li>`;
+                 <div class="objective-group">
+                   <div class="objective-title">
+                     <span class="objective-text text--secondary" contenteditable="true" 
+                           data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}"
+                           data-placeholder="Click to add learning objective...">
+                       ${objective || `Objective ${objIndex + 1}`}
+                     </span>
+                   </div>
+                 </div>`;
            });
            
            html += `
-               </ul>
+               </div>
+             </div>`;
+         });
+         
+         html += `</div>`;
+         
+       } else if (this.currentPreviewMode === "tasks") {
+         // Lessons with topics, objectives, and tasks - ONLY tasks editable
+         html += `
+           <div class="lesson lesson--full">
+             <h3 class="lesson__title heading heading--large text--primary" contenteditable="false" 
+                  data-lesson="${lesson.lessonNumber}" data-field="title">
+               ${lesson.title || `Lesson ${lesson.lessonNumber}`}
+             </h3>`;
+             
+         lesson.topics.forEach((topic, topicIndex) => {
+           html += `
+             <div class="topic">
+               <h4 class="topic__title heading heading--medium text--secondary" contenteditable="false" 
+                    data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title">
+                 ${topic.title || `Topic ${topicIndex + 1}`}
+               </h4>
+               
+               <div class="topic__objectives">`;
+           
+           topic.objectives.forEach((objective, objIndex) => {
+             html += `
+                 <div class="objective-group">
+                   <div class="objective-title">
+                     <span class="objective-text text--secondary" contenteditable="false" 
+                           data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}">
+                       ${objective || `Objective ${objIndex + 1}`}
+                     </span>
+                   </div>`;
+             
+             // Show tasks but make ONLY tasks editable
+             if (topic.tasks && topic.tasks.length > 0 && topic.objectives.length > 0) {
+               const tasksPerObjective = this.contentLoadConfig?.tasksPerObjective || 2;
+               const startTaskIndex = objIndex * tasksPerObjective;
+               const endTaskIndex = Math.min(startTaskIndex + tasksPerObjective, topic.tasks.length);
+               
+               html += `
+                   <div class="objective-tasks objective-tasks--detailed">
+                     <ul class="tasks__list tasks__list--detailed">`;
+               
+               for (let taskIdx = startTaskIndex; taskIdx < endTaskIndex; taskIdx++) {
+                 if (topic.tasks[taskIdx] !== undefined) {
+                   html += `
+                         <li class="task-item text--tertiary" contenteditable="true" 
+                             data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-task="${taskIdx}"
+                             data-placeholder="Click to add task...">
+                           ${topic.tasks[taskIdx] || `Task ${(taskIdx % tasksPerObjective) + 1}`}
+                         </li>`;
+                 }
+               }
+               
+               html += `
+                     </ul>
+                   </div>`;
+             }
+             
+             html += `
+                 </div>`;
+           });
+           
+           html += `
+               </div>
              </div>`;
          });
          
@@ -943,6 +1151,9 @@ class CurriculumManager {
  const objectiveIndex = element.dataset.objective
  ? parseInt(element.dataset.objective)
  : null;
+ const taskIndex = element.dataset.task
+ ? parseInt(element.dataset.task)
+ : null;
  const field = element.dataset.field;
  const newValue = element.textContent || "";
 
@@ -961,6 +1172,9 @@ class CurriculumManager {
  } else if (objectiveIndex !== null) {
  // Objective
  lesson.topics[topicIndex].objectives[objectiveIndex] = newValue;
+ } else if (taskIndex !== null) {
+ // Task
+ lesson.topics[topicIndex].tasks[taskIndex] = newValue;
  }
  }
 

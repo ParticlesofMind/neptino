@@ -99,18 +99,38 @@ export class CourseBuilderNavigation {
  private activateSection(sectionId: string): void {
  console.log(`🧭 Activating section: ${sectionId}`);
  
+ // Get all coursebuilder sections
+ const allSections = document.querySelectorAll('[class*="coursebuilder__"]');
+ console.log(`🔍 Found ${allSections.length} coursebuilder sections:`, allSections);
+ 
  // Hide all coursebuilder elements
  this.sections.forEach(element => {
+ console.log(`🔍 Processing element:`, element, element.className);
  element.classList.remove('coursebuilder__setup--active', 'coursebuilder__create--active', 'coursebuilder__preview--active', 'coursebuilder__launch--active');
  element.setAttribute('aria-hidden', 'true');
+ console.log(`🔍 After hiding:`, element.className);
  });
  
  // Show target coursebuilder element
  const targetElement = document.querySelector(`.coursebuilder__${sectionId}`);
+ console.log(`🎯 Looking for: .coursebuilder__${sectionId}`, targetElement);
  if (targetElement) {
  targetElement.classList.add(`coursebuilder__${sectionId}--active`);
  targetElement.setAttribute('aria-hidden', 'false');
- console.log(`🎯 Successfully navigated to coursebuilder element: ${sectionId}`);
+ console.log(`🎯 Successfully navigated to coursebuilder element: ${sectionId}`, targetElement.className);
+ 
+ // Initialize aside navigation when entering setup section
+ if (sectionId === 'setup') {
+ console.log('🧭 Entering setup section - initializing aside navigation');
+ setTimeout(() => {
+ new AsideNavigation();
+ }, 50); // Small delay to ensure DOM is ready
+ }
+ 
+ // Additional debugging - check computed styles
+ const computedStyle = window.getComputedStyle(targetElement);
+ console.log(`🎨 Computed display style:`, computedStyle.display);
+ console.log(`🎨 Computed grid-template-columns:`, computedStyle.gridTemplateColumns);
  } else {
  console.error(`❌ Coursebuilder element not found: ${sectionId}`);
  }
@@ -263,11 +283,28 @@ export class AsideNavigation {
  }
 
  private activateSection(activeLink: HTMLAnchorElement, targetSectionId: string): void {
- // Remove all active states
+ // ATOMIC OPERATION: Validate first, then change state
+ // This prevents the content from disappearing if activation fails
+ 
+ // First, validate that the target section exists
+ const targetSection = document.getElementById(targetSectionId);
+ if (!targetSection) {
+ console.error("Cannot activate section - target section not found:", targetSectionId);
+ return; // Fail fast - don't change anything if target doesn't exist
+ }
+ 
+ // If we're already on the target section, do nothing (prevents double-click issues)
+ if (activeLink.classList.contains('link--menu-active') && 
+     targetSection.classList.contains('content__article--active')) {
+ console.log('🎯 Section already active, no changes needed:', targetSectionId);
+ return;
+ }
+ 
+ // Only now that we've validated everything, remove current active states
  this.removeActiveStates();
  
- // Set new active states
- this.setActiveStates(activeLink, targetSectionId);
+ // Set new active states (we know this will succeed because we validated above)
+ this.setActiveStates(activeLink, targetSection);
  }
 
  private removeActiveStates(): void {
@@ -280,16 +317,11 @@ export class AsideNavigation {
  });
  }
 
- private setActiveStates(activeLink: HTMLAnchorElement, targetSectionId: string): void {
+ private setActiveStates(activeLink: HTMLAnchorElement, targetSection: HTMLElement): void {
+ // Accept the actual element instead of searching for it again
  activeLink.classList.add('link--menu-active');
-
- const targetSection = document.getElementById(targetSectionId);
- if (targetSection) {
  targetSection.classList.add('content__article--active');
- console.log('🎯 Successfully activated article:', targetSectionId);
- } else {
- console.error("Target section not found:", targetSectionId);
- }
+ console.log('🎯 Successfully activated article:', targetSection.id);
  }
 
  private restoreActiveSection(): void {
@@ -312,13 +344,21 @@ export class AsideNavigation {
  }
 
  private setDefaultSection(): void {
- // Always default to the first link
+ // Always default to the first link - with robust error handling
  const firstLink = this.asideLinks[0];
  const firstSectionId = firstLink?.getAttribute("data-section");
 
  if (firstLink && firstSectionId) {
  console.log('🎯 Setting default section:', firstSectionId);
  this.activateSection(firstLink, firstSectionId);
+ } else {
+ console.error('🚨 No valid first link found - navigation may be broken');
+ // As a last resort, try to activate the first article directly
+ const firstArticle = this.contentSections[0];
+ if (firstArticle) {
+ firstArticle.classList.add('content__article--active');
+ console.log('🆘 Emergency fallback: activated first article directly:', firstArticle.id);
+ }
  }
  }
 

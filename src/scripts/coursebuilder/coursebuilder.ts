@@ -202,9 +202,19 @@ export class CourseBuilderCanvas {
 
  private setupSectionNavigation(): void {
  try {
+ // Skip sidebar/aside links since CourseBuilderNavigation.ts handles them
+ // Only handle main section navigation via URL hash changes
  const navLinks = document.querySelectorAll('[data-section]');
  
+ // Don't add duplicate event handlers for aside links - CourseBuilderNavigation.ts handles them
+ // Only handle non-sidebar navigation links if any exist
  navLinks.forEach(link => {
+ // Skip sidebar menu links (they have .link--menu class and are handled by CourseBuilderNavigation.ts)
+ if (link.classList.contains('link--menu')) {
+ return; // Skip - handled by AsideNavigation in CourseBuilderNavigation.ts
+ }
+ 
+ // Handle other navigation links that aren't in the sidebar
  link.addEventListener('click', (e) => {
  e.preventDefault();
  const sectionId = (e.currentTarget as HTMLElement).getAttribute('data-section');
@@ -538,6 +548,13 @@ export class CourseBuilderCanvas {
  private updateUIForSection(sectionId: string): void {
  try {
  // Update active nav state for subsection links (in setup)
+ // Only update sidebar links if we're handling a sidebar section
+ const validSubSections = ["essentials", "classification", "templates", "schedule", "curriculum", "settings", "marketplace", "resources"];
+ const isSubSection = validSubSections.includes(sectionId);
+ 
+ // Don't interfere with CourseBuilderNavigation.ts handling of aside links
+ // Only update nav links if this is a main section change
+ if (!isSubSection) {
  const navLinks = document.querySelectorAll('[data-section]');
  navLinks.forEach(link => {
  const linkSection = link.getAttribute('data-section');
@@ -547,6 +564,7 @@ export class CourseBuilderCanvas {
  link.classList.remove('link--menu-active');
  }
  });
+ }
  
  // Update main coursebuilder element visibility
  const coursebuilderElements = document.querySelectorAll('.coursebuilder__setup, .coursebuilder__create, .coursebuilder__preview, .coursebuilder__launch');
@@ -563,32 +581,41 @@ export class CourseBuilderCanvas {
  });
  
  // If we're in setup, also ensure the correct subsection is shown
- if (sectionId === 'setup') {
+ // But only if this is a subsection navigation (not handled by CourseBuilderNavigation.ts)
+ if (sectionId === 'setup' || isSubSection) {
  // Get the hash to see which subsection we should show
  const hash = window.location.hash.substring(1);
- const subSections = ["essentials", "classification", "templates", "schedule", "curriculum", "settings", "marketplace", "resources"];
+ const targetSubSection = isSubSection ? sectionId : hash;
  
- if (subSections.includes(hash)) {
- // Show the specific subsection article
+ if (validSubSections.includes(targetSubSection)) {
+ // Show the specific subsection article - but don't interfere if CourseBuilderNavigation.ts is handling it
  const articles = document.querySelectorAll('.content__article');
+ const targetArticle = document.getElementById(targetSubSection);
+ 
+ // Only update if the target article isn't already active (avoid interference)
+ if (targetArticle && !targetArticle.classList.contains('content__article--active')) {
  articles.forEach(article => {
- if (article.id === hash) {
+ if (article.id === targetSubSection) {
  article.classList.add('content__article--active');
  } else {
  article.classList.remove('content__article--active');
  }
  });
  
- // Update the aside navigation
+ // Update the aside navigation - but only if not already active
  const asideLinks = document.querySelectorAll('.link--menu[data-section]');
+ const targetLink = document.querySelector(`[data-section="${targetSubSection}"]`);
+ if (targetLink && !targetLink.classList.contains('link--menu-active')) {
  asideLinks.forEach(link => {
  const linkSection = link.getAttribute('data-section');
- if (linkSection === hash) {
+ if (linkSection === targetSubSection) {
  link.classList.add('link--menu-active');
  } else {
  link.classList.remove('link--menu-active');
  }
  });
+ }
+ }
  }
  }
  } catch (error) {
