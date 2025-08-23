@@ -1,32 +1,29 @@
-
-
-
 // ==========================================================================
 // HOME PAGE - Dashboard Layout with 3x3 Grid
 // ==========================================================================
 
-.home { 
-    display: grid; 
+.home {
+    display: grid;
     grid-template-columns: auto 1fr; // Narrower sidebar
+}
 
-    // Enhance content for dashboard-specific grid layout
-    .content {
-        display: grid; 
-        grid-template-columns: repeat(3, 1fr); 
-        grid-template-rows: repeat(3, 1fr);
-        height: 100%; // Take full available height
-        padding: var(--spacing-4); // Add internal padding
+// Enhance content for dashboard-specific grid layout
+.content {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    height: 100%; // Take full available height
+    padding: var(--spacing-4); // Add internal padding
 
-        &__article {
-            grid-column: 1 / -1; // Span all columns
-            grid-row: 1 / -1; // Span all rows
-            
-            &--active {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                grid-template-rows: repeat(3, 1fr);
-                gap: var(--spacing-4);
-            }
+    &__article {
+        grid-column: 1 / -1; // Span all columns
+        grid-row: 1 / -1; // Span all rows
+
+        &--active {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: var(--spacing-4);
         }
     }
 }

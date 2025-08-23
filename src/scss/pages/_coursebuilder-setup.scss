@@ -2,18 +2,6 @@
 // HEADER VISIBILITY FIX - Prevent anchor links from hiding header
 // ==========================================================================
 
-// Prevent anchor navigation from hiding header
-html {
-    scroll-padding-top: 100px; // Account for header height when navigating to anchors
-}
-
-// Alternative approach - add scroll margin to each section
-.coursebuilder__setup,
-.coursebuilder__create,
-.coursebuilder__preview,
-.coursebuilder__launch {
-    scroll-margin-top: 100px; // Ensure header stays visible when navigating to these sections
-}
 
 // ==========================================================================
 // COURSEBUILDER ELEMENT VISIBILITY CONTROLS
@@ -25,7 +13,7 @@ html {
     &__preview,
     &__launch {
         display: none;
-        
+
         // When aria-hidden="true", force hide everything
         &[aria-hidden="true"] {
             display: none !important;
@@ -34,12 +22,11 @@ html {
     }
 
     &__setup {
+        
         &.coursebuilder__setup--active {
             display: grid;
-            grid-template-columns: 280px 1fr; // Sidebar width + flexible content
             gap: 0;
             width: 100%;
-            height: 100%; // Use available height within grid, not full viewport
         }
     }
 
@@ -50,7 +37,7 @@ html {
             overflow: hidden;
             width: 100%;
             height: 100%; // Use available height within grid, not full viewport
-            
+
             // Explicitly hide any sidebar that might be showing
             .sidebar,
             aside {
@@ -61,6 +48,7 @@ html {
 
     &__preview,
     &__launch {
+
         &.coursebuilder__preview--active,
         &.coursebuilder__launch--active {
             display: block;
@@ -101,47 +89,12 @@ html {
         display: grid;
         grid-template-columns: auto 1fr; // Sidebar and content
         gap: var(--spacing-4);
-        height: 100%; // Fill parent
-        align-items: stretch; // Sidebar spans full height
 
         // Mobile responsive
         @media (max-width: 768px) {
             grid-template-columns: 1fr;
             grid-template-rows: 1fr auto;
             gap: 0;
-        }
-
-        // Enhance content for coursebuilder-specific layout  
-        .content {
-            padding: var(--spacing-6); // More padding for forms
-            height: 100%; // Ensure content fills the available height in the grid
-            
-            // Mobile adjustments
-            @media (max-width: 768px) {
-                width: 100vw;
-                height: 100%; // Use available height within container
-                margin: 0;
-                margin-bottom: 60px;
-                border-radius: 0;
-                box-shadow: none;
-            }
-
-            // ==========================================================================
-            // CONTENT ELEMENTS (BEM: Elements)
-            // ==========================================================================
-
-            &__article {
-                &--active {
-                    display: block;
-                    width: 100%; // Ensure active articles span full width
-                }
-            }
-
-            &__section {
-                &:not(:last-child) {
-                    margin-bottom: var(--spacing-8);
-                }
-            }
         }
     }
 }
@@ -173,3 +126,36 @@ html {
     }
 }
 
+
+
+// Enhance content for coursebuilder-specific layout  
+.content {
+    padding: var(--spacing-6); // More padding for forms
+
+    // Mobile adjustments
+    @media (max-width: 768px) {
+        width: 100vw;
+        height: 100%; // Use available height within container
+        margin: 0;
+        margin-bottom: 60px;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    // ==========================================================================
+    // CONTENT ELEMENTS (BEM: Elements)
+    // ==========================================================================
+
+    &__article {
+        &--active {
+            display: block;
+            width: 100%; // Ensure active articles span full width
+        }
+    }
+
+    &__section {
+        &:not(:last-child) {
+            margin-bottom: var(--spacing-8);
+        }
+    }
+}

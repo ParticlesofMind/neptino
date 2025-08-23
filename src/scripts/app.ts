@@ -6,6 +6,7 @@
 import { initializeGlobalNavigation, initializeDashboardNavigation } from './navigation';
 import { initAuth } from './backend/auth/auth';
 import { AuthFormHandler } from './auth/AuthFormHandler';
+import './utils/pageSetupPreview';
 // import PageTransitions from './navigation/PageTransitions'; // DISABLED
 
 // Initialize global navigation system

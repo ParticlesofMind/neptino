@@ -379,8 +379,108 @@
         }
     }
 
+    // Radio input variant
+    &--radio {
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--color-neutral-300);
+        border-radius: 50%; // Circular for radio buttons
+        background-color: var(--color-input-background);
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s ease;
+        display: inline-block;
+        margin-right: var(--spacing-3);
+        flex-shrink: 0; // Prevent shrinking in flex containers
+
+        // Focus state
+        &:focus {
+            outline: none;
+            border-color: var(--color-primary-500);
+            box-shadow: 0 0 0 3px var(--color-primary-100);
+        }
+
+        // Hover state
+        &:hover:not(:disabled):not(:checked) {
+            border-color: var(--color-primary-400);
+            background-color: var(--color-primary-50);
+        }
+
+        // Checked state
+        &:checked {
+            background-color: var(--color-primary-500);
+            border-color: var(--color-primary-500);
+
+            // Radio dot
+            &::after {
+                content: '';
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background-color: white;
+                transform: translate(-50%, -50%);
+                opacity: 1;
+                transition: all 0.2s ease;
+            }
+
+            &:hover {
+                background-color: var(--color-primary-600);
+                border-color: var(--color-primary-600);
+            }
+        }
+
+        // Disabled state
+        &:disabled {
+            background-color: var(--color-neutral-100);
+            border-color: var(--color-neutral-200);
+            cursor: not-allowed;
+            opacity: 0.6;
+
+            &:checked {
+                background-color: var(--color-neutral-300);
+                border-color: var(--color-neutral-300);
+
+                &::after {
+                    background-color: var(--color-neutral-500);
+                }
+            }
+        }
+    }
+
     // Checkbox with success state
     &--checkbox.input--success {
+        border-color: var(--color-success-500);
+
+        &:focus {
+            box-shadow: 0 0 0 3px var(--color-success-100);
+        }
+
+        &:checked {
+            background-color: var(--color-success-500);
+            border-color: var(--color-success-500);
+        }
+    }
+
+    // Radio with error state
+    &--radio.input--error {
+        border-color: var(--color-error-500);
+
+        &:focus {
+            box-shadow: 0 0 0 3px var(--color-error-100);
+        }
+
+        &:checked {
+            background-color: var(--color-error-500);
+            border-color: var(--color-error-500);
+        }
+    }
+
+    // Radio with success state
+    &--radio.input--success {
         border-color: var(--color-success-500);
 
         &:focus {

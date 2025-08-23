@@ -679,68 +679,85 @@
 
         <!-- Page Setup Article -->
         <article class="content__article" id="page-setup">
-          <!-- Margins Section -->
-          <div class="settings__section">
-            <h4 class="settings__heading">Margins</h4>
+          <div class="page-setup">
+            <div class="page-setup__config">
+              <h3 class="header">Page Configuration</h3>
+              <div class="page-setup__content">
+                <!-- Orientation -->
+                <div class="page-setup__section">
+                  <label class="page-setup__label">Orientation</label>
+                  <div class="page-setup__options">
+                    <label class="page-setup__option">
+                      <input class="input input--radio" type="radio" name="orientation" value="portrait" checked />
+                      Portrait
+                    </label>
+                    <label class="page-setup__option">
+                      <input class="input input--radio" type="radio" name="orientation" value="landscape" />
+                      Landscape
+                    </label>
+                  </div>
+                </div>
 
-            <!-- Display Unit Selection -->
-            <div class="settings__margins">
-              <div class="settings__units">
-                <span class="settings__label">Display in</span>
-                <div class="settings__unit-options">
-                  <label class="form__label">
-                    <input class="input input--checkbox" type="radio" name="margin-unit" value="inches" />
-                    Inches
-                  </label>
-                  <label class="form__label">
-                    <input class="input input--checkbox" type="radio" name="margin-unit" value="centimeters" checked />
-                    Centimeters
-                  </label>
+                <!-- Canvas Size -->
+                <div class="page-setup__section">
+                  <label class="page-setup__label">Canvas Size</label>
+                  <div class="page-setup__options">
+                    <label class="page-setup__option">
+                      <input class="input input--radio" type="radio" name="canvas-size" value="a4" checked />
+                      A4 (210 × 297 mm)
+                    </label>
+                    <label class="page-setup__option">
+                      <input class="input input--radio" type="radio" name="canvas-size" value="us-letter" />
+                      US Letter (8.5" × 11" / 216 × 279 mm)
+                    </label>
+                    <label class="page-setup__option">
+                      <input class="input input--radio" type="radio" name="canvas-size" value="a3" />
+                      A3 (297 × 420 mm)
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Margins -->
+                <div class="page-setup__section">
+                  <label class="page-setup__label">Margins</label>
+                  <div class="page-setup__margins">
+                    <div class="page-setup__margin-group">
+                      <label class="page-setup__margin">
+                        Top
+                        <input class="input input--number" type="number" name="margin_top" value="25" step="1" min="0" max="100" />
+                        <span class="page-setup__unit">mm</span>
+                      </label>
+                      <label class="page-setup__margin">
+                        Bottom
+                        <input class="input input--number" type="number" name="margin_bottom" value="25" step="1" min="0" max="100" />
+                        <span class="page-setup__unit">mm</span>
+                      </label>
+                    </div>
+                    <div class="page-setup__margin-group">
+                      <label class="page-setup__margin">
+                        Left
+                        <input class="input input--number" type="number" name="margin_left" value="25" step="1" min="0" max="100" />
+                        <span class="page-setup__unit">mm</span>
+                      </label>
+                      <label class="page-setup__margin">
+                        Right
+                        <input class="input input--number" type="number" name="margin_right" value="25" step="1" min="0" max="100" />
+                        <span class="page-setup__unit">mm</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <!-- Margin Inputs Grid -->
-              <div class="settings__grid">
-                <label class="form__label">
-                  Top
-                  <div class="settings__input-wrapper">
-                    <input class="input input--number" type="number" name="margin_top"
-                      value="2.54" step="0.01" min="0" />
-                    <span class="settings__unit">cm</span>
-                  </div>
-                </label>
-
-                <label class="form__label">
-                  Bottom
-                  <div class="settings__input-wrapper">
-                    <input class="input input--number" type="number" name="margin_bottom"
-                      value="2.54" step="0.01" min="0" />
-                    <span class="settings__unit">cm</span>
-                  </div>
-                </label>
-
-                <label class="form__label">
-                  Left
-                  <div class="settings__input-wrapper">
-                    <input class="input input--number" type="number" name="margin_left"
-                      value="2.54" step="0.01" min="0" />
-                    <span class="settings__unit">cm</span>
-                  </div>
-                </label>
-
-                <label class="form__label">
-                  Right
-                  <div class="settings__input-wrapper">
-                    <input class="input input--number" type="number" name="margin_right"
-                      value="2.54" step="0.01" min="0" />
-                    <span class="settings__unit">cm</span>
-                  </div>
-                </label>
-              </div>
-
-              <!-- Save Status -->
-              <div class="settings__status" id="margins-save-status">
-                <span class="settings__status-text">Margins will be saved automatically</span>
+            <div class="page-setup__preview">
+              <h3 class="header">Page Preview</h3>
+              <div class="page-setup__canvas-container">
+                <canvas class="page-setup__canvas" id="page-preview-canvas" width="400" height="500"></canvas>
+                <div class="page-setup__canvas-info">
+                  <span class="page-setup__dimensions" id="canvas-dimensions">210 × 297 mm (A4 Portrait)</span>
+                  <span class="page-setup__margins-info" id="margins-info">Margins: 25mm all sides</span>
+                </div>
               </div>
             </div>
           </div>

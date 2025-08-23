@@ -36,6 +36,7 @@
 @use 'layout/classification';
 @use 'layout/engine';
 @use 'layout/settings';
+@use 'layout/page-setup';         // Page setup component
 // PAGES (page styling)
 // ==========================================================================
 @use 'pages/home';

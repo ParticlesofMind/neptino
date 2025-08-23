@@ -7,10 +7,7 @@
   background: rgba(var(--color-background-rgb), 0.85);
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
-  height: 100%; // Ensure content takes full available height
-  display: flex;
-  flex-direction: column;
+
 
   // Mobile responsive
   @media (max-width: 768px) {
@@ -24,12 +21,6 @@
 
   &__article {
     display: none;
-    flex: 1; // Make active articles fill remaining height
-    
-    &--active {
-      display: flex;
-      flex-direction: column;
-    }
   }
 }
 
