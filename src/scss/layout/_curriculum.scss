@@ -2,17 +2,16 @@
     display: grid; 
     grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-8);
+    height: 100%; // Fill the full height of the container
 
     // Smooth scrolling for both sections
-    * {
-        scroll-behavior: smooth;
-    }
 
     &__config { 
+        
         display: flex;
         flex-direction: column;
         gap: var(--spacing-5);
-        max-height: 70vh;
+        height: 100%; // Fill available height instead of viewport height
         overflow-y: auto;
         padding-right: var(--spacing-2);
 
@@ -40,8 +39,27 @@
         display: flex;
         flex-direction: column;
         gap: var(--spacing-5);
-        max-height: 70vh;
-        overflow: hidden;
+        height: 100%; // Fill available height instead of viewport height
+        overflow-y: auto; // Enable scrolling for the preview content
+
+        // Custom scrollbar styling
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: var(--color-neutral-100);
+            border-radius: var(--radius-small);
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: var(--color-neutral-300);
+            border-radius: var(--radius-small);
+
+            &:hover {
+                background: var(--color-neutral-400);
+            }
+        }
     }
 
     &__structure { 

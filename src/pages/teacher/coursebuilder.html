@@ -40,13 +40,16 @@
         <nav class="ul ul--sidebar">
           <ul class="ul ul--menu">
             <li class="ul__item ul__item--heading">
-              <h3 class="heading heading--sidebar">Required</h3>
+              <h3 class="heading heading--sidebar">Setup</h3>
             </li>
             <li class="ul__item">
               <a class="link link--menu" href="#essentials" data-section="essentials">Essentials</a>
             </li>
             <li class="ul__item">
               <a class="link link--menu" href="#classification" data-section="classification">Classification</a>
+            </li>
+            <li class="ul__item">
+              <a class="link link--menu" href="#students" data-section="students">Students</a>
             </li>
             <li class="ul__item">
               <a class="link link--menu" href="#templates" data-section="templates">Templates</a>
@@ -58,16 +61,49 @@
               <a class="link link--menu" href="#curriculum" data-section="curriculum">Curriculum</a>
             </li>
             <li class="ul__item ul__item--heading">
-              <h3 class="heading heading--sidebar">Optional</h3>
+              <h3 class="heading heading--sidebar">Publishing</h3>
+            </li>
+            <li class="ul__item">
+              <a class="link link--menu" href="#course-visibility" data-section="course-visibility">Course visibility</a>
             </li>
             <li class="ul__item">
               <a class="link link--menu" href="#marketplace" data-section="marketplace">Marketplace</a>
             </li>
             <li class="ul__item">
-              <a class="link link--menu" href="#resources" data-section="resources">Resources</a>
+              <a class="link link--menu" href="#pricing-monetization" data-section="pricing-monetization">Pricing & Monetization</a>
             </li>
             <li class="ul__item">
-              <a class="link link--menu" href="#settings" data-section="settings">Settings</a>
+              <a class="link link--menu" href="#external-integrations" data-section="external-integrations">External Integrations & APIs</a>
+            </li>
+            <li class="ul__item">
+              <a class="link link--menu" href="#communication" data-section="communication">Communication</a>
+            </li>
+            <li class="ul__item ul__item--heading">
+              <h3 class="heading heading--sidebar">Engine</h3>
+            </li>
+            <li class="ul__item">
+              <a class="link link--menu" href="#page-setup" data-section="page-setup">Page Setup</a>
+            </li>
+            <li class="ul__item">
+              <a class="link link--menu" href="#interface" data-section="interface">Interface</a>
+            </li>
+            <li class="ul__item">
+              <a class="link link--menu" href="#themes" data-section="themes">Themes</a>
+            </li>
+            <li class="ul__item">
+              <a class="link link--menu" href="#accessibility-comfort" data-section="accessibility-comfort">Accessibility & Comfort</a>
+            </li>
+            <li class="ul__item ul__item--heading">
+              <h3 class="heading heading--sidebar">Settings</h3>
+            </li>
+            <li class="ul__item">
+              <a class="link link--menu" href="#notifications-alerts" data-section="notifications-alerts">Notifications & Alerts</a>
+            </li>
+            <li class="ul__item">
+              <a class="link link--menu" href="#data-management" data-section="data-management">Data management & Backup</a>
+            </li>
+            <li class="ul__item">
+              <a class="link link--menu" href="#advanced-settings" data-section="advanced-settings">Advanced Settings</a>
             </li>
           </ul>
         </nav>
@@ -104,22 +140,15 @@
             </label>
             <label class="form__label">
               Course Image
-              <div class="image-upload">
-                <input class="image-upload__input" type="file" name="course_image" accept="image/*" required />
-                <div class="image-upload__controls">
-                  <label class="button button--outline image-upload__button" for="course-image">
-                    Change course image
-                  </label>
-                  <div class="image-upload__preview" id="image-preview" style="display: none">
-                    <img class="image-upload__img" id="preview-img" src="" alt="Course preview" />
-                    <button class="button button--small image-upload__remove" type="button" id="remove-image">
-                      ×
-                    </button>
-                  </div>
-                </div>
+              <input class="input input--file" type="file" name="course_image" accept="image/*" required />
+              <div class="image-upload__preview" id="image-preview" style="display: none">
+                <img class="image-upload__img" id="preview-img" src="" alt="Course preview" />
+                <button class="button button--small image-upload__remove" type="button" id="remove-image">
+                  ×
+                </button>
               </div>
             </label>
-            <button class="button button--primary button--large" type="submit" id="save-essentials-btn">
+            <button class="button button--primary button--medium" type="submit" id="save-essentials-btn">
               Save Course Details
             </button>
           </form>
@@ -385,71 +414,77 @@
         <!-- Schedule Article -->
         <article class="content__article" id="schedule">
           <!-- Schedule Layout -->
-          <div class="schedule__layout">
+          <div class="schedule">
             <!-- Schedule Configuration -->
             <div class="schedule__config" id="schedule-config">
               <h3 class="schedule__heading">Schedule Configuration</h3>
 
               <form class="form" id="course-schedule-form">
-                <label class="form__label">
-                  Start Date
-                  <input class="form__input" type="date" required />
-                </label>
-                <label class="form__label">
-                  End Date
-                  <input class="form__input" type="date" required />
-                </label>
+                <!-- Date Range Field Group -->
+                <div class="schedule__field-group">
+                  <label class="form__label">
+                    Start Date
+                    <input class="input input--date" type="date" id="start-date" required />
+                  </label>
+                  <label class="form__label">
+                    End Date
+                    <input class="input input--date" type="date" id="end-date" required />
+                  </label>
+                </div>
 
                 <!-- Days of Week Selection -->
                 <label class="form__label">
                   Days of the Week
                   <div class="schedule__days">
-                    <button class="button button--outline button--small schedule__days__button" type="button"
+                    <button class="button button--outline button--small schedule__day-button" type="button"
                       data-day="monday">
                       Mon
                     </button>
-                    <button class="button button--outline button--small schedule__days__button" type="button"
+                    <button class="button button--outline button--small schedule__day-button" type="button"
                       data-day="tuesday">
                       Tue
                     </button>
-                    <button class="button button--outline button--small schedule__days__button" type="button"
+                    <button class="button button--outline button--small schedule__day-button" type="button"
                       data-day="wednesday">
                       Wed
                     </button>
-                    <button class="button button--outline button--small schedule__days__button" type="button"
+                    <button class="button button--outline button--small schedule__day-button" type="button"
                       data-day="thursday">
                       Thu
                     </button>
-                    <button class="button button--outline button--small schedule__days__button" type="button"
+                    <button class="button button--outline button--small schedule__day-button" type="button"
                       data-day="friday">
                       Fri
                     </button>
-                    <button class="button button--outline button--small schedule__days__button" type="button"
+                    <button class="button button--outline button--small schedule__day-button" type="button"
                       data-day="saturday">
                       Sat
                     </button>
-                    <button class="button button--outline button--small schedule__days__button" type="button"
+                    <button class="button button--outline button--small schedule__day-button" type="button"
                       data-day="sunday">
                       Sun
                     </button>
                   </div>
                 </label>
 
-                <label class="form__label">
-                  Start Time
-                  <input class="form__input" type="time" required />
-                </label>
-                <label class="form__label">
-                  End Time
-                  <input class="form__input" type="time" required />
-                </label>
+                <!-- Time Range Field Group -->
+                <div class="schedule__field-group">
+                  <label class="form__label">
+                    Start Time
+                    <input class="input input--time" type="time" id="start-time" required />
+                  </label>
+                  <label class="form__label">
+                    End Time
+                    <input class="input input--time" type="time" id="end-time" required />
+                  </label>
+                </div>
 
                 <!-- Schedule Action Buttons -->
                 <div class="button-group">
                   <button class="button button--primary" type="button" id="schedule-course-btn" disabled>
                     Schedule Course
                   </button>
-                  <button class="button button--outline" type="button" id="delete-schedule-btn" style="display: none;">
+                  <button class="button button--delete" type="button" id="delete-schedule-btn" style="display: none;">
                     Delete Schedule
                   </button>
                 </div>
@@ -553,111 +588,8 @@
         </article>
         <!-- Settings Article -->
         <article class="content__article" id="settings">
-          <!-- Margins Section -->
-          <div class="coursebuilder-settings-section">
-            <h4 class="coursebuilder-settings-section__heading">Margins</h4>
-
-            <!-- Display Unit Selection -->
-            <div class="coursebuilder-margin-settings">
-              <div class="coursebuilder-margin-settings__units">
-                <span class="coursebuilder-margin-settings__label">Display in</span>
-                <div class="coursebuilder-margin-settings__unit-options">
-                  <label class="form__label">
-                    <input class="form__checkbox" type="radio" name="margin-unit" value="inches" />
-                    Inches
-                  </label>
-                  <label class="form__label">
-                    <input class="form__checkbox" type="radio" name="margin-unit" value="centimeters" checked />
-                    Centimeters
-                  </label>
-                </div>
-              </div>
-
-              <!-- Margin Inputs Grid -->
-              <div class="coursebuilder-margin-settings__grid">
-                <label class="form__label">
-                  Top
-                  <div class="coursebuilder-margin-settings__input-wrapper">
-                    <input class="form__input coursebuilder-margin-settings__input" type="number" name="margin_top"
-                      value="2.54" step="0.01" min="0" />
-                    <span class="coursebuilder-margin-settings__unit">cm</span>
-                  </div>
-                </label>
-
-                <label class="form__label">
-                  Bottom
-                  <div class="coursebuilder-margin-settings__input-wrapper">
-                    <input class="form__input coursebuilder-margin-settings__input" type="number" name="margin_bottom"
-                      value="2.54" step="0.01" min="0" />
-                    <span class="coursebuilder-margin-settings__unit">cm</span>
-                  </div>
-                </label>
-
-                <label class="form__label">
-                  Left
-                  <div class="coursebuilder-margin-settings__input-wrapper">
-                    <input class="form__input coursebuilder-margin-settings__input" type="number" name="margin_left"
-                      value="2.54" step="0.01" min="0" />
-                    <span class="coursebuilder-margin-settings__unit">cm</span>
-                  </div>
-                </label>
-
-                <label class="form__label">
-                  Right
-                  <div class="coursebuilder-margin-settings__input-wrapper">
-                    <input class="form__input coursebuilder-margin-settings__input" type="number" name="margin_right"
-                      value="2.54" step="0.01" min="0" />
-                    <span class="coursebuilder-margin-settings__unit">cm</span>
-                  </div>
-                </label>
-              </div>
-
-              <!-- Save Status -->
-              <div class="coursebuilder-save-status" id="margins-save-status">
-                <span class="coursebuilder-save-status__text">Margins will be saved automatically</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Course Visibility Settings -->
-          <div class="coursebuilder-settings-section">
-            <form class="form coursebuilder-form" id="course-settings-form">
-              <div class="coursebuilder-visibility-settings">
-                <label class="form__label">
-                  <input class="form__checkbox" type="checkbox" name="course_visible" />
-                  Course visible to students
-                </label>
-
-                <label class="form__label">
-                  <input class="form__checkbox" type="checkbox" name="allow_enrollment" />
-                  Allow new enrollments
-                </label>
-
-                <label class="form__label">
-                  <input class="form__checkbox" type="checkbox" name="require_approval" />
-                  Require enrollment approval
-                </label>
-
-                <div class="coursebuilder-save-status" id="settings-last-saved">
-                  <span class="coursebuilder-save-status__text" id="settings-save-status">
-                    Changes will be saved automatically
-                  </span>
-                </div>
-              </div>
-            </form>
-          </div>
-
-          <!-- Danger Zone -->
-          <div class="coursebuilder-settings-section coursebuilder-settings-section--danger">
-            <h3 class="coursebuilder-settings-section__heading coursebuilder-settings-section__heading--danger">
-              Danger Zone
-            </h3>
-            <p class="coursebuilder-settings-section__description">
-              Once you delete a course, there is no going back. Please be certain.
-            </p>
-            <button class="button button--outline coursebuilder-settings-section__danger-button">
-              Delete Course
-            </button>
+          <div class="placeholder">
+            <!-- General settings content will be added here -->
           </div>
         </article>
         <!-- Marketplace Article -->
@@ -672,6 +604,196 @@
         <article class="content__article" id="resources">
           <div class="placeholder">
             <!-- Resources content will be added here -->
+          </div>
+        </article>
+
+        <!-- Students Article -->
+        <article class="content__article" id="students">
+          <div class="placeholder">
+            <!-- Students content will be added here -->
+          </div>
+        </article>
+
+        <!-- Course Visibility Article -->
+        <article class="content__article" id="course-visibility">
+          <!-- Course Visibility Settings -->
+          <div class="settings__section">
+            <h4 class="settings__heading">Course Visibility</h4>
+            <form class="form" id="course-settings-form">
+              <div class="settings__checkboxes">
+                <label class="form__label">
+                  <input class="input input--checkbox" type="checkbox" name="course_visible" />
+                  Course visible to students
+                </label>
+
+                <label class="form__label">
+                  <input class="input input--checkbox" type="checkbox" name="allow_enrollment" />
+                  Allow new enrollments
+                </label>
+
+                <label class="form__label">
+                  <input class="input input--checkbox" type="checkbox" name="require_approval" />
+                  Require enrollment approval
+                </label>
+
+                <label class="form__label">
+                  <input class="input input--checkbox" type="checkbox" name="enable_notifications" />
+                  Enable email notifications for new enrollments
+                </label>
+
+                <label class="form__label">
+                  <input class="input input--checkbox" type="checkbox" name="public_course" />
+                  Make course publicly discoverable
+                </label>
+
+                <div class="settings__status" id="settings-last-saved">
+                  <span class="settings__status-text" id="settings-save-status">
+                    Changes will be saved automatically
+                  </span>
+                </div>
+              </div>
+            </form>
+          </div>
+        </article>
+
+        <!-- Pricing & Monetization Article -->
+        <article class="content__article" id="pricing-monetization">
+          <div class="placeholder">
+            <!-- Pricing & Monetization content will be added here -->
+          </div>
+        </article>
+
+        <!-- External Integrations & APIs Article -->
+        <article class="content__article" id="external-integrations">
+          <div class="placeholder">
+            <!-- External Integrations & APIs content will be added here -->
+          </div>
+        </article>
+
+        <!-- Communication Article -->
+        <article class="content__article" id="communication">
+          <div class="placeholder">
+            <!-- Communication content will be added here -->
+          </div>
+        </article>
+
+        <!-- Page Setup Article -->
+        <article class="content__article" id="page-setup">
+          <!-- Margins Section -->
+          <div class="settings__section">
+            <h4 class="settings__heading">Margins</h4>
+
+            <!-- Display Unit Selection -->
+            <div class="settings__margins">
+              <div class="settings__units">
+                <span class="settings__label">Display in</span>
+                <div class="settings__unit-options">
+                  <label class="form__label">
+                    <input class="input input--checkbox" type="radio" name="margin-unit" value="inches" />
+                    Inches
+                  </label>
+                  <label class="form__label">
+                    <input class="input input--checkbox" type="radio" name="margin-unit" value="centimeters" checked />
+                    Centimeters
+                  </label>
+                </div>
+              </div>
+
+              <!-- Margin Inputs Grid -->
+              <div class="settings__grid">
+                <label class="form__label">
+                  Top
+                  <div class="settings__input-wrapper">
+                    <input class="input input--number" type="number" name="margin_top"
+                      value="2.54" step="0.01" min="0" />
+                    <span class="settings__unit">cm</span>
+                  </div>
+                </label>
+
+                <label class="form__label">
+                  Bottom
+                  <div class="settings__input-wrapper">
+                    <input class="input input--number" type="number" name="margin_bottom"
+                      value="2.54" step="0.01" min="0" />
+                    <span class="settings__unit">cm</span>
+                  </div>
+                </label>
+
+                <label class="form__label">
+                  Left
+                  <div class="settings__input-wrapper">
+                    <input class="input input--number" type="number" name="margin_left"
+                      value="2.54" step="0.01" min="0" />
+                    <span class="settings__unit">cm</span>
+                  </div>
+                </label>
+
+                <label class="form__label">
+                  Right
+                  <div class="settings__input-wrapper">
+                    <input class="input input--number" type="number" name="margin_right"
+                      value="2.54" step="0.01" min="0" />
+                    <span class="settings__unit">cm</span>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Save Status -->
+              <div class="settings__status" id="margins-save-status">
+                <span class="settings__status-text">Margins will be saved automatically</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Interface Article -->
+        <article class="content__article" id="interface">
+          <div class="placeholder">
+            <!-- Interface content will be added here -->
+          </div>
+        </article>
+
+        <!-- Themes Article -->
+        <article class="content__article" id="themes">
+          <div class="placeholder">
+            <!-- Themes content will be added here -->
+          </div>
+        </article>
+
+        <!-- Accessibility & Comfort Article -->
+        <article class="content__article" id="accessibility-comfort">
+          <div class="placeholder">
+            <!-- Accessibility & Comfort content will be added here -->
+          </div>
+        </article>
+
+        <!-- Notifications & Alerts Article -->
+        <article class="content__article" id="notifications-alerts">
+          <div class="placeholder">
+            <!-- Notifications & Alerts content will be added here -->
+          </div>
+        </article>
+
+        <!-- Data Management & Backup Article -->
+        <article class="content__article" id="data-management">
+          <div class="placeholder">
+            <!-- Data Management & Backup content will be added here -->
+          </div>
+        </article>
+
+        <!-- Advanced Settings Article -->
+        <article class="content__article" id="advanced-settings">
+          <!-- Danger Zone -->
+          <div class="settings__section settings__section--danger">
+            <h3 class="settings__heading settings__heading--danger">
+              Danger Zone
+            </h3>
+            <p class="settings__description">
+              Once you delete a course, there is no going back. Please be certain.
+            </p>
+            <button class="button button--delete" id="delete-course-btn">
+              Delete Course
+            </button>
           </div>
         </article>
       </div>

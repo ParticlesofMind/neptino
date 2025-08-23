@@ -316,7 +316,7 @@ export class ScheduleCourseManager {
  <span class="lesson-day">${this.formatDay(session.day)}</span>
  <input type="time" class="lesson-start-time" value="${session.startTime}" data-index="${index}">
  <input type="time" class="lesson-end-time" value="${session.endTime}" data-index="${index}">
- <button class="delete-lesson-btn" data-index="${index}">×</button>
+ <button class="button button--extra-small button--cross" data-index="${index}"></button>
  `;
 
  // Bind events for time editing
@@ -327,7 +327,7 @@ export class ScheduleCourseManager {
  ".lesson-end-time",
  ) as HTMLInputElement;
  const deleteButton = row.querySelector(
- ".delete-lesson-btn",
+ ".button--cross",
  ) as HTMLButtonElement;
 
  startTimeInput.addEventListener("change", (e) =>

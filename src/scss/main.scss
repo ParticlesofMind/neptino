@@ -35,6 +35,7 @@
 @use 'layout/curriculum';
 @use 'layout/classification';
 @use 'layout/engine';
+@use 'layout/settings';
 // PAGES (page styling)
 // ==========================================================================
 @use 'pages/home';
@@ -49,6 +50,7 @@
 @use 'components/dropdown';       // Dropdown component system
 @use 'components/inputs';         // Form inputs
 @use 'components/alerts';         // Alert/notification components
+@use 'components/notifications';  // Toast/notification components
 @use 'components/cards';          // Card component system
 @use 'components/forms';          // Form components
 @use 'components/modals';         // Modal/overlay components

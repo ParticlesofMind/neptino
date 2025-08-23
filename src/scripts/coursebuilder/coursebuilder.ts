@@ -16,6 +16,7 @@ import "../backend/courses/languageLoader";
 // Course management imports
 import { ScheduleCourseManager } from "../backend/courses/scheduleCourse";
 import { CurriculumManager } from "../backend/courses/curriculumManager";
+import { DeleteCourseManager } from "../backend/courses/deleteCourse";
 
 // Optional imports for managers that may not exist yet
 // These will be conditionally imported when available
@@ -89,6 +90,7 @@ export class CourseBuilderCanvas {
  private curriculumManager: CurriculumManager | null = null;
  private currentFormHandler: CourseFormHandler | null = null;
  private selectHandler: CourseBuilderSelectHandler | null = null;
+ private deleteCourseManager: DeleteCourseManager | null = null;
  
  // State tracking
  private currentSection: string = "essentials";
@@ -416,6 +418,12 @@ export class CourseBuilderCanvas {
  this.curriculumManager = new CurriculumManager(this.courseId || undefined);
  console.log('📚 Curriculum manager initialized');
  }
+ 
+ // Delete course manager - always initialize if we have a course ID
+ if (this.courseId) {
+ this.deleteCourseManager = new DeleteCourseManager(this.courseId);
+ console.log('🗑️ Delete course manager initialized');
+ }
  }
 
  // Initialize dropdown handler for classification section
@@ -651,6 +659,14 @@ export class CourseBuilderCanvas {
  this.selectHandler.setCourseId(courseId);
  }
  
+ // Initialize or update delete course manager
+ if (!this.deleteCourseManager) {
+ this.deleteCourseManager = new DeleteCourseManager(courseId);
+ console.log('🗑️ Delete course manager initialized');
+ } else {
+ this.deleteCourseManager.setCourseId(courseId);
+ }
+ 
  // Update URL to include course ID parameter
  this.updateUrlWithCourseId(courseId);
  
@@ -821,6 +837,7 @@ export class CourseBuilderCanvas {
  curriculumManager: this.curriculumManager,
  currentFormHandler: this.currentFormHandler,
  selectHandler: this.selectHandler,
+ deleteCourseManager: this.deleteCourseManager,
  };
  }
 
@@ -873,6 +890,12 @@ export class CourseBuilderCanvas {
  // Select handler doesn't have destroy method yet
  console.log('📋 Select handler cleanup - no destroy method available');
  this.selectHandler = null;
+ }
+
+ // Clean up delete course manager
+ if (this.deleteCourseManager) {
+ this.deleteCourseManager.destroy();
+ this.deleteCourseManager = null;
  }
 
  // Remove global reference

@@ -72,12 +72,78 @@
     }
   }
   
+  // Delete button (danger variant)
+  &--delete {
+    background: var(--color-error-500);
+    color: white;
+    
+    &:hover {
+      background: var(--color-error-600);
+      transform: translateY(-1px);
+    }
+    
+    &:active {
+      transform: translateY(0);
+      background: var(--color-error-700);
+    }
+    
+    &:focus {
+      outline: 2px solid var(--color-error-500);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 3px var(--color-error-100);
+    }
+
+    // Small square delete button variant (for inline deletions)
+    &.button--small {
+      width: 2rem;
+      height: 2rem;
+      min-height: 2rem;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--border-radius-small);
+      font-size: var(--font-size-small);
+      font-weight: var(--font-weight-bold);
+      line-height: 1;
+
+      &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(var(--color-error-500-rgb), 0.3);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+  }
+  
   // Size modifiers
+  &--extra-small {
+    padding: var(--spacing-1) var(--spacing-2);
+    font-size: var(--font-size-extra-small);
+    min-height: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-small);
+  }
+  
   &--small {
     padding: var(--spacing-2) var(--spacing-4);
     font-size: var(--font-size-small);
     min-height: var(--size-button-small);
     width: 6rem;
+  }
+  
+  &--medium {
+    padding: var(--spacing-3) var(--spacing-6);
+    font-size: var(--font-size-base);
+    min-height: var(--size-button-base);
+    width: auto;
+    max-width: 20rem;
   }
   
   &--large {
@@ -96,6 +162,38 @@
   &--loading {
     opacity: 0.8;
     cursor: wait;
+  }
+  
+  // Cross button (X icon)
+  &--cross {
+    background: var(--color-error-500);
+    color: white;
+    font-weight: var(--font-weight-bold);
+    line-height: 1;
+    
+    &:hover {
+      background: var(--color-error-600);
+      transform: scale(1.1);
+    }
+    
+    &:active {
+      transform: scale(0.9);
+      background: var(--color-error-700);
+    }
+    
+    &:focus {
+      outline: 2px solid var(--color-error-500);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 3px var(--color-error-100);
+    }
+    
+    // Ensure the X is properly centered and sized
+    &::before {
+      content: '×';
+      display: block;
+      font-size: 1em;
+      line-height: 1;
+    }
   }
 }
 

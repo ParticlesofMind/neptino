@@ -114,6 +114,7 @@ html {
         // Enhance content for coursebuilder-specific layout  
         .content {
             padding: var(--spacing-6); // More padding for forms
+            height: 100%; // Ensure content fills the available height in the grid
             
             // Mobile adjustments
             @media (max-width: 768px) {

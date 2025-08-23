@@ -6,13 +6,14 @@
 .template {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto minmax(500px, 1fr); // Auto for buttons, flexible content with minimum height
   gap: var(--spacing-6);
-  min-height: 500px;
+  height: 100%; // Fill the full height of the container
+  min-height: 0; // Allow grid items to shrink if needed
   
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto auto minmax(500px, 1fr);
   }
 
   // Buttons span both columns at the top
@@ -37,8 +38,8 @@
     background: var(--color-background);
     border: 1px solid var(--color-neutral-200);
     border-radius: var(--radius-medium);
-    overflow: hidden;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    min-height: 0; // This is crucial - allows the grid item to be constrained
 
     @media (max-width: 768px) {
       grid-column: 1;
@@ -54,8 +55,8 @@
     background: var(--color-background);
     border: 1px solid var(--color-neutral-200);
     border-radius: var(--radius-medium);
-    overflow: hidden;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    min-height: 0; // This is crucial - allows the grid item to be constrained
 
     @media (max-width: 768px) {
       grid-column: 1;
@@ -67,26 +68,25 @@
   &__content {
     flex: 1;
     padding: var(--spacing-5);
-    overflow-y: auto;
-    max-height: 60vh;
+    overflow-y: auto; // Enable scrolling when content overflows
+    min-height: 0; // Allow content to shrink
     
-    // Default placeholder styling
-    > p {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 200px;
-      text-align: center;
-      color: var(--color-text-secondary);
-      font-style: italic;
-      margin: 0;
-      
-      &:before {
-        content: "🗂️";
-        font-size: 2.5rem;
-        margin-bottom: var(--spacing-3);
-        opacity: 0.5;
+    // Custom scrollbar styling
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: var(--color-neutral-100);
+      border-radius: var(--radius-small);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--color-neutral-400);
+      border-radius: var(--radius-small);
+
+      &:hover {
+        background: var(--color-neutral-500);
       }
     }
   }

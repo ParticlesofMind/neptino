@@ -1,62 +1,274 @@
 // ==========================================================================
-// SCHEDULE
+// SCHEDULE LAYOUT - BEM Methodology
 // ==========================================================================
 
 .schedule {
-  
-  &__layout {
-    display: flex;
-    gap: var(--spacing-6);
-    height: calc(100vh - 300px);
-    min-height: 500px;
-    width: 100%;
-  }
+  display: grid;
+  grid-template-columns: auto 1.5fr;
+  gap: var(--spacing-5);
+  height: 100%; // Fill the full height of the container
+  min-height: 0; // Allow grid items to shrink if needed
 
-  &__config,
-  &__preview {
-    flex: 1;
+  // ==========================================================================
+  // ELEMENTS
+  // ==========================================================================
+
+  // Configuration panel (left side)
+  &__config {
+    background: var(--color-background);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--border-radius-large);
+    padding: var(--spacing-6);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    top: var(--spacing-4);
+    height: 100%; // Fill available height
+    overflow-y: auto; // Enable scrolling when content overflows
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--color-neutral-200);
-    border-radius: var(--radius-large);
+
+    .form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-5);
+    }
+
+    // Custom scrollbar styling
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: var(--color-neutral-100);
+      border-radius: var(--radius-small);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--color-neutral-300);
+      border-radius: var(--radius-small);
+
+      &:hover {
+        background: var(--color-neutral-400);
+      }
+    }
+  }
+
+  // Preview panel (right side) 
+  &__preview {
     background: var(--color-background);
-    overflow: hidden;
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--border-radius-large);
+    padding: var(--spacing-6);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow-y: auto; // Enable scrolling for the preview content
+    height: 100%; // Fill the available height
+    display: flex;
+    flex-direction: column;
+
+    // Custom scrollbar styling
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: var(--color-neutral-100);
+      border-radius: var(--radius-small);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--color-neutral-300);
+      border-radius: var(--radius-small);
+
+      &:hover {
+        background: var(--color-neutral-400);
+      }
+    }
   }
 
+  // Section headings
   &__heading {
-    margin: 0;
-    padding: var(--spacing-4) var(--spacing-5);
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-xl);
     font-weight: var(--font-weight-semibold);
-    color: var(--color-text);
-    border-bottom: 1px solid var(--color-neutral-100);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--spacing-5) 0;
+    padding-bottom: var(--spacing-3);
+    border-bottom: 2px solid var(--color-primary-100);
   }
 
+  // Days selection container
   &__days {
     display: flex;
     flex-wrap: wrap;
     gap: var(--spacing-2);
+    margin-top: var(--spacing-3);
+  }
 
-    &__button {
-      min-width: 48px;
-      padding: var(--spacing-2) var(--spacing-3);
-      transition: var(--transition-fast);
+  // Field group for side-by-side inputs
+  &__field-group {
+    display: flex;
+    gap: var(--spacing-4);
+    
+    // Each field in the group takes equal width
+    .form__label {
+      flex: 1;
+    }
+    
+    // Responsive: stack vertically on mobile
+    @media (max-width: 640px) {
+      flex-direction: column;
+      gap: var(--spacing-3);
+    }
+  }
 
-      &:hover {
-        background: var(--color-primary-50);
-        border-color: var(--color-primary-300);
-      }
+  // Individual day button
+  &__day-button {
+    flex: 0 0 auto;
+    min-width: 3rem;
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight-medium);
+    
+    // Selected state
+    &.button--primary {
+      background: var(--color-primary-500);
+      border-color: var(--color-primary-500);
+      color: white;
+    }
+  }
 
-      &.button--primary {
-        background: var(--color-primary-500);
-        border-color: var(--color-primary-500);
-        color: var(--color-white);
+  // Preview content area
+  &__content {
+    min-height: 200px;
+    flex: 1; // Allow content to grow and fill available space
+  }
 
-        &:hover {
-          background: var(--color-primary-600);
-          border-color: var(--color-primary-600);
-        }
-      }
+  // Placeholder state
+  &__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    text-align: center;
+    color: var(--color-text-tertiary);
+    font-style: italic;
+    border: 2px dashed var(--color-neutral-200);
+    border-radius: var(--border-radius-medium);
+    background: var(--color-neutral-50);
+
+    p {
+      margin: 0;
+      font-size: var(--font-size-base);
+    }
+  }
+
+  // Schedule row (individual lesson)
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-4);
+    margin-bottom: var(--spacing-3);
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    border-radius: var(--border-radius-medium);
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: var(--color-primary-100);
+      border-color: var(--color-primary-300);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(var(--color-primary-500-rgb), 0.1);
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // Lesson info in each row
+  &__lesson {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+    flex: 1;
+  }
+
+  // Lesson title
+  &__lesson-title {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0;
+    font-size: var(--font-size-base);
+  }
+
+  // Lesson details (date, time)
+  &__lesson-details {
+    display: flex;
+    gap: var(--spacing-4);
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+
+  // Total lessons counter
+  &__total {
+    margin-top: var(--spacing-5);
+    padding: var(--spacing-3) var(--spacing-4);
+    background: var(--color-neutral-100);
+    border-radius: var(--border-radius-medium);
+    text-align: center;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-neutral-200);
+  }
+
+  // ==========================================================================
+  // RESPONSIVE DESIGN
+  // ==========================================================================
+
+  // Tablet and smaller
+  @media (max-width: 968px) {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-6);
+
+    &__config {
+      position: static;
+      order: 1;
+    }
+
+    &__preview {
+      order: 2;
+      max-height: none;
+    }
+  }
+
+  // Mobile
+  @media (max-width: 640px) {
+    gap: var(--spacing-4);
+
+    &__config,
+    &__preview {
+      padding: var(--spacing-4);
+      border-radius: var(--border-radius-medium);
+    }
+
+    &__days {
+      gap: var(--spacing-1);
+    }
+
+    &__day-button {
+      min-width: 2.5rem;
+      font-size: var(--font-size-xs);
+    }
+
+    &__row {
+      padding: var(--spacing-3);
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--spacing-2);
+    }
+
+    &__lesson-details {
+      flex-direction: column;
+      gap: var(--spacing-1);
     }
   }
 }

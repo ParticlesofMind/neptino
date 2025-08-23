@@ -10,7 +10,6 @@
   visibility: hidden;
   transition: opacity var(--transition-normal), visibility var(--transition-normal);
 
-
   /* Modal Backdrop */
   &__backdrop {
     position: absolute;
@@ -27,69 +26,122 @@
   }
 
   /* Modal Content */
-&__content {
-  background: var(--color-background);
-  border-radius: var(--radius-large);
-  box-shadow: var(--shadow-extra-large);
-  max-width: 90vw;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-  transform: scale(0.95) translateY(-20px);
-  transition: transform var(--transition-normal);
+  &__content {
+    background: var(--color-background);
+    border-radius: var(--radius-large);
+    box-shadow: var(--shadow-extra-large);
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    transform: scale(0.95) translateY(-20px);
+    transition: transform var(--transition-normal);
 
-  .modal--active & {
-    transform: scale(1) translateY(0);
+    .modal--active & {
+      transform: scale(1) translateY(0);
+    }
   }
-}
 
+  /* Modal Header */
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-8);
+    border-bottom: 1px solid var(--color-border-primary);
+  }
 
+  &__title {
+    margin: 0;
+    font-size: var(--font-size-large);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+  }
+
+  &__close {
+    margin-left: auto;
+
+    &:hover {
+      background-color: var(--color-background-secondary);
+    }
+  }
+
+  /* Modal Body */
+  &__body {
+    padding: var(--spacing-8);
+  }
+
+  /* Modal Footer */
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--spacing-3);
+    padding: var(--spacing-8);
+    border-top: 1px solid var(--color-border-primary);
+  }
+
+  &__text {
+    margin-bottom: var(--spacing-4);
+    color: var(--color-text-primary);
+    line-height: var(--line-height-relaxed);
+  }
+  
+  &__warning {
+    margin-bottom: var(--spacing-3);
+    color: var(--color-error-600);
+    font-weight: var(--font-weight-medium);
+  }
+  
+  &__list {
+    margin: var(--spacing-3) 0 var(--spacing-4) var(--spacing-5);
+    color: var(--color-text-secondary);
+    
+    li {
+      margin-bottom: var(--spacing-1);
+    }
+  }
+  
+  &__confirmation {
+    margin-top: var(--spacing-5);
+    padding: var(--spacing-4);
+    background: var(--color-error-50);
+    border: 1px solid var(--color-error-200);
+    border-radius: var(--radius-medium);
+    
+    .form__label {
+      margin-bottom: 0;
+      font-size: var(--font-size-small);
+      color: var(--color-error-700);
+    }
+    
+    .input {
+      margin-top: var(--spacing-2);
+      border-color: var(--color-error-300);
+      
+      &:focus {
+        border-color: var(--color-error-500);
+        box-shadow: 0 0 0 3px var(--color-error-100);
+      }
+    }
+  }
+
+  // ==========================================================================
+  // MODIFIERS
+  // ==========================================================================
 
   &--active {
     opacity: 1;
     visibility: visible;
   }
-}
 
-
-
-/* Modal Header */
-.modal__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-8);
-  border-bottom: 1px solid var(--color-border-primary);
-}
-
-.modal__title {
-  margin: 0;
-  font-size: var(--font-size-large);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-}
-
-.modal__close {
-  margin-left: auto;
-
-  &:hover {
-    background-color: var(--color-background-secondary);
+  /* Delete Course Modal Modifier */
+  &--delete {
+    .modal__content {
+      width: 100%;
+      max-width: 500px;
+    }
   }
-}
-
-/* Modal Body */
-.modal__body {
-  padding: var(--spacing-8);
-}
-
-/* Modal Footer */
-.modal__footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--spacing-3);
-  padding: var(--spacing-8);
-  border-top: 1px solid var(--color-border-primary);
 }
 
 /* CourseBuilder Specific Modal Styles */
