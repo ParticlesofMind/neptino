@@ -66,7 +66,7 @@
     &__canvas {
         grid-column: 3;
         grid-row: 2;
-        background: var(--color-background); // Override for canvas
+        background: var(--color-neutral-100); // Slightly grey container area
         overflow: auto; // Enable scrolling for large content
         padding: 2rem;
         box-shadow:
@@ -89,6 +89,7 @@
             display: block;
             margin: 0 auto; // Center the canvas
             flex-shrink: 0; // Prevent canvas from shrinking
+            background: var(--color-background); // Keep canvas white for contrast
         }
         
         // Canvas placeholder styling
@@ -102,7 +103,7 @@
             margin: 0 auto;
             border: 2px dashed var(--color-neutral-300);
             border-radius: var(--radius-large);
-            background: var(--color-neutral-50);
+            background: var(--color-background); // Keep placeholder white to match actual canvas
         }
     }
 
@@ -117,6 +118,48 @@
 
             &--active {
                 display: block;
+            }
+        }
+
+        // Lesson outline styling
+        .lessons-outline {
+            padding: 1rem;
+        }
+
+        .lesson-item {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: var(--color-background);
+            border: 1px solid var(--color-neutral-200);
+            border-radius: var(--radius-medium);
+            transition: all 0.2s ease;
+
+            &:hover {
+                border-color: var(--color-primary-300);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            &--active {
+                border-color: var(--color-primary-500);
+                background: var(--color-primary-50);
+                box-shadow: 0 2px 12px rgba(77, 166, 255, 0.15);
+            }
+
+            .lesson-title {
+                margin: 0 0 0.5rem 0;
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: var(--color-text-primary);
+            }
+
+            .lesson-topics {
+                margin: 0.5rem 0 1rem 0;
+                color: var(--color-text-secondary);
+                font-size: 0.9rem;
+            }
+
+            .switch-to-lesson {
+                margin-top: 0.5rem;
             }
         }
     }

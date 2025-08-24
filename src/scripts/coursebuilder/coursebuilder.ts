@@ -17,6 +17,16 @@ import "../backend/courses/languageLoader";
 import { ScheduleCourseManager } from "../backend/courses/scheduleCourse";
 import { CurriculumManager } from "../backend/courses/curriculumManager";
 import { DeleteCourseManager } from "../backend/courses/deleteCourse";
+import { supabase } from "../backend/supabase";
+
+// Import and expose PIXI globally for devtools detection
+import * as PIXI from "pixi.js";
+
+// Expose PIXI globally for devtools
+if (typeof window !== 'undefined') {
+ (window as any).PIXI = PIXI;
+ console.log('🔧 PIXI library exposed globally for devtools');
+}
 
 // Optional imports for managers that may not exist yet
 // These will be conditionally imported when available
@@ -74,7 +84,7 @@ class PerformanceMonitor {
  */
 export class CourseBuilderCanvas {
  // Core canvas and state management
- private pixiCanvas: PixiCanvas | null = null;
+ private pixiCanvases: PixiCanvas[] = []; // Array to store PIXI canvases for each lesson
  private toolStateManager: ToolStateManager | null = null;
  private uiEventHandler: UIEventHandler | null = null;
  private commandManager: CommandManager | null = null;
@@ -259,22 +269,25 @@ export class CourseBuilderCanvas {
 
  private async initializeBasedOnSection(): Promise<void> {
  try {
- // Only initialize canvas for sections that need it
- if (this.currentSection === "create" || this.shouldInitializeCanvas()) {
- await this.initializeCanvas();
- }
+ // Skip canvas initialization - using direct HTML5 canvases
+ console.log('📚 Skipping PIXI canvas initialization - using HTML5 canvases');
  
  // Initialize section-specific handlers
  this.initializeSectionHandler(this.currentSection);
+ 
+ // If we're in create section and have a course ID, initialize PIXI canvases immediately
+ if (this.currentSection === "create" && this.courseId) {
+ console.log('🎨 Create section detected with course ID, initializing PIXI canvases...');
+ await this.generateLessonNavigation(this.courseId);
+ }
  } catch (error) {
  this.errorBoundary.handleError(error as Error, 'initializeBasedOnSection');
  }
  }
 
  private shouldInitializeCanvas(): boolean {
- // Define which sections need the canvas
- const canvasSections = ["create", "edit", "design"];
- return canvasSections.includes(this.currentSection);
+ // Disable canvas initialization - using direct HTML5 canvases
+ return false;
  }
 
  private async initializeCanvas(): Promise<void> {
@@ -287,22 +300,116 @@ export class CourseBuilderCanvas {
  return;
  }
 
- console.log('🎨 Initializing PIXI Canvas...');
- this.pixiCanvas = new PixiCanvas("#canvas-container");
- await this.pixiCanvas.init();
+ // Skip all PIXI initialization - using direct HTML5 canvases for PDF-style layout
+ console.log('📚 Skipping PIXI initialization - using HTML5 canvases for lessons');
  
- // Initialize core managers now that canvas is available
+ // If we have a course ID, initialize canvases now that container is ready
+ if (this.courseId) {
+ console.log('🎯 Canvas container ready - initializing course:', this.courseId);
+ // Generate lesson navigation for this course
+ this.generateLessonNavigation(this.courseId);
+ }
+ 
+ // Initialize core managers without PIXI dependency
  if (!this.uiEventHandler) {
- console.log('🎛️ Initializing core managers after canvas creation...');
+ console.log('🎛️ Initializing core managers after canvas setup...');
  this.initializeCoreManagers();
  }
  
  this.performanceMonitor.end('canvas-init');
- console.log('✅ PIXI Canvas initialized');
+ console.log('✅ Canvas system initialized without PIXI');
  } catch (error) {
  this.errorBoundary.handleError(error as Error, 'canvas-init');
  throw error; // Canvas is critical, so rethrow
  }
+ }
+
+ /**
+ * Set up listener for page layout changes to update canvas margins
+ */
+ private setupPageLayoutListener(): void {
+ try {
+ document.addEventListener('pageLayoutChange', (event: Event) => {
+ if (this.pixiCanvas && (event as CustomEvent).detail) {
+ const layout = (event as CustomEvent).detail;
+ console.log('📄 Page layout changed, updating canvas margins:', layout.margins);
+ 
+ // Convert margin values to pixels
+ const margins = this.convertMarginsToPixels(layout.margins);
+ this.pixiCanvas.updateMargins(margins);
+ }
+ });
+ 
+ console.log('📄 Page layout listener set up');
+ } catch (error) {
+ this.errorBoundary.handleError(error as Error, 'setupPageLayoutListener');
+ }
+ }
+
+ /**
+ * Load initial page layout settings for the current course
+ */
+ private async loadInitialPageLayout(): Promise<void> {
+ try {
+ if (!this.courseId) {
+ console.log('📄 No course ID - using default margins');
+ // Use default margins if no course ID
+ const defaultMargins = { top: 72, right: 72, bottom: 72, left: 72 }; // 2.54cm in pixels
+ if (this.pixiCanvas) {
+ this.pixiCanvas.updateMargins(defaultMargins);
+ }
+ return;
+ }
+
+ // Import and get page layout settings
+ const { pageSetupHandler } = await import('../backend/courses/pageSetupHandler');
+ const settings = pageSetupHandler.getCurrentSettings();
+ 
+ if (settings && settings.margins) {
+ const margins = this.convertMarginsToPixels(settings.margins);
+ console.log('📄 Loading initial page layout margins:', margins);
+ if (this.pixiCanvas) {
+ this.pixiCanvas.updateMargins(margins);
+ }
+ }
+ } catch (error) {
+ this.errorBoundary.handleError(error as Error, 'loadInitialPageLayout');
+ }
+ }
+
+ /**
+ * Convert margin values to pixels based on unit
+ */
+ private convertMarginsToPixels(margins: {
+ top: number;
+ right: number;
+ bottom: number;
+ left: number;
+ unit: "mm" | "cm" | "inches";
+ }): { top: number; right: number; bottom: number; left: number } {
+ let conversionFactor = 1;
+ 
+ // Convert to pixels (assuming 96 DPI)
+ switch (margins.unit) {
+ case "mm":
+ conversionFactor = 96 / 25.4; // mm to pixels
+ break;
+ case "cm":
+ conversionFactor = 96 / 2.54; // cm to pixels
+ break;
+ case "inches":
+ conversionFactor = 96; // inches to pixels
+ break;
+ default:
+ conversionFactor = 96 / 2.54; // default to cm
+ }
+
+ return {
+ top: Math.round(margins.top * conversionFactor),
+ right: Math.round(margins.right * conversionFactor),
+ bottom: Math.round(margins.bottom * conversionFactor),
+ left: Math.round(margins.left * conversionFactor),
+ };
  }
 
  private setupKeyboardShortcuts(): void {
@@ -364,39 +471,38 @@ export class CourseBuilderCanvas {
  // UI event handling
  this.uiEventHandler = new UIEventHandler(this.toolStateManager);
  
- // Connect UI tool selection to canvas tool activation
+ // Connect UI tool selection to PIXI canvas tool activation
  this.uiEventHandler.setOnToolChange((toolName: string) => {
- if (this.pixiCanvas) {
- console.log(`🔧 Activating tool: ${toolName}`);
- const success = this.pixiCanvas.setTool(toolName);
+ console.log(`🔧 Activating tool: ${toolName} on ${this.pixiCanvases.length} canvases`);
+ 
+ // Apply tool to all active PIXI canvases
+ this.pixiCanvases.forEach((canvas, index) => {
+ const success = canvas.setTool(toolName);
  if (!success) {
- console.warn(`⚠️ Failed to activate tool: ${toolName}`);
- }
+ console.warn(`⚠️ Failed to activate tool ${toolName} on canvas ${index + 1}`);
  } else {
- console.warn('⚠️ Cannot activate tool: PixiJS canvas not available');
+ console.log(`✅ Tool ${toolName} activated on canvas ${index + 1}`);
  }
  });
+ });
  
- // Connect UI color changes to canvas
+ // Connect UI color changes to PIXI canvases
  this.uiEventHandler.setOnColorChange((color: string) => {
- if (this.pixiCanvas) {
- console.log(`🎨 Updating tool color: ${color}`);
- this.pixiCanvas.updateToolColor(color);
- }
+ console.log(`🎨 Updating tool color: ${color} on ${this.pixiCanvases.length} canvases`);
+ this.pixiCanvases.forEach((canvas) => {
+ canvas.updateToolColor(color);
+ });
  });
 
- // Connect UI tool settings changes to canvas
+ // Connect UI tool settings changes to PIXI canvases
  this.uiEventHandler.setOnToolSettingsChange((toolName: string, settings: any) => {
- if (this.pixiCanvas) {
- console.log(`⚙️ Updating tool settings for ${toolName}:`, settings);
- this.pixiCanvas.updateToolSettings(toolName, settings);
- }
+ console.log(`⚙️ Updating tool settings for ${toolName} on ${this.pixiCanvases.length} canvases:`, settings);
+ this.pixiCanvases.forEach((canvas) => {
+ canvas.updateToolSettings(toolName, settings);
+ });
  });
  
- // Stub implementations for managers that don't exist yet
- console.log('⚠️ Using stub implementations for missing managers');
- 
- console.log('✅ Core managers initialized');
+ console.log('✅ Core managers initialized with PIXI canvas integration');
  } catch (error) {
  this.errorBoundary.handleError(error as Error, 'initializeCoreManagers');
  }
@@ -645,6 +751,10 @@ export class CourseBuilderCanvas {
  this.courseId = courseId;
  sessionStorage.setItem("currentCourseId", courseId);
  
+ // Initialize canvases for this course - generate lesson navigation directly
+ console.log('🎯 Initializing PIXI lesson canvases for course');
+ this.generateLessonNavigation(courseId);
+ 
  // Update managers that need course ID
  if (this.scheduleManager) {
  this.scheduleManager.setCourseId(courseId);
@@ -666,6 +776,9 @@ export class CourseBuilderCanvas {
  } else {
  this.deleteCourseManager.setCourseId(courseId);
  }
+
+ // Initialize page setup handler for this course
+ this.initializePageSetupHandler(courseId);
  
  // Update URL to include course ID parameter
  this.updateUrlWithCourseId(courseId);
@@ -673,6 +786,316 @@ export class CourseBuilderCanvas {
  console.log('✅ Course ID updated for all managers');
  } catch (error) {
  this.errorBoundary.handleError(error as Error, 'setCourseId');
+ }
+ }
+
+
+
+ /**
+ * Generate lesson navigation UI based on course sessions
+ */
+ private async generateLessonNavigation(courseId: string): Promise<void> {
+ try {
+ // Get course data to determine number of sessions
+ const { data: course, error } = await supabase
+ .from('courses')
+ .select('course_sessions, course_name')
+ .eq('id', courseId)
+ .single();
+
+ if (error || !course) {
+ console.error('Failed to fetch course data:', error);
+ return;
+ }
+
+ const sessions = course.course_sessions || 1;
+ console.log(`📚 Generating navigation for ${sessions} lessons`);
+
+ // Restore the original 3 navigation items
+ const navContainer = document.querySelector('.engine__nav-course');
+ if (!navContainer) {
+ console.warn('Navigation container not found');
+ return;
+ }
+
+ // Restore original navigation structure
+ navContainer.innerHTML = `
+ <div class="nav-course__item nav-course__item--active" data-preview="outline">
+ <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-toc.svg" alt="">
+ <span class="icon-label">Outline</span>
+ </div>
+ <div class="nav-course__item" data-preview="preview">
+ <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-thumbnail.svg" alt="">
+ <span class="icon-label">Preview</span>
+ </div>
+ <div class="nav-course__item" data-preview="marks">
+ <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-bookmark.svg" alt="">
+ <span class="icon-label">Marks</span>
+ </div>
+ `;
+
+ // Add click handlers for preview navigation
+ navContainer.querySelectorAll('.nav-course__item').forEach(item => {
+ item.addEventListener('click', (e) => {
+ const target = e.currentTarget as HTMLElement;
+ const previewType = target.dataset.preview;
+ this.switchPreviewMode(previewType || 'outline');
+ });
+ });
+
+ // Generate lesson navigation in the outline preview
+ await this.generateOutlineContent(courseId, sessions);
+
+ // Create multiple canvases for each lesson
+ await this.createLessonCanvases(sessions);
+
+ console.log(`✅ Generated navigation for ${sessions} lessons`);
+ } catch (error) {
+ console.error('❌ Failed to generate lesson navigation:', error);
+ }
+ }
+
+ /**
+ * Generate the lesson outline content in the preview area
+ */
+ private async generateOutlineContent(courseId: string, sessions: number): Promise<void> {
+ const outlineContainer = document.querySelector('#preview-outline .outline-preview__content');
+ if (!outlineContainer) {
+ console.warn('Outline content container not found');
+ return;
+ }
+
+ // Generate lesson navigation items for the outline
+ const lessonHTML = Array.from({ length: sessions }, (_, index) => {
+ const lessonNumber = index + 1;
+ return `
+ <div class="lesson-item" data-lesson="${lessonNumber}">
+ <h4 class="lesson-title">Lesson ${lessonNumber}</h4>
+ <div class="lesson-topics">
+ <p>Lesson content and topics will be configured here</p>
+ </div>
+ <button class="button button--outline button--small switch-to-lesson" data-course="${courseId}" data-lesson="${lessonNumber}">
+ Edit Lesson ${lessonNumber}
+ </button>
+ </div>
+ `;
+ }).join('');
+
+ outlineContainer.innerHTML = `
+ <div class="lessons-outline">
+ ${lessonHTML}
+ </div>
+ `;
+
+ // Add click handlers for lesson switching
+ outlineContainer.querySelectorAll('.switch-to-lesson').forEach(button => {
+ button.addEventListener('click', (e) => {
+ const target = e.currentTarget as HTMLElement;
+ const lessonNumber = parseInt(target.dataset.lesson || '1');
+ const courseId = target.dataset.course || '';
+ this.switchToLesson(courseId, lessonNumber);
+ });
+ });
+ }
+
+ /**
+ * Switch between preview modes (outline, preview, marks)
+ */
+ private switchPreviewMode(previewType: string): void {
+ // Update active navigation item
+ document.querySelectorAll('.nav-course__item').forEach(item => {
+ item.classList.remove('nav-course__item--active');
+ });
+ 
+ const activeItem = document.querySelector(`[data-preview="${previewType}"]`);
+ if (activeItem) {
+ activeItem.classList.add('nav-course__item--active');
+ }
+
+ // Show corresponding preview content
+ document.querySelectorAll('.preview__content').forEach(content => {
+ content.classList.remove('preview__content--active');
+ });
+
+ const targetContent = document.querySelector(`#preview-${previewType}`);
+ if (targetContent) {
+ targetContent.classList.add('preview__content--active');
+ }
+
+ console.log(`📋 Switched to ${previewType} preview mode`);
+ }
+
+ /**
+ * Create multiple PIXI.js canvas elements for lessons in PDF-style layout
+ */
+ private async createLessonCanvases(sessionCount: number): Promise<void> {
+ try {
+ const canvasContainer = document.querySelector('#canvas-container');
+ if (!canvasContainer) {
+ console.error('❌ Canvas container not found');
+ return;
+ }
+
+ // Clear existing canvases
+ this.pixiCanvases.forEach(canvas => canvas.destroy());
+ this.pixiCanvases = [];
+ canvasContainer.innerHTML = '';
+
+ console.log(`🎨 Creating ${sessionCount} PIXI.js lesson canvases...`);
+
+ // Create PIXI.js applications for each lesson - PDF-like scrollable stack
+ for (let i = 1; i <= sessionCount; i++) {
+ // Create container for this lesson
+ const lessonWrapper = document.createElement('div');
+ lessonWrapper.className = 'lesson-wrapper';
+ lessonWrapper.id = `lesson-wrapper-${i}`;
+ lessonWrapper.style.cssText = `
+   margin: 20px auto;
+   text-align: center;
+ `;
+ 
+ // Add lesson label
+ const lessonLabel = document.createElement('div');
+ lessonLabel.className = 'lesson-label';
+ lessonLabel.textContent = `Lesson ${i}`;
+ lessonLabel.style.cssText = `
+   font-weight: bold;
+   color: var(--color-text-secondary);
+   margin-bottom: 10px;
+   font-size: 14px;
+ `;
+ 
+ // Create container for PIXI canvas
+ const pixiContainer = document.createElement('div');
+ pixiContainer.id = `lesson-canvas-${i}`;
+ pixiContainer.className = 'lesson-canvas';
+ pixiContainer.style.cssText = `
+   width: 794px;
+   height: 1123px;
+   margin: 0 auto;
+   background: white;
+   border: 1px solid var(--color-neutral-300);
+   border-radius: var(--radius-large);
+   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+ `;
+ 
+ lessonWrapper.appendChild(lessonLabel);
+ lessonWrapper.appendChild(pixiContainer);
+ canvasContainer.appendChild(lessonWrapper);
+
+ // Initialize PIXI canvas for this lesson
+ const pixiCanvas = new PixiCanvas(`#lesson-canvas-${i}`);
+ await pixiCanvas.init();
+ 
+ // Store in the array
+ this.pixiCanvases.push(pixiCanvas);
+ 
+ console.log(`🎨 Created PIXI.js canvas for Lesson ${i}`);
+ }
+
+ console.log(`✅ Created ${sessionCount} PIXI.js lesson canvases`);
+ 
+ // Expose first PIXI app globally for devtools detection
+ if (this.pixiCanvases && this.pixiCanvases.length > 0) {
+ const firstCanvas = this.pixiCanvases[0];
+ const firstApp = firstCanvas.getApp();
+ if (firstApp && typeof window !== 'undefined') {
+ (window as any).__PIXI_APP__ = firstApp;
+ (window as any).PIXI_APP = firstApp; // Alternative naming
+ (window as any).__NEPTINO_PIXI_APPS__ = this.pixiCanvases.map(c => c.getApp()).filter(Boolean);
+ console.log('🔧 PIXI apps exposed for devtools detection:', this.pixiCanvases.length, 'canvases');
+ console.log('🔧 First PIXI app exposed as window.__PIXI_APP__');
+ 
+ // Trigger devtools detection
+ if ((window as any).__PIXI_DEVTOOLS_GLOBAL_HOOK__) {
+ (window as any).__PIXI_DEVTOOLS_GLOBAL_HOOK__.register(firstApp);
+ console.log('🔧 PIXI app registered with devtools hook');
+ }
+ }
+ }
+ 
+ // Initialize core managers now that PIXI canvases are ready
+ if (!this.uiEventHandler && this.pixiCanvases.length > 0) {
+ console.log('🎛️ Initializing core managers after PIXI canvases creation...');
+ this.initializeCoreManagers();
+ }
+ } catch (error) {
+ console.error('❌ Failed to create PIXI lesson canvases:', error);
+ }
+ }
+
+ /**
+ * Switch to a specific lesson canvas by scrolling to it
+ */
+ private async switchToLesson(_courseId: string, lessonNumber: number): Promise<void> {
+ try {
+ console.log(`🎯 Scrolling to Lesson ${lessonNumber}`);
+
+ // Update active lesson item in outline
+ document.querySelectorAll('.lesson-item').forEach(item => {
+ item.classList.remove('lesson-item--active');
+ });
+ 
+ const activeLesson = document.querySelector(`[data-lesson="${lessonNumber}"].lesson-item`);
+ if (activeLesson) {
+ activeLesson.classList.add('lesson-item--active');
+ }
+
+ // Scroll to the target lesson canvas
+ const targetCanvas = document.querySelector(`#lesson-canvas-${lessonNumber}`) as HTMLCanvasElement;
+ if (targetCanvas) {
+ // Smooth scroll to the canvas
+ targetCanvas.scrollIntoView({ 
+   behavior: 'smooth', 
+   block: 'center' 
+ });
+ 
+ // Highlight the active canvas temporarily
+ targetCanvas.style.boxShadow = '0 0 20px rgba(77, 166, 255, 0.5)';
+ setTimeout(() => {
+   targetCanvas.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+ }, 2000);
+ 
+ console.log(`📸 Scrolled to canvas for Lesson ${lessonNumber}`);
+ 
+ // Add lesson-specific content if canvas is empty
+ const ctx = targetCanvas.getContext('2d');
+ if (ctx) {
+   // Check if canvas is empty (just clear it and redraw)
+   ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+   ctx.fillStyle = '#f8f9fa';
+   ctx.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
+   ctx.fillStyle = '#4da6ff';
+   ctx.fillRect(50, 50, 200, 100);
+   ctx.fillStyle = '#2c3e50';
+   ctx.font = '18px Arial';
+   ctx.fillText(`Lesson ${lessonNumber} Canvas`, 60, 180);
+ }
+ } else {
+ console.error(`❌ Canvas for Lesson ${lessonNumber} not found`);
+ }
+
+ console.log(`✅ Switched to Lesson ${lessonNumber}`);
+ } catch (error) {
+ console.error(`❌ Failed to switch to lesson ${lessonNumber}:`, error);
+ }
+ }
+
+ /**
+ * Initialize page setup handler for the course
+ */
+ private async initializePageSetupHandler(courseId: string): Promise<void> {
+ try {
+ const { pageSetupHandler } = await import('../backend/courses/pageSetupHandler');
+ pageSetupHandler.setCourseId(courseId);
+ console.log('📄 Page setup handler initialized for course:', courseId);
+ 
+ // If canvas is available, load the margins
+ if (this.pixiCanvas) {
+ await this.loadInitialPageLayout();
+ }
+ } catch (error) {
+ this.errorBoundary.handleError(error as Error, 'initializePageSetupHandler');
  }
  }
 
@@ -812,13 +1235,6 @@ export class CourseBuilderCanvas {
  public setKeyboardShortcuts(enabled: boolean): void {
  this.keyboardShortcutsEnabled = enabled;
  console.log(`⌨️ Keyboard shortcuts ${enabled ? 'enabled' : 'disabled'}`);
- }
-
- /**
- * Get PIXI canvas instance
- */
- public getPixiCanvas(): PixiCanvas | null {
- return this.pixiCanvas;
  }
 
  /**

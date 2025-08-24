@@ -89,7 +89,7 @@ export class CanvasLayerManager {
  const canvasHeight = this.app.screen.height;
 
  // Draw margin boundaries with blue color
- const marginColor = 0x3b82f6; // Bright blue
+ const marginColor = 0x4da6ff; // Match coursebuilder icon blue (--color-primary-300)
  const marginAlpha = 0.8;
  const lineWidth = 2;
 
