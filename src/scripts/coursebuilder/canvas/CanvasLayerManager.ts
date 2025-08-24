@@ -39,7 +39,7 @@ export class CanvasLayerManager {
  }
 
  /**
- * Add background grid to layout layer
+ * Add clean background to layout layer
  */
  public addBackgroundGrid(): void {
  if (!this.layoutContainer) {
@@ -48,41 +48,17 @@ export class CanvasLayerManager {
  }
 
  const graphics = new Graphics();
- const gridSize = 20;
  const canvasWidth = this.app.screen.width;
  const canvasHeight = this.app.screen.height;
 
  console.log(`🎨 Canvas dimensions - Screen: ${canvasWidth}x${canvasHeight}`);
 
- // Create a more visible background
+ // Create a clean white background
  graphics.rect(0, 0, canvasWidth, canvasHeight);
- graphics.fill({ color: 0xffffff, alpha: 1 }); // White background
+ graphics.fill({ color: 0xffffff, alpha: 1 }); // Clean white background
 
- // Add temporary red border to visualize boundaries
- graphics.rect(0, 0, canvasWidth, canvasHeight);
- graphics.stroke({ width: 4, color: 0xff0000, alpha: 1 }); // Red border
-
- // Draw grid lines
- graphics.moveTo(0, 0);
-
- // Draw vertical lines
- for (let x = 0; x <= canvasWidth; x += gridSize) {
- graphics.moveTo(x, 0);
- graphics.lineTo(x, canvasHeight);
- }
-
- // Draw horizontal lines
- for (let y = 0; y <= canvasHeight; y += gridSize) {
- graphics.moveTo(0, y);
- graphics.lineTo(canvasWidth, y);
- }
-
- graphics.stroke({ width: 1, color: 0xe0e0e0, alpha: 0.8 });
-
- graphics.label = "background-grid";
-
+ graphics.label = "background";
  this.layoutContainer.addChild(graphics);
-
  }
 
  /**

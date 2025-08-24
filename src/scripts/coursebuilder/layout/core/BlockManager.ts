@@ -39,6 +39,10 @@ export class BlockManager implements IBlockManager {
   renderBlock(block: Block, parentContainer: Container): Container {
     const blockContainer = new Container() as LayoutContainer;
     
+    // Calculate actual pixel dimensions
+    const blockHeight = (this.canvasHeight * block.heightPercentage) / 100;
+    const blockWidth = this.canvasWidth;
+    
     // Apply block-level layout
     blockContainer.layout = {
       width: "100%",
@@ -55,14 +59,16 @@ export class BlockManager implements IBlockManager {
 
     blockContainer.label = `block-${block.id}`;
 
-    // Add background if required
-    if (block.isRequired) {
-      this.addBlockBackground(blockContainer, block);
-    }
+    // Add visible background rectangle for the block
+    this.addBlockBackground(blockContainer, block, blockWidth, blockHeight);
 
     // Render each row
-    block.rows.forEach((row, rowIndex) => {
-      const rowContainer = this.renderRow(row, block);
+    let yOffset = 10; // Start with padding
+    block.rows.forEach((row) => {
+      const rowHeight = block.rows.length > 1 ? (blockHeight - 20) / block.rows.length : blockHeight - 20;
+      const rowContainer = this.renderRow(row, block, blockWidth - 20, rowHeight); 
+      rowContainer.y = yOffset;
+      yOffset += rowHeight + 5; // Add some gap between rows
       blockContainer.addChild(rowContainer);
     });
 
@@ -83,7 +89,7 @@ export class BlockManager implements IBlockManager {
   /**
    * Render a row within a block
    */
-  private renderRow(row: BlockRow, parentBlock: Block): Container {
+  private renderRow(row: BlockRow, parentBlock: Block, width: number, height: number): Container {
     const rowContainer = new Container() as LayoutContainer;
     
     // Row layout - horizontal by default
@@ -99,9 +105,21 @@ export class BlockManager implements IBlockManager {
 
     rowContainer.label = `row-${row.id}`;
 
+    // Add row background for visibility
+    const rowBackground = new Graphics();
+    rowBackground.rect(0, 0, width, height);
+    rowBackground.fill({ color: this.getRowColor(parentBlock.type), alpha: 0.3 });
+    rowBackground.stroke({ width: 1, color: this.getRowBorderColor(parentBlock.type), alpha: 0.5 });
+    rowContainer.addChildAt(rowBackground, 0);
+
     // Render each area in the row
+    let xOffset = 8; // Start with gap
+    const areaWidth = (width - (row.areas.length + 1) * 8) / row.areas.length; // Equal width for now
     row.areas.forEach((area) => {
-      const areaContainer = this.renderArea(area);
+      const areaContainer = this.renderArea(area, areaWidth, height - 16);
+      areaContainer.x = xOffset;
+      areaContainer.y = 8;
+      xOffset += areaWidth + 8;
       rowContainer.addChild(areaContainer);
     });
 
@@ -111,7 +129,7 @@ export class BlockManager implements IBlockManager {
   /**
    * Render an area within a row
    */
-  private renderArea(area: BlockArea): Container {
+  private renderArea(area: BlockArea, width: number, height: number): Container {
     const areaContainer = new Container() as LayoutContainer;
     
     // Area layout
@@ -122,12 +140,19 @@ export class BlockManager implements IBlockManager {
       alignItems: "stretch",
       padding: 8,
       gap: 4,
-      backgroundColor: this.getAreaColor(area.type),
+      backgroundColor: this.getAreaColor(area.type || 'text'),
       borderRadius: 4,
     };
 
     areaContainer.label = `area-${area.id}`;
     areaContainer.interactive = area.allowsDrawing;
+
+    // Add area background
+    const areaBackground = new Graphics();
+    areaBackground.rect(0, 0, width, height);
+    areaBackground.fill({ color: this.getAreaColor(area.type || 'text'), alpha: 0.6 });
+    areaBackground.stroke({ width: 1, color: this.getAreaBorderColor(area.type || 'text'), alpha: 0.8 });
+    areaContainer.addChildAt(areaBackground, 0);
 
     // Add capability indicators
     this.addAreaIndicators(areaContainer, area);
@@ -139,11 +164,12 @@ export class BlockManager implements IBlockManager {
   }
 
   /**
-   * Add visual background to blocks
+   * Add visible background rectangle for the block
    */
-  private addBlockBackground(container: Container, block: Block): void {
+  private addBlockBackground(container: Container, block: Block, width: number, height: number): void {
     const background = new Graphics();
-    background.rect(0, 0, 100, 100); // Will be sized by layout
+    background.rect(0, 0, width, height);
+    background.fill({ color: this.getBlockColor(block.type), alpha: 0.4 });
     background.stroke({ 
       width: 2, 
       color: this.getBlockBorderColor(block.type), 
@@ -208,12 +234,12 @@ export class BlockManager implements IBlockManager {
    */
   private getBlockColor(blockType: string): number {
     const colors: Record<string, number> = {
-      header: 0x4a90e2,
-      program: 0x7ed321,
-      content: 0xd0021b,
-      resources: 0xf5a623,
-      assessment: 0x9013fe,
-      footer: 0x50e3c2,
+      header: 0x4a90e2,    // Blue
+      program: 0x7ed321,   // Green  
+      content: 0xd0021b,   // Red
+      resources: 0xf5a623, // Orange
+      assessment: 0x9013fe, // Purple
+      footer: 0x50e3c2,    // Teal
     };
     return colors[blockType] || 0x999999;
   }
@@ -221,6 +247,16 @@ export class BlockManager implements IBlockManager {
   private getBlockBorderColor(blockType: string): number {
     const baseColor = this.getBlockColor(blockType);
     return Math.max(0, baseColor - 0x202020);
+  }
+
+  private getRowColor(blockType: string): number {
+    // Lighter version of block color
+    const baseColor = this.getBlockColor(blockType);
+    return Math.min(0xffffff, baseColor + 0x404040);
+  }
+
+  private getRowBorderColor(blockType: string): number {
+    return this.getBlockBorderColor(blockType);
   }
 
   private getAreaColor(areaType: string): number {
@@ -232,6 +268,11 @@ export class BlockManager implements IBlockManager {
       text: 0xf9f9f9,       // Light gray
     };
     return colors[areaType] || 0xf5f5f5;
+  }
+
+  private getAreaBorderColor(areaType: string): number {
+    const baseColor = this.getAreaColor(areaType);
+    return Math.max(0, baseColor - 0x303030);
   }
 
   /**

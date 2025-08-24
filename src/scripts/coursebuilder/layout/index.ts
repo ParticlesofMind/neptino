@@ -17,9 +17,6 @@ export * from "./lesson/LessonRenderer";
 // Block implementations
 export * from "./blocks";
 
-// Demo and utilities
-export * from "./demo";
-
 // Quick access to main classes
 export { TemplateRenderer } from "./core/TemplateRenderer";
 export { LessonRenderer } from "./lesson/LessonRenderer";

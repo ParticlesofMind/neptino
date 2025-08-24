@@ -47,10 +47,18 @@ export class TemplateRenderer implements ITemplateRenderer {
     const mainContainer = this.createMainContainer(template, responsive);
 
     // Render each block
+    let yOffset = 0;
     template.blocks
       .filter(block => block.enabled) // Only render enabled blocks
       .forEach(block => {
         const blockContainer = this.blockManager.renderBlock(block, mainContainer);
+        
+        // Position the block
+        blockContainer.y = yOffset;
+        
+        // Calculate block height
+        const blockHeight = (this.canvasHeight * block.heightPercentage) / 100;
+        yOffset += blockHeight;
         
         // Add block labels if requested
         if (showLabels) {
@@ -120,8 +128,6 @@ export class TemplateRenderer implements ITemplateRenderer {
    * Calculate responsive dimensions
    */
   private getResponsiveDimensions(): { width: number; height: number } {
-    const isPortrait = this.canvasHeight > this.canvasWidth;
-    
     return {
       width: this.canvasWidth,
       height: this.canvasHeight,
@@ -132,9 +138,10 @@ export class TemplateRenderer implements ITemplateRenderer {
   /**
    * Add label to a block
    */
-  private addBlockLabel(container: Container, block: any): void {
+  private addBlockLabel(_container: Container, block: any): void {
     // Block labels will be handled by BlockManager
     // This is a placeholder for future template-level labeling
+    console.log(`📝 Block label: ${block.name} (${block.type})`);
   }
 
   /**
@@ -184,7 +191,7 @@ export class TemplateRenderer implements ITemplateRenderer {
   /**
    * Enable debug mode to show layout boundaries
    */
-  private enableDebugMode(container: Container): void {
+  private enableDebugMode(_container: Container): void {
     // Debug mode implementation
     console.log('🐛 Debug mode enabled');
     // This would add visual debugging aids
