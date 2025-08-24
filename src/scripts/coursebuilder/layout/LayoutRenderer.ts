@@ -8,6 +8,17 @@ import { Container, Text, TextStyle } from "pixi.js";
 import type { LayoutBlock } from "./LayoutTypes";
 import { PixiLayoutIntegration } from "./PixiLayoutIntegration";
 
+// Extended types for layout-enabled objects
+type LayoutText = Text & { 
+  layout?: {
+    position?: "relative" | "absolute";
+    top?: number;
+    left?: number;
+    alignSelf?: "flex-start" | "flex-end" | "center" | "stretch";
+    margin?: number;
+  }
+};
+
 export class LayoutRenderer {
   private layoutContainer: Container;
   private pixiLayoutIntegration: PixiLayoutIntegration;
@@ -112,11 +123,11 @@ export class LayoutRenderer {
             fontFamily: 'Arial, sans-serif',
             stroke: { color: 0xffffff, width: 2 },
           }),
-        });
+        }) as LayoutText;
 
         // Position label (PixiJS Layout will handle final positioning)
         label.layout = {
-          position: 'absolute' as any, // Position absolutely within the container
+          position: 'absolute', // Position absolutely within the container
           top: 5,
           left: 10,
         };
@@ -154,7 +165,7 @@ export class LayoutRenderer {
             wordWrap: true,
             wordWrapWidth: 200,
           }),
-        });
+        }) as LayoutText;
 
         // Position within area container
         areaLabel.layout = {

@@ -7,15 +7,7 @@ import "@pixi/layout"; // Import must be first to apply mixins
 import { Container, Graphics } from "pixi.js";
 import type { LayoutBlock, CanvasArea } from "./LayoutTypes";
 
-// Extend PixiJS types to include layout properties
-declare global {
-  namespace PIXI {
-    interface Container {
-      layout?: LayoutProperties;
-    }
-  }
-}
-
+// Type definitions for layout-enabled PixiJS objects
 interface LayoutProperties {
   width?: string | number;
   height?: string | number;
@@ -34,7 +26,14 @@ interface LayoutProperties {
   backgroundColor?: number;
   borderRadius?: number;
   overflow?: "visible" | "hidden";
+  position?: "relative" | "absolute";
+  top?: number;
+  left?: number;
+  alignSelf?: "flex-start" | "flex-end" | "center" | "stretch";
 }
+
+// Extended types for layout-enabled objects
+type LayoutContainer = Container & { layout?: LayoutProperties };
 
 export class PixiLayoutIntegration {
   private layoutContainer: Container;
@@ -52,7 +51,7 @@ export class PixiLayoutIntegration {
    */
   createPedagogicalLayout(blocks: LayoutBlock[]): Container {
     // Create main container with full canvas layout
-    const mainContainer = new Container();
+    const mainContainer = new Container() as LayoutContainer;
     mainContainer.layout = {
       width: this.canvasWidth,
       height: this.canvasHeight,
@@ -77,7 +76,7 @@ export class PixiLayoutIntegration {
    * Create a single block container with areas
    */
   private createBlockContainer(block: LayoutBlock, _index: number): Container {
-    const blockContainer = new Container();
+    const blockContainer = new Container() as LayoutContainer;
     
     // Apply PixiJS Layout properties
     blockContainer.layout = {
@@ -117,7 +116,7 @@ export class PixiLayoutIntegration {
    * Create area containers within blocks
    */
   private createAreaContainer(area: CanvasArea): Container {
-    const areaContainer = new Container();
+    const areaContainer = new Container() as LayoutContainer;
     
     // Configure layout based on area type and permissions
     areaContainer.layout = {
@@ -211,7 +210,7 @@ export class PixiLayoutIntegration {
     // Create adaptive layout based on aspect ratio
     const isPortrait = targetHeight > targetWidth;
     
-    const mainContainer = new Container();
+    const mainContainer = new Container() as LayoutContainer;
     mainContainer.layout = {
       width: targetWidth,
       height: targetHeight,
@@ -290,9 +289,10 @@ export class PixiLayoutIntegration {
     this.canvasHeight = height;
     
     // Update main container layout
-    if (this.layoutContainer.layout) {
-      (this.layoutContainer.layout as any).width = width;
-      (this.layoutContainer.layout as any).height = height;
+    const layoutContainer = this.layoutContainer as LayoutContainer;
+    if (layoutContainer.layout) {
+      layoutContainer.layout.width = width;
+      layoutContainer.layout.height = height;
     }
   }
 
