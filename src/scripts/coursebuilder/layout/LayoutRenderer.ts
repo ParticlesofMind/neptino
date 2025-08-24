@@ -1,5 +1,5 @@
 /**
- * Enhanced Layout Renderer with PixiJS Layout v3 Integration
+ * Layout Renderer with PixiJS Layout v3 Integration
  * Replaces manual positioning with flexbox-based layout
  */
 
@@ -8,7 +8,7 @@ import { Container, Text, TextStyle } from "pixi.js";
 import type { LayoutBlock } from "./LayoutTypes";
 import { PixiLayoutIntegration } from "./PixiLayoutIntegration";
 
-export class EnhancedLayoutRenderer {
+export class LayoutRenderer {
   private layoutContainer: Container;
   private pixiLayoutIntegration: PixiLayoutIntegration;
   private canvasWidth: number;
@@ -27,7 +27,7 @@ export class EnhancedLayoutRenderer {
       canvasHeight
     );
 
-    console.log('🎨 Enhanced Layout Renderer initialized with PixiJS Layout v3');
+    console.log('🎨 Layout Renderer initialized with PixiJS Layout v3');
   }
 
   /**
