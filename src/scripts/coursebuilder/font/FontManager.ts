@@ -4,7 +4,6 @@
  * Single Responsibility: Font family management and coordination only
  */
 
-import { FontStyleController } from "./FontStyleController.js";
 import { FontSizeController } from "./FontSizeController.js";
 
 export class FontManager {
@@ -14,12 +13,10 @@ export class FontManager {
  family: string;
  loaded: boolean;
  }> = [];
- private fontStyleController: FontStyleController;
  private fontSizeController: FontSizeController;
  private onFontChangeCallback: ((fontFamily: string) => void) | null = null;
 
  constructor() {
- this.fontStyleController = new FontStyleController();
  this.fontSizeController = new FontSizeController();
 
  this.initializeDefaultFonts();
@@ -78,11 +75,6 @@ export class FontManager {
  * Setup controller callbacks
  */
  private setupControllerCallbacks(): void {
- // Font style changes
- this.fontStyleController.setOnStyleChange(() => {
- // Handle style changes
- });
-
  // Font size changes
  this.fontSizeController.setOnSizeChange(() => {
  // Handle size changes
@@ -201,13 +193,6 @@ export class FontManager {
  }
 
  /**
- * Get font style controller
- */
- getStyleController(): FontStyleController {
- return this.fontStyleController;
- }
-
- /**
  * Get font size controller
  */
  getSizeController(): FontSizeController {
@@ -220,12 +205,10 @@ export class FontManager {
  getCurrentFontConfig(): {
  family: string;
  size: number;
- styles: { bold: boolean; italic: boolean; underline: boolean };
  } {
  return {
  family: this.getCurrentFontFamily(),
  size: this.fontSizeController.getCurrentSize(),
- styles: this.fontStyleController.getCurrentStyles(),
  };
  }
 
@@ -237,8 +220,6 @@ export class FontManager {
 
  element.style.fontFamily = config.family;
  element.style.fontSize = `${config.size}px`;
-
- this.fontStyleController.applyStylesToElement(element);
  }
 
  /**
@@ -247,14 +228,12 @@ export class FontManager {
  resetToDefaults(): void {
  this.setCurrentFont("Arial");
  this.fontSizeController.reset();
- this.fontStyleController.resetStyles();
  }
 
  /**
  * Cleanup
  */
  destroy(): void {
- this.fontStyleController.destroy();
  this.fontSizeController.destroy();
  this.onFontChangeCallback = null;
  }

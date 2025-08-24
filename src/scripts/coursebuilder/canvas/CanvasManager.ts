@@ -5,13 +5,13 @@
  */
 
 import * as PIXI from "pixi.js";
-import { LayoutRenderer } from "../layout/LayoutRenderer";
+import { EnhancedLayoutRenderer } from "../layout/EnhancedLayoutRenderer";
 
 export class CanvasManager {
  private canvas: HTMLCanvasElement;
  private ctx: CanvasRenderingContext2D;
  private pixiApp: any; // PIXI.Application
- private layoutRenderer: LayoutRenderer | null = null;
+ private enhancedLayoutRenderer: EnhancedLayoutRenderer | null = null;
  private currentTemplate: any = null;
  private isLayoutVisible: boolean = true;
 
@@ -71,16 +71,16 @@ export class CanvasManager {
  }
 
  // Trigger re-render if layout is active
- if (this.layoutRenderer && this.currentTemplate) {
+ if (this.enhancedLayoutRenderer && this.currentTemplate) {
  this.renderLayout();
  }
  }
 
  /**
- * Set layout renderer
+ * Set enhanced layout renderer
  */
- setLayoutRenderer(renderer: LayoutRenderer): void {
- this.layoutRenderer = renderer;
+ setLayoutRenderer(renderer: EnhancedLayoutRenderer): void {
+ this.enhancedLayoutRenderer = renderer;
  }
 
  /**
@@ -89,9 +89,8 @@ export class CanvasManager {
  async loadTemplate(template: any): Promise<void> {
  this.currentTemplate = template;
 
- if (this.layoutRenderer) {
- // Note: LayoutRenderer doesn't have renderTemplate method
- // Template data should be processed before calling renderLayoutStructure
+ if (this.enhancedLayoutRenderer) {
+ // EnhancedLayoutRenderer uses PixiJS Layout system
  this.renderLayout();
  }
  }
@@ -100,14 +99,14 @@ export class CanvasManager {
  * Render current layout
  */
  renderLayout(): void {
- if (!this.layoutRenderer || !this.currentTemplate) return;
+ if (!this.enhancedLayoutRenderer || !this.currentTemplate) return;
 
  this.clearCanvas();
 
  if (this.isLayoutVisible) {
- // Use renderLayoutStructure with blocks from template
+ // Use EnhancedLayoutRenderer to render pedagogical layout
  const blocks = this.currentTemplate.blocks || [];
- this.layoutRenderer.renderLayoutStructure(blocks, true);
+ this.enhancedLayoutRenderer.renderPedagogicalLayout(blocks, true, true);
  }
  }
 
@@ -138,8 +137,8 @@ export class CanvasManager {
  this.clearCanvas();
  this.currentTemplate = null;
 
- if (this.layoutRenderer) {
- this.layoutRenderer.clear();
+ if (this.enhancedLayoutRenderer) {
+ this.enhancedLayoutRenderer.clear();
  }
 
  }
@@ -236,7 +235,7 @@ export class CanvasManager {
  this.pixiApp.destroy();
  }
 
- this.layoutRenderer = null;
+ this.enhancedLayoutRenderer = null;
  this.currentTemplate = null;
  }
 }

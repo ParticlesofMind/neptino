@@ -11,3 +11,6 @@ export { CourseBuilderNavigation, AsideNavigation } from './CourseBuilderNavigat
 
 // Dashboard sidebar navigation
 export { DashboardNavigation, initializeDashboardNavigation } from './DashboardNavigation';
+
+// Canvas navigation for coursebuilder multi-canvas support
+export { CanvasNavigator } from './CanvasNavigator';

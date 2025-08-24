@@ -22,7 +22,6 @@
     }
 
     &__setup {
-        
         &.coursebuilder__setup--active {
             display: grid;
             gap: 0;
@@ -65,9 +64,7 @@
 
 .coursebuilder__setup {
     .sidebar {
-        grid-column: 1; // First column
-        width: 280px;
-
+    
         // On mobile, remove sidebar from grid layout since it's fixed positioned
         @media (max-width: 768px) {
             position: fixed;

@@ -3,7 +3,7 @@
  * Handles navigation between multiple canvases, thumbnails, and table of contents
  */
 
-import type { CourseLayout, CanvasLayout } from "./LayoutTypes";
+import type { CourseLayout, CanvasLayout } from "../coursebuilder/layout/LayoutTypes";
 
 interface CanvasThumbnail {
  id: string;

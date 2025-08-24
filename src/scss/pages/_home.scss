@@ -10,8 +10,6 @@
 // Enhance content for dashboard-specific grid layout
 .content {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
     height: 100%; // Take full available height
     padding: var(--spacing-4); // Add internal padding
 
@@ -21,8 +19,7 @@
 
         &--active {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
+  
             gap: var(--spacing-4);
         }
     }
