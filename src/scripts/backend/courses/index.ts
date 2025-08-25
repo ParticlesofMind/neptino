@@ -92,6 +92,7 @@ export class CourseBuilder {
  
  // Initialize schedule manager (always ready)
  this.scheduleManager = new ScheduleCourseManager(this.courseId);
+ console.log('📋 ScheduleCourseManager created by CourseBuilder class');
  
  // Initialize curriculum manager (always ready)
  this.curriculumManager = new CurriculumManager(this.courseId);
@@ -170,7 +171,7 @@ export class CourseBuilder {
 
  private initializeCurrentSection(): void {
  // Initialize the currently active section
- const activeSection = document.querySelector('element');
+ const activeSection = document.querySelector('.content__article--active');
  if (activeSection) {
  const sectionId = activeSection.id;
  this.loadSection(sectionId);
@@ -179,7 +180,7 @@ export class CourseBuilder {
 
  private setupSectionNavigation(): void {
  // Listen for aside navigation clicks
- const asideLinks = document.querySelectorAll('elements');
+ const asideLinks = document.querySelectorAll('aside .link--menu[data-section]');
  asideLinks.forEach((link) => {
  link.addEventListener("click", (e) => {
  e.preventDefault();
@@ -197,15 +198,15 @@ export class CourseBuilder {
 
  private navigateToSection(sectionId: string): void {
  // Hide all articles
- const articles = document.querySelectorAll('elements');
+ const articles = document.querySelectorAll('.content__article');
  articles.forEach((article) => {
- article
+ article.classList.remove('content__article--active');
  });
 
  // Show target article
  const targetArticle = document.getElementById(sectionId);
  if (targetArticle) {
- targetArticle
+ targetArticle.classList.add('content__article--active');
  this.currentSection = sectionId;
  this.loadSection(sectionId);
  }
@@ -227,6 +228,11 @@ export class CourseBuilder {
  if (sectionId === "schedule") {
  // Schedule manager is already initialized - just ensure preview is visible
  if (this.scheduleManager) {
+ // If we have a course ID, make sure the schedule manager has the latest data
+ if (this.courseId) {
+ console.log('📋 Refreshing schedule manager with course ID:', this.courseId);
+ this.scheduleManager.setCourseId(this.courseId);
+ }
  // Trigger a refresh to show/hide preview as needed
  this.scheduleManager.refreshDisplay();
  } else {
@@ -291,10 +297,10 @@ let courseBuilderInitialized = false;
 document.addEventListener("DOMContentLoaded", () => {
  // Only initialize if we're on the coursebuilder page, in the setup section, and not already initialized
  const isInSetupSection =
- document.querySelector('element') ||
+ document.querySelector('.coursebuilder__setup') ||
  window.location.hash === "#setup" ||
  window.location.hash === "";
- const hasSetupSection = document.querySelector('element');
+ const hasSetupSection = document.querySelector('.coursebuilder__setup');
 
  if (hasSetupSection && isInSetupSection && !courseBuilderInitialized) {
  courseBuilderInitialized = true;
@@ -309,7 +315,7 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addEventListener("hashchange", () => {
  const isInSetupSection =
  window.location.hash === "#setup" || window.location.hash === "";
- const hasSetupSection = document.querySelector('element');
+ const hasSetupSection = document.querySelector('.coursebuilder__setup');
 
  if (hasSetupSection && isInSetupSection && !courseBuilderInitialized) {
  courseBuilderInitialized = true;

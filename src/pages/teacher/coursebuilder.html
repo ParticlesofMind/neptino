@@ -1058,8 +1058,12 @@
   <script type="module" src="/src/scripts/backend/courses/settings/languageLoader.ts"></script>
   <!-- PIXI and PixiJS devtools -->
   <script type="module" src="/src/scripts/coursebuilder/devtools-setup.ts"></script>
-  <!-- CourseBuilder application -->
+  <!-- Navigation system (handles all coursebuilder navigation) -->
+  <script type="module" src="/src/scripts/navigation/CourseBuilderNavigation.ts"></script>
+  <!-- CourseBuilder application (canvas and managers only) -->
   <script type="module" src="/src/scripts/coursebuilder/coursebuilder.ts"></script>
+  <!-- Navigation bridge (connects navigation to coursebuilder) -->
+  <script type="module" src="/src/scripts/coursebuilder/navigation-bridge.ts"></script>
   <!-- Backend services -->
   <script type="module" src="/src/scripts/backend/courses/index.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/classification/simpleClassificationFormHandler.ts"></script>

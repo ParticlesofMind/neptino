@@ -29,6 +29,15 @@ export class ScheduleCourseManager {
  this.courseId = courseId || this.getCourseId();
 
  console.log('📅 ScheduleCourseManager initializing with course ID:', this.courseId);
+ console.log('📅 Constructor received courseId parameter:', courseId);
+ console.log('📅 Current window.location.search:', window.location.search);
+ console.log('📅 Current window.location.href:', window.location.href);
+
+ // Always store instance globally for debugging, even without course ID
+ if (typeof window !== "undefined") {
+ (window as any).scheduleManagerInstance = this;
+ console.log('📅 Schedule manager instance stored globally');
+ }
 
  if (!this.courseId) {
  console.warn("⚠️ No course ID available for schedule management - some features may be limited");
@@ -63,7 +72,10 @@ export class ScheduleCourseManager {
  return courseIdFromSession;
  }
 
- console.log('📅 No course ID found for schedule manager');
+ console.warn('📅 No course ID found for schedule manager');
+ console.warn('📅 Current URL:', window.location.href);
+ console.warn('📅 Available URL params:', Object.fromEntries(urlParams.entries()));
+ console.warn('📅 Session storage keys:', Object.keys(sessionStorage));
  return "";
  }
 
@@ -274,35 +286,47 @@ export class ScheduleCourseManager {
  }
 
  private renderSchedulePreview(): void {
-   const previewContainer =
-     this.schedulePreviewSection.querySelector('.schedule__content');
-   if (!previewContainer) return;
+   console.log('📅 Rendering schedule preview with', this.currentSchedule?.length || 0, 'sessions');
+   
+   const previewContainer = this.schedulePreviewSection.querySelector('.schedule__content');
+   if (!previewContainer) {
+     console.error('📅 .schedule__content container not found');
+     return;
+   }
 
+   // Clear existing content
    previewContainer.innerHTML = "";
 
    // Safety check: ensure currentSchedule is an array
    if (!Array.isArray(this.currentSchedule)) {
-     console.warn("currentSchedule is not an array:", this.currentSchedule);
+     console.warn("📅 currentSchedule is not an array:", this.currentSchedule);
      this.currentSchedule = [];
      return;
    }
 
    // Show schedule rows or placeholder
    if (this.currentSchedule.length > 0) {
+     console.log('📅 Rendering', this.currentSchedule.length, 'schedule rows');
      this.currentSchedule.forEach((session, index) => {
        const row = this.createScheduleRow(session, index);
        previewContainer.appendChild(row);
      });
+     
+     // Hide any existing placeholder and show the preview
+     this.schedulePreviewSection.style.display = 'block';
    } else {
+     console.log('📅 No schedule data - showing placeholder');
      // Show placeholder if no schedule
      const placeholder = document.createElement('div');
      placeholder.className = 'schedule__placeholder';
      placeholder.innerHTML = '<p>Click "Schedule Course" to generate your lesson schedule</p>';
      previewContainer.appendChild(placeholder);
+     
+     // Still show the preview section but with placeholder
+     this.schedulePreviewSection.style.display = 'block';
    }
 
    this.updateTotalLessonsDisplay();
-   this.schedulePreviewSection.style.display = 'block';
  }
 
  private createScheduleRow(
@@ -409,6 +433,9 @@ export class ScheduleCourseManager {
  private async loadExistingSchedule(): Promise<void> {
  if (!this.courseId) {
  console.warn('📅 Cannot load schedule: no course ID available');
+ console.warn('📅 Current URL:', window.location.href);
+ console.warn('📅 URL params:', new URLSearchParams(window.location.search).toString());
+ console.warn('📅 Session storage courseId:', sessionStorage.getItem("currentCourseId"));
  this.currentSchedule = [];
  this.hideSchedulePreview();
  this.unlockScheduleConfig();
@@ -416,6 +443,8 @@ export class ScheduleCourseManager {
  return;
  }
 
+ console.log('📅 Loading existing schedule for course ID:', this.courseId);
+ 
  try {
  const { data, error } = await supabase
  .from("courses")
@@ -423,22 +452,29 @@ export class ScheduleCourseManager {
  .eq("id", this.courseId)
  .single();
 
- if (error) throw error;
+ if (error) {
+ console.error("📅 Supabase error loading schedule:", error);
+ throw error;
+ }
+
+ console.log('📅 Raw schedule data from Supabase:', data);
 
  if (data?.schedule_settings && Array.isArray(data.schedule_settings)) {
+ console.log('📅 Found existing schedule with', data.schedule_settings.length, 'sessions');
  this.currentSchedule = data.schedule_settings;
  this.renderSchedulePreview();
  this.lockScheduleConfig();
  this.showDeleteScheduleButton();
  } else {
  // No existing schedule or invalid data - ensure currentSchedule is empty array
+ console.log('📅 No existing schedule found or invalid data format');
  this.currentSchedule = [];
  this.hideSchedulePreview();
  this.unlockScheduleConfig();
  this.hideDeleteScheduleButton();
  }
  } catch (error) {
- console.error("Error loading existing schedule:", error);
+ console.error("📅 Error loading existing schedule:", error);
  // Ensure currentSchedule is always an array even on error
  this.currentSchedule = [];
  this.hideSchedulePreview();
@@ -499,23 +535,73 @@ export class ScheduleCourseManager {
  this.courseId = courseId;
  console.log('📅 Course ID updated for schedule manager:', courseId);
  
- // Reload data with new course ID
+ // Immediately reload data with new course ID
  this.loadExistingSchedule();
  this.validateScheduleForm();
+ }
+
+ /**
+ * Directly set schedule data (useful when data is already loaded elsewhere)
+ */
+ public setScheduleData(scheduleSettings: ScheduleSession[]): void {
+ console.log('📅 Setting schedule data directly:', scheduleSettings);
+ 
+ if (!Array.isArray(scheduleSettings)) {
+ console.warn('📅 Invalid schedule data format - expected array');
+ return;
+ }
+
+ this.currentSchedule = scheduleSettings;
+ 
+ if (scheduleSettings.length > 0) {
+ console.log('📅 Displaying', scheduleSettings.length, 'schedule sessions');
+ this.renderSchedulePreview();
+ this.lockScheduleConfig();
+ this.showDeleteScheduleButton();
+ } else {
+ console.log('📅 No schedule sessions to display');
+ this.renderSchedulePreview(); // This will show the placeholder
+ this.unlockScheduleConfig();
+ this.hideDeleteScheduleButton();
+ }
+ }
+
+ /**
+ * Force reload schedule data from database
+ */
+ public async forceReload(): Promise<void> {
+ console.log('📅 Force reloading schedule data');
+ if (this.courseId) {
+ await this.loadExistingSchedule();
+ } else {
+ console.warn('📅 Cannot force reload - no course ID');
+ }
  }
 
  /**
  * Refresh the display to show current state
  */
  public refreshDisplay(): void {
+ console.log('📅 Refreshing schedule display');
+ 
  if (this.currentSchedule && this.currentSchedule.length > 0) {
- this.renderSchedulePreview();
- this.lockScheduleConfig();
- this.showDeleteScheduleButton();
+   console.log('📅 Has schedule data - showing preview');
+   this.renderSchedulePreview();
+   this.lockScheduleConfig();
+   this.showDeleteScheduleButton();
  } else {
- this.hideSchedulePreview();
- this.unlockScheduleConfig();
- this.hideDeleteScheduleButton();
+   console.log('📅 No schedule data - checking if we need to reload');
+   
+   // If we have a course ID but no schedule data, try loading it
+   if (this.courseId) {
+     console.log('📅 Have course ID but no schedule - attempting to reload');
+     this.loadExistingSchedule();
+   } else {
+     console.log('📅 No course ID - showing placeholder');
+     this.renderSchedulePreview(); // This will show the placeholder
+     this.unlockScheduleConfig();
+     this.hideDeleteScheduleButton();
+   }
  }
  }
 
@@ -528,9 +614,107 @@ export class ScheduleCourseManager {
 declare global {
  interface Window {
  ScheduleCourseManager: typeof ScheduleCourseManager;
+ scheduleManagerInstance?: ScheduleCourseManager;
  }
 }
 
 if (typeof window !== "undefined") {
  window.ScheduleCourseManager = ScheduleCourseManager;
+ 
+ // Add global debugging functions
+ (window as any).debugScheduleManager = function() {
+ const instance = (window as any).scheduleManagerInstance;
+ if (!instance) {
+ console.log('❌ No schedule manager instance found');
+ console.log('Available window properties:', Object.keys(window).filter(key => key.includes('schedule')));
+ return;
+ }
+ 
+ console.log('📅 Schedule Manager Debug Info:');
+ console.log('Course ID:', instance.courseId);
+ console.log('Current Schedule:', instance.currentSchedule);
+ console.log('URL:', window.location.href);
+ console.log('Session Storage courseId:', sessionStorage.getItem("currentCourseId"));
+ };
+ 
+ // Add function to check if instance exists
+ (window as any).checkScheduleManagerInstance = function() {
+ const instance = (window as any).scheduleManagerInstance;
+ console.log('Schedule manager instance exists:', !!instance);
+ console.log('Instance type:', typeof instance);
+ if (instance) {
+ console.log('Instance courseId:', instance.courseId);
+ }
+ return !!instance;
+ };
+ 
+ (window as any).testSetScheduleData = function(courseId?: string) {
+ // Use the actual schedule data you provided
+ const testData = [
+   {day: 'monday', date: '2025-12-01', endTime: '10:50', startTime: '09:00', lessonNumber: 1},
+   {day: 'tuesday', date: '2025-12-02', endTime: '10:50', startTime: '09:00', lessonNumber: 2},
+   {day: 'monday', date: '2025-12-08', endTime: '10:50', startTime: '09:00', lessonNumber: 3},
+   {day: 'tuesday', date: '2025-12-09', endTime: '10:50', startTime: '09:00', lessonNumber: 4},
+   {day: 'monday', date: '2025-12-15', endTime: '10:50', startTime: '09:00', lessonNumber: 5},
+   {day: 'tuesday', date: '2025-12-16', endTime: '10:50', startTime: '09:00', lessonNumber: 6},
+   {day: 'monday', date: '2025-12-22', endTime: '10:50', startTime: '09:00', lessonNumber: 7},
+   {day: 'tuesday', date: '2025-12-23', endTime: '10:50', startTime: '09:00', lessonNumber: 8},
+   {day: 'monday', date: '2025-12-29', endTime: '10:50', startTime: '09:00', lessonNumber: 9}
+ ];
+ 
+ const instance = (window as any).scheduleManagerInstance;
+ if (instance) {
+   if (courseId) {
+     instance.setCourseId(courseId);
+   }
+   instance.setScheduleData(testData);
+   console.log('✅ Test schedule data set with', testData.length, 'sessions');
+ } else {
+   console.log('❌ No schedule manager instance found');
+ }
+ };
+ 
+ // Add function to test with your actual course ID
+ (window as any).loadShakespeareCourse = function() {
+   const courseId = 'e5f435a1-a55a-4ee8-82d2-db8b0ac50296';
+   const instance = (window as any).scheduleManagerInstance;
+   
+   if (instance) {
+     console.log('📅 Loading Shakespeare course data...');
+     instance.setCourseId(courseId);
+     instance.forceReload();
+   } else {
+     console.log('❌ No schedule manager instance found');
+   }
+ };
+ 
+ // Add function to manually initialize with your course data
+ (window as any).initializeWithShakespeareData = function() {
+   // Create a new instance if none exists
+   if (!(window as any).scheduleManagerInstance) {
+     console.log('📅 Creating new schedule manager instance');
+     new ScheduleCourseManager('e5f435a1-a55a-4ee8-82d2-db8b0ac50296');
+     console.log('📅 New instance created');
+   }
+   
+   const instance = (window as any).scheduleManagerInstance;
+   if (instance) {
+     const scheduleData = [
+       {day: 'monday', date: '2025-12-01', endTime: '10:50', startTime: '09:00', lessonNumber: 1},
+       {day: 'tuesday', date: '2025-12-02', endTime: '10:50', startTime: '09:00', lessonNumber: 2},
+       {day: 'monday', date: '2025-12-08', endTime: '10:50', startTime: '09:00', lessonNumber: 3},
+       {day: 'tuesday', date: '2025-12-09', endTime: '10:50', startTime: '09:00', lessonNumber: 4},
+       {day: 'monday', date: '2025-12-15', endTime: '10:50', startTime: '09:00', lessonNumber: 5},
+       {day: 'tuesday', date: '2025-12-16', endTime: '10:50', startTime: '09:00', lessonNumber: 6},
+       {day: 'monday', date: '2025-12-22', endTime: '10:50', startTime: '09:00', lessonNumber: 7},
+       {day: 'tuesday', date: '2025-12-23', endTime: '10:50', startTime: '09:00', lessonNumber: 8},
+       {day: 'monday', date: '2025-12-29', endTime: '10:50', startTime: '09:00', lessonNumber: 9}
+     ];
+     
+     instance.setScheduleData(scheduleData);
+     console.log('✅ Shakespeare course schedule data set manually');
+   } else {
+     console.log('❌ Still no schedule manager instance found after creation attempt');
+   }
+ };
 }

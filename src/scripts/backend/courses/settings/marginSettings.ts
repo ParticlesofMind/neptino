@@ -51,7 +51,7 @@ export class MarginSettingsHandler {
  });
 
  // Margin input events
- const marginInputs = document.querySelectorAll('elements');
+ const marginInputs = document.querySelectorAll('.margin-setting input');
  marginInputs.forEach((input) => {
  input.addEventListener("input", (e) => this.handleMarginChange(e));
  input.addEventListener("change", (e) => this.handleMarginChange(e)); // For when user leaves field
@@ -148,7 +148,7 @@ export class MarginSettingsHandler {
  }
 
  private updateUnitDisplays(): void {
- const unitDisplays = document.querySelectorAll('elements');
+ const unitDisplays = document.querySelectorAll('.unit-display');
  const displayUnit = this.currentSettings.unit === "inches" ? "in" : "cm";
 
  unitDisplays.forEach((display) => {
