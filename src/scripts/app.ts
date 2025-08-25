@@ -4,8 +4,7 @@
  */
 
 import { initializeGlobalNavigation, initializeDashboardNavigation } from './navigation';
-import { initAuth } from './backend/auth/auth';
-import { AuthFormHandler } from './auth/AuthFormHandler';
+import { initAuth, AuthFormHandler } from './backend/auth/auth';
 import './utils/pageSetupPreview';
 import './backend/courses/settings/pageSetupHandler';
 // import PageTransitions from './navigation/PageTransitions'; // DISABLED

@@ -145,7 +145,7 @@ class PageTransitions {
                           window.location.pathname.includes('signup');
         
         if (isAuthPage) {
-            import('../auth/AuthFormHandler').then(({ AuthFormHandler }) => {
+            import('../backend/auth/auth').then(({ AuthFormHandler }) => {
                 new AuthFormHandler();
                 console.log('🔐 Auth form handler reinitialized');
             }).catch(err => console.warn('Could not load AuthFormHandler:', err));

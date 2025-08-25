@@ -39,45 +39,9 @@ type MediaManager = any;
 type FontManager = any;
 type CommandManager = any;
 
-/**
- * Error handler for consistent error reporting
- */
-class ErrorBoundary {
- private static instance: ErrorBoundary;
- 
- static getInstance(): ErrorBoundary {
- if (!ErrorBoundary.instance) {
- ErrorBoundary.instance = new ErrorBoundary();
- }
- return ErrorBoundary.instance;
- }
- 
- handleError(error: Error, context: string): void {
- console.error(`[CourseBuilder/${context}] Error:`, error);
- // Could integrate with error reporting service here
- }
-}
-
-/**
- * Performance monitoring utility
- */
-class PerformanceMonitor {
- private markers: Map<string, number> = new Map();
- 
- start(name: string): void {
- this.markers.set(name, performance.now());
- }
- 
- end(name: string): number {
- const start = this.markers.get(name);
- if (!start) return 0;
- 
- const duration = performance.now() - start;
- console.log(`[Performance] ${name}: ${duration.toFixed(2)}ms`);
- this.markers.delete(name);
- return duration;
- }
-}
+// Import utility classes
+import { ErrorBoundary } from "./utils/ErrorBoundary";
+import { PerformanceMonitor } from "./utils/PerformanceMonitor";
 
 /**
  * Main CourseBuilderCanvas class with enhanced architecture
@@ -152,8 +116,7 @@ export class CourseBuilderCanvas {
  // Setup page layout listener
  this.setupPageLayoutListener();
 
- // Initialize all other managers
- this.initializeAllManagers(); this.isInitialized = true;
+ this.isInitialized = true;
  this.performanceMonitor.end('coursebuilder-init');
  
  console.log('✅ CourseBuilderCanvas initialized successfully');
@@ -270,15 +233,14 @@ export class CourseBuilderCanvas {
 
  private async initializeBasedOnSection(): Promise<void> {
  try {
- // Skip canvas initialization - using direct HTML5 canvases
- console.log('📚 Skipping PIXI canvas initialization - using HTML5 canvases');
+ console.log('📚 Using HTML5 canvases for lessons');
  
  // Initialize section-specific handlers
  this.initializeSectionHandler(this.currentSection);
  
  // If we're in create section and have a course ID, initialize PIXI canvases immediately
  if (this.currentSection === "create" && this.courseId) {
- console.log('🎨 Create section detected with course ID, initializing PIXI canvases...');
+ console.log('🎨 Create section detected, initializing lesson canvases...');
  await this.generateLessonNavigation(this.courseId);
  }
  } catch (error) {
@@ -286,10 +248,7 @@ export class CourseBuilderCanvas {
  }
  }
 
- private shouldInitializeCanvas(): boolean {
- // Disable canvas initialization - using direct HTML5 canvases
- return false;
- }
+
 
  private async initializeCanvas(): Promise<void> {
  try {
@@ -297,31 +256,29 @@ export class CourseBuilderCanvas {
  
  const canvasContainer = document.getElementById("canvas-container");
  if (!canvasContainer) {
- console.warn('⚠️ Canvas container not found - skipping canvas initialization');
+ console.warn('⚠️ Canvas container not found');
  return;
  }
 
- // Skip all PIXI initialization - using direct HTML5 canvases for PDF-style layout
- console.log('📚 Skipping PIXI initialization - using HTML5 canvases for lessons');
+ console.log('📚 Using HTML5 canvases for lessons');
  
  // If we have a course ID, initialize canvases now that container is ready
  if (this.courseId) {
  console.log('🎯 Canvas container ready - initializing course:', this.courseId);
- // Generate lesson navigation for this course
  this.generateLessonNavigation(this.courseId);
  }
  
- // Initialize core managers without PIXI dependency
+ // Initialize core managers
  if (!this.uiEventHandler) {
- console.log('🎛️ Initializing core managers after canvas setup...');
+ console.log('🎛️ Initializing core managers...');
  this.initializeCoreManagers();
  }
  
  this.performanceMonitor.end('canvas-init');
- console.log('✅ Canvas system initialized without PIXI');
+ console.log('✅ Canvas system initialized');
  } catch (error) {
  this.errorBoundary.handleError(error as Error, 'canvas-init');
- throw error; // Canvas is critical, so rethrow
+ throw error;
  }
  }
 
@@ -446,24 +403,7 @@ export class CourseBuilderCanvas {
  }
  }
 
- private initializeAllManagers(): void {
- try {
- this.performanceMonitor.start('managers-init');
- 
- // Initialize core managers only if canvas is available
- if (this.pixiCanvases.length > 0) {
- this.initializeCoreManagers();
- }
- 
- // Initialize course-specific managers
- this.initializeCourseManagers();
- 
- this.performanceMonitor.end('managers-init');
- console.log('✅ All managers initialized');
- } catch (error) {
- this.errorBoundary.handleError(error as Error, 'initializeAllManagers');
- }
- }
+
 
  private initializeCoreManagers(): void {
  try {
@@ -510,39 +450,7 @@ export class CourseBuilderCanvas {
  }
  }
 
- private initializeCourseManagers(): void {
- try {
- // Only initialize if we have a course ID or are in creation mode
- if (this.courseId || this.currentSection === "essentials") {
- 
- // Schedule manager for schedule section
- if (this.currentSection === "schedule" || this.courseId) {
- this.scheduleManager = new ScheduleCourseManager(this.courseId || undefined);
- console.log('📅 Schedule manager initialized');
- }
- 
- // Curriculum manager for curriculum section
- if (this.currentSection === "curriculum" || this.courseId) {
- this.curriculumManager = new CurriculumManager(this.courseId || undefined);
- console.log('📚 Curriculum manager initialized');
- }
- 
- // Delete course manager - always initialize if we have a course ID
- if (this.courseId) {
- this.deleteCourseManager = new DeleteCourseManager(this.courseId);
- console.log('🗑️ Delete course manager initialized');
- }
- }
 
- // Initialize dropdown handler for classification section
- if (!this.selectHandler) {
- this.selectHandler = new CourseBuilderSelectHandler();
- console.log('📋 Select handler initialized');
- }
- } catch (error) {
- this.errorBoundary.handleError(error as Error, 'initializeCourseManagers');
- }
- }
 
  // ==========================================================================
  // NAVIGATION AND SECTION HANDLING
@@ -558,8 +466,8 @@ export class CourseBuilderCanvas {
  // Update current section
  this.currentSection = sectionId;
  
- // Initialize canvas if navigating to a canvas section and not already initialized
- if ((sectionId === "create" || this.shouldInitializeCanvas()) && this.pixiCanvases.length === 0) {
+ // Initialize canvas if navigating to the create section and not already initialized
+ if (sectionId === "create" && this.pixiCanvases.length === 0) {
  this.initializeCanvas().catch(error => {
  console.error('Failed to initialize canvas during navigation:', error);
  });
@@ -1411,164 +1319,8 @@ export class CourseBuilderCanvas {
 // AUTO-INITIALIZATION
 // ==========================================================================
 
-// ==========================================================================
-// ADAPTIVE SEARCH AND PREVIEW FUNCTIONALITY
-// ==========================================================================
-
-/**
- * Manages adaptive search placeholders and preview instances
- */
-class AdaptiveSearchManager {
-  private searchInput: HTMLInputElement | null = null;
-  private mediaItems: NodeListOf<Element> | null = null;
-  private navCourseItems: NodeListOf<Element> | null = null;
-  private previewContainers: NodeListOf<Element> | null = null;
-  
-  private placeholders: { [key: string]: string } = {
-    'video': 'Search video content...',
-    'audio': 'Search audio files...',
-    'image': 'Search images...',
-    'text': 'Search text content...',
-    'quiz': 'Search quiz questions...',
-    'document': 'Search documents...',
-    'default': 'Search media...'
-  };
-
-  constructor() {
-    this.initialize();
-  }
-
-  private initialize(): void {
-    // Get DOM elements
-    this.searchInput = document.getElementById('engine__search') as HTMLInputElement;
-    this.mediaItems = document.querySelectorAll('.media__item');
-    this.navCourseItems = document.querySelectorAll('.nav-course__item');
-    this.previewContainers = document.querySelectorAll('[id^="preview-"]');
-
-    if (this.searchInput && this.mediaItems.length > 0) {
-      this.setupMediaItemListeners();
-    }
-
-    if (this.navCourseItems.length > 0) {
-      this.setupNavCourseListeners();
-      // Show the first preview by default (since first nav item is already selected)
-      this.initializeDefaultPreview();
-    }
-  }
-
-  private initializeDefaultPreview(): void {
-    // Find the first nav-course item that's already active
-    const activeNavItem = document.querySelector('.nav-course__item.active') as HTMLElement;
-    if (activeNavItem) {
-      const previewId = activeNavItem.getAttribute('data-preview');
-      if (previewId) {
-        this.showPreview(previewId);
-      }
-    } else if (this.navCourseItems && this.navCourseItems.length > 0) {
-      // If no active item, use the first one
-      const firstNavItem = this.navCourseItems[0] as HTMLElement;
-      const previewId = firstNavItem.getAttribute('data-preview');
-      if (previewId) {
-        firstNavItem.classList.add('active');
-        this.showPreview(previewId);
-      }
-    }
-  }
-
-  private setupMediaItemListeners(): void {
-    this.mediaItems?.forEach(item => {
-      item.addEventListener('click', () => {
-        const mediaType = item.getAttribute('data-media-type') || 'default';
-        this.updateSearchPlaceholder(mediaType);
-        
-        // Add active class to clicked item
-        this.mediaItems?.forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
-      });
-    });
-  }
-
-  private setupNavCourseListeners(): void {
-    this.navCourseItems?.forEach(item => {
-      item.addEventListener('click', () => {
-        const previewId = item.getAttribute('data-preview');
-        if (previewId) {
-          this.showPreview(previewId);
-          
-          // Add active class to clicked item
-          this.navCourseItems?.forEach(i => i.classList.remove('active'));
-          item.classList.add('active');
-        }
-      });
-    });
-  }
-
-  private updateSearchPlaceholder(mediaType: string): void {
-    if (this.searchInput) {
-      const placeholder = this.placeholders[mediaType] || this.placeholders['default'];
-      this.searchInput.setAttribute('placeholder', placeholder);
-    }
-  }
-
-  private showPreview(previewId: string): void {
-    // Hide all preview containers
-    this.previewContainers?.forEach(container => {
-      container.classList.remove('active');
-    });
-
-    // Show the selected preview container
-    const targetPreview = document.getElementById(`preview-${previewId}`);
-    if (targetPreview) {
-      targetPreview.classList.add('active');
-      
-      // If this is the outline preview, fetch curriculum data
-      if (previewId === 'outline') {
-        this.loadCurriculumData(targetPreview);
-      }
-    }
-  }
-
-  private async loadCurriculumData(previewContainer: Element): Promise<void> {
-    try {
-      // Get the actual curriculum data from the CurriculumManager
-      const courseBuilderInstance = (window as any).courseBuilderCanvasInstance;
-      if (courseBuilderInstance && courseBuilderInstance.curriculumManager) {
-        const curriculumData = courseBuilderInstance.curriculumManager.getCurrentCurriculum();
-        
-        if (curriculumData && curriculumData.length > 0) {
-          this.renderCurriculumOutline(previewContainer, { lessons: curriculumData });
-        } else {
-          // No curriculum data available
-          previewContainer.innerHTML = '<p class="no-curriculum">No curriculum available for this course yet.</p>';
-        }
-      } else {
-        // Fallback when CurriculumManager is not available
-        previewContainer.innerHTML = '<p class="loading">Loading curriculum...</p>';
-      }
-    } catch (error) {
-      console.error('Failed to load curriculum data:', error);
-      previewContainer.innerHTML = '<p class="error">Failed to load curriculum outline</p>';
-    }
-  }
-
-  private renderCurriculumOutline(container: Element, data: any): void {
-    const outlineHTML = data.lessons.map((lesson: any) => `
-      <div class="lesson">
-        <h4>${lesson.title}</h4>
-        <ul class="topics">
-          ${lesson.topics.map((topic: any) => `<li>${topic.title || topic}</li>`).join('')}
-        </ul>
-      </div>
-    `).join('');
-
-    container.innerHTML = `
-      <div class="outline-preview">
-   
-        ${outlineHTML}
-      </div>
-    `;
-  }
-}
+// Import UI components
+import { AdaptiveSearchManager } from "./ui/AdaptiveSearchManager";
 
 // Auto-initialize when DOM is ready and we're on coursebuilder page
 document.addEventListener("DOMContentLoaded", () => {
