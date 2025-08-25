@@ -1,6 +1,10 @@
 import { supabase } from "../../supabase.js";
 import "./templateConfigHandler.js";
 import "./templatePreviewHandler.js";
+import '@pixi/layout';
+
+// Import loadTemplates modal to make it available globally
+import './modals/loadTemplates.js';
 
 export interface TemplateData {
   template_id: string;
@@ -29,7 +33,6 @@ export interface TemplateBlock {
 }
 
 export class TemplateManager {
-  private static selectedTemplateId: string | null = null;
   private static currentlyLoadedTemplateId: string | null = null;
   private static currentlyLoadedTemplateData: any = null;
 
@@ -72,196 +75,19 @@ export class TemplateManager {
   }
 
   /**
-  * Shows the load template modal
+  * Shows the load template modal using the new LoadTemplatesModal
   */
   static async showLoadTemplateModal(): Promise<void> {
-    const modal = document.getElementById("load-template-modal");
-    if (modal) {
-      modal.style.display = "flex";
-      modal
-
-      // Load templates when modal is shown
-      await this.loadTemplatesForModal();
-
-      // Add a small delay to trigger the animation
-      setTimeout(() => {
-        const content = modal.querySelector('element') as HTMLElement;
-        if (content) {
-          content.style.transform = "scale(1)";
-          content.style.opacity = "1";
-        }
-      }, 10);
-    }
-  }
-
-  /**
-  * Hides the load template modal
-  */
-  static hideLoadTemplateModal(): void {
-    const modal = document.getElementById("load-template-modal");
-    if (modal) {
-      const content = modal.querySelector('element') as HTMLElement;
-      if (content) {
-        content.style.transform = "scale(0.9)";
-        content.style.opacity = "0";
-      }
-
-      setTimeout(() => {
-        modal.style.display = "none";
-        modal
-      }, 300);
-
-      // Clear selection
-      this.selectedTemplateId = null;
-      this.updateLoadButtonState();
-    }
-  }
-
-  /**
-  * Loads templates for the modal display
-  */
-  static async loadTemplatesForModal(): Promise<void> {
-    const loadingEl = document.getElementById("template-loading");
-    const contentEl = document.getElementById("template-list-content");
-    const noTemplatesEl = document.getElementById("no-templates-message");
-
-    if (loadingEl) loadingEl.style.display = "flex";
-    if (contentEl) contentEl.style.display = "none";
-    if (noTemplatesEl) noTemplatesEl.style.display = "none";
-
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error("User not authenticated");
-      }
-
-      const { data, error } = await supabase
-        .from("templates")
-        .select(
-          "id, template_id, template_type, template_description, created_at, template_data",
-        )
-        .eq("created_by", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-
-      if (loadingEl) loadingEl.style.display = "none";
-
-      if (!data || data.length === 0) {
-        if (noTemplatesEl) noTemplatesEl.style.display = "flex";
-      } else {
-        this.displayTemplatesInModal(data);
-        if (contentEl) contentEl.style.display = "grid";
-      }
-    } catch (error) {
-      console.error("Failed to load templates:", error);
-      if (loadingEl) loadingEl.style.display = "none";
-      if (noTemplatesEl) {
-        noTemplatesEl.innerHTML = `
- <div class="">⚠</div>
- <h3>Error Loading Templates</h3>
- <p>There was an error loading your templates. Please try again.</p>
- <button class="button button--secondary" onclick="TemplateManager.loadTemplatesForModal()">
- Retry
- </button>
- `;
-        noTemplatesEl.style.display = "flex";
-      }
-    }
-  }
-
-  /**
-  * Displays templates in the modal
-  */
-  static displayTemplatesInModal(templates: any[]): void {
-    const contentEl = document.getElementById("template-list-content");
-    if (!contentEl) return;
-
-    const templatesHtml = templates
-      .map((template) => {
-        const createdDate = new Date(template.created_at).toLocaleDateString();
-        const templateName =
-          template.template_data?.name || "Untitled Template";
-        const description =
-          template.template_description || "No description provided";
-
-        return `
-         <div class="template-card" data-template-id="${template.id}" onclick="TemplateManager.selectTemplate('${template.id}')">
- <div class="template-card__header">
-             <h4 class="template-card__title">${templateName}</h4>
-             <span class="template-card__type">${template.template_type}</span>
- </div>
- <div class="template-card__description">
- ${description}
- </div>
- <div class="">
- <span class="">Created: ${createdDate}</span>
- </div>
- <div class="">
- <button class="button button--outline button--small" onclick="event.stopPropagation(); TemplateManager.previewTemplateInModal('${template.id}')">
- Preview
- </button>
- <button class="button button--outline button--small button--danger" onclick="event.stopPropagation(); TemplateManager.deleteTemplate('${template.id}')">
- Delete
- </button>
- </div>
- </div>
- `;
-      })
-      .join("");
-
-    contentEl.innerHTML = templatesHtml;
-  }
-
-  /**
-   * Selects a template in the modal
-   */
-  static selectTemplate(templateId: string): void {
-    // Remove previous selection
-    document.querySelectorAll('.template-card--selected').forEach((card) => {
-      card.classList.remove('template-card--selected');
+    // Import and use the new LoadTemplatesModal
+    const { loadTemplatesModal } = await import('./modals/loadTemplates.js');
+    
+    // Set up the callback
+    loadTemplatesModal.setOnTemplateSelected((templateId: string) => {
+      this.loadTemplate(templateId);
     });
-
-    // Add selection to current template
-    const selectedCard = document.querySelector(
-      `[data-template-id="${templateId}"]`,
-    );
-    if (selectedCard) {
-      selectedCard.classList.add('template-card--selected');
-    }
-
-    this.selectedTemplateId = templateId;
-    this.updateLoadButtonState();
-  } /**
- * Updates the load button state
- */
-  static updateLoadButtonState(): void {
-    const loadButton = document.getElementById(
-      "load-selected-template",
-    ) as HTMLButtonElement;
-    if (loadButton) {
-      loadButton.disabled = !this.selectedTemplateId;
-    }
-  }
-
-  /**
-  * Loads the selected template
-  */
-  static async loadSelectedTemplate(): Promise<void> {
-    if (!this.selectedTemplateId) return;
-
-    try {
-      await this.loadTemplate(this.selectedTemplateId);
-      this.hideLoadTemplateModal();
-      // The template is now loaded in the config and preview areas
-    } catch (error) {
-      console.error("Failed to load selected template:", error);
-      alert("Failed to load template. Please try again.");
-    }
+    
+    // Show the modal
+    await loadTemplatesModal.show();
   }
 
   /**
@@ -375,187 +201,6 @@ export class TemplateManager {
       console.error("Failed to save template changes:", error);
       alert("Failed to save template changes. Please try again.");
     }
-  }
-
-  /**
-  * Previews a template in a mini modal
-  */
-  static async previewTemplateInModal(templateId: string): Promise<void> {
-    try {
-      const { data, error } = await supabase
-        .from("templates")
-        .select("*")
-        .eq("id", templateId)
-        .single();
-
-      if (error) throw error;
-
-      // Create a simple preview modal
-      const previewHtml = `
- <div class="template-modal template-modal--extra-large template-modal--active" onclick="this.remove()">
- <div class="" onclick="event.stopPropagation()">
- <div class="">
- <h3>${data.template_data?.name || "Template Preview"}</h3>
- <button onclick="this.closest('.template-modal').remove()">&times;</button>
- </div>
- <div class="">
- <div class="template-blocks-preview">
- ${data.template_data?.blocks
-          ?.map(
-            (block: any) => `
- <div class="preview-block preview-block--${block.type}">
- <h4>${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</h4>
- <div class="preview-block__content">${block.content || "No content"}</div>
- </div>
- `,
-          )
-          .join("") || "<p>No blocks configured</p>"
-        }
- </div>
- </div>
- </div>
- </div>
- `;
-
-      document.body.insertAdjacentHTML("beforeend", previewHtml);
-    } catch (error) {
-      console.error("Failed to preview template:", error);
-      alert("Failed to load template preview.");
-    }
-  }
-
-  /**
-  * Deletes a template
-  */
-  static async deleteTemplate(templateId: string): Promise<void> {
-    const confirmation = confirm(
-      "Are you sure you want to delete this template? This action cannot be undone.",
-    );
-    if (!confirmation) return;
-
-    try {
-      const { error } = await supabase
-        .from("templates")
-        .delete()
-        .eq("id", templateId);
-
-      if (error) throw error;
-
-      // Reload templates in modal
-      await this.loadTemplatesForModal();
-
-    } catch (error) {
-      console.error("Failed to delete template:", error);
-      alert("Failed to delete template. Please try again.");
-    }
-  }
-
-  /**
-   * Filters templates based on search term
-   */
-  static filterTemplates(searchTerm: string): void {
-    const templateCards = document.querySelectorAll('.template-card');
-
-    templateCards.forEach((card) => {
-      const title =
-        card
-          .querySelector('.coursebuilder-template-card__title')
-          ?.textContent?.toLowerCase() || "";
-      const description =
-        card
-          .querySelector('.coursebuilder-template-card__description')
-          ?.textContent?.toLowerCase() || "";
-      const type =
-        card
-          .querySelector('.coursebuilder-template-card__type')
-          ?.textContent?.toLowerCase() || "";
-
-      const matchesSearch =
-        title.includes(searchTerm) ||
-        description.includes(searchTerm) ||
-        type.includes(searchTerm);
-
-      (card as HTMLElement).style.display = matchesSearch ? "block" : "none";
-    });
-  } /**
- * Applies filters and sorting to templates
- */
-  static applyFiltersAndSort(): void {
-    const typeFilter = document.getElementById(
-      "template-type-filter",
-    ) as HTMLSelectElement;
-    const sortFilter = document.getElementById(
-      "template-sort",
-    ) as HTMLSelectElement;
-    const searchInput = document.getElementById(
-      "template-search",
-    ) as HTMLInputElement;
-
-    if (!typeFilter || !sortFilter) return;
-
-    const selectedType = typeFilter.value;
-    const sortBy = sortFilter.value;
-    const searchTerm = searchInput?.value?.toLowerCase() || "";
-
-    const container = document.getElementById("template-list-content");
-    if (!container) return;
-
-    const templateCards = Array.from(
-      container.querySelectorAll('.coursebuilder-template-card'),
-    ) as HTMLElement[];
-
-    // Filter by type and search
-    templateCards.forEach((card) => {
-      const cardType =
-        card
-          .querySelector('.coursebuilder-template-card__type')
-          ?.textContent?.toLowerCase() || "";
-      const title =
-        card
-          .querySelector('.coursebuilder-template-card__title')
-          ?.textContent?.toLowerCase() || "";
-      const description =
-        card
-          .querySelector('.coursebuilder-template-card__description')
-          ?.textContent?.toLowerCase() || "";
-
-      const matchesType = !selectedType || cardType === selectedType;
-      const matchesSearch =
-        !searchTerm ||
-        title.includes(searchTerm) ||
-        description.includes(searchTerm) ||
-        cardType.includes(searchTerm);
-
-      card.style.display = matchesType && matchesSearch ? "block" : "none";
-    });
-
-    // Sort visible cards
-    const visibleCards = templateCards.filter(
-      (card) => card.style.display !== "none",
-    );
-
-    visibleCards.sort((a, b) => {
-      switch (sortBy) {
-        case "name":
-          const nameA =
-            a.querySelector('.coursebuilder-template-card__title')?.textContent || "";
-          const nameB =
-            b.querySelector('.coursebuilder-template-card__title')?.textContent || "";
-          return nameA.localeCompare(nameB);
-        case "created_at":
-          // For created_at, we assume newer templates are shown first by default
-          // This would require storing the actual date in a data attribute for proper sorting
-          return 0; // Keep original order for now
-        case "modified_at":
-          // Similar to created_at - would need modification date stored
-          return 0; // Keep original order for now
-        default:
-          return 0;
-      }
-    }); // Re-append sorted cards
-    visibleCards.forEach((card) => {
-      container.appendChild(card);
-    });
   }
 
   /**
@@ -1756,31 +1401,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (templatesSection.classList.contains('content__article--active')) {
       TemplateManager.loadCourseTemplate();
     }
-  }
-
-  // Search functionality for load template modal
-  const templateSearch = document.getElementById("template-search");
-  if (templateSearch) {
-    templateSearch.addEventListener("input", (e) => {
-      const searchTerm = (e.target as HTMLInputElement).value.toLowerCase();
-      TemplateManager.filterTemplates(searchTerm);
-    });
-  }
-
-  // Filter functionality
-  const typeFilter = document.getElementById("template-type-filter");
-  const sortFilter = document.getElementById("template-sort");
-
-  if (typeFilter) {
-    typeFilter.addEventListener("change", () => {
-      TemplateManager.applyFiltersAndSort();
-    });
-  }
-
-  if (sortFilter) {
-    sortFilter.addEventListener("change", () => {
-      TemplateManager.applyFiltersAndSort();
-    });
   }
 
   // Modal form submission handler

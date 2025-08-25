@@ -233,8 +233,7 @@ export class CourseBuilder {
  console.log('📋 Refreshing schedule manager with course ID:', this.courseId);
  this.scheduleManager.setCourseId(this.courseId);
  }
- // Trigger a refresh to show/hide preview as needed
- this.scheduleManager.refreshDisplay();
+
  } else {
  console.log('📋 Schedule manager not initialized (create new course mode)');
  }

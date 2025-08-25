@@ -341,7 +341,8 @@ export class CourseBuilderSelectHandler {
 
 // Auto-initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  if (window.location.pathname.includes('coursebuilder.html')) {
-    new CourseBuilderSelectHandler();
-  }
+  // DISABLED - Using ClassificationFormHandler instead
+  // if (window.location.pathname.includes('coursebuilder.html')) {
+  //   new CourseBuilderSelectHandler();
+  // }
 });

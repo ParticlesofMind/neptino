@@ -3,8 +3,7 @@
  * Main entry point for coursebuilder functionality
  */
 
-// Main coursebuilder class
-export { CourseBuilderCanvas } from './coursebuilder';
+
 
 // Utility classes
 export { ErrorBoundary } from './utils/ErrorBoundary';

@@ -180,7 +180,7 @@ export class CourseBuilderNavigation {
  const prevSection = sectionOrder[currentIndex - 1];
  this.previousButton.innerHTML = `
  <span class="">←</span>
- <span class="">Back to ${this.getSectionDisplayName(prevSection)}</span>
+ <span class="">${this.getSectionDisplayName(prevSection)}</span>
  `;
  }
  }
@@ -188,14 +188,13 @@ export class CourseBuilderNavigation {
  // Update next button
  if (this.nextButton) {
  if (currentIndex === sectionOrder.length - 1) {
- this.nextButton.innerHTML = `
- <span class="">Launch Course</span>
- 
- `;
+ // Hide next button on launch section
+ this.nextButton.style.display = 'none';
  } else {
  const nextSection = sectionOrder[currentIndex + 1];
+ this.nextButton.style.display = 'block';
  this.nextButton.innerHTML = `
- <span class="">Continue to ${this.getSectionDisplayName(nextSection)}</span>
+ <span class="">${this.getSectionDisplayName(nextSection)}</span>
  <span class="">→</span>
  `;
  }

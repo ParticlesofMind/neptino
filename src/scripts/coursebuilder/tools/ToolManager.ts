@@ -11,7 +11,7 @@ import { BrushTool } from "./BrushTool";
 import { TextTool } from "./TextTool";
 import { ShapesTool } from "./ShapesTool";
 import { EraserTool } from "./EraserTool";
-import { DisplayObjectManager } from "../canvas/DisplayObjectManager";
+import { DisplayObjectManager } from "../canvas/DisplayObjectManagerStub";
 import { BoundaryUtils, CanvasBounds } from "./BoundaryUtils";
 
 export class ToolManager {
