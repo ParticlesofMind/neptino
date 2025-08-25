@@ -11,7 +11,6 @@ export * from "./core/ConfigManager";
 
 // Lesson template implementation
 export * from "./lesson/LessonTemplate";
-export * from "./lesson/LessonBlocks";
 export * from "./lesson/LessonRenderer";
 
 // Block implementations

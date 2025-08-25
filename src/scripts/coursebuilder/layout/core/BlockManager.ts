@@ -62,8 +62,11 @@ export class BlockManager implements IBlockManager {
     // Add visible background rectangle for the block
     this.addBlockBackground(blockContainer, block, blockWidth, blockHeight);
 
+    // Add block title
+    this.addBlockTitle(blockContainer, block);
+
     // Render each row
-    let yOffset = 10; // Start with padding
+    let yOffset = 30; // Start with more padding to account for title
     block.rows.forEach((row) => {
       const rowHeight = block.rows.length > 1 ? (blockHeight - 20) / block.rows.length : blockHeight - 20;
       const rowContainer = this.renderRow(row, block, blockWidth - 20, rowHeight); 
@@ -177,6 +180,27 @@ export class BlockManager implements IBlockManager {
     });
     background.label = `background-${block.id}`;
     container.addChildAt(background, 0);
+  }
+
+  /**
+   * Add block title at the top of the block
+   */
+  private addBlockTitle(container: Container, block: Block): void {
+    const title = new Text({
+      text: block.name,
+      style: new TextStyle({
+        fontSize: 16,
+        fill: 0xffffff,
+        fontFamily: 'Arial, sans-serif',
+        fontWeight: 'bold',
+        align: 'center',
+      }),
+    });
+
+    title.x = 10;
+    title.y = 8;
+    title.label = `title-${block.id}`;
+    container.addChild(title);
   }
 
   /**

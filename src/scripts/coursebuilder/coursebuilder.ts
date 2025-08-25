@@ -148,11 +148,12 @@ export class CourseBuilderCanvas {
  
  // Setup keyboard shortcuts
  this.setupKeyboardShortcuts();
- 
+
+ // Setup page layout listener
+ this.setupPageLayoutListener();
+
  // Initialize all other managers
- this.initializeAllManagers();
- 
- this.isInitialized = true;
+ this.initializeAllManagers(); this.isInitialized = true;
  this.performanceMonitor.end('coursebuilder-init');
  
  console.log('✅ CourseBuilderCanvas initialized successfully');
@@ -330,13 +331,14 @@ export class CourseBuilderCanvas {
  private setupPageLayoutListener(): void {
  try {
  document.addEventListener('pageLayoutChange', (event: Event) => {
- if (this.pixiCanvas && (event as CustomEvent).detail) {
+ if (this.pixiCanvases.length > 0 && (event as CustomEvent).detail) {
  const layout = (event as CustomEvent).detail;
  console.log('📄 Page layout changed, updating canvas margins:', layout.margins);
  
  // Convert margin values to pixels
  const margins = this.convertMarginsToPixels(layout.margins);
- this.pixiCanvas.updateMargins(margins);
+ // Update all canvases
+ this.pixiCanvases.forEach(canvas => canvas.updateMargins(margins));
  }
  });
  
@@ -355,8 +357,8 @@ export class CourseBuilderCanvas {
  console.log('📄 No course ID - using default margins');
  // Use default margins if no course ID
  const defaultMargins = { top: 72, right: 72, bottom: 72, left: 72 }; // 2.54cm in pixels
- if (this.pixiCanvas) {
- this.pixiCanvas.updateMargins(defaultMargins);
+ if (this.pixiCanvases.length > 0) {
+ this.pixiCanvases.forEach(canvas => canvas.updateMargins(defaultMargins));
  }
  return;
  }
@@ -368,8 +370,8 @@ export class CourseBuilderCanvas {
  if (settings && settings.margins) {
  const margins = this.convertMarginsToPixels(settings.margins);
  console.log('📄 Loading initial page layout margins:', margins);
- if (this.pixiCanvas) {
- this.pixiCanvas.updateMargins(margins);
+ if (this.pixiCanvases.length > 0) {
+ this.pixiCanvases.forEach(canvas => canvas.updateMargins(margins));
  }
  }
  } catch (error) {
@@ -449,7 +451,7 @@ export class CourseBuilderCanvas {
  this.performanceMonitor.start('managers-init');
  
  // Initialize core managers only if canvas is available
- if (this.pixiCanvas) {
+ if (this.pixiCanvases.length > 0) {
  this.initializeCoreManagers();
  }
  
@@ -557,7 +559,7 @@ export class CourseBuilderCanvas {
  this.currentSection = sectionId;
  
  // Initialize canvas if navigating to a canvas section and not already initialized
- if ((sectionId === "create" || this.shouldInitializeCanvas()) && !this.pixiCanvas) {
+ if ((sectionId === "create" || this.shouldInitializeCanvas()) && this.pixiCanvases.length === 0) {
  this.initializeCanvas().catch(error => {
  console.error('Failed to initialize canvas during navigation:', error);
  });
@@ -803,13 +805,14 @@ export class CourseBuilderCanvas {
  .eq('id', courseId)
  .single();
 
+ let sessions = 1; // Default to 1 session
  if (error || !course) {
- console.error('Failed to fetch course data:', error);
- return;
+ console.warn('Failed to fetch course data or course not found:', error);
+ console.log('📚 Using default single lesson for demo/testing purposes');
+ } else {
+ sessions = course.course_sessions || 1;
+ console.log(`📚 Generating navigation for ${sessions} lessons from database`);
  }
-
- const sessions = course.course_sessions || 1;
- console.log(`📚 Generating navigation for ${sessions} lessons`);
 
  // Restore the original 3 navigation items
  const navContainer = document.querySelector('.engine__nav-course');
@@ -983,14 +986,84 @@ export class CourseBuilderCanvas {
  lessonWrapper.appendChild(pixiContainer);
  canvasContainer.appendChild(lessonWrapper);
 
- // Initialize PIXI canvas for this lesson
- const pixiCanvas = new PixiCanvas(`#lesson-canvas-${i}`);
- await pixiCanvas.init();
- 
- // Store in the array
- this.pixiCanvases.push(pixiCanvas);
- 
- console.log(`🎨 Created PIXI.js canvas for Lesson ${i}`);
+        // Initialize PIXI canvas for this lesson
+        const pixiCanvas = new PixiCanvas(`#lesson-canvas-${i}`);
+        await pixiCanvas.init();
+        
+        // Initialize lesson template for this canvas
+        const layoutContainer = pixiCanvas.getLayoutContainer();
+        if (layoutContainer) {
+            const canvasDimensions = pixiCanvas.getCanvasDimensions();
+            const { LessonLayoutTemplate } = await import("./canvas/LessonLayoutTemplate");
+            const lessonTemplate = new LessonLayoutTemplate(
+                layoutContainer,
+                canvasDimensions.width,
+                canvasDimensions.height,
+                i // Pass lesson number (1-indexed)
+            );
+            await lessonTemplate.initialize();
+            
+            // Check if this lesson needs additional canvases for overflow content
+            if (lessonTemplate.hasMultiplePages()) {
+                const pageCount = lessonTemplate.getPageCount();
+                console.log(`📄 Lesson ${i} requires ${pageCount} pages - creating additional canvases`);
+                
+                // Set the main template to show only page 1 when there are multiple pages
+                lessonTemplate.setSpecificPage(1);
+                
+                // Create additional HTML containers and canvases for each extra page
+                for (let pageIndex = 2; pageIndex <= pageCount; pageIndex++) {
+                    // Create additional PIXI container HTML element
+                    const additionalPixiContainer = document.createElement('div');
+                    additionalPixiContainer.id = `lesson-canvas-${i}-page-${pageIndex}`;
+                    additionalPixiContainer.className = 'lesson-canvas';
+                    additionalPixiContainer.style.cssText = `
+                        width: 794px;
+                        height: 1123px;
+                        margin: 10px auto 0 auto;
+                        background: white;
+                        border: 1px solid var(--color-neutral-300);
+                        border-radius: var(--radius-large);
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    `;
+                    
+                    // Add it to the same lesson wrapper
+                    lessonWrapper.appendChild(additionalPixiContainer);
+                    
+                    // Create and initialize the additional PIXI canvas
+                    const additionalPixiCanvas = new PixiCanvas(`#lesson-canvas-${i}-page-${pageIndex}`);
+                    await additionalPixiCanvas.init();
+                    
+                    // Initialize lesson template for the additional canvas with specific page content
+                    const additionalLayoutContainer = additionalPixiCanvas.getLayoutContainer();
+                    if (additionalLayoutContainer) {
+                        // Create a NEW lesson template instance for this additional canvas
+                        // This will have the same content but we'll set it to show only the specific page
+                        const additionalLessonTemplate = new LessonLayoutTemplate(
+                            additionalLayoutContainer,
+                            canvasDimensions.width,
+                            canvasDimensions.height,
+                            i // Same lesson number
+                        );
+                        
+                        // Initialize it first to create all the content
+                        await additionalLessonTemplate.initialize();
+                        
+                        // Then set it to show only the specific page
+                        if (additionalLessonTemplate.hasMultiplePages()) {
+                            additionalLessonTemplate.setSpecificPage(pageIndex);
+                        }
+                    }
+                    
+                    // Store the additional canvas
+                    this.pixiCanvases.push(additionalPixiCanvas);
+                    console.log(`🎨 Created additional PIXI.js canvas for Lesson ${i}, Page ${pageIndex}`);
+                }
+            }
+        }
+        
+        // Store in the array
+        this.pixiCanvases.push(pixiCanvas); console.log(`🎨 Created PIXI.js canvas for Lesson ${i}`);
  }
 
  console.log(`✅ Created ${sessionCount} PIXI.js lesson canvases`);
@@ -1091,7 +1164,7 @@ export class CourseBuilderCanvas {
  console.log('📄 Page setup handler initialized for course:', courseId);
  
  // If canvas is available, load the margins
- if (this.pixiCanvas) {
+ if (this.pixiCanvases.length > 0) {
  await this.loadInitialPageLayout();
  }
  } catch (error) {
@@ -1198,6 +1271,13 @@ export class CourseBuilderCanvas {
  }
 
  /**
+ * Get the first PIXI canvas (for backward compatibility)
+ */
+ public getPixiCanvas(): any {
+ return this.pixiCanvases.length > 0 ? this.pixiCanvases[0] : null;
+ }
+
+ /**
  * Refresh course ID detection for all managers
  */
  public refreshCourseId(): void {
@@ -1277,9 +1357,9 @@ export class CourseBuilderCanvas {
  }
 
  // Clean up canvas
- if (this.pixiCanvas) {
- this.pixiCanvas.destroy();
- this.pixiCanvas = null;
+ if (this.pixiCanvases.length > 0) {
+ this.pixiCanvases.forEach(canvas => canvas.destroy());
+ this.pixiCanvases = [];
  }
 
  // Clean up managers

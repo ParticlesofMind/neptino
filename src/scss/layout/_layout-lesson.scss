@@ -1,0 +1,337 @@
+// =============================================================================
+// Layout - Lesson Template
+// =============================================================================
+
+// Lesson template constants and variables
+:root {
+  --lesson-header-height: 80px;
+  --lesson-footer-height: 60px;
+  --lesson-page-margin: 20px;
+  --lesson-content-padding: 15px;
+  --lesson-row-height: 20px;
+  --lesson-table-row-height: 25px;
+  
+  // Colors for different block types
+  --lesson-header-bg: #4a90e2;
+  --lesson-program-bg: #7ed321;
+  --lesson-resources-bg: #f5a623;
+  --lesson-content-bg: #d0021b;
+  --lesson-assignments-bg: #9013fe;
+  --lesson-footer-bg: #50e3c2;
+  
+  // Table and content colors
+  --lesson-table-header-bg: rgba(224, 224, 224, 0.8);
+  --lesson-table-row-even: rgba(248, 248, 248, 0.8);
+  --lesson-table-row-odd: rgba(255, 255, 255, 0.8);
+  --lesson-table-border: #666666;
+  --lesson-safe-area-border: rgba(204, 204, 204, 0.3);
+  
+  // Typography
+  --lesson-font-family: 'Arial', sans-serif;
+  --lesson-font-size-header: 14px;
+  --lesson-font-size-table-header: 12px;
+  --lesson-font-size-content: 11px;
+  --lesson-font-size-small: 10px;
+  
+  --lesson-text-color: #000000;
+  --lesson-text-color-secondary: #333333;
+  --lesson-text-color-light: #666666;
+  --lesson-text-color-white: #ffffff;
+}
+
+.layout-lesson {
+  // Base lesson layout styles
+  font-family: var(--lesson-font-family);
+  color: var(--lesson-text-color-secondary);
+  
+  // Page structure
+  &__page {
+    width: 794px;  // A4 width
+    height: 1123px; // A4 height
+    background: white;
+    position: relative;
+    overflow: hidden; // Prevent content bleeding
+  }
+  
+  &__safe-area {
+    position: absolute;
+    top: var(--lesson-header-height);
+    left: 0;
+    right: 0;
+    bottom: var(--lesson-footer-height);
+    padding: var(--lesson-content-padding);
+    overflow: hidden; // Critical: prevents content from bleeding into header/footer
+  }
+  
+  // Header block - fixed at top
+  &__header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--lesson-header-height);
+    background-color: var(--lesson-header-bg);
+    border: 1px solid #e0e0e0;
+    padding: var(--lesson-page-margin);
+    box-sizing: border-box;
+    z-index: 10;
+    
+    &-title {
+      font-size: var(--lesson-font-size-header);
+      color: var(--lesson-text-color-white);
+      font-weight: bold;
+    }
+  }
+
+  // Footer block - fixed at bottom
+  &__footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--lesson-footer-height);
+    background-color: var(--lesson-footer-bg);
+    border: 1px solid #e0e0e0;
+    padding: var(--lesson-page-margin);
+    box-sizing: border-box;
+    z-index: 10;
+    
+    &-title {
+      font-size: var(--lesson-font-size-content);
+      color: var(--lesson-text-color-white);
+      font-weight: normal;
+    }
+  }
+
+  // Program block
+  &__program {
+    background-color: var(--lesson-program-bg);
+    border: 1px solid #e0e0e0;
+    margin-bottom: var(--lesson-content-padding);
+    
+    &-title {
+      font-size: var(--lesson-font-size-header);
+      color: var(--lesson-text-color-white);
+      font-weight: bold;
+      padding: var(--lesson-content-padding);
+    }
+    
+    &-table {
+      width: 100%;
+      border-collapse: collapse;
+      
+      &-header {
+        background-color: var(--lesson-table-header-bg);
+        height: calc(var(--lesson-table-row-height) + 5px);
+        
+        th {
+          font-size: var(--lesson-font-size-table-header);
+          font-weight: bold;
+          color: var(--lesson-text-color);
+          text-align: left;
+          padding: 5px;
+          border: 1px solid var(--lesson-table-border);
+        }
+      }
+      
+      &-row {
+        height: var(--lesson-table-row-height);
+        
+        &:nth-child(even) {
+          background-color: var(--lesson-table-row-even);
+        }
+        
+        &:nth-child(odd) {
+          background-color: var(--lesson-table-row-odd);
+        }
+        
+        td {
+          font-size: var(--lesson-font-size-content);
+          color: var(--lesson-text-color);
+          padding: 5px;
+          border: 1px solid var(--lesson-table-border);
+          vertical-align: top;
+          word-wrap: break-word;
+        }
+      }
+    }
+  }
+
+  // Resources block
+  &__resources {
+    background-color: var(--lesson-resources-bg);
+    border: 1px solid #e0e0e0;
+    margin-bottom: var(--lesson-content-padding);
+    
+    &-title {
+      font-size: var(--lesson-font-size-header);
+      color: var(--lesson-text-color-white);
+      font-weight: bold;
+      padding: var(--lesson-content-padding);
+    }
+    
+    // Inherit table styles from program block
+    &-table {
+      @extend .layout-lesson__program-table;
+    }
+  }
+
+  // Content block
+  &__content {
+    background-color: var(--lesson-content-bg);
+    border: 1px solid #e0e0e0;
+    margin-bottom: var(--lesson-content-padding);
+    
+    &-title {
+      font-size: var(--lesson-font-size-header);
+      color: var(--lesson-text-color-white);
+      font-weight: bold;
+      padding: var(--lesson-content-padding);
+    }
+    
+    &-section {
+      margin-bottom: var(--lesson-content-padding);
+      
+      &-topic {
+        background-color: var(--lesson-header-bg);
+        color: var(--lesson-text-color-white);
+        font-size: var(--lesson-font-size-header);
+        font-weight: bold;
+        padding: 10px;
+        margin-bottom: 8px;
+      }
+      
+      &-objective {
+        background-color: var(--lesson-program-bg);
+        color: var(--lesson-text-color-white);
+        font-size: var(--lesson-font-size-table-header);
+        font-weight: bold;
+        padding: 8px;
+        margin-left: var(--lesson-page-margin);
+        margin-bottom: 5px;
+      }
+      
+      &-task {
+        background-color: var(--lesson-resources-bg);
+        color: var(--lesson-text-color-white);
+        font-size: var(--lesson-font-size-content);
+        font-weight: bold;
+        padding: 6px;
+        margin-left: calc(var(--lesson-page-margin) * 2);
+        margin-bottom: 3px;
+      }
+      
+      &-field {
+        background-color: var(--lesson-table-row-even);
+        border: 1px solid #dddddd;
+        padding: 6px;
+        margin-left: calc(var(--lesson-page-margin) * 3);
+        margin-bottom: 2px;
+        
+        &-label {
+          font-size: var(--lesson-font-size-small);
+          font-weight: bold;
+          color: var(--lesson-text-color-light);
+          display: inline-block;
+          min-width: 120px;
+        }
+        
+        &-value {
+          font-size: var(--lesson-font-size-small);
+          color: var(--lesson-text-color);
+        }
+      }
+    }
+  }
+
+  // Assignment block
+  &__assignment {
+    background-color: var(--lesson-assignments-bg);
+    border: 1px solid #e0e0e0;
+    margin-bottom: var(--lesson-content-padding);
+    
+    &-title {
+      font-size: var(--lesson-font-size-header);
+      color: var(--lesson-text-color-white);
+      font-weight: bold;
+      padding: var(--lesson-content-padding);
+    }
+  }
+
+  // Field elements - generic styling for all field types
+  &__field {
+    margin-bottom: 8px;
+    
+    &-input {
+      background-color: rgba(255, 255, 255, 0.9);
+      border: 1px solid #cccccc;
+      border-radius: 2px;
+      padding: 5px;
+      font-family: var(--lesson-font-family);
+      font-size: var(--lesson-font-size-content);
+      
+      &:hover {
+        border-color: #999999;
+      }
+      
+      &:focus {
+        border-color: #0066cc;
+        box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+        outline: none;
+      }
+    }
+
+    &-content {
+      font-family: var(--lesson-font-family);
+      font-size: var(--lesson-font-size-content);
+      color: var(--lesson-text-color-secondary);
+      cursor: text;
+      padding: 2px;
+    }
+    
+    &-label {
+      font-family: var(--lesson-font-family);
+      font-size: var(--lesson-font-size-small);
+      color: var(--lesson-text-color-light);
+      font-weight: bold;
+      margin-bottom: 3px;
+      display: block;
+    }
+  }
+  
+  // Table styling for all lesson tables
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: var(--lesson-content-padding);
+    
+    &-border {
+      border: 2px solid var(--lesson-table-border);
+    }
+    
+    &-separator {
+      border-left: 1px solid var(--lesson-table-border);
+      height: 100%;
+    }
+  }
+  
+  // Safe area visual indicator
+  &__safe-area-border {
+    border: 1px solid var(--lesson-safe-area-border);
+    position: absolute;
+    pointer-events: none;
+  }
+  
+  // Prevent content overflow styles
+  &__content-overflow-hidden {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  &__content-wrap {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+}

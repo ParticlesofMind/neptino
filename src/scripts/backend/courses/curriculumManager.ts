@@ -1155,7 +1155,10 @@ class CurriculumManager {
  ? parseInt(element.dataset.task)
  : null;
  const field = element.dataset.field;
- const newValue = element.textContent || "";
+ 
+ // Clean the value by removing excessive whitespace and normalizing
+ const rawValue = element.textContent || "";
+ const newValue = rawValue.replace(/\s+/g, ' ').trim();
 
  const lesson = this.currentCurriculum.find(
  (l) => l.lessonNumber === lessonNum,

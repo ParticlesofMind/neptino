@@ -17,7 +17,6 @@ export class TemplateRenderer implements ITemplateRenderer {
   private blockManager: BlockManager;
   private canvasWidth: number;
   private canvasHeight: number;
-  private debugMode: boolean = false;
 
   constructor(layoutContainer: Container, canvasWidth: number = 794, canvasHeight: number = 1123) {
     this.layoutContainer = layoutContainer;
@@ -38,8 +37,6 @@ export class TemplateRenderer implements ITemplateRenderer {
       responsive = true,
       theme = "modern"
     } = options;
-
-    this.debugMode = debugMode;
 
     console.log(`🎨 Rendering template: ${template.name} (${template.type})`);
 

@@ -20,18 +20,21 @@ export const LESSON_TEMPLATE_CONFIG: Template = {
       isRequired: true,
       enabled: true,
       styles: {
-        backgroundColor: 0x4a90e2,
+        // Styling moved to CSS: .layout-lesson__header
         padding: 10,
         gap: 10,
       },
       rows: [
         {
           id: "header-row",
+          height: 60,
           areas: [
             {
               id: "course-title",
               name: "Course Title",
               type: "instruction",
+              widthPercentage: 100,
+              content: { type: "text", data: "Course Title Area" },
               allowsDrawing: false,
               allowsMedia: false,
               allowsText: true,
@@ -42,24 +45,58 @@ export const LESSON_TEMPLATE_CONFIG: Template = {
     },
     {
       id: "program", 
-      name: "Learning Objectives",
+      name: "Program",
       type: "program",
       heightPercentage: 15,
       isRequired: true,
       enabled: true,
       styles: {
-        backgroundColor: 0x7ed321,
+        // Styling moved to CSS: .layout-lesson__program
         padding: 12,
         gap: 5,
       },
       rows: [
         {
           id: "objectives-row",
+          height: 120,
           areas: [
             {
               id: "objectives-area",
               name: "Learning Objectives",
               type: "instruction",
+              widthPercentage: 100,
+              content: { type: "text", data: "Learning Objectives Area" },
+              allowsDrawing: true,
+              allowsMedia: true,
+              allowsText: true,
+            }
+          ]
+        }
+      ]
+    },
+    {
+      id: "resources",
+      name: "Resources", 
+      type: "resources",
+      heightPercentage: 12,
+      isRequired: false,
+      enabled: true,
+      styles: {
+        // Styling moved to CSS: .layout-lesson__resources
+        padding: 10,
+        gap: 8,
+      },
+      rows: [
+        {
+          id: "resources-row",
+          height: 100,
+          areas: [
+            {
+              id: "resources-area",
+              name: "Resources & Materials",
+              type: "teacher",
+              widthPercentage: 100,
+              content: { type: "container", data: {} },
               allowsDrawing: true,
               allowsMedia: true,
               allowsText: true,
@@ -70,24 +107,27 @@ export const LESSON_TEMPLATE_CONFIG: Template = {
     },
     {
       id: "content",
-      name: "Main Content", 
+      name: "Content", 
       type: "content",
       heightPercentage: 50,
       isRequired: true,
       enabled: true,
       styles: {
-        backgroundColor: 0xd0021b,
+        // Styling moved to CSS: .layout-lesson__content
         padding: 15,
         gap: 10,
       },
       rows: [
         {
           id: "content-row",
+          height: 400,
           areas: [
             {
               id: "teacher-area",
               name: "Teacher Area",
               type: "teacher",
+              widthPercentage: 50,
+              content: { type: "container", data: {} },
               allowsDrawing: true,
               allowsMedia: true,
               allowsText: true,
@@ -97,6 +137,8 @@ export const LESSON_TEMPLATE_CONFIG: Template = {
               id: "student-area", 
               name: "Student Work Area",
               type: "student",
+              widthPercentage: 50,
+              content: { type: "container", data: {} },
               allowsDrawing: true,
               allowsMedia: true,
               allowsText: true,
@@ -107,25 +149,28 @@ export const LESSON_TEMPLATE_CONFIG: Template = {
       ]
     },
     {
-      id: "resources",
+      id: "resources-duplicate",
       name: "Resources",
       type: "resources", 
       heightPercentage: 12,
       isRequired: false,
       enabled: true,
       styles: {
-        backgroundColor: 0xf5a623,
+        // Styling moved to CSS: .layout-lesson__resources
         padding: 10,
         gap: 8,
       },
       rows: [
         {
-          id: "resources-row",
+          id: "resources-row-duplicate",
+          height: 100,
           areas: [
             {
-              id: "resources-area",
+              id: "resources-area-duplicate",
               name: "Resources & Materials",
               type: "teacher",
+              widthPercentage: 100,
+              content: { type: "container", data: {} },
               allowsDrawing: true,
               allowsMedia: true,
               allowsText: true,
@@ -135,25 +180,28 @@ export const LESSON_TEMPLATE_CONFIG: Template = {
       ]
     },
     {
-      id: "assessment",
-      name: "Assessment",
-      type: "assessment",
+      id: "assignments",
+      name: "Assignments",
+      type: "assignments",
       heightPercentage: 10, 
       isRequired: false,
       enabled: true,
       styles: {
-        backgroundColor: 0x9013fe,
+        // Styling moved to CSS: .layout-lesson__assignment
         padding: 10,
         gap: 6,
       },
       rows: [
         {
-          id: "assessment-row",
+          id: "assignments-row",
+          height: 80,
           areas: [
             {
-              id: "assessment-area",
-              name: "Assessment Tasks",
+              id: "assignments-area",
+              name: "Assignments & Tasks",
               type: "instruction",
+              widthPercentage: 100,
+              content: { type: "text", data: "Assignments & Tasks" },
               allowsDrawing: true,
               allowsMedia: true,
               allowsText: true,
@@ -170,18 +218,21 @@ export const LESSON_TEMPLATE_CONFIG: Template = {
       isRequired: true,
       enabled: true,
       styles: {
-        backgroundColor: 0x50e3c2,
+        // Styling moved to CSS: .layout-lesson__footer
         padding: 8,
         gap: 5,
       },
       rows: [
         {
-          id: "footer-row", 
+          id: "footer-row",
+          height: 40,
           areas: [
             {
               id: "footer-info",
-              name: "Course Information",
+              name: "Footer Information",
               type: "instruction",
+              widthPercentage: 100,
+              content: { type: "text", data: "Footer Area" },
               allowsDrawing: false,
               allowsMedia: false,
               allowsText: true,
