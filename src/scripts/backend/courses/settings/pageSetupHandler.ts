@@ -3,7 +3,7 @@
  * Handles complete page setup including margins, orientation, and canvas size
  */
 
-import { supabase } from "../../backend/supabase";
+import { supabase } from "../../supabase";
 
 export interface PageLayoutSettings {
   margins: {

@@ -3,7 +3,7 @@
 // ==========================================================================
 
 import { getUserCourses } from "./createCourse";
-import { getCourseWithStats, CourseWithStats, formatCourseStatus, getStatusClassName } from "../../utils/courseStatistics";
+import { getCourseWithStats, CourseWithStats, formatCourseStatus, getStatusClassName } from "../../../utils/courseStatistics";
 
 interface Course {
   id: string;

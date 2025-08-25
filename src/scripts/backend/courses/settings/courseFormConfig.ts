@@ -45,7 +45,7 @@ export interface ValidationState {
 // DYNAMIC FIELD FUNCTIONS
 // ==========================================================================
 
-import { supabase } from "../supabase";
+import { supabase } from "../../supabase";
 
 export const displayFunctions = {
  async getTeacherName(): Promise<string> {

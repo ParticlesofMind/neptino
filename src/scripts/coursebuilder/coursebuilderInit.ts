@@ -3,8 +3,8 @@
  * Handles form initialization, language loading, and debugging utilities
  */
 
-import { populateCourseLanguageSelect } from '../backend/courses/languageLoader.ts';
-import { CourseFormHandler } from '../backend/courses/courseFormHandler.ts';
+import { populateCourseLanguageSelect } from '../backend/courses/settings/languageLoader.ts';
+import { CourseFormHandler } from '../backend/courses/shared/courseFormHandler.ts';
 
 /**
  * Initialize course language dropdown
@@ -102,7 +102,7 @@ function initDebugUtilities(): void {
       console.log('Fetching courses...');
 
       // Import the getUserCourses function dynamically
-      const { getUserCourses } = await import('../backend/courses/createCourse.ts');
+      const { getUserCourses } = await import('../backend/courses/essentials/createCourse.ts');
       const courses = await getUserCourses();
 
       if (courses && courses.length > 0) {
@@ -125,7 +125,7 @@ function initDebugUtilities(): void {
     try {
       console.log('Fetching templates...');
       // Import createTemplate to access TemplateManager
-      const { TemplateManager } = await import('../backend/courses/createTemplate.ts');
+      const { TemplateManager } = await import('../backend/courses/templates/createTemplate.ts');
       await TemplateManager.loadTemplatesForModal();
       console.log('✅ Templates loaded in modal - check load template modal');
     } catch (error) {
@@ -139,14 +139,14 @@ function initDebugUtilities(): void {
       console.log('🔧 Fixing language dropdown...');
       const languageSelect = document.querySelector('[name="course_language"]') as HTMLSelectElement;
       if (languageSelect) {
-        const { populateCourseLanguageSelect } = await import('../backend/courses/languageLoader.ts');
+        const { populateCourseLanguageSelect } = await import('../backend/courses/settings/languageLoader.ts');
         await populateCourseLanguageSelect(languageSelect);
 
         // Try to set the language value again
         const urlParams = new URLSearchParams(window.location.search);
         const courseId = urlParams.get('courseId');
         if (courseId && courseId !== 'undefined') {
-          const { getCourse } = await import('../backend/courses/createCourse.ts');
+          const { getCourse } = await import('../backend/courses/essentials/createCourse.ts');
           const courseData = await getCourse(courseId);
           if (courseData && courseData.course_language) {
             // Find the option that contains the language

@@ -2,7 +2,7 @@
 // COURSE CREATION & CRUD OPERATIONS
 // ==========================================================================
 
-import { supabase } from "../supabase";
+import { supabase } from "../../supabase";
 
 // Course creation interface
 export interface CourseCreationData {

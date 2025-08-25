@@ -3,7 +3,7 @@
  * Handles the deletion of courses with confirmation and cleanup
  */
 
-import { supabase } from '../supabase';
+import { supabase } from '../../supabase';
 
 interface CourseDeleteResult {
   success: boolean;

@@ -7,7 +7,7 @@ import { initializeGlobalNavigation, initializeDashboardNavigation } from './nav
 import { initAuth } from './backend/auth/auth';
 import { AuthFormHandler } from './auth/AuthFormHandler';
 import './utils/pageSetupPreview';
-import './backend/courses/pageSetupHandler';
+import './backend/courses/settings/pageSetupHandler';
 // import PageTransitions from './navigation/PageTransitions'; // DISABLED
 
 // Initialize global navigation system
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
  const isCourseBuilderPage = window.location.pathname.includes('coursebuilder');
  if (isCourseBuilderPage) {
    // Import and initialize page setup handler
-   import('./backend/courses/pageSetupHandler').then(({ pageSetupHandler }) => {
+   import('./backend/courses/settings/pageSetupHandler').then(({ pageSetupHandler }) => {
      // Get course ID from URL or session storage
      const urlParams = new URLSearchParams(window.location.search);
      const courseId = urlParams.get('courseId') || urlParams.get('id') || sessionStorage.getItem('currentCourseId');

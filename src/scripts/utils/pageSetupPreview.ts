@@ -2,7 +2,7 @@
 // PAGE SETUP CANVAS PREVIEW - Interactive margin visualization
 // ==========================================================================
 
-import { pageSetupHandler } from '../backend/courses/pageSetupHandler';
+import { pageSetupHandler } from '../backend/courses/settings/pageSetupHandler';
 
 interface PaperSize {
     width: number;

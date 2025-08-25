@@ -7,16 +7,16 @@
 import { PixiCanvas } from "./canvas/PixiCanvas";
 import { ToolStateManager } from "./ui/ToolStateManager";
 import { UIEventHandler } from "./ui/UIEventHandler";
-import { CourseFormHandler } from "../backend/courses/courseFormHandler";
+import { CourseFormHandler } from "../backend/courses/shared/courseFormHandler";
 import { CourseBuilderSelectHandler } from "./selectHandler";
 
 // Import language loader to initialize languages on page load
-import "../backend/courses/languageLoader";
+import "../backend/courses/settings/languageLoader";
 
 // Course management imports
-import { ScheduleCourseManager } from "../backend/courses/scheduleCourse";
-import { CurriculumManager } from "../backend/courses/curriculumManager";
-import { DeleteCourseManager } from "../backend/courses/deleteCourse";
+import { ScheduleCourseManager } from "../backend/courses/schedule/scheduleCourse";
+import { CurriculumManager } from "../backend/courses/curriculum/curriculumManager";
+import { DeleteCourseManager } from "../backend/courses/settings/deleteCourse";
 import { supabase } from "../backend/supabase";
 
 // Import and expose PIXI globally for devtools detection
@@ -364,7 +364,7 @@ export class CourseBuilderCanvas {
  }
 
  // Import and get page layout settings
- const { pageSetupHandler } = await import('../backend/courses/pageSetupHandler');
+ const { pageSetupHandler } = await import('../backend/courses/settings/pageSetupHandler');
  const settings = pageSetupHandler.getCurrentSettings();
  
  if (settings && settings.margins) {
@@ -1159,7 +1159,7 @@ export class CourseBuilderCanvas {
  */
  private async initializePageSetupHandler(courseId: string): Promise<void> {
  try {
- const { pageSetupHandler } = await import('../backend/courses/pageSetupHandler');
+ const { pageSetupHandler } = await import('../backend/courses/settings/pageSetupHandler');
  pageSetupHandler.setCourseId(courseId);
  console.log('📄 Page setup handler initialized for course:', courseId);
  

@@ -2,7 +2,7 @@
 // COURSE FORM VALIDATION - Validation logic and rules
 // ==========================================================================
 
-import { FormFieldConfig, ValidationState } from "./courseFormConfig";
+import { FormFieldConfig, ValidationState } from "../settings/courseFormConfig";
 
 // ==========================================================================
 // VALIDATION FUNCTIONS

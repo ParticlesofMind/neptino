@@ -1,6 +1,6 @@
-import { supabase } from "../supabase.js";
-import "./templates/templateConfigHandler.js";
-import "./templates/templatePreviewHandler.js";
+import { supabase } from "../../supabase.js";
+import "./templateConfigHandler.js";
+import "./templatePreviewHandler.js";
 
 export interface TemplateData {
  template_id: string;

@@ -3,7 +3,7 @@
  * Handles margin settings UI and database persistence for course canvas
  */
 
-import { supabase } from "../../backend/supabase";
+import { supabase } from "../../supabase";
 
 export interface MarginSettings {
  top: number;

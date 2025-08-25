@@ -2,13 +2,13 @@
 // COURSE BUILDER MAIN CONTROLLER - Uses Generic Form Handler
 // ==========================================================================
 
-import { CourseFormHandler } from "./courseFormHandler.js";
-import { ScheduleCourseManager } from "./scheduleCourse.js";
-import { CurriculumManager } from "./curriculumManager.js";
+import { CourseFormHandler } from "./shared/courseFormHandler.js";
+import { ScheduleCourseManager } from "./schedule/scheduleCourse.js";
+import { CurriculumManager } from "./curriculum/curriculumManager.js";
 
 // Re-export course creation and classification functions
-export * from "./createCourse";
-export * from "./classifyCourse";
+export * from "./essentials/createCourse";
+export * from "./classification/classifyCourse";
 
 // ==========================================================================
 // COURSE BUILDER CLASS
@@ -97,7 +97,7 @@ export class CourseBuilder {
  this.curriculumManager = new CurriculumManager(this.courseId);
  
  // Initialize margin settings with course ID
- import('./marginSettings.js').then(({ marginSettingsHandler }) => {
+ import('./settings/marginSettings.js').then(({ marginSettingsHandler }) => {
  marginSettingsHandler.setCourseId(this.courseId!);
  });
 
@@ -143,7 +143,7 @@ export class CourseBuilder {
  }
  
  // Update margin settings
- import('./marginSettings.js').then(({ marginSettingsHandler }) => {
+ import('./settings/marginSettings.js').then(({ marginSettingsHandler }) => {
  marginSettingsHandler.setCourseId(courseId);
  });
 

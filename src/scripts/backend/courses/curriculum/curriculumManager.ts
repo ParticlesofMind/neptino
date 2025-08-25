@@ -1,4 +1,4 @@
-import { supabase } from "../../backend/supabase.js";
+import { supabase } from "../../supabase.js";
 
 interface CurriculumLesson {
  lessonNumber: number;

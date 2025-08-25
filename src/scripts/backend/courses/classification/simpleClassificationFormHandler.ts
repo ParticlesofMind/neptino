@@ -18,7 +18,7 @@ import {
   CourseClassificationData,
 } from "./classifyCourse";
 
-import { getCourseId, isNewCourseMode } from "../../utils/courseId.js";
+import { getCourseId, isNewCourseMode } from "../../../utils/courseId.js";
 
 export class SimpleClassificationFormHandler {
   private autoSaveTimeout: NodeJS.Timeout | null = null;

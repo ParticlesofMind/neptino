@@ -2,7 +2,7 @@
 // COURSE CLASSIFICATION & CRUD OPERATIONS
 // ==========================================================================
 
-import { supabase } from "../supabase";
+import { supabase } from "../../supabase";
 
 // Course classification interface
 export interface CourseClassificationData {

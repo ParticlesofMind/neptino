@@ -4,7 +4,7 @@
  * Single Responsibility: Margin configuration and UI updates only
  */
 
-import { marginSettingsHandler } from "../../backend/courses/marginSettings";
+import { marginSettingsHandler } from "../../backend/courses/settings/marginSettings";
 
 export class MarginSettingsManager {
  private marginInputs: { [key: string]: HTMLInputElement } = {};

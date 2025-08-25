@@ -6,9 +6,9 @@ import {
     SectionConfig,
     ValidationState,
     getSectionConfig,
-} from "./courseFormConfig";
-import { validateFormSection, isFormSectionValid } from "./courseFormValidator";
-import { createCourse, updateCourse, getCourse } from "./createCourse";
+} from "../settings/courseFormConfig";
+import { validateFormSection, isFormSectionValid } from "../shared/courseFormValidator";
+import { createCourse, updateCourse, getCourse } from "../essentials/createCourse";
 
 // ==========================================================================
 // COURSE FORM HANDLER CLASS
@@ -148,7 +148,7 @@ export class CourseFormHandler {
                 if (fieldConfig.loadDynamically && fieldConfig.name === "course_language") {
                     // Load languages dynamically
                     try {
-                        const { populateCourseLanguageSelect } = await import('./languageLoader');
+                        const { populateCourseLanguageSelect } = await import('../settings/languageLoader');
                         await populateCourseLanguageSelect(field as HTMLSelectElement);
                         console.log('✅ Course languages loaded successfully');
                     } catch (error) {

@@ -11,7 +11,7 @@ import {
   getTopicsBySubject,
   getSubtopicsByTopic,
   getAvailableCourses 
-} from '../backend/courses/classifyCourse';
+} from '../backend/courses/classification/classifyCourse';
 
 import { DropdownDOMHelper } from './helpers/DropdownDOMHelper';
 import { DropdownRenderer } from './helpers/DropdownRenderer';
