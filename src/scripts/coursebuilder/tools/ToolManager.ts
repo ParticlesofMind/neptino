@@ -13,6 +13,7 @@ import { ShapesTool } from "./ShapesTool";
 import { EraserTool } from "./EraserTool";
 import { DisplayObjectManager } from "../canvas/DisplayObjectManager";
 import { BoundaryUtils, CanvasBounds } from "./BoundaryUtils";
+import { canvasMarginManager } from '../canvas/CanvasMarginManager';
 
 export class ToolManager {
  private tools: Map<string, Tool> = new Map();
@@ -87,6 +88,13 @@ export class ToolManager {
  this.tools.set("shapes", new ShapesTool());
  this.tools.set("eraser", new EraserTool());
 
+ // Set tool manager reference on all tools
+ this.tools.forEach((tool) => {
+ if ('setToolManager' in tool) {
+ (tool as any).setToolManager(this);
+ }
+ });
+
  // Set default tool to selection (matches UI default)
  this.activeTool = this.tools.get("selection") || null;
  if (this.activeTool) {
@@ -101,6 +109,9 @@ export class ToolManager {
  this.displayManager = manager;
  this.tools.forEach((tool) => {
  tool.setDisplayObjectManager(manager);
+ if ('setToolManager' in tool) {
+ (tool as any).setToolManager(this);
+ }
  });
  }
 
@@ -254,10 +265,11 @@ export class ToolManager {
 
  /**
  * Boundary Management
- * Provides canvas boundary utilities for all tools
+ * Provides canvas boundary utilities for all tools using user-specified margins
  */
  public getCanvasBounds(): CanvasBounds {
- return BoundaryUtils.getCanvasBounds(this.currentContainer || undefined);
+ const userMargins = canvasMarginManager.getMargins();
+ return BoundaryUtils.getCanvasBounds(this.currentContainer || undefined, userMargins);
  }
 
  public clampPointToBounds(point: Point): Point {

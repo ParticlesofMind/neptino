@@ -72,7 +72,7 @@ export class ShapesTool extends BaseTool {
  const localPoint = container.toLocal(event.global);
  
  // 🎯 BOUNDARY ENFORCEMENT: Clamp starting point to canvas bounds
- const canvasBounds = BoundaryUtils.getCanvasBounds(container);
+ const canvasBounds = this.manager.getCanvasBounds();
  const clampedStartPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
  
  this.startPoint.copyFrom(clampedStartPoint);
@@ -95,7 +95,7 @@ export class ShapesTool extends BaseTool {
  const localPoint = container.toLocal(event.global);
  
  // 🎯 BOUNDARY ENFORCEMENT: Clamp current point to canvas bounds
- const canvasBounds = BoundaryUtils.getCanvasBounds(container);
+ const canvasBounds = this.manager.getCanvasBounds();
  const clampedCurrentPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
  
  this.currentPoint.copyFrom(clampedCurrentPoint);

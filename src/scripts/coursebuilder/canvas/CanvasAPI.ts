@@ -16,6 +16,7 @@ import { CanvasLayers, LayerSystem } from './CanvasLayers';
 import { CanvasEvents } from './CanvasEvents';
 import { DisplayObjectManager } from './DisplayObjectManager';
 import { ToolManager } from '../tools/ToolManager';
+import { canvasMarginManager } from './CanvasMarginManager';
 
 export class CanvasAPI {
   private pixiApp: PixiApp;
@@ -68,10 +69,16 @@ export class CanvasAPI {
       this.events = new CanvasEvents(app, drawingLayer, this.toolManager);
       this.events.initialize();
 
+      // Step 7: Initialize margin manager with canvas layer
+      const backgroundLayer = this.layers.getLayer('background');
+      if (backgroundLayer) {
+        canvasMarginManager.setContainer(backgroundLayer);
+      }
+
       // Tool manager already sets pen as default, no need to set again
 
       this.initialized = true;
-      console.log('✅ Complete canvas system initialized with tools');
+      console.log('✅ Complete canvas system initialized with tools and margins');
 
     } catch (error) {
       console.error('❌ Failed to initialize canvas system:', error);

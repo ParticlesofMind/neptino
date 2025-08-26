@@ -97,9 +97,9 @@ export class CourseBuilder {
  // Initialize curriculum manager (always ready)
  this.curriculumManager = new CurriculumManager(this.courseId);
  
- // Initialize margin settings with course ID
- import('./settings/marginSettings.js').then(({ marginSettingsHandler }) => {
- marginSettingsHandler.setCourseId(this.courseId!);
+ // Initialize page setup handler with course ID
+ import('./settings/pageSetupHandler.js').then(({ pageSetupHandler }) => {
+ pageSetupHandler.setCourseId(this.courseId!);
  });
 
  // Initialize coursebuilder with course ID if available
@@ -143,9 +143,9 @@ export class CourseBuilder {
  console.log('📋 Notified classification handler of course ID:', courseId);
  }
  
- // Update margin settings
- import('./settings/marginSettings.js').then(({ marginSettingsHandler }) => {
- marginSettingsHandler.setCourseId(courseId);
+ // Update page setup handler
+ import('./settings/pageSetupHandler.js').then(({ pageSetupHandler }) => {
+ pageSetupHandler.setCourseId(courseId);
  });
 
  // Update coursebuilder

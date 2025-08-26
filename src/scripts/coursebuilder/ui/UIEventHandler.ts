@@ -167,13 +167,24 @@ export class UIEventHandler {
 
         if (!toolName) return;
 
+        console.log(`🔧 UI: Tool selection event for "${toolName}"`);
+
         this.toolStateManager.setTool(toolName);
         this.toolStateManager.updateCanvasCursor();
 
-        // Trigger callback
+        // Trigger callback with additional logging
         if (this.onToolChangeCallback) {
+            console.log(`🔧 UI: Triggering tool change callback for "${toolName}"`);
             this.onToolChangeCallback(toolName);
+            console.log(`🔧 UI: Tool change callback completed for "${toolName}"`);
+        } else {
+            console.warn('⚠️ UI: No tool change callback registered');
         }
+
+        // Verify synchronization after a short delay
+        setTimeout(() => {
+            this.toolStateManager.forceSyncVerification();
+        }, 100);
     }
 
     /**

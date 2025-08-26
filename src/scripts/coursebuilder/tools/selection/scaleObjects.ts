@@ -73,7 +73,7 @@ export class ScaleObjects {
  const minScaleY = minPixelSize / bounds.height;
  
  // 🎯 BOUNDARY ENFORCEMENT: Calculate maximum scale to keep within canvas bounds
- const canvasBounds = BoundaryUtils.getCanvasBounds();
+ const canvasBounds = BoundaryUtils.getCanvasBoundsWithGlobalMargins();
  const maxScale = BoundaryUtils.getMaxAllowedScale(bounds, canvasBounds);
  
  // Apply all constraints: minimum scale, minimum size, and canvas boundaries
@@ -131,7 +131,7 @@ export class ScaleObjects {
  const minScaleY = minPixelSize / bounds.height;
  
  // 🎯 BOUNDARY ENFORCEMENT: Calculate maximum scale to keep within canvas bounds
- const canvasBounds = BoundaryUtils.getCanvasBounds();
+ const canvasBounds = BoundaryUtils.getCanvasBoundsWithGlobalMargins();
  const maxScale = BoundaryUtils.getMaxAllowedScale(bounds, canvasBounds);
  
  scaleX = Math.max(0.2, minScaleX, Math.min(maxScale.scaleX, scaleX));
@@ -162,7 +162,7 @@ export class ScaleObjects {
  const dy = currentPoint.y - this.state.transformStart.y;
 
  // 🎯 BOUNDARY ENFORCEMENT: Calculate new positions and clamp them
- const canvasBounds = BoundaryUtils.getCanvasBounds();
+ const canvasBounds = BoundaryUtils.getCanvasBoundsWithGlobalMargins();
  
  // Calculate the combined bounds of all selected objects to constrain as a group
  const combinedBounds = this.calculateCombinedBounds(this.state.selectedObjects);

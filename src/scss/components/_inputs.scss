@@ -2,694 +2,254 @@
 // INPUT COMPONENT - BEM Methodology
 // ==========================================================================
 
+// Base mixins
+@mixin input-focus($border: var(--color-primary-500), $shadow: var(--color-primary-100)) {
+    outline: none;
+    border-color: $border;
+    box-shadow: 0 0 0 3px $shadow;
+}
+
+@mixin input-hover($border: var(--color-neutral-400)) {
+    &:hover:not(:focus):not(:disabled) {
+        border-color: $border;
+    }
+}
+
+@mixin input-status($color, $bg, $shadow) {
+    border-color: $color;
+    background-color: $bg;
+    &:focus { @include input-focus($color, $shadow); }
+}
+
+@mixin control-base {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-neutral-300);
+    background: var(--color-input-background);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-block;
+    margin-right: var(--spacing-3);
+
+    &:focus { @include input-focus(); }
+    &:hover:not(:disabled):not(:checked) {
+        border-color: var(--color-primary-400);
+        background: var(--color-primary-50);
+    }
+    &:checked {
+        background: var(--color-primary-500);
+        border-color: var(--color-primary-500);
+    }
+    &:disabled {
+        background: var(--color-neutral-100);
+        border-color: var(--color-neutral-200);
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
 .input {
     display: block;
     width: 100%;
-    padding: var(--spacing-4) var(--spacing-5); // 12px vertical, 16px horizontal
+    padding: var(--spacing-4) var(--spacing-5);
     font-size: var(--font-size-base);
     font-family: inherit;
-    line-height: var(--line-height-normal);
     color: var(--color-text-primary);
-    background-color: var(--color-input-background);
+    background: var(--color-input-background);
     border: 2px solid var(--color-input-border);
     border-radius: var(--border-radius-medium);
     transition: all 0.2s ease;
 
-    // Placeholder styling
     &::placeholder {
         color: var(--color-text-tertiary);
         opacity: 1;
     }
 
-    // Focus state
-    &:focus {
-        outline: none;
-        border-color: var(--color-input-border-focus);
-        box-shadow: 0 0 0 3px var(--color-primary-100);
-    }
+    &:focus { @include input-focus(); }
+    @include input-hover();
 
-    // Hover state (only when not focused or disabled)
-    &:hover:not(:focus):not(:disabled) {
-        border-color: var(--color-neutral-400);
-    }
-
-    // Disabled state
     &:disabled {
-        background-color: var(--color-neutral-100);
+        background: var(--color-neutral-100);
         color: var(--color-text-tertiary);
         border-color: var(--color-neutral-200);
         cursor: not-allowed;
-
-        &::placeholder {
-            color: var(--color-text-tertiary);
-        }
     }
 
-    // ==========================================================================
-    // MODIFIERS
-    // ==========================================================================
+    // Status states
+    &--error { @include input-status(var(--color-error-500), var(--color-error-50), var(--color-error-100)); }
+    &--success { @include input-status(var(--color-success-500), var(--color-success-50), var(--color-success-100)); }
 
-    // Error state
-    &--error {
-        border-color: var(--color-error-500);
-        background-color: var(--color-error-50);
-
-        &:focus {
-            border-color: var(--color-error-500);
-            box-shadow: 0 0 0 3px var(--color-error-100);
-        }
-    }
-
-    // Success state
-    &--success {
-        border-color: var(--color-success-500);
-        background-color: var(--color-success-50);
-
-        &:focus {
-            border-color: var(--color-success-500);
-            box-shadow: 0 0 0 3px var(--color-success-100);
-        }
-    }
-
-    // Auth inputs (with icons)
+    // Auth inputs
     &--auth {
-        padding-left: 3rem; // 48px - Space for icon
+        padding-left: 3rem;
         position: relative;
     }
 
-    // Modern search input styling
+    // Search input
     &--search {
-        width: 100%;
         padding: var(--spacing-3) var(--spacing-4);
         border: 1px solid var(--color-neutral-200);
-        border-radius: var(--radius-large); // More rounded
-        background: var(--color-background);
+        border-radius: var(--radius-large);
         font-size: var(--font-size-sm);
-        color: var(--color-text-primary);
-        transition: all 0.2s ease;
-        box-sizing: border-box; // Ensure proper sizing within container
-
-        &::placeholder {
-            color: var(--color-neutral-400);
-            font-style: italic;
-        }
-
-        &:focus {
-            outline: none;
-            border-color: var(--color-primary-300); // More subtle blue
-            box-shadow:
-                0 0 0 2px rgba(26, 140, 255, 0.1), // Softer focus ring
-                0 1px 3px rgba(0, 0, 0, 0.1);
-            background: var(--color-background);
-        }
-
-        &:hover:not(:focus) {
-            border-color: var(--color-neutral-300);
-            background: var(--color-neutral-50);
-        }
+        
+        &::placeholder { font-style: italic; }
+        &:focus { border-color: var(--color-primary-300); }
+        &:hover:not(:focus) { border-color: var(--color-neutral-300); }
     }
 
-    // Number input variant - Always visible spinner buttons
+    // Number input
     &--number {
-        // Ensure the input has enough padding for the spinner
-        padding-right: var(--spacing-6); // Extra space for spinner buttons
-
-        // Force spinner buttons to always be visible
+        padding-right: var(--spacing-6);
+        
         &::-webkit-outer-spin-button,
         &::-webkit-inner-spin-button {
-            -webkit-appearance: auto !important;
-            opacity: 1 !important;
-            position: relative;
-            right: 0;
-            height: auto;
-            cursor: pointer;
-            min-width: 16px;
-            min-height: 20px;
-            margin: 0;
-            padding: 0;
+            -webkit-appearance: auto;
+            opacity: 1;
         }
     }
 
-    // Checkbox variant
+    // Checkbox
     &--checkbox {
-        appearance: none;
-        width: 20px;
-        height: 20px;
-        border: 2px solid var(--color-neutral-300);
+        @include control-base;
         border-radius: var(--border-radius-small);
-        background-color: var(--color-input-background);
-        cursor: pointer;
         position: relative;
-        transition: all 0.2s ease;
-        display: inline-block;
-        margin-right: var(--spacing-3);
-        flex-shrink: 0; // Prevent shrinking in flex containers
-
-        // Focus state
-        &:focus {
-            outline: none;
-            border-color: var(--color-primary-500);
-            box-shadow: 0 0 0 3px var(--color-primary-100);
-        }
-
-        // Hover state
-        &:hover:not(:disabled):not(:checked) {
-            border-color: var(--color-primary-400);
-            background-color: var(--color-primary-50);
-        }
-
-        // Checked state
-        &:checked {
-            background-color: var(--color-primary-500);
-            border-color: var(--color-primary-500);
-
-            // Checkmark
-            &::after {
-                content: '';
-                position: absolute;
-                left: 6px;
-                top: 2px;
-                width: 5px;
-                height: 10px;
-                border: 2px solid white;
-                border-left: 0;
-                border-top: 0;
-                transform: rotate(45deg);
-                opacity: 1;
-            }
-
-            &:hover {
-                background-color: var(--color-primary-600);
-                border-color: var(--color-primary-600);
-            }
-        }
-
-        // Disabled state
-        &:disabled {
-            background-color: var(--color-neutral-100);
-            border-color: var(--color-neutral-200);
-            cursor: not-allowed;
-            opacity: 0.6;
-
-            &:checked {
-                background-color: var(--color-neutral-300);
-                border-color: var(--color-neutral-300);
-            }
+        
+        &:checked::after {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: 2px solid white;
+            border-left: 0;
+            border-top: 0;
+            transform: rotate(45deg);
         }
     }
 
-    // File input variant - Beautiful custom file upload
-    &--file {
+    // Radio
+    &--radio {
+        @include control-base;
+        border-radius: 50%;
         position: relative;
+        
+        &:checked::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: white;
+            transform: translate(-50%, -50%);
+        }
+    }
+
+    // File input
+    &--file {
         cursor: pointer;
-        background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-primary-100) 100%);
+        background: var(--color-primary-50);
         border: 2px dashed var(--color-primary-300);
-        border-radius: var(--border-radius-medium);
         padding: var(--spacing-4);
         text-align: center;
-        transition: all 0.3s ease;
         min-height: 50px;
-        width: auto;
         max-width: 24rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--color-primary-700);
-        font-weight: var(--font-weight-medium);
-
-        // Hide the default file input appearance
-        &::-webkit-file-upload-button {
-            display: none;
-        }
-
-        &::file-selector-button {
-            display: none;
-        }
-
-        // Custom styled placeholder content
+        
+        &::-webkit-file-upload-button,
+        &::file-selector-button { display: none; }
+        
         &::before {
-            content: 'Upload course image';
-            display: block;
-            font-size: var(--font-size-base);
-            font-weight: var(--font-weight-medium);
+            content: 'Upload file';
             color: var(--color-primary-600);
         }
-
-        // Hover state
+        
         &:hover {
             border-color: var(--color-primary-400);
-            background: linear-gradient(135deg, var(--color-primary-100) 0%, var(--color-primary-200) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(var(--color-primary-500-rgb), 0.15);
+            background: var(--color-primary-100);
         }
-
-        // Focus state
-        &:focus {
-            outline: none;
-            border-color: var(--color-primary-500);
-            box-shadow:
-                0 0 0 3px var(--color-primary-100),
-                0 4px 12px rgba(var(--color-primary-500-rgb), 0.2);
-        }
-
-        // Drag over state (can be applied via JavaScript)
-        &.drag-over {
-            border-color: var(--color-primary-500);
-            background: linear-gradient(135deg, var(--color-primary-200) 0%, var(--color-primary-300) 100%);
-            transform: scale(1.02);
-        }
-
-        // When file is selected (can be applied via JavaScript)
-        &.has-file {
-            border-style: solid;
-            border-color: var(--color-success-400);
-            background: linear-gradient(135deg, var(--color-success-50) 0%, var(--color-success-100) 100%);
-            color: var(--color-success-700);
-
-            &::before {
-                content: 'Image selected - click to change';
-                color: var(--color-success-600);
-            }
-        }
-
-        // Error state
-        &.input--error {
-            border-color: var(--color-error-400);
-            background: linear-gradient(135deg, var(--color-error-50) 0%, var(--color-error-100) 100%);
-            color: var(--color-error-700);
-
-            &::before {
-                content: 'Please select a valid image file';
-                color: var(--color-error-600);
-            }
-
-            &:focus {
-                border-color: var(--color-error-500);
-                box-shadow:
-                    0 0 0 3px var(--color-error-100),
-                    0 4px 12px rgba(var(--color-error-500-rgb), 0.2);
-            }
-        }
-
-        // Disabled state
+        
         &:disabled {
-            cursor: not-allowed;
             opacity: 0.6;
-            background: var(--color-neutral-100);
-            border-color: var(--color-neutral-200);
-            color: var(--color-text-tertiary);
-
-            &::before {
-                content: 'File upload disabled';
-                color: var(--color-text-tertiary);
-            }
-
-            &:hover {
-                transform: none;
-                box-shadow: none;
-            }
+            cursor: not-allowed;
         }
     }
 
-    // Date input variant - Clean date picker styling
-    &--date {
-        position: relative;
-        cursor: pointer;
-
-        // Hide default calendar icon in some browsers
-        &::-webkit-calendar-picker-indicator {
-            opacity: 0;
-            position: absolute;
-            right: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-
-        &:focus {
-            border-color: var(--color-primary-500);
-            box-shadow: 0 0 0 3px var(--color-primary-100);
-        }
-
-        &:hover:not(:focus):not(:disabled) {
-            border-color: var(--color-primary-300);
-        }
-    }
-
-    // Time input variant - Clean time picker styling  
+    // Date/time inputs
+    &--date,
     &--time {
-        position: relative;
         cursor: pointer;
-
-        // Hide default time picker icon in some browsers
+        
         &::-webkit-calendar-picker-indicator {
             opacity: 0;
             position: absolute;
             right: 0;
             width: 100%;
             height: 100%;
-            cursor: pointer;
-        }
-
-        &:focus {
-            border-color: var(--color-primary-500);
-            box-shadow: 0 0 0 3px var(--color-primary-100);
-        }
-
-        &:hover:not(:focus):not(:disabled) {
-            border-color: var(--color-primary-300);
         }
     }
 
-    // ==========================================================================
-    // MODIFIER COMBINATIONS
-    // ==========================================================================
-
-    // Checkbox with error state
-    &--checkbox.input--error {
-        border-color: var(--color-error-500);
-
-        &:focus {
-            box-shadow: 0 0 0 3px var(--color-error-100);
-        }
-
-        &:checked {
-            background-color: var(--color-error-500);
-            border-color: var(--color-error-500);
-        }
-    }
-
-    // Radio input variant
-    &--radio {
-        appearance: none;
-        width: 20px;
-        height: 20px;
-        border: 2px solid var(--color-neutral-300);
-        border-radius: 50%; // Circular for radio buttons
-        background-color: var(--color-input-background);
-        cursor: pointer;
-        position: relative;
-        transition: all 0.2s ease;
-        display: inline-block;
-        margin-right: var(--spacing-3);
-        flex-shrink: 0; // Prevent shrinking in flex containers
-
-        // Focus state
-        &:focus {
-            outline: none;
-            border-color: var(--color-primary-500);
-            box-shadow: 0 0 0 3px var(--color-primary-100);
-        }
-
-        // Hover state
-        &:hover:not(:disabled):not(:checked) {
-            border-color: var(--color-primary-400);
-            background-color: var(--color-primary-50);
-        }
-
-        // Checked state
-        &:checked {
-            background-color: var(--color-primary-500);
-            border-color: var(--color-primary-500);
-
-            // Radio dot
-            &::after {
-                content: '';
-                position: absolute;
-                left: 50%;
-                top: 50%;
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background-color: white;
-                transform: translate(-50%, -50%);
-                opacity: 1;
-                transition: all 0.2s ease;
-            }
-
-            &:hover {
-                background-color: var(--color-primary-600);
-                border-color: var(--color-primary-600);
-            }
-        }
-
-        // Disabled state
-        &:disabled {
-            background-color: var(--color-neutral-100);
-            border-color: var(--color-neutral-200);
-            cursor: not-allowed;
-            opacity: 0.6;
-
-            &:checked {
-                background-color: var(--color-neutral-300);
-                border-color: var(--color-neutral-300);
-
-                &::after {
-                    background-color: var(--color-neutral-500);
-                }
-            }
-        }
-    }
-
-    // Checkbox with success state
-    &--checkbox.input--success {
-        border-color: var(--color-success-500);
-
-        &:focus {
-            box-shadow: 0 0 0 3px var(--color-success-100);
-        }
-
-        &:checked {
-            background-color: var(--color-success-500);
-            border-color: var(--color-success-500);
-        }
-    }
-
-    // Radio with error state
-    &--radio.input--error {
-        border-color: var(--color-error-500);
-
-        &:focus {
-            box-shadow: 0 0 0 3px var(--color-error-100);
-        }
-
-        &:checked {
-            background-color: var(--color-error-500);
-            border-color: var(--color-error-500);
-        }
-    }
-
-    // Radio with success state
-    &--radio.input--success {
-        border-color: var(--color-success-500);
-
-        &:focus {
-            box-shadow: 0 0 0 3px var(--color-success-100);
-        }
-
-        &:checked {
-            background-color: var(--color-success-500);
-            border-color: var(--color-success-500);
-        }
-    }
-
-    // Color input variant - Clean color picker styling
+    // Color input
     &--color {
         width: 60px;
         height: 40px;
         padding: 4px;
-        border: 2px solid var(--color-neutral-300);
-        border-radius: var(--border-radius-medium);
-        background-color: var(--color-input-background);
         cursor: pointer;
-        transition: all 0.2s ease;
-
-        // Hide default appearance variations across browsers
-        &::-webkit-color-swatch-wrapper {
-            padding: 0;
-            border: none;
-            border-radius: var(--border-radius-small);
-        }
-
-        &::-webkit-color-swatch {
-            border: none;
-            border-radius: var(--border-radius-small);
-        }
-
+        
+        &::-webkit-color-swatch-wrapper,
+        &::-webkit-color-swatch,
         &::-moz-color-swatch {
             border: none;
             border-radius: var(--border-radius-small);
         }
-
-        &:focus {
-            outline: none;
-            border-color: var(--color-primary-500);
-            box-shadow: 0 0 0 3px var(--color-primary-100);
-        }
-
-        &:hover:not(:focus):not(:disabled) {
-            border-color: var(--color-primary-300);
-        }
-
-        &:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
     }
 
-    // Range input variant - Custom slider styling
+    // Range input
     &--range {
-        height: 6px;
+        height: 10px;
         padding: 0;
-        border-radius: 3px;
-        background: linear-gradient(to right,
-                var(--color-primary-200) 0%,
-                var(--color-primary-500) 50%,
-                var(--color-neutral-300) 50%,
-                var(--color-neutral-300) 100%);
-        cursor: pointer;
-        transition: all 0.2s ease;
+        border-radius: 5px;
         appearance: none;
-
-
-
-        &:focus {
-            outline: none;
-
-            &::-webkit-slider-thumb {
-                box-shadow:
-                    0 2px 4px rgba(0, 0, 0, 0.1),
-                    0 0 0 3px var(--color-primary-100);
-            }
-
-            &::-moz-range-thumb {
-                box-shadow:
-                    0 2px 4px rgba(0, 0, 0, 0.1),
-                    0 0 0 3px var(--color-primary-100);
-            }
-        }
-
-   
+        background: linear-gradient(to right, var(--color-primary-300), var(--color-neutral-300));
+        cursor: pointer;
     }
 
-    // Select input variant - Custom dropdown styling
+    // Select input
     &--select {
         cursor: pointer;
-        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
         background-repeat: no-repeat;
         background-position: right 12px center;
         background-size: 16px;
-        padding: 0;
-        padding-right: 10px;
-        padding-left: 10px;
+        padding-right: 40px;
         appearance: none;
-
-        &:focus {
-            outline: none;
-            border-color: var(--color-primary-500);
-            box-shadow: 0 0 0 3px var(--color-primary-100);
-        }
-
-        &:hover:not(:focus):not(:disabled) {
-            border-color: var(--color-primary-300);
-        }
-
-        &:disabled {
-            background-color: var(--color-neutral-100);
-            color: var(--color-text-tertiary);
-            border-color: var(--color-neutral-200);
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
     }
 
-    // Textarea input variant - Coursebuilder canvas text input styling
+    // Textarea
     &--textarea {
-        resize: vertical !important; // Allow vertical resize only
+        resize: vertical;
         min-height: 80px;
-        max-width: 240px;
-        min-width: 200px;
-        font-size: 16px !important; // Override any inherited font sizes
-        font-family: Arial, sans-serif !important; // Ensure consistent font
-        font-weight: normal !important;
-        font-style: normal !important;
-        color: var(--color-text-primary) !important;
-        text-align: left !important;
-        background-color: var(--color-input-background) !important;
-        border: 2px solid var(--color-input-border) !important;
-        border-radius: var(--border-radius-medium) !important;
-        transition: all 0.2s ease;
-        position: absolute !important; // Critical for canvas positioning
-        z-index: 1000 !important; // Ensure it's above canvas
-        padding: var(--spacing-3) var(--spacing-4); // Use consistent spacing
-        line-height: var(--line-height-normal);
-        box-sizing: border-box; // Ensure proper sizing
+        position: absolute;
+        z-index: 1000;
+        
+        &.auto-resize { transition: height 0.1s ease; }
+    }
 
-        // Enhanced placeholder styling for better visibility
-        &::placeholder {
-            color: var(--color-text-tertiary) !important;
-            opacity: 0.8;
-            font-style: italic;
-        }
+    // Status combinations for controls
+    &--checkbox.input--error,
+    &--radio.input--error {
+        border-color: var(--color-error-500);
+        &:checked { background: var(--color-error-500); }
+    }
 
-        // Focus state with better visibility
-        &:focus {
-            outline: none !important;
-            border-color: var(--color-primary-500) !important;
-            box-shadow: 
-                0 0 0 3px var(--color-primary-100),
-                0 2px 8px rgba(0, 0, 0, 0.1) !important;
-            background-color: var(--color-background) !important;
-        }
-
-        // Hover state
-        &:hover:not(:focus):not(:disabled) {
-            border-color: var(--color-primary-300);
-            background-color: var(--color-primary-50);
-        }
-
-        // Auto-resize smooth transition
-        &.auto-resize {
-            transition: height 0.1s ease;
-        }
-
-        // Disabled state
-        &:disabled {
-            background-color: var(--color-neutral-100) !important;
-            color: var(--color-text-tertiary) !important;
-            border-color: var(--color-neutral-200) !important;
-            cursor: not-allowed;
-            opacity: 0.6;
-
-            &::placeholder {
-                color: var(--color-text-tertiary) !important;
-            }
-        }
-
-        // Error state
-        &.input--error {
-            border-color: var(--color-error-500) !important;
-            background-color: var(--color-error-50) !important;
-
-            &:focus {
-                border-color: var(--color-error-500) !important;
-                box-shadow: 
-                    0 0 0 3px var(--color-error-100),
-                    0 2px 8px rgba(220, 38, 38, 0.1) !important;
-            }
-        }
-
-        // Success state
-        &.input--success {
-            border-color: var(--color-success-500) !important;
-            background-color: var(--color-success-50) !important;
-
-            &:focus {
-                border-color: var(--color-success-500) !important;
-                box-shadow: 
-                    0 0 0 3px var(--color-success-100),
-                    0 2px 8px rgba(34, 197, 94, 0.1) !important;
-            }
-        }
+    &--checkbox.input--success,
+    &--radio.input--success {
+        border-color: var(--color-success-500);
+        &:checked { background: var(--color-success-500); }
     }
 }

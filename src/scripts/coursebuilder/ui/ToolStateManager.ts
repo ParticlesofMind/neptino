@@ -165,17 +165,27 @@ export class ToolStateManager {
      * Set initial selected states
      */
     private setInitialSelections(): void {
-        // Delay execution to ensure DOM is ready
+        // Use immediate execution instead of setTimeout to prevent race conditions
+        // Ensure UI state is synchronized with canvas state immediately
+        console.log('🔧 SYNC: Setting initial tool selections...');
+        
+        this.setMode(this.currentMode);
+        
+        // CRITICAL: Ensure the tool change is properly propagated
+        console.log(`🔧 SYNC: Setting initial tool to "${this.currentTool}"`);
+        this.setTool(this.currentTool);
+        
+        // Always set media and navigation since they now have default values
+        this.setSelectedMedia(this.selectedMedia);
+        this.setSelectedNavigation(this.selectedNavigation);
+        if (this.selectedShape) {
+            this.setSelectedShape(this.selectedShape);
+        }
+
+        // Add verification step to ensure synchronization
         setTimeout(() => {
-            this.setMode(this.currentMode);
-            this.setTool(this.currentTool);
-            // Always set media and navigation since they now have default values
-            this.setSelectedMedia(this.selectedMedia);
-            this.setSelectedNavigation(this.selectedNavigation);
-            if (this.selectedShape) {
-                this.setSelectedShape(this.selectedShape);
-            }
-        }, 100);
+            this.verifyToolSynchronization();
+        }, 500);
     }
 
     /**
@@ -256,6 +266,14 @@ export class ToolStateManager {
      */
     getSelectedShape(): string | null {
         return this.selectedShape;
+    }
+
+    /**
+     * Public method to force tool synchronization verification
+     * Useful for debugging or when synchronization issues are detected
+     */
+    public forceSyncVerification(): void {
+        this.verifyToolSynchronization();
     }
 
     /**
@@ -466,6 +484,50 @@ export class ToolStateManager {
             default:
                 canvas.classList.add('cursor-default');
                 break;
+        }
+    }
+
+    /**
+     * Verify that UI tool state matches canvas tool state
+     * This helps detect and fix synchronization issues
+     */
+    private verifyToolSynchronization(): void {
+        console.log('🔍 SYNC: Verifying tool synchronization...');
+        
+        // Get the canvas API instance if available globally
+        const canvasAPI = (window as any).canvasAPI;
+        if (!canvasAPI) {
+            console.warn('⚠️ SYNC: Canvas API not available for verification');
+            return;
+        }
+
+        try {
+            const canvasActiveTool = canvasAPI.getActiveTool();
+            const uiActiveTool = this.getCurrentTool();
+            
+            console.log(`🔍 SYNC: UI tool: "${uiActiveTool}", Canvas tool: "${canvasActiveTool}"`);
+            
+            if (canvasActiveTool !== uiActiveTool) {
+                console.warn(`⚠️ SYNC MISMATCH: UI shows "${uiActiveTool}" but canvas has "${canvasActiveTool}"`);
+                console.log('🔧 SYNC: Attempting to synchronize...');
+                
+                // Force synchronization by setting the tool again
+                this.setTool(uiActiveTool);
+                
+                // Re-verify after a short delay
+                setTimeout(() => {
+                    const newCanvasTool = canvasAPI.getActiveTool();
+                    if (newCanvasTool === uiActiveTool) {
+                        console.log('✅ SYNC: Successfully synchronized tools');
+                    } else {
+                        console.error('❌ SYNC: Failed to synchronize tools - manual refresh may be needed');
+                    }
+                }, 100);
+            } else {
+                console.log('✅ SYNC: UI and canvas tools are synchronized');
+            }
+        } catch (error) {
+            console.warn('⚠️ SYNC: Error during tool synchronization verification:', error);
         }
     }
 }

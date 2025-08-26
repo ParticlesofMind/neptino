@@ -59,7 +59,14 @@ export async function initializeCanvas(): Promise<void> {
         uiEventHandler.setOnToolChange((toolName: string) => {
             console.log(`🔧 UI tool change: ${toolName}`);
             if (canvasAPI) {
-                canvasAPI.setTool(toolName);
+                const success = canvasAPI.setTool(toolName);
+                if (success) {
+                    console.log(`✅ Canvas tool successfully set to: ${toolName}`);
+                } else {
+                    console.error(`❌ Failed to set canvas tool to: ${toolName}`);
+                }
+            } else {
+                console.error('❌ Canvas API not available for tool change');
             }
         });
 
@@ -115,6 +122,22 @@ export async function initializeCanvas(): Promise<void> {
 
         // Try to get canvas info with retry logic
         await waitForCanvas();
+
+        // Final synchronization check after everything is initialized
+        console.log('🔍 Performing final tool synchronization check...');
+        if (toolStateManager && canvasAPI) {
+            const uiTool = toolStateManager.getCurrentTool();
+            const canvasTool = canvasAPI.getActiveTool();
+            console.log(`Final sync check - UI: "${uiTool}", Canvas: "${canvasTool}"`);
+            
+            if (uiTool !== canvasTool) {
+                console.warn('⚠️ Final sync mismatch detected - correcting...');
+                canvasAPI.setTool(uiTool);
+            }
+            
+            // Force a sync verification
+            toolStateManager.forceSyncVerification();
+        }
 
         console.log('✅ Canvas initialization completed successfully');
     } catch (error) {

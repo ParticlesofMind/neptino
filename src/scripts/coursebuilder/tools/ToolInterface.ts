@@ -51,6 +51,7 @@ export abstract class BaseTool implements Tool {
  protected isActive: boolean = false;
  protected settings: any;
  protected displayManager: DisplayObjectManager | null = null;
+ protected manager: any = null; // ToolManager reference (avoid circular import)
 
  constructor(name: string, cursor: string = "default") {
  this.name = name;
@@ -84,6 +85,10 @@ export abstract class BaseTool implements Tool {
 
  setDisplayObjectManager(manager: DisplayObjectManager): void {
  this.displayManager = manager;
+ }
+
+ setToolManager(manager: any): void {
+ this.manager = manager;
  }
 
  protected hexToNumber(hex: string): number {

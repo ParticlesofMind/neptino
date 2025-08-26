@@ -4,6 +4,7 @@
  */
 
 import { Point, Rectangle, Container } from "pixi.js";
+import { canvasMarginManager } from '../canvas/CanvasMarginManager';
 
 export interface CanvasBounds {
   width: number;
@@ -14,24 +15,26 @@ export interface CanvasBounds {
   bottom: number;
 }
 
+export interface MarginSettings {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
 export class BoundaryUtils {
   // A4 Canvas dimensions (fixed)
   public static readonly CANVAS_WIDTH = 794;
   public static readonly CANVAS_HEIGHT = 1123;
-  
-  // Default margins (can be overridden)
-  public static readonly DEFAULT_MARGINS = {
-    top: 40,
-    right: 40, 
-    bottom: 40,
-    left: 60
-  };
 
   /**
-   * Get canvas bounds from container or use default A4 dimensions
+   * Get canvas bounds from container with user-specified margins
    */
-  public static getCanvasBounds(container?: Container, margins?: typeof BoundaryUtils.DEFAULT_MARGINS): CanvasBounds {
-    const appliedMargins = margins || BoundaryUtils.DEFAULT_MARGINS;
+  public static getCanvasBounds(container?: Container, margins?: MarginSettings): CanvasBounds {
+    if (!margins) {
+      throw new Error('Margins are required - please provide user-specified margins from PageSetupHandler');
+    }
+    const appliedMargins = margins;
     
     // If container is provided, try to get bounds from it
     let canvasWidth = BoundaryUtils.CANVAS_WIDTH;
@@ -54,6 +57,14 @@ export class BoundaryUtils {
       right: canvasWidth - appliedMargins.right,
       bottom: canvasHeight - appliedMargins.bottom
     };
+  }
+
+  /**
+   * Get canvas bounds using global margin manager (for backward compatibility)
+   */
+  public static getCanvasBoundsWithGlobalMargins(container?: Container): CanvasBounds {
+    const margins = canvasMarginManager.getMargins();
+    return BoundaryUtils.getCanvasBounds(container, margins);
   }
 
   /**

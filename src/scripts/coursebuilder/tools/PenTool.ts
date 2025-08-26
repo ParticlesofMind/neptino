@@ -56,7 +56,7 @@ export class PenTool extends BaseTool {
  const localPoint = container.toLocal(event.global);
  
  // 🎯 BOUNDARY ENFORCEMENT: Clamp point to canvas bounds
- const canvasBounds = BoundaryUtils.getCanvasBounds(container);
+ const canvasBounds = this.manager.getCanvasBounds();
  const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
  
  // Log if point was adjusted
@@ -91,7 +91,7 @@ export class PenTool extends BaseTool {
  const localPoint = container.toLocal(event.global);
  
  // 🎯 BOUNDARY ENFORCEMENT: Clamp mouse position for preview
- const canvasBounds = BoundaryUtils.getCanvasBounds(container);
+ const canvasBounds = this.manager.getCanvasBounds();
  const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
  
  this.lastMousePosition.copyFrom(clampedPoint);
@@ -375,8 +375,20 @@ export class PenTool extends BaseTool {
  onDeactivate(): void {
  super.onDeactivate();
 
- // Complete any active path
+ // Complete any active path and clean up all node graphics
  if (this.currentPath) {
+ // Remove all individual node graphics that were left behind
+ this.currentPath.nodes.forEach((node) => {
+ if (node.graphics.parent) {
+ node.graphics.parent.removeChild(node.graphics);
+ }
+ });
+
+ // Remove path graphics if it exists
+ if (this.currentPath.pathGraphics.parent) {
+ this.currentPath.pathGraphics.parent.removeChild(this.currentPath.pathGraphics);
+ }
+
  this.removePreviewLine();
  this.currentPath = null;
  }

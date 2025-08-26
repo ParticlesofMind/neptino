@@ -4,6 +4,7 @@
  */
 
 import { supabase } from "../../supabase";
+import { canvasMarginManager } from "../../../coursebuilder/canvas/CanvasMarginManager";
 
 export interface PageLayoutSettings {
   margins: {
@@ -42,6 +43,10 @@ export class PageSetupHandler {
   private init(): void {
     this.bindEvents();
     this.updateUI();
+    
+    // Initialize margin manager with default settings
+    canvasMarginManager.setMarginsFromPageLayout(this.currentSettings);
+    
     console.log("📄 Page Setup Handler initialized with defaults:", this.currentSettings);
   }
 
@@ -316,6 +321,9 @@ export class PageSetupHandler {
   }
 
   private updatePreview(): void {
+    // Update canvas margin manager with current settings  
+    canvasMarginManager.setMarginsFromPageLayout(this.currentSettings);
+    
     // Trigger the canvas preview update if it exists
     const event = new CustomEvent('pageLayoutChange', {
       detail: this.currentSettings
@@ -385,8 +393,13 @@ export class PageSetupHandler {
         };
         
         console.log("📄 Loaded page layout settings from database:", this.currentSettings);
+        
+        // Update margin manager immediately with loaded settings
+        canvasMarginManager.setMarginsFromPageLayout(this.currentSettings);
       } else {
         console.log("📄 No existing page layout settings found, using defaults");
+        // Still update margin manager with defaults
+        canvasMarginManager.setMarginsFromPageLayout(this.currentSettings);
       }
 
       this.updateUI();
