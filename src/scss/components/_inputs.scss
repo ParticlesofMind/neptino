@@ -39,7 +39,7 @@
         color: var(--color-text-tertiary);
         border-color: var(--color-neutral-200);
         cursor: not-allowed;
-        
+
         &::placeholder {
             color: var(--color-text-tertiary);
         }
@@ -88,21 +88,21 @@
         color: var(--color-text-primary);
         transition: all 0.2s ease;
         box-sizing: border-box; // Ensure proper sizing within container
-        
+
         &::placeholder {
             color: var(--color-neutral-400);
             font-style: italic;
         }
-        
+
         &:focus {
             outline: none;
             border-color: var(--color-primary-300); // More subtle blue
-            box-shadow: 
+            box-shadow:
                 0 0 0 2px rgba(26, 140, 255, 0.1), // Softer focus ring
                 0 1px 3px rgba(0, 0, 0, 0.1);
             background: var(--color-background);
         }
-        
+
         &:hover:not(:focus) {
             border-color: var(--color-neutral-300);
             background: var(--color-neutral-50);
@@ -113,7 +113,7 @@
     &--number {
         // Ensure the input has enough padding for the spinner
         padding-right: var(--spacing-6); // Extra space for spinner buttons
-        
+
         // Force spinner buttons to always be visible
         &::-webkit-outer-spin-button,
         &::-webkit-inner-spin-button {
@@ -247,7 +247,7 @@
         &:focus {
             outline: none;
             border-color: var(--color-primary-500);
-            box-shadow: 
+            box-shadow:
                 0 0 0 3px var(--color-primary-100),
                 0 4px 12px rgba(var(--color-primary-500-rgb), 0.2);
         }
@@ -285,7 +285,7 @@
 
             &:focus {
                 border-color: var(--color-error-500);
-                box-shadow: 
+                box-shadow:
                     0 0 0 3px var(--color-error-100),
                     0 4px 12px rgba(var(--color-error-500-rgb), 0.2);
             }
@@ -315,7 +315,7 @@
     &--date {
         position: relative;
         cursor: pointer;
-        
+
         // Hide default calendar icon in some browsers
         &::-webkit-calendar-picker-indicator {
             opacity: 0;
@@ -340,7 +340,7 @@
     &--time {
         position: relative;
         cursor: pointer;
-        
+
         // Hide default time picker icon in some browsers
         &::-webkit-calendar-picker-indicator {
             opacity: 0;
@@ -490,6 +490,206 @@
         &:checked {
             background-color: var(--color-success-500);
             border-color: var(--color-success-500);
+        }
+    }
+
+    // Color input variant - Clean color picker styling
+    &--color {
+        width: 60px;
+        height: 40px;
+        padding: 4px;
+        border: 2px solid var(--color-neutral-300);
+        border-radius: var(--border-radius-medium);
+        background-color: var(--color-input-background);
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        // Hide default appearance variations across browsers
+        &::-webkit-color-swatch-wrapper {
+            padding: 0;
+            border: none;
+            border-radius: var(--border-radius-small);
+        }
+
+        &::-webkit-color-swatch {
+            border: none;
+            border-radius: var(--border-radius-small);
+        }
+
+        &::-moz-color-swatch {
+            border: none;
+            border-radius: var(--border-radius-small);
+        }
+
+        &:focus {
+            outline: none;
+            border-color: var(--color-primary-500);
+            box-shadow: 0 0 0 3px var(--color-primary-100);
+        }
+
+        &:hover:not(:focus):not(:disabled) {
+            border-color: var(--color-primary-300);
+        }
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    }
+
+    // Range input variant - Custom slider styling
+    &--range {
+        height: 6px;
+        padding: 0;
+        border-radius: 3px;
+        background: linear-gradient(to right,
+                var(--color-primary-200) 0%,
+                var(--color-primary-500) 50%,
+                var(--color-neutral-300) 50%,
+                var(--color-neutral-300) 100%);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        appearance: none;
+
+
+
+        &:focus {
+            outline: none;
+
+            &::-webkit-slider-thumb {
+                box-shadow:
+                    0 2px 4px rgba(0, 0, 0, 0.1),
+                    0 0 0 3px var(--color-primary-100);
+            }
+
+            &::-moz-range-thumb {
+                box-shadow:
+                    0 2px 4px rgba(0, 0, 0, 0.1),
+                    0 0 0 3px var(--color-primary-100);
+            }
+        }
+
+   
+    }
+
+    // Select input variant - Custom dropdown styling
+    &--select {
+        cursor: pointer;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px;
+        padding: 0;
+        padding-right: 10px;
+        padding-left: 10px;
+        appearance: none;
+
+        &:focus {
+            outline: none;
+            border-color: var(--color-primary-500);
+            box-shadow: 0 0 0 3px var(--color-primary-100);
+        }
+
+        &:hover:not(:focus):not(:disabled) {
+            border-color: var(--color-primary-300);
+        }
+
+        &:disabled {
+            background-color: var(--color-neutral-100);
+            color: var(--color-text-tertiary);
+            border-color: var(--color-neutral-200);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+    }
+
+    // Textarea input variant - Coursebuilder canvas text input styling
+    &--textarea {
+        resize: vertical !important; // Allow vertical resize only
+        min-height: 80px;
+        max-width: 240px;
+        min-width: 200px;
+        font-size: 16px !important; // Override any inherited font sizes
+        font-family: Arial, sans-serif !important; // Ensure consistent font
+        font-weight: normal !important;
+        font-style: normal !important;
+        color: var(--color-text-primary) !important;
+        text-align: left !important;
+        background-color: var(--color-input-background) !important;
+        border: 2px solid var(--color-input-border) !important;
+        border-radius: var(--border-radius-medium) !important;
+        transition: all 0.2s ease;
+        position: absolute !important; // Critical for canvas positioning
+        z-index: 1000 !important; // Ensure it's above canvas
+        padding: var(--spacing-3) var(--spacing-4); // Use consistent spacing
+        line-height: var(--line-height-normal);
+        box-sizing: border-box; // Ensure proper sizing
+
+        // Enhanced placeholder styling for better visibility
+        &::placeholder {
+            color: var(--color-text-tertiary) !important;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        // Focus state with better visibility
+        &:focus {
+            outline: none !important;
+            border-color: var(--color-primary-500) !important;
+            box-shadow: 
+                0 0 0 3px var(--color-primary-100),
+                0 2px 8px rgba(0, 0, 0, 0.1) !important;
+            background-color: var(--color-background) !important;
+        }
+
+        // Hover state
+        &:hover:not(:focus):not(:disabled) {
+            border-color: var(--color-primary-300);
+            background-color: var(--color-primary-50);
+        }
+
+        // Auto-resize smooth transition
+        &.auto-resize {
+            transition: height 0.1s ease;
+        }
+
+        // Disabled state
+        &:disabled {
+            background-color: var(--color-neutral-100) !important;
+            color: var(--color-text-tertiary) !important;
+            border-color: var(--color-neutral-200) !important;
+            cursor: not-allowed;
+            opacity: 0.6;
+
+            &::placeholder {
+                color: var(--color-text-tertiary) !important;
+            }
+        }
+
+        // Error state
+        &.input--error {
+            border-color: var(--color-error-500) !important;
+            background-color: var(--color-error-50) !important;
+
+            &:focus {
+                border-color: var(--color-error-500) !important;
+                box-shadow: 
+                    0 0 0 3px var(--color-error-100),
+                    0 2px 8px rgba(220, 38, 38, 0.1) !important;
+            }
+        }
+
+        // Success state
+        &.input--success {
+            border-color: var(--color-success-500) !important;
+            background-color: var(--color-success-50) !important;
+
+            &:focus {
+                border-color: var(--color-success-500) !important;
+                box-shadow: 
+                    0 0 0 3px var(--color-success-100),
+                    0 2px 8px rgba(34, 197, 94, 0.1) !important;
+            }
         }
     }
 }

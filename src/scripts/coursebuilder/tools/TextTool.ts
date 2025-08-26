@@ -73,23 +73,28 @@ export class TextTool extends BaseTool {
  this.removeTextArea();
 
  console.log(
- `📝 TEXT: Creating professional text area at global (${Math.round(x)}, ${Math.round(y)})`,
+ `📝 TEXT: Creating text area at global (${Math.round(x)}, ${Math.round(y)}), local (${Math.round(this.textPosition.x)}, ${Math.round(this.textPosition.y)})`,
  );
 
  // Get canvas bounds for proper positioning
- const canvasElement = document.querySelector("canvas");
+ const canvasElement = document.querySelector("#canvas-container canvas");
  let adjustedX = x;
  let adjustedY = y;
 
  if (canvasElement) {
  const canvasRect = canvasElement.getBoundingClientRect();
  
+ // Use the global click coordinates directly - they're already in screen space
+ // The x, y parameters are the global mouse position from the event
+ adjustedX = x;
+ adjustedY = y;
+ 
  // Ensure text area stays within canvas bounds
- const textAreaWidth = 240; // Approximate width of text area
- const textAreaHeight = 80; // Approximate height of text area
+ const textAreaWidth = 240;
+ const textAreaHeight = 80;
  
  // Adjust X coordinate to keep within canvas bounds
- if (x + textAreaWidth > canvasRect.right) {
+ if (adjustedX + textAreaWidth > canvasRect.right) {
  adjustedX = canvasRect.right - textAreaWidth - 10;
  }
  if (adjustedX < canvasRect.left) {
@@ -97,7 +102,7 @@ export class TextTool extends BaseTool {
  }
  
  // Adjust Y coordinate to keep within canvas bounds  
- if (y + textAreaHeight > canvasRect.bottom) {
+ if (adjustedY + textAreaHeight > canvasRect.bottom) {
  adjustedY = canvasRect.bottom - textAreaHeight - 10;
  }
  if (adjustedY < canvasRect.top) {
@@ -105,23 +110,25 @@ export class TextTool extends BaseTool {
  }
  
  console.log(
- `📝 TEXT: Adjusted position to (${Math.round(adjustedX)}, ${Math.round(adjustedY)}) within canvas bounds`,
+ `📝 TEXT: Canvas rect:`, canvasRect,
+ `Global click position: (${Math.round(x)}, ${Math.round(y)})`,
+ `Final position: (${Math.round(adjustedX)}, ${Math.round(adjustedY)})`,
  );
+ } else {
+ console.warn('📝 TEXT: Canvas element not found, using click position directly');
+ adjustedX = x;
+ adjustedY = y;
  }
 
  // Create HTML textarea for professional text entry
  this.activeTextArea = document.createElement("textarea");
 
- // Apply CSS classes for styling instead of inline styles
- this.activeTextArea.className = "coursebuilder-text-input";
- this.activeTextArea.style.position = "absolute";
+ // Apply proper CSS classes for styling - no inline styles
+ this.activeTextArea.className = "input input--textarea auto-resize";
  this.activeTextArea.style.left = `${adjustedX}px`;
  this.activeTextArea.style.top = `${adjustedY}px`;
- this.activeTextArea.style.zIndex = "1000"; // Ensure it's above canvas
- this.activeTextArea.style.maxWidth = "240px"; // Limit width to prevent overflow
- this.activeTextArea.style.minWidth = "200px"; // Minimum width for usability
  
- // Apply settings through CSS properties
+ // Apply settings through CSS properties only for dynamic styles
  this.updateTextAreaSettings();
  
  this.activeTextArea.placeholder = "Enter your text here...";
@@ -266,14 +273,9 @@ export class TextTool extends BaseTool {
  updateSettings(settings: TextSettings): void {
  this.settings = { ...this.settings, ...settings };
 
- // Update active text area if it exists
+ // Update active text area if it exists - only dynamic properties
  if (this.activeTextArea) {
- this.activeTextArea.style.fontSize = `${this.settings.fontSize}px`;
- this.activeTextArea.style.fontFamily = this.settings.fontFamily;
- this.activeTextArea.style.fontWeight = this.settings.fontWeight;
- this.activeTextArea.style.fontStyle = this.settings.fontStyle;
- this.activeTextArea.style.color = this.settings.color;
- this.activeTextArea.style.textAlign = this.settings.align as any;
+ this.updateTextAreaSettings();
  }
  }
 
@@ -284,11 +286,12 @@ export class TextTool extends BaseTool {
 
  /**
  * Update text area settings based on current tool settings
+ * Only applies dynamic properties that change based on user settings
  */
  private updateTextAreaSettings(): void {
  if (!this.activeTextArea) return;
  
- // Only set the dynamic properties that need to change
+ // Only set the dynamic properties that need to change based on settings
  this.activeTextArea.style.fontSize = `${this.settings.fontSize}px`;
  this.activeTextArea.style.fontFamily = this.settings.fontFamily;
  this.activeTextArea.style.fontWeight = this.settings.fontWeight;

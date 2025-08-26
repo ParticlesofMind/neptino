@@ -115,7 +115,12 @@ export class CanvasAPI {
    * Get canvas dimensions
    */
   public getDimensions(): { width: number; height: number } {
-    return this.pixiApp.getDimensions();
+    try {
+      return this.pixiApp.getDimensions();
+    } catch (error) {
+      console.warn('⚠️ Could not get dimensions - canvas not ready:', error);
+      return { width: 0, height: 0 };
+    }
   }
 
   // ============== TOOL METHODS ==============
@@ -287,6 +292,7 @@ export class CanvasAPI {
     return {
       initialized: this.initialized,
       ready: this.isReady(),
+      canvasAvailable: this.getApp()?.canvas !== undefined,
       dimensions,
       layers: layerInfo,
       events: eventInfo,

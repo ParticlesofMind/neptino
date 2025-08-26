@@ -116,6 +116,12 @@ export class PixiApp {
       return { width: 0, height: 0 };
     }
     
+    // Check if canvas is available - it might not be ready immediately after init
+    if (!this.app.canvas) {
+      console.warn('⚠️ Canvas not yet available - returning zero dimensions');
+      return { width: 0, height: 0 };
+    }
+    
     return {
       width: this.app.canvas.width,
       height: this.app.canvas.height
@@ -126,7 +132,7 @@ export class PixiApp {
    * Check if app is created and mounted
    */
   public isReady(): boolean {
-    return this.app !== null && this.mounted;
+    return this.app !== null && this.mounted && this.app.canvas !== undefined;
   }
 
   /**

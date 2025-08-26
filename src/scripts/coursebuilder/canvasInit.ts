@@ -6,6 +6,7 @@
 import { CanvasAPI } from './canvas/CanvasAPI';
 import { ToolStateManager } from './ui/ToolStateManager';
 import { UIEventHandler } from './ui/UIEventHandler';
+import { toolColorManager } from './tools/ToolColorManager';
 
 console.log('📦 CanvasAPI import successful:', CanvasAPI);
 
@@ -18,91 +19,126 @@ let uiEventHandler: UIEventHandler | null = null;
  * Initialize canvas when coursebuilder page loads
  */
 export async function initializeCanvas(): Promise<void> {
-  try {
-    console.log('🔍 Checking for canvas container...');
-    
-    // Check if we're on coursebuilder page with canvas container
-    const canvasContainer = document.getElementById('canvas-container');
-    if (!canvasContainer) {
-      console.log('📄 No canvas container found - skipping canvas init');
-      return;
+    try {
+        console.log('🔍 Checking for canvas container...');
+
+        // Check if we're on coursebuilder page with canvas container
+        const canvasContainer = document.getElementById('canvas-container');
+        if (!canvasContainer) {
+            console.log('📄 No canvas container found - skipping canvas init');
+            return;
+        }
+
+        console.log('✅ Canvas container found:', canvasContainer);
+
+        console.log('🎨 Starting canvas initialization...');
+
+        // Create canvas API
+        canvasAPI = new CanvasAPI('#canvas-container');
+        console.log('✅ CanvasAPI instance created');
+
+        // Initialize with A4 dimensions
+        await canvasAPI.init({
+            width: 794,
+            height: 1123,
+            backgroundColor: 0xffffff,
+        });
+
+        console.log('✅ Canvas initialized successfully!');
+
+        // Initialize UI system
+        console.log('🎛️ Connecting UI to canvas...');
+        toolStateManager = new ToolStateManager();
+        uiEventHandler = new UIEventHandler(toolStateManager);
+
+        // Initialize color selectors for all tools
+        console.log('🎨 Initializing tool color selectors...');
+        toolColorManager.init();
+
+        // Connect UI tool changes to canvas
+        uiEventHandler.setOnToolChange((toolName: string) => {
+            console.log(`🔧 UI tool change: ${toolName}`);
+            if (canvasAPI) {
+                canvasAPI.setTool(toolName);
+            }
+        });
+
+        // Connect UI color changes to canvas
+        uiEventHandler.setOnColorChange((color: string) => {
+            console.log(`🎨 UI color change: ${color}`);
+            if (canvasAPI) {
+                canvasAPI.setToolColor(color);
+            }
+        });
+
+        // Listen for color selector changes
+        document.addEventListener('toolColorChange', (event: Event) => {
+            const customEvent = event as CustomEvent;
+            const { tool, hex } = customEvent.detail;
+            console.log(`🎨 Color selector change for ${tool}: ${hex}`);
+            if (canvasAPI) {
+                canvasAPI.setToolColor(hex);
+            }
+        });
+
+        // Connect UI tool settings changes to canvas
+        uiEventHandler.setOnToolSettingsChange(
+            (toolName: string, settings: any) => {
+                console.log(`⚙️ UI settings change: ${toolName}`, settings);
+                if (canvasAPI) {
+                    canvasAPI.setToolSettings(toolName, settings);
+                }
+            },
+        );
+
+        console.log('✅ UI connected to canvas');
+
+        // Make available globally for debugging
+        (window as any).canvasAPI = canvasAPI;
+        (window as any).toolStateManager = toolStateManager;
+
+        // Wait for canvas to be fully ready before getting info
+        const waitForCanvas = async (maxAttempts: number = 5, delay: number = 100): Promise<void> => {
+            for (let i = 0; i < maxAttempts; i++) {
+                if (canvasAPI && canvasAPI.isReady()) {
+                    try {
+                        console.log('📊 Canvas info:', canvasAPI.getCanvasInfo());
+                        return;
+                    } catch (infoError) {
+                        console.warn(`⚠️ Attempt ${i + 1}: Could not get canvas info:`, infoError);
+                    }
+                }
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+            console.warn('⚠️ Canvas info unavailable after all attempts - canvas may still be initializing');
+        };
+
+        // Try to get canvas info with retry logic
+        await waitForCanvas();
+
+        console.log('✅ Canvas initialization completed successfully');
+    } catch (error) {
+        console.error('❌ Canvas initialization failed:', error);
+        console.error(
+            '❌ Error stack:',
+            error instanceof Error ? error.stack : 'No stack available',
+        );
     }
-
-    console.log('✅ Canvas container found:', canvasContainer);
-
-    console.log('🎨 Starting canvas initialization...');
-    
-    // Create canvas API
-    canvasAPI = new CanvasAPI('#canvas-container');
-    console.log('✅ CanvasAPI instance created');
-    
-    // Initialize with A4 dimensions
-    await canvasAPI.init({
-      width: 794,
-      height: 1123,
-      backgroundColor: 0xffffff
-    });
-
-    console.log('✅ Canvas initialized successfully!');
-
-    // Initialize UI system
-    console.log('🎛️ Connecting UI to canvas...');
-    toolStateManager = new ToolStateManager();
-    uiEventHandler = new UIEventHandler(toolStateManager);
-
-    // Connect UI tool changes to canvas
-    uiEventHandler.setOnToolChange((toolName: string) => {
-      console.log(`🔧 UI tool change: ${toolName}`);
-      if (canvasAPI) {
-        canvasAPI.setTool(toolName);
-      }
-    });
-
-    // Connect UI color changes to canvas
-    uiEventHandler.setOnColorChange((color: string) => {
-      console.log(`🎨 UI color change: ${color}`);
-      if (canvasAPI) {
-        canvasAPI.setToolColor(color);
-      }
-    });
-
-    // Connect UI tool settings changes to canvas
-    uiEventHandler.setOnToolSettingsChange((toolName: string, settings: any) => {
-      console.log(`⚙️ UI settings change: ${toolName}`, settings);
-      if (canvasAPI) {
-        canvasAPI.setToolSettings(toolName, settings);
-      }
-    });
-
-    console.log('✅ UI connected to canvas');
-
-    // Make available globally for debugging
-    (window as any).canvasAPI = canvasAPI;
-    (window as any).toolStateManager = toolStateManager;
-
-    console.log('📊 Canvas info:', canvasAPI.getCanvasInfo());
-
-    console.log('✅ Canvas initialization completed successfully');
-
-  } catch (error) {
-    console.error('❌ Canvas initialization failed:', error);
-    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack available');
-  }
 }
 
 /**
  * Initialize canvas when DOM is ready
  */
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('📄 DOM loaded - attempting canvas initialization...');
-  // Small delay to ensure coursebuilder page is fully loaded
-  setTimeout(initializeCanvas, 100);
+    console.log('📄 DOM loaded - attempting canvas initialization...');
+    // Small delay to ensure coursebuilder page is fully loaded
+    setTimeout(initializeCanvas, 100);
 });
 
 // Also try immediate initialization in case DOM is already loaded
 if (document.readyState === 'loading') {
-  console.log('📄 Document still loading - waiting for DOMContentLoaded');
+    console.log('📄 Document still loading - waiting for DOMContentLoaded');
 } else {
-  console.log('📄 Document already loaded - initializing canvas immediately');
-  setTimeout(initializeCanvas, 100);
+    console.log('📄 Document already loaded - initializing canvas immediately');
+    setTimeout(initializeCanvas, 100);
 }

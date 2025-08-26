@@ -56,6 +56,7 @@ export class ShapesTool extends BaseTool {
  this.bindKeyboardEvents();
  
  console.log('🔶 SHAPES: Initialized with rectangle, triangle, and circle support');
+ console.log(`🔶 SHAPES: Default settings - Color: ${this.settings.color}, Stroke: ${this.settings.strokeWidth}px, Fill: ${this.settings.fillEnabled ? 'enabled' : 'disabled'}`);
  }
 
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
@@ -106,10 +107,19 @@ export class ShapesTool extends BaseTool {
  }
 
  onPointerUp(): void {
- if (this.isDrawing) {
+ if (this.isDrawing && this.currentShape) {
+ const width = this.currentPoint.x - this.startPoint.x;
+ const height = this.currentPoint.y - this.startPoint.y;
  console.log(
- `🔶 SHAPES: Finished drawing professional ${this.settings.shapeType}${this.isProportional ? " (proportional)" : ""}`,
+ `🔶 SHAPES: Finished drawing professional ${this.settings.shapeType}${this.isProportional ? " (proportional)" : ""} - Final size: ${Math.round(Math.abs(width))}x${Math.round(Math.abs(height))}`,
  );
+ 
+ // Log the final shape details
+ if (this.currentShape.parent) {
+ console.log(`🔶 SHAPES: Shape added to parent with ${this.currentShape.parent.children.length} total children`);
+ } else {
+ console.warn(`🔶 SHAPES: Shape not added to any parent!`);
+ }
  }
  this.isDrawing = false;
  this.currentShape = null;
@@ -175,7 +185,7 @@ export class ShapesTool extends BaseTool {
 
  // Apply stroke style
  const strokeStyle = {
- width: this.settings.strokeWidth,
+ width: Math.max(this.settings.strokeWidth, 1), // Ensure minimum 1px stroke
  color: strokeColor,
  cap: "round" as const,
  join: "round" as const,
@@ -186,6 +196,15 @@ export class ShapesTool extends BaseTool {
  if (this.settings.fillEnabled && this.settings.fillColor) {
  fillStyle = { color: hexToNumber(this.settings.fillColor) };
  }
+
+ // Ensure the shape is actually drawn by checking dimensions
+ const minSize = 5; // Minimum size to be visible
+ if (Math.abs(width) < minSize || Math.abs(height) < minSize) {
+ // Don't draw shapes that are too small to see
+ return;
+ }
+
+ console.log(`🔶 SHAPES: Drawing ${this.settings.shapeType} - Width: ${Math.round(width)}, Height: ${Math.round(height)}, Stroke: ${strokeStyle.width}px, Color: ${this.settings.color}`);
 
  switch (this.settings.shapeType) {
  case "rectangle":
@@ -226,6 +245,8 @@ export class ShapesTool extends BaseTool {
  ): void {
  if (!this.currentShape) return;
 
+ console.log(`🔶 SHAPES: Drawing rectangle at (${this.startPoint.x}, ${this.startPoint.y}) with size ${width}x${height}`);
+
  if (this.settings.cornerRadius && this.settings.cornerRadius > 0) {
  // Rounded rectangle
  this.currentShape.roundRect(
@@ -245,7 +266,11 @@ export class ShapesTool extends BaseTool {
  );
  }
 
- if (fillStyle) this.currentShape.fill(fillStyle);
+ if (fillStyle) {
+ console.log(`🔶 SHAPES: Applying fill style:`, fillStyle);
+ this.currentShape.fill(fillStyle);
+ }
+ console.log(`🔶 SHAPES: Applying stroke style:`, strokeStyle);
  this.currentShape.stroke(strokeStyle);
  }
 
@@ -288,9 +313,15 @@ export class ShapesTool extends BaseTool {
  const centerX = this.startPoint.x + width / 2;
  const centerY = this.startPoint.y + height / 2;
 
+ console.log(`🔶 SHAPES: Drawing circle at center (${Math.round(centerX)}, ${Math.round(centerY)}) with radius ${Math.round(radius)}`);
+
  this.currentShape.circle(centerX, centerY, radius);
 
- if (fillStyle) this.currentShape.fill(fillStyle);
+ if (fillStyle) {
+ console.log(`🔶 SHAPES: Applying circle fill:`, fillStyle);
+ this.currentShape.fill(fillStyle);
+ }
+ console.log(`🔶 SHAPES: Applying circle stroke:`, strokeStyle);
  this.currentShape.stroke(strokeStyle);
  }
 

@@ -115,7 +115,7 @@
           <form class="form" id="course-essentials-form">
             <label class="form__label">
               Course Name
-              <input class="form__input" type="text" name="course_name" placeholder="Enter course name" required />
+              <input class="input" type="text" name="course_name" placeholder="Enter course name" required />
             </label>
             <label class="form__label">
               Course Description
@@ -124,17 +124,15 @@
             </label>
             <label class="form__label">
               Teacher
-              <input class="form__input form__input--readonly" type="text" name="teacher_id" placeholder="Loading..."
-                readonly />
+              <input class="input" type="text" name="teacher_id" placeholder="Loading..." readonly />
             </label>
             <label class="form__label">
               Institution
-              <input class="form__input form__input--readonly" type="text" name="institution" placeholder="Loading..."
-                readonly />
+              <input class="input" type="text" name="institution" placeholder="Loading..." readonly />
             </label>
             <label class="form__label">
               Course Language
-              <select class="form__input form__select" name="course_language" required>
+              <select class="input input--select" name="course_language" required>
                 <option value="">Select language...</option>
               </select>
             </label>
@@ -163,7 +161,7 @@
                 <label class="form__label" for="class-year-select">
                   Class Year
                 </label>
-                <select class="form__input form__select" name="class_year" id="class-year-select" required>
+                <select class="input input--select" name="class_year" id="class-year-select" required>
                   <option value="">Loading...</option>
                 </select>
               </div>
@@ -172,7 +170,7 @@
                 <label class="form__label" for="curricular-framework-select">
                   Curricular Framework
                 </label>
-                <select class="form__input form__select" name="curricular_framework" id="curricular-framework-select" required>
+                <select class="input input--select" name="curricular_framework" id="curricular-framework-select" required>
                   <option value="">Loading...</option>
                 </select>
               </div>
@@ -185,7 +183,7 @@
                   Domain 
                   <span class="form__label-hint">Academic field</span>
                 </label>
-                <select class="form__input form__select" name="domain" id="domain-select" required>
+                <select class="input input--select" name="domain" id="domain-select" required>
                   <option value="">Loading...</option>
                 </select>
               </div>
@@ -195,7 +193,7 @@
                   Subject 
                   <span class="form__label-hint">Specific discipline</span>
                 </label>
-                <select class="form__input form__select" name="subject" id="subject-select" required disabled>
+                <select class="input input--select" name="subject" id="subject-select" required disabled>
                   <option value="">Select domain first...</option>
                 </select>
               </div>
@@ -205,7 +203,7 @@
                   Topic 
                   <span class="form__label-hint">Area of study</span>
                 </label>
-                <select class="form__input form__select" name="topic" id="topic-select" required disabled>
+                <select class="input input--select" name="topic" id="topic-select" required disabled>
                   <option value="">Select subject first...</option>
                 </select>
               </div>
@@ -216,7 +214,7 @@
                   <span class="form__label-optional">(Optional)</span> 
                   <span class="form__label-hint">Specific focus</span>
                 </label>
-                <select class="form__input form__select" name="subtopic" id="subtopic-select" disabled>
+                <select class="input input--select" name="subtopic" id="subtopic-select" disabled>
                   <option value="">Select topic first...</option>
                 </select>
               </div>
@@ -241,7 +239,7 @@
                     Previous Course 
                     <span class="form__label-hint">Course that should come before this one</span>
                   </label>
-                  <select class="form__input form__select" name="previous_course" id="previous-course-select">
+                  <select class="input input--select" name="previous_course" id="previous-course-select">
                     <option value="">Loading courses...</option>
                   </select>
                 </div>
@@ -251,7 +249,7 @@
                     Current Course 
                     <span class="form__label-hint">Other courses at this level</span>
                   </label>
-                  <select class="form__input form__select" name="current_course" id="current-course-select">
+                  <select class="input input--select" name="current_course" id="current-course-select">
                     <option value="">Loading courses...</option>
                   </select>
                 </div>
@@ -261,7 +259,7 @@
                     Next Course 
                     <span class="form__label-hint">Course that should come after this one</span>
                   </label>
-                  <select class="form__input form__select" name="next_course" id="next-course-select">
+                  <select class="input input--select" name="next_course" id="next-course-select">
                     <option value="">Loading courses...</option>
                   </select>
                 </div>
@@ -322,13 +320,13 @@
               <form class="form coursebuilder-form modal__body" id="create-template-form">
                 <label class="form__label">
                   Template Name*
-                  <input class="form__input" type="text" name="template-name" required
+                  <input class="input" type="text" name="template-name" required
                     placeholder="Enter template name" />
                 </label>
 
                 <label class="form__label">
                   Template Type*
-                  <select class="form__input form__select" name="template-type" required>
+                  <select class="input input--select" name="template-type" required>
                     <option value="">Select template type</option>
                     <option value="lesson">Lesson</option>
                   </select>
@@ -367,9 +365,9 @@
 
               <div class="modal__body template-browser">
                 <div class="template-browser__controls">
-                  <input class="form__input template-browser__search" type="text" id="template-search"
+                  <input class="input" type="text" id="template-search"
                     placeholder="Search templates..." />
-                  <select class="form__input form__select template-browser__filter" id="template-type-filter">
+                  <select class="input input--select" id="template-type-filter">
                     <option value="">All Types</option>
                     <option value="lesson">Lesson</option>
                   </select>
@@ -951,89 +949,88 @@
 
           <!-- Drawing Tools -->
           <div class="engine__tools tools">
-            <div class="tools__item tools__item--active" data-tool="selection">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
-                class="tools__icon icon icon--base">
-              <span class="icon-label">Select</span>
-            </div>
-            <div class="tools__item" data-tool="pen">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Pen Tool"
-                class="tools__icon icon icon--base">
-              <span class="icon-label">Pen</span>
-            </div>
-            <div class="tools__item" data-tool="brush">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" alt="Brush Tool"
-                class="tools__icon icon icon--base">
-              <span class="icon-label">Brush</span>
-            </div>
-            <div class="tools__item" data-tool="text">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" alt="Text Tool"
-                class="tools__icon icon icon--base">
-              <span class="icon-label">Text</span>
-            </div>
-            <div class="tools__item" data-tool="shapes">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" alt="Shapes Tool"
-                class="tools__icon icon icon--base">
-              <span class="icon-label">Shapes</span>
-            </div>
-            <div class="tools__item" data-tool="eraser">
-              <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" alt="Eraser Tool"
-                class="tools__icon icon icon--base">
-              <span class="icon-label">Eraser</span>
+            <div class="tools__selection">
+              <div class="tools__item tools__item--active" data-tool="selection">
+                <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
+                  class="tools__icon icon icon--base">
+                <span class="icon-label">Select</span>
+              </div>
+              <div class="tools__item" data-tool="pen">
+                <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Pen Tool"
+   class="tools__icon icon icon--base">
+                <span class="icon-label">Pen</span>
+              </div>
+              <div class="tools__item" data-tool="brush">
+                <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" alt="Brush Tool"
+                  class="tools__icon icon icon--base">
+                <span class="icon-label">Brush</span>
+              </div>
+              <div class="tools__item" data-tool="text">
+                <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" alt="Text Tool"
+                  class="tools__icon icon icon--base">
+                <span class="icon-label">Text</span>
+              </div>
+              <div class="tools__item" data-tool="shapes">
+                <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" alt="Shapes Tool"
+                  class="tools__icon icon icon--base">
+                <span class="icon-label">Shapes</span>
+              </div>
+              <div class="tools__item" data-tool="eraser">
+                <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" alt="Eraser Tool"
+                  class="tools__icon icon icon--base">
+                <span class="icon-label">Eraser</span>
+              </div>
             </div>
 
             <!-- Tool Settings -->
             <div class="tools__options">
+           
               <!-- Pen Settings -->
-              <div class="tool-settings" data-tool="pen" style="display: none;">
-                <input type="color" value="#000000" class="tool-color" title="Pen Color">
-                <input type="range" min="1" max="10" value="2" class="tool-size" title="Pen Size">
+              <div class="tools__item" data-tool="pen" style="display: none;">
+                <div class="tools__color-container" data-color-selector="pen"></div>
+                <input type="range" min="1" max="10" value="2" class="input input--range" title="Pen Size" data-setting="size">
               </div>
 
               <!-- Text Settings -->
-              <div class="tool-settings" data-tool="text" style="display: none;">
-                <select class="tool-font" title="Font Family">
+              <div class="tools__item" data-tool="text" style="display: none;">
+                <select class="input input--select" title="Font Family" data-setting="fontFamily">
                   <option value="Arial">Arial</option>
-                  <option value="Times">Times</option>
+                  <option value="Times New Roman">Times New Roman</option>
                   <option value="Georgia">Georgia</option>
+                  <option value="Verdana">Verdana</option>
+                  <option value="Tahoma">Tahoma</option>
                 </select>
-                <input type="color" value="#000000" class="tool-color" title="Text Color">
+                <div class="tools__color-container" data-color-selector="text"></div>
               </div>
 
               <!-- Brush Settings -->
-              <div class="tool-settings" data-tool="brush" style="display: none;">
-                <input type="color" value="#ffff00" class="tool-color" title="Brush Color">
-                <input type="range" min="10" max="50" value="20" class="tool-size" title="Brush Size">
+              <div class="tools__item" data-tool="brush" style="display: none;">
+                <div class="tools__color-container" data-color-selector="brush"></div>
+                <input type="range" min="10" max="50" value="20" class="input input--range" title="Brush Size" data-setting="size">
               </div>
 
               <!-- Shapes Settings -->
-              <div class="tool-settings" data-tool="shapes" style="display: none;">
-                <!-- Shape Selection Buttons -->
-                <div class="shape-buttons">
-                  <button class="shape-btn" data-shape="rectangle" title="Rectangle">
-                    <svg width="20" height="20" viewBox="0 0 20 20">
-                      <rect x="3" y="6" width="14" height="8" fill="none" stroke="currentColor" stroke-width="1.5" />
-                    </svg>
-                  </button>
-                  <button class="shape-btn" data-shape="triangle" title="Triangle">
-                    <svg width="20" height="20" viewBox="0 0 20 20">
-                      <path d="M10 4 L17 16 L3 16 Z" fill="none" stroke="currentColor" stroke-width="1.5" />
-                    </svg>
-                  </button>
-                  <button class="shape-btn" data-shape="circle" title="Circle">
-                    <svg width="20" height="20" viewBox="0 0 20 20">
-                      <circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="1.5" />
-                    </svg>
-                  </button>
+              <div class="tools__item" data-tool="shapes" style="display: none;">
+                <!-- Shape Selection Icons -->
+                <div class="tools__shape-item" data-shape="rectangle">
+                  <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-rectangle.svg" alt="rectangle shape" class="tools__icon icon icon--base" title="Rectangle">
                 </div>
-                <input type="color" value="#000000" class="tool-color" title="Shape Color">
+                <div class="tools__shape-item" data-shape="circle">
+                  <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-circle.svg" alt="circle shape" class="tools__icon icon icon--base" title="Circle">
+                </div>
+                <div class="tools__shape-item" data-shape="triangle">
+                  <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-triangle.svg" alt="triangle shape" class="tools__icon icon icon--base" title="Triangle">
+                </div>
+                <!-- Color Picker -->
+                <div class="tools__color-container" data-color-selector="shapes"></div>
               </div>
 
               <!-- Eraser Settings -->
-              <div class="tool-settings" data-tool="eraser" style="display: none;">
-                <input type="range" min="5" max="50" value="20" class="tool-size" title="Eraser Size">
+              <div class="tools__item" data-tool="eraser" style="display: none;">
+                <input type="range" min="5" max="50" value="20" class="input input--range" title="Eraser Size" data-setting="size">
               </div>
             </div>
+
           </div>
         </div>
     </div>
