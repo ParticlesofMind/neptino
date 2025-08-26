@@ -5,8 +5,8 @@
 
 import { initializeGlobalNavigation, initializeDashboardNavigation } from './navigation';
 import { initAuth, AuthFormHandler } from './backend/auth/auth';
-import './utils/pageSetupPreview';
 import './backend/courses/settings/pageSetupHandler';
+import './coursebuilder/canvasInit'; // Initialize canvas system
 // import PageTransitions from './navigation/PageTransitions'; // DISABLED
 
 // Initialize global navigation system

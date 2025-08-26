@@ -11,7 +11,7 @@ import { BrushTool } from "./BrushTool";
 import { TextTool } from "./TextTool";
 import { ShapesTool } from "./ShapesTool";
 import { EraserTool } from "./EraserTool";
-import { DisplayObjectManager } from "../canvas/DisplayObjectManagerStub";
+import { DisplayObjectManager } from "../canvas/DisplayObjectManager";
 import { BoundaryUtils, CanvasBounds } from "./BoundaryUtils";
 
 export class ToolManager {
@@ -87,7 +87,7 @@ export class ToolManager {
  this.tools.set("shapes", new ShapesTool());
  this.tools.set("eraser", new EraserTool());
 
- // Set default tool
+ // Set default tool to selection (matches UI default)
  this.activeTool = this.tools.get("selection") || null;
  if (this.activeTool) {
  this.activeTool.onActivate();
@@ -123,10 +123,7 @@ export class ToolManager {
  // Update tool settings
  this.updateToolSettings(toolName);
 
- console.log(
- `🔧 Tool settings:`,
- this.settings[toolName as keyof ToolSettings],
- );
+ console.log(`🔧 Tool set to: ${toolName}`);
  return true;
  }
 

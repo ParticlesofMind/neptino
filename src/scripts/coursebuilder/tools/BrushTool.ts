@@ -54,18 +54,13 @@ export class BrushTool extends BaseTool {
  `🖍️ BRUSH: Setting authentic marker stroke - color: ${color} (from ${this.settings.color}), width: ${this.settings.size}`,
  );
 
- // Start the drawing path with marker-style properties
- this.currentStroke.moveTo(localPoint.x, localPoint.y).stroke({
- width: this.settings.size,
- color,
- cap: "round", // Authentic marker tip
- join: "round", // Smooth joins like real markers
- });
+ // Start the drawing path - just moveTo, don't stroke yet
+ this.currentStroke.moveTo(localPoint.x, localPoint.y);
 
  // Add to container
  container.addChild(this.currentStroke);
  console.log(
- `🖍️ BRUSH: Marker stroke started with authentic properties`,
+ `🖍️ BRUSH: Marker stroke started at (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`,
  );
  }
 
@@ -91,6 +86,29 @@ export class BrushTool extends BaseTool {
  `🖍️ BRUSH: Brushing to (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`,
  );
 
+ // Clear the current stroke and redraw the entire path
+ this.currentStroke.clear();
+ 
+ // Redraw the entire path
+ if (this.strokePoints.length > 0) {
+ this.currentStroke.moveTo(this.strokePoints[0].x, this.strokePoints[0].y);
+ 
+ for (let i = 1; i < this.strokePoints.length; i++) {
+ this.currentStroke.lineTo(this.strokePoints[i].x, this.strokePoints[i].y);
+ }
+ 
+ // Add the current point
+ this.currentStroke.lineTo(localPoint.x, localPoint.y);
+ 
+ // Apply the stroke style
+ this.currentStroke.stroke({
+ width: this.settings.size,
+ color: hexToNumber(this.settings.color),
+ cap: "round",
+ join: "round",
+ });
+ }
+
  // Add slight texture variation for authentic marker feel
  const opacityVariation =
  1 + (Math.random() - 0.5) * BRUSH_CONSTANTS.TEXTURE_VARIATION;
@@ -98,14 +116,6 @@ export class BrushTool extends BaseTool {
  0.3,
  Math.min(1, BRUSH_CONSTANTS.FIXED_OPACITY * opacityVariation),
  );
-
- // Continue the stroke with authentic marker characteristics
- this.currentStroke.lineTo(localPoint.x, localPoint.y).stroke({
- width: this.settings.size,
- color: hexToNumber(this.settings.color),
- cap: "round",
- join: "round",
- });
 
  // Apply subtle opacity variation
  this.currentStroke.alpha = adjustedOpacity;

@@ -4,7 +4,7 @@
  */
 
 import { FederatedPointerEvent, Container } from "pixi.js";
-import { DisplayObjectManager } from "../canvas/DisplayObjectManagerStub";
+import { DisplayObjectManager } from "../canvas/DisplayObjectManager";
 
 export interface ToolSettings {
  pen: {

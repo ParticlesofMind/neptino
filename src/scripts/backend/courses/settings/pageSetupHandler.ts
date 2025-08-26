@@ -71,7 +71,7 @@ export class PageSetupHandler {
         input.addEventListener('keydown', this.handleMarginKeydown.bind(this));
         
         // Also handle mouse wheel for precision
-        input.addEventListener('wheel', this.handleMarginWheel.bind(this));
+        input.addEventListener('wheel', this.handleMarginWheel.bind(this), { passive: false });
       }
     });
   }
