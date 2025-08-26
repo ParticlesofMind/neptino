@@ -126,6 +126,16 @@ export class UIEventHandler {
                 );
             });
 
+        // Number input events for table settings (rows, columns, etc.)
+        document
+            .querySelectorAll('input[type="number"][data-setting]')
+            .forEach(numberInput => {
+                numberInput.addEventListener(
+                    'input',
+                    this.handleNumberInputChange.bind(this),
+                );
+            });
+
         // Canvas actions
         this.bindCanvasActions();
 
@@ -336,6 +346,34 @@ export class UIEventHandler {
     }
 
     /**
+     * Handle number input changes for tool settings (tables, etc.)
+     */
+    private handleNumberInputChange(event: Event): void {
+        const numberInput = event.currentTarget as HTMLInputElement;
+        const setting = numberInput.dataset.setting;
+        const value = numberInput.value;
+
+        if (!setting) return;
+
+        // Update tool settings based on currently active tool
+        const currentTool = this.toolStateManager.getCurrentTool();
+        const numericValue = parseInt(value) || 1; // Ensure minimum value of 1
+
+        if (currentTool === 'tables' && (setting === 'rows' || setting === 'columns')) {
+            this.toolStateManager.updateToolSettings('tables', {
+                [setting]: Math.max(1, numericValue), // Ensure positive values
+            });
+        }
+
+        // Trigger callback if set
+        if (this.onToolSettingsChangeCallback) {
+            this.onToolSettingsChangeCallback(currentTool, {
+                [setting]: numericValue,
+            });
+        }
+    }
+
+    /**
      * Handle select changes for tool settings
      */
     private handleSelectChange(event: Event): void {
@@ -466,18 +504,43 @@ export class UIEventHandler {
     }
 
     /**
-     * Initialize default shape selection (rectangle)
+     * Initialize shape selection from saved state (not hardcoded default)
      */
     private initializeDefaultShapeSelection(): void {
-        const defaultShapeIcon = document.querySelector(
-            'img[src*="shape-rectangle.svg"]',
+        // Get the saved shape from ToolStateManager instead of forcing rectangle
+        const savedShape = this.toolStateManager.getSelectedShape() || 'rectangle';
+        
+        const shapeIcon = document.querySelector(
+            `img[src*="shape-${savedShape}.svg"]`,
         ) as HTMLElement;
-        if (defaultShapeIcon) {
-            defaultShapeIcon.classList.add('tools__icon--active');
-            this.toolStateManager.setSelectedShape('rectangle');
+        
+        if (shapeIcon) {
+            // Remove active class from all shape icons first
+            document.querySelectorAll('.tools__icon').forEach(img => {
+                img.classList.remove('tools__icon--active');
+            });
+            
+            // Add active class to the saved shape
+            shapeIcon.classList.add('tools__icon--active');
+            this.toolStateManager.setSelectedShape(savedShape);
+            
+            // Update tool settings to match saved shape
+            this.toolStateManager.updateToolSettings('shapes', {
+                shapeType: savedShape as
+                    | 'rectangle'
+                    | 'triangle'
+                    | 'circle'
+                    | 'ellipse'
+                    | 'line'
+                    | 'arrow'
+                    | 'polygon',
+            });
+            
             console.log(
-                '🔶 SHAPES: Initialized with rectangle as default shape',
+                `🔶 SHAPES: Initialized with saved shape: ${savedShape}`,
             );
+        } else {
+            console.warn(`🔶 SHAPES: Could not find icon for saved shape: ${savedShape}`);
         }
     }
 

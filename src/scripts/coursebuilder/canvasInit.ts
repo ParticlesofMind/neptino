@@ -103,6 +103,7 @@ export async function initializeCanvas(): Promise<void> {
         // Make available globally for debugging
         (window as any).canvasAPI = canvasAPI;
         (window as any).toolStateManager = toolStateManager;
+        (window as any).toolColorManager = toolColorManager;
 
         // Wait for canvas to be fully ready before getting info
         const waitForCanvas = async (maxAttempts: number = 5, delay: number = 100): Promise<void> => {

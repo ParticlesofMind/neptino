@@ -173,8 +173,7 @@ export class CourseBuilderNavigation {
  if (this.previousButton) {
  if (currentIndex === 0) {
  this.previousButton.innerHTML = `
- <span class="">←</span>
- <span class="">Back to Courses</span>
+ <span class="">← Courses</span>
  `;
  } else {
  const prevSection = sectionOrder[currentIndex - 1];

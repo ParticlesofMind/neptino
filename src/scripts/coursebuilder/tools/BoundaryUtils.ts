@@ -101,6 +101,17 @@ export class BoundaryUtils {
   }
 
   /**
+   * Check if a point is within the content area (not in margins)
+   * This is stricter than isPointWithinBounds - it prevents creation in margin areas
+   */
+  public static isPointInContentArea(point: Point, bounds: CanvasBounds): boolean {
+    return point.x > bounds.left && 
+           point.x < bounds.right &&
+           point.y > bounds.top && 
+           point.y < bounds.bottom;
+  }
+
+  /**
    * Check if a rectangle is completely within canvas bounds
    */
   public static isRectangleWithinBounds(rect: Rectangle, bounds: CanvasBounds): boolean {

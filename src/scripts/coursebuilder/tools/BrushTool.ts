@@ -11,6 +11,7 @@ import {
  BRUSH_CONSTANTS,
  hexToNumber,
 } from "./SharedResources";
+import { BoundaryUtils } from "./BoundaryUtils";
 
 interface BrushSettings {
  color: string;
@@ -41,6 +42,14 @@ export class BrushTool extends BaseTool {
 
  // Use local coordinates relative to the container
  const localPoint = container.toLocal(event.global);
+ 
+ // 🚫 MARGIN PROTECTION: Prevent creation in margin areas
+ const canvasBounds = this.manager.getCanvasBounds();
+ if (!BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
+ console.log(`🖍️ BRUSH: 🚫 Click in margin area rejected - point (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)}) outside content area`);
+ return; // Exit early - no creation allowed in margins
+ }
+ 
  this.lastPoint.copyFrom(localPoint);
  this.strokePoints = [localPoint.clone()];
 

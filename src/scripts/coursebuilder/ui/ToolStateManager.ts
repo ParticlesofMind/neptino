@@ -5,6 +5,9 @@
  */
 
 interface ToolSettings {
+    selection: {
+        enabled: boolean;
+    };
     pen: {
         color: string;
         size: number;
@@ -35,6 +38,10 @@ interface ToolSettings {
     eraser: {
         size: number;
     };
+    tables: {
+        rows: number;
+        columns: number;
+    };
 }
 
 interface IconState {
@@ -43,6 +50,7 @@ interface IconState {
     tools: string;
     navigation: string | null;
     shape: string | null;
+    toolSettings?: ToolSettings; // Add tool settings to persistence
 }
 
 export class ToolStateManager {
@@ -56,6 +64,9 @@ export class ToolStateManager {
 
     constructor() {
         this.toolSettings = {
+            selection: {
+                enabled: true,
+            },
             pen: {
                 color: '#000000',
                 size: 2,
@@ -78,6 +89,10 @@ export class ToolStateManager {
             eraser: {
                 size: 20,
             },
+            tables: {
+                rows: 3,
+                columns: 3,
+            },
         };
 
         // Load saved states from localStorage or set defaults
@@ -85,6 +100,23 @@ export class ToolStateManager {
 
         // Set initial selected states
         this.setInitialSelections();
+
+        // Listen for color changes from ToolColorManager
+        this.bindColorChangeEvents();
+    }
+
+    /**
+     * Bind color change events from ToolColorManager
+     */
+    private bindColorChangeEvents(): void {
+        document.addEventListener('toolColorChange', (event: Event) => {
+            const customEvent = event as CustomEvent;
+            const { tool, hex } = customEvent.detail;
+            if (tool && hex) {
+                this.updateToolSettings(tool, { color: hex });
+                console.log(`🎨 COLOR SYNC: Updated ${tool} color to ${hex}`);
+            }
+        });
     }
 
     /**
@@ -100,6 +132,11 @@ export class ToolStateManager {
                 this.selectedMedia = iconState.media || 'files';
                 this.selectedNavigation = iconState.navigation || 'Outline';
                 this.selectedShape = iconState.shape;
+                
+                // Load tool settings if available
+                if (iconState.toolSettings) {
+                    this.toolSettings = { ...this.toolSettings, ...iconState.toolSettings };
+                }
             } else {
                 // Set defaults to first icons if no localStorage exists
                 this.setDefaultSelections();
@@ -154,6 +191,7 @@ export class ToolStateManager {
                 media: this.selectedMedia,
                 navigation: this.selectedNavigation,
                 shape: this.selectedShape,
+                toolSettings: this.toolSettings, // Save tool settings
             };
             localStorage.setItem(this.storageKey, JSON.stringify(iconState));
         } catch (error) {
@@ -182,6 +220,9 @@ export class ToolStateManager {
             this.setSelectedShape(this.selectedShape);
         }
 
+        // CRITICAL: Restore saved tool settings to HTML elements
+        this.restoreToolSettingsToUI();
+
         // Add verification step to ensure synchronization
         setTimeout(() => {
             this.verifyToolSynchronization();
@@ -205,11 +246,15 @@ export class ToolStateManager {
     }
 
     /**
-     * Set current tool
+     * Set current tool and apply its settings to canvas
      */
     setTool(toolName: string): void {
         this.currentTool = toolName;
         this.updateToolUI(toolName);
+        
+        // CRITICAL: Apply saved tool settings to canvas when tool is switched
+        this.applyToolSettingsToCanvas(toolName);
+        
         this.saveStates();
     }
 
@@ -253,11 +298,19 @@ export class ToolStateManager {
     }
 
     /**
-     * Set selected shape
+     * Set selected shape and update tool settings
      */
     setSelectedShape(shapeName: string | null): void {
         this.selectedShape = shapeName;
         this.updateShapeUI(shapeName);
+        
+        // Update tool settings for shapes tool
+        if (shapeName && this.currentTool === 'shapes') {
+            this.updateToolSettings('shapes', {
+                shapeType: shapeName as 'rectangle' | 'triangle' | 'circle' | 'ellipse' | 'line' | 'arrow' | 'polygon',
+            });
+        }
+        
         this.saveStates();
     }
 
@@ -277,7 +330,7 @@ export class ToolStateManager {
     }
 
     /**
-     * Update tool settings
+     * Update tool settings and apply them immediately
      */
     updateToolSettings(
         toolName: string,
@@ -288,6 +341,16 @@ export class ToolStateManager {
                 this.toolSettings[toolName as keyof ToolSettings],
                 settings,
             );
+            
+            // Apply settings to canvas immediately if this is the current tool
+            if (toolName === this.currentTool) {
+                this.applyToolSettingsToCanvas(toolName);
+            }
+            
+            // Save states whenever tool settings are updated
+            this.saveStates();
+            
+            console.log(`🔧 SETTINGS: Updated ${toolName}:`, settings);
         }
     }
 
@@ -296,6 +359,131 @@ export class ToolStateManager {
      */
     getToolSettings(): ToolSettings {
         return { ...this.toolSettings };
+    }
+
+    /**
+     * Apply saved tool settings to canvas (colors, shapes, etc.)
+     */
+    private applyToolSettingsToCanvas(toolName: string): void {
+        const canvasAPI = (window as any).canvasAPI;
+        if (!canvasAPI) {
+            console.warn('⚠️ CANVAS: Canvas API not available for applying tool settings');
+            return;
+        }
+
+        const toolSettings = this.toolSettings[toolName as keyof ToolSettings] as any;
+        if (!toolSettings) {
+            console.warn(`⚠️ CANVAS: No settings found for tool: ${toolName}`);
+            return;
+        }
+
+        try {
+            // Apply color settings
+            if (toolSettings.color) {
+                canvasAPI.setToolColor(toolSettings.color);
+                console.log(`🎨 CANVAS: Applied ${toolName} color: ${toolSettings.color}`);
+            }
+
+            // Apply all tool-specific settings
+            canvasAPI.setToolSettings(toolName, toolSettings);
+            console.log(`🔧 CANVAS: Applied ${toolName} settings:`, toolSettings);
+        } catch (error) {
+            console.error(`❌ CANVAS: Error applying ${toolName} settings:`, error);
+        }
+    }
+
+    /**
+     * Restore saved tool settings to HTML UI elements
+     */
+    private restoreToolSettingsToUI(): void {
+        console.log('🔧 SYNC: Restoring saved tool settings to UI elements...');
+
+        // Restore range inputs (sliders)
+        document.querySelectorAll('input[type="range"][data-setting]').forEach(slider => {
+            const input = slider as HTMLInputElement;
+            const setting = input.dataset.setting!;
+            const toolContainer = input.closest('.tools__item[data-tool]') as HTMLElement;
+            
+            if (toolContainer) {
+                const toolName = toolContainer.dataset.tool!;
+                const toolSettings = this.toolSettings[toolName as keyof ToolSettings] as any;
+                
+                if (toolSettings && setting in toolSettings) {
+                    const savedValue = toolSettings[setting];
+                    input.value = String(savedValue);
+                    
+                    // Update any value display elements
+                    const valueDisplay = input.parentElement?.querySelector('.size-display');
+                    if (valueDisplay) {
+                        if (setting === 'opacity') {
+                            const percentage = Math.round(savedValue * 100);
+                            valueDisplay.textContent = `${percentage}%`;
+                        } else {
+                            valueDisplay.textContent = `${savedValue}px`;
+                        }
+                    }
+                    
+                    console.log(`🔧 SYNC: Restored ${toolName}.${setting} = ${savedValue}`);
+                }
+            }
+        });
+
+        // Restore select dropdowns (font family, etc.)
+        document.querySelectorAll('select[data-setting]').forEach(select => {
+            const selectElement = select as HTMLSelectElement;
+            const setting = selectElement.dataset.setting!;
+            const toolContainer = selectElement.closest('.tools__item[data-tool]') as HTMLElement;
+            
+            if (toolContainer) {
+                const toolName = toolContainer.dataset.tool!;
+                const toolSettings = this.toolSettings[toolName as keyof ToolSettings] as any;
+                
+                if (toolSettings && setting in toolSettings) {
+                    const savedValue = toolSettings[setting];
+                    selectElement.value = savedValue;
+                    console.log(`🔧 SYNC: Restored ${toolName}.${setting} = ${savedValue}`);
+                }
+            }
+        });
+
+        // Restore number inputs (rows, columns, etc.)
+        document.querySelectorAll('input[type="number"][data-setting]').forEach(input => {
+            const numberInput = input as HTMLInputElement;
+            const setting = numberInput.dataset.setting!;
+            const toolContainer = numberInput.closest('.tools__item[data-tool]') as HTMLElement;
+            
+            if (toolContainer) {
+                const toolName = toolContainer.dataset.tool!;
+                const toolSettings = this.toolSettings[toolName as keyof ToolSettings] as any;
+                
+                if (toolSettings && setting in toolSettings) {
+                    const savedValue = toolSettings[setting];
+                    numberInput.value = String(savedValue);
+                    console.log(`🔧 SYNC: Restored ${toolName}.${setting} = ${savedValue}`);
+                }
+            }
+        });
+
+        // Note: Color selectors are handled by ToolColorManager
+        // Restore colors by calling ToolColorManager's setToolColor method
+        setTimeout(() => {
+            // Use setTimeout to ensure ToolColorManager is initialized
+            const toolColorManager = (window as any).toolColorManager;
+            if (toolColorManager) {
+                Object.keys(this.toolSettings).forEach(toolName => {
+                    const toolSettings = this.toolSettings[toolName as keyof ToolSettings] as any;
+                    if (toolSettings.color) {
+                        toolColorManager.setToolColor(toolName, toolSettings.color);
+                        console.log(`🔧 SYNC: Restored color for ${toolName} = ${toolSettings.color}`);
+                    }
+                });
+                
+                // Apply current tool settings to canvas immediately
+                this.applyToolSettingsToCanvas(this.currentTool);
+            } else {
+                console.warn('⚠️ SYNC: ToolColorManager not available for color restoration');
+            }
+        }, 100);
     }
 
     /**

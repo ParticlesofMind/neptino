@@ -17,6 +17,7 @@ import {
  FONT_FAMILIES,
  TEXT_CONSTANTS,
 } from "./SharedResources";
+import { BoundaryUtils } from "./BoundaryUtils";
 
 interface TextSettings {
  fontFamily: string;
@@ -54,6 +55,14 @@ export class TextTool extends BaseTool {
  );
 
  const localPoint = container.toLocal(event.global);
+ 
+ // 🚫 MARGIN PROTECTION: Prevent creation in margin areas
+ const canvasBounds = this.manager.getCanvasBounds();
+ if (!BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
+ console.log(`📝 TEXT: 🚫 Click in margin area rejected - point (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)}) outside content area`);
+ return; // Exit early - no creation allowed in margins
+ }
+ 
  this.textPosition.copyFrom(localPoint);
  this.currentContainer = container; // Store the container
 

@@ -96,8 +96,8 @@ export class CanvasMarginManager {
     this.updateMarginVisuals();
   }
 
-  /**
-   * Update visual margin indicators (blue lines)
+   /**
+   * Update visual margin indicators (clean blue lines)
    */
   private updateMarginVisuals(): void {
     if (!this.container) {
@@ -116,12 +116,12 @@ export class CanvasMarginManager {
     const canvasHeight = 1123; // A4 height
     const margins = this.currentMargins;
     
-    // Blue color for margins
+    // Professional blue lines for margins
     const marginColor = 0x0066FF; // Blue
     const lineWidth = 1;
-    const alpha = 0.5;
+    const alpha = 0.8; // Clear and visible
 
-    // Draw margin boundaries
+    // Draw clean margin boundary lines using modern PIXI.js API
     this.marginGraphics
       // Top margin line
       .moveTo(0, margins.top)
@@ -143,16 +143,13 @@ export class CanvasMarginManager {
       .lineTo(margins.left, canvasHeight)
       .stroke({ color: marginColor, width: lineWidth, alpha });
 
-    this.marginGraphics.label = 'margin-indicators';
-    this.marginGraphics.alpha = alpha;
+    this.marginGraphics.label = 'blue-margin-lines';
     
     // Add to container (should be background or guides layer)
     this.container.addChild(this.marginGraphics);
     
-    console.log('📏 Updated blue margin visuals:', margins);
-  }
-
-  /**
+    console.log('📏 Updated clean blue margin lines:', margins);
+  }  /**
    * Hide margin visuals
    */
   public hideMargins(): void {

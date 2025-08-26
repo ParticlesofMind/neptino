@@ -71,8 +71,14 @@ export class ShapesTool extends BaseTool {
  // Use local coordinates relative to the container
  const localPoint = container.toLocal(event.global);
  
- // 🎯 BOUNDARY ENFORCEMENT: Clamp starting point to canvas bounds
+ // 🚫 MARGIN PROTECTION: Prevent creation in margin areas
  const canvasBounds = this.manager.getCanvasBounds();
+ if (!BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
+ console.log(`🔷 SHAPES: 🚫 Click in margin area rejected - point (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)}) outside content area`);
+ return; // Exit early - no creation allowed in margins
+ }
+ 
+ // Point is in content area, safe to proceed
  const clampedStartPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
  
  this.startPoint.copyFrom(clampedStartPoint);

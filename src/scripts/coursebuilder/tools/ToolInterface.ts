@@ -7,6 +7,10 @@ import { FederatedPointerEvent, Container } from "pixi.js";
 import { DisplayObjectManager } from "../canvas/DisplayObjectManager";
 
 export interface ToolSettings {
+ selection: {
+ // Selection tools typically don't need settings, but this prevents warnings
+ enabled: boolean;
+ };
  pen: {
  color: string;
  size: number;
@@ -29,6 +33,10 @@ export interface ToolSettings {
  };
  eraser: {
  size: number;
+ };
+ tables: {
+ rows: number;
+ columns: number;
  };
 }
 

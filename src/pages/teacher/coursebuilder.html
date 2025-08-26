@@ -869,10 +869,6 @@
               <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-text.svg" alt="">
               <span class="icon-label">Text</span>
             </div>
-            <div class="media__item" data-media="tables">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-table.svg" alt="">
-              <span class="icon-label">Tables</span>
-            </div>
             <div class="media__item" data-media="plugin">
               <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-plugins.svg" alt="">
               <span class="icon-label">Plugins</span>
@@ -975,11 +971,18 @@
                   class="tools__icon icon icon--base">
                 <span class="icon-label">Shapes</span>
               </div>
+                       <div class="tools__item" data-tool="tables">
+                <img src="/src/assets/icons/coursebuilder/media/media-table.svg" alt="Table Tool"
+                  class="tools__icon icon icon--base">
+                <span class="icon-label">Tables</span>
+              </div>
+
               <div class="tools__item" data-tool="eraser">
                 <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" alt="Eraser Tool"
                   class="tools__icon icon icon--base">
                 <span class="icon-label">Eraser</span>
               </div>
+     
             </div>
 
             <!-- Tool Settings -->
@@ -1028,6 +1031,12 @@
               <!-- Eraser Settings -->
               <div class="tools__item" data-tool="eraser" style="display: none;">
                 <input type="range" min="5" max="50" value="20" class="input input--range" title="Eraser Size" data-setting="size">
+              </div>
+
+              <!-- Table Settings -->
+              <div class="tools__item" data-tool="tables" style="display: none;">
+                <input type="number" min="1" max="20" value="3" class="input input--number" placeholder="Rows" title="Number of Rows" data-setting="rows">
+                <input type="number" min="1" max="20" value="3" class="input input--number" placeholder="Columns" title="Number of Columns" data-setting="columns">
               </div>
             </div>
 

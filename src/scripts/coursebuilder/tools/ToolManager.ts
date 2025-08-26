@@ -11,6 +11,7 @@ import { BrushTool } from "./BrushTool";
 import { TextTool } from "./TextTool";
 import { ShapesTool } from "./ShapesTool";
 import { EraserTool } from "./EraserTool";
+import { TableTool } from "./TableTool";
 import { DisplayObjectManager } from "../canvas/DisplayObjectManager";
 import { BoundaryUtils, CanvasBounds } from "./BoundaryUtils";
 import { canvasMarginManager } from '../canvas/CanvasMarginManager';
@@ -23,33 +24,35 @@ export class ToolManager {
  private currentContainer: Container | null = null;
 
  constructor() {
- this.settings = {
- pen: {
- color: "#000000", // Black for good visibility
- size: 4, // Increased size for better visibility
- },
- text: {
- fontFamily: "Arial",
- fontSize: 16,
- color: "#000000",
- },
- brush: {
- color: "#ffff00", // Bright yellow
- opacity: 0.8, // Increased opacity for better visibility
- size: 20, // Larger size for better visibility
- },
- shapes: {
- color: "#000000",
- strokeWidth: 2,
- fillColor: undefined,
- shapeType: "rectangle",
- },
- eraser: {
- size: 20,
- },
- };
-
- this.initializeTools();
+        this.settings = {
+            pen: {
+                color: "#000000", // Black for good visibility
+                size: 4, // Increased size for better visibility
+            },
+            text: {
+                fontFamily: "Arial",
+                fontSize: 16,
+                color: "#000000",
+            },
+            brush: {
+                color: "#ffff00", // Bright yellow
+                opacity: 0.8, // Increased opacity for better visibility
+                size: 20, // Larger size for better visibility
+            },
+            shapes: {
+                color: "#000000",
+                strokeWidth: 2,
+                fillColor: undefined,
+                shapeType: "rectangle",
+            },
+            eraser: {
+                size: 20,
+            },
+            tables: {
+                rows: 3,
+                columns: 3,
+            },
+        }; this.initializeTools();
  this.setupGlobalKeyboardHandlers();
  }
 
@@ -79,23 +82,22 @@ export class ToolManager {
  }
  };
 
- private initializeTools(): void {
- // Register all tools
- this.tools.set("selection", new SelectionTool());
- this.tools.set("pen", new PenTool());
- this.tools.set("brush", new BrushTool());
- this.tools.set("text", new TextTool());
- this.tools.set("shapes", new ShapesTool());
- this.tools.set("eraser", new EraserTool());
+    private initializeTools(): void {
+        // Register all tools
+        this.tools.set("selection", new SelectionTool());
+        this.tools.set("pen", new PenTool());
+        this.tools.set("brush", new BrushTool());
+        this.tools.set("text", new TextTool());
+        this.tools.set("shapes", new ShapesTool());
+        this.tools.set("eraser", new EraserTool());
+        this.tools.set("tables", new TableTool());
 
- // Set tool manager reference on all tools
- this.tools.forEach((tool) => {
- if ('setToolManager' in tool) {
- (tool as any).setToolManager(this);
- }
- });
-
- // Set default tool to selection (matches UI default)
+        // Set tool manager reference on all tools
+        this.tools.forEach((tool) => {
+            if ('setToolManager' in tool) {
+                (tool as any).setToolManager(this);
+            }
+        }); // Set default tool to selection (matches UI default)
  this.activeTool = this.tools.get("selection") || null;
  if (this.activeTool) {
  this.activeTool.onActivate();
@@ -280,6 +282,11 @@ export class ToolManager {
  public isPointWithinBounds(point: Point): boolean {
  const bounds = this.getCanvasBounds();
  return BoundaryUtils.isPointWithinBounds(point, bounds);
+ }
+
+ public isPointInContentArea(point: Point): boolean {
+ const bounds = this.getCanvasBounds();
+ return BoundaryUtils.isPointInContentArea(point, bounds);
  }
 
  public logBoundaryInfo(label: string, point: Point): void {
