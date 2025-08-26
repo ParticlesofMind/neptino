@@ -183,7 +183,7 @@ export class CanvasAPI {
   }
 
   /**
-   * Test drawing by manually creating a simple graphic
+   * Test drawing readiness (without creating test objects)
    */
   public testDrawing(): boolean {
     const drawingLayer = this.getDrawingLayer();
@@ -193,11 +193,8 @@ export class CanvasAPI {
     }
 
     try {
-      // Use the display manager to create a test graphic
       if (this.displayManager) {
-        const { graphics } = this.displayManager.createGraphics();
-        graphics.circle(200, 200, 30).fill(0x00ff00); // Green circle
-        console.log('✅ Test drawing: Green circle added via DisplayObjectManager');
+        console.log('✅ Test drawing: Canvas and DisplayObjectManager ready');
         console.log('📊 Drawing layer children:', drawingLayer.children.length);
         return true;
       } else {

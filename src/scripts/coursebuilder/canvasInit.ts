@@ -82,61 +82,11 @@ export async function initializeCanvas(): Promise<void> {
 
     console.log('📊 Canvas info:', canvasAPI.getCanvasInfo());
 
-    // Test if we can draw something simple on the canvas
-    console.log('🧪 Testing drawing capability...');
-    const drawingTest = canvasAPI.testDrawing();
-    console.log('Drawing test result:', drawingTest ? 'SUCCESS' : 'FAILED');
-
-    // Test direct drawing as backup
-    testDirectDrawing(canvasAPI);
+    console.log('✅ Canvas initialization completed successfully');
 
   } catch (error) {
     console.error('❌ Canvas initialization failed:', error);
     console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack available');
-  }
-}
-
-/**
- * Test function - add a simple dot to verify canvas is working
- */
-export function testCanvas(): void {
-  if (!canvasAPI?.isReady()) {
-    console.warn('Canvas not ready for testing');
-    return;
-  }
-
-  const drawingLayer = canvasAPI.getDrawingLayer();
-  if (!drawingLayer) {
-    console.warn('Drawing layer not available');
-    return;
-  }
-
-  // We'll add a simple test graphic here once we have events working
-  console.log('🧪 Canvas test - drawing layer ready:', drawingLayer);
-}
-
-/**
- * Direct drawing test to verify the canvas can display graphics
- */
-function testDirectDrawing(canvasAPI: CanvasAPI): void {
-  const drawingLayer = canvasAPI.getDrawingLayer();
-  if (!drawingLayer) {
-    console.error('❌ No drawing layer available for test');
-    return;
-  }
-
-  try {
-    // Import Graphics from pixi.js to create a test circle
-    import('pixi.js').then(({ Graphics }) => {
-      const testCircle = new Graphics();
-      testCircle.circle(100, 100, 20).fill(0xff0000); // Red circle at (100,100)
-      drawingLayer.addChild(testCircle);
-      
-      console.log('✅ Direct drawing test: Added red circle to drawing layer');
-      console.log('📊 Drawing layer children count:', drawingLayer.children.length);
-    });
-  } catch (error) {
-    console.error('❌ Direct drawing test failed:', error);
   }
 }
 
