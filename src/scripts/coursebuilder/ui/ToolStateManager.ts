@@ -61,6 +61,7 @@ export class ToolStateManager {
     private selectedShape: string | null = null;
     private toolSettings: ToolSettings;
     private storageKey = 'coursebuilder-icon-states';
+    private canvasRetryAttempted = false; // Prevent infinite retry loops
 
     constructor() {
         this.toolSettings = {
@@ -367,7 +368,17 @@ export class ToolStateManager {
     private applyToolSettingsToCanvas(toolName: string): void {
         const canvasAPI = (window as any).canvasAPI;
         if (!canvasAPI) {
-            console.warn('⚠️ CANVAS: Canvas API not available for applying tool settings');
+            // Canvas API not ready yet - this is normal during initialization
+            console.debug(`🔧 CANVAS: Canvas API not yet available for ${toolName} settings (will apply when ready)`);
+            
+            // Try to apply settings after a short delay if canvas is still initializing
+            if (typeof window !== 'undefined' && !this.canvasRetryAttempted) {
+                this.canvasRetryAttempted = true;
+                setTimeout(() => {
+                    this.canvasRetryAttempted = false;
+                    this.applyToolSettingsToCanvas(toolName);
+                }, 100);
+            }
             return;
         }
 

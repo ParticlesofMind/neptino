@@ -90,9 +90,9 @@ export class UIEventHandler {
             );
         });
 
-        // Shape tool events - bind to shape icons instead of buttons
-        document.querySelectorAll('.tools__icon').forEach(icon => {
-            icon.addEventListener(
+        // Shape tool events - bind to shape containers, not all icons
+        document.querySelectorAll('.tools__shape-item').forEach(shapeItem => {
+            shapeItem.addEventListener(
                 'click',
                 this.handleShapeSelection.bind(this),
             );
@@ -157,14 +157,8 @@ export class UIEventHandler {
             return;
         }
 
-        // Handle shape selection - check if target is a shape icon
-        const shapeIcon = target.closest('.tools__icon') as HTMLElement;
-        if (shapeIcon) {
-            // Create a new event with the shape icon as currentTarget
-            const shapeEvent = { ...event, currentTarget: shapeIcon };
-            this.handleShapeSelection(shapeEvent);
-            return;
-        }
+        // Shape selection is now handled by direct event binding to .tools__shape-item
+        // No need to handle it in global click anymore
     }
 
     /**
@@ -445,29 +439,44 @@ export class UIEventHandler {
     /**
      * Handle shape selection
      */
-    private handleShapeSelection(event: Event): void {
+    private handleShapeSelection(event: Event, providedElement?: HTMLElement): void {
         event.preventDefault();
-        const icon = event.currentTarget as HTMLImageElement;
+        
+        // Use provided element or fallback to currentTarget
+        const targetElement = providedElement || (event.currentTarget as HTMLElement);
 
-        if (!icon || !icon.src) {
-            console.warn('🔶 SHAPES: Invalid icon element in shape selection');
+        if (!targetElement) {
+            console.warn('🔶 SHAPES: No target element found in shape selection');
             return;
         }
 
-        // Extract shape type from the image src path
-        let shapeType: string | null = null;
-        if (icon.src.includes('shape-circle.svg')) {
-            shapeType = 'circle';
-        } else if (icon.src.includes('shape-rectangle.svg')) {
-            shapeType = 'rectangle';
-        } else if (icon.src.includes('shape-triangle.svg')) {
-            shapeType = 'triangle';
+        // First, try to get shape type from data-shape attribute (new approach)
+        let shapeType: string | null = targetElement.getAttribute('data-shape');
+        
+        if (!shapeType) {
+            // Fallback to extracting from icon src for backward compatibility
+            const imgElement = targetElement.querySelector('img');
+            const iconSrc = imgElement?.src || targetElement.getAttribute('data-icon') || '';
+
+            if (iconSrc) {
+                if (iconSrc.includes('shape-circle.svg')) {
+                    shapeType = 'circle';
+                } else if (iconSrc.includes('shape-rectangle.svg')) {
+                    shapeType = 'rectangle';
+                } else if (iconSrc.includes('shape-triangle.svg')) {
+                    shapeType = 'triangle';
+                } else if (iconSrc.includes('media-table.svg') || iconSrc.includes('table')) {
+                    // This is a table icon, not a shape - ignore it gracefully
+                    console.log('🔷 TABLE: Table icon clicked, ignoring in shape handler');
+                    return;
+                }
+            }
         }
 
         if (!shapeType) {
             console.warn(
-                '🔶 SHAPES: No shape type found in icon src:',
-                icon.src,
+                '🔶 SHAPES: No shape type found in element:',
+                targetElement,
             );
             return;
         }
@@ -479,8 +488,11 @@ export class UIEventHandler {
             img.classList.remove('tools__icon--active');
         });
 
-        // Add active class to clicked icon
-        icon.classList.add('tools__icon--active');
+        // Add active class to the icon within the clicked container
+        const iconElement = targetElement.querySelector('.tools__icon');
+        if (iconElement) {
+            iconElement.classList.add('tools__icon--active');
+        }
 
         // Update shape selection in ToolStateManager
         this.toolStateManager.setSelectedShape(shapeType);

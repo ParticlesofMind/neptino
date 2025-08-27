@@ -19,28 +19,31 @@ export class SelectionVisuals {
  this.rotator = rotator;
  }
 
- public createSelectionGroup(
- selectedObjects: any[], 
- parentContainer: Container
- ): SelectionGroup | null {
- if (selectedObjects.length === 0) return null;
+    public createSelectionGroup(
+        selectedObjects: any[], 
+        parentContainer: Container
+    ): SelectionGroup | null {
+        if (selectedObjects.length === 0) return null;
 
- // Always calculate actual object bounds for proper selection visuals
- // Ignore marqueeBounds parameter as it causes visual misalignment
- const bounds = this.calculateCombinedBounds(selectedObjects);
- const selectionBox = this.createSelectionBox(bounds);
- const transformHandles = this.createTransformHandles(bounds);
- const rotationHandle = this.rotator.createRotationHandle(bounds);
- 
- const selectionGroup: SelectionGroup = {
- objects: [...selectedObjects],
- bounds,
- transformHandles,
- rotationHandle,
- selectionBox
- };
+        // Check if any selected object disables rotation
+        const hasNonRotatableObject = selectedObjects.some(obj => obj.disableRotation);
 
- // Add selection graphics to parent container
+        // Always calculate actual object bounds for proper selection visuals
+        // Ignore marqueeBounds parameter as it causes visual misalignment
+        const bounds = this.calculateCombinedBounds(selectedObjects);
+        const selectionBox = this.createSelectionBox(bounds);
+        const transformHandles = this.createTransformHandles(bounds);
+        
+        // Only create rotation handle if no object disables rotation
+        const rotationHandle = hasNonRotatableObject ? null : this.rotator.createRotationHandle(bounds);
+        
+        const selectionGroup: SelectionGroup = {
+            objects: [...selectedObjects],
+            bounds,
+            transformHandles,
+            rotationHandle,
+            selectionBox
+        }; // Add selection graphics to parent container
  parentContainer.addChild(selectionBox);
  transformHandles.forEach(handle => parentContainer.addChild(handle.graphics));
  if (rotationHandle) {

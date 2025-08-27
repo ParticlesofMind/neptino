@@ -434,7 +434,9 @@ export class ShapesTool extends BaseTool {
  | "arrow"
  | "polygon",
  ): void {
+ const previousType = this.settings.shapeType;
  this.settings.shapeType = shapeType;
+ console.log(`🔶 SHAPES: Shape type changed from ${previousType} to ${shapeType}`);
  }
 
  setCornerRadius(radius: number): void {

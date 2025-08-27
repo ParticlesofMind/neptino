@@ -70,7 +70,8 @@ export class TableTool extends BaseTool {
         // Check if we're clicking on an existing table cell for editing
         const clickedCell = this.getTableCellAtPoint(event, container);
         if (clickedCell) {
-            this.startCellEditing(clickedCell, event);
+            console.log(`🔷 TABLE: Clicked on cell R${clickedCell.row + 1}C${clickedCell.column + 1}`);
+            this.startCellEditing(clickedCell, container);
             return;
         }
 
@@ -237,6 +238,7 @@ export class TableTool extends BaseTool {
         // Store table metadata
         (tableContainer as any).isTable = true;
         (tableContainer as any).tableId = id;
+        (tableContainer as any).disableRotation = true; // Disable rotation for tables
 
         // Calculate cell dimensions
         const cellWidth = width / this.settings.columns;
@@ -342,6 +344,12 @@ export class TableTool extends BaseTool {
         (cellGraphics as any).tableCell = cell;
         (cellText as any).tableCell = cell;
 
+        // Add double-click event for editing
+        cellGraphics.on('pointerdown', (event) => {
+            event.stopPropagation();
+            console.log(`🔷 TABLE: Cell clicked - R${row + 1}C${col + 1}`);
+        });
+
         return cell;
     }
 
@@ -371,21 +379,35 @@ export class TableTool extends BaseTool {
         return null;
     }
 
-    private startCellEditing(cell: TableCell, event: FederatedPointerEvent): void {
+    private startCellEditing(cell: TableCell, container: Container): void {
         // End any existing edit
         this.endCellEditing();
         
         this.editingCell = cell;
         cell.isEditing = true;
 
+        // Get the table that contains this cell
+        const tableData = this.activeTables.find(table => 
+            table.cells.some(row => row.includes(cell))
+        );
+
+        if (!tableData) {
+            console.error('🔷 TABLE: Could not find table data for cell');
+            return;
+        }
+
         // Get screen coordinates for the text input
         const canvasElement = document.querySelector("#canvas-container canvas") as HTMLCanvasElement;
         if (!canvasElement) return;
 
         const canvasRect = canvasElement.getBoundingClientRect();
-        const globalPos = event.currentTarget?.toGlobal({ x: cell.bounds.x, y: cell.bounds.y });
         
-        if (!globalPos) return;
+        // Calculate global position of the cell
+        const cellGlobalX = tableData.x + cell.bounds.x;
+        const cellGlobalY = tableData.y + cell.bounds.y;
+        const globalPos = container.toGlobal({ x: cellGlobalX, y: cellGlobalY });
+        
+        console.log(`🔷 TABLE: Starting edit for cell at (${cellGlobalX}, ${cellGlobalY}) -> screen (${globalPos.x + canvasRect.left}, ${globalPos.y + canvasRect.top})`);
 
         // Create invisible text input overlay
         this.textInput = document.createElement("input");
@@ -402,23 +424,26 @@ export class TableTool extends BaseTool {
         this.textInput.style.fontFamily = 'Arial, sans-serif';
         this.textInput.style.color = this.settings.fontColor;
         this.textInput.style.backgroundColor = "rgba(255, 255, 255, 0.9)";
-        this.textInput.style.border = "1px solid #2196f3";
+        this.textInput.style.border = "2px solid #2196f3";
         this.textInput.style.outline = "none";
         this.textInput.style.zIndex = "10000";
         this.textInput.style.padding = "2px";
+        this.textInput.style.borderRadius = "2px";
 
         // Event handlers
         this.textInput.addEventListener("blur", () => this.endCellEditing());
         this.textInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" || e.key === "Tab") {
+            e.stopPropagation(); // Prevent canvas shortcuts
+            
+            if (e.key === "Enter") {
                 e.preventDefault();
                 this.endCellEditing();
-                
-                if (e.key === "Tab") {
-                    this.navigateToNextCell(cell, !e.shiftKey);
-                }
-            }
-            if (e.key === "Escape") {
+            } else if (e.key === "Tab") {
+                e.preventDefault();
+                this.endCellEditing();
+                this.navigateToNextCell(cell, !e.shiftKey);
+            } else if (e.key === "Escape") {
+                e.preventDefault();
                 this.cancelCellEditing();
             }
         });
@@ -433,7 +458,7 @@ export class TableTool extends BaseTool {
             document.addEventListener("click", this.handleGlobalClick);
         }, 10);
 
-        console.log(`🔷 TABLE: Started editing cell R${cell.row + 1}C${cell.column + 1}`);
+        console.log(`🔷 TABLE: Started editing cell R${cell.row + 1}C${cell.column + 1} - Current text: "${cell.text.text}"`);
     }
 
     private endCellEditing(): void {
@@ -485,13 +510,14 @@ export class TableTool extends BaseTool {
     }
 
     private navigateToNextCell(currentCell: TableCell, forward: boolean): void {
-        // Find current table
+        // Find current table and container
         const tableData = this.activeTables.find(table => 
             table.cells.some(row => row.includes(currentCell))
         );
         
-        if (!tableData) return;
+        if (!tableData || !tableData.container.parent) return;
 
+        const container = tableData.container.parent;
         const { rows, columns } = this.settings;
         const currentIndex = currentCell.row * columns + currentCell.column;
         
@@ -507,11 +533,9 @@ export class TableTool extends BaseTool {
         
         if (nextRow < rows && nextCol < columns) {
             const nextCell = tableData.cells[nextRow][nextCol];
-            // Simulate click on next cell
+            // Start editing next cell
             setTimeout(() => {
-                this.startCellEditing(nextCell, {
-                    currentTarget: { toGlobal: (point: any) => point }
-                } as any);
+                this.startCellEditing(nextCell, container);
             }, 10);
         }
     }
