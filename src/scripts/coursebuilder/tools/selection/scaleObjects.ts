@@ -22,13 +22,77 @@ export class ScaleObjects {
  const dx = currentPoint.x - this.state.transformStart.x;
  const dy = currentPoint.y - this.state.transformStart.y;
 
+ // Check if any selected objects are rotated
+ const hasRotatedObjects = this.state.selectedObjects.some(obj => 
+ obj.rotation !== undefined && Math.abs(obj.rotation) > 0.01
+ );
+
  if (this.state.activeHandle.type === "corner") {
+ if (hasRotatedObjects) {
+ this.performRotationAwareCornerResize(dx, dy, this.state.activeHandle.position, bounds);
+ } else {
  this.performCornerResize(dx, dy, this.state.activeHandle.position, bounds);
+ }
  } else if (this.state.activeHandle.type === "edge") {
  this.performEdgeResize(dx, dy, this.state.activeHandle.position, bounds);
  }
 
  this.state.transformStart.copyFrom(currentPoint);
+ }
+
+ private performRotationAwareCornerResize(dx: number, dy: number, corner: string, bounds: Rectangle): void {
+ // For rotated objects, we scale based on selection center instead of using corner pivot points
+ if (this.state.selectedObjects.length === 0) return;
+
+ const center = {
+ x: bounds.x + bounds.width / 2,
+ y: bounds.y + bounds.height / 2
+ };
+
+ // Calculate scale factors based on distance change from center
+ let scaleX = 1;
+ let scaleY = 1;
+
+ switch (corner) {
+ case "tl":
+ scaleX = 1 - dx / bounds.width;
+ scaleY = 1 - dy / bounds.height;
+ break;
+ case "tr":
+ scaleX = 1 + dx / bounds.width;
+ scaleY = 1 - dy / bounds.height;
+ break;
+ case "bl":
+ scaleX = 1 - dx / bounds.width;
+ scaleY = 1 + dy / bounds.height;
+ break;
+ case "br":
+ scaleX = 1 + dx / bounds.width;
+ scaleY = 1 + dy / bounds.height;
+ break;
+ }
+
+ // Apply minimum scale constraints
+ const minScale = 0.2;
+ scaleX = Math.max(minScale, scaleX);
+ scaleY = Math.max(minScale, scaleY);
+
+ // Apply scaling to each object, maintaining their relative positions
+ this.state.selectedObjects.forEach(obj => {
+ if (obj.scale && obj.position) {
+ // Calculate object's position relative to selection center
+ const relativeX = obj.position.x - center.x;
+ const relativeY = obj.position.y - center.y;
+
+ // Apply scale to object size
+ obj.scale.x = Math.abs(obj.scale.x * scaleX);
+ obj.scale.y = Math.abs(obj.scale.y * scaleY);
+
+ // Adjust position to maintain relative positioning
+ obj.position.x = center.x + relativeX * scaleX;
+ obj.position.y = center.y + relativeY * scaleY;
+ }
+ });
  }
 
  private performCornerResize(dx: number, dy: number, corner: string, bounds: Rectangle): void {

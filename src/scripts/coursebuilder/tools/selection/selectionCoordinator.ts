@@ -113,6 +113,7 @@ export class SelectionCoordinator extends BaseTool {
  if (this.state.activeHandle.type === "rotation") {
  this.rotator.updateTransform(localPoint);
  } else {
+ // Use the existing scaling system (it works!)
  this.scaler.updateTransform(localPoint);
  }
  this.refreshSelectionGroup(container);
