@@ -92,6 +92,9 @@ export class CanvasEvents {
 
     // Route to tool manager
     this.toolManager.onPointerMove(event, this.drawingLayer);
+    
+    // Update cursor after tool processes the move event (in case tool cursor changed)
+    this.updateCursor();
   }
 
   /**
@@ -155,7 +158,7 @@ export class CanvasEvents {
     // Set cursor on the canvas element
     if (this.app.canvas) {
       this.app.canvas.style.cursor = cursor;
-      console.log('🖱️ Canvas cursor updated:', cursor);
+      console.log('🖱️ Canvas cursor updated by CanvasEvents:', cursor);
     }
   }
 

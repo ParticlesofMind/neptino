@@ -129,6 +129,13 @@ export class PixiApp {
   }
 
   /**
+   * Get the container selector
+   */
+  public getContainerSelector(): string {
+    return this.containerSelector;
+  }
+
+  /**
    * Check if app is created and mounted
    */
   public isReady(): boolean {

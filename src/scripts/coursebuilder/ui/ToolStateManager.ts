@@ -253,8 +253,22 @@ export class ToolStateManager {
         this.currentTool = toolName;
         this.updateToolUI(toolName);
         
-        // CRITICAL: Apply saved tool settings to canvas when tool is switched
-        this.applyToolSettingsToCanvas(toolName);
+        // CRITICAL: Actually set the tool in canvas first, then apply settings
+        const canvasAPI = (window as any).canvasAPI;
+        if (canvasAPI) {
+            const success = canvasAPI.setTool(toolName);
+            if (success) {
+                console.log(`✅ TOOL SYNC: Canvas tool successfully set to: ${toolName}`);
+                // Apply saved tool settings after successfully changing the tool
+                this.applyToolSettingsToCanvas(toolName);
+            } else {
+                console.error(`❌ TOOL SYNC: Failed to set canvas tool to: ${toolName}`);
+            }
+        } else {
+            // Canvas API not ready yet - settings will be applied when it becomes available
+            console.debug(`🔧 TOOL SYNC: Canvas API not yet available for tool "${toolName}" (will sync when ready)`);
+            this.applyToolSettingsToCanvas(toolName);
+        }
         
         this.saveStates();
     }

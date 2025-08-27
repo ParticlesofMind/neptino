@@ -37,14 +37,14 @@ export async function initializeCanvas(): Promise<void> {
         canvasAPI = new CanvasAPI('#canvas-container');
         console.log('✅ CanvasAPI instance created');
 
-        // Initialize with A4 dimensions
+        // Initialize with A4 dimensions and responsiveness
         await canvasAPI.init({
             width: 794,
             height: 1123,
             backgroundColor: 0xffffff,
         });
 
-        console.log('✅ Canvas initialized successfully!');
+        console.log('✅ Canvas initialized with responsiveness!');
 
         // Initialize UI system
         console.log('🎛️ Connecting UI to canvas...');

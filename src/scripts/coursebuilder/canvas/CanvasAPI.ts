@@ -17,6 +17,7 @@ import { CanvasEvents } from './CanvasEvents';
 import { DisplayObjectManager } from './DisplayObjectManager';
 import { ToolManager } from '../tools/ToolManager';
 import { canvasMarginManager } from './CanvasMarginManager';
+import { ResponsivenessManager, ResponsiveSettings } from './responsiveness';
 
 export class CanvasAPI {
   private pixiApp: PixiApp;
@@ -24,6 +25,7 @@ export class CanvasAPI {
   private events: CanvasEvents | null = null;
   private displayManager: DisplayObjectManager | null = null;
   private toolManager: ToolManager | null = null;
+  private responsiveness: ResponsivenessManager | null = null;
   private initialized: boolean = false;
 
   constructor(containerSelector: string) {
@@ -75,10 +77,21 @@ export class CanvasAPI {
         canvasMarginManager.setContainer(backgroundLayer);
       }
 
+      // Step 8: Initialize responsiveness system
+      this.responsiveness = new ResponsivenessManager({
+        enabled: true,
+        mode: 'window' as any, // Will be properly typed
+        maintainAspectRatio: true,
+        throttleMs: 16
+      });
+      
+      const containerSelector = this.pixiApp.getContainerSelector();
+      await this.responsiveness.initialize(app, containerSelector);
+
       // Tool manager already sets pen as default, no need to set again
 
       this.initialized = true;
-      console.log('✅ Complete canvas system initialized with tools and margins');
+      console.log('✅ Complete canvas system initialized with tools, margins, and responsiveness');
 
     } catch (error) {
       console.error('❌ Failed to initialize canvas system:', error);
@@ -354,6 +367,26 @@ export class CanvasAPI {
   }
 
   /**
+   * Get responsiveness manager
+   */
+  public getResponsiveness(): ResponsivenessManager | null {
+    return this.responsiveness;
+  }
+
+  /**
+   * Enable or disable responsiveness
+   */
+  public setResponsive(enabled: boolean): void {
+    if (this.responsiveness) {
+      if (enabled) {
+        this.responsiveness.enable();
+      } else {
+        this.responsiveness.disable();
+      }
+    }
+  }
+
+  /**
    * Destroy the entire canvas system
    */
   public destroy(): void {
@@ -370,6 +403,11 @@ export class CanvasAPI {
     if (this.toolManager) {
       this.toolManager.destroy();
       this.toolManager = null;
+    }
+
+    if (this.responsiveness) {
+      this.responsiveness.destroy();
+      this.responsiveness = null;
     }
 
     if (this.layers) {

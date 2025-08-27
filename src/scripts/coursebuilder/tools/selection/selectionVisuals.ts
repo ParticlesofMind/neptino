@@ -14,9 +14,12 @@ import { RotateObjects } from "./rotateObjects";
 
 export class SelectionVisuals {
  private rotator: RotateObjects;
+ private currentCursor: string = 'default';
+ private canvasElement: HTMLCanvasElement | null = null;
 
- constructor(rotator: RotateObjects) {
+ constructor(rotator: RotateObjects, canvasElement?: HTMLCanvasElement) {
  this.rotator = rotator;
+ this.canvasElement = canvasElement || null;
  }
 
     public createSelectionGroup(
@@ -187,7 +190,9 @@ export class SelectionVisuals {
  point: { x: number; y: number }, 
  selectionGroup: SelectionGroup | null
  ): TransformHandle | null {
- if (!selectionGroup) return null;
+ if (!selectionGroup) {
+   return null;
+ }
 
  for (const handle of selectionGroup.transformHandles) {
  if (point.x >= handle.bounds.x && point.x <= handle.bounds.x + handle.bounds.width &&
@@ -206,5 +211,108 @@ export class SelectionVisuals {
  }
 
  return null;
+ }
+
+ /**
+ * Update cursor based on the handle being hovered over
+ */
+ public updateCursor(handle: TransformHandle | null): void {
+ const newCursor = this.getCursorForHandle(handle);
+ if (newCursor !== this.currentCursor) {
+ this.setCursor(newCursor);
+ this.currentCursor = newCursor;
+ }
+ }
+
+ /**
+ * Set cursor for dragging mode
+ */
+ public setDragCursor(): void {
+ this.setCursor('move');
+ this.currentCursor = 'move';
+ }
+
+ /**
+ * Get appropriate cursor for a transform handle
+ */
+ private getCursorForHandle(handle: TransformHandle | null): string {
+ if (!handle) return 'default';
+
+ switch (handle.type) {
+ case 'corner':
+ return this.getCornerCursor(handle.position);
+ case 'edge':
+ return this.getEdgeCursor(handle.position);
+ case 'rotation':
+ return 'grab';
+ default:
+ return 'default';
+ }
+ }
+
+ /**
+ * Get cursor for corner handles
+ */
+ private getCornerCursor(position: string): string {
+ switch (position) {
+ case 'tl': // Top-left
+ case 'br': // Bottom-right
+ return 'nw-resize';
+ case 'tr': // Top-right
+ case 'bl': // Bottom-left
+ return 'ne-resize';
+ default:
+ return 'default';
+ }
+ }
+
+ /**
+ * Get cursor for edge handles
+ */
+ private getEdgeCursor(position: string): string {
+ switch (position) {
+ case 't': // Top
+ case 'b': // Bottom
+ return 'n-resize';
+ case 'l': // Left
+ case 'r': // Right
+ return 'e-resize';
+ default:
+ return 'default';
+ }
+ }
+
+ /**
+ * Set the canvas element reference for cursor updates
+ */
+ public setCanvasElement(canvasElement: HTMLCanvasElement): void {
+ this.canvasElement = canvasElement;
+ }
+
+ /**
+ * Apply cursor to canvas element (preferred) or document body as fallback
+ */
+ private setCursor(cursor: string): void {
+ console.log('🖱️ SelectionVisuals.setCursor called with:', cursor);
+ 
+ // Try to set on canvas element first (this takes precedence in the app)
+ if (this.canvasElement) {
+ this.canvasElement.style.cursor = cursor;
+ console.log('🖱️ Set cursor on canvas element:', cursor);
+ } else {
+ // Fallback to document body
+ if (typeof document !== 'undefined' && document.body) {
+ document.body.style.cursor = cursor;
+ console.log('🖱️ Set cursor on document body:', cursor);
+ }
+ }
+ }
+
+ /**
+ * Reset cursor to default
+ */
+ public resetCursor(): void {
+ this.setCursor('default');
+ this.currentCursor = 'default';
  }
 }

@@ -1,6 +1,10 @@
 /**
  * Object Scaling/Resizing Functionality  
  * Handles corner and edge-based scaling/resizing of selected objects
+ * 
+ * Note: Stroke width preservation during scaling is a complex problem in PixiJS.
+ * Currently, stroke widths will scale proportionally with the object. 
+ * Full stroke preservation would require recreating Graphics objects with adjusted stroke widths.
  */
 
 import { Point, Rectangle } from "pixi.js";
@@ -31,7 +35,7 @@ export class ScaleObjects {
  if (hasRotatedObjects) {
  // 🔄 Using rotation-aware scaling with stable anchor points
  console.log('🔄 SCALING: Using rotation-aware corner resize for rotated objects');
- this.performRotationAwareCornerResize(dx, dy, this.state.activeHandle.position, bounds);
+ this.performRotationAwareCornerResize(dx, dy, this.state.activeHandle.position);
  } else {
  // 📐 Using standard corner scaling for non-rotated objects
  this.performCornerResize(dx, dy, this.state.activeHandle.position, bounds);
@@ -43,41 +47,63 @@ export class ScaleObjects {
  this.state.transformStart.copyFrom(currentPoint);
  }
 
- private performRotationAwareCornerResize(dx: number, dy: number, corner: string, bounds: Rectangle): void {
- // For rotated objects, we need to use rotation-aware scaling with stable anchor points
+ private performRotationAwareCornerResize(dx: number, dy: number, corner: string): void {
+ // For rotated objects, we need to temporarily reset rotation and pivot for predictable scaling
  if (this.state.selectedObjects.length === 0) return;
 
- // Calculate scale factors based on the bounds and corner being dragged
+ // 🔄 TRANSFORMATION RESET: Store original transformations and temporarily reset them
+ const originalTransforms: Array<{obj: any, pivot: {x: number, y: number}, rotation: number}> = [];
+ 
+ this.state.selectedObjects.forEach(obj => {
+ if (obj.rotation !== undefined && Math.abs(obj.rotation) > 0.01) {
+ // Store original transform state
+ originalTransforms.push({
+ obj: obj,
+ pivot: { x: obj.pivot.x, y: obj.pivot.y },
+ rotation: obj.rotation
+ });
+ 
+ // Temporarily reset to neutral state for predictable scaling
+ obj.pivot.set(0, 0);
+ obj.rotation = 0;
+ console.log('🔄 SCALING: Reset pivot and rotation for predictable corner scaling');
+ }
+ });
+
+ // Recalculate bounds after reset to get non-rotated bounding box
+ const resetBounds = this.calculateCombinedBounds(this.state.selectedObjects);
+
+ // Calculate scale factors based on the reset bounds and corner being dragged
  let scaleX = 1;
  let scaleY = 1;
- let pivotX = bounds.x + bounds.width / 2;
- let pivotY = bounds.y + bounds.height / 2;
+ let pivotX = resetBounds.x + resetBounds.width / 2;
+ let pivotY = resetBounds.y + resetBounds.height / 2;
 
  // Determine anchor point based on corner (opposite corner becomes the pivot)
  switch (corner) {
  case "tl": // Top-left corner
- scaleX = 1 - dx / bounds.width;
- scaleY = 1 - dy / bounds.height;
- pivotX = bounds.x + bounds.width;  // Anchor at bottom-right
- pivotY = bounds.y + bounds.height;
+ scaleX = 1 - dx / resetBounds.width;
+ scaleY = 1 - dy / resetBounds.height;
+ pivotX = resetBounds.x + resetBounds.width;  // Anchor at bottom-right
+ pivotY = resetBounds.y + resetBounds.height;
  break;
  case "tr": // Top-right corner
- scaleX = 1 + dx / bounds.width;
- scaleY = 1 - dy / bounds.height;
- pivotX = bounds.x;                 // Anchor at bottom-left
- pivotY = bounds.y + bounds.height;
+ scaleX = 1 + dx / resetBounds.width;
+ scaleY = 1 - dy / resetBounds.height;
+ pivotX = resetBounds.x;                      // Anchor at bottom-left
+ pivotY = resetBounds.y + resetBounds.height;
  break;
  case "bl": // Bottom-left corner
- scaleX = 1 - dx / bounds.width;
- scaleY = 1 + dy / bounds.height;
- pivotX = bounds.x + bounds.width;  // Anchor at top-right
- pivotY = bounds.y;
+ scaleX = 1 - dx / resetBounds.width;
+ scaleY = 1 + dy / resetBounds.height;
+ pivotX = resetBounds.x + resetBounds.width;  // Anchor at top-right
+ pivotY = resetBounds.y;
  break;
  case "br": // Bottom-right corner
- scaleX = 1 + dx / bounds.width;
- scaleY = 1 + dy / bounds.height;
- pivotX = bounds.x;                 // Anchor at top-left
- pivotY = bounds.y;
+ scaleX = 1 + dx / resetBounds.width;
+ scaleY = 1 + dy / resetBounds.height;
+ pivotX = resetBounds.x;                      // Anchor at top-left
+ pivotY = resetBounds.y;
  break;
  }
 
@@ -86,22 +112,44 @@ export class ScaleObjects {
  scaleX = Math.max(minScale, scaleX);
  scaleY = Math.max(minScale, scaleY);
 
- // Apply scaling to each object using the stable anchor approach
+ // Apply scaling to each object using traditional corner-anchored approach
  this.state.selectedObjects.forEach(obj => {
  if (obj.scale && obj.position) {
- // For rotated objects, we need to scale around the stable anchor point
  // Calculate object's position relative to the anchor point
  const relativeX = obj.position.x - pivotX;
  const relativeY = obj.position.y - pivotY;
+
+ // 🎯 STROKE WIDTH PRESERVATION: Store original stroke width if not already stored
+ this.preserveStrokeWidth(obj);
 
  // Apply scale to object size
  obj.scale.x = Math.abs(obj.scale.x * scaleX);
  obj.scale.y = Math.abs(obj.scale.y * scaleY);
 
+ // 🎯 STROKE WIDTH PRESERVATION: Adjust stroke width to maintain visual consistency
+ this.adjustStrokeWidth(obj);
+
  // Adjust position based on anchor point (this keeps the anchor stable)
  obj.position.x = pivotX + relativeX * scaleX;
  obj.position.y = pivotY + relativeY * scaleY;
  }
+ });
+
+ // 🔄 TRANSFORMATION RESTORE: Restore original transformations after scaling
+ originalTransforms.forEach(({obj, pivot, rotation}) => {
+ // Calculate the new position after scaling
+ const scaledX = obj.position.x;
+ const scaledY = obj.position.y;
+ 
+ // Restore pivot and rotation
+ obj.pivot.set(pivot.x, pivot.y);
+ obj.rotation = rotation;
+ 
+ // Keep the scaled position
+ obj.position.x = scaledX;
+ obj.position.y = scaledY;
+ 
+ console.log('🔄 SCALING: Restored pivot and rotation after corner scaling');
  });
  }
 
@@ -161,9 +209,15 @@ export class ScaleObjects {
  const relativeX = obj.position.x - pivotX;
  const relativeY = obj.position.y - pivotY;
 
+ // 🎯 STROKE WIDTH PRESERVATION: Store original stroke width if not already stored
+ this.preserveStrokeWidth(obj);
+
  // Apply scale
  obj.scale.x = Math.abs(obj.scale.x * scaleX);
  obj.scale.y = Math.abs(obj.scale.y * scaleY);
+
+ // 🎯 STROKE WIDTH PRESERVATION: Adjust stroke width to maintain visual consistency
+ this.adjustStrokeWidth(obj);
 
  // Adjust position based on new scale
  obj.position.x = pivotX + relativeX * scaleX;
@@ -211,18 +265,47 @@ export class ScaleObjects {
  scaleX = Math.max(0.2, minScaleX, Math.min(maxScale.scaleX, scaleX));
  scaleY = Math.max(0.2, minScaleY, Math.min(maxScale.scaleY, scaleY));
 
+ // 🔄 PIVOT RESET: Store original pivots and temporarily reset them for predictable scaling
+ const originalPivots: Array<{obj: any, pivot: {x: number, y: number}}> = [];
+ 
+ this.state.selectedObjects.forEach(obj => {
+ if (obj.pivot && (obj.pivot.x !== 0 || obj.pivot.y !== 0)) {
+ // Store original pivot
+ originalPivots.push({
+ obj: obj,
+ pivot: { x: obj.pivot.x, y: obj.pivot.y }
+ });
+ 
+ // Temporarily reset pivot to (0,0) for predictable scaling behavior
+ obj.pivot.set(0, 0);
+ console.log('🔄 SCALING: Temporarily reset pivot for edge scaling');
+ }
+ });
+
  // Apply transformation to all selected objects
  this.state.selectedObjects.forEach(obj => {
  if (obj.scale && obj.position) {
  const relativeX = obj.position.x - pivotX;
  const relativeY = obj.position.y - pivotY;
 
+ // 🎯 STROKE WIDTH PRESERVATION: Store original stroke width if not already stored
+ this.preserveStrokeWidth(obj);
+
  obj.scale.x = Math.abs(obj.scale.x * scaleX);
  obj.scale.y = Math.abs(obj.scale.y * scaleY);
+
+ // 🎯 STROKE WIDTH PRESERVATION: Adjust stroke width to maintain visual consistency
+ this.adjustStrokeWidth(obj);
 
  obj.position.x = pivotX + relativeX * scaleX;
  obj.position.y = pivotY + relativeY * scaleY;
  }
+ });
+
+ // 🔄 PIVOT RESTORE: Restore original pivots after scaling
+ originalPivots.forEach(({obj, pivot}) => {
+ obj.pivot.set(pivot.x, pivot.y);
+ console.log('🔄 SCALING: Restored original pivot after edge scaling');
  });
  }
 
@@ -284,20 +367,49 @@ export class ScaleObjects {
  const centerX = bounds.x + bounds.width / 2;
  const centerY = bounds.y + bounds.height / 2;
 
+ // 🔄 PIVOT RESET: Store original pivots and temporarily reset them for predictable scaling
+ const originalPivots: Array<{obj: any, pivot: {x: number, y: number}}> = [];
+ 
+ this.state.selectedObjects.forEach(obj => {
+ if (obj.pivot && (obj.pivot.x !== 0 || obj.pivot.y !== 0)) {
+ // Store original pivot
+ originalPivots.push({
+ obj: obj,
+ pivot: { x: obj.pivot.x, y: obj.pivot.y }
+ });
+ 
+ // Temporarily reset pivot to (0,0) for predictable scaling behavior
+ obj.pivot.set(0, 0);
+ console.log('🔄 SCALING: Temporarily reset pivot for programmatic scaling');
+ }
+ });
+
  this.state.selectedObjects.forEach(obj => {
  if (obj.scale && obj.position) {
  // Store position relative to center
  const relativeX = obj.position.x - centerX;
  const relativeY = obj.position.y - centerY;
 
+ // 🎯 STROKE WIDTH PRESERVATION: Store original stroke width if not already stored
+ this.preserveStrokeWidth(obj);
+
  // Apply scale
  obj.scale.x *= scaleX;
  obj.scale.y *= scaleY;
+
+ // 🎯 STROKE WIDTH PRESERVATION: Adjust stroke width to maintain visual consistency
+ this.adjustStrokeWidth(obj);
 
  // Adjust position
  obj.position.x = centerX + relativeX * scaleX;
  obj.position.y = centerY + relativeY * scaleY;
  }
+ });
+
+ // 🔄 PIVOT RESTORE: Restore original pivots after scaling
+ originalPivots.forEach(({obj, pivot}) => {
+ obj.pivot.set(pivot.x, pivot.y);
+ console.log('🔄 SCALING: Restored original pivot after programmatic scaling');
  });
  }
 
@@ -318,5 +430,48 @@ export class ScaleObjects {
  });
 
  return new Rectangle(minX, minY, maxX - minX, maxY - minY);
+ }
+
+ /**
+ * 🎯 STROKE WIDTH PRESERVATION: Attempt to preserve stroke width during scaling
+ * Note: This is a complex problem in PixiJS. For now, we log the issue and mark objects.
+ */
+ private preserveStrokeWidth(obj: any): void {
+ // Skip if not a Graphics object or if we've already processed it
+ if (obj.constructor.name !== 'Graphics' || obj._strokeWidthPreservationAttempted) return;
+ 
+ // Mark that we've attempted preservation on this object
+ obj._strokeWidthPreservationAttempted = true;
+ obj._originalScale = { x: Math.abs(obj.scale.x), y: Math.abs(obj.scale.y) };
+ 
+ // Try to enable any built-in stroke scaling prevention
+ if (obj.geometry && typeof obj.geometry.setScaleMode === 'function') {
+ obj.geometry.setScaleMode(false); // Disable scaling for geometry if available
+ }
+ 
+ console.log(`🎯 STROKE: Marked Graphics object for stroke preservation (may have visual scaling)`);
+ }
+
+ /**
+ * 🎯 STROKE WIDTH PRESERVATION: Log scaling information for debugging
+ * Note: Full stroke width preservation requires more complex graphics recreation.
+ */
+ private adjustStrokeWidth(obj: any): void {
+ if (!obj._strokeWidthPreservationAttempted || obj.constructor.name !== 'Graphics') return;
+ 
+ const currentScaleX = Math.abs(obj.scale.x);
+ const currentScaleY = Math.abs(obj.scale.y);
+ const originalScaleX = obj._originalScale.x;
+ const originalScaleY = obj._originalScale.y;
+ 
+ const scaleChangeX = currentScaleX / originalScaleX;
+ const scaleChangeY = currentScaleY / originalScaleY;
+ const averageScaleChange = (scaleChangeX + scaleChangeY) / 2;
+ 
+ // Log significant scale changes that will affect stroke width
+ if (Math.abs(averageScaleChange - 1.0) > 0.1) { // 10% threshold
+ console.log(`⚠️ STROKE: Graphics object scaled by ${averageScaleChange.toFixed(2)}x - stroke width will change proportionally`);
+ console.log(`   Current scale: (${currentScaleX.toFixed(2)}, ${currentScaleY.toFixed(2)}), Original: (${originalScaleX.toFixed(2)}, ${originalScaleY.toFixed(2)})`);
+ }
  }
 }
