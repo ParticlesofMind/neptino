@@ -5,9 +5,9 @@
  * Monitors the Vite dev server and restarts it if it crashes
  */
 
-const { spawn } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { spawn } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 
 let devServer = null;
 let restartCount = 0;

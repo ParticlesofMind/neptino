@@ -29,8 +29,11 @@ export class ScaleObjects {
 
  if (this.state.activeHandle.type === "corner") {
  if (hasRotatedObjects) {
+ // 🔄 Using rotation-aware scaling with stable anchor points
+ console.log('🔄 SCALING: Using rotation-aware corner resize for rotated objects');
  this.performRotationAwareCornerResize(dx, dy, this.state.activeHandle.position, bounds);
  } else {
+ // 📐 Using standard corner scaling for non-rotated objects
  this.performCornerResize(dx, dy, this.state.activeHandle.position, bounds);
  }
  } else if (this.state.activeHandle.type === "edge") {
@@ -41,34 +44,40 @@ export class ScaleObjects {
  }
 
  private performRotationAwareCornerResize(dx: number, dy: number, corner: string, bounds: Rectangle): void {
- // For rotated objects, we scale based on selection center instead of using corner pivot points
+ // For rotated objects, we need to use rotation-aware scaling with stable anchor points
  if (this.state.selectedObjects.length === 0) return;
 
- const center = {
- x: bounds.x + bounds.width / 2,
- y: bounds.y + bounds.height / 2
- };
-
- // Calculate scale factors based on distance change from center
+ // Calculate scale factors based on the bounds and corner being dragged
  let scaleX = 1;
  let scaleY = 1;
+ let pivotX = bounds.x + bounds.width / 2;
+ let pivotY = bounds.y + bounds.height / 2;
 
+ // Determine anchor point based on corner (opposite corner becomes the pivot)
  switch (corner) {
- case "tl":
+ case "tl": // Top-left corner
  scaleX = 1 - dx / bounds.width;
  scaleY = 1 - dy / bounds.height;
+ pivotX = bounds.x + bounds.width;  // Anchor at bottom-right
+ pivotY = bounds.y + bounds.height;
  break;
- case "tr":
+ case "tr": // Top-right corner
  scaleX = 1 + dx / bounds.width;
  scaleY = 1 - dy / bounds.height;
+ pivotX = bounds.x;                 // Anchor at bottom-left
+ pivotY = bounds.y + bounds.height;
  break;
- case "bl":
+ case "bl": // Bottom-left corner
  scaleX = 1 - dx / bounds.width;
  scaleY = 1 + dy / bounds.height;
+ pivotX = bounds.x + bounds.width;  // Anchor at top-right
+ pivotY = bounds.y;
  break;
- case "br":
+ case "br": // Bottom-right corner
  scaleX = 1 + dx / bounds.width;
  scaleY = 1 + dy / bounds.height;
+ pivotX = bounds.x;                 // Anchor at top-left
+ pivotY = bounds.y;
  break;
  }
 
@@ -77,20 +86,21 @@ export class ScaleObjects {
  scaleX = Math.max(minScale, scaleX);
  scaleY = Math.max(minScale, scaleY);
 
- // Apply scaling to each object, maintaining their relative positions
+ // Apply scaling to each object using the stable anchor approach
  this.state.selectedObjects.forEach(obj => {
  if (obj.scale && obj.position) {
- // Calculate object's position relative to selection center
- const relativeX = obj.position.x - center.x;
- const relativeY = obj.position.y - center.y;
+ // For rotated objects, we need to scale around the stable anchor point
+ // Calculate object's position relative to the anchor point
+ const relativeX = obj.position.x - pivotX;
+ const relativeY = obj.position.y - pivotY;
 
  // Apply scale to object size
  obj.scale.x = Math.abs(obj.scale.x * scaleX);
  obj.scale.y = Math.abs(obj.scale.y * scaleY);
 
- // Adjust position to maintain relative positioning
- obj.position.x = center.x + relativeX * scaleX;
- obj.position.y = center.y + relativeY * scaleY;
+ // Adjust position based on anchor point (this keeps the anchor stable)
+ obj.position.x = pivotX + relativeX * scaleX;
+ obj.position.y = pivotY + relativeY * scaleY;
  }
  });
  }

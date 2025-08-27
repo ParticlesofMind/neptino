@@ -2,6 +2,10 @@ import { defineConfig } from 'vite'
 import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig({
+  // Explicitly define as ESM
+  esbuild: {
+    format: 'esm',
+  },
   plugins: [
     // Bundle analysis visualization (only when ANALYZE env var is set)
     ...(process.env.ANALYZE ? [visualizer({
