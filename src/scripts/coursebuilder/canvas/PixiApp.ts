@@ -43,23 +43,28 @@ export class PixiApp {
     }
 
     const defaultConfig: PixiAppConfig = {
-      width: 794,           // A4 width in pixels
-      height: 1123,         // A4 height in pixels  
+      width: 794,           // A4 width in pixels at 96 DPI
+      height: 1123,         // A4 height in pixels at 96 DPI
       backgroundColor: 0xffffff, // White background
-      antialias: true,
-      resolution: window.devicePixelRatio || 1,
-      autoDensity: true
+      antialias: true,      // Enable antialiasing for smooth edges
+      resolution: window.devicePixelRatio || 1, // Use device pixel ratio for crisp rendering
+      autoDensity: true     // Automatically adjust canvas CSS size
     };
 
     const finalConfig = { ...defaultConfig, ...config };
 
     try {
-      console.log('🎨 Creating PIXI Application...', finalConfig);
+      console.log('🎨 Creating PIXI Application with optimized settings...', finalConfig);
 
       this.app = new Application();
-      await this.app.init(finalConfig);
+      await this.app.init({
+        ...finalConfig,
+        preference: 'webgl', // Prefer WebGL for better performance and quality
+        hello: false, // Disable PIXI hello message
+      });
 
       console.log('✅ PIXI Application created successfully');
+      console.log(`📐 Canvas size: ${finalConfig.width}x${finalConfig.height}`);
       return this.app;
 
     } catch (error) {

@@ -62,14 +62,6 @@ export class UIEventHandler {
             );
         });
 
-        // Shape tool events - bind to shape containers, not all icons
-        document.querySelectorAll('.tools__shape-item').forEach(shapeItem => {
-            shapeItem.addEventListener(
-                'click',
-                this.handleShapeSelection.bind(this),
-            );
-        });
-
         // Slider events for tool settings
         document
             .querySelectorAll('input[type="range"][data-setting]')
@@ -330,9 +322,8 @@ export class UIEventHandler {
             this.toolStateManager.updateToolSettings('text', {
                 [setting]: value,
             });
-
-            // Settings already applied through toolStateManager.updateToolSettings()
         }
+        // Note: shapes are now handled by the grid, not select dropdown
     }
 
     /**
@@ -370,67 +361,22 @@ export class UIEventHandler {
     }
 
     /**
-     * Handle shape selection
+     * Handle shape selection from Select2 dropdown
+     * Public method called by Select2 configuration
      */
-    private handleShapeSelection(event: Event, providedElement?: HTMLElement): void {
-        event.preventDefault();
-        
-        // Use provided element or fallback to currentTarget
-        const targetElement = providedElement || (event.currentTarget as HTMLElement);
-
-        if (!targetElement) {
-            console.warn('🔶 SHAPES: No target element found in shape selection');
-            return;
-        }
-
-        // First, try to get shape type from data-shape attribute (new approach)
-        let shapeType: string | null = targetElement.getAttribute('data-shape');
-        
+    public handleShapeSelection(shapeType: string): void {
         if (!shapeType) {
-            // Fallback to extracting from icon src for backward compatibility
-            const imgElement = targetElement.querySelector('img');
-            const iconSrc = imgElement?.src || targetElement.getAttribute('data-icon') || '';
-
-            if (iconSrc) {
-                if (iconSrc.includes('shape-circle.svg')) {
-                    shapeType = 'circle';
-                } else if (iconSrc.includes('shape-rectangle.svg')) {
-                    shapeType = 'rectangle';
-                } else if (iconSrc.includes('shape-triangle.svg')) {
-                    shapeType = 'triangle';
-                } else if (iconSrc.includes('media-table.svg') || iconSrc.includes('table')) {
-                    // This is a table icon, not a shape - ignore it gracefully
-                    console.log('🔷 TABLE: Table icon clicked, ignoring in shape handler');
-                    return;
-                }
-            }
-        }
-
-        if (!shapeType) {
-            console.warn(
-                '🔶 SHAPES: No shape type found in element:',
-                targetElement,
-            );
+            console.warn('🔶 SHAPES: No shape type provided');
             return;
         }
 
         console.log(`🔶 SHAPES: Selected shape type: ${shapeType}`);
 
-        // Update UI - remove active class from all shape icons
-        document.querySelectorAll('.tools__icon').forEach(img => {
-            img.classList.remove('tools__icon--active');
-        });
+        // Activate the shapes tool first
+        this.toolStateManager.setTool('shapes');
 
-        // Add active class to the icon within the clicked container
-        const iconElement = targetElement.querySelector('.tools__icon');
-        if (iconElement) {
-            iconElement.classList.add('tools__icon--active');
-        }
-
-        // Update shape selection in ToolStateManager
+        // Update state manager with selected shape
         this.toolStateManager.setSelectedShape(shapeType);
-
-        // Update tool settings for the shape tool
         this.toolStateManager.updateToolSettings('shapes', {
             shapeType: shapeType as
                 | 'rectangle'
@@ -442,48 +388,43 @@ export class UIEventHandler {
                 | 'polygon',
         });
 
-        // Settings already applied through toolStateManager.updateToolSettings()
+        // Ensure the canvas gets the updated shape settings immediately
+        const canvasAPI = (window as any).canvasAPI;
+        if (canvasAPI) {
+            try {
+                canvasAPI.setToolSettings('shapes', { shapeType });
+                console.log(`🔶 CANVAS: Applied shape type: ${shapeType}`);
+            } catch (error) {
+                console.error('❌ CANVAS: Error applying shape settings:', error);
+            }
+        }
     }
 
     /**
-     * Initialize shape selection from saved state (not hardcoded default)
+     * Initialize shape selection from saved state for Select2
      */
     private initializeDefaultShapeSelection(): void {
-        // Get the saved shape from ToolStateManager instead of forcing rectangle
         const savedShape = this.toolStateManager.getSelectedShape() || 'rectangle';
         
-        const shapeIcon = document.querySelector(
-            `img[src*="shape-${savedShape}.svg"]`,
-        ) as HTMLElement;
+        console.log(`🔶 SHAPES: Initializing with saved shape: ${savedShape}`);
         
-        if (shapeIcon) {
-            // Remove active class from all shape icons first
-            document.querySelectorAll('.tools__icon').forEach(img => {
-                img.classList.remove('tools__icon--active');
-            });
-            
-            // Add active class to the saved shape
-            shapeIcon.classList.add('tools__icon--active');
-            this.toolStateManager.setSelectedShape(savedShape);
-            
-            // Update tool settings to match saved shape
-            this.toolStateManager.updateToolSettings('shapes', {
-                shapeType: savedShape as
-                    | 'rectangle'
-                    | 'triangle'
-                    | 'circle'
-                    | 'ellipse'
-                    | 'line'
-                    | 'arrow'
-                    | 'polygon',
-            });
-            
-            console.log(
-                `🔶 SHAPES: Initialized with saved shape: ${savedShape}`,
-            );
-        } else {
-            console.warn(`🔶 SHAPES: Could not find icon for saved shape: ${savedShape}`);
+        // Set the Select2 value
+        const shapeSelect = document.querySelector('#shapes-select') as HTMLSelectElement;
+        if (shapeSelect && (window as any).$) {
+            (window as any).$('#shapes-select').val(savedShape).trigger('change');
         }
+        
+        // Update tool settings
+        this.toolStateManager.updateToolSettings('shapes', {
+            shapeType: savedShape as
+                | 'rectangle'
+                | 'triangle'
+                | 'circle'
+                | 'ellipse'
+                | 'line'
+                | 'arrow'
+                | 'polygon',
+        });
     }
 
     /**

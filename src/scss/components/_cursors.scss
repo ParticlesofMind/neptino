@@ -1,0 +1,73 @@
+// ==========================================================================
+// CUSTOM CURSORS FOR TOOLS
+// Custom cursor styles for coursebuilder tools
+// ==========================================================================
+
+// Cursor utility classes
+// ==========================================================================
+
+.cursor {
+  // Pen tool cursor - pen icon with hotspot at tip
+  &--pen {
+    cursor: url('/src/assets/cursors/pen-cursor.svg') 2 2, crosshair;
+  }
+  
+  // Brush tool cursor - brush icon with hotspot at tip
+  &--brush {
+    cursor: url('/src/assets/cursors/brush-cursor.svg') 3 21, crosshair;
+  }
+  
+  // Eraser tool cursor - eraser icon with center hotspot
+  &--eraser {
+    cursor: url('/src/assets/cursors/eraser-cursor.svg') 12 12, crosshair;
+  }
+  
+  // Text tool cursor - text/I-beam cursor
+  &--text {
+    cursor: text;
+  }
+  
+  // Selection tool cursor - default pointer
+  &--selection {
+    cursor: default;
+  }
+  
+  // Shapes tool cursor - shapes icon with center hotspot
+  &--shapes {
+    cursor: url('/src/assets/cursors/shapes-cursor.svg') 12 12, crosshair;
+  }
+}
+
+// Canvas-specific cursor styling
+// ==========================================================================
+
+// Apply cursor styles directly to canvas element
+#canvas-container canvas {
+  // Default fallback
+  cursor: crosshair;
+  
+  // Tool-specific cursors applied via JavaScript
+  &.tool-pen {
+    cursor: url('/src/assets/cursors/pen-cursor.svg') 2 2, crosshair;
+  }
+  
+  &.tool-brush {
+    cursor: url('/src/assets/cursors/brush-cursor.svg') 3 21, crosshair;
+  }
+  
+  &.tool-eraser {
+    cursor: none; // Custom eraser cursor handled by JavaScript
+  }
+  
+  &.tool-text {
+    cursor: text;
+  }
+  
+  &.tool-selection {
+    cursor: default;
+  }
+  
+  &.tool-shapes {
+    cursor: url('/src/assets/cursors/shapes-cursor.svg') 12 12, crosshair;
+  }
+}

@@ -6,6 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="pixi-devtools" content="enabled" />
   <title>Course Builder - Neptino</title>
+  
+  <!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  
   <link rel="stylesheet" href="/src/scss/main.scss" />
 </head>
 
@@ -1014,21 +1018,19 @@
 
               <!-- Shapes Settings -->
               <div class="tools__item" data-tool="shapes" style="display: none;">
-                <!-- Shape Selection Icons -->
-                <div class="tools__shape-item" data-shape="rectangle">
-                  <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-rectangle.svg" alt="rectangle shape" class="tools__icon icon icon--base" title="Rectangle">
-                </div>
-                <div class="tools__shape-item" data-shape="circle">
-                  <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-circle.svg" alt="circle shape" class="tools__icon icon icon--base" title="Circle">
-                </div>
-                <div class="tools__shape-item" data-shape="triangle">
-                  <img src="/src/assets/icons/coursebuilder/tools/shapes/shape-triangle.svg" alt="triangle shape" class="tools__icon icon icon--base" title="Triangle">
-                </div>
+                <!-- Shape Selection Dropdown with Select2 -->
+                <select id="shapes-select" class="tools__shapes-select">
+                  <option value="rectangle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-rectangle.svg"></option>
+                  <option value="triangle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-triangle.svg"></option>
+                  <option value="circle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-circle.svg"></option>
+                  <option value="ellipse" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-ellipse.svg"></option>
+                  <option value="line" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-line.svg"></option>
+                  <option value="arrow" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-arrow.svg"></option>
+                  <option value="polygon" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-polygon.svg"></option>
+                </select>
                 <!-- Color Picker -->
                 <div class="tools__color-container" data-color-selector="shapes"></div>
-              </div>
-
-              <!-- Eraser Settings -->
+              </div>              <!-- Eraser Settings -->
               <div class="tools__item" data-tool="eraser" style="display: none;">
                 <input type="range" min="5" max="50" value="20" class="input input--range" title="Eraser Size" data-setting="size">
               </div>
@@ -1058,6 +1060,12 @@
           </article>
         </div>
   </main>
+  
+  <!-- jQuery (required for Select2) -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- Select2 JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  
   <!-- Core application scripts -->
   <script type="module" src="/src/scripts/app.ts"></script>
   <!-- Language loader for course languages -->
@@ -1072,6 +1080,44 @@
   <script type="module" src="/src/scripts/backend/courses/templates/templatePreviewHandler.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/schedule/scheduleCourse.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/settings/pageSetupHandler.ts"></script>
+  
+  <!-- Select2 Configuration -->
+  <script>
+    $(document).ready(function() {
+      // Custom template for Select2 to show images
+      function formatShapeOption(state) {
+        if (!state.id) { return state.text; }
+        
+        var baseUrl = $(state.element).data('image');
+        var $state = $(
+          '<span><img src="' + baseUrl + '" class="img-flag" width="20" height="20" /> ' + state.text + '</span>'
+        );
+        return $state;
+      }
+      
+      // Initialize Select2 for shapes dropdown
+      $('#shapes-select').select2({
+        templateResult: formatShapeOption,
+        templateSelection: function(state) {
+          if (!state.id) { return state.text; }
+          var baseUrl = $(state.element).data('image');
+          var $state = $('<span><img src="' + baseUrl + '" width="16" height="16" /></span>');
+          return $state;
+        },
+        minimumResultsForSearch: -1, // Hide search box
+        width: '100%'
+      });
+      
+      // Handle selection change
+      $('#shapes-select').on('select2:select', function (e) {
+        var data = e.params.data;
+        // Trigger your shape selection handler here
+        if (window.uiEventHandler && window.uiEventHandler.handleShapeSelection) {
+          window.uiEventHandler.handleShapeSelection(data.id);
+        }
+      });
+    });
+  </script>
 </body>
 
 </html>

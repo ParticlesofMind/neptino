@@ -9,11 +9,21 @@
 // All inline media elements are responsive by default
 img,
 svg,
-video,
-canvas {
+video {
   max-width: 100%;
   height: auto;
   display: block; // safer than inline to prevent descender gaps
+}
+
+// Canvas specific styling for high quality rendering
+canvas {
+  max-width: 100%;
+  display: block;
+  // Preserve exact dimensions set by PixiJS to maintain quality
+  image-rendering: -webkit-optimize-contrast; // Safari
+  image-rendering: crisp-edges; // Firefox
+  image-rendering: pixelated; // Chrome/Edge (fallback)
+  image-rendering: optimizeQuality; // General fallback
 }
 
 // Videos/embeds should not overflow their parent

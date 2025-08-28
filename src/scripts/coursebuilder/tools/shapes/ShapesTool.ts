@@ -32,7 +32,7 @@ export class ShapesTool extends BaseTool {
     declare protected settings: ShapesSettings;
 
     constructor() {
-        super("shapes", "crosshair");
+        super("shapes", "url('/src/assets/cursors/shapes-cursor.svg') 12 12, crosshair");
         this.settings = {
             color: PROFESSIONAL_COLORS[0], // Dark charcoal stroke
             strokeWidth: STROKE_SIZES.SHAPES[2], // 4px stroke

@@ -11,7 +11,7 @@
     gap: 0.5rem;
 
     // Common styling for all grid items
-    > * {
+    >* {
         background: var(--color-background); // Even lighter - pure white
         border-radius: var(--radius-large);
         border: 1px solid var(--color-neutral-200); // Lighter border for modern look
@@ -243,6 +243,7 @@
         align-items: center;
         gap: var(--spacing-3);
         margin-left: var(--spacing-4);
+        overflow: visible; // Ensure dropdowns can escape container bounds
 
         // Override column direction for ALL tool items in options area
         .tools__item {
@@ -253,6 +254,7 @@
             border: none;
             box-shadow: none;
             background: transparent;
+            overflow: visible; // Allow dropdowns to escape tool item bounds
 
             &:hover {
                 transform: none;
@@ -326,23 +328,109 @@
         }
     }
 
-    &__icon {
-        width: 20px;
-        height: 20px;
+    // Custom shapes select with icons
+    &__shapes-select {
+        position: relative;
+        display: inline-block;
+    }
+
+    &__shapes-trigger {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
+        padding: var(--spacing-2);
+        background: var(--color-background);
+        border: 1px solid var(--color-neutral-200);
+        border-radius: var(--radius-medium);
         cursor: pointer;
         transition: all 0.2s ease;
-        opacity: 0.7;
-        display: block;
 
         &:hover {
+            border-color: var(--color-neutral-300);
+            background: var(--color-neutral-50);
+        }
+
+        &:focus {
+            outline: 2px solid var(--color-primary-500);
+            outline-offset: 2px;
+        }
+    }
+
+    &__shapes-arrow {
+        width: 12px;
+        height: 12px;
+        transition: transform 0.2s ease;
+        opacity: 0.6;
+        flex-shrink: 0;
+    }
+
+    &__shapes-trigger[aria-expanded="true"] &__shapes-arrow {
+        transform: rotate(180deg);
+    }
+
+    &__shapes-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: var(--color-background);
+        border: 1px solid var(--color-neutral-200);
+        border-radius: var(--radius-medium);
+        box-shadow:
+            0 4px 12px rgba(0, 0, 0, 0.1),
+            0 2px 6px rgba(0, 0, 0, 0.05);
+        z-index: 1000;
+        min-width: 120px;
+        padding: var(--spacing-1);
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-1);
+        
+        // Hidden by default
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-4px);
+        transition: all 0.15s ease;
+        pointer-events: none;
+
+        &--open {
             opacity: 1;
-            transform: scale(1.1);
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+    }
+
+    &__shapes-option {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--spacing-2);
+        cursor: pointer;
+        border-radius: var(--radius-small);
+        transition: all 0.15s ease;
+        background: transparent;
+        border: 1px solid transparent;
+
+        &:hover {
+            background: var(--color-primary-50);
+            border-color: var(--color-primary-200);
         }
 
         &--active {
-            opacity: 1;
-            filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(214deg)
-                brightness(93%) contrast(101%);
+            background: var(--color-primary-100);
+            border-color: var(--color-primary-300);
         }
+    }
+
+    &__shape-icon {
+        width: 20px;
+        height: 20px;
+        display: block;
+    }
+
+    &__icon {
+        width: 20px;
+        height: 20px;
+        display: block;
     }
 }

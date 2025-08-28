@@ -25,7 +25,7 @@ export class BrushTool extends BaseTool {
  private strokePoints: Point[] = [];
 
  constructor() {
- super("brush", "crosshair");
+         super("brush", "url('/src/assets/cursors/brush-cursor.svg') 3 21, crosshair");
  this.settings = {
  color: BRUSH_COLORS[0], // Start with classic yellow
  size: STROKE_SIZES.BRUSH[1], // Start with 12px

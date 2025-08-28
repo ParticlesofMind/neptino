@@ -10,6 +10,23 @@
   // DROPDOWN TOGGLE (BEM: Element)
   // ==========================================================================
   
+    &--right .dropdown__menu {
+    right: 0;
+    left: auto;
+  }
+  
+  // Left-aligned menu
+  &--left .dropdown__menu {
+    right: auto;
+    left: 0;
+  }
+  
+  // Wide menu
+  &--wide .dropdown__menu {
+    min-width: 240px;
+  }
+
+
   &__toggle {
     display: flex;
     align-items: center;
@@ -154,28 +171,5 @@
     color: var(--color-text-secondary);
     font-size: var(--font-size-small);
     font-style: italic;
-  }
-}
-
-// ==========================================================================
-// DROPDOWN VARIANTS (BEM: Modifiers)
-// ==========================================================================
-
-.dropdown {
-  // Right-aligned menu (default)
-  &--right .dropdown__menu {
-    right: 0;
-    left: auto;
-  }
-  
-  // Left-aligned menu
-  &--left .dropdown__menu {
-    right: auto;
-    left: 0;
-  }
-  
-  // Wide menu
-  &--wide .dropdown__menu {
-    min-width: 240px;
   }
 }

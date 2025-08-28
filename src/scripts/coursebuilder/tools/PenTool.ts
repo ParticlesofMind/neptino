@@ -38,7 +38,7 @@ export class PenTool extends BaseTool {
  private hoverIndicator: Graphics | null = null;
 
  constructor() {
- super("pen", "crosshair");
+         super("pen", "url('/src/assets/cursors/pen-cursor.svg') 2 2, crosshair");
  this.settings = {
  color: PROFESSIONAL_COLORS[0], // Start with dark charcoal
  size: STROKE_SIZES.PEN[2], // Start with 3px

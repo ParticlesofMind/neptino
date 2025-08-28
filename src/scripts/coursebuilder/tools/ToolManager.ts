@@ -9,6 +9,7 @@ import { SelectionTool } from "./selection";
 import { PenTool } from "./PenTool";
 import { BrushTool } from "./BrushTool";
 import { TextTool } from "./TextTool";
+import { ShapesTool } from "./shapes";
 import { EraserTool } from "./EraserTool";
 import { TableManager } from "./tables/TableManager";
 import { DisplayObjectManager } from "../canvas/DisplayObjectManager";
@@ -90,7 +91,7 @@ export class ToolManager {
         this.tools.set("pen", new PenTool());
         this.tools.set("brush", new BrushTool());
         this.tools.set("text", new TextTool());
-   
+        this.tools.set("shapes", new ShapesTool());
         this.tools.set("eraser", new EraserTool());
         this.tools.set("tables", new TableManager());
 

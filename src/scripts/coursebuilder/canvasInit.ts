@@ -49,7 +49,15 @@ export async function initializeCanvas(): Promise<void> {
         // Initialize UI system with clean architecture
         console.log('🎛️ Connecting UI to canvas...');
         toolStateManager = new ToolStateManager();
+        
+        // Wait a bit to ensure DOM is fully ready before binding events
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
         uiEventHandler = new UIEventHandler(toolStateManager);
+        console.log('✅ UIEventHandler created and events bound');
+        
+        // Expose UIEventHandler on window for Select2 integration
+        (window as any).uiEventHandler = uiEventHandler;
 
         // Initialize color selectors for all tools
         console.log('🎨 Initializing tool color selectors...');

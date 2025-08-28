@@ -240,21 +240,23 @@ export class TextTool extends BaseTool {
  const textContent = this.activeTextArea.value.trim();
 
  if (textContent) {
- // Create professional PixiJS text object
- const style = new TextStyle({
- fontFamily: this.settings.fontFamily,
- fontSize: this.settings.fontSize,
- fontWeight: this.settings.fontWeight,
- fontStyle: this.settings.fontStyle,
- fill: this.settings.color,
- align: this.settings.align as any,
- wordWrap: true,
- wordWrapWidth: 400, // Reasonable wrap width
- lineHeight: this.settings.fontSize * 1.2, // Professional line spacing
- padding: 4, // Prevent text clipping
- });
+        // Create professional PixiJS text object
+        const style = new TextStyle({
+            fontFamily: this.settings.fontFamily,
+            fontSize: this.settings.fontSize,
+            fontWeight: this.settings.fontWeight,
+            fontStyle: this.settings.fontStyle,
+            fill: this.settings.color,
+            align: this.settings.align as any,
+            wordWrap: true,
+            wordWrapWidth: 400, // Reasonable wrap width
+            lineHeight: this.settings.fontSize * 1.2, // Professional line spacing
+            padding: 4, // Prevent text clipping
+        });
 
- const textObject = new Text({ text: textContent, style });
+        const textObject = new Text({ text: textContent, style });
+        
+        // No need for high resolution since we're using 3x canvas size with resolution: 1
  textObject.position.set(this.textPosition.x, this.textPosition.y);
  textObject.eventMode = "static"; // Make it selectable for future tools
 

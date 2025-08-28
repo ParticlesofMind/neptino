@@ -611,31 +611,30 @@ export class ToolStateManager {
      * Update shape UI to reflect current selection
      */
     private updateShapeUI(shapeName: string | null): void {
-        // Remove active class from all shape icons
-        document.querySelectorAll('.tools__icon').forEach(icon => {
-            icon.classList.remove('tools__icon--active');
-        });
-
-        // Add active class to current shape if one is selected
-        if (shapeName) {
-            // Find the img with the correct shape in its src path
-            const selectedShapeIcon = document.querySelector(
-                `img[src*="shape-${shapeName}.svg"]`,
-            );
-            if (selectedShapeIcon) {
-                selectedShapeIcon.classList.add('tools__icon--active');
-                console.log(
-                    `🔶 SHAPES: Updated UI to show ${shapeName} as selected`,
-                );
-            } else {
-                console.warn(
-                    `🔶 SHAPES: Could not find icon for shape: ${shapeName}`,
-                );
-            }
+        if (!shapeName) return;
+        
+        // Update the dropdown trigger to show current shape
+        const trigger = document.querySelector('.tools__shapes-trigger');
+        const triggerIcon = trigger?.querySelector('.tools__icon') as HTMLImageElement;
+        
+        if (triggerIcon) {
+            triggerIcon.src = `/src/assets/icons/coursebuilder/tools/shapes/shape-${shapeName}.svg`;
+            triggerIcon.alt = `Selected shape: ${shapeName}`;
+            console.log(`🔶 SHAPES: Updated dropdown trigger to show ${shapeName} as selected`);
         }
-    }
 
-    /**
+        // Update active state in dropdown options
+        document.querySelectorAll('.tools__shapes-option').forEach(option => {
+            option.classList.remove('tools__shapes-option--active');
+        });
+        
+        const selectedOption = document.querySelector(`[data-shape="${shapeName}"]`);
+        if (selectedOption) {
+            selectedOption.classList.add('tools__shapes-option--active');
+        } else {
+            console.warn(`🔶 SHAPES: Could not find dropdown option for shape: ${shapeName}`);
+        }
+    }    /**
      * Update tool UI to reflect current selection
      */
     private updateToolUI(toolName: string): void {

@@ -2,6 +2,32 @@
 
 // ==========================================================================
 // COURSEBUILDER CREATE PAGE
+// ====================================//Canvas container positioning helper  
+#canvas-container {
+    position: relative;
+    
+    // High-quality canvas rendering
+    canvas {        
+        // Force sharp rendering
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: crisp-edges;
+        
+        // Prevent anti-aliasing blur
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+    }
+    
+    // Ensure tables stay within canvas bounds
+    .coursebuilder-table {
+        // Prevent tables from going outside canvas
+        max-width: calc(100% - 40px);
+        max-height: calc(100% - 40px);
+    }
+}
+
+// ==========================================================================
+// LEGACY TABLE TOOL STYLES (keeping for backward compatibility)
 // ==========================================================================
 
 .coursebuilder {
@@ -143,18 +169,6 @@
                 color: #b71c1c;
             }
         }
-    }
-}
-
-// Canvas container positioning helper
-#canvas-container {
-    position: relative;
-    
-    // Ensure tables stay within canvas bounds
-    .coursebuilder-table {
-        // Prevent tables from going outside canvas
-        max-width: calc(100% - 40px);
-        max-height: calc(100% - 40px);
     }
 }
 
