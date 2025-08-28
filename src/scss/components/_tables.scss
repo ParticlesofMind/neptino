@@ -1,0 +1,122 @@
+/**
+ * Table Tool Components - BEM Structure
+ * Styles for the interactive table creation and editing tool
+ */
+
+// Main table component (for future reference)
+.table {
+  // Reserved for future table wrapper styles
+  
+  // Table preview during creation
+  &-preview {
+    position: absolute;
+    border: 1px solid #000000;
+    background-color: rgba(0, 123, 255, 0.1);
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  // Table editing input overlay
+  &-input {
+    position: absolute;
+    font-family: Arial, sans-serif;
+    background-color: rgba(255, 255, 255, 0.95);
+    border: 2px solid #2196f3;
+    outline: none;
+    z-index: 10000;
+    padding: 2px;
+    border-radius: 2px;
+    box-shadow: 0 0 5px rgba(33, 150, 243, 0.3);
+    text-align: left;
+    vertical-align: top;
+
+    &:focus {
+      box-shadow: 0 0 8px rgba(33, 150, 243, 0.5);
+    }
+  }
+
+  // Table context menu
+  &-menu {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10000;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+
+    &__option {
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+
+      &:hover {
+        background-color: #f0f0f0;
+      }
+
+      &--delete {
+        color: #d32f2f;
+
+        &:hover {
+          background-color: #ffebee;
+        }
+      }
+    }
+  }
+}
+
+/*
+ * Table cell states reference:
+ * - Editing state: Light blue background (#E3F2FD), Blue border (#2196F3), Border width +1px
+ * - Placeholder state: Muted text color (#757575)
+ * - Has content state: Normal text color (#000000)
+ * 
+ * Note: Actual cell styling is handled in TableTool.ts through PIXI graphics API
+ */
+
+// Responsive table adjustments
+@media (max-width: 768px) {
+  .table-input {
+    font-size: 16px; // Prevent zoom on mobile
+    padding: 4px;
+  }
+
+  .table-menu {
+    font-size: 16px;
+    
+    &__option {
+      padding: 12px 20px;
+    }
+  }
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .table-preview {
+    border-width: 2px;
+    background-color: rgba(0, 123, 255, 0.2);
+  }
+
+  .table-input {
+    border-width: 3px;
+    box-shadow: 0 0 0 1px rgba(33, 150, 243, 0.5);
+  }
+
+  .table-menu {
+    border-width: 2px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .table-menu__option {
+    transition: none;
+  }
+
+  .table-input {
+    transition: none;
+  }
+}
