@@ -1,0 +1,81 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e3]:
+      - list [ref=e4]:
+        - listitem [ref=e5]:
+          - link "Neptino Logo" [ref=e6] [cursor=pointer]:
+            - /url: /
+            - img "Neptino Logo" [ref=e7] [cursor=pointer]
+        - listitem [ref=e8]:
+          - link "Features" [ref=e9] [cursor=pointer]:
+            - /url: /src/pages/shared/features.html
+        - listitem [ref=e10]:
+          - link "About" [ref=e11] [cursor=pointer]:
+            - /url: /src/pages/shared/about.html
+        - listitem [ref=e12]:
+          - button "EN" [ref=e14] [cursor=pointer]:
+            - generic [ref=e15] [cursor=pointer]: EN
+            - img [ref=e16] [cursor=pointer]
+        - listitem [ref=e18]:
+          - link "Sign In" [ref=e19] [cursor=pointer]:
+            - /url: /src/pages/shared/signin.html
+  - main [ref=e20]:
+    - generic [ref=e21]:
+      - heading "Neptino changes everything." [level=1] [ref=e22]
+      - paragraph [ref=e23]: An innovative educational platform that brings teachers, students, and institutions together in a seamless learning experience designed for the future of education.
+      - link "Get Started Free" [ref=e24] [cursor=pointer]:
+        - /url: /src/pages/shared/signup.html
+      - link "View Pricing" [ref=e25] [cursor=pointer]:
+        - /url: /src/pages/shared/pricing.html
+    - generic [ref=e26]:
+      - heading "Trusted by Educators Worldwide" [level=2] [ref=e27]
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - generic [ref=e30]: 10,000+
+          - generic [ref=e31]: Active Teachers
+        - generic [ref=e32]:
+          - generic [ref=e33]: 500,000+
+          - generic [ref=e34]: Students Engaged
+        - generic [ref=e35]:
+          - generic [ref=e36]: 500+
+          - generic [ref=e37]: Institutions
+        - generic [ref=e38]:
+          - generic [ref=e39]: 98%
+          - generic [ref=e40]: Satisfaction Rate
+    - generic [ref=e41]:
+      - blockquote [ref=e42]:
+        - paragraph [ref=e43]: "\"Neptino has completely transformed how I teach. My students are more engaged than ever, and I can see their progress in real-time.\""
+        - generic [ref=e44]: — Dr. Sarah Johnson, Mathematics Professor
+      - blockquote [ref=e45]:
+        - paragraph [ref=e46]: "\"The analytics and reporting features give us insights we never had before. We can make data-driven decisions to improve student outcomes.\""
+        - generic [ref=e47]: — Mark Chen, IT Director
+      - blockquote [ref=e48]:
+        - paragraph [ref=e49]: "\"As a student, I love how interactive and engaging the courses are. The mobile app lets me learn anywhere, anytime.\""
+        - generic [ref=e50]: — Emma Rodriguez, University Student
+    - generic [ref=e51]:
+      - heading "Ready to Transform Your Educational Experience?" [level=2] [ref=e52]
+      - paragraph [ref=e53]: Join thousands of educators and students already using Neptino to enhance teaching and learning.
+      - link "Start Your Free Trial" [ref=e54] [cursor=pointer]:
+        - /url: /src/pages/shared/signup.html
+      - link "View All Plans" [ref=e55] [cursor=pointer]:
+        - /url: /src/pages/shared/pricing.html
+  - contentinfo [ref=e56]:
+    - navigation [ref=e57]:
+      - list [ref=e58]:
+        - listitem [ref=e59]:
+          - link "Neptino Logo" [ref=e60] [cursor=pointer]:
+            - /url: /
+            - img "Neptino Logo" [ref=e61] [cursor=pointer]
+        - listitem [ref=e62]:
+          - link "Privacy Policy" [ref=e63] [cursor=pointer]:
+            - /url: "#"
+        - listitem [ref=e64]:
+          - link "Terms of Service" [ref=e65] [cursor=pointer]:
+            - /url: "#"
+        - listitem [ref=e66]:
+          - link "Contact" [ref=e67] [cursor=pointer]:
+            - /url: "#"
+```
