@@ -7,6 +7,7 @@ import { CanvasAPI } from './canvas/CanvasAPI';
 import { ToolStateManager } from './ui/ToolStateManager';
 import { UIEventHandler } from './ui/UIEventHandler';
 import { toolColorManager } from './tools/ToolColorManager';
+import { TextTool } from './tools/text/TextTool';
 
 console.log('📦 CanvasAPI import successful:', CanvasAPI);
 
@@ -82,6 +83,10 @@ export async function initializeCanvas(): Promise<void> {
         (window as any).canvasAPI = canvasAPI;
         (window as any).toolStateManager = toolStateManager;
         (window as any).toolColorManager = toolColorManager;
+        
+        // Expose TextTool for font debugging
+        (window as any).TextTool = TextTool;
+        console.log('🔧 TextTool exposed globally for debugging - use TextTool.debugReinitializeFonts() to reload fonts');
 
         // Wait for canvas to be fully ready before getting info
         const waitForCanvas = async (maxAttempts: number = 5, delay: number = 100): Promise<void> => {
