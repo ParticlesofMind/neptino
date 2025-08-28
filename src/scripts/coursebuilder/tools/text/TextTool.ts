@@ -8,8 +8,7 @@ import {
     Container,
     BitmapText,
     Point,
-    Rectangle,
-    Application
+    Rectangle
 } from "pixi.js";
 import { BaseTool } from "../ToolInterface";
 import { 
@@ -24,7 +23,6 @@ import {
 } from "../SharedResources";
 
 export class TextTool extends BaseTool {
-    private app: Application;
     private textAreaManager: TextAreaManager;
     private fontManager: TextBitmapFontManager;
     private isDragging = false;
@@ -32,9 +30,8 @@ export class TextTool extends BaseTool {
     private dragCurrent = new Point(0, 0);
     private currentContainer: Container | null = null;
 
-    constructor(toolName: string, app: Application) {
-        super(toolName, "text");
-        this.app = app;
+    constructor() {
+        super("text", "default");
         
         // Initialize managers
         this.fontManager = new TextBitmapFontManager();

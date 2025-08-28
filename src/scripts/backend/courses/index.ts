@@ -222,6 +222,12 @@ export class CourseBuilder {
  if (!this.courseId) {
  console.log('📋 CREATE NEW COURSE MODE - Limited functionality until course is created');
  }
+
+ // Cleanup previous form handler
+ if (this.currentFormHandler) {
+ console.log('📋 Cleaning up previous form handler');
+ this.currentFormHandler = null;
+ }
  
  // Only initialize form handlers for specific sections
  
@@ -250,6 +256,11 @@ export class CourseBuilder {
  } else if (sectionId === "essentials" || sectionId === "settings") {
  // Initialize generic form handler for form-based sections
  this.currentFormHandler = new CourseFormHandler(sectionId);
+ }
+
+ // Log form handler initialization
+ if (this.currentFormHandler) {
+ console.log(`📋 Form handler initialized for section: ${sectionId}`);
  }
  } catch (error) {
  console.warn(`No handler available for section: ${sectionId}`, error);

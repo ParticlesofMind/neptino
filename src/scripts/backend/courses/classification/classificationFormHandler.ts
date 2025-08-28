@@ -21,11 +21,23 @@ import {
 import { getCourseId, isNewCourseMode } from "../../../utils/courseId.js";
 
 export class ClassificationFormHandler {
+  // Private state tracking
   private autoSaveTimeout: NodeJS.Timeout | null = null;
   private lastSavedData: string = "";
   private selectedDomain: string = "";
   private selectedSubject: string = "";
-  private selectedTopic: string = "";
+  private _selectedTopic: string = "";
+
+  /**
+   * Get/set selected topic with proper tracking
+   */
+  private get selectedTopic(): string {
+    return this._selectedTopic;
+  }
+  
+  private set selectedTopic(value: string) {
+    this._selectedTopic = value;
+  }
 
   /**
    * Get current course ID from URL
@@ -38,7 +50,9 @@ export class ClassificationFormHandler {
    * Check if we're in new course creation mode
    */
   private get isNewCourse(): boolean {
-    return isNewCourseMode();
+    const isNew = isNewCourseMode();
+    console.log('📋 isNewCourse check:', isNew);
+    return isNew;
   }
 
   constructor() {
@@ -65,9 +79,11 @@ export class ClassificationFormHandler {
 
       // Load existing classification if course exists
       const courseId = this.courseId;
-      if (courseId) {
+      if (courseId && !this.isNewCourse) {
         await this.loadExistingClassification(courseId);
         this.updateSaveStatus("Loaded existing data");
+      } else if (this.isNewCourse) {
+        this.updateSaveStatus("New course - ready for classification");
       } else {
         this.updateSaveStatus("Waiting for course creation...");
       }

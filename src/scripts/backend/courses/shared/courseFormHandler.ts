@@ -610,6 +610,11 @@ export class CourseFormHandler {
                 this.enableCourseBuilderFeatures(result.courseId);
 
                 console.log('📋 Course created with ID:', result.courseId);
+                
+                // Navigate to next section after successful creation
+                if (this.sectionConfig.section === 'essentials') {
+                    this.navigateToNextSection();
+                }
             } else {
                 throw new Error(result.error || "Failed to create course");
             }
@@ -704,10 +709,10 @@ export class CourseFormHandler {
         message: string,
         type: "success" | "error" | "loading",
     ): void {
-        const statusDiv = this.form?.querySelector('element') as HTMLElement;
+        const statusDiv = this.form?.querySelector('.save-status__text') as HTMLElement;
         if (statusDiv) {
             statusDiv.textContent = message;
-            statusDiv
+            statusDiv.className = `save-status__text save-status__text--${type}`;
         }
     }
 

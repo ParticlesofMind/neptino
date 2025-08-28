@@ -3,7 +3,23 @@
  * Handles navigation between multiple canvases, thumbnails, and table of contents
  */
 
-import type { CourseLayout, CanvasLayout } from "../coursebuilder/layout/LayoutTypes";
+// Define layout types locally until LayoutTypes module is created
+interface CourseLayout {
+  scheduledSessions: number;
+  totalCanvases: number;
+  lessonDuration: {
+    type: string;
+  };
+  canvases: CanvasLayout[];
+}
+
+interface CanvasLayout {
+  id: string;
+  sessionNumber: number;
+  canvasNumber: number;
+  type: string;
+  blocks: any[];
+}
 
 interface CanvasThumbnail {
  id: string;
@@ -46,7 +62,7 @@ export class CanvasNavigator {
  this.createNavigationHeader(courseLayout);
 
  // Create thumbnail for each canvas
- courseLayout.canvases.forEach((canvas, index) => {
+ courseLayout.canvases.forEach((canvas: CanvasLayout, index: number) => {
  const thumbnail = this.createCanvasThumbnail(canvas, index);
  this.thumbnails.push(thumbnail);
  this.tocContainer!.appendChild(thumbnail.element);
@@ -122,7 +138,7 @@ export class CanvasNavigator {
  preview
 
  // Add miniature blocks
- canvas.blocks.forEach((block) => {
+ canvas.blocks.forEach((block: any) => {
  const blockElement = document.createElement("div");
  blockElement
 

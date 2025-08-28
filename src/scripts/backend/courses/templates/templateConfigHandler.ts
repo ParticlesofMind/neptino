@@ -148,9 +148,17 @@ export class TemplateConfigHandler {
       detail: {
         template: this.currentTemplate,
         activeBlocks: this.activeBlocks,
+        selectedBlock: this.currentlySelectedBlock, // Include selected block info
       },
     });
     document.dispatchEvent(event);
+  }
+
+  /**
+   * Get the currently selected block type
+   */
+  getCurrentlySelectedBlock(): string | null {
+    return this.currentlySelectedBlock;
   }
 }
 
