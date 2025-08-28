@@ -8,38 +8,10 @@ import { ToolStateManager } from './ToolStateManager';
 
 export class UIEventHandler {
     private toolStateManager: ToolStateManager;
-    private onToolChangeCallback: ((toolName: string) => void) | null = null;
-    private onColorChangeCallback: ((color: string) => void) | null = null;
-    private onToolSettingsChangeCallback:
-        | ((toolName: string, settings: any) => void)
-        | null = null;
 
     constructor(toolStateManager: ToolStateManager) {
         this.toolStateManager = toolStateManager;
         this.bindEvents();
-    }
-
-    /**
-     * Set callback for tool changes
-     */
-    setOnToolChange(callback: (toolName: string) => void): void {
-        this.onToolChangeCallback = callback;
-    }
-
-    /**
-     * Set callback for color changes
-     */
-    setOnColorChange(callback: (color: string) => void): void {
-        this.onColorChangeCallback = callback;
-    }
-
-    /**
-     * Set callback for tool settings changes
-     */
-    setOnToolSettingsChange(
-        callback: (toolName: string, settings: any) => void,
-    ): void {
-        this.onToolSettingsChangeCallback = callback;
     }
 
     /**
@@ -173,22 +145,8 @@ export class UIEventHandler {
 
         console.log(`🔧 UI: Tool selection event for "${toolName}"`);
 
+        // Clean architecture: UI delegates to state manager, no callbacks needed
         this.toolStateManager.setTool(toolName);
-        this.toolStateManager.updateCanvasCursor();
-
-        // Trigger callback with additional logging
-        if (this.onToolChangeCallback) {
-            console.log(`🔧 UI: Triggering tool change callback for "${toolName}"`);
-            this.onToolChangeCallback(toolName);
-            console.log(`🔧 UI: Tool change callback completed for "${toolName}"`);
-        } else {
-            console.warn('⚠️ UI: No tool change callback registered');
-        }
-
-        // Verify synchronization after a short delay
-        setTimeout(() => {
-            this.toolStateManager.forceSyncVerification();
-        }, 100);
     }
 
     /**
@@ -273,10 +231,8 @@ export class UIEventHandler {
             });
         }
 
-        // Trigger callback
-        if (this.onColorChangeCallback) {
-            this.onColorChangeCallback(colorValue);
-        }
+        // Clean architecture: delegate to state manager
+        this.toolStateManager.updateCurrentToolColor(colorValue);
     }
 
     /**
@@ -331,12 +287,7 @@ export class UIEventHandler {
             });
         }
 
-        // Trigger callback if set
-        if (this.onToolSettingsChangeCallback) {
-            this.onToolSettingsChangeCallback(currentTool, {
-                [setting]: numericValue,
-            });
-        }
+        // Settings already applied through toolStateManager.updateToolSettings()
     }
 
     /**
@@ -359,12 +310,7 @@ export class UIEventHandler {
             });
         }
 
-        // Trigger callback if set
-        if (this.onToolSettingsChangeCallback) {
-            this.onToolSettingsChangeCallback(currentTool, {
-                [setting]: numericValue,
-            });
-        }
+        // Settings already applied through toolStateManager.updateToolSettings()
     }
 
     /**
@@ -385,10 +331,7 @@ export class UIEventHandler {
                 [setting]: value,
             });
 
-            // Trigger callback if set
-            if (this.onToolSettingsChangeCallback) {
-                this.onToolSettingsChangeCallback('text', { [setting]: value });
-            }
+            // Settings already applied through toolStateManager.updateToolSettings()
         }
     }
 
@@ -423,17 +366,7 @@ export class UIEventHandler {
             });
         }
 
-        // Trigger callback if set
-        if (this.onColorChangeCallback) {
-            this.onColorChangeCallback(colorValue);
-        }
-
-        // Trigger settings callback if set
-        if (this.onToolSettingsChangeCallback) {
-            this.onToolSettingsChangeCallback(currentTool, {
-                [setting]: colorValue,
-            });
-        }
+        // Color and settings already applied through toolStateManager methods
     }
 
     /**
@@ -509,10 +442,7 @@ export class UIEventHandler {
                 | 'polygon',
         });
 
-        // Trigger callback if set
-        if (this.onToolSettingsChangeCallback) {
-            this.onToolSettingsChangeCallback('shapes', { shapeType });
-        }
+        // Settings already applied through toolStateManager.updateToolSettings()
     }
 
     /**

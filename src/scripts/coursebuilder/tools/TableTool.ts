@@ -67,11 +67,18 @@ export class TableTool extends BaseTool {
     }
 
     onPointerDown(event: FederatedPointerEvent, container: Container): void {
-        // Check if we're clicking on an existing table cell for editing
+        // 🔒 CRITICAL: Only respond if this tool is active
+        if (!this.isActive) {
+            console.log('🔷 TABLE: Ignoring pointer down - tool not active');
+            return;
+        }
+
+        // Check if we're clicking on an existing table cell - but don't start editing here
+        // (editing is handled by the double-click detection in the cell's own event handler)
         const clickedCell = this.getTableCellAtPoint(event, container);
         if (clickedCell) {
-            console.log(`🔷 TABLE: Clicked on cell R${clickedCell.row + 1}C${clickedCell.column + 1}`);
-            this.startCellEditing(clickedCell, container);
+            console.log(`🔷 TABLE: Single click on cell R${clickedCell.row + 1}C${clickedCell.column + 1} - waiting for potential double-click`);
+            // Don't start table creation, let the cell's double-click handler manage editing
             return;
         }
 
@@ -118,6 +125,11 @@ export class TableTool extends BaseTool {
     }
 
     onPointerMove(event: FederatedPointerEvent, container: Container): void {
+        // 🔒 CRITICAL: Only respond if this tool is active
+        if (!this.isActive) {
+            return;
+        }
+
         if (!this.isDrawing || !this.previewElement) return;
 
         // Use local coordinates relative to the container
@@ -133,6 +145,11 @@ export class TableTool extends BaseTool {
     }
 
     onPointerUp(_event: FederatedPointerEvent, container: Container): void {
+        // 🔒 CRITICAL: Only respond if this tool is active
+        if (!this.isActive) {
+            return;
+        }
+
         if (!this.isDrawing || !this.previewElement) return;
 
         const width = Math.abs(this.currentPoint.x - this.startPoint.x);
@@ -345,9 +362,49 @@ export class TableTool extends BaseTool {
         (cellText as any).tableCell = cell;
 
         // Add double-click event for editing
+        let clickCount = 0;
+        let clickTimer: NodeJS.Timeout | null = null;
+        
         cellGraphics.on('pointerdown', (event) => {
             event.stopPropagation();
-            console.log(`🔷 TABLE: Cell clicked - R${row + 1}C${col + 1}`);
+            
+            clickCount++;
+            console.log(`🔷 TABLE: Cell clicked - R${row + 1}C${col + 1} (click ${clickCount})`);
+            
+            if (clickCount === 1) {
+                // Start timer for double-click detection
+                clickTimer = setTimeout(() => {
+                    clickCount = 0;
+                }, 300); // 300ms window for double-click
+            } else if (clickCount === 2) {
+                // Double-click detected
+                if (clickTimer) {
+                    clearTimeout(clickTimer);
+                    clickTimer = null;
+                }
+                clickCount = 0;
+                
+                console.log(`🔷 TABLE: Double-click detected on cell R${row + 1}C${col + 1} - Starting edit mode`);
+                
+                // Find the container by traversing up the display tree
+                let container = cellGraphics.parent;
+                while (container && container.parent) {
+                    if (container.parent && (container.parent as any).isStage) {
+                        // We've reached near the stage, this container should work
+                        break;
+                    }
+                    container = container.parent;
+                }
+                
+                if (container) {
+                    // Use a small delay to ensure the click event is fully processed
+                    setTimeout(() => {
+                        this.startCellEditing(cell, container as Container);
+                    }, 10);
+                } else {
+                    console.error('🔷 TABLE: Could not find container for cell editing');
+                }
+            }
         });
 
         return cell;

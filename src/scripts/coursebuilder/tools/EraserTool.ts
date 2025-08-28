@@ -26,6 +26,12 @@ export class EraserTool extends BaseTool {
  }
 
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
+ // 🔒 CRITICAL: Only respond if this tool is active
+ if (!this.isActive) {
+   console.log('🗑️ ERASER: Ignoring pointer down - tool not active');
+   return;
+ }
+
  this.isErasing = true;
  console.log(
  `🗑️ ERASER: Started precision erasing at (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
@@ -41,6 +47,11 @@ export class EraserTool extends BaseTool {
  }
 
  onPointerMove(event: FederatedPointerEvent, container: Container): void {
+ // 🔒 CRITICAL: Only respond if this tool is active
+ if (!this.isActive) {
+   return;
+ }
+
  // Always update cursor position, even outside canvas bounds
  this.updateCursorPosition(event);
 
@@ -67,6 +78,11 @@ export class EraserTool extends BaseTool {
  }
 
  onPointerUp(): void {
+ // 🔒 CRITICAL: Only respond if this tool is active
+ if (!this.isActive) {
+   return;
+ }
+
  this.isErasing = false;
  this.hideErasePreview();
  }

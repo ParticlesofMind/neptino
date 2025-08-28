@@ -25,6 +25,9 @@ export class ToolManager {
 
  constructor() {
         this.settings = {
+            selection: {
+                enabled: true,
+            },
             pen: {
                 color: "#000000", // Black for good visibility
                 size: 4, // Increased size for better visibility
@@ -118,29 +121,27 @@ export class ToolManager {
  }
 
  public setActiveTool(toolName: string): boolean {
- const newTool = this.tools.get(toolName);
- if (!newTool) {
- console.warn(`❌ Tool '${toolName}' not found`);
- return false;
- }
+   const newTool = this.tools.get(toolName);
+   if (!newTool) {
+     console.warn(`❌ Tool '${toolName}' not found`);
+     return false;
+   }
 
- // Deactivate current tool
- if (this.activeTool) {
- this.activeTool.onDeactivate();
- }
+   // Deactivate current tool
+   if (this.activeTool) {
+     this.activeTool.onDeactivate();
+   }
 
- // Activate new tool
- this.activeTool = newTool;
- this.activeTool.onActivate();
+   // Activate new tool
+   this.activeTool = newTool;
+   this.activeTool.onActivate();
 
- // Update tool settings
- this.updateToolSettings(toolName);
+   // Update tool settings
+   this.updateToolSettings(toolName);
 
- console.log(`🔧 Tool set to: ${toolName}`);
- return true;
- }
-
- public getActiveTool(): Tool | null {
+   console.log(`🔧 Tool set to: ${toolName}`);
+   return true;
+ } public getActiveTool(): Tool | null {
  return this.activeTool;
  }
 
@@ -162,49 +163,21 @@ export class ToolManager {
  }
 
  public onPointerMove(
- event: FederatedPointerEvent,
- container: Container,
+   event: FederatedPointerEvent,
+   container: Container,
  ): void {
- if (this.activeTool) {
- // Only log move events for drawing tools when they're actually drawing
- if (this.shouldLogMove()) {
- console.log(
- `👈 Pointer MOVE [DRAWING] - Tool: ${this.activeTool.name}, Position: (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
- );
- }
- this.activeTool.onPointerMove(event, container);
- }
- }
-
- public onPointerUp(event: FederatedPointerEvent, container: Container): void {
+   if (this.activeTool) {
+     // CRITICAL: Only call the active tool's onPointerMove
+     // Make sure no other tools can respond
+     this.activeTool.onPointerMove(event, container);
+   }
+ } public onPointerUp(event: FederatedPointerEvent, container: Container): void {
  if (this.activeTool) {
  console.log(
  `👆 Pointer UP - Tool: ${this.activeTool.name}, Position: (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
  );
  this.activeTool.onPointerUp(event, container);
  }
- }
-
- private shouldLogMove(): boolean {
- if (!this.activeTool) return false;
-
- // Only log move events for drawing tools when they're actively drawing
- const toolName = this.activeTool.name;
-
- // Check if the tool is actively drawing
- if (toolName === "pen" || toolName === "brush") {
- // Only log if the tool is currently drawing (we need to check the tool's state)
- const tool = this.activeTool as any;
- return tool.isDrawing === true;
- }
-
- if (toolName === "selection") {
- // Only log for selection tool when dragging
- const tool = this.activeTool as any;
- return tool.isDragging === true;
- }
-
- return false;
  }
 
  public updateToolSettings(toolName: string, newSettings?: any): void {

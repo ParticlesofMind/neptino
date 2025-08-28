@@ -37,16 +37,16 @@ export async function initializeCanvas(): Promise<void> {
         canvasAPI = new CanvasAPI('#canvas-container');
         console.log('✅ CanvasAPI instance created');
 
-        // Initialize with A4 dimensions and responsiveness
+        // Initialize with A4 dimensions
         await canvasAPI.init({
             width: 794,
             height: 1123,
             backgroundColor: 0xffffff,
         });
 
-        console.log('✅ Canvas initialized with responsiveness!');
+        console.log('✅ Canvas initialized!');
 
-        // Initialize UI system
+        // Initialize UI system with clean architecture
         console.log('🎛️ Connecting UI to canvas...');
         toolStateManager = new ToolStateManager();
         uiEventHandler = new UIEventHandler(toolStateManager);
@@ -54,29 +54,6 @@ export async function initializeCanvas(): Promise<void> {
         // Initialize color selectors for all tools
         console.log('🎨 Initializing tool color selectors...');
         toolColorManager.init();
-
-        // Connect UI tool changes to canvas
-        uiEventHandler.setOnToolChange((toolName: string) => {
-            console.log(`🔧 UI tool change: ${toolName}`);
-            if (canvasAPI) {
-                const success = canvasAPI.setTool(toolName);
-                if (success) {
-                    console.log(`✅ Canvas tool successfully set to: ${toolName}`);
-                } else {
-                    console.error(`❌ Failed to set canvas tool to: ${toolName}`);
-                }
-            } else {
-                console.error('❌ Canvas API not available for tool change');
-            }
-        });
-
-        // Connect UI color changes to canvas
-        uiEventHandler.setOnColorChange((color: string) => {
-            console.log(`🎨 UI color change: ${color}`);
-            if (canvasAPI) {
-                canvasAPI.setToolColor(color);
-            }
-        });
 
         // Listen for color selector changes
         document.addEventListener('toolColorChange', (event: Event) => {
@@ -88,17 +65,10 @@ export async function initializeCanvas(): Promise<void> {
             }
         });
 
-        // Connect UI tool settings changes to canvas
-        uiEventHandler.setOnToolSettingsChange(
-            (toolName: string, settings: any) => {
-                console.log(`⚙️ UI settings change: ${toolName}`, settings);
-                if (canvasAPI) {
-                    canvasAPI.setToolSettings(toolName, settings);
-                }
-            },
-        );
-
-        console.log('✅ UI connected to canvas');
+        // Clean architecture: All UI events are handled through ToolStateManager
+        // No callbacks needed - ToolStateManager directly manages canvas state
+        
+        console.log('✅ UI connected to canvas with clean architecture');
 
         // Make available globally for debugging
         (window as any).canvasAPI = canvasAPI;

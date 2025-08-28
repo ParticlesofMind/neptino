@@ -47,6 +47,12 @@ export class TextTool extends BaseTool {
  }
 
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
+ // 🔒 CRITICAL: Only respond if this tool is active
+ if (!this.isActive) {
+   console.log('📝 TEXT: Ignoring pointer down - tool not active');
+   return;
+ }
+
  console.log(
  `📝 TEXT: Text placement at (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
  );

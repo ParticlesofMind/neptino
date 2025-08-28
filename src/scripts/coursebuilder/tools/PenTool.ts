@@ -46,6 +46,12 @@ export class PenTool extends BaseTool {
  }
 
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
+ // 🔒 CRITICAL: Only respond if this tool is active
+ if (!this.isActive) {
+   console.log('✏️ PEN: Ignoring pointer down - tool not active');
+   return;
+ }
+
  console.log(
  `✏️ PEN: Node placement at (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
  );
@@ -94,6 +100,11 @@ export class PenTool extends BaseTool {
  }
 
  onPointerMove(event: FederatedPointerEvent, container: Container): void {
+ // 🔒 CRITICAL: Only respond if this tool is active
+ if (!this.isActive) {
+   return;
+ }
+
  const localPoint = container.toLocal(event.global);
  
  // 🎯 BOUNDARY ENFORCEMENT: Clamp mouse position for preview

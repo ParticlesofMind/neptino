@@ -370,6 +370,25 @@ export class ToolStateManager {
     }
 
     /**
+     * Update color for the current tool
+     */
+    updateCurrentToolColor(color: string): void {
+        console.log(`🎨 TOOL COLOR: Updating ${this.currentTool} color to ${color}`);
+        
+        // Update tool settings with new color
+        const toolSettings = this.toolSettings[this.currentTool as keyof ToolSettings] as any;
+        if (toolSettings && 'color' in toolSettings) {
+            toolSettings.color = color;
+            
+            // Apply to canvas immediately
+            this.applyToolSettingsToCanvas(this.currentTool);
+            
+            // Save states
+            this.saveStates();
+        }
+    }
+
+    /**
      * Get tool settings
      */
     getToolSettings(): ToolSettings {

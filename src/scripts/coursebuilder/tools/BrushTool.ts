@@ -33,6 +33,12 @@ export class BrushTool extends BaseTool {
  }
 
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
+ // 🔒 CRITICAL: Only respond if this tool is active
+ if (!this.isActive) {
+   console.log('🖍️ BRUSH: Ignoring pointer down - tool not active');
+   return;
+ }
+
  this.isDrawing = true;
 
  // Create new graphics object for this stroke with authentic marker properties
@@ -74,6 +80,11 @@ export class BrushTool extends BaseTool {
  }
 
  onPointerMove(event: FederatedPointerEvent, container: Container): void {
+ // 🔒 CRITICAL: Only respond if this tool is active
+ if (!this.isActive) {
+   return;
+ }
+
  // Only respond to move events when actively drawing
  if (!this.isDrawing || !this.currentStroke) return;
 
@@ -135,6 +146,11 @@ export class BrushTool extends BaseTool {
  }
 
  onPointerUp(): void {
+ // 🔒 CRITICAL: Only respond if this tool is active
+ if (!this.isActive) {
+   return;
+ }
+
  if (this.isDrawing) {
  console.log(
  `🖍️ BRUSH: Finished marker stroke with ${this.strokePoints.length} points`,

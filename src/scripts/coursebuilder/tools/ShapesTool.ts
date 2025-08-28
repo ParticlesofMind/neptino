@@ -60,6 +60,12 @@ export class ShapesTool extends BaseTool {
  }
 
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
+ // 🔒 CRITICAL: Only respond if this tool is active
+ if (!this.isActive) {
+   console.log('🔶 SHAPES: Ignoring pointer down - tool not active');
+   return;
+ }
+
  this.isDrawing = true;
  console.log(
  `🔶 SHAPES: Started drawing ${this.settings.shapeType} at (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
@@ -95,6 +101,11 @@ export class ShapesTool extends BaseTool {
  }
 
  onPointerMove(event: FederatedPointerEvent, container: Container): void {
+ // 🔒 CRITICAL: Only respond if this tool is active
+ if (!this.isActive) {
+   return;
+ }
+
  if (!this.isDrawing || !this.currentShape) return;
 
  // Use local coordinates relative to the container
@@ -113,6 +124,11 @@ export class ShapesTool extends BaseTool {
  }
 
  onPointerUp(): void {
+ // 🔒 CRITICAL: Only respond if this tool is active
+ if (!this.isActive) {
+   return;
+ }
+
  if (this.isDrawing && this.currentShape) {
  const width = this.currentPoint.x - this.startPoint.x;
  const height = this.currentPoint.y - this.startPoint.y;

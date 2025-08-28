@@ -50,6 +50,12 @@ export class SelectionCoordinator extends BaseTool {
  }
 
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
+ // 🔒 CRITICAL: Only respond if this tool is active
+ if (!this.isActive) {
+   console.log('🖱️ SelectionCoordinator: Ignoring pointer down - tool not active');
+   return;
+ }
+
  const localPoint = container.toLocal(event.global);
 
  // Check if clicking on a transform handle
@@ -113,7 +119,10 @@ export class SelectionCoordinator extends BaseTool {
  }
 
  onPointerMove(event: FederatedPointerEvent, container: Container): void {
- const localPoint = container.toLocal(event.global);
+   // 🔒 CRITICAL: Only respond if this tool is active
+   if (!this.isActive) {
+     return;
+   } const localPoint = container.toLocal(event.global);
 
  if (this.state.isTransforming && this.state.activeHandle) {
  // Handle transformation via specialized modules
@@ -149,6 +158,11 @@ export class SelectionCoordinator extends BaseTool {
  }
 
  onPointerUp(_event: FederatedPointerEvent, container: Container): void {
+ // 🔒 CRITICAL: Only respond if this tool is active
+ if (!this.isActive) {
+   return;
+ }
+
  if (this.marqueeSelector.isActive) {
  const marqueeResult = this.marqueeSelector.completeSelection(container);
  if (marqueeResult.objects.length > 0) {
@@ -229,22 +243,20 @@ export class SelectionCoordinator extends BaseTool {
  }
 
  onActivate(): void {
- super.onActivate();
- document.addEventListener('keydown', this.handleKeyDown);
+   super.onActivate();
+   document.addEventListener('keydown', this.handleKeyDown);
  }
 
  onDeactivate(): void {
- super.onDeactivate();
- this.clearSelection();
- this.marqueeSelector.cancelSelection(this.state.selectedObjects[0]?.parent);
- document.removeEventListener('keydown', this.handleKeyDown);
- this.state.isTransforming = false;
- // 🎯 CURSOR MANAGEMENT: Reset cursor when deactivating tool
- this.cursor = 'default';
- console.log('🖱️ SelectionCoordinator cursor reset to default (deactivate)');
- }
-
- updateSettings(settings: SelectionSettings): void {
+   super.onDeactivate();
+   this.clearSelection();
+   this.marqueeSelector.cancelSelection(this.state.selectedObjects[0]?.parent);
+   document.removeEventListener('keydown', this.handleKeyDown);
+   this.state.isTransforming = false;
+   // 🎯 CURSOR MANAGEMENT: Reset cursor when deactivating tool
+   this.cursor = 'default';
+   console.log('🖱️ SelectionCoordinator cursor reset to default (deactivate)');
+ } updateSettings(settings: SelectionSettings): void {
  this.settings = { ...this.settings, ...settings };
  }
 
