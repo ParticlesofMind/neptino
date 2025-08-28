@@ -49,6 +49,10 @@ export class CanvasEvents {
     this.drawingLayer.eventMode = 'static';
     this.drawingLayer.interactiveChildren = true;
 
+    // 🚑 GLOBAL SAFETY: Add document-level mouse up listener to catch any missed events
+    document.addEventListener('mouseup', this.handleGlobalMouseUp.bind(this));
+    document.addEventListener('pointerup', this.handleGlobalMouseUp.bind(this));
+
     // Update cursor based on active tool
     this.updateCursor();
 
@@ -110,6 +114,9 @@ export class CanvasEvents {
 
     // Route to tool manager
     this.toolManager.onPointerUp(event, this.drawingLayer);
+    
+    // 🚑 CLEANUP: Ensure any stuck dragging states are cleared
+    this.clearAllDragStates();
   }
 
   /**
@@ -122,6 +129,45 @@ export class CanvasEvents {
     
     // Treat as pointer up to end any active drawing
     this.toolManager.onPointerUp(event, this.drawingLayer);
+    
+    // 🚑 CLEANUP: Ensure any stuck dragging states are cleared when leaving canvas
+    this.clearAllDragStates();
+  }
+
+  /**
+   * Clear all dragging states (for both PixiJS and HTML elements)
+   * This ensures nothing gets "stuck" to the mouse cursor
+   */
+  private clearAllDragStates(): void {
+    // Clear HTML table dragging states
+    document.querySelectorAll('.coursebuilder-table.dragging').forEach(table => {
+      table.classList.remove('dragging');
+      console.log('🚑 CLEANUP: Removed dragging class from HTML table');
+    });
+
+    // Clear any global CSS classes that might indicate dragging
+    document.querySelectorAll('.dragging, [data-dragging="true"]').forEach(element => {
+      element.classList.remove('dragging');
+      element.removeAttribute('data-dragging');
+      console.log('🚑 CLEANUP: Removed dragging state from element');
+    });
+
+    // Reset body cursor in case it got stuck
+    document.body.style.cursor = '';
+    
+    // Reset canvas cursor to match active tool
+    this.updateCursor();
+    
+    console.log('🚑 CLEANUP: All drag states cleared');
+  }
+
+  /**
+   * Global mouse up handler to catch any events that might escape the canvas
+   * This is a safety net to prevent elements from getting stuck in dragging state
+   */
+  private handleGlobalMouseUp(): void {
+    console.log('🚑 GLOBAL: Document mouse up detected - clearing all drag states');
+    this.clearAllDragStates();
   }
 
   /**
@@ -234,6 +280,13 @@ export class CanvasEvents {
     this.drawingLayer.off('pointerup');
     this.drawingLayer.off('pointerupoutside');
     this.drawingLayer.off('pointerleave');
+
+    // Remove global event listeners
+    document.removeEventListener('mouseup', this.handleGlobalMouseUp.bind(this));
+    document.removeEventListener('pointerup', this.handleGlobalMouseUp.bind(this));
+
+    // Final cleanup of any remaining drag states
+    this.clearAllDragStates();
 
     // Destroy tool manager
     this.toolManager.destroy();

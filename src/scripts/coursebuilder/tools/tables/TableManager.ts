@@ -75,6 +75,12 @@ export class TableManager implements Tool {
         if (this.isDrawing) {
             this.endDrawing(container);
         }
+        
+        // Ensure proper cleanup of any table interaction states
+        this.cellEditor.forceExitEditMode();
+        this.contextMenu.hideMenu();
+        
+        console.log("🔷 TABLE: Pointer up completed with cleanup");
     }
 
     updateSettings(settings: any): void {

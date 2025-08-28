@@ -232,13 +232,56 @@
 
     // Textarea
     &--textarea {
-        resize: vertical;
+        resize: both; // Allow both horizontal and vertical resize
         min-height: 80px;
+        min-width: 200px; // Minimum reasonable width
+        
+        // Override width for positioned textareas (text tool)
+        &[style*="position: absolute"] {
+            width: 240px; // More reasonable default width
+            max-width: 400px; // Prevent oversized textareas
+        }
+        
         position: absolute;
         z-index: 1000;
         
         &.auto-resize { transition: height 0.1s ease; }
     }
+
+    // Text input for course builder
+    &--text {
+        position: absolute;
+        z-index: 1000;
+        min-width: 200px;
+        min-height: 40px;
+        resize: both;
+        background: transparent;
+        border: 1px solid var(--color-primary-300);
+        border-radius: var(--border-radius-small);
+        padding: var(--spacing-2) var(--spacing-3);
+        font-size: var(--font-size-base);
+        font-family: inherit;
+        color: var(--color-text-primary);
+        
+        &::placeholder {
+            color: var(--color-text-tertiary);
+            opacity: 0.8;
+        }
+        
+        &:focus {
+            outline: none;
+            border-color: var(--color-primary-500);
+            box-shadow: 0 0 0 2px var(--color-primary-100);
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        &:hover:not(:focus) {
+            border-color: var(--color-primary-400);
+            background: rgba(255, 255, 255, 0.5);
+        }
+    }
+
+
 
     // Status combinations for controls
     &--checkbox.input--error,

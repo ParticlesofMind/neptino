@@ -22,7 +22,8 @@
     "test:ui": "playwright test --ui",
     "test:debug": "playwright test --debug",
     "test:headed": "playwright test --headed",
-    "test:report": "playwright show-report"
+    "test:report": "playwright show-report",
+    "fonts:generate": "node scripts/generate-bitmap-fonts.js"
   },
   "keywords": [
     "education",
@@ -37,6 +38,7 @@
     "@playwright/test": "^1.55.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "canvas": "^3.2.0",
     "eslint": "^8.45.0",
     "playwright": "^1.55.0",
     "prettier": "^3.0.0",

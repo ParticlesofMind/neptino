@@ -33,7 +33,11 @@ export class TableEventHandler {
 
         // Double-click detection for editing
         cell.graphics.on('pointerup', (event: FederatedPointerEvent) => {
-            event.stopPropagation();
+            // Only stop propagation if we're in table edit mode
+            // This allows selection tool to receive pointer up events for ending drags
+            if (this.cellEditor.isInEditMode()) {
+                event.stopPropagation();
+            }
 
             // Only handle left clicks for editing
             if (event.button !== 0) return;
@@ -48,11 +52,9 @@ export class TableEventHandler {
             
             this.contextMenu.showCellMenu(cell, event as any);
         });
-
+        
         console.log(`🔷 TABLE: Set up events for cell R${cell.row + 1}C${cell.column + 1}`);
-    }
-
-    setupTableEvents(tableData: PixiTableData): void {
+    }    setupTableEvents(tableData: PixiTableData): void {
         // Set up table-level right-click for table menu
         tableData.container.eventMode = 'static';
         tableData.container.on('rightclick', (event: FederatedPointerEvent) => {
@@ -200,5 +202,23 @@ export class TableEventHandler {
         }
 
         return false; // Let other handlers process the event
+    }
+
+    /**
+     * Handle global mouse up events to ensure proper cleanup
+     * This helps prevent tables from getting stuck in dragging state
+     */
+    public handleGlobalMouseUp(): void {
+        // Clear any selection states
+        this.clearSelection();
+        
+        // Ensure all table containers have proper cursor
+        this.activeTables.forEach(tableData => {
+            if (tableData.container) {
+                tableData.container.cursor = 'default';
+            }
+        });
+        
+        console.log('🔷 TABLE: Global mouse up - cleared all selection states');
     }
 }

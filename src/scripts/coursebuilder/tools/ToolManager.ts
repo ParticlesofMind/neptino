@@ -8,7 +8,7 @@ import { Tool, ToolSettings } from "./ToolInterface";
 import { SelectionTool } from "./selection";
 import { PenTool } from "./PenTool";
 import { BrushTool } from "./BrushTool";
-import { TextTool } from "./TextTool";
+import { TextTool } from "./text";
 import { ShapesTool } from "./shapes";
 import { EraserTool } from "./EraserTool";
 import { TableManager } from "./tables/TableManager";
