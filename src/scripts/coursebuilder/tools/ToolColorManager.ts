@@ -51,35 +51,76 @@ export class ToolColorManager {
 
   private getInitialColorForTool(toolType: string): string {
     const initialColors: Record<string, string> = {
-      'pen': '#1a1a1a',      // Black
-      'brush': '#4a7c59',    // Forest Green
-      'text': '#1a1a1a',     // Black
-      'shapes': '#4a79a4'    // Ocean Blue
+      'pen': '#1a1a1a',         // Black
+      'pen-stroke': '#1a1a1a',  // Black
+      'pen-fill': '#ffffff',    // White
+      'brush': '#4a7c59',       // Forest Green
+      'text': '#1a1a1a',        // Black
+      'shapes': '#4a79a4',      // Ocean Blue
+      'shapes-stroke': '#4a79a4', // Ocean Blue
+      'shapes-fill': '#ffffff'   // White
     };
 
     return initialColors[toolType] || '#1a1a1a';
   }
 
   private handleColorChange(toolType: string, color: ColorOption): void {
-    // Dispatch custom event for tool color change
-    const event = new CustomEvent('toolColorChange', {
-      detail: {
-        tool: toolType,
-        color: color,
-        hex: color.hex
-      }
-    });
+    // Map compound tool types to base tool types and color properties
+    const toolMapping: Record<string, { tool: string; property: string }> = {
+      'pen-stroke': { tool: 'pen', property: 'strokeColor' },
+      'pen-fill': { tool: 'pen', property: 'fillColor' },
+      'shapes-stroke': { tool: 'shapes', property: 'strokeColor' },
+      'shapes-fill': { tool: 'shapes', property: 'fillColor' },
+      'text': { tool: 'text', property: 'color' },
+      'brush': { tool: 'brush', property: 'color' }
+    };
 
-    document.dispatchEvent(event);
+    const mapping = toolMapping[toolType];
+    if (mapping) {
+      // Dispatch custom event for specific tool color change
+      const event = new CustomEvent('toolColorChange', {
+        detail: {
+          tool: mapping.tool,
+          property: mapping.property,
+          color: color,
+          hex: color.hex
+        }
+      });
 
-    // Also trigger for backward compatibility with existing systems
-    const legacyEvent = new CustomEvent(`${toolType}ColorChange`, {
-      detail: { color: color.hex }
-    });
+      document.dispatchEvent(event);
 
-    document.dispatchEvent(legacyEvent);
+      // Also trigger for backward compatibility
+      const legacyEvent = new CustomEvent(`${mapping.tool}ColorChange`, {
+        detail: { 
+          color: color.hex,
+          property: mapping.property
+        }
+      });
 
-    console.log(`Color changed for ${toolType} tool:`, color);
+      document.dispatchEvent(legacyEvent);
+
+      console.log(`Color changed for ${toolType} (${mapping.tool}.${mapping.property}):`, color);
+    } else {
+      // Fallback for simple tool types
+      const event = new CustomEvent('toolColorChange', {
+        detail: {
+          tool: toolType,
+          color: color,
+          hex: color.hex
+        }
+      });
+
+      document.dispatchEvent(event);
+
+      // Also trigger for backward compatibility
+      const legacyEvent = new CustomEvent(`${toolType}ColorChange`, {
+        detail: { color: color.hex }
+      });
+
+      document.dispatchEvent(legacyEvent);
+
+      console.log(`Color changed for ${toolType} tool:`, color);
+    }
   }
 
   /**
@@ -97,6 +138,19 @@ export class ToolColorManager {
     const selector = this.colorSelectors.get(toolType);
     if (selector) {
       selector.setColor(hex);
+    } else {
+      // Try to find a matching selector for compound types
+      const compoundSelectors = Array.from(this.colorSelectors.keys()).filter(key => 
+        key.startsWith(toolType + '-') || key === toolType
+      );
+      
+      if (compoundSelectors.length > 0) {
+        // Set the color for the first matching selector (usually the main one)
+        const mainSelector = this.colorSelectors.get(compoundSelectors[0]);
+        if (mainSelector) {
+          mainSelector.setColor(hex);
+        }
+      }
     }
   }
 

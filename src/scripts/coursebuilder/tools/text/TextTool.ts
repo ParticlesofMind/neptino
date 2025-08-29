@@ -326,23 +326,13 @@ export class TextTool extends BaseTool {
   }
 
   private createTextArea(container: Container): void {
-    // Calculate initial bounds
-    let x = Math.min(this.startPoint.x, this.currentPoint.x);
-    let y = Math.min(this.startPoint.y, this.currentPoint.y);
-    let width = Math.abs(this.currentPoint.x - this.startPoint.x);
-    let height = Math.abs(this.currentPoint.y - this.startPoint.y);
+    // Calculate bounds
+    const x = Math.min(this.startPoint.x, this.currentPoint.x);
+    const y = Math.min(this.startPoint.y, this.currentPoint.y);
+    const width = Math.abs(this.currentPoint.x - this.startPoint.x);
+    const height = Math.abs(this.currentPoint.y - this.startPoint.y);
 
-    // 🎯 BOUNDARY ENFORCEMENT: Ensure text area respects canvas margins
-    const canvasBounds = this.manager.getCanvasBounds();
-    const constrainedBounds = BoundaryUtils.constrainRectangle(
-      { x, y, width, height },
-      canvasBounds
-    );
-    
-    // Use the constrained bounds
-    const bounds: TextAreaBounds = constrainedBounds;
-    
-    console.log(`📝 TextArea bounds constrained from ${width}x${height} to ${bounds.width}x${bounds.height}`);
+    const bounds: TextAreaBounds = { x, y, width, height };
     
     const config: TextAreaConfig = {
       bounds,
@@ -357,7 +347,7 @@ export class TextTool extends BaseTool {
     // Activate the new text area
     this.activateTextArea(textArea);
     
-    console.log(`📝 TextArea created: ${bounds.width}x${bounds.height} at (${Math.round(bounds.x)}, ${Math.round(bounds.y)})`);
+    console.log(`📝 TextArea created: ${width}x${height} at (${Math.round(x)}, ${Math.round(y)})`);
   }
 
   private activateTextArea(textArea: TextArea): void {

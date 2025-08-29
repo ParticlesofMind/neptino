@@ -18,16 +18,16 @@ export class ColorSelector {
 
   // Neptino's desaturated color palette (most to least used)
   private colors: ColorOption[] = [
-    { name: 'Black', value: 'black', hex: '#1a1a1a' },
-    { name: 'Forest Green', value: 'green', hex: '#4a7c59' },
-    { name: 'Ocean Blue', value: 'blue', hex: '#4a79a4' },
-    { name: 'Crimson Red', value: 'red', hex: '#a74a4a' },
-    { name: 'Warm Gray', value: 'gray', hex: '#6b7280' },
-    { name: 'Sunset Orange', value: 'orange', hex: '#b87333' },
-    { name: 'Deep Purple', value: 'purple', hex: '#7c5a9b' },
-    { name: 'Golden Yellow', value: 'yellow', hex: '#b8a642' },
-    { name: 'Slate Blue', value: 'slate', hex: '#64748b' },
-    { name: 'Soft White', value: 'white', hex: '#f8fafc' }
+    { name: '', value: 'black', hex: '#1a1a1a' },
+    { name: '', value: 'green', hex: '#4a7c59' },
+    { name: '', value: 'blue', hex: '#4a79a4' },
+    { name: '', value: 'red', hex: '#a74a4a' },
+    { name: '', value: 'gray', hex: '#6b7280' },
+    { name: '', value: 'orange', hex: '#b87333' },
+    { name: '', value: 'purple', hex: '#7c5a9b' },
+    { name: '', value: 'yellow', hex: '#b8a642' },
+    { name: '', value: 'slate', hex: '#64748b' },
+    { name: '', value: 'white', hex: '#f8fafc' }
   ];
 
   constructor(
@@ -102,7 +102,7 @@ export class ColorSelector {
 
   private bindEvents(): void {
     const button = this.container.querySelector('.button--color-selector') as HTMLButtonElement;
-    
+
     button.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -186,7 +186,7 @@ export class ColorSelector {
 
     this.isOpen = true;
     this.dropdown.classList.add('button--color-selector__dropdown--open');
-    
+
     const button = this.container.querySelector('.button--color-selector') as HTMLButtonElement;
     button.setAttribute('aria-expanded', 'true');
     button.classList.add('button--color-selector--open');
@@ -200,7 +200,7 @@ export class ColorSelector {
 
     const button = this.container.querySelector('.button--color-selector') as HTMLButtonElement;
     const buttonRect = button.getBoundingClientRect();
-    
+
     // Position dropdown right below the button
     this.dropdown.style.position = 'fixed';
     this.dropdown.style.top = `${buttonRect.bottom + 4}px`;
@@ -214,7 +214,7 @@ export class ColorSelector {
 
     this.isOpen = false;
     this.dropdown.classList.remove('button--color-selector__dropdown--open');
-    
+
     const button = this.container.querySelector('.button--color-selector') as HTMLButtonElement;
     button.setAttribute('aria-expanded', 'false');
     button.classList.remove('button--color-selector--open');
@@ -222,7 +222,7 @@ export class ColorSelector {
 
   private focusFirstOption(): void {
     if (!this.dropdown) return;
-    
+
     const firstOption = this.dropdown.querySelector('.button--color-selector__option') as HTMLButtonElement;
     if (firstOption) {
       firstOption.focus();
@@ -256,13 +256,13 @@ export class ColorSelector {
     options.forEach((option) => {
       const isSelected = option.getAttribute('data-hex') === this.currentColor.hex;
       option.setAttribute('aria-selected', isSelected ? 'true' : 'false');
-      
+
       // Update check mark
       const existingCheck = option.querySelector('.button--color-selector__check');
       if (existingCheck) {
         existingCheck.remove();
       }
-      
+
       if (isSelected) {
         const check = document.createElement('svg');
         check.className = 'button--color-selector__check';
@@ -296,19 +296,19 @@ export class ColorSelector {
       }
     };
     document.removeEventListener('click', closeHandler);
-    
+
     const resizeHandler = () => {
       if (this.isOpen) {
         this.positionDropdown();
       }
     };
     window.removeEventListener('resize', resizeHandler);
-    
+
     // Remove dropdown from body
     if (this.dropdown && this.dropdown.parentNode) {
       this.dropdown.parentNode.removeChild(this.dropdown);
     }
-    
+
     // Clear container
     this.container.innerHTML = '';
   }

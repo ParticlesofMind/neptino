@@ -62,16 +62,6 @@ export class UIEventHandler {
             );
         });
 
-        // Slider events for tool settings
-        document
-            .querySelectorAll('input[type="range"][data-setting]')
-            .forEach(slider => {
-                slider.addEventListener(
-                    'input',
-                    this.handleSliderChange.bind(this),
-                );
-            });
-
         // Select dropdown events for font settings
         document.querySelectorAll('select[data-setting]').forEach(select => {
             select.addEventListener(
@@ -97,6 +87,16 @@ export class UIEventHandler {
                 numberInput.addEventListener(
                     'input',
                     this.handleNumberInputChange.bind(this),
+                );
+            });
+
+        // Plus/minus button events for number inputs
+        document
+            .querySelectorAll('.tools__button[data-action]')
+            .forEach(button => {
+                button.addEventListener(
+                    'click',
+                    this.handleNumberButtonClick.bind(this),
                 );
             });
 
@@ -228,61 +228,6 @@ export class UIEventHandler {
     }
 
     /**
-     * Handle slider changes for tool settings
-     */
-    private handleSliderChange(event: Event): void {
-        const slider = event.currentTarget as HTMLInputElement;
-        const setting = slider.dataset.setting;
-        const value = slider.value;
-
-        if (!setting) return;
-
-        // Update the displayed value
-        const valueDisplay =
-            slider.parentElement?.querySelector('.size-display');
-        if (valueDisplay) {
-            if (setting === 'opacity') {
-                const percentage = Math.round(parseFloat(value) * 100);
-                valueDisplay.textContent = `${percentage}%`;
-            } else {
-                valueDisplay.textContent = `${value}px`;
-            }
-        }
-
-        // Update tool settings based on currently active tool
-        const currentTool = this.toolStateManager.getCurrentTool();
-        const numericValue =
-            setting === 'opacity' ? parseFloat(value) : parseInt(value);
-
-        if (currentTool === 'pen' && setting === 'size') {
-            this.toolStateManager.updateToolSettings('pen', {
-                [setting]: numericValue,
-            });
-        } else if (currentTool === 'text' && setting === 'fontSize') {
-            this.toolStateManager.updateToolSettings('text', {
-                [setting]: numericValue,
-            });
-        } else if (
-            currentTool === 'brush' &&
-            (setting === 'size' || setting === 'opacity')
-        ) {
-            this.toolStateManager.updateToolSettings('brush', {
-                [setting]: numericValue,
-            });
-        } else if (currentTool === 'shapes' && setting === 'strokeWidth') {
-            this.toolStateManager.updateToolSettings('shapes', {
-                [setting]: numericValue,
-            });
-        } else if (currentTool === 'eraser' && setting === 'size') {
-            this.toolStateManager.updateToolSettings('eraser', {
-                [setting]: numericValue,
-            });
-        }
-
-        // Settings already applied through toolStateManager.updateToolSettings()
-    }
-
-    /**
      * Handle number input changes for tool settings (tables, etc.)
      */
     private handleNumberInputChange(event: Event): void {
@@ -300,9 +245,40 @@ export class UIEventHandler {
             this.toolStateManager.updateToolSettings('tables', {
                 [setting]: Math.max(1, numericValue), // Ensure positive values
             });
+        } else if (['pen', 'brush', 'eraser'].includes(currentTool) && setting === 'size') {
+            this.toolStateManager.updateToolSettings(currentTool, {
+                [setting]: numericValue,
+            });
         }
 
         // Settings already applied through toolStateManager.updateToolSettings()
+    }
+
+    /**
+     * Handle plus/minus button clicks for number inputs
+     */
+    private handleNumberButtonClick(event: Event): void {
+        const button = event.currentTarget as HTMLButtonElement;
+        const action = button.dataset.action;
+        const toolItem = button.closest('.tools__item');
+        const numberInput = toolItem?.querySelector('input[type="number"][data-setting]') as HTMLInputElement;
+        
+        if (!numberInput || !action) return;
+        
+        const min = parseInt(numberInput.min) || 1;
+        const max = parseInt(numberInput.max) || 100;
+        let currentValue = parseInt(numberInput.value) || min;
+        
+        if (action === 'increase' && currentValue < max) {
+            currentValue += 1;
+        } else if (action === 'decrease' && currentValue > min) {
+            currentValue -= 1;
+        }
+        
+        numberInput.value = currentValue.toString();
+        
+        const changeEvent = new Event('input', { bubbles: true });
+        numberInput.dispatchEvent(changeEvent);
     }
 
     /**

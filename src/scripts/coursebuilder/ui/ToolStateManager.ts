@@ -11,6 +11,8 @@ interface ToolSettings {
     pen: {
         color: string;
         size: number;
+        strokeColor: string;
+        fillColor: string;
     };
     text: {
         fontFamily: string;
@@ -26,6 +28,7 @@ interface ToolSettings {
         color: string;
         strokeWidth: number;
         fillColor?: string;
+        strokeColor: string;
         shapeType:
             | 'rectangle'
             | 'triangle'
@@ -71,6 +74,8 @@ export class ToolStateManager {
             pen: {
                 color: '#000000',
                 size: 2,
+                strokeColor: '#000000',
+                fillColor: '#ffffff',
             },
             text: {
                 fontFamily: 'Arial',
@@ -85,6 +90,8 @@ export class ToolStateManager {
             shapes: {
                 color: '#000000',
                 strokeWidth: 2,
+                strokeColor: '#000000',
+                fillColor: '#ffffff',
                 shapeType: 'rectangle',
             },
             eraser: {
@@ -113,9 +120,32 @@ export class ToolStateManager {
         document.addEventListener('toolColorChange', (event: Event) => {
             const customEvent = event as CustomEvent;
             const { tool, hex } = customEvent.detail;
+            
             if (tool && hex) {
-                this.updateToolSettings(tool, { color: hex });
-                console.log(`🎨 COLOR SYNC: Updated ${tool} color to ${hex}`);
+                // Map compound selectors to base tools and properties
+                const toolMapping: { [key: string]: { tool: string; property: string } } = {
+                    'pen-stroke': { tool: 'pen', property: 'strokeColor' },
+                    'pen-fill': { tool: 'pen', property: 'fillColor' },
+                    'shapes-stroke': { tool: 'shapes', property: 'strokeColor' },
+                    'shapes-fill': { tool: 'shapes', property: 'fillColor' },
+                    'brush': { tool: 'brush', property: 'color' },
+                    'text': { tool: 'text', property: 'color' },
+                    'eraser': { tool: 'eraser', property: 'color' },
+                    'tables': { tool: 'tables', property: 'color' }
+                };
+                
+                const mapping = toolMapping[tool];
+                if (mapping) {
+                    // Update tool settings with the specific color property
+                    const settings: any = {};
+                    settings[mapping.property] = hex;
+                    this.updateToolSettings(mapping.tool, settings);
+                    console.log(`🎨 COLOR SYNC: Updated ${mapping.tool}.${mapping.property} to ${hex}`);
+                } else {
+                    // Fallback for simple tool names
+                    this.updateToolSettings(tool, { color: hex });
+                    console.log(`🎨 COLOR SYNC: Updated ${tool} color to ${hex}`);
+                }
             }
         });
     }
@@ -422,8 +452,29 @@ export class ToolStateManager {
         }
 
         try {
-            // Apply color settings
-            if (toolSettings.color) {
+            // Apply color settings based on tool type
+            if (toolName === 'pen') {
+                // For pen tool, apply both stroke and fill colors
+                if (toolSettings.strokeColor) {
+                    canvasAPI.setToolColor(toolSettings.strokeColor, 'stroke');
+                    console.log(`🎨 CANVAS: Applied pen stroke color: ${toolSettings.strokeColor}`);
+                }
+                if (toolSettings.fillColor) {
+                    canvasAPI.setToolColor(toolSettings.fillColor, 'fill');
+                    console.log(`🎨 CANVAS: Applied pen fill color: ${toolSettings.fillColor}`);
+                }
+            } else if (toolName === 'shapes') {
+                // For shapes tool, apply both stroke and fill colors
+                if (toolSettings.strokeColor) {
+                    canvasAPI.setToolColor(toolSettings.strokeColor, 'stroke');
+                    console.log(`🎨 CANVAS: Applied shapes stroke color: ${toolSettings.strokeColor}`);
+                }
+                if (toolSettings.fillColor) {
+                    canvasAPI.setToolColor(toolSettings.fillColor, 'fill');
+                    console.log(`🎨 CANVAS: Applied shapes fill color: ${toolSettings.fillColor}`);
+                }
+            } else if (toolSettings.color) {
+                // For other tools, apply the simple color
                 canvasAPI.setToolColor(toolSettings.color);
                 console.log(`🎨 CANVAS: Applied ${toolName} color: ${toolSettings.color}`);
             }
@@ -442,11 +493,11 @@ export class ToolStateManager {
     private restoreToolSettingsToUI(): void {
         console.log('🔧 SYNC: Restoring saved tool settings to UI elements...');
 
-        // Restore range inputs (sliders)
-        document.querySelectorAll('input[type="range"][data-setting]').forEach(slider => {
-            const input = slider as HTMLInputElement;
-            const setting = input.dataset.setting!;
-            const toolContainer = input.closest('.tools__item[data-tool]') as HTMLElement;
+        // Restore number inputs (for size settings)
+        document.querySelectorAll('input[type="number"][data-setting]').forEach(input => {
+            const numberInput = input as HTMLInputElement;
+            const setting = numberInput.dataset.setting!;
+            const toolContainer = numberInput.closest('.tools__item[data-tool]') as HTMLElement;
             
             if (toolContainer) {
                 const toolName = toolContainer.dataset.tool!;
@@ -454,20 +505,9 @@ export class ToolStateManager {
                 
                 if (toolSettings && setting in toolSettings) {
                     const savedValue = toolSettings[setting];
-                    input.value = String(savedValue);
+                    numberInput.value = String(savedValue);
                     
-                    // Update any value display elements
-                    const valueDisplay = input.parentElement?.querySelector('.size-display');
-                    if (valueDisplay) {
-                        if (setting === 'opacity') {
-                            const percentage = Math.round(savedValue * 100);
-                            valueDisplay.textContent = `${percentage}%`;
-                        } else {
-                            valueDisplay.textContent = `${savedValue}px`;
-                        }
-                    }
-                    
-                    console.log(`🔧 SYNC: Restored ${toolName}.${setting} = ${savedValue}`);
+                    console.log(`↻ Restored ${toolName} ${setting} to: ${savedValue}`);
                 }
             }
         });
@@ -516,7 +556,28 @@ export class ToolStateManager {
             if (toolColorManager) {
                 Object.keys(this.toolSettings).forEach(toolName => {
                     const toolSettings = this.toolSettings[toolName as keyof ToolSettings] as any;
-                    if (toolSettings.color) {
+                    
+                    // Handle compound color properties for pen and shapes
+                    if (toolName === 'pen') {
+                        if (toolSettings.strokeColor) {
+                            toolColorManager.setToolColor('pen-stroke', toolSettings.strokeColor);
+                            console.log(`🔧 SYNC: Restored pen stroke color = ${toolSettings.strokeColor}`);
+                        }
+                        if (toolSettings.fillColor) {
+                            toolColorManager.setToolColor('pen-fill', toolSettings.fillColor);
+                            console.log(`🔧 SYNC: Restored pen fill color = ${toolSettings.fillColor}`);
+                        }
+                    } else if (toolName === 'shapes') {
+                        if (toolSettings.strokeColor) {
+                            toolColorManager.setToolColor('shapes-stroke', toolSettings.strokeColor);
+                            console.log(`🔧 SYNC: Restored shapes stroke color = ${toolSettings.strokeColor}`);
+                        }
+                        if (toolSettings.fillColor) {
+                            toolColorManager.setToolColor('shapes-fill', toolSettings.fillColor);
+                            console.log(`🔧 SYNC: Restored shapes fill color = ${toolSettings.fillColor}`);
+                        }
+                    } else if (toolSettings.color) {
+                        // Handle simple color property for other tools
                         toolColorManager.setToolColor(toolName, toolSettings.color);
                         console.log(`🔧 SYNC: Restored color for ${toolName} = ${toolSettings.color}`);
                     }
