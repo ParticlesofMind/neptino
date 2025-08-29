@@ -30,15 +30,20 @@ export class SelectionVisuals {
 
         // Check if any selected object disables rotation
         const hasNonRotatableObject = selectedObjects.some(obj => obj.disableRotation);
+        
+        // Check if any selected object is a text object
+        const hasTextObject = selectedObjects.some(obj => this.isTextObject(obj));
 
         // Always calculate actual object bounds for proper selection visuals
         // Ignore marqueeBounds parameter as it causes visual misalignment
         const bounds = this.calculateCombinedBounds(selectedObjects);
         const selectionBox = this.createSelectionBox(bounds);
-        const transformHandles = this.createTransformHandles(bounds);
         
-        // Only create rotation handle if no object disables rotation
-        const rotationHandle = hasNonRotatableObject ? null : this.rotator.createRotationHandle(bounds);
+        // For text objects, don't show transform handles (resize/scale handles)
+        const transformHandles = hasTextObject ? [] : this.createTransformHandles(bounds);
+        
+        // Only create rotation handle if no object disables rotation and no text objects
+        const rotationHandle = (hasNonRotatableObject || hasTextObject) ? null : this.rotator.createRotationHandle(bounds);
         
         const selectionGroup: SelectionGroup = {
             objects: [...selectedObjects],
@@ -309,10 +314,21 @@ export class SelectionVisuals {
  }
 
  /**
- * Reset cursor to default
- */
+  * Reset cursor to default
+  */
  public resetCursor(): void {
- this.setCursor('default');
- this.currentCursor = 'default';
+   this.setCursor('default');
+   this.currentCursor = 'default';
+ }
+
+ /**
+  * Check if an object is a text object
+  */
+ private isTextObject(object: any): boolean {
+   return object && (
+     object.constructor.name === 'Text' || 
+     object.text !== undefined ||
+     object.isTextObject === true  // Support for our TextArea containers
+   );
  }
 }

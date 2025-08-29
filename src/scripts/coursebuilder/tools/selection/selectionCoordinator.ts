@@ -211,12 +211,31 @@ export class SelectionCoordinator extends BaseTool {
  }
  }
 
- private enterTextEditMode(textObject: any, _point: Point, _container: Container): void {
- // TODO: Implement text editing mode
- console.log('Text editing mode not yet implemented for:', textObject);
- }
-
- private handleKeyDown = (event: KeyboardEvent): void => {
+  private enterTextEditMode(textObject: any, point: Point, container: Container): void {
+    console.log('📝 Entering text editing mode for:', textObject);
+    
+    // Get the tool manager to switch to text tool
+    if (this.manager && typeof (this.manager as any).manager !== 'undefined') {
+      const toolManager = (this.manager as any).manager;
+      
+      // Switch to text tool
+      const success = toolManager.setActiveTool('text');
+      if (success) {
+        // Get the text tool instance
+        const textTool = toolManager.getActiveTool();
+        if (textTool && typeof (textTool as any).activateTextObjectForEditing === 'function') {
+          // Activate the specific text object for editing
+          (textTool as any).activateTextObjectForEditing(textObject, point, container);
+        }
+        
+        console.log('📝 Switched to text tool for editing');
+      } else {
+        console.warn('📝 Failed to switch to text tool');
+      }
+    } else {
+      console.warn('📝 Tool manager not available for text editing mode');
+    }
+  } private handleKeyDown = (event: KeyboardEvent): void => {
  if (event.key === 'Delete' || event.key === 'Backspace') {
  event.preventDefault();
  this.deleteSelectedObjects();
