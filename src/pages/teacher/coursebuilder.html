@@ -1004,34 +1004,34 @@
               <div class="tools__item tools__item--pen" data-tool="pen" style="display: none;">
                 <input type="number" min="1" max="15" value="2" class="input input--number" title="Pen Size" data-setting="size">
                 
-                <select class="input input--select" title="Stroke Type" data-setting="strokeType">
-                  <option value="solid">Solid</option>
-                  <option value="dashed">Dashed</option>
+                <select id="pen-stroke-type-select" class="input input--select" title="Stroke Type" data-setting="strokeType">
+                  <option value="solid" data-line-style="solid">Solid</option>
+                  <option value="dashed" data-line-style="dashed">Dashed</option>
                 </select>
                 
-                <select class="input input--color" data-color-selector="pen-stroke" title="Stroke Color">
-                    <option value="#1a1a1a" selected>Black</option>
-                    <option value="#4a7c59">Green</option>
-                    <option value="#4a79a4">Blue</option>
-                    <option value="#a74a4a">Red</option>
-                    <option value="#6b7280">Gray</option>
-                    <option value="#b87333">Orange</option>
-                    <option value="#7c5a9b">Purple</option>
-                    <option value="#b8a642">Yellow</option>
-                    <option value="#64748b">Slate</option>
-                    <option value="#f8fafc">White</option>
+                <select id="pen-stroke-select" class="input input--color" data-color-selector="pen-stroke" title="Stroke Color">
+                    <option value="#1a1a1a" data-color="#1a1a1a" selected>Black</option>
+                    <option value="#4a7c59" data-color="#4a7c59">Green</option>
+                    <option value="#4a79a4" data-color="#4a79a4">Blue</option>
+                    <option value="#a74a4a" data-color="#a74a4a">Red</option>
+                    <option value="#6b7280" data-color="#6b7280">Gray</option>
+                    <option value="#b87333" data-color="#b87333">Orange</option>
+                    <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
+                    <option value="#b8a642" data-color="#b8a642">Yellow</option>
+                    <option value="#64748b" data-color="#64748b">Slate</option>
+                    <option value="#f8fafc" data-color="#f8fafc">White</option>
                 </select>
-                <select class="input input--color" data-color-selector="pen-fill" title="Fill Color">
-                    <option value="#1a1a1a">Black</option>
-                    <option value="#4a7c59">Green</option>
-                    <option value="#4a79a4">Blue</option>
-                    <option value="#a74a4a">Red</option>
-                    <option value="#6b7280">Gray</option>
-                    <option value="#b87333">Orange</option>
-                    <option value="#7c5a9b">Purple</option>
-                    <option value="#b8a642">Yellow</option>
-                    <option value="#64748b">Slate</option>
-                    <option value="#f8fafc" selected>White</option>
+                <select id="pen-fill-select" class="input input--color" data-color-selector="pen-fill" title="Fill Color">
+                    <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
+                    <option value="#4a7c59" data-color="#4a7c59">Green</option>
+                    <option value="#4a79a4" data-color="#4a79a4">Blue</option>
+                    <option value="#a74a4a" data-color="#a74a4a">Red</option>
+                    <option value="#6b7280" data-color="#6b7280">Gray</option>
+                    <option value="#b87333" data-color="#b87333">Orange</option>
+                    <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
+                    <option value="#b8a642" data-color="#b8a642">Yellow</option>
+                    <option value="#64748b" data-color="#64748b">Slate</option>
+                    <option value="#f8fafc" data-color="#f8fafc" selected>White</option>
                 </select>
               </div>
 
@@ -1039,25 +1039,25 @@
               <div class="tools__item tools__item--text" data-tool="text" style="display: none;">
                 <input type="number" min="8" max="72" value="16" class="input input--number" title="Text Size" data-setting="fontSize">
                 
-                <select class="input input--select" title="Font Family" data-setting="fontFamily">
-                  <option value="Arial">Arial</option>
-                  <option value="Times New Roman">Times New Roman</option>
-                  <option value="Georgia">Georgia</option>
-                  <option value="Verdana">Verdana</option>
-                  <option value="Tahoma">Tahoma</option>
+                <select id="font-family-select" class="input input--select" title="Font Family" data-setting="fontFamily">
+                  <option value="Arial" data-font-family="Arial">Arial</option>
+                  <option value="Times New Roman" data-font-family="Times New Roman">Times New Roman</option>
+                  <option value="Georgia" data-font-family="Georgia">Georgia</option>
+                  <option value="Verdana" data-font-family="Verdana">Verdana</option>
+                  <option value="Tahoma" data-font-family="Tahoma">Tahoma</option>
                 </select>
                 
-                <select class="input input--color" data-color-selector="text" title="Text Color">
-                    <option value="#1a1a1a" selected>Black</option>
-                    <option value="#4a7c59">Green</option>
-                    <option value="#4a79a4">Blue</option>
-                    <option value="#a74a4a">Red</option>
-                    <option value="#6b7280">Gray</option>
-                    <option value="#b87333">Orange</option>
-                    <option value="#7c5a9b">Purple</option>
-                    <option value="#b8a642">Yellow</option>
-                    <option value="#64748b">Slate</option>
-                    <option value="#f8fafc">White</option>
+                <select id="text-color-select" class="input input--color" data-color-selector="text" title="Text Color">
+                    <option value="#1a1a1a" data-color="#1a1a1a" selected>Black</option>
+                    <option value="#4a7c59" data-color="#4a7c59">Green</option>
+                    <option value="#4a79a4" data-color="#4a79a4">Blue</option>
+                    <option value="#a74a4a" data-color="#a74a4a">Red</option>
+                    <option value="#6b7280" data-color="#6b7280">Gray</option>
+                    <option value="#b87333" data-color="#b87333">Orange</option>
+                    <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
+                    <option value="#b8a642" data-color="#b8a642">Yellow</option>
+                    <option value="#64748b" data-color="#64748b">Slate</option>
+                    <option value="#f8fafc" data-color="#f8fafc">White</option>
                 </select>
               </div>
 
@@ -1065,57 +1065,58 @@
               <div class="tools__item tools__item--brush" data-tool="brush" style="display: none;">
                 <input type="number" min="10" max="50" value="20" class="input input--number" title="Brush Size" data-setting="size">
                 
-                <select class="input input--color" data-color-selector="brush" title="Brush Color">
-                    <option value="#1a1a1a">Black</option>
-                    <option value="#4a7c59" selected>Green</option>
-                    <option value="#4a79a4">Blue</option>
-                    <option value="#a74a4a">Red</option>
-                    <option value="#6b7280">Gray</option>
-                    <option value="#b87333">Orange</option>
-                    <option value="#7c5a9b">Purple</option>
-                    <option value="#b8a642">Yellow</option>
-                    <option value="#64748b">Slate</option>
-                    <option value="#f8fafc">White</option>
+                <select id="brush-color-select" class="input input--color" data-color-selector="brush" title="Brush Color">
+                    <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
+                    <option value="#4a7c59" data-color="#4a7c59" selected>Green</option>
+                    <option value="#4a79a4" data-color="#4a79a4">Blue</option>
+                    <option value="#a74a4a" data-color="#a74a4a">Red</option>
+                    <option value="#6b7280" data-color="#6b7280">Gray</option>
+                    <option value="#b87333" data-color="#b87333">Orange</option>
+                    <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
+                    <option value="#b8a642" data-color="#b8a642">Yellow</option>
+                    <option value="#64748b" data-color="#64748b">Slate</option>
+                    <option value="#f8fafc" data-color="#f8fafc">White</option>
                 </select>
               </div>
 
               <!-- Shapes Settings -->
               <div class="tools__item tools__item--shapes" data-tool="shapes" style="display: none;">
-                <select class="input input--select" title="Shape Type" data-setting="shapeType">
-                  <option value="rectangle">Rectangle</option>
-                  <option value="triangle">Triangle</option>
-                  <option value="circle">Circle</option>
-                  <option value="ellipse">Ellipse</option>
-                  <option value="line">Line</option>
-                  <option value="arrow">Arrow</option>
-                  <option value="polygon">Polygon</option>
+                <select id="shapes-select" class="input input--select" title="Shape Type" data-setting="shapeType">
+                  <option value="rectangle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-rectangle.svg">Rectangle</option>
+                  <option value="triangle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-triangle.svg">Triangle</option>
+                  <option value="circle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-circle.svg">Circle</option>
+                  <option value="ellipse" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-ellipse.svg">Ellipse</option>
+                  <option value="line" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-line.svg">Line</option>
+                  <option value="arrow" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-arrow.svg">Arrow</option>
+                  <option value="polygon" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-polygon.svg">Polygon</option>
                 </select>
                 
                 <input type="number" min="1" max="20" value="2" class="input input--number" title="Shape Thickness" data-setting="strokeWidth">
                 
-                <select class="input input--color" data-color-selector="shapes-stroke" title="Shape Stroke">
-                    <option value="#1a1a1a">Black</option>
-                    <option value="#4a7c59">Green</option>
-                    <option value="#4a79a4" selected>Blue</option>
-                    <option value="#a74a4a">Red</option>
-                    <option value="#6b7280">Gray</option>
-                    <option value="#b87333">Orange</option>
-                    <option value="#7c5a9b">Purple</option>
-                    <option value="#b8a642">Yellow</option>
-                    <option value="#64748b">Slate</option>
-                    <option value="#f8fafc">White</option>
+                <select id="shapes-stroke-select" class="input input--color" data-color-selector="shapes-stroke" title="Shape Stroke">
+                    <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
+                    <option value="#4a7c59" data-color="#4a7c59">Green</option>
+                    <option value="#4a79a4" data-color="#4a79a4" selected>Blue</option>
+                    <option value="#a74a4a" data-color="#a74a4a">Red</option>
+                    <option value="#6b7280" data-color="#6b7280">Gray</option>
+                    <option value="#b87333" data-color="#b87333">Orange</option>
+                    <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
+                    <option value="#b8a642" data-color="#b8a642">Yellow</option>
+                    <option value="#64748b" data-color="#64748b">Slate</option>
+                    <option value="#f8fafc" data-color="#f8fafc">White</option>
                 </select>
-                <select class="input input--color" data-color-selector="shapes-fill" title="Shape Fill">
-                    <option value="#1a1a1a">Black</option>
-                    <option value="#4a7c59">Green</option>
-                    <option value="#4a79a4">Blue</option>
-                    <option value="#a74a4a">Red</option>
-                    <option value="#6b7280">Gray</option>
-                    <option value="#b87333">Orange</option>
-                    <option value="#7c5a9b">Purple</option>
-                    <option value="#b8a642">Yellow</option>
-                    <option value="#64748b">Slate</option>
-                    <option value="#f8fafc" selected>White</option>
+
+                <select id="shapes-fill-select" class="input input--color" data-color-selector="shapes-fill" title="Shape Fill">
+                    <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
+                    <option value="#4a7c59" data-color="#4a7c59">Green</option>
+                    <option value="#4a79a4" data-color="#4a79a4">Blue</option>
+                    <option value="#a74a4a" data-color="#a74a4a">Red</option>
+                    <option value="#6b7280" data-color="#6b7280">Gray</option>
+                    <option value="#b87333" data-color="#b87333">Orange</option>
+                    <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
+                    <option value="#b8a642" data-color="#b8a642">Yellow</option>
+                    <option value="#64748b" data-color="#64748b">Slate</option>
+                    <option value="#f8fafc" data-color="#f8fafc" selected>White</option>
                 </select>
               </div>
 
@@ -1177,13 +1178,53 @@
   <!-- Select2 Configuration -->
   <script>
     $(document).ready(function() {
-      // Custom template for Select2 to show images
+      // Custom template for Select2 to show only shape images
       function formatShapeOption(state) {
         if (!state.id) { return state.text; }
         
-        var baseUrl = $(state.element).data('image');
+        var imageUrl = $(state.element).data('image');
+        if (!imageUrl) { return state.text; }
+        
         var $state = $(
-          '<span><img src="' + baseUrl + '" class="img-flag" width="20" height="20" /> ' + state.text + '</span>'
+          '<span><img src="' + imageUrl + '" width="20" height="20" alt="' + state.text + '" /></span>'
+        );
+        return $state;
+      }
+      
+      // Custom template for Select2 to show only color swatches
+      function formatColorOption(state) {
+        if (!state.id) { return state.text; }
+        
+        var colorValue = $(state.element).data('color');
+        if (!colorValue) { return state.text; }
+        
+        var $state = $(
+          '<span><div style="width: 20px; height: 20px; background-color: ' + colorValue + '; border: 1px solid #ccc; border-radius: 3px; display: inline-block;"></div></span>'
+        );
+        return $state;
+      }
+
+      // Custom template for font families with font preview
+      function formatFontOption(state) {
+        if (!state.id) { return state.text; }
+        
+        var fontFamily = $(state.element).data('font-family') || state.text;
+        var $state = $(
+          '<span style="font-family: ' + fontFamily + '; font-size: 14px;">' + state.text + '</span>'
+        );
+        return $state;
+      }
+
+      // Custom template for line styles
+      function formatLineStyleOption(state) {
+        if (!state.id) { return state.text; }
+        
+        var lineStyle = $(state.element).data('line-style');
+        if (!lineStyle) { return state.text; }
+        
+        var borderStyle = lineStyle === 'dashed' ? '2px dashed #333' : '2px solid #333';
+        var $state = $(
+          '<span><div style="width: 30px; height: 0; border-top: ' + borderStyle + '; margin: 10px 0; display: inline-block;"></div></span>'
         );
         return $state;
       }
@@ -1193,20 +1234,94 @@
         templateResult: formatShapeOption,
         templateSelection: function(state) {
           if (!state.id) { return state.text; }
-          var baseUrl = $(state.element).data('image');
-          var $state = $('<span><img src="' + baseUrl + '" width="16" height="16" /></span>');
+          
+          var imageUrl = $(state.element).data('image');
+          if (!imageUrl) { return state.text; }
+          
+          var $state = $('<span><img src="' + imageUrl + '" width="16" height="16" alt="' + state.text + '" /></span>');
           return $state;
         },
-        minimumResultsForSearch: -1, // Hide search box
+        minimumResultsForSearch: -1,
         width: '100%'
       });
       
-      // Handle selection change
+      // Initialize Select2 for all color dropdowns
+      $('#shapes-stroke-select, #shapes-fill-select, #pen-stroke-select, #pen-fill-select, #text-color-select, #brush-color-select').select2({
+        templateResult: formatColorOption,
+        templateSelection: function(state) {
+          if (!state.id) { return state.text; }
+          
+          var colorValue = $(state.element).data('color');
+          if (!colorValue) { return state.text; }
+          
+          var $state = $('<span><div style="width: 16px; height: 16px; background-color: ' + colorValue + '; border: 1px solid #ccc; border-radius: 2px; display: inline-block;"></div></span>');
+          return $state;
+        },
+        minimumResultsForSearch: -1,
+        width: '100%'
+      });
+
+      // Initialize Select2 for font family dropdown
+      $('#font-family-select').select2({
+        templateResult: formatFontOption,
+        templateSelection: formatFontOption,
+        minimumResultsForSearch: -1,
+        width: '100%'
+      });
+
+      // Initialize Select2 for line style dropdown
+      $('#pen-stroke-type-select').select2({
+        templateResult: formatLineStyleOption,
+        templateSelection: function(state) {
+          if (!state.id) { return state.text; }
+          
+          var lineStyle = $(state.element).data('line-style');
+          if (!lineStyle) { return state.text; }
+          
+          var borderStyle = lineStyle === 'dashed' ? '1px dashed #333' : '1px solid #333';
+          var $state = $(
+            '<span><div style="width: 20px; height: 0; border-top: ' + borderStyle + '; margin: 8px 0; display: inline-block;"></div></span>'
+          );
+          return $state;
+        },
+        minimumResultsForSearch: -1,
+        width: '100%'
+      });
+      
+      // Handle shape selection change
       $('#shapes-select').on('select2:select', function (e) {
         var data = e.params.data;
-        // Trigger your shape selection handler here
         if (window.uiEventHandler && window.uiEventHandler.handleShapeSelection) {
           window.uiEventHandler.handleShapeSelection(data.id);
+        }
+      });
+      
+      // Handle color selection changes
+      $('#shapes-stroke-select, #shapes-fill-select, #pen-stroke-select, #pen-fill-select, #text-color-select, #brush-color-select').on('select2:select', function (e) {
+        var data = e.params.data;
+        var colorSelector = $(this).data('color-selector');
+        
+        // Trigger existing color selection logic
+        if (window.uiEventHandler && window.uiEventHandler.handleColorChange) {
+          window.uiEventHandler.handleColorChange(colorSelector, data.id);
+        }
+      });
+
+      // Handle font family changes
+      $('#font-family-select').on('select2:select', function (e) {
+        var data = e.params.data;
+        // Trigger existing font family logic
+        if (window.uiEventHandler && window.uiEventHandler.handleFontChange) {
+          window.uiEventHandler.handleFontChange(data.id);
+        }
+      });
+
+      // Handle stroke type changes
+      $('#pen-stroke-type-select').on('select2:select', function (e) {
+        var data = e.params.data;
+        // Trigger existing stroke type logic
+        if (window.uiEventHandler && window.uiEventHandler.handleStrokeTypeChange) {
+          window.uiEventHandler.handleStrokeTypeChange(data.id);
         }
       });
     });

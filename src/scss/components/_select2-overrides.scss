@@ -1,0 +1,214 @@
+// ==========================================================================
+// SELECT2 OVERRIDE STYLES - BEM Integration
+// ==========================================================================
+// This file ensures Select2 components match our existing input styling
+
+.select2-container {
+  // Override Select2's default styles to match our input component
+  .select2-selection {
+    // Make the selection area look like our input--select
+    background: var(--color-input-background, white) !important;
+    border: 1px solid var(--color-neutral-200) !important;
+    border-radius: var(--radius-large) !important;
+    padding: var(--spacing-4) !important;
+    font-size: var(--font-size-base) !important;
+    font-family: inherit !important;
+    color: var(--color-text-primary) !important;
+    transition: all 0.2s ease !important;
+    min-height: auto !important;
+    height: auto !important;
+    line-height: 1.5 !important;
+
+    &:focus,
+    &:focus-within {
+      outline: none !important;
+      border-color: var(--color-primary-500) !important;
+      box-shadow: 0 0 0 3px var(--color-primary-100) !important;
+    }
+
+    // Remove Select2's default arrow and add our own
+    .select2-selection__arrow {
+      display: none !important;
+    }
+
+    &::after {
+      content: '';
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 16px;
+      width: 16px;
+      height: 16px;
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      transition: transform 0.2s ease;
+    }
+
+    // Hover state to match input--select
+    &:hover:not(:focus):not(:focus-within) {
+      border-color: var(--color-neutral-400) !important;
+    }
+  }
+
+  // When dropdown is open, rotate arrow
+  &.select2-container--open .select2-selection::after {
+    transform: translateY(-50%) rotate(180deg);
+  }
+
+  // Style the rendered content area
+  .select2-selection__rendered {
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: var(--spacing-2) !important;
+    min-height: 20px !important;
+  }
+
+  // Ensure single selection has proper padding
+  &.select2-container--default .select2-selection--single {
+    padding-right: 40px !important;
+  }
+}
+
+// Style the dropdown to match our design system
+.select2-dropdown {
+  background: var(--color-input-background, white) !important;
+  border: 1px solid var(--color-neutral-200) !important;
+  border-radius: var(--radius-large) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  z-index: 9999 !important;
+
+  .select2-results {
+    padding: var(--spacing-2) !important;
+    
+    .select2-results__options {
+      max-height: 200px !important;
+      overflow-y: auto !important;
+    }
+    
+    .select2-results__option {
+      padding: var(--spacing-3) !important;
+      border-radius: var(--radius-medium) !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: var(--spacing-2) !important;
+      
+      &:hover,
+      &[aria-selected="true"]:not([data-selected="true"]) {
+        background: var(--color-primary-50) !important;
+        color: var(--color-text-primary) !important;
+      }
+      
+      &[data-selected="true"] {
+        background: var(--color-primary-100) !important;
+        color: var(--color-primary-700) !important;
+        font-weight: var(--font-weight-medium) !important;
+      }
+      
+      &:focus {
+        background: var(--color-primary-100) !important;
+        outline: 2px solid var(--color-primary-500) !important;
+        outline-offset: 2px !important;
+      }
+    }
+  }
+}
+
+// ==========================================================================
+// SPECIFIC OVERRIDES FOR VISUAL SELECT COMPONENTS
+// ==========================================================================
+
+// Color swatches in dropdowns should be properly sized
+.select2-dropdown .select2-results__option div[style*="background-color"] {
+  border-radius: 3px !important;
+  border: 1px solid #ccc !important;
+}
+
+// Shape images should be properly sized
+.select2-dropdown .select2-results__option img {
+  flex-shrink: 0 !important;
+}
+
+// Font family options should have proper font rendering
+.select2-dropdown .select2-results__option[style*="font-family"] {
+  font-size: 14px !important;
+}
+
+// Line style previews should be centered
+.select2-dropdown .select2-results__option div[style*="border-top"] {
+  margin: 10px 0 !important;
+}
+
+// Selection display adjustments
+.select2-container .select2-selection__rendered {
+  // Color swatches in selection
+  div[style*="background-color"] {
+    border-radius: 2px !important;
+    border: 1px solid #ccc !important;
+  }
+  
+  // Shape icons in selection
+  img {
+    flex-shrink: 0 !important;
+  }
+  
+  // Line styles in selection
+  div[style*="border-top"] {
+    margin: 8px 0 !important;
+  }
+}
+
+// ==========================================================================
+// RESPONSIVE ADJUSTMENTS
+// ==========================================================================
+
+@media (max-width: 768px) {
+  .select2-container {
+    .select2-selection {
+      padding: var(--spacing-3) !important;
+    }
+  }
+  
+  .select2-dropdown {
+    .select2-results__option {
+      padding: var(--spacing-4) !important;
+      
+      img {
+        width: 24px !important;
+        height: 24px !important;
+      }
+      
+      div[style*="background-color"] {
+        width: 24px !important;
+        height: 24px !important;
+      }
+    }
+  }
+}
+
+// ==========================================================================
+// FOCUS AND ACCESSIBILITY
+// ==========================================================================
+
+.select2-container--focus .select2-selection,
+.select2-container--open .select2-selection {
+  border-color: var(--color-primary-500) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-100) !important;
+}
+
+// Ensure proper keyboard navigation visibility
+.select2-results__option--highlighted {
+  background: var(--color-primary-100) !important;
+  color: var(--color-primary-700) !important;
+}
+
+// Remove Select2's default focus outline since we have our own
+.select2-container--default .select2-selection--single:focus {
+  outline: none !important;
+}
