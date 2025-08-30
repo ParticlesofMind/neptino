@@ -245,6 +245,10 @@ export class UIEventHandler {
             this.toolStateManager.updateToolSettings('tables', {
                 [setting]: Math.max(1, numericValue), // Ensure positive values
             });
+        } else if (currentTool === 'shapes' && setting === 'strokeWidth') {
+            this.toolStateManager.updateToolSettings('shapes', {
+                strokeWidth: Math.max(1, numericValue), // Ensure positive stroke width
+            });
         } else if (['pen', 'brush', 'eraser'].includes(currentTool) && setting === 'size') {
             this.toolStateManager.updateToolSettings(currentTool, {
                 [setting]: numericValue,

@@ -66,6 +66,9 @@
         background: var(--color-neutral-100); // Slightly grey container area
         overflow: auto; // Enable scrolling for large content
         padding: 2rem;
+        display: flex;
+        justify-content: center; // Center the canvas horizontally
+        align-items: flex-start; // Align to top vertically
         box-shadow:
             inset 6px 6px 12px rgba(0, 0, 0, 0.1),
             inset -6px -6px 12px rgba(255, 255, 255, 0.8),
@@ -74,8 +77,8 @@
 
     // Canvas placeholder styling
     &__placeholder {
-        width: 794px;
-        height: 1123px;
+        width: 794px; // A4 width at 96dpi
+        height: 1123px; // A4 height at 96dpi
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -84,6 +87,7 @@
         border: 2px dashed var(--color-neutral-300);
         border-radius: var(--radius-large);
         background: var(--color-background); // Keep placeholder white to match actual canvas
+        flex-shrink: 0; // Prevent placeholder from shrinking
     }
 
     &__preview {

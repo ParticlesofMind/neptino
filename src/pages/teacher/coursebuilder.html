@@ -994,24 +994,20 @@
            
               <!-- Pen Settings -->
               <div class="tools__item tools__item--pen" data-tool="pen" style="display: none;">
-                <button type="button" class="tools__button tools__button--minus" data-action="decrease">−</button>
-                <input type="number" min="1" max="10" value="2" class="input input--number" title="Pen Size" data-setting="size">
-                <button type="button" class="tools__button tools__button--plus" data-action="increase">+</button>
+                <input type="number" min="1" max="15" value="2" class="input input--number" title="Pen Size" data-setting="size">
                 
                 <select class="input input--select" title="Stroke Type" data-setting="strokeType">
                   <option value="solid">Solid</option>
                   <option value="dashed">Dashed</option>
                 </select>
                 
-                <div class="tools__color-container tools__color-container--stroke" data-color-selector="pen-stroke" title="Stroke Color"></div>
-                <div class="tools__color-container tools__color-container--fill" data-color-selector="pen-fill" title="Fill Color"></div>
+                <div class="input input--color" data-color-selector="pen-stroke" title="Stroke Color"></div>
+                <div class="input input--color" data-color-selector="pen-fill" title="Fill Color"></div>
               </div>
 
               <!-- Text Settings -->
               <div class="tools__item tools__item--text" data-tool="text" style="display: none;">
-                <button type="button" class="tools__button tools__button--minus" data-action="decrease">−</button>
                 <input type="number" min="8" max="72" value="16" class="input input--number" title="Text Size" data-setting="fontSize">
-                <button type="button" class="tools__button tools__button--plus" data-action="increase">+</button>
                 
                 <select class="input input--select" title="Font Family" data-setting="fontFamily">
                   <option value="Arial">Arial</option>
@@ -1021,21 +1017,19 @@
                   <option value="Tahoma">Tahoma</option>
                 </select>
                 
-                <div class="tools__color-container tools__color-container--text" data-color-selector="text" title="Text Color"></div>
+                <div class="input input--color" data-color-selector="text" title="Text Color"></div>
               </div>
 
               <!-- Brush Settings -->
               <div class="tools__item tools__item--brush" data-tool="brush" style="display: none;">
-                <button type="button" class="tools__button tools__button--minus" data-action="decrease">−</button>
                 <input type="number" min="10" max="50" value="20" class="input input--number" title="Brush Size" data-setting="size">
-                <button type="button" class="tools__button tools__button--plus" data-action="increase">+</button>
                 
-                <div class="tools__color-container tools__color-container--brush" data-color-selector="brush" title="Brush Color"></div>
+                <div class="input input--color" data-color-selector="brush" title="Brush Color"></div>
               </div>
 
               <!-- Shapes Settings -->
               <div class="tools__item tools__item--shapes" data-tool="shapes" style="display: none;">
-                <select id="shapes-select" class="input input--select" title="Shape Type" data-setting="shapeType">
+                <select class="input input--select" title="Shape Type" data-setting="shapeType">
                   <option value="rectangle">Rectangle</option>
                   <option value="triangle">Triangle</option>
                   <option value="circle">Circle</option>
@@ -1045,22 +1039,20 @@
                   <option value="polygon">Polygon</option>
                 </select>
                 
-                <div class="tools__color-container tools__color-container--stroke" data-color-selector="shapes-stroke" title="Shape Stroke"></div>
-                <div class="tools__color-container tools__color-container--fill" data-color-selector="shapes-fill" title="Shape Fill"></div>
+                <input type="number" min="1" max="20" value="2" class="input input--number" title="Shape Thickness" data-setting="strokeWidth">
+                
+                <div class="input input--color" data-color-selector="shapes-stroke" title="Shape Stroke"></div>
+                <div class="input input--color" data-color-selector="shapes-fill" title="Shape Fill"></div>
               </div>
 
               <!-- Eraser Settings -->
               <div class="tools__item tools__item--eraser" data-tool="eraser" style="display: none;">
-                <button type="button" class="tools__button tools__button--minus" data-action="decrease">−</button>
                 <input type="number" min="5" max="50" value="20" class="input input--number" title="Eraser Size" data-setting="size">
-                <button type="button" class="tools__button tools__button--plus" data-action="increase">+</button>
               </div>
 
               <!-- Table Settings -->
               <div class="tools__item tools__item--tables" data-tool="tables" style="display: none;">
-                <button type="button" class="tools__button tools__button--minus" data-action="decrease">−</button>
                 <input type="number" min="1" max="20" value="3" class="input input--number" title="Table Size" data-setting="size">
-                <button type="button" class="tools__button tools__button--plus" data-action="increase">+</button>
                 
                 <select class="input input--select" title="Table Type" data-setting="tableType">
                   <option value="basic">Basic</option>
@@ -1069,7 +1061,6 @@
                 </select>
               </div>
             </div>
-
           </div>
         </div>
     </div>
