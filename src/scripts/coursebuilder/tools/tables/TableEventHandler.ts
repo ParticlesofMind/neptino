@@ -48,12 +48,9 @@ export class TableEventHandler {
         // Right-click for context menu
         cell.graphics.on('rightclick', (event: FederatedPointerEvent) => {
             event.stopPropagation();
-            console.log(`🔷 TABLE: Right-clicked cell R${cell.row + 1}C${cell.column + 1}`);
-            
+
             this.contextMenu.showCellMenu(cell, event as any);
         });
-        
-        console.log(`🔷 TABLE: Set up events for cell R${cell.row + 1}C${cell.column + 1}`);
     }    setupTableEvents(tableData: PixiTableData): void {
         // Set up table-level right-click for table menu
         tableData.container.eventMode = 'static';
@@ -66,7 +63,6 @@ export class TableEventHandler {
             
             if (!isCell) {
                 event.stopPropagation();
-                console.log(`🔷 TABLE: Right-clicked table ${tableData.id}`);
                 this.contextMenu.showTableMenu(tableData, event as any);
             }
         });
@@ -78,7 +74,6 @@ export class TableEventHandler {
 
         // In edit mode, single click should start editing immediately
         if (isInEditMode) {
-            console.log(`🔷 TABLE: Single click in edit mode - starting cell edit R${cell.row + 1}C${cell.column + 1}`);
             this.cellEditor.startCellEditing(cell, container);
             return;
         }
@@ -115,15 +110,12 @@ export class TableEventHandler {
             }
             this.clickTimer = null;
             this.clickCount = 0;
-            
-            console.log(`🔷 TABLE: Double-click detected on cell R${cell.row + 1}C${cell.column + 1}`);
+
             this.cellEditor.startCellEditing(cell, container);
         }
     }
 
     private handleSingleClick(cell: TableCell): void {
-        // For single clicks outside edit mode, just provide visual feedback
-        console.log(`🔷 TABLE: Single-clicked cell R${cell.row + 1}C${cell.column + 1} (no edit)`);
         this.highlightCellSelection(cell);
     }
 
@@ -211,14 +203,12 @@ export class TableEventHandler {
     public handleGlobalMouseUp(): void {
         // Clear any selection states
         this.clearSelection();
-        
+
         // Ensure all table containers have proper cursor
         this.activeTables.forEach(tableData => {
             if (tableData.container) {
                 tableData.container.cursor = 'default';
             }
         });
-        
-        console.log('🔷 TABLE: Global mouse up - cleared all selection states');
     }
 }

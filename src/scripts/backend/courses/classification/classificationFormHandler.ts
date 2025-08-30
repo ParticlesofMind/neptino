@@ -51,7 +51,6 @@ export class ClassificationFormHandler {
    */
   private get isNewCourse(): boolean {
     const isNew = isNewCourseMode();
-    console.log('📋 isNewCourse check:', isNew);
     return isNew;
   }
 
@@ -89,7 +88,6 @@ export class ClassificationFormHandler {
       }
 
     } catch (error) {
-      console.error("Error initializing Classification Form Handler:", error);
       this.updateSaveStatus("Error loading data");
     }
   }
@@ -179,8 +177,6 @@ export class ClassificationFormHandler {
         select.appendChild(option);
       });
 
-    } catch (error) {
-      console.error("Error populating class year dropdown:", error);
     }
   }
 
@@ -205,8 +201,6 @@ export class ClassificationFormHandler {
         select.appendChild(option);
       });
 
-    } catch (error) {
-      console.error("Error populating curricular framework dropdown:", error);
     }
   }
 
@@ -228,8 +222,6 @@ export class ClassificationFormHandler {
         select.appendChild(option);
       });
 
-    } catch (error) {
-      console.error("Error populating domain dropdown:", error);
     }
   }
 
@@ -258,8 +250,6 @@ export class ClassificationFormHandler {
         });
       });
 
-    } catch (error) {
-      console.error("Error populating available courses:", error);
     }
   }
 
@@ -299,7 +289,6 @@ export class ClassificationFormHandler {
       });
 
     } catch (error) {
-      console.error("Error loading subjects:", error);
       this.resetSelect(subjectSelect, "Error loading subjects");
     }
   }
@@ -334,7 +323,6 @@ export class ClassificationFormHandler {
       });
 
     } catch (error) {
-      console.error("Error loading topics:", error);
       this.resetSelect(topicSelect, "Error loading topics");
     }
   }
@@ -365,7 +353,6 @@ export class ClassificationFormHandler {
       });
 
     } catch (error) {
-      console.error("Error loading subtopics:", error);
       this.resetSelect(subtopicSelect, "Error loading subtopics");
     }
   }
@@ -439,9 +426,8 @@ export class ClassificationFormHandler {
         throw new Error(result.error || "Failed to save classification");
       }
     } catch (error) {
-      console.error("Error in auto-save:", error);
       this.updateSaveStatus("Save failed - will retry");
-      
+
       // Retry after 3 seconds
       setTimeout(() => {
         this.triggerAutoSave();
@@ -489,7 +475,6 @@ export class ClassificationFormHandler {
         this.lastSavedData = JSON.stringify(classification);
       }
     } catch (error) {
-      console.error("Error loading existing classification:", error);
       this.updateSaveStatus("Error loading existing data");
     }
   }

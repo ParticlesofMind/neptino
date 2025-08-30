@@ -28,7 +28,6 @@ export class DeleteCourseManager {
   private initialize(): void {
     this.deleteButton = document.getElementById('delete-course-btn') as HTMLButtonElement;
     this.setupEventListeners();
-    console.log('🗑️ Delete Course Manager initialized');
   }
 
   private getCourseIdFromStorage(): string | null {
@@ -171,8 +170,6 @@ export class DeleteCourseManager {
     }
 
     try {
-      console.log('🗑️ Starting course deletion process for:', this.courseId);
-      
       const result = await this.deleteCourseFromDatabase(this.courseId);
 
       if (result.success) {
@@ -193,11 +190,9 @@ export class DeleteCourseManager {
       } else {
         throw new Error(result.message || 'Failed to delete course');
       }
-
     } catch (error) {
-      console.error('❌ Error deleting course:', error);
       this.showNotification(`Failed to delete course: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
-      
+
       // Reset button state
       if (confirmButton) {
         confirmButton.innerHTML = 'Delete Course Forever';
@@ -208,9 +203,6 @@ export class DeleteCourseManager {
 
   private async deleteCourseFromDatabase(courseId: string): Promise<CourseDeleteResult> {
     try {
-      // Delete related data first (foreign key constraints)
-      console.log('🧹 Cleaning up related course data...');
-
       // Delete course sessions/schedules
       const { error: sessionsError } = await supabase
         .from('course_sessions')
@@ -227,22 +219,12 @@ export class DeleteCourseManager {
         .delete()
         .eq('course_id', courseId);
 
-      if (templatesError) {
-        console.warn('⚠️ Error deleting templates (may not exist):', templatesError.message);
-      }
-
       // Delete enrollments
       const { error: enrollmentsError } = await supabase
         .from('enrollments')
         .delete()
         .eq('course_id', courseId);
 
-      if (enrollmentsError) {
-        console.warn('⚠️ Error deleting enrollments (may not exist):', enrollmentsError.message);
-      }
-
-      // Delete the main course record
-      console.log('🗑️ Deleting main course record...');
       const { error: courseError } = await supabase
         .from('courses')
         .delete()
@@ -252,14 +234,11 @@ export class DeleteCourseManager {
         throw new Error(`Failed to delete course: ${courseError.message}`);
       }
 
-      console.log('✅ Course deleted successfully');
       return {
         success: true,
         message: 'Course deleted successfully'
       };
-
     } catch (error) {
-      console.error('❌ Database deletion error:', error);
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Unknown database error',
@@ -311,7 +290,6 @@ export class DeleteCourseManager {
    */
   public setCourseId(courseId: string): void {
     this.courseId = courseId;
-    console.log('🗑️ Delete manager course ID updated:', courseId);
   }
 
   /**
@@ -328,7 +306,6 @@ export class DeleteCourseManager {
     if (this.confirmationModal) {
       this.hideDeleteConfirmation();
     }
-    console.log('🗑️ Delete Course Manager destroyed');
   }
 }
 

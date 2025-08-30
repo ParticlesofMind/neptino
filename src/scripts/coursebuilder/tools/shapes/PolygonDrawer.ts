@@ -21,13 +21,11 @@ export class PolygonDrawer extends BaseShapeDrawer {
         if (!this.isValidSize(context) || this.sides < 3) {
             return;
         }
-        
+
         const centerX = context.startX + context.width / 2;
         const centerY = context.startY + context.height / 2;
         const radius = Math.max(Math.abs(context.width), Math.abs(context.height)) / 2;
-        
-        console.log(`🔶 SHAPES: Drawing ${this.sides}-sided polygon at center (${Math.round(centerX)}, ${Math.round(centerY)}) with radius ${Math.round(radius)}`);
-        
+
         // Generate polygon points
         const points: number[] = [];
         for (let i = 0; i < this.sides; i++) {
@@ -36,9 +34,9 @@ export class PolygonDrawer extends BaseShapeDrawer {
             const y = centerY + radius * Math.sin(angle);
             points.push(x, y);
         }
-        
+
         this.graphics.poly(points);
-        
+
         this.applyFill(fillStyle);
         this.applyStroke(strokeStyle);
     }

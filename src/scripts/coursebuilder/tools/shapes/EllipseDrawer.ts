@@ -11,16 +11,14 @@ export class EllipseDrawer extends BaseShapeDrawer {
         if (!this.isValidSize(context)) {
             return;
         }
-        
+
         const centerX = context.startX + context.width / 2;
         const centerY = context.startY + context.height / 2;
         const radiusX = Math.abs(context.width) / 2;
         const radiusY = Math.abs(context.height) / 2;
-        
-        console.log(`🔶 SHAPES: Drawing ellipse at center (${Math.round(centerX)}, ${Math.round(centerY)}) with radii ${Math.round(radiusX)}x${Math.round(radiusY)}`);
-        
+
         this.graphics.ellipse(centerX, centerY, radiusX, radiusY);
-        
+
         this.applyFill(fillStyle);
         this.applyStroke(strokeStyle);
     }

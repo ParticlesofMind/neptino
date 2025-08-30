@@ -37,23 +37,18 @@ export class CoursesManager {
 
   private async loadCourses(): Promise<void> {
     try {
-      console.log('🔄 Loading user courses...');
-
       // Show loading state
       this.showLoadingState();
 
       const courses = await getUserCourses();
 
       if (courses && courses.length > 0) {
-        console.log(`✅ Loaded ${courses.length} courses`);
         this.displayCourses(courses);
         this.hideNoCoursesMessage();
       } else {
-        console.log('ℹ️ No courses found for user');
         this.showNoCoursesMessage();
       }
     } catch (error) {
-      console.error("❌ Error loading courses:", error);
       this.showErrorState();
     } finally {
       this.hideLoadingState();
@@ -113,9 +108,6 @@ export class CoursesManager {
       try {
         const courseCard = await this.createCourseCard(course);
         this.coursesContainer.appendChild(courseCard);
-      } catch (error) {
-        console.error(`Error creating card for course ${course.course_name}:`, error);
-        // Create a fallback card without statistics
       }
     }
   }
@@ -131,8 +123,6 @@ export class CoursesManager {
     let courseStats: CourseWithStats | null = null;
     try {
       courseStats = await getCourseWithStats(course.id);
-    } catch (error) {
-      console.warn('Error fetching course statistics for course:', course.id, error);
     }
 
     // Use statistics if available, otherwise use defaults

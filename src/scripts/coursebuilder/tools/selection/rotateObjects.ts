@@ -104,8 +104,6 @@ export class RotateObjects {
  obj.anchor.set(0.5, 0.5);
  }
  }
- } catch (error) {
- // Silently handle any bounds calculation errors
  }
  }
 

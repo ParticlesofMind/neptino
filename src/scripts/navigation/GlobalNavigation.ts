@@ -266,24 +266,21 @@ export class GlobalNavigation {
  }
 
  private handleLanguageChange(langCode: string): void {
- const languages = {
- 'en': 'EN',
- 'es': 'ES', 
- 'fr': 'FR',
- 'de': 'DE'
- };
- 
- // Update the dropdown toggle text
- const dropdownText = document.querySelector('.dropdown__text');
- if (dropdownText) {
- dropdownText.textContent = languages[langCode as keyof typeof languages] || 'EN';
- }
- 
- // Close the dropdown
- this.closeLanguageDropdown();
- 
- // Here you would typically handle the actual language change
- console.log('Language changed to:', langCode);
+  const languages = {
+  'en': 'EN',
+  'es': 'ES',
+  'fr': 'FR',
+  'de': 'DE'
+  };
+
+  // Update the dropdown toggle text
+  const dropdownText = document.querySelector('.dropdown__text');
+  if (dropdownText) {
+  dropdownText.textContent = languages[langCode as keyof typeof languages] || 'EN';
+  }
+
+  // Close the dropdown
+  this.closeLanguageDropdown();
  }
 
  private closeLanguageDropdown(): void {
@@ -307,11 +304,7 @@ export class GlobalNavigation {
  if (result.success) {
  // Redirect to home page
  window.location.href = '/index.html';
- } else {
- console.error('Sign out failed:', result.error);
  }
- } catch (error) {
- console.error('Sign out error:', error);
  }
  }
 

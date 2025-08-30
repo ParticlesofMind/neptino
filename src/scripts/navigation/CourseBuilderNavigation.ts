@@ -13,21 +13,16 @@ export class CourseBuilderNavigation {
  private previousButton!: HTMLElement | null;
 
  constructor() {
- // Only initialize if we're actually on the coursebuilder page
- if (!this.isOnCourseBuilderPage()) {
- console.log('🧭 Not on coursebuilder page - skipping CourseBuilder navigation');
- return;
- }
+   // Only initialize if we're actually on the coursebuilder page
+   if (!this.isOnCourseBuilderPage()) {
+     return;
+   }
 
- console.log('🧭 Initializing CourseBuilder Navigation...');
- 
- this.sections = document.querySelectorAll('.coursebuilder__setup, .coursebuilder__create, .coursebuilder__preview, .coursebuilder__launch');
- this.nextButton = document.getElementById('next-btn');
- this.previousButton = document.getElementById('previous-btn');
- 
- this.initialize();
- 
- console.log('🧭 CourseBuilder Navigation initialized');
+   this.sections = document.querySelectorAll('.coursebuilder__setup, .coursebuilder__create, .coursebuilder__preview, .coursebuilder__launch');
+   this.nextButton = document.getElementById('next-btn');
+   this.previousButton = document.getElementById('previous-btn');
+
+   this.initialize();
  }
 
  private isOnCourseBuilderPage(): boolean {
@@ -67,20 +62,17 @@ export class CourseBuilderNavigation {
  }
 
  private initializeFromHash(): void {
- const hash = window.location.hash.substring(1);
- console.log('🧭 Initializing from hash:', hash);
- 
- if (hash && this.isValidSection(hash)) {
- this.currentSection = hash;
- console.log('🧭 Valid hash detected, setting current section to:', hash);
- } else {
- this.currentSection = 'setup';
- console.log('🧭 No valid hash, defaulting to setup');
- if (!hash) {
- history.replaceState(null, '', '#setup');
- }
- }
- this.activateSection(this.currentSection);
+   const hash = window.location.hash.substring(1);
+
+   if (hash && this.isValidSection(hash)) {
+     this.currentSection = hash;
+   } else {
+     this.currentSection = 'setup';
+     if (!hash) {
+     history.replaceState(null, '', '#setup');
+     }
+   }
+   this.activateSection(this.currentSection);
  }
 
  private handleHashChange(): void {
@@ -97,43 +89,31 @@ export class CourseBuilderNavigation {
  }
 
  private activateSection(sectionId: string): void {
- console.log(`🧭 Activating section: ${sectionId}`);
- 
- // Get all coursebuilder sections
- const allSections = document.querySelectorAll('[class*="coursebuilder__"]');
- console.log(`🔍 Found ${allSections.length} coursebuilder sections:`, allSections);
- 
- // Hide all coursebuilder elements
- this.sections.forEach(element => {
- console.log(`🔍 Processing element:`, element, element.className);
- element.classList.remove('coursebuilder__setup--active', 'coursebuilder__create--active', 'coursebuilder__preview--active', 'coursebuilder__launch--active');
- element.setAttribute('aria-hidden', 'true');
- console.log(`🔍 After hiding:`, element.className);
- });
- 
- // Show target coursebuilder element
- const targetElement = document.querySelector(`.coursebuilder__${sectionId}`);
- console.log(`🎯 Looking for: .coursebuilder__${sectionId}`, targetElement);
- if (targetElement) {
- targetElement.classList.add(`coursebuilder__${sectionId}--active`);
- targetElement.setAttribute('aria-hidden', 'false');
- console.log(`🎯 Successfully navigated to coursebuilder element: ${sectionId}`, targetElement.className);
- 
- // Initialize aside navigation when entering setup section
- if (sectionId === 'setup') {
- console.log('🧭 Entering setup section - initializing aside navigation');
- setTimeout(() => {
- new AsideNavigation();
- }, 50); // Small delay to ensure DOM is ready
- }
- 
- // Additional debugging - check computed styles
- const computedStyle = window.getComputedStyle(targetElement);
- console.log(`🎨 Computed display style:`, computedStyle.display);
- console.log(`🎨 Computed grid-template-columns:`, computedStyle.gridTemplateColumns);
- } else {
- console.error(`❌ Coursebuilder element not found: ${sectionId}`);
- }
+   // Get all coursebuilder sections
+   const allSections = document.querySelectorAll('[class*="coursebuilder__"]');
+
+   // Hide all coursebuilder elements
+   this.sections.forEach(element => {
+     element.classList.remove('coursebuilder__setup--active', 'coursebuilder__create--active', 'coursebuilder__preview--active', 'coursebuilder__launch--active');
+     element.setAttribute('aria-hidden', 'true');
+   });
+
+   // Show target coursebuilder element
+   const targetElement = document.querySelector(`.coursebuilder__${sectionId}`);
+   if (targetElement) {
+     targetElement.classList.add(`coursebuilder__${sectionId}--active`);
+     targetElement.setAttribute('aria-hidden', 'false');
+
+     // Initialize aside navigation when entering setup section
+     if (sectionId === 'setup') {
+       setTimeout(() => {
+       new AsideNavigation();
+       }, 50); // Small delay to ensure DOM is ready
+     }
+
+     // Additional debugging - check computed styles
+     const computedStyle = window.getComputedStyle(targetElement);
+   }
  }
 
  private navigateNext(): void {
@@ -222,40 +202,33 @@ export class AsideNavigation {
  private boundHandleLinkClick!: (e: Event) => void;
 
  constructor() {
- // Only initialize if we're in the setup section
- if (!this.isInSetupSection()) {
- console.log('🧭 Not in setup section - skipping aside navigation');
- return;
- }
+   // Only initialize if we're in the setup section
+   if (!this.isInSetupSection()) {
+     return;
+   }
 
- console.log('🧭 Initializing Aside Navigation...');
- 
- this.asideLinks = document.querySelectorAll('.link--menu[data-section]');
- this.contentSections = document.querySelectorAll('.content__article[id]');
- this.boundHandleLinkClick = this.handleLinkClick.bind(this);
+   this.asideLinks = document.querySelectorAll('.link--menu[data-section]');
+   this.contentSections = document.querySelectorAll('.content__article[id]');
+   this.boundHandleLinkClick = this.handleLinkClick.bind(this);
 
- this.init();
+   this.init();
  }
 
     private isInSetupSection(): boolean {
         const setupElement = document.querySelector('.coursebuilder__setup');
         return setupElement !== null;
     } private init(): void {
- if (this.asideLinks.length === 0) {
- console.warn("No aside links found - aside navigation disabled");
- return;
- }
+  if (this.asideLinks.length === 0) {
+    return;
+  }
 
- if (this.contentSections.length === 0) {
- console.warn("No content sections found - aside navigation disabled");
- return;
- }
+  if (this.contentSections.length === 0) {
+    return;
+  }
 
- console.log('🧭 Aside navigation initializing with', this.asideLinks.length, 'links and', this.contentSections.length, 'sections');
-
- this.bindEvents();
- this.restoreActiveSection();
- }
+  this.bindEvents();
+  this.restoreActiveSection();
+}
 
  private bindEvents(): void {
  this.asideLinks.forEach((link: HTMLAnchorElement) => {
@@ -264,20 +237,17 @@ export class AsideNavigation {
  }
 
  private handleLinkClick(e: Event): void {
- e.preventDefault();
- 
- const target = e.currentTarget as HTMLAnchorElement;
- const targetSection = target.getAttribute("data-section");
+   e.preventDefault();
 
- if (!targetSection) {
- console.error("No data-section attribute found");
- return;
- }
+   const target = e.currentTarget as HTMLAnchorElement;
+   const targetSection = target.getAttribute("data-section");
 
- console.log('🧭 Aside link clicked:', target.textContent, 'Target section:', targetSection);
+   if (!targetSection) {
+     return;
+   }
 
- this.activateSection(target, targetSection);
- this.saveActiveSection(targetSection);
+   this.activateSection(target, targetSection);
+   this.saveActiveSection(targetSection);
  }
 
  private activateSection(activeLink: HTMLAnchorElement, targetSectionId: string): void {
@@ -287,15 +257,13 @@ export class AsideNavigation {
  // First, validate that the target section exists
  const targetSection = document.getElementById(targetSectionId);
  if (!targetSection) {
- console.error("Cannot activate section - target section not found:", targetSectionId);
- return; // Fail fast - don't change anything if target doesn't exist
+   return; // Fail fast - don't change anything if target doesn't exist
  }
  
  // If we're already on the target section, do nothing (prevents double-click issues)
  if (activeLink.classList.contains('link--menu-active') && 
      targetSection.classList.contains('content__article--active')) {
- console.log('🎯 Section already active, no changes needed:', targetSectionId);
- return;
+   return;
  }
  
  // Only now that we've validated everything, remove current active states
@@ -316,29 +284,24 @@ export class AsideNavigation {
  }
 
  private setActiveStates(activeLink: HTMLAnchorElement, targetSection: HTMLElement): void {
- // Accept the actual element instead of searching for it again
- activeLink.classList.add('link--menu-active');
- targetSection.classList.add('content__article--active');
- console.log('🎯 Successfully activated article:', targetSection.id);
+   // Accept the actual element instead of searching for it again
+   activeLink.classList.add('link--menu-active');
+   targetSection.classList.add('content__article--active');
  }
 
  private restoreActiveSection(): void {
- const savedSection = localStorage.getItem(this.STORAGE_KEY);
+   const savedSection = localStorage.getItem(this.STORAGE_KEY);
 
- if (savedSection) {
- console.log('🧭 Restoring saved section:', savedSection);
- const savedLink = document.querySelector(`[data-section="${savedSection}"]`) as HTMLAnchorElement;
- 
- if (savedLink && document.getElementById(savedSection)) {
- this.activateSection(savedLink, savedSection);
- return;
- } else {
- console.warn("Saved section not found, setting default");
- }
- }
- 
- console.log('🧭 No saved section, setting default');
- this.setDefaultSection();
+   if (savedSection) {
+     const savedLink = document.querySelector(`[data-section="${savedSection}"]`) as HTMLAnchorElement;
+
+     if (savedLink && document.getElementById(savedSection)) {
+     this.activateSection(savedLink, savedSection);
+     return;
+     }
+   }
+
+   this.setDefaultSection();
  }
 
  private setDefaultSection(): void {
@@ -347,22 +310,18 @@ export class AsideNavigation {
  const firstSectionId = firstLink?.getAttribute("data-section");
 
  if (firstLink && firstSectionId) {
- console.log('🎯 Setting default section:', firstSectionId);
- this.activateSection(firstLink, firstSectionId);
+   this.activateSection(firstLink, firstSectionId);
  } else {
- console.error('🚨 No valid first link found - navigation may be broken');
- // As a last resort, try to activate the first article directly
- const firstArticle = this.contentSections[0];
- if (firstArticle) {
- firstArticle.classList.add('content__article--active');
- console.log('🆘 Emergency fallback: activated first article directly:', firstArticle.id);
- }
+   // As a last resort, try to activate the first article directly
+   const firstArticle = this.contentSections[0];
+   if (firstArticle) {
+     firstArticle.classList.add('content__article--active');
+   }
  }
  }
 
  private saveActiveSection(sectionId: string): void {
- localStorage.setItem(this.STORAGE_KEY, sectionId);
- console.log('🧭 Saved active section to localStorage:', sectionId);
+   localStorage.setItem(this.STORAGE_KEY, sectionId);
  }
 
  public destroy(): void {
@@ -439,7 +398,6 @@ export class ModalHandler {
   public showModal(modalId: string): void {
     const modal = document.getElementById(modalId);
     if (!modal) {
-      console.error(`Modal not found: ${modalId}`);
       return;
     }
 
@@ -452,8 +410,6 @@ export class ModalHandler {
 
     // Prevent body scroll
     document.body.style.overflow = 'hidden';
-
-    console.log(`🔄 Modal shown: ${modalId}`);
   }
 
   public hideModal(): void {
@@ -464,8 +420,6 @@ export class ModalHandler {
 
     // Restore body scroll
     document.body.style.overflow = '';
-
-    console.log('🔄 Modal hidden');
   }
 
   public static getInstance(): ModalHandler {

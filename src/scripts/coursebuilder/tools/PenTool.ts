@@ -46,57 +46,41 @@ export class PenTool extends BaseTool {
  }
 
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
- // 🔒 CRITICAL: Only respond if this tool is active
- if (!this.isActive) {
-   console.log('✏️ PEN: Ignoring pointer down - tool not active');
+  // 🔒 CRITICAL: Only respond if this tool is active
+  if (!this.isActive) {
    return;
- }
+  }
 
- console.log(
- `✏️ PEN: Node placement at (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
- );
- console.log(
- `✏️ PEN: Settings - Color: ${this.settings.color}, Size: ${this.settings.size}`,
- );
+  const localPoint = container.toLocal(event.global);
 
- const localPoint = container.toLocal(event.global);
- 
- // 🚫 MARGIN PROTECTION: Prevent creation in margin areas
- const canvasBounds = this.manager.getCanvasBounds();
- if (!BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
- console.log(`✏️ PEN: 🚫 Click in margin area rejected - point (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)}) outside content area`);
- return; // Exit early - no creation allowed in margins
- }
- 
- // Point is in content area, safe to proceed
- const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
- 
- // Log if point was adjusted
- if (Math.abs(localPoint.x - clampedPoint.x) > 1 || Math.abs(localPoint.y - clampedPoint.y) > 1) {
- console.log(
- `✏️ PEN: 🎯 Point clamped from (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)}) to (${Math.round(clampedPoint.x)}, ${Math.round(clampedPoint.y)})`
- );
- }
- 
- this.lastMousePosition.copyFrom(clampedPoint);
+  // 🚫 MARGIN PROTECTION: Prevent creation in margin areas
+  const canvasBounds = this.manager.getCanvasBounds();
+  if (!BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
+   return; // Exit early - no creation allowed in margins
+  }
 
- // Check if we're continuing an existing path or starting a new one
- if (this.currentPath && this.currentPath.nodes.length > 0) {
- // Check if clicking near the first node to close the path
- const firstNode = this.currentPath.nodes[0];
- const distance = Math.sqrt(
- Math.pow(clampedPoint.x - firstNode.position.x, 2) +
- Math.pow(clampedPoint.y - firstNode.position.y, 2),
- );
+  // Point is in content area, safe to proceed
+  const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
 
- if (distance <= PEN_CONSTANTS.PATH_CLOSE_TOLERANCE) {
- this.completePath(true);
- return;
- }
- }
+  this.lastMousePosition.copyFrom(clampedPoint);
 
- // Add new node to current path or start new path
- this.addNodeToPath(clampedPoint, container);
+  // Check if we're continuing an existing path or starting a new one
+  if (this.currentPath && this.currentPath.nodes.length > 0) {
+  // Check if clicking near the first node to close the path
+  const firstNode = this.currentPath.nodes[0];
+  const distance = Math.sqrt(
+  Math.pow(clampedPoint.x - firstNode.position.x, 2) +
+  Math.pow(clampedPoint.y - firstNode.position.y, 2),
+  );
+
+  if (distance <= PEN_CONSTANTS.PATH_CLOSE_TOLERANCE) {
+  this.completePath(true);
+  return;
+  }
+  }
+
+  // Add new node to current path or start new path
+  this.addNodeToPath(clampedPoint, container);
  }
 
  onPointerMove(event: FederatedPointerEvent, container: Container): void {
@@ -126,82 +110,75 @@ export class PenTool extends BaseTool {
  }
 
  private addNodeToPath(position: Point, container: Container): void {
- if (!this.currentPath) {
- // Start new path
- this.currentPath = {
- nodes: [],
- pathGraphics: new Graphics(),
- isComplete: false,
- settings: { ...this.settings },
- };
+  if (!this.currentPath) {
+  // Start new path
+  this.currentPath = {
+  nodes: [],
+  pathGraphics: new Graphics(),
+  isComplete: false,
+  settings: { ...this.settings },
+  };
 
- this.currentPath.pathGraphics.eventMode = "static";
- container.addChild(this.currentPath.pathGraphics);
- }
+  this.currentPath.pathGraphics.eventMode = "static";
+  container.addChild(this.currentPath.pathGraphics);
+  }
 
- // Create node graphics
- const nodeGraphics = new Graphics();
- nodeGraphics.circle(0, 0, PEN_CONSTANTS.NODE_SIZE);
- nodeGraphics.fill({ color: PEN_CONSTANTS.NODE_COLOR });
- nodeGraphics.stroke({
- width: PEN_CONSTANTS.NODE_STROKE_WIDTH,
- color: 0xffffff,
- });
- nodeGraphics.position.set(position.x, position.y);
- nodeGraphics.eventMode = "static";
+  // Create node graphics
+  const nodeGraphics = new Graphics();
+  nodeGraphics.circle(0, 0, PEN_CONSTANTS.NODE_SIZE);
+  nodeGraphics.fill({ color: PEN_CONSTANTS.NODE_COLOR });
+  nodeGraphics.stroke({
+  width: PEN_CONSTANTS.NODE_STROKE_WIDTH,
+  color: 0xffffff,
+  });
+  nodeGraphics.position.set(position.x, position.y);
+  nodeGraphics.eventMode = "static";
 
- container.addChild(nodeGraphics);
+  container.addChild(nodeGraphics);
 
- // Create node object
- const node: VectorNode = {
- position: position.clone(),
- graphics: nodeGraphics,
- };
+  // Create node object
+  const node: VectorNode = {
+  position: position.clone(),
+  graphics: nodeGraphics,
+  };
 
- this.currentPath.nodes.push(node);
- console.log(
- `✏️ PEN: Added node ${this.currentPath.nodes.length} at (${Math.round(position.x)}, ${Math.round(position.y)})`,
- );
+  this.currentPath.nodes.push(node);
 
- // Update path graphics
- this.updatePathGraphics();
+  // Update path graphics
+  this.updatePathGraphics();
 
- // Update preview line
- this.updatePreviewLine(container);
+  // Update preview line
+  this.updatePreviewLine(container);
  }
 
  private updatePathGraphics(): void {
- if (!this.currentPath || this.currentPath.nodes.length === 0) return;
+  if (!this.currentPath || this.currentPath.nodes.length === 0) return;
 
- const path = this.currentPath.pathGraphics;
- const color = hexToNumber(this.currentPath.settings.color);
+  const path = this.currentPath.pathGraphics;
+  const color = hexToNumber(this.currentPath.settings.color);
 
- path.clear();
+  path.clear();
 
- if (this.currentPath.nodes.length === 1) {
- // Single node - just show the node
- return;
- }
+  if (this.currentPath.nodes.length === 1) {
+  // Single node - just show the node
+  return;
+  }
 
- // Draw lines between nodes
- const firstNode = this.currentPath.nodes[0];
- path.moveTo(firstNode.position.x, firstNode.position.y);
+  // Draw lines between nodes
+  const firstNode = this.currentPath.nodes[0];
+  path.moveTo(firstNode.position.x, firstNode.position.y);
 
- for (let i = 1; i < this.currentPath.nodes.length; i++) {
- const node = this.currentPath.nodes[i];
- path.lineTo(node.position.x, node.position.y);
- }
+  for (let i = 1; i < this.currentPath.nodes.length; i++) {
+  const node = this.currentPath.nodes[i];
+  path.lineTo(node.position.x, node.position.y);
+  }
 
- path.stroke({
- width: this.currentPath.settings.size,
- color: color,
- cap: "round",
- join: "round",
- });
-
- console.log(
- `✏️ PEN: Updated path graphics with ${this.currentPath.nodes.length} nodes`,
- );
+  path.stroke({
+  width: this.currentPath.settings.size,
+  color: color,
+  cap: "round",
+  join: "round",
+  });
  }
 
  private updatePreviewLine(container: Container): void {
@@ -264,26 +241,25 @@ export class PenTool extends BaseTool {
  * Show green hover indicator for path completion
  */
  private showHoverIndicator(position: Point, container: Container): void {
- this.hoverIndicator = new Graphics();
- 
- // Create a subtle, desaturated green circle (no blinking)
- this.hoverIndicator.circle(0, 0, PEN_CONSTANTS.NODE_SIZE + 2);
- this.hoverIndicator.fill({ 
- color: 0x4ade80, // Subtle green (more desaturated)
- alpha: 0.6 // More subtle opacity
- });
- this.hoverIndicator.stroke({
- width: 2,
- color: 0x22c55e, // Slightly darker green border (desaturated)
- alpha: 0.8
- });
- 
- this.hoverIndicator.position.set(position.x, position.y);
- 
- // No animation - static indicator
- 
- container.addChild(this.hoverIndicator);
- console.log('✏️ PEN: Showing subtle green completion indicator');
+  this.hoverIndicator = new Graphics();
+
+  // Create a subtle, desaturated green circle (no blinking)
+  this.hoverIndicator.circle(0, 0, PEN_CONSTANTS.NODE_SIZE + 2);
+  this.hoverIndicator.fill({
+  color: 0x4ade80, // Subtle green (more desaturated)
+  alpha: 0.6 // More subtle opacity
+  });
+  this.hoverIndicator.stroke({
+  width: 2,
+  color: 0x22c55e, // Slightly darker green border (desaturated)
+  alpha: 0.8
+  });
+
+  this.hoverIndicator.position.set(position.x, position.y);
+
+  // No animation - static indicator
+
+  container.addChild(this.hoverIndicator);
  }
 
  /**
@@ -303,21 +279,17 @@ export class PenTool extends BaseTool {
  if (!this.currentPath) return;
 
  if (closeShape && this.currentPath.nodes.length >= 3) {
- // Close the shape by connecting last node to first
- const firstNode = this.currentPath.nodes[0];
- const path = this.currentPath.pathGraphics;
+  // Close the shape by connecting last node to first
+  const firstNode = this.currentPath.nodes[0];
+  const path = this.currentPath.pathGraphics;
 
- path.lineTo(firstNode.position.x, firstNode.position.y);
- path.stroke({
- width: this.currentPath.settings.size,
- color: hexToNumber(this.currentPath.settings.color),
- cap: "round",
- join: "round",
- });
-
- console.log(
- `✏️ PEN: Closed shape with ${this.currentPath.nodes.length} nodes`,
- );
+  path.lineTo(firstNode.position.x, firstNode.position.y);
+  path.stroke({
+  width: this.currentPath.settings.size,
+  color: hexToNumber(this.currentPath.settings.color),
+  cap: "round",
+  join: "round",
+  });
  }
 
  // Remove individual node graphics since the path is complete

@@ -47,25 +47,15 @@ export class ShapesTool extends BaseTool {
         this.boundKeyDown = this.handleKeyDown.bind(this);
         this.boundKeyUp = this.handleKeyUp.bind(this);
         this.bindKeyboardEvents();
-
-        console.log('🔶 SHAPES: Initialized with modular shape drawing system');
-        console.log(`🔶 SHAPES: Default settings - Color: ${this.settings.color}, Stroke: ${this.settings.strokeWidth}px, Fill: ${this.settings.fillEnabled ? 'enabled' : 'disabled'}`);
     }
 
     onPointerDown(event: FederatedPointerEvent, container: Container): void {
         // 🔒 CRITICAL: Only respond if this tool is active
         if (!this.isActive) {
-            console.log('🔶 SHAPES: Ignoring pointer down - tool not active');
             return;
         }
 
         this.isDrawing = true;
-        console.log(
-            `🔶 SHAPES: Started drawing ${this.settings.shapeType} at (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
-        );
-        console.log(
-            `🔶 SHAPES: Settings - Color: ${this.settings.color}, Stroke: ${this.settings.strokeWidth}px, Fill: ${this.settings.fillEnabled ? this.settings.fillColor : "none"}`,
-        );
 
         // Use local coordinates relative to the container
         const localPoint = container.toLocal(event.global);
@@ -73,7 +63,6 @@ export class ShapesTool extends BaseTool {
         // 🚫 MARGIN PROTECTION: Prevent creation in margin areas
         const canvasBounds = this.manager.getCanvasBounds();
         if (!BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
-            console.log(`🔷 SHAPES: 🚫 Click in margin area rejected - point (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)}) outside content area`);
             return; // Exit early - no creation allowed in margins
         }
 
@@ -94,9 +83,6 @@ export class ShapesTool extends BaseTool {
         this.configureDrawerSettings();
 
         container.addChild(this.currentShape);
-        console.log(
-            `🔶 SHAPES: Professional ${this.settings.shapeType} graphics object created`,
-        );
     }
 
     onPointerMove(event: FederatedPointerEvent, container: Container): void {
@@ -131,16 +117,10 @@ export class ShapesTool extends BaseTool {
         if (this.isDrawing && this.currentShape) {
             const width = this.currentPoint.x - this.startPoint.x;
             const height = this.currentPoint.y - this.startPoint.y;
-            console.log(
-                `🔶 SHAPES: Finished drawing professional ${this.settings.shapeType}${this.isProportional ? " (proportional)" : ""} - Final size: ${Math.round(Math.abs(width))}x${Math.round(Math.abs(height))}`,
-            );
 
             // Log the final shape details
-            if (this.currentShape.parent) {
-                console.log(`🔶 SHAPES: Shape added to parent with ${this.currentShape.parent.children.length} total children`);
-            } else {
-                console.warn(`🔶 SHAPES: Shape not added to any parent!`);
-            }
+            if (this.currentShape.parent)
+                {}
         }
         this.isDrawing = false;
         this.currentShape = null;
@@ -217,7 +197,6 @@ export class ShapesTool extends BaseTool {
         // Get the appropriate drawer
         const drawer = this.drawerFactory.getDrawer(this.settings.shapeType);
         if (!drawer) {
-            console.warn(`🔶 SHAPES: No drawer found for shape type: ${this.settings.shapeType}`);
             return;
         }
 
@@ -237,8 +216,6 @@ export class ShapesTool extends BaseTool {
             fillStyle = { color: hexToNumber(this.settings.fillColor) };
         }
 
-        console.log(`🔶 SHAPES: Drawing ${this.settings.shapeType} - Width: ${Math.round(context.width)}, Height: ${Math.round(context.height)}, Stroke: ${strokeStyle.width}px, Color: ${this.settings.color}`);
-
         // Draw the shape using the appropriate drawer
         drawer.draw(context, strokeStyle, fillStyle);
     }
@@ -248,7 +225,6 @@ export class ShapesTool extends BaseTool {
     ): void {
         const previousType = this.settings.shapeType;
         this.settings.shapeType = shapeType;
-        console.log(`🔶 SHAPES: Shape type changed from ${previousType} to ${shapeType}`);
     }
 
     setCornerRadius(radius: number): void {
@@ -261,19 +237,11 @@ export class ShapesTool extends BaseTool {
 
     toggleFill(): void {
         this.settings.fillEnabled = !this.settings.fillEnabled;
-        console.log(
-            `🔶 SHAPES: Fill ${this.settings.fillEnabled ? "enabled" : "disabled"}`,
-        );
     }
 
     updateSettings(settings: Partial<ShapesSettings>): void {
         const previousShapeType = this.settings.shapeType;
         this.settings = { ...this.settings, ...settings };
-
-        // Log shape type changes
-        if (settings.shapeType && settings.shapeType !== previousShapeType) {
-            console.log(`🔶 SHAPES: Shape type changed from ${previousShapeType} to ${settings.shapeType}`);
-        }
     }
 
     // Get available colors for UI

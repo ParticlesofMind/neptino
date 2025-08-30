@@ -121,26 +121,24 @@ export class ToolManager {
  }
 
  public setActiveTool(toolName: string): boolean {
-   const newTool = this.tools.get(toolName);
-   if (!newTool) {
-     console.warn(`❌ Tool '${toolName}' not found`);
-     return false;
-   }
+     const newTool = this.tools.get(toolName);
+     if (!newTool) {
+         return false;
+     }
 
-   // Deactivate current tool
-   if (this.activeTool) {
-     this.activeTool.onDeactivate();
-   }
+     // Deactivate current tool
+     if (this.activeTool) {
+       this.activeTool.onDeactivate();
+     }
 
-   // Activate new tool
-   this.activeTool = newTool;
-   this.activeTool.onActivate();
+     // Activate new tool
+     this.activeTool = newTool;
+     this.activeTool.onActivate();
 
-   // Update tool settings
-   this.updateToolSettings(toolName);
+     // Update tool settings
+     this.updateToolSettings(toolName);
 
-   console.log(`🔧 Tool set to: ${toolName}`);
-   return true;
+     return true;
  } public getActiveTool(): Tool | null {
  return this.activeTool;
  }
@@ -154,11 +152,8 @@ export class ToolManager {
  container: Container,
  ): void {
  if (this.activeTool) {
- console.log(
- `👆 Pointer DOWN - Tool: ${this.activeTool.name}, Position: (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
- );
- this.currentContainer = container; // Store current container for boundary access
- this.activeTool.onPointerDown(event, container);
+     this.currentContainer = container; // Store current container for boundary access
+     this.activeTool.onPointerDown(event, container);
  }
  }
 
@@ -173,10 +168,7 @@ export class ToolManager {
    }
  } public onPointerUp(event: FederatedPointerEvent, container: Container): void {
  if (this.activeTool) {
- console.log(
- `👆 Pointer UP - Tool: ${this.activeTool.name}, Position: (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
- );
- this.activeTool.onPointerUp(event, container);
+     this.activeTool.onPointerUp(event, container);
  }
  }
 

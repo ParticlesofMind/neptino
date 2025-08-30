@@ -7,23 +7,15 @@ import { initializeGlobalNavigation, initializeDashboardNavigation } from './nav
 import { initAuth, AuthFormHandler } from './backend/auth/auth';
 import './backend/courses/settings/pageSetupHandler';
 import './coursebuilder/canvasInit'; // Initialize canvas system
-// import PageTransitions from './navigation/PageTransitions'; // DISABLED
-
-// Initialize global navigation system
-console.log('📱 Initializing Neptino app...');
 
 // Initialize authentication system
 initAuth();
 
 // Initialize global navigation
 initializeGlobalNavigation();
-console.log('🧭 Global navigation initialized');
 
 // Initialize dashboard navigation if present
 const dashboardNav = initializeDashboardNavigation();
-if (dashboardNav) {
-  console.log('📊 Dashboard navigation initialized');
-}
 
 // Initialize page transitions for smooth navigation
 // new PageTransitions(); // DISABLED - causing script initialization issues
@@ -36,8 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
  window.location.pathname.includes('/pages/shared/signup.html');
  
  if (isAuthPage) {
- new AuthFormHandler();
- console.log('🔐 Auth form handler initialized');
+   new AuthFormHandler();
  }
 
  // Initialize page setup handler for coursebuilder pages
@@ -51,28 +42,16 @@ document.addEventListener('DOMContentLoaded', () => {
      
      if (courseId) {
        pageSetupHandler.setCourseId(courseId);
-       console.log('📄 Page setup handler initialized with course ID:', courseId);
-     } else {
-       console.log('📄 Page setup handler initialized (no course ID yet)');
      }
-   }).catch(error => {
-     console.error('Failed to initialize page setup handler:', error);
-   });
+   }).catch(error => {});
  }
 });
 
-// Global app initialization
-console.log('📱 Neptino app initialized');
-
 // Global error handling
-window.addEventListener('error', (event) => {
- console.error('Global error:', event.error);
-});
+window.addEventListener('error', (event) => {});
 
 // Global unhandled promise rejection handling
-window.addEventListener('unhandledrejection', (event) => {
- console.error('Unhandled promise rejection:', event.reason);
-});
+window.addEventListener('unhandledrejection', (event) => {});
 
 // Export for module system
 export {};

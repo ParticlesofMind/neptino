@@ -35,8 +35,7 @@ export async function signUp(
 
  return { success: true };
  } catch (error) {
- console.error("Unexpected error during sign up:", error);
- return { success: false, error: "An unexpected error occurred" };
+  return { success: false, error: "An unexpected error occurred" };
  }
 }
 
@@ -50,24 +49,16 @@ export async function signIn(email: string, password: string) {
  });
 
  if (error) {
- console.error("Sign in error:", error);
- return { success: false, error: error.message };
+  return { success: false, error: error.message };
  }
 
  if (data.user) {
- currentUser = data.user;
-
- // Don't redirect immediately - let the auth state listener handle it
- // This prevents the "connection refused" issue
- console.log(
- "✅ Sign in successful - auth state listener will handle redirect",
- );
+  currentUser = data.user;
  }
 
  return { success: true };
  } catch (error) {
- console.error("Unexpected error during sign in:", error);
- return { success: false, error: "An unexpected error occurred" };
+  return { success: false, error: "An unexpected error occurred" };
  }
 }
 
@@ -108,9 +99,8 @@ export function redirectUser(userRole: string) {
  window.location.href = studentUrl;
  break;
  default:
- console.warn("❌ Unknown role, defaulting to student:", userRole);
- const defaultUrl = `${origin}/src/pages/student/home.html`;
- window.location.href = defaultUrl;
+  const defaultUrl = `${origin}/src/pages/student/home.html`;
+  window.location.href = defaultUrl;
  }
 }
 
@@ -119,32 +109,28 @@ export function initAuth() {
  supabase.auth.onAuthStateChange(async (event, session) => {
 
  if (event === "SIGNED_IN" && session?.user) {
- currentUser = session.user;
+  currentUser = session.user;
 
- // Check current page context - ONLY redirect from actual signin/signup pages
- const currentPath = window.location.pathname;
+  // Check current page context - ONLY redirect from actual signin/signup pages
+  const currentPath = window.location.pathname;
 
- // ONLY redirect from signin and signup pages - nowhere else!
- const shouldRedirect =
- currentPath.includes("/pages/shared/signin.html") ||
- currentPath.includes("/pages/shared/signup.html");
+  // ONLY redirect from signin and signup pages - nowhere else!
+  const shouldRedirect =
+  currentPath.includes("/pages/shared/signin.html") ||
+  currentPath.includes("/pages/shared/signup.html");
 
- if (!shouldRedirect) {
- return;
- }
+  if (!shouldRedirect) {
+  return;
+  }
 
- console.log(
- "📍 On signin/signup page, proceeding with role-based redirect",
- );
+  // Get role from user metadata - this is where the role is actually stored!
+  const userMetadata = session.user.user_metadata || {};
+  const userRole = userMetadata.user_role || "student";
 
- // Get role from user metadata - this is where the role is actually stored!
- const userMetadata = session.user.user_metadata || {};
- const userRole = userMetadata.user_role || "student";
-
- // Add a small delay to ensure everything is ready
- setTimeout(() => {
- redirectUser(userRole);
- }, 500);
+  // Add a small delay to ensure everything is ready
+  setTimeout(() => {
+  redirectUser(userRole);
+  }, 500);
  } else if (event === "SIGNED_OUT") {
  currentUser = null;
 
@@ -156,11 +142,7 @@ export function initAuth() {
  currentPath.includes("/pages/admin/");
 
  if (isProtectedPage) {
- console.log(
- "📍 On protected page after sign out, redirecting to signin",
- );
- window.location.href = "/src/pages/shared/signin.html";
- } else {
+  window.location.href = "/src/pages/shared/signin.html";
  }
  }
  });
@@ -237,20 +219,16 @@ export class AuthFormHandler {
  submitButton.disabled = true;
 
  try {
- console.log('🔐 Attempting to sign in with:', email);
- 
- const result = await signIn(email, password);
+  const result = await signIn(email, password);
 
- if (result.success) {
- this.showMessage('Sign in successful! Redirecting...', 'success');
- // The auth state listener in auth.ts will handle the redirect
- } else {
- this.showMessage(result.error || 'Sign in failed', 'error');
- console.error('❌ Sign in failed:', result.error);
- }
+  if (result.success) {
+  this.showMessage('Sign in successful! Redirecting...', 'success');
+  // The auth state listener in auth.ts will handle the redirect
+  } else {
+   this.showMessage(result.error || 'Sign in failed', 'error');
+  }
  } catch (error) {
- console.error('❌ Sign in error:', error);
- this.showMessage('An unexpected error occurred', 'error');
+  this.showMessage('An unexpected error occurred', 'error');
  } finally {
  // Restore button state
  submitButton.textContent = originalText;
@@ -289,21 +267,17 @@ export class AuthFormHandler {
  submitButton.disabled = true;
 
  try {
- console.log('📝 Attempting to sign up:', { email, fullName, role });
- 
- const result = await signUp(email, password, fullName, role);
+  const result = await signUp(email, password, fullName, role);
 
- if (result.success) {
- this.showMessage('Account created successfully! Please check your email to verify your account.', 'success');
- // Clear form
- form.reset();
- } else {
- this.showMessage(result.error || 'Account creation failed', 'error');
- console.error('❌ Sign up failed:', result.error);
- }
+  if (result.success) {
+  this.showMessage('Account created successfully! Please check your email to verify your account.', 'success');
+  // Clear form
+  form.reset();
+  } else {
+   this.showMessage(result.error || 'Account creation failed', 'error');
+  }
  } catch (error) {
- console.error('❌ Sign up error:', error);
- this.showMessage('An unexpected error occurred', 'error');
+  this.showMessage('An unexpected error occurred', 'error');
  } finally {
  // Restore button state
  submitButton.textContent = originalText;
@@ -345,7 +319,6 @@ document.addEventListener('DOMContentLoaded', () => {
  // Only initialize on auth pages
  if (window.location.pathname.includes('/pages/shared/signin.html') || 
  window.location.pathname.includes('/pages/shared/signup.html')) {
- new AuthFormHandler();
- console.log('🔐 Auth form handler initialized');
+  new AuthFormHandler();
  }
 });

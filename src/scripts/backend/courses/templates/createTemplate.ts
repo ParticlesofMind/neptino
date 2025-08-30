@@ -44,7 +44,6 @@ export class TemplateManager {
       "create-template-modal",
     ) as HTMLElement;
     if (!modal) {
-      console.error("Create template modal not found");
       return;
     }
 
@@ -174,8 +173,6 @@ export class TemplateManager {
       // Update the preview
       this.updateTemplatePreview();
     } catch (error) {
-      console.error("Failed to update template field:", error);
-
       // Show error status
       const statusEl = document.getElementById("template-save-status");
       if (statusEl) {
@@ -198,7 +195,6 @@ export class TemplateManager {
       // For now, just show a success message
       alert("Template changes saved successfully!");
     } catch (error) {
-      console.error("Failed to save template changes:", error);
       alert("Failed to save template changes. Please try again.");
     }
   }
@@ -330,13 +326,11 @@ export class TemplateManager {
         .single();
 
       if (error) {
-        console.error("Error creating template:", error);
         throw error;
       }
 
       return data.id;
     } catch (error) {
-      console.error("Failed to create template:", error);
       return null;
     }
   }
@@ -358,9 +352,6 @@ export class TemplateManager {
         if (window.templateConfigHandler) {
           window.templateConfigHandler.init();
         } else {
-          console.warn(
-            "Template config handler not available, showing basic interface",
-          );
           this.initializeBasicInterface();
         }
 
@@ -371,8 +362,6 @@ export class TemplateManager {
           this.initializeEmptyTemplate();
         }
       }, 100);
-    } else {
-      console.error("Template container not found");
     }
   }
 
@@ -383,10 +372,6 @@ export class TemplateManager {
     try {
       // If we have a currently loaded template, display it instead of the placeholder
       if (this.currentlyLoadedTemplateData) {
-        console.log(
-          "Displaying currently loaded template:",
-          this.currentlyLoadedTemplateData,
-        );
         this.displayTemplateBlocks(this.currentlyLoadedTemplateData);
         this.updateTemplatePreview(this.currentlyLoadedTemplateData);
         return;
@@ -412,8 +397,6 @@ export class TemplateManager {
       }
 
       this.displayTemplateList(data || []);
-    } catch (error) {
-      console.error("Failed to load templates:", error);
     }
   }
 
@@ -463,8 +446,6 @@ export class TemplateManager {
       }
 
       this.updateTemplatePreview(data);
-    } catch (error) {
-      console.error("Failed to preview template:", error);
     }
   }
 
@@ -552,13 +533,8 @@ export class TemplateManager {
           .update({ course_id: courseId })
           .eq("id", templateId);
 
-        if (updateError) {
-          console.error(
-            "Failed to associate template with course:",
-            updateError,
-          );
-        } else {
-        }
+        if (updateError)
+          {}
       }
 
       // Store the loaded template data
@@ -570,8 +546,6 @@ export class TemplateManager {
 
       // Update the preview area with template content
       this.updateTemplatePreview(data.template_data);
-    } catch (error) {
-      console.error("Failed to load template:", error);
     }
   }
 
@@ -608,18 +582,11 @@ export class TemplateManager {
         .single();
 
       if (error && error.code !== "PGRST116") {
-        // PGRST116 = no rows found
-        console.error("Error loading course template:", error);
         this.loadExistingTemplates();
         return;
       }
 
       if (template) {
-        console.log(
-          "Found existing template for course:",
-          template.template_id,
-        );
-
         // Load the template
         this.currentlyLoadedTemplateId = template.id; // Store UUID for database operations
         this.currentlyLoadedTemplateData = template;
@@ -633,7 +600,6 @@ export class TemplateManager {
         this.loadExistingTemplates();
       }
     } catch (error) {
-      console.error("Failed to load course template:", error);
       // Fallback to showing template list
       this.loadExistingTemplates();
     }
@@ -741,7 +707,6 @@ export class TemplateManager {
   static displayTemplateBlocks(templateData: any): void {
     const configArea = document.getElementById('template-config-content');
     if (!configArea) {
-      console.error('Template config content area not found');
       return;
     }
 
@@ -899,7 +864,6 @@ export class TemplateManager {
   static updateTemplatePreview(templateData?: any): void {
     const previewContainer = document.getElementById('template-preview-content');
     if (!previewContainer) {
-      console.error('Template preview content area not found');
       return;
     }
 
@@ -1212,10 +1176,7 @@ export class TemplateManager {
       const tempDiv = document.createElement("div");
       tempDiv.innerHTML = block.content;
       const textContent = tempDiv.textContent || tempDiv.innerText || "";
-      return (
-        textContent.replace(/\{\{.*?\}\}/g, "[Dynamic Content]") ||
-        this.getDefaultBlockContent(block.type)
-      );
+      return (textContent.replace(/\{\{.*?\}\}/g, "[Dynamic Content]") || this.getDefaultBlockContent(block.type));
     }
 
     return this.getDefaultBlockContent(block.type);
@@ -1238,10 +1199,6 @@ export class TemplateManager {
  * Show block configuration modal/interface
  */
   static showBlockConfiguration(blockType: string, templateId?: string): void {
-    console.log(
-      `Showing configuration for ${blockType} block${templateId ? ` of template ${templateId}` : ""}`,
-    );
-
     // Create an elegant modal for block configuration
     const modalHtml = `
  <div class="modal modal--active" id="block-config-modal">
@@ -1425,9 +1382,6 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => {
           TemplateManager.loadExistingTemplates();
         }, 500);
-      } else {
-        console.error("Failed to create template");
-        // You could show an error message to the user here
       }
     });
   }

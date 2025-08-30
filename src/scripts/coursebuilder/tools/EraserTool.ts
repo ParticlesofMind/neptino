@@ -26,24 +26,17 @@ export class EraserTool extends BaseTool {
  }
 
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
- // 🔒 CRITICAL: Only respond if this tool is active
- if (!this.isActive) {
-   console.log('🗑️ ERASER: Ignoring pointer down - tool not active');
+  // 🔒 CRITICAL: Only respond if this tool is active
+  if (!this.isActive) {
    return;
- }
+  }
 
- this.isErasing = true;
- console.log(
- `🗑️ ERASER: Started precision erasing at (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
- );
- console.log(
- `🗑️ ERASER: Settings - Size: ${this.settings.size}px, Mode: ${this.settings.mode}`,
- );
+  this.isErasing = true;
 
- const localPoint = container.toLocal(event.global);
- this.lastErasePoint.copyFrom(localPoint);
+  const localPoint = container.toLocal(event.global);
+  this.lastErasePoint.copyFrom(localPoint);
 
- this.eraseAtPoint(event, container);
+  this.eraseAtPoint(event, container);
  }
 
  onPointerMove(event: FederatedPointerEvent, container: Container): void {
@@ -88,11 +81,8 @@ export class EraserTool extends BaseTool {
  }
 
  onActivate(): void {
- super.onActivate();
- this.createProfessionalEraserCursor();
- console.log(
- `�️ ERASER: Activated precision brush eraser - Size: ${this.settings.size}px, Mode: ${this.settings.mode}`,
- );
+  super.onActivate();
+  this.createProfessionalEraserCursor();
  }
 
  onDeactivate(): void {
@@ -106,44 +96,37 @@ export class EraserTool extends BaseTool {
  event: FederatedPointerEvent,
  container: Container,
  ): void {
- const globalPoint = event.global;
- const eraserRadius = this.settings.size / 2;
+  const globalPoint = event.global;
+  const eraserRadius = this.settings.size / 2;
 
- console.log(
- `🗑️ ERASER: Precision erasing at point (${Math.round(globalPoint.x)}, ${Math.round(globalPoint.y)}) with radius ${eraserRadius}px`,
- );
+  // Check all objects in the container
+  for (let i = container.children.length - 1; i >= 0; i--) {
+  const child = container.children[i];
 
- // Check all objects in the container
- for (let i = container.children.length - 1; i >= 0; i--) {
- const child = container.children[i];
+  // LAYOUT PROTECTION: Skip protected objects
+  if (this.isProtectedObject(child)) {
+  continue;
+  }
 
- // LAYOUT PROTECTION: Skip protected objects
- if (this.isProtectedObject(child)) {
- continue;
- }
+  // Get accurate bounds
+  const bounds = child.getBounds();
 
- // Get accurate bounds
- const bounds = child.getBounds();
-
- // Enhanced collision detection for precision
- if (
- this.precisionCollisionDetection(
- globalPoint.x,
- globalPoint.y,
- eraserRadius,
- bounds.x,
- bounds.y,
- bounds.width,
- bounds.height,
- )
- ) {
- console.log(
- `�️ ERASER: Removing object (${child.constructor.name}) at bounds (${Math.round(bounds.x)}, ${Math.round(bounds.y)}, ${Math.round(bounds.width)}x${Math.round(bounds.height)})`,
- );
- container.removeChild(child);
- child.destroy();
- }
- }
+  // Enhanced collision detection for precision
+  if (
+  this.precisionCollisionDetection(
+  globalPoint.x,
+  globalPoint.y,
+  eraserRadius,
+  bounds.x,
+  bounds.y,
+  bounds.width,
+  bounds.height,
+  )
+  ) {
+   container.removeChild(child);
+   child.destroy();
+  }
+  }
  }
 
  private brushErase(
@@ -263,42 +246,40 @@ export class EraserTool extends BaseTool {
  }
 
  private createProfessionalEraserCursor(): void {
- // Create a professional visual cursor for the eraser
- const cursorElement = document.createElement("div");
- cursorElement.style.position = "fixed";
- cursorElement.style.pointerEvents = "none";
- cursorElement.style.zIndex = "10000";
- cursorElement.style.width = `${this.settings.size}px`;
- cursorElement.style.height = `${this.settings.size}px`;
- cursorElement.style.border = "2px solid #ff6b6b";
- cursorElement.style.borderRadius = "50%";
- cursorElement.style.backgroundColor = "rgba(255, 107, 107, 0.15)";
- cursorElement.style.boxShadow = "0 0 8px rgba(255, 107, 107, 0.3)";
- cursorElement.style.transform = "translate(-50%, -50%)";
- cursorElement.style.transition = "opacity 0.2s ease"; // Smooth fade
- cursorElement.id = "precision-eraser-cursor";
+  // Create a professional visual cursor for the eraser
+  const cursorElement = document.createElement("div");
+  cursorElement.style.position = "fixed";
+  cursorElement.style.pointerEvents = "none";
+  cursorElement.style.zIndex = "10000";
+  cursorElement.style.width = `${this.settings.size}px`;
+  cursorElement.style.height = `${this.settings.size}px`;
+  cursorElement.style.border = "2px solid #ff6b6b";
+  cursorElement.style.borderRadius = "50%";
+  cursorElement.style.backgroundColor = "rgba(255, 107, 107, 0.15)";
+  cursorElement.style.boxShadow = "0 0 8px rgba(255, 107, 107, 0.3)";
+  cursorElement.style.transform = "translate(-50%, -50%)";
+  cursorElement.style.transition = "opacity 0.2s ease"; // Smooth fade
+  cursorElement.id = "precision-eraser-cursor";
 
- // Add inner dot for precision
- const innerDot = document.createElement("div");
- innerDot.style.position = "absolute";
- innerDot.style.top = "50%";
- innerDot.style.left = "50%";
- innerDot.style.width = "2px";
- innerDot.style.height = "2px";
- innerDot.style.backgroundColor = "#ff0000";
- innerDot.style.borderRadius = "50%";
- innerDot.style.transform = "translate(-50%, -50%)";
- cursorElement.appendChild(innerDot);
+  // Add inner dot for precision
+  const innerDot = document.createElement("div");
+  innerDot.style.position = "absolute";
+  innerDot.style.top = "50%";
+  innerDot.style.left = "50%";
+  innerDot.style.width = "2px";
+  innerDot.style.height = "2px";
+  innerDot.style.backgroundColor = "#ff0000";
+  innerDot.style.borderRadius = "50%";
+  innerDot.style.transform = "translate(-50%, -50%)";
+  cursorElement.appendChild(innerDot);
 
- // Add mode indicator
- cursorElement.title = `🗑️ Precision Eraser - ${this.settings.mode} mode, ${this.settings.size}px`;
+  // Add mode indicator
+  cursorElement.title = `🗑️ Precision Eraser - ${this.settings.mode} mode, ${this.settings.size}px`;
 
- document.body.appendChild(cursorElement);
+  document.body.appendChild(cursorElement);
 
- // Hide default cursor on the entire document when eraser is active
- document.body.style.cursor = "none";
- 
- console.log('🗑️ ERASER: Professional cursor created with enhanced canvas boundary detection');
+  // Hide default cursor on the entire document when eraser is active
+  document.body.style.cursor = "none";
  }
 
  private updateCursorPosition(event: FederatedPointerEvent): void {

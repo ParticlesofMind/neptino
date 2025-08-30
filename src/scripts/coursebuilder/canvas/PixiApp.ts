@@ -38,7 +38,6 @@ export class PixiApp {
    */
   public async create(config?: Partial<PixiAppConfig>): Promise<Application> {
     if (this.app) {
-      console.warn('⚠️ PixiApp already created');
       return this.app;
     }
 
@@ -54,8 +53,6 @@ export class PixiApp {
     const finalConfig = { ...defaultConfig, ...config };
 
     try {
-      console.log('🎨 Creating PIXI Application with optimized settings...', finalConfig);
-
       this.app = new Application();
       await this.app.init({
         ...finalConfig,
@@ -63,12 +60,8 @@ export class PixiApp {
         hello: false, // Disable PIXI hello message
       });
 
-      console.log('✅ PIXI Application created successfully');
-      console.log(`📐 Canvas size: ${finalConfig.width}x${finalConfig.height}`);
       return this.app;
-
     } catch (error) {
-      console.error('❌ Failed to create PIXI Application:', error);
       throw error;
     }
   }
@@ -86,22 +79,17 @@ export class PixiApp {
     }
 
     if (this.mounted) {
-      console.warn('⚠️ Canvas already mounted');
       return;
     }
 
     try {
       // Clear any existing content
       this.container.innerHTML = '';
-      
+
       // Mount the canvas
       this.container.appendChild(this.app.canvas);
       this.mounted = true;
-
-      console.log('✅ Canvas mounted to', this.containerSelector);
-
     } catch (error) {
-      console.error('❌ Failed to mount canvas:', error);
       throw error;
     }
   }
@@ -123,7 +111,6 @@ export class PixiApp {
     
     // Check if canvas is available - it might not be ready immediately after init
     if (!this.app.canvas) {
-      console.warn('⚠️ Canvas not yet available - returning zero dimensions');
       return { width: 0, height: 0 };
     }
     
@@ -161,6 +148,5 @@ export class PixiApp {
     }
 
     this.mounted = false;
-    console.log('🗑️ PixiApp destroyed');
   }
 }

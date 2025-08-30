@@ -36,10 +36,7 @@ export class CanvasNavigator {
  private onCanvasChangeCallback: ((canvasIndex: number) => void) | null = null;
 
  constructor(tocContainerId: string = "") {
- this.tocContainer = document.getElementById(tocContainerId);
- if (!this.tocContainer) {
- console.warn(`TOC container with id "${tocContainerId}" not found`);
- }
+  this.tocContainer = document.getElementById(tocContainerId);
  }
 
  /**

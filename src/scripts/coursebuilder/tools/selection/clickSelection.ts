@@ -68,9 +68,8 @@ export class ClickSelection {
 
  public isTextObject(object: any): boolean {
    return object && (
-     object.constructor.name === 'Text' || 
-     object.text !== undefined ||
-     object.isTextObject === true  // Support for our TextArea containers
+     (object.constructor.name === 'Text' ||
+     object.text !== undefined || object.isTextObject === true)  // Support for our TextArea containers
    );
  } /**
  * Determine selection action based on click context

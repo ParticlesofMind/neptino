@@ -23,8 +23,6 @@ export class TextInputHandler implements ITextInputHandler {
     document.addEventListener('keydown', this.boundKeyDown);
     document.addEventListener('keypress', this.boundKeyPress);
     document.addEventListener('input', this.boundInput);
-
-    console.log('📝 TextInputHandler created');
   }
 
   public setActiveTextArea(textArea: ITextArea | null): void {
@@ -45,11 +43,9 @@ export class TextInputHandler implements ITextInputHandler {
     document.removeEventListener('keydown', this.boundKeyDown);
     document.removeEventListener('keypress', this.boundKeyPress);
     document.removeEventListener('input', this.boundInput);
-    
+
     this.activeTextArea = null;
     this.activeCursor = null;
-    
-    console.log('📝 TextInputHandler destroyed');
   }
 
   private handleKeyDown(event: KeyboardEvent): void {

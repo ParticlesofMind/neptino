@@ -26,26 +26,22 @@ export async function loadCourseLanguages(): Promise<CourseLanguage[]> {
 
   try {
     const response = await fetch('/src/scripts/json/courseLanguage.json');
-    
+
     if (!response.ok) {
       throw new Error(`Failed to load languages: ${response.status}`);
     }
 
     const data: LanguageData = await response.json();
-    
+
     if (!data.languages || !Array.isArray(data.languages)) {
       throw new Error('Invalid language data format');
     }
 
     // Sort languages by name for better UX
     cachedLanguages = data.languages.sort((a, b) => a.name.localeCompare(b.name));
-    
-    console.log('📚 Loaded', cachedLanguages.length, 'course languages');
-    return cachedLanguages;
 
+    return cachedLanguages;
   } catch (error) {
-    console.error('Error loading course languages:', error);
-    
     // Return fallback languages if JSON fails to load
     const fallbackLanguages: CourseLanguage[] = [
       { code: 'en', name: 'English', nativeName: 'English', speakers: 379000000 },
@@ -59,7 +55,7 @@ export async function loadCourseLanguages(): Promise<CourseLanguage[]> {
       { code: 'ja', name: 'Japanese', nativeName: '日本語', speakers: 128000000 },
       { code: 'ko', name: 'Korean', nativeName: '한국어', speakers: 77000000 }
     ];
-    
+
     cachedLanguages = fallbackLanguages;
     return fallbackLanguages;
   }
@@ -71,11 +67,11 @@ export async function loadCourseLanguages(): Promise<CourseLanguage[]> {
 export async function populateCourseLanguageSelect(selectElement: HTMLSelectElement): Promise<void> {
   try {
     const languages = await loadCourseLanguages();
-    
+
     // Clear existing options except the first placeholder
     const placeholder = selectElement.querySelector('option[value=""]');
     selectElement.innerHTML = '';
-    
+
     if (placeholder) {
       selectElement.appendChild(placeholder);
     } else {
@@ -85,7 +81,7 @@ export async function populateCourseLanguageSelect(selectElement: HTMLSelectElem
       defaultOption.textContent = 'Select language...';
       selectElement.appendChild(defaultOption);
     }
-    
+
     // Add language options
     languages.forEach(language => {
       const option = document.createElement('option');
@@ -94,11 +90,6 @@ export async function populateCourseLanguageSelect(selectElement: HTMLSelectElem
       option.setAttribute('data-speakers', language.speakers.toString());
       selectElement.appendChild(option);
     });
-
-    console.log('📚 Populated course language select with', languages.length, 'languages');
-
-  } catch (error) {
-    console.error('Error populating course language select:', error);
   }
 }
 
@@ -129,20 +120,14 @@ if (typeof window !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {
       const languageSelect = document.getElementById('course-language') as HTMLSelectElement;
       if (languageSelect) {
-        console.log('🌍 Found course language select, populating...');
         populateCourseLanguageSelect(languageSelect);
-      } else {
-        console.log('⚠️ Course language select not found');
       }
     });
   } else {
     // DOM already loaded
     const languageSelect = document.getElementById('course-language') as HTMLSelectElement;
     if (languageSelect) {
-      console.log('🌍 Found course language select (DOM ready), populating...');
       populateCourseLanguageSelect(languageSelect);
-    } else {
-      console.log('⚠️ Course language select not found (DOM ready)');
     }
   }
 }

@@ -11,9 +11,7 @@ export class TriangleDrawer extends BaseShapeDrawer {
         if (!this.isValidSize(context)) {
             return;
         }
-        
-        console.log(`🔶 SHAPES: Drawing triangle at (${context.startX}, ${context.startY}) with size ${context.width}x${context.height}`);
-        
+
         // Equilateral triangle pointing up
         const topX = context.startX + context.width / 2;
         const topY = context.startY;
@@ -21,13 +19,13 @@ export class TriangleDrawer extends BaseShapeDrawer {
         const bottomLeftY = context.startY + context.height;
         const bottomRightX = context.startX + context.width;
         const bottomRightY = context.startY + context.height;
-        
+
         this.graphics
             .moveTo(topX, topY)
             .lineTo(bottomLeftX, bottomLeftY)
             .lineTo(bottomRightX, bottomRightY)
             .closePath();
-        
+
         this.applyFill(fillStyle);
         this.applyStroke(strokeStyle);
     }

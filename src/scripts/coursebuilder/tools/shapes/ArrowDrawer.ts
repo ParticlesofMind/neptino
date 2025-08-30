@@ -12,25 +12,23 @@ export class ArrowDrawer extends BaseShapeDrawer {
         const dy = context.currentY - context.startY;
         const angle = Math.atan2(dy, dx);
         const length = Math.sqrt(dx * dx + dy * dy);
-        
-        console.log(`🔶 SHAPES: Drawing arrow from (${Math.round(context.startX)}, ${Math.round(context.startY)}) to (${Math.round(context.currentX)}, ${Math.round(context.currentY)}) with length ${Math.round(length)}`);
-        
+
         // Arrow head size
         const headLength = Math.min(20, length * 0.3);
         const headAngle = Math.PI / 6; // 30 degrees
-        
+
         // Draw line
         this.graphics
             .moveTo(context.startX, context.startY)
             .lineTo(context.currentX, context.currentY)
             .stroke(strokeStyle);
-        
+
         // Draw arrow head
         const headX1 = context.currentX - headLength * Math.cos(angle - headAngle);
         const headY1 = context.currentY - headLength * Math.sin(angle - headAngle);
         const headX2 = context.currentX - headLength * Math.cos(angle + headAngle);
         const headY2 = context.currentY - headLength * Math.sin(angle + headAngle);
-        
+
         this.graphics
             .moveTo(context.currentX, context.currentY)
             .lineTo(headX1, headY1)

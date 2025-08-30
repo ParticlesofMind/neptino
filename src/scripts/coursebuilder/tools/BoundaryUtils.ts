@@ -189,10 +189,5 @@ export class BoundaryUtils {
    */
   public static logBoundaryInfo(label: string, point: Point, bounds: CanvasBounds): void {
     const isWithin = BoundaryUtils.isPointWithinBounds(point, bounds);
-    console.log(
-      `🎯 ${label}: Point(${Math.round(point.x)}, ${Math.round(point.y)}) - ${
-        isWithin ? "✅ WITHIN" : "❌ OUTSIDE"
-      } bounds [${bounds.left}-${bounds.right}, ${bounds.top}-${bounds.bottom}]`
-    );
   }
 }

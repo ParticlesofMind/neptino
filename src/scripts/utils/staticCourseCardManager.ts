@@ -34,24 +34,18 @@ export class StaticCourseCardManager {
 
     const courseId = getCourseId();
     if (!courseId) {
-      console.log('📋 No courseId in URL - keeping static course card as placeholder');
       return;
     }
 
     try {
       const courseData = await getCurrentPageCourseWithStats();
-      
+
       if (!courseData) {
-        console.warn('⚠️ Could not load course data for courseId:', courseId);
         return;
       }
 
-      console.log('✅ Updating static course card with real data:', courseData);
       this.updateCardContent(courseData);
       this.updateCardActions(courseId);
-      
-    } catch (error) {
-      console.error('❌ Error updating static course card:', error);
     }
   }
 

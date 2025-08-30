@@ -24,7 +24,6 @@ export class DisplayObjectManager {
   constructor(rootContainer: Container) {
     this.rootContainer = rootContainer;
     this.root = rootContainer; // Legacy alias
-    console.log('🖼️ DisplayObjectManager initialized');
   }
 
   /**
@@ -53,22 +52,16 @@ export class DisplayObjectManager {
    */
   public addWithId(displayObject: any, id: string, parent?: Container): string {
     const targetParent = parent || this.rootContainer;
-    
+
     // Add to parent container
     targetParent.addChild(displayObject);
-    
+
     // Store reference
     this.allObjects.set(id, displayObject);
-    
+
     // Legacy compatibility
     this.objects.add(displayObject);
-    
-    console.log('➕ Added display object:', {
-      id,
-      type: displayObject.constructor.name,
-      parentChildren: targetParent.children.length
-    });
-    
+
     return id;
   }
 
@@ -77,12 +70,11 @@ export class DisplayObjectManager {
    */
   public remove(id: string | any): boolean {
     let displayObject: any;
-    
+
     // Handle both ID and direct object removal
     if (typeof id === 'string') {
       displayObject = this.allObjects.get(id);
       if (!displayObject) {
-        console.warn('⚠️ Cannot remove - display object not found:', id);
         return false;
       }
       this.allObjects.delete(id);
@@ -104,15 +96,10 @@ export class DisplayObjectManager {
 
     // Legacy compatibility
     this.objects.delete(displayObject);
-    
+
     // Destroy the object
     displayObject.destroy();
-    
-    console.log('🗑️ Removed display object:', {
-      id: typeof id === 'string' ? id : 'direct',
-      type: displayObject.constructor.name
-    });
-    
+
     return true;
   }
 
@@ -127,8 +114,6 @@ export class DisplayObjectManager {
    * Clear all display objects
    */
   public clear(): void {
-    console.log('🧹 Clearing all display objects...');
-    
     // Remove all objects
     for (const [, displayObject] of this.allObjects) {
       if (displayObject.parent) {
@@ -136,12 +121,10 @@ export class DisplayObjectManager {
       }
       displayObject.destroy();
     }
-    
+
     // Clear the map and legacy set
     this.allObjects.clear();
     this.objects.clear();
-    
-    console.log('✅ All display objects cleared');
   }
 
   /**
@@ -180,12 +163,11 @@ export class DisplayObjectManager {
   public bringToFront(id: string): boolean {
     const displayObject = this.get(id);
     if (!displayObject || !displayObject.parent) return false;
-    
+
     const parent = displayObject.parent;
     parent.removeChild(displayObject);
     parent.addChild(displayObject);
-    
-    console.log('⬆️ Brought to front:', id);
+
     return true;
   }
 
@@ -195,12 +177,11 @@ export class DisplayObjectManager {
   public sendToBack(id: string): boolean {
     const displayObject = this.get(id);
     if (!displayObject || !displayObject.parent) return false;
-    
+
     const parent = displayObject.parent;
     parent.removeChild(displayObject);
     parent.addChildAt(displayObject, 0);
-    
-    console.log('⬇️ Sent to back:', id);
+
     return true;
   }
 
@@ -210,9 +191,8 @@ export class DisplayObjectManager {
   public setVisible(id: string, visible: boolean): boolean {
     const displayObject = this.get(id);
     if (!displayObject) return false;
-    
+
     displayObject.visible = visible;
-    console.log('👁️ Set visibility:', { id, visible });
     return true;
   }
 
@@ -222,9 +202,8 @@ export class DisplayObjectManager {
   public setAlpha(id: string, alpha: number): boolean {
     const displayObject = this.get(id);
     if (!displayObject) return false;
-    
+
     displayObject.alpha = Math.max(0, Math.min(1, alpha));
-    console.log('💫 Set alpha:', { id, alpha: displayObject.alpha });
     return true;
   }
 
@@ -234,10 +213,9 @@ export class DisplayObjectManager {
   public setPosition(id: string, x: number, y: number): boolean {
     const displayObject = this.get(id);
     if (!displayObject) return false;
-    
+
     displayObject.x = x;
     displayObject.y = y;
-    console.log('📍 Set position:', { id, x, y });
     return true;
   }
 
@@ -247,10 +225,9 @@ export class DisplayObjectManager {
   public setScale(id: string, scaleX: number, scaleY?: number): boolean {
     const displayObject = this.get(id);
     if (!displayObject) return false;
-    
+
     displayObject.scale.x = scaleX;
     displayObject.scale.y = scaleY ?? scaleX;
-    console.log('📏 Set scale:', { id, scaleX, scaleY: displayObject.scale.y });
     return true;
   }
 
@@ -260,9 +237,8 @@ export class DisplayObjectManager {
   public setRotation(id: string, rotation: number): boolean {
     const displayObject = this.get(id);
     if (!displayObject) return false;
-    
+
     displayObject.rotation = rotation;
-    console.log('🔄 Set rotation:', { id, rotation });
     return true;
   }
 
@@ -311,8 +287,6 @@ export class DisplayObjectManager {
    * Destroy the manager and clean up all objects
    */
   public destroy(): void {
-    console.log('🗑️ Destroying DisplayObjectManager...');
     this.clear();
-    console.log('✅ DisplayObjectManager destroyed');
   }
 }

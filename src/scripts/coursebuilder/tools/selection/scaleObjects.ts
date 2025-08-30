@@ -33,9 +33,7 @@ export class ScaleObjects {
 
  if (this.state.activeHandle.type === "corner") {
  if (hasRotatedObjects) {
- // 🔄 Using rotation-aware scaling with stable anchor points
- console.log('🔄 SCALING: Using rotation-aware corner resize for rotated objects');
- this.performRotationAwareCornerResize(dx, dy, this.state.activeHandle.position);
+  this.performRotationAwareCornerResize(dx, dy, this.state.activeHandle.position);
  } else {
  // 📐 Using standard corner scaling for non-rotated objects
  this.performCornerResize(dx, dy, this.state.activeHandle.position, bounds);
@@ -56,17 +54,16 @@ export class ScaleObjects {
  
  this.state.selectedObjects.forEach(obj => {
  if (obj.rotation !== undefined && Math.abs(obj.rotation) > 0.01) {
- // Store original transform state
- originalTransforms.push({
- obj: obj,
- pivot: { x: obj.pivot.x, y: obj.pivot.y },
- rotation: obj.rotation
- });
- 
- // Temporarily reset to neutral state for predictable scaling
- obj.pivot.set(0, 0);
- obj.rotation = 0;
- console.log('🔄 SCALING: Reset pivot and rotation for predictable corner scaling');
+  // Store original transform state
+  originalTransforms.push({
+  obj: obj,
+  pivot: { x: obj.pivot.x, y: obj.pivot.y },
+  rotation: obj.rotation
+  });
+
+  // Temporarily reset to neutral state for predictable scaling
+  obj.pivot.set(0, 0);
+  obj.rotation = 0;
  }
  });
 
@@ -137,19 +134,17 @@ export class ScaleObjects {
 
  // 🔄 TRANSFORMATION RESTORE: Restore original transformations after scaling
  originalTransforms.forEach(({obj, pivot, rotation}) => {
- // Calculate the new position after scaling
- const scaledX = obj.position.x;
- const scaledY = obj.position.y;
- 
- // Restore pivot and rotation
- obj.pivot.set(pivot.x, pivot.y);
- obj.rotation = rotation;
- 
- // Keep the scaled position
- obj.position.x = scaledX;
- obj.position.y = scaledY;
- 
- console.log('🔄 SCALING: Restored pivot and rotation after corner scaling');
+  // Calculate the new position after scaling
+  const scaledX = obj.position.x;
+  const scaledY = obj.position.y;
+
+  // Restore pivot and rotation
+  obj.pivot.set(pivot.x, pivot.y);
+  obj.rotation = rotation;
+
+  // Keep the scaled position
+  obj.position.x = scaledX;
+  obj.position.y = scaledY;
  });
  }
 
@@ -270,15 +265,14 @@ export class ScaleObjects {
  
  this.state.selectedObjects.forEach(obj => {
  if (obj.pivot && (obj.pivot.x !== 0 || obj.pivot.y !== 0)) {
- // Store original pivot
- originalPivots.push({
- obj: obj,
- pivot: { x: obj.pivot.x, y: obj.pivot.y }
- });
- 
- // Temporarily reset pivot to (0,0) for predictable scaling behavior
- obj.pivot.set(0, 0);
- console.log('🔄 SCALING: Temporarily reset pivot for edge scaling');
+  // Store original pivot
+  originalPivots.push({
+  obj: obj,
+  pivot: { x: obj.pivot.x, y: obj.pivot.y }
+  });
+
+  // Temporarily reset pivot to (0,0) for predictable scaling behavior
+  obj.pivot.set(0, 0);
  }
  });
 
@@ -304,8 +298,7 @@ export class ScaleObjects {
 
  // 🔄 PIVOT RESTORE: Restore original pivots after scaling
  originalPivots.forEach(({obj, pivot}) => {
- obj.pivot.set(pivot.x, pivot.y);
- console.log('🔄 SCALING: Restored original pivot after edge scaling');
+  obj.pivot.set(pivot.x, pivot.y);
  });
  }
 
@@ -313,47 +306,40 @@ export class ScaleObjects {
  * Handle dragging/moving objects
  */
  public updateDrag(currentPoint: Point): void {
- if (this.state.selectedObjects.length === 0) return;
+  if (this.state.selectedObjects.length === 0) return;
 
- const dx = currentPoint.x - this.state.transformStart.x;
- const dy = currentPoint.y - this.state.transformStart.y;
+  const dx = currentPoint.x - this.state.transformStart.x;
+  const dy = currentPoint.y - this.state.transformStart.y;
 
- // 🎯 BOUNDARY ENFORCEMENT: Calculate new positions and clamp them
- const canvasBounds = BoundaryUtils.getCanvasBoundsWithGlobalMargins();
- 
- // Calculate the combined bounds of all selected objects to constrain as a group
- const combinedBounds = this.calculateCombinedBounds(this.state.selectedObjects);
- const newX = combinedBounds.x + dx;
- const newY = combinedBounds.y + dy;
- 
- // Clamp the group position to keep it within canvas bounds
- const clampedX = Math.max(canvasBounds.left, 
-                          Math.min(canvasBounds.right - combinedBounds.width, newX));
- const clampedY = Math.max(canvasBounds.top, 
-                          Math.min(canvasBounds.bottom - combinedBounds.height, newY));
- 
- // Calculate the actual allowed movement delta
- const clampedDx = clampedX - combinedBounds.x;
- const clampedDy = clampedY - combinedBounds.y;
- 
- // Apply the clamped movement to all selected objects
- this.state.selectedObjects.forEach(obj => {
- if (obj.position) {
- obj.position.x += clampedDx;
- obj.position.y += clampedDy;
- }
- });
+  // 🎯 BOUNDARY ENFORCEMENT: Calculate new positions and clamp them
+  const canvasBounds = BoundaryUtils.getCanvasBoundsWithGlobalMargins();
 
- // Update transform start with the clamped position
- this.state.transformStart.x += clampedDx;
- this.state.transformStart.y += clampedDy;
- 
- // Log boundary constraint if movement was limited
- if (Math.abs(dx - clampedDx) > 1 || Math.abs(dy - clampedDy) > 1) {
- console.log(
- `🎯 SELECTION: Drag constrained - requested delta (${Math.round(dx)}, ${Math.round(dy)}), applied (${Math.round(clampedDx)}, ${Math.round(clampedDy)})`
- );
- }
+  // Calculate the combined bounds of all selected objects to constrain as a group
+  const combinedBounds = this.calculateCombinedBounds(this.state.selectedObjects);
+  const newX = combinedBounds.x + dx;
+  const newY = combinedBounds.y + dy;
+
+  // Clamp the group position to keep it within canvas bounds
+  const clampedX = Math.max(canvasBounds.left,
+                           Math.min(canvasBounds.right - combinedBounds.width, newX));
+  const clampedY = Math.max(canvasBounds.top,
+                           Math.min(canvasBounds.bottom - combinedBounds.height, newY));
+
+  // Calculate the actual allowed movement delta
+  const clampedDx = clampedX - combinedBounds.x;
+  const clampedDy = clampedY - combinedBounds.y;
+
+  // Apply the clamped movement to all selected objects
+  this.state.selectedObjects.forEach(obj => {
+  if (obj.position) {
+  obj.position.x += clampedDx;
+  obj.position.y += clampedDy;
+  }
+  });
+
+  // Update transform start with the clamped position
+  this.state.transformStart.x += clampedDx;
+  this.state.transformStart.y += clampedDy;
  }
 
  /**
@@ -372,15 +358,14 @@ export class ScaleObjects {
  
  this.state.selectedObjects.forEach(obj => {
  if (obj.pivot && (obj.pivot.x !== 0 || obj.pivot.y !== 0)) {
- // Store original pivot
- originalPivots.push({
- obj: obj,
- pivot: { x: obj.pivot.x, y: obj.pivot.y }
- });
- 
- // Temporarily reset pivot to (0,0) for predictable scaling behavior
- obj.pivot.set(0, 0);
- console.log('🔄 SCALING: Temporarily reset pivot for programmatic scaling');
+  // Store original pivot
+  originalPivots.push({
+  obj: obj,
+  pivot: { x: obj.pivot.x, y: obj.pivot.y }
+  });
+
+  // Temporarily reset pivot to (0,0) for predictable scaling behavior
+  obj.pivot.set(0, 0);
  }
  });
 
@@ -408,8 +393,7 @@ export class ScaleObjects {
 
  // 🔄 PIVOT RESTORE: Restore original pivots after scaling
  originalPivots.forEach(({obj, pivot}) => {
- obj.pivot.set(pivot.x, pivot.y);
- console.log('🔄 SCALING: Restored original pivot after programmatic scaling');
+  obj.pivot.set(pivot.x, pivot.y);
  });
  }
 
@@ -437,19 +421,17 @@ export class ScaleObjects {
  * Note: This is a complex problem in PixiJS. For now, we log the issue and mark objects.
  */
  private preserveStrokeWidth(obj: any): void {
- // Skip if not a Graphics object or if we've already processed it
- if (obj.constructor.name !== 'Graphics' || obj._strokeWidthPreservationAttempted) return;
- 
- // Mark that we've attempted preservation on this object
- obj._strokeWidthPreservationAttempted = true;
- obj._originalScale = { x: Math.abs(obj.scale.x), y: Math.abs(obj.scale.y) };
- 
- // Try to enable any built-in stroke scaling prevention
- if (obj.geometry && typeof obj.geometry.setScaleMode === 'function') {
- obj.geometry.setScaleMode(false); // Disable scaling for geometry if available
- }
- 
- console.log(`🎯 STROKE: Marked Graphics object for stroke preservation (may have visual scaling)`);
+  // Skip if not a Graphics object or if we've already processed it
+  if (obj.constructor.name !== 'Graphics' || obj._strokeWidthPreservationAttempted) return;
+
+  // Mark that we've attempted preservation on this object
+  obj._strokeWidthPreservationAttempted = true;
+  obj._originalScale = { x: Math.abs(obj.scale.x), y: Math.abs(obj.scale.y) };
+
+  // Try to enable any built-in stroke scaling prevention
+  if (obj.geometry && typeof obj.geometry.setScaleMode === 'function') {
+  obj.geometry.setScaleMode(false); // Disable scaling for geometry if available
+  }
  }
 
  /**
@@ -457,21 +439,15 @@ export class ScaleObjects {
  * Note: Full stroke width preservation requires more complex graphics recreation.
  */
  private adjustStrokeWidth(obj: any): void {
- if (!obj._strokeWidthPreservationAttempted || obj.constructor.name !== 'Graphics') return;
- 
- const currentScaleX = Math.abs(obj.scale.x);
- const currentScaleY = Math.abs(obj.scale.y);
- const originalScaleX = obj._originalScale.x;
- const originalScaleY = obj._originalScale.y;
- 
- const scaleChangeX = currentScaleX / originalScaleX;
- const scaleChangeY = currentScaleY / originalScaleY;
- const averageScaleChange = (scaleChangeX + scaleChangeY) / 2;
- 
- // Log significant scale changes that will affect stroke width
- if (Math.abs(averageScaleChange - 1.0) > 0.1) { // 10% threshold
- console.log(`⚠️ STROKE: Graphics object scaled by ${averageScaleChange.toFixed(2)}x - stroke width will change proportionally`);
- console.log(`   Current scale: (${currentScaleX.toFixed(2)}, ${currentScaleY.toFixed(2)}), Original: (${originalScaleX.toFixed(2)}, ${originalScaleY.toFixed(2)})`);
- }
+  if (!obj._strokeWidthPreservationAttempted || obj.constructor.name !== 'Graphics') return;
+
+  const currentScaleX = Math.abs(obj.scale.x);
+  const currentScaleY = Math.abs(obj.scale.y);
+  const originalScaleX = obj._originalScale.x;
+  const originalScaleY = obj._originalScale.y;
+
+  const scaleChangeX = currentScaleX / originalScaleX;
+  const scaleChangeY = currentScaleY / originalScaleY;
+  const averageScaleChange = (scaleChangeX + scaleChangeY) / 2;
  }
 }

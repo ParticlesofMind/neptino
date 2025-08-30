@@ -17,9 +17,7 @@ export class RectangleDrawer extends BaseShapeDrawer {
         if (!this.isValidSize(context)) {
             return;
         }
-        
-        console.log(`🔶 SHAPES: Drawing rectangle at (${context.startX}, ${context.startY}) with size ${context.width}x${context.height}`);
-        
+
         if (this.cornerRadius > 0) {
             // Rounded rectangle
             this.graphics.roundRect(
@@ -38,7 +36,7 @@ export class RectangleDrawer extends BaseShapeDrawer {
                 context.height
             );
         }
-        
+
         this.applyFill(fillStyle);
         this.applyStroke(strokeStyle);
     }

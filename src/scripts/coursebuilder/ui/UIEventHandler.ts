@@ -135,8 +135,6 @@ export class UIEventHandler {
 
         if (!toolName) return;
 
-        console.log(`🔧 UI: Tool selection event for "${toolName}"`);
-
         // Clean architecture: UI delegates to state manager, no callbacks needed
         this.toolStateManager.setTool(toolName);
     }
@@ -190,7 +188,6 @@ export class UIEventHandler {
         const colorValue = colorSquare.dataset.color;
 
         if (!colorValue) {
-            console.warn('🎨 Color selection failed: no color data found');
             return;
         }
 
@@ -346,11 +343,8 @@ export class UIEventHandler {
      */
     public handleShapeSelection(shapeType: string): void {
         if (!shapeType) {
-            console.warn('🔶 SHAPES: No shape type provided');
             return;
         }
-
-        console.log(`🔶 SHAPES: Selected shape type: ${shapeType}`);
 
         // Activate the shapes tool first
         this.toolStateManager.setTool('shapes');
@@ -373,9 +367,6 @@ export class UIEventHandler {
         if (canvasAPI) {
             try {
                 canvasAPI.setToolSettings('shapes', { shapeType });
-                console.log(`🔶 CANVAS: Applied shape type: ${shapeType}`);
-            } catch (error) {
-                console.error('❌ CANVAS: Error applying shape settings:', error);
             }
         }
     }
@@ -385,15 +376,13 @@ export class UIEventHandler {
      */
     private initializeDefaultShapeSelection(): void {
         const savedShape = this.toolStateManager.getSelectedShape() || 'rectangle';
-        
-        console.log(`🔶 SHAPES: Initializing with saved shape: ${savedShape}`);
-        
+
         // Set the Select2 value
         const shapeSelect = document.querySelector('#shapes-select') as HTMLSelectElement;
         if (shapeSelect && (window as any).$) {
             (window as any).$('#shapes-select').val(savedShape).trigger('change');
         }
-        
+
         // Update tool settings
         this.toolStateManager.updateToolSettings('shapes', {
             shapeType: savedShape as

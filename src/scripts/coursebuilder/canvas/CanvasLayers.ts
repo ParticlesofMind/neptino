@@ -55,8 +55,6 @@ export class CanvasLayers {
     // Enable z-index sorting
     this.app.stage.sortableChildren = true;
 
-    console.log('🎭 Canvas layers created: background(0), drawing(1), ui(2)');
-
     return { background, drawing, ui };
   }
 
@@ -73,10 +71,10 @@ export class CanvasLayers {
    */
   private addBackgroundFill(): void {
     this.backgroundGraphics = new Graphics();
-    
+
     const width = this.app.canvas.width;
     const height = this.app.canvas.height;
-    
+
     // Draw white rectangle covering entire canvas
     this.backgroundGraphics
       .rect(0, 0, width, height)
@@ -84,8 +82,6 @@ export class CanvasLayers {
 
     this.backgroundGraphics.label = 'background-fill';
     this.layers.background.addChild(this.backgroundGraphics);
-
-    console.log('⬜ Background fill added:', { width, height });
   }
 
   /**
@@ -108,9 +104,8 @@ export class CanvasLayers {
 
     gridGraphics.stroke({ color, width: 1, alpha: 0.3 });
     gridGraphics.label = 'background-grid';
-    
+
     this.layers.background.addChild(gridGraphics);
-    console.log('📏 Background grid added:', { gridSize, color });
   }
 
   /**
@@ -132,7 +127,7 @@ export class CanvasLayers {
    */
   public clearLayer(layerName: keyof LayerSystem): void {
     const layer = this.layers[layerName];
-    
+
     if (layerName === 'background') {
       // Don't clear background - just reset it
       layer.removeChildren();
@@ -140,8 +135,6 @@ export class CanvasLayers {
     } else {
       layer.removeChildren();
     }
-
-    console.log(`🧹 Layer '${layerName}' cleared`);
   }
 
   /**
@@ -157,7 +150,6 @@ export class CanvasLayers {
    */
   public setLayerVisibility(layerName: keyof LayerSystem, visible: boolean): void {
     this.layers[layerName].visible = visible;
-    console.log(`👁️ Layer '${layerName}' visibility:`, visible);
   }
 
   /**
@@ -192,6 +184,5 @@ export class CanvasLayers {
     });
 
     this.backgroundGraphics = null;
-    console.log('🗑️ Canvas layers destroyed');
   }
 }

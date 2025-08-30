@@ -35,14 +35,12 @@ export class TableCellEditor {
         );
 
         if (!tableData) {
-            console.error('🔷 TABLE: Could not find table data for cell');
             return;
         }
 
         // Set this table as the one in edit mode
         this.tableInEditMode = tableData;
         this.highlightTableInEditMode(tableData);
-        console.log(`🔷 TABLE: Table ${tableData.id} is now in edit mode`);
 
         // Get screen coordinates for the text input
         const canvasElement = document.querySelector("#canvas-container canvas") as HTMLCanvasElement;
@@ -155,8 +153,6 @@ export class TableCellEditor {
         setTimeout(() => {
             document.addEventListener("click", this.handleGlobalClick);
         }, 10);
-
-        console.log(`🔷 TABLE: Started editing cell R${cell.row + 1}C${cell.column + 1}`);
     }
 
     private endCellEditing(): void {
@@ -181,16 +177,12 @@ export class TableCellEditor {
         // Clean up input
         this.cleanupTextInput();
 
-        console.log(`🔷 TABLE: Ended editing cell R${cell.row + 1}C${cell.column + 1}`);
-
         this.editingCell = null;
 
         // Note: We don't exit table edit mode here - user can continue tabbing to other cells
     }
 
     private exitTableEditMode(): void {
-        console.log('🔷 TABLE: Exiting table edit mode');
-
         if (this.tableInEditMode) {
             this.removeTableEditModeHighlight(this.tableInEditMode);
         }

@@ -49,7 +49,6 @@ export async function getCourseWithStats(courseId: string): Promise<CourseWithSt
       .single();
 
     if (courseError) {
-      console.error('Error fetching course data:', courseError);
       return null;
     }
 
@@ -68,7 +67,6 @@ export async function getCourseWithStats(courseId: string): Promise<CourseWithSt
 
     return courseWithStats;
   } catch (error) {
-    console.error('Error in getCourseWithStats:', error);
     return null;
   }
 }
@@ -87,20 +85,12 @@ export async function getCourseStatistics(courseId: string): Promise<CourseStati
       .eq('course_id', courseId)
       .eq('status', 'active');
 
-    if (enrollmentError) {
-      console.warn('Error fetching enrollment count:', enrollmentError);
-    }
-
     // Get course data to check for schedule sessions
     const { data: courseData, error: courseError } = await supabase
       .from('courses')
       .select('course_sessions, schedule_settings')
       .eq('id', courseId)
       .single();
-
-    if (courseError) {
-      console.warn('Error fetching course data for statistics:', courseError);
-    }
 
     let scheduleSessions = 0;
     if (courseData?.course_sessions) {
@@ -115,14 +105,12 @@ export async function getCourseStatistics(courseId: string): Promise<CourseStati
           // If schedule_settings is an object, try to find session count
           scheduleSessions = (scheduleData as any).sessions?.length || 0;
         }
-      } catch (parseError) {
-        console.warn('Error parsing schedule settings:', parseError);
       }
     }
 
     // Determine course status based on available data
     let status: 'draft' | 'active' | 'completed' = 'draft';
-    
+
     if (scheduleSessions > 0 && (studentCount || 0) > 0) {
       status = 'active';
     } else if (scheduleSessions > 0) {
@@ -137,7 +125,6 @@ export async function getCourseStatistics(courseId: string): Promise<CourseStati
       status,
     };
   } catch (error) {
-    console.error('Error calculating course statistics:', error);
     return {
       student_count: 0,
       lesson_count: 0,

@@ -12,11 +12,7 @@
 export function getCourseId(): string | null {
  const urlParams = new URLSearchParams(window.location.search);
  const courseId = urlParams.get('courseId') || urlParams.get('id');
- 
- if (courseId) {
- console.log('🔍 Course ID detected from URL:', courseId);
- }
- 
+
  return courseId;
 }
 
@@ -63,8 +59,7 @@ export async function validateCourseAccess(courseId: string): Promise<boolean> {
  
  return !error && data !== null;
  } catch (error) {
- console.error('Error validating course access:', error);
- return false;
+  return false;
  }
 }
 
@@ -81,8 +76,7 @@ export async function getValidatedCourseId(): Promise<string | null> {
  
  const hasAccess = await validateCourseAccess(courseId);
  if (!hasAccess) {
- console.warn('⚠️ User does not have access to course:', courseId);
- return null;
+  return null;
  }
  
  return courseId;

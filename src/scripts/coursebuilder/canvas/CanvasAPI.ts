@@ -35,16 +35,13 @@ export class CanvasAPI {
    */
   public async init(config?: Partial<PixiAppConfig>): Promise<void> {
     if (this.initialized) {
-      console.warn('⚠️ Canvas already initialized');
       return;
     }
 
     try {
-      console.log('🚀 Initializing complete canvas system...');
-
       // Step 1: Create PIXI app
       const app = await this.pixiApp.create(config);
-      
+
       // Step 2: Mount to DOM
       this.pixiApp.mount();
 
@@ -78,10 +75,7 @@ export class CanvasAPI {
       // Tool manager already sets pen as default, no need to set again
 
       this.initialized = true;
-      console.log('✅ Complete canvas system initialized with tools and margins');
-
     } catch (error) {
-      console.error('❌ Failed to initialize canvas system:', error);
       throw error;
     }
   }
@@ -105,7 +99,6 @@ export class CanvasAPI {
    */
   public getLayer(layerName: keyof LayerSystem): Container | null {
     if (!this.layers) {
-      console.warn('⚠️ Canvas not initialized - cannot get layer');
       return null;
     }
     return this.layers.getLayer(layerName);
@@ -125,7 +118,6 @@ export class CanvasAPI {
     try {
       return this.pixiApp.getDimensions();
     } catch (error) {
-      console.warn('⚠️ Could not get dimensions - canvas not ready:', error);
       return { width: 0, height: 0 };
     }
   }
@@ -137,7 +129,6 @@ export class CanvasAPI {
    */
   public setTool(toolName: string): boolean {
     if (!this.events) {
-      console.warn('⚠️ Canvas not initialized - cannot set tool');
       return false;
     }
     return this.events.setActiveTool(toolName);
@@ -156,7 +147,6 @@ export class CanvasAPI {
    */
   public setToolColor(color: string): void {
     if (!this.events) {
-      console.warn('⚠️ Canvas not initialized - cannot set color');
       return;
     }
     this.events.updateToolColor(color);
@@ -167,7 +157,6 @@ export class CanvasAPI {
    */
   public setToolSettings(toolName: string, settings: any): void {
     if (!this.events) {
-      console.warn('⚠️ Canvas not initialized - cannot set tool settings');
       return;
     }
     this.events.updateToolSettings(toolName, settings);
@@ -186,11 +175,10 @@ export class CanvasAPI {
    */
   public testToolActivation(toolName: string): string {
     if (!this.isReady()) return 'canvas-not-ready';
-    
+
     const success = this.setTool(toolName);
     const currentTool = this.getActiveTool();
-    
-    console.log(`🧪 Tool test: ${toolName} -> ${success ? 'SUCCESS' : 'FAILED'} -> Current: ${currentTool}`);
+
     return currentTool;
   }
 
@@ -200,21 +188,16 @@ export class CanvasAPI {
   public testDrawing(): boolean {
     const drawingLayer = this.getDrawingLayer();
     if (!drawingLayer) {
-      console.error('❌ No drawing layer for test');
       return false;
     }
 
     try {
       if (this.displayManager) {
-        console.log('✅ Test drawing: Canvas and DisplayObjectManager ready');
-        console.log('📊 Drawing layer children:', drawingLayer.children.length);
         return true;
       } else {
-        console.error('❌ No display manager available');
         return false;
       }
     } catch (error) {
-      console.error('❌ Test drawing failed:', error);
       return false;
     }
   }
@@ -226,18 +209,15 @@ export class CanvasAPI {
    */
   public clearDrawings(): void {
     if (!this.layers) {
-      console.warn('⚠️ Canvas not initialized - cannot clear');
       return;
     }
-    
+
     this.layers.clearUserContent();
-    
+
     // Also clear display object manager
     if (this.displayManager) {
       this.displayManager.clear();
     }
-    
-    console.log('🧹 User drawings cleared');
   }
 
   /**
@@ -245,7 +225,6 @@ export class CanvasAPI {
    */
   public clearLayer(layerName: keyof LayerSystem): void {
     if (!this.layers) {
-      console.warn('⚠️ Canvas not initialized - cannot clear layer');
       return;
     }
 
@@ -257,7 +236,6 @@ export class CanvasAPI {
    */
   public addGrid(gridSize: number = 20, color: number = 0xf0f0f0): void {
     if (!this.layers) {
-      console.warn('⚠️ Canvas not initialized - cannot add grid');
       return;
     }
 
@@ -269,7 +247,6 @@ export class CanvasAPI {
    */
   public setLayerVisibility(layerName: keyof LayerSystem, visible: boolean): void {
     if (!this.layers) {
-      console.warn('⚠️ Canvas not initialized - cannot set visibility');
       return;
     }
 
@@ -281,7 +258,6 @@ export class CanvasAPI {
    */
   public setInteractionEnabled(enabled: boolean): void {
     if (!this.events) {
-      console.warn('⚠️ Canvas not initialized - cannot set interaction');
       return;
     }
     this.events.setEnabled(enabled);
@@ -314,18 +290,15 @@ export class CanvasAPI {
   public resize(width: number, height: number): void {
     const app = this.getApp();
     if (!app) {
-      console.warn('⚠️ Cannot resize - app not ready');
       return;
     }
 
     app.renderer.resize(width, height);
-    
+
     // Recreate background to match new size
     if (this.layers) {
       this.layers.clearLayer('background');
     }
-
-    console.log('📐 Canvas resized:', { width, height });
   }
 
   /**
@@ -343,10 +316,7 @@ export class CanvasAPI {
     if (uiLayer) uiLayer.visible = false;
 
     try {
-      // For now, return placeholder - we'll implement proper export later
-      console.log('📸 Canvas export requested (placeholder)');
       return 'data:image/png;base64,placeholder';
-
     } finally {
       // Restore UI layer visibility
       if (uiLayer) uiLayer.visible = originalVisibility;
@@ -379,7 +349,5 @@ export class CanvasAPI {
 
     this.pixiApp.destroy();
     this.initialized = false;
-    
-    console.log('🗑️ Complete canvas system destroyed');
   }
 }

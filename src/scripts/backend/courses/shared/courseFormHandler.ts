@@ -37,33 +37,21 @@ export class CourseFormHandler {
     // ==========================================================================
 
     private getCourseId(): string | null {
-        // Debug current URL
-        console.log('🔍 Current URL:', window.location.href);
-        console.log('🔍 Current search params:', window.location.search);
-
         // First try to get course ID from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        console.log('🔍 All URL params:', Array.from(urlParams.entries()));
 
         const courseIdFromUrl = urlParams.get('courseId') || urlParams.get('id');
 
         if (courseIdFromUrl && courseIdFromUrl !== 'undefined') {
-            console.log('✅ Course ID from URL:', courseIdFromUrl);
             return courseIdFromUrl;
-        } else {
-            console.log('❌ Course ID from URL is invalid:', courseIdFromUrl);
         }
 
         // Fallback to session storage (for backward compatibility)
         const courseIdFromSession = sessionStorage.getItem("currentCourseId");
         if (courseIdFromSession && courseIdFromSession !== 'undefined') {
-            console.log('✅ Course ID from session storage:', courseIdFromSession);
             return courseIdFromSession;
-        } else {
-            console.log('❌ Course ID from session storage is invalid:', courseIdFromSession);
         }
 
-        console.log('⚠️ No valid course ID found - this is likely a new course creation');
         return null;
     }
 
@@ -82,13 +70,10 @@ export class CourseFormHandler {
     }
 
     private findForm(): void {
-        console.log('🔍 Looking for form...');
-
         // First, try to find form by section name (most reliable)
         if (this.sectionConfig.section === 'essentials') {
             this.form = document.querySelector('#course-essentials-form');
             if (this.form) {
-                console.log('✅ Found essentials form by ID');
                 return;
             }
         }
@@ -96,30 +81,22 @@ export class CourseFormHandler {
         // Try to find the form in the active article 
         const activeArticle = document.querySelector('.content__article--active');
         if (activeArticle) {
-            console.log('✅ Found active article:', activeArticle);
             this.form = activeArticle.querySelector("form");
             if (this.form) {
-                console.log('✅ Found form in active article');
                 return;
             }
-        } else {
-            console.log('❌ No active article found');
         }
 
         // If still not found, try to find any form in the current section
         if (!this.form) {
             this.form = document.querySelector('form');
             if (this.form) {
-                console.log('✅ Found form as fallback');
                 return;
             }
         }
 
-        if (this.form) {
-            console.log('✅ Form found for section:', this.sectionConfig.section);
-        } else {
-            console.error('❌ No form found for section:', this.sectionConfig.section);
-        }
+        if (this.form)
+            {}
     } private async initializeFields(): Promise<void> {
         if (!this.form) return;
 
@@ -135,11 +112,6 @@ export class CourseFormHandler {
                 try {
                     const displayValue = await fieldConfig.displayFunction();
                     this.setDisplayField(field, displayValue);
-                } catch (error) {
-                    console.error(
-                        `Error setting display field ${fieldConfig.name}:`,
-                        error,
-                    );
                 }
             }
 
@@ -150,9 +122,7 @@ export class CourseFormHandler {
                     try {
                         const { populateCourseLanguageSelect } = await import('../settings/languageLoader');
                         await populateCourseLanguageSelect(field as HTMLSelectElement);
-                        console.log('✅ Course languages loaded successfully');
                     } catch (error) {
-                        console.error('❌ Error loading course languages:', error);
                         // Fallback to basic options
                         this.addFallbackLanguageOptions(field as HTMLSelectElement);
                     }
@@ -222,8 +192,6 @@ export class CourseFormHandler {
             optionElement.textContent = lang.name;
             select.appendChild(optionElement);
         });
-
-        console.log('⚠️ Using fallback language options');
     }
 
     // ==========================================================================
@@ -232,20 +200,16 @@ export class CourseFormHandler {
 
     private async loadExistingData(): Promise<void> {
         if (!this.form || !this.currentCourseId) {
-            console.log('⚠️ No form or course ID, skipping data load');
             return;
         }
 
         try {
-            console.log('🔄 Loading course data for ID:', this.currentCourseId);
             const courseData = await getCourse(this.currentCourseId);
 
             if (!courseData) {
-                console.log('⚠️ No course data found for ID:', this.currentCourseId);
                 return;
             }
 
-            console.log('✅ Course data loaded:', courseData);
             this.populateFormFields(courseData);
 
             // Show course code if we're in essentials section and have a course ID
@@ -254,16 +218,11 @@ export class CourseFormHandler {
             }
 
             setTimeout(() => this.validateForm(), 100);
-        } catch (error) {
-            console.error("❌ Error loading existing course data:", error);
         }
     }
 
     private populateFormFields(courseData: any): void {
-        console.log(`🔄 Populating form fields for section: ${this.sectionConfig.section}`);
-
         if (this.sectionConfig.section === "essentials") {
-            console.log('📝 Populating essentials fields...');
             this.setFieldValue("course_name", courseData.course_name);
             this.setFieldValue("course_description", courseData.course_description);
             this.setFieldValue("course_language", courseData.course_language);
@@ -272,11 +231,9 @@ export class CourseFormHandler {
                 this.displayExistingImage(courseData.course_image);
             }
         } else if (this.sectionConfig.section === "classification") {
-            console.log('📚 Populating classification fields...');
             // Handle classification data from classification_data JSONB field
             if (courseData.classification_data) {
                 const classificationData = courseData.classification_data;
-                console.log('Classification data found:', classificationData);
 
                 this.setFieldValue("class_year", classificationData.class_year);
                 this.setFieldValue(
@@ -293,14 +250,9 @@ export class CourseFormHandler {
                 );
                 this.setFieldValue("current_course", classificationData.current_course);
                 this.setFieldValue("next_course", classificationData.next_course);
-            } else {
-                console.log('⚠️ No classification_data found in course data');
             }
-        } else if (
-            this.sectionConfig.jsonbField &&
-            courseData[this.sectionConfig.jsonbField]
-        ) {
-            console.log(`📊 Populating ${this.sectionConfig.section} fields from ${this.sectionConfig.jsonbField}...`);
+        } else if (this.sectionConfig.jsonbField &&
+        courseData[this.sectionConfig.jsonbField]) {
             const sectionData = courseData[this.sectionConfig.jsonbField];
 
             this.sectionConfig.fields.forEach((fieldConfig) => {
@@ -308,8 +260,6 @@ export class CourseFormHandler {
                     this.setFieldValue(fieldConfig.name, sectionData[fieldConfig.name]);
                 }
             });
-        } else {
-            console.log(`⚠️ No data found for section: ${this.sectionConfig.section}`);
         }
     }
 
@@ -330,10 +280,7 @@ export class CourseFormHandler {
                     fieldName,
                     value,
                 );
-                console.log(`✅ Set classification field ${fieldName} to:`, value);
                 return;
-            } else {
-                console.warn(`❌ Could not find elements for classification field: ${fieldName}`);
             }
         }
 
@@ -344,11 +291,8 @@ export class CourseFormHandler {
             | HTMLTextAreaElement;
 
         if (!field) {
-            console.warn(`❌ Field not found: [name="${fieldName}"]`);
             return;
         }
-
-        console.log(`✅ Setting field ${fieldName} to:`, value);
 
         try {
             if (field.tagName === "SELECT") {
@@ -365,9 +309,7 @@ export class CourseFormHandler {
 
                 if (optionExists) {
                     selectField.value = value;
-                    console.log(`✅ Select option set to: ${value}`);
                 } else {
-                    console.warn(`⚠️ Option "${value}" not found in select field ${fieldName}`);
                     // For course_language, try advanced matching
                     if (fieldName === 'course_language') {
                         let found = false;
@@ -380,7 +322,6 @@ export class CourseFormHandler {
                             // Check if the option text contains the language name
                             if (optionText.toLowerCase().includes(value.toLowerCase())) {
                                 selectField.value = option.value; // Use the code, not the name
-                                console.log(`✅ Found language match: "${value}" → "${option.value}" (${optionText})`);
                                 found = true;
                                 break;
                             }
@@ -407,17 +348,11 @@ export class CourseFormHandler {
                                 for (let i = 0; i < selectField.options.length; i++) {
                                     if (selectField.options[i].value === mappedCode) {
                                         selectField.value = mappedCode;
-                                        console.log(`✅ Mapped language: "${value}" → "${mappedCode}"`);
                                         found = true;
                                         break;
                                     }
                                 }
                             }
-                        }
-
-                        if (!found) {
-                            console.warn(`❌ Could not find language option for: ${value}`);
-                            console.log('Available options:', Array.from(selectField.options).map(opt => `${opt.value}: ${opt.textContent}`));
                         }
                     }
                 }
@@ -427,10 +362,6 @@ export class CourseFormHandler {
 
             field.dispatchEvent(new Event("input", { bubbles: true }));
             field.dispatchEvent(new Event("change", { bubbles: true }));
-
-            console.log(`✅ Successfully set ${fieldName} to:`, field.value);
-        } catch (error) {
-            console.warn(`❌ Failed to set field ${fieldName}:`, error);
         }
     }
 
@@ -609,8 +540,6 @@ export class CourseFormHandler {
                 // Enable course builder features
                 this.enableCourseBuilderFeatures(result.courseId);
 
-                console.log('📋 Course created with ID:', result.courseId);
-                
                 // Navigate to next section after successful creation
                 if (this.sectionConfig.section === 'essentials') {
                     this.navigateToNextSection();
@@ -619,7 +548,6 @@ export class CourseFormHandler {
                 throw new Error(result.error || "Failed to create course");
             }
         } catch (error) {
-            console.error("Error creating course:", error);
             const errorMessage =
                 error instanceof Error ? error.message : "Unknown error occurred";
             this.showStatus(`Failed to create course: ${errorMessage}`, "error");
@@ -647,7 +575,6 @@ export class CourseFormHandler {
                 throw new Error(result.error || "Failed to save");
             }
         } catch (error) {
-            console.error("Error updating course:", error);
             this.showStatus("Failed to save", "error");
         }
     }
@@ -739,7 +666,6 @@ export class CourseFormHandler {
                         await navigator.clipboard.writeText(courseId);
                         this.showCopyFeedback(courseCopyBtn);
                     } catch (err) {
-                        console.error('Failed to copy course ID:', err);
                         // Fallback for older browsers
                         this.fallbackCopy(courseId);
                         this.showCopyFeedback(courseCopyBtn);
@@ -752,13 +678,9 @@ export class CourseFormHandler {
         if (courseCodeDisplay) {
             courseCodeDisplay.style.display = 'flex';
         }
-
-        console.log('📋 Course ID displayed:', courseId);
     }
 
     private enableCourseBuilderFeatures(courseId: string): void {
-        console.log("🔧 Enabling course builder features for course:", courseId);
-
         // Enable next button or any other course-specific features
         const nextButton = document.getElementById('next-btn');
         if (nextButton) {

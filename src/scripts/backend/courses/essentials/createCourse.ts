@@ -69,8 +69,7 @@ export async function uploadCourseImage(
  });
 
  if (error) {
- console.error("Error uploading image:", error);
- return null;
+  return null;
  }
 
  // Get public URL
@@ -80,8 +79,7 @@ export async function uploadCourseImage(
 
  return publicUrl;
  } catch (error) {
- console.error("Error in uploadCourseImage:", error);
- return null;
+  return null;
  }
 }
 
@@ -99,16 +97,14 @@ export async function createCourse(
  error: sessionError,
  } = await supabase.auth.getSession();
  if (sessionError) {
- console.error("Session error:", sessionError);
- return { success: false, error: "Authentication session error" };
+  return { success: false, error: "Authentication session error" };
  }
 
  if (!session?.user) {
- console.error("No valid session or user found");
- return {
- success: false,
- error: "User not authenticated - please sign in again",
- };
+  return {
+  success: false,
+  error: "User not authenticated - please sign in again",
+  };
  }
 
  const user = session.user;
@@ -139,11 +135,10 @@ export async function createCourse(
  .single();
 
  if (courseError) {
- console.error("Error creating course:", courseError);
- return {
- success: false,
- error: `Failed to create course: ${courseError.message}`,
- };
+  return {
+  success: false,
+  error: `Failed to create course: ${courseError.message}`,
+  };
  }
 
  const courseId = courseData.id;
@@ -152,24 +147,17 @@ export async function createCourse(
  if (data.course_image) {
  const imageUrl = await uploadCourseImage(data.course_image, courseId);
  if (imageUrl) {
- // Update course with image URL using course_image field
- const { error: updateError } = await supabase
- .from("courses")
- .update({ course_image: imageUrl })
- .eq("id", courseId);
-
- if (updateError) {
- console.error("Error updating course with image:", updateError);
- // Don't fail the entire operation for image update failure
- console.warn("Course created but image update failed");
- }
+  // Update course with image URL using course_image field
+  const { error: updateError } = await supabase
+  .from("courses")
+  .update({ course_image: imageUrl })
+  .eq("id", courseId);
  }
  }
 
  return { success: true, courseId };
  } catch (error) {
- console.error("Error in createCourse:", error);
- return { success: false, error: "Unexpected error occurred" };
+  return { success: false, error: "Unexpected error occurred" };
  }
 }
 
@@ -184,13 +172,11 @@ async function ensureUserProfile(user: any): Promise<void> {
  });
 
  if (rpcError) {
- console.warn("RPC call failed, using fallback method:", rpcError);
- // Fallback to direct upsert
- await ensureUserProfileFallback(user);
+  // Fallback to direct upsert
+  await ensureUserProfileFallback(user);
  }
  } catch (error) {
- console.warn("Error ensuring user profile, using fallback:", error);
- await ensureUserProfileFallback(user);
+  await ensureUserProfileFallback(user);
  }
 }
 
@@ -220,12 +206,7 @@ async function ensureUserProfileFallback(user: any): Promise<void> {
  },
  );
 
- if (error) {
- console.error("Failed to create user profile:", error);
- } else {
- }
- } catch (error) {
- console.error("Error in ensureUserProfileFallback:", error);
+ if (error) {}
  }
 }
 
@@ -243,14 +224,12 @@ export async function updateCourse(
  .eq("id", courseId);
 
  if (error) {
- console.error("Error updating course:", error);
- return { success: false, error: "Failed to update course" };
+  return { success: false, error: "Failed to update course" };
  }
 
  return { success: true };
  } catch (error) {
- console.error("Error in updateCourse:", error);
- return { success: false, error: "Unexpected error occurred" };
+  return { success: false, error: "Unexpected error occurred" };
  }
 }
 
@@ -264,14 +243,12 @@ export async function deleteCourse(
  .eq("id", courseId);
 
  if (error) {
- console.error("Error deleting course:", error);
- return { success: false, error: "Failed to delete course" };
+  return { success: false, error: "Failed to delete course" };
  }
 
  return { success: true };
  } catch (error) {
- console.error("Error in deleteCourse:", error);
- return { success: false, error: "Unexpected error occurred" };
+  return { success: false, error: "Unexpected error occurred" };
  }
 }
 
@@ -284,14 +261,12 @@ export async function getCourse(courseId: string) {
  .single();
 
  if (error) {
- console.error("Error fetching course:", error);
- return null;
+  return null;
  }
 
  return data;
  } catch (error) {
- console.error("Error in getCourse:", error);
- return null;
+  return null;
  }
 }
 
@@ -316,13 +291,11 @@ export async function getUserCourses(userId?: string) {
  });
 
  if (error) {
- console.error("Error fetching courses:", error);
- return [];
+  return [];
  }
 
  return data || [];
  } catch (error) {
- console.error("Error in getUserCourses:", error);
- return [];
+  return [];
  }
 }

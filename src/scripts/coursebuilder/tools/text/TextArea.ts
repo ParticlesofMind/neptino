@@ -38,11 +38,11 @@ export class TextArea implements ITextArea {
     // Create container
     this.container = new Container();
     this.container.eventMode = 'static';
-    
+
     // Mark this container as a text object for selection tool identification
     (this.container as any).isTextObject = true;
     (this.container as any).textAreaId = this.id;
-    
+
     parent.addChild(this.container);
 
     // Create border graphics
@@ -69,8 +69,6 @@ export class TextArea implements ITextArea {
 
     // Initial render
     this.render();
-
-    console.log(`📝 TextArea created: ${this.id}`);
   }
 
   public get bounds(): TextAreaBounds {
@@ -99,11 +97,9 @@ export class TextArea implements ITextArea {
 
   public setActive(active: boolean): void {
     if (this._isActive === active) return;
-    
+
     this._isActive = active;
     this.updateBorderStyle();
-    
-    console.log(`📝 TextArea ${this.id} ${active ? 'activated' : 'deactivated'}`);
   }
 
   public updateBounds(bounds: TextAreaBounds): void {
@@ -197,7 +193,6 @@ export class TextArea implements ITextArea {
   public destroy(): void {
     this.container.parent?.removeChild(this.container);
     this.container.destroy({ children: true });
-    console.log(`📝 TextArea destroyed: ${this.id}`);
   }
 
   private calculateLineHeight(): void {
@@ -233,23 +228,21 @@ export class TextArea implements ITextArea {
 
   private drawBorder(): void {
     this.border.clear();
-    
+
     // Determine border style based on active state
     const borderColor = this.getBorderColor();
     const borderWidth = this._isActive ? 2 : 1;
-    
+
     // Draw border rectangle
     this.border.stroke({ width: borderWidth, color: borderColor });
-    
+
     // Add background if specified
     if (this.settings.backgroundColor) {
       this.border.fill(this.settings.backgroundColor);
     }
-    
+
     // Draw rectangle
     this.border.rect(0, 0, this._bounds.width, this._bounds.height);
-    
-    console.log(`📝 Border drawn: ${this._bounds.width}x${this._bounds.height}, active: ${this._isActive}`);
   }
 
   private getBorderColor(): number {

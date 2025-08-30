@@ -26,8 +26,7 @@ export class CourseBuilder {
  
  // Make this instance globally accessible
  if (typeof window !== 'undefined') {
- (window as any).courseBuilderInstance = this;
- console.log('📋 CourseBuilder instance registered globally');
+  (window as any).courseBuilderInstance = this;
  }
  }
 
@@ -36,80 +35,61 @@ export class CourseBuilder {
  // ==========================================================================
 
  private initialize(): void {
- console.log('📋 CourseBuilder initializing...');
- 
- // Clear any existing course data from sessionStorage to ensure fresh start if no courseId in URL
- const urlParams = new URLSearchParams(window.location.search);
- const hasUrlCourseId = urlParams.get('courseId') || urlParams.get('id');
- 
- if (!hasUrlCourseId) {
- console.log('📋 No courseId in URL - clearing sessionStorage for fresh start');
- sessionStorage.removeItem("currentCourseId");
- }
- 
- this.getCourseId();
- this.initializeCurrentSection();
- this.setupSectionNavigation();
- 
- // Only initialize managers if we have a course ID (existing course mode)
- if (this.courseId) {
- console.log('📋 EXISTING COURSE MODE - Initializing with course ID:', this.courseId);
- this.initializeAllManagers();
- } else {
- console.log('📋 CREATE NEW COURSE MODE - Managers will be initialized after course creation');
- }
+  // Clear any existing course data from sessionStorage to ensure fresh start if no courseId in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const hasUrlCourseId = urlParams.get('courseId') || urlParams.get('id');
+
+  if (!hasUrlCourseId) {
+   sessionStorage.removeItem("currentCourseId");
+  }
+
+  this.getCourseId();
+  this.initializeCurrentSection();
+  this.setupSectionNavigation();
+
+  // Only initialize managers if we have a course ID (existing course mode)
+  if (this.courseId) {
+   this.initializeAllManagers();
+  }
  }
 
  private getCourseId(): void {
- // First try to get course ID from URL parameters
- const urlParams = new URLSearchParams(window.location.search);
- const courseIdFromUrl = urlParams.get('courseId') || urlParams.get('id');
- 
- if (courseIdFromUrl) {
- this.courseId = courseIdFromUrl;
- console.log('📋 EXISTING COURSE MODE - Course ID from URL:', courseIdFromUrl);
- return;
- }
+  // First try to get course ID from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const courseIdFromUrl = urlParams.get('courseId') || urlParams.get('id');
 
- // If no URL parameter, check if we're in "create new course" mode
- console.log('📋 CREATE NEW COURSE MODE - No course ID in URL');
- 
- // Clear any existing course data from sessionStorage to ensure fresh start
- sessionStorage.removeItem("currentCourseId");
- 
- this.courseId = null;
+  if (courseIdFromUrl) {
+   this.courseId = courseIdFromUrl;
+   return;
+  }
+
+  // Clear any existing course data from sessionStorage to ensure fresh start
+  sessionStorage.removeItem("currentCourseId");
+
+  this.courseId = null;
  }
 
  private initializeAllManagers(): void {
  if (!this.courseId) {
- console.log('📋 Skipping managers initialization - no course ID (create new course mode)');
- return;
+  return;
  }
 
  try {
- // Initialize all managers once with the course ID
- console.log('📋 Initializing managers with course ID:', this.courseId);
- 
- // Initialize schedule manager (always ready)
- this.scheduleManager = new ScheduleCourseManager(this.courseId);
- console.log('📋 ScheduleCourseManager created by CourseBuilder class');
- 
- // Initialize curriculum manager (always ready)
- this.curriculumManager = new CurriculumManager(this.courseId);
- 
- // Initialize page setup handler with course ID
- import('./settings/pageSetupHandler.js').then(({ pageSetupHandler }) => {
- pageSetupHandler.setCourseId(this.courseId!);
- });
+  // Initialize schedule manager (always ready)
+  this.scheduleManager = new ScheduleCourseManager(this.courseId);
 
- // Initialize coursebuilder with course ID if available
- if (typeof window !== 'undefined' && (window as any).courseBuilder) {
- (window as any).courseBuilder.setCourseId(this.courseId);
- }
- 
- console.log('📋 All managers initialized successfully');
- } catch (error) {
- console.error('📋 Error initializing managers:', error);
+  // Initialize curriculum manager (always ready)
+  this.curriculumManager = new CurriculumManager(this.courseId);
+
+  // Initialize page setup handler with course ID
+  import('./settings/pageSetupHandler.js').then(({ pageSetupHandler }) => {
+  pageSetupHandler.setCourseId(this.courseId!);
+  });
+
+  // Initialize coursebuilder with course ID if available
+  if (typeof window !== 'undefined' && (window as any).courseBuilder) {
+  (window as any).courseBuilder.setCourseId(this.courseId);
+  }
  }
  }
 
@@ -117,56 +97,52 @@ export class CourseBuilder {
  * Update course ID for all managers
  */
  public setCourseId(courseId: string): void {
- this.courseId = courseId;
- console.log('📋 Course ID set to:', courseId);
- 
- // Store in session storage for consistency
- sessionStorage.setItem("currentCourseId", courseId);
- 
- // If managers aren't initialized yet, initialize them now
- if (!this.scheduleManager && !this.curriculumManager) {
- console.log('📋 Initializing managers for newly created course');
- this.initializeAllManagers();
- } else {
- // Update existing managers with new course ID
- if (this.scheduleManager) {
- this.scheduleManager.setCourseId(courseId);
- }
- if (this.curriculumManager) {
- this.curriculumManager.setCourseId(courseId);
- }
- }
- 
- // Update classification handler if available
- if (typeof window !== 'undefined' && (window as any).classificationHandler) {
- (window as any).classificationHandler.setCourseId(courseId);
- console.log('📋 Notified classification handler of course ID:', courseId);
- }
- 
- // Update page setup handler
- import('./settings/pageSetupHandler.js').then(({ pageSetupHandler }) => {
- pageSetupHandler.setCourseId(courseId);
- });
+  this.courseId = courseId;
 
- // Update coursebuilder
- if (typeof window !== 'undefined' && (window as any).courseBuilder) {
- (window as any).courseBuilder.setCourseId(courseId);
- }
+  // Store in session storage for consistency
+  sessionStorage.setItem("currentCourseId", courseId);
 
- // Update URL to include course ID (so refresh works properly)
- this.updateUrlWithCourseId(courseId);
+  // If managers aren't initialized yet, initialize them now
+  if (!this.scheduleManager && !this.curriculumManager) {
+   this.initializeAllManagers();
+  } else {
+  // Update existing managers with new course ID
+  if (this.scheduleManager) {
+  this.scheduleManager.setCourseId(courseId);
+  }
+  if (this.curriculumManager) {
+  this.curriculumManager.setCourseId(courseId);
+  }
+  }
+
+  // Update classification handler if available
+  if (typeof window !== 'undefined' && (window as any).classificationHandler) {
+   (window as any).classificationHandler.setCourseId(courseId);
+  }
+
+  // Update page setup handler
+  import('./settings/pageSetupHandler.js').then(({ pageSetupHandler }) => {
+  pageSetupHandler.setCourseId(courseId);
+  });
+
+  // Update coursebuilder
+  if (typeof window !== 'undefined' && (window as any).courseBuilder) {
+  (window as any).courseBuilder.setCourseId(courseId);
+  }
+
+  // Update URL to include course ID (so refresh works properly)
+  this.updateUrlWithCourseId(courseId);
  }
 
  /**
  * Update the URL to include the course ID parameter
  */
  private updateUrlWithCourseId(courseId: string): void {
- const url = new URL(window.location.href);
- url.searchParams.set('courseId', courseId);
- 
- // Update URL without reloading the page
- window.history.replaceState({}, '', url.toString());
- console.log('📋 Updated URL with course ID:', url.toString());
+  const url = new URL(window.location.href);
+  url.searchParams.set('courseId', courseId);
+
+  // Update URL without reloading the page
+  window.history.replaceState({}, '', url.toString());
  }
 
  private initializeCurrentSection(): void {
@@ -217,53 +193,34 @@ export class CourseBuilder {
 
  private loadSection(sectionId: string): void {
  try {
- console.log(`📋 Loading section: ${sectionId}`);
- 
- if (!this.courseId) {
- console.log('📋 CREATE NEW COURSE MODE - Limited functionality until course is created');
- }
+  // Cleanup previous form handler
+  if (this.currentFormHandler) {
+   this.currentFormHandler = null;
+  }
 
- // Cleanup previous form handler
- if (this.currentFormHandler) {
- console.log('📋 Cleaning up previous form handler');
- this.currentFormHandler = null;
- }
- 
- // Only initialize form handlers for specific sections
- 
- if (sectionId === "schedule") {
- // Schedule manager is already initialized - just ensure preview is visible
- if (this.scheduleManager) {
- // If we have a course ID, make sure the schedule manager has the latest data
- if (this.courseId) {
- console.log('📋 Refreshing schedule manager with course ID:', this.courseId);
- this.scheduleManager.setCourseId(this.courseId);
- }
+  // Only initialize form handlers for specific sections
 
- } else {
- console.log('📋 Schedule manager not initialized (create new course mode)');
- }
- } else if (sectionId === "curriculum") {
- // Curriculum manager is already initialized - just ensure preview is visible
- if (this.curriculumManager) {
- // Trigger a refresh to show/hide preview as needed
- this.curriculumManager.refreshDisplay();
- } else {
- console.log('📋 Curriculum manager not initialized (create new course mode)');
- }
- // Also initialize form handler for curriculum form data
- this.currentFormHandler = new CourseFormHandler(sectionId);
- } else if (sectionId === "essentials" || sectionId === "settings") {
- // Initialize generic form handler for form-based sections
- this.currentFormHandler = new CourseFormHandler(sectionId);
- }
+  if (sectionId === "schedule") {
+  // Schedule manager is already initialized - just ensure preview is visible
+  if (this.scheduleManager) {
+  // If we have a course ID, make sure the schedule manager has the latest data
+  if (this.courseId) {
+   this.scheduleManager.setCourseId(this.courseId);
+  }
 
- // Log form handler initialization
- if (this.currentFormHandler) {
- console.log(`📋 Form handler initialized for section: ${sectionId}`);
- }
- } catch (error) {
- console.warn(`No handler available for section: ${sectionId}`, error);
+  }
+  } else if (sectionId === "curriculum") {
+  // Curriculum manager is already initialized - just ensure preview is visible
+  if (this.curriculumManager) {
+  // Trigger a refresh to show/hide preview as needed
+  this.curriculumManager.refreshDisplay();
+  }
+  // Also initialize form handler for curriculum form data
+  this.currentFormHandler = new CourseFormHandler(sectionId);
+  } else if (sectionId === "essentials" || sectionId === "settings") {
+  // Initialize generic form handler for form-based sections
+  this.currentFormHandler = new CourseFormHandler(sectionId);
+  }
  }
  }
 
@@ -313,11 +270,8 @@ document.addEventListener("DOMContentLoaded", () => {
  const hasSetupSection = document.querySelector('.coursebuilder__setup');
 
  if (hasSetupSection && isInSetupSection && !courseBuilderInitialized) {
- courseBuilderInitialized = true;
- new CourseBuilder();
- console.log(
- "CourseBuilder (form handler) initialized from courses/index.ts",
- );
+  courseBuilderInitialized = true;
+  new CourseBuilder();
  }
 });
 
@@ -328,10 +282,7 @@ window.addEventListener("hashchange", () => {
  const hasSetupSection = document.querySelector('.coursebuilder__setup');
 
  if (hasSetupSection && isInSetupSection && !courseBuilderInitialized) {
- courseBuilderInitialized = true;
- new CourseBuilder();
- console.log(
- "CourseBuilder (form handler) initialized on hash change to setup",
- );
+  courseBuilderInitialized = true;
+  new CourseBuilder();
  }
 });

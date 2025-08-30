@@ -47,8 +47,7 @@ export async function loadClassYearData() {
  );
  classYearData = await response.json();
  } catch (error) {
- console.error("Error loading class year data:", error);
- classYearData = { classYears: [] };
+  classYearData = { classYears: [] };
  }
  }
  return classYearData;
@@ -62,8 +61,7 @@ export async function loadCurricularFrameworkData() {
  );
  curricularFrameworkData = await response.json();
  } catch (error) {
- console.error("Error loading curricular framework data:", error);
- curricularFrameworkData = { curricularFrameworks: [] };
+  curricularFrameworkData = { curricularFrameworks: [] };
  }
  }
  return curricularFrameworkData;
@@ -77,8 +75,7 @@ export async function loadIscedData() {
  );
  iscedData = await response.json();
  } catch (error) {
- console.error("Error loading ISCED data:", error);
- iscedData = { domains: [] };
+  iscedData = { domains: [] };
  }
  }
  return iscedData;
@@ -167,100 +164,84 @@ export async function savePartialCourseClassification(
  data: Partial<CourseClassificationData>,
 ): Promise<{ success: boolean; error?: string }> {
  try {
- // Enhanced authentication check with session validation
- const {
- data: { session },
- error: sessionError,
- } = await supabase.auth.getSession();
- if (sessionError) {
- console.error("Session error:", sessionError);
- return { success: false, error: "Authentication session error" };
- }
+  // Enhanced authentication check with session validation
+  const {
+  data: { session },
+  error: sessionError,
+  } = await supabase.auth.getSession();
+  if (sessionError) {
+   return { success: false, error: "Authentication session error" };
+  }
 
- if (!session?.user) {
- console.error("No valid session or user found");
- return {
- success: false,
- error: "User not authenticated - please sign in again",
- };
- }
+  if (!session?.user) {
+   return {
+   success: false,
+   error: "User not authenticated - please sign in again",
+   };
+  }
 
- const user = session.user;
- console.log(
- "Saving partial course classification for user:",
- user.id,
- "course:",
- courseId,
- );
+  const user = session.user;
 
- // Verify course ownership
- const { data: courseData, error: courseError } = await supabase
- .from("courses")
- .select("teacher_id")
- .eq("id", courseId)
- .single();
+  // Verify course ownership
+  const { data: courseData, error: courseError } = await supabase
+  .from("courses")
+  .select("teacher_id")
+  .eq("id", courseId)
+  .single();
 
- if (courseError) {
- console.error("Error fetching course:", courseError);
- return { success: false, error: "Course not found" };
- }
+  if (courseError) {
+   return { success: false, error: "Course not found" };
+  }
 
- if (courseData.teacher_id !== user.id) {
- return {
- success: false,
- error: "Unauthorized - you can only modify your own courses",
- };
- }
+  if (courseData.teacher_id !== user.id) {
+  return {
+  success: false,
+  error: "Unauthorized - you can only modify your own courses",
+  };
+  }
 
- // Prepare classification data for JSONB column (allow partial data)
- const classificationData: any = {
- updated_at: new Date().toISOString(),
- };
+  // Prepare classification data for JSONB column (allow partial data)
+  const classificationData: any = {
+  updated_at: new Date().toISOString(),
+  };
 
- // Only include fields that have values
- if (data.class_year?.trim())
- classificationData.class_year = data.class_year.trim();
- if (data.curricular_framework?.trim())
- classificationData.curricular_framework =
- data.curricular_framework.trim();
- if (data.domain?.trim()) classificationData.domain = data.domain.trim();
- if (data.subject?.trim()) classificationData.subject = data.subject.trim();
- if (data.topic?.trim()) classificationData.topic = data.topic.trim();
- if (data.subtopic?.trim())
- classificationData.subtopic = data.subtopic.trim();
- if (data.previous_course?.trim())
- classificationData.previous_course = data.previous_course.trim();
- if (data.current_course?.trim())
- classificationData.current_course = data.current_course.trim();
- if (data.next_course?.trim())
- classificationData.next_course = data.next_course.trim();
+  // Only include fields that have values
+  if (data.class_year?.trim())
+  classificationData.class_year = data.class_year.trim();
+  if (data.curricular_framework?.trim())
+  classificationData.curricular_framework =
+  data.curricular_framework.trim();
+  if (data.domain?.trim()) classificationData.domain = data.domain.trim();
+  if (data.subject?.trim()) classificationData.subject = data.subject.trim();
+  if (data.topic?.trim()) classificationData.topic = data.topic.trim();
+  if (data.subtopic?.trim())
+  classificationData.subtopic = data.subtopic.trim();
+  if (data.previous_course?.trim())
+  classificationData.previous_course = data.previous_course.trim();
+  if (data.current_course?.trim())
+  classificationData.current_course = data.current_course.trim();
+  if (data.next_course?.trim())
+  classificationData.next_course = data.next_course.trim();
 
- console.log(
- "Saving partial course classification data:",
- classificationData,
- );
+  // Update course with classification data in the JSONB column
+  const { error: updateError } = await supabase
+  .from("courses")
+  .update({
+  classification_data: classificationData,
+  updated_at: new Date().toISOString(),
+  })
+  .eq("id", courseId);
 
- // Update course with classification data in the JSONB column
- const { error: updateError } = await supabase
- .from("courses")
- .update({
- classification_data: classificationData,
- updated_at: new Date().toISOString(),
- })
- .eq("id", courseId);
+  if (updateError) {
+   return {
+   success: false,
+   error: `Failed to update classification: ${updateError.message}`,
+   };
+  }
 
- if (updateError) {
- console.error("Error updating course classification:", updateError);
- return {
- success: false,
- error: `Failed to update classification: ${updateError.message}`,
- };
- }
-
- return { success: true };
+  return { success: true };
  } catch (error) {
- console.error("Error in savePartialCourseClassification:", error);
- return { success: false, error: "Unexpected error occurred" };
+  return { success: false, error: "Unexpected error occurred" };
  }
 }
 
@@ -269,95 +250,84 @@ export async function updateCourseClassification(
  data: CourseClassificationData,
 ): Promise<{ success: boolean; error?: string }> {
  try {
- // Enhanced authentication check with session validation
- const {
- data: { session },
- error: sessionError,
- } = await supabase.auth.getSession();
- if (sessionError) {
- console.error("Session error:", sessionError);
- return { success: false, error: "Authentication session error" };
- }
+  // Enhanced authentication check with session validation
+  const {
+  data: { session },
+  error: sessionError,
+  } = await supabase.auth.getSession();
+  if (sessionError) {
+   return { success: false, error: "Authentication session error" };
+  }
 
- if (!session?.user) {
- console.error("No valid session or user found");
- return {
- success: false,
- error: "User not authenticated - please sign in again",
- };
- }
+  if (!session?.user) {
+   return {
+   success: false,
+   error: "User not authenticated - please sign in again",
+   };
+  }
 
- const user = session.user;
- console.log(
- "Updating course classification for user:",
- user.id,
- "course:",
- courseId,
- );
+  const user = session.user;
 
- // Validate data
- const validation = validateClassificationData(data);
- if (!isValidClassification(validation)) {
- return {
- success: false,
- error: "Invalid classification data - required fields missing",
- };
- }
+  // Validate data
+  const validation = validateClassificationData(data);
+  if (!isValidClassification(validation)) {
+  return {
+  success: false,
+  error: "Invalid classification data - required fields missing",
+  };
+  }
 
- // Verify course ownership
- const { data: courseData, error: courseError } = await supabase
- .from("courses")
- .select("teacher_id")
- .eq("id", courseId)
- .single();
+  // Verify course ownership
+  const { data: courseData, error: courseError } = await supabase
+  .from("courses")
+  .select("teacher_id")
+  .eq("id", courseId)
+  .single();
 
- if (courseError) {
- console.error("Error fetching course:", courseError);
- return { success: false, error: "Course not found" };
- }
+  if (courseError) {
+   return { success: false, error: "Course not found" };
+  }
 
- if (courseData.teacher_id !== user.id) {
- return {
- success: false,
- error: "Unauthorized - you can only modify your own courses",
- };
- }
+  if (courseData.teacher_id !== user.id) {
+  return {
+  success: false,
+  error: "Unauthorized - you can only modify your own courses",
+  };
+  }
 
- // Prepare classification data for JSONB column
- const classificationData = {
- class_year: data.class_year.trim(),
- curricular_framework: data.curricular_framework.trim(),
- domain: data.domain.trim(),
- subject: data.subject.trim(),
- topic: data.topic.trim(),
- subtopic: data.subtopic?.trim() || null,
- previous_course: data.previous_course?.trim() || null,
- current_course: data.current_course?.trim() || null,
- next_course: data.next_course?.trim() || null,
- updated_at: new Date().toISOString(),
- };
+  // Prepare classification data for JSONB column
+  const classificationData = {
+  class_year: data.class_year.trim(),
+  curricular_framework: data.curricular_framework.trim(),
+  domain: data.domain.trim(),
+  subject: data.subject.trim(),
+  topic: data.topic.trim(),
+  subtopic: data.subtopic?.trim() || null,
+  previous_course: data.previous_course?.trim() || null,
+  current_course: data.current_course?.trim() || null,
+  next_course: data.next_course?.trim() || null,
+  updated_at: new Date().toISOString(),
+  };
 
- // Update course with classification data in the JSONB column
- const { error: updateError } = await supabase
- .from("courses")
- .update({
- classification_data: classificationData,
- updated_at: new Date().toISOString(),
- })
- .eq("id", courseId);
+  // Update course with classification data in the JSONB column
+  const { error: updateError } = await supabase
+  .from("courses")
+  .update({
+  classification_data: classificationData,
+  updated_at: new Date().toISOString(),
+  })
+  .eq("id", courseId);
 
- if (updateError) {
- console.error("Error updating course classification:", updateError);
- return {
- success: false,
- error: `Failed to update classification: ${updateError.message}`,
- };
- }
+  if (updateError) {
+   return {
+   success: false,
+   error: `Failed to update classification: ${updateError.message}`,
+   };
+  }
 
- return { success: true };
+  return { success: true };
  } catch (error) {
- console.error("Error in updateCourseClassification:", error);
- return { success: false, error: "Unexpected error occurred" };
+  return { success: false, error: "Unexpected error occurred" };
  }
 }
 
@@ -372,8 +342,7 @@ export async function getCourseClassification(
  .single();
 
  if (error) {
- console.error("Error fetching course classification:", error);
- return null;
+  return null;
  }
 
  // Extract classification data from JSONB column
@@ -392,8 +361,7 @@ export async function getCourseClassification(
  next_course: classificationData.next_course || undefined,
  };
  } catch (error) {
- console.error("Error in getCourseClassification:", error);
- return null;
+  return null;
  }
 }
 
@@ -421,14 +389,12 @@ export async function getAvailableCourses(
  const { data, error } = await query;
 
  if (error) {
- console.error("Error fetching available courses:", error);
- return [];
+  return [];
  }
 
  return data || [];
  } catch (error) {
- console.error("Error in getAvailableCourses:", error);
- return [];
+  return [];
  }
 }
 
@@ -518,7 +484,5 @@ export async function initializeClassificationData(): Promise<void> {
  loadIscedData(),
  ]);
 
- } catch (error) {
- console.error("Error initializing classification data:", error);
  }
 }

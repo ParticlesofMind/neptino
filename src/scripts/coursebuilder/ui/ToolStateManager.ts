@@ -140,11 +140,9 @@ export class ToolStateManager {
                     const settings: any = {};
                     settings[mapping.property] = hex;
                     this.updateToolSettings(mapping.tool, settings);
-                    console.log(`🎨 COLOR SYNC: Updated ${mapping.tool}.${mapping.property} to ${hex}`);
                 } else {
                     // Fallback for simple tool names
                     this.updateToolSettings(tool, { color: hex });
-                    console.log(`🎨 COLOR SYNC: Updated ${tool} color to ${hex}`);
                 }
             }
         });
@@ -173,7 +171,6 @@ export class ToolStateManager {
                 this.setDefaultSelections();
             }
         } catch (error) {
-            console.warn('Error loading coursebuilder states:', error);
             this.setDefaultSelections();
         }
     }
@@ -225,8 +222,6 @@ export class ToolStateManager {
                 toolSettings: this.toolSettings, // Save tool settings
             };
             localStorage.setItem(this.storageKey, JSON.stringify(iconState));
-        } catch (error) {
-            console.warn('Error saving coursebuilder states:', error);
         }
     }
 
@@ -234,16 +229,10 @@ export class ToolStateManager {
      * Set initial selected states
      */
     private setInitialSelections(): void {
-        // Use immediate execution instead of setTimeout to prevent race conditions
-        // Ensure UI state is synchronized with canvas state immediately
-        console.log('🔧 SYNC: Setting initial tool selections...');
-        
         this.setMode(this.currentMode);
-        
-        // CRITICAL: Ensure the tool change is properly propagated
-        console.log(`🔧 SYNC: Setting initial tool to "${this.currentTool}"`);
+
         this.setTool(this.currentTool);
-        
+
         // Always set media and navigation since they now have default values
         this.setSelectedMedia(this.selectedMedia);
         this.setSelectedNavigation(this.selectedNavigation);
@@ -288,15 +277,10 @@ export class ToolStateManager {
         if (canvasAPI) {
             const success = canvasAPI.setTool(toolName);
             if (success) {
-                console.log(`✅ TOOL SYNC: Canvas tool successfully set to: ${toolName}`);
                 // Apply saved tool settings after successfully changing the tool
                 this.applyToolSettingsToCanvas(toolName);
-            } else {
-                console.error(`❌ TOOL SYNC: Failed to set canvas tool to: ${toolName}`);
             }
         } else {
-            // Canvas API not ready yet - settings will be applied when it becomes available
-            console.debug(`🔧 TOOL SYNC: Canvas API not yet available for tool "${toolName}" (will sync when ready)`);
             this.applyToolSettingsToCanvas(toolName);
         }
         
@@ -386,16 +370,14 @@ export class ToolStateManager {
                 this.toolSettings[toolName as keyof ToolSettings],
                 settings,
             );
-            
+
             // Apply settings to canvas immediately if this is the current tool
             if (toolName === this.currentTool) {
                 this.applyToolSettingsToCanvas(toolName);
             }
-            
+
             // Save states whenever tool settings are updated
             this.saveStates();
-            
-            console.log(`🔧 SETTINGS: Updated ${toolName}:`, settings);
         }
     }
 
@@ -403,8 +385,6 @@ export class ToolStateManager {
      * Update color for the current tool
      */
     updateCurrentToolColor(color: string): void {
-        console.log(`🎨 TOOL COLOR: Updating ${this.currentTool} color to ${color}`);
-        
         // Update tool settings with new color
         const toolSettings = this.toolSettings[this.currentTool as keyof ToolSettings] as any;
         if (toolSettings && 'color' in toolSettings) {
@@ -431,9 +411,6 @@ export class ToolStateManager {
     private applyToolSettingsToCanvas(toolName: string): void {
         const canvasAPI = (window as any).canvasAPI;
         if (!canvasAPI) {
-            // Canvas API not ready yet - this is normal during initialization
-            console.debug(`🔧 CANVAS: Canvas API not yet available for ${toolName} settings (will apply when ready)`);
-            
             // Try to apply settings after a short delay if canvas is still initializing
             if (typeof window !== 'undefined' && !this.canvasRetryAttempted) {
                 this.canvasRetryAttempted = true;
@@ -447,7 +424,6 @@ export class ToolStateManager {
 
         const toolSettings = this.toolSettings[toolName as keyof ToolSettings] as any;
         if (!toolSettings) {
-            console.warn(`⚠️ CANVAS: No settings found for tool: ${toolName}`);
             return;
         }
 
@@ -457,33 +433,25 @@ export class ToolStateManager {
                 // For pen tool, apply both stroke and fill colors
                 if (toolSettings.strokeColor) {
                     canvasAPI.setToolColor(toolSettings.strokeColor, 'stroke');
-                    console.log(`🎨 CANVAS: Applied pen stroke color: ${toolSettings.strokeColor}`);
                 }
                 if (toolSettings.fillColor) {
                     canvasAPI.setToolColor(toolSettings.fillColor, 'fill');
-                    console.log(`🎨 CANVAS: Applied pen fill color: ${toolSettings.fillColor}`);
                 }
             } else if (toolName === 'shapes') {
                 // For shapes tool, apply both stroke and fill colors
                 if (toolSettings.strokeColor) {
                     canvasAPI.setToolColor(toolSettings.strokeColor, 'stroke');
-                    console.log(`🎨 CANVAS: Applied shapes stroke color: ${toolSettings.strokeColor}`);
                 }
                 if (toolSettings.fillColor) {
                     canvasAPI.setToolColor(toolSettings.fillColor, 'fill');
-                    console.log(`🎨 CANVAS: Applied shapes fill color: ${toolSettings.fillColor}`);
                 }
             } else if (toolSettings.color) {
                 // For other tools, apply the simple color
                 canvasAPI.setToolColor(toolSettings.color);
-                console.log(`🎨 CANVAS: Applied ${toolName} color: ${toolSettings.color}`);
             }
 
             // Apply all tool-specific settings
             canvasAPI.setToolSettings(toolName, toolSettings);
-            console.log(`🔧 CANVAS: Applied ${toolName} settings:`, toolSettings);
-        } catch (error) {
-            console.error(`❌ CANVAS: Error applying ${toolName} settings:`, error);
         }
     }
 
@@ -491,8 +459,6 @@ export class ToolStateManager {
      * Restore saved tool settings to HTML UI elements
      */
     private restoreToolSettingsToUI(): void {
-        console.log('🔧 SYNC: Restoring saved tool settings to UI elements...');
-
         // Restore number inputs (for size settings)
         document.querySelectorAll('input[type="number"][data-setting]').forEach(input => {
             const numberInput = input as HTMLInputElement;
@@ -506,8 +472,6 @@ export class ToolStateManager {
                 if (toolSettings && setting in toolSettings) {
                     const savedValue = toolSettings[setting];
                     numberInput.value = String(savedValue);
-                    
-                    console.log(`↻ Restored ${toolName} ${setting} to: ${savedValue}`);
                 }
             }
         });
@@ -525,7 +489,6 @@ export class ToolStateManager {
                 if (toolSettings && setting in toolSettings) {
                     const savedValue = toolSettings[setting];
                     selectElement.value = savedValue;
-                    console.log(`🔧 SYNC: Restored ${toolName}.${setting} = ${savedValue}`);
                 }
             }
         });
@@ -543,7 +506,6 @@ export class ToolStateManager {
                 if (toolSettings && setting in toolSettings) {
                     const savedValue = toolSettings[setting];
                     numberInput.value = String(savedValue);
-                    console.log(`🔧 SYNC: Restored ${toolName}.${setting} = ${savedValue}`);
                 }
             }
         });
@@ -561,32 +523,25 @@ export class ToolStateManager {
                     if (toolName === 'pen') {
                         if (toolSettings.strokeColor) {
                             toolColorManager.setToolColor('pen-stroke', toolSettings.strokeColor);
-                            console.log(`🔧 SYNC: Restored pen stroke color = ${toolSettings.strokeColor}`);
                         }
                         if (toolSettings.fillColor) {
                             toolColorManager.setToolColor('pen-fill', toolSettings.fillColor);
-                            console.log(`🔧 SYNC: Restored pen fill color = ${toolSettings.fillColor}`);
                         }
                     } else if (toolName === 'shapes') {
                         if (toolSettings.strokeColor) {
                             toolColorManager.setToolColor('shapes-stroke', toolSettings.strokeColor);
-                            console.log(`🔧 SYNC: Restored shapes stroke color = ${toolSettings.strokeColor}`);
                         }
                         if (toolSettings.fillColor) {
                             toolColorManager.setToolColor('shapes-fill', toolSettings.fillColor);
-                            console.log(`🔧 SYNC: Restored shapes fill color = ${toolSettings.fillColor}`);
                         }
                     } else if (toolSettings.color) {
                         // Handle simple color property for other tools
                         toolColorManager.setToolColor(toolName, toolSettings.color);
-                        console.log(`🔧 SYNC: Restored color for ${toolName} = ${toolSettings.color}`);
                     }
                 });
                 
                 // Apply current tool settings to canvas immediately
                 this.applyToolSettingsToCanvas(this.currentTool);
-            } else {
-                console.warn('⚠️ SYNC: ToolColorManager not available for color restoration');
             }
         }, 100);
     }
@@ -681,7 +636,6 @@ export class ToolStateManager {
         if (triggerIcon) {
             triggerIcon.src = `/src/assets/icons/coursebuilder/tools/shapes/shape-${shapeName}.svg`;
             triggerIcon.alt = `Selected shape: ${shapeName}`;
-            console.log(`🔶 SHAPES: Updated dropdown trigger to show ${shapeName} as selected`);
         }
 
         // Update active state in dropdown options
@@ -692,8 +646,6 @@ export class ToolStateManager {
         const selectedOption = document.querySelector(`[data-shape="${shapeName}"]`);
         if (selectedOption) {
             selectedOption.classList.add('tools__shapes-option--active');
-        } else {
-            console.warn(`🔶 SHAPES: Could not find dropdown option for shape: ${shapeName}`);
         }
     }    /**
      * Update tool UI to reflect current selection
@@ -784,42 +736,27 @@ export class ToolStateManager {
      * This helps detect and fix synchronization issues
      */
     private verifyToolSynchronization(): void {
-        console.log('🔍 SYNC: Verifying tool synchronization...');
-        
         // Get the canvas API instance if available globally
         const canvasAPI = (window as any).canvasAPI;
         if (!canvasAPI) {
-            console.warn('⚠️ SYNC: Canvas API not available for verification');
             return;
         }
 
         try {
             const canvasActiveTool = canvasAPI.getActiveTool();
             const uiActiveTool = this.getCurrentTool();
-            
-            console.log(`🔍 SYNC: UI tool: "${uiActiveTool}", Canvas tool: "${canvasActiveTool}"`);
-            
+
             if (canvasActiveTool !== uiActiveTool) {
-                console.warn(`⚠️ SYNC MISMATCH: UI shows "${uiActiveTool}" but canvas has "${canvasActiveTool}"`);
-                console.log('🔧 SYNC: Attempting to synchronize...');
-                
                 // Force synchronization by setting the tool again
                 this.setTool(uiActiveTool);
-                
+
                 // Re-verify after a short delay
                 setTimeout(() => {
                     const newCanvasTool = canvasAPI.getActiveTool();
-                    if (newCanvasTool === uiActiveTool) {
-                        console.log('✅ SYNC: Successfully synchronized tools');
-                    } else {
-                        console.error('❌ SYNC: Failed to synchronize tools - manual refresh may be needed');
-                    }
+                    if (newCanvasTool === uiActiveTool)
+                        {}
                 }, 100);
-            } else {
-                console.log('✅ SYNC: UI and canvas tools are synchronized');
             }
-        } catch (error) {
-            console.warn('⚠️ SYNC: Error during tool synchronization verification:', error);
         }
     }
 }

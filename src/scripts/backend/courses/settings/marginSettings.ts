@@ -34,13 +34,9 @@ export class MarginSettingsHandler {
  }
 
  private init(): void {
- this.bindEvents();
- this.updateUnitDisplays();
- this.updateInputValues(); // Ensure UI shows default values
- console.log(
- "📏 Margin Settings Handler initialized with defaults:",
- this.currentSettings,
- );
+  this.bindEvents();
+  this.updateUnitDisplays();
+  this.updateInputValues(); // Ensure UI shows default values
  }
 
  private bindEvents(): void {
@@ -74,59 +70,50 @@ export class MarginSettingsHandler {
  }
 
  private handleMarginChange(event: Event): void {
- const input = event.target as HTMLInputElement;
- const marginType = input.name.replace("margin_", "") as keyof Omit<
- MarginSettings,
- "unit"
- >;
- const value = parseFloat(input.value) || 0;
+  const input = event.target as HTMLInputElement;
+  const marginType = input.name.replace("margin_", "") as keyof Omit<
+  MarginSettings,
+  "unit"
+  >;
+  const value = parseFloat(input.value) || 0;
 
- console.log(
- `📏 Margin ${marginType} changed to: ${value} ${this.currentSettings.unit}`,
- );
+  // Update current settings
+  this.currentSettings[marginType] = value;
 
- // Update current settings
- this.currentSettings[marginType] = value;
+  // Show saving status
+  this.showSaveStatus("saving");
 
- // Show saving status
- this.showSaveStatus("saving");
+  // Debounce saving to database
+  if (this.saveTimeout) {
+  clearTimeout(this.saveTimeout);
+  }
 
- // Debounce saving to database
- if (this.saveTimeout) {
- clearTimeout(this.saveTimeout);
- }
-
- this.saveTimeout = setTimeout(() => {
- this.saveSettingsToDatabase();
- this.updateCanvasMargins();
- }, 500); // Save after 500ms of no changes
+  this.saveTimeout = setTimeout(() => {
+  this.saveSettingsToDatabase();
+  this.updateCanvasMargins();
+  }, 500); // Save after 500ms of no changes
  }
 
  private convertMarginUnits(
  fromUnit: "inches" | "centimeters",
  toUnit: "inches" | "centimeters",
  ): void {
- if (fromUnit === toUnit) return;
+  if (fromUnit === toUnit) return;
 
- const conversionFactor = fromUnit === "inches" ? 2.54 : 1 / 2.54; // inches to cm or cm to inches
+  const conversionFactor = fromUnit === "inches" ? 2.54 : 1 / 2.54; // inches to cm or cm to inches
 
- this.currentSettings.top = parseFloat(
- (this.currentSettings.top * conversionFactor).toFixed(2),
- );
- this.currentSettings.bottom = parseFloat(
- (this.currentSettings.bottom * conversionFactor).toFixed(2),
- );
- this.currentSettings.left = parseFloat(
- (this.currentSettings.left * conversionFactor).toFixed(2),
- );
- this.currentSettings.right = parseFloat(
- (this.currentSettings.right * conversionFactor).toFixed(2),
- );
-
- console.log(
- `📏 Converted margins from ${fromUnit} to ${toUnit}:`,
- this.currentSettings,
- );
+  this.currentSettings.top = parseFloat(
+  (this.currentSettings.top * conversionFactor).toFixed(2),
+  );
+  this.currentSettings.bottom = parseFloat(
+  (this.currentSettings.bottom * conversionFactor).toFixed(2),
+  );
+  this.currentSettings.left = parseFloat(
+  (this.currentSettings.left * conversionFactor).toFixed(2),
+  );
+  this.currentSettings.right = parseFloat(
+  (this.currentSettings.right * conversionFactor).toFixed(2),
+  );
  }
 
  private updateInputValues(): void {
@@ -158,50 +145,41 @@ export class MarginSettingsHandler {
 
  private async saveSettingsToDatabase(): Promise<void> {
  if (!this.courseId) {
- console.error(
- "📏 ERROR: No course ID available, cannot save margin settings",
- );
- return;
+  return;
  }
 
  try {
- console.log(
- "📏 Saving margin settings to database...",
- this.currentSettings,
- );
+  // Get current course settings
+  const { data: course, error: fetchError } = await supabase
+  .from("courses")
+  .select("course_settings")
+  .eq("id", this.courseId)
+  .single();
 
- // Get current course settings
- const { data: course, error: fetchError } = await supabase
- .from("courses")
- .select("course_settings")
- .eq("id", this.courseId)
- .single();
+  if (fetchError) {
+  throw fetchError;
+  }
 
- if (fetchError) {
- throw fetchError;
- }
+  // Merge with existing settings
+  const existingSettings = course?.course_settings || {};
+  const updatedSettings = {
+  ...existingSettings,
+  margins: this.currentSettings,
+  };
 
- // Merge with existing settings
- const existingSettings = course?.course_settings || {};
- const updatedSettings = {
- ...existingSettings,
- margins: this.currentSettings,
- };
+  // Save to database
+  const { error } = await supabase
+  .from("courses")
+  .update({ course_settings: updatedSettings })
+  .eq("id", this.courseId);
 
- // Save to database
- const { error } = await supabase
- .from("courses")
- .update({ course_settings: updatedSettings })
- .eq("id", this.courseId);
+  if (error) {
+  throw error;
+  }
 
- if (error) {
- throw error;
- }
-
- this.showSaveStatus("saved");
+  this.showSaveStatus("saved");
  } catch (error) {
- console.error("📏 Failed to save margin settings:", error);
- this.showSaveStatus("error");
+  this.showSaveStatus("error");
  }
  }
 
@@ -252,22 +230,16 @@ export class MarginSettingsHandler {
  .single();
 
  if (error) {
- console.error("📏 Error loading course settings:", error);
- // Use defaults if loading fails
- this.updateInputValues();
- this.updateUnitDisplays();
- this.updateCanvasMargins();
- return;
+  // Use defaults if loading fails
+  this.updateInputValues();
+  this.updateUnitDisplays();
+  this.updateCanvasMargins();
+  return;
  }
 
  if (course?.course_settings?.margins) {
- const margins = course.course_settings.margins;
- this.currentSettings = { ...this.currentSettings, ...margins };
- console.log(
- "📏 Loaded margin settings from database:",
- this.currentSettings,
- );
- } else {
+  const margins = course.course_settings.margins;
+  this.currentSettings = { ...this.currentSettings, ...margins };
  }
 
  // Update UI and canvas
@@ -275,20 +247,17 @@ export class MarginSettingsHandler {
  this.updateUnitDisplays();
  this.updateCanvasMargins();
  } catch (error) {
- console.error("📏 Error loading margin settings:", error);
- // Use defaults if loading fails
- this.updateInputValues();
- this.updateUnitDisplays();
- this.updateCanvasMargins();
+  // Use defaults if loading fails
+  this.updateInputValues();
+  this.updateUnitDisplays();
+  this.updateCanvasMargins();
  }
  }
 
  private updateCanvasMargins(): void {
  // This will communicate with the course builder to update canvas margins
- if (
- this.courseBuilder &&
- typeof this.courseBuilder.updateCanvasMargins === "function"
- ) {
+ if (this.courseBuilder &&
+ typeof this.courseBuilder.updateCanvasMargins === "function") {
  // Convert to pixels (assuming 96 DPI)
  const dpi = 96;
  const marginsInPixels = {
@@ -311,10 +280,6 @@ export class MarginSettingsHandler {
  };
 
  this.courseBuilder.updateCanvasMargins(marginsInPixels);
- } else {
- console.log(
- "📏 Course builder not available yet, margins will be applied when canvas is ready",
- );
  }
  }
 
@@ -328,9 +293,8 @@ export class MarginSettingsHandler {
  * Set course ID and load settings from database
  */
  public setCourseId(courseId: string): void {
- this.courseId = courseId;
- console.log('📏 Setting course ID for margin settings:', courseId);
- this.loadSettingsFromDatabase(courseId);
+  this.courseId = courseId;
+  this.loadSettingsFromDatabase(courseId);
  }
 
  public getCurrentSettings(): MarginSettings {

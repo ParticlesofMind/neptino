@@ -298,19 +298,15 @@ export class SelectionVisuals {
  * Apply cursor to canvas element (preferred) or document body as fallback
  */
  private setCursor(cursor: string): void {
- console.log('🖱️ SelectionVisuals.setCursor called with:', cursor);
- 
- // Try to set on canvas element first (this takes precedence in the app)
- if (this.canvasElement) {
- this.canvasElement.style.cursor = cursor;
- console.log('🖱️ Set cursor on canvas element:', cursor);
- } else {
- // Fallback to document body
- if (typeof document !== 'undefined' && document.body) {
- document.body.style.cursor = cursor;
- console.log('🖱️ Set cursor on document body:', cursor);
- }
- }
+  // Try to set on canvas element first (this takes precedence in the app)
+  if (this.canvasElement) {
+   this.canvasElement.style.cursor = cursor;
+  } else {
+  // Fallback to document body
+  if (typeof document !== 'undefined' && document.body) {
+   document.body.style.cursor = cursor;
+  }
+  }
  }
 
  /**
@@ -326,9 +322,8 @@ export class SelectionVisuals {
   */
  private isTextObject(object: any): boolean {
    return object && (
-     object.constructor.name === 'Text' || 
-     object.text !== undefined ||
-     object.isTextObject === true  // Support for our TextArea containers
+     (object.constructor.name === 'Text' ||
+     object.text !== undefined || object.isTextObject === true)  // Support for our TextArea containers
    );
  }
 }

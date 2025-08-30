@@ -18,13 +18,11 @@ export class TextCursor implements ITextCursor {
 
   constructor(parent: Container, height: number = 20) {
     this.height = height;
-    
+
     // Create cursor graphics
     this.graphics = new Graphics();
     this.graphics.eventMode = 'none'; // Don't interfere with input events
     parent.addChild(this.graphics);
-
-    console.log('📝 TextCursor created');
   }
 
   public get visible(): boolean {
@@ -100,17 +98,14 @@ export class TextCursor implements ITextCursor {
     this.stopBlinking();
     this.graphics.parent?.removeChild(this.graphics);
     this.graphics.destroy();
-    console.log('📝 TextCursor destroyed');
   }
 
   private redraw(): void {
     this.graphics.clear();
-    
+
     // Draw vertical line cursor
     this.graphics.stroke({ width: 1, color: 0x000000 }); // Black cursor
     this.graphics.moveTo(0, 0);
     this.graphics.lineTo(0, this.height);
-    
-    console.log(`📝 Cursor redrawn at (${this._graphicsPosition.x}, ${this._graphicsPosition.y}) height: ${this.height}`);
   }
 }

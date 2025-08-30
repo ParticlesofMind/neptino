@@ -28,19 +28,12 @@ export class ScheduleCourseManager {
     // Get course ID from parameter, URL, or session storage
     this.courseId = courseId || this.getCourseId();
 
-    console.log('📅 ScheduleCourseManager initializing with course ID:', this.courseId);
-    console.log('📅 Constructor received courseId parameter:', courseId);
-    console.log('📅 Current window.location.search:', window.location.search);
-    console.log('📅 Current window.location.href:', window.location.href);
-
     // Always store instance globally for debugging, even without course ID
     if (typeof window !== "undefined") {
       (window as any).scheduleManagerInstance = this;
-      console.log('📅 Schedule manager instance stored globally');
     }
 
     if (!this.courseId) {
-      console.warn("⚠️ No course ID available for schedule management - some features may be limited");
       // Still initialize elements and basic functionality
       this.initializeElements();
       this.bindEvents();
@@ -61,21 +54,15 @@ export class ScheduleCourseManager {
     const courseIdFromUrl = urlParams.get('courseId') || urlParams.get('id');
 
     if (courseIdFromUrl) {
-      console.log('📅 Course ID from URL:', courseIdFromUrl);
       return courseIdFromUrl;
     }
 
     // Fallback to session storage (for backward compatibility)
     const courseIdFromSession = sessionStorage.getItem("currentCourseId");
     if (courseIdFromSession) {
-      console.log('📅 Course ID from session storage:', courseIdFromSession);
       return courseIdFromSession;
     }
 
-    console.warn('📅 No course ID found for schedule manager');
-    console.warn('📅 Current URL:', window.location.href);
-    console.warn('📅 Available URL params:', Object.fromEntries(urlParams.entries()));
-    console.warn('📅 Session storage keys:', Object.keys(sessionStorage));
     return "";
   }
 
@@ -93,19 +80,15 @@ export class ScheduleCourseManager {
       "delete-schedule-btn",
     ) as HTMLButtonElement; // Check if all elements were found
     if (!this.scheduleConfigSection) {
-      console.error("schedule-config element not found");
       return;
     }
     if (!this.schedulePreviewSection) {
-      console.error("schedule-preview element not found");
       return;
     }
     if (!this.scheduleButton) {
-      console.error("schedule-course-btn element not found");
       return;
     }
     if (!this.deleteScheduleButton) {
-      console.error("delete-schedule-btn element not found");
       return;
     }
 
@@ -117,7 +100,6 @@ export class ScheduleCourseManager {
       !this.scheduleButton ||
       !this.deleteScheduleButton
     ) {
-      console.error("Cannot bind events: required elements not found");
       return;
     }
 
@@ -140,19 +122,11 @@ export class ScheduleCourseManager {
 
     // Schedule generation
     this.scheduleButton.addEventListener("click", (e) => {
-      console.log("Button clicked!", {
-        disabled: this.scheduleButton.disabled,
-        event: e,
-      });
       this.generateSchedule();
     });
 
     // Delete schedule
     this.deleteScheduleButton.addEventListener("click", (e) => {
-      console.log("Delete button clicked!", {
-        disabled: this.deleteScheduleButton.disabled,
-        event: e,
-      });
       this.deleteSchedule();
     });
   }
@@ -172,15 +146,6 @@ export class ScheduleCourseManager {
 
     const isValid =
       startDate && endDate && startTime && endTime && selectedDays.length > 0;
-
-    console.log("Form validation:", {
-      startDate,
-      endDate,
-      startTime,
-      endTime,
-      selectedDays,
-      isValid,
-    });
 
     if (isValid) {
       this.scheduleButton.classList.remove('button--disabled');
@@ -231,7 +196,6 @@ export class ScheduleCourseManager {
       this.lockScheduleConfig();
       this.showDeleteScheduleButton();
     } catch (error) {
-      console.error("Error generating schedule:", error);
       alert("Failed to generate schedule. Please try again.");
     }
   }
@@ -269,7 +233,6 @@ export class ScheduleCourseManager {
     sessions: ScheduleSession[],
   ): Promise<void> {
     if (!this.courseId) {
-      console.warn('📅 Cannot save schedule: no course ID available');
       throw new Error('No course ID available for saving schedule');
     }
 
@@ -287,11 +250,8 @@ export class ScheduleCourseManager {
   }
 
   private renderSchedulePreview(): void {
-    console.log('📅 Rendering schedule preview with', this.currentSchedule?.length || 0, 'sessions');
-
     const previewContainer = this.schedulePreviewSection.querySelector('.schedule__content');
     if (!previewContainer) {
-      console.error('📅 .schedule__content container not found');
       return;
     }
 
@@ -300,14 +260,12 @@ export class ScheduleCourseManager {
 
     // Safety check: ensure currentSchedule is an array
     if (!Array.isArray(this.currentSchedule)) {
-      console.warn("📅 currentSchedule is not an array:", this.currentSchedule);
       this.currentSchedule = [];
       return;
     }
 
     // Show schedule rows or placeholder
     if (this.currentSchedule.length > 0) {
-      console.log('📅 Rendering', this.currentSchedule.length, 'schedule rows');
       this.currentSchedule.forEach((session, index) => {
         const row = this.createScheduleRow(session, index);
         previewContainer.appendChild(row);
@@ -316,7 +274,6 @@ export class ScheduleCourseManager {
       // Hide any existing placeholder and show the preview
       this.schedulePreviewSection.style.display = 'block';
     } else {
-      console.log('📅 No schedule data - showing placeholder');
       // Show placeholder if no schedule
       const placeholder = document.createElement('div');
       placeholder.className = 'schedule__placeholder';
@@ -383,8 +340,6 @@ export class ScheduleCourseManager {
 
     try {
       await this.saveScheduleToDatabase(this.currentSchedule);
-    } catch (error) {
-      console.error("Error updating lesson time:", error);
     }
   }
 
@@ -403,8 +358,6 @@ export class ScheduleCourseManager {
     try {
       await this.saveScheduleToDatabase(this.currentSchedule);
       this.renderSchedulePreview();
-    } catch (error) {
-      console.error("Error deleting lesson:", error);
     }
   }
 
@@ -426,25 +379,17 @@ export class ScheduleCourseManager {
       this.unlockScheduleConfig();
       this.hideSchedulePreview();
       this.hideDeleteScheduleButton();
-    } catch (error) {
-      console.error("Error deleting schedule:", error);
     }
   }
 
   private async loadExistingSchedule(): Promise<void> {
     if (!this.courseId) {
-      console.warn('📅 Cannot load schedule: no course ID available');
-      console.warn('📅 Current URL:', window.location.href);
-      console.warn('📅 URL params:', new URLSearchParams(window.location.search).toString());
-      console.warn('📅 Session storage courseId:', sessionStorage.getItem("currentCourseId"));
       this.currentSchedule = [];
       this.hideSchedulePreview();
       this.unlockScheduleConfig();
       this.hideDeleteScheduleButton();
       return;
     }
-
-    console.log('📅 Loading existing schedule for course ID:', this.courseId);
 
     try {
       const { data, error } = await supabase
@@ -454,28 +399,21 @@ export class ScheduleCourseManager {
         .single();
 
       if (error) {
-        console.error("📅 Supabase error loading schedule:", error);
         throw error;
       }
 
-      console.log('📅 Raw schedule data from Supabase:', data);
-
       if (data?.schedule_settings && Array.isArray(data.schedule_settings)) {
-        console.log('📅 Found existing schedule with', data.schedule_settings.length, 'sessions');
         this.currentSchedule = data.schedule_settings;
         this.renderSchedulePreview();
         this.lockScheduleConfig();
         this.showDeleteScheduleButton();
       } else {
-        // No existing schedule or invalid data - ensure currentSchedule is empty array
-        console.log('📅 No existing schedule found or invalid data format');
         this.currentSchedule = [];
         this.hideSchedulePreview();
         this.unlockScheduleConfig();
         this.hideDeleteScheduleButton();
       }
     } catch (error) {
-      console.error("📅 Error loading existing schedule:", error);
       // Ensure currentSchedule is always an array even on error
       this.currentSchedule = [];
       this.hideSchedulePreview();
@@ -534,7 +472,6 @@ export class ScheduleCourseManager {
     }
 
     this.courseId = courseId;
-    console.log('📅 Course ID updated for schedule manager:', courseId);
 
     // Immediately reload data with new course ID
     this.loadExistingSchedule();

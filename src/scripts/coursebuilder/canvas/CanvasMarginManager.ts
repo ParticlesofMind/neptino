@@ -41,7 +41,7 @@ export class CanvasMarginManager {
 
     // Convert all units to pixels
     let pixelMargins: MarginSettings;
-    
+
     switch (margins.unit) {
       case 'inches':
         pixelMargins = {
@@ -70,13 +70,11 @@ export class CanvasMarginManager {
         };
         break;
       default:
-        console.error('Unknown margin unit:', margins.unit);
         return;
     }
 
     this.currentMargins = pixelMargins;
-    console.log('📏 Updated canvas margins to pixels:', this.currentMargins);
-    
+
     // Update visual margins if canvas is available
     this.updateMarginVisuals();
   }
@@ -111,11 +109,11 @@ export class CanvasMarginManager {
 
     // Create new margin graphics
     this.marginGraphics = new Graphics();
-    
+
     const canvasWidth = 794;  // A4 width
     const canvasHeight = 1123; // A4 height
     const margins = this.currentMargins;
-    
+
     // Professional blue lines for margins
     const marginColor = 0x0066FF; // Blue
     const lineWidth = 1;
@@ -144,11 +142,9 @@ export class CanvasMarginManager {
       .stroke({ color: marginColor, width: lineWidth, alpha });
 
     this.marginGraphics.label = 'blue-margin-lines';
-    
+
     // Add to container (should be background or guides layer)
     this.container.addChild(this.marginGraphics);
-    
-    console.log('📏 Updated clean blue margin lines:', margins);
   }  /**
    * Hide margin visuals
    */

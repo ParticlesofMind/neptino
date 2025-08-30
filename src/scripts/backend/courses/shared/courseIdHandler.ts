@@ -29,27 +29,24 @@ export class CourseIdHandler {
  * Show the course ID after course creation
  */
  public showCourseId(courseId: string): void {
- if (!this.courseCodeDisplay) {
- console.warn('Course code display element not found');
- return;
- }
+  if (!this.courseCodeDisplay) {
+   return;
+  }
 
- // Update the course ID value display
- const codeValueElement = document.getElementById('course-id-value');
- if (codeValueElement) {
- codeValueElement.textContent = courseId;
- }
- 
- // Store the course ID in the copy button's data attribute
- if (this.courseCopyBtn) {
- this.courseCopyBtn.setAttribute('data-course-id', courseId);
- this.courseCopyBtn.setAttribute('title', `Copy course ID: ${courseId}`);
- }
+  // Update the course ID value display
+  const codeValueElement = document.getElementById('course-id-value');
+  if (codeValueElement) {
+  codeValueElement.textContent = courseId;
+  }
 
- // Show the course code display
- this.courseCodeDisplay.style.display = 'flex';
- 
- console.log('📋 Course ID displayed:', courseId);
+  // Store the course ID in the copy button's data attribute
+  if (this.courseCopyBtn) {
+  this.courseCopyBtn.setAttribute('data-course-id', courseId);
+  this.courseCopyBtn.setAttribute('title', `Copy course ID: ${courseId}`);
+  }
+
+  // Show the course code display
+  this.courseCodeDisplay.style.display = 'flex';
  }
 
  /**
@@ -60,27 +57,22 @@ export class CourseIdHandler {
 
  const courseId = this.courseCopyBtn.getAttribute('data-course-id');
  if (!courseId) {
- console.warn('No course ID to copy');
- return;
+  return;
  }
 
  try {
- if (navigator.clipboard && window.isSecureContext) {
- // Use modern clipboard API
- await navigator.clipboard.writeText(courseId);
- } else {
- // Fallback for older browsers
- this.fallbackCopyToClipboard(courseId);
- }
+  if (navigator.clipboard && window.isSecureContext) {
+  // Use modern clipboard API
+  await navigator.clipboard.writeText(courseId);
+  } else {
+  // Fallback for older browsers
+  this.fallbackCopyToClipboard(courseId);
+  }
 
- // Show success feedback
- this.showCopyFeedback(true);
-
- console.log('📋 Course ID copied to clipboard:', courseId);
-
+  // Show success feedback
+  this.showCopyFeedback(true);
  } catch (error) {
- console.error('Failed to copy course ID:', error);
- this.showCopyFeedback(false);
+  this.showCopyFeedback(false);
  }
  }
 

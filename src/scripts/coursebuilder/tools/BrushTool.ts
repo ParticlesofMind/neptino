@@ -33,116 +33,100 @@ export class BrushTool extends BaseTool {
  }
 
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
- // 🔒 CRITICAL: Only respond if this tool is active
- if (!this.isActive) {
-   console.log('🖍️ BRUSH: Ignoring pointer down - tool not active');
+  // 🔒 CRITICAL: Only respond if this tool is active
+  if (!this.isActive) {
    return;
- }
+  }
 
- this.isDrawing = true;
+  this.isDrawing = true;
 
- // Create new graphics object for this stroke with authentic marker properties
- this.currentStroke = new Graphics();
- this.currentStroke.eventMode = "static";
- this.currentStroke.alpha = BRUSH_CONSTANTS.FIXED_OPACITY; // Fixed opacity like real markers
+  // Create new graphics object for this stroke with authentic marker properties
+  this.currentStroke = new Graphics();
+  this.currentStroke.eventMode = "static";
+  this.currentStroke.alpha = BRUSH_CONSTANTS.FIXED_OPACITY; // Fixed opacity like real markers
 
- // Use local coordinates relative to the container
- const localPoint = container.toLocal(event.global);
- 
- // 🚫 MARGIN PROTECTION: Prevent creation in margin areas
- const canvasBounds = this.manager.getCanvasBounds();
- if (!BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
- console.log(`🖍️ BRUSH: 🚫 Click in margin area rejected - point (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)}) outside content area`);
- return; // Exit early - no creation allowed in margins
- }
- 
- this.lastPoint.copyFrom(localPoint);
- this.strokePoints = [localPoint.clone()];
+  // Use local coordinates relative to the container
+  const localPoint = container.toLocal(event.global);
 
- console.log(
- `🖍️ BRUSH: Container local point: (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`,
- );
+  // 🚫 MARGIN PROTECTION: Prevent creation in margin areas
+  const canvasBounds = this.manager.getCanvasBounds();
+  if (!BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
+   return; // Exit early - no creation allowed in margins
+  }
 
- // Set stroke style with authentic marker characteristics
- const color = hexToNumber(this.settings.color);
- console.log(
- `🖍️ BRUSH: Setting authentic marker stroke - color: ${color} (from ${this.settings.color}), width: ${this.settings.size}`,
- );
+  this.lastPoint.copyFrom(localPoint);
+  this.strokePoints = [localPoint.clone()];
 
- // Start the drawing path - just moveTo, don't stroke yet
- this.currentStroke.moveTo(localPoint.x, localPoint.y);
+  // Set stroke style with authentic marker characteristics
+  const color = hexToNumber(this.settings.color);
 
- // Add to container
- container.addChild(this.currentStroke);
- console.log(
- `🖍️ BRUSH: Marker stroke started at (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`,
- );
+  // Start the drawing path - just moveTo, don't stroke yet
+  this.currentStroke.moveTo(localPoint.x, localPoint.y);
+
+  // Add to container
+  container.addChild(this.currentStroke);
  }
 
  onPointerMove(event: FederatedPointerEvent, container: Container): void {
- // 🔒 CRITICAL: Only respond if this tool is active
- if (!this.isActive) {
-   return;
- }
+  // 🔒 CRITICAL: Only respond if this tool is active
+  if (!this.isActive) {
+    return;
+  }
 
- // Only respond to move events when actively drawing
- if (!this.isDrawing || !this.currentStroke) return;
+  // Only respond to move events when actively drawing
+  if (!this.isDrawing || !this.currentStroke) return;
 
- // Use local coordinates relative to the container
- const localPoint = container.toLocal(event.global);
+  // Use local coordinates relative to the container
+  const localPoint = container.toLocal(event.global);
 
- // Implement stroke smoothing for authentic marker feel
- if (BRUSH_CONSTANTS.STROKE_SMOOTHING) {
- const distance = Math.sqrt(
- Math.pow(localPoint.x - this.lastPoint.x, 2) +
- Math.pow(localPoint.y - this.lastPoint.y, 2),
- );
+  // Implement stroke smoothing for authentic marker feel
+  if (BRUSH_CONSTANTS.STROKE_SMOOTHING) {
+  const distance = Math.sqrt(
+  Math.pow(localPoint.x - this.lastPoint.x, 2) +
+  Math.pow(localPoint.y - this.lastPoint.y, 2),
+  );
 
- // Only draw if we've moved a minimum distance (reduces jitter)
- if (distance < BRUSH_CONSTANTS.MIN_DISTANCE) return;
- }
+  // Only draw if we've moved a minimum distance (reduces jitter)
+  if (distance < BRUSH_CONSTANTS.MIN_DISTANCE) return;
+  }
 
- console.log(
- `🖍️ BRUSH: Brushing to (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`,
- );
+  // Clear the current stroke and redraw the entire path
+  this.currentStroke.clear();
 
- // Clear the current stroke and redraw the entire path
- this.currentStroke.clear();
- 
- // Redraw the entire path
- if (this.strokePoints.length > 0) {
- this.currentStroke.moveTo(this.strokePoints[0].x, this.strokePoints[0].y);
- 
- for (let i = 1; i < this.strokePoints.length; i++) {
- this.currentStroke.lineTo(this.strokePoints[i].x, this.strokePoints[i].y);
- }
- 
- // Add the current point
- this.currentStroke.lineTo(localPoint.x, localPoint.y);
- 
- // Apply the stroke style
- this.currentStroke.stroke({
- width: this.settings.size,
- color: hexToNumber(this.settings.color),
- cap: "round",
- join: "round",
- });
- }
+  // Redraw the entire path
+  if (this.strokePoints.length > 0) {
+  this.currentStroke.moveTo(this.strokePoints[0].x, this.strokePoints[0].y);
 
- // Add slight texture variation for authentic marker feel
- const opacityVariation =
- 1 + (Math.random() - 0.5) * BRUSH_CONSTANTS.TEXTURE_VARIATION;
- const adjustedOpacity = Math.max(
- 0.3,
- Math.min(1, BRUSH_CONSTANTS.FIXED_OPACITY * opacityVariation),
- );
+  for (let i = 1; i < this.strokePoints.length; i++) {
+  this.currentStroke.lineTo(this.strokePoints[i].x, this.strokePoints[i].y);
+  }
 
- // Apply subtle opacity variation
- this.currentStroke.alpha = adjustedOpacity;
+  // Add the current point
+  this.currentStroke.lineTo(localPoint.x, localPoint.y);
 
- // Update tracking
- this.lastPoint.copyFrom(localPoint);
- this.strokePoints.push(localPoint.clone());
+  // Apply the stroke style
+  this.currentStroke.stroke({
+  width: this.settings.size,
+  color: hexToNumber(this.settings.color),
+  cap: "round",
+  join: "round",
+  });
+  }
+
+  // Add slight texture variation for authentic marker feel
+  const opacityVariation =
+  1 + (Math.random() - 0.5) * BRUSH_CONSTANTS.TEXTURE_VARIATION;
+  const adjustedOpacity = Math.max(
+  0.3,
+  Math.min(1, BRUSH_CONSTANTS.FIXED_OPACITY * opacityVariation),
+  );
+
+  // Apply subtle opacity variation
+  this.currentStroke.alpha = adjustedOpacity;
+
+  // Update tracking
+  this.lastPoint.copyFrom(localPoint);
+  this.strokePoints.push(localPoint.clone());
  }
 
  onPointerUp(): void {
@@ -152,14 +136,10 @@ export class BrushTool extends BaseTool {
  }
 
  if (this.isDrawing) {
- console.log(
- `🖍️ BRUSH: Finished marker stroke with ${this.strokePoints.length} points`,
- );
-
- // Apply final authentic marker properties
- if (this.currentStroke) {
- this.currentStroke.alpha = BRUSH_CONSTANTS.FIXED_OPACITY;
- }
+  // Apply final authentic marker properties
+  if (this.currentStroke) {
+  this.currentStroke.alpha = BRUSH_CONSTANTS.FIXED_OPACITY;
+  }
  }
 
  this.isDrawing = false;

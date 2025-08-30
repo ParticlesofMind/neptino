@@ -45,12 +45,9 @@ export class TableManager implements Tool {
         this.contextMenu = new TableContextMenu(this.activeTables);
     }
 
-    onActivate(): void {
-        console.log("🔷 TABLE: Table tool activated");
-    }
+    onActivate(): void {}
 
     onDeactivate(): void {
-        console.log("🔷 TABLE: Table tool deactivated");
         this.cellEditor.forceExitEditMode();
         this.contextMenu.hideMenu();
     }
@@ -75,12 +72,10 @@ export class TableManager implements Tool {
         if (this.isDrawing) {
             this.endDrawing(container);
         }
-        
+
         // Ensure proper cleanup of any table interaction states
         this.cellEditor.forceExitEditMode();
         this.contextMenu.hideMenu();
-        
-        console.log("🔷 TABLE: Pointer up completed with cleanup");
     }
 
     updateSettings(settings: any): void {
@@ -111,11 +106,11 @@ export class TableManager implements Tool {
 
     private createTable(container: Container, x: number, y: number, width: number, height: number): void {
         const tableId = `table-${++this.tableIdCounter}`;
-        
+
         const handleCellDoubleClick = (cell: any, container: Container) => {
             this.cellEditor.startCellEditing(cell, container);
         };
-        
+
         const handleCellRightClick = (event: any, tableId: string) => {
             // Find the table and cell from the event
             const table = this.activeTables.find(t => t.id === tableId);
@@ -123,7 +118,7 @@ export class TableManager implements Tool {
                 this.contextMenu.showTableMenu(table, event);
             }
         };
-        
+
         const tableData = this.tableCreator.createPixiTable(
             tableId,
             container,
@@ -135,15 +130,13 @@ export class TableManager implements Tool {
             handleCellRightClick,
             this.displayManager
         );
-        
+
         this.activeTables.push(tableData);
-        
+
         if (this.displayManager) {
             this.displayManager.add(tableData.container);
         } else {
             container.addChild(tableData.container);
         }
-        
-        console.log(`🔷 TABLE: Created table ${tableId} at (${x}, ${y}) with size ${width}x${height}`);
     }
 }
