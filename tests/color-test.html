@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Select Test</title>
+    <link rel="stylesheet" href="/src/scss/main.scss" />
+    <style>
+        .test-container {
+            padding: 20px;
+            max-width: 500px;
+        }
+        .tools__item--pen {
+            display: block !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Color Select Test</h1>
+        
+        <div class="tools__item--pen" data-tool="pen">
+            <h2>Pen Tool Options</h2>
+            
+            <div class="form__group">
+                <label for="pen-stroke-color">Stroke Color</label>
+                <select id="pen-stroke-color" title="Stroke Color" data-color-selector="pen-stroke" class="input input--color">
+                    <option value="#1a1a1a" selected>Black</option>
+                    <option value="#4a79a4">Blue</option>
+                    <option value="#a74a4a">Red</option>
+                    <option value="#4a9a4a">Green</option>
+                    <option value="#a4a44a">Yellow</option>
+                    <option value="#a44aa4">Purple</option>
+                    <option value="#4aa4a4">Cyan</option>
+                    <option value="#a4644a">Brown</option>
+                    <option value="#646464">Gray</option>
+                    <option value="#f8fafc">White</option>
+                </select>
+            </div>
+            
+            <div class="form__group">
+                <label for="pen-fill-color">Fill Color</label>
+                <select id="pen-fill-color" title="Fill Color" data-color-selector="pen-fill" class="input input--color">
+                    <option value="#f8fafc" selected>White</option>
+                    <option value="#1a1a1a">Black</option>
+                    <option value="#4a79a4">Blue</option>
+                    <option value="#a74a4a">Red</option>
+                    <option value="#4a9a4a">Green</option>
+                    <option value="#a4a44a">Yellow</option>
+                    <option value="#a44aa4">Purple</option>
+                    <option value="#4aa4a4">Cyan</option>
+                    <option value="#a4644a">Brown</option>
+                    <option value="#646464">Gray</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Simple test script to verify color changes
+        const strokeSelect = document.getElementById('pen-stroke-color');
+        const fillSelect = document.getElementById('pen-fill-color');
+        
+        strokeSelect?.addEventListener('change', (e) => {
+            console.log('Pen stroke color changed to:', e.target.value);
+        });
+        
+        fillSelect?.addEventListener('change', (e) => {
+            console.log('Pen fill color changed to:', e.target.value);
+        });
+    </script>
+</body>
+</html>

@@ -28,6 +28,7 @@
     &__mode {
         grid-column: 1 / 3;
         grid-row: 1;
+        display: flex;
     }
 
     &__tools {
@@ -38,7 +39,11 @@
     &__nav {
         grid-column: 4;
         grid-row: 1;
-        justify-content: flex-start; // Ensure items start from the left, not center
+    }
+
+    &__nav-course {
+        display: flex;
+
     }
 
     // ==========================================================================
@@ -48,8 +53,7 @@
     &__media {
         grid-column: 1;
         grid-row: 2;
-        flex-direction: column;
-        overflow-y: auto;
+    
     }
 
     &__search {
@@ -94,89 +98,10 @@
         grid-column: 4;
         grid-row: 2;
         overflow-y: auto;
-
-        .preview__content {
-            display: none;
-            height: 100%;
-
-            &--active {
-                display: block;
-            }
-        }
     }
 }
 
 // ==========================================================================
-// UNIFIED ICON STYLING - NEUMORPHIC DESIGN FOR ALL COURSEBUILDER ICONS
-// ==========================================================================
-
-.mode,
-.media,
-.nav-course {
-    display: flex;
-    gap: var(--spacing-4); // Ensure proper spacing between items
-    align-items: center;
-
-    &__item {
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing-2);
-        width: 50px; // Corrected size
-        height: 50px; // Corrected size
-        align-items: center;
-        justify-content: center;
-        border-radius: var(--radius-large);
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background: var(--color-background); // Lighter - pure white
-        border: 1px solid var(--color-neutral-200); // Lighter border
-        box-shadow:
-            0 1px 3px rgba(0, 0, 0, 0.08),
-            0 1px 2px rgba(0, 0, 0, 0.12); // Modern, subtle shadow
-
-        &:hover {
-            transform: translateY(-1px);
-            background: var(--color-neutral-50); // Light grey on hover
-            border-color: var(--color-neutral-300);
-            box-shadow:
-                0 2px 8px rgba(0, 0, 0, 0.1),
-                0 1px 3px rgba(0, 0, 0, 0.08); // Enhanced hover shadow
-        }
-
-        &--active {
-            background: var(--color-primary-300); // More subtle, desaturated blue
-            color: var(--color-background);
-            border-color: var(--color-primary-400);
-            box-shadow:
-                0 2px 8px rgba(26, 140, 255, 0.15),
-                // Blue-tinted shadow
-                0 1px 3px rgba(26, 140, 255, 0.1),
-                inset 0 1px 2px rgba(255, 255, 255, 0.2); // Inner light for depth
-
-            .icon {
-                filter: brightness(0) invert(1); // Keep icons white when selected
-            }
-
-            // Keep same background on hover for active items
-            &:hover {
-                background: var(--color-primary-300); // Same background, no color change
-                border-color: var(--color-primary-400); // Same border
-                transform: translateY(-1px);
-                box-shadow:
-                    0 3px 12px rgba(26, 140, 255, 0.2),
-                    // Enhanced blue shadow only
-                    0 2px 6px rgba(26, 140, 255, 0.15),
-                    inset 0 1px 2px rgba(255, 255, 255, 0.3); // Slightly brighter inner light
-            }
-        }
-    }
-
-    // Target icon labels within active items across all sections
-    &__item--active .icon-label {
-        color: var(--color-background);
-    }
-}
-
 // ==========================================================================
 // TOOLS - BEM STYLING FOR TOOL LAYOUT AND SETTINGS
 // ==========================================================================
@@ -185,6 +110,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+
     gap: var(--spacing-3);
 
     &__selection {
@@ -192,52 +118,13 @@
         gap: var(--spacing-3);
     }
 
-    // Tool selection items inherit from unified icon styling
+    // Tool selection items - layout structure only
     &__item {
         display: flex;
         flex-direction: column;
         gap: var(--spacing-2);
-        width: 50px;
-        height: 50px;
         align-items: center;
         justify-content: center;
-        border-radius: var(--radius-large);
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border: 1px solid var(--color-neutral-200);
-        box-shadow:
-            0 1px 3px rgba(0, 0, 0, 0.08),
-            0 1px 2px rgba(0, 0, 0, 0.12);
-
-        &:hover {
-            transform: translateY(-1px);
-            background: var(--color-neutral-50);
-            border-color: var(--color-neutral-300);
-            box-shadow:
-                0 2px 8px rgba(0, 0, 0, 0.1),
-                0 1px 3px rgba(0, 0, 0, 0.08);
-        }
-
-        &--active {
-            background: var(--color-primary-300);
-            color: var(--color-background);
-            border-color: var(--color-primary-400);
-            box-shadow:
-                0 2px 8px rgba(26, 140, 255, 0.15),
-                0 1px 3px rgba(26, 140, 255, 0.1),
-                inset 0 1px 2px rgba(255, 255, 255, 0.2);
-
-
-            &:hover {
-                background: var(--color-primary-300);
-                border-color: var(--color-primary-400);
-                transform: translateY(-1px);
-                box-shadow:
-                    0 3px 12px rgba(26, 140, 255, 0.2),
-                    0 2px 6px rgba(26, 140, 255, 0.15),
-                    inset 0 1px 2px rgba(255, 255, 255, 0.3);
-            }
-        }
     }
 
     &__options {
@@ -247,194 +134,46 @@
         align-items: center;
         gap: var(--spacing-3);
         margin-left: var(--spacing-4);
-        overflow: visible; // Ensure dropdowns can escape container bounds
+        overflow: visible;
 
-        // Override column direction for ALL tool items in options area
+        // Override layout for tool items in options area (settings should be horizontal)
         .tools__item {
             flex-direction: row;
             width: auto;
             height: auto;
             gap: var(--spacing-2);
-            border: none;
-            box-shadow: none;
-            background: transparent;
-            overflow: visible; // Allow dropdowns to escape tool item bounds
-
-            &:hover {
-                transform: none;
-                background: transparent;
-            }
-        }
-
-
-    }
-
-    &__option-item {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-2);
-
-        &[data-tool] {
-            display: none;
-
-            &[style*='flex'],
-            &[style*='block'] {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                gap: var(--spacing-2);
-            }
         }
     }
+}
 
-    // Shape-specific elements
-    &__shape-item {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 50px;
-        height: 50px;
-        border-radius: var(--radius-large);
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border: 1px solid var(--color-neutral-200);
-        box-shadow:
-            0 1px 3px rgba(0, 0, 0, 0.08),
-            0 1px 2px rgba(0, 0, 0, 0.12);
+// ==========================================================================
+// MODE, MEDIA, NAV-COURSE - ACTIVE STATE STYLING
+// ==========================================================================
 
-        &:hover {
-            transform: translateY(-1px);
-            background: var(--color-neutral-50);
-            border-color: var(--color-neutral-300);
-            box-shadow:
-                0 2px 8px rgba(0, 0, 0, 0.1),
-                0 1px 3px rgba(0, 0, 0, 0.08);
-        }
-
+.mode,
+.media,
+.nav-course,
+.tools {
+    &__item {
         &--active {
-            background: var(--color-primary-300);
-            color: var(--color-background);
-            border-color: var(--color-primary-400);
-            box-shadow:
-                0 2px 8px rgba(26, 140, 255, 0.15),
-                0 1px 3px rgba(26, 140, 255, 0.1),
-                inset 0 1px 2px rgba(255, 255, 255, 0.2);
-
-            &:hover {
-                background: var(--color-primary-300);
-                border-color: var(--color-primary-400);
-                transform: translateY(-1px);
+            .icon--base {
+                background: var(--color-primary-100);
+                border-color: var(--color-primary-300);
                 box-shadow:
-                    0 3px 12px rgba(26, 140, 255, 0.2),
-                    0 2px 6px rgba(26, 140, 255, 0.15),
-                    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+                    0 2px 4px rgba(26, 140, 255, 0.15),
+                    0 1px 2px rgba(26, 140, 255, 0.1);
+
+                &:hover {
+                    background: var(--color-primary-200);
+                    border-color: var(--color-primary-400);
+                    transform: translateY(-1px);
+                    box-shadow:
+                        0 3px 6px rgba(26, 140, 255, 0.2),
+                        0 2px 4px rgba(26, 140, 255, 0.15);
+                }
             }
+
+
         }
-    }
-
-    // Custom shapes select with icons
-    &__shapes-select {
-        position: relative;
-        display: inline-block;
-    }
-
-    &__shapes-trigger {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-2);
-        padding: var(--spacing-2);
-        background: var(--color-background);
-        border: 1px solid var(--color-neutral-200);
-        border-radius: var(--radius-medium);
-        cursor: pointer;
-        transition: all 0.2s ease;
-
-        &:hover {
-            border-color: var(--color-neutral-300);
-            background: var(--color-neutral-50);
-        }
-
-        &:focus {
-            outline: 2px solid var(--color-primary-500);
-            outline-offset: 2px;
-        }
-    }
-
-    &__shapes-arrow {
-        width: 12px;
-        height: 12px;
-        transition: transform 0.2s ease;
-        opacity: 0.6;
-        flex-shrink: 0;
-    }
-
-    &__shapes-trigger[aria-expanded="true"] &__shapes-arrow {
-        transform: rotate(180deg);
-    }
-
-    &__shapes-menu {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        background: var(--color-background);
-        border: 1px solid var(--color-neutral-200);
-        border-radius: var(--radius-medium);
-        box-shadow:
-            0 4px 12px rgba(0, 0, 0, 0.1),
-            0 2px 6px rgba(0, 0, 0, 0.05);
-        z-index: 1000;
-        min-width: 120px;
-        padding: var(--spacing-1);
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--spacing-1);
-        
-        // Hidden by default
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(-4px);
-        transition: all 0.15s ease;
-        pointer-events: none;
-
-        &--open {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-            pointer-events: auto;
-        }
-    }
-
-    &__shapes-option {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: var(--spacing-2);
-        cursor: pointer;
-        border-radius: var(--radius-small);
-        transition: all 0.15s ease;
-        background: transparent;
-        border: 1px solid transparent;
-
-        &:hover {
-            background: var(--color-primary-50);
-            border-color: var(--color-primary-200);
-        }
-
-        &--active {
-            background: var(--color-primary-100);
-            border-color: var(--color-primary-300);
-        }
-    }
-
-    &__shape-icon {
-        width: 20px;
-        height: 20px;
-        display: block;
-    }
-
-    &__icon {
-        width: 20px;
-        height: 20px;
-        display: block;
     }
 }

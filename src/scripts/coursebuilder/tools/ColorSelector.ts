@@ -49,16 +49,16 @@ export class ColorSelector {
 
   private createColorButton(): void {
     const button = document.createElement('button');
-    button.className = 'input__color-selector';
+    button.className = 'color-button';
     button.type = 'button';
     button.setAttribute('aria-label', `Current color: ${this.currentColor.name}`);
     button.setAttribute('aria-expanded', 'false');
     button.setAttribute('aria-haspopup', 'true');
 
     button.innerHTML = `
-      <div class="input__color-preview" style="background-color: ${this.currentColor.hex}"></div>
-      <span class="input__color-name">${this.currentColor.name}</span>
-      <svg class="input__color-arrow" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+      <div class="color-preview" style="background-color: ${this.currentColor.hex}"></div>
+      <span class="color-name">${this.currentColor.name}</span>
+      <svg class="color-arrow" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
         <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
       </svg>
     `;
@@ -68,13 +68,13 @@ export class ColorSelector {
 
   private createDropdown(): void {
     this.dropdown = document.createElement('div');
-    this.dropdown.className = 'input__color-dropdown';
+    this.dropdown.className = 'color-menu';
     this.dropdown.setAttribute('role', 'listbox');
     this.dropdown.setAttribute('aria-label', 'Color options');
 
     this.colors.forEach((color) => {
       const option = document.createElement('button');
-      option.className = 'input__color-option';
+      option.className = 'color-option';
       option.type = 'button';
       option.setAttribute('role', 'option');
       option.setAttribute('aria-selected', color.hex === this.currentColor.hex ? 'true' : 'false');
@@ -82,9 +82,9 @@ export class ColorSelector {
       option.setAttribute('data-hex', color.hex);
 
       option.innerHTML = `
-        <div class="input__color-swatch" style="background-color: ${color.hex}"></div>
-        <span class="input__color-label">${color.name}</span>
-        ${color.hex === this.currentColor.hex ? '<svg class="input__color-check" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M13.485 3.495a.75.75 0 011.06 1.06l-7 7a.75.75 0 01-1.06 0l-3.5-3.5a.75.75 0 111.06-1.06L6.97 9.44l6.515-5.945z"/></svg>' : ''}
+        <div class="color-swatch" style="background-color: ${color.hex}"></div>
+        <span class="color-label">${color.name}</span>
+        ${color.hex === this.currentColor.hex ? '<svg class="color-check" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M13.485 3.495a.75.75 0 011.06 1.06l-7 7a.75.75 0 01-1.06 0l-3.5-3.5a.75.75 0 111.06-1.06L6.97 9.44l6.515-5.945z"/></svg>' : ''}
       `;
 
       option.addEventListener('click', (e) => {
@@ -101,7 +101,7 @@ export class ColorSelector {
   }
 
   private bindEvents(): void {
-    const button = this.container.querySelector('.input__color-selector') as HTMLButtonElement;
+    const button = this.container.querySelector('.color-button') as HTMLButtonElement;
 
     button.addEventListener('click', (e) => {
       e.preventDefault();
@@ -147,7 +147,7 @@ export class ColorSelector {
   }
 
   private handleDropdownKeydown(e: KeyboardEvent): void {
-    const options = Array.from(this.dropdown?.querySelectorAll('.input__color-option') || []) as HTMLButtonElement[];
+    const options = Array.from(this.dropdown?.querySelectorAll('.color-option') || []) as HTMLButtonElement[];
     const currentIndex = options.findIndex(opt => opt === document.activeElement);
 
     switch (e.key) {
@@ -168,7 +168,7 @@ export class ColorSelector {
         break;
       case 'Escape':
         this.closeDropdown();
-        (this.container.querySelector('.input__color-selector') as HTMLButtonElement).focus();
+        (this.container.querySelector('.color-button') as HTMLButtonElement).focus();
         break;
     }
   }
@@ -185,11 +185,11 @@ export class ColorSelector {
     if (!this.dropdown) return;
 
     this.isOpen = true;
-    this.dropdown.classList.add('input__color-dropdown--open');
+    this.dropdown.classList.add('color-menu--open');
 
-    const button = this.container.querySelector('.input__color-selector') as HTMLButtonElement;
+    const button = this.container.querySelector('.color-button') as HTMLButtonElement;
     button.setAttribute('aria-expanded', 'true');
-    button.classList.add('input__color-selector--open');
+    button.classList.add('color-button--open');
 
     // Position dropdown relative to button using fixed positioning
     this.positionDropdown();
@@ -198,7 +198,7 @@ export class ColorSelector {
   private positionDropdown(): void {
     if (!this.dropdown) return;
 
-    const button = this.container.querySelector('.input__color-selector') as HTMLButtonElement;
+    const button = this.container.querySelector('.color-button') as HTMLButtonElement;
     const buttonRect = button.getBoundingClientRect();
 
     // Position dropdown right below the button
@@ -213,17 +213,17 @@ export class ColorSelector {
     if (!this.dropdown) return;
 
     this.isOpen = false;
-    this.dropdown.classList.remove('input__color-dropdown--open');
+    this.dropdown.classList.remove('color-menu--open');
 
-    const button = this.container.querySelector('.input__color-selector') as HTMLButtonElement;
+    const button = this.container.querySelector('.color-button') as HTMLButtonElement;
     button.setAttribute('aria-expanded', 'false');
-    button.classList.remove('input__color-selector--open');
+    button.classList.remove('color-button--open');
   }
 
   private focusFirstOption(): void {
     if (!this.dropdown) return;
 
-    const firstOption = this.dropdown.querySelector('.input__color-option') as HTMLButtonElement;
+    const firstOption = this.dropdown.querySelector('.color-option') as HTMLButtonElement;
     if (firstOption) {
       firstOption.focus();
     }
@@ -238,9 +238,9 @@ export class ColorSelector {
   }
 
   private updateButton(): void {
-    const button = this.container.querySelector('.input__color-selector') as HTMLButtonElement;
-    const preview = button.querySelector('.input__color-preview') as HTMLElement;
-    const name = button.querySelector('.input__color-name') as HTMLElement;
+    const button = this.container.querySelector('.color-button') as HTMLButtonElement;
+    const preview = button.querySelector('.color-preview') as HTMLElement;
+    const name = button.querySelector('.color-name') as HTMLElement;
 
     if (preview && name) {
       preview.style.backgroundColor = this.currentColor.hex;
@@ -252,20 +252,20 @@ export class ColorSelector {
   private updateDropdownSelection(): void {
     if (!this.dropdown) return;
 
-    const options = this.dropdown.querySelectorAll('.input__color-option');
+    const options = this.dropdown.querySelectorAll('.color-option');
     options.forEach((option) => {
       const isSelected = option.getAttribute('data-hex') === this.currentColor.hex;
       option.setAttribute('aria-selected', isSelected ? 'true' : 'false');
 
       // Update check mark
-      const existingCheck = option.querySelector('.input__color-check');
+      const existingCheck = option.querySelector('.color-check');
       if (existingCheck) {
         existingCheck.remove();
       }
 
       if (isSelected) {
         const check = document.createElement('svg');
-        check.className = 'input__color-check';
+        check.className = 'color-check';
         check.setAttribute('width', '16');
         check.setAttribute('height', '16');
         check.setAttribute('viewBox', '0 0 16 16');

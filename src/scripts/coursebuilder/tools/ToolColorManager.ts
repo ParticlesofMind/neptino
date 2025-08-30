@@ -1,51 +1,60 @@
 /**
- * ToolColorManager - Manages ColorSelector instances for coursebuilder tools
+ * ToolColorManager - Manages native color input elements for coursebuilder tools
  * Initializes and manages color pickers for pen, brush, text, and shapes tools
  */
 
-import { ColorSelector, ColorOption } from './ColorSelector.js';
+export interface ColorOption {
+  name: string;
+  value: string;
+  hex: string;
+}
 
 export class ToolColorManager {
-  private colorSelectors: Map<string, ColorSelector> = new Map();
+  private colorSelects: Map<string, HTMLSelectElement> = new Map();
   private initialized: boolean = false;
 
   constructor() {
-    // No need to inject styles - using button system
+    // No need to inject styles - using native inputs
   }
 
   /**
-   * Initialize color selectors for all tools
+   * Initialize color selects for all tools
    */
   public init(): void {
     if (this.initialized) return;
 
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.initializeColorSelectors());
+      document.addEventListener('DOMContentLoaded', () => this.initializeColorSelects());
     } else {
-      this.initializeColorSelectors();
+      this.initializeColorSelects();
     }
 
     this.initialized = true;
   }
 
-  private initializeColorSelectors(): void {
-    const colorContainers = document.querySelectorAll('[data-color-selector]');
+  private initializeColorSelects(): void {
+    const colorSelects = document.querySelectorAll('select[data-color-selector]');
 
-    colorContainers.forEach((container) => {
-      const toolType = container.getAttribute('data-color-selector');
+    colorSelects.forEach((select) => {
+      const htmlSelect = select as HTMLSelectElement;
+      const toolType = htmlSelect.getAttribute('data-color-selector');
       if (!toolType) return;
 
-      const htmlContainer = container as HTMLElement;
-      const initialColor = this.getInitialColorForTool(toolType);
+      // Set initial color (should already be set by HTML selected attribute)
+      // Add event listener for color changes
+      htmlSelect.addEventListener('change', (e) => {
+        const target = e.target as HTMLSelectElement;
+        const selectedOption = target.selectedOptions[0];
+        const color: ColorOption = {
+          name: selectedOption.textContent || target.value,
+          value: target.value,
+          hex: target.value
+        };
+        this.handleColorChange(toolType, color);
+      });
 
-      const colorSelector = new ColorSelector(
-        htmlContainer,
-        initialColor,
-        (color: ColorOption) => this.handleColorChange(toolType, color)
-      );
-
-      this.colorSelectors.set(toolType, colorSelector);
+      this.colorSelects.set(toolType, htmlSelect);
     });
   }
 
@@ -127,28 +136,39 @@ export class ToolColorManager {
    * Get the current color for a specific tool
    */
   public getToolColor(toolType: string): ColorOption | null {
-    const selector = this.colorSelectors.get(toolType);
-    return selector ? selector.getCurrentColor() : null;
+    const select = this.colorSelects.get(toolType);
+    if (select) {
+      const selectedOption = select.selectedOptions[0];
+      return {
+        name: selectedOption.textContent || select.value,
+        value: select.value,
+        hex: select.value
+      };
+    }
+    return null;
   }
 
   /**
    * Set the color for a specific tool
    */
   public setToolColor(toolType: string, hex: string): void {
-    const selector = this.colorSelectors.get(toolType);
-    if (selector) {
-      selector.setColor(hex);
+    const select = this.colorSelects.get(toolType);
+    if (select) {
+      select.value = hex;
+      // Trigger change event to update the tool
+      select.dispatchEvent(new Event('change', { bubbles: true }));
     } else {
-      // Try to find a matching selector for compound types
-      const compoundSelectors = Array.from(this.colorSelectors.keys()).filter(key => 
+      // Try to find a matching select for compound types
+      const compoundSelects = Array.from(this.colorSelects.keys()).filter(key => 
         key.startsWith(toolType + '-') || key === toolType
       );
       
-      if (compoundSelectors.length > 0) {
-        // Set the color for the first matching selector (usually the main one)
-        const mainSelector = this.colorSelectors.get(compoundSelectors[0]);
-        if (mainSelector) {
-          mainSelector.setColor(hex);
+      if (compoundSelects.length > 0) {
+        // Set the color for the first matching select (usually the main one)
+        const mainSelect = this.colorSelects.get(compoundSelects[0]);
+        if (mainSelect) {
+          mainSelect.value = hex;
+          mainSelect.dispatchEvent(new Event('change', { bubbles: true }));
         }
       }
     }
@@ -160,22 +180,27 @@ export class ToolColorManager {
   public getAllToolColors(): Record<string, ColorOption> {
     const colors: Record<string, ColorOption> = {};
     
-    this.colorSelectors.forEach((selector, toolType) => {
-      colors[toolType] = selector.getCurrentColor();
+    this.colorSelects.forEach((select, toolType) => {
+      const selectedOption = select.selectedOptions[0];
+      colors[toolType] = {
+        name: selectedOption.textContent || select.value,
+        value: select.value,
+        hex: select.value
+      };
     });
 
     return colors;
   }
 
   /**
-   * Destroy all color selectors
+   * Destroy all color selects (remove event listeners)
    */
   public destroy(): void {
-    this.colorSelectors.forEach((selector) => {
-      selector.destroy();
+    this.colorSelects.forEach((select) => {
+      // Remove event listeners (they'll be garbage collected with the selects)
     });
     
-    this.colorSelectors.clear();
+    this.colorSelects.clear();
     this.initialized = false;
   }
 }
