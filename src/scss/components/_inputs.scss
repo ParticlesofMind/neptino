@@ -62,12 +62,11 @@
 .input {
     display: block;
     width: 100%;
-    padding: var(--spacing-4) var(--spacing-5);
+    padding: var(--spacing-4);
     font-size: var(--font-size-base);
     font-family: inherit;
     color: var(--color-text-primary);
-    background: var(--color-input-background);
-    border: 2px solid var(--color-input-border);
+    border: 1px solid var(--color-neutral-200);
     border-radius: var(--radius-large);
     transition: all 0.2s ease;
 
@@ -125,7 +124,6 @@
 
     // Number input
     &--number {
-        padding-right: var(--spacing-6);
 
         &::-webkit-outer-spin-button,
         &::-webkit-inner-spin-button {
@@ -261,10 +259,6 @@
 
     // Text input for course builder
     &--text {
-        position: absolute;
-        z-index: 1000;
-        min-width: 200px;
-        min-height: 40px;
         resize: both;
         background: transparent;
         border: 1px solid var(--color-primary-300);

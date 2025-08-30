@@ -63,6 +63,9 @@
     &--base {
         width: var(--size-icon-base);
         height: var(--size-icon-base);
+        // Force consistent sizing regardless of container
+        min-width: var(--size-icon-base);
+        min-height: var(--size-icon-base);
         
         // Coursebuilder tool icon styling
         border: 1px solid var(--color-neutral-200);
@@ -71,7 +74,7 @@
         box-shadow: 
             0 1px 2px rgba(0, 0, 0, 0.05),
             0 1px 1px rgba(0, 0, 0, 0.08);
-        padding: var(--spacing-2);
+        padding: var(--spacing-1); // Reduced from var(--spacing-2) to prevent overflow
         cursor: pointer;
 
         &:hover {
@@ -181,16 +184,18 @@
     }
 }
 
-  // Unified label class for all icon labels
-  .icon-label {
-    font-size: 9pt;
-    font-weight: var(--font-weight-medium);
-    font-family: var(--font-family-primary);
-    text-align: center;
-    line-height: 1.2;
-    color: var(--color-text-secondary);
-    transition: color 0.2s ease;
-    margin-top: var(--spacing-1);
-    display: block;
-    width: 100%;
-  }
+// Base icon label styling
+.icon-label {
+  font-size: 9pt;
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-family-primary);
+  text-align: center;
+  line-height: 1.2;
+  color: var(--color-text-secondary);
+  transition: color 0.2s ease;
+  margin-top: var(--spacing-1);
+  display: block;
+  width: 100%;
+}
+
+// Coursebuilder toolbar item styling has been moved to _engine.scss for better organization
