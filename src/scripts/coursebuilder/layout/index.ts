@@ -4,8 +4,7 @@
  * Provides a clean API for importing layout system components
  */
 
-export { LayoutManager, type GridConfig, type LayoutRegion, type LayoutTemplate } from './LayoutManager';
-export { AdaptiveLayoutManager, type PageMargins } from './AdaptiveLayoutManager';
+export { LayoutManager, type GridConfig, type LayoutRegion, type LayoutTemplate, type PageMargins, type ColumnConfiguration } from './LayoutManager';
 export { HeaderComponent, type HeaderConfig, type HeaderContent } from './HeaderComponent';
 export { FooterComponent, type FooterConfig, type FooterContent } from './FooterComponent';
 

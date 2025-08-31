@@ -6,18 +6,18 @@
  */
 
 import { CanvasAPI } from '../canvas/CanvasAPI';
-import { AdaptiveLayoutManager } from './AdaptiveLayoutManager';
+import { LayoutManager } from './LayoutManager';
 import { HeaderComponent, FooterComponent } from './index';
 
 export class LayoutDemo {
   private canvasAPI: CanvasAPI;
-  private layoutManager: AdaptiveLayoutManager;
+  private layoutManager: LayoutManager;
   private headerComponent: HeaderComponent | null = null;
   private footerComponent: FooterComponent | null = null;
 
   constructor(canvasAPI: CanvasAPI) {
     this.canvasAPI = canvasAPI;
-    this.layoutManager = new AdaptiveLayoutManager();
+    this.layoutManager = new LayoutManager();
   }
 
   /**
@@ -296,7 +296,7 @@ export class LayoutDemo {
   public getLayoutInfo(): any {
     return {
       canvas: this.canvasAPI.getCanvasInfo(),
-      layout: this.layoutManager.getAdaptiveLayoutInfo(), // Use adaptive info
+      layout: this.layoutManager.getLayoutInfo(), // Use layout info
       header: this.headerComponent?.getDebugInfo() || null,
       footer: this.footerComponent?.getDebugInfo() || null
     };
@@ -350,7 +350,7 @@ export class LayoutDemo {
    * Test margin adaptation (NEW FEATURE)
    */
   public testMarginAdaptation(): void {
-    this.layoutManager.testMarginAdaptation();
+    this.layoutManager.testMarginChanges();
   }
 
   /**
@@ -498,7 +498,7 @@ export class LayoutDemo {
    * Refresh layout adaptation (useful after changes) (NEW FEATURE)
    */
   public refreshLayout(): void {
-    this.layoutManager.refreshAdaptation();
+    this.layoutManager.refreshLayout();
   }
 
   /**
@@ -506,7 +506,7 @@ export class LayoutDemo {
    */
   public showLayoutStructure(): void {
     const margins = this.layoutManager.getCurrentMargins();
-    const info = this.layoutManager.getAdaptiveLayoutInfo();
+    const info = this.layoutManager.getLayoutInfo();
     
     console.log('📋 LAYOUT STRUCTURE:');
     console.log('┌─────────────────────────────────────────┐ ← Canvas (794×1123px)');
