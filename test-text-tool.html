@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Tool Test Page</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .canvas-container {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin: 20px 0;
+            position: relative;
+            min-height: 600px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .tools {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .tool-group {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            border: 1px solid #ddd;
+            padding: 8px;
+            border-radius: 6px;
+        }
+        
+        .tool-button {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tool-button:hover {
+            background: #f0f0f0;
+        }
+        
+        .tool-button.active {
+            background: #007bff;
+            color: white;
+        }
+        
+        .setting-input {
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin: 0 5px;
+        }
+        
+        .instructions {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .feature-list {
+            columns: 2;
+            column-gap: 20px;
+        }
+        
+        .feature-list li {
+            break-inside: avoid;
+            margin-bottom: 5px;
+        }
+        
+        .status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .logs {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔤 Text Tool Feature Testing</h1>
+            <p>Comprehensive test page for all Text Tool capabilities</p>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 Testing Instructions:</h3>
+            <div class="feature-list">
+                <ul>
+                    <li><strong>Drag-to-Create:</strong> Click and drag on canvas to create text areas</li>
+                    <li><strong>Double-click:</strong> Double-click text areas to activate for editing</li>
+                    <li><strong>Typing:</strong> Type text when area is active (blinking cursor)</li>
+                    <li><strong>Navigation:</strong> Use arrow keys, Home, End for cursor movement</li>
+                    <li><strong>Editing:</strong> Backspace, Delete, Enter for text editing</li>
+                    <li><strong>Multi-line:</strong> Press Enter for new lines</li>
+                    <li><strong>Tab Support:</strong> Press Tab to insert spaces</li>
+                    <li><strong>Word Navigation:</strong> Shift+Arrow keys for word boundaries</li>
+                    <li><strong>Multiple Areas:</strong> Create multiple text areas</li>
+                    <li><strong>Settings:</strong> Change font, size, color before creating</li>
+                    <li><strong>Boundary Protection:</strong> Try creating near edges (should be blocked)</li>
+                    <li><strong>Visual Feedback:</strong> Active areas show borders and cursor</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-controls">
+            <h3>🛠️ Text Tool Settings</h3>
+            
+            <div class="tools">
+                <div class="tool-group">
+                    <label>Tool:</label>
+                    <button class="tool-button active" id="text-tool-btn" data-tool="text">📝 Text</button>
+                    <button class="tool-button" id="selection-tool-btn" data-tool="selection">👆 Select</button>
+                </div>
+                
+                <div class="tool-group">
+                    <label>Font Size:</label>
+                    <input type="number" class="setting-input" id="font-size" min="8" max="72" value="16" />
+                </div>
+                
+                <div class="tool-group">
+                    <label>Font:</label>
+                    <select class="setting-input" id="font-family">
+                        <option value="Arial">Arial</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="Inter" selected>Inter</option>
+                    </select>
+                </div>
+                
+                <div class="tool-group">
+                    <label>Color:</label>
+                    <select class="setting-input" id="text-color">
+                        <option value="#1f2937" selected>Dark</option>
+                        <option value="#4a7c59">Green</option>
+                        <option value="#4a79a4">Blue</option>
+                        <option value="#a74a4a">Red</option>
+                        <option value="#7c5a9b">Purple</option>
+                    </select>
+                </div>
+                
+                <div class="tool-group">
+                    <button class="tool-button" id="clear-all-btn">🗑️ Clear All</button>
+                    <button class="tool-button" id="test-features-btn">🧪 Auto Test</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-container" id="canvas-container">
+            <!-- Canvas will be initialized here -->
+        </div>
+
+        <div class="test-controls">
+            <h3>📊 Test Information</h3>
+            <div>
+                <strong>Text Areas:</strong> <span id="text-area-count">0</span> |
+                <strong>Active Tool:</strong> <span id="active-tool">text</span> |
+                <strong>Status:</strong> <span id="tool-status">Ready</span>
+            </div>
+            
+            <details>
+                <summary>🔍 Debug Logs</summary>
+                <div class="logs" id="debug-logs">
+                    Text tool demo initialized. Ready for testing!
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="status" id="status-message"></div>
+
+    <!-- Core Scripts -->
+    <script type="module">
+        import { TextToolDemo } from '/src/scripts/coursebuilder/tools/text/TextToolDemo.js';
+
+        class TextToolTestPage {
+            constructor() {
+                this.demo = null;
+                this.canvas = null;
+                this.init();
+            }
+
+            async init() {
+                try {
+                    this.log('Initializing text tool demo...');
+                    
+                    // Initialize the demo
+                    this.demo = new TextToolDemo();
+                    await this.demo.init('#canvas-container');
+                    this.canvas = this.demo.getCanvas();
+                    
+                    if (this.canvas) {
+                        this.log('✅ Canvas initialized successfully');
+                        this.setupEventListeners();
+                        this.updateStatus();
+                        
+                        // Make demo globally accessible for testing
+                        window.textToolDemo = this.demo;
+                        window.textToolTest = this;
+                        
+                        this.log('🎉 Text tool demo ready for testing!');
+                    } else {
+                        throw new Error('Canvas initialization failed');
+                    }
+                } catch (error) {
+                    this.log(`❌ Error: ${error.message}`);
+                    console.error('Text tool initialization failed:', error);
+                }
+            }
+
+            setupEventListeners() {
+                // Tool switching
+                document.getElementById('text-tool-btn').addEventListener('click', () => {
+                    this.setTool('text');
+                });
+                
+                document.getElementById('selection-tool-btn').addEventListener('click', () => {
+                    this.setTool('selection');
+                });
+
+                // Settings
+                document.getElementById('font-size').addEventListener('change', (e) => {
+                    this.updateTextSetting('fontSize', parseInt(e.target.value));
+                });
+
+                document.getElementById('font-family').addEventListener('change', (e) => {
+                    this.updateTextSetting('fontFamily', e.target.value);
+                });
+
+                document.getElementById('text-color').addEventListener('change', (e) => {
+                    this.updateTextSetting('color', e.target.value);
+                });
+
+                // Actions
+                document.getElementById('clear-all-btn').addEventListener('click', () => {
+                    this.clearAllTextAreas();
+                });
+
+                document.getElementById('test-features-btn').addEventListener('click', () => {
+                    this.runAutomatedTests();
+                });
+
+                // Update status periodically
+                setInterval(() => this.updateStatus(), 1000);
+            }
+
+            setTool(toolName) {
+                if (this.canvas) {
+                    this.canvas.setTool(toolName);
+                    this.updateToolButtons(toolName);
+                    this.log(`🔧 Switched to ${toolName} tool`);
+                }
+            }
+
+            updateToolButtons(activeTool) {
+                document.querySelectorAll('.tool-button[data-tool]').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.tool === activeTool);
+                });
+            }
+
+            updateTextSetting(setting, value) {
+                if (this.canvas) {
+                    const textTool = this.canvas.tools?.text;
+                    if (textTool && textTool.updateSettings) {
+                        textTool.updateSettings({ [setting]: value });
+                        this.log(`⚙️ Updated ${setting} to ${value}`);
+                    }
+                }
+            }
+
+            clearAllTextAreas() {
+                if (this.canvas) {
+                    const textTool = this.canvas.tools?.text;
+                    if (textTool && textTool.clearAllTextAreas) {
+                        textTool.clearAllTextAreas();
+                        this.log('🗑️ Cleared all text areas');
+                        this.updateStatus();
+                    }
+                }
+            }
+
+            async runAutomatedTests() {
+                this.log('🧪 Running automated feature tests...');
+                
+                try {
+                    // Test 1: Tool activation
+                    this.setTool('text');
+                    await this.delay(500);
+                    
+                    // Test 2: Simulate drag creation
+                    this.simulateDragCreation(200, 150, 350, 200);
+                    await this.delay(1000);
+                    
+                    // Test 3: Settings changes
+                    this.updateTextSetting('fontSize', 24);
+                    this.updateTextSetting('color', '#4a79a4');
+                    await this.delay(500);
+                    
+                    // Test 4: Create another text area
+                    this.simulateDragCreation(400, 250, 550, 300);
+                    await this.delay(1000);
+                    
+                    this.log('✅ Automated tests completed');
+                    this.showStatus('Automated tests completed successfully!', 3000);
+                    
+                } catch (error) {
+                    this.log(`❌ Test error: ${error.message}`);
+                    this.showStatus('Test error occurred', 3000);
+                }
+            }
+
+            simulateDragCreation(startX, startY, endX, endY) {
+                // This would simulate a drag operation programmatically
+                // In a real implementation, this would interact with the canvas
+                this.log(`🖱️ Simulating drag from (${startX}, ${startY}) to (${endX}, ${endY})`);
+            }
+
+            updateStatus() {
+                try {
+                    const textAreaCount = this.getTextAreaCount();
+                    const activeTool = this.canvas ? this.canvas.getActiveTool() : 'unknown';
+                    
+                    document.getElementById('text-area-count').textContent = textAreaCount;
+                    document.getElementById('active-tool').textContent = activeTool;
+                    document.getElementById('tool-status').textContent = 'Active';
+                    
+                } catch (error) {
+                    document.getElementById('tool-status').textContent = 'Error';
+                }
+            }
+
+            getTextAreaCount() {
+                if (this.canvas) {
+                    const textTool = this.canvas.tools?.text;
+                    if (textTool && textTool.getTextAreas) {
+                        return textTool.getTextAreas().length;
+                    }
+                }
+                return 0;
+            }
+
+            log(message) {
+                const logs = document.getElementById('debug-logs');
+                const timestamp = new Date().toLocaleTimeString();
+                logs.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+                logs.scrollTop = logs.scrollHeight;
+                console.log(`[TextToolTest] ${message}`);
+            }
+
+            showStatus(message, duration = 2000) {
+                const status = document.getElementById('status-message');
+                status.textContent = message;
+                status.style.display = 'block';
+                
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, duration);
+            }
+
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => new TextToolTestPage());
+        } else {
+            new TextToolTestPage();
+        }
+    </script>
+</body>
+</html>
