@@ -1,99 +1,99 @@
 export class TemplatePreviewHandler {
- private previewContainer: HTMLElement | null = null;
+    private previewContainer: HTMLElement | null = null;
 
- constructor() {
- this.previewContainer = document.getElementById('template-preview-content');
- this.setupEventListeners();
- }
+    constructor() {
+        this.previewContainer = document.getElementById('template-preview-content');
+        this.setupEventListeners();
+    }
 
- /**
- * Sets up event listeners for template preview updates
- */
- private setupEventListeners(): void {
- document.addEventListener("templateConfigChanged", (e: any) => {
- this.updatePreview(e.detail.template, e.detail.activeBlocks);
- });
- }
+    /**
+    * Sets up event listeners for template preview updates
+    */
+    private setupEventListeners(): void {
+        document.addEventListener("templateConfigChanged", (e: any) => {
+            this.updatePreview(e.detail.template, e.detail.activeBlocks);
+        });
+    }
 
- /**
- * Updates the template preview based on configuration
- */
- updatePreview(template: any, activeBlocks: string[]): void {
- if (!this.previewContainer) return;
+    /**
+    * Updates the template preview based on configuration
+    */
+    updatePreview(template: any, activeBlocks: string[]): void {
+        if (!this.previewContainer) return;
 
- if (!template || !activeBlocks.length) {
- this.renderEmptyPreview();
- return;
- }
+        if (!template || !activeBlocks.length) {
+            this.renderEmptyPreview();
+            return;
+        }
 
- const previewHtml = this.generatePreviewHtml(template, activeBlocks);
- this.previewContainer.innerHTML = previewHtml;
- }
+        const previewHtml = this.generatePreviewHtml(template, activeBlocks);
+        this.previewContainer.innerHTML = previewHtml;
+    }
 
- /**
- * Renders an empty preview state
- */
- private renderEmptyPreview(): void {
- if (!this.previewContainer) return;
+    /**
+    * Renders an empty preview state
+    */
+    private renderEmptyPreview(): void {
+        if (!this.previewContainer) return;
 
- this.previewContainer.innerHTML = `
+        this.previewContainer.innerHTML = `
  <div class="preview-placeholder">
  <div class="">📋</div>
  <h4 class="">Template Preview</h4>
  <p class="">Configure your template blocks to see a preview here.</p>
  </div>
  `;
- }
+    }
 
- /**
- * Generates HTML for the template preview
- */
- private generatePreviewHtml(template: any, activeBlocks: string[]): string {
- const blocks = template.blocks || [];
- const sortedBlocks = blocks
- .filter((block: any) => activeBlocks.includes(block.type))
- .sort((a: any, b: any) => {
- const aIndex = activeBlocks.indexOf(a.type);
- const bIndex = activeBlocks.indexOf(b.type);
- return aIndex - bIndex;
- });
+    /**
+    * Generates HTML for the template preview
+    */
+    private generatePreviewHtml(template: any, activeBlocks: string[]): string {
+        const blocks = template.blocks || [];
+        const sortedBlocks = blocks
+            .filter((block: any) => activeBlocks.includes(block.type))
+            .sort((a: any, b: any) => {
+                const aIndex = activeBlocks.indexOf(a.type);
+                const bIndex = activeBlocks.indexOf(b.type);
+                return aIndex - bIndex;
+            });
 
- const blocksHtml = sortedBlocks
- .map((block: any) => this.renderBlock(block))
- .join("");
+        const blocksHtml = sortedBlocks
+            .map((block: any) => this.renderBlock(block))
+            .join("");
 
- return blocksHtml;
- }
+        return blocksHtml;
+    }
 
- /**
- * Renders a single block in the preview
- */
- private renderBlock(block: any): string {
- const config = block.config || {};
+    /**
+    * Renders a single block in the preview
+    */
+    private renderBlock(block: any): string {
+        const config = block.config || {};
 
- switch (block.type) {
- case "header":
- return this.renderHeaderBlock(config);
- case "program":
- return this.renderProgramBlock(config);
- case "resources":
- return this.renderResourcesBlock(config);
- case "content":
- return this.renderContentBlock(config);
- case "assignment":
- return this.renderAssignmentBlock(config);
- case "footer":
- return this.renderFooterBlock(config);
- default:
- return `<div class="preview-block preview-block--unknown">Unknown block type: ${block.type}</div>`;
- }
- }
+        switch (block.type) {
+            case "header":
+                return this.renderHeaderBlock(config);
+            case "program":
+                return this.renderProgramBlock(config);
+            case "resources":
+                return this.renderResourcesBlock(config);
+            case "content":
+                return this.renderContentBlock(config);
+            case "assignment":
+                return this.renderAssignmentBlock(config);
+            case "footer":
+                return this.renderFooterBlock(config);
+            default:
+                return `<div class="preview-block preview-block--unknown">Unknown block type: ${block.type}</div>`;
+        }
+    }
 
- /**
- * Renders header block preview
- */
- private renderHeaderBlock(_config: any): string {
- return `
+    /**
+    * Renders header block preview
+    */
+    private renderHeaderBlock(_config: any): string {
+        return `
  <div class="preview-block preview-block--header">
  <h4>Header</h4>
  <div class="preview-block__content">
@@ -134,13 +134,13 @@ export class TemplatePreviewHandler {
  </div>
  </div>
  `;
- }
+    }
 
- /**
- * Renders program block preview
- */
- private renderProgramBlock(_config: any): string {
- return `
+    /**
+    * Renders program block preview
+    */
+    private renderProgramBlock(_config: any): string {
+        return `
  <div class="preview-block preview-block--program">
  <h4>Program</h4>
  <div class="preview-block__content">
@@ -173,13 +173,13 @@ export class TemplatePreviewHandler {
  </div>
  </div>
  `;
- }
+    }
 
- /**
- * Renders resources block preview
- */
- private renderResourcesBlock(_config: any): string {
- return `
+    /**
+    * Renders resources block preview
+    */
+    private renderResourcesBlock(_config: any): string {
+        return `
  <div class="preview-block preview-block--resources">
  <h4>Resources</h4>
  <div class="preview-block__content">
@@ -232,17 +232,17 @@ export class TemplatePreviewHandler {
  </div>
  </div>
  `;
- }
+    }
 
- /**
- * Renders content block preview
- */
- private renderContentBlock(config: any): string {
- const editor = config.editor || "rich-text";
- const allowMedia = config.allowMedia !== false;
- const allowTables = config.allowTables !== false;
+    /**
+    * Renders content block preview
+    */
+    private renderContentBlock(config: any): string {
+        const editor = config.editor || "rich-text";
+        const allowMedia = config.allowMedia !== false;
+        const allowTables = config.allowTables !== false;
 
- return `
+        return `
  <div class="preview-block preview-block--content">
  <h4>Content</h4>
  <div class="preview-block__content">
@@ -255,18 +255,18 @@ export class TemplatePreviewHandler {
  </div>
  </div>
  `;
- }
+    }
 
- /**
- * Renders assignment block preview
- */
- private renderAssignmentBlock(config: any): string {
- const allowSubmissions = config.allowSubmissions !== false;
- const requireDueDate = config.requireDueDate !== false;
- const enableGrading = config.enableGrading !== false;
- const maxSubmissions = config.maxSubmissions || 1;
+    /**
+    * Renders assignment block preview
+    */
+    private renderAssignmentBlock(config: any): string {
+        const allowSubmissions = config.allowSubmissions !== false;
+        const requireDueDate = config.requireDueDate !== false;
+        const enableGrading = config.enableGrading !== false;
+        const maxSubmissions = config.maxSubmissions || 1;
 
- return `
+        return `
  <div class="preview-block preview-block--assignment">
  <h4>Assignment</h4>
  <div class="preview-block__content">
@@ -279,17 +279,17 @@ export class TemplatePreviewHandler {
  </div>
  </div>
  `;
- }
+    }
 
- /**
- * Renders footer block preview
- */
- private renderFooterBlock(config: any): string {
- const showCredits = config.showCredits !== false;
- const showDate = config.showDate !== false;
- const showContact = config.showContact === true;
+    /**
+    * Renders footer block preview
+    */
+    private renderFooterBlock(config: any): string {
+        const showCredits = config.showCredits !== false;
+        const showDate = config.showDate !== false;
+        const showContact = config.showContact === true;
 
- return `
+        return `
  <div class="preview-block preview-block--footer">
  <h4>Footer</h4>
  <div class="preview-block__content">
@@ -301,22 +301,22 @@ export class TemplatePreviewHandler {
  </div>
  </div>
  `;
- }
+    }
 
- /**
- * Exports the current template configuration
- */
- exportTemplate(): void {
- // This would open an export modal or trigger a download
- // Implementation for template export functionality
- }
+    /**
+    * Exports the current template configuration
+    */
+    exportTemplate(): void {
+        // This would open an export modal or trigger a download
+        // Implementation for template export functionality
+    }
 }
 
 // Create global instance
 declare global {
- interface Window {
- templatePreviewHandler: TemplatePreviewHandler;
- }
+    interface Window {
+        templatePreviewHandler: TemplatePreviewHandler;
+    }
 }
 
 window.templatePreviewHandler = new TemplatePreviewHandler();

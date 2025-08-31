@@ -89,23 +89,22 @@ export class ProgramComponent {
    */
   private getDefaultConfig(): ProgramConfig {
     return {
-      backgroundColor: 0xfafbfc,
-      borderColor: 0xe9ecef,
+      backgroundColor: 0xffffff,
+      borderColor: 0xf5f5f5,
       borderWidth: 1,
       padding: {
-        top: 12,
-        right: 20,
-        bottom: 12,
-        left: 20
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0
       },
       textStyle: {
-        fontSize: 16,
-        fill: 0x495057,
+        fontSize: 14,
+        fill: 0x333333,
         fontFamily: 'Arial, sans-serif',
         fontWeight: 'normal',
         align: 'left'
-      },
-      height: 50 // Default program section height
+      }
     };
   }
 

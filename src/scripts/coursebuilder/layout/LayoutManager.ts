@@ -24,6 +24,20 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import type { TemplateBlock } from '../../backend/courses/templates/createTemplate.js';
 import { supabase } from '../../backend/supabase.js';
+import { 
+  HEADER_FIELDS, 
+  FOOTER_FIELDS, 
+  PROGRAM_FIELDS, 
+  RESOURCES_FIELDS,
+  CONTENT_FIELDS,
+  ASSIGNMENT_FIELDS
+} from './FieldConfigurations.js';
+import { HeaderComponent } from './HeaderComponent.js';
+import { FooterComponent } from './FooterComponent.js';
+import { ProgramComponent } from './ProgramComponent.js';
+import { ResourcesComponent } from './ResourcesComponent.js';
+import { ContentComponent } from './ContentComponent.js';
+import { AssignmentComponent } from './AssignmentComponent.js';
 
 export interface GridConfig {
   totalWidth: number;
@@ -84,6 +98,10 @@ export interface ColumnConfiguration {
   resourcesValues: Record<string, string>;
   resourcesGlossaryFields?: string[];
   includeGlossary?: boolean;
+  contentFields: string[];
+  contentValues: Record<string, string>;
+  assignmentFields: string[];
+  assignmentValues: Record<string, string>;
 }
 
 export class LayoutManager {
@@ -111,6 +129,14 @@ export class LayoutManager {
   private isListening: boolean = false;
   private templateCache: Map<string, any> = new Map();
   private currentColumnConfig: ColumnConfiguration | null = null;
+
+  // Layout components
+  private headerComponent: HeaderComponent | null = null;
+  private footerComponent: FooterComponent | null = null;
+  private programComponent: ProgramComponent | null = null;
+  private resourcesComponent: ResourcesComponent | null = null;
+  private contentComponent: ContentComponent | null = null;
+  private assignmentComponent: AssignmentComponent | null = null;
 
   constructor() {
     // Default configuration based on A4 canvas
@@ -321,19 +347,80 @@ export class LayoutManager {
   }
 
   /**
-   * Create a basic template with header, program, and footer
+   * Create content region with nested structure support
+   */
+  public createContentRegion(height: number = 280): LayoutRegion {
+    const config = this.getGridConfig();
+    const margins = this.getCurrentMarginsInPixels();
+    
+    // Position content after resources region
+    const headerHeight = config.headerHeight;
+    const programHeight = 50; // Default program height
+    const resourcesHeight = 80; // Default resources height
+    const spacingBetweenRegions = 10; // Small gap between regions
+    const yPosition = margins.top + headerHeight + programHeight + resourcesHeight + (spacingBetweenRegions * 2);
+
+    return {
+      id: 'content',
+      name: 'Content',
+      x: margins.left,
+      y: yPosition,
+      width: config.totalWidth - margins.left - margins.right,
+      height: height, // Larger height for nested content
+      gridColumn: 1,
+      gridRow: 3, // Third content row
+      columnSpan: config.columns,
+      rowSpan: 1,
+      isFixed: false
+    };
+  }
+
+  /**
+   * Create assignment region with nested structure support
+   */
+  public createAssignmentRegion(height: number = 150): LayoutRegion {
+    const config = this.getGridConfig();
+    const margins = this.getCurrentMarginsInPixels();
+    
+    // Position assignment after content region
+    const headerHeight = config.headerHeight;
+    const programHeight = 50; // Default program height
+    const resourcesHeight = 80; // Default resources height
+    const contentHeight = 280; // Updated content height to accommodate Teacher Area
+    const spacingBetweenRegions = 10; // Small gap between regions
+    const yPosition = margins.top + headerHeight + programHeight + resourcesHeight + contentHeight + (spacingBetweenRegions * 3);
+
+    return {
+      id: 'assignment',
+      name: 'Assignment',
+      x: margins.left,
+      y: yPosition,
+      width: config.totalWidth - margins.left - margins.right,
+      height: height, // Configurable height for assignment content
+      gridColumn: 1,
+      gridRow: 4, // Fourth content row
+      columnSpan: config.columns,
+      rowSpan: 1,
+      isFixed: false
+    };
+  }
+
+  /**
+   * Create a basic template with all layout components
    */
   public createBasicTemplate(): LayoutTemplate {
     const headerRegion = this.createHeaderRegion();
     const programRegion = this.createProgramRegion();
     const resourcesRegion = this.createResourcesRegion();
+    const contentRegion = this.createContentRegion();
+    const assignmentRegion = this.createAssignmentRegion();
     const footerRegion = this.createFooterRegion();
 
     return {
       id: 'basic',
       name: 'Basic Layout',
-      description: 'Simple layout with header, program section, resources, and footer',
-      regions: [headerRegion, programRegion, resourcesRegion, footerRegion],
+      description: 'Complete layout with header, program, resources, content, assignment, and footer',
+      regions: [headerRegion, programRegion, resourcesRegion, contentRegion, assignmentRegion, footerRegion],
       headerContent: null,
       footerContent: null
     };
@@ -362,7 +449,142 @@ export class LayoutManager {
   }
 
   /**
-   * Create visual container for a layout region
+   * Create and display basic layout with header, program, resources, and footer components
+   */
+  public async createBasicLayout(): Promise<void> {
+    if (!this.container) {
+      console.error('❌ Cannot create layout - no container set');
+      return;
+    }
+
+    console.log('📐 Creating basic layout with components...');
+
+    // Clear any existing components
+    this.clearComponents();
+
+    // Create regions
+    const headerRegion = this.createHeaderRegion();
+    const programRegion = this.createProgramRegion(100);
+    const resourcesRegion = this.createResourcesRegion(80);
+    const contentRegion = this.createContentRegion(280); // Increased height for Teacher Area
+    const assignmentRegion = this.createAssignmentRegion(150);
+    const footerRegion = this.createFooterRegion();
+
+    // Get column configuration
+    const columnConfig = await this.getColumnConfiguration();
+
+    // Create header component
+    this.headerComponent = new HeaderComponent(headerRegion);
+    this.headerComponent.setContent({
+      type: 'columns',
+      columnData: {
+        fields: columnConfig.headerFields,
+        distribution: columnConfig.headerDistribution,
+        values: {
+          lesson_number: '[#]',
+          lesson_title: '[Lesson Title]',
+          module_title: '[Module Title]',
+          course_title: '[Course Title]',
+          institution_name: '[Institution]'
+        }
+      }
+    });
+    this.container.addChild(this.headerComponent.getContainer());
+
+    // Create program component  
+    this.programComponent = new ProgramComponent(programRegion);
+    this.programComponent.setContent({
+      type: 'columns',
+      columnData: {
+        fields: columnConfig.programFields,
+        distribution: [3, 3, 3, 3], // Equal distribution for 4 program fields
+        values: columnConfig.programValues
+      }
+    });
+    this.container.addChild(this.programComponent.getContainer());
+
+    // Create resources component
+    this.resourcesComponent = new ResourcesComponent(resourcesRegion, {
+      type: 'columns',
+      fields: columnConfig.resourcesFields,
+      values: columnConfig.resourcesValues,
+      glossaryFields: columnConfig.resourcesGlossaryFields,
+      includeGlossary: columnConfig.includeGlossary
+    }, columnConfig);
+    this.container.addChild(this.resourcesComponent.getContainer());
+
+    // Create content component
+    this.contentComponent = new ContentComponent(contentRegion);
+    this.contentComponent.setContent({
+      type: 'nested',
+      hierarchy: this.contentComponent.createEmptyHierarchy()
+    });
+    this.container.addChild(this.contentComponent.getContainer());
+
+    // Create assignment component
+    this.assignmentComponent = new AssignmentComponent(assignmentRegion);
+    this.assignmentComponent.setContent({
+      type: 'nested',
+      hierarchy: this.assignmentComponent.createEmptyHierarchy()
+    });
+    this.container.addChild(this.assignmentComponent.getContainer());
+
+    // Create footer component
+    this.footerComponent = new FooterComponent(footerRegion);
+    this.footerComponent.setContent({
+      type: 'columns',
+      columnData: {
+        fields: columnConfig.footerFields,
+        distribution: columnConfig.footerDistribution,
+        values: {
+          copyright: '[© Copyright]',
+          page_number: '[Page #]'
+        }
+      }
+    });
+    this.container.addChild(this.footerComponent.getContainer());
+
+    console.log('✅ Basic layout created with all components');
+  }
+
+  /**
+   * Clear existing components
+   */
+  private clearComponents(): void {
+    if (this.headerComponent) {
+      this.container?.removeChild(this.headerComponent.getContainer());
+      this.headerComponent.destroy();
+      this.headerComponent = null;
+    }
+    if (this.programComponent) {
+      this.container?.removeChild(this.programComponent.getContainer());
+      this.programComponent.destroy();
+      this.programComponent = null;
+    }
+    if (this.resourcesComponent) {
+      this.container?.removeChild(this.resourcesComponent.getContainer());
+      this.resourcesComponent.destroy();
+      this.resourcesComponent = null;
+    }
+    if (this.contentComponent) {
+      this.container?.removeChild(this.contentComponent.getContainer());
+      this.contentComponent.destroy();
+      this.contentComponent = null;
+    }
+    if (this.assignmentComponent) {
+      this.container?.removeChild(this.assignmentComponent.getContainer());
+      this.assignmentComponent.destroy();
+      this.assignmentComponent = null;
+    }
+    if (this.footerComponent) {
+      this.container?.removeChild(this.footerComponent.getContainer());
+      this.footerComponent.destroy();
+      this.footerComponent = null;
+    }
+  }
+
+  /**
+   * Create visual container for a layout region - Modern minimalist style
    */
   private createRegionContainer(region: LayoutRegion): Container {
     if (!this.container) {
@@ -374,28 +596,31 @@ export class LayoutManager {
     regionContainer.x = region.x;
     regionContainer.y = region.y;
 
-    // Create subtle background for visual reference (will be configurable)
+    // Create ultra-minimal background - no background color to preserve canvas transparency
     const background = new Graphics();
     background
       .rect(0, 0, region.width, region.height)
-      .fill({ color: 0xffffff, alpha: 0.01 })
-      .stroke({ color: 0xf0f0f0, width: 1, alpha: 0.3 });
+      .fill({ color: 0xffffff, alpha: 0 }) // Completely transparent
+      .stroke({ color: 0x0066cc, width: 0.5, alpha: 0.1 }); // Ultra-subtle Neptino blue accent border
 
     regionContainer.addChild(background);
 
-    // Add label for debugging
+    // Add label for debugging - more elegant typography
     if (this.showDebugGrid) {
       const label = new Text({
-        text: `${region.name}\n${region.width}×${region.height}`,
+        text: `${region.name}`,
         style: {
-          fontSize: 12,
-          fill: 0x333333,
+          fontSize: 10,
+          fill: 0x0066cc, // Neptino blue for debug labels
+          fontFamily: 'Inter, -apple-system, system-ui, sans-serif',
+          fontWeight: '400',
           align: 'center'
         }
       });
       label.anchor.set(0.5, 0.5);
       label.x = region.width / 2;
       label.y = region.height / 2;
+      label.alpha = 0.6; // Subtle transparency
       regionContainer.addChild(label);
     }
 
@@ -446,7 +671,7 @@ export class LayoutManager {
   }
 
   /**
-   * Create visual debug grid (very minimal)
+   * Create visual debug grid - Ultra-minimal, modern approach
    */
   private createDebugGrid(): void {
     if (!this.container || this.debugGraphics) return;
@@ -455,23 +680,15 @@ export class LayoutManager {
     this.debugGraphics.label = 'debug-grid';
     this.debugGraphics.zIndex = -1; // Behind everything else
 
-    // Only show header and footer guides - no column lines
-    const headerY = this.config.margins.top;
-    const footerY = this.config.totalHeight - this.config.footerHeight - this.config.margins.bottom;
-
-    // Very subtle header guide
+    // Only show very subtle margin guides - no visual clutter
+    const margins = this.getCurrentMarginsInPixels();
+    
+    // Ultra-subtle margin guides with Neptino blue
     this.debugGraphics
-      .rect(this.config.margins.left, headerY, 
-            this.config.totalWidth - this.config.margins.left - this.config.margins.right, 
-            this.config.headerHeight)
-      .stroke({ color: 0xe0e0e0, width: 1, alpha: 0.2 });
-
-    // Very subtle footer guide
-    this.debugGraphics
-      .rect(this.config.margins.left, footerY, 
-            this.config.totalWidth - this.config.margins.left - this.config.margins.right, 
-            this.config.footerHeight)
-      .stroke({ color: 0xe0e0e0, width: 1, alpha: 0.2 });
+      .rect(margins.left, margins.top, 
+            this.config.totalWidth - margins.left - margins.right, 
+            this.config.totalHeight - margins.top - margins.bottom)
+      .stroke({ color: 0x0066cc, width: 0.5, alpha: 0.05 }); // Extremely subtle Neptino blue border
 
     this.container.addChild(this.debugGraphics);
   }
@@ -535,6 +752,9 @@ export class LayoutManager {
    * Destroy layout system
    */
   public destroy(): void {
+    // Clean up components first
+    this.clearComponents();
+    
     // Remove event listeners
     Object.entries(this.marginInputs).forEach(([side, input]) => {
       if (input) {
@@ -813,6 +1033,8 @@ export class LayoutManager {
       const footerConfig = this.calculateFooterColumns(templateData);
       const programConfig = this.calculateProgramFields(templateData);
       const resourcesConfig = this.calculateResourcesFields(templateData);
+      const contentConfig = this.calculateContentFields(templateData);
+      const assignmentConfig = this.calculateAssignmentFields(templateData);
 
       this.currentColumnConfig = {
         headerColumns: headerConfig.columns,
@@ -826,7 +1048,11 @@ export class LayoutManager {
         resourcesFields: resourcesConfig.fields,
         resourcesValues: resourcesConfig.values,
         resourcesGlossaryFields: resourcesConfig.glossaryFields,
-        includeGlossary: resourcesConfig.includeGlossary
+        includeGlossary: resourcesConfig.includeGlossary,
+        contentFields: contentConfig.fields,
+        contentValues: contentConfig.values,
+        assignmentFields: assignmentConfig.fields,
+        assignmentValues: assignmentConfig.values
       };
 
       console.log('📊 Dynamic column configuration calculated:', this.currentColumnConfig);
@@ -902,7 +1128,7 @@ export class LayoutManager {
       return { columns: 5, fields: ['lesson_number', 'lesson_title', 'module_title', 'course_title', 'institution_name'] };
     }
 
-    const enabledFields = this.getEnabledFields(headerBlock, this.getHeaderFieldConfig());
+    const enabledFields = this.getEnabledFields(headerBlock, HEADER_FIELDS);
     return {
       columns: Math.max(1, Math.min(12, enabledFields.length)),
       fields: enabledFields
@@ -918,7 +1144,7 @@ export class LayoutManager {
       return { columns: 2, fields: ['copyright', 'page_number'] };
     }
 
-    const enabledFields = this.getEnabledFields(footerBlock, this.getFooterFieldConfig());
+    const enabledFields = this.getEnabledFields(footerBlock, FOOTER_FIELDS);
     return {
       columns: Math.max(1, Math.min(12, enabledFields.length)),
       fields: enabledFields
@@ -942,7 +1168,7 @@ export class LayoutManager {
       };
     }
 
-    const enabledFields = this.getEnabledFields(programBlock, this.getProgramFieldConfig());
+    const enabledFields = this.getEnabledFields(programBlock, PROGRAM_FIELDS);
     const values: Record<string, string> = {};
     
     // Extract values from template data
@@ -972,7 +1198,7 @@ export class LayoutManager {
       };
     }
 
-    const allEnabledFields = this.getEnabledFields(resourcesBlock, this.getResourcesFieldConfig());
+    const allEnabledFields = this.getEnabledFields(resourcesBlock, RESOURCES_FIELDS);
     
     // Separate main fields from glossary fields
     const mainFields = allEnabledFields.filter(field => 
@@ -1008,6 +1234,54 @@ export class LayoutManager {
   }
 
   /**
+   * Calculate content fields configuration
+   */
+  private calculateContentFields(templateData: any): { fields: string[]; values: Record<string, string> } {
+    const contentBlock = this.findBlockByType(templateData, 'content');
+    
+    if (!contentBlock) {
+      return {
+        fields: CONTENT_FIELDS.filter(f => f.mandatory).map(f => f.name),
+        values: {}
+      };
+    }
+
+    const fields = this.getEnabledFields(contentBlock, CONTENT_FIELDS);
+    const values: Record<string, string> = {};
+    
+    // Extract values from template data
+    fields.forEach(field => {
+      values[field] = contentBlock.config?.fields?.[field]?.value || '';
+    });
+
+    return { fields, values };
+  }
+
+  /**
+   * Calculate assignment fields configuration
+   */
+  private calculateAssignmentFields(templateData: any): { fields: string[]; values: Record<string, string> } {
+    const assignmentBlock = this.findBlockByType(templateData, 'assignment');
+    
+    if (!assignmentBlock) {
+      return {
+        fields: ASSIGNMENT_FIELDS.filter(f => f.mandatory).map(f => f.name),
+        values: {}
+      };
+    }
+
+    const fields = this.getEnabledFields(assignmentBlock, ASSIGNMENT_FIELDS);
+    const values: Record<string, string> = {};
+    
+    // Extract values from template data
+    fields.forEach(field => {
+      values[field] = assignmentBlock.config?.fields?.[field]?.value || '';
+    });
+
+    return { fields, values };
+  }
+
+  /**
    * Get enabled fields from block configuration
    */
   private getEnabledFields(block: TemplateBlock, fieldConfig: any[]): string[] {
@@ -1023,61 +1297,6 @@ export class LayoutManager {
   }
 
   /**
-   * Get header field configuration (matches createTemplate.ts)
-   */
-  private getHeaderFieldConfig() {
-    return [
-      { name: 'lesson_number', label: 'Lesson number (#)', mandatory: true },
-      { name: 'lesson_title', label: 'Lesson title', mandatory: true },
-      { name: 'module_title', label: 'Module title', mandatory: true },
-      { name: 'course_title', label: 'Course title', mandatory: true },
-      { name: 'institution_name', label: 'Institution name', mandatory: true },
-      { name: 'teacher_name', label: 'Teacher name', mandatory: false }
-    ];
-  }
-
-  /**
-   * Get footer field configuration (matches createTemplate.ts)
-   */
-  private getFooterFieldConfig() {
-    return [
-      { name: 'copyright', label: 'Copyright', mandatory: true },
-      { name: 'teacher_name', label: 'Teacher name', mandatory: false },
-      { name: 'institution_name', label: 'Institution name', mandatory: false },
-      { name: 'page_number', label: 'Page number (#)', mandatory: true }
-    ];
-  }
-
-  /**
-   * Get program field configuration (the 4 mandatory configs)
-   */
-  private getProgramFieldConfig() {
-    return [
-      { name: 'competence', label: 'Competence', mandatory: true },
-      { name: 'topic', label: 'Topic', mandatory: true },
-      { name: 'objective', label: 'Objective', mandatory: true },
-      { name: 'task', label: 'Task', mandatory: true }
-    ];
-  }
-
-  /**
-   * Get resources field configuration
-   */
-  private getResourcesFieldConfig() {
-    return [
-      { name: 'task', label: 'Task', mandatory: true },
-      { name: 'type', label: 'Type', mandatory: true },
-      { name: 'origin', label: 'Origin', mandatory: true },
-      { name: 'state', label: 'State', mandatory: false },
-      { name: 'quality', label: 'Quality', mandatory: false },
-      { name: 'include_glossary', label: 'Include Glossary', mandatory: false },
-      { name: 'historical_figures', label: 'Historical figures', mandatory: false },
-      { name: 'terminology', label: 'Terminology', mandatory: false },
-      { name: 'concepts', label: 'Concepts', mandatory: false }
-    ];
-  }
-
-  /**
    * Get default column configuration when no template data
    */
   public getDefaultColumnConfiguration(): ColumnConfiguration {
@@ -1090,16 +1309,34 @@ export class LayoutManager {
       footerDistribution: [6, 6],
       programFields: ['competence', 'topic', 'objective', 'task'],
       programValues: {
-        competence: 'Core Skills Development',
-        topic: 'Course Fundamentals', 
-        objective: 'Master Key Concepts',
-        task: 'Complete Assignments'
+        competence: '[Competence]',
+        topic: '[Topic]', 
+        objective: '[Objective]',
+        task: '[Task]'
       },
       resourcesFields: ['task', 'type', 'origin'],
       resourcesValues: {
-        task: 'Resource Task',
-        type: 'Resource Type', 
-        origin: 'Resource Origin'
+        task: '[Task]',
+        type: '[Type]', 
+        origin: '[Origin]'
+      },
+      contentFields: ['topic', 'objective', 'task', 'instruction_area', 'student_area', 'teacher_area'],
+      contentValues: {
+        topic: '[Topic]',
+        objective: '[Objective]',
+        task: '[Task]',
+        instruction_area: '[Instruction Area]',
+        student_area: '[Student Area]',
+        teacher_area: '[Teacher Area]'
+      },
+      assignmentFields: ['topic', 'objective', 'task', 'instruction_area', 'student_area', 'teacher_area'],
+      assignmentValues: {
+        topic: '[Assignment Topic]',
+        objective: '[Assignment Objective]',
+        task: '[Assignment Task]',
+        instruction_area: '[Assignment Instructions]',
+        student_area: '[Student Submission]',
+        teacher_area: '[Teacher Grading]'
       }
     };
   }

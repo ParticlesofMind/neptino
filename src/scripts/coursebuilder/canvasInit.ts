@@ -9,7 +9,7 @@ import { UIEventHandler } from './ui/UIEventHandler';
 import { toolColorManager } from './tools/ToolColorManager';
 import { TextTool } from './tools/text/TextTool';
 import { SimplePerspectiveManager } from './tools/SimplePerspectiveManager';
-import { LayoutDemo } from './layout/LayoutDemo';
+import { LayoutManager } from './layout/LayoutManager';
 
 console.log('📦 CanvasAPI import successful:', CanvasAPI);
 
@@ -19,7 +19,7 @@ let canvasAPI: CanvasAPI | null = null;
 let toolStateManager: ToolStateManager | null = null;
 let uiEventHandler: UIEventHandler | null = null;
 let perspectiveManager: SimplePerspectiveManager | null = null;
-let layoutDemo: LayoutDemo | null = null;
+let layoutManager: LayoutManager | null = null;
 
 /**
  * Initialize canvas when coursebuilder page loads
@@ -54,9 +54,19 @@ export async function initializeCanvas(): Promise<void> {
 
         // Initialize Layout System
         console.log('📐 Initializing layout system...');
-        layoutDemo = new LayoutDemo(canvasAPI);
-        await layoutDemo.demo();
-        console.log('✅ Layout system initialized and demo applied!');
+        layoutManager = new LayoutManager();
+        
+        // Initialize the layout manager with the main canvas container
+        const uiLayer = canvasAPI.getLayer('ui');
+        if (uiLayer) {
+            layoutManager.initialize(uiLayer);
+            
+            // Create and display the basic layout
+            await layoutManager.createBasicLayout();
+            console.log('✅ Layout system initialized with basic layout!');
+        } else {
+            console.warn('⚠️ UI layer not found, layout system not initialized');
+        }
 
                 // Initialize Perspective Manager (zoom/pan controls)
         console.log('🔍 Initializing perspective controls...');
@@ -107,7 +117,7 @@ export async function initializeCanvas(): Promise<void> {
         (window as any).toolStateManager = toolStateManager;
         (window as any).toolColorManager = toolColorManager;
         (window as any).perspectiveManager = perspectiveManager;
-        (window as any).layoutDemo = layoutDemo;
+        (window as any).layoutManager = layoutManager;
         
         // Expose TextTool for font debugging
         (window as any).TextTool = TextTool;

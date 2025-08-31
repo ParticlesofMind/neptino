@@ -7,6 +7,26 @@
 
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import type { LayoutRegion, ColumnConfiguration } from './LayoutManager';
+import { getFieldLabel } from './FieldConfigurations.js';
+
+export interface ResourcesConfig {
+  backgroundColor?: number;
+  borderColor?: number;
+  borderWidth?: number;
+  padding?: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
+  textStyle?: {
+    fontSize: number;
+    fill: number;
+    fontFamily?: string;
+    fontWeight?: string;
+    align?: 'left' | 'center' | 'right';
+  };
+}
 
 export interface ResourcesContent {
   type: 'columns' | 'sections';
@@ -256,21 +276,10 @@ export class ResourcesComponent {
   }
 
   /**
-   * Get user-friendly label for field
+   * Get user-friendly label for field (using shared configuration)
    */
   private getFieldLabel(field: string): string {
-    const labels: Record<string, string> = {
-      task: 'Task',
-      type: 'Type',
-      origin: 'Origin',
-      state: 'State',
-      quality: 'Quality',
-      include_glossary: 'Include Glossary',
-      historical_figures: 'Historical figures',
-      terminology: 'Terminology',
-      concepts: 'Concepts'
-    };
-    return labels[field] || field.charAt(0).toUpperCase() + field.slice(1);
+    return getFieldLabel(field);
   }
 
   /**

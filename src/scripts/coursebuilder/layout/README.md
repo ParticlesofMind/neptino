@@ -256,20 +256,26 @@ The layout system provides a solid foundation for:
 4. **Component Library**: Reusable UI components positioned using the grid
 5. **Theme System**: Consistent styling across all layout components
 
-## Demo
+## Usage
 
-Use the `LayoutDemo` class to see the system in action:
+Use the `LayoutManager` directly for proper integration:
 
 ```typescript
-import { LayoutDemo } from './layout/LayoutDemo';
+import { LayoutManager } from './layout/LayoutManager';
+import { HeaderComponent, FooterComponent } from './layout';
 
-const demo = new LayoutDemo(canvasAPI);
-await demo.demo();
+// Initialize layout manager
+const layoutManager = new LayoutManager();
+const uiLayer = canvasAPI.getLayer('ui');
+layoutManager.initialize(uiLayer);
 
-// Test dynamic updates
-demo.updateHeaderTitle('New Course Title', 'Updated Subtitle');
-demo.updatePageNumber(2, 15);
-demo.toggleDebugGrid();
+// Create and position components
+const headerRegion = layoutManager.createHeaderRegion();
+const headerComponent = new HeaderComponent(headerRegion);
+
+// Apply template and add to canvas
+const template = layoutManager.createBasicTemplate();
+layoutManager.applyTemplate(template);
 ```
 
 This creates a solid, scalable foundation for building more complex layout templates and components on top of the existing canvas system.

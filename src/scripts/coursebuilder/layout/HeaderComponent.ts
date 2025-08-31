@@ -1,15 +1,23 @@
 /**
- * HeaderComponent - Header Layout Component
+ * HeaderComponent - Minimalist Header Layout Component
  * 
  * Responsibilities:
- * - Render header content within the header layout region
- * - Handle different header content types (text, logo, navigation, etc.)
- * - Provide configurable styling and layout options
- * - Manage header-specific interactions and updates
+ * - Render header content with clean typography
+ * - Transparent backgrounds that don't interfere with canvas
+ * - Subtle Neptino blue accents for visual hierarchy
+ * - Inter font family for professional look
  */
 
 import { Container, Graphics, Text } from 'pixi.js';
 import { LayoutRegion } from './LayoutManager';
+import { getFieldLabel } from './FieldConfigurations.js';
+import { 
+  COMPONENT_STYLES, 
+  createTextStyle, 
+  createBackground, 
+  createBorder,
+  SPACING
+} from './LayoutStyles.js';
 
 export interface HeaderConfig {
   backgroundColor?: number;
@@ -74,48 +82,44 @@ export class HeaderComponent {
   }
 
   /**
-   * Get default header configuration
+   * Get default header configuration - Modern minimalist style
    */
   private getDefaultConfig(): HeaderConfig {
+    const headerStyle = COMPONENT_STYLES.HEADER;
+    
     return {
-      backgroundColor: 0xffffff,
-      borderColor: 0xf5f5f5,
-      borderWidth: 1,
-      padding: {
-        top: 16,
-        right: 20,
-        bottom: 16,
-        left: 20
-      },
+      backgroundColor: headerStyle.background.color,
+      borderColor: 0x0066cc, // Neptino blue accent
+      borderWidth: headerStyle.border.width,
+      padding: headerStyle.padding,
       textStyle: {
-        fontSize: 24,
-        fill: 0x333333,
-        fontFamily: 'Arial, sans-serif',
-        fontWeight: 'bold',
+        fontSize: headerStyle.typography.fontSize,
+        fill: headerStyle.typography.fill,
+        fontFamily: headerStyle.typography.fontFamily,
+        fontWeight: headerStyle.typography.fontWeight,
         align: 'left'
       }
     };
   }
 
   /**
-   * Setup header background
+   * Setup background graphics - Modern transparent approach
    */
   private setupBackground(): void {
     this.background = new Graphics();
     this.background.label = 'header-background';
 
-    // Draw background rectangle
+    const bg = createBackground('transparent');
+    
+    // Create completely transparent background (no visual interference with canvas)
     this.background
       .rect(0, 0, this.region.width, this.region.height)
-      .fill({ color: this.config.backgroundColor, alpha: 1 });
+      .fill({ color: bg.color, alpha: bg.alpha });
 
-    // Add border if specified
+    // Optional subtle border can be added if needed
     if (this.config.borderWidth && this.config.borderWidth > 0) {
-      this.background
-        .stroke({ 
-          color: this.config.borderColor || 0xe0e0e0, 
-          width: this.config.borderWidth 
-        });
+      const border = createBorder('subtle');
+      this.background.stroke(border);
     }
 
     this.container.addChild(this.background);
@@ -169,14 +173,13 @@ export class HeaderComponent {
   private renderTextContent(area: { x: number; y: number; width: number; height: number }): void {
     if (!this.content || !this.content.title) return;
 
+    const titleStyle = createTextStyle('title');
+    
     const titleText = new Text({
       text: this.content.title,
       style: {
-        fontSize: this.config.textStyle!.fontSize,
-        fill: this.config.textStyle!.fill,
-        fontFamily: this.config.textStyle!.fontFamily,
-        fontWeight: this.config.textStyle!.fontWeight as any,
-        align: this.config.textStyle!.align || 'left'
+        ...titleStyle,
+        fontWeight: titleStyle.fontWeight as any
       }
     });
 
@@ -195,25 +198,24 @@ export class HeaderComponent {
         titleText.x = area.x;
     }
 
-    titleText.y = area.y;
+    titleText.y = area.y + this.config.padding!.top;
 
-    // Add subtitle if provided
+    // Add subtitle if provided - more elegant spacing
     if (this.content.subtitle) {
+      const subtitleStyle = createTextStyle('label');
+      
       const subtitleText = new Text({
         text: this.content.subtitle,
         style: {
-          fontSize: Math.max(12, this.config.textStyle!.fontSize * 0.6),
-          fill: this.config.textStyle!.fill,
-          fontFamily: this.config.textStyle!.fontFamily,
-          fontWeight: 'normal' as any,
-          align: this.config.textStyle!.align || 'left'
+          ...subtitleStyle,
+          fontWeight: subtitleStyle.fontWeight as any
         }
       });
 
-      // Position subtitle below title
+      // Position subtitle below title with minimal spacing
       subtitleText.anchor.copyFrom(titleText.anchor);
       subtitleText.x = titleText.x;
-      subtitleText.y = titleText.y + titleText.height + 4;
+      subtitleText.y = titleText.y + titleText.height + SPACING.XS;
 
       this.contentContainer.addChild(subtitleText);
     }
@@ -222,33 +224,36 @@ export class HeaderComponent {
   }
 
   /**
-   * Render logo content (placeholder for now)
+   * Render logo content - Modern minimalist placeholder
    */
   private renderLogoContent(area: { x: number; y: number; width: number; height: number }): void {
-    // For now, create a placeholder rectangle for the logo
+    const border = createBorder('subtle');
+    const textStyle = createTextStyle('meta');
+    
+    // Create ultra-minimal logo placeholder with Neptino accent
     const logoPlaceholder = new Graphics();
     logoPlaceholder
-      .rect(area.x, area.y, Math.min(area.width, 120), area.height)
-      .fill({ color: 0xf0f0f0, alpha: 1 })
-      .stroke({ color: 0xcccccc, width: 1 });
+      .rect(area.x, area.y, Math.min(area.width, 60), area.height - 4)
+      .fill({ color: 0x000000, alpha: 0 }) // Transparent fill
+      .stroke(border); // Subtle border
 
     const logoText = new Text({
       text: 'LOGO',
       style: {
-        fontSize: 14,
-        fill: 0x999999,
+        ...textStyle,
+        fontWeight: textStyle.fontWeight as any,
         align: 'center'
       }
     });
 
     logoText.anchor.set(0.5, 0.5);
-    logoText.x = area.x + 60;
+    logoText.x = area.x + 30;
     logoText.y = area.y + area.height / 2;
 
     this.contentContainer.addChild(logoPlaceholder);
     this.contentContainer.addChild(logoText);
 
-    console.log('📷 Logo placeholder rendered (will implement actual logo loading later)');
+    console.log('📷 Minimal logo placeholder rendered');
   }
 
   /**
@@ -355,20 +360,10 @@ export class HeaderComponent {
   }
 
   /**
-   * Get user-friendly label for template field
+   * Get user-friendly label for template field (using shared configuration)
    */
   private getFieldLabel(field: string): string {
-    const labels: Record<string, string> = {
-      lesson_number: 'Lesson #',
-      lesson_title: 'Lesson Title',
-      module_title: 'Module',
-      course_title: 'Course',
-      institution_name: 'Institution',
-      teacher_name: 'Teacher',
-      copyright: 'Copyright',
-      page_number: 'Page #'
-    };
-    return labels[field] || field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return getFieldLabel(field);
   }
 
   /**

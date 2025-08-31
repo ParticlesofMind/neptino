@@ -1,15 +1,21 @@
 /**
- * FooterComponent - Footer Layout Component
+ * FooterComponent - Minimalist Footer Layout Component
  * 
  * Responsibilities:
- * - Render footer content within the footer layout region
- * - Handle different footer content types (page numbers, copyright, navigation, etc.)
- * - Provide configurable styling and layout options
- * - Manage footer-specific interactions and updates
+ * - Render footer content with clean typography
+ * - Transparent backgrounds that don't interfere with canvas  
+ * - Subtle styling for page numbers, copyright, navigation
+ * - Inter font family for professional look
  */
 
 import { Container, Graphics, Text } from 'pixi.js';
 import { LayoutRegion } from './LayoutManager';
+import { getFieldLabel } from './FieldConfigurations.js';
+import { 
+  COMPONENT_STYLES, 
+  createBackground, 
+  createBorder
+} from './LayoutStyles.js';
 
 export interface FooterConfig {
   backgroundColor?: number;
@@ -76,50 +82,47 @@ export class FooterComponent {
   }
 
   /**
-   * Get default footer configuration
+   * Get default footer configuration - Modern minimalist style
    */
   private getDefaultConfig(): FooterConfig {
+    const footerStyle = COMPONENT_STYLES.FOOTER;
+    
     return {
-      backgroundColor: 0xfafafa,
-      borderColor: 0xf0f0f0,
-      borderWidth: 1,
-      padding: {
-        top: 12,
-        right: 20,
-        bottom: 12,
-        left: 20
-      },
+      backgroundColor: footerStyle.background.color,
+      borderColor: 0x0066cc, // Neptino blue accent  
+      borderWidth: footerStyle.border.width,
+      padding: footerStyle.padding,
       textStyle: {
-        fontSize: 14,
-        fill: 0x666666,
-        fontFamily: 'Arial, sans-serif',
-        fontWeight: 'normal',
+        fontSize: footerStyle.typography.fontSize,
+        fill: footerStyle.typography.fill,
+        fontFamily: footerStyle.typography.fontFamily,
+        fontWeight: footerStyle.typography.fontWeight,
         align: 'center'
       }
     };
   }
 
   /**
-   * Setup footer background
+   * Setup footer background - Modern transparent approach
    */
   private setupBackground(): void {
     this.background = new Graphics();
     this.background.label = 'footer-background';
 
-    // Draw background rectangle
+    const bg = createBackground('transparent');
+
+    // Draw transparent background rectangle
     this.background
       .rect(0, 0, this.region.width, this.region.height)
-      .fill({ color: this.config.backgroundColor, alpha: 1 });
+      .fill({ color: bg.color, alpha: bg.alpha });
 
-    // Add top border (footer typically has top border)
+    // Optional subtle top border 
     if (this.config.borderWidth && this.config.borderWidth > 0) {
+      const border = createBorder('subtle');
       this.background
         .moveTo(0, 0)
         .lineTo(this.region.width, 0)
-        .stroke({ 
-          color: this.config.borderColor || 0xe0e0e0, 
-          width: this.config.borderWidth 
-        });
+        .stroke(border);
     }
 
     this.container.addChild(this.background);
@@ -158,9 +161,6 @@ export class FooterComponent {
         break;
       case 'mixed':
         this.renderMixedContent(contentArea);
-        break;
-      case 'navigation':
-        this.renderNavigationContent(contentArea);
         break;
       case 'columns':
         this.renderColumnContent(contentArea);
@@ -288,35 +288,7 @@ export class FooterComponent {
     }
   }
 
-  /**
-   * Render navigation content (placeholder for future navigation elements)
-   */
-  private renderNavigationContent(area: { x: number; y: number; width: number; height: number }): void {
-    // For now, just show a placeholder
-    const navPlaceholder = new Graphics();
-    navPlaceholder
-      .rect(area.x, area.y, area.width, area.height)
-      .fill({ color: 0xf8f8f8, alpha: 1 })
-      .stroke({ color: 0xdddddd, width: 1 });
 
-    const navText = new Text({
-      text: 'Footer Navigation (Coming Soon)',
-      style: {
-        fontSize: 12,
-        fill: 0x999999,
-        align: 'center'
-      }
-    });
-
-    navText.anchor.set(0.5, 0.5);
-    navText.x = area.x + area.width / 2;
-    navText.y = area.y + area.height / 2;
-
-    this.contentContainer.addChild(navPlaceholder);
-    this.contentContainer.addChild(navText);
-
-    console.log('🧭 Footer navigation placeholder rendered');
-  }
 
   /**
    * Render template-based column content for footer
@@ -391,20 +363,10 @@ export class FooterComponent {
   }
 
   /**
-   * Get user-friendly label for template field
+   * Get user-friendly label for template field (using shared configuration)
    */
   private getFieldLabel(field: string): string {
-    const labels: Record<string, string> = {
-      lesson_number: 'Lesson #',
-      lesson_title: 'Lesson Title',
-      module_title: 'Module',
-      course_title: 'Course',
-      institution_name: 'Institution',
-      teacher_name: 'Teacher',
-      copyright: 'Copyright',
-      page_number: 'Page #'
-    };
-    return labels[field] || field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return getFieldLabel(field);
   }
 
   /**
