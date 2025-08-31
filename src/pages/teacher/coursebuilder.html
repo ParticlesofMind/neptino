@@ -6,10 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="pixi-devtools" content="enabled" />
   <title>Course Builder - Neptino</title>
-  
+
   <!-- Select2 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-  
+
   <link rel="stylesheet" href="/src/scss/main.scss" />
 </head>
 
@@ -68,16 +68,19 @@
               <h3 class="heading heading--sidebar">Publishing</h3>
             </li>
             <li class="ul__item">
-              <a class="link link--menu" href="#course-visibility" data-section="course-visibility">Course visibility</a>
+              <a class="link link--menu" href="#course-visibility" data-section="course-visibility">Course
+                visibility</a>
             </li>
             <li class="ul__item">
               <a class="link link--menu" href="#marketplace" data-section="marketplace">Marketplace</a>
             </li>
             <li class="ul__item">
-              <a class="link link--menu" href="#pricing-monetization" data-section="pricing-monetization">Pricing & Monetization</a>
+              <a class="link link--menu" href="#pricing-monetization" data-section="pricing-monetization">Pricing &
+                Monetization</a>
             </li>
             <li class="ul__item">
-              <a class="link link--menu" href="#external-integrations" data-section="external-integrations">External Integrations & APIs</a>
+              <a class="link link--menu" href="#external-integrations" data-section="external-integrations">External
+                Integrations & APIs</a>
             </li>
             <li class="ul__item">
               <a class="link link--menu" href="#communication" data-section="communication">Communication</a>
@@ -95,19 +98,23 @@
               <a class="link link--menu" href="#themes" data-section="themes">Themes</a>
             </li>
             <li class="ul__item">
-              <a class="link link--menu" href="#accessibility-comfort" data-section="accessibility-comfort">Accessibility & Comfort</a>
+              <a class="link link--menu" href="#accessibility-comfort"
+                data-section="accessibility-comfort">Accessibility & Comfort</a>
             </li>
             <li class="ul__item ul__item--heading">
               <h3 class="heading heading--sidebar">Settings</h3>
             </li>
             <li class="ul__item">
-              <a class="link link--menu" href="#notifications-alerts" data-section="notifications-alerts">Notifications & Alerts</a>
+              <a class="link link--menu" href="#notifications-alerts" data-section="notifications-alerts">Notifications
+                & Alerts</a>
             </li>
             <li class="ul__item">
-              <a class="link link--menu" href="#data-management" data-section="data-management">Data management & Backup</a>
+              <a class="link link--menu" href="#data-management" data-section="data-management">Data management &
+                Backup</a>
             </li>
             <li class="ul__item">
-              <a class="link link--menu" href="#advanced-settings" data-section="advanced-settings">Advanced Settings</a>
+              <a class="link link--menu" href="#advanced-settings" data-section="advanced-settings">Advanced
+                Settings</a>
             </li>
           </ul>
         </nav>
@@ -158,7 +165,7 @@
         <!-- Classification Article -->
         <article class="content__article" id="classification">
           <form class="form classification" id="course-classification-form">
-            
+
             <!-- Row 1: Basic Information -->
             <div class="classification__row classification__row--basic">
               <div class="classification__field">
@@ -174,7 +181,8 @@
                 <label class="form__label" for="curricular-framework-select">
                   Curricular Framework
                 </label>
-                <select class="input input--select" name="curricular_framework" id="curricular-framework-select" required>
+                <select class="input input--select" name="curricular_framework" id="curricular-framework-select"
+                  required>
                   <option value="">Loading...</option>
                 </select>
               </div>
@@ -184,7 +192,7 @@
             <div class="classification__row classification__row--hierarchy">
               <div class="classification__field">
                 <label class="form__label" for="domain-select">
-                  Domain 
+                  Domain
                   <span class="form__label-hint">Academic field</span>
                 </label>
                 <select class="input input--select" name="domain" id="domain-select" required>
@@ -194,7 +202,7 @@
 
               <div class="classification__field">
                 <label class="form__label" for="subject-select">
-                  Subject 
+                  Subject
                   <span class="form__label-hint">Specific discipline</span>
                 </label>
                 <select class="input input--select" name="subject" id="subject-select" required disabled>
@@ -204,7 +212,7 @@
 
               <div class="classification__field">
                 <label class="form__label" for="topic-select">
-                  Topic 
+                  Topic
                   <span class="form__label-hint">Area of study</span>
                 </label>
                 <select class="input input--select" name="topic" id="topic-select" required disabled>
@@ -214,8 +222,8 @@
 
               <div class="classification__field">
                 <label class="form__label" for="subtopic-select">
-                  Subtopic 
-                  <span class="form__label-optional">(Optional)</span> 
+                  Subtopic
+                  <span class="form__label-optional">(Optional)</span>
                   <span class="form__label-hint">Specific focus</span>
                 </label>
                 <select class="input input--select" name="subtopic" id="subtopic-select" disabled>
@@ -228,7 +236,7 @@
             <div class="classification__section">
               <div class="classification__section-header">
                 <h3 class="classification__section-title">
-                  Course Sequence 
+                  Course Sequence
                   <span class="form__label-optional">(Optional)</span>
                 </h3>
                 <p class="classification__section-description">
@@ -240,7 +248,7 @@
               <div class="classification__row classification__row--sequence">
                 <div class="classification__field">
                   <label class="form__label" for="previous-course-select">
-                    Previous Course 
+                    Previous Course
                     <span class="form__label-hint">Course that should come before this one</span>
                   </label>
                   <select class="input input--select" name="previous_course" id="previous-course-select">
@@ -250,7 +258,7 @@
 
                 <div class="classification__field">
                   <label class="form__label" for="current-course-select">
-                    Current Course 
+                    Current Course
                     <span class="form__label-hint">Other courses at this level</span>
                   </label>
                   <select class="input input--select" name="current_course" id="current-course-select">
@@ -260,7 +268,7 @@
 
                 <div class="classification__field">
                   <label class="form__label" for="next-course-select">
-                    Next Course 
+                    Next Course
                     <span class="form__label-hint">Course that should come after this one</span>
                   </label>
                   <select class="input input--select" name="next_course" id="next-course-select">
@@ -324,8 +332,7 @@
               <form class="form coursebuilder-form modal__body" id="create-template-form">
                 <label class="form__label">
                   Template Name*
-                  <input class="input" type="text" name="template-name" required
-                    placeholder="Enter template name" />
+                  <input class="input" type="text" name="template-name" required placeholder="Enter template name" />
                 </label>
 
                 <label class="form__label">
@@ -369,8 +376,7 @@
 
               <div class="modal__body template-browser">
                 <div class="template-browser__controls">
-                  <input class="input" type="text" id="template-search"
-                    placeholder="Search templates..." />
+                  <input class="input" type="text" id="template-search" placeholder="Search templates..." />
                   <select class="input input--select" id="template-type-filter">
                     <option value="">All Types</option>
                     <option value="lesson">Lesson</option>
@@ -531,9 +537,11 @@
                 </button>
               </div>
 
-              <div class="card card--rounded curriculum__duration-info" id="curriculum-duration-info" style="display: none;">
+              <div class="card card--rounded curriculum__duration-info" id="curriculum-duration-info"
+                style="display: none;">
                 <div class="card__content">
-                  <span class="curriculum__duration-text">Select a lesson duration above to see the ideal lesson length</span>
+                  <span class="curriculum__duration-text">Select a lesson duration above to see the ideal lesson
+                    length</span>
                 </div>
               </div>
 
@@ -549,7 +557,8 @@
 
                 <label class="form__label">
                   Objectives per topic
-                  <input class="input input--number" type="number" min="1" max="5" value="2" id="curriculum-objectives" />
+                  <input class="input input--number" type="number" min="1" max="5" value="2"
+                    id="curriculum-objectives" />
                 </label>
 
                 <label class="form__label">
@@ -561,19 +570,19 @@
 
             <div class="curriculum__preview">
               <div class="curriculum__controls">
-            
+
                 <div class="button-group">
                   <button class="button button--small button--outline" type="button" data-mode="titles">
-                     Titles
+                    Titles
                   </button>
                   <button class="button button--small button--outline" type="button" data-mode="topics">
-                     Topics
+                    Topics
                   </button>
                   <button class="button button--small button--outline" type="button" data-mode="objectives">
-                     Objectives
+                    Objectives
                   </button>
                   <button class="button button--small button--outline" type="button" data-mode="tasks">
-                     Tasks
+                    Tasks
                   </button>
                   <button class="button button--small button--outline" type="button" data-mode="all">
                     All
@@ -720,11 +729,13 @@
                   <div class="page-setup__options">
                     <label class="page-setup__option">
                       <input class="input input--radio" type="radio" name="canvas-size" value="a4" checked />
-                      <span class="canvas-size-label" data-cm="A4 (21.0 × 29.7 cm)" data-inches="A4 (8.27&quot; × 11.69&quot;)">A4 (21.0 × 29.7 cm)</span>
+                      <span class="canvas-size-label" data-cm="A4 (21.0 × 29.7 cm)"
+                        data-inches="A4 (8.27&quot; × 11.69&quot;)">A4 (21.0 × 29.7 cm)</span>
                     </label>
                     <label class="page-setup__option">
                       <input class="input input--radio" type="radio" name="canvas-size" value="us-letter" />
-                      <span class="canvas-size-label" data-cm="US Letter (21.6 × 27.9 cm)" data-inches="US Letter (8.5&quot; × 11&quot;)">US Letter (21.6 × 27.9 cm)</span>
+                      <span class="canvas-size-label" data-cm="US Letter (21.6 × 27.9 cm)"
+                        data-inches="US Letter (8.5&quot; × 11&quot;)">US Letter (21.6 × 27.9 cm)</span>
                     </label>
                   </div>
                 </div>
@@ -736,24 +747,28 @@
                     <div class="page-setup__margin-group">
                       <label class="page-setup__margin">
                         Top
-                        <input class="input input--number" type="number" name="margin_top" value="2.54" step="0.01" min="0" max="100" />
+                        <input class="input input--number" type="number" name="margin_top" value="2.54" step="0.01"
+                          min="0" max="100" />
                         <span class="page-setup__unit">cm</span>
                       </label>
                       <label class="page-setup__margin">
                         Bottom
-                        <input class="input input--number" type="number" name="margin_bottom" value="2.54" step="0.01" min="0" max="100" />
+                        <input class="input input--number" type="number" name="margin_bottom" value="2.54" step="0.01"
+                          min="0" max="100" />
                         <span class="page-setup__unit">cm</span>
                       </label>
                     </div>
                     <div class="page-setup__margin-group">
                       <label class="page-setup__margin">
                         Left
-                        <input class="input input--number" type="number" name="margin_left" value="2.54" step="0.01" min="0" max="100" />
+                        <input class="input input--number" type="number" name="margin_left" value="2.54" step="0.01"
+                          min="0" max="100" />
                         <span class="page-setup__unit">cm</span>
                       </label>
                       <label class="page-setup__margin">
                         Right
-                        <input class="input input--number" type="number" name="margin_right" value="2.54" step="0.01" min="0" max="100" />
+                        <input class="input input--number" type="number" name="margin_right" value="2.54" step="0.01"
+                          min="0" max="100" />
                         <span class="page-setup__unit">cm</span>
                       </label>
                     </div>
@@ -830,354 +845,375 @@
 
     <!-- Create View -->
     <div class="coursebuilder__create" aria-hidden="true" id="create">
-        <div class="engine">
-          <!-- Mode Selector -->
-          <div class="engine__mode mode">
-            <div class="mode__item" data-mode="build">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-build.svg" alt="">
-              <span class="icon-label">Build</span>
-            </div>
-            <div class="mode__item" data-mode="animate">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" alt="">
-              <span class="icon-label">Animate</span>
-            </div>
-            <div class="mode__item" data-mode="workflow">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-workflow.svg" alt="">
-              <span class="icon-label">Flow</span>
-            </div>
-            <div class="mode__item" data-mode="optimize">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-optimize.svg" alt="">
-              <span class="icon-label">Improve</span>
-            </div>
+      <div class="engine">
+        <!-- Mode Selector -->
+        <div class="engine__mode mode">
+          <div class="mode__item" data-mode="build">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-build.svg" alt="">
+            <span class="icon-label">Build</span>
           </div>
-
-          <!-- Media Selector -->
-          <div class="engine__media media">
-            <div class="media__item" data-media="files">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-files.svg" alt="">
-              <span class="icon-label">Files</span>
-            </div>
-            <div class="media__item" data-media="images">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-image.svg" alt="">
-              <span class="icon-label">Images</span>
-            </div>
-            <div class="media__item" data-media="videos">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-video.svg" alt="">
-              <span class="icon-label">Videos</span>
-            </div>
-            <div class="media__item" data-media="audio">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-audio.svg" alt="">
-              <span class="icon-label">Audio</span>
-            </div>
-            <div class="media__item" data-media="text">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-text.svg" alt="">
-              <span class="icon-label">Text</span>
-            </div>
-            <div class="media__item" data-media="plugin">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-plugins.svg" alt="">
-              <span class="icon-label">Plugins</span>
-            </div>
-            <div class="media__item" data-media="links">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-link.svg" alt="">
-              <span class="icon-label">Links</span>
-            </div>
-            <div class="media__item" data-media="interactive">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-interactive.svg" alt="">
-              <span class="icon-label">Interactive</span>
-            </div>
+          <div class="mode__item" data-mode="animate">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" alt="">
+            <span class="icon-label">Animate</span>
           </div>
-
-          <!-- Search -->
-          <div class="engine__search search">
-            <input class="search__input input input--search" type="search" placeholder="Search media..."
-              id="media-search-input">
+          <div class="mode__item" data-mode="workflow">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-workflow.svg" alt="">
+            <span class="icon-label">Flow</span>
           </div>
+          <div class="mode__item" data-mode="optimize">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-optimize.svg" alt="">
+            <span class="icon-label">Improve</span>
+          </div>
+        </div>
 
-          <!-- Canvas Area -->
-          <div class="engine__canvas canvas" id="canvas-container">
-            <!-- Perspective Tools -->
-            <div class="engine__perspective perspective">
-              <div class="perspective__item" data-perspective="zoom-in" title="Zoom In">
-                <img src="/src/assets/icons/coursebuilder/perspective/zoomin-icon.svg" alt="Zoom In" class="perspective__icon icon icon--base">
-              </div>
-              <div class="perspective__item" data-perspective="zoom-out" title="Zoom Out">
-                <img src="/src/assets/icons/coursebuilder/perspective/zoomout-icon.svg" alt="Zoom Out" class="perspective__icon icon icon--base">
-              </div>
-              <div class="perspective__item" data-perspective="grid" title="Toggle Grid">
-                <img src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Toggle Grid" class="perspective__icon icon icon--base">
-              </div>
-              <div class="perspective__item" data-perspective="reset" title="Reset View">
-                <img src="/src/assets/icons/coursebuilder/perspective/reset-icon.svg" alt="Reset View" class="perspective__icon icon icon--base">
-              </div>
+        <!-- Media Selector -->
+        <div class="engine__media media">
+          <div class="media__item" data-media="files">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-files.svg" alt="">
+            <span class="icon-label">Files</span>
+          </div>
+          <div class="media__item" data-media="images">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-image.svg" alt="">
+            <span class="icon-label">Images</span>
+          </div>
+          <div class="media__item" data-media="videos">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-video.svg" alt="">
+            <span class="icon-label">Videos</span>
+          </div>
+          <div class="media__item" data-media="audio">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-audio.svg" alt="">
+            <span class="icon-label">Audio</span>
+          </div>
+          <div class="media__item" data-media="text">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-text.svg" alt="">
+            <span class="icon-label">Text</span>
+          </div>
+          <div class="media__item" data-media="plugin">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-plugins.svg" alt="">
+            <span class="icon-label">Plugins</span>
+          </div>
+          <div class="media__item" data-media="links">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-link.svg" alt="">
+            <span class="icon-label">Links</span>
+          </div>
+          <div class="media__item" data-media="interactive">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-interactive.svg" alt="">
+            <span class="icon-label">Interactive</span>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="engine__search search">
+          <input class="search__input input input--search" type="search" placeholder="Search media..."
+            id="media-search-input">
+        </div>
+
+        <!-- Canvas Area -->
+        <div class="engine__canvas engine__canvas--grid" id="canvas-container">
+          <!-- Column 1: Perspective Tools -->
+          <div class="engine__perspective">
+            <div class="perspective__item" data-perspective="zoom-in" title="Zoom In">
+              <img src="/src/assets/icons/coursebuilder/perspective/zoomin-icon.svg" alt="Zoom In"
+                class="perspective__icon icon icon--base">
             </div>
+            <div class="perspective__item" data-perspective="zoom-out" title="Zoom Out">
+              <img src="/src/assets/icons/coursebuilder/perspective/zoomout-icon.svg" alt="Zoom Out"
+                class="perspective__icon icon icon--base">
+            </div>
+
+               <div class="perspective__item" data-perspective="reset" title="Reset View">
+              <img src="/src/assets/icons/coursebuilder/perspective/reset-icon.svg" alt="Reset View"
+                class="perspective__icon icon icon--base">
+            </div>
+
             
-            <div class="canvas__placeholder">
-              <svg class="canvas__icon" width="48" height="48" viewBox="0 0 24 24" fill="#ccc">
-                <path
-                  d="M12,2A2,2 0 0,1 14,4A2,2 0 0,1 12,6A2,2 0 0,1 10,4A2,2 0 0,1 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V21A2,2 0 0,0 5,23H19A2,2 0 0,0 21,21V9M19,9H14V4H19V9Z" />
-              </svg>
-              <div class="canvas__title">🔒 Layout-Protected Canvas</div>
-              <div class="canvas__desc">
-                Draw within pedagogical areas only<br>
-                <small class="canvas__note">Layout structure cannot be erased</small>
-              </div>
+               <div class="perspective__item" data-perspective="grab" title="grab">
+              <img src="/src/assets/icons/coursebuilder/perspective/grab-icon.svg" alt="grab"
+                class="perspective__icon icon icon--base">
             </div>
+            <div class="perspective__item" data-perspective="grid" title="Toggle Grid">
+              <img src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Toggle Grid"
+                class="perspective__icon icon icon--base">
+            </div>
+         
           </div>
+          <!-- Column 2: Canvas will be inserted here by JavaScript -->
+          <!-- Column 3: Empty space for future use -->
+          <div class="engine__canvas-spacer"></div>
+        </div>
 
-          <!-- Canvas Navigation -->
-          <div class="engine__nav-course nav-course">
-            <div class="nav-course__item nav-course__item--active" data-preview="outline">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-toc.svg" alt="">
-              <span class="icon-label">Outline</span>
-            </div>
-            <div class="nav-course__item" data-preview="preview">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-thumbnail.svg"
-                alt="">
-              <span class="icon-label">Preview</span>
-            </div>
-            <div class="nav-course__item" data-preview="marks">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-bookmark.svg"
-                alt="">
-              <span class="icon-label">Marks</span>
+        <!-- Canvas Navigation -->
+        <div class="engine__nav-course nav-course">
+          <div class="nav-course__item nav-course__item--active" data-preview="outline">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-toc.svg" alt="">
+            <span class="icon-label">Outline</span>
+          </div>
+          <div class="nav-course__item" data-preview="preview">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-thumbnail.svg"
+              alt="">
+            <span class="icon-label">Preview</span>
+          </div>
+          <div class="nav-course__item" data-preview="marks">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-bookmark.svg"
+              alt="">
+            <span class="icon-label">Marks</span>
+          </div>
+        </div>
+
+        <!-- Canvas Preview -->
+        <div class="engine__preview preview">
+          <!-- Outline Preview -->
+          <div class="preview__content preview__content--active" id="preview-outline">
+            <div class="outline-preview">
+              <div class="outline-preview__loading" style="display: none;">
+                Loading curriculum outline...
+              </div>
+              <div class="outline-preview__content">
+                <!-- Curriculum outline will be populated here -->
+              </div>
             </div>
           </div>
 
           <!-- Canvas Preview -->
-          <div class="engine__preview preview">
-            <!-- Outline Preview -->
-            <div class="preview__content preview__content--active" id="preview-outline">
-              <div class="outline-preview">
-                <div class="outline-preview__loading" style="display: none;">
-                  Loading curriculum outline...
-                </div>
-                <div class="outline-preview__content">
-                  <!-- Curriculum outline will be populated here -->
-                </div>
-              </div>
-            </div>
-
-            <!-- Canvas Preview -->
-            <div class="preview__content" id="preview-canvas">
-              <div class="canvas-preview">
-                <p class="placeholder">Canvas preview will be displayed here...</p>
-              </div>
-            </div>
-
-            <!-- Bookmarks/Marks Preview -->
-            <div class="preview__content" id="preview-marks">
-              <div class="marks-preview">
-                <p class="placeholder">Bookmarks and marks will be displayed here...</p>
-              </div>
+          <div class="preview__content" id="preview-canvas">
+            <div class="canvas-preview">
+              <p class="placeholder">Canvas preview will be displayed here...</p>
             </div>
           </div>
 
-          <!-- Drawing Tools -->
-          <div class="engine__tools tools">
-            <div class="tools__selection">
-              <div class="tools__item tools__item--active" data-tool="selection">
-                <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
-                  class="tools__icon icon icon--base">
-                <span class="icon-label">Select</span>
-              </div>
-              <div class="tools__item" data-tool="pen">
-                <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Pen Tool"
-   class="tools__icon icon icon--base">
-                <span class="icon-label">Pen</span>
-              </div>
-              <div class="tools__item" data-tool="brush">
-                <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" alt="Brush Tool"
-                  class="tools__icon icon icon--base">
-                <span class="icon-label">Brush</span>
-              </div>
-              <div class="tools__item" data-tool="text">
-                <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" alt="Text Tool"
-                  class="tools__icon icon icon--base">
-                <span class="icon-label">Text</span>
-              </div>
-              <div class="tools__item" data-tool="shapes">
-                <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" alt="Shapes Tool"
-                  class="tools__icon icon icon--base">
-                <span class="icon-label">Shapes</span>
-              </div>
-                       <div class="tools__item" data-tool="tables">
-                <img src="/src/assets/icons/coursebuilder/media/media-table.svg" alt="Table Tool"
-                  class="tools__icon icon icon--base">
-                <span class="icon-label">Tables</span>
-              </div>
-
-              <div class="tools__item" data-tool="eraser">
-                <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" alt="Eraser Tool"
-                  class="tools__icon icon icon--base">
-                <span class="icon-label">Eraser</span>
-              </div>
-     
-            </div>
-
-            <!-- Tool Settings -->
-            <div class="tools__options">
-           
-              <!-- Pen Settings -->
-              <div class="tools__item tools__item--pen" data-tool="pen" style="display: none;">
-                <input type="number" min="1" max="15" value="2" class="input input--number" title="Pen Size" data-setting="size">
-                
-                <select id="pen-stroke-type-select" class="input input--select" title="Stroke Type" data-setting="strokeType">
-                  <option value="solid" data-line-style="solid">Solid</option>
-                  <option value="dashed" data-line-style="dashed">Dashed</option>
-                </select>
-                
-                <select id="pen-stroke-select" class="input input--color" data-color-selector="pen-stroke" title="Stroke Color">
-                    <option value="#1a1a1a" data-color="#1a1a1a" selected>Black</option>
-                    <option value="#4a7c59" data-color="#4a7c59">Green</option>
-                    <option value="#4a79a4" data-color="#4a79a4">Blue</option>
-                    <option value="#a74a4a" data-color="#a74a4a">Red</option>
-                    <option value="#6b7280" data-color="#6b7280">Gray</option>
-                    <option value="#b87333" data-color="#b87333">Orange</option>
-                    <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
-                    <option value="#b8a642" data-color="#b8a642">Yellow</option>
-                    <option value="#64748b" data-color="#64748b">Slate</option>
-                    <option value="#f8fafc" data-color="#f8fafc">White</option>
-                </select>
-                <select id="pen-fill-select" class="input input--color" data-color-selector="pen-fill" title="Fill Color">
-                    <option value="transparent" data-color="transparent">No Fill</option>
-                    <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
-                    <option value="#4a7c59" data-color="#4a7c59">Green</option>
-                    <option value="#4a79a4" data-color="#4a79a4">Blue</option>
-                    <option value="#a74a4a" data-color="#a74a4a">Red</option>
-                    <option value="#6b7280" data-color="#6b7280">Gray</option>
-                    <option value="#b87333" data-color="#b87333">Orange</option>
-                    <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
-                    <option value="#b8a642" data-color="#b8a642">Yellow</option>
-                    <option value="#64748b" data-color="#64748b">Slate</option>
-                    <option value="#f8fafc" data-color="#f8fafc" selected>White</option>
-                </select>
-              </div>
-
-              <!-- Text Settings -->
-              <div class="tools__item tools__item--text" data-tool="text" style="display: none;">
-                <input type="number" min="8" max="72" value="16" class="input input--number" title="Text Size" data-setting="fontSize">
-                
-                <select id="font-family-select" class="input input--select" title="Font Family" data-setting="fontFamily">
-                  <option value="Arial" data-font-family="Arial">Arial</option>
-                  <option value="Times New Roman" data-font-family="Times New Roman">Times New Roman</option>
-                  <option value="Georgia" data-font-family="Georgia">Georgia</option>
-                  <option value="Verdana" data-font-family="Verdana">Verdana</option>
-                  <option value="Tahoma" data-font-family="Tahoma">Tahoma</option>
-                </select>
-                
-                <select id="text-color-select" class="input input--color" data-color-selector="text" title="Text Color">
-                    <option value="#1a1a1a" data-color="#1a1a1a" selected>Black</option>
-                    <option value="#4a7c59" data-color="#4a7c59">Green</option>
-                    <option value="#4a79a4" data-color="#4a79a4">Blue</option>
-                    <option value="#a74a4a" data-color="#a74a4a">Red</option>
-                    <option value="#6b7280" data-color="#6b7280">Gray</option>
-                    <option value="#b87333" data-color="#b87333">Orange</option>
-                    <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
-                    <option value="#b8a642" data-color="#b8a642">Yellow</option>
-                    <option value="#64748b" data-color="#64748b">Slate</option>
-                    <option value="#f8fafc" data-color="#f8fafc">White</option>
-                </select>
-              </div>
-
-              <!-- Brush Settings -->
-              <div class="tools__item tools__item--brush" data-tool="brush" style="display: none;">
-                <input type="number" min="10" max="50" value="20" class="input input--number" title="Brush Size" data-setting="size">
-                
-                <select id="brush-color-select" class="input input--color" data-color-selector="brush" title="Brush Color">
-                    <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
-                    <option value="#4a7c59" data-color="#4a7c59" selected>Green</option>
-                    <option value="#4a79a4" data-color="#4a79a4">Blue</option>
-                    <option value="#a74a4a" data-color="#a74a4a">Red</option>
-                    <option value="#6b7280" data-color="#6b7280">Gray</option>
-                    <option value="#b87333" data-color="#b87333">Orange</option>
-                    <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
-                    <option value="#b8a642" data-color="#b8a642">Yellow</option>
-                    <option value="#64748b" data-color="#64748b">Slate</option>
-                    <option value="#f8fafc" data-color="#f8fafc">White</option>
-                </select>
-              </div>
-
-              <!-- Shapes Settings -->
-              <div class="tools__item tools__item--shapes" data-tool="shapes" style="display: none;">
-                <select id="shapes-select" class="input input--select" title="Shape Type" data-setting="shapeType">
-                  <option value="rectangle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-rectangle.svg">Rectangle</option>
-                  <option value="triangle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-triangle.svg">Triangle</option>
-                  <option value="circle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-circle.svg">Circle</option>
-                  <option value="ellipse" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-ellipse.svg">Ellipse</option>
-                  <option value="line" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-line.svg">Line</option>
-                  <option value="arrow" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-arrow.svg">Arrow</option>
-                  <option value="polygon" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-polygon.svg">Polygon</option>
-                </select>
-                
-                <input type="number" min="1" max="20" value="2" class="input input--number" title="Shape Thickness" data-setting="strokeWidth">
-                
-                <select id="shapes-stroke-select" class="input input--color" data-color-selector="shapes-stroke" title="Shape Stroke">
-                    <option value="#1f2937" data-color="#1f2937" selected>Dark Charcoal</option>
-                    <option value="#4a7c59" data-color="#4a7c59">Green</option>
-                    <option value="#4a79a4" data-color="#4a79a4">Blue</option>
-                    <option value="#a74a4a" data-color="#a74a4a">Red</option>
-                    <option value="#6b7280" data-color="#6b7280">Gray</option>
-                    <option value="#b87333" data-color="#b87333">Orange</option>
-                    <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
-                    <option value="#b8a642" data-color="#b8a642">Yellow</option>
-                    <option value="#64748b" data-color="#64748b">Slate</option>
-                    <option value="#f8fafc" data-color="#f8fafc">White</option>
-                </select>
-
-                <select id="shapes-fill-select" class="input input--color" data-color-selector="shapes-fill" title="Shape Fill">
-                    <option value="transparent" data-color="transparent" selected>No Fill</option>
-                    <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
-                    <option value="#4a7c59" data-color="#4a7c59">Green</option>
-                    <option value="#4a79a4" data-color="#4a79a4">Blue</option>
-                    <option value="#a74a4a" data-color="#a74a4a">Red</option>
-                    <option value="#6b7280" data-color="#6b7280">Gray</option>
-                    <option value="#b87333" data-color="#b87333">Orange</option>
-                    <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
-                    <option value="#b8a642" data-color="#b8a642">Yellow</option>
-                    <option value="#64748b" data-color="#64748b">Slate</option>
-                    <option value="#f8fafc" data-color="#f8fafc">White</option>
-                </select>
-              </div>
-
-              <!-- Eraser Settings -->
-              <div class="tools__item tools__item--eraser" data-tool="eraser" style="display: none;">
-                <input type="number" min="5" max="50" value="20" class="input input--number" title="Eraser Size" data-setting="size">
-              </div>
-
-              <!-- Table Settings -->
-              <div class="tools__item tools__item--tables" data-tool="tables" style="display: none;">
-                <input type="number" min="1" max="20" value="3" class="input input--number" title="Table Size" data-setting="size">
-                
-                <select class="input input--select" title="Table Type" data-setting="tableType">
-                  <option value="basic">Basic</option>
-                  <option value="bordered">Bordered</option>
-                  <option value="striped">Striped</option>
-                </select>
-              </div>
+          <!-- Bookmarks/Marks Preview -->
+          <div class="preview__content" id="preview-marks">
+            <div class="marks-preview">
+              <p class="placeholder">Bookmarks and marks will be displayed here...</p>
             </div>
           </div>
         </div>
+
+        <!-- Drawing Tools -->
+        <div class="engine__tools tools">
+          <div class="tools__selection">
+            <div class="tools__item tools__item--active" data-tool="selection">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
+                class="tools__icon icon icon--base">
+              <span class="icon-label">Select</span>
+            </div>
+            <div class="tools__item" data-tool="pen">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Pen Tool"
+                class="tools__icon icon icon--base">
+              <span class="icon-label">Pen</span>
+            </div>
+            <div class="tools__item" data-tool="brush">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" alt="Brush Tool"
+                class="tools__icon icon icon--base">
+              <span class="icon-label">Brush</span>
+            </div>
+            <div class="tools__item" data-tool="text">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" alt="Text Tool"
+                class="tools__icon icon icon--base">
+              <span class="icon-label">Text</span>
+            </div>
+            <div class="tools__item" data-tool="shapes">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" alt="Shapes Tool"
+                class="tools__icon icon icon--base">
+              <span class="icon-label">Shapes</span>
+            </div>
+            <div class="tools__item" data-tool="tables">
+              <img src="/src/assets/icons/coursebuilder/media/media-table.svg" alt="Table Tool"
+                class="tools__icon icon icon--base">
+              <span class="icon-label">Tables</span>
+            </div>
+
+            <div class="tools__item" data-tool="eraser">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" alt="Eraser Tool"
+                class="tools__icon icon icon--base">
+              <span class="icon-label">Eraser</span>
+            </div>
+
+          </div>
+
+          <!-- Tool Settings -->
+          <div class="tools__options">
+
+            <!-- Pen Settings -->
+            <div class="tools__item tools__item--pen" data-tool="pen" style="display: none;">
+              <input type="number" min="1" max="15" value="2" class="input input--number" title="Pen Size"
+                data-setting="size">
+
+              <select id="pen-stroke-type-select" class="input input--select" title="Stroke Type"
+                data-setting="strokeType">
+                <option value="solid" data-line-style="solid">Solid</option>
+                <option value="dashed" data-line-style="dashed">Dashed</option>
+              </select>
+
+              <select id="pen-stroke-select" class="input input--color" data-color-selector="pen-stroke"
+                title="Stroke Color">
+                <option value="#1a1a1a" data-color="#1a1a1a" selected>Black</option>
+                <option value="#4a7c59" data-color="#4a7c59">Green</option>
+                <option value="#4a79a4" data-color="#4a79a4">Blue</option>
+                <option value="#a74a4a" data-color="#a74a4a">Red</option>
+                <option value="#6b7280" data-color="#6b7280">Gray</option>
+                <option value="#b87333" data-color="#b87333">Orange</option>
+                <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
+                <option value="#b8a642" data-color="#b8a642">Yellow</option>
+                <option value="#64748b" data-color="#64748b">Slate</option>
+                <option value="#f8fafc" data-color="#f8fafc">White</option>
+              </select>
+              <select id="pen-fill-select" class="input input--color" data-color-selector="pen-fill" title="Fill Color">
+                <option value="transparent" data-color="transparent">No Fill</option>
+                <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
+                <option value="#4a7c59" data-color="#4a7c59">Green</option>
+                <option value="#4a79a4" data-color="#4a79a4">Blue</option>
+                <option value="#a74a4a" data-color="#a74a4a">Red</option>
+                <option value="#6b7280" data-color="#6b7280">Gray</option>
+                <option value="#b87333" data-color="#b87333">Orange</option>
+                <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
+                <option value="#b8a642" data-color="#b8a642">Yellow</option>
+                <option value="#64748b" data-color="#64748b">Slate</option>
+                <option value="#f8fafc" data-color="#f8fafc" selected>White</option>
+              </select>
+            </div>
+
+            <!-- Text Settings -->
+            <div class="tools__item tools__item--text" data-tool="text" style="display: none;">
+              <input type="number" min="8" max="72" value="16" class="input input--number" title="Text Size"
+                data-setting="fontSize">
+
+              <select id="font-family-select" class="input input--select" title="Font Family" data-setting="fontFamily">
+                <option value="Arial" data-font-family="Arial">Arial</option>
+                <option value="Times New Roman" data-font-family="Times New Roman">Times New Roman</option>
+                <option value="Georgia" data-font-family="Georgia">Georgia</option>
+                <option value="Verdana" data-font-family="Verdana">Verdana</option>
+                <option value="Tahoma" data-font-family="Tahoma">Tahoma</option>
+              </select>
+
+              <select id="text-color-select" class="input input--color" data-color-selector="text" title="Text Color">
+                <option value="#1a1a1a" data-color="#1a1a1a" selected>Black</option>
+                <option value="#4a7c59" data-color="#4a7c59">Green</option>
+                <option value="#4a79a4" data-color="#4a79a4">Blue</option>
+                <option value="#a74a4a" data-color="#a74a4a">Red</option>
+                <option value="#6b7280" data-color="#6b7280">Gray</option>
+                <option value="#b87333" data-color="#b87333">Orange</option>
+                <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
+                <option value="#b8a642" data-color="#b8a642">Yellow</option>
+                <option value="#64748b" data-color="#64748b">Slate</option>
+                <option value="#f8fafc" data-color="#f8fafc">White</option>
+              </select>
+            </div>
+
+            <!-- Brush Settings -->
+            <div class="tools__item tools__item--brush" data-tool="brush" style="display: none;">
+              <input type="number" min="10" max="50" value="20" class="input input--number" title="Brush Size"
+                data-setting="size">
+
+              <select id="brush-color-select" class="input input--color" data-color-selector="brush"
+                title="Brush Color">
+                <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
+                <option value="#4a7c59" data-color="#4a7c59" selected>Green</option>
+                <option value="#4a79a4" data-color="#4a79a4">Blue</option>
+                <option value="#a74a4a" data-color="#a74a4a">Red</option>
+                <option value="#6b7280" data-color="#6b7280">Gray</option>
+                <option value="#b87333" data-color="#b87333">Orange</option>
+                <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
+                <option value="#b8a642" data-color="#b8a642">Yellow</option>
+                <option value="#64748b" data-color="#64748b">Slate</option>
+                <option value="#f8fafc" data-color="#f8fafc">White</option>
+              </select>
+            </div>
+
+            <!-- Shapes Settings -->
+            <div class="tools__item tools__item--shapes" data-tool="shapes" style="display: none;">
+              <select id="shapes-select" class="input input--select" title="Shape Type" data-setting="shapeType">
+                <option value="rectangle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-rectangle.svg">
+                  Rectangle</option>
+                <option value="triangle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-triangle.svg">
+                  Triangle</option>
+                <option value="circle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-circle.svg">Circle
+                </option>
+                <option value="ellipse" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-ellipse.svg">
+                  Ellipse</option>
+                <option value="line" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-line.svg">Line
+                </option>
+                <option value="arrow" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-arrow.svg">Arrow
+                </option>
+                <option value="polygon" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-polygon.svg">
+                  Polygon</option>
+              </select>
+
+              <input type="number" min="1" max="20" value="2" class="input input--number" title="Shape Thickness"
+                data-setting="strokeWidth">
+
+              <select id="shapes-stroke-select" class="input input--color" data-color-selector="shapes-stroke"
+                title="Shape Stroke">
+                <option value="#1f2937" data-color="#1f2937" selected>Dark Charcoal</option>
+                <option value="#4a7c59" data-color="#4a7c59">Green</option>
+                <option value="#4a79a4" data-color="#4a79a4">Blue</option>
+                <option value="#a74a4a" data-color="#a74a4a">Red</option>
+                <option value="#6b7280" data-color="#6b7280">Gray</option>
+                <option value="#b87333" data-color="#b87333">Orange</option>
+                <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
+                <option value="#b8a642" data-color="#b8a642">Yellow</option>
+                <option value="#64748b" data-color="#64748b">Slate</option>
+                <option value="#f8fafc" data-color="#f8fafc">White</option>
+              </select>
+
+              <select id="shapes-fill-select" class="input input--color" data-color-selector="shapes-fill"
+                title="Shape Fill">
+                <option value="transparent" data-color="transparent" selected>No Fill</option>
+                <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
+                <option value="#4a7c59" data-color="#4a7c59">Green</option>
+                <option value="#4a79a4" data-color="#4a79a4">Blue</option>
+                <option value="#a74a4a" data-color="#a74a4a">Red</option>
+                <option value="#6b7280" data-color="#6b7280">Gray</option>
+                <option value="#b87333" data-color="#b87333">Orange</option>
+                <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
+                <option value="#b8a642" data-color="#b8a642">Yellow</option>
+                <option value="#64748b" data-color="#64748b">Slate</option>
+                <option value="#f8fafc" data-color="#f8fafc">White</option>
+              </select>
+            </div>
+
+            <!-- Eraser Settings -->
+            <div class="tools__item tools__item--eraser" data-tool="eraser" style="display: none;">
+              <input type="number" min="5" max="50" value="20" class="input input--number" title="Eraser Size"
+                data-setting="size">
+            </div>
+
+            <!-- Table Settings -->
+            <div class="tools__item tools__item--tables" data-tool="tables" style="display: none;">
+              <input type="number" min="1" max="20" value="3" class="input input--number" title="Table Size"
+                data-setting="size">
+
+              <select class="input input--select" title="Table Type" data-setting="tableType">
+                <option value="basic">Basic</option>
+                <option value="bordered">Bordered</option>
+                <option value="striped">Striped</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-        <!-- Preview View -->
-        <div class="coursebuilder__preview" aria-hidden="true" id="preview">
-          <article class="content__article content__article--preview">
-            <p class="placeholder">Course preview will be displayed here...</p>
-          </article>
-        </div>
+    <!-- Preview View -->
+    <div class="coursebuilder__preview" aria-hidden="true" id="preview">
+      <article class="content__article content__article--preview">
+        <p class="placeholder">Course preview will be displayed here...</p>
+      </article>
+    </div>
 
-        <!-- Launch View -->
-        <div class="coursebuilder__launch" aria-hidden="true" id="launch">
-          <article class="content__article content__article--launch">
-            <p class="placeholder">Course launch options will be available here...</p>
-          </article>
-        </div>
+    <!-- Launch View -->
+    <div class="coursebuilder__launch" aria-hidden="true" id="launch">
+      <article class="content__article content__article--launch">
+        <p class="placeholder">Course launch options will be available here...</p>
+      </article>
+    </div>
   </main>
-  
+
   <!-- jQuery (required for Select2) -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <!-- Select2 JavaScript -->
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  
+
   <!-- Core application scripts -->
   <script type="module" src="/src/scripts/app.ts"></script>
   <!-- Language loader for course languages -->
@@ -1192,31 +1228,31 @@
   <script type="module" src="/src/scripts/backend/courses/templates/templatePreviewHandler.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/schedule/scheduleCourse.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/settings/pageSetupHandler.ts"></script>
-  
+
   <!-- Select2 Configuration -->
   <script>
-    $(document).ready(function() {
-      
+    $(document).ready(function () {
+
       // Custom template for Select2 to show only shape images
       function formatShapeOption(state) {
         if (!state.id) { return state.text; }
-        
+
         var imageUrl = $(state.element).data('image');
         if (!imageUrl) { return state.text; }
-        
+
         var $state = $(
           '<span><img src="' + imageUrl + '" width="24" height="24" alt="' + state.text + '" style="vertical-align: middle;" /></span>'
         );
         return $state;
       }
-      
+
       // Custom template for Select2 to show only color swatches
       function formatColorOption(state) {
         if (!state.id) { return state.text; }
-        
+
         var colorValue = $(state.element).data('color');
         if (!colorValue) { return state.text; }
-        
+
         // Handle "no fill" option with diagonal red line
         if (colorValue === 'transparent') {
           var $state = $(
@@ -1226,7 +1262,7 @@
           );
           return $state;
         }
-        
+
         var $state = $(
           '<span><div style="width: 20px; height: 20px; background-color: ' + colorValue + '; border: 1px solid #ccc; border-radius: 3px; display: inline-block;"></div></span>'
         );
@@ -1236,7 +1272,7 @@
       // Custom template for font families with font preview
       function formatFontOption(state) {
         if (!state.id) { return state.text; }
-        
+
         var fontFamily = $(state.element).data('font-family') || state.text;
         var $state = $(
           '<span style="font-family: ' + fontFamily + '; font-size: 14px;">' + state.text + '</span>'
@@ -1247,42 +1283,42 @@
       // Custom template for line styles
       function formatLineStyleOption(state) {
         if (!state.id) { return state.text; }
-        
+
         var lineStyle = $(state.element).data('line-style');
         if (!lineStyle) { return state.text; }
-        
+
         var borderStyle = lineStyle === 'dashed' ? '2px dashed #333' : '2px solid #333';
         var $state = $(
           '<span><div style="width: 30px; height: 0; border-top: ' + borderStyle + '; margin: 10px 0; display: inline-block;"></div></span>'
         );
         return $state;
       }
-      
+
       // Initialize Select2 for shapes dropdown
       $('#shapes-select').select2({
         templateResult: formatShapeOption,
-        templateSelection: function(state) {
+        templateSelection: function (state) {
           if (!state.id) { return state.text; }
-          
+
           var imageUrl = $(state.element).data('image');
           if (!imageUrl) { return state.text; }
-          
+
           var $state = $('<span><img src="' + imageUrl + '" width="24" height="24" alt="' + state.text + '" style="vertical-align: middle;" /></span>');
           return $state;
         },
         minimumResultsForSearch: -1,
         width: '100%'
       });
-      
+
       // Initialize Select2 for all color dropdowns
       $('#shapes-stroke-select, #shapes-fill-select, #pen-stroke-select, #pen-fill-select, #text-color-select, #brush-color-select').select2({
         templateResult: formatColorOption,
-        templateSelection: function(state) {
+        templateSelection: function (state) {
           if (!state.id) { return state.text; }
-          
+
           var colorValue = $(state.element).data('color');
           if (!colorValue) { return state.text; }
-          
+
           // Handle "no fill" option in selection display
           if (colorValue === 'transparent') {
             var $state = $(
@@ -1292,7 +1328,7 @@
             );
             return $state;
           }
-          
+
           var $state = $('<span><div style="width: 28px; height: 28px; background-color: ' + colorValue + '; border: 1px solid #ccc; border-radius: 4px; display: inline-block;"></div></span>');
           return $state;
         },
@@ -1311,12 +1347,12 @@
       // Initialize Select2 for line style dropdown
       $('#pen-stroke-type-select').select2({
         templateResult: formatLineStyleOption,
-        templateSelection: function(state) {
+        templateSelection: function (state) {
           if (!state.id) { return state.text; }
-          
+
           var lineStyle = $(state.element).data('line-style');
           if (!lineStyle) { return state.text; }
-          
+
           var borderStyle = lineStyle === 'dashed' ? '1px dashed #333' : '1px solid #333';
           var $state = $(
             '<span><div style="width: 20px; height: 0; border-top: ' + borderStyle + '; margin: 8px 0; display: inline-block;"></div></span>'
@@ -1326,7 +1362,7 @@
         minimumResultsForSearch: -1,
         width: '100%'
       });
-      
+
       // Handle shape selection change
       $('#shapes-select').on('select2:select', function (e) {
         var data = e.params.data;
@@ -1334,12 +1370,12 @@
           window.uiEventHandler.handleShapeSelection(data.id);
         }
       });
-      
+
       // Handle color selection changes
       $('#shapes-stroke-select, #shapes-fill-select, #pen-stroke-select, #pen-fill-select, #text-color-select, #brush-color-select').on('select2:select', function (e) {
         var data = e.params.data;
         var colorSelector = $(this).data('color-selector');
-        
+
         // Trigger existing color selection logic
         if (window.uiEventHandler && window.uiEventHandler.handleColorChange) {
           window.uiEventHandler.handleColorChange(colorSelector, data.id);

@@ -91,11 +91,31 @@ export class PixiApp {
     }
 
     try {
-      // Clear any existing content
-      this.container.innerHTML = '';
+      // Check if container has grid layout class
+      const hasGridLayout = this.container.classList.contains('engine__canvas--grid');
       
-      // Mount the canvas
-      this.container.appendChild(this.app.canvas);
+      if (hasGridLayout) {
+        // For grid layout, preserve existing content and insert canvas in proper grid position
+        // Remove any existing canvas first
+        const existingCanvas = this.container.querySelector('canvas');
+        if (existingCanvas) {
+          existingCanvas.remove();
+        }
+        
+        // Insert canvas after perspective tools (grid-column: 2 will position it correctly)
+        const perspectiveTools = this.container.querySelector('.engine__perspective');
+        if (perspectiveTools) {
+          perspectiveTools.insertAdjacentElement('afterend', this.app.canvas);
+        } else {
+          // Fallback: append to container
+          this.container.appendChild(this.app.canvas);
+        }
+      } else {
+        // Legacy behavior: clear content and add canvas
+        this.container.innerHTML = '';
+        this.container.appendChild(this.app.canvas);
+      }
+      
       this.mounted = true;
 
       console.log('✅ Canvas mounted to', this.containerSelector);

@@ -8,7 +8,7 @@ import { ToolStateManager } from './ui/ToolStateManager';
 import { UIEventHandler } from './ui/UIEventHandler';
 import { toolColorManager } from './tools/ToolColorManager';
 import { TextTool } from './tools/text/TextTool';
-import { PerspectiveManager } from './tools/PerspectiveManager';
+import { SimplePerspectiveManager } from './tools/SimplePerspectiveManager';
 
 console.log('📦 CanvasAPI import successful:', CanvasAPI);
 
@@ -17,7 +17,7 @@ console.log('📦 CanvasAPI import successful:', CanvasAPI);
 let canvasAPI: CanvasAPI | null = null;
 let toolStateManager: ToolStateManager | null = null;
 let uiEventHandler: UIEventHandler | null = null;
-let perspectiveManager: PerspectiveManager | null = null;
+let perspectiveManager: SimplePerspectiveManager | null = null;
 
 /**
  * Initialize canvas when coursebuilder page loads
@@ -49,6 +49,16 @@ export async function initializeCanvas(): Promise<void> {
         });
 
         console.log('✅ Canvas initialized!');
+
+                // Initialize Perspective Manager (zoom/pan controls)
+        console.log('🔍 Initializing perspective controls...');
+        perspectiveManager = new SimplePerspectiveManager();
+        console.log('✅ SimplePerspectiveManager initialized with zoom/pan controls');
+
+        // Update canvas reference in perspective manager now that canvas is created
+        if (perspectiveManager && 'updateCanvasReference' in perspectiveManager) {
+            (perspectiveManager as any).updateCanvasReference();
+        }
 
         // Initialize UI system with clean architecture
         console.log('🎛️ Connecting UI to canvas...');
@@ -82,10 +92,7 @@ export async function initializeCanvas(): Promise<void> {
         
         console.log('✅ UI connected to canvas with clean architecture');
 
-        // Initialize perspective manager for canvas controls
-        console.log('🔍 Initializing perspective manager...');
-        perspectiveManager = new PerspectiveManager();
-        console.log('✅ PerspectiveManager created');
+        console.log('🔍 Zoom/pan perspective controls initialized and ready');
 
         // Make available globally for debugging
         (window as any).canvasAPI = canvasAPI;
@@ -96,6 +103,7 @@ export async function initializeCanvas(): Promise<void> {
         // Expose TextTool for font debugging
         (window as any).TextTool = TextTool;
         console.log('🔧 TextTool exposed globally for debugging - use TextTool.debugReinitializeFonts() to reload fonts');
+        console.log('🔧 Debug commands: perspectiveManager.debugGrid(), perspectiveManager.forceEnableGrid()');
 
         // Wait for canvas to be fully ready before getting info
         const waitForCanvas = async (maxAttempts: number = 5, delay: number = 100): Promise<void> => {

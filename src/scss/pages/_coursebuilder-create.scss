@@ -4,7 +4,44 @@
 // COURSEBUILDER CREATE PAGE
 // ====================================//Canvas container positioning helper  
 #canvas-container {
-    position: relative;
+
+    // Three-column grid layout
+    &.engine__canvas--grid {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 1rem;
+        position: relative; // Enable relative positioning for absolute children
+  
+        
+        // Column 1: Perspective tools (sticky within their column)
+        .engine__perspective {
+            grid-column: 1;
+            position: sticky !important; // Sticky within the grid column
+            top: 50vh; // Stick to middle of viewport height
+            transform: translateY(-50%); // Perfect vertical centering
+            z-index: 100; // Above canvas but not too high
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-self: start; // Align to start of grid cell
+            background: rgba(255, 255, 255, 0.95); // Semi-transparent background
+            padding: 0.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(4px); // Modern glass effect
+        }
+        
+        // Column 2: Canvas (will be inserted by JavaScript)
+        canvas {
+            grid-column: 2;
+        }
+        
+        // Column 3: Spacer/future use
+        .engine__canvas-spacer {
+            grid-column: 3;
+            min-width: 60px; // Reserve some space
+        }
+    }
     
     // High-quality canvas rendering
     canvas {        
@@ -16,6 +53,19 @@
         // Prevent anti-aliasing blur
         backface-visibility: hidden;
         -webkit-backface-visibility: hidden;
+    }
+    
+    // Grid overlay for canvas
+    .canvas-grid-overlay {
+        position: absolute !important;
+        pointer-events: none !important;
+        z-index: 10 !important;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+        
+        // Grid lines will be set via JavaScript for dynamic sizing
+        // The transform will match the canvas transform for proper scaling
+        will-change: transform; // Optimize for transforms
     }
     
     // Ensure tables stay within canvas bounds

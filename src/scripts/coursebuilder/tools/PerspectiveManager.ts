@@ -23,7 +23,8 @@ export class PerspectiveManager {
      */
     private initializePerspective(): void {
         this.canvasContainer = document.getElementById('canvas-container');
-        this.canvas = this.canvasContainer?.querySelector('.canvas__placeholder') || null;
+        // Look for the actual PIXI canvas element, not a placeholder
+        this.canvas = this.canvasContainer?.querySelector('canvas') || null;
         
         if (!this.canvasContainer) {
             console.warn('Canvas container not found for perspective controls');
@@ -31,6 +32,18 @@ export class PerspectiveManager {
         }
 
         console.log('🔍 Perspective Manager initialized');
+    }
+
+    /**
+     * Refresh canvas reference in case it was created after initialization
+     */
+    private refreshCanvasReference(): void {
+        if (this.canvasContainer && !this.canvas) {
+            this.canvas = this.canvasContainer.querySelector('canvas');
+            if (this.canvas) {
+                console.log('🔍 Canvas reference updated after initialization');
+            }
+        }
     }
 
     /**
@@ -185,6 +198,9 @@ export class PerspectiveManager {
      * Toggle grid display
      */
     private toggleGrid(button: HTMLElement): void {
+        // Update canvas reference in case it was created after initialization
+        this.refreshCanvasReference();
+        
         this.gridEnabled = !this.gridEnabled;
         
         // Update button state
@@ -204,21 +220,27 @@ export class PerspectiveManager {
      * Apply grid styling
      */
     private applyGrid(): void {
-        if (!this.canvasContainer) return;
+        // Apply grid to the actual canvas element, not the container
+        const targetElement = this.canvas || this.canvasContainer;
+        if (!targetElement) return;
 
         if (this.gridEnabled) {
-            // Add grid background
-            this.canvasContainer.style.backgroundImage = `
+            // Add grid background to the canvas itself
+            targetElement.style.backgroundImage = `
                 linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px)
             `;
-            this.canvasContainer.style.backgroundSize = '20px 20px';
-            this.canvasContainer.style.backgroundPosition = 'center center';
+            targetElement.style.backgroundSize = '20px 20px';
+            targetElement.style.backgroundPosition = 'center center';
+            
+            console.log('📐 Grid applied to:', this.canvas ? 'canvas element' : 'container fallback');
         } else {
-            // Remove grid background
-            this.canvasContainer.style.backgroundImage = '';
-            this.canvasContainer.style.backgroundSize = '';
-            this.canvasContainer.style.backgroundPosition = '';
+            // Remove grid background from the canvas
+            targetElement.style.backgroundImage = '';
+            targetElement.style.backgroundSize = '';
+            targetElement.style.backgroundPosition = '';
+            
+            console.log('📐 Grid removed from:', this.canvas ? 'canvas element' : 'container fallback');
         }
     }
 
@@ -280,6 +302,10 @@ export class PerspectiveManager {
             const gridButton = document.querySelector('[data-perspective="grid"]') as HTMLElement;
             if (gridButton) this.toggleGrid(gridButton);
         }
+    }
+    
+    public updateCanvasReference(): void {
+        this.refreshCanvasReference();
     }
     
     /**

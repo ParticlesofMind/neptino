@@ -52,14 +52,14 @@ export class CanvasAPI {
       this.layers = new CanvasLayers(app);
       this.layers.initialize();
 
-      // Step 4: Create display object manager
+      // Step 4: Create display object manager using drawing layer
       const drawingLayer = this.layers.getLayer('drawing');
       if (!drawingLayer) {
-        throw new Error('Drawing layer not available');
+        throw new Error('Drawing layer not available after layer initialization');
       }
       this.displayManager = new DisplayObjectManager(drawingLayer);
 
-      // Step 5: Create tool manager (no arguments needed)
+      // Step 5: Create tool manager
       this.toolManager = new ToolManager();
 
       // Step 5.1: Connect display manager to tool manager (CRITICAL!)
@@ -69,16 +69,14 @@ export class CanvasAPI {
       this.events = new CanvasEvents(app, drawingLayer, this.toolManager);
       this.events.initialize();
 
-      // Step 7: Initialize margin manager with canvas layer
+      // Step 7: Initialize margin manager with background layer
       const backgroundLayer = this.layers.getLayer('background');
       if (backgroundLayer) {
         canvasMarginManager.setContainer(backgroundLayer);
       }
 
-      // Tool manager already sets pen as default, no need to set again
-
       this.initialized = true;
-      console.log('✅ Complete canvas system initialized with tools and margins');
+      console.log('✅ Canvas system initialized successfully');
 
     } catch (error) {
       console.error('❌ Failed to initialize canvas system:', error);
@@ -351,6 +349,34 @@ export class CanvasAPI {
       // Restore UI layer visibility
       if (uiLayer) uiLayer.visible = originalVisibility;
     }
+  }
+
+  /**
+   * Get current zoom level (basic implementation)
+   */
+  public getZoomLevel(): number {
+    return 1.0;
+  }
+
+  /**
+   * Set zoom level (basic implementation - no-op for now)
+   */
+  public setZoomLevel(_zoom: number, _smooth: boolean = true): void {
+    console.warn('⚠️ Basic zoom not implemented yet');
+  }
+
+  /**
+   * Check if grid is enabled (basic implementation)
+   */
+  public isGridEnabled(): boolean {
+    return false;
+  }
+
+  /**
+   * Get viewport instance (basic implementation)
+   */
+  public getViewport(): any {
+    return null;
   }
 
   /**
