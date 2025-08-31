@@ -1022,6 +1022,7 @@
                     <option value="#f8fafc" data-color="#f8fafc">White</option>
                 </select>
                 <select id="pen-fill-select" class="input input--color" data-color-selector="pen-fill" title="Fill Color">
+                    <option value="transparent" data-color="transparent">No Fill</option>
                     <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
                     <option value="#4a7c59" data-color="#4a7c59">Green</option>
                     <option value="#4a79a4" data-color="#4a79a4">Blue</option>
@@ -1094,9 +1095,9 @@
                 <input type="number" min="1" max="20" value="2" class="input input--number" title="Shape Thickness" data-setting="strokeWidth">
                 
                 <select id="shapes-stroke-select" class="input input--color" data-color-selector="shapes-stroke" title="Shape Stroke">
-                    <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
+                    <option value="#1f2937" data-color="#1f2937" selected>Dark Charcoal</option>
                     <option value="#4a7c59" data-color="#4a7c59">Green</option>
-                    <option value="#4a79a4" data-color="#4a79a4" selected>Blue</option>
+                    <option value="#4a79a4" data-color="#4a79a4">Blue</option>
                     <option value="#a74a4a" data-color="#a74a4a">Red</option>
                     <option value="#6b7280" data-color="#6b7280">Gray</option>
                     <option value="#b87333" data-color="#b87333">Orange</option>
@@ -1107,6 +1108,7 @@
                 </select>
 
                 <select id="shapes-fill-select" class="input input--color" data-color-selector="shapes-fill" title="Shape Fill">
+                    <option value="transparent" data-color="transparent" selected>No Fill</option>
                     <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
                     <option value="#4a7c59" data-color="#4a7c59">Green</option>
                     <option value="#4a79a4" data-color="#4a79a4">Blue</option>
@@ -1116,7 +1118,7 @@
                     <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
                     <option value="#b8a642" data-color="#b8a642">Yellow</option>
                     <option value="#64748b" data-color="#64748b">Slate</option>
-                    <option value="#f8fafc" data-color="#f8fafc" selected>White</option>
+                    <option value="#f8fafc" data-color="#f8fafc">White</option>
                 </select>
               </div>
 
@@ -1178,6 +1180,7 @@
   <!-- Select2 Configuration -->
   <script>
     $(document).ready(function() {
+      
       // Custom template for Select2 to show only shape images
       function formatShapeOption(state) {
         if (!state.id) { return state.text; }
@@ -1186,7 +1189,7 @@
         if (!imageUrl) { return state.text; }
         
         var $state = $(
-          '<span><img src="' + imageUrl + '" width="20" height="20" alt="' + state.text + '" /></span>'
+          '<span><img src="' + imageUrl + '" width="24" height="24" alt="' + state.text + '" style="vertical-align: middle;" /></span>'
         );
         return $state;
       }
@@ -1197,6 +1200,16 @@
         
         var colorValue = $(state.element).data('color');
         if (!colorValue) { return state.text; }
+        
+        // Handle "no fill" option with diagonal red line
+        if (colorValue === 'transparent') {
+          var $state = $(
+            '<span><div style="width: 20px; height: 20px; background: white; border: 1px solid #ccc; border-radius: 3px; display: inline-block; position: relative; overflow: hidden;">' +
+            '<div style="position: absolute; top: -1px; left: -1px; width: 28px; height: 2px; background: red; transform: rotate(45deg); transform-origin: 0 0;"></div>' +
+            '</div></span>'
+          );
+          return $state;
+        }
         
         var $state = $(
           '<span><div style="width: 20px; height: 20px; background-color: ' + colorValue + '; border: 1px solid #ccc; border-radius: 3px; display: inline-block;"></div></span>'
@@ -1238,7 +1251,7 @@
           var imageUrl = $(state.element).data('image');
           if (!imageUrl) { return state.text; }
           
-          var $state = $('<span><img src="' + imageUrl + '" width="16" height="16" alt="' + state.text + '" /></span>');
+          var $state = $('<span><img src="' + imageUrl + '" width="24" height="24" alt="' + state.text + '" style="vertical-align: middle;" /></span>');
           return $state;
         },
         minimumResultsForSearch: -1,
@@ -1254,7 +1267,17 @@
           var colorValue = $(state.element).data('color');
           if (!colorValue) { return state.text; }
           
-          var $state = $('<span><div style="width: 16px; height: 16px; background-color: ' + colorValue + '; border: 1px solid #ccc; border-radius: 2px; display: inline-block;"></div></span>');
+          // Handle "no fill" option in selection display
+          if (colorValue === 'transparent') {
+            var $state = $(
+              '<span><div style="width: 28px; height: 28px; background: white; border: 1px solid #ccc; border-radius: 4px; display: inline-block; position: relative; overflow: hidden;">' +
+              '<div style="position: absolute; top: -1px; left: -1px; width: 40px; height: 3px; background: red; transform: rotate(45deg); transform-origin: 0 0;"></div>' +
+              '</div></span>'
+            );
+            return $state;
+          }
+          
+          var $state = $('<span><div style="width: 28px; height: 28px; background-color: ' + colorValue + '; border: 1px solid #ccc; border-radius: 4px; display: inline-block;"></div></span>');
           return $state;
         },
         minimumResultsForSearch: -1,

@@ -105,6 +105,9 @@ export class UIEventHandler {
 
         // Initialize default shape selection
         this.initializeDefaultShapeSelection();
+
+        // Initialize color dropdowns with saved values
+        this.initializeColorDropdowns();
     }
 
     /**
@@ -341,6 +344,41 @@ export class UIEventHandler {
     }
 
     /**
+     * Handle color selection from Select2 dropdown
+     * Public method called by Select2 configuration
+     */
+    public handleColorChange(colorSelector: string, colorHex: string): void {
+        if (!colorSelector || !colorHex) {
+            console.warn('🎨 COLOR: Invalid color selection parameters');
+            return;
+        }
+
+        console.log(`🎨 UI: Color changed for ${colorSelector} to ${colorHex}`);
+
+        // Map compound selectors to tool and property
+        const toolMapping: { [key: string]: { tool: string; property: string } } = {
+            'pen-stroke': { tool: 'pen', property: 'strokeColor' },
+            'pen-fill': { tool: 'pen', property: 'fillColor' },
+            'shapes-stroke': { tool: 'shapes', property: 'color' }, // Fixed: shapes stroke uses 'color' property
+            'shapes-fill': { tool: 'shapes', property: 'fillColor' },
+            'brush': { tool: 'brush', property: 'color' },
+            'text': { tool: 'text', property: 'color' }
+        };
+
+        const mapping = toolMapping[colorSelector];
+        if (mapping) {
+            // Update tool settings with the specific color property
+            const settings: any = {};
+            settings[mapping.property] = colorHex;
+            this.toolStateManager.updateToolSettings(mapping.tool, settings);
+            
+            console.log(`🎨 UI: Updated ${mapping.tool}.${mapping.property} to ${colorHex}`);
+        } else {
+            console.warn(`🎨 UI: Unknown color selector: ${colorSelector}`);
+        }
+    }
+
+    /**
      * Handle shape selection from Select2 dropdown
      * Public method called by Select2 configuration
      */
@@ -405,6 +443,114 @@ export class UIEventHandler {
                 | 'arrow'
                 | 'polygon',
         });
+    }
+
+    /**
+     * Handle font family changes from Select2 dropdown
+     * Public method called by Select2 configuration
+     */
+    public handleFontChange(fontFamily: string): void {
+        if (!fontFamily) {
+            console.warn('🔤 FONT: No font family provided');
+            return;
+        }
+
+        console.log(`🔤 UI: Font changed to ${fontFamily}`);
+        
+        // Update text tool settings
+        this.toolStateManager.updateToolSettings('text', {
+            fontFamily: fontFamily,
+        });
+    }
+
+    /**
+     * Handle stroke type changes from Select2 dropdown
+     * Public method called by Select2 configuration
+     */
+    public handleStrokeTypeChange(strokeType: string): void {
+        if (!strokeType) {
+            console.warn('✏️ STROKE: No stroke type provided');
+            return;
+        }
+
+        console.log(`✏️ UI: Stroke type changed to ${strokeType}`);
+        
+        // Update pen tool settings
+        this.toolStateManager.updateToolSettings('pen', {
+            strokeType: strokeType,
+        });
+    }
+
+    /**
+     * Initialize color dropdowns with saved values
+     */
+    public initializeColorDropdowns(): void {
+        const toolSettings = this.toolStateManager.getToolSettings();
+        
+        // Wait for jQuery and Select2 to be available
+        const initializeWhenReady = () => {
+            if (!(window as any).$) {
+                setTimeout(initializeWhenReady, 100);
+                return;
+            }
+
+            console.log('🎨 INIT: Initializing color dropdowns with saved values...');
+
+            // Restore pen colors
+            if (toolSettings.pen.strokeColor) {
+                const penStroke = (window as any).$('#pen-stroke-select');
+                if (penStroke.length) {
+                    penStroke.val(toolSettings.pen.strokeColor).trigger('change.select2');
+                    console.log(`🎨 INIT: Set pen stroke color to ${toolSettings.pen.strokeColor}`);
+                }
+            }
+
+            if (toolSettings.pen.fillColor) {
+                const penFill = (window as any).$('#pen-fill-select');
+                if (penFill.length) {
+                    penFill.val(toolSettings.pen.fillColor).trigger('change.select2');
+                    console.log(`🎨 INIT: Set pen fill color to ${toolSettings.pen.fillColor}`);
+                }
+            }
+
+            // Restore brush color
+            if (toolSettings.brush.color) {
+                const brushColor = (window as any).$('#brush-color-select');
+                if (brushColor.length) {
+                    brushColor.val(toolSettings.brush.color).trigger('change.select2');
+                    console.log(`🎨 INIT: Set brush color to ${toolSettings.brush.color}`);
+                }
+            }
+
+            // Restore shapes colors
+            if (toolSettings.shapes.color) {
+                const shapesStroke = (window as any).$('#shapes-stroke-select');
+                if (shapesStroke.length) {
+                    shapesStroke.val(toolSettings.shapes.color).trigger('change.select2');
+                    console.log(`🎨 INIT: Set shapes stroke color to ${toolSettings.shapes.color}`);
+                }
+            }
+
+            if (toolSettings.shapes.fillColor) {
+                const shapesFill = (window as any).$('#shapes-fill-select');
+                if (shapesFill.length) {
+                    shapesFill.val(toolSettings.shapes.fillColor).trigger('change.select2');
+                    console.log(`🎨 INIT: Set shapes fill color to ${toolSettings.shapes.fillColor}`);
+                }
+            }
+
+            // Restore text color
+            if (toolSettings.text.color) {
+                const textColor = (window as any).$('#text-color-select');
+                if (textColor.length) {
+                    textColor.val(toolSettings.text.color).trigger('change.select2');
+                    console.log(`🎨 INIT: Set text color to ${toolSettings.text.color}`);
+                }
+            }
+        };
+
+        // Start the initialization process
+        setTimeout(initializeWhenReady, 500); // Give time for DOM and libraries to load
     }
 
     /**

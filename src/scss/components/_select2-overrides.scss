@@ -71,6 +71,37 @@
   // Ensure single selection has proper padding
   &.select2-container--default .select2-selection--single {
     padding-right: 40px !important;
+    height: 48px !important; // Increased height for larger icons
+    
+    .select2-selection__arrow {
+      height: 46px !important;
+    }
+    
+    // Make the selected shape/color display larger and centered
+    .select2-selection__rendered {
+      padding-top: 0px !important;
+      padding-bottom: 14px !important;
+      line-height: 32px !important;
+      display: flex !important;
+      align-items: flex-start !important;
+      justify-content: center !important;
+      min-height: 32px !important;
+      
+      // Make selected shape icons much larger
+      img {
+        width: 32px !important;
+        height: 32px !important;
+        max-width: none !important;
+        max-height: none !important;
+      }
+      
+      // Make selected color swatches larger too
+      div[style*="background-color"] {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 4px !important;
+      }
+    }
   }
 }
 
@@ -130,9 +161,26 @@
   border: 1px solid #ccc !important;
 }
 
+// No fill option in dropdown (white background with diagonal line)
+.select2-dropdown .select2-results__option div[style*="background: white"] {
+  border-radius: 3px !important;
+  border: 1px solid #ccc !important;
+}
+
 // Shape images should be properly sized
 .select2-dropdown .select2-results__option img {
   flex-shrink: 0 !important;
+  width: 24px !important;
+  height: 24px !important;
+}
+
+// Make Select2 shape dropdown items larger and centered
+#select2-shapes-select-results .select2-results__option {
+  padding: 8px 12px !important;
+  min-height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 // Font family options should have proper font rendering
@@ -149,13 +197,27 @@
 .select2-container .select2-selection__rendered {
   // Color swatches in selection
   div[style*="background-color"] {
-    border-radius: 2px !important;
+    border-radius: 4px !important;
     border: 1px solid #ccc !important;
+    width: 28px !important;
+    height: 28px !important;
   }
   
-  // Shape icons in selection
+  // No fill option in selection (white background with diagonal line)
+  div[style*="background: white"] {
+    border-radius: 4px !important;
+    border: 1px solid #ccc !important;
+    width: 28px !important;
+    height: 28px !important;
+  }
+  
+  // Shape icons in selection - make them much larger
   img {
     flex-shrink: 0 !important;
+    width: 32px !important;
+    height: 32px !important;
+    max-width: none !important;
+    max-height: none !important;
   }
   
   // Line styles in selection

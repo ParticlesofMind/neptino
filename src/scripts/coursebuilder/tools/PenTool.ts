@@ -14,8 +14,10 @@ import {
 import { BoundaryUtils } from "./BoundaryUtils";
 
 interface PenSettings {
- color: string;
  size: number;
+ strokeColor: string;   // Primary stroke color
+ fillColor: string;     // Fill color for closed shapes
+ strokeType?: string;   // Line style (solid, dashed)
 }
 
 interface VectorNode {
@@ -40,8 +42,10 @@ export class PenTool extends BaseTool {
  constructor() {
          super("pen", "url('/src/assets/cursors/pen-cursor.svg') 2 2, crosshair");
  this.settings = {
- color: PROFESSIONAL_COLORS[0], // Start with dark charcoal
  size: STROKE_SIZES.PEN[2], // Start with 3px
+ strokeColor: '#1a1a1a',  // Black stroke
+ fillColor: '#f8fafc',    // White fill
+ strokeType: 'solid',     // Solid lines by default
  };
  }
 
@@ -56,7 +60,7 @@ export class PenTool extends BaseTool {
  `✏️ PEN: Node placement at (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
  );
  console.log(
- `✏️ PEN: Settings - Color: ${this.settings.color}, Size: ${this.settings.size}`,
+ `✏️ PEN: Settings - Stroke: ${this.settings.strokeColor}, Size: ${this.settings.size}px, Fill: ${this.settings.fillColor}`,
  );
 
  const localPoint = container.toLocal(event.global);
@@ -162,6 +166,11 @@ export class PenTool extends BaseTool {
  console.log(
  `✏️ PEN: Added node ${this.currentPath.nodes.length} at (${Math.round(position.x)}, ${Math.round(position.y)})`,
  );
+ 
+ // Give user tips on how to close the path for fill
+ if (this.currentPath.nodes.length === 3 && this.settings.fillColor && this.settings.fillColor !== 'transparent') {
+ console.log(`✏️ PEN: 💡 TIP: Click near the first node or press SPACEBAR to close this path and apply fill color ${this.settings.fillColor}`);
+ }
 
  // Update path graphics
  this.updatePathGraphics();
@@ -174,7 +183,6 @@ export class PenTool extends BaseTool {
  if (!this.currentPath || this.currentPath.nodes.length === 0) return;
 
  const path = this.currentPath.pathGraphics;
- const color = hexToNumber(this.currentPath.settings.color);
 
  path.clear();
 
@@ -192,15 +200,17 @@ export class PenTool extends BaseTool {
  path.lineTo(node.position.x, node.position.y);
  }
 
+ // Only apply stroke during the drawing process (not fill)
+ // The fill will be applied when the path is completed and closed
  path.stroke({
  width: this.currentPath.settings.size,
- color: color,
+ color: hexToNumber(this.currentPath.settings.strokeColor),
  cap: "round",
  join: "round",
  });
 
  console.log(
- `✏️ PEN: Updated path graphics with ${this.currentPath.nodes.length} nodes`,
+ `✏️ PEN: Updated path graphics with ${this.currentPath.nodes.length} nodes, strokeColor: ${this.currentPath.settings.strokeColor}`,
  );
  }
 
@@ -217,14 +227,13 @@ export class PenTool extends BaseTool {
  }
 
  const lastNode = this.currentPath.nodes[this.currentPath.nodes.length - 1];
- const color = hexToNumber(this.currentPath.settings.color);
 
  this.previewLine.clear();
  this.previewLine.moveTo(lastNode.position.x, lastNode.position.y);
  this.previewLine.lineTo(this.lastMousePosition.x, this.lastMousePosition.y);
  this.previewLine.stroke({
  width: this.currentPath.settings.size,
- color: color,
+ color: hexToNumber(this.currentPath.settings.strokeColor),
  cap: "round",
  });
  }
@@ -303,20 +312,63 @@ export class PenTool extends BaseTool {
  if (!this.currentPath) return;
 
  if (closeShape && this.currentPath.nodes.length >= 3) {
- // Close the shape by connecting last node to first
- const firstNode = this.currentPath.nodes[0];
- const path = this.currentPath.pathGraphics;
+ // Create a new graphics object for the final filled shape
+ const finalShape = new Graphics();
+ const strokeColorToUse = this.currentPath.settings.strokeColor;
+ const fillColorToUse = this.currentPath.settings.fillColor;
 
- path.lineTo(firstNode.position.x, firstNode.position.y);
- path.stroke({
+ // Build the complete closed path
+ const firstNode = this.currentPath.nodes[0];
+ finalShape.moveTo(firstNode.position.x, firstNode.position.y);
+ 
+ for (let i = 1; i < this.currentPath.nodes.length; i++) {
+ const node = this.currentPath.nodes[i];
+ finalShape.lineTo(node.position.x, node.position.y);
+ }
+ 
+ // Close the path back to the first node
+ finalShape.lineTo(firstNode.position.x, firstNode.position.y);
+ finalShape.closePath();
+ 
+ // Apply fill first (if specified)
+ if (fillColorToUse && fillColorToUse !== 'transparent' && fillColorToUse !== '') {
+   console.log(`✏️ PEN: Applying fill color ${fillColorToUse} to closed shape`);
+   finalShape.fill({ color: hexToNumber(fillColorToUse) });
+ } else {
+   console.log(`✏️ PEN: No fill applied - fill color is ${fillColorToUse || 'undefined'}`);
+ }
+ 
+ // Then apply stroke
+ finalShape.stroke({
  width: this.currentPath.settings.size,
- color: hexToNumber(this.currentPath.settings.color),
+ color: hexToNumber(strokeColorToUse),
+ cap: "round",
+ join: "round",
+ });
+
+ // Replace the old path graphics with the new filled shape
+ const container = this.currentPath.pathGraphics.parent;
+ if (container) {
+   container.removeChild(this.currentPath.pathGraphics);
+   container.addChild(finalShape);
+ }
+
+ console.log(
+ `✏️ PEN: Closed shape with ${this.currentPath.nodes.length} nodes - Stroke: ${strokeColorToUse}, Fill: ${fillColorToUse || 'none'}`,
+ );
+ } else {
+ // Just a path (open), no fill
+ const strokeColorToUse = this.currentPath.settings.strokeColor;
+ 
+ this.currentPath.pathGraphics.stroke({
+ width: this.currentPath.settings.size,
+ color: hexToNumber(strokeColorToUse),
  cap: "round",
  join: "round",
  });
 
  console.log(
- `✏️ PEN: Closed shape with ${this.currentPath.nodes.length} nodes`,
+ `✏️ PEN: Completed open path with ${this.currentPath.nodes.length} nodes - Stroke: ${strokeColorToUse}`,
  );
  }
 
@@ -433,6 +485,11 @@ export class PenTool extends BaseTool {
  if (this.currentPath) {
  this.currentPath.settings = { ...this.settings };
  this.updatePathGraphics();
+ }
+ 
+ // Log fill color changes for debugging
+ if (settings.fillColor) {
+ console.log(`✏️ PEN: Fill color updated to ${settings.fillColor}`);
  }
  }
 

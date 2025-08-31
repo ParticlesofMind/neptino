@@ -13,6 +13,7 @@ interface ToolSettings {
         size: number;
         strokeColor: string;
         fillColor: string;
+        strokeType?: string;
     };
     text: {
         fontFamily: string;
@@ -72,26 +73,26 @@ export class ToolStateManager {
                 enabled: true,
             },
             pen: {
-                color: '#000000',
+                color: '#1a1a1a',        // Black (matches HTML)
                 size: 2,
-                strokeColor: '#000000',
-                fillColor: '#ffffff',
+                strokeColor: '#1a1a1a',  // Black (matches HTML)
+                fillColor: '#f8fafc',    // White (matches HTML)
             },
             text: {
                 fontFamily: 'Arial',
                 fontSize: 16,
-                color: '#000000',
+                color: '#1a1a1a',        // Black (matches HTML)
             },
             brush: {
-                color: '#ffff00',
+                color: '#4a7c59',        // Green (matches HTML)
                 opacity: 0.3,
                 size: 20,
             },
             shapes: {
-                color: '#000000',
+                color: '#4a79a4',        // Blue (matches HTML stroke default)
                 strokeWidth: 2,
-                strokeColor: '#000000',
-                fillColor: '#ffffff',
+                strokeColor: '#4a79a4',  // Blue (matches HTML)
+                fillColor: '#f8fafc',    // White (matches HTML)
                 shapeType: 'rectangle',
             },
             eraser: {
@@ -126,7 +127,7 @@ export class ToolStateManager {
                 const toolMapping: { [key: string]: { tool: string; property: string } } = {
                     'pen-stroke': { tool: 'pen', property: 'strokeColor' },
                     'pen-fill': { tool: 'pen', property: 'fillColor' },
-                    'shapes-stroke': { tool: 'shapes', property: 'strokeColor' },
+                    'shapes-stroke': { tool: 'shapes', property: 'color' }, // Fixed: shapes stroke uses 'color' property
                     'shapes-fill': { tool: 'shapes', property: 'fillColor' },
                     'brush': { tool: 'brush', property: 'color' },
                     'text': { tool: 'text', property: 'color' },
@@ -386,6 +387,19 @@ export class ToolStateManager {
                 this.toolSettings[toolName as keyof ToolSettings],
                 settings,
             );
+            
+            // Special handling for pen tool to maintain backward compatibility
+            if (toolName === 'pen') {
+                const penSettings = this.toolSettings.pen as any;
+                // If strokeColor is updated, also update the legacy color property
+                if ('strokeColor' in settings) {
+                    penSettings.color = (settings as any).strokeColor;
+                }
+                // If color is updated, also update strokeColor
+                if ('color' in settings) {
+                    penSettings.strokeColor = (settings as any).color;
+                }
+            }
             
             // Apply settings to canvas immediately if this is the current tool
             if (toolName === this.currentTool) {
