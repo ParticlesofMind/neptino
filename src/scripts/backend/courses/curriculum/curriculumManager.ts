@@ -1217,11 +1217,10 @@ class CurriculumManager {
        // Update inputs to match loaded curriculum structure
        this.populateInputsFromExistingCurriculum();
      } else {
-       console.log('ℹ️ No existing curriculum found');
+    
        this.hideCurriculumPreview();
      }
    } catch (error) {
-     console.error("❌ Error loading existing curriculum:", error);
      this.hideCurriculumPreview();
    }
  } /**
@@ -1233,7 +1232,6 @@ class CurriculumManager {
  }
  
  this.courseId = courseId;
- console.log('📚 Course ID updated for curriculum manager:', courseId);
  
  // Reload data with new course ID
  this.initializeCurriculum();

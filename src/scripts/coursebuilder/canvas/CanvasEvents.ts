@@ -29,7 +29,7 @@ export class CanvasEvents {
    * Set up all pointer event listeners
    */
   public initialize(): void {
-    console.log('🖱️ Setting up canvas pointer events...');
+ 
     
     // CLEAN APPROACH: Make the stage itself interactive
     this.app.stage.eventMode = 'static';
@@ -56,7 +56,7 @@ export class CanvasEvents {
     // Update cursor based on active tool
     this.updateCursor();
 
-    console.log('✅ Canvas pointer events initialized on stage');
+
   }
 
   /**
@@ -71,10 +71,9 @@ export class CanvasEvents {
       tool: this.toolManager.getActiveToolName()
     });
 
-    // Route to tool manager - this should trigger the tool
-    console.log('🔧 Routing pointer down to tool manager...');
+
     this.toolManager.onPointerDown(event, this.drawingLayer);
-    console.log('✅ Tool manager pointer down completed');
+   
   }
 
   /**
@@ -107,10 +106,7 @@ export class CanvasEvents {
   private handlePointerUp(event: FederatedPointerEvent): void {
     if (!this.isEnabled) return;
 
-    console.log('🖱️ Canvas pointer UP:', {
-      local: { x: Math.round(event.getLocalPosition(this.drawingLayer).x), y: Math.round(event.getLocalPosition(this.drawingLayer).y) },
-      tool: this.toolManager.getActiveToolName()
-    });
+
 
     // Route to tool manager
     this.toolManager.onPointerUp(event, this.drawingLayer);
@@ -125,7 +121,6 @@ export class CanvasEvents {
   private handlePointerLeave(event: FederatedPointerEvent): void {
     if (!this.isEnabled) return;
 
-    console.log('🖱️ Canvas pointer LEAVE');
     
     // Treat as pointer up to end any active drawing
     this.toolManager.onPointerUp(event, this.drawingLayer);
@@ -149,7 +144,6 @@ export class CanvasEvents {
     document.querySelectorAll('.dragging, [data-dragging="true"]').forEach(element => {
       element.classList.remove('dragging');
       element.removeAttribute('data-dragging');
-      console.log('🚑 CLEANUP: Removed dragging state from element');
     });
 
     // Reset body cursor in case it got stuck
@@ -158,7 +152,6 @@ export class CanvasEvents {
     // Reset canvas cursor to match active tool
     this.updateCursor();
     
-    console.log('🚑 CLEANUP: All drag states cleared');
   }
 
   /**
@@ -204,7 +197,6 @@ export class CanvasEvents {
     // Set cursor on the canvas element
     if (this.app.canvas) {
       this.app.canvas.style.cursor = cursor;
-      console.log('🖱️ Canvas cursor updated by CanvasEvents:', cursor);
     }
   }
 
@@ -215,7 +207,6 @@ export class CanvasEvents {
     const success = this.toolManager.setActiveTool(toolName);
     if (success) {
       this.updateCursor();
-      console.log('🔧 Tool changed to:', toolName);
     }
     return success;
   }
@@ -225,7 +216,6 @@ export class CanvasEvents {
    */
   public updateToolColor(color: string): void {
     this.toolManager.updateColorForCurrentTool(color);
-    console.log('🎨 Tool color updated:', color);
   }
 
   /**
@@ -233,7 +223,6 @@ export class CanvasEvents {
    */
   public updateToolSettings(toolName: string, settings: any): void {
     this.toolManager.updateToolSettings(toolName, settings);
-    console.log('⚙️ Tool settings updated:', { toolName, settings });
   }
 
   /**
@@ -255,7 +244,6 @@ export class CanvasEvents {
    */
   public setEnabled(enabled: boolean): void {
     this.isEnabled = enabled;
-    console.log('🖱️ Canvas events', enabled ? 'enabled' : 'disabled');
   }
 
   /**

@@ -9,25 +9,21 @@ import './backend/courses/settings/pageSetupHandler';
 import './coursebuilder/canvasInit'; // Initialize canvas system
 // import PageTransitions from './navigation/PageTransitions'; // DISABLED
 
-// Initialize global navigation system
-console.log('📱 Initializing Neptino app...');
+
 
 // Initialize authentication system
 initAuth();
 
 // Initialize global navigation
 initializeGlobalNavigation();
-console.log('🧭 Global navigation initialized');
+
 
 // Initialize dashboard navigation if present
 const dashboardNav = initializeDashboardNavigation();
 if (dashboardNav) {
-  console.log('📊 Dashboard navigation initialized');
+
 }
 
-// Initialize page transitions for smooth navigation
-// new PageTransitions(); // DISABLED - causing script initialization issues
-// console.log('🔄 Page transitions initialized');
 
 // Initialize auth form handlers on auth pages
 document.addEventListener('DOMContentLoaded', () => {
@@ -37,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
  
  if (isAuthPage) {
  new AuthFormHandler();
- console.log('🔐 Auth form handler initialized');
+
  }
 
  // Initialize page setup handler for coursebuilder pages
@@ -51,9 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
      
      if (courseId) {
        pageSetupHandler.setCourseId(courseId);
-       console.log('📄 Page setup handler initialized with course ID:', courseId);
+    
      } else {
-       console.log('📄 Page setup handler initialized (no course ID yet)');
+    
      }
    }).catch(error => {
      console.error('Failed to initialize page setup handler:', error);
@@ -61,8 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
  }
 });
 
-// Global app initialization
-console.log('📱 Neptino app initialized');
+
 
 // Global error handling
 window.addEventListener('error', (event) => {

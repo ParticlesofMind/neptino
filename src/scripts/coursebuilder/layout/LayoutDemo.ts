@@ -1,18 +1,32 @@
 /**
  * Layout Demo - Example Usage of the Layout System
  * 
- * This file demonstrates how to integrate the layout system with the existing
+ * This file demonstrates how to integrate   private async createHeader(): Promise<void> {
+    try {
+      // Clean up existing header component first
+      if (this.headerComponent) {
+        const uiLayer = this.canvasAPI.getLayer('ui');
+        if (uiLayer) {
+          uiLayer.removeChild(this.headerComponent.getContainer());
+        }
+        this.headerComponent.destroy();
+        this.headerComponent = null;
+      }system with the existing
  * PIXI canvas and shows basic usage of header and footer components.
  */
 
 import { CanvasAPI } from '../canvas/CanvasAPI';
 import { LayoutManager } from './LayoutManager';
-import { HeaderComponent, FooterComponent } from './index';
+import { HeaderComponent, FooterComponent, ProgramComponent, ResourcesComponent } from './index';
+import { HeaderContent } from './HeaderComponent';
+import { ProgramContent } from './ProgramComponent';
 
 export class LayoutDemo {
   private canvasAPI: CanvasAPI;
   private layoutManager: LayoutManager;
   private headerComponent: HeaderComponent | null = null;
+  private programComponent: ProgramComponent | null = null;
+  private resourcesComponent: ResourcesComponent | null = null;
   private footerComponent: FooterComponent | null = null;
 
   constructor(canvasAPI: CanvasAPI) {
@@ -57,6 +71,12 @@ export class LayoutDemo {
     // Create header component
     await this.createHeader();
 
+    // Create program component  
+    await this.createProgram();
+
+    // Create resources component
+    await this.createResourcesWithTemplate();
+
     // Create footer component
     await this.createFooter();
 
@@ -93,6 +113,16 @@ export class LayoutDemo {
    */
   private async createHeader(): Promise<void> {
     try {
+      // Get UI layer
+      const uiLayer = this.canvasAPI.getLayer('ui');
+      
+      // Clean up existing header component first
+      if (this.headerComponent && uiLayer) {
+        uiLayer.removeChild(this.headerComponent.getContainer());
+        this.headerComponent.destroy();
+        this.headerComponent = null;
+      }
+
       // Get column configuration from template
       const columnConfig = await this.layoutManager.getColumnConfiguration();
       const headerRegion = this.layoutManager.createHeaderRegion();
@@ -114,64 +144,110 @@ export class LayoutDemo {
         type: 'columns',
         columnData: {
           fields: columnConfig.headerFields,
-          distribution: columnConfig.headerDistribution,
-          values: {
-            lesson_number: 'Lesson 1',
-            lesson_title: 'Introduction to Templates',
-            module_title: 'Course Builder',
-            course_title: 'Web Development',
-            institution_name: 'Neptino Academy',
-            teacher_name: 'Course Instructor'
-          }
+          distribution: columnConfig.headerDistribution
         }
       });
 
       // Add to UI layer
-      const uiLayer = this.canvasAPI.getLayer('ui');
       if (uiLayer) {
         uiLayer.addChild(this.headerComponent.getContainer());
       }
 
       console.log('📋 Header component created with', columnConfig.headerFields.length, 'template columns');
     } catch (error) {
-      console.error('❌ Failed to create template-based header, falling back to static:', error);
-      this.createStaticHeader();
+      console.error('❌ Failed to create header component:', error);
     }
   }
 
   /**
-   * Create static header as fallback
+   * Create and configure program component
    */
-  private createStaticHeader(): void {
-    const headerRegion = this.layoutManager.createHeaderRegion();
-
-    this.headerComponent = new HeaderComponent(headerRegion, {
-      backgroundColor: 0xfcfcfc,
-      borderColor: 0xeeeeee,
-      borderWidth: 1,
-      textStyle: {
-        fontSize: 22,
-        fill: 0x333333,
-        fontFamily: 'Arial, sans-serif',
-        fontWeight: 'bold'
+  private async createProgram(): Promise<void> {
+    try {
+      // Get UI layer
+      const uiLayer = this.canvasAPI.getLayer('ui');
+      
+      // Clean up existing program component first
+      if (this.programComponent && uiLayer) {
+        uiLayer.removeChild(this.programComponent.getContainer());
+        this.programComponent.destroy();
+        this.programComponent = null;
       }
-    });
 
-    // Set static header content
-    this.headerComponent.setContent({
-      type: 'text',
-      title: 'Course Builder',
-      subtitle: 'Layout System (Static Fallback)',
-      alignment: 'center'
-    });
+      // Get program region and config from template
+      const programResult = await this.layoutManager.createDynamicProgramRegion(80); // 80px height
+      const { region: programRegion, columnConfig } = programResult;
 
-    // Add to UI layer
-    const uiLayer = this.canvasAPI.getLayer('ui');
-    if (uiLayer) {
-      uiLayer.addChild(this.headerComponent.getContainer());
+      this.programComponent = new ProgramComponent(programRegion, {
+        backgroundColor: 0xfafbfc,
+        borderColor: 0xe9ecef,
+        borderWidth: 1,
+        textStyle: {
+          fontSize: 14,
+          fill: 0x495057,
+          fontFamily: 'Arial, sans-serif',
+          fontWeight: 'normal'
+        }
+      });
+
+      // Set program content from template configuration
+      this.programComponent.setContent({
+        type: 'columns',
+        // Program as a row with 4 columns: Competence | Topic | Objective | Task
+        columnData: {
+          fields: columnConfig.programFields,
+          distribution: [3, 3, 3, 3] // Equal 4 columns
+        },
+        alignment: 'left'
+      });
+
+      // Add to UI layer
+      if (uiLayer) {
+        uiLayer.addChild(this.programComponent.getContainer());
+      }
+
+      console.log('📋 Program component created');
+    } catch (error) {
+      console.error('❌ Failed to create program component:', error);
     }
+  }
 
-    console.log('📋 Static header component created (template integration failed)');
+  /**
+   * Create resources component with template integration
+   */
+  private async createResourcesWithTemplate(): Promise<void> {
+    try {
+      // Get UI layer
+      const uiLayer = this.canvasAPI.getLayer('ui');
+      
+      // Clean up existing resources component first
+      if (this.resourcesComponent && uiLayer) {
+        uiLayer.removeChild(this.resourcesComponent.getContainer());
+        this.resourcesComponent.destroy();
+        this.resourcesComponent = null;
+      }
+
+      // Get resources region and config from template
+      const resourcesResult = await this.layoutManager.createDynamicResourcesRegion(60); // 60px height
+      const { region: resourcesRegion, columnConfig } = resourcesResult;
+
+      this.resourcesComponent = new ResourcesComponent(resourcesRegion, {
+        type: 'columns',
+        fields: columnConfig.resourcesFields,
+        distribution: [3, 3, 3, 3], // Equal 4 columns
+        glossaryFields: columnConfig.resourcesGlossaryFields,
+        includeGlossary: columnConfig.includeGlossary
+      }, columnConfig);
+
+      // Add to UI layer
+      if (uiLayer) {
+        uiLayer.addChild(this.resourcesComponent.getContainer());
+      }
+
+      console.log('📚 Resources component created');
+    } catch (error) {
+      console.error('❌ Failed to create resources component:', error);
+    }
   }
 
   /**
@@ -179,6 +255,16 @@ export class LayoutDemo {
    */
   private async createFooter(): Promise<void> {
     try {
+      // Get UI layer
+      const uiLayer = this.canvasAPI.getLayer('ui');
+      
+      // Clean up existing footer component first
+      if (this.footerComponent && uiLayer) {
+        uiLayer.removeChild(this.footerComponent.getContainer());
+        this.footerComponent.destroy();
+        this.footerComponent = null;
+      }
+
       // Get column configuration from template
       const columnConfig = await this.layoutManager.getColumnConfiguration();
       const footerRegion = this.layoutManager.createFooterRegion();
@@ -200,62 +286,19 @@ export class LayoutDemo {
         type: 'columns',
         columnData: {
           fields: columnConfig.footerFields,
-          distribution: columnConfig.footerDistribution,
-          values: {
-            copyright: '© 2025 Neptino',
-            teacher_name: 'Course Instructor',
-            institution_name: 'Neptino Academy',
-            page_number: 'Page 1'
-          }
+          distribution: columnConfig.footerDistribution
         }
       });
 
       // Add to UI layer
-      const uiLayer = this.canvasAPI.getLayer('ui');
       if (uiLayer) {
         uiLayer.addChild(this.footerComponent.getContainer());
       }
 
       console.log('📄 Footer component created with', columnConfig.footerFields.length, 'template columns');
     } catch (error) {
-      console.error('❌ Failed to create template-based footer, falling back to static:', error);
-      this.createStaticFooter();
+      console.error('❌ Failed to create footer component:', error);
     }
-  }
-
-  /**
-   * Create static footer as fallback
-   */
-  private createStaticFooter(): void {
-    const footerRegion = this.layoutManager.createFooterRegion();
-
-    this.footerComponent = new FooterComponent(footerRegion, {
-      backgroundColor: 0xf9f9f9,
-      borderColor: 0xeeeeee,
-      borderWidth: 1,
-      textStyle: {
-        fontSize: 12,
-        fill: 0x777777,
-        fontFamily: 'Arial, sans-serif',
-        fontWeight: 'normal'
-      }
-    });
-
-    // Set static footer content
-    this.footerComponent.setContent({
-      type: 'mixed',
-      leftText: 'Course Draft',
-      centerText: 'Neptino Course Builder',
-      rightText: 'Page 1'
-    });
-
-    // Add to UI layer
-    const uiLayer = this.canvasAPI.getLayer('ui');
-    if (uiLayer) {
-      uiLayer.addChild(this.footerComponent.getContainer());
-    }
-
-    console.log('📄 Static footer component created (template integration failed)');
   }
 
   /**
@@ -263,11 +306,20 @@ export class LayoutDemo {
    */
   public updateHeaderTitle(newTitle: string, subtitle?: string): void {
     if (this.headerComponent) {
-      this.headerComponent.updateContent({
-        title: newTitle,
-        subtitle: subtitle
-      });
-      console.log('📝 Header updated:', newTitle);
+      const content: HeaderContent = {
+        type: 'text',
+        title: newTitle
+      };
+      if (subtitle) {
+        content.subtitle = subtitle;
+      }
+      this.headerComponent.setContent(content);
+    }
+  }
+
+  public updateProgramContent(content: ProgramContent): void {
+    if (this.programComponent) {
+      this.programComponent.setContent(content);
     }
   }
 
@@ -415,27 +467,44 @@ export class LayoutDemo {
   }
 
   /**
-   * Recreate header and footer components with updated template data
+   * Recreate header, program, resources, and footer components with updated template data
    */
   public async recreateHeaderFooter(): Promise<void> {
-    console.log('🔄 Recreating header and footer with updated template data...');
+    console.log('🔄 Recreating header, program, resources, and footer with updated template data...');
     
     try {
-      // Remove existing components
-      if (this.headerComponent) {
+      // Get UI layer for proper cleanup
+      const uiLayer = this.canvasAPI.getLayer('ui');
+      
+      // Remove existing components from UI layer before destroying
+      if (this.headerComponent && uiLayer) {
+        uiLayer.removeChild(this.headerComponent.getContainer());
         this.headerComponent.destroy();
         this.headerComponent = null;
       }
-      if (this.footerComponent) {
+      if (this.programComponent && uiLayer) {
+        uiLayer.removeChild(this.programComponent.getContainer());
+        this.programComponent.destroy();
+        this.programComponent = null;
+      }
+      if (this.resourcesComponent && uiLayer) {
+        uiLayer.removeChild(this.resourcesComponent.getContainer());
+        this.resourcesComponent.destroy();
+        this.resourcesComponent = null;
+      }
+      if (this.footerComponent && uiLayer) {
+        uiLayer.removeChild(this.footerComponent.getContainer());
         this.footerComponent.destroy();
         this.footerComponent = null;
       }
 
       // Recreate with new template data
       await this.createHeader();
+      await this.createProgram();
+      await this.createResourcesWithTemplate();
       await this.createFooter();
 
-      console.log('✅ Header and footer recreated with updated template data');
+      console.log('✅ Header, program, and footer recreated with updated template data');
     } catch (error) {
       console.error('❌ Failed to recreate components:', error);
     }

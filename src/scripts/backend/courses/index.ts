@@ -36,14 +36,12 @@ export class CourseBuilder {
  // ==========================================================================
 
  private initialize(): void {
- console.log('📋 CourseBuilder initializing...');
  
  // Clear any existing course data from sessionStorage to ensure fresh start if no courseId in URL
  const urlParams = new URLSearchParams(window.location.search);
  const hasUrlCourseId = urlParams.get('courseId') || urlParams.get('id');
  
  if (!hasUrlCourseId) {
- console.log('📋 No courseId in URL - clearing sessionStorage for fresh start');
  sessionStorage.removeItem("currentCourseId");
  }
  
@@ -53,10 +51,8 @@ export class CourseBuilder {
  
  // Only initialize managers if we have a course ID (existing course mode)
  if (this.courseId) {
- console.log('📋 EXISTING COURSE MODE - Initializing with course ID:', this.courseId);
  this.initializeAllManagers();
  } else {
- console.log('📋 CREATE NEW COURSE MODE - Managers will be initialized after course creation');
  }
  }
 
@@ -67,12 +63,10 @@ export class CourseBuilder {
  
  if (courseIdFromUrl) {
  this.courseId = courseIdFromUrl;
- console.log('📋 EXISTING COURSE MODE - Course ID from URL:', courseIdFromUrl);
  return;
  }
 
  // If no URL parameter, check if we're in "create new course" mode
- console.log('📋 CREATE NEW COURSE MODE - No course ID in URL');
  
  // Clear any existing course data from sessionStorage to ensure fresh start
  sessionStorage.removeItem("currentCourseId");
@@ -82,17 +76,14 @@ export class CourseBuilder {
 
  private initializeAllManagers(): void {
  if (!this.courseId) {
- console.log('📋 Skipping managers initialization - no course ID (create new course mode)');
  return;
  }
 
  try {
  // Initialize all managers once with the course ID
- console.log('📋 Initializing managers with course ID:', this.courseId);
  
  // Initialize schedule manager (always ready)
  this.scheduleManager = new ScheduleCourseManager(this.courseId);
- console.log('📋 ScheduleCourseManager created by CourseBuilder class');
  
  // Initialize curriculum manager (always ready)
  this.curriculumManager = new CurriculumManager(this.courseId);
@@ -107,9 +98,7 @@ export class CourseBuilder {
  (window as any).courseBuilder.setCourseId(this.courseId);
  }
  
- console.log('📋 All managers initialized successfully');
  } catch (error) {
- console.error('📋 Error initializing managers:', error);
  }
  }
 
@@ -118,14 +107,12 @@ export class CourseBuilder {
  */
  public setCourseId(courseId: string): void {
  this.courseId = courseId;
- console.log('📋 Course ID set to:', courseId);
  
  // Store in session storage for consistency
  sessionStorage.setItem("currentCourseId", courseId);
  
  // If managers aren't initialized yet, initialize them now
  if (!this.scheduleManager && !this.curriculumManager) {
- console.log('📋 Initializing managers for newly created course');
  this.initializeAllManagers();
  } else {
  // Update existing managers with new course ID
@@ -140,7 +127,6 @@ export class CourseBuilder {
  // Update classification handler if available
  if (typeof window !== 'undefined' && (window as any).classificationHandler) {
  (window as any).classificationHandler.setCourseId(courseId);
- console.log('📋 Notified classification handler of course ID:', courseId);
  }
  
  // Update page setup handler

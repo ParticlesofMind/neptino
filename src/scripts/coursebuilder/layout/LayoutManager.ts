@@ -78,6 +78,12 @@ export interface ColumnConfiguration {
   footerFields: string[];
   headerDistribution: number[];
   footerDistribution: number[];
+  programFields: string[];
+  programValues: Record<string, string>;
+  resourcesFields: string[];
+  resourcesValues: Record<string, string>;
+  resourcesGlossaryFields?: string[];
+  includeGlossary?: boolean;
 }
 
 export class LayoutManager {
@@ -265,17 +271,69 @@ export class LayoutManager {
   }
 
   /**
-   * Create a basic template with just header and footer
+   * Create program region positioned right after the header
+   */
+  public createProgramRegion(height: number = 50): LayoutRegion {
+    const config = this.getGridConfig();
+    const margins = this.getCurrentMarginsInPixels();
+    
+    return {
+      id: 'program',
+      name: 'Program',
+      x: margins.left, // Start within left margin
+      y: margins.top, // Start right after header (which uses the top margin)
+      width: config.totalWidth - margins.left - margins.right, // Content width within margins
+      height: height, // Configurable height
+      gridColumn: 1,
+      gridRow: 1, // First content row after header
+      columnSpan: config.columns,
+      rowSpan: 1,
+      isFixed: false // Can be dynamic based on content
+    };
+  }
+
+  /**
+   * Create resources region
+   */
+  public createResourcesRegion(height: number = 50): LayoutRegion {
+    const config = this.getGridConfig();
+    const margins = this.getCurrentMarginsInPixels();
+    
+    // Position resources after program region (header + program + spacing)
+    const headerHeight = config.headerHeight;
+    const programHeight = 50; // Default program height
+    const spacingBetweenRegions = 10; // Small gap between regions
+    const yPosition = margins.top + headerHeight + programHeight + spacingBetweenRegions;
+
+    return {
+      id: 'resources',
+      name: 'Resources',
+      x: margins.left, // Start within left margin
+      y: yPosition, // Position after program
+      width: config.totalWidth - margins.left - margins.right, // Content width within margins
+      height: height, // Configurable height
+      gridColumn: 1,
+      gridRow: 2, // Second content row after program
+      columnSpan: config.columns,
+      rowSpan: 1,
+      isFixed: false // Can be dynamic based on content
+    };
+  }
+
+  /**
+   * Create a basic template with header, program, and footer
    */
   public createBasicTemplate(): LayoutTemplate {
     const headerRegion = this.createHeaderRegion();
+    const programRegion = this.createProgramRegion();
+    const resourcesRegion = this.createResourcesRegion();
     const footerRegion = this.createFooterRegion();
 
     return {
       id: 'basic',
       name: 'Basic Layout',
-      description: 'Simple layout with header and footer only',
-      regions: [headerRegion, footerRegion],
+      description: 'Simple layout with header, program section, resources, and footer',
+      regions: [headerRegion, programRegion, resourcesRegion, footerRegion],
       headerContent: null,
       footerContent: null
     };
@@ -753,6 +811,8 @@ export class LayoutManager {
 
       const headerConfig = this.calculateHeaderColumns(templateData);
       const footerConfig = this.calculateFooterColumns(templateData);
+      const programConfig = this.calculateProgramFields(templateData);
+      const resourcesConfig = this.calculateResourcesFields(templateData);
 
       this.currentColumnConfig = {
         headerColumns: headerConfig.columns,
@@ -760,7 +820,13 @@ export class LayoutManager {
         headerFields: headerConfig.fields,
         footerFields: footerConfig.fields,
         headerDistribution: this.calculateColumnDistribution(headerConfig.columns),
-        footerDistribution: this.calculateColumnDistribution(footerConfig.columns)
+        footerDistribution: this.calculateColumnDistribution(footerConfig.columns),
+        programFields: programConfig.fields,
+        programValues: programConfig.values,
+        resourcesFields: resourcesConfig.fields,
+        resourcesValues: resourcesConfig.values,
+        resourcesGlossaryFields: resourcesConfig.glossaryFields,
+        includeGlossary: resourcesConfig.includeGlossary
       };
 
       console.log('📊 Dynamic column configuration calculated:', this.currentColumnConfig);
@@ -860,6 +926,80 @@ export class LayoutManager {
   }
 
   /**
+   * Calculate program fields based on template configuration
+   */
+  private calculateProgramFields(templateData: any): { fields: string[]; values: Record<string, string> } {
+    const programBlock = this.findBlockByType(templateData, 'program');
+    if (!programBlock) {
+      return { 
+        fields: ['competence', 'topic', 'objective', 'task'],
+        values: {
+          competence: '',
+          topic: '', 
+          objective: '',
+          task: ''
+        }
+      };
+    }
+
+    const enabledFields = this.getEnabledFields(programBlock, this.getProgramFieldConfig());
+    const values: Record<string, string> = {};
+    
+    // Extract values from template data
+    enabledFields.forEach(field => {
+      values[field] = programBlock.config?.fields?.[field]?.value || '';
+    });
+
+    return {
+      fields: enabledFields,
+      values
+    };
+  }
+
+  /**
+   * Calculate resources fields based on template configuration
+   */
+  private calculateResourcesFields(templateData: any): { fields: string[]; values: Record<string, string>; glossaryFields?: string[]; includeGlossary?: boolean } {
+    const resourcesBlock = this.findBlockByType(templateData, 'resources');
+    if (!resourcesBlock) {
+      return { 
+        fields: ['task', 'type', 'origin'],
+        values: {
+          task: '',
+          type: '', 
+          origin: ''
+        }
+      };
+    }
+
+    const allEnabledFields = this.getEnabledFields(resourcesBlock, this.getResourcesFieldConfig());
+    
+    // Separate main fields from glossary fields
+    const mainFields = allEnabledFields.filter(field => 
+      !['include_glossary', 'historical_figures', 'terminology', 'concepts'].includes(field)
+    );
+    
+    const includeGlossary = allEnabledFields.includes('include_glossary');
+    const glossaryFields = allEnabledFields.filter(field => 
+      ['historical_figures', 'terminology', 'concepts'].includes(field)
+    );
+
+    const values: Record<string, string> = {};
+    
+    // Extract values from template data (only for main fields)
+    mainFields.forEach(field => {
+      values[field] = resourcesBlock.config?.fields?.[field]?.value || '';
+    });
+
+    return {
+      fields: mainFields,
+      values,
+      glossaryFields: includeGlossary ? glossaryFields : undefined,
+      includeGlossary
+    };
+  }
+
+  /**
    * Find block by type in template data
    */
   private findBlockByType(templateData: any, blockType: string): TemplateBlock | null {
@@ -909,16 +1049,58 @@ export class LayoutManager {
   }
 
   /**
+   * Get program field configuration (the 4 mandatory configs)
+   */
+  private getProgramFieldConfig() {
+    return [
+      { name: 'competence', label: 'Competence', mandatory: true },
+      { name: 'topic', label: 'Topic', mandatory: true },
+      { name: 'objective', label: 'Objective', mandatory: true },
+      { name: 'task', label: 'Task', mandatory: true }
+    ];
+  }
+
+  /**
+   * Get resources field configuration
+   */
+  private getResourcesFieldConfig() {
+    return [
+      { name: 'task', label: 'Task', mandatory: true },
+      { name: 'type', label: 'Type', mandatory: true },
+      { name: 'origin', label: 'Origin', mandatory: true },
+      { name: 'state', label: 'State', mandatory: false },
+      { name: 'quality', label: 'Quality', mandatory: false },
+      { name: 'include_glossary', label: 'Include Glossary', mandatory: false },
+      { name: 'historical_figures', label: 'Historical figures', mandatory: false },
+      { name: 'terminology', label: 'Terminology', mandatory: false },
+      { name: 'concepts', label: 'Concepts', mandatory: false }
+    ];
+  }
+
+  /**
    * Get default column configuration when no template data
    */
-  private getDefaultColumnConfiguration(): ColumnConfiguration {
+  public getDefaultColumnConfiguration(): ColumnConfiguration {
     return {
       headerColumns: 5,
       footerColumns: 2,
       headerFields: ['lesson_number', 'lesson_title', 'module_title', 'course_title', 'institution_name'],
       footerFields: ['copyright', 'page_number'],
       headerDistribution: [2, 3, 2, 3, 2],
-      footerDistribution: [6, 6]
+      footerDistribution: [6, 6],
+      programFields: ['competence', 'topic', 'objective', 'task'],
+      programValues: {
+        competence: 'Core Skills Development',
+        topic: 'Course Fundamentals', 
+        objective: 'Master Key Concepts',
+        task: 'Complete Assignments'
+      },
+      resourcesFields: ['task', 'type', 'origin'],
+      resourcesValues: {
+        task: 'Resource Task',
+        type: 'Resource Type', 
+        origin: 'Resource Origin'
+      }
     };
   }
 
@@ -965,6 +1147,31 @@ export class LayoutManager {
     const region = this.createFooterRegion();
     
     console.log('📱 Dynamic footer region created with', columnConfig.footerColumns, 'columns');
+    return { region, columnConfig };
+  }
+
+  /**
+   * Create program region with dynamic configuration from template
+   */
+  /**
+   * Create program region with dynamic configuration from template
+   */
+  public async createDynamicProgramRegion(height: number = 100, templateId?: string): Promise<{ region: LayoutRegion; columnConfig: ColumnConfiguration }> {
+    const columnConfig = await this.getColumnConfiguration(templateId);
+    const region = this.createProgramRegion(height);
+    
+    console.log('📱 Dynamic program region created with program fields:', columnConfig.programFields);
+    return { region, columnConfig };
+  }
+
+  /**
+   * Create resources region with dynamic configuration from template
+   */
+  public async createDynamicResourcesRegion(height: number = 50, templateId?: string): Promise<{ region: LayoutRegion; columnConfig: ColumnConfiguration }> {
+    const columnConfig = await this.getColumnConfiguration(templateId);
+    const region = this.createResourcesRegion(height);
+    
+    console.log('📚 Dynamic resources region created with resources fields:', columnConfig.resourcesFields);
     return { region, columnConfig };
   }
 
