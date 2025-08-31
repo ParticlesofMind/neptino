@@ -44,3 +44,17 @@ export function alignPointToPixel(x: number, y: number): { x: number; y: number 
         y: Math.round(y)
     };
 }
+
+/**
+ * Align a rectangle to pixel boundaries
+ */
+export function alignRectToPixel(x: number, y: number, width: number, height: number): { x: number; y: number; width: number; height: number } {
+    const alignedX = Math.round(x);
+    const alignedY = Math.round(y);
+    return {
+        x: alignedX,
+        y: alignedY,
+        width: Math.round(x + width) - alignedX,
+        height: Math.round(y + height) - alignedY
+    };
+}

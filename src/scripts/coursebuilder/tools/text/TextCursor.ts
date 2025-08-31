@@ -22,9 +22,10 @@ export class TextCursor implements ITextCursor {
     // Create cursor graphics
     this.graphics = new Graphics();
     this.graphics.eventMode = 'none'; // Don't interfere with input events
+    this.graphics.zIndex = 2000; // Ensure cursor is above everything else including creation guide
     parent.addChild(this.graphics);
 
-    console.log('📝 TextCursor created');
+    console.log('📝 TextCursor created with high z-index');
   }
 
   public get visible(): boolean {
@@ -46,6 +47,7 @@ export class TextCursor implements ITextCursor {
   public setVisible(visible: boolean): void {
     if (this._visible === visible) return;
     
+    console.log(`📝 Setting cursor visibility: ${visible}`);
     this._visible = visible;
     
     if (visible) {
@@ -68,6 +70,11 @@ export class TextCursor implements ITextCursor {
     // Update graphics position
     this.graphics.x = aligned.x;
     this.graphics.y = aligned.y;
+    
+    // Redraw to ensure visibility with new position
+    this.redraw();
+    
+    console.log(`📝 Cursor positioned at (${aligned.x}, ${aligned.y}), visible: ${this._visible}`);
   }
 
   public setHeight(height: number): void {
@@ -82,10 +89,15 @@ export class TextCursor implements ITextCursor {
     this.graphics.visible = true;
     this.redraw();
 
+    console.log(`📝 Starting cursor blinking at (${this._graphicsPosition.x}, ${this._graphicsPosition.y})`);
+
     // Start blinking animation
     this.blinkTimer = window.setInterval(() => {
       this.isBlinkVisible = !this.isBlinkVisible;
       this.graphics.visible = this.isBlinkVisible && this._visible;
+      if (this.isBlinkVisible) {
+        console.log(`📝 Cursor blink ON at (${this._graphicsPosition.x}, ${this._graphicsPosition.y})`);
+      }
     }, 500); // Blink every 500ms
   }
 
@@ -106,11 +118,19 @@ export class TextCursor implements ITextCursor {
   private redraw(): void {
     this.graphics.clear();
     
-    // Draw vertical line cursor
-    this.graphics.stroke({ width: 1, color: 0x000000 }); // Black cursor
-    this.graphics.moveTo(0, 0);
-    this.graphics.lineTo(0, this.height);
+    // Draw vertical line cursor with proper styling
+    this.graphics
+      .moveTo(0, 0)
+      .lineTo(0, this.height)
+      .stroke({ 
+        width: 2,  // Make it thicker for better visibility
+        color: 0x000000,  // Black cursor
+        alpha: 1.0  // Full opacity
+      });
     
-    console.log(`📝 Cursor redrawn at (${this._graphicsPosition.x}, ${this._graphicsPosition.y}) height: ${this.height}`);
+    // Ensure visibility
+    this.graphics.visible = this._visible && this.isBlinkVisible;
+    
+    console.log(`📝 Cursor redrawn at (${this._graphicsPosition.x}, ${this._graphicsPosition.y}) height: ${this.height}, visible: ${this.graphics.visible}`);
   }
 }

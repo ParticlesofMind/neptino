@@ -15,6 +15,8 @@ import {
 import { TextArea } from "./TextArea.js";
 import { TextCursor } from "./TextCursor.js";
 import { TextInputHandler } from "./TextInputHandler.js";
+import { CreationGuide } from "./CreationGuide.js";
+import { SizeLabel } from "./SizeLabel.js";
 import { PROFESSIONAL_COLORS, TEXT_SIZES, FONT_FAMILIES } from "../SharedResources.js";
 
 export class TextTool extends BaseTool {
@@ -25,18 +27,23 @@ export class TextTool extends BaseTool {
   };
   
   private dragPreview: Graphics | null = null;
+  private creationGuide: CreationGuide | null = null;
+  private sizeLabel: SizeLabel | null = null;
   private startPoint: Point = new Point(0, 0);
   private currentPoint: Point = new Point(0, 0);
   private textAreas: TextArea[] = [];
   private activeTextArea: TextArea | null = null;
   private textCursor: TextCursor | null = null;
-  private inputHandler: TextInputHandler;
+  private inputHandler: TextInputHandler | null = null;
   
   // Double-click detection
   private lastClickTime: number = 0;
   private lastClickPoint: Point = new Point(0, 0);
   private doubleClickThreshold: number = 300; // ms
   private doubleClickDistance: number = 10; // pixels
+  
+  // Canvas element for cursor management
+  private canvasElement: HTMLElement | null = null;
   
   declare protected settings: TextSettings;
 
@@ -52,12 +59,20 @@ export class TextTool extends BaseTool {
       backgroundColor: undefined // Transparent by default
     };
 
-    this.inputHandler = new TextInputHandler();
+    this.inputHandler = null; // Will be created when first needed
 
     console.log('📝 TextTool initialized with drag-to-create system');
   }
 
-  onPointerDown(event: FederatedPointerEvent, container: Container): void {
+  private ensureInputHandler(container: Container): TextInputHandler {
+    if (!this.inputHandler) {
+      this.inputHandler = new TextInputHandler(container);
+      console.log('📝 TextInputHandler created with container');
+    }
+    return this.inputHandler;
+  }
+
+    onPointerDown(event: FederatedPointerEvent, container: Container): void {
     if (!this.isActive) {
       console.log('📝 TextTool: Ignoring pointer down - tool not active');
       return;
@@ -66,70 +81,75 @@ export class TextTool extends BaseTool {
     const localPoint = container.toLocal(event.global);
     const currentTime = Date.now();
     
-    // Check if we clicked on an existing text area
-    const clickedTextArea = this.findTextAreaAtPoint(localPoint);
+    // 🎯 BOUNDARY ENFORCEMENT: Clamp to canvas bounds from the start
+    const canvasBounds = this.manager.getCanvasBounds();
+    const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
     
-    if (clickedTextArea) {
-      // Check for double-click
-      const timeDiff = currentTime - this.lastClickTime;
-      const distance = Math.sqrt(
-        Math.pow(localPoint.x - this.lastClickPoint.x, 2) +
-        Math.pow(localPoint.y - this.lastClickPoint.y, 2)
-      );
+    console.log(`📝 TextTool pointer down at (${clampedPoint.x.toFixed(1)}, ${clampedPoint.y.toFixed(1)})`);
+
+    // Check if clicking inside an existing text area
+    const existingTextArea = this.findTextAreaAtPoint(clampedPoint);
+    if (existingTextArea) {
+      console.log('📝 Clicked inside existing text area - activating for editing');
+      this.activateTextArea(existingTextArea);
       
-      const isDoubleClick = timeDiff < this.doubleClickThreshold && distance < this.doubleClickDistance;
-      
-      if (isDoubleClick) {
-        // Double-click: activate for editing
-        this.handleTextAreaDoubleClick(clickedTextArea, localPoint);
-      } else {
-        // Single click: just select (activate without editing)
-        this.handleTextAreaSingleClick(clickedTextArea);
-      }
-      
-      // Update click tracking
-      this.lastClickTime = currentTime;
-      this.lastClickPoint.copyFrom(localPoint);
+      // Handle mouse events for text selection
+      const inputHandler = this.ensureInputHandler(container);
+      inputHandler.handleMouseDown(clampedPoint.x, clampedPoint.y);
       return;
     }
 
-    // Check if clicking outside all text areas (deactivate current)
-    if (this.activeTextArea) {
+    // Check for double-click to start new text area
+    if (currentTime - this.lastClickTime < 300 && 
+        Math.abs(clampedPoint.x - this.lastClickPoint.x) < 10 && 
+        Math.abs(clampedPoint.y - this.lastClickPoint.y) < 10) {
+      
+      console.log('📝 Double-click detected - starting text creation');
+      this.startDragCreation(clampedPoint, container);
+    } else {
+      // Single click on empty area - deactivate current text
+      console.log('📝 Single click on empty area - deactivating current text');
       this.deactivateCurrentTextArea();
     }
 
-    // 🚫 MARGIN PROTECTION: Prevent creation in margin areas
-    const canvasBounds = this.manager.getCanvasBounds();
-    if (!BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
-      console.log(`📝 TextTool: 🚫 Click in margin area rejected`);
-      return;
-    }
-
-    // Update click tracking for potential drag start
+    // Update click tracking
     this.lastClickTime = currentTime;
-    this.lastClickPoint.copyFrom(localPoint);
+    this.lastClickPoint.copyFrom(clampedPoint);
 
-    // Start drag creation
-    this.startDragCreation(localPoint, container);
+    // Start drag creation on single click hold
+    if (!this.state.isDragging) {
+      this.startDragCreation(clampedPoint, container);
+    }
   }
 
   onPointerMove(event: FederatedPointerEvent, container: Container): void {
     if (!this.isActive) return;
 
+    const localPoint = container.toLocal(event.global);
+
     if (this.state.isDragging && this.dragPreview) {
-      const localPoint = container.toLocal(event.global);
-      
       // 🎯 BOUNDARY ENFORCEMENT: Clamp to canvas bounds
       const canvasBounds = this.manager.getCanvasBounds();
       const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
       
       this.currentPoint.copyFrom(clampedPoint);
       this.updateDragPreview();
+    } else {
+      // Handle text selection drag if input handler exists
+      const inputHandler = this.ensureInputHandler(container);
+      inputHandler.handleMouseMove(localPoint.x, localPoint.y);
+      
+      // Update cursor based on hover context
+      this.updatePointerCursor(localPoint);
     }
   }
 
-  onPointerUp(_event: FederatedPointerEvent, container: Container): void {
+  onPointerUp(event: FederatedPointerEvent, container: Container): void {
     if (!this.isActive) return;
+
+    // Notify input handler of mouse up
+    const inputHandler = this.ensureInputHandler(container);
+    inputHandler.handleMouseUp();
 
     if (this.state.isDragging) {
       this.finalizeDragCreation(container);
@@ -138,14 +158,82 @@ export class TextTool extends BaseTool {
 
   onActivate(): void {
     super.onActivate();
+    this.initializeCursorManagement();
     console.log('📝 TextTool activated');
   }
 
   onDeactivate(): void {
     super.onDeactivate();
+    this.hideCreationGuide(); // Hide guide when switching tools (this is the only time it should disappear)
     this.cleanupDragState();
     this.deactivateCurrentTextArea();
+    this.cleanupCursorManagement();
     console.log('📝 TextTool deactivated');
+  }
+
+  /**
+   * Initialize cursor management for professional pointer behavior
+   */
+  private initializeCursorManagement(): void {
+    this.canvasElement = document.querySelector('#pixi-canvas');
+    if (this.canvasElement) {
+      // Set default text I-beam cursor over empty canvas
+      this.setCanvasCursor('text');
+    }
+  }
+
+  /**
+   * Cleanup cursor management
+   */
+  private cleanupCursorManagement(): void {
+    if (this.canvasElement) {
+      this.setCanvasCursor('default');
+      this.canvasElement = null;
+    }
+  }
+
+  /**
+   * Set canvas cursor type
+   */
+  private setCanvasCursor(cursor: string): void {
+    if (this.canvasElement) {
+      this.canvasElement.style.cursor = cursor;
+    }
+  }
+
+  /**
+   * Show creation guide with persistent behavior
+   */
+  private showCreationGuide(bounds: TextAreaBounds, container: Container): void {
+    if (!this.creationGuide) {
+      this.creationGuide = new CreationGuide(container);
+    }
+    this.creationGuide.show(bounds);
+  }
+
+  /**
+   * Hide creation guide
+   */
+  private hideCreationGuide(): void {
+    if (this.creationGuide) {
+      this.creationGuide.hide();
+    }
+  }
+
+  /**
+   * Update pointer cursor based on hover context
+   */
+  private updatePointerCursor(localPoint: Point): void {
+    const hoveredTextArea = this.findTextAreaAtPoint(localPoint);
+    
+    if (hoveredTextArea) {
+      // Over existing text area - could show resize handles or I-beam
+      // For now, just show text cursor when inside text content
+      this.setCanvasCursor('text');
+    } else {
+      // Over empty canvas - show I-beam for text creation
+      this.setCanvasCursor('text');
+    }
   }
 
   updateSettings(settings: Partial<TextSettings>): void {
@@ -283,6 +371,14 @@ export class TextTool extends BaseTool {
           width: this.settings.borderWidth, 
           color: this.hexToNumber(this.settings.borderColor)
         });
+      
+      // Show size label during drag
+      if (!this.sizeLabel && this.dragPreview.parent) {
+        this.sizeLabel = new SizeLabel(this.dragPreview.parent);
+      }
+      if (this.sizeLabel) {
+        this.sizeLabel.show(rectWidth, rectHeight, { x: rectX, y: rectY });
+      }
     } else {
       // For very small drags, draw a small cross or dot as indicator
       this.dragPreview
@@ -294,9 +390,14 @@ export class TextTool extends BaseTool {
           width: 2, 
           color: this.hexToNumber(this.settings.borderColor)
         });
+        
+      // Hide size label for very small drags
+      if (this.sizeLabel) {
+        this.sizeLabel.hide();
+      }
     }
     
-    console.log(`📝 Drag preview updated: ${rectWidth}x${rectHeight} at (${Math.round(rectX)}, ${Math.round(rectY)})`);
+    console.log(`📝 Drag preview updated: ${rectWidth}×${rectHeight} at (${Math.round(rectX)}, ${Math.round(rectY)})`);
   }
 
   private finalizeDragCreation(container: Container): void {
@@ -308,24 +409,34 @@ export class TextTool extends BaseTool {
     // Only create text area if drag is significant enough
     const minSize = 30; // Minimum 30px in either dimension
     if (width >= minSize && height >= minSize) {
-      this.createTextArea(container);
-      // Keep the drag preview visible until user starts typing
-      // It will be cleaned up when the text area becomes active and shows its own border
+      const bounds = this.createTextArea(container);
+      
+      // Hide drag preview and size label
+      this.cleanupDragPreview();
+      
+      // Show persistent creation guide with size label at the text area bounds
+      this.showCreationGuide(bounds, container);
+      
+      console.log('📝 Text area created and creation guide positioned at bounds');
     } else {
       console.log('📝 Drag too small, no text area created');
       // Only cleanup if no text area was created
       this.cleanupDragState();
     }
 
-    // Reset drag state but keep preview if text area was created
+    // Reset drag state - CRITICAL: This prevents the guide from following cursor
     this.state = {
-      mode: 'active', // Change to active since we have a text area now
+      mode: width >= minSize && height >= minSize ? 'active' : 'inactive',
       isDragging: false,
       hasStarted: false
     };
+    
+    // Clear drag points to prevent any residual attachment
+    this.startPoint.set(0, 0);
+    this.currentPoint.set(0, 0);
   }
 
-  private createTextArea(container: Container): void {
+  private createTextArea(container: Container): TextAreaBounds {
     // Calculate bounds
     const x = Math.min(this.startPoint.x, this.currentPoint.x);
     const y = Math.min(this.startPoint.y, this.currentPoint.y);
@@ -347,7 +458,9 @@ export class TextTool extends BaseTool {
     // Activate the new text area
     this.activateTextArea(textArea);
     
-    console.log(`📝 TextArea created: ${width}x${height} at (${Math.round(x)}, ${Math.round(y)})`);
+    console.log(`📝 TextArea created: ${width}×${height} at (${Math.round(x)}, ${Math.round(y)})`);
+    
+    return bounds;
   }
 
   private activateTextArea(textArea: TextArea): void {
@@ -360,9 +473,6 @@ export class TextTool extends BaseTool {
     this.activeTextArea = textArea;
     textArea.setActive(true);
     
-    // Clean up drag preview when text area becomes active (shows its own border)
-    this.cleanupDragPreview();
-    
     // Create/update cursor
     if (!this.textCursor) {
       this.textCursor = new TextCursor(textArea.pixiContainer, textArea.textLineHeight);
@@ -372,14 +482,20 @@ export class TextTool extends BaseTool {
       this.textCursor = new TextCursor(textArea.pixiContainer, textArea.textLineHeight);
     }
     
-    // Set up input handling
-    this.inputHandler.setActiveTextArea(textArea);
-    this.inputHandler.setActiveCursor(this.textCursor);
+    // Set proper cursor height based on text settings
+    this.textCursor.setHeight(Math.max(textArea.textLineHeight, this.settings.fontSize + 4));
+    
+    // Set up input handling - ensure inputHandler exists
+    const inputHandler = this.ensureInputHandler(textArea.pixiContainer);
+    inputHandler.setActiveTextArea(textArea);
+    inputHandler.setActiveCursor(this.textCursor);
     
     // Position cursor at start
     const startPos = textArea.getCharacterPosition(0);
     (this.textCursor as any).setGraphicsPosition(startPos.x, startPos.y);
     this.textCursor.setVisible(true);
+    
+    console.log(`📝 Cursor activated at position (${startPos.x}, ${startPos.y}) with height ${this.textCursor.pixiGraphics.height}`);
     
     this.state.mode = 'active';
   }
@@ -394,28 +510,13 @@ export class TextTool extends BaseTool {
       this.textCursor.setVisible(false);
     }
     
-    this.inputHandler.setActiveTextArea(null);
+    // Clear input handler if it exists
+    if (this.inputHandler) {
+      this.inputHandler.setActiveTextArea(null);
+    }
     this.state.mode = 'inactive';
     
     console.log('📝 Text area deactivated');
-  }
-
-  private handleTextAreaSingleClick(textArea: TextArea): void {
-    // Single click: just select the text area (visual indication)
-    if (this.activeTextArea && this.activeTextArea !== textArea) {
-      this.activeTextArea.setActive(false);
-    }
-    
-    this.activeTextArea = textArea;
-    textArea.setActive(true);
-    
-    // Don't start editing mode, just show it's selected
-    if (this.textCursor) {
-      this.textCursor.setVisible(false);
-    }
-    
-    this.state.mode = 'inactive'; // Keep in inactive mode
-    console.log(`📝 Text area selected: ${textArea.id}`);
   }
 
   private handleTextAreaDoubleClick(textArea: TextArea, localPoint: Point): void {
@@ -460,18 +561,31 @@ export class TextTool extends BaseTool {
       this.dragPreview.destroy();
       this.dragPreview = null;
     }
+    
+    if (this.sizeLabel) {
+      this.sizeLabel.destroy();
+      this.sizeLabel = null;
+    }
   }
 
   public destroy(): void {
     this.cleanupDragState();
     this.clearAllTextAreas();
     
+    if (this.creationGuide) {
+      this.creationGuide.destroy();
+      this.creationGuide = null;
+    }
+    
     if (this.textCursor) {
       this.textCursor.destroy();
       this.textCursor = null;
     }
     
-    this.inputHandler.destroy();
+    // Destroy input handler if it exists
+    if (this.inputHandler) {
+      this.inputHandler.destroy();
+    }
     
     console.log('📝 TextTool destroyed');
   }

@@ -11,6 +11,8 @@ export { TextArea } from "./TextArea.js";
 export { TextCursor } from "./TextCursor.js";
 export { TextInputHandler } from "./TextInputHandler.js";
 export { TextFlowManager } from "./TextFlowManager.js";
+export { CreationGuide } from "./CreationGuide.js";
+export { SizeLabel } from "./SizeLabel.js";
 
 // Main tool
 export { TextTool } from "./TextTool.js";

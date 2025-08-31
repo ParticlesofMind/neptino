@@ -138,7 +138,7 @@ export class TextFlowManager implements ITextFlowManager {
       return 0;
     }
 
-    // Find character position within the line
+    // Find character position within the line using more accurate measurement
     const measureText = new PixiText({
       text: '',
       style: {
@@ -150,7 +150,7 @@ export class TextFlowManager implements ITextFlowManager {
     let closestCharIndex = line.startIndex;
     let closestDistance = Math.abs(position.x);
 
-    // Test each character position in the line
+    // Test each character position in the line more precisely
     for (let i = 0; i <= line.text.length; i++) {
       measureText.text = line.text.substring(0, i);
       const charX = measureText.width;
@@ -159,13 +159,17 @@ export class TextFlowManager implements ITextFlowManager {
       if (distance < closestDistance) {
         closestDistance = distance;
         closestCharIndex = line.startIndex + i;
+      } else if (distance > closestDistance && i > 0) {
+        // We've moved past the closest point, so break early for efficiency
+        break;
       }
     }
 
     measureText.destroy();
 
     // Clamp to valid range
-    return Math.max(0, Math.min(closestCharIndex, line.endIndex + 1));
+    const maxIndex = line.endIndex + 1;
+    return Math.max(line.startIndex, Math.min(closestCharIndex, maxIndex));
   }
 
   /**

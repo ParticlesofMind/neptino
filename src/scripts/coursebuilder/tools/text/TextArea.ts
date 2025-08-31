@@ -38,6 +38,7 @@ export class TextArea implements ITextArea {
     // Create container
     this.container = new Container();
     this.container.eventMode = 'static';
+    this.container.sortableChildren = true; // Enable z-index sorting
     
     // Mark this container as a text object for selection tool identification
     (this.container as any).isTextObject = true;
@@ -50,6 +51,7 @@ export class TextArea implements ITextArea {
     this.container.addChild(this.border);
 
     // Create text object
+    const contentWidth = Math.max(10, this._bounds.width - 10); // 5px padding on each side
     this.textObject = new PixiText({
       text: '',
       style: {
@@ -57,12 +59,16 @@ export class TextArea implements ITextArea {
         fontSize: this.settings.fontSize,
         fill: this.settings.color,
         wordWrap: true,
-        wordWrapWidth: this._bounds.width - 10, // 5px padding on each side
+        wordWrapWidth: contentWidth,
+        breakWords: true, // Allow breaking long words
+        whiteSpace: 'normal' // Ensure normal text wrapping behavior
       }
     });
     this.textObject.x = alignToPixel(5); // 5px padding from left
     this.textObject.y = alignToPixel(5); // 5px padding from top
     this.container.addChild(this.textObject);
+
+    console.log(`📝 TextArea text object created with wordWrapWidth: ${contentWidth}`);
 
     // Calculate line height from text metrics
     this.calculateLineHeight();
@@ -109,11 +115,18 @@ export class TextArea implements ITextArea {
   public updateBounds(bounds: TextAreaBounds): void {
     this._bounds = { ...bounds };
     
-    // Update word wrap width
+    // Update word wrap width with proper minimum
     const contentWidth = Math.max(10, this._bounds.width - 10); // Minimum content width
     this.textObject.style.wordWrapWidth = contentWidth;
     
+    // Force text update to apply new wrapping
+    const currentText = this._text;
+    this.textObject.text = '';
+    this.textObject.text = currentText;
+    
     this.render();
+    
+    console.log(`📝 TextArea bounds updated: ${bounds.width}x${bounds.height}, new wordWrapWidth: ${contentWidth}`);
   }
 
   public updateText(text: string): void {
@@ -126,6 +139,10 @@ export class TextArea implements ITextArea {
     const before = this._text.substring(0, position);
     const after = this._text.substring(position);
     this._text = before + text + after;
+    
+    // Ensure word wrap width is current before recalculating
+    const contentWidth = Math.max(10, this._bounds.width - 10);
+    this.textObject.style.wordWrapWidth = contentWidth;
     
     this.recalculateTextFlow();
     this.render();
@@ -153,6 +170,14 @@ export class TextArea implements ITextArea {
   }
 
   public getCharacterPosition(index: number): TextPosition {
+    // For empty text or position 0, return the text area's top-left with padding
+    if (this._text.length === 0 || index === 0) {
+      const x = this.textObject.x; // Already includes 5px padding
+      const y = this.textObject.y; // Already includes 5px padding
+      console.log(`📝 Cursor position for index ${index}: (${x}, ${y}) - empty text or start`);
+      return alignPointToPixel(x, y);
+    }
+
     if (this.lines.length === 0) {
       return { x: this.textObject.x, y: this.textObject.y };
     }
@@ -180,6 +205,7 @@ export class TextArea implements ITextArea {
     
     tempText.destroy();
     
+    console.log(`📝 Cursor position for index ${index}: (${x}, ${y}) - line ${lineIndex}`);
     return alignPointToPixel(x, y);
   }
 
@@ -219,8 +245,14 @@ export class TextArea implements ITextArea {
     // Position and draw border
     this.drawBorder();
     
-    // Update text content
-    this.textObject.text = this._text;
+    // Update text content and ensure word wrap width is current
+    const contentWidth = Math.max(10, this._bounds.width - 10); // 5px padding on each side
+    this.textObject.style.wordWrapWidth = contentWidth;
+    
+    // Force text refresh to apply wrapping changes
+    const currentText = this._text;
+    this.textObject.text = '';
+    this.textObject.text = currentText;
     
     // Recalculate text flow
     this.recalculateTextFlow();
@@ -229,6 +261,8 @@ export class TextArea implements ITextArea {
     const alignedPos = alignPointToPixel(this._bounds.x, this._bounds.y);
     this.container.x = alignedPos.x;
     this.container.y = alignedPos.y;
+    
+    console.log(`📝 TextArea render: bounds=${this._bounds.width}x${this._bounds.height}, wordWrapWidth=${contentWidth}, text="${this._text}"`);
   }
 
   private drawBorder(): void {

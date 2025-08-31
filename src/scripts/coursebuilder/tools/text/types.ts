@@ -60,6 +60,9 @@ export interface ITextArea {
   readonly bounds: TextAreaBounds;
   readonly text: string;
   readonly isActive: boolean;
+  readonly textLines: LineInfo[];
+  readonly textLineHeight: number;
+  readonly pixiContainer: any; // Container from PIXI
   
   setActive(active: boolean): void;
   updateBounds(bounds: TextAreaBounds): void;
@@ -68,6 +71,7 @@ export interface ITextArea {
   deleteText(start: number, length: number): void;
   getCursorPositionFromPoint(point: Point): number;
   getCharacterPosition(index: number): TextPosition;
+  containsPoint(point: Point): boolean;
   destroy(): void;
 }
 
@@ -81,6 +85,7 @@ export interface ITextCursor {
   
   setVisible(visible: boolean): void;
   setPosition(position: number): void;
+  setGraphicsPosition(x: number, y: number): void;
   startBlinking(): void;
   stopBlinking(): void;
   destroy(): void;
