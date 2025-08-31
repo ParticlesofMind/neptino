@@ -8,13 +8,16 @@ import { ToolStateManager } from './ui/ToolStateManager';
 import { UIEventHandler } from './ui/UIEventHandler';
 import { toolColorManager } from './tools/ToolColorManager';
 import { TextTool } from './tools/text/TextTool';
+import { PerspectiveManager } from './tools/PerspectiveManager';
 
 console.log('📦 CanvasAPI import successful:', CanvasAPI);
 
 // Global canvas instance for testing
+
 let canvasAPI: CanvasAPI | null = null;
 let toolStateManager: ToolStateManager | null = null;
 let uiEventHandler: UIEventHandler | null = null;
+let perspectiveManager: PerspectiveManager | null = null;
 
 /**
  * Initialize canvas when coursebuilder page loads
@@ -79,10 +82,16 @@ export async function initializeCanvas(): Promise<void> {
         
         console.log('✅ UI connected to canvas with clean architecture');
 
+        // Initialize perspective manager for canvas controls
+        console.log('🔍 Initializing perspective manager...');
+        perspectiveManager = new PerspectiveManager();
+        console.log('✅ PerspectiveManager created');
+
         // Make available globally for debugging
         (window as any).canvasAPI = canvasAPI;
         (window as any).toolStateManager = toolStateManager;
         (window as any).toolColorManager = toolColorManager;
+        (window as any).perspectiveManager = perspectiveManager;
         
         // Expose TextTool for font debugging
         (window as any).TextTool = TextTool;

@@ -5,10 +5,14 @@
 
 import { Container, Graphics } from "pixi.js";
 import { TableCell, TableSettings, PixiTableData } from "./TableTypes";
+import { TextArea } from "../text/TextArea.js";
+import { TextInputHandler } from "../text/TextInputHandler.js";
+import { TextAreaConfig, TextSettings } from "../text/types.js";
 
 export class TableCellEditor {
     private settings: TableSettings;
-    private textInput: HTMLInputElement | null = null;
+    private textArea: TextArea | null = null;
+    private inputHandler: TextInputHandler | null = null;
     private editingCell: TableCell | null = null;
     private tableInEditMode: PixiTableData | null = null;
     private activeTables: PixiTableData[];
@@ -44,47 +48,47 @@ export class TableCellEditor {
         this.highlightTableInEditMode(tableData);
         console.log(`🔷 TABLE: Table ${tableData.id} is now in edit mode`);
 
-        // Get screen coordinates for the text input
-        const canvasElement = document.querySelector("#canvas-container canvas") as HTMLCanvasElement;
-        if (!canvasElement) return;
-
-        const canvasRect = canvasElement.getBoundingClientRect();
-
-        // Calculate global position of the cell
+        // Create text editing area using PIXI TextArea
         const cellGlobalX = tableData.x + cell.bounds.x;
         const cellGlobalY = tableData.y + cell.bounds.y;
-        const globalPos = container.toGlobal({ x: cellGlobalX, y: cellGlobalY });
+        
+        // Prepare text area bounds relative to cell position
+        const textAreaBounds = {
+            x: cellGlobalX + this.settings.cellPadding,
+            y: cellGlobalY + this.settings.cellPadding,
+            width: cell.bounds.width - (this.settings.cellPadding * 2),
+            height: cell.bounds.height - (this.settings.cellPadding * 2)
+        };
 
-        // Create text input overlay
-        this.textInput = document.createElement("input");
-        this.textInput.type = "text";
-        this.textInput.className = "table-input";
+        // Set up text settings based on table settings
+        const textSettings: TextSettings = {
+            fontSize: this.settings.fontSize,
+            color: this.settings.fontColor,
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            borderColor: '#2196f3',
+            borderWidth: 2,
+            fontFamily: 'Arial, sans-serif'
+        };
 
-        // Set value - empty if it's a placeholder, otherwise use existing text
+        // Get text content - empty if it's a placeholder
         const isPlaceholder = cell.text.text === `R${cell.row + 1}C${cell.column + 1}`;
-        this.textInput.value = isPlaceholder ? "" : cell.text.text;
+        const textContent = isPlaceholder ? "" : cell.text.text;
 
-        // Temporarily override CSS to ensure visibility for debugging
-        this.textInput.style.position = "absolute";
-        this.textInput.style.zIndex = "10000";
-        this.textInput.style.backgroundColor = "rgba(255, 255, 255, 0.95)";
-        this.textInput.style.border = "2px solid #2196f3";
-        this.textInput.style.outline = "none";
-        this.textInput.style.fontFamily = "Arial, sans-serif";
+        const textAreaConfig: TextAreaConfig = {
+            bounds: textAreaBounds,
+            text: textContent,
+            settings: textSettings
+        };
 
-        // Set position and dimensions
-        this.textInput.style.left = `${globalPos.x + canvasRect.left + this.settings.cellPadding}px`;
-        this.textInput.style.top = `${globalPos.y + canvasRect.top + this.settings.cellPadding}px`;
-        this.textInput.style.width = `${cell.bounds.width - (this.settings.cellPadding * 2)}px`;
-        this.textInput.style.height = `${cell.bounds.height - (this.settings.cellPadding * 2)}px`;
-        this.textInput.style.fontSize = `${this.settings.fontSize}px`;
-        this.textInput.style.color = this.settings.fontColor;
+        // Create TextArea for editing
+        this.textArea = new TextArea(textAreaConfig, container);
+        
+        // Create input handler for keyboard input
+        this.inputHandler = new TextInputHandler(container);
+        this.inputHandler.setActiveTextArea(this.textArea);
 
-        // Event handlers
-        this.textInput.addEventListener("blur", () => {
-            this.endCellEditing();
-        });
-        this.textInput.addEventListener("keydown", (e) => {
+        // Set up keyboard event handling
+        const handleKeyDown = (e: KeyboardEvent) => {
             e.stopPropagation(); // Prevent canvas shortcuts
 
             if (e.key === "Enter") {
@@ -100,27 +104,19 @@ export class TableCellEditor {
                 e.preventDefault();
                 this.endCellEditing();
                 this.navigateToNextCell(cell, !e.shiftKey);
-            } else if (e.key === "ArrowRight") {
-                // Navigate right if cursor is at end of text
-                const isAtEnd = this.textInput!.selectionStart === this.textInput!.value.length;
-                if (isAtEnd || e.ctrlKey) {
-                    e.preventDefault();
-                    this.endCellEditing();
-                    this.navigateHorizontally(cell, true);
-                }
-            } else if (e.key === "ArrowLeft") {
-                // Navigate left if cursor is at start of text
-                const isAtStart = this.textInput!.selectionStart === 0;
-                if (isAtStart || e.ctrlKey) {
-                    e.preventDefault();
-                    this.endCellEditing();
-                    this.navigateHorizontally(cell, false);
-                }
-            } else if (e.key === "ArrowDown") {
+            } else if (e.key === "ArrowRight" && e.ctrlKey) {
+                e.preventDefault();
+                this.endCellEditing();
+                this.navigateHorizontally(cell, true);
+            } else if (e.key === "ArrowLeft" && e.ctrlKey) {
+                e.preventDefault();
+                this.endCellEditing();
+                this.navigateHorizontally(cell, false);
+            } else if (e.key === "ArrowDown" && e.ctrlKey) {
                 e.preventDefault();
                 this.endCellEditing();
                 this.navigateVertically(cell, true);
-            } else if (e.key === "ArrowUp") {
+            } else if (e.key === "ArrowUp" && e.ctrlKey) {
                 e.preventDefault();
                 this.endCellEditing();
                 this.navigateVertically(cell, false);
@@ -128,42 +124,27 @@ export class TableCellEditor {
                 e.preventDefault();
                 this.cancelCellEditing();
             }
-        });
+        };
 
-        // Add to DOM and focus
-        document.body.appendChild(this.textInput);
-
-        // Focus and select text with better timing
-        setTimeout(() => {
-            if (this.textInput) {
-                this.textInput.focus();
-
-                // Give it another moment for focus to take effect
-                setTimeout(() => {
-                    if (this.textInput) {
-                        this.textInput.select();
-                        // Ensure selection worked with a fallback
-                        if (this.textInput.selectionStart === this.textInput.selectionEnd) {
-                            this.textInput.setSelectionRange(0, this.textInput.value.length);
-                        }
-                    }
-                }, 50);
-            }
-        }, 100);
+        // Add keyboard event listener
+        document.addEventListener("keydown", handleKeyDown);
+        
+        // Store the handler for cleanup
+        (this as any).keydownHandler = handleKeyDown;
 
         // Add global click listener
         setTimeout(() => {
             document.addEventListener("click", this.handleGlobalClick);
         }, 10);
 
-        console.log(`🔷 TABLE: Started editing cell R${cell.row + 1}C${cell.column + 1}`);
+        console.log(`🔷 TABLE: Started editing cell R${cell.row + 1}C${cell.column + 1} with PIXI TextArea`);
     }
 
     private endCellEditing(): void {
-        if (!this.editingCell || !this.textInput) return;
+        if (!this.editingCell || !this.textArea) return;
 
         const cell = this.editingCell;
-        const newText = this.textInput.value.trim();
+        const newText = this.textArea.text.trim();
 
         // Update cell text - show placeholder if empty, otherwise show the text
         if (newText) {
@@ -178,7 +159,7 @@ export class TableCellEditor {
         // Restore normal cell appearance
         this.restoreCellAppearance(cell);
 
-        // Clean up input
+        // Clean up text input
         this.cleanupTextInput();
 
         console.log(`🔷 TABLE: Ended editing cell R${cell.row + 1}C${cell.column + 1}`);
@@ -380,19 +361,30 @@ export class TableCellEditor {
     }
 
     private cleanupTextInput(): void {
-        if (this.textInput) {
-            if (this.textInput.parentNode) {
-                this.textInput.parentNode.removeChild(this.textInput);
-            }
-            this.textInput = null;
+        if (this.textArea) {
+            // Destroy the TextArea and its container
+            this.textArea.destroy();
+            this.textArea = null;
         }
+        
+        if (this.inputHandler) {
+            // Clean up the input handler
+            this.inputHandler.setActiveTextArea(null);
+            this.inputHandler = null;
+        }
+        
+        // Remove keyboard event listener
+        if ((this as any).keydownHandler) {
+            document.removeEventListener("keydown", (this as any).keydownHandler);
+            (this as any).keydownHandler = null;
+        }
+        
         document.removeEventListener("click", this.handleGlobalClick);
     }
 
     private handleGlobalClick(event: MouseEvent): void {
         const target = event.target as HTMLElement;
-        if (!this.textInput || target === this.textInput) return;
-
+        
         // Check if clicking on canvas - allow table interaction but check if it's outside current table
         const canvas = document.querySelector("#canvas-container canvas");
         if (target === canvas) {

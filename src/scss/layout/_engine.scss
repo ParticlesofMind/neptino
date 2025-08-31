@@ -80,6 +80,7 @@
         display: flex;
         justify-content: center; // Center the canvas horizontally
         align-items: flex-start; // Align to top vertically
+        position: relative; // Add relative positioning for perspective tools
         box-shadow:
             inset 6px 6px 12px rgba(0, 0, 0, 0.1),
             inset -6px -6px 12px rgba(255, 255, 255, 0.8),
@@ -261,5 +262,134 @@
     min-height: 28px !important;
     max-width: 28px !important;
     max-height: 28px !important;
+  }
+}
+
+// ==========================================================================
+// PERSPECTIVE TOOLSET - Vertical toolbar for canvas perspective controls
+// ==========================================================================
+
+.perspective {
+  position: absolute;
+  left: var(--spacing-4);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  z-index: 10;
+  background: rgba(var(--color-background-rgb), 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-2);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+
+  &__item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    box-sizing: border-box;
+    padding: var(--spacing-1);
+    
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-medium);
+    background: var(--color-background);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: var(--color-neutral-50);
+      border-color: var(--color-neutral-300);
+      transform: translateY(-1px);
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.1),
+        0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+    
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    
+    // Active state for toggle buttons (like grid)
+    &--active {
+      background: var(--color-primary-50);
+      border-color: var(--color-primary-200);
+      color: var(--color-primary-600);
+      
+      .perspective__icon {
+        filter: hue-rotate(210deg) saturate(1.2);
+      }
+    }
+  }
+
+  &__icon {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+    flex-shrink: 0;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    transition: filter 0.2s ease;
+  }
+
+  // Tooltip support for perspective items
+  &__item[title] {
+    &::before {
+      content: attr(title);
+      position: absolute;
+      left: calc(100% + var(--spacing-2));
+      top: 50%;
+      transform: translateY(-50%);
+      padding: var(--spacing-1) var(--spacing-2);
+      background: var(--color-neutral-900);
+      color: var(--color-background);
+      font-size: 0.75rem;
+      border-radius: var(--radius-small);
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+      z-index: 1000;
+      pointer-events: none;
+    }
+    
+    &::after {
+      content: '';
+      position: absolute;
+      left: calc(100% + var(--spacing-1));
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 4px 4px 4px 0;
+      border-color: transparent var(--color-neutral-900) transparent transparent;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+      z-index: 999;
+      pointer-events: none;
+    }
+    
+    &:hover::before,
+    &:hover::after {
+      opacity: 1;
+      visibility: visible;
+    }
   }
 }
