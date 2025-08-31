@@ -284,6 +284,9 @@ export class ToolStateManager {
         this.currentTool = toolName;
         this.updateToolUI(toolName);
         
+        // 🎯 GRAB TOOL MANAGEMENT: Deactivate grab tool when any drawing tool is selected
+        this.deactivateGrabToolIfActive();
+        
         // CRITICAL: Actually set the tool in canvas first, then apply settings
         const canvasAPI = (window as any).canvasAPI;
         if (canvasAPI) {
@@ -302,6 +305,17 @@ export class ToolStateManager {
         }
         
         this.saveStates();
+    }
+
+    /**
+     * Deactivate grab tool if it's currently active
+     * This ensures drawing tools don't conflict with viewport grab tool
+     */
+    private deactivateGrabToolIfActive(): void {
+        const perspectiveManager = (window as any).perspectiveManager;
+        if (perspectiveManager && typeof perspectiveManager.deactivateGrabTool === 'function') {
+            perspectiveManager.deactivateGrabTool();
+        }
     }
 
     /**

@@ -17,17 +17,16 @@ import { ScaleObjects } from "./scaleObjects";
 import { RotateObjects } from "./rotateObjects";
 
 export class SelectionCoordinator extends BaseTool {
- private state: SelectionState;
- protected settings: SelectionSettings = {};
- 
- // Specialized functionality modules
- private marqueeSelector: MarqueeSelection;
- private clickSelector: ClickSelection;
- private visuals: SelectionVisuals;
- private scaler: ScaleObjects;
- private rotator: RotateObjects;
-
- constructor() {
+    private state: SelectionState;
+    protected settings: SelectionSettings = {};
+    private recentlyCreatedObjects: Set<any> = new Set();
+    
+    // Specialized functionality modules
+    private marqueeSelector: MarqueeSelection;
+    private clickSelector: ClickSelection;
+    private visuals: SelectionVisuals;
+    private scaler: ScaleObjects;
+    private rotator: RotateObjects; constructor() {
  super("selection", "default");
  
  this.state = {
@@ -194,24 +193,41 @@ export class SelectionCoordinator extends BaseTool {
  console.log('🖱️ SelectionCoordinator cursor reset to default (clear selection)');
  }
 
- private refreshSelectionGroup(container?: Container): void {
- // Remove existing selection group
- this.visuals.removeSelectionGroup(this.state.selectionGroup);
- this.state.selectionGroup = null;
+    private refreshSelectionGroup(container?: Container): void {
+        // Remove existing selection group
+        this.visuals.removeSelectionGroup(this.state.selectionGroup);
+        this.state.selectionGroup = null;
 
- // Create new selection group if objects are selected
- if (this.state.selectedObjects.length > 0) {
- const parentContainer = container || this.state.selectedObjects[0]?.parent;
- if (parentContainer) {
- this.state.selectionGroup = this.visuals.createSelectionGroup(
- this.state.selectedObjects, 
- parentContainer
- );
- }
- }
- }
+        // Create new selection group if objects are selected
+        if (this.state.selectedObjects.length > 0) {
+            const parentContainer = container || this.state.selectedObjects[0]?.parent;
+            if (parentContainer) {
+                // Check if any selected objects are newly created
+                const hasNewlyCreatedObjects = this.state.selectedObjects.some(obj => 
+                    this.recentlyCreatedObjects.has(obj)
+                );
+                
+                this.state.selectionGroup = this.visuals.createSelectionGroup(
+                    this.state.selectedObjects, 
+                    parentContainer,
+                    hasNewlyCreatedObjects // Suppress initial display for newly created objects
+                );
+            }
+        }
+    }
 
-  private enterTextEditMode(textObject: any, point: Point, container: Container): void {
+    /**
+     * Mark an object as newly created to enable delayed handle display
+     */
+    public markAsNewlyCreated(objects: any[]): void {
+        objects.forEach(obj => {
+            this.recentlyCreatedObjects.add(obj);
+            // Auto-remove after 2 seconds to prevent memory leaks
+            setTimeout(() => {
+                this.recentlyCreatedObjects.delete(obj);
+            }, 2000);
+        });
+    }  private enterTextEditMode(textObject: any, point: Point, container: Container): void {
     console.log('📝 Entering text editing mode for:', textObject);
     
     // Get the tool manager to switch to text tool

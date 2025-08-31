@@ -21,6 +21,7 @@ export class TableManager implements Tool {
     private activeTables: PixiTableData[] = [];
     private tableIdCounter: number = 0;
     private displayManager: any = null;
+    private toolManager: any = null;
     
     private tableCreator: TableCreator;
     private cellEditor: TableCellEditor;
@@ -94,8 +95,8 @@ export class TableManager implements Tool {
         this.displayManager = manager;
     }
 
-    setToolManager(_toolManager: any): void {
-        // Optional: store tool manager reference if needed
+    setToolManager(toolManager: any): void {
+        this.toolManager = toolManager;
     }
 
     private endDrawing(container: Container): void {
@@ -142,6 +143,14 @@ export class TableManager implements Tool {
             this.displayManager.add(tableData.container);
         } else {
             container.addChild(tableData.container);
+        }
+        
+        // Mark the newly created table for delayed handle display
+        if (this.toolManager && this.toolManager.getActiveTool && this.toolManager.getActiveTool()?.name === 'selection') {
+            const selectionTool = this.toolManager.getActiveTool();
+            if (selectionTool && typeof selectionTool.markAsNewlyCreated === 'function') {
+                selectionTool.markAsNewlyCreated([tableData.container]);
+            }
         }
         
         console.log(`🔷 TABLE: Created table ${tableId} at (${x}, ${y}) with size ${width}x${height}`);

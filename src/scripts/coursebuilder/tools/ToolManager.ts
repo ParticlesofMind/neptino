@@ -201,11 +201,9 @@ export class ToolManager {
  this.displayManager?.add(obj);
  }
 
- public removeDisplayObject(obj: any): void {
- this.displayManager?.remove(obj);
- }
-
- public getDisplayObjects(): any[] {
+    public removeDisplayObject(obj: any): void {
+        this.displayManager?.remove(obj);
+    } public getDisplayObjects(): any[] {
  return this.displayManager?.getObjects() || [];
  }
 

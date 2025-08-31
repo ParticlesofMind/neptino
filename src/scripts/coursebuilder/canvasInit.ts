@@ -9,6 +9,7 @@ import { UIEventHandler } from './ui/UIEventHandler';
 import { toolColorManager } from './tools/ToolColorManager';
 import { TextTool } from './tools/text/TextTool';
 import { SimplePerspectiveManager } from './tools/SimplePerspectiveManager';
+import { LayoutDemo } from './layout/LayoutDemo';
 
 console.log('📦 CanvasAPI import successful:', CanvasAPI);
 
@@ -18,6 +19,7 @@ let canvasAPI: CanvasAPI | null = null;
 let toolStateManager: ToolStateManager | null = null;
 let uiEventHandler: UIEventHandler | null = null;
 let perspectiveManager: SimplePerspectiveManager | null = null;
+let layoutDemo: LayoutDemo | null = null;
 
 /**
  * Initialize canvas when coursebuilder page loads
@@ -49,6 +51,12 @@ export async function initializeCanvas(): Promise<void> {
         });
 
         console.log('✅ Canvas initialized!');
+
+        // Initialize Layout System
+        console.log('📐 Initializing layout system...');
+        layoutDemo = new LayoutDemo(canvasAPI);
+        await layoutDemo.demo();
+        console.log('✅ Layout system initialized and demo applied!');
 
                 // Initialize Perspective Manager (zoom/pan controls)
         console.log('🔍 Initializing perspective controls...');
@@ -99,6 +107,7 @@ export async function initializeCanvas(): Promise<void> {
         (window as any).toolStateManager = toolStateManager;
         (window as any).toolColorManager = toolColorManager;
         (window as any).perspectiveManager = perspectiveManager;
+        (window as any).layoutDemo = layoutDemo;
         
         // Expose TextTool for font debugging
         (window as any).TextTool = TextTool;

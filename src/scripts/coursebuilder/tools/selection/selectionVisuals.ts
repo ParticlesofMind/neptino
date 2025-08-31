@@ -10,21 +10,19 @@ import {
 } from "pixi.js";
 import { SELECTION_CONSTANTS } from "../SharedResources";
 import { SelectionGroup, TransformHandle } from "./types";
-import { RotateObjects } from "./rotateObjects";
 
 export class SelectionVisuals {
- private rotator: RotateObjects;
- private currentCursor: string = 'default';
- private canvasElement: HTMLCanvasElement | null = null;
+    private showDelay: number | null = null;
+    private rotator: any;
+    private currentCursor = 'default';
+    private canvasElement: HTMLCanvasElement | null = null;
 
- constructor(rotator: RotateObjects, canvasElement?: HTMLCanvasElement) {
- this.rotator = rotator;
- this.canvasElement = canvasElement || null;
- }
-
-    public createSelectionGroup(
+    constructor(rotator: any) {
+        this.rotator = rotator;
+    }    public createSelectionGroup(
         selectedObjects: any[], 
-        parentContainer: Container
+        parentContainer: Container,
+        suppressInitialDisplay: boolean = false
     ): SelectionGroup | null {
         if (selectedObjects.length === 0) return null;
 
@@ -51,40 +49,78 @@ export class SelectionVisuals {
             transformHandles,
             rotationHandle,
             selectionBox
-        }; // Add selection graphics to parent container
- parentContainer.addChild(selectionBox);
- transformHandles.forEach(handle => parentContainer.addChild(handle.graphics));
- if (rotationHandle) {
- parentContainer.addChild(rotationHandle.graphics);
+        };
+
+        // Always add selection box immediately (subtle visual feedback)
+        parentContainer.addChild(selectionBox);
+        
+        // Handle delayed display of transform handles
+        if (suppressInitialDisplay) {
+            // Clear any existing delay timeout
+            if (this.showDelay !== null) {
+                clearTimeout(this.showDelay);
+            }
+            
+            // Add handles with opacity 0 (invisible but ready)
+            transformHandles.forEach(handle => {
+                handle.graphics.alpha = 0;
+                parentContainer.addChild(handle.graphics);
+            });
+            if (rotationHandle) {
+                rotationHandle.graphics.alpha = 0;
+                parentContainer.addChild(rotationHandle.graphics);
+            }
+            
+            // Show handles after brief delay with smooth fade-in
+            this.showDelay = setTimeout(() => {
+                transformHandles.forEach(handle => {
+                    handle.graphics.alpha = 1;
+                });
+                if (rotationHandle) {
+                    rotationHandle.graphics.alpha = 1;
+                }
+                this.showDelay = null;
+            }, 800) as any; // 800ms delay provides smooth user experience
+            
+        } else {
+            // Immediate display (normal selection behavior)
+            transformHandles.forEach(handle => parentContainer.addChild(handle.graphics));
+            if (rotationHandle) {
+                parentContainer.addChild(rotationHandle.graphics);
+            }
+        }
+
+        return selectionGroup;
  }
 
- return selectionGroup;
- }
+    public removeSelectionGroup(selectionGroup: SelectionGroup | null): void {
+        if (!selectionGroup) return;
 
- public removeSelectionGroup(selectionGroup: SelectionGroup | null): void {
- if (!selectionGroup) return;
+        // Clear any pending show delay
+        if (this.showDelay !== null) {
+            clearTimeout(this.showDelay);
+            this.showDelay = null;
+        }
 
- // Remove selection box
- if (selectionGroup.selectionBox.parent) {
- selectionGroup.selectionBox.parent.removeChild(selectionGroup.selectionBox);
- }
+        // Remove selection box
+        if (selectionGroup.selectionBox.parent) {
+            selectionGroup.selectionBox.parent.removeChild(selectionGroup.selectionBox);
+        }
 
- // Remove transform handles
- selectionGroup.transformHandles.forEach(handle => {
- if (handle.graphics.parent) {
- handle.graphics.parent.removeChild(handle.graphics);
- }
- });
+        // Remove transform handles
+        selectionGroup.transformHandles.forEach(handle => {
+            if (handle.graphics.parent) {
+                handle.graphics.parent.removeChild(handle.graphics);
+            }
+        });
 
- // Remove rotation handle if exists
- if (selectionGroup.rotationHandle?.graphics.parent) {
- selectionGroup.rotationHandle.graphics.parent.removeChild(
- selectionGroup.rotationHandle.graphics
- );
- }
- }
-
- private calculateCombinedBounds(objects: any[]): Rectangle {
+        // Remove rotation handle if exists
+        if (selectionGroup.rotationHandle?.graphics.parent) {
+            selectionGroup.rotationHandle.graphics.parent.removeChild(
+                selectionGroup.rotationHandle.graphics
+            );
+        }
+    } private calculateCombinedBounds(objects: any[]): Rectangle {
  if (objects.length === 0) return new Rectangle(0, 0, 0, 0);
 
  let minX = Infinity;

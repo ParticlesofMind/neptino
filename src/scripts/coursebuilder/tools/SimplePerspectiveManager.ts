@@ -301,6 +301,28 @@ export class SimplePerspectiveManager {
     }
 
     /**
+     * Deactivate pan mode (public method for external calls)
+     */
+    public deactivateGrabTool(): void {
+        if (this.isPanMode) {
+            const grabButton = document.querySelector('[data-perspective="grab"]') as HTMLElement;
+            if (grabButton) {
+                this.isPanMode = false;
+                grabButton.classList.remove('perspective__item--active');
+                this.updateCanvasCursor('');
+                console.log('✋ Grab mode deactivated by external tool selection');
+            }
+        }
+    }
+
+    /**
+     * Check if grab tool is currently active
+     */
+    public isGrabToolActive(): boolean {
+        return this.isPanMode;
+    }
+
+    /**
      * Update pan mode availability based on zoom level
      */
     private updatePanAvailability(): void {

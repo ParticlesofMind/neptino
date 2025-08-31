@@ -80,12 +80,12 @@ export class TemplateManager {
   static async showLoadTemplateModal(): Promise<void> {
     // Import and use the new LoadTemplatesModal
     const { loadTemplatesModal } = await import('./modals/loadTemplates.js');
-    
+
     // Set up the callback
     loadTemplatesModal.setOnTemplateSelected((templateId: string) => {
       this.loadTemplate(templateId);
     });
-    
+
     // Show the modal
     await loadTemplatesModal.show();
   }
@@ -265,11 +265,8 @@ export class TemplateManager {
           type: "content",
           order: 4,
           config: {
-            instruction_title: true,
             instruction_area: true,
-            student_title: true,
             student_area: true,
-            teacher_title: true,
             teacher_area: true,
           },
           content: '<div class="content-section">{{content}}</div>',
@@ -279,11 +276,8 @@ export class TemplateManager {
           type: "assignment",
           order: 5,
           config: {
-            instruction_title: true,
             instruction_area: true,
-            student_title: true,
             student_area: true,
-            teacher_title: true,
             teacher_area: true,
           },
           content: '<div class="assignment-section">{{assignment}}</div>',
@@ -691,35 +685,35 @@ export class TemplateManager {
         { name: "concepts", label: "Concepts", mandatory: false },
       ],
       content: [
-        {
-          name: "instruction_title",
-          label: "Instruction title",
-          mandatory: true,
-        },
+
         {
           name: "instruction_area",
           label: "Instruction area",
           mandatory: true,
         },
-        { name: "student_title", label: "Student Title", mandatory: true },
-        { name: "student_area", label: "Student Area", mandatory: true },
-        { name: "teacher_title", label: "Teacher title", mandatory: true },
-        { name: "teacher_area", label: "Teacher area", mandatory: true },
+
+        {
+          name: "student_area",
+          label: "Student Area",
+          mandatory: true
+        },
+
+        {
+          name: "teacher_area",
+          label: "Teacher area",
+          mandatory: true
+        },
       ],
       assignment: [
-        {
-          name: "instruction_title",
-          label: "Instruction title",
-          mandatory: true,
-        },
+
         {
           name: "instruction_area",
           label: "Instruction area",
           mandatory: true,
         },
-        { name: "student_title", label: "Student Title", mandatory: true },
-        { name: "student_area", label: "Student Area", mandatory: true },
-        { name: "teacher_title", label: "Teacher title", mandatory: true },
+        { name: "student_area", 
+          label: "Student Area", mandatory: true 
+        },
         { name: "teacher_area", label: "Teacher area", mandatory: true },
       ],
       footer: [
