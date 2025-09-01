@@ -58,6 +58,7 @@ export class ToolColorManager {
     });
   }
 
+  /*
   private getInitialColorForTool(toolType: string): string {
     const initialColors: Record<string, string> = {
       'pen': '#1a1a1a',         // Black (matches HTML)
@@ -72,6 +73,7 @@ export class ToolColorManager {
 
     return initialColors[toolType] || '#1a1a1a';
   }
+  */
 
   private handleColorChange(toolType: string, color: ColorOption): void {
     // Map compound tool types to base tool types and color properties
@@ -196,7 +198,7 @@ export class ToolColorManager {
    * Destroy all color selects (remove event listeners)
    */
   public destroy(): void {
-    this.colorSelects.forEach((select) => {
+    this.colorSelects.forEach((_select) => {
       // Remove event listeners (they'll be garbage collected with the selects)
     });
     

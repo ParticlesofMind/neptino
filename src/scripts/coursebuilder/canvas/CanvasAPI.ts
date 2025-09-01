@@ -180,6 +180,36 @@ export class CanvasAPI {
   }
 
   /**
+   * Enable canvas drawing events (allow drawing tools to work)
+   */
+  public enableDrawingEvents(): void {
+    if (!this.events) {
+      console.warn('⚠️ Canvas not initialized - cannot enable drawing events');
+      return;
+    }
+    this.events.enableDrawingEvents();
+  }
+
+  /**
+   * Disable canvas drawing events (for grab tool, etc.)
+   */
+  public disableDrawingEvents(): void {
+    if (!this.events) {
+      console.warn('⚠️ Canvas not initialized - cannot disable drawing events');
+      return;
+    }
+    this.events.disableDrawingEvents();
+  }
+
+  /**
+   * Check if drawing events are enabled
+   */
+  public areDrawingEventsEnabled(): boolean {
+    if (!this.events) return false;
+    return this.events.areDrawingEventsEnabled();
+  }
+
+  /**
    * Test tool activation - returns current active tool name
    */
   public testToolActivation(toolName: string): string {

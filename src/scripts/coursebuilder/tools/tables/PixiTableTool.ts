@@ -9,7 +9,6 @@ import { BaseTool } from "../ToolInterface.js";
 import { BoundaryUtils } from "../BoundaryUtils.js";
 import { TextArea } from "../text/TextArea.js";
 import { TextSettings, TextAreaConfig } from "../text/types.js";
-import { PROFESSIONAL_COLORS } from "../SharedResources.js";
 
 export interface PixiTableSettings {
   rows: number;
@@ -56,7 +55,6 @@ export class PixiTableTool extends BaseTool {
   private startPoint: Point = new Point(0, 0);
   private currentPoint: Point = new Point(0, 0);
   private tables: PixiTable[] = [];
-  private activeTable: PixiTable | null = null;
   private tableIdCounter: number = 0;
   
   declare protected settings: PixiTableSettings;
@@ -88,7 +86,6 @@ export class PixiTableTool extends BaseTool {
     }
 
     const localPoint = container.toLocal(event.global);
-    const currentTime = Date.now();
     
     // Boundary enforcement
     const canvasBounds = this.manager.getCanvasBounds();
@@ -122,7 +119,7 @@ export class PixiTableTool extends BaseTool {
     }
   }
 
-  onPointerUp(event: FederatedPointerEvent, container: Container): void {
+  onPointerUp(_event: FederatedPointerEvent, container: Container): void {
     if (!this.isActive) return;
 
     if (this.state.isDragging) {
@@ -330,7 +327,7 @@ export class PixiTableTool extends BaseTool {
       color: this.settings.fontColor,
       borderColor: "transparent", // Cell borders handled by table
       borderWidth: 0,
-      backgroundColor: this.hexToNumber(this.settings.backgroundColor)
+      backgroundColor: this.settings.backgroundColor
     };
 
     const config: TextAreaConfig = {
@@ -482,7 +479,7 @@ export class PixiTableTool extends BaseTool {
     };
   }
 
-  private hexToNumber(hex: string): number {
+  protected hexToNumber(hex: string): number {
     return parseInt(hex.replace("#", ""), 16);
   }
 

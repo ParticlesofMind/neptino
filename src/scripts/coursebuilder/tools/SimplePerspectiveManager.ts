@@ -193,19 +193,53 @@ export class SimplePerspectiveManager {
     }
 
     /**
-     * Handle mouse wheel zoom
+     * Handle mouse wheel zoom and scroll
      */
     private handleWheelZoom(event: WheelEvent): void {
-        // Only zoom when Ctrl/Cmd is held
-        if (!event.ctrlKey && !event.metaKey) return;
-
-        event.preventDefault();
-        
-        if (event.deltaY < 0) {
-            this.zoomIn();
-        } else {
-            this.zoomOut();
+        // Handle zoom when Ctrl/Cmd is held
+        if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            
+            if (event.deltaY < 0) {
+                this.zoomIn();
+            } else {
+                this.zoomOut();
+            }
+            return;
         }
+
+        // Handle normal scrolling when zoomed in (like grab tool)
+        if (this.zoomLevel > 1.0) {
+            event.preventDefault();
+            
+            const scrollSpeed = 2;
+            const deltaX = event.deltaX * scrollSpeed;
+            const deltaY = event.deltaY * scrollSpeed;
+            
+            // Update pan offset to simulate scrolling
+            this.panOffset.x -= deltaX / this.zoomLevel;
+            this.panOffset.y -= deltaY / this.zoomLevel;
+            
+            // Apply reasonable boundaries to prevent scrolling too far
+            this.constrainPanOffset();
+            
+            this.applyTransform();
+        }
+        
+        // If not zoomed and no Ctrl/Cmd, let normal scroll behavior happen
+    }
+
+    /**
+     * Constrain pan offset to reasonable boundaries based on zoom level
+     */
+    private constrainPanOffset(): void {
+        if (!this.canvas || !this.canvasContainer) return;
+        
+        // Calculate reasonable boundaries based on zoom level
+        const maxOffset = (this.zoomLevel - 1) * 200; // Allow more movement when more zoomed
+        
+        this.panOffset.x = Math.max(-maxOffset, Math.min(maxOffset, this.panOffset.x));
+        this.panOffset.y = Math.max(-maxOffset, Math.min(maxOffset, this.panOffset.y));
     }
 
     /**
@@ -268,11 +302,21 @@ export class SimplePerspectiveManager {
      * Apply zoom and pan transforms to canvas
      */
     private applyTransform(): void {
-        if (!this.canvas) return;
+        if (!this.canvas || !this.canvasContainer) return;
 
         const transform = `scale(${this.zoomLevel}) translate(${this.panOffset.x}px, ${this.panOffset.y}px)`;
         this.canvas.style.transform = transform;
         this.canvas.style.transformOrigin = 'center center';
+        
+        // Update container overflow behavior based on zoom level
+        if (this.zoomLevel > 1.0) {
+            // When zoomed in, ensure we can see the overflow but hide scrollbars
+            // since we're handling scrolling manually
+            this.canvasContainer.style.overflow = 'hidden';
+        } else {
+            // At normal zoom, restore default overflow behavior
+            this.canvasContainer.style.overflow = 'auto';
+        }
         
         // Update grid overlay to match zoom level
         this.updateGridOverlay();
@@ -292,9 +336,21 @@ export class SimplePerspectiveManager {
         if (this.isPanMode) {
             button.classList.add('perspective__item--active');
             this.updateCanvasCursor('grab');
+            
+            // 🎯 UNIFIED TOOL MANAGEMENT: Notify coordinator about perspective tool selection
+            const toolCoordinator = (window as any).toolCoordinator;
+            if (toolCoordinator && typeof toolCoordinator.setPerspectiveTool === 'function') {
+                toolCoordinator.setPerspectiveTool('grab');
+            }
+            
+            // 🎯 SOLUTION 1: Deactivate drawing tools when grab is activated
+            this.deactivateDrawingTools();
         } else {
             button.classList.remove('perspective__item--active');
             this.updateCanvasCursor('');
+            
+            // 🎯 CRITICAL: Reactivate drawing tools when grab is turned off
+            this.reactivateDrawingTools();
         }
 
         console.log(`✋ Pan mode ${this.isPanMode ? 'enabled' : 'disabled'}`);
@@ -310,8 +366,68 @@ export class SimplePerspectiveManager {
                 this.isPanMode = false;
                 grabButton.classList.remove('perspective__item--active');
                 this.updateCanvasCursor('');
+                
+                // 🎯 CRITICAL: Reactivate drawing tools when grab is deactivated
+                this.reactivateDrawingTools();
+                
                 console.log('✋ Grab mode deactivated by external tool selection');
             }
+        }
+    }
+
+    /**
+     * Reactivate drawing tools when grab tool is deactivated
+     */
+    private reactivateDrawingTools(): void {
+        const toolStateManager = (window as any).toolStateManager;
+        if (toolStateManager) {
+            // Get the last active drawing tool or default to selection
+            const lastTool = toolStateManager.getCurrentTool() || 'selection';
+            
+            // CRITICAL: Re-enable canvas drawing events first
+            const canvasAPI = (window as any).canvasAPI;
+            if (canvasAPI) {
+                if (typeof canvasAPI.enableDrawingEvents === 'function') {
+                    canvasAPI.enableDrawingEvents();
+                    console.log('✅ CANVAS: Drawing events re-enabled');
+                }
+                
+                // Then reactivate the canvas with the drawing tool
+                if (typeof canvasAPI.setTool === 'function') {
+                    canvasAPI.setTool(lastTool);
+                    console.log(`🎨 CANVAS: Drawing tools reactivated with tool: ${lastTool}`);
+                }
+            }
+            
+            // Update UI to show the active tool
+            const toolButton = document.querySelector(`[data-tool="${lastTool}"]`);
+            if (toolButton) {
+                // Clear all active states first
+                document.querySelectorAll('[data-tool]').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                // Set the current tool as active
+                toolButton.classList.add('active');
+                console.log(`🔧 UI: Reactivated drawing tool button: ${lastTool}`);
+            }
+        }
+    }
+
+    /**
+     * Deactivate all drawing tools when grab tool is activated
+     * Enforces "only one tool active at a time" rule
+     */
+    private deactivateDrawingTools(): void {
+        const toolStateManager = (window as any).toolStateManager;
+        if (toolStateManager && typeof toolStateManager.deactivateAllDrawingTools === 'function') {
+            toolStateManager.deactivateAllDrawingTools();
+            console.log('🔧 GRAB: Deactivated all drawing tools');
+        } else {
+            // Fallback: Direct UI manipulation if toolStateManager method not available
+            document.querySelectorAll('[data-tool]').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            console.log('🔧 GRAB: Deactivated drawing tools (fallback method)');
         }
     }
 
@@ -372,6 +488,9 @@ export class SimplePerspectiveManager {
 
         this.panOffset.x += deltaX;
         this.panOffset.y += deltaY;
+
+        // Apply the same constraints as wheel scrolling
+        this.constrainPanOffset();
 
         this.panStart = { x: event.clientX, y: event.clientY };
         this.applyTransform();
@@ -510,9 +629,17 @@ export class SimplePerspectiveManager {
      * Update zoom display indicator
      */
     private updateZoomDisplay(): void {
-        const zoomDisplay = document.querySelector('.zoom-display');
+        const zoomDisplay = document.querySelector('.zoom-display') as HTMLElement;
         if (zoomDisplay) {
-            zoomDisplay.textContent = `${Math.round(this.zoomLevel * 100)}%`;
+            const zoomPercent = Math.round(this.zoomLevel * 100);
+            zoomDisplay.textContent = `${zoomPercent}%`;
+            
+            // Update title to show scroll instructions when zoomed
+            if (this.zoomLevel > 1.0) {
+                zoomDisplay.title = `Zoomed to ${zoomPercent}% - Mouse wheel scrolls around canvas, Ctrl/Cmd+wheel zooms`;
+            } else {
+                zoomDisplay.title = `${zoomPercent} zoom - Ctrl/Cmd+wheel to zoom in`;
+            }
         }
     }
 

@@ -39,8 +39,6 @@ export class TextTool extends BaseTool {
   // Double-click detection
   private lastClickTime: number = 0;
   private lastClickPoint: Point = new Point(0, 0);
-  private doubleClickThreshold: number = 300; // ms
-  private doubleClickDistance: number = 10; // pixels
   
   // Canvas element for cursor management
   private canvasElement: HTMLElement | null = null;
@@ -144,7 +142,7 @@ export class TextTool extends BaseTool {
     }
   }
 
-  onPointerUp(event: FederatedPointerEvent, container: Container): void {
+  onPointerUp(_event: FederatedPointerEvent, container: Container): void {
     if (!this.isActive) return;
 
     // Notify input handler of mouse up
@@ -263,7 +261,7 @@ export class TextTool extends BaseTool {
       
       if (this.activeTextArea === textArea) {
         this.activeTextArea = null;
-        this.inputHandler.setActiveTextArea(null);
+        this.inputHandler?.setActiveTextArea(null);
       }
       
       textArea.destroy();
@@ -278,7 +276,7 @@ export class TextTool extends BaseTool {
     this.textAreas.forEach(textArea => textArea.destroy());
     this.textAreas = [];
     this.activeTextArea = null;
-    this.inputHandler.setActiveTextArea(null);
+    this.inputHandler?.setActiveTextArea(null);
     console.log('📝 All text areas cleared');
   }
 

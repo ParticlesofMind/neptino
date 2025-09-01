@@ -23,9 +23,9 @@ export interface MarginSettings {
 }
 
 export class BoundaryUtils {
-  // A4 Canvas dimensions (fixed)
-  public static readonly CANVAS_WIDTH = 794;
-  public static readonly CANVAS_HEIGHT = 1123;
+  // Canvas dimensions (4:3 aspect ratio)
+  public static readonly CANVAS_WIDTH = 900;
+  public static readonly CANVAS_HEIGHT = 1200;
 
   /**
    * Get canvas bounds from container with user-specified margins

@@ -46,8 +46,8 @@
   
   // Page structure
   &__page {
-    width: 794px;  // A4 width
-    height: 1123px; // A4 height
+    width: 900px;   // Canvas width (4:3 aspect ratio)
+    height: 1200px; // Canvas height (4:3 aspect ratio)
     background: white;
     position: relative;
     overflow: hidden; // Prevent content bleeding

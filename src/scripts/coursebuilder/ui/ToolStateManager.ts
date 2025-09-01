@@ -284,6 +284,12 @@ export class ToolStateManager {
         this.currentTool = toolName;
         this.updateToolUI(toolName);
         
+        // 🎯 UNIFIED TOOL MANAGEMENT: Notify coordinator about drawing tool selection
+        const toolCoordinator = (window as any).toolCoordinator;
+        if (toolCoordinator && typeof toolCoordinator.setDrawingTool === 'function') {
+            toolCoordinator.setDrawingTool(toolName);
+        }
+        
         // 🎯 GRAB TOOL MANAGEMENT: Deactivate grab tool when any drawing tool is selected
         this.deactivateGrabToolIfActive();
         
@@ -316,6 +322,34 @@ export class ToolStateManager {
         if (perspectiveManager && typeof perspectiveManager.deactivateGrabTool === 'function') {
             perspectiveManager.deactivateGrabTool();
         }
+    }
+
+    /**
+     * Deactivate all drawing tools
+     * Called by perspective tools (like grab) to enforce "one tool at a time" rule
+     */
+    public deactivateAllDrawingTools(): void {
+        console.log('🔧 TOOLS: Deactivating all drawing tools');
+        
+        // Clear visual states for all drawing tool buttons
+        document.querySelectorAll('[data-tool]').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Clear internal state (keep current tool reference for later reactivation)
+        const previousTool = this.currentTool;
+        // Don't change currentTool - keep it for when we reactivate
+        
+        // CRITICAL: Disable canvas drawing events completely
+        const canvasAPI = (window as any).canvasAPI;
+        if (canvasAPI && typeof canvasAPI.disableDrawingEvents === 'function') {
+            canvasAPI.disableDrawingEvents();
+            console.log('🚫 CANVAS: Drawing events DISABLED - grab tool can work without interference');
+        } else {
+            console.warn('⚠️ CANVAS: Could not disable drawing events - grab tool may conflict');
+        }
+        
+        console.log(`✅ TOOLS: All drawing tools deactivated and canvas events disabled (keeping: ${previousTool})`);
     }
 
     /**

@@ -281,4 +281,27 @@ export class CanvasEvents {
 
     console.log('🗑️ Canvas events destroyed');
   }
+
+  /**
+   * Enable canvas drawing events
+   */
+  public enableDrawingEvents(): void {
+    this.isEnabled = true;
+    console.log('✅ Canvas drawing events ENABLED');
+  }
+
+  /**
+   * Disable canvas drawing events (for grab tool, etc.)
+   */
+  public disableDrawingEvents(): void {
+    this.isEnabled = false;
+    console.log('🚫 Canvas drawing events DISABLED');
+  }
+
+  /**
+   * Check if drawing events are enabled
+   */
+  public areDrawingEventsEnabled(): boolean {
+    return this.isEnabled;
+  }
 }

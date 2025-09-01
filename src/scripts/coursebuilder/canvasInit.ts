@@ -1,6 +1,6 @@
 /**
- * Canvas Initialization Test
- * Simple test to verify our new canvas system works and connects to UI
+ * Canvas Initialization 
+ * Initialize canvas system with proper dimensions and clean architecture
  */
 
 import { CanvasAPI } from './canvas/CanvasAPI';
@@ -9,18 +9,22 @@ import { UIEventHandler } from './ui/UIEventHandler';
 import { toolColorManager } from './tools/ToolColorManager';
 import { TextTool } from './tools/text/TextTool';
 import { SimplePerspectiveManager } from './tools/SimplePerspectiveManager';
+import { CanvasLayoutManager } from './ui/CanvasLayoutManager';
+import { ToolCoordinator } from './ui/ToolCoordinator';
 
+// Canvas dimensions - centralized in one place (4:3 aspect ratio)
+const CANVAS_WIDTH = 900;
+const CANVAS_HEIGHT = 1200;
 
 console.log('📦 CanvasAPI import successful:', CanvasAPI);
 
-// Global canvas instance for testing
-
+// Global canvas instance
 let canvasAPI: CanvasAPI | null = null;
 let toolStateManager: ToolStateManager | null = null;
 let uiEventHandler: UIEventHandler | null = null;
 let perspectiveManager: SimplePerspectiveManager | null = null;
-
-let resizeCleanup: (() => void) | null = null;
+let layoutManager: CanvasLayoutManager | null = null;
+let toolCoordinator: ToolCoordinator | null = null;
 
 /**
  * Initialize canvas when coursebuilder page loads
@@ -44,59 +48,28 @@ export async function initializeCanvas(): Promise<void> {
         canvasAPI = new CanvasAPI('#canvas-container');
         console.log('✅ CanvasAPI instance created');
 
-        // Detect optimal canvas size for current device/viewport
-        const canvasSize = ResponsiveCanvasManager.detectOptimalCanvasSize(canvasContainer);
-        console.log('📐 Detected optimal canvas size:', canvasSize);
-        
-        // Log device and sizing info
+        // Log canvas dimensions info
         const dpr = window.devicePixelRatio || 1;
         console.log(`📱 Device Pixel Ratio: ${dpr}x`);
         console.log(`🖥️ Viewport: ${window.innerWidth}×${window.innerHeight}`);
-        console.log(`📄 Canvas: ${canvasSize.width}×${canvasSize.height} (${canvasSize.paperType})`);
-        console.log(`📏 Scale Factor: ${canvasSize.scaleFactor.toFixed(2)}x relative to A4`);
+        console.log(`📄 Canvas: ${CANVAS_WIDTH}×${CANVAS_HEIGHT} (4:3 aspect ratio)`);
 
-        // Initialize with responsive dimensions
+        // Initialize with fixed dimensions
         await canvasAPI.init({
-            width: canvasSize.width,
-            height: canvasSize.height,
+            width: CANVAS_WIDTH,
+            height: CANVAS_HEIGHT,
             backgroundColor: 0xffffff,
         });
 
         console.log('✅ Canvas initialized!');
 
-        // Initialize Layout System with responsive grid
-        console.log('📐 Initializing responsive layout system...');
-     
-        
-        // Initialize the layout manager with the main canvas container and actual canvas dimensions
-        const uiLayer = canvasAPI.getLayer('ui');
-        const canvasInfo = canvasAPI.getCanvasInfo();
-        
-        if (uiLayer && canvasInfo) {
-            // Pass actual responsive canvas dimensions for layout
-   
-            
-      
-            console.log('✅ Responsive layout system initialized!');
-            
-            // Setup responsive resize handling
-            console.log('🔄 Setting up responsive resize handling...');
-            resizeCleanup = ResponsiveCanvasManager.onResize((newSize) => {
-                console.log('📐 Canvas resizing to:', newSize);
-                if (canvasAPI && layoutManager) {
-                    // Resize canvas to new dimensions
-                    canvasAPI.resize(newSize.width, newSize.height);
-                    // Update layout with new dimensions
-                    layoutManager.initialize(uiLayer, newSize.width, newSize.height);
-                    layoutManager.createResponsiveLayout();
-                }
-            });
-            console.log('✅ Responsive resize handling setup complete');
-        } else {
-            console.warn('⚠️ UI layer or canvas info not found, layout system not initialized');
-        }
+        // Initialize Canvas Layout Manager
+        console.log('📐 Initializing canvas layout manager...');
+        layoutManager = new CanvasLayoutManager('#canvas-container');
+        layoutManager.setupResponsiveLayout(); // Auto-select layout based on viewport
+        console.log('✅ Canvas layout manager initialized!');
 
-                // Initialize Perspective Manager (zoom/pan controls)
+        // Initialize Perspective Manager (zoom/pan controls)
         console.log('🔍 Initializing perspective controls...');
         perspectiveManager = new SimplePerspectiveManager();
         console.log('✅ SimplePerspectiveManager initialized with zoom/pan controls');
@@ -118,6 +91,11 @@ export async function initializeCanvas(): Promise<void> {
         
         // Expose UIEventHandler on window for Select2 integration
         (window as any).uiEventHandler = uiEventHandler;
+
+        // Initialize Tool Coordinator for unified tool management
+        console.log('🎯 Initializing Tool Coordinator...');
+        toolCoordinator = new ToolCoordinator();
+        console.log('✅ ToolCoordinator initialized - enforcing single tool rule');
 
         // Initialize color selectors for all tools
         console.log('🎨 Initializing tool color selectors...');
@@ -146,31 +124,23 @@ export async function initializeCanvas(): Promise<void> {
         (window as any).toolColorManager = toolColorManager;
         (window as any).perspectiveManager = perspectiveManager;
         (window as any).layoutManager = layoutManager;
-        (window as any).ResponsiveLayoutDemo = ResponsiveLayoutDemo;
+        (window as any).toolCoordinator = toolCoordinator;
         
         // Expose TextTool for font debugging
         (window as any).TextTool = TextTool;
         console.log('🔧 TextTool exposed globally for debugging - use TextTool.debugReinitializeFonts() to reload fonts');
         console.log('🔧 Debug commands: perspectiveManager.debugGrid(), perspectiveManager.forceEnableGrid()');
-        console.log('🐛 Grid commands: layoutManager.toggleResponsiveDebugGrid(), layoutManager.toggleDebugGrid()');
-        console.log('📐 Canvas commands: toggleGrid(), showGridInfo(), showCanvasInfo(), showCanvasDebug(), resizeCanvas()');
-        console.log('📐 Responsive commands: ResponsiveLayoutDemo.runDemo()');
+        console.log('🎯 Tool Coordinator commands: toolCoordinator.debugState(), toolCoordinator.resetAllTools()');
+        console.log('📐 Canvas commands: showCanvasInfo(), resizeCanvas()');
+        console.log('📐 Layout commands: toggleCanvasLayout(), useGridLayout(), useCompactLayout(), useAutoLayout()');
         console.log('🖼️ Canvas issue debugging: If canvas shows wrong size, check devicePixelRatio with showCanvasInfo()');
-        console.log('📱 Responsive canvas: Use resizeCanvas("A4"), resizeCanvas("Mobile"), etc.');
+
+        // Add layout manager debug commands
+        if (layoutManager) {
+            layoutManager.addDebugCommands();
+        }
 
         // Add global debug commands
-        (window as any).toggleGrid = (show?: boolean) => {
-            if (layoutManager) {
-                layoutManager.toggleResponsiveDebugGrid(show);
-            }
-        };
-
-        (window as any).showGridInfo = () => {
-            if (layoutManager) {
-                console.log('📐 Grid Info:', layoutManager.getLayoutInfo());
-            }
-        };
-
         (window as any).showCanvasInfo = () => {
             if (canvasAPI) {
                 const info = canvasAPI.getCanvasInfo();
@@ -189,44 +159,29 @@ export async function initializeCanvas(): Promise<void> {
                     screenSize: {
                         width: window.screen.width,
                         height: window.screen.height
+                    },
+                    expectedDimensions: {
+                        width: CANVAS_WIDTH,
+                        height: CANVAS_HEIGHT,
+                        aspectRatio: '4:3'
                     }
                 });
             }
         };
 
-        // Enhanced debug command for responsive canvas system
-        (window as any).showCanvasDebug = () => {
-            const debugInfo = ResponsiveCanvasManager.getDebugInfo();
-            console.log('📐 Responsive Canvas Debug Info:', debugInfo);
-        };
-
-        // Dynamic canvas resizing command
-        (window as any).resizeCanvas = (paperType?: string) => {
-            if (!canvasAPI || !layoutManager) {
-                console.warn('⚠️ Canvas or layout manager not initialized');
+        // Simple canvas resize command
+        (window as any).resizeCanvas = (width?: number, height?: number) => {
+            if (!canvasAPI) {
+                console.warn('⚠️ Canvas not initialized');
                 return;
             }
 
-            const container = document.getElementById('canvas-container');
-            let newSize;
+            const newWidth = width || CANVAS_WIDTH;
+            const newHeight = height || CANVAS_HEIGHT;
             
-            if (paperType && paperType in {'A4': 1, 'A3': 1, 'Letter': 1, 'Mobile': 1, 'Tablet': 1, 'Desktop': 1, 'Square': 1}) {
-                newSize = ResponsiveCanvasManager.getCanvasSizeForPaperType(paperType as any, container || undefined);
-                console.log(`📐 Resizing canvas to ${paperType}:`, newSize);
-            } else {
-                newSize = ResponsiveCanvasManager.detectOptimalCanvasSize(container || undefined);
-                console.log('📐 Auto-detecting optimal canvas size:', newSize);
-            }
-
-            // Apply the new size
-            canvasAPI.resize(newSize.width, newSize.height);
-            const uiLayer = canvasAPI.getLayer('ui');
-            if (uiLayer) {
-                layoutManager.initialize(uiLayer, newSize.width, newSize.height);
-                layoutManager.createResponsiveLayout();
-            }
-            
-            console.log(`✅ Canvas resized to ${newSize.width}×${newSize.height} (${newSize.paperType})`);
+            console.log(`📐 Resizing canvas to ${newWidth}×${newHeight}`);
+            canvasAPI.resize(newWidth, newHeight);
+            console.log(`✅ Canvas resized to ${newWidth}×${newHeight}`);
         };
 
         // Wait for canvas to be fully ready before getting info

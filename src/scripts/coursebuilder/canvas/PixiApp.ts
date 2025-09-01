@@ -43,8 +43,8 @@ export class PixiApp {
     }
 
     const defaultConfig: PixiAppConfig = {
-      width: 794,           // A4 width in pixels at 96 DPI
-      height: 1123,         // A4 height in pixels at 96 DPI
+      width: 900,           // Canvas width (4:3 aspect ratio)
+      height: 1200,         // Canvas height (4:3 aspect ratio)
       backgroundColor: 0xffffff, // White background
       antialias: true,      // Enable antialiasing for smooth edges
       resolution: window.devicePixelRatio || 1, // Use device pixel ratio for crisp rendering

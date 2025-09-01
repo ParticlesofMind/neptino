@@ -112,8 +112,8 @@ export class CanvasMarginManager {
     // Create new margin graphics
     this.marginGraphics = new Graphics();
     
-    const canvasWidth = 794;  // A4 width
-    const canvasHeight = 1123; // A4 height
+    const canvasWidth = 900;   // Canvas width
+    const canvasHeight = 1200; // Canvas height
     const margins = this.currentMargins;
     
     // Professional blue lines for margins
