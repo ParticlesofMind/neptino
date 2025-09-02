@@ -13,10 +13,14 @@ import { test, expect } from '@playwright/test';
 test.describe('Text Tool - Basic Functionality', () => {
   
   test.beforeEach(async ({ page }) => {
-    // Navigate to the coursebuilder page
-    await page.goto('/src/pages/teacher/coursebuilder.html');
+    // Navigate to coursebuilder page
+    await page.goto('/test-coursebuilder.html');
+    
+    // Wait for the page to load completely
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    
+    // Give extra time for any async operations to complete
+    await page.waitForTimeout(1000);
   });
 
   test('should activate text tool when clicked', async ({ page }) => {

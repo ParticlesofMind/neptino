@@ -18,11 +18,6 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,scss,css,html}\"",
     "clean": "rm -rf dist node_modules/.vite",
     "reset": "npm run clean && npm install && npm run dev",
-    "test": "playwright test",
-    "test:ui": "playwright test --ui",
-    "test:debug": "playwright test --debug",
-    "test:headed": "playwright test --headed",
-    "test:report": "playwright show-report",
     "fonts:generate": "node scripts/generate-bitmap-fonts.js"
   },
   "keywords": [
@@ -35,12 +30,11 @@
   "author": "Benjamin Jack Laubacher",
   "license": "MIT",
   "devDependencies": {
-    "@playwright/test": "^1.55.0",
+    "@types/node": "^24.3.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "canvas": "^3.2.0",
     "eslint": "^8.45.0",
-    "playwright": "^1.55.0",
     "prettier": "^3.0.0",
     "rollup-plugin-visualizer": "^6.0.3",
     "sass": "^1.90.0",

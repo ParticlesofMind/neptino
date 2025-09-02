@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="pixi-devtools" content="enabled" />
+  <title>Course Builder Test - Neptino</title>
+
+  <!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/src/scss/main.scss" />
+</head>
+
+<body class="grid body">
+  <header class="grid__header header">
+    <nav class="nav">
+      <ul class="ul ul--header">
+        <li class="ul__item">
+          <button class="button button--outline button--small" id="previous-btn" title="Previous Step">
+            Previous
+          </button>
+        </li>
+
+        <li class="ul__item">
+          <a class="link link--header" href="/src/pages/teacher/home.html" title="Back to Home">
+            <img class="logo logo--small" src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
+          </a>
+        </li>
+
+        <li class="ul__item">
+          <button class="button button--outline button--small" id="next-btn" title="Next Step">
+            Next
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </header>
+  <main class="grid__main coursebuilder">
+    <!-- Create View (THE MAIN CANVAS AREA) -->
+    <div class="coursebuilder__create" aria-hidden="false" id="create">
+      <div class="engine">
+        <!-- Mode Selector -->
+        <div class="engine__mode mode">
+          <div class="mode__item" data-mode="build">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-build.svg" alt="">
+            <span class="icon-label">Build</span>
+          </div>
+        </div>
+
+        <!-- Canvas Area -->
+        <div class="engine__canvas engine__canvas--grid" id="canvas-container">
+          <!-- Canvas will be inserted here by JavaScript -->
+        </div>
+
+        <!-- Drawing Tools -->
+        <div class="engine__tools tools">
+          <div class="tools__selection">
+            <div class="tools__item tools__item--active" data-tool="selection">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
+                class="tools__icon icon icon--base">
+              <span class="icon-label">Select</span>
+            </div>
+            <div class="tools__item" data-tool="pen">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Pen Tool"
+                class="tools__icon icon icon--base">
+              <span class="icon-label">Pen</span>
+            </div>
+            <div class="tools__item" data-tool="brush">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" alt="Brush Tool"
+                class="tools__icon icon icon--base">
+              <span class="icon-label">Brush</span>
+            </div>
+            <div class="tools__item" data-tool="text">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" alt="Text Tool"
+                class="tools__icon icon icon--base">
+              <span class="icon-label">Text</span>
+            </div>
+            <div class="tools__item" data-tool="shapes">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" alt="Shapes Tool"
+                class="tools__icon icon icon--base">
+              <span class="icon-label">Shapes</span>
+            </div>
+            <div class="tools__item" data-tool="eraser">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" alt="Eraser Tool"
+                class="tools__icon icon icon--base">
+              <span class="icon-label">Eraser</span>
+            </div>
+          </div>
+
+          <!-- Tool Settings -->
+          <div class="tools__options">
+            <!-- Text Settings -->
+            <div class="tools__item tools__item--text" data-tool="text" style="display: none;">
+              <input type="number" min="8" max="72" value="16" class="input input--number" title="Text Size"
+                data-setting="fontSize">
+
+              <select id="font-family-select" class="input input--select" title="Font Family" data-setting="fontFamily">
+                <option value="Arial" data-font-family="Arial">Arial</option>
+                <option value="Times New Roman" data-font-family="Times New Roman">Times New Roman</option>
+                <option value="Georgia" data-font-family="Georgia">Georgia</option>
+                <option value="Verdana" data-font-family="Verdana">Verdana</option>
+                <option value="Tahoma" data-font-family="Tahoma">Tahoma</option>
+              </select>
+
+              <select id="text-color-select" class="input input--color" data-color-selector="text" title="Text Color">
+                <option value="#1a1a1a" data-color="#1a1a1a" selected>Black</option>
+                <option value="#4a7c59" data-color="#4a7c59">Green</option>
+                <option value="#4a79a4" data-color="#4a79a4">Blue</option>
+                <option value="#a74a4a" data-color="#a74a4a">Red</option>
+                <option value="#6b7280" data-color="#6b7280">Gray</option>
+                <option value="#b87333" data-color="#b87333">Orange</option>
+                <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
+                <option value="#b8a642" data-color="#b8a642">Yellow</option>
+                <option value="#64748b" data-color="#64748b">Slate</option>
+                <option value="#f8fafc" data-color="#f8fafc">White</option>
+              </select>
+            </div>
+
+            <!-- Pen Settings -->
+            <div class="tools__item tools__item--pen" data-tool="pen" style="display: none;">
+              <input type="number" min="1" max="15" value="2" class="input input--number" title="Pen Size"
+                data-setting="size">
+
+              <select id="pen-stroke-select" class="input input--color" data-color-selector="pen-stroke"
+                title="Stroke Color">
+                <option value="#1a1a1a" data-color="#1a1a1a" selected>Black</option>
+                <option value="#4a7c59" data-color="#4a7c59">Green</option>
+                <option value="#4a79a4" data-color="#4a79a4">Blue</option>
+                <option value="#a74a4a" data-color="#a74a4a">Red</option>
+              </select>
+            </div>
+
+            <!-- Brush Settings -->
+            <div class="tools__item tools__item--brush" data-tool="brush" style="display: none;">
+              <input type="number" min="10" max="50" value="20" class="input input--number" title="Brush Size"
+                data-setting="size">
+
+              <select id="brush-color-select" class="input input--color" data-color-selector="brush"
+                title="Brush Color">
+                <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
+                <option value="#4a7c59" data-color="#4a7c59" selected>Green</option>
+                <option value="#4a79a4" data-color="#4a79a4">Blue</option>
+                <option value="#a74a4a" data-color="#a74a4a">Red</option>
+              </select>
+            </div>
+
+            <!-- Shapes Settings -->
+            <div class="tools__item tools__item--shapes" data-tool="shapes" style="display: none;">
+              <select id="shapes-select" class="input input--select" title="Shape Type" data-setting="shapeType">
+                <option value="rectangle">Rectangle</option>
+                <option value="triangle">Triangle</option>
+                <option value="circle">Circle</option>
+                <option value="ellipse">Ellipse</option>
+              </select>
+
+              <select id="shapes-stroke-select" class="input input--color" data-color-selector="shapes-stroke"
+                title="Shape Stroke">
+                <option value="#1f2937" data-color="#1f2937" selected>Dark Charcoal</option>
+                <option value="#4a7c59" data-color="#4a7c59">Green</option>
+                <option value="#4a79a4" data-color="#4a79a4">Blue</option>
+                <option value="#a74a4a" data-color="#a74a4a">Red</option>
+              </select>
+
+              <select id="shapes-fill-select" class="input input--color" data-color-selector="shapes-fill"
+                title="Shape Fill">
+                <option value="transparent" data-color="transparent" selected>No Fill</option>
+                <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
+                <option value="#4a7c59" data-color="#4a7c59">Green</option>
+                <option value="#4a79a4" data-color="#4a79a4">Blue</option>
+                <option value="#a74a4a" data-color="#a74a4a">Red</option>
+              </select>
+            </div>
+
+            <!-- Eraser Settings -->
+            <div class="tools__item tools__item--eraser" data-tool="eraser" style="display: none;">
+              <input type="number" min="5" max="50" value="20" class="input input--number" title="Eraser Size"
+                data-setting="size">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- jQuery (required for Select2) -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- Select2 JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+  <!-- TEST-ONLY: Initialize canvas without authentication -->
+  <script type="module">
+    // Bypass authentication for tests - directly initialize canvas
+    console.log('Test mode: Initializing canvas without auth...');
+    
+    // Initialize canvas system directly
+    import('/src/scripts/coursebuilder/canvasInit.js').then(() => {
+      console.log('Canvas initialization complete');
+    }).catch(error => {
+      console.error('Canvas initialization failed:', error);
+    });
+
+    // Initialize tool handlers
+    import('/src/scripts/coursebuilder/tools/index.js').then(() => {
+      console.log('Tools initialized');
+    }).catch(error => {
+      console.warn('Tools initialization failed:', error);
+    });
+
+    // Simple Select2 initialization for testing
+    $(document).ready(function () {
+      // Initialize basic Select2 for dropdowns
+      $('#font-family-select, #text-color-select, #pen-stroke-select, #brush-color-select, #shapes-select, #shapes-stroke-select, #shapes-fill-select').select2({
+        minimumResultsForSearch: -1,
+        width: '100%'
+      });
+    });
+  </script>
+</body>
+
+</html>

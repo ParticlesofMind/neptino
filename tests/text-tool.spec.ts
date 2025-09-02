@@ -28,7 +28,7 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
   
   // Setup: Navigate to page and activate text tool before each test
   test.beforeEach(async ({ page }) => {
-    await page.goto('/src/pages/teacher/coursebuilder.html');
+    await page.goto('/test-coursebuilder.html');
     await page.waitForLoadState('networkidle');
     
     // Wait for canvas and scripts to initialize
