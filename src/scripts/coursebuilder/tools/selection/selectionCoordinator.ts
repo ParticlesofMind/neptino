@@ -51,7 +51,6 @@ export class SelectionCoordinator extends BaseTool {
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
  // 🔒 CRITICAL: Only respond if this tool is active
  if (!this.isActive) {
-   console.log('🖱️ SelectionCoordinator: Ignoring pointer down - tool not active');
    return;
  }
 
@@ -67,10 +66,7 @@ export class SelectionCoordinator extends BaseTool {
  this.state.transformStart.copyFrom(localPoint);
  
  // 🎯 CURSOR MANAGEMENT: Set appropriate cursor for active transformation
- this.cursor = this.getCursorForHandle(handle);
- console.log('🖱️ SelectionCoordinator handle cursor set to:', this.cursor);
- 
- // Start rotation if it's a rotation handle
+            this.cursor = this.getCursorForHandle(handle); // Start rotation if it's a rotation handle
  if (handle.type === "rotation") {
  this.rotator.startRotation(localPoint);
  }
@@ -84,7 +80,6 @@ export class SelectionCoordinator extends BaseTool {
  this.state.transformStart.copyFrom(localPoint);
  // 🎯 CURSOR MANAGEMENT: Use move cursor for dragging
  this.cursor = 'move';
- console.log('🖱️ SelectionCoordinator drag cursor set to:', this.cursor);
  return;
  }
 
@@ -138,20 +133,12 @@ export class SelectionCoordinator extends BaseTool {
  this.refreshSelectionGroup(container);
  } else if (this.marqueeSelector.isActive) {
  this.marqueeSelector.updateSelection(localPoint);
- } else {
- // 🎯 CURSOR MANAGEMENT: Update cursor based on what's being hovered over
- console.log('🖱️ SelectionCoordinator.onPointerMove - checking for hovered handle', { 
-   localPoint, 
-   selectionGroup: !!this.state.selectionGroup,
-   selectedObjects: this.state.selectedObjects.length 
- });
- const hoveredHandle = this.visuals.getTransformHandleAtPoint(localPoint, this.state.selectionGroup);
- 
- // Update tool cursor directly instead of using visuals.updateCursor
+        } else {
+            // 🎯 CURSOR MANAGEMENT: Update cursor based on what's being hovered over
+            const hoveredHandle = this.visuals.getTransformHandleAtPoint(localPoint, this.state.selectionGroup); // Update tool cursor directly instead of using visuals.updateCursor
  const newCursor = this.getCursorForHandle(hoveredHandle);
  if (newCursor !== this.cursor) {
    this.cursor = newCursor;
-   console.log('🖱️ SelectionCoordinator cursor updated to:', newCursor);
  }
  }
  }
@@ -171,12 +158,15 @@ export class SelectionCoordinator extends BaseTool {
  } else if (this.state.isTransforming) {
  if (this.state.activeHandle?.type === "rotation") {
  this.rotator.stopRotation();
+ // Update selection group bounds after rotation (more efficient than full refresh)
+ if (this.state.selectionGroup) {
+ this.visuals.updateSelectionGroupBounds(this.state.selectionGroup);
+ }
  }
  this.state.isTransforming = false;
  this.state.activeHandle = null;
  // 🎯 CURSOR MANAGEMENT: Reset cursor when transformation ends
  this.cursor = 'default';
- console.log('🖱️ SelectionCoordinator cursor reset to default');
  }
  }
 
@@ -190,7 +180,6 @@ export class SelectionCoordinator extends BaseTool {
  this.refreshSelectionGroup();
  // 🎯 CURSOR MANAGEMENT: Reset cursor when clearing selection
  this.cursor = 'default';
- console.log('🖱️ SelectionCoordinator cursor reset to default (clear selection)');
  }
 
     private refreshSelectionGroup(container?: Container): void {
@@ -228,7 +217,6 @@ export class SelectionCoordinator extends BaseTool {
             }, 2000);
         });
     }  private enterTextEditMode(textObject: any, point: Point, container: Container): void {
-    console.log('📝 Entering text editing mode for:', textObject);
     
     // Get the tool manager to switch to text tool
     if (this.manager && typeof (this.manager as any).manager !== 'undefined') {
@@ -244,12 +232,11 @@ export class SelectionCoordinator extends BaseTool {
           (textTool as any).activateTextObjectForEditing(textObject, point, container);
         }
         
-        console.log('📝 Switched to text tool for editing');
       } else {
-        console.warn('📝 Failed to switch to text tool');
+        // Failed to switch to text tool
       }
     } else {
-      console.warn('📝 Tool manager not available for text editing mode');
+      // Tool manager not available for text editing mode
     }
   } private handleKeyDown = (event: KeyboardEvent): void => {
  if (event.key === 'Delete' || event.key === 'Backspace') {
@@ -313,12 +300,13 @@ export class SelectionCoordinator extends BaseTool {
  this.clearSelection();
  }
 
- public rotateSelectedObjects(angleInRadians: number): void {
- this.rotator.rotateSelectedObjects(angleInRadians);
- this.refreshSelectionGroup();
- }
-
- public scaleSelectedObjects(scaleX: number, scaleY: number): void {
+    public rotateSelectedObjects(angleInRadians: number): void {
+        this.rotator.rotateSelectedObjects(angleInRadians);
+        // Update selection group bounds after rotation (more efficient than full refresh)
+        if (this.state.selectionGroup) {
+            this.visuals.updateSelectionGroupBounds(this.state.selectionGroup);
+        }
+    } public scaleSelectedObjects(scaleX: number, scaleY: number): void {
  this.scaler.scaleSelectedObjects(scaleX, scaleY);
  this.refreshSelectionGroup();
  }

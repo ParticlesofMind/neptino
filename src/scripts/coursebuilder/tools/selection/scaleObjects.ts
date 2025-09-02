@@ -19,294 +19,234 @@ export class ScaleObjects {
  }
 
  public updateTransform(currentPoint: Point): void {
- if (!this.state.activeHandle || !this.state.selectionGroup) return;
- if (this.state.activeHandle.type === "rotation") return; // Handled by rotation module
+        if (!this.state.activeHandle || !this.state.selectionGroup) return;
+        if (this.state.activeHandle.type === "rotation") return; // Handled by rotation module
 
- const bounds = this.state.selectionGroup.bounds;
- const dx = currentPoint.x - this.state.transformStart.x;
- const dy = currentPoint.y - this.state.transformStart.y;
-
- // Check if any selected objects are rotated
- const hasRotatedObjects = this.state.selectedObjects.some(obj => 
- obj.rotation !== undefined && Math.abs(obj.rotation) > 0.01
- );
-
- if (this.state.activeHandle.type === "corner") {
- if (hasRotatedObjects) {
- // 🔄 Using rotation-aware scaling with stable anchor points
- console.log('🔄 SCALING: Using rotation-aware corner resize for rotated objects');
- this.performRotationAwareCornerResize(dx, dy, this.state.activeHandle.position);
- } else {
- // 📐 Using standard corner scaling for non-rotated objects
- this.performCornerResize(dx, dy, this.state.activeHandle.position, bounds);
- }
+        // Use fresh bounds calculation instead of stored bounds to ensure accuracy
+        const bounds = this.calculateCombinedBounds(this.state.selectedObjects);
+        const dx = currentPoint.x - this.state.transformStart.x;
+        const dy = currentPoint.y - this.state.transformStart.y; if (this.state.activeHandle.type === "corner") {
+ this.scaleFromCorner(dx, dy, this.state.activeHandle.position, bounds);
  } else if (this.state.activeHandle.type === "edge") {
- this.performEdgeResize(dx, dy, this.state.activeHandle.position, bounds);
+ this.scaleFromEdge(dx, dy, this.state.activeHandle.position, bounds);
  }
 
  this.state.transformStart.copyFrom(currentPoint);
  }
 
- private performRotationAwareCornerResize(dx: number, dy: number, corner: string): void {
- // For rotated objects, we need to temporarily reset rotation and pivot for predictable scaling
+ private scaleFromCorner(dx: number, dy: number, corner: string, bounds: Rectangle): void {
  if (this.state.selectedObjects.length === 0) return;
 
- // 🔄 TRANSFORMATION RESET: Store original transformations and temporarily reset them
- const originalTransforms: Array<{obj: any, pivot: {x: number, y: number}, rotation: number}> = [];
+ const anchorPoint = this.calculateCornerAnchorPoint(corner, bounds);
+ const scaleFactors = this.calculateCornerScaleFactors(dx, dy, corner, bounds);
+ const constrainedScale = this.applyScaleConstraints(scaleFactors, bounds);
  
- this.state.selectedObjects.forEach(obj => {
- if (obj.rotation !== undefined && Math.abs(obj.rotation) > 0.01) {
- // Store original transform state
- originalTransforms.push({
- obj: obj,
- pivot: { x: obj.pivot.x, y: obj.pivot.y },
- rotation: obj.rotation
- });
- 
- // Temporarily reset to neutral state for predictable scaling
- obj.pivot.set(0, 0);
- obj.rotation = 0;
- console.log('🔄 SCALING: Reset pivot and rotation for predictable corner scaling');
+ this.applyScaleTransformation(constrainedScale, anchorPoint);
  }
- });
 
- // Recalculate bounds after reset to get non-rotated bounding box
- const resetBounds = this.calculateCombinedBounds(this.state.selectedObjects);
-
- // Calculate scale factors based on the reset bounds and corner being dragged
- let scaleX = 1;
- let scaleY = 1;
- let pivotX = resetBounds.x + resetBounds.width / 2;
- let pivotY = resetBounds.y + resetBounds.height / 2;
-
- // Determine anchor point based on corner (opposite corner becomes the pivot)
+ private calculateCornerAnchorPoint(corner: string, bounds: Rectangle): Point {
+ const anchorPoint = new Point();
+ 
  switch (corner) {
  case "tl": // Top-left corner
- scaleX = 1 - dx / resetBounds.width;
- scaleY = 1 - dy / resetBounds.height;
- pivotX = resetBounds.x + resetBounds.width;  // Anchor at bottom-right
- pivotY = resetBounds.y + resetBounds.height;
+ anchorPoint.x = bounds.x + bounds.width;  // Anchor at bottom-right
+ anchorPoint.y = bounds.y + bounds.height;
  break;
  case "tr": // Top-right corner
- scaleX = 1 + dx / resetBounds.width;
- scaleY = 1 - dy / resetBounds.height;
- pivotX = resetBounds.x;                      // Anchor at bottom-left
- pivotY = resetBounds.y + resetBounds.height;
+ anchorPoint.x = bounds.x;                 // Anchor at bottom-left
+ anchorPoint.y = bounds.y + bounds.height;
  break;
  case "bl": // Bottom-left corner
- scaleX = 1 - dx / resetBounds.width;
- scaleY = 1 + dy / resetBounds.height;
- pivotX = resetBounds.x + resetBounds.width;  // Anchor at top-right
- pivotY = resetBounds.y;
+ anchorPoint.x = bounds.x + bounds.width;  // Anchor at top-right
+ anchorPoint.y = bounds.y;
  break;
  case "br": // Bottom-right corner
- scaleX = 1 + dx / resetBounds.width;
- scaleY = 1 + dy / resetBounds.height;
- pivotX = resetBounds.x;                      // Anchor at top-left
- pivotY = resetBounds.y;
+ anchorPoint.x = bounds.x;                 // Anchor at top-left
+ anchorPoint.y = bounds.y;
  break;
+ default:
+ anchorPoint.x = bounds.x + bounds.width / 2;
+ anchorPoint.y = bounds.y + bounds.height / 2;
+ }
+ 
+ return anchorPoint;
  }
 
- // Apply minimum scale constraints
- const minScale = 0.2;
- scaleX = Math.max(minScale, scaleX);
- scaleY = Math.max(minScale, scaleY);
-
- // Apply scaling to each object using traditional corner-anchored approach
- this.state.selectedObjects.forEach(obj => {
- if (obj.scale && obj.position) {
- // Calculate object's position relative to the anchor point
- const relativeX = obj.position.x - pivotX;
- const relativeY = obj.position.y - pivotY;
-
- // 🎯 STROKE WIDTH PRESERVATION: Store original stroke width if not already stored
- this.preserveStrokeWidth(obj);
-
- // Apply scale to object size
- obj.scale.x = Math.abs(obj.scale.x * scaleX);
- obj.scale.y = Math.abs(obj.scale.y * scaleY);
-
- // 🎯 STROKE WIDTH PRESERVATION: Adjust stroke width to maintain visual consistency
- this.adjustStrokeWidth(obj);
-
- // Adjust position based on anchor point (this keeps the anchor stable)
- obj.position.x = pivotX + relativeX * scaleX;
- obj.position.y = pivotY + relativeY * scaleY;
- }
- });
-
- // 🔄 TRANSFORMATION RESTORE: Restore original transformations after scaling
- originalTransforms.forEach(({obj, pivot, rotation}) => {
- // Calculate the new position after scaling
- const scaledX = obj.position.x;
- const scaledY = obj.position.y;
+ private calculateCornerScaleFactors(dx: number, dy: number, corner: string, bounds: Rectangle): Point {
+ const scaleFactors = new Point(1, 1);
  
- // Restore pivot and rotation
- obj.pivot.set(pivot.x, pivot.y);
- obj.rotation = rotation;
- 
- // Keep the scaled position
- obj.position.x = scaledX;
- obj.position.y = scaledY;
- 
- console.log('🔄 SCALING: Restored pivot and rotation after corner scaling');
- });
- }
-
- private performCornerResize(dx: number, dy: number, corner: string, bounds: Rectangle): void {
- if (this.state.selectedObjects.length === 0) return;
-
- // Calculate scale factors based on corner being dragged
- let scaleX = 1;
- let scaleY = 1;
- let pivotX = bounds.x + bounds.width / 2;
- let pivotY = bounds.y + bounds.height / 2;
-
  switch (corner) {
  case "tl": // Top-left corner
- scaleX = 1 - dx / bounds.width;
- scaleY = 1 - dy / bounds.height;
- pivotX = bounds.x + bounds.width;
- pivotY = bounds.y + bounds.height;
+ scaleFactors.x = 1 - dx / bounds.width;
+ scaleFactors.y = 1 - dy / bounds.height;
  break;
  case "tr": // Top-right corner
- scaleX = 1 + dx / bounds.width;
- scaleY = 1 - dy / bounds.height;
- pivotX = bounds.x;
- pivotY = bounds.y + bounds.height;
+ scaleFactors.x = 1 + dx / bounds.width;
+ scaleFactors.y = 1 - dy / bounds.height;
  break;
  case "bl": // Bottom-left corner
- scaleX = 1 - dx / bounds.width;
- scaleY = 1 + dy / bounds.height;
- pivotX = bounds.x + bounds.width;
- pivotY = bounds.y;
+ scaleFactors.x = 1 - dx / bounds.width;
+ scaleFactors.y = 1 + dy / bounds.height;
  break;
  case "br": // Bottom-right corner
- scaleX = 1 + dx / bounds.width;
- scaleY = 1 + dy / bounds.height;
- pivotX = bounds.x;
- pivotY = bounds.y;
+ scaleFactors.x = 1 + dx / bounds.width;
+ scaleFactors.y = 1 + dy / bounds.height;
  break;
  }
+ 
+ return scaleFactors;
+ }
 
+ private applyScaleConstraints(scaleFactors: Point, bounds: Rectangle): Point {
  // Calculate minimum scale based on canvas size and object bounds
  const minPixelSize = 10; // Minimum 10px size
  const minScaleX = minPixelSize / bounds.width;
  const minScaleY = minPixelSize / bounds.height;
  
- // 🎯 BOUNDARY ENFORCEMENT: Calculate maximum scale to keep within canvas bounds
+ // Calculate maximum scale to keep within canvas bounds
  const canvasBounds = BoundaryUtils.getCanvasBoundsWithGlobalMargins();
  const maxScale = BoundaryUtils.getMaxAllowedScale(bounds, canvasBounds);
  
  // Apply all constraints: minimum scale, minimum size, and canvas boundaries
- scaleX = Math.max(0.2, minScaleX, Math.min(maxScale.scaleX, scaleX));
- scaleY = Math.max(0.2, minScaleY, Math.min(maxScale.scaleY, scaleY));
+ const constrainedScale = new Point();
+ constrainedScale.x = Math.max(0.2, minScaleX, Math.min(maxScale.scaleX, scaleFactors.x));
+ constrainedScale.y = Math.max(0.2, minScaleY, Math.min(maxScale.scaleY, scaleFactors.y));
+ 
+ return constrainedScale;
+ }
 
- // Apply transformation to all selected objects
+ private applyScaleTransformation(scaleFactors: Point, anchorPoint: Point): void {
  this.state.selectedObjects.forEach(obj => {
  if (obj.scale && obj.position) {
- // Store original position relative to pivot
- const relativeX = obj.position.x - pivotX;
- const relativeY = obj.position.y - pivotY;
-
- // 🎯 STROKE WIDTH PRESERVATION: Store original stroke width if not already stored
+ // Store original stroke width if not already stored
  this.preserveStrokeWidth(obj);
 
- // Apply scale
- obj.scale.x = Math.abs(obj.scale.x * scaleX);
- obj.scale.y = Math.abs(obj.scale.y * scaleY);
-
- // 🎯 STROKE WIDTH PRESERVATION: Adjust stroke width to maintain visual consistency
+         // Check if object is rotated - if so, handle differently
+         if (Math.abs(obj.rotation) > 0.01) { // Small threshold to handle floating point precision
+           this.scaleRotatedObject(obj, scaleFactors, anchorPoint);
+         } else {
+           this.scaleNormalObject(obj, scaleFactors, anchorPoint);
+         } // Adjust stroke width to maintain visual consistency
  this.adjustStrokeWidth(obj);
-
- // Adjust position based on new scale
- obj.position.x = pivotX + relativeX * scaleX;
- obj.position.y = pivotY + relativeY * scaleY;
  }
  });
  }
 
- private performEdgeResize(dx: number, dy: number, edge: string, bounds: Rectangle): void {
+ /**
+  * Scale a non-rotated object using the original method
+  */
+ private scaleNormalObject(obj: any, scaleFactors: Point, anchorPoint: Point): void {
+ // Calculate object's position relative to the anchor point
+ const relativeX = obj.position.x - anchorPoint.x;
+ const relativeY = obj.position.y - anchorPoint.y;
+
+ // Apply scale to object size
+ obj.scale.x = Math.abs(obj.scale.x * scaleFactors.x);
+ obj.scale.y = Math.abs(obj.scale.y * scaleFactors.y);
+
+ // Adjust position based on anchor point (this keeps the anchor stable)
+ obj.position.x = anchorPoint.x + relativeX * scaleFactors.x;
+ obj.position.y = anchorPoint.y + relativeY * scaleFactors.y;
+ }
+
+ /**
+  * Scale a rotated object by working in world coordinates
+  */
+ private scaleRotatedObject(obj: any, scaleFactors: Point, anchorPoint: Point): void {
+ // For rotated objects, we need to:
+ // 1. Get the object's world bounds (which include rotation)
+ // 2. Calculate scaling relative to world coordinates
+ // 3. Apply scaling while preserving the rotation
+
+ // Get world position (accounting for pivot offset)
+ const worldBounds = obj.getBounds();
+ const worldCenterX = worldBounds.x + worldBounds.width / 2;
+ const worldCenterY = worldBounds.y + worldBounds.height / 2;
+
+ // Calculate relative position from anchor to world center
+ const relativeX = worldCenterX - anchorPoint.x;
+ const relativeY = worldCenterY - anchorPoint.y;
+
+ // Apply scale to object size
+ obj.scale.x = Math.abs(obj.scale.x * scaleFactors.x);
+ obj.scale.y = Math.abs(obj.scale.y * scaleFactors.y);
+
+ // Calculate new world center position
+ const newWorldCenterX = anchorPoint.x + relativeX * scaleFactors.x;
+ const newWorldCenterY = anchorPoint.y + relativeY * scaleFactors.y;
+
+ // Convert back to object position (accounting for pivot)
+ // For rotated objects, the position needs to be adjusted for pivot offset
+ const pivotOffsetX = obj.pivot.x * obj.scale.x;
+ const pivotOffsetY = obj.pivot.y * obj.scale.y;
+ 
+ // Apply rotation transform to pivot offset
+ const cos = Math.cos(obj.rotation);
+ const sin = Math.sin(obj.rotation);
+ const rotatedPivotOffsetX = pivotOffsetX * cos - pivotOffsetY * sin;
+ const rotatedPivotOffsetY = pivotOffsetX * sin + pivotOffsetY * cos;
+
+ obj.position.x = newWorldCenterX - rotatedPivotOffsetX;
+ obj.position.y = newWorldCenterY - rotatedPivotOffsetY;
+ }
+
+ private scaleFromEdge(dx: number, dy: number, edge: string, bounds: Rectangle): void {
  if (this.state.selectedObjects.length === 0) return;
 
- let scaleX = 1;
- let scaleY = 1;
- let pivotX = bounds.x + bounds.width / 2;
- let pivotY = bounds.y + bounds.height / 2;
+ const anchorPoint = this.calculateEdgeAnchorPoint(edge, bounds);
+ const scaleFactors = this.calculateEdgeScaleFactors(dx, dy, edge, bounds);
+ const constrainedScale = this.applyScaleConstraints(scaleFactors, bounds);
+ 
+ this.applyScaleTransformation(constrainedScale, anchorPoint);
+ }
 
+ private calculateEdgeAnchorPoint(edge: string, bounds: Rectangle): Point {
+ const anchorPoint = new Point();
+ 
  switch (edge) {
  case "t": // Top edge
- scaleY = 1 - dy / bounds.height;
- pivotY = bounds.y + bounds.height;
+ anchorPoint.x = bounds.x + bounds.width / 2;
+ anchorPoint.y = bounds.y + bounds.height;
  break;
  case "r": // Right edge
- scaleX = 1 + dx / bounds.width;
- pivotX = bounds.x;
+ anchorPoint.x = bounds.x;
+ anchorPoint.y = bounds.y + bounds.height / 2;
  break;
  case "b": // Bottom edge
- scaleY = 1 + dy / bounds.height;
- pivotY = bounds.y;
+ anchorPoint.x = bounds.x + bounds.width / 2;
+ anchorPoint.y = bounds.y;
  break;
  case "l": // Left edge
- scaleX = 1 - dx / bounds.width;
- pivotX = bounds.x + bounds.width;
+ anchorPoint.x = bounds.x + bounds.width;
+ anchorPoint.y = bounds.y + bounds.height / 2;
+ break;
+ default:
+ anchorPoint.x = bounds.x + bounds.width / 2;
+ anchorPoint.y = bounds.y + bounds.height / 2;
+ }
+ 
+ return anchorPoint;
+ }
+
+ private calculateEdgeScaleFactors(dx: number, dy: number, edge: string, bounds: Rectangle): Point {
+ const scaleFactors = new Point(1, 1);
+ 
+ switch (edge) {
+ case "t": // Top edge
+ scaleFactors.y = 1 - dy / bounds.height;
+ break;
+ case "r": // Right edge
+ scaleFactors.x = 1 + dx / bounds.width;
+ break;
+ case "b": // Bottom edge
+ scaleFactors.y = 1 + dy / bounds.height;
+ break;
+ case "l": // Left edge
+ scaleFactors.x = 1 - dx / bounds.width;
  break;
  }
-
- // Apply minimum scale constraints
- const minPixelSize = 10;
- const minScaleX = minPixelSize / bounds.width;
- const minScaleY = minPixelSize / bounds.height;
  
- // 🎯 BOUNDARY ENFORCEMENT: Calculate maximum scale to keep within canvas bounds
- const canvasBounds = BoundaryUtils.getCanvasBoundsWithGlobalMargins();
- const maxScale = BoundaryUtils.getMaxAllowedScale(bounds, canvasBounds);
- 
- scaleX = Math.max(0.2, minScaleX, Math.min(maxScale.scaleX, scaleX));
- scaleY = Math.max(0.2, minScaleY, Math.min(maxScale.scaleY, scaleY));
-
- // 🔄 PIVOT RESET: Store original pivots and temporarily reset them for predictable scaling
- const originalPivots: Array<{obj: any, pivot: {x: number, y: number}}> = [];
- 
- this.state.selectedObjects.forEach(obj => {
- if (obj.pivot && (obj.pivot.x !== 0 || obj.pivot.y !== 0)) {
- // Store original pivot
- originalPivots.push({
- obj: obj,
- pivot: { x: obj.pivot.x, y: obj.pivot.y }
- });
- 
- // Temporarily reset pivot to (0,0) for predictable scaling behavior
- obj.pivot.set(0, 0);
- console.log('🔄 SCALING: Temporarily reset pivot for edge scaling');
- }
- });
-
- // Apply transformation to all selected objects
- this.state.selectedObjects.forEach(obj => {
- if (obj.scale && obj.position) {
- const relativeX = obj.position.x - pivotX;
- const relativeY = obj.position.y - pivotY;
-
- // 🎯 STROKE WIDTH PRESERVATION: Store original stroke width if not already stored
- this.preserveStrokeWidth(obj);
-
- obj.scale.x = Math.abs(obj.scale.x * scaleX);
- obj.scale.y = Math.abs(obj.scale.y * scaleY);
-
- // 🎯 STROKE WIDTH PRESERVATION: Adjust stroke width to maintain visual consistency
- this.adjustStrokeWidth(obj);
-
- obj.position.x = pivotX + relativeX * scaleX;
- obj.position.y = pivotY + relativeY * scaleY;
- }
- });
-
- // 🔄 PIVOT RESTORE: Restore original pivots after scaling
- originalPivots.forEach(({obj, pivot}) => {
- obj.pivot.set(pivot.x, pivot.y);
- console.log('🔄 SCALING: Restored original pivot after edge scaling');
- });
+ return scaleFactors;
  }
 
  /**
@@ -347,13 +287,6 @@ export class ScaleObjects {
  // Update transform start with the clamped position
  this.state.transformStart.x += clampedDx;
  this.state.transformStart.y += clampedDy;
- 
- // Log boundary constraint if movement was limited
- if (Math.abs(dx - clampedDx) > 1 || Math.abs(dy - clampedDy) > 1) {
- console.log(
- `🎯 SELECTION: Drag constrained - requested delta (${Math.round(dx)}, ${Math.round(dy)}), applied (${Math.round(clampedDx)}, ${Math.round(clampedDy)})`
- );
- }
  }
 
  /**
@@ -362,55 +295,15 @@ export class ScaleObjects {
  public scaleSelectedObjects(scaleX: number, scaleY: number): void {
  if (this.state.selectedObjects.length === 0) return;
 
- // Calculate center point of selection
+ // Calculate center point of selection as anchor
  const bounds = this.calculateCombinedBounds(this.state.selectedObjects);
- const centerX = bounds.x + bounds.width / 2;
- const centerY = bounds.y + bounds.height / 2;
-
- // 🔄 PIVOT RESET: Store original pivots and temporarily reset them for predictable scaling
- const originalPivots: Array<{obj: any, pivot: {x: number, y: number}}> = [];
+ const centerPoint = new Point(
+ bounds.x + bounds.width / 2,
+ bounds.y + bounds.height / 2
+ );
  
- this.state.selectedObjects.forEach(obj => {
- if (obj.pivot && (obj.pivot.x !== 0 || obj.pivot.y !== 0)) {
- // Store original pivot
- originalPivots.push({
- obj: obj,
- pivot: { x: obj.pivot.x, y: obj.pivot.y }
- });
- 
- // Temporarily reset pivot to (0,0) for predictable scaling behavior
- obj.pivot.set(0, 0);
- console.log('🔄 SCALING: Temporarily reset pivot for programmatic scaling');
- }
- });
-
- this.state.selectedObjects.forEach(obj => {
- if (obj.scale && obj.position) {
- // Store position relative to center
- const relativeX = obj.position.x - centerX;
- const relativeY = obj.position.y - centerY;
-
- // 🎯 STROKE WIDTH PRESERVATION: Store original stroke width if not already stored
- this.preserveStrokeWidth(obj);
-
- // Apply scale
- obj.scale.x *= scaleX;
- obj.scale.y *= scaleY;
-
- // 🎯 STROKE WIDTH PRESERVATION: Adjust stroke width to maintain visual consistency
- this.adjustStrokeWidth(obj);
-
- // Adjust position
- obj.position.x = centerX + relativeX * scaleX;
- obj.position.y = centerY + relativeY * scaleY;
- }
- });
-
- // 🔄 PIVOT RESTORE: Restore original pivots after scaling
- originalPivots.forEach(({obj, pivot}) => {
- obj.pivot.set(pivot.x, pivot.y);
- console.log('🔄 SCALING: Restored original pivot after programmatic scaling');
- });
+ const scaleFactors = new Point(scaleX, scaleY);
+ this.applyScaleTransformation(scaleFactors, centerPoint);
  }
 
  private calculateCombinedBounds(objects: any[]): Rectangle {
@@ -433,8 +326,7 @@ export class ScaleObjects {
  }
 
  /**
- * 🎯 STROKE WIDTH PRESERVATION: Attempt to preserve stroke width during scaling
- * Note: This is a complex problem in PixiJS. For now, we log the issue and mark objects.
+ * Store stroke width preservation data for Graphics objects
  */
  private preserveStrokeWidth(obj: any): void {
  // Skip if not a Graphics object or if we've already processed it
@@ -448,13 +340,10 @@ export class ScaleObjects {
  if (obj.geometry && typeof obj.geometry.setScaleMode === 'function') {
  obj.geometry.setScaleMode(false); // Disable scaling for geometry if available
  }
- 
- console.log(`🎯 STROKE: Marked Graphics object for stroke preservation (may have visual scaling)`);
  }
 
  /**
- * 🎯 STROKE WIDTH PRESERVATION: Log scaling information for debugging
- * Note: Full stroke width preservation requires more complex graphics recreation.
+ * Log scaling information for stroke width debugging
  */
  private adjustStrokeWidth(obj: any): void {
  if (!obj._strokeWidthPreservationAttempted || obj.constructor.name !== 'Graphics') return;
@@ -470,8 +359,7 @@ export class ScaleObjects {
  
  // Log significant scale changes that will affect stroke width
  if (Math.abs(averageScaleChange - 1.0) > 0.1) { // 10% threshold
- console.log(`⚠️ STROKE: Graphics object scaled by ${averageScaleChange.toFixed(2)}x - stroke width will change proportionally`);
- console.log(`   Current scale: (${currentScaleX.toFixed(2)}, ${currentScaleY.toFixed(2)}), Original: (${originalScaleX.toFixed(2)}, ${originalScaleY.toFixed(2)})`);
+ // Note: Graphics stroke width will change proportionally with scale
  }
  }
 }

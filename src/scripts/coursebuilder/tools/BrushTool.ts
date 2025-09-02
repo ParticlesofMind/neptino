@@ -12,6 +12,7 @@ import {
  hexToNumber,
 } from "./SharedResources";
 import { BoundaryUtils } from "./BoundaryUtils";
+import { createHighQualityGraphics, alignToPixel } from "../utils/graphicsQuality";
 
 interface BrushSettings {
  color: string;
@@ -42,7 +43,7 @@ export class BrushTool extends BaseTool {
  this.isDrawing = true;
 
  // Create new graphics object for this stroke with authentic marker properties
- this.currentStroke = new Graphics();
+ this.currentStroke = createHighQualityGraphics();
  this.currentStroke.eventMode = "static";
  this.currentStroke.alpha = BRUSH_CONSTANTS.FIXED_OPACITY; // Fixed opacity like real markers
 
@@ -56,21 +57,24 @@ export class BrushTool extends BaseTool {
  return; // Exit early - no creation allowed in margins
  }
  
- this.lastPoint.copyFrom(localPoint);
- this.strokePoints = [localPoint.clone()];
+ // Align coordinates for pixel-perfect rendering
+ const alignedPoint = { x: alignToPixel(localPoint.x), y: alignToPixel(localPoint.y) };
+ 
+ this.lastPoint.copyFrom(alignedPoint);
+ this.strokePoints = [new Point(alignedPoint.x, alignedPoint.y)];
 
  console.log(
- `🖍️ BRUSH: Container local point: (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`,
+ `🖍️ BRUSH: Container local point: (${Math.round(alignedPoint.x)}, ${Math.round(alignedPoint.y)})`,
  );
 
  // Set stroke style with authentic marker characteristics
  const color = hexToNumber(this.settings.color);
  console.log(
- `🖍️ BRUSH: Setting authentic marker stroke - color: ${color} (from ${this.settings.color}), width: ${this.settings.size}`,
+ `🖍️ BRUSH: Setting high-quality marker stroke - color: ${color} (from ${this.settings.color}), width: ${this.settings.size}`,
  );
 
  // Start the drawing path - just moveTo, don't stroke yet
- this.currentStroke.moveTo(localPoint.x, localPoint.y);
+ this.currentStroke.moveTo(alignedPoint.x, alignedPoint.y);
 
  // Add to container
  container.addChild(this.currentStroke);

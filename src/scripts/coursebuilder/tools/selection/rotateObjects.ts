@@ -172,13 +172,11 @@ export class RotateObjects {
  const cos = Math.cos(angleInRadians);
  const sin = Math.sin(angleInRadians);
  
- obj.position.x = center.x + (relativeX * cos - relativeY * sin);
- obj.position.y = center.y + (relativeX * sin + relativeY * cos);
- }
- });
- }
-
- private calculateCombinedBounds(objects: any[]): Rectangle {
+         obj.position.x = center.x + (relativeX * cos - relativeY * sin);
+         obj.position.y = center.y + (relativeX * sin + relativeY * cos);
+         }
+         });
+         } private calculateCombinedBounds(objects: any[]): Rectangle {
  if (objects.length === 0) return new Rectangle(0, 0, 0, 0);
 
  let minX = Infinity;

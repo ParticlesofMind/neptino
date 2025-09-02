@@ -49,6 +49,9 @@ export class SimplePerspectiveManager {
 
         // Find the canvas when it gets mounted
         this.findCanvas();
+        
+        // Initialize zoom display
+        setTimeout(() => this.updateZoomDisplay(), 100); // Small delay to ensure DOM is ready
 
         console.log('🔍 Simple Perspective Manager initialized');
     }

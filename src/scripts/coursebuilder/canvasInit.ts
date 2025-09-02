@@ -133,7 +133,6 @@ export async function initializeCanvas(): Promise<void> {
         console.log('🎯 Tool Coordinator commands: toolCoordinator.debugState(), toolCoordinator.resetAllTools()');
         console.log('📐 Canvas commands: showCanvasInfo(), resizeCanvas()');
         console.log('📐 Layout commands: toggleCanvasLayout(), useGridLayout(), useCompactLayout(), useAutoLayout()');
-        console.log('🖼️ Canvas issue debugging: If canvas shows wrong size, check devicePixelRatio with showCanvasInfo()');
 
         // Add layout manager debug commands
         if (layoutManager) {

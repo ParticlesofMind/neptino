@@ -91,9 +91,77 @@ export class SelectionVisuals {
         }
 
         return selectionGroup;
- }
+    }
 
-    public removeSelectionGroup(selectionGroup: SelectionGroup | null): void {
+    /**
+     * Update the bounds of an existing selection group after transformations
+     */
+    public updateSelectionGroupBounds(selectionGroup: SelectionGroup): void {
+        if (!selectionGroup || selectionGroup.objects.length === 0) return;
+        
+        // Recalculate bounds based on current object positions/transformations
+        const newBounds = this.calculateCombinedBounds(selectionGroup.objects);
+        selectionGroup.bounds = newBounds;
+        
+        // Update visual elements to match new bounds
+        this.updateSelectionBoxPosition(selectionGroup.selectionBox, newBounds);
+        this.updateTransformHandlePositions(selectionGroup.transformHandles, newBounds);
+        
+        if (selectionGroup.rotationHandle) {
+            // Recreate rotation handle with new bounds
+            const oldRotationHandle = selectionGroup.rotationHandle;
+            const parentContainer = oldRotationHandle.graphics.parent;
+            if (parentContainer) {
+                parentContainer.removeChild(oldRotationHandle.graphics);
+            }
+            const newRotationHandle = this.rotator.createRotationHandle(newBounds);
+            selectionGroup.rotationHandle = newRotationHandle;
+            if (parentContainer && newRotationHandle) {
+                parentContainer.addChild(newRotationHandle.graphics);
+            }
+        }
+    }
+
+    /**
+     * Update selection box position and size
+     */
+    private updateSelectionBoxPosition(selectionBox: Graphics, bounds: Rectangle): void {
+        selectionBox.clear();
+        selectionBox.rect(bounds.x, bounds.y, bounds.width, bounds.height);
+        selectionBox.stroke({ width: 2, color: 0x007ACC });
+    }
+
+    /**
+     * Update transform handle positions
+     */
+    private updateTransformHandlePositions(transformHandles: TransformHandle[], bounds: Rectangle): void {
+        transformHandles.forEach(handle => {
+            const size = 8;
+            const halfSize = size / 2;
+            let x = 0;
+            let y = 0;
+
+            // Calculate position based on handle type
+            switch (handle.position) {
+                case 'tl': x = bounds.x - halfSize; y = bounds.y - halfSize; break;
+                case 'tr': x = bounds.x + bounds.width - halfSize; y = bounds.y - halfSize; break;
+                case 'bl': x = bounds.x - halfSize; y = bounds.y + bounds.height - halfSize; break;
+                case 'br': x = bounds.x + bounds.width - halfSize; y = bounds.y + bounds.height - halfSize; break;
+                case 't': x = bounds.x + bounds.width / 2 - halfSize; y = bounds.y - halfSize; break;
+                case 'r': x = bounds.x + bounds.width - halfSize; y = bounds.y + bounds.height / 2 - halfSize; break;
+                case 'b': x = bounds.x + bounds.width / 2 - halfSize; y = bounds.y + bounds.height - halfSize; break;
+                case 'l': x = bounds.x - halfSize; y = bounds.y + bounds.height / 2 - halfSize; break;
+            }
+
+            // Update handle graphics position
+            handle.graphics.x = x + halfSize;
+            handle.graphics.y = y + halfSize;
+            
+            // Update handle bounds for hit testing
+            handle.bounds.x = x;
+            handle.bounds.y = y;
+        });
+    }    public removeSelectionGroup(selectionGroup: SelectionGroup | null): void {
         if (!selectionGroup) return;
 
         // Clear any pending show delay
@@ -127,24 +195,54 @@ export class SelectionVisuals {
  let minY = Infinity;
  let maxX = -Infinity;
  let maxY = -Infinity;
+ let validObjectCount = 0;
 
- objects.forEach(obj => {
+ objects.forEach((obj, index) => {
+ // Skip selection graphics, transform handles, debug visuals, and other UI elements
+ if (obj.name?.startsWith('selection-') || 
+     obj.name?.startsWith('transform-') ||
+     obj.name?.startsWith('marquee-') ||
+     obj.name?.startsWith('debug-') ||
+     obj.name?.includes('debug') ||
+     obj.name?.includes('visual') ||
+     obj.name?.includes('indicator')) {
+   // Skip UI/debug object
+   return;
+ }
+
  // Force bounds recalculation to get accurate current bounds
  let bounds;
- try {
- // Force fresh bounds calculation
- bounds = obj.getBounds(true) || obj.getBounds();
- } catch {
- bounds = obj.getBounds();
- }
- 
- minX = Math.min(minX, bounds.x);
+         try {
+             // Force fresh bounds calculation
+             bounds = obj.getBounds(true) || obj.getBounds();
+         } catch {
+             bounds = obj.getBounds();
+         }
+
+         // Validate bounds values and skip invalid objects
+         if (isNaN(bounds.x) || isNaN(bounds.y) || bounds.width <= 0 || bounds.height <= 0) {
+             return;
+         }
+
+         // Skip objects that are unreasonably large (likely UI elements or debug visuals)
+         if (bounds.width > 2000 || bounds.height > 2000) {
+             return;
+         } minX = Math.min(minX, bounds.x);
  minY = Math.min(minY, bounds.y);
  maxX = Math.max(maxX, bounds.x + bounds.width);
  maxY = Math.max(maxY, bounds.y + bounds.height);
+ validObjectCount++;
  });
 
- return new Rectangle(minX, minY, maxX - minX, maxY - minY);
+ // If no valid objects found, return a default rectangle
+ if (validObjectCount === 0) {
+   console.warn('⚠️ BOUNDS DEBUG: No valid objects found for bounds calculation');
+   return new Rectangle(0, 0, 100, 100);
+ }
+
+ const combinedBounds = new Rectangle(minX, minY, maxX - minX, maxY - minY);
+
+ return combinedBounds;
  }
 
  private createSelectionBox(bounds: Rectangle): Graphics {
@@ -333,23 +431,17 @@ export class SelectionVisuals {
  /**
  * Apply cursor to canvas element (preferred) or document body as fallback
  */
- private setCursor(cursor: string): void {
- console.log('🖱️ SelectionVisuals.setCursor called with:', cursor);
- 
- // Try to set on canvas element first (this takes precedence in the app)
- if (this.canvasElement) {
- this.canvasElement.style.cursor = cursor;
- console.log('🖱️ Set cursor on canvas element:', cursor);
- } else {
- // Fallback to document body
- if (typeof document !== 'undefined' && document.body) {
- document.body.style.cursor = cursor;
- console.log('🖱️ Set cursor on document body:', cursor);
- }
- }
- }
-
- /**
+    private setCursor(cursor: string): void {
+        // Try to set on canvas element first (this takes precedence in the app)
+        if (this.canvasElement) {
+            this.canvasElement.style.cursor = cursor;
+        } else {
+            // Fallback to document body
+            if (typeof document !== 'undefined' && document.body) {
+                document.body.style.cursor = cursor;
+            }
+        }
+    } /**
   * Reset cursor to default
   */
  public resetCursor(): void {

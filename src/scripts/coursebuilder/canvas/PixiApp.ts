@@ -42,19 +42,23 @@ export class PixiApp {
       return this.app;
     }
 
+    // Higher resolution for crisp graphics at all zoom levels
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    const highQualityResolution = Math.max(devicePixelRatio, 2); // Minimum 2x resolution for crisp zoom
+
     const defaultConfig: PixiAppConfig = {
       width: 900,           // Canvas width (4:3 aspect ratio)
       height: 1200,         // Canvas height (4:3 aspect ratio)
       backgroundColor: 0xffffff, // White background
       antialias: true,      // Enable antialiasing for smooth edges
-      resolution: window.devicePixelRatio || 1, // Use device pixel ratio for crisp rendering
+      resolution: highQualityResolution, // High resolution for crisp rendering at all zoom levels
       autoDensity: true     // Automatically adjust canvas CSS size
     };
 
     const finalConfig = { ...defaultConfig, ...config };
 
     try {
-      console.log('🎨 Creating PIXI Application with optimized settings...', finalConfig);
+      console.log('🎨 Creating PIXI Application with high-quality settings...', finalConfig);
 
       this.app = new Application();
       await this.app.init({
@@ -63,8 +67,8 @@ export class PixiApp {
         hello: false, // Disable PIXI hello message
       });
 
-      console.log('✅ PIXI Application created successfully');
-      console.log(`📐 Canvas size: ${finalConfig.width}x${finalConfig.height}`);
+      console.log('✅ PIXI Application created successfully with high-quality rendering');
+      console.log(`📐 Canvas size: ${finalConfig.width}x${finalConfig.height}, Resolution: ${finalConfig.resolution}x`);
       return this.app;
 
     } catch (error) {

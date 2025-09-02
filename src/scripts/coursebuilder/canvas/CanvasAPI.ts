@@ -410,6 +410,29 @@ export class CanvasAPI {
   }
 
   /**
+   * Clear all debug visuals from the canvas
+   */
+  public clearDebugVisuals(): void {
+    if (!this.toolManager) {
+      console.warn('⚠️ Cannot clear debug visuals - tool manager not ready');
+      return;
+    }
+
+    const selectionTool = this.toolManager.getActiveTool();
+    if (selectionTool && 'clearDebugVisuals' in selectionTool) {
+      (selectionTool as any).clearDebugVisuals();
+    } else {
+      // If selection tool is not active, try to get it from the tools map
+      const selectionTool = (this.toolManager as any).tools?.get('selection');
+      if (selectionTool && 'clearDebugVisuals' in selectionTool) {
+        (selectionTool as any).clearDebugVisuals();
+      }
+    }
+
+    console.log('🧹 Debug visuals cleared from canvas');
+  }
+
+  /**
    * Destroy the entire canvas system
    */
   public destroy(): void {
