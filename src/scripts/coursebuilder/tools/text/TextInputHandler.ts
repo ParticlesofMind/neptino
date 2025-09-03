@@ -31,6 +31,8 @@ export class TextInputHandler implements ITextInputHandler {
 
     // Add event listeners
     document.addEventListener('keydown', this.boundKeyDown);
+    // Some environments fire both keydown and keypress for printable chars.
+    // We handle insertion on keydown; keep keypress as a no-op to avoid duplicates.
     document.addEventListener('keypress', this.boundKeyPress);
     document.addEventListener('input', this.boundInput);
 
@@ -129,16 +131,16 @@ export class TextInputHandler implements ITextInputHandler {
         event.preventDefault();
         break;
     }
-  }
 
-  private handleKeyPress(event: KeyboardEvent): void {
-    if (!this.activeTextArea) return;
-
-    // Handle printable characters
-    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
+    // Fallback: handle printable characters on keydown as well (keypress may not fire in all environments)
+    if (event.key && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
       this.insertCharacter(event.key);
       event.preventDefault();
     }
+  }
+
+  private handleKeyPress(_event: KeyboardEvent): void {
+    // Intentionally no-op to avoid double-insertion; keydown handles input.
   }
 
   private handleInput(event: Event): void {

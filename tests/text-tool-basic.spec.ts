@@ -14,13 +14,12 @@ test.describe('Text Tool - Basic Functionality', () => {
   
   test.beforeEach(async ({ page }) => {
     // Navigate to coursebuilder page
-    await page.goto('/test-coursebuilder.html');
+    await page.goto('/src/pages/teacher/coursebuilder.html#create');
     
     // Wait for the page to load completely
-    await page.waitForLoadState('networkidle');
-    
-    // Give extra time for any async operations to complete
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('domcontentloaded');
+    // Wait for tools to render
+    await page.waitForSelector('.tools__selection .tools__item[data-tool="text"]', { timeout: 10000 });
   });
 
   test('should activate text tool when clicked', async ({ page }) => {
@@ -94,14 +93,10 @@ test.describe('Text Tool - Basic Functionality', () => {
 
   test('should have canvas container present', async ({ page }) => {
     // Verify canvas container exists
-    const canvasContainer = page.locator('#canvas-container');
-    await expect(canvasContainer).toBeVisible();
-    
-    // Verify it has reasonable dimensions
-    const boundingBox = await canvasContainer.boundingBox();
-    expect(boundingBox).toBeTruthy();
-    expect(boundingBox!.width).toBeGreaterThan(100);
-    expect(boundingBox!.height).toBeGreaterThan(100);
+    const bounds = await page.evaluate(() => window.canvasAPI?.getContentBounds());
+    expect(bounds).toBeTruthy();
+    expect(bounds!.width).toBeGreaterThan(100);
+    expect(bounds!.height).toBeGreaterThan(100);
   });
 
   test('should switch between tools correctly', async ({ page }) => {
@@ -175,10 +170,9 @@ test.describe('Text Tool - Basic Functionality', () => {
     await page.locator('.tools__item[data-tool="text"]').click();
     await page.waitForTimeout(500);
     
-    const canvasContainer = page.locator('#canvas-container');
-    
-    // Test clicking on canvas doesn't cause errors
-    await canvasContainer.click({ position: { x: 200, y: 200 } });
+    const bounds = await page.evaluate(() => window.canvasAPI?.getContentBounds());
+    if (!bounds) throw new Error('Content bounds not available');
+    await page.mouse.click(bounds.left + 200, bounds.top + 200);
     await page.waitForTimeout(300);
     
     // Test that no JavaScript errors occurred

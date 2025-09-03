@@ -28,12 +28,12 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
   
   // Setup: Navigate to page and activate text tool before each test
   test.beforeEach(async ({ page }) => {
-    await page.goto('/test-coursebuilder.html');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/src/pages/teacher/coursebuilder.html#create');
+    await page.waitForLoadState('domcontentloaded');
     
     // Wait for canvas and scripts to initialize
-    await page.waitForSelector('#canvas-container', { timeout: 10000 });
-    await page.waitForTimeout(2000);
+    await page.waitForSelector('.tools__selection .tools__item[data-tool="text"]', { timeout: 10000 });
+    await page.waitForTimeout(500);
     
     // Activate the text tool
     const textTool = page.locator('.tools__item[data-tool="text"]');
@@ -45,15 +45,11 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
   test.describe('Core Drag-to-Create System', () => {
     
     test('should allow dragging to create text areas', async ({ page }) => {
-      // Get canvas bounds for positioning
-      const canvas = page.locator('#canvas-container');
-      const canvasBounds = await canvas.boundingBox();
-      
-      if (!canvasBounds) throw new Error('Canvas not found');
-      
-      // Start drag at a good position within the canvas
-      const startX = canvasBounds.x + 100;
-      const startY = canvasBounds.y + 100;
+      // Use CanvasAPI content bounds for safe clicks
+      const bounds = await page.evaluate(() => window.canvasAPI?.getContentBounds());
+      if (!bounds) throw new Error('Content bounds not available');
+      const startX = bounds.left + 100;
+      const startY = bounds.top + 100;
       const endX = startX + 200;
       const endY = startY + 100;
       
@@ -70,21 +66,17 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
       // Verify text area was created
       // Check for presence of text area elements in the DOM or canvas
       const textAreaExists = await page.evaluate(() => {
-        // Look for text area indicators in the global canvas or tool manager
-        return window.canvas && window.canvas.getActiveTool() === 'text';
+        return window.canvasAPI && window.canvasAPI.getActiveTool() === 'text';
       });
       
       expect(textAreaExists).toBe(true);
     });
     
     test('should show drag preview during drag operation', async ({ page }) => {
-      const canvas = page.locator('#canvas-container');
-      const canvasBounds = await canvas.boundingBox();
-      
-      if (!canvasBounds) throw new Error('Canvas not found');
-      
-      const startX = canvasBounds.x + 120;
-      const startY = canvasBounds.y + 120;
+      const bounds = await page.evaluate(() => window.canvasAPI?.getContentBounds());
+      if (!bounds) throw new Error('Content bounds not available');
+      const startX = bounds.left + 120;
+      const startY = bounds.top + 120;
       
       // Start drag
       await page.mouse.move(startX, startY);
@@ -111,13 +103,10 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
     });
     
     test('should not create text area for very small drags', async ({ page }) => {
-      const canvas = page.locator('#canvas-container');
-      const canvasBounds = await canvas.boundingBox();
-      
-      if (!canvasBounds) throw new Error('Canvas not found');
-      
-      const startX = canvasBounds.x + 150;
-      const startY = canvasBounds.y + 150;
+      const bounds = await page.evaluate(() => window.canvasAPI?.getContentBounds());
+      if (!bounds) throw new Error('Content bounds not available');
+      const startX = bounds.left + 150;
+      const startY = bounds.top + 150;
       
       // Perform very small drag (less than minimum size)
       await page.mouse.move(startX, startY);
@@ -177,13 +166,10 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
     
     test('should show blinking cursor when text area is active', async ({ page }) => {
       // Create and activate text area
-      const canvas = page.locator('#canvas-container');
-      const canvasBounds = await canvas.boundingBox();
-      
-      if (!canvasBounds) throw new Error('Canvas not found');
-      
-      const x = canvasBounds.x + 200;
-      const y = canvasBounds.y + 200;
+      const bounds = await page.evaluate(() => window.canvasAPI?.getContentBounds());
+      if (!bounds) throw new Error('Content bounds not available');
+      const x = bounds.left + 200;
+      const y = bounds.top + 200;
       
       // Create text area
       await page.mouse.move(x, y);
@@ -210,13 +196,10 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
     
     test('should deactivate text area when clicking outside', async ({ page }) => {
       // Create and activate text area
-      const canvas = page.locator('#canvas-container');
-      const canvasBounds = await canvas.boundingBox();
-      
-      if (!canvasBounds) throw new Error('Canvas not found');
-      
-      const textX = canvasBounds.x + 100;
-      const textY = canvasBounds.y + 100;
+      const bounds = await page.evaluate(() => window.canvasAPI?.getContentBounds());
+      if (!bounds) throw new Error('Content bounds not available');
+      const textX = bounds.left + 100;
+      const textY = bounds.top + 100;
       
       // Create text area
       await page.mouse.move(textX, textY);
@@ -249,13 +232,10 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
     
     // Helper function to create and activate a text area
     async function createAndActivateTextArea(page, x = 150, y = 150) {
-      const canvas = page.locator('#canvas-container');
-      const canvasBounds = await canvas.boundingBox();
-      
-      if (!canvasBounds) throw new Error('Canvas not found');
-      
-      const actualX = canvasBounds.x + x;
-      const actualY = canvasBounds.y + y;
+      const bounds = await page.evaluate(() => window.canvasAPI?.getContentBounds());
+      if (!bounds) throw new Error('Content bounds not available');
+      const actualX = bounds.left + x;
+      const actualY = bounds.top + y;
       
       // Create text area
       await page.mouse.move(actualX, actualY);
@@ -266,7 +246,13 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
       
       // Activate with double-click
       await page.mouse.dblclick(actualX + 100, actualY + 50);
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(200);
+      // Ensure canvas is focused for keyboard events
+      await page.evaluate(() => {
+        const c = document.querySelector('#pixi-canvas') as HTMLElement | null;
+        if (c) (c as any).focus?.();
+      });
+      await page.waitForTimeout(100);
     }
     
     test('should accept typed text input', async ({ page }) => {
@@ -386,13 +372,10 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
   test.describe('Cursor Navigation', () => {
     
     async function createTextAreaWithContent(page, text = 'Hello World Test') {
-      const canvas = page.locator('#canvas-container');
-      const canvasBounds = await canvas.boundingBox();
-      
-      if (!canvasBounds) throw new Error('Canvas not found');
-      
-      const x = canvasBounds.x + 150;
-      const y = canvasBounds.y + 150;
+      const bounds = await page.evaluate(() => window.canvasAPI?.getContentBounds());
+      if (!bounds) throw new Error('Content bounds not available');
+      const x = bounds.left + 150;
+      const y = bounds.top + 150;
       
       // Create and activate text area
       await page.mouse.move(x, y);

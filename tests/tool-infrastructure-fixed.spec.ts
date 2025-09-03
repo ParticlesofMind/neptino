@@ -78,7 +78,7 @@ class ToolTestHelpers {
 test.describe('Core Tool Infrastructure', () => {
   let helpers: ToolTestHelpers;
 
-  beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     helpers = new ToolTestHelpers(page);
     await page.goto('/test-coursebuilder.html');
     await page.waitForLoadState('networkidle');

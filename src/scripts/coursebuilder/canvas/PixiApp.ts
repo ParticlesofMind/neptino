@@ -120,6 +120,13 @@ export class PixiApp {
         this.container.appendChild(this.app.canvas);
       }
       
+      // Ensure a stable id on the canvas for tools/tests that query it
+      try {
+        this.app.canvas.id = 'pixi-canvas';
+        // Make canvas focusable for keyboard handling
+        (this.app.canvas as any).tabIndex = 0;
+      } catch {}
+
       this.mounted = true;
 
       console.log('✅ Canvas mounted to', this.containerSelector);

@@ -86,14 +86,34 @@ export class TextTool extends BaseTool {
     console.log(`📝 TextTool pointer down at (${clampedPoint.x.toFixed(1)}, ${clampedPoint.y.toFixed(1)})`);
 
     // Check if clicking inside an existing text area
-    const existingTextArea = this.findTextAreaAtPoint(clampedPoint);
+    // Use global point for hit-testing against text areas
+    const globalClamped = (container as any).toGlobal ? (container as any).toGlobal(clampedPoint) : event.global;
+    const existingTextArea = this.findTextAreaAtPoint(globalClamped);
     if (existingTextArea) {
-      console.log('📝 Clicked inside existing text area - activating for editing');
+      console.log('📝 Clicked inside existing text area');
+      // Convert to text-area local coordinates for precise caret placement
+      const localInText = existingTextArea.pixiContainer.toLocal(globalClamped);
+
+      // Detect double-click inside the text area to enter editing mode explicitly
+      const isDoubleClick = (currentTime - this.lastClickTime < 350) &&
+                            (Math.abs(localInText.x - this.lastClickPoint.x) < 8) &&
+                            (Math.abs(localInText.y - this.lastClickPoint.y) < 8);
+
       this.activateTextArea(existingTextArea);
-      
-      // Handle mouse events for text selection
+
       const inputHandler = this.ensureInputHandler(container);
-      inputHandler.handleMouseDown(clampedPoint.x, clampedPoint.y);
+      if (isDoubleClick) {
+        // Double-click: place caret and fully enter edit mode
+        console.log('📝 Double-click inside text area - entering edit mode');
+        this.handleTextAreaDoubleClick(existingTextArea, localInText);
+      } else {
+        // Single-click: place caret and prepare for drag selection
+        inputHandler.handleMouseDown(localInText.x, localInText.y);
+      }
+
+      // Update click tracking in text-area local space
+      this.lastClickTime = currentTime;
+      this.lastClickPoint.copyFrom(localInText);
       return;
     }
 
@@ -135,7 +155,11 @@ export class TextTool extends BaseTool {
     } else {
       // Handle text selection drag if input handler exists
       const inputHandler = this.ensureInputHandler(container);
-      inputHandler.handleMouseMove(localPoint.x, localPoint.y);
+      if (this.activeTextArea) {
+        const global = (container as any).toGlobal ? (container as any).toGlobal(localPoint) : (event as any).global;
+        const localInText = this.activeTextArea.pixiContainer.toLocal(global);
+        inputHandler.handleMouseMove(localInText.x, localInText.y);
+      }
       
       // Update cursor based on hover context
       this.updatePointerCursor(localPoint);
@@ -157,6 +181,19 @@ export class TextTool extends BaseTool {
   onActivate(): void {
     super.onActivate();
     this.initializeCursorManagement();
+    // Expose instance for tests and debug
+    try {
+      const self = this as any;
+      const api = new Proxy(self, {
+        get(target, prop: PropertyKey, receiver) {
+          if (prop === 'activeTextArea') return target.activeTextArea;
+          if (prop === 'textCursor') return target.textCursor;
+          if (prop === 'settings') return target.settings;
+          return Reflect.get(target, prop, receiver);
+        }
+      });
+      (window as any).textTool = api;
+    } catch {}
     console.log('📝 TextTool activated');
   }
 
@@ -487,6 +524,11 @@ export class TextTool extends BaseTool {
     const inputHandler = this.ensureInputHandler(textArea.pixiContainer);
     inputHandler.setActiveTextArea(textArea);
     inputHandler.setActiveCursor(this.textCursor);
+    try {
+      // Ensure keyboard events route to the page
+      this.canvasElement = document.querySelector('#pixi-canvas');
+      (this.canvasElement as any)?.focus?.();
+    } catch {}
     
     // Position cursor at start
     const startPos = textArea.getCharacterPosition(0);
@@ -515,6 +557,17 @@ export class TextTool extends BaseTool {
     this.state.mode = 'inactive';
     
     console.log('📝 Text area deactivated');
+  }
+
+  // ======= Test/Debug accessors =======
+  public get activeTextAreaPublic(): TextArea | null {
+    return this.activeTextArea;
+  }
+  public get textCursorPublic(): TextCursor | null {
+    return this.textCursor;
+  }
+  public get settingsPublic(): TextSettings {
+    return this.settings;
   }
 
   private handleTextAreaDoubleClick(textArea: TextArea, localPoint: Point): void {

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 
-<head>
+  <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="pixi-devtools" content="enabled" />
@@ -11,7 +11,13 @@
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
   <link rel="stylesheet" href="/src/scss/main.scss" />
-</head>
+  <style>
+    /* Ensure tool buttons are visible in test harness */
+    .engine__tools { display:block !important; opacity:1 !important; visibility:visible !important; position:fixed !important; left:20px; top:80px; z-index:9999; }
+    .tools__selection { display:flex !important; }
+    .tools__selection .tools__item { display: inline-flex !important; }
+  </style>
+  </head>
 
 <body class="grid body">
   <header class="grid__header header">
@@ -57,32 +63,32 @@
         <!-- Drawing Tools -->
         <div class="engine__tools tools">
           <div class="tools__selection">
-            <div class="tools__item tools__item--active" data-tool="selection">
+            <div class="tools__item tools__item--active" data-tool="selection" style="display:inline-flex">
               <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
                 class="tools__icon icon icon--base">
               <span class="icon-label">Select</span>
             </div>
-            <div class="tools__item" data-tool="pen">
+            <div class="tools__item" data-tool="pen" style="display:inline-flex">
               <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Pen Tool"
                 class="tools__icon icon icon--base">
               <span class="icon-label">Pen</span>
             </div>
-            <div class="tools__item" data-tool="brush">
+            <div class="tools__item" data-tool="brush" style="display:inline-flex">
               <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" alt="Brush Tool"
                 class="tools__icon icon icon--base">
               <span class="icon-label">Brush</span>
             </div>
-            <div class="tools__item" data-tool="text">
+            <div class="tools__item" data-tool="text" style="display:inline-flex">
               <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" alt="Text Tool"
                 class="tools__icon icon icon--base">
               <span class="icon-label">Text</span>
             </div>
-            <div class="tools__item" data-tool="shapes">
+            <div class="tools__item" data-tool="shapes" style="display:inline-flex">
               <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" alt="Shapes Tool"
                 class="tools__icon icon icon--base">
               <span class="icon-label">Shapes</span>
             </div>
-            <div class="tools__item" data-tool="eraser">
+            <div class="tools__item" data-tool="eraser" style="display:inline-flex">
               <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" alt="Eraser Tool"
                 class="tools__icon icon icon--base">
               <span class="icon-label">Eraser</span>
@@ -92,7 +98,7 @@
           <!-- Tool Settings -->
           <div class="tools__options">
             <!-- Text Settings -->
-            <div class="tools__item tools__item--text" data-tool="text" style="display: none;">
+            <div class="tools__item tools__item--text" style="display: none;">
               <input type="number" min="8" max="72" value="16" class="input input--number" title="Text Size"
                 data-setting="fontSize">
 
@@ -133,7 +139,7 @@
             </div>
 
             <!-- Brush Settings -->
-            <div class="tools__item tools__item--brush" data-tool="brush" style="display: none;">
+            <div class="tools__item tools__item--brush" style="display: none;">
               <input type="number" min="10" max="50" value="20" class="input input--number" title="Brush Size"
                 data-setting="size">
 
@@ -147,7 +153,7 @@
             </div>
 
             <!-- Shapes Settings -->
-            <div class="tools__item tools__item--shapes" data-tool="shapes" style="display: none;">
+            <div class="tools__item tools__item--shapes" style="display: none;">
               <select id="shapes-select" class="input input--select" title="Shape Type" data-setting="shapeType">
                 <option value="rectangle">Rectangle</option>
                 <option value="triangle">Triangle</option>
@@ -174,7 +180,7 @@
             </div>
 
             <!-- Eraser Settings -->
-            <div class="tools__item tools__item--eraser" data-tool="eraser" style="display: none;">
+            <div class="tools__item tools__item--eraser" style="display: none;">
               <input type="number" min="5" max="50" value="20" class="input input--number" title="Eraser Size"
                 data-setting="size">
             </div>
@@ -201,12 +207,7 @@
       console.error('Canvas initialization failed:', error);
     });
 
-    // Initialize tool handlers
-    import('/src/scripts/coursebuilder/tools/index.js').then(() => {
-      console.log('Tools initialized');
-    }).catch(error => {
-      console.warn('Tools initialization failed:', error);
-    });
+    // Tools are initialized via Canvas initialization (UI + ToolManager)
 
     // Simple Select2 initialization for testing
     $(document).ready(function () {

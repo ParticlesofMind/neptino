@@ -301,6 +301,10 @@ export class ToolStateManager {
                 console.log(`✅ TOOL SYNC: Canvas tool successfully set to: ${toolName}`);
                 // Apply saved tool settings after successfully changing the tool
                 this.applyToolSettingsToCanvas(toolName);
+                // Ensure drawing events are enabled whenever a drawing tool is selected
+                if (typeof canvasAPI.enableDrawingEvents === 'function') {
+                    canvasAPI.enableDrawingEvents();
+                }
             } else {
                 console.error(`❌ TOOL SYNC: Failed to set canvas tool to: ${toolName}`);
             }
@@ -764,6 +768,7 @@ export class ToolStateManager {
         // Remove selected class from all tool items
         document.querySelectorAll('.tools__item').forEach(element => {
             element.classList.remove('tools__item--active');
+            element.classList.remove('active'); // compatibility for tests
         });
 
         // Add selected class to current tool item
@@ -772,9 +777,10 @@ export class ToolStateManager {
         );
         if (selectedTool) {
             const parentItem = selectedTool.closest('.tools__item');
-            if (parentItem) {
+                if (parentItem) {
                 parentItem.classList.add('tools__item--active');
-            }
+                parentItem.classList.add('active'); // compatibility for tests
+                }
         }
 
         // Hide placeholder and all tool settings (updated BEM selector)
@@ -786,15 +792,17 @@ export class ToolStateManager {
         }
 
         document
-            .querySelectorAll('.tools__options .tools__item[data-tool]')
+            .querySelectorAll('.tools__options .tools__item')
             .forEach(settings => {
                 (settings as HTMLElement).style.display = 'none';
             });
 
         // Show settings for current tool (updated BEM selector)
-        const toolSettings = document.querySelector(
-            `.tools__options .tools__item[data-tool="${toolName}"]`,
-        ) as HTMLElement;
+        const toolSettings = (document.querySelector(
+            `.tools__options .tools__item--${toolName}`,
+        ) as HTMLElement) || (document.querySelector(
+            `.tools__options [data-settings-for="${toolName}"]`,
+        ) as HTMLElement);
         if (toolSettings) {
             toolSettings.style.display = 'flex';
         } else if (placeholder) {

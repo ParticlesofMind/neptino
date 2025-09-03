@@ -337,6 +337,54 @@ export class CanvasAPI {
   }
 
   /**
+   * Get content bounds (canvas area minus margins) in CSS pixels.
+   */
+  public getContentBounds(): { left: number; top: number; width: number; height: number } | null {
+    const app = this.getApp();
+    if (!app || !app.canvas) return null;
+    try {
+      const rect = app.canvas.getBoundingClientRect();
+      const canvasPixelWidth = app.canvas.width || rect.width;
+      const canvasPixelHeight = app.canvas.height || rect.height;
+      const scaleX = rect.width / canvasPixelWidth;
+      const scaleY = rect.height / canvasPixelHeight;
+      const margins = canvasMarginManager.getMargins();
+      const left = rect.left + margins.left * scaleX;
+      const top = rect.top + margins.top * scaleY;
+      const width = rect.width - (margins.left + margins.right) * scaleX;
+      const height = rect.height - (margins.top + margins.bottom) * scaleY;
+      return { left, top, width, height };
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  /**
+   * Return basic info for top-level objects on the drawing layer
+   * Useful for E2E tests to assert creation/movement without leaking Pixi objects
+   */
+  public getDrawingObjectsInfo(): Array<{ index: number; type: string; name?: string; x: number; y: number; width: number; height: number }> {
+    const layer = this.getDrawingLayer();
+    if (!layer) return [];
+    try {
+      return layer.children.map((child: any, index: number) => {
+        const b = child.getBounds?.();
+        return {
+          index,
+          type: child.constructor?.name || 'Unknown',
+          name: (child as any).name,
+          x: typeof child.x === 'number' ? child.x : (b?.x ?? 0),
+          y: typeof child.y === 'number' ? child.y : (b?.y ?? 0),
+          width: b?.width ?? 0,
+          height: b?.height ?? 0,
+        };
+      });
+    } catch (_e) {
+      return [];
+    }
+  }
+
+  /**
    * Resize the canvas
    */
   public resize(width: number, height: number): void {
