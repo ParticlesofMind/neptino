@@ -5,14 +5,21 @@
 import { Graphics, Point, Rectangle } from "pixi.js";
 
 export interface SelectionSettings {
- // Selection settings can be expanded as needed
+  // Selection tool configuration
+  enableMirroring?: boolean;            // allow negative scale (mirror) when crossing anchor
+  restorePivotOnEnd?: boolean;          // restore original pivot after transform
+  rotationSnapDeg?: number;             // rotation snap increment in degrees (used with Shift)
+  scaleSnapStep?: number;               // scale snap step (e.g., 0.05) used with Ctrl/Cmd
 }
 
 export interface TransformHandle {
- type: "corner" | "edge" | "rotation";
- position: "tl" | "tr" | "bl" | "br" | "t" | "r" | "b" | "l" | "rotate";
- graphics: Graphics;
- bounds: Rectangle;
+  type: "corner" | "edge" | "rotation";
+  position: "tl" | "tr" | "bl" | "br" | "t" | "r" | "b" | "l" | "rotate";
+  graphics: Graphics;
+  bounds: Rectangle;
+  // Optional metadata for rotated frames and precise anchor math
+  index?: number; // 0..3 for corners or edges (order: tl,tr,br,bl for corners; t,r,b,l for edges)
+  center?: Point; // handle center in parent container local coordinates
 }
 
 export interface SelectionGroup {

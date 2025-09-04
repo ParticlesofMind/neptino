@@ -8,8 +8,11 @@ import { DisplayObjectManager } from "../canvas/DisplayObjectManager";
 
 export interface ToolSettings {
  selection: {
- // Selection tools typically don't need settings, but this prevents warnings
- enabled: boolean;
+   enabled: boolean;
+   enableMirroring?: boolean;
+   restorePivotOnEnd?: boolean;
+   rotationSnapDeg?: number;
+   scaleSnapStep?: number;
  };
  pen: {
  color: string;

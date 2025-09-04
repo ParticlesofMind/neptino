@@ -55,16 +55,29 @@ export class ClickSelection {
  return null;
  }
 
- public isSelectableObject(object: any): boolean {
- // Skip selection graphics and handles
- if (object.name?.startsWith('selection-') || 
-     object.name?.startsWith('transform-')) {
- return false;
- }
+  public isSelectableObject(object: any): boolean {
+    // Skip selection graphics and handles
+    if (object.name?.startsWith('selection-') || 
+        object.name?.startsWith('transform-') ||
+        this.isTransformerObject(object)) {
+      return false;
+    }
  
  // Check for valid drawable objects
- return object.getBounds && typeof object.getBounds === 'function';
- }
+    return object.getBounds && typeof object.getBounds === 'function';
+  }
+
+  private isTransformerObject(object: any): boolean {
+    // Exclude @pixi-essentials/transformer root and its children
+    let cur: any = object;
+    for (let i = 0; i < 5 && cur; i++) {
+      const ctorName = cur?.constructor?.name || '';
+      const name = cur?.name || '';
+      if (ctorName === 'Transformer' || name.includes('transformer')) return true;
+      cur = cur.parent;
+    }
+    return false;
+  }
 
  public isTextObject(object: any): boolean {
    return object && (

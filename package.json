@@ -52,6 +52,8 @@
   },
   "homepage": "https://github.com/[your-username]/neptino#readme",
   "dependencies": {
+    "@pixi-essentials/bounds": "^3.0.0",
+    "@pixi-essentials/transformer": "^3.0.4",
     "@pixi/devtools": "^2.0.1",
     "@pixi/layout": "^3.1.0",
     "@supabase/supabase-js": "^2.54.0",

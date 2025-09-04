@@ -27,6 +27,10 @@ export class ToolManager {
         this.settings = {
             selection: {
                 enabled: true,
+                enableMirroring: true,
+                restorePivotOnEnd: true,
+                rotationSnapDeg: 15,
+                scaleSnapStep: 0.05,
             },
             pen: {
                 color: "#000000", // Black for good visibility
