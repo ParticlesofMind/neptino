@@ -26,6 +26,10 @@ export class TransformController {
   private rotationSnapRad = 0; // radians; 0 disables snapping
   private scaleSnapStep = 0;   // 0 disables snapping
 
+  public isActive(): boolean {
+    return !!this.activeHandle;
+  }
+
   public begin(
     selectedObjects: any[],
     selectionGroup: SelectionGroup,
@@ -58,6 +62,7 @@ export class TransformController {
     this.anchorGlobal = container.toGlobal(this.anchorLocal);
 
     // Prepare per-object state and temporarily pivot around anchor
+    const isRotation = handle.type === 'rotation';
     this.objects = selectedObjects.map((obj) => {
       const state: PerObjectState = {
         obj,
@@ -65,15 +70,31 @@ export class TransformController {
         startScale: { x: obj.scale?.x ?? 1, y: obj.scale?.y ?? 1 },
         startRotation: obj.rotation ?? 0,
         startPivot: { x: obj.pivot?.x ?? 0, y: obj.pivot?.y ?? 0 },
-        localAnchor: obj.toLocal(this.anchorGlobal),
+        localAnchor: new Point(0, 0),
       };
 
-      // Align pivot to anchor without visual movement
-      if (obj.pivot) {
-        obj.pivot.set(state.localAnchor.x, state.localAnchor.y);
-        // Set position so that pivot maps exactly to anchorGlobal
-        const posInParent = obj.parent?.toLocal(this.anchorGlobal, undefined, undefined, false) ?? { x: 0, y: 0 };
-        obj.position.set(posInParent.x, posInParent.y);
+      if (isRotation) {
+        // For rotation: pivot around each object's own local center
+        let lb: Rectangle | null = null;
+        try { lb = obj.getLocalBounds(); } catch {}
+        const localCenter = lb
+          ? new Point(lb.x + lb.width * 0.5, lb.y + lb.height * 0.5)
+          : new Point((obj.width ?? 0) * 0.5, (obj.height ?? 0) * 0.5);
+        state.localAnchor = localCenter;
+        if (obj.pivot) {
+          const worldCenter = obj.toGlobal(localCenter);
+          obj.pivot.set(localCenter.x, localCenter.y);
+          const posInParent = obj.parent?.toLocal(worldCenter, undefined, undefined, false) ?? { x: 0, y: 0 };
+          obj.position.set(posInParent.x, posInParent.y);
+        }
+      } else {
+        // For scaling/dragging: pivot around the active handle's anchor (selection-based)
+        state.localAnchor = obj.toLocal(this.anchorGlobal);
+        if (obj.pivot) {
+          obj.pivot.set(state.localAnchor.x, state.localAnchor.y);
+          const posInParent = obj.parent?.toLocal(this.anchorGlobal, undefined, undefined, false) ?? { x: 0, y: 0 };
+          obj.position.set(posInParent.x, posInParent.y);
+        }
       }
 
       return state;
@@ -101,7 +122,9 @@ export class TransformController {
   }
 
   public end(): void {
-    if (this.restorePivotOnEnd) {
+    // Avoid restoring pivot after rotation to keep objects visually stable around their centers
+    const shouldRestore = this.restorePivotOnEnd && this.activeHandle?.type !== 'rotation';
+    if (shouldRestore) {
       this.objects.forEach((o) => {
         try {
           const currentPivotLocal = new Point(o.obj.pivot?.x ?? 0, o.obj.pivot?.y ?? 0);
@@ -112,7 +135,8 @@ export class TransformController {
         } catch {}
       });
     }
-    this.cleanupEphemeral();
+    // Fully reset controller state so no further updates are applied after mouseup
+    this.cleanup();
   }
 
   private applyRotation(pointerLocal: Point, modifiers?: { shiftKey?: boolean }): void {

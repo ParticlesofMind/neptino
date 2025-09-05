@@ -15,8 +15,8 @@ export interface SelectionSettings {
 export interface TransformHandle {
   type: "corner" | "edge" | "rotation";
   position: "tl" | "tr" | "bl" | "br" | "t" | "r" | "b" | "l" | "rotate";
-  graphics: Graphics;
-  bounds: Rectangle;
+  graphics?: Graphics;   // optional for synthetic rotation hotspots
+  bounds?: Rectangle;    // optional for synthetic rotation hotspots
   // Optional metadata for rotated frames and precise anchor math
   index?: number; // 0..3 for corners or edges (order: tl,tr,br,bl for corners; t,r,b,l for edges)
   center?: Point; // handle center in parent container local coordinates
@@ -26,7 +26,6 @@ export interface SelectionGroup {
  objects: any[];
  bounds: Rectangle;
  transformHandles: TransformHandle[];
- rotationHandle: TransformHandle | null;
  selectionBox: Graphics;
 }
 

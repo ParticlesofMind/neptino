@@ -17,11 +17,12 @@ import { BoundaryUtils, CanvasBounds } from "./BoundaryUtils";
 import { canvasMarginManager } from '../canvas/CanvasMarginManager';
 
 export class ToolManager {
- private tools: Map<string, Tool> = new Map();
- private activeTool: Tool | null = null;
- private settings: ToolSettings;
- private displayManager: DisplayObjectManager | null = null;
- private currentContainer: Container | null = null;
+  private tools: Map<string, Tool> = new Map();
+  private activeTool: Tool | null = null;
+  private settings: ToolSettings;
+  private displayManager: DisplayObjectManager | null = null;
+  private currentContainer: Container | null = null;
+  private uiLayer: Container | null = null;
 
  constructor() {
         this.settings = {
@@ -114,15 +115,27 @@ export class ToolManager {
  /**
  * Provide the display object manager to all tools
  */
- public setDisplayManager(manager: DisplayObjectManager): void {
- this.displayManager = manager;
- this.tools.forEach((tool) => {
- tool.setDisplayObjectManager(manager);
- if ('setToolManager' in tool) {
- (tool as any).setToolManager(this);
- }
- });
- }
+  public setDisplayManager(manager: DisplayObjectManager): void {
+    this.displayManager = manager;
+    this.tools.forEach((tool) => {
+      tool.setDisplayObjectManager(manager);
+      if ('setToolManager' in tool) {
+        (tool as any).setToolManager(this);
+      }
+      if (this.uiLayer && 'setUILayer' in (tool as any)) {
+        try { (tool as any).setUILayer(this.uiLayer); } catch {}
+      }
+    });
+  }
+
+  public setUILayer(container: Container): void {
+    this.uiLayer = container;
+    this.tools.forEach((tool) => {
+      if ('setUILayer' in (tool as any)) {
+        try { (tool as any).setUILayer(container); } catch {}
+      }
+    });
+  }
 
  public setActiveTool(toolName: string): boolean {
    const newTool = this.tools.get(toolName);

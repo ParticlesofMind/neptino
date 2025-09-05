@@ -68,7 +68,7 @@ export class ClickSelection {
   }
 
   private isTransformerObject(object: any): boolean {
-    // Exclude @pixi-essentials/transformer root and its children
+    // Exclude transformer UI root and its children (custom transformer)
     let cur: any = object;
     for (let i = 0; i < 5 && cur; i++) {
       const ctorName = cur?.constructor?.name || '';

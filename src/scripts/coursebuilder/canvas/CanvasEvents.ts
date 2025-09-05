@@ -73,6 +73,7 @@ export class CanvasEvents {
 
 
     this.toolManager.onPointerDown(event, this.drawingLayer);
+    this.updateCursor();
    
   }
 
@@ -113,6 +114,7 @@ export class CanvasEvents {
     
     // 🚑 CLEANUP: Ensure any stuck dragging states are cleared
     this.clearAllDragStates();
+    this.updateCursor();
   }
 
   /**

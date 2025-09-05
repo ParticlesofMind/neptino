@@ -3,7 +3,7 @@
  * Multi-geometry creation with professional styling and modular shape drawing
  */
 
-import { FederatedPointerEvent, Container, Graphics, Point } from "pixi.js";
+import { FederatedPointerEvent, Container, Graphics, Point, Text } from "pixi.js";
 import { BaseTool } from "../ToolInterface";
 import {
     PROFESSIONAL_COLORS,
@@ -28,6 +28,8 @@ export class ShapesTool extends BaseTool {
     private boundKeyDown: (event: KeyboardEvent) => void;
     private boundKeyUp: (event: KeyboardEvent) => void;
     private drawerFactory: ShapeDrawerFactory | null = null;
+    private uiContainer: Container | null = null;
+    private sizeIndicator: { container: Container; bg: Graphics; text: Text } | null = null;
     
     declare protected settings: ShapesSettings;
 
@@ -50,6 +52,11 @@ export class ShapesTool extends BaseTool {
 
         console.log('🔶 SHAPES: Initialized with modular shape drawing system');
         console.log(`🔶 SHAPES: Default settings - Color: ${this.settings.color}, Stroke: ${this.settings.strokeWidth}px, Fill: ${this.settings.fillEnabled ? 'enabled' : 'disabled'}`);
+    }
+
+    // Provided by ToolManager so helper visuals can be drawn on UI layer
+    public setUILayer(container: Container) {
+        this.uiContainer = container;
     }
 
     onPointerDown(event: FederatedPointerEvent, container: Container): void {
@@ -97,6 +104,8 @@ export class ShapesTool extends BaseTool {
         console.log(
             `🔶 SHAPES: Professional ${this.settings.shapeType} graphics object created`,
         );
+
+        // Initialize size indicator on first draw update
     }
 
     onPointerMove(event: FederatedPointerEvent, container: Container): void {
@@ -119,7 +128,11 @@ export class ShapesTool extends BaseTool {
         // Check if shift key is pressed for proportional drawing
         this.isProportional = event.shiftKey;
 
-        this.drawShape();
+        const context = this.drawShape();
+        // Update size indicator box under the creating shape
+        if (context) {
+            this.updateSizeIndicator(context);
+        }
     }
 
     onPointerUp(): void {
@@ -146,6 +159,7 @@ export class ShapesTool extends BaseTool {
         this.currentShape = null;
         this.drawerFactory = null;
         this.isProportional = false;
+        this.removeSizeIndicator();
     }
 
     /**
@@ -193,7 +207,7 @@ export class ShapesTool extends BaseTool {
         }
     }
 
-    private drawShape(): void {
+    private drawShape(): ShapeDrawingContext | null {
         if (!this.currentShape || !this.drawerFactory) return;
 
         // Clear previous drawing
@@ -241,6 +255,7 @@ export class ShapesTool extends BaseTool {
 
         // Draw the shape using the appropriate drawer
         drawer.draw(context, strokeStyle, fillStyle);
+        return context;
     }
 
     setShapeType(
@@ -302,5 +317,59 @@ export class ShapesTool extends BaseTool {
     destroy(): void {
         document.removeEventListener("keydown", this.boundKeyDown);
         document.removeEventListener("keyup", this.boundKeyUp);
+    }
+
+    // ----- Size indicator (during creation) -----
+    private updateSizeIndicator(context: ShapeDrawingContext): void {
+        if (!this.uiContainer) return;
+        const ui = this.uiContainer;
+
+        // Determine normalized bounds of the creating shape
+        const minX = Math.min(context.startX, context.currentX);
+        const minY = Math.min(context.startY, context.currentY);
+        const width = Math.max(0, Math.round(Math.abs(context.width)));
+        const height = Math.max(0, Math.round(Math.abs(context.height)));
+        const label = `${width} x ${height}`;
+
+        if (!this.sizeIndicator) {
+            const container = new Container();
+            container.name = 'creation-size-indicator';
+            const bg = new Graphics();
+            const text = new Text({ text: label, style: { fontFamily: 'Arial', fontSize: 12, fill: 0x111111 } });
+            container.addChild(bg);
+            container.addChild(text);
+            ui.addChild(container);
+            this.sizeIndicator = { container, bg, text };
+        } else {
+            this.sizeIndicator.text.text = label;
+        }
+
+        const paddingX = 6;
+        const paddingY = 3;
+        const textW = (this.sizeIndicator.text as any).width || 0;
+        const textH = (this.sizeIndicator.text as any).height || 0;
+        const boxW = Math.ceil(textW + paddingX * 2);
+        const boxH = Math.ceil(textH + paddingY * 2);
+
+        this.sizeIndicator.bg.clear();
+        this.sizeIndicator.bg.rect(0, 0, boxW, boxH);
+        this.sizeIndicator.bg.fill({ color: 0xffffff, alpha: 1 });
+        this.sizeIndicator.bg.stroke({ width: 1, color: 0x3b82f6 });
+
+        this.sizeIndicator.text.position.set(paddingX, paddingY - 1);
+
+        // Position below the current shape bounds
+        const cx = minX + width * 0.5 - boxW * 0.5;
+        const cy = minY + Math.max(0, Math.round(Math.abs(context.height))) + 8;
+        this.sizeIndicator.container.position.set(cx, cy);
+    }
+
+    private removeSizeIndicator(): void {
+        if (this.sizeIndicator) {
+            if (this.sizeIndicator.container.parent) {
+                this.sizeIndicator.container.parent.removeChild(this.sizeIndicator.container);
+            }
+            this.sizeIndicator = null;
+        }
     }
 }

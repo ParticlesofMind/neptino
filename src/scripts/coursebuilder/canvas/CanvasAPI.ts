@@ -65,6 +65,12 @@ export class CanvasAPI {
       // Step 5.1: Connect display manager to tool manager (CRITICAL!)
       this.toolManager.setDisplayManager(this.displayManager);
 
+      // Step 5.2: Provide UI layer to tools so helper visuals stay separate from drawing content
+      const uiLayer = this.layers.getLayer('ui');
+      if (uiLayer && this.toolManager) {
+        this.toolManager.setUILayer(uiLayer);
+      }
+
       // Step 6: Set up event handling
       this.events = new CanvasEvents(app, drawingLayer, this.toolManager);
       this.events.initialize();
