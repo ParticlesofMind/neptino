@@ -10,7 +10,7 @@
  * Target: ~250 lines
  */
 
-import { Application, Container } from 'pixi.js';
+import { Application, Container, Assets, Sprite, Text } from 'pixi.js';
 import { PixiApp, PixiAppConfig } from './PixiApp';
 import { CanvasLayers, LayerSystem } from './CanvasLayers';
 import { CanvasEvents } from './CanvasEvents';
@@ -226,6 +226,50 @@ export class CanvasAPI {
   public areDrawingEventsEnabled(): boolean {
     if (!this.events) return false;
     return this.events.areDrawingEventsEnabled();
+  }
+
+  // ============== SIMPLE CONTENT HELPERS ==============
+
+  /**
+   * Add an image sprite to the drawing layer
+   */
+  public async addImage(url: string, x: number = 50, y: number = 50, scale: number = 1): Promise<string | null> {
+    if (!this.displayManager) {
+      console.warn('⚠️ Canvas not initialized - cannot add image');
+      return null;
+    }
+    try {
+      const texture = await Assets.load(url);
+      const sprite = new Sprite(texture);
+      sprite.x = x;
+      sprite.y = y;
+      sprite.scale.set(scale);
+      const id = this.displayManager.add(sprite);
+      return id;
+    } catch (e) {
+      console.error('❌ Failed to add image:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Add a simple text object to the drawing layer
+   */
+  public addText(text: string, x: number = 60, y: number = 60, style: any = { fontFamily: 'Arial', fontSize: 18, fill: 0x1a1a1a }): string | null {
+    if (!this.displayManager) {
+      console.warn('⚠️ Canvas not initialized - cannot add text');
+      return null;
+    }
+    const { id, text: textObj } = this.displayManager.createText(text, style);
+    this.displayManager.setPosition(id, x, y);
+    return id;
+  }
+
+  /**
+   * Add a simple audio placeholder (uses text label)
+   */
+  public addAudioPlaceholder(title: string): string | null {
+    return this.addText(`🔈 ${title}`, 80, 80, { fontFamily: 'Arial', fontSize: 16, fill: 0x4a79a4 });
   }
 
   /**
