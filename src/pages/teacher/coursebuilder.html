@@ -934,9 +934,26 @@
               <img src="/src/assets/icons/coursebuilder/perspective/grab-icon.svg" alt="grab"
                 class="perspective__icon icon icon--base">
             </div>
-            <div class="perspective__item" data-perspective="grid" title="Toggle Grid">
-              <img src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Toggle Grid"
+            <!-- Grid button (opens Snap Menu) -->
+            <div class="perspective__item" data-perspective="grid" title="Snapping">
+              <img src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Snapping"
                 class="perspective__icon icon icon--base">
+              <span class="icon-label">Grid</span>
+            </div>
+            <!-- Minimal Snap Menu -->
+            <div class="snap-menu" id="snap-menu">
+              <div class="snap-menu__item" data-snap-mode="grid">
+                <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Grid"><span>Snap to Grid</span>
+              </div>
+              <div class="snap-menu__item" data-snap-mode="objects">
+                <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-objects.svg" alt="Objects"><span>Snap to Objects</span>
+              </div>
+              <div class="snap-menu__item" data-snap-mode="canvas">
+                <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-canvas.svg" alt="Canvas"><span>Snap to Canvas</span>
+              </div>
+              <div class="snap-menu__item" data-snap-mode="smart">
+                <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Smart"><span>Smart Guides</span>
+              </div>
             </div>
          
           </div>

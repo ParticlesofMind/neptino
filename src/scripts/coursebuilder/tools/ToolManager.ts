@@ -74,21 +74,16 @@ export class ToolManager {
  /**
  * Bound method for global keyboard handling
  */
- private handleGlobalKeyDown = (event: KeyboardEvent): void => {
- if (!this.activeTool) return;
+  private handleGlobalKeyDown = (event: KeyboardEvent): void => {
+    if (!this.activeTool) return;
 
- // Handle tool-specific keyboard events
- const toolName = this.activeTool.name;
- 
- switch (toolName) {
- case 'pen':
- // Pass keyboard events to pen tool
- if (typeof (this.activeTool as any).onKeyDown === 'function') {
- (this.activeTool as any).onKeyDown(event);
- }
- break;
- }
- };
+    // Handle tool-specific keyboard events
+    const toolName = this.activeTool.name;
+    // If tool exposes onKeyDown, forward the event (pen, selection, others)
+    if (typeof (this.activeTool as any).onKeyDown === 'function') {
+      try { (this.activeTool as any).onKeyDown(event); } catch {}
+    }
+  };
 
     private initializeTools(): void {
         // Register all tools
@@ -245,9 +240,9 @@ export class ToolManager {
  }
  }
 
- public getToolSettings(): ToolSettings {
- return this.settings;
- }
+  public getToolSettings(): ToolSettings {
+    return this.settings;
+  }
 
  public getCursor(): string {
  return this.activeTool?.cursor || "default";
@@ -282,7 +277,7 @@ export class ToolManager {
  BoundaryUtils.logBoundaryInfo(label, point, bounds);
  }
 
- public destroy(): void {
+  public destroy(): void {
  // Deactivate current tool
  if (this.activeTool) {
  this.activeTool.onDeactivate();
@@ -292,8 +287,18 @@ export class ToolManager {
  document.removeEventListener('keydown', this.handleGlobalKeyDown);
 
  // Clear all tools
- this.tools.clear();
- this.activeTool = null;
- this.displayManager = null;
- }
+    this.tools.clear();
+    this.activeTool = null;
+    this.displayManager = null;
+  }
+
+  /**
+   * Apply settings to current selection (when selection tool active)
+   */
+  public applySettingsToSelection(toolName: string, settings: any): void {
+    const sel = this.tools.get('selection') as any;
+    if (sel && typeof sel.applySettingsToSelection === 'function') {
+      try { sel.applySettingsToSelection(toolName, settings); } catch {}
+    }
+  }
 }

@@ -11,6 +11,7 @@ import {
     hexToNumber,
 } from "../SharedResources";
 import { BoundaryUtils } from "../BoundaryUtils";
+import { snapManager } from "../SnapManager";
 import { ShapeDrawerFactory } from "./ShapeDrawerFactory";
 import { 
     ShapesSettings, 
@@ -34,7 +35,8 @@ export class ShapesTool extends BaseTool {
     declare protected settings: ShapesSettings;
 
     constructor() {
-        super("shapes", "url('/src/assets/cursors/shapes-cursor.svg') 12 12, crosshair");
+        // Use a precise crosshair cursor so the shape emerges from the center
+        super("shapes", "crosshair");
         this.settings = {
             color: PROFESSIONAL_COLORS[0], // Dark charcoal stroke
             strokeWidth: STROKE_SIZES.SHAPES[2], // 4px stroke
@@ -88,11 +90,15 @@ export class ShapesTool extends BaseTool {
         const clampedStartPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
 
         this.startPoint.copyFrom(clampedStartPoint);
-        this.currentPoint.copyFrom(clampedStartPoint);
+        // Apply snapping to the initial point for a precise start
+        const snappedStart = snapManager.snapPoint(clampedStartPoint);
+        this.currentPoint.copyFrom(snappedStart);
 
         // Create new graphics object with professional styling
         this.currentShape = new Graphics();
         this.currentShape.eventMode = "static";
+        // Tag for selection-based option routing
+        (this.currentShape as any).__toolType = 'shapes';
 
         // Initialize drawer factory with new graphics
         this.drawerFactory = new ShapeDrawerFactory(this.currentShape);
@@ -122,8 +128,8 @@ export class ShapesTool extends BaseTool {
         // 🎯 BOUNDARY ENFORCEMENT: Clamp current point to canvas bounds
         const canvasBounds = this.manager.getCanvasBounds();
         const clampedCurrentPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
-
-        this.currentPoint.copyFrom(clampedCurrentPoint);
+        const snapped = snapManager.snapPoint(clampedCurrentPoint);
+        this.currentPoint.copyFrom(snapped);
 
         // Check if shift key is pressed for proportional drawing
         this.isProportional = event.shiftKey;
@@ -154,6 +160,33 @@ export class ShapesTool extends BaseTool {
             } else {
                 console.warn(`🔶 SHAPES: Shape not added to any parent!`);
             }
+
+            // Attach metadata for selection-based restyling
+            try {
+                const x = Math.min(this.startPoint.x, this.currentPoint.x);
+                const y = Math.min(this.startPoint.y, this.currentPoint.y);
+                const w = Math.abs(this.currentPoint.x - this.startPoint.x);
+                const h = Math.abs(this.currentPoint.y - this.startPoint.y);
+                const meta: any = {
+                    kind: 'shapes',
+                    shapeType: this.settings.shapeType,
+                    x, y, width: w, height: h,
+                    startX: this.startPoint.x, startY: this.startPoint.y,
+                    currentX: this.currentPoint.x, currentY: this.currentPoint.y,
+                    strokeWidth: this.settings.strokeWidth,
+                    strokeColor: this.settings.color,
+                    fillEnabled: this.settings.fillEnabled,
+                    fillColor: this.settings.fillColor,
+                };
+                if (this.settings.shapeType === 'rectangle' && this.settings.cornerRadius) {
+                    meta.cornerRadius = this.settings.cornerRadius;
+                }
+                if (this.settings.shapeType === 'polygon' && this.settings.sides) {
+                    meta.sides = this.settings.sides;
+                }
+                (this.currentShape as any).__toolType = 'shapes';
+                (this.currentShape as any).__meta = meta;
+            } catch {}
         }
         this.isDrawing = false;
         this.currentShape = null;

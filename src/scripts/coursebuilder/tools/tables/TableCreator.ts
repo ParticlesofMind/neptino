@@ -63,6 +63,22 @@ export class TableCreator {
             cells.push(cellRow);
         }
 
+        // Tag container for selection/type detection and metadata for live restyling
+        (tableContainer as any).__toolType = 'tables';
+        try {
+            (tableContainer as any).__meta = {
+                kind: 'tables',
+                rows: this.settings.rows,
+                columns: this.settings.columns,
+                borderColor: this.settings.borderColor,
+                backgroundColor: this.settings.backgroundColor,
+                borderWidth: this.settings.borderWidth,
+                cellPadding: this.settings.cellPadding,
+                fontSize: this.settings.fontSize,
+                fontColor: this.settings.fontColor
+            };
+        } catch {}
+
         // Add table container to main container
         container.addChild(tableContainer);
 

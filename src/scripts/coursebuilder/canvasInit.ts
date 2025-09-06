@@ -9,6 +9,8 @@ import { UIEventHandler } from './ui/UIEventHandler';
 import { toolColorManager } from './tools/ToolColorManager';
 import { TextTool } from './tools/text/TextTool';
 import { SimplePerspectiveManager } from './tools/SimplePerspectiveManager';
+import { snapManager } from './tools/SnapManager';
+import { bindSnapMenu } from './tools/SnapMenu';
 import { CanvasLayoutManager } from './ui/CanvasLayoutManager';
 import { ToolCoordinator } from './ui/ToolCoordinator';
 
@@ -78,6 +80,10 @@ export async function initializeCanvas(): Promise<void> {
         if (perspectiveManager && 'updateCanvasReference' in perspectiveManager) {
             (perspectiveManager as any).updateCanvasReference();
         }
+
+        // Bind minimal snap menu UI to perspective tools
+        try { bindSnapMenu(perspectiveManager); } catch {}
+
 
         // Initialize UI system with clean architecture
         console.log('🎛️ Connecting UI to canvas...');

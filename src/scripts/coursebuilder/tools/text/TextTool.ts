@@ -31,6 +31,7 @@ export class TextTool extends BaseTool {
   private sizeLabel: SizeLabel | null = null;
   private startPoint: Point = new Point(0, 0);
   private currentPoint: Point = new Point(0, 0);
+  private proportionalDrag: boolean = false; // Shift to create square
   private textAreas: TextArea[] = [];
   private activeTextArea: TextArea | null = null;
   private textCursor: TextCursor | null = null;
@@ -123,6 +124,7 @@ export class TextTool extends BaseTool {
         Math.abs(clampedPoint.y - this.lastClickPoint.y) < 10) {
       
       console.log('📝 Double-click detected - starting text creation');
+      this.proportionalDrag = !!(event as any).shiftKey;
       this.startDragCreation(clampedPoint, container);
     } else {
       // Single click on empty area - deactivate current text
@@ -136,6 +138,7 @@ export class TextTool extends BaseTool {
 
     // Start drag creation on single click hold
     if (!this.state.isDragging) {
+      this.proportionalDrag = !!(event as any).shiftKey;
       this.startDragCreation(clampedPoint, container);
     }
   }
@@ -151,6 +154,8 @@ export class TextTool extends BaseTool {
       const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
       
       this.currentPoint.copyFrom(clampedPoint);
+      // Update proportional flag from Shift
+      this.proportionalDrag = !!(event as any).shiftKey;
       this.updateDragPreview();
     } else {
       // Handle text selection drag if input handler exists
@@ -386,16 +391,30 @@ export class TextTool extends BaseTool {
   private updateDragPreview(): void {
     if (!this.dragPreview) return;
 
-    const width = this.currentPoint.x - this.startPoint.x;
-    const height = this.currentPoint.y - this.startPoint.y;
+    let width = this.currentPoint.x - this.startPoint.x;
+    let height = this.currentPoint.y - this.startPoint.y;
     
     this.dragPreview.clear();
     
     // Draw rectangle from start to current point
-    const rectX = Math.min(this.startPoint.x, this.currentPoint.x);
-    const rectY = Math.min(this.startPoint.y, this.currentPoint.y);
-    const rectWidth = Math.abs(width);
-    const rectHeight = Math.abs(height);
+    let rectX = Math.min(this.startPoint.x, this.currentPoint.x);
+    let rectY = Math.min(this.startPoint.y, this.currentPoint.y);
+    let rectWidth = Math.abs(width);
+    let rectHeight = Math.abs(height);
+
+    // If proportional mode, enforce square
+    if (this.proportionalDrag) {
+      const maxDim = Math.max(rectWidth, rectHeight);
+      const signX = width >= 0 ? 1 : -1;
+      const signY = height >= 0 ? 1 : -1;
+      rectWidth = maxDim;
+      rectHeight = maxDim;
+      rectX = this.startPoint.x + (signX < 0 ? -maxDim : 0);
+      rectY = this.startPoint.y + (signY < 0 ? -maxDim : 0);
+      // Normalize width/height variables used for label
+      width = signX * maxDim;
+      height = signY * maxDim;
+    }
     
     // Always draw the preview, even if small - user needs visual feedback
     if (rectWidth >= 1 && rectHeight >= 1) {
@@ -438,13 +457,35 @@ export class TextTool extends BaseTool {
   private finalizeDragCreation(container: Container): void {
     if (!this.dragPreview) return;
 
-    const width = Math.abs(this.currentPoint.x - this.startPoint.x);
-    const height = Math.abs(this.currentPoint.y - this.startPoint.y);
+    let width = Math.abs(this.currentPoint.x - this.startPoint.x);
+    let height = Math.abs(this.currentPoint.y - this.startPoint.y);
+    if (this.proportionalDrag) {
+      const maxDim = Math.max(width, height);
+      width = maxDim;
+      height = maxDim;
+    }
     
     // Only create text area if drag is significant enough
     const minSize = 30; // Minimum 30px in either dimension
     if (width >= minSize && height >= minSize) {
-      const bounds = this.createTextArea(container);
+      // Calculate bounds with proportional constraint if needed
+      let x = Math.min(this.startPoint.x, this.currentPoint.x);
+      let y = Math.min(this.startPoint.y, this.currentPoint.y);
+      if (this.proportionalDrag) {
+        const sx = this.currentPoint.x - this.startPoint.x >= 0 ? 1 : -1;
+        const sy = this.currentPoint.y - this.startPoint.y >= 0 ? 1 : -1;
+        x = this.startPoint.x + (sx < 0 ? -width : 0);
+        y = this.startPoint.y + (sy < 0 ? -height : 0);
+      }
+      const bounds = { x, y, width, height } as TextAreaBounds;
+      const config: TextAreaConfig = {
+        bounds,
+        text: '',
+        settings: { ...this.settings }
+      };
+      const textArea = new TextArea(config, container);
+      this.textAreas.push(textArea);
+      this.activateTextArea(textArea);
       
       // Hide drag preview and size label
       this.cleanupDragPreview();
@@ -469,6 +510,7 @@ export class TextTool extends BaseTool {
     // Clear drag points to prevent any residual attachment
     this.startPoint.set(0, 0);
     this.currentPoint.set(0, 0);
+    this.proportionalDrag = false;
   }
 
   private createTextArea(container: Container): TextAreaBounds {

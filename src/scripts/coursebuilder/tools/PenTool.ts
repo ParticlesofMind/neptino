@@ -38,6 +38,7 @@ export class PenTool extends BaseTool {
  private previewLine: Graphics | null = null;
  private lastMousePosition: Point = new Point(0, 0);
  private hoverIndicator: Graphics | null = null;
+ private constrainFromNode: Point | null = null; // anchor for shift-straight segments
 
  constructor() {
          super("pen", "url('/src/assets/cursors/pen-cursor.svg') 2 2, crosshair");
@@ -73,7 +74,7 @@ export class PenTool extends BaseTool {
  }
  
  // Point is in content area, safe to proceed
- const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
+ let clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
  
  // Log if point was adjusted
  if (Math.abs(localPoint.x - clampedPoint.x) > 1 || Math.abs(localPoint.y - clampedPoint.y) > 1) {
@@ -86,8 +87,8 @@ export class PenTool extends BaseTool {
 
  // Check if we're continuing an existing path or starting a new one
  if (this.currentPath && this.currentPath.nodes.length > 0) {
- // Check if clicking near the first node to close the path
- const firstNode = this.currentPath.nodes[0];
+  // Check if clicking near the first node to close the path
+  const firstNode = this.currentPath.nodes[0];
  const distance = Math.sqrt(
  Math.pow(clampedPoint.x - firstNode.position.x, 2) +
  Math.pow(clampedPoint.y - firstNode.position.y, 2),
@@ -96,6 +97,22 @@ export class PenTool extends BaseTool {
  if (distance <= PEN_CONSTANTS.PATH_CLOSE_TOLERANCE) {
  this.completePath(true);
  return;
+ }
+
+ // If extending an existing path with Shift held, snap the new node to a straight line
+ if ((event as any).shiftKey && this.currentPath && this.currentPath.nodes.length > 0) {
+   const lastNode = this.currentPath.nodes[this.currentPath.nodes.length - 1].position;
+   const dx = clampedPoint.x - lastNode.x;
+   const dy = clampedPoint.y - lastNode.y;
+   const angle = Math.atan2(dy, dx);
+   const step = Math.PI / 4;
+   const snapped = Math.round(angle / step) * step;
+   const dist = Math.hypot(dx, dy);
+   const snappedPoint = new Point(lastNode.x + Math.cos(snapped) * dist, lastNode.y + Math.sin(snapped) * dist);
+   clampedPoint = BoundaryUtils.clampPoint(snappedPoint, canvasBounds);
+   this.constrainFromNode = new Point(lastNode.x, lastNode.y);
+ } else {
+   this.constrainFromNode = null;
  }
  }
 
@@ -113,8 +130,25 @@ export class PenTool extends BaseTool {
  
  // 🎯 BOUNDARY ENFORCEMENT: Clamp mouse position for preview
  const canvasBounds = this.manager.getCanvasBounds();
- const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
- 
+ let clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
+
+ // If Shift held and we have an anchor (last node), snap preview to straight line
+ const shiftHeld = (event as any).shiftKey === true;
+ if (shiftHeld && this.currentPath && this.currentPath.nodes.length > 0) {
+   const anchor = this.currentPath.nodes[this.currentPath.nodes.length - 1].position;
+   const dx = clampedPoint.x - anchor.x;
+   const dy = clampedPoint.y - anchor.y;
+   const angle = Math.atan2(dy, dx);
+   const step = Math.PI / 4;
+   const snapped = Math.round(angle / step) * step;
+   const dist = Math.hypot(dx, dy);
+   const snappedPoint = new Point(anchor.x + Math.cos(snapped) * dist, anchor.y + Math.sin(snapped) * dist);
+   clampedPoint = BoundaryUtils.clampPoint(snappedPoint, canvasBounds);
+   this.constrainFromNode = new Point(anchor.x, anchor.y);
+ } else if (!shiftHeld) {
+   this.constrainFromNode = null;
+ }
+
  this.lastMousePosition.copyFrom(clampedPoint);
 
  // Check for path completion hover
@@ -131,16 +165,18 @@ export class PenTool extends BaseTool {
 
  private addNodeToPath(position: Point, container: Container): void {
  if (!this.currentPath) {
- // Start new path
- this.currentPath = {
- nodes: [],
- pathGraphics: new Graphics(),
- isComplete: false,
- settings: { ...this.settings },
- };
+  // Start new path
+  this.currentPath = {
+    nodes: [],
+    pathGraphics: new Graphics(),
+    isComplete: false,
+    settings: { ...this.settings },
+  };
 
- this.currentPath.pathGraphics.eventMode = "static";
- container.addChild(this.currentPath.pathGraphics);
+  this.currentPath.pathGraphics.eventMode = "static";
+  // Tag for selection-based option routing
+  (this.currentPath.pathGraphics as any).__toolType = 'pen';
+  container.addChild(this.currentPath.pathGraphics);
  }
 
  // Create node graphics
@@ -311,7 +347,7 @@ export class PenTool extends BaseTool {
  private completePath(closeShape: boolean = false): void {
  if (!this.currentPath) return;
 
- if (closeShape && this.currentPath.nodes.length >= 3) {
+  if (closeShape && this.currentPath.nodes.length >= 3) {
  // Create a new graphics object for the final filled shape
  const finalShape = new Graphics();
  const strokeColorToUse = this.currentPath.settings.strokeColor;
@@ -346,12 +382,25 @@ export class PenTool extends BaseTool {
  join: "round",
  });
 
- // Replace the old path graphics with the new filled shape
- const container = this.currentPath.pathGraphics.parent;
- if (container) {
-   container.removeChild(this.currentPath.pathGraphics);
-   container.addChild(finalShape);
- }
+  // Replace the old path graphics with the new filled shape
+  const container = this.currentPath.pathGraphics.parent;
+  if (container) {
+    container.removeChild(this.currentPath.pathGraphics);
+    // Tag final shape for selection routing and metadata for restyling
+    (finalShape as any).__toolType = 'pen';
+    try {
+      const nodesData = this.currentPath.nodes.map(n => ({ x: n.position.x, y: n.position.y }));
+      (finalShape as any).__meta = {
+        kind: 'pen',
+        closed: true,
+        nodes: nodesData,
+        size: this.currentPath.settings.size,
+        strokeColor: this.currentPath.settings.strokeColor,
+        fillColor: this.currentPath.settings.fillColor,
+      };
+    } catch {}
+    container.addChild(finalShape);
+  }
 
  console.log(
  `✏️ PEN: Closed shape with ${this.currentPath.nodes.length} nodes - Stroke: ${strokeColorToUse}, Fill: ${fillColorToUse || 'none'}`,
@@ -361,11 +410,25 @@ export class PenTool extends BaseTool {
  const strokeColorToUse = this.currentPath.settings.strokeColor;
  
  this.currentPath.pathGraphics.stroke({
- width: this.currentPath.settings.size,
- color: hexToNumber(strokeColorToUse),
- cap: "round",
- join: "round",
- });
+    width: this.currentPath.settings.size,
+    color: hexToNumber(strokeColorToUse),
+    cap: "round",
+    join: "round",
+  });
+
+  // Attach metadata for later restyling
+  try {
+    const nodesData = this.currentPath.nodes.map(n => ({ x: n.position.x, y: n.position.y }));
+    (this.currentPath.pathGraphics as any).__meta = {
+      kind: 'pen',
+      closed: false,
+      nodes: nodesData,
+      size: this.currentPath.settings.size,
+      strokeColor: strokeColorToUse,
+      fillColor: null,
+    };
+    (this.currentPath.pathGraphics as any).__toolType = 'pen';
+  } catch {}
 
  console.log(
  `✏️ PEN: Completed open path with ${this.currentPath.nodes.length} nodes - Stroke: ${strokeColorToUse}`,

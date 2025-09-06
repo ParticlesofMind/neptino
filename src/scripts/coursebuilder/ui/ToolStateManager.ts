@@ -66,6 +66,7 @@ export class ToolStateManager {
     private toolSettings: ToolSettings;
     private storageKey = 'coursebuilder-icon-states';
     private canvasRetryAttempted = false; // Prevent infinite retry loops
+    private selectionContextTool: string | null = null; // tool options to show when selection is active
 
     constructor() {
         this.toolSettings = {
@@ -112,6 +113,17 @@ export class ToolStateManager {
 
         // Listen for color changes from ToolColorManager
         this.bindColorChangeEvents();
+
+        // Listen for selection context to surface relevant options while Selection tool is active
+        document.addEventListener('selection:context', (e: Event) => {
+            const detail = (e as CustomEvent).detail || {};
+            const type = detail.type as string | null;
+            this.selectionContextTool = type && type !== 'mixed' ? type : null;
+            if (this.currentTool === 'selection') {
+                // Only toggle the options panel; do not change the active canvas tool
+                this.showSettingsPanelFor(this.selectionContextTool);
+            }
+        });
     }
 
     /**
@@ -364,6 +376,13 @@ export class ToolStateManager {
     }
 
     /**
+     * Get selection context tool (brush/pen/shapes/text/tables) if any
+     */
+    getSelectionContextTool(): string | null {
+        return this.selectionContextTool;
+    }
+
+    /**
      * Set selected media
      */
     setSelectedMedia(mediaId: string | null): void {
@@ -458,6 +477,15 @@ export class ToolStateManager {
                 this.applyToolSettingsToCanvas(toolName);
             }
             
+            // If selection tool is active and the settings correspond to the selected object type,
+            // apply these settings to the current selection immediately.
+            if (this.currentTool === 'selection' && this.selectionContextTool === toolName) {
+                const canvasAPI = (window as any).canvasAPI;
+                if (canvasAPI && typeof canvasAPI.applySettingsToSelection === 'function') {
+                    try { canvasAPI.applySettingsToSelection(toolName, settings); } catch {}
+                }
+            }
+            
             // Save states whenever tool settings are updated
             this.saveStates();
             
@@ -481,6 +509,18 @@ export class ToolStateManager {
             
             // Save states
             this.saveStates();
+        }
+
+        // Also apply to selection when selection tool is active and we have context
+        if (this.currentTool === 'selection' && this.selectionContextTool) {
+            const canvasAPI = (window as any).canvasAPI;
+            if (canvasAPI && typeof canvasAPI.applySettingsToSelection === 'function') {
+                const t = this.selectionContextTool;
+                const payload: any = { color };
+                if (t === 'pen') payload.strokeColor = color;
+                if (t === 'shapes') payload.strokeColor = color;
+                try { canvasAPI.applySettingsToSelection(t, payload); } catch {}
+            }
         }
     }
 
@@ -846,6 +886,29 @@ export class ToolStateManager {
             default:
                 canvas.classList.add('cursor-default');
                 break;
+        }
+    }
+
+    /**
+     * Show only the settings panel for the specified tool without switching tools
+     */
+    private showSettingsPanelFor(toolName: string | null): void {
+        // Hide all panels
+        document.querySelectorAll('.tools__options .tools__item').forEach(el => {
+            (el as HTMLElement).style.display = 'none';
+        });
+        const placeholder = document.querySelector('.tools__placeholder') as HTMLElement | null;
+        if (!toolName) {
+            if (placeholder) placeholder.style.display = 'flex';
+            return;
+        }
+        // Show specific panel
+        const panel = (document.querySelector(`.tools__options .tools__item--${toolName}`) as HTMLElement) ||
+                      (document.querySelector(`.tools__options [data-settings-for="${toolName}"]`) as HTMLElement);
+        if (panel) {
+            panel.style.display = 'flex';
+        } else if (placeholder) {
+            placeholder.style.display = 'flex';
         }
     }
 

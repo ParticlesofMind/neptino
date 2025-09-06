@@ -6,7 +6,7 @@
     display: grid;
     grid-template-columns: 0.5fr 2fr 7fr 1.5fr; // Proportional: ~60px:300px:1fr:250px ratio
     grid-template-rows: 0.075fr 1fr; // Increased to 90px to ensure labels have adequate space
-    height: calc(100vh - 10vh); // Constrain to available viewport space minus header
+    height: calc(100vh - 7vh); // Constrain to available viewport space minus header
     width: 100%;
     gap: 0.5rem;
 
@@ -80,13 +80,16 @@
         display: flex;
         justify-content: center; // Center the canvas horizontally
         align-items: flex-start; // Align to top vertically
-    
+
         box-shadow:
             inset 6px 6px 12px rgba(0, 0, 0, 0.1),
             inset -6px -6px 12px rgba(255, 255, 255, 0.8),
             2px 2px 6px rgba(0, 0, 0, 0.05);
 
 
+        // Remove any default border/outline to avoid visual distraction
+        border: none !important;
+        outline: none !important;
     }
 
   
@@ -246,5 +249,4 @@
     max-height: 28px !important;
   }
 }
-
 

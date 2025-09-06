@@ -227,6 +227,11 @@ export class CanvasEvents {
     this.toolManager.updateToolSettings(toolName, settings);
   }
 
+  /** Apply settings to selected objects (selection tool) */
+  public applySettingsToSelection(toolName: string, settings: any): void {
+    this.toolManager.applySettingsToSelection(toolName, settings);
+  }
+
   /**
    * Get active tool name
    */

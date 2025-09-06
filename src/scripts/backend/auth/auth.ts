@@ -42,20 +42,80 @@ export async function signUp(
 
 // Sign in existing user
 export async function signIn(email: string, password: string) {
- try {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
- const { data, error } = await supabase.auth.signInWithPassword({
- email,
- password,
- });
+    if (error) {
+      console.error("Sign in error:", error);
 
- if (error) {
- console.error("Sign in error:", error);
- return { success: false, error: error.message };
- }
+      // Development convenience: auto-create account on first sign-in attempt
+      // Only enable in development to avoid accidental account creation in prod
+      const isDev = (import.meta as any)?.env?.VITE_APP_ENV === 'development';
+      const isInvalidCreds =
+        typeof (error as any)?.message === 'string' &&
+        (error as any).message.toLowerCase().includes('invalid login credentials');
 
- if (data.user) {
- currentUser = data.user;
+      if (isDev && isInvalidCreds) {
+        try {
+          console.log('🔧 Dev mode: attempting auto sign-up since credentials are unknown.');
+          // Heuristic: guess a sensible default role from current path
+          const path = typeof window !== 'undefined' ? window.location.pathname : '';
+          const inferredRole = path.includes('/teacher/')
+            ? 'teacher'
+            : path.includes('/admin/')
+              ? 'admin'
+              : 'student';
+
+          const signupResult = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: email.split('@')[0],
+                user_role: inferredRole,
+              },
+            },
+          });
+
+          if (signupResult.error) {
+            // If user already exists, it's truly a bad password
+            const msg = signupResult.error.message || 'Sign up failed';
+            console.warn('Auto sign-up skipped:', msg);
+            return { success: false, error: 'Incorrect password or user already exists.' };
+          }
+
+          // In local dev with confirmations disabled, we usually get a session immediately
+          if (signupResult.data.user) {
+            currentUser = signupResult.data.user;
+            console.log('✅ Dev auto sign-up successful; signed in.');
+            return { success: true, info: 'Account created and signed in (dev).' };
+          }
+
+          // Fallback: attempt a fresh sign-in now that the account exists
+          const retry = await supabase.auth.signInWithPassword({ email, password });
+          if (retry.error) {
+            console.error('Retry sign-in after auto sign-up failed:', retry.error);
+            return { success: false, error: retry.error.message };
+          }
+          if (retry.data.user) {
+            currentUser = retry.data.user;
+            console.log('✅ Dev auto sign-up + retry sign-in successful.');
+            return { success: true, info: 'Account created and signed in (dev).' };
+          }
+        } catch (autoErr) {
+          console.error('Auto sign-up flow error:', autoErr);
+          // Fall through to the original error handling below
+        }
+      }
+
+      return { success: false, error: error.message };
+    }
+
+    if (data.user) {
+      currentUser = data.user;
 
  // Don't redirect immediately - let the auth state listener handle it
  // This prevents the "connection refused" issue
@@ -64,11 +124,11 @@ export async function signIn(email: string, password: string) {
  );
  }
 
- return { success: true };
- } catch (error) {
- console.error("Unexpected error during sign in:", error);
- return { success: false, error: "An unexpected error occurred" };
- }
+    return { success: true };
+  } catch (error) {
+    console.error("Unexpected error during sign in:", error);
+    return { success: false, error: "An unexpected error occurred" };
+  }
 }
 
 // Sign out user
@@ -92,13 +152,14 @@ export function getCurrentUser() {
 
 // Redirect based on user role
 export function redirectUser(userRole: string) {
- const origin = window.location.origin;
+  const origin = window.location.origin;
 
- switch (userRole) {
- case "administrator":
- const adminUrl = `${origin}/src/pages/admin/home.html`;
- window.location.href = adminUrl;
- break;
+  switch (userRole) {
+    case "administrator":
+    case "admin":
+      const adminUrl = `${origin}/src/pages/admin/home.html`;
+      window.location.href = adminUrl;
+      break;
  case "teacher":
  const teacherUrl = `${origin}/src/pages/teacher/home.html`;
  window.location.href = teacherUrl;
@@ -236,18 +297,19 @@ export class AuthFormHandler {
  submitButton.textContent = 'Signing in...';
  submitButton.disabled = true;
 
- try {
- console.log('🔐 Attempting to sign in with:', email);
- 
- const result = await signIn(email, password);
+    try {
+      console.log('🔐 Attempting to sign in with:', email);
+      
+      const result = await signIn(email, password);
 
- if (result.success) {
- this.showMessage('Sign in successful! Redirecting...', 'success');
- // The auth state listener in auth.ts will handle the redirect
- } else {
- this.showMessage(result.error || 'Sign in failed', 'error');
- console.error('❌ Sign in failed:', result.error);
- }
+      if (result.success) {
+        const msg = (result as any).info || 'Sign in successful! Redirecting...';
+        this.showMessage(msg, 'success');
+        // The auth state listener in auth.ts will handle the redirect
+      } else {
+        this.showMessage(result.error || 'Sign in failed', 'error');
+        console.error('❌ Sign in failed:', result.error);
+      }
  } catch (error) {
  console.error('❌ Sign in error:', error);
  this.showMessage('An unexpected error occurred', 'error');
@@ -340,12 +402,4 @@ export class AuthFormHandler {
  }
 }
 
-// Auto-initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
- // Only initialize on auth pages
- if (window.location.pathname.includes('/pages/shared/signin.html') || 
- window.location.pathname.includes('/pages/shared/signup.html')) {
- new AuthFormHandler();
- console.log('🔐 Auth form handler initialized');
- }
-});
+// Initialization of AuthFormHandler is handled centrally in src/scripts/app.ts

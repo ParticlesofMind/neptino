@@ -110,6 +110,18 @@ export class UIEventHandler {
         this.initializeColorDropdowns();
     }
 
+    // Determine which tool settings panel an element belongs to (from tools__options)
+    private inferToolFromElement(el: Element | null): string | null {
+        if (!el) return null;
+        const container = (el as HTMLElement).closest('.tools__options .tools__item');
+        if (!container) return null;
+        const classList = Array.from(container.classList);
+        const cls = classList.find(c => c.startsWith('tools__item--'));
+        if (!cls) return null;
+        const tool = cls.replace('tools__item--', '');
+        return tool || null;
+    }
+
     /**
      * Handle global click events
      */
@@ -206,21 +218,25 @@ export class UIEventHandler {
             colorSquare.classList.add('active');
         }
 
-        // Update tool settings based on currently active tool
-        const currentTool = this.toolStateManager.getCurrentTool();
-        if (currentTool === 'pen') {
+        // Determine target tool (when selection tool is active, use selection context or panel source)
+        let targetTool = this.toolStateManager.getCurrentTool();
+        if (targetTool === 'selection') {
+            targetTool = this.toolStateManager.getSelectionContextTool() || this.inferToolFromElement(colorSquare) || 'pen';
+        }
+
+        if (targetTool === 'pen') {
             this.toolStateManager.updateToolSettings('pen', {
                 color: colorValue,
             });
-        } else if (currentTool === 'text') {
+        } else if (targetTool === 'text') {
             this.toolStateManager.updateToolSettings('text', {
                 color: colorValue,
             });
-        } else if (currentTool === 'brush') {
+        } else if (targetTool === 'brush') {
             this.toolStateManager.updateToolSettings('brush', {
                 color: colorValue,
             });
-        } else if (currentTool === 'shapes') {
+        } else if (targetTool === 'shapes') {
             this.toolStateManager.updateToolSettings('shapes', {
                 color: colorValue,
             });
@@ -240,8 +256,11 @@ export class UIEventHandler {
 
         if (!setting) return;
 
-        // Update tool settings based on currently active tool
-        const currentTool = this.toolStateManager.getCurrentTool();
+        // Determine target tool (selection-aware)
+        let currentTool = this.toolStateManager.getCurrentTool();
+        if (currentTool === 'selection') {
+            currentTool = this.toolStateManager.getSelectionContextTool() || this.inferToolFromElement(numberInput) || currentTool;
+        }
         const numericValue = parseInt(value) || 1; // Ensure minimum value of 1
 
         if (currentTool === 'tables' && (setting === 'rows' || setting === 'columns')) {
@@ -251,6 +270,10 @@ export class UIEventHandler {
         } else if (currentTool === 'shapes' && setting === 'strokeWidth') {
             this.toolStateManager.updateToolSettings('shapes', {
                 strokeWidth: Math.max(1, numericValue), // Ensure positive stroke width
+            });
+        } else if (currentTool === 'text' && setting === 'fontSize') {
+            this.toolStateManager.updateToolSettings('text', {
+                fontSize: Math.max(1, numericValue),
             });
         } else if (['pen', 'brush', 'eraser'].includes(currentTool) && setting === 'size') {
             this.toolStateManager.updateToolSettings(currentTool, {
@@ -298,8 +321,11 @@ export class UIEventHandler {
 
         if (!setting) return;
 
-        // Update tool settings based on currently active tool
-        const currentTool = this.toolStateManager.getCurrentTool();
+        // Determine target tool (selection-aware)
+        let currentTool = this.toolStateManager.getCurrentTool();
+        if (currentTool === 'selection') {
+            currentTool = this.toolStateManager.getSelectionContextTool() || this.inferToolFromElement(colorInput) || currentTool;
+        }
 
         if (currentTool === 'text' && setting === 'fontFamily') {
             this.toolStateManager.updateToolSettings('text', {

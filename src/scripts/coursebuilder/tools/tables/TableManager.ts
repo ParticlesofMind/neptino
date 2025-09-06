@@ -3,12 +3,13 @@
  * Implements the Tool interface and coordinates table functionality
  */
 
-import { Container, FederatedPointerEvent, Point } from "pixi.js";
+import { Container, FederatedPointerEvent, Point, Rectangle } from "pixi.js";
 import { Tool } from "../ToolInterface";
 import { TableSettings, PixiTableData } from "./TableTypes";
 import { TableCreator } from "./TableCreator";
 import { TableCellEditor } from "./TableCellEditor";
 import { TableContextMenu } from "./TableContextMenu";
+import { BoundaryUtils } from "../BoundaryUtils";
 
 export class TableManager implements Tool {
     name = "tables";
@@ -58,18 +59,28 @@ export class TableManager implements Tool {
 
     onPointerDown(event: FederatedPointerEvent, container: Container): void {
         const localPoint = container.toLocal(event.global);
-        
-        if (!this.cellEditor.isInEditMode()) {
-            this.isDrawing = true;
-            this.startPoint = localPoint;
-            this.currentPoint = localPoint;
+
+        if (this.cellEditor.isInEditMode()) return;
+
+        // Enforce margins: only allow starting inside the content area
+        const canvasBounds = this.toolManager?.getCanvasBounds ? this.toolManager.getCanvasBounds() : undefined;
+        if (canvasBounds && !BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
+            console.log(`🔷 TABLE: 🚫 Start point in margin area rejected at (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`);
+            return;
         }
+
+        this.isDrawing = true;
+        // Clamp start within bounds
+        const clampedStart = canvasBounds ? BoundaryUtils.clampPoint(localPoint, canvasBounds) : localPoint;
+        this.startPoint = clampedStart;
+        this.currentPoint = clampedStart;
     }
 
     onPointerMove(event: FederatedPointerEvent, container: Container): void {
-        if (this.isDrawing) {
-            this.currentPoint = container.toLocal(event.global);
-        }
+        if (!this.isDrawing) return;
+        const local = container.toLocal(event.global);
+        const canvasBounds = this.toolManager?.getCanvasBounds ? this.toolManager.getCanvasBounds() : undefined;
+        this.currentPoint = canvasBounds ? BoundaryUtils.clampPoint(local, canvasBounds) : local;
     }
 
     onPointerUp(_event: FederatedPointerEvent, container: Container): void {
@@ -101,12 +112,24 @@ export class TableManager implements Tool {
 
     private endDrawing(container: Container): void {
         this.isDrawing = false;
-        
-        const width = Math.abs(this.currentPoint.x - this.startPoint.x);
-        const height = Math.abs(this.currentPoint.y - this.startPoint.y);
-        
+        const widthRaw = this.currentPoint.x - this.startPoint.x;
+        const heightRaw = this.currentPoint.y - this.startPoint.y;
+
+        const width = Math.abs(widthRaw);
+        const height = Math.abs(heightRaw);
+
         if (width > 50 && height > 50) {
-            this.createTable(container, this.startPoint.x, this.startPoint.y, width, height);
+            // Normalize rectangle from start/current and clamp to content area
+            let x = Math.min(this.startPoint.x, this.currentPoint.x);
+            let y = Math.min(this.startPoint.y, this.currentPoint.y);
+            let w = width;
+            let h = height;
+            const canvasBounds = this.toolManager?.getCanvasBounds ? this.toolManager.getCanvasBounds() : undefined;
+            if (canvasBounds) {
+                const clamped = BoundaryUtils.clampRectangle(new Rectangle(x, y, w, h), canvasBounds);
+                x = clamped.x; y = clamped.y; w = clamped.width; h = clamped.height;
+            }
+            this.createTable(container, x, y, w, h);
         }
     }
 

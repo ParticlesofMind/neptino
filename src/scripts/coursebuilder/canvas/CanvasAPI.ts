@@ -58,6 +58,8 @@ export class CanvasAPI {
         throw new Error('Drawing layer not available after layer initialization');
       }
       this.displayManager = new DisplayObjectManager(drawingLayer);
+      // Expose for snapping helpers that need read-only access
+      try { (window as any)._displayManager = this.displayManager; } catch {}
 
       // Step 5: Create tool manager
       this.toolManager = new ToolManager();
@@ -175,6 +177,17 @@ export class CanvasAPI {
       return;
     }
     this.events.updateToolSettings(toolName, settings);
+  }
+
+  /**
+   * Apply settings to current selection (without switching tools)
+   */
+  public applySettingsToSelection(toolName: string, settings: any): void {
+    if (!this.events) {
+      console.warn('⚠️ Canvas not initialized - cannot apply selection settings');
+      return;
+    }
+    this.events.applySettingsToSelection(toolName, settings);
   }
 
   /**

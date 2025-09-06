@@ -83,7 +83,11 @@ export class ToolColorManager {
       'shapes-stroke': { tool: 'shapes', property: 'color' }, // Fixed: shapes stroke uses 'color' property
       'shapes-fill': { tool: 'shapes', property: 'fillColor' },
       'text': { tool: 'text', property: 'color' },
-      'brush': { tool: 'brush', property: 'color' }
+      'brush': { tool: 'brush', property: 'color' },
+      // Tables: support separate selectors if UI adds them
+      'tables-border': { tool: 'tables', property: 'borderColor' },
+      'tables-background': { tool: 'tables', property: 'backgroundColor' },
+      'tables-font': { tool: 'tables', property: 'fontColor' }
     };
 
     const mapping = toolMapping[toolType];

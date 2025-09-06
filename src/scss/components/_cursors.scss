@@ -34,7 +34,7 @@
   
   // Shapes tool cursor - shapes icon with center hotspot
   &--shapes {
-    cursor: url('/src/assets/cursors/shapes-cursor.svg') 12 12, crosshair;
+    cursor: crosshair;
   }
 }
 
@@ -68,6 +68,14 @@
   }
   
   &.tool-shapes {
-    cursor: url('/src/assets/cursors/shapes-cursor.svg') 12 12, crosshair;
+    cursor: crosshair;
   }
+}
+
+// Remove any outline/border from the PIXI canvas to avoid distracting blue rings
+#pixi-canvas,
+#canvas-container canvas {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }

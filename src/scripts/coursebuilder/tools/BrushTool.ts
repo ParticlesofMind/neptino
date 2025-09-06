@@ -20,10 +20,11 @@ interface BrushSettings {
 }
 
 export class BrushTool extends BaseTool {
- public isDrawing: boolean = false;
- private currentStroke: Graphics | null = null;
- private lastPoint: Point = new Point(0, 0);
- private strokePoints: Point[] = [];
+  public isDrawing: boolean = false;
+  private currentStroke: Graphics | null = null;
+  private lastPoint: Point = new Point(0, 0);
+  private strokePoints: Point[] = [];
+  private constrainStart: Point | null = null; // anchor for shift-straight-line
 
  constructor() {
          super("brush", "url('/src/assets/cursors/brush-cursor.svg') 3 21, crosshair");
@@ -46,22 +47,27 @@ export class BrushTool extends BaseTool {
  this.currentStroke = createHighQualityGraphics();
  this.currentStroke.eventMode = "static";
  this.currentStroke.alpha = BRUSH_CONSTANTS.FIXED_OPACITY; // Fixed opacity like real markers
+  // Tag for selection-based option routing
+  (this.currentStroke as any).__toolType = 'brush';
 
- // Use local coordinates relative to the container
- const localPoint = container.toLocal(event.global);
- 
- // 🚫 MARGIN PROTECTION: Prevent creation in margin areas
- const canvasBounds = this.manager.getCanvasBounds();
- if (!BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
- console.log(`🖍️ BRUSH: 🚫 Click in margin area rejected - point (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)}) outside content area`);
- return; // Exit early - no creation allowed in margins
- }
- 
- // Align coordinates for pixel-perfect rendering
- const alignedPoint = { x: alignToPixel(localPoint.x), y: alignToPixel(localPoint.y) };
- 
- this.lastPoint.copyFrom(alignedPoint);
- this.strokePoints = [new Point(alignedPoint.x, alignedPoint.y)];
+  // Use local coordinates relative to the container
+  const localPoint = container.toLocal(event.global);
+
+  // 🚫 MARGIN PROTECTION: Prevent creation in margin areas
+  const canvasBounds = this.manager.getCanvasBounds();
+  if (!BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
+    console.log(`🖍️ BRUSH: 🚫 Click in margin area rejected - point (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)}) outside content area`);
+    return; // Exit early - no creation allowed in margins
+  }
+
+  // Align coordinates for pixel-perfect rendering, then clamp to bounds
+  const alignedPoint = { x: alignToPixel(localPoint.x), y: alignToPixel(localPoint.y) };
+  const clampedAligned = BoundaryUtils.clampPoint(new Point(alignedPoint.x, alignedPoint.y), canvasBounds);
+
+  this.lastPoint.copyFrom(clampedAligned);
+  this.strokePoints = [new Point(clampedAligned.x, clampedAligned.y)];
+  // If shift is held at stroke start, initialize constrain anchor
+  this.constrainStart = (event as any).shiftKey ? new Point(clampedAligned.x, clampedAligned.y) : null;
 
  console.log(
  `🖍️ BRUSH: Container local point: (${Math.round(alignedPoint.x)}, ${Math.round(alignedPoint.y)})`,
@@ -74,7 +80,7 @@ export class BrushTool extends BaseTool {
  );
 
  // Start the drawing path - just moveTo, don't stroke yet
- this.currentStroke.moveTo(alignedPoint.x, alignedPoint.y);
+ this.currentStroke.moveTo(clampedAligned.x, clampedAligned.y);
 
  // Add to container
  container.addChild(this.currentStroke);
@@ -94,12 +100,34 @@ export class BrushTool extends BaseTool {
 
  // Use local coordinates relative to the container
  const localPoint = container.toLocal(event.global);
+ // 🎯 Clamp to canvas bounds to prevent drawing into margins
+ const canvasBoundsMove = this.manager.getCanvasBounds();
+ let clampedLocal = BoundaryUtils.clampPoint(localPoint, canvasBoundsMove);
+ // If shift is held, snap to straight line from constrainStart (or first point)
+ const shiftHeld = (event as any).shiftKey === true;
+ if (shiftHeld) {
+   const anchor = this.constrainStart || (this.strokePoints.length > 0 ? this.strokePoints[0] : null);
+   if (anchor) {
+     const dx = clampedLocal.x - anchor.x;
+     const dy = clampedLocal.y - anchor.y;
+     const angle = Math.atan2(dy, dx);
+     const step = Math.PI / 4; // 45-degree increments
+     const snapped = Math.round(angle / step) * step;
+     const dist = Math.hypot(dx, dy);
+     clampedLocal = new Point(anchor.x + Math.cos(snapped) * dist, anchor.y + Math.sin(snapped) * dist);
+     // Clamp the snapped point again to be safe
+     clampedLocal = BoundaryUtils.clampPoint(clampedLocal, canvasBoundsMove);
+   }
+ } else {
+   // If shift released, clear constrain anchor
+   this.constrainStart = null;
+ }
 
  // Implement stroke smoothing for authentic marker feel
  if (BRUSH_CONSTANTS.STROKE_SMOOTHING) {
  const distance = Math.sqrt(
- Math.pow(localPoint.x - this.lastPoint.x, 2) +
- Math.pow(localPoint.y - this.lastPoint.y, 2),
+   Math.pow(clampedLocal.x - this.lastPoint.x, 2) +
+   Math.pow(clampedLocal.y - this.lastPoint.y, 2),
  );
 
  // Only draw if we've moved a minimum distance (reduces jitter)
@@ -107,7 +135,7 @@ export class BrushTool extends BaseTool {
  }
 
  console.log(
- `🖍️ BRUSH: Brushing to (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`,
+ `🖍️ BRUSH: Brushing to (${Math.round(clampedLocal.x)}, ${Math.round(clampedLocal.y)})`,
  );
 
  // Clear the current stroke and redraw the entire path
@@ -122,7 +150,7 @@ export class BrushTool extends BaseTool {
  }
  
  // Add the current point
- this.currentStroke.lineTo(localPoint.x, localPoint.y);
+ this.currentStroke.lineTo(clampedLocal.x, clampedLocal.y);
  
  // Apply the stroke style
  this.currentStroke.stroke({
@@ -145,31 +173,42 @@ export class BrushTool extends BaseTool {
  this.currentStroke.alpha = adjustedOpacity;
 
  // Update tracking
- this.lastPoint.copyFrom(localPoint);
- this.strokePoints.push(localPoint.clone());
+ this.lastPoint.copyFrom(clampedLocal);
+ this.strokePoints.push(clampedLocal.clone());
  }
 
- onPointerUp(): void {
+  onPointerUp(): void {
  // 🔒 CRITICAL: Only respond if this tool is active
  if (!this.isActive) {
    return;
  }
 
- if (this.isDrawing) {
- console.log(
- `🖍️ BRUSH: Finished marker stroke with ${this.strokePoints.length} points`,
- );
+  if (this.isDrawing) {
+    console.log(
+      `🖍️ BRUSH: Finished marker stroke with ${this.strokePoints.length} points`,
+    );
 
- // Apply final authentic marker properties
- if (this.currentStroke) {
- this.currentStroke.alpha = BRUSH_CONSTANTS.FIXED_OPACITY;
- }
- }
+    // Apply final authentic marker properties
+    if (this.currentStroke) {
+      this.currentStroke.alpha = BRUSH_CONSTANTS.FIXED_OPACITY;
+      // Attach metadata for later re-styling via selection
+      try {
+        const pts = this.strokePoints.map(p => ({ x: p.x, y: p.y }));
+        (this.currentStroke as any).__meta = {
+          kind: 'brush',
+          points: pts,
+          size: this.settings.size,
+          color: this.settings.color,
+        };
+      } catch {}
+    }
+  }
 
  this.isDrawing = false;
  this.currentStroke = null;
  this.strokePoints = [];
- }
+ this.constrainStart = null;
+}
 
  updateSettings(settings: BrushSettings): void {
  this.settings = { ...this.settings, ...settings };

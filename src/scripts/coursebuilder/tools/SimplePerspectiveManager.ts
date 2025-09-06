@@ -543,6 +543,21 @@ export class SimplePerspectiveManager {
     }
 
     /**
+     * External API: set grid enabled state and synchronize overlay
+     */
+    public setGridEnabled(enabled: boolean): void {
+        this.findCanvasIfNeeded();
+        this.gridEnabled = !!enabled;
+        this.applyGridStyling();
+
+        // Sync UI button states for both legacy and new snap button
+        const legacyBtn = document.querySelector('[data-perspective="grid"]') as HTMLElement | null;
+        const snapBtn = document.querySelector('[data-snap="grid"]') as HTMLElement | null;
+        if (legacyBtn) legacyBtn.classList.toggle('perspective__item--active', this.gridEnabled);
+        if (snapBtn) snapBtn.classList.toggle('perspective__item--active', this.gridEnabled);
+    }
+
+    /**
      * Apply or remove grid styling using overlay approach
      */
     private applyGridStyling(): void {
@@ -587,19 +602,27 @@ export class SimplePerspectiveManager {
         
         // Calculate grid size based on zoom level to maintain visual consistency
         const gridSize = Math.max(2, 20 / this.zoomLevel);
-        
+
+        // Position overlay relative to container using accurate DOM geometry
+        const canvasRect = this.canvas.getBoundingClientRect();
+        const containerRect = this.canvasContainer.getBoundingClientRect();
+        const top = Math.max(0, canvasRect.top - containerRect.top);
+        const left = Math.max(0, canvasRect.left - containerRect.left);
+        const width = canvasRect.width;
+        const height = canvasRect.height;
+
         // Style the overlay to match canvas position and size
         this.gridOverlay.style.cssText = `
             position: absolute;
-            top: ${this.canvas.offsetTop}px;
-            left: ${this.canvas.offsetLeft}px;
-            width: ${this.canvas.offsetWidth}px;
-            height: ${this.canvas.offsetHeight}px;
+            top: ${top}px;
+            left: ${left}px;
+            width: ${width}px;
+            height: ${height}px;
             pointer-events: none;
             z-index: 10;
             background-image: 
-                linear-gradient(rgba(100, 100, 100, 0.4) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(100, 100, 100, 0.4) 1px, transparent 1px);
+                linear-gradient(rgba(59,130,246,0.35) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59,130,246,0.35) 1px, transparent 1px);
             background-size: ${gridSize}px ${gridSize}px;
             background-position: 0 0;
             background-repeat: repeat;
