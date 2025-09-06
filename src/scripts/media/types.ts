@@ -1,4 +1,4 @@
-export type MediaType = 'audio' | 'images' | 'videos' | 'text' | 'files';
+export type MediaType = 'audio' | 'images' | 'videos' | 'text' | 'files' | 'plugins' | 'links';
 
 export interface SearchQueryOptions {
   page?: number;

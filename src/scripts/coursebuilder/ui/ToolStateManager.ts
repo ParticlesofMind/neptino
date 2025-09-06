@@ -389,6 +389,10 @@ export class ToolStateManager {
         this.selectedMedia = mediaId;
         this.updateMediaUI(mediaId);
         this.saveStates();
+        try {
+            const evt = new CustomEvent('media:selected', { detail: mediaId });
+            document.dispatchEvent(evt);
+        } catch {}
     }
 
     /**

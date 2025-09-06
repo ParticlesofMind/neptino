@@ -11,6 +11,7 @@ import { TextProvider } from './providers/TextProvider';
 import { LocalFilesProvider } from './providers/LocalFilesProvider';
 import { GoogleDriveProvider } from './providers/GoogleDriveProvider';
 import { DropboxProvider } from './providers/DropboxProvider';
+import { StockMediaProvider } from './providers/StockMediaProvider';
 
 export class MediaManager {
   private providers = new Map<string, MediaProvider>();
@@ -23,8 +24,18 @@ export class MediaManager {
   init() {
     if (this.initialized) return;
     const env = resolveConfig();
+    const useStockEnv = (import.meta as any).env?.VITE_MEDIA_USE_STOCK;
+    const useStock = (useStockEnv === undefined) || useStockEnv === '1' || String(useStockEnv).toLowerCase() === 'true';
 
     // Lazy provider factories (registered but initialized when used)
+    // Stock providers for all major types
+    this.register('images:stock', () => new StockMediaProvider('stock', {}, this.cache, this.rateLimiter));
+    this.register('videos:stock', () => new StockMediaProvider('stock', {}, this.cache, this.rateLimiter));
+    this.register('audio:stock', () => new StockMediaProvider('stock', {}, this.cache, this.rateLimiter));
+    this.register('text:stock', () => new StockMediaProvider('stock', {}, this.cache, this.rateLimiter));
+    this.register('plugins:stock', () => new StockMediaProvider('stock', {}, this.cache, this.rateLimiter));
+    this.register('links:stock', () => new StockMediaProvider('stock', {}, this.cache, this.rateLimiter));
+    this.register('files:stock', () => new StockMediaProvider('stock', {}, this.cache, this.rateLimiter));
     this.register('audio:freesound', () => new FreesoundProvider('freesound', env.freesound, this.cache, this.rateLimiter));
     this.register('images:unsplash', () => new UnsplashProvider('unsplash', env.unsplash, this.cache, this.rateLimiter));
     this.register('videos:pixabay', () => new PixabayVideoProvider('pixabay', env.pixabay as any, this.cache, this.rateLimiter));
@@ -56,11 +67,15 @@ export class MediaManager {
 
   // Map media type to default provider keys
   private resolveDefaultProvider(mediaType: MediaType): string | null {
+    const useStockEnv = (import.meta as any).env?.VITE_MEDIA_USE_STOCK;
+    const useStock = (useStockEnv === undefined) || useStockEnv === '1' || String(useStockEnv).toLowerCase() === 'true';
     switch (mediaType) {
-      case 'audio': return 'audio:freesound';
-      case 'images': return 'images:unsplash';
-      case 'videos': return 'videos:pixabay';
-      case 'text': return 'text:quotable';
+      case 'audio': return useStock ? 'audio:stock' : 'audio:freesound';
+      case 'images': return useStock ? 'images:stock' : 'images:unsplash';
+      case 'videos': return useStock ? 'videos:stock' : 'videos:pixabay';
+      case 'text': return useStock ? 'text:stock' : 'text:quotable';
+      case 'plugins': return 'plugins:stock';
+      case 'links': return 'links:stock';
       default: return null;
     }
   }
@@ -90,25 +105,39 @@ export class MediaManager {
   listProvidersFor(mediaType: MediaType): { key: string; label: string }[] {
     const entries: { key: string; label: string }[] = [];
     const add = (key: string, label: string) => entries.push({ key, label });
+    const useStockEnv = (import.meta as any).env?.VITE_MEDIA_USE_STOCK;
+    const useStock = (useStockEnv === undefined) || useStockEnv === '1' || String(useStockEnv).toLowerCase() === 'true';
     switch (mediaType) {
       case 'audio':
-        add('audio:freesound', 'Freesound');
+        add('audio:stock', 'Stock');
+        if (!useStock) add('audio:freesound', 'Freesound');
         break;
       case 'images':
-        add('images:unsplash', 'Unsplash');
+        add('images:stock', 'Stock');
+        if (!useStock) add('images:unsplash', 'Unsplash');
         break;
       case 'videos':
-        add('videos:pixabay', 'Pixabay');
-        add('videos:pexels', 'Pexels');
-        add('videos:default', 'Generic');
+        add('videos:stock', 'Stock');
+        if (!useStock) {
+          add('videos:pixabay', 'Pixabay');
+          add('videos:pexels', 'Pexels');
+          add('videos:default', 'Generic');
+        }
         break;
       case 'text':
-        add('text:quotable', 'Quotable');
+        add('text:stock', 'Stock');
+        if (!useStock) add('text:quotable', 'Quotable');
         break;
       case 'files':
         add('files:local', 'Local Upload');
         add('files:google-drive', 'Google Drive');
         add('files:dropbox', 'Dropbox');
+        break;
+      case 'plugins':
+        add('plugins:stock', 'Stock');
+        break;
+      case 'links':
+        add('links:stock', 'Stock');
         break;
     }
     return entries;

@@ -43,13 +43,10 @@ class MediaInterface {
     this.container.style.flexDirection = 'column';
     this.container.style.gap = '8px';
 
+    // filters removed per request (keep node to maintain layout hooks)
     this.filtersEl = document.createElement('div');
     this.filtersEl.className = 'search__filters';
     this.filtersEl.style.display = 'none';
-    this.filtersEl.style.gap = '8px';
-    this.filtersEl.style.alignItems = 'center';
-    this.filtersEl.style.flexWrap = 'wrap';
-    this.filtersEl.style.marginLeft = '8px';
 
     this.resultsEl = document.createElement('div');
     this.resultsEl.className = 'search__results';
@@ -78,66 +75,7 @@ class MediaInterface {
 
     actions.appendChild(this.loadMoreBtn);
 
-    // Provider select row
-    const providerRow = document.createElement('div');
-    providerRow.style.display = 'flex';
-    providerRow.style.gap = '8px';
-    providerRow.style.alignItems = 'center';
-
-    const providerLabel = document.createElement('span');
-    providerLabel.textContent = 'Source:';
-    providerLabel.style.fontSize = '12px';
-
-    this.providerSelect = document.createElement('select');
-    this.providerSelect.className = 'input input--select';
-    this.providerSelect.style.width = '180px';
-    this.providerSelect.addEventListener('change', () => {
-      this.selectedProviderKey = this.providerSelect.value || null;
-      this.renderFilters();
-      this.page = 1;
-      this.search(true);
-    });
-
-    providerRow.appendChild(providerLabel);
-    providerRow.appendChild(this.providerSelect);
-
-    // Local upload container (only shown for files:local)
-    this.localUploadWrap = document.createElement('div');
-    this.localUploadWrap.style.display = 'none';
-    this.localUploadWrap.style.gap = '8px';
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.multiple = true;
-    fileInput.addEventListener('change', () => {
-      if (fileInput.files && fileInput.files.length) {
-        mediaManager.ingestLocalFiles(fileInput.files);
-        this.page = 1;
-        this.search(true, true);
-      }
-    });
-    this.localUploadWrap.appendChild(fileInput);
-
-    // OAuth Connect panel
-    this.connectPanel = document.createElement('div');
-    this.connectPanel.style.display = 'none';
-    this.connectPanel.style.alignItems = 'center';
-    this.connectPanel.style.gap = '8px';
-    this.connectPanel.style.marginTop = '6px';
-    const connectText = document.createElement('span');
-    connectText.style.fontSize = '12px';
-    const connectBtn = document.createElement('button');
-    connectBtn.className = 'button button--outline button--small';
-    connectBtn.textContent = 'Connect';
-    connectBtn.addEventListener('click', () => this.handleConnect());
-    const disconnectBtn = document.createElement('button');
-    disconnectBtn.className = 'button button--delete button--small';
-    disconnectBtn.textContent = 'Disconnect';
-    disconnectBtn.addEventListener('click', () => this.handleDisconnect());
-    this.connectPanel.append(connectText, connectBtn, disconnectBtn);
-
-    this.container.appendChild(providerRow);
-    this.container.appendChild(this.localUploadWrap);
-    this.container.appendChild(this.connectPanel);
+    // Provider/Connect/Upload removed per request (stock provider is used behind the scenes)
     this.container.appendChild(this.filtersEl);
     this.container.appendChild(this.resultsEl);
     this.container.appendChild(actions);
@@ -147,9 +85,18 @@ class MediaInterface {
     document.querySelectorAll('[data-media]').forEach(el => {
       el.addEventListener('click', (e) => {
         const target = e.currentTarget as HTMLElement;
-        const t = (target.dataset.media || 'files') as MediaType;
-        this.setType(t);
+        let val = (target.dataset.media || 'files');
+        // Normalize plugin -> plugins
+        if (val === 'plugin') val = 'plugins';
+        this.setType(val as MediaType);
       });
+    });
+
+    // Sync with ToolStateManager-driven selection (on reload/init)
+    document.addEventListener('media:selected', (e: any) => {
+      let val = (e?.detail || 'files');
+      if (val === 'plugin') val = 'plugins';
+      this.setType(val as MediaType);
     });
 
     // Try to read initial selection from ToolStateManager if present
@@ -159,8 +106,19 @@ class MediaInterface {
     } else {
       this.currentType = 'files';
     }
-    this.refreshProviders();
-    this.renderFilters();
+    // Default to stock provider per type; initial render shows current type content
+    this.selectedProviderKey = `${this.currentType}:stock`;
+    this.search(true, true);
+
+    // As a fallback, resync once after a short delay in case ToolState initializes later
+    setTimeout(() => {
+      const ts = (window as any).toolStateManager;
+      if (ts && typeof ts.getSelectedMedia === 'function') {
+        let m = ts.getSelectedMedia() || 'files';
+        if (m === 'plugin') m = 'plugins';
+        this.setType(m as MediaType);
+      }
+    }, 150);
 
     // Search box
     const doSearch = debounce(() => {
@@ -186,102 +144,15 @@ class MediaInterface {
     this.resultsEl.innerHTML = '';
     this.page = 1;
     this.hasMore = false;
-    this.refreshProviders();
-    this.renderFilters();
-    if (this.query) this.search(true);
+    this.selectedProviderKey = `${this.currentType}:stock`;
+    this.search(true, true);
   }
 
-  private refreshProviders() {
-    // Populate provider select based on current type
-    const providers = mediaManager.listProvidersFor(this.currentType);
-    this.providerSelect.innerHTML = '';
-    for (const p of providers) {
-      const opt = document.createElement('option');
-      opt.value = p.key;
-      opt.textContent = p.label;
-      this.providerSelect.appendChild(opt);
-    }
-    this.selectedProviderKey = providers[0]?.key || null;
-    this.providerSelect.value = this.selectedProviderKey || '';
 
-    // Show local upload input if files:local is selected
-    this.localUploadWrap.style.display = this.selectedProviderKey === 'files:local' ? 'flex' : 'none';
-
-    // Show OAuth connect panel for Drive/Dropbox
-    const isDrive = this.selectedProviderKey === 'files:google-drive';
-    const isDropbox = this.selectedProviderKey === 'files:dropbox';
-    this.connectPanel.style.display = (isDrive || isDropbox) ? 'flex' : 'none';
-    if (this.connectPanel.style.display === 'flex') {
-      const label = this.connectPanel.querySelector('span') as HTMLSpanElement;
-      label.textContent = `Connect to ${isDrive ? 'Google Drive' : 'Dropbox'}`;
-    }
-  }
-
-  private renderFilters() {
-    // Show audio filters only for audio
-    this.filtersEl.innerHTML = '';
-    if (this.currentType === 'audio') {
-      this.filtersEl.style.display = 'flex';
-      const min = this.makeNumberInput('Min sec', (v) => { this.audioFilters.minDurationSec = v; this.page = 1; this.search(true); });
-      const max = this.makeNumberInput('Max sec', (v) => { this.audioFilters.maxDurationSec = v; this.page = 1; this.search(true); });
-      const format = this.makeSelect(
-        'Format',
-        ['', 'mp3', 'ogg', 'wav'],
-        (v) => { this.audioFilters.format = v; this.page = 1; this.search(true); }
-      );
-      const license = this.makeInput('License', (v) => { this.audioFilters.license = v; this.page = 1; this.search(true); }, 'e.g., Attribution');
-      const minBr = this.makeNumberInput('Min kbps', (v) => { this.audioAdvanced.minBitrateKbps = v; this.page = 1; this.search(true); });
-      const maxBr = this.makeNumberInput('Max kbps', (v) => { this.audioAdvanced.maxBitrateKbps = v; this.page = 1; this.search(true); });
-      const minSr = this.makeNumberInput('Min Hz', (v) => { this.audioAdvanced.minSamplerateHz = v; this.page = 1; this.search(true); });
-      const maxSr = this.makeNumberInput('Max Hz', (v) => { this.audioAdvanced.maxSamplerateHz = v; this.page = 1; this.search(true); });
-      this.filtersEl.append(min, max, format, license, minBr, maxBr, minSr, maxSr);
-    } else {
-      this.filtersEl.style.display = 'none';
-    }
-  }
-
-  private makeNumberInput(placeholder: string, onChange: (val: number) => void) {
-    const wrap = document.createElement('div');
-    const input = document.createElement('input');
-    input.type = 'number';
-    input.className = 'input input--number';
-    input.placeholder = placeholder;
-    input.style.width = '100px';
-    input.addEventListener('change', () => onChange(Number(input.value || 0)));
-    wrap.appendChild(input);
-    return wrap;
-  }
-
-  private makeInput(placeholder: string, onChange: (val: string) => void, title?: string) {
-    const wrap = document.createElement('div');
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'input';
-    input.placeholder = placeholder;
-    if (title) input.title = title;
-    input.style.width = '160px';
-    input.addEventListener('change', () => onChange(String(input.value || '').trim()));
-    wrap.appendChild(input);
-    return wrap;
-  }
-
-  private makeSelect(label: string, options: string[], onChange: (val: string) => void) {
-    const wrap = document.createElement('div');
-    const sel = document.createElement('select');
-    sel.className = 'input input--select';
-    for (const v of options) {
-      const opt = document.createElement('option');
-      opt.value = v;
-      opt.textContent = v || label;
-      sel.appendChild(opt);
-    }
-    sel.addEventListener('change', () => onChange(sel.value));
-    wrap.appendChild(sel);
-    return wrap;
-  }
+  // Filters removed intentionally. Only search query and media type are used.
 
   private async search(clear: boolean, allowEmpty = false) {
-    if (!this.query && !allowEmpty && this.selectedProviderKey !== 'files:local') {
+    if (!this.query && !allowEmpty && this.selectedProviderKey !== 'files:local' && !(this.selectedProviderKey || '').includes(':stock')) {
       this.resultsEl.innerHTML = '';
       this.loadMoreBtn.style.display = 'none';
       return;
@@ -299,9 +170,9 @@ class MediaInterface {
 
     try {
       const opts: any = { page: this.page, pageSize: this.pageSize };
-      if (this.currentType === 'audio') {
-        Object.assign(opts, this.audioFilters);
-        Object.assign(opts, this.audioAdvanced);
+      // Inject type hint for stock provider so it can filter (skip 'files' to aggregate)
+      if ((this.selectedProviderKey || '').includes(':stock')) {
+        if (this.currentType !== 'files') (opts as any).type = this.currentType;
       }
       const result = this.selectedProviderKey
         ? await mediaManager.searchWithProvider(this.selectedProviderKey, this.query, opts)
@@ -579,12 +450,65 @@ document.addEventListener('DOMContentLoaded', () => {
         const item = JSON.parse(json);
         const canvasAPI = (window as any).canvasAPI;
         if (!canvasAPI) return;
+        // Always create a styled HTML card overlay at drop point
+        const hostRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const x = (e.clientX - hostRect.left);
+        const y = (e.clientY - hostRect.top);
+        const card = document.createElement('div');
+        const type = (item.type || 'files');
+        card.className = `card card--floating card--${type}`;
+        card.style.left = `${x}px`;
+        card.style.top = `${y}px`;
+        card.style.width = '180px';
+        card.style.transform = 'translate(-50%, -50%)';
+        card.innerHTML = '';
+        // Embed the media itself inside the card
+        if (item.type === 'images') {
+          const img = document.createElement('img');
+          img.src = item.contentUrl || item.previewUrl || item.thumbnailUrl || '';
+          img.alt = item.title || '';
+          img.className = 'card__thumb';
+          card.appendChild(img);
+        } else if (item.type === 'videos') {
+          const vid = document.createElement('video');
+          vid.controls = true;
+          vid.src = item.previewUrl || item.contentUrl || '';
+          vid.style.width = '100%';
+          vid.style.maxHeight = '140px';
+          vid.style.objectFit = 'cover';
+          card.appendChild(vid);
+        } else if (item.type === 'audio') {
+          const audio = document.createElement('audio');
+          audio.controls = true;
+          audio.src = item.previewUrl || item.contentUrl || '';
+          audio.style.width = '100%';
+          card.appendChild(audio);
+        } else if (item.type === 'text') {
+          const p = document.createElement('div');
+          p.textContent = item.title || 'Text';
+          p.className = 'card__title';
+          card.appendChild(p);
+        } else if (item.type === 'plugins' || item.type === 'links') {
+          const p = document.createElement('div');
+          p.textContent = item.title || (item.type === 'plugins' ? 'Plugin' : 'Link');
+          p.className = 'card__title';
+          card.appendChild(p);
+        }
+        const title = document.createElement('div');
+        title.className = 'card__title';
+        title.textContent = item.title || type;
+        card.appendChild(title);
+        (e.currentTarget as HTMLElement).appendChild(card);
+
+        // Also add to canvas in basic form (optional)
         if (item.type === 'images' && item.contentUrl) {
-          canvasAPI.addImage(item.contentUrl, e.offsetX || 50, e.offsetY || 50);
+          canvasAPI.addImage(item.contentUrl, x, y);
         } else if (item.type === 'audio') {
           canvasAPI.addAudioPlaceholder(item.title || 'Audio');
         } else if (item.type === 'videos') {
-          canvasAPI.addText(`📹 ${item.title || 'Video'}`);
+          canvasAPI.addText(`📹 ${item.title || 'Video'}`, x, y);
+        } else if (item.type === 'text' && item.title) {
+          canvasAPI.addText(item.title, x, y);
         }
       } catch {}
     });

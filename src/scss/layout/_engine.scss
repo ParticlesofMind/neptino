@@ -82,6 +82,7 @@
         display: flex;
         justify-content: center; // Center the canvas horizontally
         align-items: flex-start; // Align to top vertically
+        position: relative; // Allow absolute-positioned overlay cards
 
         box-shadow:
             inset 6px 6px 12px rgba(0, 0, 0, 0.1),

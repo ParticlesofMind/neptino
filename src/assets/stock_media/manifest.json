@@ -1,0 +1,44 @@
+{
+  "items": [
+    {"id": "img1", "type": "images", "title": "Octopus Logo", "thumbnailUrl": "/src/assets/logo/octopus-logo.png", "previewUrl": "/src/assets/logo/octopus-logo.png", "contentUrl": "/src/assets/logo/octopus-logo.png", "author": "Neptino"},
+    {"id": "img2", "type": "images", "title": "Brand Mark", "thumbnailUrl": "/src/assets/logo/octopus-logo.png", "previewUrl": "/src/assets/logo/octopus-logo.png", "contentUrl": "/src/assets/logo/octopus-logo.png", "author": "Neptino"},
+
+    {"id": "stock-img-001", "type": "images", "title": "Boat Scene", "thumbnailUrl": "/src/assets/stock_media/images/001_sample-boat-400x300.png", "previewUrl": "/src/assets/stock_media/images/001_sample-boat-400x300.png", "contentUrl": "/src/assets/stock_media/images/001_sample-boat-400x300.png", "author": "Stock"},
+    {"id": "stock-img-002", "type": "images", "title": "Hut Scene", "thumbnailUrl": "/src/assets/stock_media/images/002_sample-hut-400x300.png", "previewUrl": "/src/assets/stock_media/images/002_sample-hut-400x300.png", "contentUrl": "/src/assets/stock_media/images/002_sample-hut-400x300.png", "author": "Stock"},
+    {"id": "stock-img-003", "type": "images", "title": "Bumblebee", "thumbnailUrl": "/src/assets/stock_media/images/003_sample-bumblebee-400x300.png", "previewUrl": "/src/assets/stock_media/images/003_sample-bumblebee-400x300.png", "contentUrl": "/src/assets/stock_media/images/003_sample-bumblebee-400x300.png", "author": "Stock"},
+    {"id": "stock-img-004", "type": "images", "title": "Clouds", "thumbnailUrl": "/src/assets/stock_media/images/004_sample-clouds2-400x300.png", "previewUrl": "/src/assets/stock_media/images/004_sample-clouds2-400x300.png", "contentUrl": "/src/assets/stock_media/images/004_sample-clouds2-400x300.png", "author": "Stock"},
+    {"id": "stock-img-005", "type": "images", "title": "Red Background", "thumbnailUrl": "/src/assets/stock_media/images/005_sample-red-400x300.png", "previewUrl": "/src/assets/stock_media/images/005_sample-red-400x300.png", "contentUrl": "/src/assets/stock_media/images/005_sample-red-400x300.png", "author": "Stock"},
+    {"id": "stock-img-006", "type": "images", "title": "Green Background", "thumbnailUrl": "/src/assets/stock_media/images/006_sample-green-400x300.png", "previewUrl": "/src/assets/stock_media/images/006_sample-green-400x300.png", "contentUrl": "/src/assets/stock_media/images/006_sample-green-400x300.png", "author": "Stock"},
+    {"id": "stock-img-007", "type": "images", "title": "Blue Background", "thumbnailUrl": "/src/assets/stock_media/images/007_sample-blue-400x300.png", "previewUrl": "/src/assets/stock_media/images/007_sample-blue-400x300.png", "contentUrl": "/src/assets/stock_media/images/007_sample-blue-400x300.png", "author": "Stock"},
+    {"id": "stock-img-008", "type": "images", "title": "Red Square", "thumbnailUrl": "/src/assets/stock_media/images/008_sample-red-200x200.png", "previewUrl": "/src/assets/stock_media/images/008_sample-red-200x200.png", "contentUrl": "/src/assets/stock_media/images/008_sample-red-200x200.png", "author": "Stock"},
+    {"id": "stock-img-009", "type": "images", "title": "Green Square", "thumbnailUrl": "/src/assets/stock_media/images/009_sample-green-200x200.png", "previewUrl": "/src/assets/stock_media/images/009_sample-green-200x200.png", "contentUrl": "/src/assets/stock_media/images/009_sample-green-200x200.png", "author": "Stock"},
+    {"id": "stock-img-010", "type": "images", "title": "Blue Square", "thumbnailUrl": "/src/assets/stock_media/images/010_sample-blue-200x200.png", "previewUrl": "/src/assets/stock_media/images/010_sample-blue-200x200.png", "contentUrl": "/src/assets/stock_media/images/010_sample-blue-200x200.png", "author": "Stock"},
+
+    {"id": "stock-vid-001", "type": "videos", "title": "Sample Video 5s", "thumbnailUrl": "/src/assets/logo/octopus-logo.png", "previewUrl": "/src/assets/stock_media/videos/001_sample-5s.mp4", "contentUrl": "/src/assets/stock_media/videos/001_sample-5s.mp4", "author": "Stock", "durationSec": 5},
+    {"id": "stock-vid-002", "type": "videos", "title": "Sample Video 10s", "thumbnailUrl": "/src/assets/logo/octopus-logo.png", "previewUrl": "/src/assets/stock_media/videos/002_sample-10s.mp4", "contentUrl": "/src/assets/stock_media/videos/002_sample-10s.mp4", "author": "Stock", "durationSec": 10},
+    {"id": "stock-vid-003", "type": "videos", "title": "Sample Video 15s", "thumbnailUrl": "/src/assets/logo/octopus-logo.png", "previewUrl": "/src/assets/stock_media/videos/003_sample-15s.mp4", "contentUrl": "/src/assets/stock_media/videos/003_sample-15s.mp4", "author": "Stock", "durationSec": 15},
+    {"id": "stock-vid-004", "type": "videos", "title": "Sample Video 20s", "thumbnailUrl": "/src/assets/logo/octopus-logo.png", "previewUrl": "/src/assets/stock_media/videos/004_sample-20s.mp4", "contentUrl": "/src/assets/stock_media/videos/004_sample-20s.mp4", "author": "Stock", "durationSec": 20},
+    {"id": "stock-vid-005", "type": "videos", "title": "Sample Video 30s", "thumbnailUrl": "/src/assets/logo/octopus-logo.png", "previewUrl": "/src/assets/stock_media/videos/005_sample-30s.mp4", "contentUrl": "/src/assets/stock_media/videos/005_sample-30s.mp4", "author": "Stock", "durationSec": 30},
+
+    {"id": "stock-aud-001", "type": "audio", "title": "Audio Sample 3s", "thumbnailUrl": "", "previewUrl": "/src/assets/stock_media/audios/001_sample-3s.mp3", "contentUrl": "/src/assets/stock_media/audios/001_sample-3s.mp3", "author": "Stock", "durationSec": 3},
+    {"id": "stock-aud-002", "type": "audio", "title": "Audio Sample 6s", "thumbnailUrl": "", "previewUrl": "/src/assets/stock_media/audios/002_sample-6s.mp3", "contentUrl": "/src/assets/stock_media/audios/002_sample-6s.mp3", "author": "Stock", "durationSec": 6},
+    {"id": "stock-aud-003", "type": "audio", "title": "Audio Sample 9s", "thumbnailUrl": "", "previewUrl": "/src/assets/stock_media/audios/003_sample-9s.mp3", "contentUrl": "/src/assets/stock_media/audios/003_sample-9s.mp3", "author": "Stock", "durationSec": 9},
+    {"id": "stock-aud-004", "type": "audio", "title": "Audio Sample 12s", "thumbnailUrl": "", "previewUrl": "/src/assets/stock_media/audios/004_sample-12s.mp3", "contentUrl": "/src/assets/stock_media/audios/004_sample-12s.mp3", "author": "Stock", "durationSec": 12},
+    {"id": "stock-aud-005", "type": "audio", "title": "Audio Sample 15s", "thumbnailUrl": "", "previewUrl": "/src/assets/stock_media/audios/005_sample-15s.mp3", "contentUrl": "/src/assets/stock_media/audios/005_sample-15s.mp3", "author": "Stock", "durationSec": 15},
+
+    {"id": "stock-txt-001", "type": "text", "title": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.", "author": "Lorem"},
+    {"id": "stock-txt-002", "type": "text", "title": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", "author": "Lorem"},
+    {"id": "stock-txt-003", "type": "text", "title": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.", "author": "Lorem"},
+    {"id": "stock-txt-004", "type": "text", "title": "Learning never exhausts the mind. — Leonardo da Vinci", "author": "Quote"},
+    {"id": "stock-txt-005", "type": "text", "title": "Simplicity is the soul of efficiency. — Austin Freeman", "author": "Quote"},
+    {"id": "stock-txt-006", "type": "text", "title": "Innovation distinguishes between a leader and a follower. — Steve Jobs", "author": "Quote"},
+    {"id": "stock-txt-007", "type": "text", "title": "The best way to predict the future is to create it. — Peter Drucker", "author": "Quote"},
+
+    {"id": "plg1", "type": "plugins", "title": "Quiz Plugin", "thumbnailUrl": "/src/assets/icons/coursebuilder/media/media-plugins.svg", "contentUrl": "#"},
+    {"id": "plg2", "type": "plugins", "title": "Form Plugin", "thumbnailUrl": "/src/assets/icons/coursebuilder/media/media-plugins.svg", "contentUrl": "#"},
+
+    {"id": "lnk1", "type": "links", "title": "Neptino Website", "thumbnailUrl": "/src/assets/icons/coursebuilder/media/media-link.svg", "contentUrl": "https://example.com"},
+    {"id": "lnk2", "type": "links", "title": "Documentation", "thumbnailUrl": "/src/assets/icons/coursebuilder/media/media-link.svg", "contentUrl": "https://example.com/docs"}
+  ]
+}
+
