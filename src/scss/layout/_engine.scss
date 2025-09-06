@@ -88,6 +88,7 @@
     }
 
     &__search {
+      
         grid-column: 2;
         grid-row: 2;
         // RESET any common grid-item styling applied above
@@ -261,23 +262,6 @@
 // SEARCH PANEL (engine__search children)
 // ==========================================================================
 
-.search__input {
-  width: 100%;
-  box-sizing: border-box;
-  flex-shrink: 0; // Prevent input from shrinking
-  min-width: 0; // Allow input to shrink if necessary but maintain readability
-  padding: var(--spacing-3) var(--spacing-5) !important; // Add comfortable horizontal padding
-  border: 1px solid var(--color-neutral-300);
-  border-radius: var(--radius-medium);
-  font-size: var(--font-size-small);
-  margin-bottom: var(--spacing-2);
-  
-  &:focus {
-    outline: none;
-    border-color: var(--color-primary-500);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-  }
-}
 
 .search__filters {
   display: flex;

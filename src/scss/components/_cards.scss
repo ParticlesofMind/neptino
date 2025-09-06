@@ -125,6 +125,24 @@
   }
 }
 
+// Consistent media card previews in search panel
+.search__results {
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    .card__preview {
+      width: 100%;
+      aspect-ratio: 16 / 10; // Wider than tall for consistency
+      height: auto; // Let aspect-ratio control height
+      border-radius: var(--radius-small);
+      object-fit: cover;
+      display: block;
+    }
+  }
+}
+
 // Card metric variant
 .card-metric {
   &__number {

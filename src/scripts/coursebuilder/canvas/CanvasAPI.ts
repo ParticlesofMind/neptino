@@ -280,98 +280,228 @@ export class CanvasAPI {
   }
 
   /**
-   * Add a video sprite backed by an HTMLVideoElement
+   * Add a video element with proper sizing - simplified approach
    */
-  public addVideoElement(url: string, title: string = 'Video', x: number = 50, y: number = 50): string | null {
+  public addVideoElement(url: string, title: string = 'Video', x: number = 50, y: number = 50, _posterUrl?: string): string | null {
     if (!this.displayManager) {
       console.warn('⚠️ Canvas not initialized - cannot add video element');
       return null;
     }
 
-    try {
-      // Prepare HTML video element
-      const video = document.createElement('video');
-      video.src = url;
-      video.crossOrigin = 'anonymous';
-      video.preload = 'auto';
-      video.playsInline = true;
-      video.muted = true; // allow autoplay if needed later
-      video.loop = false;
-      video.controls = false;
+    // Create a simple container with consistent dimensions
+    const { container, id } = this.displayManager.createContainer();
+    container.x = x;
+    container.y = y;
 
-      // Create a container to hold video sprite + label background
-      const { container, id } = this.displayManager.createContainer();
-      container.x = x;
-      container.y = y;
-
-      // Video sprite from element (Pixi v8 supports HTMLVideoElement sources)
-      const sprite = Sprite.from(video as any);
-      sprite.name = `video:${title}`;
-      sprite.eventMode = 'passive';
-      container.addChild(sprite);
-
-      // Draw a subtle border/background once metadata is known
-      const bg = new Graphics();
-      bg.alpha = 0.6;
-      container.addChildAt(bg, 0);
-
-      const label = new Text({
-        text: title,
-        style: { fontFamily: 'Arial', fontSize: 12, fill: 0xffffff },
-      });
-      label.alpha = 0.8;
-      label.visible = false;
-      container.addChild(label);
-
-      const applyLayout = () => {
-        const vw = video.videoWidth || 1;
-        const vh = video.videoHeight || 1;
-        // Normalize initial size: cap short edge to 200px (no upscaling)
-        const cap = 200;
-        const shortEdge = Math.min(vw, vh);
-        const scale = Math.min(1, cap / shortEdge);
-        sprite.width = Math.max(1, vw * scale);
-        sprite.height = Math.max(1, vh * scale);
-
-        // Styled backdrop/border
-        bg.clear()
-          .roundRect(-2, -2, sprite.width + 4, sprite.height + 4, 6)
-          .fill({ color: 0x0b6b53, alpha: 0.12 })
-          .stroke({ color: 0x059669, width: 2, alpha: 0.6 });
-
-        // Title label in bottom-left
-        label.visible = true;
-        label.x = 6;
-        label.y = sprite.height - (label.height + 4);
-      };
-
-      // If metadata already available
-      if (video.readyState >= 1) {
-        applyLayout();
-      } else {
-        video.addEventListener('loadedmetadata', applyLayout, { once: true });
+    // Standard video dimensions (16:9 aspect ratio)
+    const VIDEO_WIDTH = 320;
+    const VIDEO_HEIGHT = 180;
+    
+    // Create HTML video element
+    const video = document.createElement('video');
+    video.src = url;
+    video.preload = 'metadata'; // Load metadata and first frame for thumbnail
+    video.playsInline = true;
+    video.muted = true;
+    video.loop = true;
+    
+    // Create a placeholder background first
+    const placeholder = new Graphics();
+    placeholder.roundRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT, 8)
+      .fill({ color: 0x2a2a2a })
+      .stroke({ color: 0x059669, width: 2 });
+    container.addChild(placeholder);
+    
+    // Add video icon in center as placeholder
+    const videoIcon = new Text({
+      text: '🎬',
+      style: { fontFamily: 'Arial', fontSize: 32, fill: 0xffffff }
+    });
+    videoIcon.anchor.set(0.5);
+    videoIcon.x = VIDEO_WIDTH / 2;
+    videoIcon.y = VIDEO_HEIGHT / 2 - 10;
+    container.addChild(videoIcon);
+    
+    // Create video sprite from the HTML video element
+    const videoSprite = Sprite.from(video);
+    // Force the sprite to our desired dimensions, not the video's native size
+    videoSprite.width = VIDEO_WIDTH;
+    videoSprite.height = VIDEO_HEIGHT;
+    videoSprite.x = 0;
+    videoSprite.y = 0;
+    videoSprite.visible = false; // Hide until we have content
+    container.addChild(videoSprite);
+    
+    let hasLoadedData = false;
+    
+    // When video metadata loads, show the first frame as thumbnail
+    video.addEventListener('loadeddata', () => {
+      console.log('📹 Video data loaded, showing thumbnail');
+      hasLoadedData = true;
+      videoSprite.visible = true;
+      placeholder.visible = false;
+      videoIcon.visible = false;
+      
+      // Force size and update texture to show first frame
+      videoSprite.width = VIDEO_WIDTH;
+      videoSprite.height = VIDEO_HEIGHT;
+      if (videoSprite.texture && videoSprite.texture.source) {
+        videoSprite.texture.source.update();
       }
-
-      // Auto-play when ready (muted for autoplay policies)
-      const tryPlay = () => {
-        video.play().catch(() => {/* ignore autoplay failure */});
-      };
-      if (video.readyState >= 2) {
-        tryPlay();
-      } else {
-        video.addEventListener('canplay', tryPlay, { once: true });
-        video.addEventListener('loadeddata', tryPlay, { once: true });
+    });
+    
+    // Ensure the sprite maintains our size and updates texture
+    const forceSize = () => {
+      videoSprite.width = VIDEO_WIDTH;
+      videoSprite.height = VIDEO_HEIGHT;
+      // Force texture update
+      if (videoSprite.texture && videoSprite.texture.source) {
+        videoSprite.texture.source.update();
       }
-
-      // Store metadata for later use
-      (container as any).metadata = { type: 'video', url, title, element: video };
-
-      console.log(`📹 Video sprite added: ${title} at (${x}, ${y})`);
-      return id;
-    } catch (e) {
-      console.error('❌ Failed to add video element:', e);
-      return null;
-    }
+    };
+    
+    video.addEventListener('loadedmetadata', forceSize);
+    video.addEventListener('canplay', forceSize);
+    video.addEventListener('playing', forceSize);
+    
+    // Add a ticker to update video texture during playback
+    let ticker: any = null;
+    
+    video.addEventListener('play', () => {
+      console.log('Video started playing');
+      if (ticker) return; // Already has ticker
+      
+      // Create a ticker to update the video texture
+      ticker = () => {
+        if (video.paused || video.ended) {
+          return;
+        }
+        if (videoSprite.texture && videoSprite.texture.source) {
+          videoSprite.texture.source.update();
+        }
+      };
+      
+      // Use requestAnimationFrame for smooth updates
+      const updateLoop = () => {
+        if (!video.paused && !video.ended) {
+          ticker();
+          requestAnimationFrame(updateLoop);
+        }
+      };
+      requestAnimationFrame(updateLoop);
+    });
+    
+    // Create background/border
+    const bg = new Graphics();
+    bg.roundRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT, 8)
+      .stroke({ color: 0x059669, width: 2 });
+    container.addChildAt(bg, 0);
+    
+    // Add title text
+    const titleText = new Text({
+      text: title,
+      style: { 
+        fontFamily: 'Arial', 
+        fontSize: 12, 
+        fill: 0xffffff,
+        padding: 4
+      }
+    });
+    
+    // Create background for title text
+    const titleBg = new Graphics();
+    titleBg.roundRect(0, 0, titleText.width + 8, titleText.height + 4, 4)
+      .fill({ color: 0x000000, alpha: 0.7 });
+    titleBg.x = 5;
+    titleBg.y = VIDEO_HEIGHT - titleText.height - 9;
+    container.addChild(titleBg);
+    
+    titleText.x = 9;
+    titleText.y = VIDEO_HEIGHT - titleText.height - 7;
+    container.addChild(titleText);
+    
+    // Create play button overlay
+    const playButton = new Graphics();
+    const drawPlayButton = () => {
+      playButton.clear()
+        .circle(VIDEO_WIDTH / 2, VIDEO_HEIGHT / 2, 24)
+        .fill({ color: 0x000000, alpha: 0.7 })
+        .stroke({ color: 0xffffff, width: 2 })
+        .moveTo(VIDEO_WIDTH / 2 - 8, VIDEO_HEIGHT / 2 - 10)
+        .lineTo(VIDEO_WIDTH / 2 - 8, VIDEO_HEIGHT / 2 + 10)
+        .lineTo(VIDEO_WIDTH / 2 + 10, VIDEO_HEIGHT / 2)
+        .closePath()
+        .fill({ color: 0xffffff });
+    };
+    drawPlayButton();
+    
+    playButton.eventMode = 'static';
+    playButton.cursor = 'pointer';
+    playButton.interactive = true;
+    
+    let isPlaying = false;
+    
+    playButton.on('pointertap', async (event) => {
+      event.stopPropagation();
+      
+      if (!isPlaying) {
+        try {
+          console.log(`🎬 Attempting to play video: ${title}`);
+          console.log(`📹 Video ready state: ${video.readyState}`);
+          console.log(`📹 Has loaded data: ${hasLoadedData}`);
+          
+          if (!hasLoadedData) {
+            console.log('⏳ Video not ready yet, waiting for data to load...');
+            return;
+          }
+          
+          await video.play();
+          playButton.visible = false;
+          isPlaying = true;
+          
+          console.log(`✅ Video playing successfully`);
+          
+          // Start continuous texture update during playback
+          const updateTexture = () => {
+            if (!video.paused && !video.ended && videoSprite.texture && videoSprite.texture.source) {
+              videoSprite.texture.source.update();
+              requestAnimationFrame(updateTexture);
+            }
+          };
+          requestAnimationFrame(updateTexture);
+          
+        } catch (error) {
+          console.error('❌ Failed to play video:', error);
+          playButton.visible = true;
+        }
+      }
+    });
+    
+    // Show play button when video is paused/ended
+    video.addEventListener('pause', () => {
+      isPlaying = false;
+      playButton.visible = true;
+    });
+    
+    video.addEventListener('ended', () => {
+      isPlaying = false;
+      playButton.visible = true;
+    });
+    
+    container.addChild(playButton);
+    
+    // Store metadata for future functionality
+    (container as any).metadata = {
+      type: 'video',
+      url: url,
+      title: title,
+      width: VIDEO_WIDTH,
+      height: VIDEO_HEIGHT,
+      videoElement: video
+    };
+    
+    console.log(`📹 Video element added: ${title} at (${x}, ${y})`);
+    return id;
   }
 
   /**
