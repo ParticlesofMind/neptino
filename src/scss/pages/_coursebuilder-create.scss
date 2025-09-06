@@ -8,6 +8,13 @@
     border: none !important;
     outline: none !important;
 
+    // Drag and drop states
+    &.drag-over {
+        background: rgba(59, 130, 246, 0.1);
+        border: 2px dashed var(--color-primary-400) !important;
+        transition: all 0.2s ease;
+    }
+
     // Three-column grid layout
     &.engine__canvas--grid {
         display: grid;

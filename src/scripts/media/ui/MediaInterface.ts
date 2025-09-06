@@ -35,14 +35,10 @@ class MediaInterface {
     const host = document.querySelector('.engine__search');
     if (!searchBox || !host) return;
 
-    // Build UI container
+    // Build UI container (CSS handles all layout)
     this.container = document.createElement('div');
     this.container.className = 'search__panel';
-    this.container.style.width = '100%';
-    this.container.style.display = 'flex';
-    this.container.style.flexDirection = 'column';
-    this.container.style.gap = '8px';
-
+    
     // filters removed per request (keep node to maintain layout hooks)
     this.filtersEl = document.createElement('div');
     this.filtersEl.className = 'search__filters';
@@ -50,12 +46,6 @@ class MediaInterface {
 
     this.resultsEl = document.createElement('div');
     this.resultsEl.className = 'search__results';
-    this.resultsEl.style.display = 'grid';
-    this.resultsEl.style.gridTemplateColumns = 'repeat(auto-fill, minmax(140px, 1fr))';
-    this.resultsEl.style.gap = '10px';
-    this.resultsEl.style.maxHeight = '380px';
-    this.resultsEl.style.overflowY = 'auto';
-    this.resultsEl.style.padding = '4px';
 
     const actions = document.createElement('div');
     actions.style.display = 'flex';
@@ -303,6 +293,10 @@ class MediaInterface {
     card.style.flexDirection = 'column';
     card.style.gap = '6px';
     card.style.borderRadius = '8px';
+    
+    // Make the entire card draggable for all media types
+    card.draggable = true;
+    card.addEventListener('dragstart', (ev) => this.onDragStart(ev, item));
 
     if (item.type === 'images' && item.thumbnailUrl) {
       const img = document.createElement('img');
@@ -312,21 +306,21 @@ class MediaInterface {
       img.style.height = '100px';
       img.style.objectFit = 'cover';
       img.style.borderRadius = '6px';
-      img.draggable = true;
-      img.addEventListener('dragstart', (ev) => this.onDragStart(ev, item));
+      img.draggable = false; // Prevent nested drag
       card.appendChild(img);
     }
 
     if (item.type === 'videos' && (item.previewUrl || item.thumbnailUrl)) {
       if (item.previewUrl) {
         const vid = document.createElement('video');
-        vid.controls = true;
+        vid.controls = false; // Disable controls to prevent interference with drag
+        vid.muted = true; // Mute for autoplay compatibility
         vid.src = item.previewUrl;
         vid.style.width = '100%';
         vid.style.maxHeight = '120px';
         vid.style.objectFit = 'cover';
-        vid.draggable = true;
-        vid.addEventListener('dragstart', (ev) => this.onDragStart(ev, item));
+        vid.style.borderRadius = '6px';
+        vid.draggable = false; // Prevent nested drag
         card.appendChild(vid);
       } else if (item.thumbnailUrl) {
         const thumb = document.createElement('img');
@@ -335,20 +329,118 @@ class MediaInterface {
         thumb.style.width = '100%';
         thumb.style.height = '100px';
         thumb.style.objectFit = 'cover';
-        thumb.draggable = true;
-        thumb.addEventListener('dragstart', (ev) => this.onDragStart(ev, item));
+        thumb.style.borderRadius = '6px';
+        thumb.draggable = false; // Prevent nested drag
         card.appendChild(thumb);
       }
     }
 
-    if (item.type === 'audio' && item.previewUrl) {
-      const audio = document.createElement('audio');
-      audio.controls = true;
-      audio.src = item.previewUrl;
-      audio.style.width = '100%';
-      audio.draggable = true;
-      audio.addEventListener('dragstart', (ev) => this.onDragStart(ev, item));
-      card.appendChild(audio);
+    if (item.type === 'audio') {
+      // Create visual representation for audio items
+      const audioWrapper = document.createElement('div');
+      audioWrapper.style.width = '100%';
+      audioWrapper.style.height = '100px';
+      audioWrapper.style.backgroundColor = 'var(--color-warning-100)';
+      audioWrapper.style.borderRadius = '6px';
+      audioWrapper.style.display = 'flex';
+      audioWrapper.style.alignItems = 'center';
+      audioWrapper.style.justifyContent = 'center';
+      audioWrapper.style.border = '2px solid var(--color-warning-300)';
+      
+      const audioIcon = document.createElement('div');
+      audioIcon.innerHTML = '🔊';
+      audioIcon.style.fontSize = '32px';
+      audioWrapper.appendChild(audioIcon);
+      
+      card.appendChild(audioWrapper);
+      
+      // Add audio controls below the visual representation
+      if (item.previewUrl) {
+        const audio = document.createElement('audio');
+        audio.controls = true;
+        audio.src = item.previewUrl;
+        audio.style.width = '100%';
+        audio.style.marginTop = '4px';
+        audio.draggable = false; // Prevent nested drag
+        card.appendChild(audio);
+      }
+    }
+
+    // Add visual indicators for non-media types
+    if (item.type === 'text') {
+      const textWrapper = document.createElement('div');
+      textWrapper.style.width = '100%';
+      textWrapper.style.height = '100px';
+      textWrapper.style.backgroundColor = 'var(--color-neutral-100)';
+      textWrapper.style.borderRadius = '6px';
+      textWrapper.style.display = 'flex';
+      textWrapper.style.alignItems = 'center';
+      textWrapper.style.justifyContent = 'center';
+      textWrapper.style.border = '2px solid var(--color-neutral-300)';
+      
+      const textIcon = document.createElement('div');
+      textIcon.innerHTML = '📝';
+      textIcon.style.fontSize = '32px';
+      textWrapper.appendChild(textIcon);
+      
+      card.appendChild(textWrapper);
+    }
+
+    if (item.type === 'plugins') {
+      const pluginWrapper = document.createElement('div');
+      pluginWrapper.style.width = '100%';
+      pluginWrapper.style.height = '100px';
+      pluginWrapper.style.backgroundColor = 'var(--color-purple-100, #f3f0ff)';
+      pluginWrapper.style.borderRadius = '6px';
+      pluginWrapper.style.display = 'flex';
+      pluginWrapper.style.alignItems = 'center';
+      pluginWrapper.style.justifyContent = 'center';
+      pluginWrapper.style.border = '2px solid var(--color-purple-300, #c4b5fd)';
+      
+      const pluginIcon = document.createElement('div');
+      pluginIcon.innerHTML = '🔌';
+      pluginIcon.style.fontSize = '32px';
+      pluginWrapper.appendChild(pluginIcon);
+      
+      card.appendChild(pluginWrapper);
+    }
+
+    if (item.type === 'links') {
+      const linkWrapper = document.createElement('div');
+      linkWrapper.style.width = '100%';
+      linkWrapper.style.height = '100px';
+      linkWrapper.style.backgroundColor = 'var(--color-sky-100, #e0f2fe)';
+      linkWrapper.style.borderRadius = '6px';
+      linkWrapper.style.display = 'flex';
+      linkWrapper.style.alignItems = 'center';
+      linkWrapper.style.justifyContent = 'center';
+      linkWrapper.style.border = '2px solid var(--color-sky-300, #7dd3fc)';
+      
+      const linkIcon = document.createElement('div');
+      linkIcon.innerHTML = '🔗';
+      linkIcon.style.fontSize = '32px';
+      linkWrapper.appendChild(linkIcon);
+      
+      card.appendChild(linkWrapper);
+    }
+
+    if (item.type === 'files' && !item.thumbnailUrl) {
+      const fileWrapper = document.createElement('div');
+      fileWrapper.style.width = '100%';
+      fileWrapper.style.height = '100px';
+      fileWrapper.style.backgroundColor = 'var(--color-neutral-100)';
+      fileWrapper.style.borderRadius = '6px';
+      fileWrapper.style.display = 'flex';
+      fileWrapper.style.alignItems = 'center';
+      fileWrapper.style.justifyContent = 'center';
+      fileWrapper.style.border = '2px solid var(--color-neutral-300)';
+      
+      const fileIcon = document.createElement('div');
+      fileIcon.innerHTML = '📄';
+      fileIcon.style.fontSize = '32px';
+      fileWrapper.appendChild(fileIcon);
+      
+      card.appendChild(fileWrapper);
     }
 
     const title = document.createElement('div');
@@ -370,23 +462,7 @@ class MediaInterface {
     if (item.filesize) meta.appendChild(this.kv('Size', `${Math.round(item.filesize / 1024)} KB`));
     card.appendChild(meta);
 
-    const actions = document.createElement('div');
-    actions.style.display = 'flex';
-    actions.style.gap = '6px';
-    const addBtn = document.createElement('button');
-    addBtn.className = 'button button--primary button--small';
-    addBtn.textContent = 'Add';
-    addBtn.addEventListener('click', () => this.handleAdd(item));
-    actions.appendChild(addBtn);
-    if (item.contentUrl) {
-      const openBtn = document.createElement('a');
-      openBtn.className = 'button button--outline button--small';
-      openBtn.textContent = 'Open';
-      openBtn.href = item.contentUrl;
-      openBtn.target = '_blank';
-      actions.appendChild(openBtn);
-    }
-    card.appendChild(actions);
+    // Remove Add/Open buttons – drag-and-drop only
     return card;
   }
 
@@ -398,19 +474,23 @@ class MediaInterface {
 
   private handleAdd(item: MediaItem) {
     const canvasAPI = (window as any).canvasAPI;
-    if (item.type === 'images' && item.contentUrl) {
+    if (item.type === 'images' && (item.contentUrl || item.previewUrl || item.thumbnailUrl)) {
       document.dispatchEvent(new CustomEvent('unsplashImageSelected', { detail: item }));
       if (canvasAPI && typeof canvasAPI.addImage === 'function') {
-        canvasAPI.addImage(item.contentUrl);
+        canvasAPI.addImage(item.contentUrl || item.previewUrl || item.thumbnailUrl);
       }
     } else if (item.type === 'audio') {
       document.dispatchEvent(new CustomEvent('freesoundAudioSelected', { detail: item }));
-      if (canvasAPI && typeof canvasAPI.addAudioPlaceholder === 'function') {
+      if (canvasAPI && typeof canvasAPI.addAudioElement === 'function') {
+        canvasAPI.addAudioElement(item.previewUrl || item.contentUrl || '', item.title || 'Audio');
+      } else if (canvasAPI && typeof canvasAPI.addAudioPlaceholder === 'function') {
         canvasAPI.addAudioPlaceholder(item.title || 'Audio');
       }
     } else if (item.type === 'videos') {
       document.dispatchEvent(new CustomEvent('pixabayVideoSelected', { detail: item }));
-      if (canvasAPI && typeof canvasAPI.addText === 'function') {
+      if (canvasAPI && typeof canvasAPI.addVideoElement === 'function') {
+        canvasAPI.addVideoElement(item.previewUrl || item.contentUrl || '', item.title || 'Video');
+      } else if (canvasAPI && typeof canvasAPI.addText === 'function') {
         canvasAPI.addText(`📹 ${item.title || 'Video'}`);
       }
     } else if (item.type === 'text') {
@@ -419,14 +499,38 @@ class MediaInterface {
       if (canvasAPI && typeof canvasAPI.addText === 'function' && item.title) {
         try { canvasAPI.addText(item.title); } catch {}
       }
+    } else if (item.type === 'plugins') {
+      document.dispatchEvent(new CustomEvent('pluginSelected', { detail: item }));
+      if (canvasAPI && typeof canvasAPI.addText === 'function' && item.title) {
+        try { canvasAPI.addText(`🔌 ${item.title}`); } catch {}
+      }
+    } else if (item.type === 'links') {
+      document.dispatchEvent(new CustomEvent('linkSelected', { detail: item }));
+      if (canvasAPI && typeof canvasAPI.addText === 'function' && item.title) {
+        try { canvasAPI.addText(`🔗 ${item.title}`); } catch {}
+      }
     }
   }
 
   private onDragStart(ev: DragEvent, item: any) {
     try {
       ev.dataTransfer?.setData('application/json', JSON.stringify(item));
-      if (item.contentUrl) {
-        ev.dataTransfer?.setData('text/uri-list', item.contentUrl);
+      if (item.contentUrl || item.previewUrl) {
+        ev.dataTransfer?.setData('text/uri-list', item.contentUrl || item.previewUrl);
+      }
+      
+      // Add visual feedback during drag
+      const target = ev.target as HTMLElement;
+      const card = target.closest('.card') as HTMLElement;
+      if (card) {
+        card.classList.add('dragging');
+        
+        // Remove the class after drag ends
+        const removeDragClass = () => {
+          card.classList.remove('dragging');
+          document.removeEventListener('dragend', removeDragClass);
+        };
+        document.addEventListener('dragend', removeDragClass);
       }
     } catch {}
   }
@@ -441,74 +545,86 @@ document.addEventListener('DOMContentLoaded', () => {
   // Enable drop on canvas container
   const canvasHost = document.getElementById('canvas-container');
   if (canvasHost) {
-    canvasHost.addEventListener('dragover', (e) => { e.preventDefault(); });
+    canvasHost.addEventListener('dragover', (e) => { 
+      e.preventDefault();
+      try { (e as DragEvent).dataTransfer!.dropEffect = 'copy'; } catch {}
+      // Add visual feedback when dragging over canvas
+      canvasHost.classList.add('drag-over');
+    });
+    
+    canvasHost.addEventListener('dragleave', (e) => {
+      // Only remove the class if we're actually leaving the canvas area
+      if (!canvasHost.contains(e.relatedTarget as Node)) {
+        canvasHost.classList.remove('drag-over');
+      }
+    });
+    
     canvasHost.addEventListener('drop', (e: DragEvent) => {
       e.preventDefault();
+      canvasHost.classList.remove('drag-over');
+      
       try {
         const json = e.dataTransfer?.getData('application/json');
         if (!json) return;
         const item = JSON.parse(json);
         const canvasAPI = (window as any).canvasAPI;
         if (!canvasAPI) return;
-        // Always create a styled HTML card overlay at drop point
-        const hostRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-        const x = (e.clientX - hostRect.left);
-        const y = (e.clientY - hostRect.top);
-        const card = document.createElement('div');
-        const type = (item.type || 'files');
-        card.className = `card card--floating card--${type}`;
-        card.style.left = `${x}px`;
-        card.style.top = `${y}px`;
-        card.style.width = '180px';
-        card.style.transform = 'translate(-50%, -50%)';
-        card.innerHTML = '';
-        // Embed the media itself inside the card
-        if (item.type === 'images') {
-          const img = document.createElement('img');
-          img.src = item.contentUrl || item.previewUrl || item.thumbnailUrl || '';
-          img.alt = item.title || '';
-          img.className = 'card__thumb';
-          card.appendChild(img);
-        } else if (item.type === 'videos') {
-          const vid = document.createElement('video');
-          vid.controls = true;
-          vid.src = item.previewUrl || item.contentUrl || '';
-          vid.style.width = '100%';
-          vid.style.maxHeight = '140px';
-          vid.style.objectFit = 'cover';
-          card.appendChild(vid);
-        } else if (item.type === 'audio') {
-          const audio = document.createElement('audio');
-          audio.controls = true;
-          audio.src = item.previewUrl || item.contentUrl || '';
-          audio.style.width = '100%';
-          card.appendChild(audio);
-        } else if (item.type === 'text') {
-          const p = document.createElement('div');
-          p.textContent = item.title || 'Text';
-          p.className = 'card__title';
-          card.appendChild(p);
-        } else if (item.type === 'plugins' || item.type === 'links') {
-          const p = document.createElement('div');
-          p.textContent = item.title || (item.type === 'plugins' ? 'Plugin' : 'Link');
-          p.className = 'card__title';
-          card.appendChild(p);
-        }
-        const title = document.createElement('div');
-        title.className = 'card__title';
-        title.textContent = item.title || type;
-        card.appendChild(title);
-        (e.currentTarget as HTMLElement).appendChild(card);
 
-        // Also add to canvas in basic form (optional)
-        if (item.type === 'images' && item.contentUrl) {
-          canvasAPI.addImage(item.contentUrl, x, y);
-        } else if (item.type === 'audio') {
-          canvasAPI.addAudioPlaceholder(item.title || 'Audio');
+        // Compute drop position in Pixi canvas coordinates for precise placement
+        const app = canvasAPI.getApp?.();
+        let x = 50, y = 50;
+        if (app && app.canvas) {
+          const rect = app.canvas.getBoundingClientRect();
+          const canvasPixelW = app.canvas.width || rect.width;
+          const canvasPixelH = app.canvas.height || rect.height;
+          const scaleX = canvasPixelW / rect.width;
+          const scaleY = canvasPixelH / rect.height;
+
+          // Clamp cursor to content bounds in CSS pixels
+          const b = canvasAPI.getContentBounds?.();
+          let cssX = e.clientX;
+          let cssY = e.clientY;
+          if (b) {
+            const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+            cssX = clamp(cssX, b.left, b.left + b.width);
+            cssY = clamp(cssY, b.top, b.top + b.height);
+            // Small offset so media doesn't sit directly under cursor
+            cssX = clamp(cssX + 8, b.left, b.left + b.width);
+            cssY = clamp(cssY + 8, b.top, b.top + b.height);
+          } else {
+            cssX += 8; cssY += 8;
+          }
+
+          x = (cssX - rect.left) * scaleX;
+          y = (cssY - rect.top) * scaleY;
+        } else {
+          // Fallback: relative to host
+          const hostRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+          x = (e.clientX - hostRect.left) + 8;
+          y = (e.clientY - hostRect.top) + 8;
+        }
+
+        // Add to canvas only (no HTML overlay)
+        if (item.type === 'images' && (item.contentUrl || item.previewUrl || item.thumbnailUrl)) {
+          canvasAPI.addImage(item.contentUrl || item.previewUrl || item.thumbnailUrl, x, y);
         } else if (item.type === 'videos') {
-          canvasAPI.addText(`📹 ${item.title || 'Video'}`, x, y);
+          if (typeof canvasAPI.addVideoElement === 'function') {
+            canvasAPI.addVideoElement(item.previewUrl || item.contentUrl || '', item.title || 'Video', x, y);
+          } else {
+            canvasAPI.addText(`📹 ${item.title || 'Video'}`, x, y);
+          }
+        } else if (item.type === 'audio') {
+          if (typeof canvasAPI.addAudioElement === 'function') {
+            canvasAPI.addAudioElement(item.previewUrl || item.contentUrl || '', item.title || 'Audio', x, y);
+          } else {
+            canvasAPI.addAudioPlaceholder(item.title || 'Audio');
+          }
         } else if (item.type === 'text' && item.title) {
           canvasAPI.addText(item.title, x, y);
+        } else if (item.type === 'plugins' && item.title) {
+          canvasAPI.addText(`� ${item.title}`, x, y);
+        } else if (item.type === 'links' && item.title) {
+          canvasAPI.addText(`🔗 ${item.title}`, x, y);
         }
       } catch {}
     });

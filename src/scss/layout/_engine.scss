@@ -2,13 +2,37 @@
 // CREATE GRID
 // ==========================================================================
 
+// Note: using native browser scrollbars; no custom scroll mixins
+
 .engine {
     display: grid;
-    grid-template-columns: 0.5fr 2fr 7fr 1.5fr; // Proportional: ~60px:300px:1fr:250px ratio
+    grid-template-columns: 0.5fr 2fr 7fr 1.5fr; // Reverted to original proportions
     grid-template-rows: 0.075fr 1fr; // Increased to 90px to ensure labels have adequate space
     height: calc(100vh - 7vh); // Constrain to available viewport space minus header
     width: 100%;
     gap: 0.5rem;
+
+    // Responsive adjustments
+    @media (max-width: 1400px) {
+        grid-template-columns: 0.5fr 2fr 7fr 1.5fr; // Keep original proportions
+    }
+
+    @media (max-width: 1200px) {
+        grid-template-columns: 0.5fr 2fr 7fr 1.5fr; // Keep original proportions
+    }
+
+    @media (max-width: 992px) {
+        grid-template-columns: 1fr; // Stack vertically on mobile
+        grid-template-rows: auto auto auto auto;
+        height: auto;
+        
+        &__mode { grid-column: 1; grid-row: 1; }
+        &__search { grid-column: 1; grid-row: 2; min-height: 300px; }
+        &__canvas { grid-column: 1; grid-row: 3; min-height: 400px; }
+        &__preview { grid-column: 1; grid-row: 4; min-height: 200px; }
+        &__tools { display: none; } // Hide tools on mobile for space
+        &__nav { display: none; } // Hide nav on mobile for space
+    }
 
     // Common styling for all grid items
     >* {
@@ -66,11 +90,52 @@
     &__search {
         grid-column: 2;
         grid-row: 2;
+        // RESET any common grid-item styling applied above
+        padding: var(--spacing-3) !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        align-items: stretch !important;
+
+        // Build fresh layout
         display: flex;
-        flex-direction: column; // Stack search input, provider row, filters, results vertically
-        align-items: stretch; // Make children stretch full width
+        flex-direction: column;
         gap: var(--spacing-2);
-        padding: var(--spacing-2); // Keep consistent padding
+        height: 100%;
+        min-height: 0; // Critical for internal scroll areas
+        min-width: 0;  // Prevent right-side clipping
+        overflow: hidden; // Panel itself doesn't scroll; child does
+
+        // Input spacing (kept simple)
+        .search__input {
+            width: 100%;
+            box-sizing: border-box;
+            margin: 0 0 var(--spacing-2) 0;
+        }
+
+        // Panel wraps results and fills remaining space
+        .search__panel {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-2);
+            flex: 1 1 auto;
+            min-height: 0; // Allow results to become scroll container
+        }
+
+        // Results are the only scroll area
+        .search__results {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto; // Native scroll
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 16px; // Spacing between cards
+            padding: 10px;
+            // Prevent single item from stretching to panel height
+            align-content: start;
+            align-items: start;
+            grid-auto-rows: max-content;
+        }
     }
 
     &__canvas {
@@ -199,22 +264,68 @@
 .search__input {
   width: 100%;
   box-sizing: border-box;
+  flex-shrink: 0; // Prevent input from shrinking
+  min-width: 0; // Allow input to shrink if necessary but maintain readability
+  padding: var(--spacing-3) var(--spacing-5) !important; // Add comfortable horizontal padding
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-medium);
+  font-size: var(--font-size-small);
+  margin-bottom: var(--spacing-2);
+  
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary-500);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  }
 }
 
 .search__filters {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-2);
+  flex-shrink: 0; // Prevent filters from shrinking
 }
 
 .search__results {
-  width: 100%;
+  flex: 1 1 auto; // Fill available space
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 16px; // More spacing between thumbnails
+  padding: 10px;
+  overflow-y: auto; // Native scroll
+  min-height: 0; // Allow scrolling within flex parent
+  
+  // Avoid stretching when only a few items
+  align-content: start;
+  align-items: start;
+  grid-auto-rows: max-content;
+
+  // Responsive grid adjustments
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 12px;
+  }
+  
+  @media (max-width: 992px) {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+    padding: 8px;
+  }
+  
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
 }
 
 .search__panel {
+  height: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2);
+  flex: 1 1 auto; // Let panel fill and shrink within engine__search
+  min-height: 0; // Allow flex child to shrink
+  max-height: 100%; // Prevent overflow
 }
 
   // Active state styling with lighter blue

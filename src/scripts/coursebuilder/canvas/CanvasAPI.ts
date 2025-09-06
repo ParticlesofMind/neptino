@@ -10,7 +10,7 @@
  * Target: ~250 lines
  */
 
-import { Application, Container, Assets, Sprite, Text } from 'pixi.js';
+import { Application, Container, Assets, Sprite, Graphics, Text } from 'pixi.js';
 import { PixiApp, PixiAppConfig } from './PixiApp';
 import { CanvasLayers, LayerSystem } from './CanvasLayers';
 import { CanvasEvents } from './CanvasEvents';
@@ -243,7 +243,14 @@ export class CanvasAPI {
       const sprite = new Sprite(texture);
       sprite.x = x;
       sprite.y = y;
-      sprite.scale.set(scale);
+      // Normalize initial size: cap short edge to 200px (no upscaling)
+      const w = texture.width || 1;
+      const h = texture.height || 1;
+      const shortEdge = Math.min(w, h);
+      const cap = 200;
+      const fitScale = Math.min(1, cap / shortEdge);
+      const finalScale = (scale ?? 1) * fitScale;
+      sprite.scale.set(finalScale);
       const id = this.displayManager.add(sprite);
       return id;
     } catch (e) {
@@ -260,7 +267,7 @@ export class CanvasAPI {
       console.warn('⚠️ Canvas not initialized - cannot add text');
       return null;
     }
-    const { id, text: textObj } = this.displayManager.createText(text, style);
+    const { id } = this.displayManager.createText(text, style);
     this.displayManager.setPosition(id, x, y);
     return id;
   }
@@ -270,6 +277,191 @@ export class CanvasAPI {
    */
   public addAudioPlaceholder(title: string): string | null {
     return this.addText(`🔈 ${title}`, 80, 80, { fontFamily: 'Arial', fontSize: 16, fill: 0x4a79a4 });
+  }
+
+  /**
+   * Add a video sprite backed by an HTMLVideoElement
+   */
+  public addVideoElement(url: string, title: string = 'Video', x: number = 50, y: number = 50): string | null {
+    if (!this.displayManager) {
+      console.warn('⚠️ Canvas not initialized - cannot add video element');
+      return null;
+    }
+
+    try {
+      // Prepare HTML video element
+      const video = document.createElement('video');
+      video.src = url;
+      video.crossOrigin = 'anonymous';
+      video.preload = 'auto';
+      video.playsInline = true;
+      video.muted = true; // allow autoplay if needed later
+      video.loop = false;
+      video.controls = false;
+
+      // Create a container to hold video sprite + label background
+      const { container, id } = this.displayManager.createContainer();
+      container.x = x;
+      container.y = y;
+
+      // Video sprite from element (Pixi v8 supports HTMLVideoElement sources)
+      const sprite = Sprite.from(video as any);
+      sprite.name = `video:${title}`;
+      sprite.eventMode = 'passive';
+      container.addChild(sprite);
+
+      // Draw a subtle border/background once metadata is known
+      const bg = new Graphics();
+      bg.alpha = 0.6;
+      container.addChildAt(bg, 0);
+
+      const label = new Text({
+        text: title,
+        style: { fontFamily: 'Arial', fontSize: 12, fill: 0xffffff },
+      });
+      label.alpha = 0.8;
+      label.visible = false;
+      container.addChild(label);
+
+      const applyLayout = () => {
+        const vw = video.videoWidth || 1;
+        const vh = video.videoHeight || 1;
+        // Normalize initial size: cap short edge to 200px (no upscaling)
+        const cap = 200;
+        const shortEdge = Math.min(vw, vh);
+        const scale = Math.min(1, cap / shortEdge);
+        sprite.width = Math.max(1, vw * scale);
+        sprite.height = Math.max(1, vh * scale);
+
+        // Styled backdrop/border
+        bg.clear()
+          .roundRect(-2, -2, sprite.width + 4, sprite.height + 4, 6)
+          .fill({ color: 0x0b6b53, alpha: 0.12 })
+          .stroke({ color: 0x059669, width: 2, alpha: 0.6 });
+
+        // Title label in bottom-left
+        label.visible = true;
+        label.x = 6;
+        label.y = sprite.height - (label.height + 4);
+      };
+
+      // If metadata already available
+      if (video.readyState >= 1) {
+        applyLayout();
+      } else {
+        video.addEventListener('loadedmetadata', applyLayout, { once: true });
+      }
+
+      // Auto-play when ready (muted for autoplay policies)
+      const tryPlay = () => {
+        video.play().catch(() => {/* ignore autoplay failure */});
+      };
+      if (video.readyState >= 2) {
+        tryPlay();
+      } else {
+        video.addEventListener('canplay', tryPlay, { once: true });
+        video.addEventListener('loadeddata', tryPlay, { once: true });
+      }
+
+      // Store metadata for later use
+      (container as any).metadata = { type: 'video', url, title, element: video };
+
+      console.log(`📹 Video sprite added: ${title} at (${x}, ${y})`);
+      return id;
+    } catch (e) {
+      console.error('❌ Failed to add video element:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Add an audio UI container with play/pause and label
+   */
+  public addAudioElement(url: string, title: string = 'Audio', x: number = 80, y: number = 80): string | null {
+    if (!this.displayManager) {
+      console.warn('⚠️ Canvas not initialized - cannot add audio element');
+      return null;
+    }
+
+    try {
+      const { container, id } = this.displayManager.createContainer();
+      container.x = x;
+      container.y = y;
+      container.name = `audio:${title}`;
+      container.eventMode = 'static';
+
+      const width = 220;
+      const height = 56;
+
+      // Background panel
+      const panel = new Graphics()
+        .roundRect(0, 0, width, height, 8)
+        .fill({ color: 0xfffbeb })
+        .stroke({ color: 0xd97706, width: 2, alpha: 0.9 });
+      container.addChild(panel);
+
+      // Play/Pause icon (simple triangle / square)
+      const icon = new Graphics();
+      const drawPlay = () => {
+        icon.clear();
+        icon.poly([18, 16, 18, height - 16, 46, height / 2]);
+        icon.fill({ color: 0xd97706 });
+      };
+      const drawPause = () => {
+        icon.clear();
+        icon.rect(18, 16, 10, height - 32);
+        icon.rect(36, 16, 10, height - 32);
+        icon.fill({ color: 0xd97706 });
+      };
+      drawPlay();
+      container.addChild(icon);
+
+      // Title text
+      const text = new Text({
+        text: title,
+        style: { fontFamily: 'Arial', fontSize: 13, fill: 0x7c2d12 },
+      });
+      text.x = 52;
+      text.y = 18;
+      container.addChild(text);
+
+      // Simple progress bar background + fill
+      const progressBg = new Graphics().roundRect(52, height - 16, width - 66, 6, 3).fill({ color: 0xfde68a });
+      const progress = new Graphics().roundRect(52, height - 16, 0, 6, 3).fill({ color: 0xf59e0b });
+      container.addChild(progressBg, progress);
+
+      // Underlying HTMLAudioElement for playback
+      const audio = new Audio(url);
+      audio.crossOrigin = 'anonymous';
+      audio.preload = 'auto';
+
+      let playing = false;
+      const toggle = () => {
+        if (playing) {
+          audio.pause();
+        } else {
+          audio.play().catch(() => {/* ignore */});
+        }
+      };
+
+      container.on('pointertap', toggle);
+
+      audio.addEventListener('play', () => { playing = true; drawPause(); });
+      audio.addEventListener('pause', () => { playing = false; drawPlay(); });
+      audio.addEventListener('timeupdate', () => {
+        const pct = audio.duration ? Math.min(1, Math.max(0, audio.currentTime / audio.duration)) : 0;
+        const w = (width - 66) * pct;
+        progress.clear().roundRect(52, height - 16, w, 6, 3).fill({ color: 0xf59e0b });
+      });
+
+      (container as any).metadata = { type: 'audio', url, title, element: audio };
+
+      console.log(`🎵 Audio UI added: ${title} at (${x}, ${y})`);
+      return id;
+    } catch (e) {
+      console.error('❌ Failed to add audio element:', e);
+      return null;
+    }
   }
 
   /**
