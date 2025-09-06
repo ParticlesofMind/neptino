@@ -488,11 +488,8 @@ class MediaInterface {
       }
     } else if (item.type === 'videos') {
       document.dispatchEvent(new CustomEvent('pixabayVideoSelected', { detail: item }));
-      if (canvasAPI && typeof canvasAPI.addVideoElement === 'function') {
-        canvasAPI.addVideoElement(item.previewUrl || item.contentUrl || '', item.title || 'Video');
-      } else if (canvasAPI && typeof canvasAPI.addText === 'function') {
-        canvasAPI.addText(`📹 ${item.title || 'Video'}`);
-      }
+      // Video elements should only be added via drag-and-drop for better positioning control
+      // Removed automatic canvas addition on click to prevent duplicates
     } else if (item.type === 'text') {
       document.dispatchEvent(new CustomEvent('textSelected', { detail: item }));
       // Add simple text element on canvas if available
@@ -600,6 +597,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (item.type === 'images' && (item.contentUrl || item.previewUrl || item.thumbnailUrl)) {
           canvasAPI.addImage(item.contentUrl || item.previewUrl || item.thumbnailUrl, x, y);
         } else if (item.type === 'videos') {
+          console.log(`🎬 DEBUG: Drop handler adding video - ${item.title || 'Video'} at (${x}, ${y})`);
           if (typeof canvasAPI.addVideoElement === 'function') {
             canvasAPI.addVideoElement(
               item.previewUrl || item.contentUrl || '',

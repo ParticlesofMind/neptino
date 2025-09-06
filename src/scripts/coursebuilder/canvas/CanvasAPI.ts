@@ -10,7 +10,8 @@
  * Target: ~250 lines
  */
 
-import { Application, Container, Assets, Sprite, Graphics, Text } from 'pixi.js';
+import { Application, Container, Assets, Sprite, Graphics, Text, Texture } from 'pixi.js';
+import { VideoSource } from 'pixi.js';
 import { PixiApp, PixiAppConfig } from './PixiApp';
 import { CanvasLayers, LayerSystem } from './CanvasLayers';
 import { CanvasEvents } from './CanvasEvents';
@@ -280,7 +281,10 @@ export class CanvasAPI {
   }
 
   /**
-   * Add a video element with proper sizing - simplified approach
+   * Add a video element with proper sizing using PIXI v8 VideoSource
+   * - Waits for the first frame before creating the texture to avoid blank sprites
+   * - Uses VideoSource autoUpdate instead of manual RAF loops
+   * - Attaches listeners before setting src to avoid race conditions
    */
   public addVideoElement(url: string, title: string = 'Video', x: number = 50, y: number = 50, _posterUrl?: string): string | null {
     if (!this.displayManager) {
@@ -288,112 +292,168 @@ export class CanvasAPI {
       return null;
     }
 
+    console.log(`🎬 DEBUG: addVideoElement called with URL: ${url}, title: ${title}, position: (${x}, ${y})`);
+
     // Create a simple container with consistent dimensions
     const { container, id } = this.displayManager.createContainer();
     container.x = x;
     container.y = y;
+    container.sortableChildren = true;
 
-    // Standard video dimensions (16:9 aspect ratio)
-    const VIDEO_WIDTH = 320;
-    const VIDEO_HEIGHT = 180;
-    
-    // Create HTML video element
+    // Start with conservative placeholder dimensions (16:9). We'll swap to natural size then scale down.
+    const canvasDims = this.getDimensions();
+    const targetWidth = Math.round((canvasDims?.width || 900) * 0.12); // ~12% of canvas width
+    const PLACEHOLDER_WIDTH = Math.max(120, Math.min(240, targetWidth));
+    const PLACEHOLDER_HEIGHT = Math.round(PLACEHOLDER_WIDTH * 9 / 16);
+    // Track current content size (updated after metadata load)
+    let contentW = PLACEHOLDER_WIDTH;
+    let contentH = PLACEHOLDER_HEIGHT;
+
+    // Create HTML video element and attach listeners BEFORE setting src
     const video = document.createElement('video');
-    video.src = url;
-    video.preload = 'metadata'; // Load metadata and first frame for thumbnail
+    // crossOrigin helps when drawing video to WebGL textures from other domains
+    try { video.crossOrigin = 'anonymous'; } catch {}
     video.playsInline = true;
-    video.muted = true;
+    video.muted = true; // allow autoplay when user clicks without sound issues
     video.loop = true;
-    
+    // Use 'auto' to ensure first frames are fetched; VideoSource will handle timing
+    video.preload = 'auto';
+    // Optimize video quality settings
+    video.style.objectFit = 'cover';
+    if ('requestVideoFrameCallback' in video) {
+      // Enable high-quality video processing where supported
+      video.setAttribute('playsinline', 'true');
+    }
+
     // Create a placeholder background first
     const placeholder = new Graphics();
-    placeholder.roundRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT, 8)
+    placeholder.roundRect(0, 0, contentW, contentH, 8)
       .fill({ color: 0x2a2a2a })
       .stroke({ color: 0x059669, width: 2 });
     container.addChild(placeholder);
     
-    // Add video icon in center as placeholder
+    // Add video icon in center as placeholder - sized appropriately for smaller video
     const videoIcon = new Text({
       text: '🎬',
-      style: { fontFamily: 'Arial', fontSize: 32, fill: 0xffffff }
+      style: { fontFamily: 'Arial', fontSize: 24, fill: 0xffffff } // Reduced from 32 to 24
     });
     videoIcon.anchor.set(0.5);
-    videoIcon.x = VIDEO_WIDTH / 2;
-    videoIcon.y = VIDEO_HEIGHT / 2 - 10;
+    videoIcon.x = contentW / 2;
+    videoIcon.y = contentH / 2 - 6; // Adjusted offset for better centering
     container.addChild(videoIcon);
-    
-    // Create video sprite from the HTML video element
-    const videoSprite = Sprite.from(video);
-    // Force the sprite to our desired dimensions, not the video's native size
-    videoSprite.width = VIDEO_WIDTH;
-    videoSprite.height = VIDEO_HEIGHT;
+
+    // Helper: wait until we have at least the first frame available
+    const waitForFirstFrame = (): Promise<void> => {
+      return new Promise((resolve) => {
+        // If already ready, resolve immediately
+        if (video.readyState >= 2 /* HAVE_CURRENT_DATA */) {
+          resolve();
+          return;
+        }
+        const onLoadedData = () => {
+          cleanup();
+          resolve();
+        };
+        const onCanPlay = () => {
+          cleanup();
+          resolve();
+        };
+        const cleanup = () => {
+          video.removeEventListener('loadeddata', onLoadedData);
+          video.removeEventListener('canplay', onCanPlay);
+        };
+        video.addEventListener('loadeddata', onLoadedData, { once: true });
+        video.addEventListener('canplay', onCanPlay, { once: true });
+      });
+    };
+
+    // Set src after listeners to avoid race conditions with cached resources
+    video.src = url;
+    // Kick off preload
+    try { video.load(); } catch {}
+
+    // Create sprite/texture AFTER first frame is definitely available
+    const videoSprite = new Sprite(Texture.WHITE); // temporary placeholder texture
+    videoSprite.width = contentW;
+    videoSprite.height = contentH;
     videoSprite.x = 0;
     videoSprite.y = 0;
-    videoSprite.visible = false; // Hide until we have content
+    videoSprite.visible = false; // hide until texture is ready
+    videoSprite.eventMode = 'none'; // ensure overlay gets clicks
+    videoSprite.zIndex = 10;
     container.addChild(videoSprite);
-    
-    let hasLoadedData = false;
-    
-    // When video metadata loads, show the first frame as thumbnail
-    video.addEventListener('loadeddata', () => {
-      console.log('📹 Video data loaded, showing thumbnail');
-      hasLoadedData = true;
+
+    // Build PIXI v8 VideoSource so the texture auto-updates during playback with optimized settings
+    const videoSource = new VideoSource({
+      resource: video,
+      autoLoad: true,     // begin loading immediately
+      autoPlay: false,    // do not auto-play; we control via UI
+      updateFPS: 30,      // update at 30fps for smoother playback (was 0)
+      crossorigin: true,  // set crossorigin on element if possible
+      loop: true,
+      muted: true,
+      playsinline: true,
+      preload: true
+    });
+
+    // Ensure we wait for first frame, then swap sprite texture
+    waitForFirstFrame().then(() => {
+      console.log('📹 Video data loaded, initializing PIXI video texture');
+      // Create a proper Texture from the VideoSource with quality optimization
+      const texture = Texture.from(videoSource);
+      // Keep auto-updating frames managed by VideoSource
+      try { 
+        (texture.source as any).autoUpdate = true;
+        // Ensure high-quality scaling
+        texture.source.scaleMode = 'linear';
+        texture.source.antialias = true;
+      } catch {}
+
+      // Determine natural video dimensions
+      const naturalW = Math.max(1, video.videoWidth || texture.width || contentW);
+      const naturalH = Math.max(1, video.videoHeight || texture.height || contentH);
+      contentW = naturalW;
+      contentH = naturalH;
+
+      // Swap in the real video texture, set to natural size first
+      videoSprite.texture = texture;
+      videoSprite.width = contentW;
+      videoSprite.height = contentH;
+
+      // Scale down the whole container so short edge is capped (like images)
+      const shortEdge = Math.min(contentW, contentH);
+      const cap = 200; // match image cap in addImage
+      const shrinkScale = Math.min(1, cap / shortEdge);
+      container.scale.set(shrinkScale);
+      // Keep the play button readable regardless of container scaling
+      try { playButton.scale.set(shrinkScale === 0 ? 1 : 1 / shrinkScale); } catch {}
+
+      // Update overlay graphics to match content size before scaling
+      try {
+        bg.clear().roundRect(0, 0, contentW, contentH, 8).stroke({ color: 0x059669, width: 2 });
+        titleBg.clear().roundRect(0, 0, titleText.width + 8, titleText.height + 4, 4)
+          .fill({ color: 0x000000, alpha: 0.7 });
+        titleBg.x = 5;
+        titleBg.y = contentH - titleText.height - 9;
+        titleText.x = 9;
+        titleText.y = contentH - titleText.height - 7;
+        drawPlayButton();
+        playButton.position.set(contentW / 2, contentH / 2);
+      } catch {}
+
       videoSprite.visible = true;
       placeholder.visible = false;
       videoIcon.visible = false;
-      
-      // Force size and update texture to show first frame
-      videoSprite.width = VIDEO_WIDTH;
-      videoSprite.height = VIDEO_HEIGHT;
-      if (videoSprite.texture && videoSprite.texture.source) {
-        videoSprite.texture.source.update();
-      }
+
+      // Try to reset to first frame for consistent thumbnail
+      try { if (!video.paused) { video.pause(); } video.currentTime = 0; } catch {}
+    }).catch((err) => {
+      console.warn('⚠️ Video did not become ready in time:', err);
     });
-    
-    // Ensure the sprite maintains our size and updates texture
-    const forceSize = () => {
-      videoSprite.width = VIDEO_WIDTH;
-      videoSprite.height = VIDEO_HEIGHT;
-      // Force texture update
-      if (videoSprite.texture && videoSprite.texture.source) {
-        videoSprite.texture.source.update();
-      }
-    };
-    
-    video.addEventListener('loadedmetadata', forceSize);
-    video.addEventListener('canplay', forceSize);
-    video.addEventListener('playing', forceSize);
-    
-    // Add a ticker to update video texture during playback
-    let ticker: any = null;
-    
-    video.addEventListener('play', () => {
-      console.log('Video started playing');
-      if (ticker) return; // Already has ticker
-      
-      // Create a ticker to update the video texture
-      ticker = () => {
-        if (video.paused || video.ended) {
-          return;
-        }
-        if (videoSprite.texture && videoSprite.texture.source) {
-          videoSprite.texture.source.update();
-        }
-      };
-      
-      // Use requestAnimationFrame for smooth updates
-      const updateLoop = () => {
-        if (!video.paused && !video.ended) {
-          ticker();
-          requestAnimationFrame(updateLoop);
-        }
-      };
-      requestAnimationFrame(updateLoop);
-    });
-    
+
     // Create background/border
     const bg = new Graphics();
-    bg.roundRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT, 8)
+    bg.roundRect(0, 0, contentW, contentH, 8)
       .stroke({ color: 0x059669, width: 2 });
     container.addChildAt(bg, 0);
     
@@ -413,67 +473,83 @@ export class CanvasAPI {
     titleBg.roundRect(0, 0, titleText.width + 8, titleText.height + 4, 4)
       .fill({ color: 0x000000, alpha: 0.7 });
     titleBg.x = 5;
-    titleBg.y = VIDEO_HEIGHT - titleText.height - 9;
+    titleBg.y = contentH - titleText.height - 9;
+    titleBg.zIndex = 900;
     container.addChild(titleBg);
     
     titleText.x = 9;
-    titleText.y = VIDEO_HEIGHT - titleText.height - 7;
+    titleText.y = contentH - titleText.height - 7;
+    (titleText as any).zIndex = 901;
     container.addChild(titleText);
     
-    // Create play button overlay
+    // Create play button overlay with perfect centering
     const playButton = new Graphics();
+    const PLAY_BUTTON_SIZE = 44; // Larger, more visible play button
     const drawPlayButton = () => {
-      playButton.clear()
-        .circle(VIDEO_WIDTH / 2, VIDEO_HEIGHT / 2, 24)
+      playButton.clear();
+      // Draw shapes centered at (0,0). We'll position the graphics to content center.
+      // Circular background
+      playButton
+        .circle(0, 0, PLAY_BUTTON_SIZE)
         .fill({ color: 0x000000, alpha: 0.7 })
-        .stroke({ color: 0xffffff, width: 2 })
-        .moveTo(VIDEO_WIDTH / 2 - 8, VIDEO_HEIGHT / 2 - 10)
-        .lineTo(VIDEO_WIDTH / 2 - 8, VIDEO_HEIGHT / 2 + 10)
-        .lineTo(VIDEO_WIDTH / 2 + 10, VIDEO_HEIGHT / 2)
+        .stroke({ color: 0xffffff, width: 2 });
+
+      // Play triangle centered at origin
+      const triangleSize = PLAY_BUTTON_SIZE * 0.5;
+      const offsetX = triangleSize * 0.15; // slight visual centering
+      playButton
+        .moveTo(-triangleSize + offsetX, -triangleSize)
+        .lineTo(-triangleSize + offsetX, triangleSize)
+        .lineTo(triangleSize + offsetX, 0)
         .closePath()
         .fill({ color: 0xffffff });
     };
     drawPlayButton();
+    // Center the button over the video content
+    playButton.position.set(contentW / 2, contentH / 2);
     
     playButton.eventMode = 'static';
     playButton.cursor = 'pointer';
     playButton.interactive = true;
+    playButton.zIndex = 1000;
     
     let isPlaying = false;
-    
+
     playButton.on('pointertap', async (event) => {
       event.stopPropagation();
-      
-      if (!isPlaying) {
-        try {
+
+      try {
+        // Ensure the first frame/texture is ready before toggling
+        if (video.readyState < 2) {
+          console.log('⏳ Waiting for video to become ready before play...');
+          await new Promise<void>((resolve) => {
+            const onReady = () => { cleanup(); resolve(); };
+            const cleanup = () => {
+              video.removeEventListener('loadeddata', onReady);
+              video.removeEventListener('canplay', onReady);
+            };
+            video.addEventListener('loadeddata', onReady, { once: true });
+            video.addEventListener('canplay', onReady, { once: true });
+          });
+        }
+
+        if (isPlaying) {
+          video.pause();
+          playButton.visible = true;
+          isPlaying = false;
+          console.log('⏸️ Video paused');
+        } else {
           console.log(`🎬 Attempting to play video: ${title}`);
-          console.log(`📹 Video ready state: ${video.readyState}`);
-          console.log(`📹 Has loaded data: ${hasLoadedData}`);
-          
-          if (!hasLoadedData) {
-            console.log('⏳ Video not ready yet, waiting for data to load...');
-            return;
-          }
-          
           await video.play();
+          // VideoSource autoUpdate should handle texture updates during playback
           playButton.visible = false;
           isPlaying = true;
-          
-          console.log(`✅ Video playing successfully`);
-          
-          // Start continuous texture update during playback
-          const updateTexture = () => {
-            if (!video.paused && !video.ended && videoSprite.texture && videoSprite.texture.source) {
-              videoSprite.texture.source.update();
-              requestAnimationFrame(updateTexture);
-            }
-          };
-          requestAnimationFrame(updateTexture);
-          
-        } catch (error) {
-          console.error('❌ Failed to play video:', error);
-          playButton.visible = true;
+          console.log('✅ Video playing successfully');
         }
+      } catch (error) {
+        console.error('❌ Failed to toggle video playback:', error);
+        playButton.visible = true;
+        isPlaying = false;
       }
     });
     
@@ -495,8 +571,9 @@ export class CanvasAPI {
       type: 'video',
       url: url,
       title: title,
-      width: VIDEO_WIDTH,
-      height: VIDEO_HEIGHT,
+      // store displayed size after any scaling applied
+      width: contentW * container.scale.x,
+      height: contentH * container.scale.y,
       videoElement: video
     };
     
