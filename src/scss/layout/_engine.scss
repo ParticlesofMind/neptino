@@ -92,11 +92,10 @@
         grid-column: 2;
         grid-row: 2;
         // RESET any common grid-item styling applied above
-        padding: var(--spacing-3) !important;
-        border: 0 !important;
-        box-shadow: none !important;
-        background: transparent !important;
-        align-items: stretch !important;
+       
+     
+
+        align-items: stretch;
 
         // Build fresh layout
         display: flex;

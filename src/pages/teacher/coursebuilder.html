@@ -935,28 +935,29 @@
                 class="perspective__icon icon icon--base">
             </div>
             <!-- Grid button (opens Snap Menu) -->
-            <div class="perspective__item" data-perspective="grid" title="Snapping">
+            <div class="perspective__item" data-perspective="grid" title="Snapping" data-snap-anchor>
               <img src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Snapping"
                 class="perspective__icon icon icon--base">
               <span class="icon-label">Grid</span>
             </div>
-            <!-- Minimal Snap Menu -->
-            <div class="snap-menu" id="snap-menu">
-              <div class="snap-menu__item" data-snap-mode="grid">
-                <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Grid"><span>Snap to Grid</span>
-              </div>
-              <div class="snap-menu__item" data-snap-mode="objects">
-                <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-objects.svg" alt="Objects"><span>Snap to Objects</span>
-              </div>
-              <div class="snap-menu__item" data-snap-mode="canvas">
-                <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-canvas.svg" alt="Canvas"><span>Snap to Canvas</span>
-              </div>
-              <div class="snap-menu__item" data-snap-mode="smart">
-                <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Smart"><span>Smart Guides</span>
-              </div>
-            </div>
-         
           </div>
+          
+          <!-- Snap Menu (positioned outside perspective tools) -->
+          <div class="snap-menu" id="snap-menu" data-snap-menu>
+            <div class="snap-menu__item snap-menu__item--active" data-snap-option="grid">
+              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Grid"><span>Snap to Grid</span>
+            </div>
+            <div class="snap-menu__item" data-snap-option="objects">
+              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-objects.svg" alt="Objects"><span>Snap to Objects</span>
+            </div>
+            <div class="snap-menu__item" data-snap-option="canvas">
+              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-canvas.svg" alt="Canvas"><span>Snap to Canvas</span>
+            </div>
+            <div class="snap-menu__item" data-snap-option="smart">
+              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Smart"><span>Smart Guides</span>
+            </div>
+          </div>
+          
           <!-- Column 2: Canvas will be inserted here by JavaScript -->
           <!-- Column 3: Empty space for future use -->
           <div class="engine__canvas-spacer"></div>

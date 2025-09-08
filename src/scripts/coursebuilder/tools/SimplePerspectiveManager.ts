@@ -110,8 +110,8 @@ export class SimplePerspectiveManager {
      * Bind UI events
      */
     private bindEvents(): void {
-        // Bind perspective tool buttons
-        document.querySelectorAll('[data-perspective]').forEach(element => {
+        // Bind perspective tool buttons (exclude grid button which is handled by SnapMenu)
+        document.querySelectorAll('[data-perspective]:not([data-snap-anchor])').forEach(element => {
             element.addEventListener('click', this.handlePerspectiveAction.bind(this));
         });
 
@@ -144,7 +144,9 @@ export class SimplePerspectiveManager {
                 this.togglePanMode(target);
                 break;
             case 'grid':
-                this.toggleGrid(target);
+                // Grid button is now handled by SnapMenu system
+                // Don't handle it here to avoid conflicts
+                console.log('Grid button clicked - handled by SnapMenu system');
                 break;
             default:
                 console.warn('Unknown perspective action:', action);

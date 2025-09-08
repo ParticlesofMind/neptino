@@ -82,7 +82,13 @@ export async function initializeCanvas(): Promise<void> {
         }
 
         // Bind minimal snap menu UI to perspective tools
-        try { bindSnapMenu(perspectiveManager); } catch {}
+        try { 
+            bindSnapMenu(perspectiveManager); 
+            // Initialize snap manager with saved state
+            snapManager.initialize();
+        } catch (error) {
+            console.warn('Failed to initialize snap menu:', error);
+        }
 
 
         // Initialize UI system with clean architecture

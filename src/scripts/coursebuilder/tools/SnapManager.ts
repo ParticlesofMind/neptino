@@ -41,59 +41,11 @@ class SnapManager {
   }
 
   /**
-   * Bind UI elements with data-snap attributes
-   * Optionally coordinate with perspectiveManager for grid overlay
+   * Initialize the snap manager - load saved state and update UI
    */
-  public bindUI(perspectiveManager?: any): void {
+  public initialize(): void {
     this.loadState();
-    const anchor = document.querySelector('[data-snap-anchor]') as HTMLElement | null;
-    const menu = document.querySelector('[data-snap-menu]') as HTMLElement | null;
-    if (!anchor || !menu) return;
-
-    const openMenu = () => {
-      try {
-        const perspective = anchor.closest('.engine__perspective') as HTMLElement | null;
-        if (perspective && menu.parentElement !== perspective) perspective.appendChild(menu);
-        const aRect = anchor.getBoundingClientRect();
-        const pRect = (anchor.closest('.engine__perspective') as HTMLElement).getBoundingClientRect();
-        const top = Math.max(0, Math.round(aRect.top - pRect.top));
-        const left = Math.max(0, Math.round(aRect.left - pRect.left + anchor.offsetWidth + 8));
-        menu.style.top = `${top}px`;
-        menu.style.left = `${left}px`;
-      } catch {}
-      menu.classList.add('open');
-    };
-    const closeMenu = () => { menu.classList.remove('open'); };
-
-    anchor.addEventListener('click', (e) => {
-      e.preventDefault(); e.stopPropagation();
-      if (menu.classList.contains('open')) closeMenu(); else openMenu();
-    });
-
-    menu.querySelectorAll<HTMLElement>('[data-snap-option]').forEach(item => {
-      item.addEventListener('click', (e) => {
-        e.preventDefault(); e.stopPropagation();
-        const mode = (item.getAttribute('data-snap-option') || 'grid') as SnapMode;
-        this.setActiveMode(mode);
-        closeMenu();
-        if (perspectiveManager && typeof perspectiveManager.setGridEnabled === 'function') {
-          perspectiveManager.setGridEnabled(mode === 'grid');
-        }
-      });
-    });
-
-    // Outside click closes
-    document.addEventListener('click', (e) => {
-      if (!menu.contains(e.target as Node) && !anchor.contains(e.target as Node)) closeMenu();
-    });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
-    window.addEventListener('resize', closeMenu);
-
-    // Initial sync: update icon/label and grid overlay
     this.updateAnchorDisplay();
-    if (perspectiveManager && typeof perspectiveManager.setGridEnabled === 'function') {
-      perspectiveManager.setGridEnabled(this.activeMode === 'grid');
-    }
   }
 
   /**
@@ -202,8 +154,8 @@ class SnapManager {
   private updateAnchorDisplay(): void {
     const anchor = document.querySelector('[data-snap-anchor]') as HTMLElement | null;
     if (!anchor) return;
-    const img = anchor.querySelector('img');
-    const label = anchor.querySelector('.icon-label');
+    const img = anchor.querySelector('img') as HTMLImageElement;
+    const label = anchor.querySelector('.icon-label') as HTMLElement;
     const map: Record<SnapMode, { src: string; text: string }> = {
       grid: { src: '/src/assets/icons/coursebuilder/perspective/grid-icon.svg', text: 'Grid' },
       objects: { src: '/src/assets/icons/coursebuilder/perspective/snap-objects.svg', text: 'Objects' },
@@ -212,8 +164,20 @@ class SnapManager {
       none: { src: '/src/assets/icons/coursebuilder/perspective/snap-none.svg', text: 'None' },
     };
     const v = map[this.activeMode];
-    if (img && v) (img as HTMLImageElement).src = v.src;
+    if (img && v) img.src = v.src;
     if (label && v) label.textContent = v.text;
+    
+    // Update menu item selection state
+    const menu = document.querySelector('[data-snap-menu]') as HTMLElement | null;
+    if (menu) {
+      menu.querySelectorAll('.snap-menu__item').forEach(item => {
+        item.classList.remove('snap-menu__item--active');
+      });
+      const activeItem = menu.querySelector(`[data-snap-option="${this.activeMode}"]`);
+      if (activeItem) {
+        activeItem.classList.add('snap-menu__item--active');
+      }
+    }
   }
   private updatePrefsDisplay(): void {
     document.querySelectorAll<HTMLElement>('[data-snap-pref="gridSize"]').forEach(btn => {
