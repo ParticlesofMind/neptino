@@ -3,7 +3,7 @@
  * Multi-geometry creation with professional styling and modular shape drawing
  */
 
-import { FederatedPointerEvent, Container, Graphics, Point, Text } from "pixi.js";
+import { FederatedPointerEvent, Container, Graphics, Point, Text, Rectangle } from "pixi.js";
 import { BaseTool } from "../ToolInterface";
 import {
     PROFESSIONAL_COLORS,
@@ -31,6 +31,9 @@ export class ShapesTool extends BaseTool {
     private drawerFactory: ShapeDrawerFactory | null = null;
     private uiContainer: Container | null = null;
     private sizeIndicator: { container: Container; bg: Graphics; text: Text } | null = null;
+    // Dimension snap visuals
+    private dimGuide: Graphics | null = null;
+    private dimSnap: { width?: number; height?: number } = {};
     
     declare protected settings: ShapesSettings;
 
@@ -131,6 +134,11 @@ export class ShapesTool extends BaseTool {
         const snapped = snapManager.snapPoint(clampedCurrentPoint);
         this.currentPoint.copyFrom(snapped);
 
+        // Dimension snapping to match width/height of nearby objects
+        try {
+            this.applyDimensionSnapping(container);
+        } catch {}
+
         // Check if shift key is pressed for proportional drawing
         this.isProportional = event.shiftKey;
 
@@ -138,6 +146,8 @@ export class ShapesTool extends BaseTool {
         // Update size indicator box under the creating shape
         if (context) {
             this.updateSizeIndicator(context);
+            // Draw dimension guides if any
+            this.drawDimensionGuides(container, context);
         }
     }
 
@@ -193,6 +203,10 @@ export class ShapesTool extends BaseTool {
         this.drawerFactory = null;
         this.isProportional = false;
         this.removeSizeIndicator();
+        // Clear dimension guides
+        if (this.dimGuide && this.dimGuide.parent) this.dimGuide.parent.removeChild(this.dimGuide);
+        this.dimGuide = null;
+        this.dimSnap = {};
     }
 
     /**
@@ -250,6 +264,18 @@ export class ShapesTool extends BaseTool {
         let width = this.currentPoint.x - this.startPoint.x;
         let height = this.currentPoint.y - this.startPoint.y;
 
+        // Apply dimension snapping overrides if present
+        if (this.dimSnap.width !== undefined) {
+            const sign = (width >= 0) ? 1 : -1;
+            width = Math.abs(this.dimSnap.width) * sign;
+            this.currentPoint.x = this.startPoint.x + width;
+        }
+        if (this.dimSnap.height !== undefined) {
+            const sign = (height >= 0) ? 1 : -1;
+            height = Math.abs(this.dimSnap.height) * sign;
+            this.currentPoint.y = this.startPoint.y + height;
+        }
+
         // Create drawing context
         let context: ShapeDrawingContext = {
             startX: this.startPoint.x,
@@ -289,6 +315,103 @@ export class ShapesTool extends BaseTool {
         // Draw the shape using the appropriate drawer
         drawer.draw(context, strokeStyle, fillStyle);
         return context;
+    }
+
+    // Compute and apply dimension snapping (width/height matching to nearby objects)
+    private applyDimensionSnapping(container: Container): void {
+        const prefs = (snapManager as any).getPrefs?.() || { threshold: 6, matchWidth: true, matchHeight: true };
+        const threshold = prefs.threshold ?? 6;
+        const enableW = prefs.matchWidth !== false;
+        const enableH = prefs.matchHeight !== false;
+        const others = this.collectOtherBounds(container);
+
+        const curW = Math.abs(this.currentPoint.x - this.startPoint.x);
+        const curH = Math.abs(this.currentPoint.y - this.startPoint.y);
+
+        // Current provisional rect
+        const minX = Math.min(this.startPoint.x, this.currentPoint.x);
+        const minY = Math.min(this.startPoint.y, this.currentPoint.y);
+        const curRect = new Rectangle(minX, minY, curW, curH);
+
+        // Choose width/height candidates from nearest object among those within width/height value threshold
+        let chosenW: number | undefined; let bestWDist = Number.POSITIVE_INFINITY;
+        let chosenH: number | undefined; let bestHDist = Number.POSITIVE_INFINITY;
+
+        for (const r of others) {
+            // Distance metric: center-to-center distance
+            const dx = (r.x + r.width / 2) - (curRect.x + curRect.width / 2);
+            const dy = (r.y + r.height / 2) - (curRect.y + curRect.height / 2);
+            const dist = Math.hypot(dx, dy);
+
+            if (enableW) {
+                const dW = Math.abs(curW - Math.round(r.width));
+                if (dW <= threshold && dist < bestWDist) {
+                    bestWDist = dist; chosenW = Math.round(r.width);
+                }
+            }
+            if (enableH) {
+                const dH = Math.abs(curH - Math.round(r.height));
+                if (dH <= threshold && dist < bestHDist) {
+                    bestHDist = dist; chosenH = Math.round(r.height);
+                }
+            }
+        }
+
+        this.dimSnap = {};
+        if (enableW && chosenW !== undefined) this.dimSnap.width = chosenW;
+        if (enableH && chosenH !== undefined) this.dimSnap.height = chosenH;
+    }
+
+    // Draw dimension guides next to the creating shape
+    private drawDimensionGuides(container: Container, context: ShapeDrawingContext): void {
+        if (!this.uiContainer) return;
+        const ui = this.uiContainer;
+        if (!this.dimGuide) { this.dimGuide = new Graphics(); this.dimGuide.zIndex = 1000; ui.addChild(this.dimGuide); }
+        this.dimGuide.clear();
+
+        const guideColor = 0x3b82f6;
+        const highlight = 0x10b981;
+        const minX = Math.min(context.startX, context.currentX);
+        const minY = Math.min(context.startY, context.currentY);
+        const w = Math.abs(context.width);
+        const h = Math.abs(context.height);
+
+        // Width guide above the shape
+        const widthColor = (this.dimSnap.width !== undefined) ? highlight : guideColor;
+        this.dimGuide.moveTo(minX, minY - 6).lineTo(minX + w, minY - 6).stroke({ width: 1, color: widthColor, alpha: 0.95 });
+        // Small end caps
+        this.dimGuide.moveTo(minX, minY - 10).lineTo(minX, minY - 2).stroke({ width: 1, color: widthColor, alpha: 0.95 });
+        this.dimGuide.moveTo(minX + w, minY - 10).lineTo(minX + w, minY - 2).stroke({ width: 1, color: widthColor, alpha: 0.95 });
+
+        // Height guide to the left of the shape
+        const heightColor = (this.dimSnap.height !== undefined) ? highlight : guideColor;
+        this.dimGuide.moveTo(minX - 6, minY).lineTo(minX - 6, minY + h).stroke({ width: 1, color: heightColor, alpha: 0.95 });
+        this.dimGuide.moveTo(minX - 10, minY).lineTo(minX - 2, minY).stroke({ width: 1, color: heightColor, alpha: 0.95 });
+        this.dimGuide.moveTo(minX - 10, minY + h).lineTo(minX - 2, minY + h).stroke({ width: 1, color: heightColor, alpha: 0.95 });
+    }
+
+    private collectOtherBounds(container: Container): Rectangle[] {
+        const out: Rectangle[] = [];
+        const visit = (node: any) => {
+            if (!node || node === container || node === this.currentShape) return;
+            try {
+                if (typeof node.getBounds === 'function' && node.visible !== false) {
+                    const wb = node.getBounds();
+                    const tl = container.toLocal(new Point(wb.x, wb.y));
+                    const br = container.toLocal(new Point(wb.x + wb.width, wb.y + wb.height));
+                    const x = Math.min(tl.x, br.x);
+                    const y = Math.min(tl.y, br.y);
+                    const w = Math.abs(br.x - tl.x);
+                    const h = Math.abs(br.y - tl.y);
+                    if (w > 0.01 && h > 0.01) out.push(new Rectangle(x, y, w, h));
+                }
+            } catch {}
+            if (node.children && Array.isArray(node.children)) {
+                for (const child of node.children) visit(child);
+            }
+        };
+        for (const child of container.children) visit(child);
+        return out;
     }
 
     setShapeType(
@@ -387,7 +510,9 @@ export class ShapesTool extends BaseTool {
         this.sizeIndicator.bg.clear();
         this.sizeIndicator.bg.rect(0, 0, boxW, boxH);
         this.sizeIndicator.bg.fill({ color: 0xffffff, alpha: 1 });
-        this.sizeIndicator.bg.stroke({ width: 1, color: 0x3b82f6 });
+        // Highlight when snapped to a dimension
+        const snapped = (this.dimSnap.width !== undefined) || (this.dimSnap.height !== undefined);
+        this.sizeIndicator.bg.stroke({ width: 1, color: snapped ? 0x10b981 : 0x3b82f6 });
 
         this.sizeIndicator.text.position.set(paddingX, paddingY - 1);
 
@@ -405,4 +530,10 @@ export class ShapesTool extends BaseTool {
             this.sizeIndicator = null;
         }
     }
+}
+
+// ----- Dimension snapping helpers for ShapesTool -----
+export interface DimensionMatch {
+    width?: { value: number; ref: Rectangle };
+    height?: { value: number; ref: Rectangle };
 }

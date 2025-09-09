@@ -947,14 +947,24 @@
             <div class="snap-menu__item snap-menu__item--active" data-snap-option="grid">
               <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Grid"><span>Snap to Grid</span>
             </div>
-            <div class="snap-menu__item" data-snap-option="objects">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-objects.svg" alt="Objects"><span>Snap to Objects</span>
-            </div>
-            <div class="snap-menu__item" data-snap-option="canvas">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-canvas.svg" alt="Canvas"><span>Snap to Canvas</span>
-            </div>
             <div class="snap-menu__item" data-snap-option="smart">
               <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Smart"><span>Smart Guides</span>
+            </div>
+            <!-- Preferences -->
+            <div class="snap-menu__controls">
+              <div class="snap-menu__row"><label>Snap Threshold</label><input type="number" min="0" max="50" step="1" value="6" data-snap-threshold></div>
+              <div class="snap-menu__row"><label>Equal Tolerance</label><input type="number" min="0" max="10" step="1" value="1" data-snap-equaltol></div>
+              <div class="snap-menu__row"><label><input type="checkbox" checked data-dim-match-width> Match Width</label></div>
+              <div class="snap-menu__row"><label><input type="checkbox" checked data-dim-match-height> Match Height</label></div>
+            </div>
+            <!-- Distribute actions -->
+            <div class="snap-menu__row">
+              <div class="snap-menu__item" data-distribute="horizontal">
+                <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Distribute H"><span>Distribute Horizontally</span>
+              </div>
+              <div class="snap-menu__item" data-distribute="vertical">
+                <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Distribute V"><span>Distribute Vertically</span>
+              </div>
             </div>
           </div>
           

@@ -28,6 +28,8 @@ export class AABBSelectionTool extends BaseTool {
   private sizeIndicator: { container: Container; bg: Graphics; text: Text } | null = null;
   // Smart guide visuals
   private guideGfx: Graphics | null = null;
+  private guideLabels: Container | null = null;
+  private boundDistributeHandler: ((e: Event) => void) | null = null;
   // Clipboard for copy/paste
   private clipboard: Array<{ type: string; meta?: any; textInfo?: { text: string; style: any; x: number; y: number } }> = [];
   private pasteCount: number = 0;
@@ -170,6 +172,8 @@ export class AABBSelectionTool extends BaseTool {
         this.cursor = 'grabbing';
         this.isDragging = true;
         this.dragStart.copyFrom(p);
+        // Draw initial guides immediately when drag starts
+        try { this.updateSmartGuides(); } catch {}
       }
       return;
     }
@@ -195,17 +199,31 @@ export class AABBSelectionTool extends BaseTool {
     } catch {}
 
     if (this.group && this.group.objects.length > 0 && (this.transformer as any).isActive && (this.transformer as any).isActive()) {
-      // If a transform is in progress, update
+      // If a transform is in progress, update and show guides
       this.transformer.update(p, { shiftKey: event.shiftKey, altKey: (event as any).altKey, ctrlKey: (event as any).ctrlKey || (event as any).metaKey });
       this.refreshGroupBoundsOnly();
+      try { this.updateSmartGuides(); } catch {}
       return;
     }
 
     if (this.isDraggingGroup && this.group) {
-      // Compute proposed delta (apply snapping to pointer position first)
-      const snapped = snapManager.snapPoint(p, { exclude: this.selected });
-      let dx = snapped.x - this.dragStart.x;
-      let dy = snapped.y - this.dragStart.y;
+      // Base delta from raw pointer movement
+      let dx = p.x - this.dragStart.x;
+      let dy = p.y - this.dragStart.y;
+
+      // Smart snapping to object guides using proposed movement
+      try {
+        if (snapManager.isSmartEnabled()) {
+          const adj = this.computeSnapAdjustments(this.group.bounds, dx, dy, this.container || undefined);
+          if (adj.dx !== null) dx = adj.dx;
+          if (adj.dy !== null) dy = adj.dy;
+        } else if (snapManager.isGridEnabled()) {
+          // If grid mode, snap pointer delta to grid via snapManager
+          const snapped = snapManager.snapPoint(p);
+          dx = snapped.x - this.dragStart.x;
+          dy = snapped.y - this.dragStart.y;
+        }
+      } catch {}
 
       // Constrain movement to canvas content bounds if available
       try {
@@ -234,10 +252,9 @@ export class AABBSelectionTool extends BaseTool {
         this.dragStart.x += dx;
         this.dragStart.y += dy;
         this.refreshGroupBoundsOnly();
-
-        // Update smart guide visuals if enabled
-        try { this.updateSmartGuides(); } catch {}
       }
+      // Update smart guide visuals continuously during drag
+      try { this.updateSmartGuides(); } catch {}
       return;
     }
 
@@ -284,6 +301,14 @@ export class AABBSelectionTool extends BaseTool {
 
   onActivate(): void {
     super.onActivate();
+    // Listen for distribute commands from UI
+    this.boundDistributeHandler = (evt: Event) => {
+      const e = evt as CustomEvent;
+      const dir = e.detail && (e.detail.direction as 'horizontal' | 'vertical');
+      if (!dir) return;
+      this.distribute(dir);
+    };
+    document.addEventListener('selection:distribute', this.boundDistributeHandler as any);
   }
 
   onDeactivate(): void {
@@ -293,6 +318,11 @@ export class AABBSelectionTool extends BaseTool {
     this.marquee = { active: false, start: new Point(), gfx: null, shift: false };
     // Remove size indicator
     this.removeSizeIndicator();
+    // Remove listeners
+    if (this.boundDistributeHandler) {
+      document.removeEventListener('selection:distribute', this.boundDistributeHandler as any);
+      this.boundDistributeHandler = null;
+    }
   }
 
   // ----- Group visuals -----
@@ -364,6 +394,10 @@ export class AABBSelectionTool extends BaseTool {
       this.guideGfx.parent.removeChild(this.guideGfx);
     }
     this.guideGfx = null;
+    if (this.guideLabels && this.guideLabels.parent) {
+      this.guideLabels.parent.removeChild(this.guideLabels);
+    }
+    this.guideLabels = null;
   }
 
   private updateSmartGuides(): void {
@@ -382,36 +416,360 @@ export class AABBSelectionTool extends BaseTool {
     } else {
       this.guideGfx.clear();
     }
-
-    // Canvas centers
-    const canvas = document.getElementById('pixi-canvas') as HTMLCanvasElement | null;
-    const cw = canvas?.width || 0; const ch = canvas?.height || 0;
-    const cx = cw / 2; const cy = ch / 2;
-    const gbx = b.x + b.width / 2; const gby = b.y + b.height / 2;
-    const threshold = 6;
-
-    // Draw center alignment guides when close
-    const guideColor = 0x3b82f6; // elegant blue
-    if (Math.abs(gbx - cx) <= threshold) {
-      this.guideGfx.moveTo(cx, 0).lineTo(cx, ch).stroke({ width: 1, color: guideColor, alpha: 0.8 });
-    }
-    if (Math.abs(gby - cy) <= threshold) {
-      this.guideGfx.moveTo(0, cy).lineTo(cw, cy).stroke({ width: 1, color: guideColor, alpha: 0.8 });
+    // Prepare labels container (above lines)
+    if (!this.guideLabels) {
+      this.guideLabels = new Container();
+      this.guideLabels.zIndex = 10001;
+      ui.addChild(this.guideLabels);
+    } else {
+      try { this.guideLabels.removeChildren(); } catch {}
     }
 
-    // Canvas edge alignment guides
-    if (Math.abs(b.x - 0) <= threshold) {
-      this.guideGfx.moveTo(0, 0).lineTo(0, ch).stroke({ width: 1, color: guideColor, alpha: 0.6 });
+    const candidates = snapManager.getCandidates({ exclude: this.selected, container: this.container || undefined });
+    const threshold = candidates.threshold;
+    const guideColor = 0x3b82f6; // thin blue guides
+
+    // Gather other objects' local-space bounds
+    const others = this.collectOtherBounds(this.container!, this.selected || []);
+
+    type Line = { pos: number; rects: Rectangle[] };
+    const vLines: Line[] = [];
+    const hLines: Line[] = [];
+
+    const bLeft = b.x;
+    const bRight = b.x + b.width;
+    const bTop = b.y;
+    const bBottom = b.y + b.height;
+    const bCx = b.x + b.width / 2;
+    const bCy = b.y + b.height / 2;
+
+    const ensureLine = (list: Line[], pos: number): Line => {
+      for (const l of list) { if (Math.abs(l.pos - pos) <= threshold) return l; }
+      const l = { pos, rects: [] as Rectangle[] };
+      list.push(l); return l;
+    };
+
+    // Build vertical and horizontal alignment candidates
+    for (const r of others) {
+      const rLeft = r.x;
+      const rRight = r.x + r.width;
+      const rCx = r.x + r.width / 2;
+      const rTop = r.y;
+      const rBottom = r.y + r.height;
+      const rCy = r.y + r.height / 2;
+
+      // Vertical comparisons (x)
+      if (Math.abs(bLeft - rLeft) <= threshold) ensureLine(vLines, rLeft).rects.push(r);
+      if (Math.abs(bLeft - rCx) <= threshold) ensureLine(vLines, rCx).rects.push(r);
+      if (Math.abs(bLeft - rRight) <= threshold) ensureLine(vLines, rRight).rects.push(r);
+      if (Math.abs(bCx - rLeft) <= threshold) ensureLine(vLines, rLeft).rects.push(r);
+      if (Math.abs(bCx - rCx) <= threshold) ensureLine(vLines, rCx).rects.push(r);
+      if (Math.abs(bCx - rRight) <= threshold) ensureLine(vLines, rRight).rects.push(r);
+      if (Math.abs(bRight - rLeft) <= threshold) ensureLine(vLines, rLeft).rects.push(r);
+      if (Math.abs(bRight - rCx) <= threshold) ensureLine(vLines, rCx).rects.push(r);
+      if (Math.abs(bRight - rRight) <= threshold) ensureLine(vLines, rRight).rects.push(r);
+
+      // Horizontal comparisons (y)
+      if (Math.abs(bTop - rTop) <= threshold) ensureLine(hLines, rTop).rects.push(r);
+      if (Math.abs(bTop - rCy) <= threshold) ensureLine(hLines, rCy).rects.push(r);
+      if (Math.abs(bTop - rBottom) <= threshold) ensureLine(hLines, rBottom).rects.push(r);
+      if (Math.abs(bCy - rTop) <= threshold) ensureLine(hLines, rTop).rects.push(r);
+      if (Math.abs(bCy - rCy) <= threshold) ensureLine(hLines, rCy).rects.push(r);
+      if (Math.abs(bCy - rBottom) <= threshold) ensureLine(hLines, rBottom).rects.push(r);
+      if (Math.abs(bBottom - rTop) <= threshold) ensureLine(hLines, rTop).rects.push(r);
+      if (Math.abs(bBottom - rCy) <= threshold) ensureLine(hLines, rCy).rects.push(r);
+      if (Math.abs(bBottom - rBottom) <= threshold) ensureLine(hLines, rBottom).rects.push(r);
     }
-    if (Math.abs(b.x + b.width - cw) <= threshold) {
-      this.guideGfx.moveTo(cw, 0).lineTo(cw, ch).stroke({ width: 1, color: guideColor, alpha: 0.6 });
+
+    // Include current group in each detected line
+    for (const l of vLines) l.rects.push(b.clone());
+    for (const l of hLines) l.rects.push(b.clone());
+    // Dedupe rects per line to avoid double-counting
+    for (const l of vLines) l.rects = l.rects.filter((r, i, arr) => arr.indexOf(r) === i);
+    for (const l of hLines) l.rects = l.rects.filter((r, i, arr) => arr.indexOf(r) === i);
+
+    // Draw segmented vertical guides + spacing labels
+    for (const l of vLines) {
+      if (l.rects.length < 2) continue;
+      const yMin = Math.min(...l.rects.map(r => r.y));
+      const yMax = Math.max(...l.rects.map(r => r.y + r.height));
+      // Equal spacing highlight check (vertical stack)
+      const sorted = l.rects.slice().sort((a, b) => a.y - b.y);
+      const gaps: number[] = [];
+      for (let i = 0; i < sorted.length - 1; i++) {
+        const a = sorted[i];
+        const c = sorted[i + 1];
+        const gap = Math.round(c.y - (a.y + a.height));
+        if (gap > 0) gaps.push(gap);
+      }
+      const eqTol = snapManager.getPrefs().equalTolerance;
+      const eqSpacing = gaps.length >= 2 && (Math.max(...gaps) - Math.min(...gaps) <= eqTol);
+      const lineColor = eqSpacing ? 0x10b981 /* teal */ : guideColor;
+      this.guideGfx.moveTo(l.pos, yMin).lineTo(l.pos, yMax).stroke({ width: 1, color: lineColor, alpha: 0.98 });
+
+      for (let i = 0; i < sorted.length - 1; i++) {
+        const a = sorted[i];
+        const c = sorted[i + 1];
+        const gap = Math.round(c.y - (a.y + a.height));
+        if (gap > 0) {
+          const midY = (a.y + a.height + c.y) / 2;
+          this.drawGuideLabel(l.pos + 6, midY - 8, `${gap}px`, lineColor);
+        }
+      }
     }
-    if (Math.abs(b.y - 0) <= threshold) {
-      this.guideGfx.moveTo(0, 0).lineTo(cw, 0).stroke({ width: 1, color: guideColor, alpha: 0.6 });
+
+    // Draw segmented horizontal guides + spacing labels
+    for (const l of hLines) {
+      if (l.rects.length < 2) continue;
+      const xMin = Math.min(...l.rects.map(r => r.x));
+      const xMax = Math.max(...l.rects.map(r => r.x + r.width));
+      const sorted = l.rects.slice().sort((a, b) => a.x - b.x);
+      const gaps: number[] = [];
+      for (let i = 0; i < sorted.length - 1; i++) {
+        const a = sorted[i];
+        const c = sorted[i + 1];
+        const gap = Math.round(c.x - (a.x + a.width));
+        if (gap > 0) gaps.push(gap);
+      }
+      const eqTol = snapManager.getPrefs().equalTolerance;
+      const eqSpacing = gaps.length >= 2 && (Math.max(...gaps) - Math.min(...gaps) <= eqTol);
+      const lineColor = eqSpacing ? 0x10b981 : guideColor;
+      this.guideGfx.moveTo(xMin, l.pos).lineTo(xMax, l.pos).stroke({ width: 1, color: lineColor, alpha: 0.98 });
+
+      for (let i = 0; i < sorted.length - 1; i++) {
+        const a = sorted[i];
+        const c = sorted[i + 1];
+        const gap = Math.round(c.x - (a.x + a.width));
+        if (gap > 0) {
+          const midX = (a.x + a.width + c.x) / 2;
+          this.drawGuideLabel(midX - 10, l.pos - 16, `${gap}px`, lineColor);
+        }
+      }
     }
-    if (Math.abs(b.y + b.height - ch) <= threshold) {
-      this.guideGfx.moveTo(0, ch).lineTo(cw, ch).stroke({ width: 1, color: guideColor, alpha: 0.6 });
+  }
+
+  // Compute best snap adjustments for group bounds to nearest candidates based on proposed movement
+  private computeSnapAdjustments(bounds: Rectangle, dxProp: number, dyProp: number, container?: Container): { dx: number | null; dy: number | null } {
+    const candidates = snapManager.getCandidates({ exclude: this.selected, container });
+    const threshold = candidates.threshold;
+    const allV = [...candidates.vLines];
+    const allH = [...candidates.hLines];
+
+    // Prospective positions after applying proposed movement
+    const left = bounds.x + dxProp; const right = bounds.x + bounds.width + dxProp; const cx = bounds.x + bounds.width / 2 + dxProp;
+    const top = bounds.y + dyProp; const bottom = bounds.y + bounds.height + dyProp; const cy = bounds.y + bounds.height / 2 + dyProp;
+
+    // For dx, find best alignment among left/cx/right to any vLine
+    let dxAdj: number | null = null; let bestDxDist = threshold + 1;
+    const vTargets = [left, cx, right];
+    for (const t of vTargets) {
+      for (const x of allV) {
+        const d = Math.abs(t - x);
+        if (d <= threshold && d < bestDxDist) {
+          bestDxDist = d; dxAdj = dxProp + (x - t); // adjust proposed dx to align
+        }
+      }
     }
+
+    // For dy, find best alignment among top/cy/bottom to any hLine
+    let dyAdj: number | null = null; let bestDyDist = threshold + 1;
+    const hTargets = [top, cy, bottom];
+    for (const t of hTargets) {
+      for (const y of allH) {
+        const d = Math.abs(t - y);
+        if (d <= threshold && d < bestDyDist) {
+          bestDyDist = d; dyAdj = dyProp + (y - t); // adjust proposed dy to align
+        }
+      }
+    }
+
+    // Distribute evenly snap (horizontal): if between two neighbors on the same horizontal alignment
+    try {
+      const others = this.collectOtherBounds(container || this.container!, this.selected || []);
+      // Pick the y alignment that has the most matches
+      let bestYLine: number | null = null; let bestYCount = 0;
+      for (const yT of [top, cy, bottom]) {
+        const count = others.reduce((acc, r) => {
+          const rT = r.y, rC = r.y + r.height / 2, rB = r.y + r.height;
+          return acc + ((Math.abs(rT - yT) <= threshold || Math.abs(rC - yT) <= threshold || Math.abs(rB - yT) <= threshold) ? 1 : 0);
+        }, 0);
+        if (count > bestYCount) { bestYCount = count; bestYLine = yT; }
+      }
+      if (bestYLine !== null && bestYCount >= 2) {
+        const aligned = others.filter(r => {
+          const rT = r.y, rC = r.y + r.height / 2, rB = r.y + r.height;
+          return Math.abs(rT - bestYLine!) <= threshold || Math.abs(rC - bestYLine!) <= threshold || Math.abs(rB - bestYLine!) <= threshold;
+        }).sort((a, b) => a.x - b.x);
+        const L0 = bounds.x + dxProp; const R0 = bounds.x + bounds.width + dxProp;
+        let leftN: Rectangle | null = null, rightN: Rectangle | null = null;
+        for (const r of aligned) {
+          if (r.x + r.width <= L0) leftN = r; else if (r.x >= R0) { rightN = r; break; }
+        }
+        if (leftN && rightN) {
+          const leftRight = leftN.x + leftN.width; const rightLeft = rightN.x;
+          const dxEven = (rightLeft + leftRight - (bounds.x + bounds.x + bounds.width)) / 2; // equals formula simplification
+          const delta = Math.abs(dxEven - dxProp);
+          if (delta <= threshold && (dxAdj === null || Math.abs(dxAdj - dxProp) > delta)) {
+            dxAdj = dxEven;
+          }
+        }
+      }
+    } catch {}
+
+    // Distribute evenly snap (vertical)
+    try {
+      const others = this.collectOtherBounds(container || this.container!, this.selected || []);
+      // Pick the x alignment that has the most matches
+      let bestXLine: number | null = null; let bestXCount = 0;
+      for (const xT of [left, cx, right]) {
+        const count = others.reduce((acc, r) => {
+          const rL = r.x, rC = r.x + r.width / 2, rR = r.x + r.width;
+          return acc + ((Math.abs(rL - xT) <= threshold || Math.abs(rC - xT) <= threshold || Math.abs(rR - xT) <= threshold) ? 1 : 0);
+        }, 0);
+        if (count > bestXCount) { bestXCount = count; bestXLine = xT; }
+      }
+      if (bestXLine !== null && bestXCount >= 2) {
+        const aligned = others.filter(r => {
+          const rL = r.x, rC = r.x + r.width / 2, rR = r.x + r.width;
+          return Math.abs(rL - bestXLine!) <= threshold || Math.abs(rC - bestXLine!) <= threshold || Math.abs(rR - bestXLine!) <= threshold;
+        }).sort((a, b) => a.y - b.y);
+        const T0 = bounds.y + dyProp; const B0 = bounds.y + bounds.height + dyProp;
+        let topN: Rectangle | null = null, botN: Rectangle | null = null;
+        for (const r of aligned) {
+          if (r.y + r.height <= T0) topN = r; else if (r.y >= B0) { botN = r; break; }
+        }
+        if (topN && botN) {
+          const topBottom = topN.y + topN.height; const bottomTop = botN.y;
+          const dyEven = (bottomTop + topBottom - (bounds.y + bounds.y + bounds.height)) / 2;
+          const delta = Math.abs(dyEven - dyProp);
+          if (delta <= threshold && (dyAdj === null || Math.abs(dyAdj - dyProp) > delta)) {
+            dyAdj = dyEven;
+          }
+        }
+      }
+    } catch {}
+
+    return { dx: dxAdj, dy: dyAdj };
+  }
+
+  // --- Helpers for smart guide rendering and measurement ---
+  private collectOtherBounds(container: Container, exclude: any[]): Rectangle[] {
+    const out: Rectangle[] = [];
+    const ex = new Set(exclude);
+    const visit = (node: any) => {
+      if (!node || node === container) return;
+      try {
+        if (typeof node.getBounds === 'function' && !ex.has(node) && node.visible !== false) {
+          const wb = node.getBounds();
+          const tl = container.toLocal(new Point(wb.x, wb.y));
+          const br = container.toLocal(new Point(wb.x + wb.width, wb.y + wb.height));
+          const x = Math.min(tl.x, br.x);
+          const y = Math.min(tl.y, br.y);
+          const w = Math.abs(br.x - tl.x);
+          const h = Math.abs(br.y - tl.y);
+          if (isFinite(x) && isFinite(y) && w > 0.01 && h > 0.01) out.push(new Rectangle(x, y, w, h));
+        }
+      } catch {}
+      if (node.children && Array.isArray(node.children)) {
+        for (const child of node.children) visit(child);
+      }
+    };
+    for (const child of container.children) visit(child);
+    return out;
+  }
+
+  private drawGuideLabel(x: number, y: number, text: string, strokeColor: number = 0x3b82f6): void {
+    if (!this.guideLabels) return;
+    const bg = new Graphics();
+    const t = new Text({ text, style: { fontFamily: 'Arial', fontSize: 10, fill: 0x111111 } });
+    const paddingX = 4, paddingY = 2;
+    const boxW = Math.ceil(((t as any).width || 0) + paddingX * 2);
+    const boxH = Math.ceil(((t as any).height || 0) + paddingY * 2);
+    bg.rect(0, 0, boxW, boxH).fill({ color: 0xffffff, alpha: 1 }).stroke({ width: 1, color: strokeColor, alpha: 1 });
+    const container = new Container();
+    container.addChild(bg);
+    container.addChild(t);
+    t.position.set(paddingX, paddingY - 1);
+    container.position.set(x, y);
+    this.guideLabels.addChild(container);
+  }
+
+  // Distribute selected objects evenly along an axis
+  private distribute(direction: 'horizontal' | 'vertical'): void {
+    if (!this.container || !this.selected || this.selected.length < 3) {
+      console.warn('Distribute requires at least 3 selected objects');
+      return;
+    }
+    // Compute local bounds for selection objects
+    const items = this.selected.map(obj => ({ obj, b: this.boundsInContainer(obj, this.container!) }))
+      .filter(it => it.b.width > 0.01 && it.b.height > 0.01);
+    if (items.length < 3) return;
+
+    if (direction === 'horizontal') {
+      items.sort((a, b) => a.b.x - b.b.x);
+      const first = items[0], last = items[items.length - 1];
+      const span = (last.b.x + last.b.width) - first.b.x;
+      const sizes = items.reduce((s, it) => s + it.b.width, 0);
+      const gap = (span - sizes) / (items.length - 1);
+      let x = first.b.x;
+      // Keep first at its x, last at its current end; move the middle
+      for (let i = 1; i < items.length - 1; i++) {
+        const it = items[i];
+        x += items[i - 1].b.width + gap;
+        const dx = x - it.b.x;
+        this.moveObjectByContainerDelta(it.obj, dx, 0, this.container!);
+        // Update cached bounds
+        it.b.x += dx;
+      }
+    } else {
+      // vertical
+      items.sort((a, b) => a.b.y - b.b.y);
+      const first = items[0], last = items[items.length - 1];
+      const span = (last.b.y + last.b.height) - first.b.y;
+      const sizes = items.reduce((s, it) => s + it.b.height, 0);
+      const gap = (span - sizes) / (items.length - 1);
+      let y = first.b.y;
+      for (let i = 1; i < items.length - 1; i++) {
+        const it = items[i];
+        y += items[i - 1].b.height + gap;
+        const dy = y - it.b.y;
+        this.moveObjectByContainerDelta(it.obj, 0, dy, this.container!);
+        it.b.y += dy;
+      }
+    }
+    this.refreshGroup();
+    try { this.updateSmartGuides(); } catch {}
+  }
+
+  private boundsInContainer(obj: any, container: Container): Rectangle {
+    try {
+      const wb = obj.getBounds();
+      const tl = container.toLocal(new Point(wb.x, wb.y));
+      const br = container.toLocal(new Point(wb.x + wb.width, wb.y + wb.height));
+      const x = Math.min(tl.x, br.x);
+      const y = Math.min(tl.y, br.y);
+      const w = Math.abs(br.x - tl.x);
+      const h = Math.abs(br.y - tl.y);
+      return new Rectangle(x, y, w, h);
+    } catch {
+      return new Rectangle(0, 0, 0, 0);
+    }
+  }
+
+  private moveObjectByContainerDelta(obj: any, dx: number, dy: number, container: Container): void {
+    if (!obj?.parent) return;
+    if (dx === 0 && dy === 0) return;
+    try {
+      // Map delta from container-local to parent-local
+      const pAWorld = container.toGlobal(new Point(0, 0));
+      const pBWorld = container.toGlobal(new Point(dx, dy));
+      const pALocal = obj.parent.toLocal(pAWorld);
+      const pBLocal = obj.parent.toLocal(pBWorld);
+      const ddx = pBLocal.x - pALocal.x;
+      const ddy = pBLocal.y - pALocal.y;
+      obj.position.x += ddx;
+      obj.position.y += ddy;
+    } catch {}
   }
 
   // ----- Copy/Paste Helpers -----
@@ -452,30 +810,33 @@ export class AABBSelectionTool extends BaseTool {
     for (const item of this.clipboard) {
       try {
         if (item.type === 'shapes' && item.meta) {
-          const gfx = this.createShapeFromMeta(item.meta, offset);
+          const metaCopy = JSON.parse(JSON.stringify(item.meta));
+          const gfx = this.createShapeFromMeta(metaCopy, offset);
           if (!gfx) continue;
           (gfx as any).__toolType = 'shapes';
-          (gfx as any).__meta = item.meta;
+          (gfx as any).__meta = metaCopy;
           container.addChild(gfx);
           this.displayManager?.add(gfx, container);
           created.push(gfx);
           continue;
         }
         if (item.type === 'pen' && item.meta) {
-          const gfx = this.createPenFromMeta(item.meta, offset);
+          const metaCopy = JSON.parse(JSON.stringify(item.meta));
+          const gfx = this.createPenFromMeta(metaCopy, offset);
           if (!gfx) continue;
           (gfx as any).__toolType = 'pen';
-          (gfx as any).__meta = item.meta;
+          (gfx as any).__meta = metaCopy;
           container.addChild(gfx);
           this.displayManager?.add(gfx, container);
           created.push(gfx);
           continue;
         }
         if (item.type === 'brush' && item.meta) {
-          const gfx = this.createBrushFromMeta(item.meta, offset);
+          const metaCopy = JSON.parse(JSON.stringify(item.meta));
+          const gfx = this.createBrushFromMeta(metaCopy, offset);
           if (!gfx) continue;
           (gfx as any).__toolType = 'brush';
-          (gfx as any).__meta = item.meta;
+          (gfx as any).__meta = metaCopy;
           container.addChild(gfx);
           this.displayManager?.add(gfx, container);
           created.push(gfx);

@@ -79,14 +79,6 @@ export function bindSnapMenu(perspectiveManager?: any): void {
         src: '/src/assets/icons/coursebuilder/perspective/grid-icon.svg', 
         label: 'Grid' 
       },
-      objects: { 
-        src: '/src/assets/icons/coursebuilder/perspective/snap-objects.svg', 
-        label: 'Objects' 
-      },
-      canvas: { 
-        src: '/src/assets/icons/coursebuilder/perspective/snap-canvas.svg', 
-        label: 'Canvas' 
-      },
       smart: { 
         src: '/src/assets/icons/coursebuilder/perspective/snap-smart.svg', 
         label: 'Smart' 
@@ -164,10 +156,65 @@ export function bindSnapMenu(perspectiveManager?: any): void {
   try {
     const currentMode = (snapManager as any).getActiveMode?.() || 'grid';
     updateSelectedOption(currentMode);
+    // Initialize preferences inputs
+    try {
+      const prefs = (snapManager as any).getPrefs?.();
+      const thr = snapMenu.querySelector('[data-snap-threshold]') as HTMLInputElement | null;
+      const tol = snapMenu.querySelector('[data-snap-equaltol]') as HTMLInputElement | null;
+      const mw = snapMenu.querySelector('[data-dim-match-width]') as HTMLInputElement | null;
+      const mh = snapMenu.querySelector('[data-dim-match-height]') as HTMLInputElement | null;
+      if (thr && prefs?.threshold != null) thr.value = String(prefs.threshold);
+      if (tol && prefs?.equalTolerance != null) tol.value = String(prefs.equalTolerance);
+      if (mw && prefs?.matchWidth != null) mw.checked = !!prefs.matchWidth;
+      if (mh && prefs?.matchHeight != null) mh.checked = !!prefs.matchHeight;
+    } catch {}
     console.log('SnapMenu: Initialized successfully with mode:', currentMode);
   } catch (error) {
     console.warn('Failed to initialize snap menu state:', error);
     updateSelectedOption('grid'); // fallback to grid
   }
-}
 
+  // Bind threshold and equal tolerance inputs
+  try {
+    const thr = snapMenu.querySelector('[data-snap-threshold]') as HTMLInputElement | null;
+    const tol = snapMenu.querySelector('[data-snap-equaltol]') as HTMLInputElement | null;
+    const mw = snapMenu.querySelector('[data-dim-match-width]') as HTMLInputElement | null;
+    const mh = snapMenu.querySelector('[data-dim-match-height]') as HTMLInputElement | null;
+    if (thr) {
+      thr.addEventListener('input', () => {
+        const v = Math.max(0, Math.min(50, parseInt(thr.value || '0', 10) || 0));
+        (snapManager as any).setPrefs?.({ threshold: v });
+      });
+    }
+    if (tol) {
+      tol.addEventListener('input', () => {
+        const v = Math.max(0, Math.min(10, parseInt(tol.value || '0', 10) || 0));
+        (snapManager as any).setPrefs?.({ equalTolerance: v });
+      });
+    }
+    if (mw) {
+      mw.addEventListener('change', () => {
+        (snapManager as any).setPrefs?.({ matchWidth: !!mw.checked });
+      });
+    }
+    if (mh) {
+      mh.addEventListener('change', () => {
+        (snapManager as any).setPrefs?.({ matchHeight: !!mh.checked });
+      });
+    }
+  } catch (e) {
+    console.warn('SnapMenu: failed to bind pref inputs', e);
+  }
+
+  // Bind distribute buttons
+  snapMenu.querySelectorAll<HTMLElement>('[data-distribute]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const dir = (btn.getAttribute('data-distribute') || '').toLowerCase();
+      if (dir === 'horizontal' || dir === 'vertical') {
+        const evt = new CustomEvent('selection:distribute', { detail: { direction: dir } });
+        document.dispatchEvent(evt);
+        closeMenu();
+      }
+    });
+  });
+}

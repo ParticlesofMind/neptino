@@ -47,6 +47,10 @@ export class CanvasLayers {
     drawing.zIndex = 1;
     ui.zIndex = 2;
 
+    // Enable z-index sorting within the UI layer so helper overlays (guides, cursors)
+    // can reliably render above other UI elements
+    ui.sortableChildren = true;
+
     // Add to stage
     this.app.stage.addChild(background);
     this.app.stage.addChild(drawing);
