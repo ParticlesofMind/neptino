@@ -84,16 +84,24 @@ export class TransformController {
         if (obj.pivot) {
           const worldCenter = obj.toGlobal(localCenter);
           obj.pivot.set(localCenter.x, localCenter.y);
-          const posInParent = obj.parent?.toLocal(worldCenter, undefined, undefined, false) ?? { x: 0, y: 0 };
-          obj.position.set(posInParent.x, posInParent.y);
+          if (obj.parent) {
+            const posInParent = obj.parent.toLocal(worldCenter, undefined, undefined, false);
+            obj.position.set(posInParent.x, posInParent.y);
+          } else {
+            console.warn('TransformController.begin(rotation): object has no parent; skipped position realignment to avoid (0,0) jump');
+          }
         }
       } else {
         // For scaling/dragging: pivot around the active handle's anchor (selection-based)
         state.localAnchor = obj.toLocal(this.anchorGlobal);
         if (obj.pivot) {
           obj.pivot.set(state.localAnchor.x, state.localAnchor.y);
-          const posInParent = obj.parent?.toLocal(this.anchorGlobal, undefined, undefined, false) ?? { x: 0, y: 0 };
-          obj.position.set(posInParent.x, posInParent.y);
+          if (obj.parent) {
+            const posInParent = obj.parent.toLocal(this.anchorGlobal, undefined, undefined, false);
+            obj.position.set(posInParent.x, posInParent.y);
+          } else {
+            console.warn('TransformController.begin(scale/drag): object has no parent; skipped position realignment to avoid (0,0) jump');
+          }
         }
       }
 
@@ -130,8 +138,12 @@ export class TransformController {
           const currentPivotLocal = new Point(o.obj.pivot?.x ?? 0, o.obj.pivot?.y ?? 0);
           const currentPivotWorld = o.obj.toGlobal(currentPivotLocal);
           o.obj.pivot.set(o.startPivot.x, o.startPivot.y);
-          const posInParent = o.obj.parent?.toLocal(currentPivotWorld, undefined, undefined, false) ?? { x: 0, y: 0 };
-          o.obj.position.set(posInParent.x, posInParent.y);
+          if (o.obj.parent) {
+            const posInParent = o.obj.parent.toLocal(currentPivotWorld, undefined, undefined, false);
+            o.obj.position.set(posInParent.x, posInParent.y);
+          } else {
+            console.warn('TransformController.end: object has no parent; skipped position realignment to avoid (0,0) jump');
+          }
         } catch {}
       });
     }
@@ -172,8 +184,12 @@ export class TransformController {
         o.localAnchor = o.obj.toLocal(this.anchorGlobal);
         if (o.obj.pivot) {
           o.obj.pivot.set(o.localAnchor.x, o.localAnchor.y);
-          const posInParent = o.obj.parent?.toLocal(this.anchorGlobal, undefined, undefined, false) ?? { x: 0, y: 0 };
-          o.obj.position.set(posInParent.x, posInParent.y);
+          if (o.obj.parent) {
+            const posInParent = o.obj.parent.toLocal(this.anchorGlobal, undefined, undefined, false);
+            o.obj.position.set(posInParent.x, posInParent.y);
+          } else {
+            console.warn('TransformController.update(anchor toggle): object has no parent; skipped position realignment to avoid (0,0) jump');
+          }
         }
       });
     }
@@ -263,8 +279,12 @@ export class TransformController {
       if (o.obj.scale) {
         o.obj.scale.set(o.startScale.x * scaleX, o.startScale.y * scaleY);
         // Keep pivot aligned to the world anchor
-        const posInParent = o.obj.parent?.toLocal(this.anchorGlobal, undefined, undefined, false) ?? { x: 0, y: 0 };
-        o.obj.position.set(posInParent.x, posInParent.y);
+        if (o.obj.parent) {
+          const posInParent = o.obj.parent.toLocal(this.anchorGlobal, undefined, undefined, false);
+          o.obj.position.set(posInParent.x, posInParent.y);
+        } else {
+          console.warn('TransformController.update(scale): object has no parent; skipped position realignment to avoid (0,0) jump');
+        }
       }
     });
   }
