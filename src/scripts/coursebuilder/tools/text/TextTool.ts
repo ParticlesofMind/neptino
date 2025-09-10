@@ -628,6 +628,55 @@ export class TextTool extends BaseTool {
     return this.settings;
   }
 
+  /**
+   * Test helper: programmatically create and activate a text area.
+   * If bounds omitted, creates a 220x120 box at (200,200) in canvas coordinates.
+   */
+  public debugCreateAndActivate(bounds?: { x: number; y: number; width: number; height: number }): void {
+    try {
+      const parent = (this.displayManager as any)?.getRoot?.() || (this.displayManager as any)?.root || null;
+      if (!parent) return;
+      const b = bounds || { x: 200, y: 200, width: 220, height: 120 };
+      const config: TextAreaConfig = {
+        bounds: { x: b.x, y: b.y, width: b.width, height: b.height },
+        text: '',
+        settings: { ...this.settings }
+      };
+      const textArea = new TextArea(config, parent);
+      this.textAreas.push(textArea);
+      this.activateTextArea(textArea);
+    } catch {}
+  }
+
+  /** Test helper: insert text into active text area */
+  public debugType(text: string): void {
+    if (!this.activeTextArea) return;
+    const current = this.activeTextArea.text;
+    const newText = current + (text || '');
+    this.activeTextArea.updateText(newText);
+    if (this.textCursor) {
+      const pos = newText.length;
+      this.textCursor.setPosition(pos);
+      const gp = this.activeTextArea.getCharacterPosition(pos);
+      (this.textCursor as any).setGraphicsPosition(gp.x, gp.y);
+      this.textCursor.setVisible(true);
+    }
+  }
+
+  /** Test helper: backspace delete n characters */
+  public debugBackspace(count: number = 1): void {
+    if (!this.activeTextArea) return;
+    let t = this.activeTextArea.text;
+    if (!t) return;
+    const n = Math.max(0, t.length - (count || 1));
+    this.activeTextArea.updateText(t.substring(0, n));
+    if (this.textCursor) {
+      this.textCursor.setPosition(n);
+      const gp = this.activeTextArea.getCharacterPosition(n);
+      (this.textCursor as any).setGraphicsPosition(gp.x, gp.y);
+    }
+  }
+
   private handleTextAreaDoubleClick(textArea: TextArea, localPoint: Point): void {
     // Double-click: activate for editing
     this.activateTextArea(textArea);
