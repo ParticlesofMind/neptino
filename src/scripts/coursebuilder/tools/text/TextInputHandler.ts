@@ -19,6 +19,7 @@ export class TextInputHandler implements ITextInputHandler {
   private boundKeyDown: (event: KeyboardEvent) => void;
   private boundKeyPress: (event: KeyboardEvent) => void;
   private boundInput: (event: Event) => void;
+  private onTextChange: ((text: string) => void) | null = null;
 
   constructor(parent: any) {
     // Create text selection system
@@ -70,6 +71,10 @@ export class TextInputHandler implements ITextInputHandler {
     this.activeCursor = null;
     
     console.log('📝 TextInputHandler destroyed');
+  }
+
+  public setOnTextChange(cb: ((text: string) => void) | null): void {
+    this.onTextChange = cb;
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
@@ -168,6 +173,9 @@ export class TextInputHandler implements ITextInputHandler {
     this.activeTextArea.insertText(char, this.cursorPosition);
     this.cursorPosition += char.length;
     this.updateCursorPosition();
+    if (this.onTextChange) {
+      try { this.onTextChange(this.activeTextArea.text); } catch {}
+    }
     
     console.log(`📝 Inserted character '${char}' at position ${this.cursorPosition - char.length}`);
   }
@@ -249,6 +257,9 @@ export class TextInputHandler implements ITextInputHandler {
     this.activeTextArea.deleteText(this.cursorPosition - 1, 1);
     this.cursorPosition--;
     this.updateCursorPosition();
+    if (this.onTextChange) {
+      try { this.onTextChange(this.activeTextArea.text); } catch {}
+    }
   }
 
   private handleDelete(): void {
@@ -268,6 +279,9 @@ export class TextInputHandler implements ITextInputHandler {
     if (this.cursorPosition < textLength) {
       this.activeTextArea.deleteText(this.cursorPosition, 1);
       this.updateCursorPosition();
+      if (this.onTextChange) {
+        try { this.onTextChange(this.activeTextArea.text); } catch {}
+      }
     }
   }
 
@@ -518,6 +532,8 @@ export class TextInputHandler implements ITextInputHandler {
     
     // Now we can call setGraphicsPosition properly since it's in the interface
     this.activeCursor.setGraphicsPosition(graphicsPos.x, graphicsPos.y);
+    // Ensure cursor is visible immediately after movement/typing
+    this.activeCursor.startBlinking();
     
     console.log(`🔍 Cursor updated to text position ${this.cursorPosition} at graphics position (${graphicsPos.x.toFixed(1)}, ${graphicsPos.y.toFixed(1)})`);
   }

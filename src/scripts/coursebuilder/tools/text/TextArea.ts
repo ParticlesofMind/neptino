@@ -57,6 +57,8 @@ export class TextArea implements ITextArea {
       style: {
         fontFamily: this.settings.fontFamily,
         fontSize: this.settings.fontSize,
+        fontWeight: (this.settings as any).fontWeight || 'normal',
+        fontStyle: (this.settings as any).fontStyle || 'normal',
         fill: this.settings.color,
         wordWrap: true,
         wordWrapWidth: contentWidth,

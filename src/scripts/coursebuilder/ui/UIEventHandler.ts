@@ -324,7 +324,7 @@ export class UIEventHandler {
         // Determine target tool (selection-aware)
         let currentTool = this.toolStateManager.getCurrentTool();
         if (currentTool === 'selection') {
-            currentTool = this.toolStateManager.getSelectionContextTool() || this.inferToolFromElement(colorInput) || currentTool;
+            currentTool = this.toolStateManager.getSelectionContextTool() || this.inferToolFromElement(select) || currentTool;
         }
 
         if (currentTool === 'text' && setting === 'fontFamily') {

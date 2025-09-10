@@ -1070,11 +1070,6 @@
               <input type="number" min="1" max="15" value="2" class="input input--number" title="Pen Size"
                 data-setting="size">
 
-              <select id="pen-stroke-type-select" class="input input--select" title="Stroke Type"
-                data-setting="strokeType">
-                <option value="solid" data-line-style="solid">Solid</option>
-                <option value="dashed" data-line-style="dashed">Dashed</option>
-              </select>
 
               <select id="pen-stroke-select" class="input input--color" data-color-selector="pen-stroke"
                 title="Stroke Color">
@@ -1106,8 +1101,19 @@
 
             <!-- Text Settings -->
             <div class="tools__item tools__item--text" style="display: none;">
-              <input type="number" min="8" max="72" value="16" class="input input--number" title="Text Size"
-                data-setting="fontSize">
+              <select id="text-size-select" class="input input--select" title="Text Size" data-setting="fontSize">
+                <option value="12" data-label="Normal">Normal Text (12 pt)</option>
+                <option value="26" data-label="Title">Title (26 pt)</option>
+                <option value="20" data-label="Header1">Header 1 (20 pt)</option>
+                <option value="16" data-label="Header2" selected>Header 2 (16 pt)</option>
+                <option value="14" data-label="Header3">Header 3 (14 pt)</option>
+              </select>
+
+              <div class="text-style-controls" aria-label="Text Style" style="display:flex; gap:6px; align-items:center;">
+                <button type="button" class="tools__button text-style-btn active" data-text-style="none">None</button>
+                <button type="button" class="tools__button text-style-btn" data-text-style="bold">Bold</button>
+                <button type="button" class="tools__button text-style-btn" data-text-style="italic">Italic</button>
+              </div>
 
               <select id="font-family-select" class="input input--select" title="Font Family" data-setting="fontFamily">
                 <option value="Arial" data-font-family="Arial">Arial</option>
@@ -1172,6 +1178,7 @@
 
               <input type="number" min="1" max="20" value="2" class="input input--number" title="Shape Thickness"
                 data-setting="strokeWidth">
+
 
               <select id="shapes-stroke-select" class="input input--color" data-color-selector="shapes-stroke"
                 title="Shape Stroke">
@@ -1377,24 +1384,12 @@
         width: '100%'
       });
 
-      // Initialize Select2 for line style dropdown
-      $('#pen-stroke-type-select').select2({
-        templateResult: formatLineStyleOption,
-        templateSelection: function (state) {
-          if (!state.id) { return state.text; }
-
-          var lineStyle = $(state.element).data('line-style');
-          if (!lineStyle) { return state.text; }
-
-          var borderStyle = lineStyle === 'dashed' ? '1px dashed #333' : '1px solid #333';
-          var $state = $(
-            '<span><div style="width: 20px; height: 0; border-top: ' + borderStyle + '; margin: 8px 0; display: inline-block;"></div></span>'
-          );
-          return $state;
-        },
+      // Initialize Select2 for text size dropdown
+      $('#text-size-select').select2({
         minimumResultsForSearch: -1,
         width: '100%'
       });
+
 
       // Handle shape selection change
       $('#shapes-select').on('select2:select', function (e) {
@@ -1424,14 +1419,44 @@
         }
       });
 
-      // Handle stroke type changes
-      $('#pen-stroke-type-select').on('select2:select', function (e) {
+      // Handle text size preset changes
+      $('#text-size-select').on('select2:select', function (e) {
         var data = e.params.data;
-        // Trigger existing stroke type logic
-        if (window.uiEventHandler && window.uiEventHandler.handleStrokeTypeChange) {
-          window.uiEventHandler.handleStrokeTypeChange(data.id);
+        var size = parseInt(data.id, 10) || 16;
+        if (window.toolStateManager) {
+          window.toolStateManager.updateToolSettings('text', { fontSize: size });
+          // Default bold for title/headers
+          var label = $(data.element).data('label');
+          var makeBold = (label === 'Title' || label === 'Header1' || label === 'Header2' || label === 'Header3');
+          if (makeBold) {
+            window.toolStateManager.updateToolSettings('text', { fontWeight: 'bold', fontStyle: 'normal' });
+            $('.text-style-btn').removeClass('active');
+            $('.text-style-btn[data-text-style="bold"]').addClass('active');
+          } else {
+            window.toolStateManager.updateToolSettings('text', { fontWeight: 'normal', fontStyle: 'normal' });
+            $('.text-style-btn').removeClass('active');
+            $('.text-style-btn[data-text-style="none"]').addClass('active');
+          }
         }
       });
+
+      // Text style buttons
+      $('.text-style-btn').on('click', function() {
+        var style = $(this).data('text-style');
+        $('.text-style-btn').removeClass('active');
+        $(this).addClass('active');
+        if (window.toolStateManager) {
+          if (style === 'bold') {
+            window.toolStateManager.updateToolSettings('text', { fontWeight: 'bold', fontStyle: 'normal' });
+          } else if (style === 'italic') {
+            window.toolStateManager.updateToolSettings('text', { fontWeight: 'normal', fontStyle: 'italic' });
+          } else {
+            window.toolStateManager.updateToolSettings('text', { fontWeight: 'normal', fontStyle: 'normal' });
+          }
+        }
+      });
+
+      // (Removed stroke type dropdowns for pen and shapes)
     });
   </script>
 </body>

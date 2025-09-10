@@ -13,13 +13,14 @@ import { test, expect } from '@playwright/test';
 test.describe('Text Tool - Basic Functionality', () => {
   
   test.beforeEach(async ({ page }) => {
-    // Navigate to coursebuilder page
+    // Navigate to coursebuilder page (design/create view)
     await page.goto('/src/pages/teacher/coursebuilder.html#create');
-    
-    // Wait for the page to load completely
     await page.waitForLoadState('domcontentloaded');
-    // Wait for tools to render
-    await page.waitForSelector('.tools__selection .tools__item[data-tool="text"]', { timeout: 10000 });
+    // Wait for UI wiring to finish
+    await page.waitForFunction(() => !!(window as any).uiEventHandler && !!(window as any).toolStateManager, null, { timeout: 15000 });
+    // Wait for canvas API ready
+    await page.waitForFunction(() => (window as any).canvasAPI && (window as any).canvasAPI.isReady && (window as any).canvasAPI.isReady(), null, { timeout: 20000 });
+    await page.waitForSelector('.tools__item[data-tool="text"]', { timeout: 10000 });
   });
 
   test('should activate text tool when clicked', async ({ page }) => {
@@ -43,7 +44,7 @@ test.describe('Text Tool - Basic Functionality', () => {
     await page.waitForTimeout(500);
     
     // Check for text-specific settings
-    const fontSizeInput = page.locator('.tools__item--text input[data-setting="fontSize"]');
+    const fontSizeInput = page.locator('#text-size-select');
     const fontFamilySelect = page.locator('#font-family-select');
     const textColorSelect = page.locator('#text-color-select');
     
@@ -57,12 +58,12 @@ test.describe('Text Tool - Basic Functionality', () => {
     await page.locator('.tools__item[data-tool="text"]').click();
     await page.waitForTimeout(500);
     
-    // Change font size
-    const fontSizeInput = page.locator('.tools__item--text input[data-setting="fontSize"]');
-    await fontSizeInput.fill('24');
+    // Change font size via dropdown
+    const fontSizeInput = page.locator('#text-size-select');
+    await fontSizeInput.selectOption('26');
     
     // Verify the value was set
-    await expect(fontSizeInput).toHaveValue('24');
+    await expect(fontSizeInput).toHaveValue('26');
   });
 
   test('should change font family setting', async ({ page }) => {
@@ -92,9 +93,9 @@ test.describe('Text Tool - Basic Functionality', () => {
   });
 
   test('should have canvas container present', async ({ page }) => {
-    // Verify canvas container exists
-    const bounds = await page.evaluate(() => window.canvasAPI?.getContentBounds());
-    expect(bounds).toBeTruthy();
+    // Verify canvas container exists (after canvas ready)
+    const bounds = await page.evaluate(() => (window as any).canvasAPI?.getContentBounds());
+    expect(bounds).not.toBeNull();
     expect(bounds!.width).toBeGreaterThan(100);
     expect(bounds!.height).toBeGreaterThan(100);
   });
@@ -106,19 +107,19 @@ test.describe('Text Tool - Basic Functionality', () => {
     
     await textTool.click();
     await page.waitForTimeout(300);
-    await expect(textTool).toHaveClass(/active/);
+    await expect(textTool).toHaveClass(/active|tools__item--active/);
     
     // Switch to pen tool
     await penTool.click();
     await page.waitForTimeout(300);
-    await expect(penTool).toHaveClass(/active/);
-    await expect(textTool).not.toHaveClass(/active/);
+    await expect(penTool).toHaveClass(/active|tools__item--active/);
+    await expect(textTool).not.toHaveClass(/active|tools__item--active/);
     
     // Switch back to text tool
     await textTool.click();
     await page.waitForTimeout(300);
-    await expect(textTool).toHaveClass(/active/);
-    await expect(penTool).not.toHaveClass(/active/);
+    await expect(textTool).toHaveClass(/active|tools__item--active/);
+    await expect(penTool).not.toHaveClass(/active|tools__item--active/);
   });
 
   test('should show appropriate tool settings when switching', async ({ page }) => {
@@ -151,11 +152,11 @@ test.describe('Text Tool - Basic Functionality', () => {
     await page.waitForTimeout(500);
     
     // Change multiple settings
-    const fontSizeInput = page.locator('.tools__item--text input[data-setting="fontSize"]');
+    const fontSizeInput = page.locator('#text-size-select');
     const fontFamilySelect = page.locator('#font-family-select');
     const textColorSelect = page.locator('#text-color-select');
     
-    await fontSizeInput.fill('20');
+    await fontSizeInput.selectOption('20');
     await fontFamilySelect.selectOption('Verdana');
     await textColorSelect.selectOption('#a74a4a'); // Red
     
@@ -208,9 +209,10 @@ test.describe('Text Tool - Basic Functionality', () => {
 test.describe('Text Tool - Integration Tests', () => {
   
   test.beforeEach(async ({ page }) => {
-    await page.goto('/src/pages/teacher/coursebuilder.html');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await page.goto('/src/pages/teacher/coursebuilder.html#create');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForFunction(() => !!(window as any).uiEventHandler && !!(window as any).toolStateManager, null, { timeout: 15000 });
+    await page.waitForFunction(() => (window as any).canvasAPI && (window as any).canvasAPI.isReady && (window as any).canvasAPI.isReady(), null, { timeout: 20000 });
   });
 
   test('should work with coursebuilder navigation', async ({ page }) => {
@@ -223,10 +225,8 @@ test.describe('Text Tool - Integration Tests', () => {
     
     // Activate text tool
     const textTool = page.locator('.tools__item[data-tool="text"]');
-    if (await textTool.isVisible()) {
-      await textTool.click();
-      await expect(textTool).toHaveClass(/active/);
-    }
+    await textTool.click();
+    await expect(textTool).toHaveClass(/active|tools__item--active/);
   });
 
   test('should persist settings across tool switches', async ({ page }) => {
@@ -234,8 +234,8 @@ test.describe('Text Tool - Integration Tests', () => {
     await page.locator('.tools__item[data-tool="text"]').click();
     await page.waitForTimeout(300);
     
-    const fontSizeInput = page.locator('.tools__item--text input[data-setting="fontSize"]');
-    await fontSizeInput.fill('18');
+    const fontSizeInput = page.locator('#text-size-select');
+    await fontSizeInput.selectOption('20');
     
     // Switch to another tool and back
     await page.locator('.tools__item[data-tool="pen"]').click();
@@ -245,7 +245,7 @@ test.describe('Text Tool - Integration Tests', () => {
     await page.waitForTimeout(300);
     
     // Setting should be preserved
-    await expect(fontSizeInput).toHaveValue('18');
+    await expect(fontSizeInput).toHaveValue('20');
   });
 
   test('should handle Select2 dropdowns correctly', async ({ page }) => {

@@ -28,12 +28,12 @@ export interface ToolSettings {
  opacity: number;
  size: number;
  };
- shapes: {
- color: string;
- strokeWidth: number;
- fillColor?: string;
- shapeType: "rectangle" | "triangle" | "circle" | "ellipse" | "line" | "arrow" | "polygon";
- };
+  shapes: {
+  color: string;
+  strokeWidth: number;
+  fillColor?: string;
+  shapeType: "rectangle" | "triangle" | "circle" | "ellipse" | "line" | "arrow" | "polygon";
+  };
  eraser: {
  size: number;
  };

@@ -86,6 +86,13 @@ export class TableCellEditor {
         // Create input handler for keyboard input
         this.inputHandler = new TextInputHandler(container);
         this.inputHandler.setActiveTextArea(this.textArea);
+        // Update cell content in real-time while typing
+        this.inputHandler.setOnTextChange((txt: string) => {
+            if (this.editingCell) {
+                const isEmpty = !txt || txt.trim() === '';
+                this.editingCell.text.text = isEmpty ? `R${this.editingCell.row + 1}C${this.editingCell.column + 1}` : txt;
+            }
+        });
 
         // Set up keyboard event handling
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -370,6 +377,7 @@ export class TableCellEditor {
         if (this.inputHandler) {
             // Clean up the input handler
             this.inputHandler.setActiveTextArea(null);
+            this.inputHandler.setOnTextChange(null);
             this.inputHandler = null;
         }
         

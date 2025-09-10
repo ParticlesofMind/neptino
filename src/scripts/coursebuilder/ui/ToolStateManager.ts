@@ -79,11 +79,13 @@ export class ToolStateManager {
                 strokeColor: '#1a1a1a',  // Black (matches HTML)
                 fillColor: '#f8fafc',    // White (matches HTML)
             },
-            text: {
-                fontFamily: 'Arial',
-                fontSize: 16,
-                color: '#1a1a1a',        // Black (matches HTML)
-            },
+    text: {
+        fontFamily: 'Arial',
+        fontSize: 16,
+        color: '#1a1a1a',        // Black (matches HTML)
+        fontWeight: 'normal',
+        fontStyle: 'normal',
+    },
             brush: {
                 color: '#4a7c59',        // Green (matches HTML)
                 opacity: 0.3,
@@ -122,6 +124,57 @@ export class ToolStateManager {
             if (this.currentTool === 'selection') {
                 // Only toggle the options panel; do not change the active canvas tool
                 this.showSettingsPanelFor(this.selectionContextTool);
+            }
+        });
+
+        // Global keyboard shortcuts for tool switching and spacebar prevention
+        document.addEventListener('keydown', (e: KeyboardEvent) => {
+            const active = document.activeElement;
+            const isForm = active && (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement || (active as any).isContentEditable);
+            const key = e.key;
+            // When Text tool is active, disable all shortcut handling (including preventing spacebar)
+            if (this.currentTool === 'text') {
+                return;
+            }
+            // Prevent page scroll on space when not typing in inputs
+            if (key === ' ' && !isForm) {
+                e.preventDefault();
+            }
+            if (isForm) return;
+            // Only handle single-letter shortcuts without modifiers
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            const map: Record<string, string> = {
+                'v': 'selection',
+                'V': 'selection',
+                'p': 'pen',
+                'P': 'pen',
+                'b': 'brush',
+                'B': 'brush',
+                't': 'text',
+                'T': 'text',
+                's': 'shapes',
+                'S': 'shapes',
+                'm': 'tables',
+                'M': 'tables',
+                'e': 'eraser',
+                'E': 'eraser',
+            };
+            if (key === 'h' || key === 'H') {
+                // Toggle hand/grab via perspective manager if available
+                try {
+                    const pm = (window as any).perspectiveManager;
+                    const btn = document.querySelector('[data-perspective="grab"]') as HTMLElement | null;
+                    if (pm && typeof pm.togglePanMode === 'function') {
+                        e.preventDefault();
+                        pm.togglePanMode(btn || undefined);
+                    }
+                } catch {}
+                return;
+            }
+            const tool = map[key];
+            if (tool) {
+                e.preventDefault();
+                this.setTool(tool);
             }
         });
     }
@@ -698,6 +751,24 @@ export class ToolStateManager {
             } else {
                 console.warn('⚠️ SYNC: ToolColorManager not available for color restoration');
             }
+            // Restore text style button state
+            try {
+                const t = this.toolSettings.text as any;
+                const isBold = t.fontWeight === 'bold';
+                const isItalic = t.fontStyle === 'italic';
+                const btns = document.querySelectorAll('.text-style-btn');
+                btns.forEach(b => b.classList.remove('active'));
+                if (isBold) {
+                    const b = document.querySelector('.text-style-btn[data-text-style="bold"]');
+                    (b as any)?.classList?.add('active');
+                } else if (isItalic) {
+                    const b = document.querySelector('.text-style-btn[data-text-style="italic"]');
+                    (b as any)?.classList?.add('active');
+                } else {
+                    const b = document.querySelector('.text-style-btn[data-text-style="none"]');
+                    (b as any)?.classList?.add('active');
+                }
+            } catch {}
         }, 100);
     }
 

@@ -494,10 +494,10 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
   test.describe('Text Formatting and Settings', () => {
     
     test('should apply font size changes', async ({ page }) => {
-      // Change font size setting first
-      const fontSizeInput = page.locator('.tools__item--text input[data-setting="fontSize"]');
+      // Change font size setting first via preset dropdown
+      const fontSizeInput = page.locator('#text-size-select');
       await expect(fontSizeInput).toBeVisible();
-      await fontSizeInput.fill('24');
+      await fontSizeInput.selectOption('26');
       await page.waitForTimeout(300);
       
       // Create text area after setting change
@@ -523,7 +523,7 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
         return null;
       });
       
-      expect(fontSize).toBe(24);
+      expect(fontSize).toBe(26);
     });
     
     test('should change font family', async ({ page }) => {

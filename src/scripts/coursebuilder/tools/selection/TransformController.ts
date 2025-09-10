@@ -277,14 +277,9 @@ export class TransformController {
 
     this.objects.forEach((o) => {
       if (o.obj.scale) {
+        // Apply scale relative to starting scale; pivot has been aligned in begin().
+        // Avoid continuously reprojecting position each frame to reduce stutter.
         o.obj.scale.set(o.startScale.x * scaleX, o.startScale.y * scaleY);
-        // Keep pivot aligned to the world anchor
-        if (o.obj.parent) {
-          const posInParent = o.obj.parent.toLocal(this.anchorGlobal, undefined, undefined, false);
-          o.obj.position.set(posInParent.x, posInParent.y);
-        } else {
-          console.warn('TransformController.update(scale): object has no parent; skipped position realignment to avoid (0,0) jump');
-        }
       }
     });
   }

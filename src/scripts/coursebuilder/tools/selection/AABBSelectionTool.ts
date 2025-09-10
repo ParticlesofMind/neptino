@@ -117,6 +117,14 @@ export class AABBSelectionTool extends BaseTool {
     // Check handle hit
     const handle = this.findHandleAtPoint(p, true);
     if (handle && this.group) {
+      // If selection contains text, prevent scaling; allow rotation only
+      const containsText = this.selected.some(obj => this.click.isTextObject(obj));
+      if (containsText && handle.type !== 'rotation') {
+        // Disallow scaling of text objects to preserve rendering quality
+        this.mode = 'idle';
+        this.cursor = 'default';
+        return;
+      }
       // Set cursor/mode based on handle
       if (handle.type === 'rotation') {
         this.mode = 'rotate';
@@ -158,7 +166,22 @@ export class AABBSelectionTool extends BaseTool {
     }
 
     // Click selection path on drawing objects
-    const result = this.click.handleClick(p, container, event.shiftKey);
+    const result = this.click.handleClick(p, container, event.shiftKey, (object, point, cont) => {
+      // Double-click on text -> switch to text tool and activate editing
+      try {
+        const canvasAPI = (window as any).canvasAPI;
+        if (canvasAPI) {
+          (window as any).toolStateManager?.setTool('text');
+          // Delay one tick for tool activation
+          setTimeout(() => {
+            const textTool = this.manager?.getActiveTool && this.manager.getActiveTool();
+            if (textTool && typeof (textTool as any).activateTextObjectForEditing === 'function') {
+              (textTool as any).activateTextObjectForEditing(object, point, cont);
+            }
+          }, 0);
+        }
+      } catch {}
+    });
     if (result.clickedObject) {
       const action = this.click.getSelectionAction(result.clickedObject, this.selected, event.shiftKey);
       this.selected = this.click.applySelectionAction(action, this.selected);

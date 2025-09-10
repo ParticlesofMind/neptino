@@ -53,6 +53,8 @@ export class TextTool extends BaseTool {
       fontFamily: FONT_FAMILIES[0], // Inter
       fontSize: TEXT_SIZES[4], // 16px
       color: PROFESSIONAL_COLORS[0], // Dark charcoal
+      fontWeight: 'normal',
+      fontStyle: 'normal',
       borderColor: "#4a90e2", // Blue border
       borderWidth: 2,
       backgroundColor: undefined // Transparent by default
@@ -281,7 +283,21 @@ export class TextTool extends BaseTool {
     
     // Update active text area if any
     if (this.activeTextArea) {
-      // Update active text area settings would go here
+      // Re-render active text area with updated font settings
+      const currentText = this.activeTextArea.text;
+      // Recreate style on the underlying Pixi Text
+      try {
+        const container: any = (this.activeTextArea as any).pixiContainer;
+        const textObj: any = container?.children?.find((c: any) => (c.constructor?.name === 'Text'));
+        if (textObj && textObj.style) {
+          textObj.style.fontFamily = this.settings.fontFamily;
+          textObj.style.fontSize = this.settings.fontSize;
+          textObj.style.fill = this.settings.color as any;
+          if (this.settings.fontWeight) (textObj.style as any).fontWeight = this.settings.fontWeight;
+          if (this.settings.fontStyle) (textObj.style as any).fontStyle = this.settings.fontStyle;
+          textObj.text = currentText; // force update
+        }
+      } catch {}
       console.log('📝 Updated settings for active text area');
     }
   }

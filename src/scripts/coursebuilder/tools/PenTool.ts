@@ -35,9 +35,10 @@ interface VectorPath {
 export class PenTool extends BaseTool {
  public isDrawing: boolean = false;
  private currentPath: VectorPath | null = null;
- private previewLine: Graphics | null = null;
+  private previewLine: Graphics | null = null;
  private lastMousePosition: Point = new Point(0, 0);
  private hoverIndicator: Graphics | null = null;
+ private snapIndicator: Graphics | null = null;
  private constrainFromNode: Point | null = null; // anchor for shift-straight segments
 
  constructor() {
@@ -149,6 +150,14 @@ export class PenTool extends BaseTool {
    this.constrainFromNode = null;
  }
 
+ // Show snap anchor hover if near any anchor
+ const snap = this.findNearestAnchor(container, clampedPoint, 8);
+ if (snap) {
+   this.showSnapIndicator(snap, container);
+ } else {
+   this.removeSnapIndicator();
+ }
+
  this.lastMousePosition.copyFrom(clampedPoint);
 
  // Check for path completion hover
@@ -163,7 +172,9 @@ export class PenTool extends BaseTool {
  // Nodes are placed on pointer down, path completion happens on double-click or escape
  }
 
- private addNodeToPath(position: Point, container: Container): void {
+  private addNodeToPath(position: Point, container: Container): void {
+ // Snap to nearest anchor (shape corners, centers, existing pen nodes)
+ position = this.snapToNearestAnchor(container, position);
  if (!this.currentPath) {
   // Start new path
   this.currentPath = {
@@ -227,30 +238,28 @@ export class PenTool extends BaseTool {
  return;
  }
 
- // Draw lines between nodes
- const firstNode = this.currentPath.nodes[0];
- path.moveTo(firstNode.position.x, firstNode.position.y);
-
- for (let i = 1; i < this.currentPath.nodes.length; i++) {
- const node = this.currentPath.nodes[i];
- path.lineTo(node.position.x, node.position.y);
- }
-
- // Only apply stroke during the drawing process (not fill)
- // The fill will be applied when the path is completed and closed
- path.stroke({
- width: this.currentPath.settings.size,
- color: hexToNumber(this.currentPath.settings.strokeColor),
- cap: "round",
- join: "round",
- });
+  // Draw lines between nodes
+  const firstNode = this.currentPath.nodes[0];
+  path.moveTo(firstNode.position.x, firstNode.position.y);
+  for (let i = 1; i < this.currentPath.nodes.length; i++) {
+    const node = this.currentPath.nodes[i];
+    path.lineTo(node.position.x, node.position.y);
+  }
+  // Only apply stroke during the drawing process (not fill)
+  // The fill will be applied when the path is completed and closed
+  path.stroke({
+    width: this.currentPath.settings.size,
+    color: hexToNumber(this.currentPath.settings.strokeColor),
+    cap: "round",
+    join: "round",
+  });
 
  console.log(
  `✏️ PEN: Updated path graphics with ${this.currentPath.nodes.length} nodes, strokeColor: ${this.currentPath.settings.strokeColor}`,
  );
  }
 
- private updatePreviewLine(container: Container): void {
+  private updatePreviewLine(container: Container): void {
  if (!this.currentPath || this.currentPath.nodes.length === 0) {
  this.removePreviewLine();
  return;
@@ -264,13 +273,17 @@ export class PenTool extends BaseTool {
 
  const lastNode = this.currentPath.nodes[this.currentPath.nodes.length - 1];
 
+ // Snap preview end to nearest anchor
+ const snapped = this.snapToNearestAnchor(container, this.lastMousePosition);
+ this.lastMousePosition.copyFrom(snapped);
+
  this.previewLine.clear();
  this.previewLine.moveTo(lastNode.position.x, lastNode.position.y);
  this.previewLine.lineTo(this.lastMousePosition.x, this.lastMousePosition.y);
  this.previewLine.stroke({
- width: this.currentPath.settings.size,
- color: hexToNumber(this.currentPath.settings.strokeColor),
- cap: "round",
+   width: this.currentPath.settings.size,
+   color: hexToNumber(this.currentPath.settings.strokeColor),
+   cap: "round",
  });
  }
 
@@ -338,10 +351,29 @@ export class PenTool extends BaseTool {
  * Remove hover indicator
  */
  private removeHoverIndicator(): void {
- if (this.hoverIndicator && this.hoverIndicator.parent) {
- this.hoverIndicator.parent.removeChild(this.hoverIndicator);
- this.hoverIndicator = null;
+   if (this.hoverIndicator && this.hoverIndicator.parent) {
+     this.hoverIndicator.parent.removeChild(this.hoverIndicator);
+     this.hoverIndicator = null;
+   }
  }
+
+ /** Snap indicator (blue dot) **/
+ private showSnapIndicator(position: Point, container: Container): void {
+   if (!this.snapIndicator) {
+     this.snapIndicator = new Graphics();
+     this.snapIndicator.zIndex = 2000;
+     container.addChild(this.snapIndicator);
+   }
+   this.snapIndicator.clear();
+   this.snapIndicator.circle(0, 0, PEN_CONSTANTS.NODE_SIZE + 1);
+   this.snapIndicator.fill({ color: 0x3b82f6, alpha: 0.85 });
+   this.snapIndicator.position.set(position.x, position.y);
+ }
+ private removeSnapIndicator(): void {
+   if (this.snapIndicator && this.snapIndicator.parent) {
+     this.snapIndicator.parent.removeChild(this.snapIndicator);
+   }
+   this.snapIndicator = null;
  }
 
  private completePath(closeShape: boolean = false): void {
@@ -408,13 +440,12 @@ export class PenTool extends BaseTool {
  } else {
  // Just a path (open), no fill
  const strokeColorToUse = this.currentPath.settings.strokeColor;
- 
  this.currentPath.pathGraphics.stroke({
-    width: this.currentPath.settings.size,
-    color: hexToNumber(strokeColorToUse),
-    cap: "round",
-    join: "round",
-  });
+   width: this.currentPath.settings.size,
+   color: hexToNumber(strokeColorToUse),
+   cap: "round",
+   join: "round",
+ });
 
   // Attach metadata for later restyling
   try {
@@ -505,24 +536,15 @@ export class PenTool extends BaseTool {
  }
 
  onDeactivate(): void {
- super.onDeactivate();
+  super.onDeactivate();
 
- // Complete any active path and clean up all node graphics
+ // Finalize any active path as open if it has at least 2 nodes, otherwise cancel
  if (this.currentPath) {
- // Remove all individual node graphics that were left behind
- this.currentPath.nodes.forEach((node) => {
- if (node.graphics.parent) {
- node.graphics.parent.removeChild(node.graphics);
- }
- });
-
- // Remove path graphics if it exists
- if (this.currentPath.pathGraphics.parent) {
- this.currentPath.pathGraphics.parent.removeChild(this.currentPath.pathGraphics);
- }
-
- this.removePreviewLine();
- this.currentPath = null;
+   if (this.currentPath.nodes.length >= 2) {
+     this.completePath(false);
+   } else {
+     this.cancelPath();
+   }
  }
 
  // Remove keyboard listeners
@@ -533,9 +555,65 @@ export class PenTool extends BaseTool {
  this.removeHoverIndicator();
  }
 
- private handleKeyDown = (): void => {
- // This would need to be handled by the tool manager to get container reference
- };
+  private handleKeyDown = (): void => {
+  // This would need to be handled by the tool manager to get container reference
+  };
+
+  /**
+   * Find nearest anchor point on existing objects and snap within tolerance
+   */
+  private snapToNearestAnchor(container: Container, p: Point, tolerance: number = 8): Point {
+    const best = this.findNearestAnchor(container, p, tolerance);
+    if (best) return best;
+    return p;
+  }
+
+  private findNearestAnchor(container: Container, p: Point, tolerance: number = 8): Point | null {
+    try {
+      let best: Point | null = null;
+      let bestDist = Infinity;
+      const anchors: Point[] = [];
+      for (const child of container.children) {
+        const meta = (child as any).__meta;
+        const type = (child as any).__toolType;
+        if (!meta || !type) continue;
+        if (type === 'shapes') {
+          const x = meta.x ?? Math.min(meta.startX, meta.currentX);
+          const y = meta.y ?? Math.min(meta.startY, meta.currentY);
+          const w = meta.width ?? Math.abs((meta.currentX ?? 0) - (meta.startX ?? 0));
+          const h = meta.height ?? Math.abs((meta.currentY ?? 0) - (meta.startY ?? 0));
+          // corners, mids, center
+          anchors.push(
+            new Point(x, y), new Point(x + w, y), new Point(x + w, y + h), new Point(x, y + h),
+            new Point(x + w / 2, y), new Point(x + w, y + h / 2), new Point(x + w / 2, y + h), new Point(x, y + h / 2),
+            new Point(x + w / 2, y + h / 2),
+          );
+          // polygon vertices if applicable
+          if (meta.shapeType === 'polygon' && meta.sides) {
+            const cx = x + w / 2; const cy = y + h / 2; const radius = Math.max(w, h) / 2;
+            const sides = Math.max(3, meta.sides);
+            for (let i = 0; i < sides; i++) {
+              const ang = (i * 2 * Math.PI) / sides - Math.PI / 2;
+              anchors.push(new Point(cx + radius * Math.cos(ang), cy + radius * Math.sin(ang)));
+            }
+          }
+        } else if (type === 'pen') {
+          const nodes = meta?.nodes as any[] | undefined;
+          if (nodes && Array.isArray(nodes)) {
+            for (const n of nodes) anchors.push(new Point(n.x, n.y));
+          }
+        }
+      }
+      for (const a of anchors) {
+        const d = Math.hypot(a.x - p.x, a.y - p.y);
+        if (d < bestDist) { bestDist = d; best = a; }
+      }
+      if (best && bestDist <= tolerance) return best;
+    } catch {}
+    return null;
+  }
+
+  // (no dashed stroke support)
 
  /**
  * Public method to handle key down events from tool manager

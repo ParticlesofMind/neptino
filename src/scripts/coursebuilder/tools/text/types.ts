@@ -9,6 +9,8 @@ export interface TextSettings {
   fontFamily: string;
   fontSize: number;
   color: string;
+  fontWeight?: 'normal' | 'bold';
+  fontStyle?: 'normal' | 'italic';
   backgroundColor?: string;
   borderColor: string;
   borderWidth: number;
