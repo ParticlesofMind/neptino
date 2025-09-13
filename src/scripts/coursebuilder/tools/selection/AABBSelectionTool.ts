@@ -128,7 +128,7 @@ export class AABBSelectionTool extends BaseTool {
       // Set cursor/mode based on handle
       if (handle.type === 'rotation') {
         this.mode = 'rotate';
-        this.cursor = "url('/src/assets/cursors/rotate-cursor.svg') 12 12, crosshair";
+        this.cursor = this.cursorForHandle(handle);
       } else {
         this.mode = 'scale';
         this.cursor = this.cursorForHandle(handle);
@@ -222,10 +222,12 @@ export class AABBSelectionTool extends BaseTool {
     } catch {}
 
     if (this.group && this.group.objects.length > 0 && (this.transformer as any).isActive && (this.transformer as any).isActive()) {
-      // If a transform is in progress, update and show guides
+      // If a transform is in progress, update. Keep selection box stable during rotation.
       this.transformer.update(p, { shiftKey: event.shiftKey, altKey: (event as any).altKey, ctrlKey: (event as any).ctrlKey || (event as any).metaKey });
-      this.refreshGroupBoundsOnly();
-      try { this.updateSmartGuides(); } catch {}
+      if (this.mode !== 'rotate') {
+        this.refreshGroupBoundsOnly();
+        try { this.updateSmartGuides(); } catch {}
+      }
       return;
     }
 
@@ -308,6 +310,10 @@ export class AABBSelectionTool extends BaseTool {
 
     if (this.group) {
       this.transformer.end();
+      // After rotation completed, refresh visuals once to reflect final bounds
+      if (this.mode === 'rotate') {
+        this.refreshGroupBoundsOnly();
+      }
     }
     if (this.isDraggingGroup) {
       this.isDraggingGroup = false;
@@ -1140,25 +1146,25 @@ export class AABBSelectionTool extends BaseTool {
       const dxTL = b.x - point.x; // >=0 if left of left edge
       const dyTL = b.y - point.y; // >=0 if above top edge
       if (dxTL >= 0 && dyTL >= 0 && dxTL < margin && dyTL < margin && Math.abs(dxTL - dyTL) <= thresh) {
-        return { type: 'rotation', position: 'rotate' } as TransformHandle;
+        return { type: 'rotation', position: 'tl' } as TransformHandle;
       }
       // TR hotspot: above and right
       const dxTR = point.x - (b.x + b.width);
       const dyTR = b.y - point.y;
       if (dxTR >= 0 && dyTR >= 0 && dxTR < margin && dyTR < margin && Math.abs(dxTR - dyTR) <= thresh) {
-        return { type: 'rotation', position: 'rotate' } as TransformHandle;
+        return { type: 'rotation', position: 'tr' } as TransformHandle;
       }
       // BL hotspot: below and left
       const dxBL = b.x - point.x;
       const dyBL = point.y - (b.y + b.height);
       if (dxBL >= 0 && dyBL >= 0 && dxBL < margin && dyBL < margin && Math.abs(dxBL - dyBL) <= thresh) {
-        return { type: 'rotation', position: 'rotate' } as TransformHandle;
+        return { type: 'rotation', position: 'bl' } as TransformHandle;
       }
       // BR hotspot: below and right
       const dxBR = point.x - (b.x + b.width);
       const dyBR = point.y - (b.y + b.height);
       if (dxBR >= 0 && dyBR >= 0 && dxBR < margin && dyBR < margin && Math.abs(dxBR - dyBR) <= thresh) {
-        return { type: 'rotation', position: 'rotate' } as TransformHandle;
+        return { type: 'rotation', position: 'br' } as TransformHandle;
       }
     }
     return null;
@@ -1220,7 +1226,16 @@ export class AABBSelectionTool extends BaseTool {
   }
 
   private cursorForHandle(h: TransformHandle): string {
-    if (h.type === 'rotation') return "url('/src/assets/cursors/rotate-cursor.svg') 12 12, crosshair";
+    if (h.type === 'rotation') {
+      // Use smaller curved double-arrow cursors by diagonal orientation
+      if (h.position === 'tl' || h.position === 'br') {
+        return "url('/src/assets/cursors/rotate-corner-nwse.svg') 12 12, crosshair";
+      }
+      if (h.position === 'tr' || h.position === 'bl') {
+        return "url('/src/assets/cursors/rotate-corner-nesw.svg') 12 12, crosshair";
+      }
+      return "url('/src/assets/cursors/rotate-corner-nwse.svg') 12 12, crosshair";
+    }
     if (h.type === 'edge') {
       switch (h.position) {
         case 't':
