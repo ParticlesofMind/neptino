@@ -129,7 +129,7 @@ export class LayersPanel {
     });
     li.appendChild(lock);
 
-    // Z-order quick actions: send back/front
+    // Z-order quick actions: send back/front and step forward/backward
     const toFront = document.createElement('button');
     toFront.className = 'layer__toggle layer__front';
     toFront.title = 'Bring to front';
@@ -153,6 +153,48 @@ export class LayersPanel {
       this.safeRefreshSoon();
     });
     li.appendChild(toBack);
+
+    const forward = document.createElement('button');
+    forward.className = 'layer__toggle layer__forward';
+    forward.title = 'Bring forward one step';
+    forward.textContent = '▶';
+    forward.addEventListener('click', () => {
+      const parent = (obj as any).parent;
+      if (!parent) return;
+      try {
+        const idx = parent.getChildIndex ? parent.getChildIndex(obj as any) : parent.children.indexOf(obj as any);
+        const newIdx = Math.min(parent.children.length - 1, idx + 1);
+        if (typeof parent.setChildIndex === 'function') {
+          parent.setChildIndex(obj as any, newIdx);
+        } else {
+          parent.removeChild(obj as any);
+          parent.addChildAt(obj as any, newIdx);
+        }
+      } catch {}
+      this.safeRefreshSoon();
+    });
+    li.appendChild(forward);
+
+    const backward = document.createElement('button');
+    backward.className = 'layer__toggle layer__backward';
+    backward.title = 'Send backward one step';
+    backward.textContent = '◀';
+    backward.addEventListener('click', () => {
+      const parent = (obj as any).parent;
+      if (!parent) return;
+      try {
+        const idx = parent.getChildIndex ? parent.getChildIndex(obj as any) : parent.children.indexOf(obj as any);
+        const newIdx = Math.max(0, idx - 1);
+        if (typeof parent.setChildIndex === 'function') {
+          parent.setChildIndex(obj as any, newIdx);
+        } else {
+          parent.removeChild(obj as any);
+          parent.addChildAt(obj as any, newIdx);
+        }
+      } catch {}
+      this.safeRefreshSoon();
+    });
+    li.appendChild(backward);
 
     // Drag handle
     const drag = document.createElement('span');

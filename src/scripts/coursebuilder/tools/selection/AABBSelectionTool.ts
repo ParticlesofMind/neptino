@@ -1367,31 +1367,43 @@ export class AABBSelectionTool extends BaseTool {
 
     // Rotation hotspots near corners (diagonal zones outside the box)
     if (includeRotationHotspots && this.group) {
+      // Use rotated-local frame for hotspot detection if overlay is rotated
       const b = this.group.bounds;
+      const angle = this.overlayRotationAngle || 0;
+      const cx = b.x + b.width * 0.5;
+      const cy = b.y + b.height * 0.5;
+      const sin = Math.sin(-angle); // inverse rotation
+      const cos = Math.cos(-angle);
+      const px = point.x - cx;
+      const py = point.y - cy;
+      const qx = cx + (px * cos - py * sin);
+      const qy = cy + (px * sin + py * cos);
+      const q = new Point(qx, qy);
+
       const margin = 18; // hotspot distance outside the bounds
       const thresh = 6;  // how close to diagonal (|dx - dy|)
 
-      // TL hotspot: above and left
-      const dxTL = b.x - point.x; // >=0 if left of left edge
-      const dyTL = b.y - point.y; // >=0 if above top edge
+      // TL hotspot: above and left in rotated-local frame
+      const dxTL = b.x - q.x;
+      const dyTL = b.y - q.y;
       if (dxTL >= 0 && dyTL >= 0 && dxTL < margin && dyTL < margin && Math.abs(dxTL - dyTL) <= thresh) {
         return { type: 'rotation', position: 'tl' } as TransformHandle;
       }
       // TR hotspot: above and right
-      const dxTR = point.x - (b.x + b.width);
-      const dyTR = b.y - point.y;
+      const dxTR = q.x - (b.x + b.width);
+      const dyTR = b.y - q.y;
       if (dxTR >= 0 && dyTR >= 0 && dxTR < margin && dyTR < margin && Math.abs(dxTR - dyTR) <= thresh) {
         return { type: 'rotation', position: 'tr' } as TransformHandle;
       }
       // BL hotspot: below and left
-      const dxBL = b.x - point.x;
-      const dyBL = point.y - (b.y + b.height);
+      const dxBL = b.x - q.x;
+      const dyBL = q.y - (b.y + b.height);
       if (dxBL >= 0 && dyBL >= 0 && dxBL < margin && dyBL < margin && Math.abs(dxBL - dyBL) <= thresh) {
         return { type: 'rotation', position: 'bl' } as TransformHandle;
       }
       // BR hotspot: below and right
-      const dxBR = point.x - (b.x + b.width);
-      const dyBR = point.y - (b.y + b.height);
+      const dxBR = q.x - (b.x + b.width);
+      const dyBR = q.y - (b.y + b.height);
       if (dxBR >= 0 && dyBR >= 0 && dxBR < margin && dyBR < margin && Math.abs(dxBR - dyBR) <= thresh) {
         return { type: 'rotation', position: 'br' } as TransformHandle;
       }
