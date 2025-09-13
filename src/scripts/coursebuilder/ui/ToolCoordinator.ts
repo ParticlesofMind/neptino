@@ -84,6 +84,7 @@ export class ToolCoordinator {
             // Fallback: Direct UI manipulation
             document.querySelectorAll('[data-tool]').forEach(btn => {
                 btn.classList.remove('active');
+                btn.classList.remove('tools__item--active');
             });
             console.log('🔧 COORDINATOR: Used fallback method to deactivate drawing tools');
         }

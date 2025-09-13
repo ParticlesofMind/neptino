@@ -271,6 +271,23 @@
     }
 }
 
+// Preview placeholders
+.preview-placeholder {
+    padding: 16px;
+    color: var(--color-neutral-700);
+}
+
+// Layers panel
+.layers-panel {
+    padding: 8px;
+}
+
+.layers-list {
+    list-style: decimal inside;
+    margin: 0;
+    padding: 0;
+}
+
 // ==========================================================================
 // LEGACY TABLE TOOL STYLES (keeping for backward compatibility)
 // ==========================================================================

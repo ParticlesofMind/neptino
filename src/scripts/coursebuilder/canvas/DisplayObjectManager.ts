@@ -59,6 +59,7 @@ export class DisplayObjectManager {
     
     // Store reference
     this.allObjects.set(id, displayObject);
+    try { (displayObject as any).__id = id; } catch {}
     
     // Legacy compatibility
     this.objects.add(displayObject);
@@ -68,6 +69,8 @@ export class DisplayObjectManager {
       type: displayObject.constructor.name,
       parentChildren: targetParent.children.length
     });
+    // Notify UI layers panel
+    try { document.dispatchEvent(new CustomEvent('displayObject:added', { detail: { id, object: displayObject } })); } catch {}
     
     return id;
   }
@@ -112,8 +115,21 @@ export class DisplayObjectManager {
       id: typeof id === 'string' ? id : 'direct',
       type: displayObject.constructor.name
     });
+    try { document.dispatchEvent(new CustomEvent('displayObject:removed', { detail: { id } })); } catch {}
     
     return true;
+  }
+
+  /**
+   * Get the ID for a given display object (if available)
+   */
+  public getIdForObject(obj: any): string | null {
+    if (!obj) return null;
+    if ((obj as any).__id) return (obj as any).__id;
+    for (const [id, val] of this.allObjects.entries()) {
+      if (val === obj) return id;
+    }
+    return null;
   }
 
   /**

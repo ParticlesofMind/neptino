@@ -22,6 +22,62 @@
   }
 }
 
+// Layer card variant for Layers panel
+.card--layer {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid #ddd;
+  margin-bottom: 4px;
+  background: #fff;
+  cursor: grab;
+
+  &:hover {
+    border-color: #aaa;
+  }
+
+  .layer__thumbnail {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #eee;
+    margin-right: 8px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    flex: 0 0 auto;
+  }
+
+  .layer__name-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    background: transparent;
+  }
+
+  .layer__toggle {
+    cursor: pointer;
+    margin-left: 8px;
+    background: transparent;
+    border: none;
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .layer__drag-handle {
+    margin-left: 8px;
+    color: #9ca3af;
+    user-select: none;
+    cursor: grab;
+  }
+}
+
+.layer__item--nested {
+  padding-left: 20px;
+}
+
 // Media card variants
 .card {
   &--floating {

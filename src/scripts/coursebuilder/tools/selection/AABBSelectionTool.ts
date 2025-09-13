@@ -33,6 +33,13 @@ export class AABBSelectionTool extends BaseTool {
   // Clipboard for copy/paste
   private clipboard: Array<{ type: string; meta?: any; textInfo?: { text: string; style: any; x: number; y: number } }> = [];
   private pasteCount: number = 0;
+  // Rotation + persistent overlay state
+  private rotateStartRefAngle: number = 0;
+  private rotateCenter: Point | null = null;
+  private rotateBaseBounds: Rectangle | null = null;
+  private overlayCenter: Point | null = null;
+  private overlayBaseBounds: Rectangle | null = null;
+  private overlayRotationAngle: number = 0;
 
   constructor() {
     super('selection', 'default');
@@ -129,6 +136,27 @@ export class AABBSelectionTool extends BaseTool {
       if (handle.type === 'rotation') {
         this.mode = 'rotate';
         this.cursor = this.cursorForHandle(handle);
+        // Initialize rotation overlay state based on current bounds and pointer
+        const b = this.group.bounds.clone();
+        const cx = b.x + b.width * 0.5;
+        const cy = b.y + b.height * 0.5;
+        this.rotateCenter = new Point(cx, cy);
+        this.rotateBaseBounds = b.clone();
+        this.overlayCenter = new Point(cx, cy);
+        this.overlayBaseBounds = b.clone();
+        this.overlayRotationAngle = 0;
+        const dx0 = p.x - cx;
+        const dy0 = p.y - cy;
+        this.rotateStartRefAngle = Math.atan2(dy0, dx0);
+        try {
+          const g = this.group.selectionBox;
+          g.clear();
+          g.rect(0, 0, b.width, b.height);
+          g.stroke({ width: 2, color: 0x3b82f6 });
+          g.pivot.set(b.width * 0.5, b.height * 0.5);
+          g.position.set(cx, cy);
+          g.rotation = 0;
+        } catch {}
       } else {
         this.mode = 'scale';
         this.cursor = this.cursorForHandle(handle);
@@ -222,9 +250,41 @@ export class AABBSelectionTool extends BaseTool {
     } catch {}
 
     if (this.group && this.group.objects.length > 0 && (this.transformer as any).isActive && (this.transformer as any).isActive()) {
-      // If a transform is in progress, update. Keep selection box stable during rotation.
+      // If a transform is in progress, update controller
       this.transformer.update(p, { shiftKey: event.shiftKey, altKey: (event as any).altKey, ctrlKey: (event as any).ctrlKey || (event as any).metaKey });
-      if (this.mode !== 'rotate') {
+      if (this.mode === 'rotate' && this.rotateCenter && this.rotateBaseBounds) {
+        // Rotate overlay and handles around center
+        const cx = this.rotateCenter.x;
+        const cy = this.rotateCenter.y;
+        const dx = p.x - cx;
+        const dy = p.y - cy;
+        const currentAngle = Math.atan2(dy, dx);
+        const delta = currentAngle - this.rotateStartRefAngle;
+        try {
+          const g = this.group.selectionBox;
+          g.pivot.set(this.rotateBaseBounds.width * 0.5, this.rotateBaseBounds.height * 0.5);
+          g.position.set(cx, cy);
+          g.rotation = delta;
+        } catch {}
+        const base = this.rotateBaseBounds;
+        const cos = Math.cos(delta);
+        const sin = Math.sin(delta);
+        const s = 8; const hs = s / 2;
+        this.group.transformHandles.forEach(h => {
+          const basePos = this.getHandlePosition(base, h.position);
+          const vx = basePos.x - cx;
+          const vy = basePos.y - cy;
+          const rx = cx + (vx * cos - vy * sin);
+          const ry = cy + (vx * sin + vy * cos);
+          h.graphics.position.set(rx, ry);
+          h.bounds.x = rx - hs; h.bounds.y = ry - hs;
+          h.center = new Point(rx, ry);
+        });
+        // Persist overlay
+        this.overlayRotationAngle = delta;
+        this.overlayCenter = new Point(cx, cy);
+        this.overlayBaseBounds = base.clone();
+      } else {
         this.refreshGroupBoundsOnly();
         try { this.updateSmartGuides(); } catch {}
       }
@@ -310,9 +370,34 @@ export class AABBSelectionTool extends BaseTool {
 
     if (this.group) {
       this.transformer.end();
-      // After rotation completed, refresh visuals once to reflect final bounds
+      // Keep rotated overlay persistent after rotation
       if (this.mode === 'rotate') {
-        this.refreshGroupBoundsOnly();
+        // Align overlay to new bounds
+        const bounds = this.computeCombinedBoundsLocal(this.group.objects, this.container!);
+        const cx = bounds.x + bounds.width * 0.5;
+        const cy = bounds.y + bounds.height * 0.5;
+        this.overlayBaseBounds = bounds.clone();
+        this.overlayCenter = new Point(cx, cy);
+        // Redraw overlay and handle positions at final angle
+        const g = this.group.selectionBox;
+        g.clear();
+        g.rect(0, 0, bounds.width, bounds.height);
+        g.stroke({ width: 2, color: 0x3b82f6 });
+        g.pivot.set(bounds.width * 0.5, bounds.height * 0.5);
+        g.position.set(cx, cy);
+        g.rotation = this.overlayRotationAngle || 0;
+        const cos = Math.cos(this.overlayRotationAngle || 0);
+        const sin = Math.sin(this.overlayRotationAngle || 0);
+        const s = 8; const hs = s / 2;
+        this.group.transformHandles.forEach(h => {
+          const pos = this.getHandlePosition(bounds, h.position);
+          const vx = pos.x - cx; const vy = pos.y - cy;
+          const rx = cx + (vx * cos - vy * sin);
+          const ry = cy + (vx * sin + vy * cos);
+          h.graphics.position.set(rx, ry);
+          h.bounds.x = rx - hs; h.bounds.y = ry - hs;
+          h.center = new Point(rx, ry);
+        });
       }
     }
     if (this.isDraggingGroup) {
@@ -364,7 +449,20 @@ export class AABBSelectionTool extends BaseTool {
     selectionBox.name = 'selection-box';
     selectionBox.rect(0, 0, bounds.width, bounds.height);
     selectionBox.stroke({ width: 2, color: 0x3b82f6 });
-    selectionBox.position.set(bounds.x, bounds.y);
+    // Apply persistent overlay if present
+    if (this.overlayCenter && this.overlayBaseBounds) {
+      const cx = bounds.x + bounds.width * 0.5;
+      const cy = bounds.y + bounds.height * 0.5;
+      selectionBox.pivot.set(bounds.width * 0.5, bounds.height * 0.5);
+      selectionBox.position.set(cx, cy);
+      selectionBox.rotation = this.overlayRotationAngle || 0;
+      this.overlayBaseBounds = bounds.clone();
+      this.overlayCenter = new Point(cx, cy);
+    } else {
+      selectionBox.position.set(bounds.x, bounds.y);
+      selectionBox.rotation = 0;
+      selectionBox.pivot.set(0, 0);
+    }
     (this.uiContainer || this.container).addChild(selectionBox);
 
     const { handles } = this.createHandles(bounds);
@@ -393,15 +491,44 @@ export class AABBSelectionTool extends BaseTool {
     g.clear();
     g.rect(0, 0, bounds.width, bounds.height);
     g.stroke({ width: 2, color: 0x3b82f6 });
-    g.position.set(bounds.x, bounds.y);
+    if (this.overlayCenter && this.overlayBaseBounds) {
+      const cx = bounds.x + bounds.width * 0.5;
+      const cy = bounds.y + bounds.height * 0.5;
+      g.pivot.set(bounds.width * 0.5, bounds.height * 0.5);
+      g.position.set(cx, cy);
+      g.rotation = this.overlayRotationAngle || 0;
+      this.overlayBaseBounds = bounds.clone();
+      this.overlayCenter = new Point(cx, cy);
+    } else {
+      g.position.set(bounds.x, bounds.y);
+      g.rotation = 0;
+      g.pivot.set(0, 0);
+    }
     // update handles
-    this.group.transformHandles.forEach(h => {
-      const s = 8; const hs = s / 2;
-      const pos = this.getHandlePosition(bounds, h.position);
-      h.graphics.position.set(pos.x, pos.y);
-      h.bounds.x = pos.x - hs; h.bounds.y = pos.y - hs;
-      h.center = new Point(pos.x, pos.y);
-    });
+    const s = 8; const hs = s / 2;
+    if (this.overlayCenter && this.overlayBaseBounds) {
+      const cx = (this.overlayCenter as Point).x;
+      const cy = (this.overlayCenter as Point).y;
+      const angle = this.overlayRotationAngle || 0;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      this.group.transformHandles.forEach(h => {
+        const pos = this.getHandlePosition(bounds, h.position);
+        const vx = pos.x - cx; const vy = pos.y - cy;
+        const rx = cx + (vx * cos - vy * sin);
+        const ry = cy + (vx * sin + vy * cos);
+        h.graphics.position.set(rx, ry);
+        h.bounds.x = rx - hs; h.bounds.y = ry - hs;
+        h.center = new Point(rx, ry);
+      });
+    } else {
+      this.group.transformHandles.forEach(h => {
+        const pos = this.getHandlePosition(bounds, h.position);
+        h.graphics.position.set(pos.x, pos.y);
+        h.bounds.x = pos.x - hs; h.bounds.y = pos.y - hs;
+        h.center = new Point(pos.x, pos.y);
+      });
+    }
     // update size indicator
     this.updateSizeIndicator(bounds);
   }
@@ -412,6 +539,11 @@ export class AABBSelectionTool extends BaseTool {
     if (parent) parent.removeChild(this.group.selectionBox);
     this.group.transformHandles.forEach(h => h.graphics.parent && h.graphics.parent.removeChild(h.graphics));
     this.group = null;
+    this.rotateCenter = null;
+    this.rotateBaseBounds = null;
+    this.overlayCenter = null;
+    this.overlayBaseBounds = null;
+    this.overlayRotationAngle = 0;
     // Notify that selection is cleared
     this.emitSelectionContext();
     this.clearGuides();
@@ -827,6 +959,11 @@ export class AABBSelectionTool extends BaseTool {
 
     if (items.length === 0) return false;
     this.clipboard = items;
+    // Notify UI that clipboard now has content
+    try {
+      const evt = new CustomEvent('selection:clipboard', { detail: { hasClipboard: this.clipboard.length > 0 } });
+      document.dispatchEvent(evt);
+    } catch {}
     return true;
   }
 
@@ -890,7 +1027,99 @@ export class AABBSelectionTool extends BaseTool {
       // Select newly created items
       this.selected = created;
       this.refreshGroup();
+      // Notify UI clipboard is still available (unchanged) and we pasted
+      try {
+        const evt = new CustomEvent('selection:clipboard', { detail: { hasClipboard: this.clipboard.length > 0, pasted: true } });
+        document.dispatchEvent(evt);
+      } catch {}
     }
+  }
+
+  // Public wrappers for UI/ToolManager
+  public copySelection(): boolean {
+    return this.copySelectionToClipboard();
+  }
+  public pasteSelection(targetContainer?: Container): boolean {
+    const container = targetContainer || this.container || this.displayManager?.getRoot();
+    if (!container) return false;
+    this.pasteClipboard(container);
+    return true;
+  }
+
+  // ----- Group/Ungroup -----
+  public groupSelection(): boolean {
+    if (!this.selected || this.selected.length < 2) return false;
+    const firstParent: Container | null = (this.selected[0] as any).parent || null;
+    const parent = firstParent || this.container || this.displayManager?.getRoot();
+    if (!parent) return false;
+    try {
+      // Create group container via display manager for ID tracking
+      const grpInfo = (this.displayManager as any)?.createContainer ? (this.displayManager as any).createContainer(parent) : null;
+      const group: Container = grpInfo ? grpInfo.container : new Container();
+      if (!grpInfo) parent.addChild(group);
+      // Compute insertion index: above highest of selected
+      const indices = this.selected.map(o => parent.children.indexOf(o)).filter(i => i >= 0);
+      const insertIdx = indices.length ? Math.max(...indices) : parent.children.length - 1;
+      try { parent.setChildIndex(group, insertIdx + 1); } catch {}
+
+      const moved: any[] = [];
+      this.selected.forEach((obj) => {
+        try {
+          const world = (obj as any).getGlobalPosition ? (obj as any).getGlobalPosition(new Point()) : new Point((obj as any).x || 0, (obj as any).y || 0);
+          if ((obj as any).parent) (obj as any).parent.removeChild(obj);
+          group.addChild(obj as any);
+          const local = group.toLocal(world);
+          (obj as any).position?.set(local.x, local.y);
+          moved.push(obj);
+        } catch {}
+      });
+      // Select the new group
+      this.selected = [group as any];
+      this.refreshGroup();
+      return true;
+    } catch (e) {
+      console.warn('⚠️ groupSelection failed:', e);
+      return false;
+    }
+  }
+
+  public ungroupSelection(): boolean {
+    if (!this.selected || this.selected.length === 0) return false;
+    let changed = false;
+    const newSelection: any[] = [];
+    for (const obj of this.selected) {
+      const cont = obj as any;
+      if (!cont?.children || cont.children.length === 0) continue;
+      const parent: Container | null = cont.parent || this.container || this.displayManager?.getRoot() || null;
+      if (!parent) continue;
+      try {
+        const children = cont.children.slice();
+        for (const child of children) {
+          // Preserve world position
+          const world = (child as any).getGlobalPosition ? (child as any).getGlobalPosition(new Point()) : new Point((child as any).x || 0, (child as any).y || 0);
+          cont.removeChild(child);
+          parent.addChild(child);
+          const local = parent.toLocal(world);
+          (child as any).position?.set(local.x, local.y);
+          newSelection.push(child);
+        }
+        // Remove the empty container
+        if ((this.displayManager as any)?.remove) {
+          (this.displayManager as any).remove(cont);
+        } else {
+          cont.parent?.removeChild(cont);
+          cont.destroy?.();
+        }
+        changed = true;
+      } catch (e) {
+        console.warn('⚠️ ungroupSelection failed for object', e);
+      }
+    }
+    if (changed) {
+      this.selected = newSelection;
+      this.refreshGroup();
+    }
+    return changed;
   }
 
   private createBrushFromMeta(meta: any, offset: number): Graphics | null {

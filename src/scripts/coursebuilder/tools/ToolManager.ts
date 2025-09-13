@@ -301,4 +301,41 @@ export class ToolManager {
       try { sel.applySettingsToSelection(toolName, settings); } catch {}
     }
   }
+
+  /** Copy currently selected objects (selection tool) */
+  public copySelection(): boolean {
+    const sel = this.tools.get('selection') as any;
+    if (sel && typeof sel.copySelection === 'function') {
+      try { return !!sel.copySelection(); } catch {}
+    }
+    return false;
+  }
+
+  /** Paste previously copied objects (selection tool) */
+  public pasteSelection(): boolean {
+    const sel = this.tools.get('selection') as any;
+    if (!sel || typeof sel.pasteSelection !== 'function') return false;
+    const container = this.currentContainer || this.displayManager?.getRoot();
+    if (!container) return false;
+    try { return !!sel.pasteSelection(container); } catch {}
+    return false;
+  }
+
+  /** Group current selection into a container */
+  public groupSelection(): boolean {
+    const sel = this.tools.get('selection') as any;
+    if (sel && typeof sel.groupSelection === 'function') {
+      try { return !!sel.groupSelection(); } catch {}
+    }
+    return false;
+  }
+
+  /** Ungroup selected containers */
+  public ungroupSelection(): boolean {
+    const sel = this.tools.get('selection') as any;
+    if (sel && typeof sel.ungroupSelection === 'function') {
+      try { return !!sel.ungroupSelection(); } catch {}
+    }
+    return false;
+  }
 }

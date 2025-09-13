@@ -246,6 +246,26 @@ export class CanvasEvents {
     return this.toolManager.getToolSettings();
   }
 
+  /** Copy selected objects */
+  public copySelection(): boolean {
+    return this.toolManager.copySelection();
+  }
+
+  /** Paste from clipboard */
+  public pasteSelection(): boolean {
+    return this.toolManager.pasteSelection();
+  }
+
+  /** Group selection */
+  public groupSelection(): boolean {
+    return this.toolManager.groupSelection();
+  }
+
+  /** Ungroup selection */
+  public ungroupSelection(): boolean {
+    return this.toolManager.ungroupSelection();
+  }
+
   /**
    * Enable/disable event handling
    */

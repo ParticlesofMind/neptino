@@ -346,23 +346,24 @@ export class ToolStateManager {
      * Set current tool and apply its settings to canvas
      */
     setTool(toolName: string): void {
-        this.currentTool = toolName;
-        this.updateToolUI(toolName);
-        
+        const previousTool = this.currentTool;
+
         // 🎯 UNIFIED TOOL MANAGEMENT: Notify coordinator about drawing tool selection
         const toolCoordinator = (window as any).toolCoordinator;
         if (toolCoordinator && typeof toolCoordinator.setDrawingTool === 'function') {
             toolCoordinator.setDrawingTool(toolName);
         }
-        
+
         // 🎯 GRAB TOOL MANAGEMENT: Deactivate grab tool when any drawing tool is selected
         this.deactivateGrabToolIfActive();
-        
-        // CRITICAL: Actually set the tool in canvas first, then apply settings
+
+        // Attempt to activate tool in canvas first to guarantee UI matches functionality
         const canvasAPI = (window as any).canvasAPI;
         if (canvasAPI) {
             const success = canvasAPI.setTool(toolName);
             if (success) {
+                this.currentTool = toolName;
+                this.updateToolUI(toolName);
                 console.log(`✅ TOOL SYNC: Canvas tool successfully set to: ${toolName}`);
                 // Apply saved tool settings after successfully changing the tool
                 this.applyToolSettingsToCanvas(toolName);
@@ -372,13 +373,18 @@ export class ToolStateManager {
                 }
             } else {
                 console.error(`❌ TOOL SYNC: Failed to set canvas tool to: ${toolName}`);
+                // Keep UI in previous state to avoid mismatch
+                this.updateToolUI(previousTool);
+                this.currentTool = previousTool;
             }
         } else {
-            // Canvas API not ready yet - settings will be applied when it becomes available
+            // Canvas API not ready yet - keep UI in sync but mark for later verification
+            this.currentTool = toolName;
+            this.updateToolUI(toolName);
             console.debug(`🔧 TOOL SYNC: Canvas API not yet available for tool "${toolName}" (will sync when ready)`);
             this.applyToolSettingsToCanvas(toolName);
         }
-        
+
         this.saveStates();
     }
 
@@ -403,6 +409,7 @@ export class ToolStateManager {
         // Clear visual states for all drawing tool buttons
         document.querySelectorAll('[data-tool]').forEach(btn => {
             btn.classList.remove('active');
+            btn.classList.remove('tools__item--active');
         });
         
         // Clear internal state (keep current tool reference for later reactivation)
@@ -846,6 +853,33 @@ export class ToolStateManager {
                     item.classList.add('nav-course__item--active');
                 }
             });
+        }
+
+        // Toggle preview content visibility based on selected tab
+        const mapTitleToId = (title: string | null): string | null => {
+            switch (title) {
+                case 'Outline': return 'preview-outline';
+                case 'Preview': return 'preview-canvas';
+                case 'Marks': return 'preview-marks';
+                case 'Layers': return 'preview-layers';
+                default: return null;
+            }
+        };
+        const targetId = mapTitleToId(navTitle);
+        document.querySelectorAll('.engine__preview .preview__content').forEach(el => {
+            el.classList.remove('preview__content--active');
+            (el as HTMLElement).style.display = 'none';
+        });
+        if (targetId) {
+            const panel = document.getElementById(targetId);
+            if (panel) {
+                panel.classList.add('preview__content--active');
+                (panel as HTMLElement).style.display = 'block';
+                // If Layers panel, refresh its contents
+                if (targetId === 'preview-layers') {
+                    try { (window as any).layersPanel?.refresh(); } catch {}
+                }
+            }
         }
     }
 

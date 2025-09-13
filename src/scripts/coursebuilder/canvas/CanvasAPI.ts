@@ -199,6 +199,30 @@ export class CanvasAPI {
     return this.events.getToolSettings();
   }
 
+  /** Copy selected objects */
+  public copySelection(): boolean {
+    if (!this.events) return false;
+    return this.events.copySelection();
+  }
+
+  /** Paste previously copied selection */
+  public pasteSelection(): boolean {
+    if (!this.events) return false;
+    return this.events.pasteSelection();
+  }
+
+  /** Group selection into a container */
+  public groupSelection(): boolean {
+    if (!this.events) return false;
+    return (this.events as any).groupSelection();
+  }
+
+  /** Ungroup selected containers */
+  public ungroupSelection(): boolean {
+    if (!this.events) return false;
+    return (this.events as any).ungroupSelection();
+  }
+
   /**
    * Enable canvas drawing events (allow drawing tools to work)
    */

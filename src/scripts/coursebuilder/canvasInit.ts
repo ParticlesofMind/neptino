@@ -13,6 +13,8 @@ import { snapManager } from './tools/SnapManager';
 import { bindSnapMenu } from './tools/SnapMenu';
 import { CanvasLayoutManager } from './ui/CanvasLayoutManager';
 import { ToolCoordinator } from './ui/ToolCoordinator';
+import { CanvasContextMenu } from './ui/CanvasContextMenu';
+import { LayersPanel } from './ui/LayersPanel';
 
 // Canvas dimensions - centralized in one place (4:3 aspect ratio)
 const CANVAS_WIDTH = 900;
@@ -27,6 +29,8 @@ let uiEventHandler: UIEventHandler | null = null;
 let perspectiveManager: SimplePerspectiveManager | null = null;
 let layoutManager: CanvasLayoutManager | null = null;
 let toolCoordinator: ToolCoordinator | null = null;
+let canvasContextMenu: CanvasContextMenu | null = null;
+let layersPanel: LayersPanel | null = null;
 
 /**
  * Initialize canvas when coursebuilder page loads
@@ -108,6 +112,18 @@ export async function initializeCanvas(): Promise<void> {
         console.log('🎯 Initializing Tool Coordinator...');
         toolCoordinator = new ToolCoordinator();
         console.log('✅ ToolCoordinator initialized - enforcing single tool rule');
+
+        // Initialize canvas context menu (right-click)
+        console.log('🖱️ Initializing canvas context menu...');
+        canvasContextMenu = new CanvasContextMenu('#canvas-container');
+        console.log('✅ Canvas context menu ready');
+
+        // Initialize Layers Panel (UI for layer ordering/visibility)
+        console.log('🧱 Initializing Layers panel...');
+        layersPanel = new LayersPanel('#preview-layers');
+        (window as any).layersPanel = layersPanel;
+        layersPanel.refresh();
+        console.log('✅ Layers panel ready');
 
         // Initialize color selectors for all tools
         console.log('🎨 Initializing tool color selectors...');

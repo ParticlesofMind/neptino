@@ -989,33 +989,37 @@
               alt="">
             <span class="icon-label">Marks</span>
           </div>
+          <div class="nav-course__item" data-preview="layers">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-layers.svg" alt="Layers icon">
+            <span class="icon-label">Layers</span>
+          </div>
         </div>
 
         <!-- Canvas Preview -->
         <div class="engine__preview preview">
           <!-- Outline Preview -->
           <div class="preview__content preview__content--active" id="preview-outline">
-            <div class="outline-preview">
-              <div class="outline-preview__loading" style="display: none;">
-                Loading curriculum outline...
-              </div>
-              <div class="outline-preview__content">
-                <!-- Curriculum outline will be populated here -->
-              </div>
-            </div>
+            <div class="preview-placeholder">Outline content coming soon</div>
           </div>
 
           <!-- Canvas Preview -->
           <div class="preview__content" id="preview-canvas">
-            <div class="canvas-preview">
-              <p class="placeholder">Canvas preview will be displayed here...</p>
-            </div>
+            <div class="preview-placeholder">Canvas preview coming soon</div>
           </div>
 
           <!-- Bookmarks/Marks Preview -->
           <div class="preview__content" id="preview-marks">
-            <div class="marks-preview">
-              <p class="placeholder">Bookmarks and marks will be displayed here...</p>
+            <div class="preview-placeholder">Marks content coming soon</div>
+          </div>
+
+          <!-- Layers Panel -->
+          <div class="preview__content" id="preview-layers">
+            <div class="layers-panel">
+              <div class="layers-controls" style="display:flex; gap:8px; padding:6px 4px;">
+                <button id="layers-group" class="btn btn--small">Group</button>
+                <button id="layers-ungroup" class="btn btn--small">Ungroup</button>
+              </div>
+              <ol class="layers-list" id="layers-list-root"></ol>
             </div>
           </div>
         </div>
