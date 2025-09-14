@@ -8,4 +8,4 @@ export { ClickSelection } from "./clickSelection";
 export * from "./types";
 
 // Main selection tool implemented with a custom PixiJS v8 transformer
-export { AABBSelectionTool as SelectionTool } from "./AABBSelectionTool";
+export { SelectionTool } from "./SelectionTool";
