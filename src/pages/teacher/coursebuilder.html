@@ -1086,7 +1086,8 @@
 
         <!-- Drawing Tools -->
         <div class="engine__tools tools">
-          <div class="tools__selection">
+          <!-- Build Mode Tools -->
+          <div class="tools__selection tools__selection--build" data-mode-tools="build">
             <div class="tools__item tools__item--active" data-tool="selection">
               <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
                 class="tools__icon icon icon--base">
@@ -1117,13 +1118,25 @@
                 class="tools__icon icon icon--base">
               <span class="icon-label">Tables</span>
             </div>
-
             <div class="tools__item" data-tool="eraser">
               <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" alt="Eraser Tool"
                 class="tools__icon icon icon--base">
               <span class="icon-label">Eraser</span>
             </div>
+          </div>
 
+          <!-- Animate Mode Tools -->
+          <div class="tools__selection tools__selection--animate" data-mode-tools="animate" style="display: none;">
+            <div class="tools__item tools__item--active" data-tool="selection">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
+                class="tools__icon icon icon--base">
+              <span class="icon-label">Select</span>
+            </div>
+            <div class="tools__item" data-tool="scene">
+              <img src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" alt="Scene Tool"
+                class="tools__icon icon icon--base">
+              <span class="icon-label">Scene</span>
+            </div>
           </div>
 
           <!-- Tool Settings -->
@@ -1289,6 +1302,21 @@
                 <option value="basic">Basic</option>
                 <option value="bordered">Bordered</option>
                 <option value="striped">Striped</option>
+              </select>
+            </div>
+
+            <!-- Scene Settings (Animate Mode) -->
+            <div class="tools__item tools__item--scene" style="display: none;">
+              <label class="checkbox-container">
+                <input type="checkbox" data-setting="loop" title="Loop Animation">
+                <span class="checkmark"></span>
+                Loop Animation
+              </label>
+
+              <select class="input input--select" title="Animation Speed" data-setting="speed">
+                <option value="slow">Slow</option>
+                <option value="medium" selected>Medium</option>
+                <option value="fast">Fast</option>
               </select>
             </div>
           </div>

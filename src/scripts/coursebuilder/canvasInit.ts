@@ -14,6 +14,8 @@ import { bindSnapMenu } from './tools/SnapMenu';
 import { CanvasLayoutManager } from './ui/CanvasLayoutManager';
 import { ToolCoordinator } from './ui/ToolCoordinator';
 import { CanvasContextMenu } from './ui/CanvasContextMenu';
+import { initializeAnimationUI } from './animation/AnimationUI';
+import { animationState } from './animation/AnimationState';
 import { LayersPanel } from './ui/LayersPanel';
 
 // Canvas dimensions - centralized in one place (4:3 aspect ratio)
@@ -108,6 +110,9 @@ export async function initializeCanvas(): Promise<void> {
         // Expose UIEventHandler on window for Select2 integration
         (window as any).uiEventHandler = uiEventHandler;
 
+        // Initialize animation UI (animate-mode tools and options)
+        try { initializeAnimationUI(toolStateManager); } catch (e) { console.warn('⚠️ Failed to init AnimationUI', e); }
+
         // Initialize Tool Coordinator for unified tool management
         console.log('🎯 Initializing Tool Coordinator...');
         toolCoordinator = new ToolCoordinator();
@@ -166,6 +171,16 @@ export async function initializeCanvas(): Promise<void> {
         if (layoutManager) {
             layoutManager.addDebugCommands();
         }
+
+        // Initialize animation state with app + layers
+        try {
+            const app = canvasAPI.getApp();
+            const uiLayer = canvasAPI.getLayer('ui');
+            const dm = (window as any)._displayManager || null;
+            if (app && uiLayer) {
+                animationState.init({ app, uiLayer, displayManager: dm });
+            }
+        } catch (e) { console.warn('⚠️ Failed to init animationState', e); }
 
         // Add global debug commands
         (window as any).showCanvasInfo = () => {

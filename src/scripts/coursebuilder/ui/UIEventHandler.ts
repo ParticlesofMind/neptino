@@ -20,13 +20,22 @@ export class UIEventHandler {
     private bindEvents(): void {
         document.addEventListener('click', this.handleGlobalClick.bind(this));
 
-        // Tool selection events
-        document.querySelectorAll('[data-tool]').forEach(button => {
-            button.addEventListener(
-                'click',
-                this.handleToolSelection.bind(this),
-            );
-        });
+        // Tool selection events (delegate to container to support dynamic palettes)
+        const toolsContainer = document.querySelector('.engine__tools');
+        if (toolsContainer) {
+            toolsContainer.addEventListener('click', (e: Event) => {
+                const btn = (e.target as HTMLElement).closest('[data-tool]') as HTMLElement | null;
+                if (btn && toolsContainer.contains(btn)) {
+                    // Use event delegation: prevent default and set tool directly
+                    try { (e as any)?.preventDefault?.(); } catch {}
+                    const toolName = btn.dataset.tool;
+                    if (toolName) {
+                        console.log(`🔧 UI: Tool selection (delegated) -> ${toolName}`);
+                        this.toolStateManager.setTool(toolName);
+                    }
+                }
+            });
+        }
 
         // Mode selection events
         document.querySelectorAll('[data-mode]').forEach(button => {
@@ -144,15 +153,12 @@ export class UIEventHandler {
      * Handle tool selection
      */
     private handleToolSelection(event: Event): void {
-        event.preventDefault();
-        const button = event.currentTarget as HTMLElement;
-        const toolName = button.dataset.tool;
-
+        // Backward-compatible handler (not used by delegated listener anymore)
+        try { (event as any)?.preventDefault?.(); } catch {}
+        const button = (event.currentTarget as HTMLElement) || (event.target as HTMLElement)?.closest('[data-tool]');
+        const toolName = button?.dataset?.tool;
         if (!toolName) return;
-
         console.log(`🔧 UI: Tool selection event for "${toolName}"`);
-
-        // Clean architecture: UI delegates to state manager, no callbacks needed
         this.toolStateManager.setTool(toolName);
     }
 

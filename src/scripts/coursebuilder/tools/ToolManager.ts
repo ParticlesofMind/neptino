@@ -12,6 +12,7 @@ import { TextTool } from "./text";
 import { ShapesTool } from "./shapes";
 import { EraserTool } from "./EraserTool";
 import { TableManager } from "./tables/TableManager";
+import { SceneTool } from "../animation/tools/SceneTool";
 import { DisplayObjectManager } from "../canvas/DisplayObjectManager";
 import { BoundaryUtils, CanvasBounds } from "./BoundaryUtils";
 import { canvasMarginManager } from '../canvas/CanvasMarginManager';
@@ -60,6 +61,12 @@ export class ToolManager {
                 rows: 3,
                 columns: 3,
             },
+            scene: {
+                loop: false,
+            },
+            path: {
+                speed: 'slow',
+            },
         }; this.initializeTools();
  this.setupGlobalKeyboardHandlers();
  }
@@ -94,6 +101,8 @@ export class ToolManager {
         this.tools.set("shapes", new ShapesTool());
         this.tools.set("eraser", new EraserTool());
         this.tools.set("tables", new TableManager());
+        // Animation tools (animate mode)
+        this.tools.set("scene", new SceneTool());
 
         // Set tool manager reference on all tools
         this.tools.forEach((tool) => {

@@ -41,6 +41,13 @@ export interface ToolSettings {
  rows: number;
  columns: number;
  };
+  // Animate mode
+  scene?: {
+    loop?: boolean;
+  };
+  path?: {
+    speed?: 'slow' | 'medium' | 'fast';
+  };
 }
 
 export interface Tool {

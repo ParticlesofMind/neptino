@@ -46,6 +46,12 @@ interface ToolSettings {
         rows: number;
         columns: number;
     };
+    scene?: {
+        loop?: boolean;
+    };
+    path?: {
+        speed?: 'slow' | 'medium' | 'fast';
+    };
 }
 
 interface IconState {
@@ -80,12 +86,10 @@ export class ToolStateManager {
                 fillColor: '#f8fafc',    // White (matches HTML)
             },
     text: {
-        fontFamily: 'Arial',
-        fontSize: 16,
-        color: '#1a1a1a',        // Black (matches HTML)
-        fontWeight: 'normal',
-        fontStyle: 'normal',
-    },
+                fontFamily: 'Arial',
+                fontSize: 16,
+                color: '#1a1a1a',        // Black (matches HTML)
+            },
             brush: {
                 color: '#4a7c59',        // Green (matches HTML)
                 opacity: 0.3,
@@ -104,6 +108,12 @@ export class ToolStateManager {
             tables: {
                 rows: 3,
                 columns: 3,
+            },
+            scene: {
+                loop: false,
+            },
+            path: {
+                speed: 'slow',
             },
         };
 
@@ -332,7 +342,23 @@ export class ToolStateManager {
     setMode(modeName: string): void {
         this.currentMode = modeName;
         this.updateModeUI(modeName);
+        this.updateToolsVisibilityByMode(modeName);
         this.saveStates();
+        try {
+            const evt = new CustomEvent('mode:changed', { detail: modeName });
+            document.dispatchEvent(evt);
+        } catch {}
+        // Enforce allowed tools per mode
+        const allowedByMode: Record<string, Set<string>> = {
+            build: new Set(['selection','pen','brush','text','shapes','eraser','tables']),
+            animate: new Set(['selection','scene']),
+            workflow: new Set(['selection']),
+            optimize: new Set(['selection'])
+        } as any;
+        const allowed = (allowedByMode[modeName] || allowedByMode.build);
+        if (!allowed.has(this.currentTool)) {
+            this.setTool('selection');
+        }
     }
 
     /**
@@ -518,21 +544,21 @@ export class ToolStateManager {
         settings: Partial<ToolSettings[keyof ToolSettings]>,
     ): void {
         if (toolName in this.toolSettings) {
-            Object.assign(
-                this.toolSettings[toolName as keyof ToolSettings],
-                settings,
-            );
+            const currentSettings = this.toolSettings[toolName as keyof ToolSettings];
+            if (currentSettings && settings) {
+                Object.assign(currentSettings, settings);
             
-            // Special handling for pen tool to maintain backward compatibility
-            if (toolName === 'pen') {
-                const penSettings = this.toolSettings.pen as any;
-                // If strokeColor is updated, also update the legacy color property
-                if ('strokeColor' in settings) {
-                    penSettings.color = (settings as any).strokeColor;
-                }
-                // If color is updated, also update strokeColor
-                if ('color' in settings) {
-                    penSettings.strokeColor = (settings as any).color;
+                // Special handling for pen tool to maintain backward compatibility
+                if (toolName === 'pen') {
+                    const penSettings = this.toolSettings.pen as any;
+                    // If strokeColor is updated, also update the legacy color property
+                    if ('strokeColor' in settings) {
+                        penSettings.color = (settings as any).strokeColor;
+                    }
+                    // If color is updated, also update strokeColor
+                    if ('color' in settings) {
+                        penSettings.strokeColor = (settings as any).color;
+                    }
                 }
             }
             
@@ -805,6 +831,43 @@ export class ToolStateManager {
     }
 
     /**
+     * Update tools visibility based on current mode
+     */
+    private updateToolsVisibilityByMode(modeName: string): void {
+        // Hide all tool selection containers
+        document.querySelectorAll('[data-mode-tools]').forEach(container => {
+            (container as HTMLElement).style.display = 'none';
+        });
+
+        // Clear active states from ALL tool items across all modes
+        document.querySelectorAll('[data-tool]').forEach(toolItem => {
+            toolItem.classList.remove('tools__item--active');
+        });
+
+        // Show the appropriate tool container for current mode
+        const activeToolContainer = document.querySelector(`[data-mode-tools="${modeName}"]`);
+        if (activeToolContainer) {
+            (activeToolContainer as HTMLElement).style.display = 'flex';
+            
+            // Set the selection tool as active in the new mode's container
+            const selectionTool = activeToolContainer.querySelector('[data-tool="selection"]');
+            if (selectionTool) {
+                selectionTool.classList.add('tools__item--active');
+            }
+        } else {
+            // Fallback to build mode if mode-specific container not found
+            const buildContainer = document.querySelector('[data-mode-tools="build"]');
+            if (buildContainer) {
+                (buildContainer as HTMLElement).style.display = 'flex';
+                const selectionTool = buildContainer.querySelector('[data-tool="selection"]');
+                if (selectionTool) {
+                    selectionTool.classList.add('tools__item--active');
+                }
+            }
+        }
+    }
+
+    /**
      * Update media UI to reflect current selection
      */
     private updateMediaUI(mediaId: string | null): void {
@@ -914,22 +977,25 @@ export class ToolStateManager {
      * Update tool UI to reflect current selection
      */
     private updateToolUI(toolName: string): void {
-        // Remove selected class from all tool items
+        // Remove selected class from all tool items in all containers
         document.querySelectorAll('.tools__item').forEach(element => {
             element.classList.remove('tools__item--active');
             element.classList.remove('active'); // compatibility for tests
         });
 
-        // Add selected class to current tool item
-        const selectedTool = document.querySelector(
-            `[data-tool="${toolName}"]`,
-        );
-        if (selectedTool) {
-            const parentItem = selectedTool.closest('.tools__item');
+        // Find the currently active mode container
+        const activeToolContainer = document.querySelector(`[data-mode-tools="${this.currentMode}"]`);
+        
+        // Add selected class to current tool item within the active mode container only
+        if (activeToolContainer) {
+            const selectedTool = activeToolContainer.querySelector(`[data-tool="${toolName}"]`);
+            if (selectedTool) {
+                const parentItem = selectedTool.closest('.tools__item');
                 if (parentItem) {
-                parentItem.classList.add('tools__item--active');
-                parentItem.classList.add('active'); // compatibility for tests
+                    parentItem.classList.add('tools__item--active');
+                    parentItem.classList.add('active'); // compatibility for tests
                 }
+            }
         }
 
         // Hide placeholder and all tool settings (updated BEM selector)
@@ -947,11 +1013,14 @@ export class ToolStateManager {
             });
 
         // Show settings for current tool (updated BEM selector)
-        const toolSettings = (document.querySelector(
+        let toolSettings = (document.querySelector(
             `.tools__options .tools__item--${toolName}`,
         ) as HTMLElement) || (document.querySelector(
             `.tools__options [data-settings-for="${toolName}"]`,
         ) as HTMLElement);
+        if (toolName === 'selection' && this.currentMode !== 'animate') {
+            toolSettings = null as any;
+        }
         if (toolSettings) {
             toolSettings.style.display = 'flex';
         } else if (placeholder) {

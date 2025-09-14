@@ -183,6 +183,13 @@
     &__selection {
         display: flex;
         gap: var(--spacing-4);
+
+        // Mode-specific tool containers
+        &--build,
+        &--animate {
+            display: flex;
+            gap: var(--spacing-4);
+        }
     }
 
     // Tool selection items - layout structure only
@@ -192,6 +199,20 @@
         gap: var(--spacing-2);
         align-items: center;
         justify-content: center;
+
+        // Checkbox container for scene settings
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-2);
+            font-size: var(--font-size-small);
+            
+            input[type="checkbox"] {
+                width: 16px;
+                height: 16px;
+                accent-color: var(--color-primary);
+            }
+        }
     }
 
     &__options {
