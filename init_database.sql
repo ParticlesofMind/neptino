@@ -69,3 +69,7 @@ CREATE TABLE IF NOT EXISTS public.course_templates (
 -- Add course_sessions column to courses table
 ALTER TABLE public.courses 
 ADD COLUMN IF NOT EXISTS course_sessions integer DEFAULT NULL;
+
+-- Add course_pedagogy column to courses table
+ALTER TABLE public.courses 
+ADD COLUMN IF NOT EXISTS course_pedagogy text;

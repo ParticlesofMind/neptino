@@ -243,17 +243,26 @@ export const SECTION_CONFIGS: { [key: string]: SectionConfig } = {
  autoSave: true,
  },
 
- settings: {
- section: "settings",
- requiredFields: [],
- jsonbField: "course_settings",
- fields: [
- { name: "course_visible", type: "checkbox", required: false },
- { name: "allow_enrollment", type: "checkbox", required: false },
- { name: "require_approval", type: "checkbox", required: false },
- ],
- autoSave: true,
- },
+  settings: {
+    section: "settings",
+    requiredFields: [],
+    jsonbField: "course_settings",
+    fields: [
+      { name: "course_visible", type: "checkbox", required: false },
+      { name: "allow_enrollment", type: "checkbox", required: false },
+      { name: "require_approval", type: "checkbox", required: false },
+    ],
+    autoSave: true,
+  },
+  pedagogy: {
+    section: "pedagogy",
+    requiredFields: ["course_pedagogy"],
+    // Stored as a top-level column in courses
+    fields: [
+      { name: "course_pedagogy", type: "text", required: true },
+    ],
+    autoSave: true,
+  },
 };
 
 // ==========================================================================

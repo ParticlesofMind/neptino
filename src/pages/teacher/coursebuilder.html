@@ -56,6 +56,9 @@
               <a class="link link--menu" href="#students" data-section="students">Students</a>
             </li>
             <li class="ul__item">
+              <a class="link link--menu" href="#pedagogy" data-section="pedagogy">Pedagogy</a>
+            </li>
+            <li class="ul__item">
               <a class="link link--menu" href="#templates" data-section="templates">Templates</a>
             </li>
             <li class="ul__item">
@@ -622,6 +625,63 @@
           <div class="placeholder">
             <!-- Students content will be added here -->
           </div>
+        </article>
+
+        <!-- Pedagogy Article -->
+        <article class="content__article" id="pedagogy">
+          <form class="form pedagogy" id="course-pedagogy-form">
+            <input type="hidden" name="course_pedagogy" id="course-pedagogy-input" />
+
+            <div class="pedagogy-ui" id="pedagogy-ui">
+              <div class="pedagogy-ui__left">
+                <div class="pedagogy-grid" id="pedagogy-grid" role="application" aria-label="Pedagogical coordinate plane" tabindex="0">
+                  <!-- Grid backdrop via CSS; central axes via pseudo elements -->
+                  <div class="axis-label axis-label--left">Essentialist</div>
+                  <div class="axis-label axis-label--right">Progressive</div>
+                  <div class="axis-label axis-label--top">Constructivist</div>
+                  <div class="axis-label axis-label--bottom">Behaviorist</div>
+                  <div class="pedagogy-grid__marker" id="pedagogy-marker" aria-hidden="true"></div>
+                </div>
+
+                <div class="pedagogy-ui__coords">
+                  <div class="coord-display">
+                    <div class="coord-display__label">X</div>
+                    <div class="coord-display__value" id="pedagogy-x">0</div>
+                  </div>
+                  <div class="coord-display">
+                    <div class="coord-display__label">Y</div>
+                    <div class="coord-display__value" id="pedagogy-y">0</div>
+                  </div>
+                </div>
+
+                <div class="pedagogy-ui__presets">
+                  <button type="button" class="button button--preset" data-x="-75" data-y="-75">Traditional</button>
+                  <button type="button" class="button button--preset" data-x="75" data-y="75">Progressive</button>
+                  <button type="button" class="button button--preset" data-x="-25" data-y="75">Guided Discovery</button>
+                  <button type="button" class="button button--preset" data-x="0" data-y="0">Balanced</button>
+                </div>
+              </div>
+
+              <div class="pedagogy-ui__right">
+                <section class="pedagogy-summary">
+                  <h3 class="pedagogy-summary__title" id="pedagogy-approach-title">Balanced</h3>
+                  <div class="pedagogy-summary__subtitle" id="pedagogy-approach-subtitle"><em>Essentialist × Behaviorist ↔ Progressive × Constructivist</em></div>
+                  <p class="pedagogy-summary__description" id="pedagogy-approach-desc">
+                    A balanced blend of teacher guidance, student agency, and mixed knowledge construction.
+                  </p>
+
+                  <h4 class="pedagogy-impact__heading">Implementation Impact</h4>
+                  <ul class="pedagogy-impact__list" id="pedagogy-impact-list">
+                    <!-- Dynamic bullets injected by script -->
+                  </ul>
+                </section>
+              </div>
+            </div>
+
+            <div class="save-status" id="pedagogy-save-status">
+              <span class="save-status__text">Changes will be saved automatically</span>
+            </div>
+          </form>
         </article>
 
         <!-- Course Visibility Article -->
@@ -1270,6 +1330,7 @@
   <script type="module" src="/src/scripts/backend/courses/templates/templatePreviewHandler.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/schedule/scheduleCourse.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/settings/pageSetupHandler.ts"></script>
+  <script type="module" src="/src/scripts/backend/courses/pedagogy/pedagogyHandler.ts"></script>
   <!-- Media Manager UI (search + providers) -->
   <script type="module" src="/src/scripts/media/ui/MediaInterface.ts"></script>
 

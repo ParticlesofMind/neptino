@@ -291,7 +291,18 @@ export class CourseFormHandler {
                 }
             });
         } else {
-        
+            // For sections without a jsonbField (top-level columns on courses)
+            // populate fields directly from courseData if present
+            try {
+                this.sectionConfig.fields.forEach((fieldConfig) => {
+                    const key = fieldConfig.name;
+                    if (key in courseData) {
+                        this.setFieldValue(key, (courseData as any)[key]);
+                    }
+                });
+            } catch (e) {
+                // No-op if courseData doesn't include these fields yet
+            }
         }
     }
 
@@ -462,6 +473,12 @@ export class CourseFormHandler {
 
     private handleInputChange(): void {
         this.validateForm();
+        // If DB column is missing for pedagogy, block autosave with a clear message
+        const isBlocked = this.form?.dataset.blockSave === 'true';
+        if (isBlocked && this.sectionConfig.section === 'pedagogy') {
+            this.showStatus('Cannot save: missing course_pedagogy column. Please run the migration.', 'error');
+            return;
+        }
 
         if (this.sectionConfig.autoSave && this.currentCourseId) {
             this.debouncedSave();
@@ -609,6 +626,13 @@ export class CourseFormHandler {
         if (!this.currentCourseId) return;
 
         try {
+            // Prevent save if pedagogy column is missing
+            const isBlocked = this.form?.dataset.blockSave === 'true';
+            if (isBlocked && this.sectionConfig.section === 'pedagogy') {
+                this.showStatus('Cannot save: missing course_pedagogy column. Please run the migration.', 'error');
+                return;
+            }
+
             const formData = this.getFormData();
             const updateData: any = {};
 

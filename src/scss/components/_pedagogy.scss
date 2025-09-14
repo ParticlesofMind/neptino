@@ -1,0 +1,171 @@
+// Pedagogy coordinate system UI
+
+.pedagogy-ui {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pedagogy-ui__left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pedagogy-grid {
+  position: relative;
+  width: 400px;
+  aspect-ratio: 1 / 1; // keep square while responsive
+  max-width: 100%;
+  background: #fff;
+  border: 2px solid #000;
+  /* Subtle grid at 25% intervals */
+  background-image:
+    linear-gradient(to right, rgba(0,0,0,0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.15) 1px, transparent 1px);
+  background-size: 25% 100%, 100% 25%;
+  cursor: grab;
+}
+
+.pedagogy-grid:active {
+  cursor: grabbing;
+}
+
+/* Central axes (2px, bold) */
+.pedagogy-grid::before,
+.pedagogy-grid::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+
+.pedagogy-grid::before { /* vertical center */
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: #000;
+  transform: translateX(-1px);
+}
+
+.pedagogy-grid::after { /* horizontal center */
+  top: 50%;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: #000;
+  transform: translateY(-1px);
+}
+
+.axis-label {
+  position: absolute;
+  color: #000;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+}
+
+.axis-label--left { left: 8px; top: 50%; transform: translateY(-50%); }
+.axis-label--right { right: 8px; top: 50%; transform: translateY(-50%); text-align: right; }
+.axis-label--top { top: 8px; left: 50%; transform: translateX(-50%); }
+.axis-label--bottom { bottom: 8px; left: 50%; transform: translateX(-50%); }
+
+.pedagogy-grid__marker {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #000;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px #000; /* extra black outline */
+  transform: translate(-50%, -50%);
+  touch-action: none; /* for pointer events */
+}
+
+.pedagogy-ui__coords {
+  display: flex;
+  gap: 16px;
+}
+
+.coord-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coord-display__label {
+  font-weight: 600;
+  color: #000;
+}
+
+.coord-display__value {
+  font-weight: 800;
+  font-size: 24px;
+  color: #000;
+  min-width: 48px;
+}
+
+.pedagogy-ui__presets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 400px;
+}
+
+.button--preset {
+  border: 2px solid #000;
+  background: #fff;
+  color: #000;
+  font-weight: 700;
+}
+
+.button--preset:hover,
+.button--preset:focus {
+  background: #000;
+  color: #fff;
+}
+
+.pedagogy-ui__right {
+  min-width: 0;
+}
+
+.pedagogy-summary__title {
+  margin: 0 0 6px 0;
+  font-weight: 800;
+  color: #000;
+}
+
+.pedagogy-summary__subtitle {
+  margin: 0 0 12px 0;
+  color: #000;
+  font-style: italic;
+}
+
+.pedagogy-summary__description {
+  margin: 0 0 16px 0;
+  color: #000;
+}
+
+.pedagogy-impact__heading {
+  margin: 0 0 8px 0;
+  font-weight: 700;
+  color: #000;
+}
+
+.pedagogy-impact__list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.pedagogy-impact__list li {
+  margin-bottom: 6px;
+}

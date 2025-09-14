@@ -239,10 +239,10 @@ export class CourseBuilder {
  }
  // Also initialize form handler for curriculum form data
  this.currentFormHandler = new CourseFormHandler(sectionId);
- } else if (sectionId === "essentials" || sectionId === "settings") {
- // Initialize generic form handler for form-based sections
- this.currentFormHandler = new CourseFormHandler(sectionId);
- }
+    } else if (sectionId === "essentials" || sectionId === "settings" || sectionId === "pedagogy") {
+      // Initialize generic form handler for form-based sections
+      this.currentFormHandler = new CourseFormHandler(sectionId);
+    }
 
  // Log form handler initialization
  if (this.currentFormHandler) {
