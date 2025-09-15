@@ -14,7 +14,7 @@ export interface SceneBounds {
 }
 
 export class Scene {
-  private root: Container; // UI layer container for this scene
+  private root: Container; // Main unified container for both scene and controls
   private bounds: SceneBounds; // in canvas/drawing coordinates
   private rect: Graphics;
   private controlsBg: Graphics;
@@ -25,7 +25,6 @@ export class Scene {
   private backText: Text;
   private fwdText: Text;
   private timerText: Text;
-  private ctrlRoot: Container | null = null;
   private isPlaying: boolean = false;
   private t: number = 0; // normalized 0..1
   private loop: boolean = false;
@@ -49,14 +48,11 @@ export class Scene {
       .stroke({ color: 0x4a79a4, width: 2 })
       .fill({ color: 0x4a79a4, alpha: 0.06 });
 
-    // Controls area (bottom bar) in UI layer (always on top)
+    // Controls area (bottom bar) - now part of the main root container
     const controlsHeight = 48;
     const cx = 0;
     const cy = bounds.height - controlsHeight;
-    this.ctrlRoot = new Container();
-    this.ctrlRoot.name = 'SceneControls';
-    const uiLayer = animationState.getUiLayer();
-    if (uiLayer) uiLayer.addChild(this.ctrlRoot);
+    
     this.controlsBg = new Graphics();
     this.controlsBg.roundRect(cx, cy, bounds.width, controlsHeight, 8)
       .fill({ color: 0x0b1b2b, alpha: 0.55 })
@@ -96,8 +92,8 @@ export class Scene {
     this.fwdText.on('pointerdown', stop).on('pointertap', (e: any) => { stop(e); this.step(0.1); });
     this.playText.on('pointerdown', stop).on('pointertap', (e: any) => { stop(e); this.togglePlay(); });
 
-    this.root.addChild(this.rect);
-    this.ctrlRoot?.addChild(this.controlsBg, this.progressTrack, this.progressFill, this.progressMarkers, this.backText, this.playText, this.fwdText, this.timerText);
+    // Add all elements to the unified root container
+    this.root.addChild(this.rect, this.controlsBg, this.progressTrack, this.progressFill, this.progressMarkers, this.backText, this.playText, this.fwdText, this.timerText);
 
     // Enable scrubbing on progress track
     const startScrub = (e: any) => {
@@ -117,8 +113,11 @@ export class Scene {
     if (drawing) {
       try { drawing.addChildAt(this.root, 0); } catch { drawing.addChild(this.root); }
     }
-    // Position UI controls over the scene
-    this.updateControlsTransform();
+
+    // Register this scene as a managed object for selection and transform support
+    if (dm) {
+      dm.add(this.root);
+    }
 
     // Attach to ticker
     const app = animationState.getApp();
@@ -144,6 +143,48 @@ export class Scene {
 
   getBounds(): SceneBounds { return { ...this.bounds }; }
 
+  setBounds(newBounds: SceneBounds): void {
+    this.bounds = { ...newBounds };
+    this.updateGraphicsForNewBounds();
+  }
+
+  private updateGraphicsForNewBounds(): void {
+    const { width, height } = this.bounds;
+    const controlsHeight = 48;
+    const cx = 0;
+    const cy = height - controlsHeight;
+    const trackMargin = 10;
+    const trackHeight = 8;
+    const trackY = cy + 8;
+
+    // Update scene rectangle
+    this.rect.clear();
+    this.rect.roundRect(0, 0, width, height, 10)
+      .stroke({ color: 0x4a79a4, width: 2 })
+      .fill({ color: 0x4a79a4, alpha: 0.06 });
+
+    // Update controls background
+    this.controlsBg.clear();
+    this.controlsBg.roundRect(cx, cy, width, controlsHeight, 8)
+      .fill({ color: 0x0b1b2b, alpha: 0.55 })
+      .stroke({ color: 0x4a79a4, width: 1 });
+
+    // Update progress track
+    this.progressTrack.clear();
+    this.progressTrack.roundRect(cx + trackMargin, trackY, width - trackMargin * 2, trackHeight, 4)
+      .fill({ color: 0xffffff, alpha: 0.35 });
+
+    // Update control positions
+    const centerY = cy + controlsHeight - 18 - 6;
+    this.backText.position.set(cx + width / 2 - 28, centerY);
+    this.playText.position.set(cx + width / 2, centerY);
+    this.fwdText.position.set(cx + width / 2 + 22, centerY);
+    this.timerText.position.set(cx + trackMargin, cy + controlsHeight - 22);
+
+    // Update progress indicators
+    this.setProgress(this.t);
+  }
+
   setLoop(enabled: boolean): void { this.loop = enabled; }
 
   destroy(): void {
@@ -151,8 +192,16 @@ export class Scene {
       const app = animationState.getApp();
       if (app) app.ticker.remove(this.tick);
     } catch {}
+    
+    // Remove from DisplayObjectManager if registered
+    try {
+      const dm = animationState.getDisplayManager();
+      if (dm) {
+        dm.remove(this.root);
+      }
+    } catch {}
+    
     try { this.root.destroy({ children: true }); } catch {}
-    try { this.ctrlRoot?.destroy({ children: true }); } catch {}
     try { (animationState as any).removeScene?.(this); } catch {}
   }
 
@@ -202,6 +251,8 @@ export class Scene {
   private tick = (ticker: any) => {
     // If scene container moved (via selection), carry content and paths with it
     try { this.syncSceneTransform(); } catch {}
+    // Check if the scene was resized by the transform system
+    try { this.syncSceneResize(); } catch {}
     const delta = (ticker?.deltaMS ?? 16.67) / 16.67; // normalize to ~60fps units
     if (!this.isPlaying) return;
     // delta ~ 1 at 60fps; we want normalized progress per frame based on a scene duration baseline (we animate per object duration)
@@ -226,7 +277,7 @@ export class Scene {
 
   private updateFromTrack(e: any): void {
     try {
-      const local = this.ctrlRoot ? this.ctrlRoot.toLocal(e.global) : null;
+      const local = this.root.toLocal(e.global);
       if (!local) return;
       const bounds = this.bounds;
       const cx = 0;
@@ -241,10 +292,28 @@ export class Scene {
   }
 
   private updateControlsTransform(): void {
-    try {
-      if (!this.ctrlRoot) return;
-      this.ctrlRoot.position.set(this.root.position.x, this.root.position.y);
-    } catch {}
+    // No longer needed - controls are part of the unified root container
+    // This method is kept for compatibility but does nothing
+  }
+
+  private syncSceneResize(): void {
+    // Check if the root container has been scaled/resized by the transform system
+    const currentScale = this.root.scale;
+    if (currentScale.x !== 1 || currentScale.y !== 1) {
+      // The transform system is scaling our container - update our internal bounds
+      const newWidth = this.bounds.width * currentScale.x;
+      const newHeight = this.bounds.height * currentScale.y;
+      
+      // Reset the scale to 1 and update the graphics to the new size
+      this.root.scale.set(1, 1);
+      
+      // Update our internal bounds
+      this.bounds.width = newWidth;
+      this.bounds.height = newHeight;
+      
+      // Recreate graphics with new dimensions
+      this.updateGraphicsForNewBounds();
+    }
   }
 
   private syncSceneTransform(): void {
