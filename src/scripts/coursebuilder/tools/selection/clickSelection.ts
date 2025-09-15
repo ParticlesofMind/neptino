@@ -63,22 +63,24 @@ const isDoubleClick = clickedObject &&
  return { clickedObject, isDoubleClick };
  }
 
- public getObjectsAtPoint(point: Point, container: Container): any[] {
-   const hits: any[] = [];
-   const visit = (node: any) => {
-     if (!node) return;
-     try {
-       if (this.isSelectableObject(node)) {
-         const b = node.getBounds();
-         if (point.x >= b.x && point.x <= b.x + b.width && point.y >= b.y && point.y <= b.y + b.height) {
-           hits.push(node);
-         }
-       }
-     } catch {}
-     if (node.children && Array.isArray(node.children)) {
-       for (const ch of node.children) visit(ch);
-     }
-   };
+  public getObjectsAtPoint(point: Point, container: Container): any[] {
+    const hits: any[] = [];
+    const visit = (node: any) => {
+      if (!node) return;
+      // Skip entire scene containers and their subtree; scenes are not selectable targets
+      if ((node as any).__sceneRef) return;
+      try {
+        if (this.isSelectableObject(node)) {
+          const b = node.getBounds();
+          if (point.x >= b.x && point.x <= b.x + b.width && point.y >= b.y && point.y <= b.y + b.height) {
+            hits.push(node);
+          }
+        }
+      } catch {}
+      if (node.children && Array.isArray(node.children)) {
+        for (const ch of node.children) visit(ch);
+      }
+    };
    // Front-to-back: visit in reverse order at each level to prioritize visually top items first
    const visitReversed = (nodes: any[]) => {
      for (let i = nodes.length - 1; i >= 0; i--) visit(nodes[i]);
@@ -94,8 +96,15 @@ const isDoubleClick = clickedObject &&
         this.isTransformerObject(object)) {
       return false;
     }
- 
- // Check for valid drawable objects
+
+    // Skip scene containers and anything inside them
+    let cur: any = object;
+    for (let i = 0; i < 8 && cur; i++) {
+      if ((cur as any).__sceneRef) return false;
+      cur = cur.parent;
+    }
+
+    // Check for valid drawable objects
     return object.getBounds && typeof object.getBounds === 'function';
   }
 

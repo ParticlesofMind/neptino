@@ -47,9 +47,16 @@ export class SceneTool extends BaseTool {
     const h = Math.abs(p.y - this.start.y);
     this.cleanup();
     if (w < 10 || h < 10) return; // ignore tiny scenes
+    
+    // CRITICAL FIX: Clear existing scenes to prevent UI fragmentation
+    // Only one scene should be active at a time to maintain cohesive interface
+    animationState.clearScenes();
+    console.log('🎬 Creating new scene, cleared previous scenes');
+    
     const scene = new Scene({ x, y, width: w, height: h });
     scene.setLoop(animationState.getLoop());
     animationState.addScene(scene);
+    console.log('🎬 New scene created:', { x, y, width: w, height: h });
   }
 
   private cleanup(): void {

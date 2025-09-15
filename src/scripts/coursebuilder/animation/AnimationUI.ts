@@ -131,47 +131,45 @@ export class AnimationUI {
     if (!options.querySelector('.tools__item--path [data-anim-speed]')) {
       const speedPanel = createEl(`
         <div class="tools__item tools__item--path" style="display:none; align-items:center; gap:6px;">
-          <span style="font-size:12px; opacity:0.8;">Speed:</span>
+      
           <div class="button-group" data-anim-speed>
             <button type="button" class="button button--small button--outline" data-speed="slow">Slow</button>
             <button type="button" class="button button--small button--outline" data-speed="medium">Medium</button>
             <button type="button" class="button button--small button--outline" data-speed="fast">Fast</button>
           </div>
-          <span style="margin-left:12px; font-size:12px; opacity:0.8;">Ease:</span>
+        
           <div class="button-group" data-anim-ease>
             <button type="button" class="button button--small button--outline" data-ease="linear">Linear</button>
             <button type="button" class="button button--small button--outline" data-ease="easeIn">Ease‑In</button>
             <button type="button" class="button button--small button--outline" data-ease="easeOut">Ease‑Out</button>
           </div>
-          <span style="margin-left:12px; font-size:12px; opacity:0.8;">Curve:</span>
           <div class="button-group" data-anim-curve>
             <button type="button" class="button button--small button--outline" data-curve="linear">Linear</button>
             <button type="button" class="button button--small button--outline" data-curve="bezier">Bezier</button>
           </div>
-          <span style="margin-left:12px; font-size:12px; opacity:0.8;">Anchors:</span>
           <div class="button-group" data-anim-anchors>
             <button type="button" class="button button--small button--outline" data-anchor-action="insertBefore">+ Before</button>
             <button type="button" class="button button--small button--outline" data-anchor-action="insertAfter">+ After</button>
             <button type="button" class="button button--small button--outline" data-anchor-action="insert">+ Add</button>
             <button type="button" class="button button--small button--outline" data-anchor-action="delete">− Remove</button>
           </div>
-          <span style="margin-left:12px; font-size:12px; opacity:0.8;">Anchor Speed:</span>
+        
           <div class="button-group" data-anim-anchor-speed>
             <button type="button" class="button button--small button--outline" data-weight="slower">Slower</button>
             <button type="button" class="button button--small button--outline" data-weight="faster">Faster</button>
           </div>
-          <span style="margin-left:12px; font-size:12px; opacity:0.8;">Timing:</span>
+         
           <div class="button-group" data-anim-timing>
             <button type="button" class="button button--small button--outline" data-timing-action="normalize">Normalize</button>
           </div>
-          <span style="margin-left:12px; font-size:12px; opacity:0.8;">Seg Ease:</span>
+   
           <div class="button-group" data-anim-seg-ease>
             <button type="button" class="button button--small button--outline" data-seg-ease="linear">Linear</button>
             <button type="button" class="button button--small button--outline" data-seg-ease="easeIn">In</button>
             <button type="button" class="button button--small button--outline" data-seg-ease="easeOut">Out</button>
             <button type="button" class="button button--small button--outline" data-seg-ease="easeInOut">InOut</button>
           </div>
-          <span style="margin-left:12px; font-size:12px; opacity:0.8;">Paths:</span>
+        
           <button type="button" class="button button--small" data-paths-visibility>Show</button>
           <button type="button" class="button button--small button--outline" data-paths-clear-selected>Clear Selected</button>
           <button type="button" class="button button--small button--delete" data-paths-clear>Clear Scene</button>
