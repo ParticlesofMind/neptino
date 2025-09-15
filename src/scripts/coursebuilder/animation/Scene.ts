@@ -229,8 +229,7 @@ export class Scene {
       const local = this.ctrlRoot ? this.ctrlRoot.toLocal(e.global) : null;
       if (!local) return;
       const bounds = this.bounds;
-      const controlsHeight = 48;
-      const cx = 0; const cy = bounds.height - controlsHeight;
+      const cx = 0;
       const trackMargin = 10; const fullWidth = bounds.width - trackMargin * 2;
       const x = Math.max(cx + trackMargin, Math.min(cx + trackMargin + fullWidth, local.x));
       const norm = (x - (cx + trackMargin)) / fullWidth;
@@ -287,11 +286,8 @@ export class Scene {
           const parent = obj.parent as any;
           if (parent && typeof parent.toLocal === 'function') {
             const dmRoot = root;
-            const oldWorld = new Point(b.x, b.y); // top-left approximation
             // Move by dx,dy in drawing coords
-            const newLocal = parent.toLocal(new Point(oldWorld.x + dx, oldWorld.y + dy), dmRoot);
             const curLocal = obj.position.clone();
-            const off = new Point(newLocal.x - (curLocal.x + (b.x - (parent.toGlobal(curLocal).x))), newLocal.y - (curLocal.y + (b.y - (parent.toGlobal(curLocal).y))));
             // Simpler: convert current position to drawing coords, then add dx,dy
             const curWorld = parent.toGlobal(curLocal);
             const curDraw = dmRoot.toLocal(curWorld);

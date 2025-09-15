@@ -149,31 +149,31 @@ function attachPedagogyGrid() {
   function renderMarker() {
     const leftPct = ((state.x + 100) / 200) * 100;
     const topPct = (1 - (state.y + 100) / 200) * 100;
-    marker.style.left = `${leftPct}%`;
-    marker.style.top = `${topPct}%`;
+    marker!.style.left = `${leftPct}%`;
+    marker!.style.top = `${topPct}%`;
   }
 
   function renderOutputs() {
-    xOut.textContent = String(round(state.x));
-    yOut.textContent = String(round(state.y));
+    xOut!.textContent = String(round(state.x));
+    yOut!.textContent = String(round(state.y));
 
     const name = approachName(state.x, state.y);
-    titleEl.textContent = name;
-    subtitleEl.textContent = formatSubtitle(state.x, state.y);
-    descEl.textContent = approachDescription(state.x, state.y);
+    titleEl!.textContent = name;
+    subtitleEl!.textContent = formatSubtitle(state.x, state.y);
+    descEl!.textContent = approachDescription(state.x, state.y);
 
-    listEl.innerHTML = '';
+    listEl!.innerHTML = '';
     for (const item of impactBullets(state.x, state.y)) {
       const li = document.createElement('li');
       li.textContent = item;
-      listEl.appendChild(li);
+      listEl!.appendChild(li);
     }
   }
 
   function saveHidden() {
-    input.value = JSON.stringify({ x: round(state.x), y: round(state.y) });
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    input.dispatchEvent(new Event('change', { bubbles: true }));
+    input!.value = JSON.stringify({ x: round(state.x), y: round(state.y) });
+    input!.dispatchEvent(new Event('input', { bubbles: true }));
+    input!.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
   function setFromXY(x: number, y: number) {
@@ -185,7 +185,7 @@ function attachPedagogyGrid() {
   }
 
   function setFromEvent(clientX: number, clientY: number) {
-    const rect = grid.getBoundingClientRect();
+    const rect = grid!.getBoundingClientRect();
     const relX = clamp(clientX - rect.left, 0, rect.width);
     const relY = clamp(clientY - rect.top, 0, rect.height);
     const x = (relX / rect.width) * 200 - 100; // -100 .. 100

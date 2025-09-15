@@ -39,7 +39,6 @@ export class PenTool extends BaseTool {
  private lastMousePosition: Point = new Point(0, 0);
  private hoverIndicator: Graphics | null = null;
  private snapIndicator: Graphics | null = null;
- private constrainFromNode: Point | null = null; // anchor for shift-straight segments
 
  constructor() {
          super("pen", "url('/src/assets/cursors/pen-cursor.svg') 2 2, crosshair");
@@ -111,9 +110,8 @@ export class PenTool extends BaseTool {
    const dist = Math.hypot(dx, dy);
    const snappedPoint = new Point(lastNode.x + Math.cos(snapped) * dist, lastNode.y + Math.sin(snapped) * dist);
    clampedPoint = BoundaryUtils.clampPoint(snappedPoint, canvasBounds);
-   this.constrainFromNode = new Point(lastNode.x, lastNode.y);
  } else {
-   this.constrainFromNode = null;
+   // No constraint
  }
  }
 
@@ -145,9 +143,8 @@ export class PenTool extends BaseTool {
    const dist = Math.hypot(dx, dy);
    const snappedPoint = new Point(anchor.x + Math.cos(snapped) * dist, anchor.y + Math.sin(snapped) * dist);
    clampedPoint = BoundaryUtils.clampPoint(snappedPoint, canvasBounds);
-   this.constrainFromNode = new Point(anchor.x, anchor.y);
  } else if (!shiftHeld) {
-   this.constrainFromNode = null;
+   // No constraint
  }
 
  // Show snap anchor hover if near any anchor

@@ -1,11 +1,9 @@
-import { Container, DisplayObject, Application } from 'pixi.js';
+import { Container, Application } from 'pixi.js';
 
 export class LayersPanel {
-  private rootEl: HTMLElement | null = null;
   private listEl: HTMLOListElement | null = null;
 
-  constructor(rootSelector: string = '#preview-layers') {
-    this.rootEl = document.querySelector(rootSelector) as HTMLElement | null;
+  constructor() {
     this.listEl = document.getElementById('layers-list-root') as HTMLOListElement | null;
     this.bindGlobalListeners();
     this.bindControls();
@@ -50,12 +48,12 @@ export class LayersPanel {
   private renderChildren(parent: Container, list: HTMLOListElement): void {
     const children = parent.children.slice();
     children.forEach((child) => {
-      const li = this.buildLayerItem(child, parent);
+      const li = this.buildLayerItem(child);
       list.appendChild(li);
     });
   }
 
-  private buildLayerItem(obj: DisplayObject, parent: Container): HTMLLIElement {
+  private buildLayerItem(obj: Container): HTMLLIElement {
     const li = document.createElement('li');
     li.className = 'layer__item card card--layer';
     (li as any).draggable = true;
@@ -249,7 +247,7 @@ export class LayersPanel {
           const ids = Array.from(containerLi.querySelectorAll(':scope > li')).map(li => (li as HTMLElement).dataset.layerId || '');
           const newOrder = ids
             .map((i) => this.getObjectById(i))
-            .filter(Boolean) as DisplayObject[];
+            .filter(Boolean) as Container[];
           newOrder.forEach((child, idx) => {
             try { parentCont.addChildAt(child as any, idx); } catch {}
           });
@@ -282,7 +280,7 @@ export class LayersPanel {
       });
       // Render children now
       (obj as any).children?.forEach((c: any) => {
-        const cli = this.buildLayerItem(c, obj as any);
+        const cli = this.buildLayerItem(c);
         childrenList!.appendChild(cli);
       });
     }
@@ -297,7 +295,7 @@ export class LayersPanel {
     } catch { return {}; }
   }
 
-  private fallbackName(obj: DisplayObject): string {
+  private fallbackName(obj: Container): string {
     const cn = (obj as any).constructor?.name || 'Object';
     return cn;
   }
@@ -310,7 +308,7 @@ export class LayersPanel {
     return null;
   }
 
-  private getObjectById(id: string): DisplayObject | null {
+  private getObjectById(id: string): Container | null {
     const dm = (window as any)._displayManager as any;
     if (!dm) return null;
     return dm.get(id);

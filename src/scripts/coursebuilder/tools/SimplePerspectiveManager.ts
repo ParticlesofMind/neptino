@@ -600,7 +600,7 @@ export class SimplePerspectiveManager {
      * Update grid overlay styles to match current zoom and canvas position
      */
     private updateGridOverlayStyles(): void {
-        if (!this.gridOverlay || !this.canvas) return;
+        if (!this.gridOverlay || !this.canvas || !this.canvasContainer) return;
         
         // Calculate grid size based on zoom level to maintain visual consistency
         const gridSize = Math.max(2, 20 / this.zoomLevel);

@@ -24,8 +24,6 @@ export class MediaManager {
   init() {
     if (this.initialized) return;
     const env = resolveConfig();
-    const useStockEnv = (import.meta as any).env?.VITE_MEDIA_USE_STOCK;
-    const useStock = (useStockEnv === undefined) || useStockEnv === '1' || String(useStockEnv).toLowerCase() === 'true';
 
     // Lazy provider factories (registered but initialized when used)
     // Stock providers for all major types
@@ -85,21 +83,21 @@ export class MediaManager {
     const key = this.resolveDefaultProvider(mediaType);
     if (!key) return { items: [], page: options.page ?? 1, pageSize: options.pageSize ?? 20, hasMore: false };
     const provider = this.getProvider(key);
-    return provider.search(query, options);
+    return provider.search(query);
   }
 
   async searchAll(query: string): Promise<{ provider: string; result: SearchResult }[]> {
     if (!this.initialized) this.init();
     const keys = Array.from(this.factories.keys());
     const providers = keys.map(k => ({ k, p: this.getProvider(k) }));
-    const promises = providers.map(({ k, p }) => p.search(query).then(result => ({ provider: k, result })).catch(err => ({ provider: k, result: { items: [], page: 1, pageSize: 20, hasMore: false } })));
+    const promises = providers.map(({ k, p }) => p.search(query).then(result => ({ provider: k, result })).catch(() => ({ provider: k, result: { items: [], page: 1, pageSize: 20, hasMore: false } })));
     return Promise.all(promises);
   }
 
-  async searchWithProvider(providerKey: string, query: string, options: SearchQueryOptions = {}): Promise<SearchResult> {
+  async searchWithProvider(providerKey: string, query: string): Promise<SearchResult> {
     if (!this.initialized) this.init();
     const provider = this.getProvider(providerKey);
-    return provider.search(query, options);
+    return provider.search(query);
   }
 
   listProvidersFor(mediaType: MediaType): { key: string; label: string }[] {

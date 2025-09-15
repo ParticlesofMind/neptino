@@ -86,7 +86,6 @@ export class ToolManager {
     if (!this.activeTool) return;
 
     // Handle tool-specific keyboard events
-    const toolName = this.activeTool.name;
     // If tool exposes onKeyDown, forward the event (pen, selection, others)
     if (typeof (this.activeTool as any).onKeyDown === 'function') {
       try { (this.activeTool as any).onKeyDown(event); } catch {}
@@ -234,7 +233,6 @@ export class ToolManager {
  if (!this.activeTool) return;
 
  const toolName = this.activeTool.name;
-
  switch (toolName) {
  case "pen":
  this.updateToolSettings("pen", { color });

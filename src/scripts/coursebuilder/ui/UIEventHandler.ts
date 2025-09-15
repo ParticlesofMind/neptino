@@ -152,15 +152,6 @@ export class UIEventHandler {
     /**
      * Handle tool selection
      */
-    private handleToolSelection(event: Event): void {
-        // Backward-compatible handler (not used by delegated listener anymore)
-        try { (event as any)?.preventDefault?.(); } catch {}
-        const button = (event.currentTarget as HTMLElement) || (event.target as HTMLElement)?.closest('[data-tool]');
-        const toolName = button?.dataset?.tool;
-        if (!toolName) return;
-        console.log(`🔧 UI: Tool selection event for "${toolName}"`);
-        this.toolStateManager.setTool(toolName);
-    }
 
     /**
      * Handle mode selection

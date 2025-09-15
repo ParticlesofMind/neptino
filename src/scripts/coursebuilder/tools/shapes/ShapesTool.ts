@@ -147,7 +147,7 @@ export class ShapesTool extends BaseTool {
         if (context) {
             this.updateSizeIndicator(context);
             // Draw dimension guides if any
-            this.drawDimensionGuides(container, context);
+            this.drawDimensionGuides(context);
         }
     }
 
@@ -255,7 +255,7 @@ export class ShapesTool extends BaseTool {
     }
 
     private drawShape(): ShapeDrawingContext | null {
-        if (!this.currentShape || !this.drawerFactory) return;
+        if (!this.currentShape || !this.drawerFactory) return null;
 
         // Clear previous drawing
         this.currentShape.clear();
@@ -291,7 +291,7 @@ export class ShapesTool extends BaseTool {
         const drawer = this.drawerFactory.getDrawer(this.settings.shapeType);
         if (!drawer) {
             console.warn(`🔶 SHAPES: No drawer found for shape type: ${this.settings.shapeType}`);
-            return;
+            return null;
         }
 
         // Apply proportional constraints
@@ -363,7 +363,7 @@ export class ShapesTool extends BaseTool {
     }
 
     // Draw dimension guides next to the creating shape
-    private drawDimensionGuides(container: Container, context: ShapeDrawingContext): void {
+    private drawDimensionGuides(context: ShapeDrawingContext): void {
         if (!this.uiContainer) return;
         const ui = this.uiContainer;
         if (!this.dimGuide) { this.dimGuide = new Graphics(); this.dimGuide.zIndex = 1000; ui.addChild(this.dimGuide); }

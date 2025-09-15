@@ -47,5 +47,5 @@ export interface ProviderConfig {
 export interface MediaProvider {
   readonly name: string;
   readonly mediaType: MediaType;
-  search(query: string, options?: SearchQueryOptions): Promise<SearchResult>;
+  search(query: string): Promise<SearchResult>;
 }

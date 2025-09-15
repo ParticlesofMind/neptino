@@ -1,5 +1,4 @@
 import { mediaManager } from '../MediaManager';
-import { resolveConfig } from '../config';
 import { MediaItem, MediaType, SearchResult } from '../types';
 
 function debounce<T extends (...args: any[]) => void>(fn: T, delay = 300) {
@@ -21,12 +20,7 @@ class MediaInterface {
   private resultsEl!: HTMLElement;
   private filtersEl!: HTMLElement;
   private loadMoreBtn!: HTMLButtonElement;
-  private audioFilters = { minDurationSec: undefined as number | undefined, maxDurationSec: undefined as number | undefined, format: '', license: '' };
-  private audioAdvanced = { minBitrateKbps: undefined as number | undefined, maxBitrateKbps: undefined as number | undefined, minSamplerateHz: undefined as number | undefined, maxSamplerateHz: undefined as number | undefined };
-  private providerSelect!: HTMLSelectElement;
   private selectedProviderKey: string | null = null;
-  private localUploadWrap!: HTMLElement;
-  private connectPanel!: HTMLElement;
 
   init() {
     mediaManager.init();
@@ -165,7 +159,7 @@ class MediaInterface {
         if (this.currentType !== 'files') (opts as any).type = this.currentType;
       }
       const result = this.selectedProviderKey
-        ? await mediaManager.searchWithProvider(this.selectedProviderKey, this.query, opts)
+        ? await mediaManager.searchWithProvider(this.selectedProviderKey, this.query)
         : await mediaManager.search(this.currentType, this.query, opts);
       this.hasMore = result.hasMore;
       this.renderResults(result, clear);
@@ -178,46 +172,6 @@ class MediaInterface {
     }
   }
 
-  private handleConnect() {
-    const cfg = resolveConfig();
-    const base = location.origin;
-    const fallbackRedirect = `${base}/src/pages/shared/oauth-callback.html`;
-    if (this.selectedProviderKey === 'files:google-drive') {
-      const clientId = (cfg as any).googleDrive.clientId;
-      const redirect = (cfg as any).googleDrive.redirectUri || fallbackRedirect;
-      const scope = encodeURIComponent('https://www.googleapis.com/auth/drive.readonly');
-      if (!clientId) { alert('Missing Google Drive client ID'); return; }
-      const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${scope}&include_granted_scopes=true&state=googledrive`; 
-      window.open(url, 'oauth', 'width=520,height=640');
-    } else if (this.selectedProviderKey === 'files:dropbox') {
-      const clientId = (cfg as any).dropbox.clientId;
-      const redirect = (cfg as any).dropbox.redirectUri || fallbackRedirect;
-      if (!clientId) { alert('Missing Dropbox client ID'); return; }
-      const url = `https://www.dropbox.com/oauth2/authorize?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&token_access_type=online&state=dropbox`;
-      window.open(url, 'oauth', 'width=520,height=640');
-    }
-    // Listen for storage signal
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'OAUTH_DONE_TIME') {
-        window.removeEventListener('storage', onStorage);
-        this.page = 1;
-        this.search(true, true);
-      }
-    };
-    window.addEventListener('storage', onStorage);
-  }
-
-  private handleDisconnect() {
-    if (this.selectedProviderKey === 'files:google-drive') {
-      localStorage.removeItem('GOOGLE_DRIVE_TOKEN');
-      (window as any).GOOGLE_DRIVE_TOKEN = undefined;
-    } else if (this.selectedProviderKey === 'files:dropbox') {
-      localStorage.removeItem('DROPBOX_TOKEN');
-      (window as any).DROPBOX_TOKEN = undefined;
-    }
-    this.page = 1;
-    this.search(true);
-  }
 
   private renderErrorWithConnect(message: string) {
     const wrap = document.createElement('div');
@@ -470,43 +424,6 @@ class MediaInterface {
     const el = document.createElement('div');
     el.textContent = `${k}: ${v}`;
     return el;
-  }
-
-  private handleAdd(item: MediaItem) {
-    const canvasAPI = (window as any).canvasAPI;
-    if (item.type === 'images' && (item.contentUrl || item.previewUrl || item.thumbnailUrl)) {
-      document.dispatchEvent(new CustomEvent('unsplashImageSelected', { detail: item }));
-      if (canvasAPI && typeof canvasAPI.addImage === 'function') {
-        canvasAPI.addImage(item.contentUrl || item.previewUrl || item.thumbnailUrl);
-      }
-    } else if (item.type === 'audio') {
-      document.dispatchEvent(new CustomEvent('freesoundAudioSelected', { detail: item }));
-      if (canvasAPI && typeof canvasAPI.addAudioElement === 'function') {
-        canvasAPI.addAudioElement(item.previewUrl || item.contentUrl || '', item.title || 'Audio');
-      } else if (canvasAPI && typeof canvasAPI.addAudioPlaceholder === 'function') {
-        canvasAPI.addAudioPlaceholder(item.title || 'Audio');
-      }
-    } else if (item.type === 'videos') {
-      document.dispatchEvent(new CustomEvent('pixabayVideoSelected', { detail: item }));
-      // Video elements should only be added via drag-and-drop for better positioning control
-      // Removed automatic canvas addition on click to prevent duplicates
-    } else if (item.type === 'text') {
-      document.dispatchEvent(new CustomEvent('textSelected', { detail: item }));
-      // Add simple text element on canvas if available
-      if (canvasAPI && typeof canvasAPI.addText === 'function' && item.title) {
-        try { canvasAPI.addText(item.title); } catch {}
-      }
-    } else if (item.type === 'plugins') {
-      document.dispatchEvent(new CustomEvent('pluginSelected', { detail: item }));
-      if (canvasAPI && typeof canvasAPI.addText === 'function' && item.title) {
-        try { canvasAPI.addText(`🔌 ${item.title}`); } catch {}
-      }
-    } else if (item.type === 'links') {
-      document.dispatchEvent(new CustomEvent('linkSelected', { detail: item }));
-      if (canvasAPI && typeof canvasAPI.addText === 'function' && item.title) {
-        try { canvasAPI.addText(`🔗 ${item.title}`); } catch {}
-      }
-    }
   }
 
   private onDragStart(ev: DragEvent, item: any) {

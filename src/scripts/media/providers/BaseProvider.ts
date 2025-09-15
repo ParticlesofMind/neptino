@@ -28,7 +28,7 @@ export abstract class BaseProvider implements MediaProvider {
     return `${this.providerKey}:${path}:${normalized}`;
   }
 
-  protected async getJson(path: string, params: Record<string, any>, headers?: Record<string, string>, cacheTtlMs?: number): Promise<any> {
+  protected async getJson(path: string, params: Record<string, any>, headers?: Record<string, string>): Promise<any> {
     // Robust path join to preserve base path segments (e.g., /apiv2)
     const base = (this.config.baseUrl || '').replace(/\/$/, '');
     const normalizedPath = (path || '').replace(/^\//, '');

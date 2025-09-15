@@ -25,7 +25,6 @@ export class SelectionTool extends BaseTool {
 
   private selected: any[] = [];
   private container: Container | null = null;
-  private uiContainer: Container | null = null;
 
   private isDraggingGroup = false;
   public isDragging: boolean = false;
@@ -43,7 +42,7 @@ export class SelectionTool extends BaseTool {
     });
   }
 
-  public setUILayer(container: Container) { this.uiContainer = container; this.overlay.setUILayer(container); this.guides.setUILayer(container); this.marquee.setUILayer(container); }
+  public setUILayer(container: Container) { this.container = container; this.overlay.setUILayer(container); this.guides.setUILayer(container); this.marquee.setUILayer(container); }
   public override setDisplayObjectManager(manager: any): void { super.setDisplayObjectManager(manager); this.clipboardSvc.setDisplayManager(manager); }
 
   public onPointerDown(event: FederatedPointerEvent, container: Container): void {
@@ -98,7 +97,7 @@ export class SelectionTool extends BaseTool {
       this.transformer.update(p, { shiftKey: event.shiftKey, altKey: (event as any).altKey, ctrlKey: (event as any).ctrlKey || (event as any).metaKey });
       const mode = this.mode; const group = this.overlay.getGroup();
       if (mode === 'rotate' && (this as any)._rotateCenter && (this as any)._rotateBase && group) {
-        const cx = (this as any)._rotateCenter.x; const cy = (this as any)._rotateCenter.y; const dx = p.x - cx; const dy = p.y - cy; const currentAngle = Math.atan2(dy, dx); const delta = currentAngle - (this as any)._rotateStartRef; this.overlay.setRotationPreview(new Point(cx, cy), (this as any)._rotateBase, delta, container);
+        const cx = (this as any)._rotateCenter.x; const cy = (this as any)._rotateCenter.y; const dx = p.x - cx; const dy = p.y - cy; const currentAngle = Math.atan2(dy, dx); const delta = currentAngle - (this as any)._rotateStartRef; this.overlay.setRotationPreview(new Point(cx, cy), (this as any)._rotateBase, delta);
       } else { this.overlay.refreshBoundsOnly(container); const b = this.overlay.getGroup()?.bounds; if (b) try { this.guides.update(container, this.selected, b); } catch {} }
       return;
     }

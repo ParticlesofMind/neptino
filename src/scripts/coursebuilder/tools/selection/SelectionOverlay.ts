@@ -1,4 +1,4 @@
-import { Container, Graphics, Point, Rectangle, Text } from 'pixi.js';
+import { Container, Graphics, Point, Rectangle } from 'pixi.js';
 import { TransformHandle, SelectionGroup } from './types';
 import { computeCombinedBoundsLocal } from './SelectionUtils';
 import { SelectionSizeIndicator } from './SelectionSizeIndicator';
@@ -112,7 +112,7 @@ export class SelectionOverlay {
     this.sizeIndicator.update(bounds, container);
   }
 
-  public setRotationPreview(center: Point, base: Rectangle, angle: number, container: Container): void {
+  public setRotationPreview(center: Point, base: Rectangle, angle: number): void {
     if (!this.group) return;
     this.overlayCenter = center; this.overlayBaseBounds = base; this.overlayRotationAngle = angle;
     const g = this.group.selectionBox;

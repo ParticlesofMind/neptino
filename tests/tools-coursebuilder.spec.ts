@@ -1,5 +1,18 @@
 import { test, expect, Page } from '@playwright/test';
 
+// Type declarations for window objects
+declare global {
+  interface Window {
+    canvas?: any;
+    canvasAPI?: any;
+    textTool?: any;
+    lastError?: any;
+    uiEventHandler?: any;
+    toolStateManager?: any;
+    errors?: any[];
+  }
+}
+
 class CanvasHelpers {
   constructor(private page: Page) {}
 
@@ -117,7 +130,7 @@ test.describe('Coursebuilder Create Tools', () => {
     await helpers.setTool('selection');
     await page.waitForTimeout(150);
     const afterBeforeMove = await helpers.drawingInfo();
-    const candidates = (afterBeforeMove || []).filter(o => o.type === 'Graphics' && !(o.name || '').startsWith('selection-') && !(o.name || '').startsWith('transform-'));
+    const candidates = (afterBeforeMove || []).filter((o: any) => o.type === 'Graphics' && !(o.name || '').startsWith('selection-') && !(o.name || '').startsWith('transform-'));
     const target = candidates[candidates.length - 1] || afterBeforeMove?.[afterBeforeMove.length - 1];
     const centerX = Math.round((startX + endX) / 2);
     const centerY = Math.round((startY + endY) / 2);
@@ -130,8 +143,8 @@ test.describe('Coursebuilder Create Tools', () => {
     await helpers.moveMouseOnCanvas(centerX + 120, centerY + 30);
     await helpers.mouseUp();
     const afterMove = await helpers.drawingInfo();
-    const movedCandidates = (afterMove || []).filter(o => o.type === 'Graphics' && !(o.name || '').startsWith('selection-') && !(o.name || '').startsWith('transform-'));
-    const moved = movedCandidates.sort((a,b) => Math.abs((a.width - (target?.width||0)) + (a.height - (target?.height||0))) - Math.abs((b.width - (target?.width||0)) + (b.height - (target?.height||0))))[0] || movedCandidates[movedCandidates.length - 1];
+    const movedCandidates = (afterMove || []).filter((o: any) => o.type === 'Graphics' && !(o.name || '').startsWith('selection-') && !(o.name || '').startsWith('transform-'));
+    const moved = movedCandidates.sort((a: any, b: any) => Math.abs((a.width - (target?.width||0)) + (a.height - (target?.height||0))) - Math.abs((b.width - (target?.width||0)) + (b.height - (target?.height||0))))[0] || movedCandidates[movedCandidates.length - 1];
     expect(moved?.x).not.toBe(target?.x);
   });
 
@@ -215,7 +228,7 @@ test.describe('Coursebuilder Create Tools', () => {
     expect((after?.length || 0)).toBeGreaterThan(before?.length || 0);
   });
 
-  test('eraser: remove a previously drawn shape', async ({ page }) => {
+  test('eraser: remove a previously drawn shape', async ({ page: _page }) => {
     // Ensure a shape exists
     await helpers.setTool('shapes');
     await helpers.mouseDownOnCanvas(520, 500);

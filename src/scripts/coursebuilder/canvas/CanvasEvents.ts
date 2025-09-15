@@ -10,10 +10,8 @@
  * Target: ~150 lines
  */
 
-import { Application, Container, FederatedPointerEvent, Graphics, Point } from 'pixi.js';
+import { Application, Container, FederatedPointerEvent } from 'pixi.js';
 import { ToolManager } from '../tools/ToolManager';
-import { animationState } from '../animation/AnimationState';
-import { pathOverlay } from '../animation/PathOverlay';
 
 export class CanvasEvents {
   private app: Application;

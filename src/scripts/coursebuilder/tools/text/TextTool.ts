@@ -529,32 +529,6 @@ export class TextTool extends BaseTool {
     this.proportionalDrag = false;
   }
 
-  private createTextArea(container: Container): TextAreaBounds {
-    // Calculate bounds
-    const x = Math.min(this.startPoint.x, this.currentPoint.x);
-    const y = Math.min(this.startPoint.y, this.currentPoint.y);
-    const width = Math.abs(this.currentPoint.x - this.startPoint.x);
-    const height = Math.abs(this.currentPoint.y - this.startPoint.y);
-
-    const bounds: TextAreaBounds = { x, y, width, height };
-    
-    const config: TextAreaConfig = {
-      bounds,
-      text: '', // Start with empty text
-      settings: { ...this.settings }
-    };
-
-    // Create text area
-    const textArea = new TextArea(config, container);
-    this.textAreas.push(textArea);
-    
-    // Activate the new text area
-    this.activateTextArea(textArea);
-    
-    console.log(`📝 TextArea created: ${width}×${height} at (${Math.round(x)}, ${Math.round(y)})`);
-    
-    return bounds;
-  }
 
   private activateTextArea(textArea: TextArea): void {
     // Deactivate previous

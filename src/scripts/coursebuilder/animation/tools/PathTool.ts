@@ -21,9 +21,7 @@ function durationFor(speed: PathSpeed): number {
 export class PathTool extends BaseTool {
   private activeObject: any | null = null;
   private pathPoints: Point[] = [];
-  private overlay: Graphics | null = null;
   private activeSceneId: string | null = null;
-  private drawing: boolean = false;
   private dragOffsetDrawing: Point | null = null; // pointer-to-object offset in drawing coords
   private editingIndex: number = -1;
   private isEditing: boolean = false;
@@ -33,7 +31,6 @@ export class PathTool extends BaseTool {
   private overlayRoot: Container | null = null;
   private overlayPath: Graphics | null = null;
   private overlayHandles: Container | null = null;
-  private draggingHandle: boolean = false;
   private editingHandleType: 'anchor' | 'in' | 'out' | null = null;
   private spacePressed: boolean = false;
 
@@ -70,7 +67,6 @@ export class PathTool extends BaseTool {
       this.activeSceneId = (this.activeSceneId || animationState.findSceneAt(local)?.getId() || null);
       this.editingIndex = target.__pathHandleIndex;
       this.isEditing = true;
-      this.draggingHandle = true;
       this.editingHandleType = target.__pathHandleType || 'anchor';
       this.ensureOverlay();
       return;
@@ -94,11 +90,8 @@ export class PathTool extends BaseTool {
           this.pathPoints.splice(ins.index + 1, 0, new Point(ins.point.x, ins.point.y));
           this.editingIndex = ins.index + 1;
           this.isEditing = true;
-          this.drawing = false;
           this.ensureOverlay();
-          const anim = (this.activeObject as any).__animation;
-          const handles = anim?.paths?.[this.activeSceneId!]?.handles || null;
-          this.redrawOverlay(this.pathPoints, handles as any);
+          this.redrawOverlay(this.pathPoints);
           return;
         }
       } else if (isDouble) {
@@ -107,11 +100,8 @@ export class PathTool extends BaseTool {
           this.pathPoints.splice(ins.index + 1, 0, new Point(ins.point.x, ins.point.y));
           this.editingIndex = ins.index + 1;
           this.isEditing = true;
-          this.drawing = false;
           this.ensureOverlay();
-          const anim = (this.activeObject as any).__animation;
-          const handles = anim?.paths?.[this.activeSceneId!]?.handles || null;
-          this.redrawOverlay(this.pathPoints, handles as any);
+          this.redrawOverlay(this.pathPoints);
           this.lastClickTime = now; this.lastClickPos = new Point(localPt.x, localPt.y);
           return;
         }
@@ -120,11 +110,8 @@ export class PathTool extends BaseTool {
         if (nearIdx >= 0) {
           this.editingIndex = nearIdx;
           this.isEditing = true;
-          this.drawing = false;
           this.ensureOverlay();
-          const anim = (this.activeObject as any).__animation;
-          const handles = anim?.paths?.[this.activeSceneId!]?.handles || null;
-          this.redrawOverlay(this.pathPoints, handles as any);
+          this.redrawOverlay(this.pathPoints);
           return; // stay in edit mode
         }
       }
@@ -143,7 +130,6 @@ export class PathTool extends BaseTool {
 
     // Begin path capture
     this.pathPoints = [];
-    this.drawing = true;
     const desiredX = local.x - (this.dragOffsetDrawing?.x || 0);
     const desiredY = local.y - (this.dragOffsetDrawing?.y || 0);
     const b = scene.getBounds();
@@ -219,13 +205,12 @@ export class PathTool extends BaseTool {
           }
         }
         (this.activeObject as any).__animation.paths[this.activeSceneId!].handles = handles;
-        this.redrawOverlay(this.pathPoints, handles as any);
+        this.redrawOverlay(this.pathPoints);
       } else {
         if (i >= 0 && i < this.pathPoints.length) {
           this.pathPoints[i].x = qx;
           this.pathPoints[i].y = qy;
-          const hs = ((this.activeObject as any).__animation?.paths?.[this.activeSceneId!]?.handles) || null;
-          this.redrawOverlay(this.pathPoints, hs as any);
+          this.redrawOverlay(this.pathPoints);
         }
       }
       return;
@@ -318,7 +303,6 @@ export class PathTool extends BaseTool {
   }
 
   private reset(): void {
-    this.drawing = false;
     this.activeObject = null;
     this.activeSceneId = null;
     this.pathPoints = [];
@@ -329,7 +313,6 @@ export class PathTool extends BaseTool {
     this.dragOffsetDrawing = null;
     this.editingIndex = -1;
     this.isEditing = false;
-    this.draggingHandle = false;
     this.editingHandleType = null;
   }
 
@@ -392,6 +375,10 @@ export class PathTool extends BaseTool {
       this.overlayPath.lineTo(pts[i].x, pts[i].y);
     }
     this.overlayPath.stroke({ color: 0x4a79a4, width: 2 });
+
+    // Get handles from active object if available
+    const handles = this.activeObject ? 
+      (this.activeObject as any).__animation?.paths?.[this.activeSceneId!]?.handles : null;
 
     // Rebuild handles
     this.overlayHandles.removeChildren().forEach(c => (c as any).destroy?.());

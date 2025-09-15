@@ -1,5 +1,18 @@
 import { test, expect } from '@playwright/test';
 
+// Type declarations for window objects
+declare global {
+  interface Window {
+    canvas?: any;
+    canvasAPI?: any;
+    textTool?: any;
+    lastError?: any;
+    uiEventHandler?: any;
+    toolStateManager?: any;
+    errors?: any[];
+  }
+}
+
 /**
  * Text Tool Basic Functionality Tests
  * 

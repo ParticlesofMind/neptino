@@ -1,5 +1,18 @@
 import { test, expect, Page } from '@playwright/test';
 
+// Type declarations for window objects
+declare global {
+  interface Window {
+    canvas?: any;
+    canvasAPI?: any;
+    textTool?: any;
+    lastError?: any;
+    uiEventHandler?: any;
+    toolStateManager?: any;
+    errors?: any[];
+  }
+}
+
 /**
  * Core Tool Infrastructure Tests
  * Tests fundamental tool system behavior that all tools depend on
@@ -135,7 +148,7 @@ test.describe('Core Tool Infrastructure', () => {
     expect(pixiDimensions.height).toBeGreaterThan(0);
   });
 
-  test('Performance meets requirements', async ({ page }) => {
+  test('Performance meets requirements', async ({ page: _page }) => {
     // Test tool switching performance
     const switchTime = await helpers.measurePerformance(async () => {
       await helpers.activateTool('pen');

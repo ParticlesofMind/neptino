@@ -18,9 +18,12 @@ import { test, expect } from '@playwright/test';
 declare global {
   interface Window {
     canvas?: any;
+    canvasAPI?: any;
     textTool?: any;
     lastError?: any;
     uiEventHandler?: any;
+    toolStateManager?: any;
+    errors?: any[];
   }
 }
 
@@ -200,9 +203,9 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
   test.describe('Text Input and Editing', () => {
     
     // Helper function to create and activate a text area
-    async function createAndActivateTextArea(page, x = 150, y = 150) {
+    async function createAndActivateTextArea(page: any, x = 150, y = 150) {
       // Prefer programmatic helper for reliability in headless
-      await page.evaluate(({ox, oy}) => {
+      await page.evaluate(({ox, oy}: {ox: number, oy: number}) => {
         const api = (window as any).textTool;
         if (!api) return;
         api.debugCreateAndActivate({ x: ox, y: oy, width: 220, height: 120 });
@@ -261,7 +264,7 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
 
   test.describe('Cursor Navigation', () => {
     
-    async function createTextAreaWithContent(page, text = 'Hello World Test') {
+    async function createTextAreaWithContent(page: any, text = 'Hello World Test') {
       await page.evaluate(() => (window as any).textTool?.debugCreateAndActivate({ x: 150, y: 150, width: 250, height: 100 }));
       await page.waitForTimeout(100);
       await page.keyboard.type(text);

@@ -1,5 +1,5 @@
 import { BaseProvider } from './BaseProvider';
-import { MediaItem, MediaType, SearchQueryOptions, SearchResult } from '../types';
+import { MediaItem, MediaType, SearchResult } from '../types';
 
 export class DropboxProvider extends BaseProvider {
   readonly name = 'Dropbox';
@@ -9,7 +9,7 @@ export class DropboxProvider extends BaseProvider {
     return (window as any).DROPBOX_TOKEN || localStorage.getItem('DROPBOX_TOKEN') || undefined;
   }
 
-  async search(query: string, options: SearchQueryOptions = {}): Promise<SearchResult> {
+  async search(query: string): Promise<SearchResult> {
     const token = this.getToken();
     if (!token) {
       throw new Error('Dropbox token missing. Paste a token to connect.');

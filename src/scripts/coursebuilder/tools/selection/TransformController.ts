@@ -406,7 +406,4 @@ export class TransformController {
     this.container = null;
   }
 
-  private cleanupEphemeral(): void {
-    // no-op placeholder for future cleanup
-  }
 }
