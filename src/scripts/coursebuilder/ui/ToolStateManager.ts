@@ -113,7 +113,7 @@ export class ToolStateManager {
                 loop: false,
             },
             path: {
-                speed: 'slow',
+                speed: 'medium',
             },
         };
 
@@ -351,7 +351,7 @@ export class ToolStateManager {
         // Enforce allowed tools per mode
         const allowedByMode: Record<string, Set<string>> = {
             build: new Set(['selection','pen','brush','text','shapes','eraser','tables']),
-            animate: new Set(['selection','scene']),
+            animate: new Set(['selection','scene','path']),
             workflow: new Set(['selection']),
             optimize: new Set(['selection'])
         } as any;

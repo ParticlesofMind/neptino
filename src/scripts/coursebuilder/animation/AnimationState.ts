@@ -8,6 +8,7 @@ import { DisplayObjectManager } from '../canvas/DisplayObjectManager';
 import { Scene } from './Scene';
 
 export type PathSpeed = 'slow' | 'medium' | 'fast';
+export type PathEase = 'linear' | 'easeIn' | 'easeOut';
 
 export class AnimationState {
   private app: Application | null = null;
@@ -15,7 +16,10 @@ export class AnimationState {
   private displayManager: DisplayObjectManager | null = null;
   private scenes: Scene[] = [];
   private loopEnabled: boolean = false;
-  private pathSpeed: PathSpeed = 'slow';
+  private pathSpeed: PathSpeed = 'medium';
+  private defaultPathEase: PathEase = 'linear';
+  private pathsVisible: boolean = true;
+  // No persistence (explicitly disabled)
 
   init(opts: { app: Application; uiLayer: Container; displayManager: DisplayObjectManager | null }): void {
     this.app = opts.app;
@@ -32,6 +36,11 @@ export class AnimationState {
     if (!this.scenes.includes(scene)) {
       this.scenes.push(scene);
     }
+  }
+
+  removeScene(scene: Scene): void {
+    const idx = this.scenes.indexOf(scene);
+    if (idx >= 0) this.scenes.splice(idx, 1);
   }
 
   getScenes(): Scene[] { return [...this.scenes]; }
@@ -51,6 +60,12 @@ export class AnimationState {
   setPathSpeed(speed: PathSpeed): void { this.pathSpeed = speed; }
   getPathSpeed(): PathSpeed { return this.pathSpeed; }
 
+  setDefaultPathEase(ease: PathEase): void { this.defaultPathEase = ease; }
+  getDefaultPathEase(): PathEase { return this.defaultPathEase; }
+
+  setPathsVisible(visible: boolean): void { this.pathsVisible = visible; }
+  getPathsVisible(): boolean { return this.pathsVisible; }
+
   /**
    * Find a scene that contains a point in canvas/drawing coordinates
    */
@@ -61,8 +76,11 @@ export class AnimationState {
     }
     return null;
   }
+
 }
 
 // Singleton instance for simple integration
 export const animationState = new AnimationState();
 
+// ------- Persistence helpers (localStorage baseline) -------
+// Note: Persistence intentionally removed per requirements.

@@ -237,6 +237,32 @@
             box-shadow: none !important;
             background: transparent !important;
         }
+
+        // Compact, horizontal Path settings (speed/ease/visibility)
+        .tools__item--path {
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+            gap: 6px;
+
+            // Keep labels subtle and tight
+            span { font-size: 11px; opacity: 0.8; white-space: nowrap; }
+
+            // Make buttons truly small and auto-sized within this panel
+            .button {
+                padding: 2px 8px;
+                font-size: 11px;
+                line-height: 1.2;
+                min-height: 22px;
+                width: auto; // override wide small buttons
+            }
+
+            .button-group {
+                display: flex;
+                gap: 4px;
+                flex-wrap: nowrap;
+            }
+        }
     }
 }
 

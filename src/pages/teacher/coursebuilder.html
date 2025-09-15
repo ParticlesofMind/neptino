@@ -1137,6 +1137,11 @@
                 class="tools__icon icon icon--base">
               <span class="icon-label">Scene</span>
             </div>
+            <div class="tools__item" data-tool="path">
+              <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Path Tool"
+                class="tools__icon icon icon--base">
+              <span class="icon-label">Path</span>
+            </div>
           </div>
 
           <!-- Tool Settings -->
@@ -1305,20 +1310,7 @@
               </select>
             </div>
 
-            <!-- Scene Settings (Animate Mode) -->
-            <div class="tools__item tools__item--scene" style="display: none;">
-              <label class="checkbox-container">
-                <input type="checkbox" data-setting="loop" title="Loop Animation">
-                <span class="checkmark"></span>
-                Loop Animation
-              </label>
-
-              <select class="input input--select" title="Animation Speed" data-setting="speed">
-                <option value="slow">Slow</option>
-                <option value="medium" selected>Medium</option>
-                <option value="fast">Fast</option>
-              </select>
-            </div>
+            <!-- Animate settings panels are injected by AnimationUI (scene loop, path speed) -->
           </div>
         </div>
       </div>

@@ -10,21 +10,18 @@
  * Target: ~150 lines
  */
 
-import { Application, Container, FederatedPointerEvent, Graphics, Point, Rectangle } from 'pixi.js';
+import { Application, Container, FederatedPointerEvent, Graphics, Point } from 'pixi.js';
 import { ToolManager } from '../tools/ToolManager';
 import { animationState } from '../animation/AnimationState';
+import { pathOverlay } from '../animation/PathOverlay';
 
 export class CanvasEvents {
   private app: Application;
   private drawingLayer: Container;
   private toolManager: ToolManager;
   private isEnabled: boolean = true;
-  // Animate-mode path recording while Selection tool is active
-  private animRecording: boolean = false;
-  private animSceneId: string | null = null;
-  private animOverlay: Graphics | null = null;
-  private animTarget: any | null = null;
-  private animPoints: Point[] = [];
+  // Animation path recording is handled exclusively by the Path tool.
+  // Kept minimal state here for canvas-wide concerns only.
 
   constructor(app: Application, drawingLayer: Container, toolManager: ToolManager) {
     this.app = app;
@@ -80,42 +77,7 @@ export class CanvasEvents {
 
     this.toolManager.onPointerDown(event, this.drawingLayer);
     
-    // Animate-mode: start recording path when dragging an object within a scene using Selection tool
-    try {
-      const mode = (window as any).toolStateManager?.getCurrentMode?.() || 'build';
-      const activeTool = this.toolManager.getActiveToolName();
-      if (mode === 'animate' && activeTool === 'selection') {
-        const pLocal = event.getLocalPosition(this.drawingLayer);
-        const scene = animationState.findSceneAt(new Point(pLocal.x, pLocal.y));
-        if (scene) {
-          // Find topmost object under pointer
-          const dm = (window as any)._displayManager;
-          if (dm && typeof dm.getObjects === 'function') {
-            const objs = dm.getObjects();
-            for (let i = objs.length - 1; i >= 0; i--) {
-              const o = objs[i];
-              try {
-                const b = o.getBounds();
-                if (event.global.x >= b.x && event.global.x <= b.x + b.width && event.global.y >= b.y && event.global.y <= b.y + b.height) {
-                  this.animTarget = o;
-                  break;
-                }
-              } catch {}
-            }
-          }
-          if (this.animTarget) {
-            this.animRecording = true;
-            this.animSceneId = scene.getId();
-            this.animPoints = [new Point(pLocal.x, pLocal.y)];
-            // Draw overlay on UI layer when available
-            const ui = (window as any).canvasAPI?.getLayer?.('ui') || null;
-            this.animOverlay = new Graphics();
-            this.animOverlay.lineStyle({ width: 2, color: 0x4a79a4 });
-            if (ui && ui.addChild) { ui.addChild(this.animOverlay); } else { this.drawingLayer.addChild(this.animOverlay); }
-          }
-        }
-      }
-    } catch {}
+    // Path recording is handled by the Path tool; Selection remains for positioning only.
     this.updateCursor();
    
   }
@@ -140,26 +102,7 @@ export class CanvasEvents {
     // Route to tool manager
     this.toolManager.onPointerMove(event, this.drawingLayer);
     
-    // Animate-mode: continue recording
-    try {
-      if (this.animRecording && this.animSceneId) {
-        const pLocal = event.getLocalPosition(this.drawingLayer);
-        const scene = animationState.getScenes().find(s => s.getId() === this.animSceneId!);
-        if (scene) {
-          const b = scene.getBounds();
-          const x = Math.max(b.x, Math.min(b.x + b.width, pLocal.x));
-          const y = Math.max(b.y, Math.min(b.y + b.height, pLocal.y));
-          const last = this.animPoints[this.animPoints.length - 1];
-          if (!last || Math.hypot(x - last.x, y - last.y) > 1.5) {
-            const pt = new Point(x, y);
-            this.animPoints.push(pt);
-            if (this.animOverlay) {
-              this.animOverlay.moveTo(last?.x ?? pt.x, last?.y ?? pt.y).lineTo(pt.x, pt.y).stroke({ color: 0x4a79a4, width: 2 });
-            }
-          }
-        }
-      }
-    } catch {}
+    // No selection-based path recording here by design.
     
     // Update cursor after tool processes the move event (in case tool cursor changed)
     this.updateCursor();
@@ -175,18 +118,8 @@ export class CanvasEvents {
     // Route to tool manager
     this.toolManager.onPointerUp(event, this.drawingLayer);
     
-    // Animate-mode: finalize recording
-    try {
-      if (this.animRecording && this.animSceneId && this.animTarget && this.animPoints.length > 1) {
-        const speed = animationState.getPathSpeed();
-        const durationMs = speed === 'fast' ? 1700 : speed === 'medium' ? 3300 : 5000;
-        const anim = (this.animTarget as any).__animation || { paths: {} };
-        anim.paths[this.animSceneId] = { points: this.animPoints.map(p => new Point(p.x, p.y)), durationMs };
-        (this.animTarget as any).__animation = anim;
-      }
-    } catch {}
-    if (this.animOverlay) { try { this.animOverlay.destroy(); } catch {} }
-    this.animRecording = false; this.animOverlay = null; this.animSceneId = null; this.animTarget = null; this.animPoints = [];
+    // No selection-based path recording to finalize.
+    // Ensure any stale overlays (if any) are cleared by active tool implementations.
     
     // 🚑 CLEANUP: Ensure any stuck dragging states are cleared
     this.clearAllDragStates();

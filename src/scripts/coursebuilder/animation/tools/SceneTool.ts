@@ -3,7 +3,7 @@
  * Draw rectangles to define animation scenes with controls
  */
 
-import { Container, FederatedPointerEvent, Graphics, Point, Rectangle } from 'pixi.js';
+import { Container, FederatedPointerEvent, Graphics, Point } from 'pixi.js';
 import { BaseTool } from '../../tools/ToolInterface';
 import { animationState } from '../AnimationState';
 import { Scene } from '../Scene';
@@ -11,7 +11,6 @@ import { Scene } from '../Scene';
 export class SceneTool extends BaseTool {
   private start: Point | null = null;
   private preview: Graphics | null = null;
-  private container: Container | null = null;
 
   constructor() {
     super('scene', 'crosshair');
@@ -19,15 +18,12 @@ export class SceneTool extends BaseTool {
 
   onPointerDown(event: FederatedPointerEvent, container: Container): void {
     if (!this.isActive) return;
-    this.container = container;
     const p = container.toLocal(event.global);
     this.start = new Point(p.x, p.y);
     // Create preview rectangle on UI layer for clarity
     const ui = animationState.getUiLayer();
     this.preview = new Graphics();
     this.preview.alpha = 0.8;
-    this.preview.lineStyle({ width: 1, color: 0x4a79a4 });
-    this.preview.beginFill(0x4a79a4, 0.08);
     if (ui) ui.addChild(this.preview);
   }
 
@@ -65,4 +61,3 @@ export class SceneTool extends BaseTool {
   onActivate(): void { super.onActivate(); }
   onDeactivate(): void { super.onDeactivate(); this.cleanup(); }
 }
-

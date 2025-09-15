@@ -108,8 +108,16 @@ export class DisplayObjectManager {
     // Legacy compatibility
     this.objects.delete(displayObject);
     
-    // Destroy the object
-    displayObject.destroy();
+    // If this object represents an animation scene, destroy via scene to clean up ticker/state
+    try {
+      if ((displayObject as any).__sceneRef && typeof (displayObject as any).__sceneRef.destroy === 'function') {
+        (displayObject as any).__sceneRef.destroy();
+      } else {
+        displayObject.destroy();
+      }
+    } catch {
+      try { displayObject.destroy(); } catch {}
+    }
     
     console.log('🗑️ Removed display object:', {
       id: typeof id === 'string' ? id : 'direct',

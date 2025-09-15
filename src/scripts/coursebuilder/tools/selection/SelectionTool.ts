@@ -8,6 +8,7 @@ import { SelectionMarquee } from './SelectionMarquee';
 import { TransformController } from './TransformController';
 import { SelectionGrouping } from './SelectionGrouping';
 import { SelectionStyling } from './SelectionStyling';
+import { animationState } from '../../animation/AnimationState';
 import { determineSelectionType, moveObjectByContainerDelta } from './SelectionUtils';
 
 type Mode = 'idle' | 'drag' | 'scale' | 'rotate';
@@ -148,7 +149,26 @@ export class SelectionTool extends BaseTool {
   }
 
   public updateSettings(settings: any): void { this.settings = { ...this.settings, ...settings }; }
-  public applySettingsToSelection(toolName: string, settings: any): void { const changed = this.styling.apply(toolName, settings, this.selected); if (changed && this.container) { this.overlay.refresh(this.selected, this.container); } }
+  public applySettingsToSelection(toolName: string, settings: any): void {
+    // Handle animation-path operations
+    if (toolName === 'path' && settings && settings.action === 'clear') {
+      try {
+        const scenes = animationState.getScenes();
+        if (!scenes.length) return;
+        const scene = scenes[scenes.length - 1];
+        for (const obj of this.selected) {
+          const a = (obj as any).__animation;
+          if (a && a.paths && a.paths[scene.getId()]) {
+            delete a.paths[scene.getId()];
+          }
+        }
+      } catch {}
+      return;
+    }
+    // Default behavior for styling
+    const changed = this.styling.apply(toolName, settings, this.selected);
+    if (changed && this.container) { this.overlay.refresh(this.selected, this.container); }
+  }
   public copySelection(): boolean { return this.clipboardSvc.copy(); }
   public pasteSelection(): boolean { const created = this.clipboardSvc.pasteAt(this.lastPointerGlobal || null); if (created.length) { this.selected = created; if (this.container) this.overlay.refresh(this.selected, this.container); return true; } return false; }
   public groupSelection(): boolean { const r = this.grouping.group(this.selected, this.container, this.displayManager); if (r && this.container) { this.selected = r.newSelection; this.overlay.refresh(this.selected, this.container); return true; } return false; }
