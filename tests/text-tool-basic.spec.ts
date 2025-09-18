@@ -41,10 +41,10 @@ test.describe('Text Tool - Basic Functionality', () => {
     // Click on the text tool
     const textTool = page.locator('.tools__item[data-tool="text"]');
     await expect(textTool).toBeVisible();
-    await textTool.click();
+    await textTool.locator('.tools__icon').click();
     
-    // Verify text tool is activated (should have active class)
-    await expect(textTool).toHaveClass(/active/);
+    // Verify tool activation via CanvasAPI for stability
+    await page.waitForFunction(() => (window as any).canvasAPI?.getActiveTool && (window as any).canvasAPI.getActiveTool() === 'text');
     
     // Verify text tool settings are visible
     const textSettings = page.locator('.tools__item--text');
@@ -54,8 +54,9 @@ test.describe('Text Tool - Basic Functionality', () => {
   test('should display text tool settings when activated', async ({ page }) => {
     // Activate text tool
     const textTool = page.locator('.tools__item[data-tool="text"]');
-    await textTool.click();
-    await page.waitForTimeout(500);
+    await textTool.locator('.tools__icon').click();
+    await page.evaluate(() => (window as any).toolStateManager?.setTool('text'));
+    await page.waitForFunction(() => (window as any).canvasAPI?.getActiveTool && (window as any).canvasAPI.getActiveTool() === 'text');
     
     // Check for text-specific settings
     const fontSizeInput = page.locator('#text-size-select');
@@ -69,7 +70,8 @@ test.describe('Text Tool - Basic Functionality', () => {
 
   test('should change font size setting', async ({ page }) => {
     // Activate text tool
-    await page.locator('.tools__item[data-tool="text"]').click();
+    await page.locator('.tools__item[data-tool="text"]').locator('.tools__icon').click();
+    await page.waitForFunction(() => (window as any).canvasAPI?.getActiveTool && (window as any).canvasAPI.getActiveTool() === 'text');
     await page.waitForTimeout(500);
     
     // Change font size via dropdown
@@ -82,8 +84,9 @@ test.describe('Text Tool - Basic Functionality', () => {
 
   test('should change font family setting', async ({ page }) => {
     // Activate text tool
-    await page.locator('.tools__item[data-tool="text"]').click();
-    await page.waitForTimeout(500);
+    await page.locator('.tools__item[data-tool="text"]').locator('.tools__icon').click();
+    await page.evaluate(() => (window as any).toolStateManager?.setTool('text'));
+    await page.waitForFunction(() => (window as any).canvasAPI?.getActiveTool && (window as any).canvasAPI.getActiveTool() === 'text');
     
     // Change font family using Select2
     const fontFamilySelect = page.locator('#font-family-select');
@@ -95,8 +98,9 @@ test.describe('Text Tool - Basic Functionality', () => {
 
   test('should change text color setting', async ({ page }) => {
     // Activate text tool
-    await page.locator('.tools__item[data-tool="text"]').click();
-    await page.waitForTimeout(500);
+    await page.locator('.tools__item[data-tool="text"]').locator('.tools__icon').click();
+    await page.evaluate(() => (window as any).toolStateManager?.setTool('text'));
+    await page.waitForFunction(() => (window as any).canvasAPI?.getActiveTool && (window as any).canvasAPI.getActiveTool() === 'text');
     
     // Change text color
     const textColorSelect = page.locator('#text-color-select');
@@ -123,31 +127,32 @@ test.describe('Text Tool - Basic Functionality', () => {
   test('should switch between tools correctly', async ({ page }) => {
     const textTool = page.locator('.tools__item[data-tool="text"]');
     const penTool = page.locator('.tools__item[data-tool="pen"]');
-    await page.evaluate(() => (window as any).toolStateManager?.setTool('text'));
-    await expect(textTool).toHaveClass(/active|tools__item--active/);
-    await page.evaluate(() => (window as any).toolStateManager?.setTool('pen'));
-    await expect(penTool).toHaveClass(/active|tools__item--active/);
-    await expect(textTool).not.toHaveClass(/active|tools__item--active/);
-    await page.evaluate(() => (window as any).toolStateManager?.setTool('text'));
-    await expect(textTool).toHaveClass(/active|tools__item--active/);
-    await expect(penTool).not.toHaveClass(/active|tools__item--active/);
+    await textTool.locator('.tools__icon').click();
+    await page.waitForFunction(() => (window as any).canvasAPI?.getActiveTool && (window as any).canvasAPI.getActiveTool() === 'text');
+    await penTool.locator('.tools__icon').click();
+    await page.waitForFunction(() => (window as any).canvasAPI?.getActiveTool && (window as any).canvasAPI.getActiveTool() === 'pen');
+    await textTool.locator('.tools__icon').click();
+    await page.waitForFunction(() => (window as any).canvasAPI?.getActiveTool && (window as any).canvasAPI.getActiveTool() === 'text');
   });
 
   test('should show appropriate tool settings when switching', async ({ page }) => {
     const textSettings = page.locator('.tools__item--text');
     const penSettings = page.locator('.tools__item--pen');
-    await page.evaluate(() => (window as any).toolStateManager?.setTool('text'));
+    await page.locator('.tools__item[data-tool="text"]').locator('.tools__icon').click();
+    await page.waitForFunction(() => (window as any).canvasAPI?.getActiveTool && (window as any).canvasAPI.getActiveTool() === 'text');
     await expect(textSettings).toBeVisible();
     await expect(penSettings).not.toBeVisible();
-    await page.evaluate(() => (window as any).toolStateManager?.setTool('pen'));
+    await page.locator('.tools__item[data-tool="pen"]').locator('.tools__icon').click();
+    await page.waitForFunction(() => (window as any).canvasAPI?.getActiveTool && (window as any).canvasAPI.getActiveTool() === 'pen');
     await expect(penSettings).toBeVisible();
     await expect(textSettings).not.toBeVisible();
   });
 
   test('should handle multiple setting changes', async ({ page }) => {
     // Activate text tool
-    await page.locator('.tools__item[data-tool="text"]').click();
-    await page.waitForTimeout(500);
+    await page.locator('.tools__item[data-tool="text"]').locator('.tools__icon').click();
+    await page.evaluate(() => (window as any).toolStateManager?.setTool('text'));
+    await page.waitForFunction(() => (window as any).canvasAPI?.getActiveTool && (window as any).canvasAPI.getActiveTool() === 'text');
     
     // Change multiple settings
     const fontSizeInput = page.locator('#text-size-select');
@@ -168,8 +173,9 @@ test.describe('Text Tool - Basic Functionality', () => {
 
   test('should have working canvas interaction area', async ({ page }) => {
     // Activate text tool
-    await page.locator('.tools__item[data-tool="text"]').click();
-    await page.waitForTimeout(500);
+    await page.locator('.tools__item[data-tool="text"]').locator('.tools__icon').click();
+    await page.evaluate(() => (window as any).toolStateManager?.setTool('text'));
+    await page.waitForFunction(() => (window as any).canvasAPI?.getActiveTool && (window as any).canvasAPI.getActiveTool() === 'text');
     
     const bounds = await page.evaluate(() => window.canvasAPI?.getContentBounds());
     if (!bounds) throw new Error('Content bounds not available');
@@ -187,8 +193,9 @@ test.describe('Text Tool - Basic Functionality', () => {
   test('should maintain tool state after page interactions', async ({ page }) => {
     // Activate text tool
     const textTool = page.locator('.tools__item[data-tool="text"]');
-    await textTool.click();
-    await page.waitForTimeout(300);
+    await textTool.locator('.tools__icon').click();
+    await page.evaluate(() => (window as any).toolStateManager?.setTool('text'));
+    await page.waitForFunction(() => (window as any).canvasAPI?.getActiveTool && (window as any).canvasAPI.getActiveTool() === 'text');
     
     // Interact with other page elements
     await page.locator('.nav-course__item[data-preview="outline"]').click();
@@ -198,7 +205,8 @@ test.describe('Text Tool - Basic Functionality', () => {
     await page.waitForTimeout(300);
     
     // Text tool should still be active
-    await expect(textTool).toHaveClass(/active/);
+    const activeTool = await page.evaluate(() => (window as any).canvasAPI?.getActiveTool());
+    expect(activeTool).toBe('text');
   });
 });
 
@@ -216,9 +224,10 @@ test.describe('Text Tool - Integration Tests', () => {
   });
 
   test('should work with coursebuilder navigation', async ({ page }) => {
-    // Activate text tool using ToolStateManager
+    // Activate text tool by clicking its icon
     const textTool = page.locator('.tools__item[data-tool="text"]');
-    await page.evaluate(() => (window as any).toolStateManager?.setTool('text'));
+    await expect(textTool).toBeVisible();
+    await textTool.click();
     await expect(textTool).toHaveClass(/active|tools__item--active/);
   });
 

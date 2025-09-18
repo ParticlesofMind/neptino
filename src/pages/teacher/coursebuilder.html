@@ -1192,9 +1192,8 @@
               </select>
 
               <div class="text-style-controls" aria-label="Text Style" style="display:flex; gap:6px; align-items:center;">
-                <button type="button" class="tools__button text-style-btn active" data-text-style="none">None</button>
-                <button type="button" class="tools__button text-style-btn" data-text-style="bold">Bold</button>
-                <button type="button" class="tools__button text-style-btn" data-text-style="italic">Italic</button>
+                <button type="button" class="tools__button text-style-btn icon icon--base" data-text-style="bold" title="Bold">B</button>
+                <button type="button" class="tools__button text-style-btn icon icon--base" data-text-style="italic" title="Italic">I</button>
               </div>
 
               <select id="font-family-select" class="input input--select" title="Font Family" data-setting="fontFamily">
@@ -1514,13 +1513,11 @@
           var label = $(data.element).data('label');
           var makeBold = (label === 'Title' || label === 'Header1' || label === 'Header2' || label === 'Header3');
           if (makeBold) {
-            window.toolStateManager.updateToolSettings('text', { fontWeight: 'bold', fontStyle: 'normal' });
-            $('.text-style-btn').removeClass('active');
+            window.toolStateManager.updateToolSettings('text', { fontWeight: 'bold' });
             $('.text-style-btn[data-text-style="bold"]').addClass('active');
           } else {
-            window.toolStateManager.updateToolSettings('text', { fontWeight: 'normal', fontStyle: 'normal' });
-            $('.text-style-btn').removeClass('active');
-            $('.text-style-btn[data-text-style="none"]').addClass('active');
+            window.toolStateManager.updateToolSettings('text', { fontWeight: 'normal' });
+            $('.text-style-btn[data-text-style="bold"]').removeClass('active');
           }
         }
       });
@@ -1528,15 +1525,14 @@
       // Text style buttons
       $('.text-style-btn').on('click', function() {
         var style = $(this).data('text-style');
-        $('.text-style-btn').removeClass('active');
-        $(this).addClass('active');
+        var isActive = $(this).hasClass('active');
+        var makeActive = !isActive;
+        $(this).toggleClass('active', makeActive);
         if (window.toolStateManager) {
           if (style === 'bold') {
-            window.toolStateManager.updateToolSettings('text', { fontWeight: 'bold', fontStyle: 'normal' });
+            window.toolStateManager.updateToolSettings('text', { fontWeight: makeActive ? 'bold' : 'normal' });
           } else if (style === 'italic') {
-            window.toolStateManager.updateToolSettings('text', { fontWeight: 'normal', fontStyle: 'italic' });
-          } else {
-            window.toolStateManager.updateToolSettings('text', { fontWeight: 'normal', fontStyle: 'normal' });
+            window.toolStateManager.updateToolSettings('text', { fontStyle: makeActive ? 'italic' : 'normal' });
           }
         }
       });

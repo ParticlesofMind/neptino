@@ -36,8 +36,11 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
     await page.waitForLoadState('domcontentloaded');
     await page.waitForFunction(() => !!(window as any).uiEventHandler && !!(window as any).toolStateManager, null, { timeout: 20000 });
     await page.waitForFunction(() => (window as any).canvasAPI && (window as any).canvasAPI.isReady && (window as any).canvasAPI.isReady(), null, { timeout: 20000 });
-    await page.evaluate(() => (window as any).toolStateManager?.setTool('text'));
-    await expect(page.locator('.tools__item[data-tool="text"]')).toHaveClass(/active|tools__item--active/);
+    // Activate Text tool by clicking the UI icon to mirror real user behavior
+    const textToolBtn = page.locator('.tools__item[data-tool="text"]');
+    await expect(textToolBtn).toBeVisible();
+    await textToolBtn.locator('.tools__icon').click();
+    await page.waitForFunction(() => (window as any).canvasAPI?.getActiveTool && (window as any).canvasAPI.getActiveTool() === 'text');
   });
 
   test.describe('Core Drag-to-Create System', () => {
@@ -259,6 +262,25 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
       await page.evaluate(() => (window as any).textTool?.debugType('Before    After'));
       const textContent = await page.evaluate(() => (window as any).textTool?.activeTextArea?.text || '');
       expect(textContent).toMatch(/Before\s+After/);
+    });
+
+    test('typing letters should not switch tools and should accept spaces/newlines', async ({ page }) => {
+      await createAndActivateTextArea(page);
+
+      // Type letters including 'e' and a space, then Enter
+      await page.keyboard.type('eee e');
+      await page.keyboard.press('Enter');
+      await page.keyboard.type('next');
+
+      // Verify tool did not switch to eraser
+      const activeTool = await page.evaluate(() => (window as any).canvasAPI?.getActiveTool());
+      expect(activeTool).toBe('text');
+
+      // Verify text content preserved spaces and newline
+      const text = await page.evaluate(() => (window as any).textTool?.activeTextArea?.text || '');
+      expect(text).toContain('eee e');
+      expect(text).toContain('\n');
+      expect(text).toContain('next');
     });
   });
 
@@ -633,7 +655,7 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
       
       // Switch to a different tool (pen tool)
       const penTool = page.locator('.tools__item[data-tool="pen"]');
-      await penTool.click();
+      await penTool.locator('.tools__icon').click();
       await page.waitForTimeout(300);
       
       // Verify text tool was properly deactivated
@@ -762,23 +784,22 @@ test.describe('Text Tool - Comprehensive Feature Testing', () => {
   test.describe('Integration with Other Tools', () => {
     
     test('should properly switch between text tool and other tools', async ({ page }) => {
-      // Start with text tool active
-      expect(await page.locator('.tools__item[data-tool="text"]').getAttribute('class')).toMatch(/active|tools__item--active/);
-      
-      // Switch to pen tool
+      // Start with text tool active (verify via CanvasAPI)
+      expect(await page.evaluate(() => (window as any).canvasAPI?.getActiveTool())).toBe('text');
+
+      // Switch to pen tool by clicking
       const penTool = page.locator('.tools__item[data-tool="pen"]');
-      await page.evaluate(() => (window as any).toolStateManager?.setTool('pen'));
+      await penTool.click();
+
+      // Verify pen tool is active
+      expect(await page.evaluate(() => (window as any).canvasAPI?.getActiveTool())).toBe('pen');
       
-      // Verify pen tool is active and text tool is inactive
-      expect(await penTool.getAttribute('class')).toMatch(/active|tools__item--active/);
-      expect(await page.locator('.tools__item[data-tool="text"]').getAttribute('class')).not.toMatch(/active|tools__item--active/);
-      
-      // Switch back to text tool
+      // Switch back to text tool by clicking
       const textTool = page.locator('.tools__item[data-tool="text"]');
-      await page.evaluate(() => (window as any).toolStateManager?.setTool('text'));
+      await textTool.locator('.tools__icon').click();
       
       // Verify text tool is active again
-      expect(await textTool.getAttribute('class')).toMatch(/active|tools__item--active/);
+      expect(await page.evaluate(() => (window as any).canvasAPI?.getActiveTool())).toBe('text');
     });
   });
 

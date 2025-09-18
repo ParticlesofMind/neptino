@@ -12,17 +12,17 @@ export class TextFlowManager implements ITextFlowManager {
    * Wrap text into lines based on maximum width
    */
   public wrapText(text: string, maxWidth: number): LineInfo[] {
-    if (!text) {
-      return [];
-    }
+    if (text === undefined || text === null) return [];
+
+    // Tokenize into sequences to preserve spaces and explicit newlines
+    // Tokens: "\n" | consecutive whitespace | consecutive non-whitespace
+    const tokens = String(text).match(/\n|\s+|\S+/g) || [];
 
     const lines: LineInfo[] = [];
-    const words = text.split(' ');
     let currentLine = '';
     let currentLineStartIndex = 0;
     let charIndex = 0;
 
-    // Create a temporary text object for measuring
     const measureText = new PixiText({
       text: '',
       style: {
@@ -32,60 +32,47 @@ export class TextFlowManager implements ITextFlowManager {
       }
     });
 
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i];
-      const testLine = currentLine.length > 0 ? currentLine + ' ' + word : word;
-      
-      // Measure the test line
-      measureText.text = testLine;
-      
-      if (measureText.width <= maxWidth || currentLine.length === 0) {
-        // Word fits, add it to current line
-        if (currentLine.length > 0) {
-          currentLine += ' ';
-          charIndex++; // Count the space
-        }
-        currentLine += word;
-        charIndex += word.length;
-      } else {
-        // Word doesn't fit, finalize current line and start new one
-        if (currentLine.length > 0) {
-          measureText.text = currentLine;
-          lines.push({
-            text: currentLine,
-            width: measureText.width,
-            startIndex: currentLineStartIndex,
-            endIndex: charIndex - 1
-          });
-
-          // Start new line
-          currentLineStartIndex = charIndex;
-          
-          // Handle line break (if there was a space before the word)
-          if (i > 0) {
-            charIndex++; // Count the space/newline
-          }
-        }
-        
-        currentLine = word;
-        charIndex += word.length;
-      }
-    }
-
-    // Add the last line
-    if (currentLine.length > 0) {
+    const pushCurrentLine = () => {
       measureText.text = currentLine;
       lines.push({
         text: currentLine,
         width: measureText.width,
         startIndex: currentLineStartIndex,
-        endIndex: charIndex - 1
+        endIndex: Math.max(currentLineStartIndex, charIndex - 1)
       });
+    };
+
+    for (let i = 0; i < tokens.length; i++) {
+      const tok = tokens[i];
+      if (tok === '\n') {
+        // Explicit line break: finalize current line (even if empty)
+        pushCurrentLine();
+        charIndex += 1; // count the newline character
+        currentLine = '';
+        currentLineStartIndex = charIndex;
+        continue;
+      }
+
+      const testLine = currentLine + tok;
+      measureText.text = testLine;
+
+      if (measureText.width <= maxWidth || currentLine.length === 0) {
+        // Fits or starting a new line
+        currentLine = testLine;
+        charIndex += tok.length;
+      } else {
+        // Doesn't fit: finalize current line and start a new one with token
+        pushCurrentLine();
+        currentLineStartIndex = charIndex;
+        currentLine = tok;
+        charIndex += tok.length;
+      }
     }
 
-    // Cleanup
-    measureText.destroy();
+    // Push the final line (even if empty to represent trailing newline)
+    pushCurrentLine();
 
+    measureText.destroy();
     return lines;
   }
 

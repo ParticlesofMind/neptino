@@ -8,6 +8,8 @@ type PerObjectState = {
   startRotation: number;
   startPivot: { x: number; y: number };
   localAnchor: Point; // anchor in the object's local space
+  isTextObject?: boolean;
+  startTextBounds?: { x: number; y: number; width: number; height: number };
 };
 
 export class TransformController {
@@ -61,6 +63,8 @@ export class TransformController {
         startRotation: obj.rotation ?? 0,
         startPivot: { x: obj.pivot?.x ?? 0, y: obj.pivot?.y ?? 0 },
         localAnchor: new Point(0, 0),
+        isTextObject: !!(obj as any)?.isTextObject,
+        startTextBounds: undefined,
       };
 
       if (isRotation) {
@@ -95,6 +99,15 @@ export class TransformController {
         }
       }
 
+      // Capture starting bounds for text objects so we can resize the text area instead of scaling text
+      try {
+        if ((obj as any)?.isTextObject && (obj as any).__textArea) {
+          const ta = (obj as any).__textArea;
+          const b = ta.bounds;
+          state.startTextBounds = { x: b.x, y: b.y, width: b.width, height: b.height };
+        }
+      } catch {}
+
       return state;
     });
 
@@ -121,6 +134,32 @@ export class TransformController {
   }
 
   public end(): void {
+    // If scaling was applied to text objects, convert scale -> text area resize before cleanup
+    if (this.activeHandle && this.activeHandle.type !== 'rotation') {
+      const anchorGlobal = this.anchorGlobal;
+      for (let i = 0; i < this.objects.length; i++) {
+        const o = this.objects[i];
+        const obj: any = o.obj;
+        try {
+          if (o.isTextObject && obj.__textArea && o.startTextBounds) {
+            const sx = (obj.scale?.x ?? 1) / (o.startScale.x || 1);
+            const sy = (obj.scale?.y ?? 1) / (o.startScale.y || 1);
+            const newW = Math.max(10, o.startTextBounds.width * Math.abs(sx));
+            const newH = Math.max(10, o.startTextBounds.height * Math.abs(sy));
+            // Update text area bounds (x/y remain the same in local space)
+            obj.__textArea.updateBounds({ x: o.startTextBounds.x, y: o.startTextBounds.y, width: newW, height: newH });
+            // Reset scaling back to 1 so text glyphs don't stretch
+            if (obj.scale) { obj.scale.set(1, 1); }
+            // Keep the anchor fixed in world space
+            if (obj.parent && anchorGlobal) {
+              const posInParent = obj.parent.toLocal(anchorGlobal, undefined, undefined, false);
+              obj.position.set(posInParent.x, posInParent.y);
+            }
+          }
+        } catch {}
+      }
+    }
+
     // Avoid restoring pivot after rotation to keep objects visually stable around their centers
     const shouldRestore = this.restorePivotOnEnd && this.activeHandle?.type !== 'rotation';
     if (shouldRestore) {
@@ -228,10 +267,41 @@ export class TransformController {
     const finalScaleX = finalScale.scaleX;
     const finalScaleY = finalScale.scaleY;
 
-    // Apply scale to all objects with minimal property access
+    // Live-resize behavior for text objects: compute the scaled bounds and
+    // immediately normalize scale back to 1 while updating the TextArea size.
+    const anchorGlobal = this.anchorGlobal;
     for (let i = 0; i < this.objects.length; i++) {
       const o = this.objects[i];
-      const objScale = o.obj.scale;
+      const obj: any = o.obj;
+      const isText = !!o.isTextObject && !!obj?.__textArea && !!o.startTextBounds;
+      if (!isText) continue;
+      try {
+        // Live-resize: keep local x/y, only update width/height from scale deltas
+        const start = o.startTextBounds!;
+        const nw = Math.max(10, start.width * Math.abs(finalScaleX));
+        const nh = Math.max(10, start.height * Math.abs(finalScaleY));
+        // Normalize scale back to 1 and update bounds (local coordinates)
+        if (obj.scale) { obj.scale.set(1, 1); }
+        obj.__textArea.updateBounds({ x: start.x, y: start.y, width: nw, height: nh });
+
+        // Keep the anchor fixed in world space (defensive realignment)
+        if (obj.parent && anchorGlobal) {
+          const posInParent = obj.parent.toLocal(anchorGlobal, undefined, undefined, false);
+          obj.position.set(posInParent.x, posInParent.y);
+        }
+
+        // Ensure scale is kept normalized
+        if (obj.scale) { obj.scale.set(1, 1); }
+      } catch {}
+    }
+
+    // Apply scale to non-text objects only
+    for (let i = 0; i < this.objects.length; i++) {
+      const o = this.objects[i];
+      const obj: any = o.obj;
+      const isText = !!o.isTextObject && !!obj?.__textArea && !!o.startTextBounds;
+      if (isText) continue;
+      const objScale = obj.scale;
       if (objScale) {
         objScale.x = o.startScale.x * finalScaleX;
         objScale.y = o.startScale.y * finalScaleY;

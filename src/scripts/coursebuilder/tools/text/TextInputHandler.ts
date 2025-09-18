@@ -80,19 +80,25 @@ export class TextInputHandler implements ITextInputHandler {
   private handleKeyDown(event: KeyboardEvent): void {
     if (!this.activeTextArea) return;
 
+    // Note: We'll selectively stop propagation for keys we handle so
+    // global canvas/tool shortcuts don't trigger while typing.
+
     // Handle keyboard shortcuts first
     if ((event.ctrlKey || event.metaKey)) {
       switch (event.key.toLowerCase()) {
         case 'a':
           event.preventDefault();
+          event.stopPropagation();
           this.handleSelectAll();
           return;
         case 'arrowleft':
           event.preventDefault();
+          event.stopPropagation();
           this.handleWordJump('left', event.shiftKey);
           return;
         case 'arrowright':
           event.preventDefault();
+          event.stopPropagation();
           this.handleWordJump('right', event.shiftKey);
           return;
       }
@@ -101,6 +107,7 @@ export class TextInputHandler implements ITextInputHandler {
     // Prevent default behavior for navigation and editing keys
     if (this.isNavigationOrEditKey(event.key)) {
       event.preventDefault();
+      event.stopPropagation();
     }
 
     switch (event.key) {
@@ -141,6 +148,7 @@ export class TextInputHandler implements ITextInputHandler {
     if (event.key && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
       this.insertCharacter(event.key);
       event.preventDefault();
+      event.stopPropagation();
     }
   }
 

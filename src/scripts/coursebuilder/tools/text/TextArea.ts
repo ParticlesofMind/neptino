@@ -43,6 +43,7 @@ export class TextArea implements ITextArea {
     // Mark this container as a text object for selection tool identification
     (this.container as any).isTextObject = true;
     (this.container as any).textAreaId = this.id;
+    (this.container as any).__textArea = this;
     
     parent.addChild(this.container);
 

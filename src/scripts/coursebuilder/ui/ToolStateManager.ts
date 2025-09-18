@@ -144,7 +144,13 @@ export class ToolStateManager {
             const isForm = active && (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement || (active as any).isContentEditable);
             const key = e.key;
             // When Text tool is active, disable all shortcut handling (including preventing spacebar)
-            if (this.currentTool === 'text') {
+            const isTextEditing = (() => {
+                try {
+                    const tt = (window as any).textTool;
+                    return !!(tt && tt.activeTextArea && tt.activeTextArea.isActive);
+                } catch { return false; }
+            })();
+            if (this.currentTool === 'text' || isTextEditing) {
                 return;
             }
             // Prevent page scroll on space when not typing in inputs
@@ -785,23 +791,15 @@ export class ToolStateManager {
             } else {
                 console.warn('⚠️ SYNC: ToolColorManager not available for color restoration');
             }
-            // Restore text style button state
+            // Restore text style button state (independent toggles)
             try {
                 const t = this.toolSettings.text as any;
                 const isBold = t.fontWeight === 'bold';
                 const isItalic = t.fontStyle === 'italic';
-                const btns = document.querySelectorAll('.text-style-btn');
-                btns.forEach(b => b.classList.remove('active'));
-                if (isBold) {
-                    const b = document.querySelector('.text-style-btn[data-text-style="bold"]');
-                    (b as any)?.classList?.add('active');
-                } else if (isItalic) {
-                    const b = document.querySelector('.text-style-btn[data-text-style="italic"]');
-                    (b as any)?.classList?.add('active');
-                } else {
-                    const b = document.querySelector('.text-style-btn[data-text-style="none"]');
-                    (b as any)?.classList?.add('active');
-                }
+                const bBtn = document.querySelector('.text-style-btn[data-text-style="bold"]') as HTMLElement | null;
+                const iBtn = document.querySelector('.text-style-btn[data-text-style="italic"]') as HTMLElement | null;
+                if (bBtn) bBtn.classList.toggle('active', !!isBold);
+                if (iBtn) iBtn.classList.toggle('active', !!isItalic);
             } catch {}
         }, 100);
     }
