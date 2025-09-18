@@ -17,6 +17,7 @@ import { PathTool } from "../animation/tools/PathTool";
 import { DisplayObjectManager } from "../canvas/DisplayObjectManager";
 import { BoundaryUtils, CanvasBounds } from "./BoundaryUtils";
 import { canvasMarginManager } from '../canvas/CanvasMarginManager';
+import { historyManager } from '../canvas/HistoryManager';
 
 export class ToolManager {
   private tools: Map<string, Tool> = new Map();
@@ -90,6 +91,10 @@ export class ToolManager {
     if (typeof (this.activeTool as any).onKeyDown === 'function') {
       try { (this.activeTool as any).onKeyDown(event); } catch {}
     }
+
+    // Global shortcuts: Undo/Redo
+    const key = event.key; const isMeta = event.metaKey || event.ctrlKey;
+    if (isMeta && (key === 'z' || key === 'Z')) { if (event.shiftKey) { historyManager.redo(); } else { historyManager.undo(); } event.preventDefault(); return; }
   };
 
     private initializeTools(): void {
@@ -347,4 +352,12 @@ export class ToolManager {
     }
     return false;
   }
+
+  // Layer/lock helpers
+  public bringToFront(): void { const sel = this.tools.get('selection') as any; try { sel?.bringToFront?.(); } catch {} }
+  public sendToBack(): void { const sel = this.tools.get('selection') as any; try { sel?.sendToBack?.(); } catch {} }
+  public bringForward(): void { const sel = this.tools.get('selection') as any; try { sel?.bringForward?.(); } catch {} }
+  public sendBackward(): void { const sel = this.tools.get('selection') as any; try { sel?.sendBackward?.(); } catch {} }
+  public toggleLock(): void { const sel = this.tools.get('selection') as any; try { sel?.toggleLock?.(); } catch {} }
+  public toggleVisibility(show?: boolean): void { const sel = this.tools.get('selection') as any; try { sel?.toggleVisibility?.(show); } catch {} }
 }
