@@ -310,6 +310,14 @@ export class CanvasEvents {
     return this.toolManager.ungroupSelection();
   }
 
+  // Layer helpers for external callers (LayersPanel, etc.)
+  public bringToFront(): void { (this.toolManager as any)?.bringToFront?.(); }
+  public sendToBack(): void { (this.toolManager as any)?.sendToBack?.(); }
+  public bringForward(): void { (this.toolManager as any)?.bringForward?.(); }
+  public sendBackward(): void { (this.toolManager as any)?.sendBackward?.(); }
+  public toggleLock(): void { (this.toolManager as any)?.toggleLock?.(); }
+  public toggleVisibility(show?: boolean): void { (this.toolManager as any)?.toggleVisibility?.(show); }
+
   /**
    * Enable/disable event handling
    */

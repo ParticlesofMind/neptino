@@ -104,6 +104,10 @@ const isDoubleClick = clickedObject &&
       cur = cur.parent;
     }
 
+    // Skip locked objects (self or any ancestor)
+    let cur2: any = object;
+    for (let i = 0; i < 8 && cur2; i++) { if ((cur2 as any).__locked) return false; cur2 = cur2.parent; }
+
     // Check for valid drawable objects
     return object.getBounds && typeof object.getBounds === 'function';
   }

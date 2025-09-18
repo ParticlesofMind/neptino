@@ -10,6 +10,8 @@ import { SelectionGrouping } from './SelectionGrouping';
 import { SelectionStyling } from './SelectionStyling';
 import { animationState } from '../../animation/AnimationState';
 import { determineSelectionType, moveObjectByContainerDelta } from './SelectionUtils';
+import { buildNodeDesc, constructNodeFromDesc, NodeDesc } from './ClipboardFactory';
+import { historyManager } from '../../canvas/HistoryManager';
 
 type Mode = 'idle' | 'drag' | 'scale' | 'rotate';
 
@@ -142,8 +144,29 @@ export class SelectionTool extends BaseTool {
     if (!this.isActive) return; const key = event.key; const isMeta = event.metaKey || event.ctrlKey;
     if (isMeta && (key === 'c' || key === 'C')) { const ok = this.clipboardSvc.copy(); if (ok) { console.log('📋 COPY: selection copied'); event.preventDefault(); } else { console.log('📋 COPY: nothing copied'); } return; }
     if (isMeta && (key === 'v' || key === 'V')) { const created = this.clipboardSvc.pasteAt(this.lastPointerGlobal || null); if (created.length) { this.selected = created; this.overlay.refresh(this.selected, this.container || this.displayManager?.getRoot()!); console.log(`📋 PASTE: created ${created.length} item(s)`); } else { console.log('📋 PASTE: clipboard empty or construct failed'); } event.preventDefault(); return; }
+    if (isMeta && (key === 'd' || key === 'D')) { const ok = this.clipboardSvc.copy(); if (ok) { const created = this.clipboardSvc.pasteAt(this.lastPointerGlobal || null); if (created.length) { this.selected = created; if (this.container) this.overlay.refresh(this.selected, this.container); console.log(`📄 DUPLICATE: ${created.length} item(s)`); } } event.preventDefault(); return; }
     if (isMeta && (key === 'x' || key === 'X')) { if (this.clipboardSvc.cut()) { this.overlay.clear(); console.log('✂️ CUT: selection cut'); } event.preventDefault(); return; }
-    if ((key === 'Backspace' || key === 'Delete') && this.selected.length > 0) { const toRemove = [...this.selected]; toRemove.forEach((obj) => { try { if (this.displayManager && (this.displayManager as any).remove) { (this.displayManager as any).remove(obj); } else if (obj?.parent) { obj.parent.removeChild(obj); obj.destroy?.(); } } catch {} }); this.selected = []; this.overlay.clear(); event.preventDefault(); return; }
+    if (isMeta && (key === 'g' || key === 'G') && !event.shiftKey) { if (this.groupSelection()) { this.overlay.refresh(this.selected, this.container || this.displayManager?.getRoot()!); console.log('🧩 GROUP: grouped selection'); } event.preventDefault(); return; }
+    if (isMeta && (key === 'g' || key === 'G') && event.shiftKey) { if (this.ungroupSelection()) { this.overlay.refresh(this.selected, this.container || this.displayManager?.getRoot()!); console.log('🧩 UNGROUP: ungrouped selection'); } event.preventDefault(); return; }
+    // Z-order shortcuts: Cmd/Ctrl + ] / [  (Shift = to front/back)
+    if (isMeta && (key === ']' || key === '}')) { if (event.shiftKey) { this.bringToFront(); } else { this.bringForward(); } event.preventDefault(); return; }
+    if (isMeta && (key === '[' || key === '{')) { if (event.shiftKey) { this.sendToBack(); } else { this.sendBackward(); } event.preventDefault(); return; }
+    // Lock toggle: Cmd/Ctrl+L
+    if (isMeta && (key === 'l' || key === 'L')) { this.toggleLock(); event.preventDefault(); return; }
+    if ((key === 'Backspace' || key === 'Delete') && this.selected.length > 0) {
+      // Capture object refs and placement for history
+      const removed = this.selected.map(obj => ({ obj, parent: obj.parent as Container | null, index: obj.parent ? obj.parent.getChildIndex(obj) : -1 }));
+      // Remove without destroying so we can undo/redo cleanly
+      removed.forEach(({ obj }) => { try { if (obj.parent) obj.parent.removeChild(obj); } catch {} });
+      this.selected = []; this.overlay.clear();
+      try {
+        historyManager.push({
+          label: 'Delete',
+          undo: () => { removed.forEach(({ obj, parent, index }) => { if (!parent) return; try { if (index >= 0 && index <= parent.children.length) parent.addChildAt(obj, Math.min(index, parent.children.length)); else parent.addChild(obj); } catch {} }); },
+          redo: () => { removed.forEach(({ obj }) => { try { if (obj.parent) obj.parent.removeChild(obj); } catch {} }); },
+        });
+      } catch {}
+      event.preventDefault(); return; }
     if (key === 'Escape' && this.selected.length > 0) { this.selected = []; this.overlay.clear(); event.preventDefault(); return; }
   }
 
@@ -172,6 +195,47 @@ export class SelectionTool extends BaseTool {
   public pasteSelection(): boolean { const created = this.clipboardSvc.pasteAt(this.lastPointerGlobal || null); if (created.length) { this.selected = created; if (this.container) this.overlay.refresh(this.selected, this.container); return true; } return false; }
   public groupSelection(): boolean { const r = this.grouping.group(this.selected, this.container, this.displayManager); if (r && this.container) { this.selected = r.newSelection; this.overlay.refresh(this.selected, this.container); return true; } return false; }
   public ungroupSelection(): boolean { const r = this.grouping.ungroup(this.selected, this.container, this.displayManager); if (r && this.container) { this.selected = r.newSelection; this.overlay.refresh(this.selected, this.container); return true; } return false; }
+
+  // Layer and lock helpers
+  private toggleLock(): void {
+    if (!this.selected.length) return;
+    const before = this.selected.map(o => ({ obj: o, locked: !!(o as any).__locked }));
+    const nextLocked = !before.every(x => x.locked); // if any unlocked, lock all; else unlock all
+    before.forEach(({ obj }) => { (obj as any).__locked = nextLocked; try { (obj as any).eventMode = nextLocked ? 'none' : 'static'; (obj as any).interactiveChildren = !nextLocked; } catch {} });
+    try { historyManager.push({ label: nextLocked ? 'Lock' : 'Unlock', undo: () => before.forEach(({ obj, locked }) => { (obj as any).__locked = locked; try { (obj as any).eventMode = locked ? 'none' : 'static'; (obj as any).interactiveChildren = !locked; } catch {} }), redo: () => before.forEach(({ obj }) => { (obj as any).__locked = nextLocked; try { (obj as any).eventMode = nextLocked ? 'none' : 'static'; (obj as any).interactiveChildren = !nextLocked; } catch {} }) }); } catch {}
+  }
+
+  public toggleVisibility(show?: boolean): void {
+    if (!this.selected.length) return;
+    const before = this.selected.map(o => ({ obj: o, visible: (o as any).visible !== false }));
+    const target = show === undefined ? !before.every(x => x.visible) : show;
+    before.forEach(({ obj }) => { (obj as any).visible = target; });
+    try { historyManager.push({ label: target ? 'Show' : 'Hide', undo: () => before.forEach(({ obj, visible }) => { (obj as any).visible = visible; }), redo: () => before.forEach(({ obj }) => { (obj as any).visible = target; }) }); } catch {}
+  }
+
+  public bringToFront(): void { this.reorderSelected('front'); }
+  public sendToBack(): void { this.reorderSelected('back'); }
+  public bringForward(): void { this.reorderSelected('forward'); }
+  public sendBackward(): void { this.reorderSelected('backward'); }
+
+  private reorderSelected(kind: 'front' | 'back' | 'forward' | 'backward'): void {
+    if (!this.selected.length) return; const changes: Array<{ obj: any; parent: Container; from: number; to: number } > = [];
+    for (const obj of this.selected) {
+      const parent = (obj as any).parent as Container | null; if (!parent) continue;
+      const from = parent.getChildIndex ? parent.getChildIndex(obj) : parent.children.indexOf(obj);
+      if (from < 0) continue; let to = from;
+      if (kind === 'front') to = parent.children.length - 1;
+      if (kind === 'back') to = 0;
+      if (kind === 'forward') to = Math.min(parent.children.length - 1, from + 1);
+      if (kind === 'backward') to = Math.max(0, from - 1);
+      if (to === from) continue;
+      try { if (typeof parent.setChildIndex === 'function') parent.setChildIndex(obj, to); else { parent.removeChild(obj); parent.addChildAt(obj, to); } changes.push({ obj, parent, from, to }); } catch {}
+    }
+    if (changes.length) {
+      try { historyManager.push({ label: `Reorder ${kind}`, undo: () => changes.forEach(({ obj, parent, from }) => { try { if (typeof parent.setChildIndex === 'function') parent.setChildIndex(obj, from); else { parent.removeChild(obj); parent.addChildAt(obj, from); } } catch {} }), redo: () => changes.forEach(({ obj, parent, to }) => { try { if (typeof parent.setChildIndex === 'function') parent.setChildIndex(obj, to); else { parent.removeChild(obj); parent.addChildAt(obj, to); } } catch {} }) }); } catch {}
+      if (this.container) this.overlay.refreshBoundsOnly(this.container);
+    }
+  }
 
   public getCursor(): string { return this.cursor; }
 

@@ -39,6 +39,7 @@
 @use 'layout/page-setup';  
 @use 'layout/layout-lesson';       // Page setup component
 @use 'layout/animations';          // Animation scene components
+@use 'layout/print';               // Print-only styles (A4 canvas)
 // PAGES (page styling)
 // ==========================================================================
 @use 'pages/home';
@@ -61,4 +62,3 @@
 @use 'components/modals';         // Modal/overlay components
 @use 'components/tables';
 @use 'components/cursors';        // Custom cursors for tools
-// Removed custom scroll bars; use native browser scroll

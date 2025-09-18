@@ -228,6 +228,38 @@ export class DisplayObjectManager {
     return true;
   }
 
+  /** Move display object one step forward in z-order */
+  public bringForward(id: string): boolean {
+    const displayObject = this.get(id);
+    if (!displayObject || !displayObject.parent) return false;
+    const parent = displayObject.parent as Container;
+    const idx = parent.getChildIndex ? parent.getChildIndex(displayObject) : parent.children.indexOf(displayObject);
+    if (idx < 0) return false;
+    const newIdx = Math.min(parent.children.length - 1, idx + 1);
+    try {
+      if (typeof parent.setChildIndex === 'function') parent.setChildIndex(displayObject, newIdx);
+      else { parent.removeChild(displayObject); parent.addChildAt(displayObject, newIdx); }
+      console.log('⤴️ Brought forward:', { id, from: idx, to: newIdx });
+      return true;
+    } catch { return false; }
+  }
+
+  /** Move display object one step backward in z-order */
+  public sendBackward(id: string): boolean {
+    const displayObject = this.get(id);
+    if (!displayObject || !displayObject.parent) return false;
+    const parent = displayObject.parent as Container;
+    const idx = parent.getChildIndex ? parent.getChildIndex(displayObject) : parent.children.indexOf(displayObject);
+    if (idx < 0) return false;
+    const newIdx = Math.max(0, idx - 1);
+    try {
+      if (typeof parent.setChildIndex === 'function') parent.setChildIndex(displayObject, newIdx);
+      else { parent.removeChild(displayObject); parent.addChildAt(displayObject, newIdx); }
+      console.log('⤵️ Sent backward:', { id, from: idx, to: newIdx });
+      return true;
+    } catch { return false; }
+  }
+
   /**
    * Set visibility of display object
    */

@@ -1,6 +1,7 @@
 import { Container, Point, Text, Sprite, Texture, Graphics } from 'pixi.js';
 import { DisplayObjectManager } from '../../canvas/DisplayObjectManager';
 import { createBrushFromMeta, createPenFromMeta, createShapeFromMeta, unionBoundsLocal, moveByContainerDelta } from './ClipboardFactory';
+import { historyManager } from '../../canvas/HistoryManager';
 
 type TransformDesc = { x: number; y: number; scaleX: number; scaleY: number; rotation: number; pivotX?: number; pivotY?: number; anchorX?: number; anchorY?: number };
 type TextDesc = { kind: 'text'; text: string; style: any; transform: TransformDesc };
@@ -118,6 +119,15 @@ export class SelectionClipboard {
     }
 
     if (created.length) {
+      // Record history: allow undo to remove pasted objects, redo to re-add
+      try {
+        const createdInfo = created.map((obj: any) => ({ obj, parent: obj.parent as Container, index: (obj.parent as Container).getChildIndex(obj) }));
+        historyManager.push({
+          label: 'Paste',
+          undo: () => { createdInfo.forEach(({ obj }) => { try { if (obj.parent) obj.parent.removeChild(obj); } catch {} }); },
+          redo: () => { createdInfo.forEach(({ obj, parent, index }) => { try { if (index >= 0 && index <= parent.children.length) parent.addChildAt(obj, Math.min(index, parent.children.length)); else parent.addChild(obj); } catch {} }); },
+        });
+      } catch {}
       this.setSelected(created);
       this.dispatchClipboardEvent({ pasted: true });
     }
