@@ -38,6 +38,7 @@
 @use 'layout/settings';
 @use 'layout/page-setup';  
 @use 'layout/layout-lesson';       // Page setup component
+@use 'layout/animations';          // Animation scene components
 // PAGES (page styling)
 // ==========================================================================
 @use 'pages/home';

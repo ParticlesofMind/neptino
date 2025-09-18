@@ -7,7 +7,6 @@ import { Application, Container, Point } from 'pixi.js';
 import { DisplayObjectManager } from '../canvas/DisplayObjectManager';
 import { Scene } from './Scene';
 
-export type PathSpeed = 'slow' | 'medium' | 'fast';
 export type PathEase = 'linear' | 'easeIn' | 'easeOut';
 
 export class AnimationState {
@@ -16,9 +15,9 @@ export class AnimationState {
   private displayManager: DisplayObjectManager | null = null;
   private scenes: Scene[] = [];
   private loopEnabled: boolean = false;
-  private pathSpeed: PathSpeed = 'medium';
   private defaultPathEase: PathEase = 'linear';
   private pathsVisible: boolean = true;
+  private sceneDurationMs: number = 3000;
   // No persistence (explicitly disabled)
 
   init(opts: { app: Application; uiLayer: Container; displayManager: DisplayObjectManager | null }): void {
@@ -57,8 +56,15 @@ export class AnimationState {
   }
   getLoop(): boolean { return this.loopEnabled; }
 
-  setPathSpeed(speed: PathSpeed): void { this.pathSpeed = speed; }
-  getPathSpeed(): PathSpeed { return this.pathSpeed; }
+  setSceneDuration(durationMs: number): void {
+    const clamped = Math.max(500, durationMs);
+    this.sceneDurationMs = clamped;
+    this.scenes.forEach(scene => scene.setDuration(clamped));
+  }
+
+  getSceneDuration(): number {
+    return this.sceneDurationMs;
+  }
 
   setDefaultPathEase(ease: PathEase): void { this.defaultPathEase = ease; }
   getDefaultPathEase(): PathEase { return this.defaultPathEase; }

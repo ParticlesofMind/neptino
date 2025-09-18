@@ -18,6 +18,8 @@ export class CanvasEvents {
   private drawingLayer: Container;
   private toolManager: ToolManager;
   private isEnabled: boolean = true;
+  private pointerBlocked: boolean = false;
+  private toolHasPointerCapture: boolean = false;
   // Animation path recording is handled exclusively by the Path tool.
   // Kept minimal state here for canvas-wide concerns only.
 
@@ -73,6 +75,14 @@ export class CanvasEvents {
       tool: this.toolManager.getActiveToolName()
     });
 
+    if (!this.shouldRouteToToolManager(event)) {
+      this.pointerBlocked = true;
+      this.toolHasPointerCapture = false;
+      this.updateCursor();
+      return;
+    }
+    this.pointerBlocked = false;
+    this.toolHasPointerCapture = true;
     this.toolManager.onPointerDown(event, this.drawingLayer);
     
     // Path recording is handled by the Path tool; Selection remains for positioning only.
@@ -85,6 +95,14 @@ export class CanvasEvents {
    */
   private handlePointerMove(event: FederatedPointerEvent): void {
     if (!this.isEnabled) return;
+
+    if (this.pointerBlocked) {
+      return;
+    }
+
+    if (!this.toolHasPointerCapture && !this.shouldRouteToToolManager(event)) {
+      return;
+    }
 
     // Only log move events for active drawing (to avoid spam)
     const activeToolName = this.toolManager.getActiveToolName();
@@ -112,6 +130,14 @@ export class CanvasEvents {
   private handlePointerUp(event: FederatedPointerEvent): void {
     if (!this.isEnabled) return;
 
+    const shouldRoute = this.toolHasPointerCapture || this.shouldRouteToToolManager(event);
+
+    if (!shouldRoute) {
+      this.pointerBlocked = false;
+      this.toolHasPointerCapture = false;
+      this.updateCursor();
+      return;
+    }
 
     // Route to tool manager
     this.toolManager.onPointerUp(event, this.drawingLayer);
@@ -121,7 +147,15 @@ export class CanvasEvents {
     
     // 🚑 CLEANUP: Ensure any stuck dragging states are cleared
     this.clearAllDragStates();
+    this.toolHasPointerCapture = false;
     this.updateCursor();
+  }
+
+  private shouldRouteToToolManager(event: FederatedPointerEvent): boolean {
+    const target = event.target as any;
+    if (!target) return true;
+    if (target.__sceneControl) return false;
+    return true;
   }
 
   /**
@@ -136,6 +170,7 @@ export class CanvasEvents {
     
     // 🚑 CLEANUP: Ensure any stuck dragging states are cleared when leaving canvas
     this.clearAllDragStates();
+    this.toolHasPointerCapture = false;
   }
 
   /**
@@ -160,6 +195,8 @@ export class CanvasEvents {
     
     // Reset canvas cursor to match active tool
     this.updateCursor();
+    this.pointerBlocked = false;
+    this.toolHasPointerCapture = false;
     
   }
 

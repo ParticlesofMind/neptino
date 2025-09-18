@@ -52,7 +52,7 @@ export class PixiApp {
       backgroundColor: 0xffffff, // White background
       antialias: true,      // Enable antialiasing for smooth edges
       resolution: highQualityResolution, // High resolution for crisp rendering at all zoom levels
-      autoDensity: true     // Automatically adjust canvas CSS size
+      autoDensity: false    // Disable automatic CSS size adjustment to maintain intended canvas size
     };
 
     const finalConfig = { ...defaultConfig, ...config };
@@ -125,6 +125,13 @@ export class PixiApp {
         this.app.canvas.id = 'pixi-canvas';
         // Make canvas focusable for keyboard handling
         (this.app.canvas as any).tabIndex = 0;
+        
+        // Manual CSS sizing to match the intended canvas dimensions
+        // Since autoDensity is disabled, we need to set the display size manually
+        this.app.canvas.style.width = `${this.app.canvas.width / (this.app.renderer.resolution || 1)}px`;
+        this.app.canvas.style.height = `${this.app.canvas.height / (this.app.renderer.resolution || 1)}px`;
+        
+        console.log(`📐 Canvas CSS size set to: ${this.app.canvas.style.width} × ${this.app.canvas.style.height}`);
       } catch {}
 
       this.mounted = true;

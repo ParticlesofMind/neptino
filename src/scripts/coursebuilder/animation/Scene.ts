@@ -3,7 +3,7 @@
  * Can only be scaled and deleted - no rotation or individual manipulation
  */
 
-import { Container, Point, Graphics, Text, TextStyle } from 'pixi.js';
+import { Container, Point, Graphics, FederatedPointerEvent } from 'pixi.js';
 import { animationState } from './AnimationState';
 
 export interface SceneBounds {
@@ -18,6 +18,23 @@ export interface AnimationPath {
   points: Point[];
   startTime: number;
   duration: number;
+  boundsOffsetX?: number;
+  boundsOffsetY?: number;
+}
+
+type ResizeHandlePosition = 'tl' | 'tr' | 'br' | 'bl' | 't' | 'r' | 'b' | 'l';
+
+interface SceneInteractionState {
+  mode: 'drag' | 'resize';
+  handle?: ResizeHandlePosition;
+  startPointer: Point;
+  startBounds: SceneBounds;
+}
+
+interface PathVisual {
+  container: Container;
+  pathGraphic: Graphics;
+  anchors: Graphics[];
 }
 
 export class Scene {
@@ -26,34 +43,88 @@ export class Scene {
   private id: string;
   private isPlaying: boolean = false;
   private t: number = 0; // Animation time 0-1
-  private duration: number = 3000; // Default 3 seconds
+  private duration: number;
   private borderGraphics: Graphics;
   private controlsContainer!: Container;
-  private playButton!: Graphics;
-  private timelineBar!: Graphics;
-  private timelineHandle!: Graphics;
-  private timeText!: Text;
+  private playbackOverlay!: HTMLDivElement; // DOM overlay for controls
+  private playButton!: HTMLButtonElement;
+  private backButton!: HTMLButtonElement;
+  private fwdButton!: HTMLButtonElement;
+  private hideTrajButton!: HTMLButtonElement;
+  private timelineBar!: HTMLDivElement;
+  private timelineProgress!: HTMLDivElement;
+  private timelineHandle!: HTMLDivElement;
+  private timeText!: HTMLDivElement;
+  private timelineWidth: number = 0;
+  private timelineLeftPad: number = 8;
+  private timelineRightPad: number = 28;
+  private isTimelineDragging: boolean = false;
   private isSelected: boolean = false;
   private animationPaths: Map<string, AnimationPath> = new Map();
   private animationFrame: number | null = null;
   private lastTime: number = 0;
+  private interactionLayer: Container | null = null;
+  private dragOverlay: Graphics | null = null;
+  private dragHandle: Graphics | null = null;
+  private pathOverlay: Container | null = null;
+  private pathVisuals: Map<string, PathVisual> = new Map();
+  private resizeHandles: Map<ResizeHandlePosition, Graphics> = new Map();
+  private interactionState: SceneInteractionState | null = null;
+  private pointerMoveHandler: ((event: FederatedPointerEvent) => void) | null = null;
+  private pointerUpHandler: ((event: FederatedPointerEvent) => void) | null = null;
+  private usingGlobalPointerTracking: boolean = false;
+  private activeAnchor: { objectId: string; index: number } | null = null;
+  private contentContainer: Container;
+  private contentMask: Graphics;
+  private hideTrajDuringPlayback: boolean = false;
+  private loopEnabled: boolean = false;
+  private livePreview: Graphics | null = null;
+  private maxVisibleAnchors: number = 7; // Reduced from 9 to 7 (includes start + end + 5 in between)
+  // Use smaller dimensions that fit well within canvas (900x1200)
+  private readonly aspectWidth = 480;
+  private readonly aspectHeight = 270;
+  private readonly aspectRatio = this.aspectWidth / this.aspectHeight;
+  private readonly minWidth = this.aspectWidth;
+  private readonly minHeight = this.aspectHeight;
 
   constructor(bounds: SceneBounds, id?: string) {
     this.bounds = bounds;
     this.id = id || `scene_${Date.now()}_${Math.floor(Math.random() * 9999)}`;
+    this.duration = animationState.getSceneDuration();
     
     // Create pure container
     this.root = new Container();
     this.root.name = 'AnimationScene';
     this.root.position.set(bounds.x, bounds.y);
+    this.root.sortableChildren = true;
+    
+    // Create content container with masking for animated objects
+    // Center the content container so (0,0) is at the center of the scene
+    this.contentContainer = new Container();
+    this.contentContainer.name = 'SceneContent';
+    this.contentContainer.position.set(bounds.width / 2, bounds.height / 2);
+    this.contentContainer.zIndex = 1; // Above path overlay but below interaction layer
+    
+    // Create mask to clip content to scene bounds
+    this.contentMask = new Graphics();
+    this.contentMask.name = 'SceneMask';
+    this.drawContentMask();
+    
+    // Apply mask to content container
+    this.contentContainer.mask = this.contentMask;
+    
+    this.root.addChild(this.contentMask);
+    this.root.addChild(this.contentContainer);
     
     // Add subtle border graphics for visual feedback
     this.borderGraphics = new Graphics();
     this.borderGraphics.name = 'SceneBorder';
+    this.borderGraphics.zIndex = 0;
     this.drawBorder();
     this.root.addChild(this.borderGraphics);
     
-    // Create playback controls
+    // Create interaction handles and playback controls
+    this.createInteractionHandles();
     this.createPlaybackControls();
     
     // Set the scene ID for identification
@@ -67,7 +138,7 @@ export class Scene {
     // Add hover effects
     this.root.on('pointerover', () => this.setHovered(true));
     this.root.on('pointerout', () => this.setHovered(false));
-    this.root.on('pointerdown', () => this.setSelected(true));
+    this.root.on('pointerdown', (event) => this.handleRootPointerDown(event));
     
     // Register with animation state
     const uiLayer = animationState.getUiLayer();
@@ -77,106 +148,788 @@ export class Scene {
     }
   }
 
+  private drawContentMask(): void {
+    this.contentMask.clear();
+    this.contentMask.rect(0, 0, this.bounds.width, this.bounds.height);
+    this.contentMask.fill({ color: 0xffffff });
+  }
+
+  private layoutPlaybackControls(): void {
+    if (!this.playbackOverlay) return;
+    
+    // Ensure controls are appended to DOM (in case constructor couldn't do it)
+    this.appendControlsToDOM();
+    
+    // Calculate timeline width
+    this.timelineWidth = Math.max(120, this.bounds.width - this.timelineLeftPad - this.timelineRightPad);
+    
+    // Convert PIXI scene coordinates to DOM coordinates
+    // Scene bounds are in PIXI coordinate system, we need to convert to DOM
+    const app = animationState.getApp();
+    const canvasElement = app?.canvas;
+    
+    if (canvasElement) {
+      // Convert scene coordinates to screen coordinates relative to canvas parent
+      const sceneScreenX = this.bounds.x;
+      const sceneScreenY = this.bounds.y; 
+      const sceneScreenBottom = sceneScreenY + this.bounds.height;
+      
+      // Position controls below the scene with proper margin
+      const controlsTop = sceneScreenBottom + 20; // 20px margin below scene
+      const controlsLeft = sceneScreenX; // Start from left edge of scene
+      
+      this.playbackOverlay.style.position = 'absolute';
+      this.playbackOverlay.style.top = `${controlsTop}px`;
+      this.playbackOverlay.style.left = `${controlsLeft}px`;
+      this.playbackOverlay.style.width = `${this.bounds.width}px`; // Same width as scene
+      this.playbackOverlay.style.zIndex = '100'; // Ensure visibility
+      
+      console.log('Controls positioned at:', { 
+        top: controlsTop, 
+        left: controlsLeft, 
+        sceneBottom: sceneScreenBottom,
+        sceneBounds: this.bounds,
+        width: this.playbackOverlay.style.width 
+      });
+    }
+    
+    // Update timeline progress
+    this.drawTimeline(this.timelineWidth);
+    this.drawTimelineHandle();
+    this.updateTimeText();
+  }
+
+  private registerSceneControl(obj: Graphics | Container, cursor?: string): void {
+    obj.eventMode = 'static';
+    if (cursor) {
+      (obj as any).cursor = cursor;
+    }
+    (obj as any).__sceneControl = true;
+  }
+
+  private createInteractionHandles(): void {
+    this.interactionLayer = new Container();
+    this.interactionLayer.name = 'SceneInteractionLayer';
+    this.interactionLayer.zIndex = 2; // Above content and paths
+    this.interactionLayer.eventMode = 'passive';
+    this.root.addChild(this.interactionLayer);
+
+    this.dragOverlay = new Graphics();
+    this.dragOverlay.name = 'SceneDragOverlay';
+    this.dragOverlay.alpha = 0.0001;
+    // Overlay only provides visual feedback; leave it non-interactive so drags inside
+    // the scene manipulate the selected object rather than the scene container.
+    this.dragOverlay.eventMode = 'none';
+    this.interactionLayer.addChild(this.dragOverlay);
+
+    this.pathOverlay = new Container();
+    this.pathOverlay.name = 'ScenePathOverlay';
+    this.pathOverlay.zIndex = 0; // Below content container
+    this.pathOverlay.eventMode = 'passive';
+    this.root.addChild(this.pathOverlay);
+
+    this.dragHandle = new Graphics();
+    this.dragHandle.name = 'SceneDragHandle';
+    this.registerSceneControl(this.dragHandle, 'move');
+    this.drawDragHandle(60);
+    this.dragHandle.on('pointerdown', (event: FederatedPointerEvent) => this.beginSceneDrag(event));
+    this.interactionLayer.addChild(this.dragHandle);
+
+    const handles: Array<{ key: ResizeHandlePosition; cursor: string }> = [
+      { key: 'tl', cursor: 'nwse-resize' },
+      { key: 'tr', cursor: 'nesw-resize' },
+      { key: 'br', cursor: 'nwse-resize' },
+      { key: 'bl', cursor: 'nesw-resize' }
+    ];
+
+    handles.forEach(({ key, cursor }) => {
+      const handle = new Graphics();
+      handle.name = `SceneHandle-${key}`;
+      this.registerSceneControl(handle, cursor);
+      this.drawResizeHandle(handle);
+      handle.on('pointerdown', (event: FederatedPointerEvent) => this.beginSceneResize(key, event));
+      this.resizeHandles.set(key, handle);
+      this.interactionLayer!.addChild(handle);
+    });
+
+    this.layoutInteractionHandles();
+  }
+
+  private drawResizeHandle(handle: Graphics): void {
+    handle.clear();
+    handle.roundRect(-6, -6, 12, 12, 2);
+    handle.fill({ color: 0x80bfff, alpha: 0.9 });
+    handle.stroke({ color: 0x4a79a4, width: 1 });
+  }
+
+  private drawDragHandle(handleWidth: number): void {
+    if (!this.dragHandle) return;
+    this.dragHandle.clear();
+    this.dragHandle.roundRect(0, 0, handleWidth, 12, 4);
+    this.dragHandle.fill({ color: 0x80bfff, alpha: 0.9 }); // Updated to match theme blue
+  }
+
+  private layoutInteractionHandles(): void {
+    if (!this.dragOverlay) return;
+
+    this.dragOverlay.clear();
+    this.dragOverlay.rect(0, 0, this.bounds.width, this.bounds.height);
+    const overlayAlpha = this.isSelected ? 0.0001 : 0.0;
+    this.dragOverlay.fill({ color: 0xffffff, alpha: overlayAlpha });
+    this.dragOverlay.visible = this.isSelected;
+
+    const w = this.bounds.width;
+    const h = this.bounds.height;
+    const midX = w / 2;
+    const midY = h / 2;
+
+    const positions: Record<ResizeHandlePosition, Point> = {
+      tl: new Point(0, 0),
+      tr: new Point(w, 0),
+      br: new Point(w, h),
+      bl: new Point(0, h),
+      t: new Point(midX, 0),
+      r: new Point(w, midY),
+      b: new Point(midX, h),
+      l: new Point(0, midY)
+    };
+
+    this.resizeHandles.forEach((handle, key) => {
+      const pos = positions[key];
+      if (!pos) return;
+      handle.position.set(pos.x, pos.y);
+      handle.visible = this.isSelected;
+      handle.eventMode = this.isSelected ? 'static' : 'none';
+    });
+
+    if (this.dragHandle) {
+      const handleWidth = Math.min(Math.max(w * 0.4, 40), 120);
+      this.drawDragHandle(handleWidth);
+      this.dragHandle.visible = this.isSelected;
+      this.dragHandle.eventMode = this.isSelected ? 'static' : 'none';
+      
+      // Position drag handle below the playback controls
+      // Controls are positioned 20px below scene, so position handle further down
+      const controlsHeight = 80; // Approximate height of timeline + buttons + spacing
+      this.dragHandle.position.set(
+        midX - handleWidth / 2,
+        h + 20 + controlsHeight + 10 // 20px margin to controls + controls height + 10px gap
+      );
+    }
+
+    this.updatePathInteractivity();
+  }
+
+  private refreshPathVisual(objectId: string): void {
+    if (!this.pathOverlay) return;
+    const path = this.animationPaths.get(objectId);
+    if (!path) return;
+
+    let visual = this.pathVisuals.get(objectId);
+    if (!visual) {
+      const container = new Container();
+      container.name = `ScenePath-${objectId}`;
+      container.zIndex = 0; // Path visual below animated objects
+      container.eventMode = 'passive';
+      this.pathOverlay.addChild(container);
+
+      const pathGraphic = new Graphics();
+      pathGraphic.name = `ScenePathLine-${objectId}`;
+      pathGraphic.eventMode = 'none';
+      container.addChild(pathGraphic);
+
+      visual = { container, pathGraphic, anchors: [] };
+      this.pathVisuals.set(objectId, visual);
+    }
+
+    const pathVisual = visual;
+
+    pathVisual.anchors.forEach(anchor => anchor.destroy());
+    pathVisual.anchors = [];
+
+    // Convert scene-relative points to pathOverlay coordinates for visual display
+    const pathOverlayPointsFull = path.points.map(point => {
+      // Points are in content container space (centered), convert to pathOverlay space
+      return this.pathOverlay!.toLocal(this.contentContainer.toGlobal(point));
+    });
+
+    // Better anchor distribution: always show start, end, and evenly spaced points
+    const indices: number[] = [];
+    const count = pathOverlayPointsFull.length;
+    
+    if (count > 0) {
+      indices.push(0); // Start point
+      
+      if (count > 1) {
+        const maxInterior = Math.max(0, Math.min(this.maxVisibleAnchors - 2, count - 2));
+        
+        // Distribute interior points more evenly
+        if (maxInterior > 0) {
+          for (let i = 1; i <= maxInterior; i++) {
+            const ratio = i / (maxInterior + 1);
+            const idx = Math.round(ratio * (count - 1));
+            if (idx > 0 && idx < count - 1 && !indices.includes(idx)) {
+              indices.push(idx);
+            }
+          }
+        }
+        
+        indices.push(count - 1); // End point
+      }
+    }
+    
+    // Sort indices to maintain order
+    indices.sort((a, b) => a - b);
+    const pathOverlayPoints = indices.map(i => pathOverlayPointsFull[i]);
+
+    this.redrawPathGraphic(pathVisual.pathGraphic, pathOverlayPointsFull);
+
+    pathOverlayPoints.forEach((point, displayIndex) => {
+      const anchor = this.createAnchor(objectId, indices[displayIndex], point);
+      pathVisual.anchors.push(anchor);
+      pathVisual.container.addChild(anchor);
+    });
+  }
+
+  private redrawPathGraphic(graphic: Graphics, points: Point[]): void {
+    graphic.clear();
+    if (points.length === 0) return;
+
+    console.log(`🎨 Drawing path visual with points:`, points.slice(0, 3).map(p => `(${p.x.toFixed(1)}, ${p.y.toFixed(1)})`));
+    console.log(`🎨 Path graphic parent container position:`, graphic.parent?.position || 'no parent');
+    
+    graphic.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      graphic.lineTo(points[i].x, points[i].y);
+    }
+    graphic.stroke({ color: 0x4a79a4, width: 2, alpha: 0.8 });
+    graphic.alpha = this.isSelected ? 0.9 : 0.4;
+  }
+
+  private createAnchor(objectId: string, index: number, point: Point): Graphics {
+    const anchor = new Graphics();
+    anchor.name = `ScenePathAnchor-${objectId}-${index}`;
+    anchor.circle(0, 0, 5);
+    anchor.fill({ color: 0xffffff, alpha: 1 });
+    anchor.stroke({ color: 0x4a79a4, width: 2, alpha: 0.9 });
+    anchor.position.set(point.x, point.y);
+    this.registerSceneControl(anchor, 'pointer');
+    anchor.on('pointerdown', (event: FederatedPointerEvent) => this.beginAnchorDrag(objectId, index, event));
+    anchor.on('pointerover', () => this.highlightAnchor(anchor, true));
+    anchor.on('pointerout', () => this.highlightAnchor(anchor, false));
+    return anchor;
+  }
+
+  private highlightAnchor(anchor: Graphics, hovered: boolean): void {
+    anchor.scale.set(hovered ? 1.25 : 1);
+    anchor.alpha = hovered ? 1 : (this.isSelected ? 1 : 0.7);
+  }
+
+  private beginAnchorDrag(objectId: string, index: number, event: FederatedPointerEvent): void {
+    this.setSelected(true);
+    this.activeAnchor = { objectId, index };
+    this.attachGlobalPointerListeners();
+    this.updateActiveAnchorPosition(event);
+    event.stopPropagation();
+  }
+
+  private updateActiveAnchorPosition(event: FederatedPointerEvent): void {
+    if (!this.activeAnchor) return;
+    const { objectId, index } = this.activeAnchor;
+    const path = this.animationPaths.get(objectId);
+    const visual = this.pathVisuals.get(objectId);
+    if (!path || !visual) return;
+
+    // Convert global position to content container coordinates (scene-relative)
+    const contentLocal = this.contentContainer.toLocal(event.global);
+    
+    // Clamp to scene bounds (centered coordinates)
+    const halfWidth = this.bounds.width / 2;
+    const halfHeight = this.bounds.height / 2;
+    const clampedX = Math.max(-halfWidth, Math.min(halfWidth, contentLocal.x));
+    const clampedY = Math.max(-halfHeight, Math.min(halfHeight, contentLocal.y));
+
+    // Update the path point in scene-relative coordinates
+    if (!path.points[index]) {
+      path.points[index] = new Point(clampedX, clampedY);
+    } else {
+      path.points[index].x = clampedX;
+      path.points[index].y = clampedY;
+    }
+
+    // Update visual anchor position (convert to pathOverlay coordinates)
+    const anchor = visual.anchors.find(a => a.name === `ScenePathAnchor-${objectId}-${index}`);
+    if (anchor) {
+      const pathOverlayPoint = this.pathOverlay!.toLocal(this.contentContainer.toGlobal(new Point(clampedX, clampedY)));
+      anchor.position.set(pathOverlayPoint.x, pathOverlayPoint.y);
+    }
+
+    // Redraw path with converted coordinates
+    const pathOverlayPoints = path.points.map(point => {
+      return this.pathOverlay!.toLocal(this.contentContainer.toGlobal(point));
+    });
+    this.redrawPathGraphic(visual.pathGraphic, pathOverlayPoints);
+    this.updateAnimationObjects();
+  }
+
+  private updatePathInteractivity(): void {
+    this.pathVisuals.forEach(({ pathGraphic, anchors }) => {
+      pathGraphic.alpha = this.isSelected ? 0.9 : 0.45;
+      anchors.forEach(anchor => {
+        anchor.visible = this.isSelected;
+        anchor.eventMode = this.isSelected ? 'static' : 'none';
+        if (!this.isSelected) {
+          anchor.scale.set(1);
+          anchor.alpha = 0.7;
+        } else {
+          anchor.alpha = 1;
+        }
+      });
+    });
+  }
+
+  private beginSceneDrag(event: FederatedPointerEvent): void {
+    const uiLayer = animationState.getUiLayer();
+    if (!uiLayer) return;
+    const local = uiLayer.toLocal(event.global);
+    this.interactionState = {
+      mode: 'drag',
+      startPointer: new Point(local.x, local.y),
+      startBounds: { ...this.bounds }
+    };
+    this.setSelected(true);
+    this.attachGlobalPointerListeners();
+    event.stopPropagation();
+  }
+
+  private beginSceneResize(handle: ResizeHandlePosition, event: FederatedPointerEvent): void {
+    const uiLayer = animationState.getUiLayer();
+    if (!uiLayer) return;
+    const local = uiLayer.toLocal(event.global);
+    this.interactionState = {
+      mode: 'resize',
+      handle,
+      startPointer: new Point(local.x, local.y),
+      startBounds: { ...this.bounds }
+    };
+    this.setSelected(true);
+    this.attachGlobalPointerListeners();
+    event.stopPropagation();
+  }
+
+  private updateSceneInteraction(event: FederatedPointerEvent): void {
+    if (!this.interactionState) return;
+    const uiLayer = animationState.getUiLayer();
+    if (!uiLayer) return;
+    const local = uiLayer.toLocal(event.global);
+    const dx = local.x - this.interactionState.startPointer.x;
+    const dy = local.y - this.interactionState.startPointer.y;
+
+    if (this.interactionState.mode === 'drag') {
+      const nextBounds: SceneBounds = {
+        x: this.interactionState.startBounds.x + dx,
+        y: this.interactionState.startBounds.y + dy,
+        width: this.interactionState.startBounds.width,
+        height: this.interactionState.startBounds.height
+      };
+      this.applyBounds(nextBounds);
+      return;
+    }
+
+    if (!this.interactionState.handle) return;
+    const resized = this.computeResizedBounds(this.interactionState.startBounds, this.interactionState.handle, dx, dy);
+    this.applyBounds(resized);
+  }
+
+  private computeResizedBounds(start: SceneBounds, handle: ResizeHandlePosition, dx: number, dy: number): SceneBounds {
+    const widthFromDx = (() => {
+      switch (handle) {
+        case 'br':
+        case 'tr':
+          return start.width + dx;
+        case 'bl':
+        case 'tl':
+          return start.width - dx;
+        default:
+          return start.width;
+      }
+    })();
+
+    const heightFromDy = (() => {
+      switch (handle) {
+        case 'br':
+        case 'bl':
+          return start.height + dy;
+        case 'tr':
+        case 'tl':
+          return start.height - dy;
+        default:
+          return start.height;
+      }
+    })();
+
+    const candidateWidthFromDx = Math.max(this.minWidth, widthFromDx);
+    const candidateWidthFromDy = Math.max(this.minWidth, Math.max(this.minHeight, heightFromDy) * this.aspectRatio);
+
+    const changeFromDx = Math.abs(candidateWidthFromDx - start.width);
+    const changeFromDy = Math.abs(candidateWidthFromDy - start.width);
+
+    let width = changeFromDy > changeFromDx ? candidateWidthFromDy : candidateWidthFromDx;
+    width = Math.max(this.minWidth, width);
+    let height = width / this.aspectRatio;
+    if (height < this.minHeight) {
+      height = this.minHeight;
+      width = height * this.aspectRatio;
+    }
+
+    let x = start.x;
+    let y = start.y;
+
+    switch (handle) {
+      case 'tr':
+        y = start.y + (start.height - height);
+        break;
+      case 'bl':
+        x = start.x + (start.width - width);
+        break;
+      case 'tl':
+        x = start.x + (start.width - width);
+        y = start.y + (start.height - height);
+        break;
+      case 'br':
+      default:
+        break;
+    }
+
+    return {
+      x,
+      y,
+      width,
+      height
+    };
+  }
+
+  private applyBounds(newBounds: SceneBounds): void {
+    this.bounds = { ...newBounds };
+    this.root.position.set(newBounds.x, newBounds.y);
+    this.drawBorder();
+    this.drawContentMask(); // Update the content mask when bounds change
+    this.layoutPlaybackControls();
+    this.layoutInteractionHandles();
+  }
+
+  private handleRootPointerDown(event: FederatedPointerEvent): void {
+    const target = event.target as any;
+    if (target && target.__sceneControl) {
+      return;
+    }
+    this.setSelected(true);
+  }
+
   private createPlaybackControls(): void {
+    console.log('Creating playback controls for scene:', this.id);
+    
+    // Keep the PIXI container for now, but will be replaced by DOM overlay
     this.controlsContainer = new Container();
     this.controlsContainer.name = 'SceneControls';
-    
-    const controlsY = this.bounds.height + 5;
-    
-    // Play/Pause button
-    this.playButton = new Graphics();
-    this.drawPlayButton();
-    this.playButton.position.set(5, controlsY);
-    this.playButton.eventMode = 'static';
-    this.playButton.cursor = 'pointer';
-    this.playButton.on('pointerdown', () => this.togglePlayback());
-    this.controlsContainer.addChild(this.playButton);
-    
-    // Timeline bar
-    const timelineWidth = this.bounds.width - 120;
-    this.timelineBar = new Graphics();
-    this.timelineBar.position.set(40, controlsY + 10);
-    this.drawTimeline(timelineWidth);
-    this.controlsContainer.addChild(this.timelineBar);
-    
-    // Timeline handle
-    this.timelineHandle = new Graphics();
-    this.timelineHandle.position.set(40, controlsY + 6);
-    this.drawTimelineHandle();
-    this.timelineHandle.eventMode = 'static';
-    this.timelineHandle.cursor = 'pointer';
-    this.setupTimelineDragging(timelineWidth);
-    this.controlsContainer.addChild(this.timelineHandle);
-    
-    // Time display
-    this.timeText = new Text({
-      text: '0.0s / 3.0s',
-      style: new TextStyle({
-        fontFamily: 'Arial',
-        fontSize: 12,
-        fill: 0x666666
-      })
-    });
-    this.timeText.position.set(timelineWidth + 50, controlsY + 8);
-    this.controlsContainer.addChild(this.timeText);
-    
+    this.controlsContainer.zIndex = 2;
+    this.controlsContainer.eventMode = 'passive';
     this.root.addChild(this.controlsContainer);
+
+    // Create DOM overlay container - this is the main scene container for video scenes
+    this.playbackOverlay = document.createElement('div');
+    this.playbackOverlay.className = 'scene scene--video';
+    
+    // Create the playback controls container inside the scene
+    const playbackContainer = document.createElement('div');
+    playbackContainer.className = 'scene__playback';
+    this.playbackOverlay.appendChild(playbackContainer);
+    
+    // Create timeline elements
+    this.createTimelineElements(playbackContainer);
+    
+    // Create control buttons  
+    this.createControlButtons(playbackContainer);
+    
+    // Try to append to canvas parent, but defer if not ready
+    this.appendControlsToDOM();
+    
+    this.layoutPlaybackControls();
+  }
+
+  private appendControlsToDOM(): void {
+    if (this.playbackOverlay.parentElement) {
+      // Already appended
+      return;
+    }
+    
+    // Append overlay to the canvas parent element
+    const app = animationState.getApp();
+    const canvasElement = app?.canvas;
+    const canvasParent = canvasElement?.parentElement;
+    
+    console.log('Animation app:', app);
+    console.log('Canvas element:', canvasElement);
+    console.log('Canvas parent:', canvasParent);
+    
+    if (canvasParent) {
+      canvasParent.style.position = 'relative'; // Ensure parent can contain positioned overlay
+      canvasParent.appendChild(this.playbackOverlay);
+      console.log('Scene controls appended to canvas parent:', canvasParent);
+    } else {
+      console.warn('Could not find canvas parent for scene controls, trying fallback...');
+      // Fallback: try to append to document body with fixed positioning
+      document.body.appendChild(this.playbackOverlay);
+      this.playbackOverlay.style.position = 'fixed';
+      this.playbackOverlay.style.bottom = '20px';
+      this.playbackOverlay.style.left = '50%';
+      this.playbackOverlay.style.transform = 'translateX(-50%)';
+      this.playbackOverlay.style.zIndex = '1000';
+      console.log('Scene controls added to body as fallback');
+    }
+  }
+
+  private createTimelineElements(playbackContainer: HTMLDivElement) {
+    console.log('Creating timeline elements...');
+    
+    // Timeline container
+    const timelineContainer = document.createElement('div');
+    timelineContainer.className = 'scene__timeline';
+    
+    // Timeline bar (background)
+    this.timelineBar = document.createElement('div');
+    this.timelineBar.className = 'scene__timeline-bar';
+    
+    // Timeline progress (foreground)
+    this.timelineProgress = document.createElement('div');
+    this.timelineProgress.className = 'scene__timeline-progress';
+    
+    // Timeline handle (scrubber)
+    this.timelineHandle = document.createElement('div');
+    this.timelineHandle.className = 'scene__timeline-handle';
+    
+    // Time text
+    this.timeText = document.createElement('div');
+    this.timeText.className = 'scene__time-text';
+    this.timeText.textContent = '0.0s';
+    
+    // Assemble timeline
+    this.timelineBar.appendChild(this.timelineProgress);
+    this.timelineBar.appendChild(this.timelineHandle);
+    timelineContainer.appendChild(this.timelineBar);
+    timelineContainer.appendChild(this.timeText);
+    
+    playbackContainer.appendChild(timelineContainer);
+    
+    console.log('Timeline elements created and appended');
+    
+    // Add timeline interaction
+    this.addTimelineInteraction();
+  }
+
+  private createControlButtons(playbackContainer: HTMLDivElement) {
+    console.log('Creating control buttons...');
+    
+    const controlsContainer = document.createElement('div');
+    controlsContainer.className = 'scene__controls';
+    
+    // Back button
+    this.backButton = this.createDOMButton('scene__button scene__button--back', 
+      '/src/assets/icons/chevron-left-icon.svg', () => this.nudgeTimeSeconds(-0.5));
+    
+    // Play button  
+    this.playButton = this.createDOMButton('scene__button scene__button--play scene__button--large',
+      '/src/assets/icons/play-icon.svg', () => this.togglePlayback());
+    
+    // Forward button
+    this.fwdButton = this.createDOMButton('scene__button scene__button--forward',
+      '/src/assets/icons/chevron-right-icon.svg', () => this.nudgeTimeSeconds(0.5));
+    
+    // Hide trajectory button
+    this.hideTrajButton = this.createDOMButton('scene__button scene__button--hide-traj',
+      '/src/assets/icons/eye-off-icon.svg', () => this.toggleTrajectoryVisibility());
+    
+    // Assemble controls
+    controlsContainer.appendChild(this.backButton);
+    controlsContainer.appendChild(this.playButton);
+    controlsContainer.appendChild(this.fwdButton);
+    controlsContainer.appendChild(this.hideTrajButton);
+    
+    playbackContainer.appendChild(controlsContainer);
+    
+    console.log('Control buttons created and appended:', {
+      backButton: this.backButton,
+      playButton: this.playButton,
+      fwdButton: this.fwdButton,
+      hideTrajButton: this.hideTrajButton
+    });
+  }
+
+  private createDOMButton(className: string, iconPath: string, onClick: () => void): HTMLButtonElement {
+    const button = document.createElement('button');
+    button.className = className;
+    button.addEventListener('click', onClick);
+    
+    const icon = document.createElement('img');
+    icon.src = iconPath;
+    icon.alt = '';
+    icon.className = 'scene__button-icon';
+    
+    button.appendChild(icon);
+    return button;
+  }
+
+  private addTimelineInteraction() {
+    let isDragging = false;
+    
+    const handleTimelineClick = (event: MouseEvent) => {
+      const rect = this.timelineBar.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const percentage = Math.max(0, Math.min(1, x / rect.width));
+      this.setTime(percentage * this.duration);
+    };
+    
+    const handleMouseDown = (event: MouseEvent) => {
+      isDragging = true;
+      handleTimelineClick(event);
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    };
+    
+    const handleMouseMove = (event: MouseEvent) => {
+      if (isDragging) {
+        handleTimelineClick(event);
+      }
+    };
+    
+    const handleMouseUp = () => {
+      isDragging = false;
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    this.timelineBar.addEventListener('mousedown', handleMouseDown);
+  }
+
+  private updateHideToggleIcon(): void {
+    if (!this.hideTrajButton) return;
+    const icon = this.hideTrajButton.querySelector('img') as HTMLImageElement;
+    if (icon) {
+      icon.src = this.hideTrajDuringPlayback ? '/src/assets/icons/eye-off-icon.svg' : '/src/assets/icons/eye.svg';
+    }
   }
 
   private drawPlayButton(): void {
-    this.playButton.clear();
-    const size = 20;
-    this.playButton.roundRect(0, 0, size, size, 3).fill({ color: 0x4a79a4 });
-    
-    // Draw play or pause icon
-    this.playButton.fill({ color: 0xffffff });
-    if (this.isPlaying) {
-      // Pause icon (two bars)
-      this.playButton.rect(6, 5, 3, 10);
-      this.playButton.rect(11, 5, 3, 10);
-    } else {
-      // Play icon (triangle)
-      this.playButton.poly([6, 5, 6, 15, 14, 10]);
+    if (!this.playButton) return;
+    const icon = this.playButton.querySelector('img') as HTMLImageElement;
+    if (icon) {
+      icon.src = this.isPlaying ? '/src/assets/icons/pause-icon.svg' : '/src/assets/icons/play-icon.svg';
     }
-    this.playButton.fill();
+  }
+
+  private toggleTrajectoryVisibility(): void {
+    this.hideTrajDuringPlayback = !this.hideTrajDuringPlayback;
+    this.updateHideToggleIcon();
+    this.updatePathVisibility();
   }
 
   private drawTimeline(width: number): void {
-    this.timelineBar.clear();
-    // Background
-    this.timelineBar.roundRect(0, 0, width, 8, 4).fill({ color: 0xe0e0e0 });
-    // Progress
-    const progress = width * this.t;
-    if (progress > 0) {
-      this.timelineBar.roundRect(0, 0, progress, 8, 4).fill({ color: 0x4a79a4 });
+    // For DOM timeline, we update styles instead of drawing
+    const safeWidth = Math.max(1, width);
+    
+    if (this.timelineBar) {
+      this.timelineBar.style.width = `${safeWidth}px`;
+    }
+    
+    // Update progress fill
+    if (this.timelineProgress) {
+      const progress = safeWidth * this.t;
+      this.timelineProgress.style.width = `${progress}px`;
     }
   }
 
   private drawTimelineHandle(): void {
-    this.timelineHandle.clear();
-    this.timelineHandle.circle(0, 4, 6).fill({ color: 0x4a79a4 });
+    // For DOM handle, position is handled via CSS positioning
+    if (this.timelineHandle && this.timelineBar) {
+      const progress = this.timelineBar.offsetWidth * this.t;
+      this.timelineHandle.style.left = `${progress}px`;
+    }
   }
 
-  private setupTimelineDragging(timelineWidth: number): void {
-    let isDragging = false;
-    
-    this.timelineHandle.on('pointerdown', (event) => {
-      isDragging = true;
+  private attachGlobalPointerListeners(): void {
+    if (this.usingGlobalPointerTracking) return;
+    const stage = animationState.getApp()?.stage;
+    if (!stage) return;
+    if (!this.pointerMoveHandler) {
+      this.pointerMoveHandler = (evt: FederatedPointerEvent) => this.onGlobalPointerMove(evt);
+    }
+    if (!this.pointerUpHandler) {
+      this.pointerUpHandler = (evt: FederatedPointerEvent) => this.onGlobalPointerUp(evt);
+    }
+    stage.on('pointermove', this.pointerMoveHandler);
+    stage.on('pointerup', this.pointerUpHandler);
+    stage.on('pointerupoutside', this.pointerUpHandler);
+    this.usingGlobalPointerTracking = true;
+  }
+
+  private detachGlobalPointerListeners(): void {
+    if (!this.usingGlobalPointerTracking) return;
+    const stage = animationState.getApp()?.stage;
+    if (!stage) return;
+    if (this.pointerMoveHandler) {
+      stage.off('pointermove', this.pointerMoveHandler);
+    }
+    if (this.pointerUpHandler) {
+      stage.off('pointerup', this.pointerUpHandler);
+      stage.off('pointerupoutside', this.pointerUpHandler);
+    }
+    this.usingGlobalPointerTracking = false;
+  }
+
+  private onGlobalPointerMove(event: FederatedPointerEvent): void {
+    if (this.activeAnchor) {
+      this.updateActiveAnchorPosition(event);
       event.stopPropagation();
-    });
-    
-    this.root.on('pointermove', (event) => {
-      if (isDragging) {
-        const local = this.timelineBar.toLocal(event.global);
-        const newT = Math.max(0, Math.min(1, local.x / timelineWidth));
-        this.setTime(newT);
-        event.stopPropagation();
-      }
-    });
-    
-    this.root.on('pointerup', () => {
-      isDragging = false;
-    });
+      return;
+    }
+    if (this.isTimelineDragging) {
+      this.updateTimelineFromEvent(event);
+      event.stopPropagation();
+      return;
+    }
+    if (this.interactionState) {
+      this.updateSceneInteraction(event);
+      event.stopPropagation();
+    }
+  }
+
+  private onGlobalPointerUp(event: FederatedPointerEvent): void {
+    let handled = false;
+    if (this.activeAnchor) {
+      this.activeAnchor = null;
+      handled = true;
+    }
+    if (this.isTimelineDragging) {
+      this.isTimelineDragging = false;
+      handled = true;
+    }
+    if (this.interactionState) {
+      this.interactionState = null;
+      this.drawBorder();
+      this.layoutInteractionHandles();
+      handled = true;
+    }
+    if (!this.isTimelineDragging && !this.interactionState) {
+      this.detachGlobalPointerListeners();
+    }
+    if (handled) {
+      event.stopPropagation();
+    }
+  }
+
+  private updateTimelineFromEvent(_event: FederatedPointerEvent): void {
+    // This method is no longer needed since we handle timeline interaction in DOM
+    // The addTimelineInteraction method handles click and drag for DOM timeline
   }
 
   private togglePlayback(): void {
@@ -189,16 +942,18 @@ export class Scene {
 
   private updateControls(): void {
     this.drawPlayButton();
-    this.drawTimeline(this.bounds.width - 120);
-    
-    // Update timeline handle position
-    const timelineWidth = this.bounds.width - 120;
-    this.timelineHandle.position.x = 40 + (timelineWidth * this.t);
-    
-    // Update time text
+    this.drawTimeline(this.timelineWidth);
+    this.drawTimelineHandle(); // This now updates the DOM handle position
+    this.updateTimeText();
+    this.updatePathVisibility();
+  }
+
+  private updateTimeText(): void {
     const currentTime = (this.t * this.duration / 1000).toFixed(1);
     const totalTime = (this.duration / 1000).toFixed(1);
-    this.timeText.text = `${currentTime}s / ${totalTime}s`;
+    if (this.timeText) {
+      this.timeText.textContent = `${currentTime}s / ${totalTime}s`;
+    }
   }
 
   private drawBorder(): void {
@@ -216,22 +971,6 @@ export class Scene {
         alpha: alpha 
       });
     
-    // Add corner indicators for resize handles when selected
-    if (this.isSelected) {
-      const cornerSize = 6;
-      const corners = [
-        { x: 0, y: 0 },
-        { x: this.bounds.width, y: 0 },
-        { x: 0, y: this.bounds.height },
-        { x: this.bounds.width, y: this.bounds.height }
-      ];
-      
-      corners.forEach(corner => {
-        this.borderGraphics
-          .rect(corner.x - cornerSize/2, corner.y - cornerSize/2, cornerSize, cornerSize)
-          .fill({ color: 0x4a79a4, alpha: 0.8 });
-      });
-    }
   }
 
   private setHovered(hovered: boolean): void {
@@ -243,10 +982,15 @@ export class Scene {
   setSelected(selected: boolean): void {
     this.isSelected = selected;
     this.drawBorder();
+    this.layoutInteractionHandles();
   }
 
   getRoot(): Container {
     return this.root;
+  }
+
+  getContentContainer(): Container {
+    return this.contentContainer;
   }
 
   getId(): string {
@@ -271,15 +1015,7 @@ export class Scene {
   }
 
   setBounds(newBounds: SceneBounds): void {
-    this.bounds = { ...newBounds };
-    this.root.position.set(newBounds.x, newBounds.y);
-    this.drawBorder(); // Redraw border with new dimensions
-    
-    // Recreate controls with new dimensions
-    if (this.controlsContainer) {
-      this.root.removeChild(this.controlsContainer);
-      this.createPlaybackControls();
-    }
+    this.applyBounds(newBounds);
   }
 
   scale(scaleX: number, scaleY: number): void {
@@ -290,7 +1026,8 @@ export class Scene {
     const uiLayer = animationState.getUiLayer();
     if (uiLayer) {
       const globalPos = object.getGlobalPosition();
-      const localPos = this.root.toLocal(globalPos, uiLayer);
+      // Convert to content container local coordinates (centered coordinate system)
+      const localPos = this.contentContainer.toLocal(globalPos, uiLayer);
       
       if (object.parent) {
         object.parent.removeChild(object);
@@ -300,32 +1037,30 @@ export class Scene {
       if (!(object as any).objectId) {
         (object as any).objectId = `obj_${Date.now()}_${Math.floor(Math.random() * 9999)}`;
       }
-      
-      console.log(`🎬 Scene.addObject Debug:`);
-      console.log(`🎬   - Object global position: (${globalPos.x.toFixed(1)}, ${globalPos.y.toFixed(1)})`);
-      console.log(`🎬   - Scene root position: (${this.root.x.toFixed(1)}, ${this.root.y.toFixed(1)})`);
-      console.log(`🎬   - Converted local position: (${localPos.x.toFixed(1)}, ${localPos.y.toFixed(1)})`);
+
       
       object.position.set(localPos.x, localPos.y);
-      this.root.addChild(object);
-      
-      console.log(`🎬 Added object ${(object as any).objectId} to scene ${this.id}`);
-    }
+      // Add to content container instead of root so it gets clipped
+      this.contentContainer.addChild(object);
+          }
   }
 
   removeObject(object: Container): void {
-    if (object.parent === this.root) {
+    if (object.parent === this.contentContainer) {
+      this.contentContainer.removeChild(object);
+    } else if (object.parent === this.root) {
       this.root.removeChild(object);
     }
   }
 
   getObjects(): Container[] {
-    return this.root.children.filter(child => child instanceof Container) as Container[];
+    return this.contentContainer.children.filter(child => child instanceof Container) as Container[];
   }
 
   destroy(): void {
     // Stop animation
     this.pause();
+    this.detachGlobalPointerListeners();
     
     animationState.removeScene(this);
     
@@ -372,25 +1107,52 @@ export class Scene {
     this.t += deltaTime / this.duration;
     
     if (this.t >= 1) {
-      this.t = 1;
-      this.pause(); // Stop at end, or could loop here
+      // Check both scene-specific and global loop settings
+      const shouldLoop = this.loopEnabled || animationState.getLoop();
+      if (shouldLoop) {
+        this.t = 0; // Reset to beginning
+        this.lastTime = performance.now(); // Reset timing for smooth looping
+      } else {
+        this.t = 1;
+        this.pause();
+        return; // Exit early when not looping
+      }
     }
     
     this.updateAnimationObjects();
     this.updateControls();
     
+    // Continue animation loop
     if (this.isPlaying) {
       this.animationFrame = requestAnimationFrame(() => this.startAnimationLoop());
     }
   }
 
   private updateAnimationObjects(): void {
-    // Animate objects along their paths
+    // Animate objects along their paths using scene-relative coordinates
     this.animationPaths.forEach((path, objectId) => {
       const object = this.findObjectById(objectId);
       if (object && path.points.length >= 2) {
-        const position = this.interpolateAlongPath(path.points, this.t);
-        object.position.set(position.x, position.y);
+        const pathPosition = this.interpolateAlongPath(path.points, this.t);
+        
+        // Since path points represent the desired center position of the object,
+        // we need to position the object so its center aligns with the path point
+        const bounds = object.getBounds();
+        const objectCenterGlobal = new Point(
+          bounds.x + bounds.width / 2,
+          bounds.y + bounds.height / 2
+        );
+        
+        // Convert the current object center to content container coordinates
+        const currentCenterLocal = this.contentContainer.toLocal(objectCenterGlobal);
+        
+        // Calculate the offset needed to move the center to the path position
+        const centerOffsetX = pathPosition.x - currentCenterLocal.x;
+        const centerOffsetY = pathPosition.y - currentCenterLocal.y;
+        
+        // Move the object by the offset
+        object.position.x += centerOffsetX;
+        object.position.y += centerOffsetY;
       }
     });
   }
@@ -417,7 +1179,7 @@ export class Scene {
   }
 
   private findObjectById(objectId: string): Container | null {
-    for (const child of this.root.children) {
+    for (const child of this.contentContainer.children) {
       if ((child as any).objectId === objectId) {
         return child as Container;
       }
@@ -427,19 +1189,154 @@ export class Scene {
 
   // Method for PathTool to add animation paths
   addAnimationPath(objectId: string, points: Point[]): void {
+    const targetObject = this.findObjectById(objectId);
+    let boundsOffsetX = 0;
+    let boundsOffsetY = 0;
+    
+    if (targetObject) {
+      // Get the object's bounds to account for visual offset
+      const bounds = targetObject.getBounds();
+      boundsOffsetX = bounds.x - targetObject.position.x;
+      boundsOffsetY = bounds.y - targetObject.position.y;
+    }
+    
+    this.animationPaths.set(objectId, {
+      objectId,
+      points: [...points],
+      startTime: 0,
+      duration: this.duration,
+      boundsOffsetX,
+      boundsOffsetY
+    });
+    console.log(`🎬 Added animation path for object ${objectId} with ${points.length} points`);
+    console.log(`🎬 Stored bounds offset: (${boundsOffsetX.toFixed(1)}, ${boundsOffsetY.toFixed(1)})`);
+    const first = points[0];
+    if (targetObject && first) {
+      console.log(`🎬 Setting object ${objectId} to first path point: (${first.x.toFixed(1)}, ${first.y.toFixed(1)})`);
+      console.log(`🎬 Object current position before: (${targetObject.position.x.toFixed(1)}, ${targetObject.position.y.toFixed(1)})`);
+      console.log(`🎬 Object global position before: (${targetObject.getGlobalPosition().x.toFixed(1)}, ${targetObject.getGlobalPosition().y.toFixed(1)})`);
+      
+      // Get the object's bounds to account for visual offset
+      const bounds = targetObject.getBounds();
+      console.log(`🎬 Object bounds before positioning: x=${bounds.x.toFixed(1)}, y=${bounds.y.toFixed(1)}, width=${bounds.width.toFixed(1)}, height=${bounds.height.toFixed(1)}`);
+      
+      // Try center-based positioning approach
+      // Convert path point from root space to contentContainer local space
+      const localFirst = this.contentContainer.toLocal(new Point(first.x, first.y), this.root);
+      
+      const centerX = bounds.x + bounds.width / 2;
+      const centerY = bounds.y + bounds.height / 2;
+      const centerOffsetX = centerX - targetObject.position.x;
+      const centerOffsetY = centerY - targetObject.position.y;
+      console.log(`🎬 Object center offset from position: (${centerOffsetX.toFixed(1)}, ${centerOffsetY.toFixed(1)})`);
+      console.log(`🎬 Converting path point from root (${first.x.toFixed(1)}, ${first.y.toFixed(1)}) to local (${localFirst.x.toFixed(1)}, ${localFirst.y.toFixed(1)})`);
+      
+      // Position the object so its center aligns with the local path point
+      targetObject.position.set(localFirst.x - centerOffsetX, localFirst.y - centerOffsetY);
+      
+      console.log(`🎬 Object position after: (${targetObject.position.x.toFixed(1)}, ${targetObject.position.y.toFixed(1)})`);
+      console.log(`🎬 Object global position after: (${targetObject.getGlobalPosition().x.toFixed(1)}, ${targetObject.getGlobalPosition().y.toFixed(1)})`);
+      console.log(`🎬 Object bounds:`, targetObject.getBounds());
+      const boundsAfter = targetObject.getBounds();
+      console.log(`🎬 Object bounds details: x=${boundsAfter.x.toFixed(1)}, y=${boundsAfter.y.toFixed(1)}, width=${boundsAfter.width.toFixed(1)}, height=${boundsAfter.height.toFixed(1)}`);
+      console.log(`🎬 Object pivot: (${targetObject.pivot.x.toFixed(1)}, ${targetObject.pivot.y.toFixed(1)})`);
+      console.log(`🎬 Object anchor:`, (targetObject as any).anchor ? `(${(targetObject as any).anchor.x.toFixed(1)}, ${(targetObject as any).anchor.y.toFixed(1)})` : 'no anchor');
+      // Clear any existing debug markers
+      const existingMarker = this.pathOverlay!.getChildByName('DebugMarker');
+      if (existingMarker) {
+        this.pathOverlay!.removeChild(existingMarker);
+      }
+      const existingObjectMarker = this.contentContainer.getChildByName('ObjectDebugMarker');
+      if (existingObjectMarker) {
+        this.contentContainer.removeChild(existingObjectMarker);
+      }
+      
+      // Add a visual debug marker at the first path point in pathOverlay
+      const debugMarker = new Graphics();
+      debugMarker.circle(0, 0, 8);
+      debugMarker.fill({ color: 0xff0000, alpha: 0.7 }); // Red circle
+      debugMarker.position.set(first.x, first.y);
+      debugMarker.name = 'DebugMarker';
+      this.pathOverlay!.addChild(debugMarker);
+
+      
+      // Add a blue marker at object center in contentContainer
+      const objectMarker = new Graphics();
+      objectMarker.circle(0, 0, 6);
+      objectMarker.fill({ color: 0x0000ff, alpha: 0.7 }); // Blue circle
+      // Position the blue marker at the local path point (where object center should be)
+      objectMarker.position.set(localFirst.x, localFirst.y);
+      objectMarker.name = 'ObjectDebugMarker';
+      this.contentContainer.addChild(objectMarker);
+
+    }
+    this.refreshPathVisual(objectId);
+    this.updatePathInteractivity();
+    this.setTime(0);
+  }
+
+  // NEW: Method for PathTool to add animation paths directly in scene-relative coordinates
+  addAnimationPathSceneRelative(objectId: string, points: Point[]): void {
+
+    
+    // Store animation path with scene-relative coordinates directly
     this.animationPaths.set(objectId, {
       objectId,
       points: [...points],
       startTime: 0,
       duration: this.duration
     });
-    console.log(`🎬 Added animation path for object ${objectId} with ${points.length} points`);
+    
+    // Position object at the first path point
+    const targetObject = this.findObjectById(objectId);
+    if (targetObject && points.length > 0) {
+      const firstPoint = points[0];
+      
+      // Get the object's current center position in scene coordinates
+      const bounds = targetObject.getBounds();
+      const objectCenterGlobal = new Point(
+        bounds.x + bounds.width / 2,
+        bounds.y + bounds.height / 2
+      );
+      const currentCenterLocal = this.contentContainer.toLocal(objectCenterGlobal);
+      
+      // Calculate offset to move center to first path point
+      const offsetX = firstPoint.x - currentCenterLocal.x;
+      const offsetY = firstPoint.y - currentCenterLocal.y;
+      
+      // Apply the offset to position object correctly
+      targetObject.position.x += offsetX;
+      targetObject.position.y += offsetY;
+      
+    }
+    
+    this.refreshPathVisual(objectId);
+    this.updatePathInteractivity();
+    this.setTime(0);
+  }
+
+  // NEW: Method for PathTool to add animation paths in container space
+  addAnimationPathInContainerSpace(objectId: string, points: Point[], sourceContainer: Container): void {
+    // Convert points from source container space to our coordinate system
+    const convertedPoints = points.map(p => {
+      // Convert from source container to global, then to our root space
+      const globalPoint = sourceContainer.toGlobal(new Point(p.x, p.y));
+      return this.root.toLocal(globalPoint);
+    });
+
+    
+    // Use the standard method with converted points
+    this.addAnimationPath(objectId, convertedPoints);
   }
 
   // Method to set animation duration
   setDuration(milliseconds: number): void {
     this.duration = Math.max(100, milliseconds);
     this.updateControls();
+  }
+
+  getDuration(): number {
+    return this.duration;
   }
 
   getTime(): number {
@@ -451,8 +1348,7 @@ export class Scene {
   }
 
   setLoop(enabled: boolean): void {
-    // Basic loop implementation for future use
-    console.log(`Scene ${this.id} loop set to: ${enabled}`);
+    this.loopEnabled = enabled;
   }
 
   showBorder(visible: boolean): void {
@@ -461,5 +1357,47 @@ export class Scene {
 
   setBorderVisible(visible: boolean): void {
     this.borderGraphics.visible = visible;
+  }
+
+  // --- Helpers & new behaviors ---
+  private nudgeTimeSeconds(deltaSec: number): void {
+    const totalSec = this.duration / 1000;
+    const currentSec = this.t * totalSec;
+    const nextSec = Math.max(0, Math.min(totalSec, currentSec + deltaSec));
+    this.setTime(nextSec / totalSec);
+  }
+
+  private updatePathVisibility(): void {
+    const hide = this.hideTrajDuringPlayback && this.isPlaying;
+    if (this.livePreview) this.livePreview.visible = true; // live preview always visible
+    this.pathVisuals.forEach(v => {
+      v.pathGraphic.visible = !hide;
+      v.anchors.forEach(a => a.visible = !hide);
+    });
+  }
+
+  // Live trajectory preview during drag
+  showLivePathPreview(points: Point[]): void {
+    if (!this.pathOverlay) return;
+    if (!this.livePreview) {
+      this.livePreview = new Graphics();
+      this.livePreview.name = 'SceneLivePathPreview';
+      this.pathOverlay.addChild(this.livePreview);
+    }
+    const overlayPts = points.map(p => this.pathOverlay!.toLocal(this.contentContainer.toGlobal(p)));
+    this.livePreview.clear();
+    if (overlayPts.length >= 2) {
+      this.livePreview.moveTo(overlayPts[0].x, overlayPts[0].y);
+      for (let i = 1; i < overlayPts.length; i++) this.livePreview.lineTo(overlayPts[i].x, overlayPts[i].y);
+      this.livePreview.stroke({ color: 0x4a79a4, width: 2, alpha: 0.85 });
+    }
+    this.livePreview.visible = true;
+  }
+
+  clearLivePathPreview(): void {
+    if (this.livePreview) {
+      this.livePreview.clear();
+      this.livePreview.visible = false;
+    }
   }
 }

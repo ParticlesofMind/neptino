@@ -1,0 +1,362 @@
+// ==========================================================================
+// Scene Components - Canvas-based Animation Scenes
+// ==========================================================================
+
+// Base scene block - container for all scene-related elements
+.scene {
+  position: absolute;
+  pointer-events: none; // Allow canvas interactions to pass through
+  z-index: 10; // Above canvas but below modals
+
+  // Video scene modifier - scenes with video playback capabilities
+  &--video {
+    z-index: 15; // Slightly higher for video scenes with controls
+  }
+
+  // Playback controls container - main control panel for video scenes
+  &__playback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    pointer-events: auto; // Re-enable pointer events for controls
+  }
+  
+  // Timeline container - wrapper for the scrubber and time display
+  &__timeline {
+    position: relative;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  // Timeline bar - the clickable background track
+  &__timeline-bar {
+    position: relative;
+    flex: 1;
+    height: 15px;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background-color: #e8e8e8;
+      border-color: #80bfff;
+    }
+  }
+  
+  // Timeline progress - visual progress indicator
+  &__timeline-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #80bfff 0%, #99ccff 100%);
+    border-radius: 4px;
+    transition: width 0.1s ease;
+    pointer-events: none;
+    width: 0; // Will be set dynamically
+  }
+  
+  // Timeline handle - draggable scrubber control
+  &__timeline-handle {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #80bfff 0%, #99ccff 100%);
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    cursor: grab;
+    transition: all 0.2s ease;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    
+    &:hover {
+      transform: translate(-50%, -50%) scale(1.15);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    &:active {
+      cursor: grabbing;
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+  }
+  
+  // Time display - current time and duration text
+  &__time-text {
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: #666666;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  
+  // Controls container - wrapper for playback buttons
+  &__controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  
+  // Button element - individual control buttons
+  &__button {
+    // Default button styling
+    width: 36px;
+    height: 36px;
+    padding: 6px;
+    background: linear-gradient(135deg, #80bfff 0%, #99ccff 100%);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+    &:hover {
+      background: linear-gradient(135deg, #99ccff 0%, #b3d9ff 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    &:focus {
+      outline: 2px solid #80bfff;
+      outline-offset: 2px;
+    }
+    
+    // Size modifiers
+    &--small {
+      width: 32px;
+      height: 32px;
+      padding: 6px;
+    }
+    
+    &--large {
+      width: 44px;
+      height: 44px;
+      padding: 6px;
+    }
+    
+    // Function modifiers
+    &--back {
+      order: 1; // Ensure back button appears first
+    }
+    
+    &--play {
+      order: 2; // Play button in center
+    }
+    
+    &--forward {
+      order: 3; // Forward button third
+    }
+    
+    &--hide-traj {
+      margin-left: auto; // Push to end of flex row, away from main controls
+    }
+  }
+  
+  // Button icon - SVG icons inside buttons
+  &__button-icon {
+    width: 100%;
+    height: 100%;
+    filter: brightness(0) invert(1); // Makes icons white
+    pointer-events: none;
+  }
+  
+  // Selection border - visual feedback for scene selection
+  &__border {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #666666;
+    border-radius: 4px;
+    opacity: 0.3;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    
+    &--selected {
+      border-color: #80bfff;
+      border-width: 2px;
+      opacity: 0.6;
+    }
+    
+    &--hovered {
+      opacity: 0.8;
+    }
+  }
+}
+
+// Animation keyframes for scene effects
+@keyframes scene-pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+@keyframes scene-path-draw {
+  from { stroke-dashoffset: 100%; }
+  to { stroke-dashoffset: 0%; }
+}
+
+@keyframes scene-fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scene-scale-in {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+// Responsive adjustments for different screen sizes
+@media (max-width: 768px) {
+  .scene {
+    &__playback {
+      max-width: 300px;
+      padding: 10px;
+      gap: 6px;
+    }
+    
+    &__timeline {
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+    
+    &__timeline-bar {
+      height: 12px;
+    }
+    
+    &__timeline-handle {
+      width: 16px;
+      height: 16px;
+    }
+    
+    &__controls {
+      gap: 8px;
+    }
+    
+    &__button {
+      // Default becomes smaller on mobile
+      width: 32px; 
+      height: 32px;
+      
+      &--small { 
+        width: 28px; 
+        height: 28px; 
+      }
+      
+      &--large { 
+        width: 38px; 
+        height: 38px; 
+      }
+      
+      &--hide-traj {
+        margin-left: auto; // Keep pushed to end on mobile too
+      }
+    }
+    
+    &__time-text {
+      font-size: 10px;
+      padding: 1px 4px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .scene {
+    &__playback {
+      max-width: 260px;
+      padding: 8px;
+    }
+    
+    &__button {
+      width: 28px;
+      height: 28px;
+      
+      &--small {
+        width: 24px;
+        height: 24px;
+      }
+      
+      &--large {
+        width: 32px;
+        height: 32px;
+      }
+    }
+    
+    &__timeline-bar {
+      height: 10px;
+    }
+    
+    &__timeline-handle {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+// Animation keyframes
+@keyframes scene-pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+@keyframes scene-path-draw {
+  from { stroke-dashoffset: 100%; }
+  to { stroke-dashoffset: 0%; }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .scene-overlay {
+    &__playback {
+      max-width: 300px;
+    }
+    
+    &__controls {
+      gap: 8px;
+    }
+    
+    &__button {
+      // Default medium becomes smaller on mobile
+      width: 32px; 
+      height: 32px;
+      
+      &--small { 
+        width: 28px; 
+        height: 28px; 
+      }
+      
+      &--large { 
+        width: 38px; 
+        height: 38px; 
+      }
+      
+      &--hide-traj {
+        margin-left: auto; // Keep pushed to end on mobile too
+      }
+    }
+  }
+}

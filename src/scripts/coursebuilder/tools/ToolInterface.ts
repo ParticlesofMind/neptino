@@ -44,9 +44,10 @@ export interface ToolSettings {
   // Animate mode
   scene?: {
     loop?: boolean;
+    duration?: number;
   };
   path?: {
-    speed?: 'slow' | 'medium' | 'fast';
+    // Path options - trajectory adjustments handled directly on canvas
   };
 }
 
