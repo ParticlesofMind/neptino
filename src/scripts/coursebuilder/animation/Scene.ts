@@ -54,10 +54,7 @@ export class Scene {
   private timelineBar!: HTMLDivElement;
   private timelineProgress!: HTMLDivElement;
   private timelineHandle!: HTMLDivElement;
-  private timeText!: HTMLDivElement;
   private timelineWidth: number = 0;
-  private timelineLeftPad: number = 8;
-  private timelineRightPad: number = 28;
   private isTimelineDragging: boolean = false;
   private isSelected: boolean = false;
   private animationPaths: Map<string, AnimationPath> = new Map();
@@ -80,17 +77,36 @@ export class Scene {
   private loopEnabled: boolean = false;
   private livePreview: Graphics | null = null;
   private maxVisibleAnchors: number = 7; // Reduced from 9 to 7 (includes start + end + 5 in between)
-  // Use smaller dimensions that fit well within canvas (900x1200)
-  private readonly aspectWidth = 480;
-  private readonly aspectHeight = 270;
-  private readonly aspectRatio = this.aspectWidth / this.aspectHeight;
-  private readonly minWidth = this.aspectWidth;
-  private readonly minHeight = this.aspectHeight;
+  // Dynamic aspect ratio support
+  private readonly aspectWidth: number;
+  private readonly aspectHeight: number;
+  private readonly aspectRatio: number;
+  private readonly minWidth: number;
+  private readonly minHeight: number;
 
-  constructor(bounds: SceneBounds, id?: string) {
+  constructor(bounds: SceneBounds, id?: string, aspectRatio: string = '16:9') {
     this.bounds = bounds;
     this.id = id || `scene_${Date.now()}_${Math.floor(Math.random() * 9999)}`;
     this.duration = animationState.getSceneDuration();
+    
+    // Calculate dimensions based on aspect ratio
+    if (aspectRatio === '9:16') {
+      // Portrait: narrower width
+      this.aspectWidth = 270;
+      this.aspectHeight = 480;
+    } else if (aspectRatio === '21:9') {
+      // Ultrawide: much wider
+      this.aspectWidth = 560;
+      this.aspectHeight = 240;
+    } else {
+      // Default 16:9: standard landscape
+      this.aspectWidth = 480;
+      this.aspectHeight = 270;
+    }
+    
+    this.aspectRatio = this.aspectWidth / this.aspectHeight;
+    this.minWidth = this.aspectWidth;
+    this.minHeight = this.aspectHeight;
     
     // Create pure container
     this.root = new Container();
@@ -160,43 +176,51 @@ export class Scene {
     // Ensure controls are appended to DOM (in case constructor couldn't do it)
     this.appendControlsToDOM();
     
-    // Calculate timeline width
-    this.timelineWidth = Math.max(120, this.bounds.width - this.timelineLeftPad - this.timelineRightPad);
+    // Calculate timeline width - use scene width as reference but with padding
+    this.timelineWidth = Math.max(200, this.bounds.width - 40); // 20px padding on each side
     
-    // Convert PIXI scene coordinates to DOM coordinates
-    // Scene bounds are in PIXI coordinate system, we need to convert to DOM
     const app = animationState.getApp();
     const canvasElement = app?.canvas;
     
     if (canvasElement) {
-      // Convert scene coordinates to screen coordinates relative to canvas parent
-      const sceneScreenX = this.bounds.x;
-      const sceneScreenY = this.bounds.y; 
-      const sceneScreenBottom = sceneScreenY + this.bounds.height;
+      // Use the EXACT same logic as the drag handle
+      const w = this.bounds.width;
+      const h = this.bounds.height;
+      const midX = w / 2;
       
-      // Position controls below the scene with proper margin
-      const controlsTop = sceneScreenBottom + 20; // 20px margin below scene
-      const controlsLeft = sceneScreenX; // Start from left edge of scene
+      // CRITICAL: Account for canvas parent offset!
+      const canvasParent = canvasElement.parentElement;
+      const parentRect = canvasParent?.getBoundingClientRect();
+      const parentOffsetX = parentRect?.left || 0;
+      const parentOffsetY = parentRect?.top || 0;
+      
+      // Position controls just below the scene (like the original plan)
+      // The drag handle should be BELOW the controls, not at the same level
+      const controlsX = parentOffsetX + this.bounds.x + midX;
+      const controlsY = parentOffsetY + this.bounds.y + h + 20; // Just below scene
       
       this.playbackOverlay.style.position = 'absolute';
-      this.playbackOverlay.style.top = `${controlsTop}px`;
-      this.playbackOverlay.style.left = `${controlsLeft}px`;
-      this.playbackOverlay.style.width = `${this.bounds.width}px`; // Same width as scene
-      this.playbackOverlay.style.zIndex = '100'; // Ensure visibility
+      this.playbackOverlay.style.top = `${controlsY}px`;
+      this.playbackOverlay.style.left = `${controlsX}px`;
+      this.playbackOverlay.style.transform = 'translateX(-50%)'; // This centers it on the point
+      this.playbackOverlay.style.width = 'auto';
+      this.playbackOverlay.style.zIndex = '100';
       
-      console.log('Controls positioned at:', { 
-        top: controlsTop, 
-        left: controlsLeft, 
-        sceneBottom: sceneScreenBottom,
-        sceneBounds: this.bounds,
-        width: this.playbackOverlay.style.width 
+      console.log('Controls positioned just below scene, drag handle below controls:', { 
+        bounds: this.bounds,
+        midX,
+        parentOffsetX,
+        parentOffsetY,
+        controlsX: `${parentOffsetX} + ${this.bounds.x} + ${midX} = ${controlsX}`,
+        controlsY: `${parentOffsetY} + ${this.bounds.y} + ${h} + 20 = ${controlsY}`,
+        dragHandleY: `scene(${h}) + gap(20) + controls(80) + gap(10) = ${h + 20 + 80 + 10}`,
+        explanation: 'Controls at scene bottom + 20px, drag handle below controls'
       });
     }
     
     // Update timeline progress
     this.drawTimeline(this.timelineWidth);
     this.drawTimelineHandle();
-    this.updateTimeText();
   }
 
   private registerSceneControl(obj: Graphics | Container, cursor?: string): void {
@@ -308,13 +332,18 @@ export class Scene {
       this.dragHandle.visible = this.isSelected;
       this.dragHandle.eventMode = this.isSelected ? 'static' : 'none';
       
-      // Position drag handle below the playback controls
-      // Controls are positioned 20px below scene, so position handle further down
-      const controlsHeight = 80; // Approximate height of timeline + buttons + spacing
+      // Position drag handle below the PIXI playback controls
+      const controlsHeight = 60; // PIXI controls are smaller
       this.dragHandle.position.set(
         midX - handleWidth / 2,
-        h + 20 + controlsHeight + 10 // 20px margin to controls + controls height + 10px gap
+        h + controlsHeight + 20 // Controls + gap
       );
+    }
+
+    // Show/hide PIXI controls with selection state
+    if (this.controlsContainer) {
+      this.controlsContainer.visible = this.isSelected;
+      this.controlsContainer.eventMode = this.isSelected ? 'static' : 'none';
     }
 
     this.updatePathInteractivity();
@@ -614,7 +643,6 @@ export class Scene {
     this.root.position.set(newBounds.x, newBounds.y);
     this.drawBorder();
     this.drawContentMask(); // Update the content mask when bounds change
-    this.layoutPlaybackControls();
     this.layoutInteractionHandles();
   }
 
@@ -627,34 +655,238 @@ export class Scene {
   }
 
   private createPlaybackControls(): void {
-    console.log('Creating playback controls for scene:', this.id);
+    console.log('Creating PIXI-based playback controls for scene:', this.id);
     
-    // Keep the PIXI container for now, but will be replaced by DOM overlay
+    // Create PIXI container for controls - positioned like the drag handle
     this.controlsContainer = new Container();
     this.controlsContainer.name = 'SceneControls';
     this.controlsContainer.zIndex = 2;
     this.controlsContainer.eventMode = 'passive';
-    this.root.addChild(this.controlsContainer);
+    
+    // Position controls just like the drag handle - relative to scene bounds
+    const w = this.bounds.width;
+    const h = this.bounds.height;
+    const midX = w / 2;
+    
+    // Create control background - wider to accommodate all buttons
+    const controlsBg = new Graphics();
+    controlsBg.roundRect(-150, -30, 300, 60, 8); // 300px wide, 60px tall, centered
+    controlsBg.fill({ color: 0xffffff, alpha: 0.95 });
+    controlsBg.stroke({ color: 0x000000, width: 1, alpha: 0.1 });
+    controlsBg.eventMode = 'none'; // Background doesn't need interactions
+    this.controlsContainer.addChild(controlsBg);
+    
+    // Timeline container (above buttons)
+    const timelineY = -15;
+    
+    // Create timeline background
+    const timelineBg = new Graphics();
+    timelineBg.roundRect(-120, -3, 240, 6, 3); // 240px wide timeline
+    timelineBg.fill({ color: 0xf0f0f0 });
+    timelineBg.position.set(0, timelineY);
+    this.controlsContainer.addChild(timelineBg);
+    
+    // Create timeline progress
+    const timelineProgress = new Graphics();
+    timelineProgress.roundRect(0, 0, 120, 6, 3); // Half width initially for demo
+    timelineProgress.fill({ color: 0x80bfff });
+    timelineProgress.position.set(-120, timelineY - 3);
+    this.controlsContainer.addChild(timelineProgress);
+    
+    // Create timeline handle
+    const timelineHandle = new Graphics();
+    timelineHandle.circle(0, 0, 8);
+    timelineHandle.fill({ color: 0x80bfff });
+    timelineHandle.stroke({ color: 0xffffff, width: 2 });
+    timelineHandle.position.set(-60, timelineY); // Middle of timeline
+    timelineHandle.eventMode = 'static';
+    timelineHandle.cursor = 'pointer';
+    this.registerSceneControl(timelineHandle);
+    this.controlsContainer.addChild(timelineHandle);
+    
+    // Button container (below timeline)
+    const buttonY = 8;
+    const buttonSize = 24;
+    const buttonSpacing = 36;
+    
+    // Back button (left arrow)
+    const backButton = this.createPixiButton(-buttonSpacing * 1.5, buttonY, buttonSize, 0x80bfff);
+    this.drawChevronLeft(backButton);
+    backButton.on('pointerdown', () => this.nudgeTimeSeconds(-0.5));
+    this.controlsContainer.addChild(backButton);
+    
+    // Play/Pause button (triangle/pause)
+    const playButton = this.createPixiButton(-buttonSpacing * 0.5, buttonY, buttonSize + 8, 0x80bfff); // Slightly larger
+    this.drawPlayIcon(playButton);
+    playButton.on('pointerdown', () => this.togglePlayback());
+    this.controlsContainer.addChild(playButton);
+    
+    // Forward button (right arrow)
+    const forwardButton = this.createPixiButton(buttonSpacing * 0.5, buttonY, buttonSize, 0x80bfff);
+    this.drawChevronRight(forwardButton);
+    forwardButton.on('pointerdown', () => this.nudgeTimeSeconds(0.5));
+    this.controlsContainer.addChild(forwardButton);
+    
+    // Hide trajectory button (eye icon)
+    const hideButton = this.createPixiButton(buttonSpacing * 1.5, buttonY, buttonSize, 0x66bb6a); // Different color
+    this.drawEyeIcon(hideButton, false); // Start with eye open
+    hideButton.on('pointerdown', () => this.toggleTrajectoryVisibility());
+    this.controlsContainer.addChild(hideButton);
+    
+    // Store references for updates
+    (this.controlsContainer as any).timelineProgress = timelineProgress;
+    (this.controlsContainer as any).timelineHandle = timelineHandle;
+    (this.controlsContainer as any).playButton = playButton;
+    (this.controlsContainer as any).hideButton = hideButton;
+    
+    // Position the controls container just below the scene, centered
+    this.controlsContainer.position.set(midX, h + 50); // 50px below scene
+    this.controlsContainer.visible = this.isSelected;
+    
+    // Add to the scene's interaction layer
+    if (this.interactionLayer) {
+      this.interactionLayer.addChild(this.controlsContainer);
+    }
+    
+    console.log('Enhanced PIXI controls created with all buttons:', {
+      position: this.controlsContainer.position,
+      sceneBounds: this.bounds,
+      buttons: ['back', 'play', 'forward', 'hide-trajectory']
+    });
+  }
 
-    // Create DOM overlay container - this is the main scene container for video scenes
-    this.playbackOverlay = document.createElement('div');
-    this.playbackOverlay.className = 'scene scene--video';
+  private createPixiButton(x: number, y: number, size: number, color: number): Container {
+    const button = new Container();
+    button.position.set(x, y);
+    button.eventMode = 'static';
+    button.cursor = 'pointer';
     
-    // Create the playback controls container inside the scene
-    const playbackContainer = document.createElement('div');
-    playbackContainer.className = 'scene__playback';
-    this.playbackOverlay.appendChild(playbackContainer);
+    // Button background
+    const bg = new Graphics();
+    bg.circle(0, 0, size / 2);
+    bg.fill({ color: color, alpha: 0.9 });
+    bg.stroke({ color: 0xffffff, width: 1 });
+    button.addChild(bg);
     
-    // Create timeline elements
-    this.createTimelineElements(playbackContainer);
+    // Hover effects
+    button.on('pointerover', () => {
+      bg.scale.set(1.1);
+      bg.alpha = 1;
+    });
     
-    // Create control buttons  
-    this.createControlButtons(playbackContainer);
+    button.on('pointerout', () => {
+      bg.scale.set(1);
+      bg.alpha = 0.9;
+    });
     
-    // Try to append to canvas parent, but defer if not ready
-    this.appendControlsToDOM();
+    this.registerSceneControl(button);
+    return button;
+  }
+
+  private drawChevronLeft(button: Container): void {
+    const icon = new Graphics();
+    icon.moveTo(4, -6);
+    icon.lineTo(-4, 0);
+    icon.lineTo(4, 6);
+    icon.stroke({ color: 0xffffff, width: 2, cap: 'round', join: 'round' });
+    button.addChild(icon);
+  }
+
+  private drawChevronRight(button: Container): void {
+    const icon = new Graphics();
+    icon.moveTo(-4, -6);
+    icon.lineTo(4, 0);
+    icon.lineTo(-4, 6);
+    icon.stroke({ color: 0xffffff, width: 2, cap: 'round', join: 'round' });
+    button.addChild(icon);
+  }
+
+  private drawPlayIcon(button: Container): void {
+    const icon = new Graphics();
+    if (this.isPlaying) {
+      // Pause icon (two bars)
+      icon.rect(-3, -6, 2, 12);
+      icon.rect(1, -6, 2, 12);
+      icon.fill({ color: 0xffffff });
+    } else {
+      // Play icon (triangle)
+      icon.moveTo(-4, -6);
+      icon.lineTo(-4, 6);
+      icon.lineTo(6, 0);
+      icon.fill({ color: 0xffffff });
+    }
+    button.addChild(icon);
+  }
+
+  private drawEyeIcon(button: Container, crossed: boolean): void {
+    const icon = new Graphics();
     
-    this.layoutPlaybackControls();
+    if (crossed) {
+      // Eye with slash
+      icon.ellipse(0, 0, 8, 5);
+      icon.stroke({ color: 0xffffff, width: 1.5 });
+      icon.circle(0, 0, 2);
+      icon.fill({ color: 0xffffff });
+      // Diagonal slash
+      icon.moveTo(-6, -4);
+      icon.lineTo(6, 4);
+      icon.stroke({ color: 0xff4444, width: 2 });
+    } else {
+      // Regular eye
+      icon.ellipse(0, 0, 8, 5);
+      icon.stroke({ color: 0xffffff, width: 1.5 });
+      icon.circle(0, 0, 2);
+      icon.fill({ color: 0xffffff });
+    }
+    
+    button.addChild(icon);
+  }
+
+  private updatePlayButtonIcon(): void {
+    const playButton = (this.controlsContainer as any)?.playButton;
+    if (!playButton) return;
+    
+    // Remove old icon
+    playButton.children.slice(1).forEach((child: any) => playButton.removeChild(child));
+    
+    // Redraw icon
+    this.drawPlayIcon(playButton);
+  }
+
+  private updateHideButtonIcon(): void {
+    const hideButton = (this.controlsContainer as any)?.hideButton;
+    if (!hideButton) return;
+    
+    // Remove old icon  
+    hideButton.children.slice(1).forEach((child: any) => hideButton.removeChild(child));
+    
+    // Redraw icon
+    this.drawEyeIcon(hideButton, this.hideTrajDuringPlayback);
+  }
+
+  private updateTimelineProgress(): void {
+    const timelineProgress = (this.controlsContainer as any)?.timelineProgress;
+    const timelineHandle = (this.controlsContainer as any)?.timelineHandle;
+    
+    if (timelineProgress && timelineHandle) {
+      // Update progress bar width (240px total timeline width)
+      const progressWidth = 240 * this.t;
+      timelineProgress.clear();
+      timelineProgress.roundRect(0, 0, progressWidth, 6, 3);
+      timelineProgress.fill({ color: 0x80bfff });
+      
+      // Update handle position (-120 to +120 range)
+      timelineHandle.position.x = -120 + (240 * this.t);
+    }
+  }
+
+  private updatePathVisibility(): void {
+    const hide = this.hideTrajDuringPlayback && this.isPlaying;
+    if (this.livePreview) this.livePreview.visible = true; // live preview always visible
+    this.pathVisuals.forEach(v => {
+      v.pathGraphic.visible = !hide;
+      v.anchors.forEach(a => a.visible = !hide);
+    });
   }
 
   private appendControlsToDOM(): void {
@@ -708,16 +940,10 @@ export class Scene {
     this.timelineHandle = document.createElement('div');
     this.timelineHandle.className = 'scene__timeline-handle';
     
-    // Time text
-    this.timeText = document.createElement('div');
-    this.timeText.className = 'scene__time-text';
-    this.timeText.textContent = '0.0s';
-    
     // Assemble timeline
     this.timelineBar.appendChild(this.timelineProgress);
     this.timelineBar.appendChild(this.timelineHandle);
     timelineContainer.appendChild(this.timelineBar);
-    timelineContainer.appendChild(this.timeText);
     
     playbackContainer.appendChild(timelineContainer);
     
@@ -941,19 +1167,10 @@ export class Scene {
   }
 
   private updateControls(): void {
-    this.drawPlayButton();
-    this.drawTimeline(this.timelineWidth);
-    this.drawTimelineHandle(); // This now updates the DOM handle position
-    this.updateTimeText();
+    // Update PIXI controls instead of DOM controls
+    this.updatePlayButtonIcon();
+    this.updateTimelineProgress();
     this.updatePathVisibility();
-  }
-
-  private updateTimeText(): void {
-    const currentTime = (this.t * this.duration / 1000).toFixed(1);
-    const totalTime = (this.duration / 1000).toFixed(1);
-    if (this.timeText) {
-      this.timeText.textContent = `${currentTime}s / ${totalTime}s`;
-    }
   }
 
   private drawBorder(): void {
@@ -1365,15 +1582,6 @@ export class Scene {
     const currentSec = this.t * totalSec;
     const nextSec = Math.max(0, Math.min(totalSec, currentSec + deltaSec));
     this.setTime(nextSec / totalSec);
-  }
-
-  private updatePathVisibility(): void {
-    const hide = this.hideTrajDuringPlayback && this.isPlaying;
-    if (this.livePreview) this.livePreview.visible = true; // live preview always visible
-    this.pathVisuals.forEach(v => {
-      v.pathGraphic.visible = !hide;
-      v.anchors.forEach(a => a.visible = !hide);
-    });
   }
 
   // Live trajectory preview during drag

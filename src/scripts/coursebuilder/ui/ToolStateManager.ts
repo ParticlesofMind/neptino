@@ -1022,11 +1022,17 @@ export class ToolStateManager {
         if (toolName === 'selection' && this.currentMode !== 'animate') {
             toolSettings = null as any;
         }
+        // Ensure scene tool options are only shown in animate mode
+        if (toolName === 'scene' && this.currentMode !== 'animate') {
+            toolSettings = null as any;
+        }
         if (toolSettings) {
             toolSettings.style.display = 'flex';
+            console.log(`✅ TOOL UI: Showing options for ${toolName} tool`);
         } else if (placeholder) {
             // Show placeholder if no tool settings found
             placeholder.style.display = 'flex';
+            console.log(`⚠️ TOOL UI: No options found for ${toolName} tool, showing placeholder`);
         }
 
         // Update canvas cursor

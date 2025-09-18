@@ -7,16 +7,19 @@ import { Container, FederatedPointerEvent, Graphics, Point } from 'pixi.js';
 import { BaseTool } from '../../tools/ToolInterface';
 import { animationState } from '../AnimationState';
 import { Scene, SceneBounds } from '../Scene';
+import { ToolManager } from '../../tools/ToolManager';
 
 export class SceneTool extends BaseTool {
   private start: Point | null = null;
   private preview: Graphics | null = null;
+  private toolManager: ToolManager | null = null;
   // Minimum scene dimensions to ensure usability
   private readonly minWidth = 100;
   private readonly minHeight = 60;
 
-  constructor() {
+  constructor(toolManager?: ToolManager) {
     super('scene', 'crosshair');
+    this.toolManager = toolManager || null;
   }
 
   onPointerDown(event: FederatedPointerEvent, container: Container): void {
@@ -49,31 +52,118 @@ export class SceneTool extends BaseTool {
     if (!this.isActive || !this.start || !this.preview) return;
     
     const p = container.toLocal(event.global);
-    const x = Math.min(this.start.x, p.x);
-    const y = Math.min(this.start.y, p.y);
-    const w = Math.max(1, Math.abs(p.x - this.start.x)); // Ensure minimum 1px width
-    const h = Math.max(1, Math.abs(p.y - this.start.y)); // Ensure minimum 1px height
     
-    // Show preview with actual dragged dimensions
+    // Get aspect ratio from tool settings
+    let aspectRatio = 16/9; // default
+    if (this.toolManager) {
+      const settings = this.toolManager.getToolSettings();
+      const sceneSettings = settings.scene || {};
+      const ratioStr = (sceneSettings as any).aspectRatio || '16:9';
+      const [w, h] = ratioStr.split(':').map((n: string) => parseInt(n));
+      aspectRatio = w / h;
+    }
+    
+    // Calculate the distance from start point to cursor
+    const deltaX = p.x - this.start.x;
+    const deltaY = p.y - this.start.y;
+    const absWidth = Math.abs(deltaX);
+    const absHeight = Math.abs(deltaY);
+    
+    // Determine which dimension to constrain based on the drag direction
+    // Use the larger dimension and constrain the other to maintain aspect ratio
+    let constrainedWidth: number;
+    let constrainedHeight: number;
+    
+    if (absWidth * (1 / aspectRatio) >= absHeight) {
+      // Width is the dominant dimension
+      constrainedWidth = Math.max(100, absWidth); // minimum width
+      constrainedHeight = constrainedWidth / aspectRatio;
+    } else {
+      // Height is the dominant dimension  
+      constrainedHeight = Math.max(60, absHeight); // minimum height
+      constrainedWidth = constrainedHeight * aspectRatio;
+    }
+    
+    // Position rectangle to follow cursor direction
+    // The rectangle should expand towards the cursor while maintaining aspect ratio
+    let x: number, y: number;
+    
+    if (deltaX >= 0) {
+      // Expanding to the right
+      x = this.start.x;
+    } else {
+      // Expanding to the left
+      x = this.start.x - constrainedWidth;
+    }
+    
+    if (deltaY >= 0) {
+      // Expanding downward
+      y = this.start.y;
+    } else {
+      // Expanding upward
+      y = this.start.y - constrainedHeight;
+    }
+    
+    // Show preview with aspect-ratio constrained dimensions
     this.preview.clear();
-    this.preview.roundRect(x, y, w, h, 8)
+    this.preview.roundRect(x, y, constrainedWidth, constrainedHeight, 8)
       .stroke({ color: 0x4a79a4, width: 2 })
       .fill({ color: 0x4a79a4, alpha: 0.1 });
       
-    console.log(`🎬 SceneTool: Preview updated - (${x.toFixed(1)}, ${y.toFixed(1)}) ${w.toFixed(1)}x${h.toFixed(1)}`);
+    console.log(`🎬 SceneTool: Preview updated - (${x.toFixed(1)}, ${y.toFixed(1)}) ${constrainedWidth.toFixed(1)}x${constrainedHeight.toFixed(1)} (${aspectRatio.toFixed(2)}:1)`);
   }
 
   onPointerUp(event: FederatedPointerEvent, container: Container): void {
     if (!this.isActive || !this.start) { this.cleanup(); return; }
     const p = container.toLocal(event.global);
-    const x = Math.min(this.start.x, p.x);
-    const y = Math.min(this.start.y, p.y);
-    const w = Math.abs(p.x - this.start.x);
-    const h = Math.abs(p.y - this.start.y);
+    
+    // Get aspect ratio from tool settings
+    let aspectRatio = 16/9; // default
+    let aspectRatioStr = '16:9';
+    if (this.toolManager) {
+      const settings = this.toolManager.getToolSettings();
+      const sceneSettings = settings.scene || {};
+      aspectRatioStr = (sceneSettings as any).aspectRatio || '16:9';
+      const [w, h] = aspectRatioStr.split(':').map((n: string) => parseInt(n));
+      aspectRatio = w / h;
+    }
+    
+    // Calculate the distance from start point to cursor (same logic as preview)
+    const deltaX = p.x - this.start.x;
+    const deltaY = p.y - this.start.y;
+    const absWidth = Math.abs(deltaX);
+    const absHeight = Math.abs(deltaY);
+    
+    let constrainedWidth: number;
+    let constrainedHeight: number;
+    
+    if (absWidth * (1 / aspectRatio) >= absHeight) {
+      constrainedWidth = Math.max(100, absWidth);
+      constrainedHeight = constrainedWidth / aspectRatio;
+    } else {
+      constrainedHeight = Math.max(60, absHeight);
+      constrainedWidth = constrainedHeight * aspectRatio;
+    }
+    
+    // Position rectangle to follow cursor direction (same as preview)
+    let x: number, y: number;
+    
+    if (deltaX >= 0) {
+      x = this.start.x;
+    } else {
+      x = this.start.x - constrainedWidth;
+    }
+    
+    if (deltaY >= 0) {
+      y = this.start.y;
+    } else {
+      y = this.start.y - constrainedHeight;
+    }
+    
     this.cleanup();
     
     // Require meaningful drag distance to create scene
-    if (w < 20 || h < 20) {
+    if (constrainedWidth < 100 || constrainedHeight < 60) {
       console.log('🎬 Scene creation cancelled - insufficient drag distance');
       return;
     }
@@ -83,13 +173,13 @@ export class SceneTool extends BaseTool {
     animationState.clearScenes();
     console.log('🎬 Creating new scene, cleared previous scenes');
 
-    const bounds = this.normalizeBounds(x, y, w, h);
-    const scene = new Scene(bounds);
+    const bounds = this.normalizeBounds(x, y, constrainedWidth, constrainedHeight);
+    const scene = new Scene(bounds, undefined, aspectRatioStr);
     scene.setLoop(animationState.getLoop());
     scene.setDuration(animationState.getSceneDuration());
     animationState.addScene(scene);
     try { scene.setSelected(true); } catch {}
-    console.log('🎬 New scene created:', bounds);
+    console.log('🎬 New scene created:', bounds, 'with aspect ratio:', aspectRatioStr);
   }
 
   private normalizeBounds(x: number, y: number, width: number, height: number): SceneBounds {

@@ -41,8 +41,8 @@ export class SelectionOverlay {
     const selectionBox = new Graphics();
     selectionBox.name = 'selection-box';
     selectionBox.eventMode = 'none';
-    selectionBox.rect(0, 0, bounds.width, bounds.height);
-    selectionBox.stroke({ width: 2, color: 0x3b82f6 });
+    selectionBox.roundRect(0, 0, bounds.width, bounds.height, 4);
+    selectionBox.stroke({ width: 2, color: 0x4a79a4, alpha: 0.6 });
     if (this.overlayCenter && this.overlayBaseBounds) {
       const cx = bounds.x + bounds.width * 0.5;
       const cy = bounds.y + bounds.height * 0.5;
@@ -69,8 +69,8 @@ export class SelectionOverlay {
     this.group.bounds = bounds;
     const g = this.group.selectionBox;
     g.clear();
-    g.rect(0, 0, bounds.width, bounds.height);
-    g.stroke({ width: 2, color: 0x3b82f6 });
+    g.roundRect(0, 0, bounds.width, bounds.height, 4);
+    g.stroke({ width: 2, color: 0x4a79a4, alpha: 0.6 });
     if (this.overlayCenter && this.overlayBaseBounds) {
       const cx = bounds.x + bounds.width * 0.5;
       const cy = bounds.y + bounds.height * 0.5;
@@ -118,8 +118,8 @@ export class SelectionOverlay {
     const g = this.group.selectionBox;
     const cx = center.x, cy = center.y;
     g.clear();
-    g.rect(0, 0, base.width, base.height);
-    g.stroke({ width: 2, color: 0x3b82f6 });
+    g.roundRect(0, 0, base.width, base.height, 4);
+    g.stroke({ width: 2, color: 0x4a79a4, alpha: 0.6 });
     g.pivot.set(base.width * 0.5, base.height * 0.5);
     g.position.set(cx, cy);
     g.rotation = angle;
@@ -193,9 +193,9 @@ export class SelectionOverlay {
       const g = new Graphics();
       g.name = `transform-handle-${p.key}`;
       g.eventMode = 'none';
-      g.rect(-hs, -hs, size, size);
+      g.roundRect(-hs, -hs, size, size, 2);
       g.fill({ color: 0xffffff });
-      g.stroke({ width: 1, color: 0x3b82f6 });
+      g.stroke({ width: 1, color: 0x4a79a4 });
       g.position.set(p.x, p.y);
       const isCorner = idx < 4;
       const index = isCorner ? cornerIdx++ : edgeIdx++;

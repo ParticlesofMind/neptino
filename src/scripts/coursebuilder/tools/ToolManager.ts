@@ -102,7 +102,7 @@ export class ToolManager {
         this.tools.set("eraser", new EraserTool());
         this.tools.set("tables", new TableManager());
         // Animation tools (animate mode)
-        this.tools.set("scene", new SceneTool());
+        this.tools.set("scene", new SceneTool(this));
         this.tools.set("path", new PathTool());
 
         // Set tool manager reference on all tools

@@ -113,12 +113,34 @@ export class AnimationUI {
     }
 
     const scenePanel = createEl(`
-      <div class="tools__item tools__item--scene" style="display:none; align-items:center; gap:12px; padding:8px;">
+      <div class="tools__item tools__item--scene" style="display:none; align-items:center; gap:16px; padding:8px;">
         <button type="button" class="button button--small button--outline" data-anim-loop title="Loop Animation" style="min-width:36px;">∞</button>
-        <div class="button-group" data-scene-duration style="gap:4px;">
-          <button type="button" class="button button--small button--outline" data-duration="3000">3s</button>
-          <button type="button" class="button button--small button--outline" data-duration="5000">5s</button>
-          <button type="button" class="button button--small button--outline" data-duration="10000">10s</button>
+        
+        <div class="scene-controls" style="display:flex; align-items:center; gap:12px;">
+          <!-- Duration Slider -->
+          <div class="duration-control" style="display:flex; align-items:center; gap:8px;">
+            <label style="font-size:11px; font-weight:500; color:#666;">Duration:</label>
+            <input type="range" 
+                   data-duration-slider 
+                   min="0" 
+                   max="4" 
+                   value="0" 
+                   step="1"
+                   style="width:80px; accent-color:#80bfff;"
+                   title="Animation Duration">
+            <span data-duration-display style="font-size:11px; font-weight:500; color:#4a79a4; min-width:24px;">3s</span>
+          </div>
+          
+          <!-- Resolution Selector -->
+          <div class="resolution-control" style="display:flex; align-items:center; gap:8px;">
+    dd
+            <select data-resolution-select 
+                    style="font-size:11px; padding:2px 6px; border:1px solid #ddd; border-radius:3px; background:white;">
+              <option value="16:9" selected>16:9 (Landscape)</option>
+              <option value="9:16">9:16 (Portrait)</option>
+              <option value="21:9">21:9 (Ultrawide)</option>
+            </select>
+          </div>
         </div>
       </div>
     `);
@@ -152,35 +174,50 @@ export class AnimationUI {
     });
     syncLoop();
 
-    const durationGroup = scenePanel.querySelector('[data-scene-duration]') as HTMLElement;
+    console.log('🎬 AnimationUI: Scene options panel created and added to options container');
+
+    // Duration slider setup
+    const durationSlider = scenePanel.querySelector('[data-duration-slider]') as HTMLInputElement;
+    const durationDisplay = scenePanel.querySelector('[data-duration-display]') as HTMLSpanElement;
+    const durationValues = [3000, 5000, 10000, 20000, 30000]; // 3s, 5s, 10s, 20s, 30s
+    const durationLabels = ['3s', '5s', '10s', '20s', '30s'];
+    
     const syncDuration = () => {
       const current = animationState.getSceneDuration();
-      durationGroup.querySelectorAll<HTMLButtonElement>('button[data-duration]').forEach(btn => {
-        const val = Number(btn.dataset.duration || '0');
-        const on = val === current;
-        btn.classList.toggle('active', on);
-        if (on) {
-          btn.style.backgroundColor = activeColor;
-          btn.style.borderColor = activeBorderColor;
-          btn.style.color = activeTextColor;
-          btn.style.fontWeight = '600';
-        } else {
-          btn.style.backgroundColor = '';
-          btn.style.borderColor = '';
-          btn.style.color = '';
-          btn.style.fontWeight = '';
-        }
-      });
+      const index = durationValues.indexOf(current);
+      if (index >= 0) {
+        durationSlider.value = index.toString();
+        durationDisplay.textContent = durationLabels[index];
+      }
     };
-    durationGroup.addEventListener('click', (event) => {
-      const btn = (event.target as HTMLElement).closest('[data-duration]') as HTMLButtonElement | null;
-      if (!btn) return;
-      const val = Number(btn.dataset.duration || '3000');
-      animationState.setSceneDuration(val);
-      this.toolState.updateToolSettings('scene', { duration: val });
-      syncDuration();
+    
+    durationSlider.addEventListener('input', () => {
+      const index = parseInt(durationSlider.value);
+      const duration = durationValues[index];
+      const label = durationLabels[index];
+      durationDisplay.textContent = label;
+      animationState.setSceneDuration(duration);
+      this.toolState.updateToolSettings('scene', { duration });
     });
+
+    // Resolution selector setup
+    const resolutionSelect = scenePanel.querySelector('[data-resolution-select]') as HTMLSelectElement;
+    
+    const syncResolution = () => {
+      // Get current resolution from tool settings if available
+      const settings = this.toolState.getToolSettings();
+      const sceneSettings = settings.scene || {};
+      const currentResolution = (sceneSettings as any).aspectRatio || '16:9';
+      resolutionSelect.value = currentResolution;
+    };
+    
+    resolutionSelect.addEventListener('change', () => {
+      const aspectRatio = resolutionSelect.value;
+      this.toolState.updateToolSettings('scene', { aspectRatio });
+    });
+    
     syncDuration();
+    syncResolution();
 
     let pathPanel = options.querySelector('.tools__item--path') as HTMLElement | null;
     if (!pathPanel) {

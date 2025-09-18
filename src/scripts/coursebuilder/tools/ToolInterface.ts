@@ -45,6 +45,7 @@ export interface ToolSettings {
   scene?: {
     loop?: boolean;
     duration?: number;
+    aspectRatio?: string;
   };
   path?: {
     // Path options - trajectory adjustments handled directly on canvas

@@ -4,9 +4,9 @@
 
 // Base scene block - container for all scene-related elements
 .scene {
-  position: absolute;
+//  position: absolute;
   pointer-events: none; // Allow canvas interactions to pass through
-  z-index: 10; // Above canvas but below modals
+  z-index: 10; // Above canvas but below modals  
 
   // Video scene modifier - scenes with video playback capabilities
   &--video {
@@ -18,14 +18,15 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    padding: 12px;
+
     background: rgba(255, 255, 255, 0.95);
     border-radius: 8px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
     backdrop-filter: blur(8px);
     border: 1px solid rgba(0, 0, 0, 0.1);
     pointer-events: auto; // Re-enable pointer events for controls
+
+    
   }
   
   // Timeline container - wrapper for the scrubber and time display
@@ -34,7 +35,7 @@
     margin-bottom: 16px;
     display: flex;
     align-items: center;
-    gap: 12px;
+  
   }
   
   // Timeline bar - the clickable background track

@@ -1,6 +1,5 @@
 import { Container, Point, Rectangle } from 'pixi.js';
 import { SelectionGroup, TransformHandle } from './types';
-import { CanvasBounds } from '../BoundaryUtils';
 
 type PerObjectState = {
   obj: any;
@@ -20,11 +19,8 @@ export class TransformController {
   private anchorGlobal: Point = new Point(0, 0); // anchor in world coords
   private pointerStartLocal: Point = new Point(0, 0);
   private startRotationRefAngle = 0; // for rotation handle: angle at start
-  private getCanvasBounds: (() => CanvasBounds) | null = null;
-  private allowMirroring = true;
   private restorePivotOnEnd = true;
   private rotationSnapRad = 0; // radians; 0 disables snapping
-  private scaleSnapStep = 0;   // 0 disables snapping
 
   public isActive(): boolean {
     return !!this.activeHandle;
@@ -37,11 +33,8 @@ export class TransformController {
     handle: TransformHandle,
     pointerLocal: Point,
     options?: {
-      getCanvasBounds?: () => CanvasBounds;
-      allowMirroring?: boolean;
       restorePivotOnEnd?: boolean;
       rotationSnapDeg?: number;
-      scaleSnapStep?: number;
       modifiers?: { shiftKey?: boolean; altKey?: boolean; ctrlKey?: boolean };
     }
   ): void {
@@ -50,11 +43,8 @@ export class TransformController {
     this.selectionGroup = selectionGroup;
     this.activeHandle = handle;
     this.pointerStartLocal.set(pointerLocal.x, pointerLocal.y);
-    this.getCanvasBounds = options?.getCanvasBounds || null;
-    this.allowMirroring = options?.allowMirroring ?? true;
     this.restorePivotOnEnd = options?.restorePivotOnEnd ?? true;
     this.rotationSnapRad = (options?.rotationSnapDeg || 0) * Math.PI / 180;
-    this.scaleSnapStep = options?.scaleSnapStep || 0;
 
     // Compute anchor from selection bounds and handle position
     const useCenter = !!options?.modifiers?.altKey;
@@ -122,6 +112,7 @@ export class TransformController {
   public update(pointerLocal: Point, modifiers?: { shiftKey?: boolean; altKey?: boolean; ctrlKey?: boolean }): void {
     if (!this.container || !this.activeHandle || !this.selectionGroup) return;
 
+    // Apply transforms immediately for smooth real-time feedback
     if (this.activeHandle.type === 'rotation') {
       this.applyRotation(pointerLocal, modifiers);
     } else {
@@ -176,53 +167,84 @@ export class TransformController {
     const useCenter = !!modifiers?.altKey;
     const currentAnchorLocal = this.computeAnchorLocalFromHandle(useCenter);
 
+    // Cache anchor position to avoid repeated calculations
+    let anchorX = this.anchorLocal.x;
+    let anchorY = this.anchorLocal.y;
+    
     // If anchor changed due to modifier toggle, retarget pivots
-    if (currentAnchorLocal.x !== this.anchorLocal.x || currentAnchorLocal.y !== this.anchorLocal.y) {
+    if (currentAnchorLocal.x !== anchorX || currentAnchorLocal.y !== anchorY) {
       this.anchorLocal.copyFrom(currentAnchorLocal);
+      anchorX = this.anchorLocal.x;
+      anchorY = this.anchorLocal.y;
       this.anchorGlobal = this.container!.toGlobal(this.anchorLocal);
+      
+      // Batch update all object pivots
+      const anchorGlobal = this.anchorGlobal;
       this.objects.forEach((o) => {
-        o.localAnchor = o.obj.toLocal(this.anchorGlobal);
-        if (o.obj.pivot) {
-          o.obj.pivot.set(o.localAnchor.x, o.localAnchor.y);
-          if (o.obj.parent) {
-            const posInParent = o.obj.parent.toLocal(this.anchorGlobal, undefined, undefined, false);
-            o.obj.position.set(posInParent.x, posInParent.y);
-          } else {
-            console.warn('TransformController.update(anchor toggle): object has no parent; skipped position realignment to avoid (0,0) jump');
+        o.localAnchor = o.obj.toLocal(anchorGlobal);
+        const obj = o.obj;
+        if (obj.pivot) {
+          obj.pivot.set(o.localAnchor.x, o.localAnchor.y);
+          if (obj.parent) {
+            const posInParent = obj.parent.toLocal(anchorGlobal, undefined, undefined, false);
+            obj.position.set(posInParent.x, posInParent.y);
           }
         }
       });
     }
 
-    const hvx0 = this.pointerStartLocal.x - this.anchorLocal.x;
-    const hvy0 = this.pointerStartLocal.y - this.anchorLocal.y;
-    const hvx = pointerLocal.x - this.anchorLocal.x;
-    const hvy = pointerLocal.y - this.anchorLocal.y;
+    // Cache all vector calculations upfront
+    const startX = this.pointerStartLocal.x;
+    const startY = this.pointerStartLocal.y;
+    const hvx0 = startX - anchorX;
+    const hvy0 = startY - anchorY;
+    const hvx = pointerLocal.x - anchorX;
+    const hvy = pointerLocal.y - anchorY;
 
-    // Prevent division by zero; tiny epsilon
+    // Prevent division by zero with cached epsilon
     const eps = 1e-6;
+    const absHvx0 = Math.abs(hvx0);
+    const absHvy0 = Math.abs(hvy0);
+    
+    // Calculate scale factors efficiently based on handle type
+    const handle = this.activeHandle!;
     let scaleX = 1;
     let scaleY = 1;
-
-    if (this.activeHandle!.type === 'corner') {
-      scaleX = Math.abs(hvx0) > eps ? hvx / hvx0 : 1;
-      scaleY = Math.abs(hvy0) > eps ? hvy / hvy0 : 1;
-    } else if (this.activeHandle!.type === 'edge') {
-      switch (this.activeHandle!.position) {
-        case 't':
-        case 'b':
-          scaleY = Math.abs(hvy0) > eps ? hvy / hvy0 : 1;
-          scaleX = 1;
-          break;
-        case 'l':
-        case 'r':
-          scaleX = Math.abs(hvx0) > eps ? hvx / hvx0 : 1;
-          scaleY = 1;
-          break;
+    
+    if (handle.type === 'corner') {
+      scaleX = absHvx0 > eps ? hvx / hvx0 : 1;
+      scaleY = absHvy0 > eps ? hvy / hvy0 : 1;
+    } else if (handle.type === 'edge') {
+      const pos = handle.position;
+      if (pos === 't' || pos === 'b') {
+        scaleY = absHvy0 > eps ? hvy / hvy0 : 1;
+      } else if (pos === 'l' || pos === 'r') {
+        scaleX = absHvx0 > eps ? hvx / hvx0 : 1;
       }
     }
 
-    // Aspect ratio lock (Shift)
+    // Apply constraints and modifiers
+    const finalScale = this.applyScaleConstraints(scaleX, scaleY, modifiers);
+    const finalScaleX = finalScale.scaleX;
+    const finalScaleY = finalScale.scaleY;
+
+    // Apply scale to all objects with minimal property access
+    for (let i = 0; i < this.objects.length; i++) {
+      const o = this.objects[i];
+      const objScale = o.obj.scale;
+      if (objScale) {
+        objScale.x = o.startScale.x * finalScaleX;
+        objScale.y = o.startScale.y * finalScaleY;
+      }
+    }
+  }
+
+  private applyScaleConstraints(
+    scaleX: number, 
+    scaleY: number, 
+    modifiers?: { shiftKey?: boolean; altKey?: boolean; ctrlKey?: boolean }
+  ): { scaleX: number; scaleY: number } {
+    // Aspect ratio lock (Shift key only)
     if (modifiers?.shiftKey) {
       const magX = Math.abs(scaleX);
       const magY = Math.abs(scaleY);
@@ -233,55 +255,16 @@ export class TransformController {
       scaleY = s * signY;
     }
 
-    // Clamp to avoid collapse; allow mirroring option
-    const minS = 0.05;
-    const clampAxis = (s: number) => {
-      if (!isFinite(s) || Math.abs(s) < minS) {
-        const sign = Math.sign(s || 1);
-        return this.allowMirroring ? minS * sign : minS;
-      }
-      return this.allowMirroring ? s : Math.max(minS, Math.abs(s));
-    };
-    scaleX = clampAxis(scaleX);
-    scaleY = clampAxis(scaleY);
-
-    // Scale snapping (Ctrl/Cmd)
-    if (modifiers?.ctrlKey && this.scaleSnapStep > 0) {
-      const snap = (s: number) => {
-        const sign = Math.sign(s || 1);
-        const mag = Math.round(Math.abs(s) / this.scaleSnapStep) * this.scaleSnapStep;
-        return sign * Math.max(this.scaleSnapStep, mag);
-      };
-      if (modifiers?.shiftKey) {
-        // With aspect lock, snap magnitude uniformly
-        const signX = Math.sign(scaleX || 1);
-        const signY = Math.sign(scaleY || 1);
-        const mag = Math.max(Math.abs(scaleX), Math.abs(scaleY));
-        const snappedMag = Math.round(mag / this.scaleSnapStep) * this.scaleSnapStep;
-        scaleX = signX * snappedMag;
-        scaleY = signY * snappedMag;
-      } else {
-        scaleX = snap(scaleX);
-        scaleY = snap(scaleY);
-      }
+    // Simple minimum scale to prevent collapse (no snapping/incremental sizing)
+    const minS = 0.01;
+    if (!isFinite(scaleX) || Math.abs(scaleX) < minS) {
+      scaleX = minS * Math.sign(scaleX || 1);
+    }
+    if (!isFinite(scaleY) || Math.abs(scaleY) < minS) {
+      scaleY = minS * Math.sign(scaleY || 1);
     }
 
-    // Enforce canvas bounds if provided
-    if (this.getCanvasBounds) {
-      const canvas = this.getCanvasBounds();
-      const bounds = this.selectionGroup!.bounds; // latest bounds
-      const constrained = this.clampScaleToCanvas(bounds, this.anchorLocal, canvas, scaleX, scaleY, !!modifiers?.shiftKey);
-      scaleX = constrained.scaleX;
-      scaleY = constrained.scaleY;
-    }
-
-    this.objects.forEach((o) => {
-      if (o.obj.scale) {
-        // Apply scale relative to starting scale; pivot has been aligned in begin().
-        // Avoid continuously reprojecting position each frame to reduce stutter.
-        o.obj.scale.set(o.startScale.x * scaleX, o.startScale.y * scaleY);
-      }
-    });
+    return { scaleX, scaleY };
   }
 
   private computeAnchorLocalFromHandle(useCenter: boolean = false): Point {
@@ -344,59 +327,6 @@ export class TransformController {
         break;
     }
     return a;
-  }
-
-  private clampScaleToCanvas(
-    bounds: Rectangle,
-    anchor: Point,
-    canvas: CanvasBounds,
-    scaleX: number,
-    scaleY: number,
-    lockAspect: boolean,
-  ): { scaleX: number; scaleY: number } {
-    const leftOffset = bounds.x - anchor.x;
-    const rightOffset = bounds.x + bounds.width - anchor.x;
-    const topOffset = bounds.y - anchor.y;
-    const bottomOffset = bounds.y + bounds.height - anchor.y;
-
-    const intersect = (a: [number, number], b: [number, number]): [number, number] => {
-      const lo = Math.max(a[0], b[0]);
-      const hi = Math.min(a[1], b[1]);
-      return [lo, hi];
-    };
-
-    const intervalForX = (offset: number): [number, number] => {
-      if (Math.abs(offset) < 1e-6) return [-Infinity, Infinity];
-      const v1 = (canvas.left - anchor.x) / offset;
-      const v2 = (canvas.right - anchor.x) / offset;
-      return [Math.min(v1, v2), Math.max(v1, v2)];
-    };
-    const intervalForY = (offset: number): [number, number] => {
-      if (Math.abs(offset) < 1e-6) return [-Infinity, Infinity];
-      const v1 = (canvas.top - anchor.y) / offset;
-      const v2 = (canvas.bottom - anchor.y) / offset;
-      return [Math.min(v1, v2), Math.max(v1, v2)];
-    };
-
-    let xRange: [number, number] = [-Infinity, Infinity];
-    xRange = intersect(xRange, intervalForX(leftOffset));
-    xRange = intersect(xRange, intervalForX(rightOffset));
-    let yRange: [number, number] = [-Infinity, Infinity];
-    yRange = intersect(yRange, intervalForY(topOffset));
-    yRange = intersect(yRange, intervalForY(bottomOffset));
-
-    const clamp = (v: number, r: [number, number]) => Math.min(Math.max(v, r[0]), r[1]);
-
-    if (!lockAspect) {
-      return { scaleX: clamp(scaleX, xRange), scaleY: clamp(scaleY, yRange) };
-    }
-
-    const signX = Math.sign(scaleX || 1);
-    const signY = Math.sign(scaleY || 1);
-    const magX = clamp(Math.abs(scaleX), [Math.max(0, xRange[0] * signX), Math.max(0, xRange[1] * signX)]);
-    const magY = clamp(Math.abs(scaleY), [Math.max(0, yRange[0] * signY), Math.max(0, yRange[1] * signY)]);
-    const s = Math.min(magX, magY);
-    return { scaleX: s * signX, scaleY: s * signY };
   }
 
   private cleanup(): void {
