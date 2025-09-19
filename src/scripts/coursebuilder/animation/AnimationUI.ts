@@ -133,7 +133,7 @@ export class AnimationUI {
           
           <!-- Resolution Selector -->
           <div class="resolution-control" style="display:flex; align-items:center; gap:8px;">
-    dd
+
             <select data-resolution-select 
                     style="font-size:11px; padding:2px 6px; border:1px solid #ddd; border-radius:3px; background:white;">
               <option value="16:9" selected>16:9 (Landscape)</option>

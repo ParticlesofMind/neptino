@@ -15,6 +15,7 @@ export class TextCursor implements ITextCursor {
   private blinkTimer: number | null = null;
   private isBlinkVisible: boolean = true;
   private height: number = 20;
+  private color: number = 0x000000;
 
   constructor(parent: Container, height: number = 20) {
     this.height = height;
@@ -51,6 +52,9 @@ export class TextCursor implements ITextCursor {
     this._visible = visible;
     
     if (visible) {
+      // Force visible immediately on show
+      this.isBlinkVisible = true;
+      this.graphics.visible = true;
       this.startBlinking();
     } else {
       this.stopBlinking();
@@ -79,6 +83,11 @@ export class TextCursor implements ITextCursor {
 
   public setHeight(height: number): void {
     this.height = height;
+    this.redraw();
+  }
+
+  public setColor(color: number): void {
+    this.color = color;
     this.redraw();
   }
 
@@ -118,15 +127,11 @@ export class TextCursor implements ITextCursor {
   private redraw(): void {
     this.graphics.clear();
     
-    // Draw vertical line cursor with proper styling
+    // Modern caret: solid 2px bar for crisp visibility
+    const width = 2;
     this.graphics
-      .moveTo(0, 0)
-      .lineTo(0, this.height)
-      .stroke({ 
-        width: 2,  // Make it thicker for better visibility
-        color: 0x000000,  // Black cursor
-        alpha: 1.0  // Full opacity
-      });
+      .rect(0, 0, width, this.height)
+      .fill({ color: this.color, alpha: 1.0 });
     
     // Ensure visibility
     this.graphics.visible = this._visible && this.isBlinkVisible;

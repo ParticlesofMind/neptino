@@ -15,8 +15,10 @@ export class TextInputHandler implements ITextInputHandler {
   private isMouseDown: boolean = false;
   private lastClickTime: number = 0;
   private lastClickPosition: number = 0;
+  private lastClickCount: number = 0;
   private selectionAnchor: number = 0;
   private boundKeyDown: (event: KeyboardEvent) => void;
+  private boundKeyUp: (event: KeyboardEvent) => void;
   private boundKeyPress: (event: KeyboardEvent) => void;
   private boundInput: (event: Event) => void;
   private onTextChange: ((text: string) => void) | null = null;
@@ -28,13 +30,16 @@ export class TextInputHandler implements ITextInputHandler {
     // Bind event handlers
     this.boundKeyDown = this.handleKeyDown.bind(this);
     this.boundKeyPress = this.handleKeyPress.bind(this);
+    this.boundKeyUp = this.handleKeyUp.bind(this);
     this.boundInput = this.handleInput.bind(this);
 
     // Add event listeners
-    document.addEventListener('keydown', this.boundKeyDown);
+    // Capture phase to intercept before global handlers (e.g., spacebar panning)
+    document.addEventListener('keydown', this.boundKeyDown, { capture: true } as any);
     // Some environments fire both keydown and keypress for printable chars.
     // We handle insertion on keydown; keep keypress as a no-op to avoid duplicates.
-    document.addEventListener('keypress', this.boundKeyPress);
+    document.addEventListener('keypress', this.boundKeyPress, { capture: true } as any);
+    document.addEventListener('keyup', this.boundKeyUp, { capture: true } as any);
     document.addEventListener('input', this.boundInput);
 
     console.log('📝 TextInputHandler created');
@@ -57,10 +62,21 @@ export class TextInputHandler implements ITextInputHandler {
     this.activeCursor = cursor;
   }
 
+  /**
+   * Public API: select all text in the active text area
+   */
+  public selectAll(): void {
+    if (!this.activeTextArea) return;
+    this.textSelection.selectAll();
+    // Keep caret blinking and visible while selection is active
+    this.updateCursorPosition();
+  }
+
   public destroy(): void {
     // Remove event listeners
-    document.removeEventListener('keydown', this.boundKeyDown);
-    document.removeEventListener('keypress', this.boundKeyPress);
+    document.removeEventListener('keydown', this.boundKeyDown, { capture: true } as any);
+    document.removeEventListener('keypress', this.boundKeyPress, { capture: true } as any);
+    document.removeEventListener('keyup', this.boundKeyUp, { capture: true } as any);
     document.removeEventListener('input', this.boundInput);
 
     // Cleanup components
@@ -108,6 +124,7 @@ export class TextInputHandler implements ITextInputHandler {
     if (this.isNavigationOrEditKey(event.key)) {
       event.preventDefault();
       event.stopPropagation();
+      try { (event as any).stopImmediatePropagation?.(); } catch {}
     }
 
     switch (event.key) {
@@ -145,15 +162,30 @@ export class TextInputHandler implements ITextInputHandler {
     }
 
     // Fallback: handle printable characters on keydown as well (keypress may not fire in all environments)
-    if (event.key && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
-      this.insertCharacter(event.key);
-      event.preventDefault();
-      event.stopPropagation();
+    const isSpace = (event.key === ' ' || (event as any).code === 'Space');
+    if ((event.key && event.key.length === 1) || isSpace) {
+      if (!event.ctrlKey && !event.metaKey && !event.altKey) {
+        const ch = isSpace ? ' ' : event.key;
+        this.insertCharacter(ch);
+        event.preventDefault();
+        event.stopPropagation();
+        try { (event as any).stopImmediatePropagation?.(); } catch {}
+      }
     }
   }
 
   private handleKeyPress(_event: KeyboardEvent): void {
     // Intentionally no-op to avoid double-insertion; keydown handles input.
+  }
+
+  private handleKeyUp(event: KeyboardEvent): void {
+    if (!this.activeTextArea) return;
+    // Extra guard: prevent browser/page scroll on Space key on keyup too
+    if (event.key === ' ' || (event as any).code === 'Space') {
+      event.preventDefault();
+      event.stopPropagation();
+      try { (event as any).stopImmediatePropagation?.(); } catch {}
+    }
   }
 
   private handleInput(event: Event): void {
@@ -198,22 +230,34 @@ export class TextInputHandler implements ITextInputHandler {
     const clickPosition = this.activeTextArea.getCursorPositionFromPoint(point);
     const currentTime = Date.now();
     
-    // Check for double-click
-    if (currentTime - this.lastClickTime < 300 && Math.abs(clickPosition - this.lastClickPosition) <= 1) {
-      // Double click - select word
+    // Click sequencing (single/double/triple)
+    const isQuick = (currentTime - this.lastClickTime) < 350 && Math.abs(clickPosition - this.lastClickPosition) <= 1;
+    this.lastClickCount = isQuick ? (this.lastClickCount + 1) : 1;
+
+    if (this.lastClickCount >= 3) {
+      // Triple click: select entire line
+      const start = this.findLineStart(clickPosition);
+      const end = this.findLineEnd(clickPosition);
+      this.textSelection.setSelection(start, end);
+      this.cursorPosition = end;
+      this.updateCursorPosition();
+      this.isMouseDown = false;
+      console.log('📝 Triple-click detected - selected line');
+    } else if (this.lastClickCount === 2) {
+      // Double click: select word
       this.textSelection.selectWordAt(clickPosition);
       console.log('📝 Double-click detected - selected word');
+      this.isMouseDown = false;
     } else {
       // Single click - position cursor and start potential selection
       this.cursorPosition = clickPosition;
       this.updateCursorPosition();
       this.textSelection.clearSelection();
       this.isMouseDown = true;
-      
       // Store the selection anchor for potential drag selection
       this.selectionAnchor = clickPosition;
     }
-    
+
     this.lastClickTime = currentTime;
     this.lastClickPosition = clickPosition;
   }
@@ -296,6 +340,14 @@ export class TextInputHandler implements ITextInputHandler {
   private handleArrowLeft(shiftKey: boolean): void {
     if (!this.activeTextArea) return;
 
+    if (this.textSelection.hasSelection && !shiftKey) {
+      // Collapse selection to start
+      this.cursorPosition = this.textSelection.selectionStart;
+      this.textSelection.clearSelection();
+      this.updateCursorPosition();
+      return;
+    }
+
     if (shiftKey) {
       // Extend selection to the left
       this.extendSelection(-1);
@@ -311,6 +363,14 @@ export class TextInputHandler implements ITextInputHandler {
 
   private handleArrowRight(shiftKey: boolean): void {
     if (!this.activeTextArea) return;
+
+    if (this.textSelection.hasSelection && !shiftKey) {
+      // Collapse selection to end
+      this.cursorPosition = this.textSelection.selectionEnd;
+      this.textSelection.clearSelection();
+      this.updateCursorPosition();
+      return;
+    }
 
     if (shiftKey) {
       // Extend selection to the right
@@ -535,6 +595,8 @@ export class TextInputHandler implements ITextInputHandler {
     this.cursorPosition = Math.max(0, Math.min(this.cursorPosition, textLength));
 
     // Update cursor visual position
+    // Ensure cursor is flagged visible during any keyboard navigation/editing
+    this.activeCursor.setVisible(true);
     this.activeCursor.setPosition(this.cursorPosition);
     const graphicsPos = this.activeTextArea.getCharacterPosition(this.cursorPosition);
     

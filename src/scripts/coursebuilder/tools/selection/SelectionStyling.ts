@@ -48,7 +48,7 @@ export class SelectionStyling {
     gfx.clear();
     switch (meta.shapeType) {
       case 'rectangle': { const r = meta.cornerRadius ?? 0; if (r > 0) gfx.roundRect(x, y, w, h, r); else gfx.rect(x, y, w, h); break; }
-      case 'circle': { const cx = x + w / 2; const cy = y + h / 2; const radius = Math.max(w, h) / 2; gfx.ellipse(cx, cy, radius, radius); break; }
+      case 'circle': { const cx = x + w / 2; const cy = y + h / 2; const radius = Math.max(Math.abs(w), Math.abs(h)) / 2; gfx.ellipse(cx, cy, radius, radius); break; }
       case 'ellipse': { const cx = x + w / 2; const cy = y + h / 2; gfx.ellipse(cx, cy, Math.abs(w / 2), Math.abs(h / 2)); break; }
       case 'triangle': { const topX = x + w / 2, topY = y; const blX = x, blY = y + h; const brX = x + w, brY = y + h; gfx.moveTo(topX, topY).lineTo(blX, blY).lineTo(brX, brY).closePath(); break; }
       case 'line': { const x1 = meta.startX ?? x, y1 = meta.startY ?? y; const x2 = meta.currentX ?? (x + w), y2 = meta.currentY ?? (y + h); gfx.moveTo(x1, y1).lineTo(x2, y2); break; }
@@ -65,4 +65,3 @@ export class SelectionStyling {
     try { const children = container.children || []; const textObj = children.find((c: any) => c.constructor?.name === 'Text'); if (!textObj) return false; let changed = false; if (settings.color) { textObj.style.fill = settings.color; changed = true; } if (settings.fontSize) { textObj.style.fontSize = settings.fontSize; changed = true; } return changed; } catch { return false; }
   }
 }
-

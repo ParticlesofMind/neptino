@@ -8,7 +8,6 @@ import { BaseShapeDrawer } from "./BaseShapeDrawer";
 import { RectangleDrawer } from "./RectangleDrawer";
 import { TriangleDrawer } from "./TriangleDrawer";
 import { CircleDrawer } from "./CircleDrawer";
-import { EllipseDrawer } from "./EllipseDrawer";
 import { LineDrawer } from "./LineDrawer";
 import { ArrowDrawer } from "./ArrowDrawer";
 import { PolygonDrawer } from "./PolygonDrawer";
@@ -25,7 +24,6 @@ export class ShapeDrawerFactory {
         this.drawers.set("rectangle", new RectangleDrawer(this.graphics));
         this.drawers.set("triangle", new TriangleDrawer(this.graphics));
         this.drawers.set("circle", new CircleDrawer(this.graphics));
-        this.drawers.set("ellipse", new EllipseDrawer(this.graphics));
         this.drawers.set("line", new LineDrawer(this.graphics));
         this.drawers.set("arrow", new ArrowDrawer(this.graphics));
         this.drawers.set("polygon", new PolygonDrawer(this.graphics));
@@ -60,7 +58,6 @@ export class ShapeDrawerFactory {
             "rectangle",
             "triangle", 
             "circle",
-            "ellipse",
             "line",
             "arrow",
             "polygon",
@@ -75,7 +72,6 @@ export class ShapeDrawerFactory {
             rectangle: "Rectangle",
             triangle: "Triangle", 
             circle: "Circle",
-            ellipse: "Ellipse",
             line: "Line",
             arrow: "Arrow",
             polygon: "Polygon",

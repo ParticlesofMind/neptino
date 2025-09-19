@@ -7,6 +7,36 @@ import { Text as PixiText } from "pixi.js";
 import { LineInfo, TextPosition, ITextFlowManager } from "./types.js";
 
 export class TextFlowManager implements ITextFlowManager {
+  private measureText: PixiText | null = null;
+
+  private ensureMeasure(): PixiText {
+    if (!this.measureText) {
+      this.measureText = new PixiText({
+        text: '',
+        style: { fontFamily: 'Arial', fontSize: 16, wordWrap: false, whiteSpace: 'pre' }
+      });
+    }
+    return this.measureText;
+  }
+
+  public setStyle(style: any): void {
+    const m = this.ensureMeasure();
+    try {
+      if (m && m.style) {
+        (m.style as any).fontFamily = (style as any)?.fontFamily || (m.style as any).fontFamily;
+        (m.style as any).fontSize = (style as any)?.fontSize || (m.style as any).fontSize;
+        (m.style as any).fontWeight = (style as any)?.fontWeight || (m.style as any).fontWeight;
+        (m.style as any).fontStyle = (style as any)?.fontStyle || (m.style as any).fontStyle;
+        (m.style as any).whiteSpace = 'pre';
+        (m.style as any).wordWrap = false;
+      }
+    } catch {}
+  }
+
+  public destroy(): void {
+    try { this.measureText?.destroy(); } catch {}
+    this.measureText = null;
+  }
   
   /**
    * Wrap text into lines based on maximum width
@@ -23,14 +53,7 @@ export class TextFlowManager implements ITextFlowManager {
     let currentLineStartIndex = 0;
     let charIndex = 0;
 
-    const measureText = new PixiText({
-      text: '',
-      style: {
-        fontFamily: 'Arial',
-        fontSize: 16,
-        wordWrap: false
-      }
-    });
+    const measureText = this.ensureMeasure();
 
     const pushCurrentLine = () => {
       measureText.text = currentLine;
@@ -72,7 +95,6 @@ export class TextFlowManager implements ITextFlowManager {
     // Push the final line (even if empty to represent trailing newline)
     pushCurrentLine();
 
-    measureText.destroy();
     return lines;
   }
 
@@ -125,14 +147,8 @@ export class TextFlowManager implements ITextFlowManager {
       return 0;
     }
 
-    // Find character position within the line using more accurate measurement
-    const measureText = new PixiText({
-      text: '',
-      style: {
-        fontFamily: 'Arial',
-        fontSize: 16
-      }
-    });
+    // Find character position within the line using persistent measurement
+    const measureText = this.ensureMeasure();
 
     let closestCharIndex = line.startIndex;
     let closestDistance = Math.abs(position.x);
@@ -151,8 +167,6 @@ export class TextFlowManager implements ITextFlowManager {
         break;
       }
     }
-
-    measureText.destroy();
 
     // Clamp to valid range
     const maxIndex = line.endIndex + 1;

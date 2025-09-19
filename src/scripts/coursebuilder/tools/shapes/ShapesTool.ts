@@ -28,12 +28,14 @@ export class ShapesTool extends BaseTool {
     private isProportional: boolean = false;
     private boundKeyDown: (event: KeyboardEvent) => void;
     private boundKeyUp: (event: KeyboardEvent) => void;
-    private drawerFactory: ShapeDrawerFactory | null = null;
-    private uiContainer: Container | null = null;
-    private sizeIndicator: { container: Container; bg: Graphics; text: Text } | null = null;
-    // Dimension snap visuals
-    private dimGuide: Graphics | null = null;
-    private dimSnap: { width?: number; height?: number } = {};
+  private drawerFactory: ShapeDrawerFactory | null = null;
+  private uiContainer: Container | null = null;
+  private sizeIndicator: { container: Container; bg: Graphics; text: Text } | null = null;
+  // Dimension snap visuals
+  private dimGuide: Graphics | null = null;
+  private dimSnap: { width?: number; height?: number } = {};
+  // Track the final drawing context actually used to render the shape (after constraints)
+  private lastDrawContext: ShapeDrawingContext | null = null;
     
     declare protected settings: ShapesSettings;
 
@@ -158,8 +160,10 @@ export class ShapesTool extends BaseTool {
         }
 
         if (this.isDrawing && this.currentShape) {
-            const width = this.currentPoint.x - this.startPoint.x;
-            const height = this.currentPoint.y - this.startPoint.y;
+            // Use the last context that the drawer actually used (after proportional constraints)
+            const ctx = this.lastDrawContext;
+            const width = ctx ? ctx.width : (this.currentPoint.x - this.startPoint.x);
+            const height = ctx ? ctx.height : (this.currentPoint.y - this.startPoint.y);
             console.log(
                 `🔶 SHAPES: Finished drawing professional ${this.settings.shapeType}${this.isProportional ? " (proportional)" : ""} - Final size: ${Math.round(Math.abs(width))}x${Math.round(Math.abs(height))}`,
             );
@@ -173,16 +177,19 @@ export class ShapesTool extends BaseTool {
 
             // Attach metadata for selection-based restyling
             try {
-                const x = Math.min(this.startPoint.x, this.currentPoint.x);
-                const y = Math.min(this.startPoint.y, this.currentPoint.y);
-                const w = Math.abs(this.currentPoint.x - this.startPoint.x);
-                const h = Math.abs(this.currentPoint.y - this.startPoint.y);
+                // Derive meta from the final rendered context when available
+                const endX = this.startPoint.x + width;
+                const endY = this.startPoint.y + height;
+                const x = Math.min(this.startPoint.x, endX);
+                const y = Math.min(this.startPoint.y, endY);
+                const w = Math.abs(width);
+                const h = Math.abs(height);
                 const meta: any = {
                     kind: 'shapes',
                     shapeType: this.settings.shapeType,
                     x, y, width: w, height: h,
                     startX: this.startPoint.x, startY: this.startPoint.y,
-                    currentX: this.currentPoint.x, currentY: this.currentPoint.y,
+                    currentX: endX, currentY: endY,
                     strokeWidth: this.settings.strokeWidth,
                     strokeColor: this.settings.color,
                     fillEnabled: this.settings.fillEnabled,
@@ -207,6 +214,7 @@ export class ShapesTool extends BaseTool {
         if (this.dimGuide && this.dimGuide.parent) this.dimGuide.parent.removeChild(this.dimGuide);
         this.dimGuide = null;
         this.dimSnap = {};
+        this.lastDrawContext = null;
     }
 
     /**
@@ -294,8 +302,9 @@ export class ShapesTool extends BaseTool {
             return null;
         }
 
-        // Apply proportional constraints
+        // Apply proportional constraints and keep the final context used for drawing
         context = drawer.applyProportionalConstraints(context);
+        this.lastDrawContext = context;
 
         // Create styles
         const strokeStyle: StrokeStyle = {

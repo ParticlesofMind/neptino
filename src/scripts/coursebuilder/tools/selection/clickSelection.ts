@@ -12,7 +12,7 @@ export class ClickSelection {
  private lastClickPoint: Point = new Point(0, 0);
  private lastHitStack: any[] = [];
  private lastHitIndex: number = -1;
- private readonly DOUBLE_CLICK_TIMEOUT = 300; // milliseconds
+ private readonly DOUBLE_CLICK_TIMEOUT = 350; // milliseconds
  private readonly CYCLE_TIMEOUT = 500; // milliseconds for cycling through stack
  private readonly CYCLE_TOLERANCE = 4; // px movement tolerance to consider same spot
 

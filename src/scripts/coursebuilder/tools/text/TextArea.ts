@@ -27,10 +27,14 @@ export class TextArea implements ITextArea {
   private flowManager: TextFlowManager;
   private lines: LineInfo[] = [];
   private lineHeight: number = 20;
+  private minHeight: number = 10;
+  private measureText: PixiText | null = null;
+  private minHeight: number;
 
   constructor(config: TextAreaConfig, parent: Container) {
     this.id = `text-area-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     this._bounds = { ...config.bounds };
+    this.minHeight = Math.max(10, this._bounds.height);
     this._text = config.text;
     this.settings = { ...config.settings };
     this.flowManager = new TextFlowManager();
@@ -49,6 +53,8 @@ export class TextArea implements ITextArea {
 
     // Create border graphics
     this.border = new Graphics();
+    // Ensure border is drawn above text content for visibility
+    this.border.zIndex = 100;
     this.container.addChild(this.border);
 
     // Create text object
@@ -64,7 +70,9 @@ export class TextArea implements ITextArea {
         wordWrap: true,
         wordWrapWidth: contentWidth,
         breakWords: true, // Allow breaking long words
-        whiteSpace: 'normal' // Ensure normal text wrapping behavior
+        // Preserve spaces and explicit newlines so the caret moves visibly
+        // through spaces and respects Enter for new lines
+        whiteSpace: 'pre'
       }
     });
     this.textObject.x = alignToPixel(5); // 5px padding from left
@@ -72,6 +80,11 @@ export class TextArea implements ITextArea {
     this.container.addChild(this.textObject);
 
     console.log(`📝 TextArea text object created with wordWrapWidth: ${contentWidth}`);
+
+    // Initialize measurement helpers and minHeight
+    this.minHeight = Math.max(10, this._bounds.height);
+    this.measureText = new PixiText({ text: '', style: this.textObject.style });
+    this.flowManager.setStyle(this.textObject.style);
 
     // Calculate line height from text metrics
     this.calculateLineHeight();
@@ -135,6 +148,10 @@ export class TextArea implements ITextArea {
   public updateText(text: string): void {
     this._text = text;
     this.recalculateTextFlow();
+    // Auto-grow vertically based on content
+    const contentWidth = Math.max(10, this._bounds.width - 10);
+    const optimal = this.flowManager.calculateOptimalHeight(this._text, contentWidth, this.lineHeight);
+    this._bounds.height = Math.max(this.minHeight, optimal);
     this.render();
   }
 
@@ -148,6 +165,8 @@ export class TextArea implements ITextArea {
     this.textObject.style.wordWrapWidth = contentWidth;
     
     this.recalculateTextFlow();
+    const optimal = this.flowManager.calculateOptimalHeight(this._text, contentWidth, this.lineHeight);
+    this._bounds.height = Math.max(this.minHeight, optimal);
     this.render();
   }
 
@@ -157,6 +176,9 @@ export class TextArea implements ITextArea {
     this._text = before + after;
     
     this.recalculateTextFlow();
+    const contentWidth = Math.max(10, this._bounds.width - 10);
+    const optimal = this.flowManager.calculateOptimalHeight(this._text, contentWidth, this.lineHeight);
+    this._bounds.height = Math.max(this.minHeight, optimal);
     this.render();
   }
 
@@ -197,16 +219,14 @@ export class TextArea implements ITextArea {
     const charInLine = index - line.startIndex;
     const lineText = line.text.substring(0, charInLine);
     
-    // Use PIXI's text measurement
-    const tempText = new PixiText({
-      text: lineText,
-      style: this.textObject.style
-    });
-    
-    const x = this.textObject.x + tempText.width;
+    // Use persistent measurement
+    if (!this.measureText) {
+      this.measureText = new PixiText({ text: '', style: this.textObject.style });
+    }
+    this.measureText.text = lineText;
+    const x = this.textObject.x + this.measureText.width;
     const y = this.textObject.y + (lineIndex * this.lineHeight);
     
-    tempText.destroy();
     
     console.log(`📝 Cursor position for index ${index}: (${x}, ${y}) - line ${lineIndex}`);
     return alignPointToPixel(x, y);
@@ -226,17 +246,17 @@ export class TextArea implements ITextArea {
   public destroy(): void {
     this.container.parent?.removeChild(this.container);
     this.container.destroy({ children: true });
+    try { this.measureText?.destroy(); } catch {}
+    try { (this.flowManager as any)?.destroy?.(); } catch {}
     console.log(`📝 TextArea destroyed: ${this.id}`);
   }
 
   private calculateLineHeight(): void {
-    const tempText = new PixiText({
-      text: 'Ag', // Use characters with ascenders and descenders
-      style: this.textObject.style
-    });
-    
-    this.lineHeight = Math.ceil(tempText.height * 1.2); // Add some line spacing
-    tempText.destroy();
+    if (!this.measureText) {
+      this.measureText = new PixiText({ text: '', style: this.textObject.style });
+    }
+    this.measureText.text = 'Ag';
+    this.lineHeight = Math.ceil(this.measureText.height * 1.2); // Add some line spacing
   }
 
   private recalculateTextFlow(): void {
@@ -266,6 +286,20 @@ export class TextArea implements ITextArea {
     this.container.y = alignedPos.y;
     
     console.log(`📝 TextArea render: bounds=${this._bounds.width}x${this._bounds.height}, wordWrapWidth=${contentWidth}, text="${this._text}"`);
+  }
+
+  /** Refresh measurement and flow when style changes */
+  public refreshTextMetrics(): void {
+    try {
+      this.flowManager.setStyle(this.textObject.style);
+      // Recompute line height using current style
+      this.calculateLineHeight();
+      this.recalculateTextFlow();
+      const contentWidth = Math.max(10, this._bounds.width - 10);
+      const optimal = this.flowManager.calculateOptimalHeight(this._text, contentWidth, this.lineHeight);
+      this._bounds.height = Math.max(this.minHeight, optimal);
+      this.render();
+    } catch {}
   }
 
   private drawBorder(): void {

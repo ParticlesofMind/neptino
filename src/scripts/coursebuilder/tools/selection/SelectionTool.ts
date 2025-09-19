@@ -73,17 +73,33 @@ export class SelectionTool extends BaseTool {
       );
       return;
     }
-    if (group && this.overlay.pointInRect(p, group.bounds)) {
-      this.isDraggingGroup = true; this.mode = 'drag'; this.cursor = 'grabbing'; this.isDragging = true; this.dragStart.copyFrom(p); return;
-    }
+
+    // Detect double-click on text before initiating group drag
     const result = this.click.handleClick(
       p,
       container,
       { shiftKey: event.shiftKey, altKey: (event as any).altKey, ctrlKey: (event as any).ctrlKey || (event as any).metaKey },
       (object, point, cont) => {
-      try { (window as any).toolStateManager?.setTool('text'); setTimeout(() => { const textTool = this.manager?.getActiveTool && this.manager.getActiveTool(); (textTool as any)?.activateTextObjectForEditing?.(object, point, cont); }, 0); } catch {}
+      try {
+        (window as any).toolStateManager?.setTool('text');
+        setTimeout(() => {
+          const textTool = this.manager?.getActiveTool && this.manager.getActiveTool();
+          (textTool as any)?.activateTextObjectForEditing?.(object, point, cont);
+          // After activating editing via selection tool (double-click), select all text
+          (textTool as any)?.selectAllTextInActiveArea?.();
+        }, 0);
+      } catch {}
       }
     );
+
+    if (result.isDoubleClick && this.click.isTextObject(result.clickedObject)) {
+      // Consumed by text editing
+      return;
+    }
+
+    if (group && this.overlay.pointInRect(p, group.bounds)) {
+      this.isDraggingGroup = true; this.mode = 'drag'; this.cursor = 'grabbing'; this.isDragging = true; this.dragStart.copyFrom(p); return;
+    }
     if (result.clickedObject) {
       const action = this.click.getSelectionAction(result.clickedObject, this.selected, event.shiftKey); this.selected = this.click.applySelectionAction(action, this.selected); this.overlay.refresh(this.selected, container);
       const bounds = this.overlay.getGroup()?.bounds; if (bounds && this.overlay.pointInRect(p, bounds)) { this.isDraggingGroup = true; this.mode = 'drag'; this.cursor = 'grabbing'; this.isDragging = true; this.dragStart.copyFrom(p); try { this.guides.update(container, this.selected, bounds); } catch {} }

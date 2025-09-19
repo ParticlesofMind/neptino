@@ -298,7 +298,15 @@ export class TextTool extends BaseTool {
           textObj.text = currentText; // force update
         }
       } catch {}
+      // Refresh flow/metrics to match new style
+      try { (this.activeTextArea as any).refreshTextMetrics?.(); } catch {}
       console.log('📝 Updated settings for active text area');
+      // Update caret color to ensure contrast and height to line metrics
+      try {
+        const caretColor = this.computeCaretColor(this.settings.color, (this.activeTextArea as any).settings?.backgroundColor);
+        this.textCursor?.setColor(caretColor);
+        this.textCursor?.setHeight(Math.max(this.activeTextArea.textLineHeight, this.settings.fontSize + 4));
+      } catch {}
     }
   }
 
@@ -549,8 +557,12 @@ export class TextTool extends BaseTool {
       this.textCursor = new TextCursor(textArea.pixiContainer, textArea.textLineHeight);
     }
     
-    // Set proper cursor height based on text settings
+    // Set proper cursor height and dynamic color based on text settings
     this.textCursor.setHeight(Math.max(textArea.textLineHeight, this.settings.fontSize + 4));
+    try {
+      const caretColor = this.computeCaretColor(this.settings.color, (textArea as any).settings?.backgroundColor);
+      this.textCursor.setColor(caretColor);
+    } catch {}
     
     // Set up input handling - ensure inputHandler exists
     const inputHandler = this.ensureInputHandler(textArea.pixiContainer);
@@ -570,6 +582,39 @@ export class TextTool extends BaseTool {
     console.log(`📝 Cursor activated at position (${startPos.x}, ${startPos.y}) with height ${this.textCursor.pixiGraphics.height}`);
     
     this.state.mode = 'active';
+  }
+
+  private hexToRgb(hex: string): { r: number; g: number; b: number } {
+    const h = hex.replace('#', '');
+    const n = parseInt(h, 16);
+    return { r: (n >> 16) & 0xff, g: (n >> 8) & 0xff, b: n & 0xff };
+  }
+
+  private luminance(hex: string | number): number {
+    const toLin = (c: number) => {
+      c /= 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    let r: number, g: number, b: number;
+    if (typeof hex === 'number') {
+      r = (hex >> 16) & 0xff; g = (hex >> 8) & 0xff; b = hex & 0xff;
+    } else {
+      const { r: rr, g: gg, b: bb } = this.hexToRgb(hex);
+      r = rr; g = gg; b = bb;
+    }
+    const R = toLin(r), G = toLin(g), B = toLin(b);
+    return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+  }
+
+  private computeCaretColor(textHex: string, backgroundHex?: string): number {
+    // Prefer contrast against background if provided
+    if (backgroundHex) {
+      const L = this.luminance(backgroundHex);
+      return L > 0.6 ? 0x000000 : 0xffffff;
+    }
+    // Fallback to black for typical light backgrounds
+    const Lt = this.luminance(textHex);
+    return Lt > 0.7 ? 0x000000 : 0x000000;
   }
 
   private deactivateCurrentTextArea(): void {
@@ -635,6 +680,17 @@ export class TextTool extends BaseTool {
       (this.textCursor as any).setGraphicsPosition(gp.x, gp.y);
       this.textCursor.setVisible(true);
     }
+  }
+
+  /** Select all text in the currently active text area */
+  public selectAllTextInActiveArea(): void {
+    if (!this.activeTextArea || !this.inputHandler) return;
+    try {
+      // Ensure handler is bound to this area
+      this.inputHandler.setActiveTextArea(this.activeTextArea);
+      (this.inputHandler as any).selectAll?.();
+      this.textCursor?.setVisible(true);
+    } catch {}
   }
 
   /** Test helper: backspace delete n characters */

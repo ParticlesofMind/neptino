@@ -1,15 +1,16 @@
 import { Container, Point, Text, Sprite, Texture, Graphics } from 'pixi.js';
 import { DisplayObjectManager } from '../../canvas/DisplayObjectManager';
-import { createBrushFromMeta, createPenFromMeta, createShapeFromMeta, unionBoundsLocal, moveByContainerDelta } from './ClipboardFactory';
+import { createBrushFromMeta, createPenFromMeta, createShapeFromMeta, unionBoundsLocal, moveByContainerDelta, colorToNumber } from './ClipboardFactory';
 import { historyManager } from '../../canvas/HistoryManager';
 
-type TransformDesc = { x: number; y: number; scaleX: number; scaleY: number; rotation: number; pivotX?: number; pivotY?: number; anchorX?: number; anchorY?: number };
-type TextDesc = { kind: 'text'; text: string; style: any; transform: TransformDesc };
-type SpriteDesc = { kind: 'sprite'; texture: Texture; transform: TransformDesc };
-type MetaGraphicsDesc = { kind: 'shapes' | 'pen' | 'brush'; meta: any; transform: TransformDesc };
+type TransformDesc = { x: number; y: number; scaleX: number; scaleY: number; rotation: number; pivotX?: number; pivotY?: number; anchorX?: number; anchorY?: number; skewX?: number; skewY?: number };
+type CommonProps = { alpha?: number; blendMode?: number; tint?: number; roundPixels?: boolean; filters?: any[] };
+type TextDesc = { kind: 'text'; text: string; style: any; transform: TransformDesc; props?: CommonProps };
+type SpriteDesc = { kind: 'sprite'; texture: Texture; transform: TransformDesc; props?: CommonProps };
+type MetaGraphicsDesc = { kind: 'shapes' | 'pen' | 'brush'; meta: any; transform: TransformDesc; props?: CommonProps };
 type TableCellDesc = { x: number; y: number; width: number; height: number; text: string; style: any };
-type TableDesc = { kind: 'table'; settings: any; cells: TableCellDesc[]; transform: TransformDesc };
-type ContainerDesc = { kind: 'container'; children: NodeDesc[]; transform: TransformDesc };
+type TableDesc = { kind: 'table'; settings: any; cells: TableCellDesc[]; transform: TransformDesc; props?: CommonProps };
+type ContainerDesc = { kind: 'container'; children: NodeDesc[]; transform: TransformDesc; props?: CommonProps };
 type NodeDesc = TextDesc | SpriteDesc | MetaGraphicsDesc | TableDesc | ContainerDesc;
 
 export class SelectionClipboard {
@@ -154,23 +155,36 @@ export class SelectionClipboard {
       pivotY: obj.pivot?.y ?? 0,
       anchorX: (obj as any).anchor?.x,
       anchorY: (obj as any).anchor?.y,
+      skewX: (obj as any).skew?.x,
+      skewY: (obj as any).skew?.y,
     };
+  }
+
+  private extractProps(obj: any): CommonProps {
+    const props: CommonProps = {};
+    try { if (obj.alpha !== undefined) props.alpha = obj.alpha; } catch {}
+    try { if (obj.blendMode !== undefined) props.blendMode = obj.blendMode; } catch {}
+    try { if ((obj as any).tint !== undefined) props.tint = (obj as any).tint; } catch {}
+    try { if ((obj as any).roundPixels !== undefined) props.roundPixels = !!(obj as any).roundPixels; } catch {}
+    try { if ((obj as any).filters !== undefined) props.filters = (obj as any).filters?.slice?.() || undefined; } catch {}
+    return props;
   }
 
   private buildDesc(obj: any): NodeDesc | null {
     const t = this.detectToolType(obj);
     const tr = this.transformOf(obj);
+    const props = this.extractProps(obj);
     if (t === 'text') {
-      try { return { kind: 'text', text: String(obj.text ?? ''), style: { ...(obj.style || {}) }, transform: tr }; } catch { return null; }
+      try { return { kind: 'text', text: String(obj.text ?? ''), style: { ...(obj.style || {}) }, transform: tr, props }; } catch { return null; }
     }
     if (t === 'shapes' || t === 'pen' || t === 'brush') {
-      const meta = (obj as any).__meta; if (meta) return { kind: t, meta: JSON.parse(JSON.stringify(meta)), transform: tr } as MetaGraphicsDesc; return null;
+      const meta = (obj as any).__meta; if (meta) return { kind: t, meta: JSON.parse(JSON.stringify(meta)), transform: tr, props } as MetaGraphicsDesc; return null;
     }
     // Fallback: graphics with __meta.kind but missing __toolType
     if (obj?.constructor?.name === 'Graphics' && (obj as any).__meta && (obj as any).__meta.kind) {
       const kind = String((obj as any).__meta.kind);
       if (kind === 'shapes' || kind === 'pen' || kind === 'brush') {
-        const meta = (obj as any).__meta; return { kind, meta: JSON.parse(JSON.stringify(meta)), transform: tr } as MetaGraphicsDesc;
+        const meta = (obj as any).__meta; return { kind, meta: JSON.parse(JSON.stringify(meta)), transform: tr, props } as MetaGraphicsDesc;
       }
     }
     if ((obj as any).isTable || (obj as any).__toolType === 'tables') {
@@ -189,16 +203,16 @@ export class SelectionClipboard {
           }
         }
       } catch {}
-      return { kind: 'table', settings, cells, transform: tr };
+      return { kind: 'table', settings, cells, transform: tr, props };
     }
     if ((obj as any).texture) {
-      try { return { kind: 'sprite', texture: (obj as Sprite).texture, transform: tr }; } catch { return null; }
+      try { return { kind: 'sprite', texture: (obj as Sprite).texture, transform: tr, props }; } catch { return null; }
     }
     // Generic container tree
     if (obj.children && Array.isArray(obj.children) && obj.children.length > 0) {
       const children: NodeDesc[] = [];
       for (const ch of obj.children) { const d = this.buildDesc(ch); if (d) children.push(d); }
-      return { kind: 'container', children, transform: tr };
+      return { kind: 'container', children, transform: tr, props };
     }
     // Unknown leaf Graphics: try to snapshot to sprite texture as last resort (avoid losing content)
     try {
@@ -215,6 +229,16 @@ export class SelectionClipboard {
     if (obj.pivot) obj.pivot.set(tr.pivotX ?? 0, tr.pivotY ?? 0);
     if (obj.scale) obj.scale.set(tr.scaleX ?? 1, tr.scaleY ?? 1);
     if ((obj as any).anchor && (tr.anchorX !== undefined || tr.anchorY !== undefined)) (obj as any).anchor.set(tr.anchorX ?? 0, tr.anchorY ?? 0);
+    try { if ((obj as any).skew && (tr.skewX !== undefined || tr.skewY !== undefined)) (obj as any).skew.set(tr.skewX ?? 0, tr.skewY ?? 0); } catch {}
+  }
+
+  private applyProps(obj: any, props?: CommonProps | null): void {
+    if (!props) return;
+    try { if (props.alpha !== undefined) obj.alpha = props.alpha; } catch {}
+    try { if (props.blendMode !== undefined) obj.blendMode = props.blendMode; } catch {}
+    try { if (props.tint !== undefined && (obj as any).tint !== undefined) (obj as any).tint = props.tint; } catch {}
+    try { if (props.roundPixels !== undefined && (obj as any).roundPixels !== undefined) (obj as any).roundPixels = props.roundPixels; } catch {}
+    try { if (props.filters !== undefined) (obj as any).filters = props.filters; } catch {}
   }
 
   private constructNode(desc: NodeDesc, target: Container, offset: number): any | any[] | null {
@@ -222,33 +246,43 @@ export class SelectionClipboard {
       case 'text': {
         const t = new Text({ text: desc.text, style: desc.style });
         (t as any).isTextObject = true;
-        this.addToContainer(t, target); this.applyTransform(t, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
+        this.addToContainer(t, target);
+        this.applyTransform(t, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
+        this.applyProps(t, desc.props);
         return t;
       }
       case 'sprite': {
         const sp = new Sprite(desc.texture);
-        this.addToContainer(sp, target); this.applyTransform(sp, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
+        this.addToContainer(sp, target);
+        this.applyTransform(sp, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
+        this.applyProps(sp, desc.props);
         return sp;
       }
       case 'shapes': {
         const gfx = createShapeFromMeta(JSON.parse(JSON.stringify(desc.meta)), 0 /* no geom offset, we move via transform */);
         if (!gfx) return null;
         (gfx as any).__toolType = 'shapes'; (gfx as any).__meta = desc.meta;
-        this.addToContainer(gfx, target); this.applyTransform(gfx, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
+        this.addToContainer(gfx, target);
+        this.applyTransform(gfx, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
+        this.applyProps(gfx, desc.props);
         return gfx;
       }
       case 'pen': {
         const gfx = createPenFromMeta(JSON.parse(JSON.stringify(desc.meta)), 0);
         if (!gfx) return null;
         (gfx as any).__toolType = 'pen'; (gfx as any).__meta = desc.meta;
-        this.addToContainer(gfx, target); this.applyTransform(gfx, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
+        this.addToContainer(gfx, target);
+        this.applyTransform(gfx, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
+        this.applyProps(gfx, desc.props);
         return gfx;
       }
       case 'brush': {
         const gfx = createBrushFromMeta(JSON.parse(JSON.stringify(desc.meta)), 0);
         if (!gfx) return null;
         (gfx as any).__toolType = 'brush'; (gfx as any).__meta = desc.meta;
-        this.addToContainer(gfx, target); this.applyTransform(gfx, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
+        this.addToContainer(gfx, target);
+        this.applyTransform(gfx, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
+        this.applyProps(gfx, desc.props);
         return gfx;
       }
       case 'table': {
@@ -257,8 +291,8 @@ export class SelectionClipboard {
         this.addToContainer(cont, target);
         // draw cells
         const borderW = (desc.settings?.borderWidth ?? 1) as number;
-        const borderC = parseInt(String((desc.settings?.borderColor || '#000000')).replace('#', '0x'));
-        const bgC = parseInt(String((desc.settings?.backgroundColor || '#ffffff')).replace('#', '0x'));
+        const borderC = colorToNumber(desc.settings?.borderColor || '#000000') ?? 0x000000;
+        const bgC = colorToNumber(desc.settings?.backgroundColor || '#ffffff') ?? 0xffffff;
         for (const cell of desc.cells) {
           const g = new Graphics(); g.rect(cell.x, cell.y, cell.width, cell.height); g.fill({ color: bgC }); g.stroke({ width: Math.max(1, borderW), color: borderC });
           const txt = new Text({ text: cell.text || '', style: { ...(cell.style || {}) } });
@@ -268,11 +302,14 @@ export class SelectionClipboard {
           cont.addChild(g); cont.addChild(txt);
         }
         this.applyTransform(cont, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
+        this.applyProps(cont, desc.props);
         return cont;
       }
       case 'container': {
         const group = new Container();
-        this.addToContainer(group, target); this.applyTransform(group, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
+        this.addToContainer(group, target);
+        this.applyTransform(group, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
+        this.applyProps(group, (desc as any).props);
         for (const ch of desc.children) {
           const node = this.constructNode(ch, group, 0);
           if (Array.isArray(node)) node.forEach(n => group.addChild(n));
