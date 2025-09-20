@@ -241,7 +241,7 @@ class MediaInterface {
 
   private renderItemCard(item: MediaItem): HTMLElement {
     const card = document.createElement('div');
-    card.className = 'card';
+    card.className = `media media--${item.type} card`;
     card.style.padding = '8px';
     card.style.display = 'flex';
     card.style.flexDirection = 'column';
@@ -256,7 +256,7 @@ class MediaInterface {
       const img = document.createElement('img');
       img.src = item.thumbnailUrl;
       img.alt = item.title || '';
-      img.classList.add('card__preview');
+      img.classList.add('card__preview', 'media__preview');
       img.style.width = '100%';
       img.style.objectFit = 'cover';
       img.style.borderRadius = '6px';
@@ -265,12 +265,13 @@ class MediaInterface {
     }
 
     if (item.type === 'videos' && (item.previewUrl || item.thumbnailUrl)) {
+      let vid: HTMLVideoElement | null = null;
       if (item.previewUrl) {
-        const vid = document.createElement('video');
-        vid.controls = false; // Disable controls to prevent interference with drag
-        vid.muted = true; // Mute for autoplay compatibility
+        vid = document.createElement('video');
+        vid.controls = false; // custom overlay controls
+        vid.muted = true; // allow autoplay on user click in some browsers
         vid.src = item.previewUrl;
-        vid.classList.add('card__preview');
+        vid.classList.add('card__preview', 'media__preview');
         vid.style.width = '100%';
         vid.style.objectFit = 'cover';
         vid.style.borderRadius = '6px';
@@ -280,20 +281,21 @@ class MediaInterface {
         const thumb = document.createElement('img');
         thumb.src = item.thumbnailUrl;
         thumb.alt = item.title || '';
-        thumb.classList.add('card__preview');
+        thumb.classList.add('card__preview', 'media__preview');
         thumb.style.width = '100%';
         thumb.style.objectFit = 'cover';
         thumb.style.borderRadius = '6px';
         thumb.draggable = false; // Prevent nested drag
         card.appendChild(thumb);
       }
+      // No in-card overlay controls (keep previews simple)
     }
 
     if (item.type === 'audio') {
       // Create visual representation for audio items
       const audioWrapper = document.createElement('div');
       audioWrapper.style.width = '100%';
-      audioWrapper.classList.add('card__preview');
+      audioWrapper.classList.add('card__preview', 'media__preview');
       audioWrapper.style.backgroundColor = 'var(--color-warning-100)';
       audioWrapper.style.borderRadius = '6px';
       audioWrapper.style.display = 'flex';
@@ -307,11 +309,10 @@ class MediaInterface {
       audioWrapper.appendChild(audioIcon);
       
       card.appendChild(audioWrapper);
-      
-      // Add audio controls below the visual representation
+      // Add audio element; no overlay controls (keep preview simple)
       if (item.previewUrl) {
         const audio = document.createElement('audio');
-        audio.controls = true;
+        audio.controls = false;
         audio.src = item.previewUrl;
         audio.style.width = '100%';
         audio.style.marginTop = '4px';
@@ -484,27 +485,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const canvasAPI = (window as any).canvasAPI;
         if (!canvasAPI) return;
 
-        // Compute drop position in Pixi screen coordinates exactly under cursor
+        // Compute drop point precisely under cursor, accounting for CSS zoom/pan and DPR
         const app = canvasAPI.getApp?.();
+        const drawingLayer = typeof canvasAPI.getLayer === 'function' ? canvasAPI.getLayer('drawing') : null;
         let x = 50, y = 50;
-        if (app && app.canvas) {
-          const rect = app.canvas.getBoundingClientRect();
-
-          // If drop happens outside the actual canvas area, clamp to canvas edges
-          const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-          const cssX = clamp(e.clientX, rect.left, rect.right);
-          const cssY = clamp(e.clientY, rect.top, rect.bottom);
-
-          // Use Pixi screen (world) size, not the backing buffer size
-          const screenW = (app as any).screen?.width ?? rect.width;
-          const screenH = (app as any).screen?.height ?? rect.height;
-          const scaleX = screenW / rect.width;
-          const scaleY = screenH / rect.height;
-
-          x = (cssX - rect.left) * scaleX;
-          y = (cssY - rect.top) * scaleY;
+        if (app && (app as any).renderer?.events && drawingLayer && app.canvas) {
+          try {
+            // Map client coordinates to PIXI global, then to drawing layer local coords
+            const global: any = { x: 0, y: 0 };
+            (app as any).renderer.events.mapPositionToPoint(global, e.clientX, e.clientY);
+            const local = (drawingLayer as any).toLocal(global);
+            x = local.x;
+            y = local.y;
+          } catch {
+            // Fallback to rect mapping if anything fails
+            const rect = app.canvas.getBoundingClientRect();
+            const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+            const cssX = clamp(e.clientX, rect.left, rect.right);
+            const cssY = clamp(e.clientY, rect.top, rect.bottom);
+            const screenW = (app as any).screen?.width ?? rect.width;
+            const screenH = (app as any).screen?.height ?? rect.height;
+            const scaleX = screenW / rect.width;
+            const scaleY = screenH / rect.height;
+            x = (cssX - rect.left) * scaleX;
+            y = (cssY - rect.top) * scaleY;
+          }
         } else {
-          // Fallback: relative to host without offsets
+          // Final fallback: relative to host without offsets
           const hostRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
           x = (e.clientX - hostRect.left);
           y = (e.clientY - hostRect.top);
@@ -512,32 +519,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Add to canvas at computed coordinates (no offsets, no clamping to content)
         if (item.type === 'images' && (item.contentUrl || item.previewUrl || item.thumbnailUrl)) {
-          canvasAPI.addImage(item.contentUrl || item.previewUrl || item.thumbnailUrl, x, y);
+          (async () => {
+            const id = await canvasAPI.addImage(item.contentUrl || item.previewUrl || item.thumbnailUrl, x, y);
+            if (id) canvasAPI.showSnapHintForId(id);
+          })();
         } else if (item.type === 'videos') {
           console.log(`🎬 DEBUG: Drop handler adding video - ${item.title || 'Video'} at (${x}, ${y})`);
           if (typeof canvasAPI.addVideoElement === 'function') {
-            canvasAPI.addVideoElement(
+            const id = canvasAPI.addVideoElement(
               item.previewUrl || item.contentUrl || '',
               item.title || 'Video',
               x,
               y,
               item.thumbnailUrl || undefined,
             );
+            if (id) canvasAPI.showSnapHintForId(id);
           } else {
             canvasAPI.addText(`📹 ${item.title || 'Video'}`, x, y);
           }
         } else if (item.type === 'audio') {
           if (typeof canvasAPI.addAudioElement === 'function') {
-            canvasAPI.addAudioElement(item.previewUrl || item.contentUrl || '', item.title || 'Audio', x, y);
+            const id = canvasAPI.addAudioElement(item.previewUrl || item.contentUrl || '', item.title || 'Audio', x, y);
+            if (id) canvasAPI.showSnapHintForId(id);
           } else {
             canvasAPI.addAudioPlaceholder(item.title || 'Audio');
           }
         } else if (item.type === 'text' && item.title) {
-          canvasAPI.addText(item.title, x, y);
+          const id = canvasAPI.addText(item.title, x, y);
+          if (id) canvasAPI.showSnapHintForId(id);
         } else if (item.type === 'plugins' && item.title) {
-          canvasAPI.addText(`🔌 ${item.title}`, x, y);
+          const id = canvasAPI.addText(`🔌 ${item.title}`, x, y);
+          if (id) canvasAPI.showSnapHintForId(id);
         } else if (item.type === 'links' && item.title) {
-          canvasAPI.addText(`🔗 ${item.title}`, x, y);
+          const id = canvasAPI.addText(`🔗 ${item.title}`, x, y);
+          if (id) canvasAPI.showSnapHintForId(id);
         }
       } catch {}
     });

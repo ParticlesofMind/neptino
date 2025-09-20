@@ -17,11 +17,15 @@ interface SnapPrefs {
   equalTolerance: number; // px tolerance for equal spacing highlight
   matchWidth: boolean; // enable dimension width matching during creation
   matchHeight: boolean; // enable dimension height matching during creation
+  centerBiasMultiplier: number; // multiplier to make center snapping easier
+  enableCenterBias: boolean; // toggle for center bias snapping
+  enableMidpoints: boolean;  // toggle midpoint candidate generation
+  enableSymmetryGuides: boolean; // toggle short center/midpoint guides
 }
 
 class SnapManager {
   private activeMode: SnapMode = 'smart';
-  private prefs: SnapPrefs = { gridSize: 20, threshold: 6, equalTolerance: 1, matchWidth: true, matchHeight: true };
+  private prefs: SnapPrefs = { gridSize: 20, threshold: 6, equalTolerance: 1, matchWidth: true, matchHeight: true, centerBiasMultiplier: 1.75, enableCenterBias: true, enableMidpoints: true, enableSymmetryGuides: true };
 
   // Simple accessors
   public getActiveMode(): SnapMode { return this.activeMode; }
@@ -65,10 +69,27 @@ class SnapManager {
       x = Math.round(x / this.prefs.gridSize) * this.prefs.gridSize;
       y = Math.round(y / this.prefs.gridSize) * this.prefs.gridSize;
     } else if (this.activeMode === 'smart') {
-      // Smart = align to other objects only (edges and centers)
-      const obj = this.collectObjectSnapLines(options);
-      x = this.snapAxis(x, obj.vLines);
-      y = this.snapAxis(y, obj.hLines);
+      // Smart = align to other objects and canvas edges/centers
+      const cand = this.getCandidates(options);
+
+      // Symmetry bias: prefer snapping to canvas centers with a larger effective threshold
+      const centerBias = Math.max(1, this.prefs.centerBiasMultiplier || 1);
+      const cx = (cand.canvas.v && cand.canvas.v[1] !== undefined) ? cand.canvas.v[1] : undefined;
+      const cy = (cand.canvas.h && cand.canvas.h[1] !== undefined) ? cand.canvas.h[1] : undefined;
+      if (this.prefs.enableCenterBias && cx !== undefined) {
+        const dx = Math.abs(x - cx);
+        if (dx <= this.prefs.threshold * centerBias) x = cx;
+      }
+      if (this.prefs.enableCenterBias && cy !== undefined) {
+        const dy = Math.abs(y - cy);
+        if (dy <= this.prefs.threshold * centerBias) y = cy;
+      }
+
+      // Fall back to nearest candidates if not center-snapped
+      const vLines = cand.vLines.concat(cand.canvas.v || []);
+      const hLines = cand.hLines.concat(cand.canvas.h || []);
+      x = this.snapAxis(x, vLines);
+      y = this.snapAxis(y, hLines);
     }
 
     return new Point(x, y);
@@ -92,7 +113,7 @@ class SnapManager {
   /**
    * Gather simple vertical/horizontal snap lines from other objects' bounds
    */
-  private collectObjectSnapLines(options?: { exclude?: any[]; container?: Container }): { vLines: number[]; hLines: number[] } {
+  private collectObjectSnapLines(options?: { exclude?: any[]; container?: Container; rect?: Rectangle; margin?: number }): { vLines: number[]; hLines: number[] } {
     const vLines: number[] = [];
     const hLines: number[] = [];
 
@@ -121,15 +142,28 @@ class SnapManager {
     } catch {}
     const excludeSet = new Set((options?.exclude || []).map(o => o));
 
+    const centers: Array<{ x: number; y: number }> = [];
+    const rect = options?.rect;
+    const margin = options?.margin ?? 160;
     for (const obj of objects) {
       if (rootRef && obj === rootRef) continue; // skip the root container
       if (!obj?.getBounds || excludeSet.has(obj) || obj.visible === false) continue;
       try {
         const b: Rectangle = obj.getBounds();
+        // Optional spatial filter against a reference rect (in world coords for now)
+        if (rect) {
+          const ax1 = b.x, ax2 = b.x + b.width, ay1 = b.y, ay2 = b.y + b.height;
+          const bx1 = rect.x - margin, bx2 = rect.x + rect.width + margin;
+          const by1 = rect.y - margin, by2 = rect.y + rect.height + margin;
+          const overlapX = ax2 >= bx1 && ax1 <= bx2;
+          const overlapY = ay2 >= by1 && ay1 <= by2;
+          if (!overlapX && !overlapY) continue;
+        }
         const cx = b.x + b.width / 2;
         const cy = b.y + b.height / 2;
         vLines.push(b.x, cx, b.x + b.width);
         hLines.push(b.y, cy, b.y + b.height);
+        centers.push({ x: cx, y: cy });
       } catch {}
     }
     // If a container is provided, convert world-space lines to that container's local space
@@ -137,18 +171,51 @@ class SnapManager {
       const c = options.container;
       const toLocalX = (x: number) => c.toLocal(new Point(x, 0)).x;
       const toLocalY = (y: number) => c.toLocal(new Point(0, y)).y;
-      return {
-        vLines: vLines.map(toLocalX),
-        hLines: hLines.map(toLocalY),
-      };
+      const v = vLines.map(toLocalX);
+      const h = hLines.map(toLocalY);
+      const localCenters = centers.map(c => ({ x: toLocalX(c.x), y: toLocalY(c.y) }));
+      // Add midpoints between object centers to encourage symmetry snapping
+      if (this.prefs.enableMidpoints) this.addMidpoints(localCenters, v, h);
+      return { vLines: v, hLines: h };
     }
+    // World space path (rare): still add midpoints in world units
+    if (this.prefs.enableMidpoints) this.addMidpoints(centers, vLines, hLines);
     return { vLines, hLines };
+  }
+
+  /**
+   * Extend candidate lines with midpoints between objects' centers.
+   * If too many objects, only use neighbor midpoints to keep cost low.
+   */
+  private addMidpoints(centers: Array<{ x: number; y: number }>, vOut: number[], hOut: number[]): void {
+    const n = centers.length;
+    if (n <= 1) return;
+    if (n <= 50) {
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const mx = (centers[i].x + centers[j].x) * 0.5;
+          const my = (centers[i].y + centers[j].y) * 0.5;
+          vOut.push(mx);
+          hOut.push(my);
+        }
+      }
+      return;
+    }
+    // Large scenes: only consecutive neighbors by axis
+    const byX = centers.slice().sort((a, b) => a.x - b.x);
+    for (let i = 0; i < byX.length - 1; i++) {
+      vOut.push((byX[i].x + byX[i + 1].x) * 0.5);
+    }
+    const byY = centers.slice().sort((a, b) => a.y - b.y);
+    for (let i = 0; i < byY.length - 1; i++) {
+      hOut.push((byY[i].y + byY[i + 1].y) * 0.5);
+    }
   }
 
   /**
    * Public: get snap candidates for guides and snapping decisions
    */
-  public getCandidates(options?: { exclude?: any[]; container?: Container }): {
+  public getCandidates(options?: { exclude?: any[]; container?: Container; rect?: Rectangle; margin?: number }): {
     vLines: number[];
     hLines: number[];
     canvas: { v: number[]; h: number[] };
@@ -157,8 +224,18 @@ class SnapManager {
   } {
     const dims = this.getCanvasDimensions();
     const centers = { cx: dims.width / 2, cy: dims.height / 2 };
-    const canvas = { v: [0, centers.cx, dims.width], h: [0, centers.cy, dims.height] };
+    let canvas = { v: [0, centers.cx, dims.width], h: [0, centers.cy, dims.height] };
     const obj = this.collectObjectSnapLines(options);
+    // If a container is provided, convert canvas lines to that container's local space
+    if (options?.container) {
+      const c = options.container;
+      const toLocalX = (x: number) => c.toLocal(new Point(x, 0)).x;
+      const toLocalY = (y: number) => c.toLocal(new Point(0, y)).y;
+      canvas = {
+        v: canvas.v.map(toLocalX),
+        h: canvas.h.map(toLocalY),
+      };
+    }
     return { vLines: obj.vLines, hLines: obj.hLines, canvas, threshold: this.prefs.threshold, dims };
   }
 
@@ -212,6 +289,10 @@ class SnapManager {
         if (typeof (this.prefs as any).equalTolerance !== 'number') this.prefs.equalTolerance = 1;
         if (typeof (this.prefs as any).matchWidth !== 'boolean') this.prefs.matchWidth = true;
         if (typeof (this.prefs as any).matchHeight !== 'boolean') this.prefs.matchHeight = true;
+        if (typeof (this.prefs as any).centerBiasMultiplier !== 'number') this.prefs.centerBiasMultiplier = 1.75;
+        if (typeof (this.prefs as any).enableCenterBias !== 'boolean') this.prefs.enableCenterBias = true;
+        if (typeof (this.prefs as any).enableMidpoints !== 'boolean') this.prefs.enableMidpoints = true;
+        if (typeof (this.prefs as any).enableSymmetryGuides !== 'boolean') this.prefs.enableSymmetryGuides = true;
       }
     } catch {}
   }

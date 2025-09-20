@@ -1,5 +1,6 @@
 import { Container, FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
 import { BaseTool } from '../ToolInterface';
+import { snapManager } from '../SnapManager';
 import { ClickSelection } from './clickSelection';
 import { SelectionClipboard } from './SelectionClipboard';
 import { SelectionOverlay } from './SelectionOverlay';
@@ -121,7 +122,31 @@ export class SelectionTool extends BaseTool {
     }
     if (this.isDraggingGroup && this.overlay.getGroup()) {
       let dx = p.x - this.dragStart.x; let dy = p.y - this.dragStart.y;
-      try { const snapped = (window as any).snapManager?.snapPoint ? (window as any).snapManager.snapPoint(p) : null; if (snapped) { dx = snapped.x - this.dragStart.x; dy = snapped.y - this.dragStart.y; } } catch {}
+      try {
+        // First, snap pointer itself
+        const snapped = snapManager.snapPoint(p, { container, exclude: this.selected });
+        if (snapped) { dx = snapped.x - this.dragStart.x; dy = snapped.y - this.dragStart.y; }
+
+        // Symmetry: also try snapping the selection center to candidates independently of pointer
+        const group = this.overlay.getGroup()!;
+        const gb = group.bounds;
+        const cand = snapManager.getCandidates({ container, exclude: this.selected, rect: group.bounds, margin: 200 });
+        const cx0 = gb.x + gb.width * 0.5;
+        const cy0 = gb.y + gb.height * 0.5;
+        const cxAfter = cx0 + dx;
+        const cyAfter = cy0 + dy;
+        const bias = Math.max(1, snapManager.getPrefs().centerBiasMultiplier || 1);
+        const thr = (snapManager.getPrefs().threshold || 6) * bias;
+        // Find nearest vertical/horizontal candidate to the center
+        let bestVX = cxAfter; let bestVD = thr + 1;
+        const vLines = (cand.canvas.v || []).concat(cand.vLines || []);
+        for (const vx of vLines) { const d = Math.abs(cxAfter - vx); if (d < bestVD && d <= thr) { bestVD = d; bestVX = vx; } }
+        let bestHY = cyAfter; let bestHD = thr + 1;
+        const hLines = (cand.canvas.h || []).concat(cand.hLines || []);
+        for (const hy of hLines) { const d = Math.abs(cyAfter - hy); if (d < bestHD && d <= thr) { bestHD = d; bestHY = hy; } }
+        if (bestVD <= thr) { dx += (bestVX - cxAfter); }
+        if (bestHD <= thr) { dy += (bestHY - cyAfter); }
+      } catch {}
       this.selected.forEach((obj) => { if (obj.position) { obj.position.x += dx; obj.position.y += dy; } }); this.dragStart.x += dx; this.dragStart.y += dy; this.overlay.refreshBoundsOnly(container); try { const b = this.overlay.getGroup()?.bounds; if (b) this.guides.update(container, this.selected, b); } catch {} return;
     }
     if (this.marquee.isActive()) { this.marquee.update(p); return; }

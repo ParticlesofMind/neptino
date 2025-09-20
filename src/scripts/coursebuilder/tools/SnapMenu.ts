@@ -163,10 +163,20 @@ export function bindSnapMenu(perspectiveManager?: any): void {
       const tol = snapMenu.querySelector('[data-snap-equaltol]') as HTMLInputElement | null;
       const mw = snapMenu.querySelector('[data-dim-match-width]') as HTMLInputElement | null;
       const mh = snapMenu.querySelector('[data-dim-match-height]') as HTMLInputElement | null;
+      const mp = snapMenu.querySelector('[data-snap-midpoints]') as HTMLInputElement | null;
+      const cb = snapMenu.querySelector('[data-center-bias]') as HTMLInputElement | null;
+      const cbVal = snapMenu.querySelector('[data-center-bias-value]') as HTMLElement | null;
+      const sg = snapMenu.querySelector('[data-symmetry-guides]') as HTMLInputElement | null;
       if (thr && prefs?.threshold != null) thr.value = String(prefs.threshold);
       if (tol && prefs?.equalTolerance != null) tol.value = String(prefs.equalTolerance);
       if (mw && prefs?.matchWidth != null) mw.checked = !!prefs.matchWidth;
       if (mh && prefs?.matchHeight != null) mh.checked = !!prefs.matchHeight;
+      if (mp && typeof prefs?.enableMidpoints === 'boolean') mp.checked = !!prefs.enableMidpoints;
+      if (cb && typeof prefs?.centerBiasMultiplier === 'number') {
+        cb.value = String(prefs.centerBiasMultiplier);
+        if (cbVal) cbVal.textContent = `×${Number(prefs.centerBiasMultiplier).toFixed(2)}`;
+      }
+      if (sg && typeof prefs?.enableSymmetryGuides === 'boolean') sg.checked = !!prefs.enableSymmetryGuides;
     } catch {}
     console.log('SnapMenu: Initialized successfully with mode:', currentMode);
   } catch (error) {
@@ -180,6 +190,10 @@ export function bindSnapMenu(perspectiveManager?: any): void {
     const tol = snapMenu.querySelector('[data-snap-equaltol]') as HTMLInputElement | null;
     const mw = snapMenu.querySelector('[data-dim-match-width]') as HTMLInputElement | null;
     const mh = snapMenu.querySelector('[data-dim-match-height]') as HTMLInputElement | null;
+    const mp = snapMenu.querySelector('[data-snap-midpoints]') as HTMLInputElement | null;
+    const cb = snapMenu.querySelector('[data-center-bias]') as HTMLInputElement | null;
+    const cbVal = snapMenu.querySelector('[data-center-bias-value]') as HTMLElement | null;
+    const sg = snapMenu.querySelector('[data-symmetry-guides]') as HTMLInputElement | null;
     if (thr) {
       thr.addEventListener('input', () => {
         const v = Math.max(0, Math.min(50, parseInt(thr.value || '0', 10) || 0));
@@ -200,6 +214,23 @@ export function bindSnapMenu(perspectiveManager?: any): void {
     if (mh) {
       mh.addEventListener('change', () => {
         (snapManager as any).setPrefs?.({ matchHeight: !!mh.checked });
+      });
+    }
+    if (mp) {
+      mp.addEventListener('change', () => {
+        (snapManager as any).setPrefs?.({ enableMidpoints: !!mp.checked });
+      });
+    }
+    if (cb) {
+      cb.addEventListener('input', () => {
+        const val = Math.max(1, Math.min(4, parseFloat(cb.value || '1.75') || 1.75));
+        (snapManager as any).setPrefs?.({ centerBiasMultiplier: val });
+        if (cbVal) cbVal.textContent = `×${val.toFixed(2)}`;
+      });
+    }
+    if (sg) {
+      sg.addEventListener('change', () => {
+        (snapManager as any).setPrefs?.({ enableSymmetryGuides: !!sg.checked });
       });
     }
   } catch (e) {

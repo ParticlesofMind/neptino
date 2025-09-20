@@ -47,15 +47,24 @@ export class StockMediaProvider extends BaseProvider {
   }
 
   async search(query: string, options: SearchQueryOptions & { type?: MediaType } = {}): Promise<SearchResult> {
-    const type = (options as any).type as MediaType | undefined;
+    // Prefer explicit type from options, otherwise infer from provider key prefix
+    let type = (options as any).type as MediaType | undefined;
+    if (!type) {
+      const keyPrefix = (this as any).providerKey as string;
+      if (keyPrefix && keyPrefix.includes(':')) {
+        const inferred = keyPrefix.split(':')[0] as MediaType;
+        // Treat 'files' as aggregate (no filtering)
+        if (inferred && inferred !== 'files') type = inferred;
+      }
+    }
     const page = options.page ?? 1;
     const pageSize = options.pageSize ?? 24;
     const q = (query || '').toLowerCase();
 
     const data = await this.loadManifest();
     let items = data.items.slice();
-    // Treat 'files' as aggregate (all types)
-    if (type && type !== 'files') items = items.filter(i => i.type === type);
+    // If a specific type was determined, filter to that type
+    if (type) items = items.filter(i => i.type === type);
     if (q) items = items.filter(i => (i.title || '').toLowerCase().includes(q));
 
     const start = (page - 1) * pageSize;

@@ -24,7 +24,7 @@ export class DisplayObjectManager {
   constructor(rootContainer: Container) {
     this.rootContainer = rootContainer;
     this.root = rootContainer; // Legacy alias
-    console.log('🖼️ DisplayObjectManager initialized');
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('🖼️ DisplayObjectManager initialized'); } catch {}
   }
 
   /**
@@ -64,11 +64,7 @@ export class DisplayObjectManager {
     // Legacy compatibility
     this.objects.add(displayObject);
     
-    console.log('➕ Added display object:', {
-      id,
-      type: displayObject.constructor.name,
-      parentChildren: targetParent.children.length
-    });
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('➕ Added display object:', { id, type: displayObject.constructor.name, parentChildren: targetParent.children.length }); } catch {}
     // Notify UI layers panel
     try { document.dispatchEvent(new CustomEvent('displayObject:added', { detail: { id, object: displayObject } })); } catch {}
     
@@ -119,10 +115,7 @@ export class DisplayObjectManager {
       try { displayObject.destroy(); } catch {}
     }
     
-    console.log('🗑️ Removed display object:', {
-      id: typeof id === 'string' ? id : 'direct',
-      type: displayObject.constructor.name
-    });
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('🗑️ Removed display object:', { id: typeof id === 'string' ? id : 'direct', type: displayObject.constructor.name }); } catch {}
     try { document.dispatchEvent(new CustomEvent('displayObject:removed', { detail: { id } })); } catch {}
     
     return true;
@@ -151,7 +144,7 @@ export class DisplayObjectManager {
    * Clear all display objects
    */
   public clear(): void {
-    console.log('🧹 Clearing all display objects...');
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('🧹 Clearing all display objects...'); } catch {}
     
     // Remove all objects
     for (const [, displayObject] of this.allObjects) {
@@ -165,7 +158,7 @@ export class DisplayObjectManager {
     this.allObjects.clear();
     this.objects.clear();
     
-    console.log('✅ All display objects cleared');
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('✅ All display objects cleared'); } catch {}
   }
 
   /**
@@ -173,6 +166,7 @@ export class DisplayObjectManager {
    */
   public createGraphics(parent?: Container): { graphics: Graphics; id: string } {
     const graphics = new Graphics();
+    try { (graphics as any).eventMode = 'none'; (graphics as any).interactiveChildren = false; } catch {}
     const id = this.add(graphics, parent);
     
     return { graphics, id };
@@ -209,7 +203,7 @@ export class DisplayObjectManager {
     parent.removeChild(displayObject);
     parent.addChild(displayObject);
     
-    console.log('⬆️ Brought to front:', id);
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('⬆️ Brought to front:', id); } catch {}
     return true;
   }
 
@@ -224,7 +218,7 @@ export class DisplayObjectManager {
     parent.removeChild(displayObject);
     parent.addChildAt(displayObject, 0);
     
-    console.log('⬇️ Sent to back:', id);
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('⬇️ Sent to back:', id); } catch {}
     return true;
   }
 
@@ -239,7 +233,7 @@ export class DisplayObjectManager {
     try {
       if (typeof parent.setChildIndex === 'function') parent.setChildIndex(displayObject, newIdx);
       else { parent.removeChild(displayObject); parent.addChildAt(displayObject, newIdx); }
-      console.log('⤴️ Brought forward:', { id, from: idx, to: newIdx });
+      try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('⤴️ Brought forward:', { id, from: idx, to: newIdx }); } catch {}
       return true;
     } catch { return false; }
   }
@@ -255,7 +249,7 @@ export class DisplayObjectManager {
     try {
       if (typeof parent.setChildIndex === 'function') parent.setChildIndex(displayObject, newIdx);
       else { parent.removeChild(displayObject); parent.addChildAt(displayObject, newIdx); }
-      console.log('⤵️ Sent backward:', { id, from: idx, to: newIdx });
+      try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('⤵️ Sent backward:', { id, from: idx, to: newIdx }); } catch {}
       return true;
     } catch { return false; }
   }

@@ -26,14 +26,14 @@ export class MediaManager {
     const env = resolveConfig();
 
     // Lazy provider factories (registered but initialized when used)
-    // Stock providers for all major types
-    this.register('images:stock', () => new StockMediaProvider('stock', {}, this.cache, this.rateLimiter));
-    this.register('videos:stock', () => new StockMediaProvider('stock', {}, this.cache, this.rateLimiter));
-    this.register('audio:stock', () => new StockMediaProvider('stock', {}, this.cache, this.rateLimiter));
-    this.register('text:stock', () => new StockMediaProvider('stock', {}, this.cache, this.rateLimiter));
-    this.register('plugins:stock', () => new StockMediaProvider('stock', {}, this.cache, this.rateLimiter));
-    this.register('links:stock', () => new StockMediaProvider('stock', {}, this.cache, this.rateLimiter));
-    this.register('files:stock', () => new StockMediaProvider('stock', {}, this.cache, this.rateLimiter));
+    // Stock providers for all major types (pass full key so provider can infer type)
+    this.register('images:stock', () => new StockMediaProvider('images:stock', {}, this.cache, this.rateLimiter));
+    this.register('videos:stock', () => new StockMediaProvider('videos:stock', {}, this.cache, this.rateLimiter));
+    this.register('audio:stock', () => new StockMediaProvider('audio:stock', {}, this.cache, this.rateLimiter));
+    this.register('text:stock', () => new StockMediaProvider('text:stock', {}, this.cache, this.rateLimiter));
+    this.register('plugins:stock', () => new StockMediaProvider('plugins:stock', {}, this.cache, this.rateLimiter));
+    this.register('links:stock', () => new StockMediaProvider('links:stock', {}, this.cache, this.rateLimiter));
+    this.register('files:stock', () => new StockMediaProvider('files:stock', {}, this.cache, this.rateLimiter));
     this.register('audio:freesound', () => new FreesoundProvider('freesound', env.freesound, this.cache, this.rateLimiter));
     this.register('images:unsplash', () => new UnsplashProvider('unsplash', env.unsplash, this.cache, this.rateLimiter));
     this.register('videos:pixabay', () => new PixabayVideoProvider('pixabay', env.pixabay as any, this.cache, this.rateLimiter));

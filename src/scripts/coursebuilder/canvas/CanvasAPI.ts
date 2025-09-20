@@ -26,6 +26,16 @@ export class CanvasAPI {
   private displayManager: DisplayObjectManager | null = null;
   private toolManager: ToolManager | null = null;
   private initialized: boolean = false;
+  // Placement configuration per media type
+  private placementMode: Record<string, 'center' | 'topleft'> = {
+    images: 'center',
+    videos: 'center',
+    audio: 'center',
+    text: 'center',
+    files: 'topleft',
+    plugins: 'topleft',
+    links: 'topleft',
+  };
 
   constructor(containerSelector: string) {
     this.pixiApp = new PixiApp(containerSelector);
@@ -105,6 +115,15 @@ export class CanvasAPI {
    */
   public getApp(): Application | null {
     return this.pixiApp.getApp();
+  }
+
+  /** Configure placement mode for a media type */
+  public setPlacementMode(type: string, mode: 'center' | 'topleft') {
+    this.placementMode[type] = mode;
+  }
+
+  private getPlacementMode(type: string): 'center' | 'topleft' {
+    return this.placementMode[type] || 'center';
   }
 
   /**
@@ -266,6 +285,9 @@ export class CanvasAPI {
     try {
       const texture = await Assets.load(url);
       const sprite = new Sprite(texture);
+      if (this.getPlacementMode('images') === 'center') {
+        try { (sprite as any).anchor?.set?.(0.5); } catch {}
+      }
       sprite.x = x;
       sprite.y = y;
       // Normalize initial size: cap short edge to 200px (no upscaling)
@@ -292,8 +314,17 @@ export class CanvasAPI {
       console.warn('⚠️ Canvas not initialized - cannot add text');
       return null;
     }
-    const { id } = this.displayManager.createText(text, style);
-    this.displayManager.setPosition(id, x, y);
+    const created = this.displayManager.createText(text, style);
+    const id = created.id;
+    if (this.getPlacementMode('text') === 'center') {
+      try { (created.text as any).anchor?.set?.(0.5); } catch {}
+    }
+    try {
+      created.text.x = x;
+      created.text.y = y;
+    } catch {
+      this.displayManager.setPosition(id, x, y);
+    }
     return id;
   }
 
@@ -355,6 +386,9 @@ export class CanvasAPI {
       .fill({ color: 0x2a2a2a })
       .stroke({ color: 0x059669, width: 2 });
     container.addChild(placeholder);
+    if (this.getPlacementMode('videos') === 'center') {
+      try { container.pivot.set(contentW / 2, contentH / 2); } catch {}
+    }
     
     // Add video icon in center as placeholder - sized appropriately for smaller video
     const videoIcon = new Text({
@@ -443,6 +477,9 @@ export class CanvasAPI {
       videoSprite.texture = texture;
       videoSprite.width = contentW;
       videoSprite.height = contentH;
+      if (this.getPlacementMode('videos') === 'center') {
+        try { container.pivot.set(contentW / 2, contentH / 2); } catch {}
+      }
 
       // Scale down the whole container so short edge is capped (like images)
       const shortEdge = Math.min(contentW, contentH);
@@ -463,6 +500,7 @@ export class CanvasAPI {
         titleText.y = contentH - titleText.height - 7;
         drawPlayButton();
         playButton.position.set(contentW / 2, contentH / 2);
+        // Keep only central play button; no controls to layout
       } catch {}
 
       videoSprite.visible = true;
@@ -589,6 +627,8 @@ export class CanvasAPI {
     });
     
     container.addChild(playButton);
+
+    // No additional controls or progress: keep only central play button
     
     // Store metadata for future functionality
     (container as any).metadata = {
@@ -623,43 +663,45 @@ export class CanvasAPI {
 
       const width = 220;
       const height = 56;
+      if (this.getPlacementMode('audio') === 'center') {
+        try { container.pivot.set(width / 2, height / 2); } catch {}
+      }
 
-      // Background panel
+      // Background panel (white with blue border)
       const panel = new Graphics()
         .roundRect(0, 0, width, height, 8)
-        .fill({ color: 0xfffbeb })
-        .stroke({ color: 0xd97706, width: 2, alpha: 0.9 });
+        .fill({ color: 0xffffff })
+        .stroke({ color: 0x80bfff, width: 2, alpha: 1 });
       container.addChild(panel);
 
-      // Play/Pause icon (simple triangle / square)
+      // Play/Pause icon button (blue circle with white symbol)
       const icon = new Graphics();
+      icon.eventMode = 'static';
+      icon.cursor = 'pointer';
       const drawPlay = () => {
         icon.clear();
-        icon.poly([18, 16, 18, height - 16, 46, height / 2]);
-        icon.fill({ color: 0xd97706 });
+        icon.circle(32, height / 2, 14).fill({ color: 0x80bfff });
+        icon.poly([27, height / 2 - 8, 27, height / 2 + 8, 41, height / 2]).fill({ color: 0xffffff });
       };
       const drawPause = () => {
         icon.clear();
-        icon.rect(18, 16, 10, height - 32);
-        icon.rect(36, 16, 10, height - 32);
-        icon.fill({ color: 0xd97706 });
+        icon.circle(32, height / 2, 14).fill({ color: 0x80bfff });
+        icon.rect(27, height / 2 - 8, 6, 16).fill({ color: 0xffffff });
+        icon.rect(35, height / 2 - 8, 6, 16).fill({ color: 0xffffff });
       };
       drawPlay();
+      // Avoid tools intercepting the click
+      icon.on('pointerdown', (ev: any) => ev.stopPropagation());
       container.addChild(icon);
 
-      // Title text
+      // Title text in black
       const text = new Text({
         text: title,
-        style: { fontFamily: 'Arial', fontSize: 13, fill: 0x7c2d12 },
+        style: { fontFamily: 'Arial', fontSize: 13, fill: 0x000000 },
       });
-      text.x = 52;
+      text.x = 62;
       text.y = 18;
       container.addChild(text);
-
-      // Simple progress bar background + fill
-      const progressBg = new Graphics().roundRect(52, height - 16, width - 66, 6, 3).fill({ color: 0xfde68a });
-      const progress = new Graphics().roundRect(52, height - 16, 0, 6, 3).fill({ color: 0xf59e0b });
-      container.addChild(progressBg, progress);
 
       // Underlying HTMLAudioElement for playback
       const audio = new Audio(url);
@@ -675,15 +717,14 @@ export class CanvasAPI {
         }
       };
 
-      container.on('pointertap', toggle);
+      // Click icon to toggle playback
+      icon.on('pointertap', toggle);
 
       audio.addEventListener('play', () => { playing = true; drawPause(); });
       audio.addEventListener('pause', () => { playing = false; drawPlay(); });
-      audio.addEventListener('timeupdate', () => {
-        const pct = audio.duration ? Math.min(1, Math.max(0, audio.currentTime / audio.duration)) : 0;
-        const w = (width - 66) * pct;
-        progress.clear().roundRect(52, height - 16, w, 6, 3).fill({ color: 0xf59e0b });
-      });
+      // No progress updates drawn
+
+      // No additional controls; keep only basic play button
 
       (container as any).metadata = { type: 'audio', url, title, element: audio };
 
@@ -764,6 +805,40 @@ export class CanvasAPI {
     }
 
     this.layers.clearLayer(layerName);
+  }
+
+  /**
+   * Show a transient snap/placement hint around an object by id
+   */
+  public showSnapHintForId(id: string): void {
+    try {
+      if (!this.displayManager || !this.layers) return;
+      const obj = this.displayManager.get(id as any);
+      if (!obj) return;
+      const uiLayer = this.layers.getLayer('ui');
+      const bounds = obj.getBounds(); // global bounds; layers share stage space
+      const gfx = new Graphics();
+      gfx.roundRect(bounds.x - 3, bounds.y - 3, bounds.width + 6, bounds.height + 6, 6)
+        .stroke({ color: 0x2563eb, width: 3, alpha: 1 });
+      gfx.zIndex = 9999;
+      uiLayer.addChild(gfx);
+
+      // Fade-out animation over ~400ms
+      const app = this.getApp();
+      if (!app) return;
+      let t = 0;
+      const dur = 0.4; // seconds
+      const cb = (delta: number) => {
+        t += (app.ticker.deltaMS || 16) / 1000;
+        const p = Math.min(1, t / dur);
+        gfx.alpha = 1 - p;
+        if (p >= 1) {
+          app.ticker.remove(cb);
+          try { uiLayer.removeChild(gfx); gfx.destroy(); } catch {}
+        }
+      };
+      app.ticker.add(cb);
+    } catch {}
   }
 
   /**

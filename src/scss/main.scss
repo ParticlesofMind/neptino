@@ -20,7 +20,7 @@
 // BASE (Foundation styles that affect the whole document)
 // ==========================================================================
 @use 'base/typography';           // Typography system with font variables
-@use 'base/media';                // Media queries and responsive behavior
+// @use 'base/media';                // Media queries and responsive behavior
 
 // LAYOUT (Major structural components)
 // ==========================================================================
@@ -62,3 +62,4 @@
 @use 'components/modals';         // Modal/overlay components
 @use 'components/tables';
 @use 'components/cursors';        // Custom cursors for tools
+@use 'components/media';          // Media cards

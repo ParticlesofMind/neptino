@@ -101,7 +101,8 @@ export class ShapesTool extends BaseTool {
 
         // Create new graphics object with professional styling
         this.currentShape = new Graphics();
-        this.currentShape.eventMode = "static";
+        // Disable event system for performance; we do manual hit testing for selection
+        this.currentShape.eventMode = "none";
         // Tag for selection-based option routing
         (this.currentShape as any).__toolType = 'shapes';
 
