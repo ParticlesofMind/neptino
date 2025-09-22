@@ -46,15 +46,7 @@ export class Scene {
   private duration: number;
   private borderGraphics: Graphics;
   private controlsContainer!: Container;
-  private playbackOverlay!: HTMLDivElement; // DOM overlay for controls
-  private playButton!: HTMLButtonElement;
-  private backButton!: HTMLButtonElement;
-  private fwdButton!: HTMLButtonElement;
   private hideTrajButton!: HTMLButtonElement;
-  private timelineBar!: HTMLDivElement;
-  private timelineProgress!: HTMLDivElement;
-  private timelineHandle!: HTMLDivElement;
-  private timelineWidth: number = 0;
   private isTimelineDragging: boolean = false;
   private isSelected: boolean = false;
   private animationPaths: Map<string, AnimationPath> = new Map();
@@ -168,59 +160,6 @@ export class Scene {
     this.contentMask.clear();
     this.contentMask.rect(0, 0, this.bounds.width, this.bounds.height);
     this.contentMask.fill({ color: 0xffffff });
-  }
-
-  private layoutPlaybackControls(): void {
-    if (!this.playbackOverlay) return;
-    
-    // Ensure controls are appended to DOM (in case constructor couldn't do it)
-    this.appendControlsToDOM();
-    
-    // Calculate timeline width - use scene width as reference but with padding
-    this.timelineWidth = Math.max(200, this.bounds.width - 40); // 20px padding on each side
-    
-    const app = animationState.getApp();
-    const canvasElement = app?.canvas;
-    
-    if (canvasElement) {
-      // Use the EXACT same logic as the drag handle
-      const w = this.bounds.width;
-      const h = this.bounds.height;
-      const midX = w / 2;
-      
-      // CRITICAL: Account for canvas parent offset!
-      const canvasParent = canvasElement.parentElement;
-      const parentRect = canvasParent?.getBoundingClientRect();
-      const parentOffsetX = parentRect?.left || 0;
-      const parentOffsetY = parentRect?.top || 0;
-      
-      // Position controls just below the scene (like the original plan)
-      // The drag handle should be BELOW the controls, not at the same level
-      const controlsX = parentOffsetX + this.bounds.x + midX;
-      const controlsY = parentOffsetY + this.bounds.y + h + 20; // Just below scene
-      
-      this.playbackOverlay.style.position = 'absolute';
-      this.playbackOverlay.style.top = `${controlsY}px`;
-      this.playbackOverlay.style.left = `${controlsX}px`;
-      this.playbackOverlay.style.transform = 'translateX(-50%)'; // This centers it on the point
-      this.playbackOverlay.style.width = 'auto';
-      this.playbackOverlay.style.zIndex = '100';
-      
-      console.log('Controls positioned just below scene, drag handle below controls:', { 
-        bounds: this.bounds,
-        midX,
-        parentOffsetX,
-        parentOffsetY,
-        controlsX: `${parentOffsetX} + ${this.bounds.x} + ${midX} = ${controlsX}`,
-        controlsY: `${parentOffsetY} + ${this.bounds.y} + ${h} + 20 = ${controlsY}`,
-        dragHandleY: `scene(${h}) + gap(20) + controls(80) + gap(10) = ${h + 20 + 80 + 10}`,
-        explanation: 'Controls at scene bottom + 20px, drag handle below controls'
-      });
-    }
-    
-    // Update timeline progress
-    this.drawTimeline(this.timelineWidth);
-    this.drawTimelineHandle();
   }
 
   private registerSceneControl(obj: Graphics | Container, cursor?: string): void {
@@ -853,17 +792,6 @@ export class Scene {
     this.drawPlayIcon(playButton);
   }
 
-  private updateHideButtonIcon(): void {
-    const hideButton = (this.controlsContainer as any)?.hideButton;
-    if (!hideButton) return;
-    
-    // Remove old icon  
-    hideButton.children.slice(1).forEach((child: any) => hideButton.removeChild(child));
-    
-    // Redraw icon
-    this.drawEyeIcon(hideButton, this.hideTrajDuringPlayback);
-  }
-
   private updateTimelineProgress(): void {
     const timelineProgress = (this.controlsContainer as any)?.timelineProgress;
     const timelineHandle = (this.controlsContainer as any)?.timelineHandle;
@@ -889,154 +817,6 @@ export class Scene {
     });
   }
 
-  private appendControlsToDOM(): void {
-    if (this.playbackOverlay.parentElement) {
-      // Already appended
-      return;
-    }
-    
-    // Append overlay to the canvas parent element
-    const app = animationState.getApp();
-    const canvasElement = app?.canvas;
-    const canvasParent = canvasElement?.parentElement;
-    
-    console.log('Animation app:', app);
-    console.log('Canvas element:', canvasElement);
-    console.log('Canvas parent:', canvasParent);
-    
-    if (canvasParent) {
-      canvasParent.style.position = 'relative'; // Ensure parent can contain positioned overlay
-      canvasParent.appendChild(this.playbackOverlay);
-      console.log('Scene controls appended to canvas parent:', canvasParent);
-    } else {
-      console.warn('Could not find canvas parent for scene controls, trying fallback...');
-      // Fallback: try to append to document body with fixed positioning
-      document.body.appendChild(this.playbackOverlay);
-      this.playbackOverlay.style.position = 'fixed';
-      this.playbackOverlay.style.bottom = '20px';
-      this.playbackOverlay.style.left = '50%';
-      this.playbackOverlay.style.transform = 'translateX(-50%)';
-      this.playbackOverlay.style.zIndex = '1000';
-      console.log('Scene controls added to body as fallback');
-    }
-  }
-
-  private createTimelineElements(playbackContainer: HTMLDivElement) {
-    console.log('Creating timeline elements...');
-    
-    // Timeline container
-    const timelineContainer = document.createElement('div');
-    timelineContainer.className = 'scene__timeline';
-    
-    // Timeline bar (background)
-    this.timelineBar = document.createElement('div');
-    this.timelineBar.className = 'scene__timeline-bar';
-    
-    // Timeline progress (foreground)
-    this.timelineProgress = document.createElement('div');
-    this.timelineProgress.className = 'scene__timeline-progress';
-    
-    // Timeline handle (scrubber)
-    this.timelineHandle = document.createElement('div');
-    this.timelineHandle.className = 'scene__timeline-handle';
-    
-    // Assemble timeline
-    this.timelineBar.appendChild(this.timelineProgress);
-    this.timelineBar.appendChild(this.timelineHandle);
-    timelineContainer.appendChild(this.timelineBar);
-    
-    playbackContainer.appendChild(timelineContainer);
-    
-    console.log('Timeline elements created and appended');
-    
-    // Add timeline interaction
-    this.addTimelineInteraction();
-  }
-
-  private createControlButtons(playbackContainer: HTMLDivElement) {
-    console.log('Creating control buttons...');
-    
-    const controlsContainer = document.createElement('div');
-    controlsContainer.className = 'scene__controls';
-    
-    // Back button
-    this.backButton = this.createDOMButton('scene__button scene__button--back', 
-      '/src/assets/icons/chevron-left-icon.svg', () => this.nudgeTimeSeconds(-0.5));
-    
-    // Play button  
-    this.playButton = this.createDOMButton('scene__button scene__button--play scene__button--large',
-      '/src/assets/icons/play-icon.svg', () => this.togglePlayback());
-    
-    // Forward button
-    this.fwdButton = this.createDOMButton('scene__button scene__button--forward',
-      '/src/assets/icons/chevron-right-icon.svg', () => this.nudgeTimeSeconds(0.5));
-    
-    // Hide trajectory button
-    this.hideTrajButton = this.createDOMButton('scene__button scene__button--hide-traj',
-      '/src/assets/icons/eye-off-icon.svg', () => this.toggleTrajectoryVisibility());
-    
-    // Assemble controls
-    controlsContainer.appendChild(this.backButton);
-    controlsContainer.appendChild(this.playButton);
-    controlsContainer.appendChild(this.fwdButton);
-    controlsContainer.appendChild(this.hideTrajButton);
-    
-    playbackContainer.appendChild(controlsContainer);
-    
-    console.log('Control buttons created and appended:', {
-      backButton: this.backButton,
-      playButton: this.playButton,
-      fwdButton: this.fwdButton,
-      hideTrajButton: this.hideTrajButton
-    });
-  }
-
-  private createDOMButton(className: string, iconPath: string, onClick: () => void): HTMLButtonElement {
-    const button = document.createElement('button');
-    button.className = className;
-    button.addEventListener('click', onClick);
-    
-    const icon = document.createElement('img');
-    icon.src = iconPath;
-    icon.alt = '';
-    icon.className = 'scene__button-icon';
-    
-    button.appendChild(icon);
-    return button;
-  }
-
-  private addTimelineInteraction() {
-    let isDragging = false;
-    
-    const handleTimelineClick = (event: MouseEvent) => {
-      const rect = this.timelineBar.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const percentage = Math.max(0, Math.min(1, x / rect.width));
-      this.setTime(percentage * this.duration);
-    };
-    
-    const handleMouseDown = (event: MouseEvent) => {
-      isDragging = true;
-      handleTimelineClick(event);
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    };
-    
-    const handleMouseMove = (event: MouseEvent) => {
-      if (isDragging) {
-        handleTimelineClick(event);
-      }
-    };
-    
-    const handleMouseUp = () => {
-      isDragging = false;
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-    
-    this.timelineBar.addEventListener('mousedown', handleMouseDown);
-  }
-
   private updateHideToggleIcon(): void {
     if (!this.hideTrajButton) return;
     const icon = this.hideTrajButton.querySelector('img') as HTMLImageElement;
@@ -1045,41 +825,10 @@ export class Scene {
     }
   }
 
-  private drawPlayButton(): void {
-    if (!this.playButton) return;
-    const icon = this.playButton.querySelector('img') as HTMLImageElement;
-    if (icon) {
-      icon.src = this.isPlaying ? '/src/assets/icons/pause-icon.svg' : '/src/assets/icons/play-icon.svg';
-    }
-  }
-
   private toggleTrajectoryVisibility(): void {
     this.hideTrajDuringPlayback = !this.hideTrajDuringPlayback;
     this.updateHideToggleIcon();
     this.updatePathVisibility();
-  }
-
-  private drawTimeline(width: number): void {
-    // For DOM timeline, we update styles instead of drawing
-    const safeWidth = Math.max(1, width);
-    
-    if (this.timelineBar) {
-      this.timelineBar.style.width = `${safeWidth}px`;
-    }
-    
-    // Update progress fill
-    if (this.timelineProgress) {
-      const progress = safeWidth * this.t;
-      this.timelineProgress.style.width = `${progress}px`;
-    }
-  }
-
-  private drawTimelineHandle(): void {
-    // For DOM handle, position is handled via CSS positioning
-    if (this.timelineHandle && this.timelineBar) {
-      const progress = this.timelineBar.offsetWidth * this.t;
-      this.timelineHandle.style.left = `${progress}px`;
-    }
   }
 
   private attachGlobalPointerListeners(): void {

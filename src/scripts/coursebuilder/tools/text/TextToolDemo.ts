@@ -101,24 +101,20 @@ export class TextToolDemo {
 }
 
 // Auto-initialize demo when DOM is ready (if in browser environment)
+// Disable auto-initialize in production. Opt-in via window.__TEXT_TOOL_DEMO__ or ?textDemo=1
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   document.addEventListener('DOMContentLoaded', async () => {
-    // Only initialize if we're on a page with canvas container
-    if (document.querySelector('#canvas-container')) {
-      console.log('📝 Auto-initializing TextToolDemo...');
-      
-      try {
-        const demo = new TextToolDemo();
-        await demo.init();
-        await demo.testTextTool();
-        
-        // Make demo globally accessible for manual testing
-        (window as any).textToolDemo = demo;
-        console.log('📝 Demo available globally as window.textToolDemo');
-        
-      } catch (error) {
-        console.error('❌ Failed to auto-initialize demo:', error);
-      }
+    try {
+      const enabled = (window as any).__TEXT_TOOL_DEMO__ === true || /(?:^|[?&])textDemo=1(?:&|$)/.test(location.search);
+      if (!enabled) return;
+      if (!document.querySelector('#canvas-container')) return;
+      console.log('📝 Auto-initializing TextToolDemo (opt-in)...');
+      const demo = new TextToolDemo();
+      await demo.init();
+      await demo.testTextTool();
+      (window as any).textToolDemo = demo;
+    } catch (error) {
+      console.error('❌ Failed to auto-initialize demo:', error);
     }
   });
 }

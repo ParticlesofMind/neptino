@@ -16,10 +16,11 @@ export class SimplePerspectiveManager {
     
     // Zoom settings
     private zoomLevel: number = 1.0; // 100%
+    private userZoomLocked: boolean = false; // stop auto-fit after user changes zoom
     private readonly ZOOM_STEP = 0.2; // 20%
     private readonly MIN_ZOOM = 0.2; // 20%
     private readonly MAX_ZOOM = 2.0; // 200%
-    private readonly GRAB_THRESHOLD = 1.2; // 120%
+    // GRAB_THRESHOLD removed - panning now works at any zoom level
     
     // Pan state
     private isPanMode: boolean = false;
@@ -28,8 +29,20 @@ export class SimplePerspectiveManager {
     private panOffset: { x: number; y: number } = { x: 0, y: 0 };
     private gridEnabled: boolean = false;
     
+    // Spacebar pan state
+    private isSpacebarPressed: boolean = false;
+    private isSpacebarPanning: boolean = false;
+    private wasToolActiveBeforeSpacebar: string | null = null;
+    
+    // Middle mouse button pan state
+    private isMiddleMousePanning: boolean = false;
+    
     // Grid overlay element
     private gridOverlay: HTMLElement | null = null;
+
+    // Bound methods to prevent multiple event listener issues
+    private boundKeyboardHandler = this.handleKeyboardShortcuts.bind(this);
+    private boundKeyupHandler = this.handleKeyup.bind(this);
 
     constructor() {
         this.initializePerspective();
@@ -41,6 +54,34 @@ export class SimplePerspectiveManager {
      */
     private initializePerspective(): void {
         this.canvasContainer = document.getElementById('canvas-container');
+        
+        // Debug browser and page state
+        console.log('🌐 Browser/Page Debug:', {
+            devicePixelRatio: window.devicePixelRatio,
+            outerWidth: window.outerWidth,
+            innerWidth: window.innerWidth,
+            visualViewport: window.visualViewport ? {
+                width: window.visualViewport.width,
+                height: window.visualViewport.height,
+                scale: window.visualViewport.scale
+            } : 'not supported',
+            documentElement: {
+                clientWidth: document.documentElement.clientWidth,
+                scrollWidth: document.documentElement.scrollWidth
+            }
+        });
+        
+        if (this.canvasContainer) {
+            // Make canvas container focusable for keyboard shortcuts
+            this.canvasContainer.setAttribute('tabindex', '0');
+            
+            // Focus canvas container when clicked to enable keyboard shortcuts
+            this.canvasContainer.addEventListener('click', () => {
+                this.canvasContainer?.focus();
+            });
+            
+            console.log('🎨 Canvas container found and configured for focus');
+        }
         
         if (!this.canvasContainer) {
             console.warn('Canvas container not found for perspective controls');
@@ -64,8 +105,19 @@ export class SimplePerspectiveManager {
             this.canvas = this.canvasContainer.querySelector('canvas');
             if (this.canvas) {
                 this.setupCanvasInteractions();
-                console.log('🎨 Canvas found and interactions set up');
+                console.log('🎨 Canvas found and interactions set up:', {
+                    canvas: this.canvas.tagName,
+                    canvasClass: this.canvas.className,
+                    canvasId: this.canvas.id,
+                    containerClass: this.canvasContainer.className,
+                    containerId: this.canvasContainer.id
+                });
+                // On first mount, if canvas is wider than its container, fit it down
+                setTimeout(() => {
+                    try { this.fitToContainer(); } catch {}
+                }, 50);
             } else {
+                console.log('🔍 Canvas not found yet, retrying in 100ms...');
                 // Try again later if canvas not found
                 setTimeout(() => this.findCanvas(), 100);
             }
@@ -87,8 +139,11 @@ export class SimplePerspectiveManager {
         // Mouse wheel zoom on canvas only
         this.canvas.addEventListener('wheel', this.handleWheelZoom.bind(this), { passive: false });
 
-        // Prevent context menu on canvas
+        // Prevent context menu and middle mouse default behavior on canvas
         this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        this.canvas.addEventListener('auxclick', (e) => {
+            if (e.button === 1) e.preventDefault(); // Prevent middle mouse default behavior
+        });
     }
 
     /**
@@ -115,10 +170,24 @@ export class SimplePerspectiveManager {
             element.addEventListener('click', this.handlePerspectiveAction.bind(this));
         });
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', this.handleKeyboardShortcuts.bind(this));
+        // Remove any existing keyboard listeners to prevent duplicates
+        document.removeEventListener('keydown', this.boundKeyboardHandler, true);
+        document.removeEventListener('keyup', this.boundKeyupHandler, true);
+        
+        // Keyboard shortcuts - use bound method to maintain context
+        // Use capture phase to intercept before browser default zoom handling
+        document.addEventListener('keydown', this.boundKeyboardHandler, { capture: true, passive: false });
+        document.addEventListener('keyup', this.boundKeyupHandler, { capture: true, passive: false });
+        
+        console.log('⌨️ Keyboard shortcuts bound for zoom controls');
         
         // Note: Wheel zoom is bound directly to canvas in setupCanvasInteractions()
+        // Refit on window resize if user hasn't adjusted zoom manually
+        window.addEventListener('resize', () => {
+            if (!this.userZoomLocked) {
+                this.fitToContainer();
+            }
+        });
     }
 
     /**
@@ -165,36 +234,130 @@ export class SimplePerspectiveManager {
         
         if (isInputElement) return;
 
+        // Handle spacebar for temporary pan mode
+        if (event.code === 'Space') {
+            if (!this.isSpacebarPressed) {
+                this.activateSpacebarPan();
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+        }
+
         const isCtrlOrCmd = event.ctrlKey || event.metaKey;
 
-        switch (event.key) {
-            case '+':
-            case '=':
-                if (isCtrlOrCmd) {
-                    event.preventDefault();
-                    this.zoomIn();
-                }
-                break;
-            case '-':
-                if (isCtrlOrCmd) {
-                    event.preventDefault();
-                    this.zoomOut();
-                }
-                break;
-            case '0':
-                if (isCtrlOrCmd) {
-                    event.preventDefault();
-                    this.resetView();
-                }
-                break;
-            case 'g':
-                if (isCtrlOrCmd && event.shiftKey) {
-                    event.preventDefault();
-                    const gridButton = document.querySelector('[data-perspective="grid"]') as HTMLElement;
-                    if (gridButton) this.toggleGrid(gridButton);
-                }
-                break;
+        // Handle all possible zoom in shortcuts
+        if (isCtrlOrCmd && (
+            event.key === '+' || 
+            event.key === '=' || 
+            event.code === 'NumpadAdd' ||
+            event.code === 'Equal' ||
+            event.code === 'NumpadEqual'
+        )) {
+            console.log('🔍 Zoom in shortcut detected');
+            event.preventDefault();
+            event.stopPropagation();
+            this.zoomIn();
+            return;
         }
+
+        // Handle all possible zoom out shortcuts
+        if (isCtrlOrCmd && (
+            event.key === '-' || 
+            event.code === 'NumpadSubtract' ||
+            event.code === 'Minus'
+        )) {
+            console.log('🔍 Zoom out shortcut detected');
+            event.preventDefault();
+            event.stopPropagation();
+            this.zoomOut();
+            return;
+        }
+
+        // Handle reset view shortcut
+        if (isCtrlOrCmd && (event.key === '0' || event.code === 'Numpad0' || event.code === 'Digit0')) {
+            event.preventDefault();
+            event.stopPropagation();
+            this.resetView();
+            return;
+        }
+
+        // Handle grid toggle shortcut
+        if (isCtrlOrCmd && event.shiftKey && event.key === 'g') {
+            event.preventDefault();
+            event.stopPropagation();
+            const gridButton = document.querySelector('[data-perspective="grid"]') as HTMLElement;
+            if (gridButton) this.toggleGrid(gridButton);
+            return;
+        }
+    }
+
+    /**
+     * Handle keyup events (mainly for spacebar release)
+     */
+    private handleKeyup(event: KeyboardEvent): void {
+        // Only handle spacebar release for pan mode
+        if (event.code === 'Space' && this.isSpacebarPressed) {
+            this.deactivateSpacebarPan();
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    }
+
+    /**
+     * Activate temporary spacebar pan mode
+     */
+    private activateSpacebarPan(): void {
+        if (this.isSpacebarPressed) return; // Already active
+        
+        this.isSpacebarPressed = true;
+        
+        // Store the currently active tool
+        const toolStateManager = (window as any).toolStateManager;
+        if (toolStateManager) {
+            this.wasToolActiveBeforeSpacebar = toolStateManager.getCurrentTool();
+        }
+        
+        // Temporarily disable drawing events
+        const canvasAPI = (window as any).canvasAPI;
+        if (canvasAPI && typeof canvasAPI.disableDrawingEvents === 'function') {
+            canvasAPI.disableDrawingEvents();
+        }
+        
+        // Change cursor to grab
+        this.updateCanvasCursor('grab');
+        
+        console.log('🖐️ Spacebar pan mode activated');
+    }
+
+    /**
+     * Deactivate spacebar pan mode and restore previous tool
+     */
+    private deactivateSpacebarPan(): void {
+        if (!this.isSpacebarPressed) return; // Not active
+        
+        this.isSpacebarPressed = false;
+        this.isSpacebarPanning = false;
+        
+        // Restore cursor
+        this.updateCanvasCursor('');
+        
+        // Re-enable drawing events
+        const canvasAPI = (window as any).canvasAPI;
+        if (canvasAPI && typeof canvasAPI.enableDrawingEvents === 'function') {
+            canvasAPI.enableDrawingEvents();
+        }
+        
+        // Restore the previous tool
+        if (this.wasToolActiveBeforeSpacebar) {
+            const toolStateManager = (window as any).toolStateManager;
+            if (toolStateManager && typeof toolStateManager.setTool === 'function') {
+                toolStateManager.setTool(this.wasToolActiveBeforeSpacebar);
+            }
+            this.wasToolActiveBeforeSpacebar = null;
+        }
+        
+        console.log('🖐️ Spacebar pan mode deactivated');
     }
 
     /**
@@ -225,8 +388,7 @@ export class SimplePerspectiveManager {
             this.panOffset.x -= deltaX / this.zoomLevel;
             this.panOffset.y -= deltaY / this.zoomLevel;
             
-            // Apply reasonable boundaries to prevent scrolling too far
-            this.constrainPanOffset();
+            // No constraints - unlimited panning freedom!
             
             this.applyTransform();
         }
@@ -235,24 +397,11 @@ export class SimplePerspectiveManager {
     }
 
     /**
-     * Constrain pan offset to reasonable boundaries based on zoom level
-     */
-    private constrainPanOffset(): void {
-        if (!this.canvas || !this.canvasContainer) return;
-        
-        // Calculate reasonable boundaries based on zoom level
-        const maxOffset = (this.zoomLevel - 1) * 200; // Allow more movement when more zoomed
-        
-        this.panOffset.x = Math.max(-maxOffset, Math.min(maxOffset, this.panOffset.x));
-        this.panOffset.y = Math.max(-maxOffset, Math.min(maxOffset, this.panOffset.y));
-    }
-
-    /**
      * Zoom in by 20%
      */
     private zoomIn(): void {
         const newZoom = Math.min(this.MAX_ZOOM, this.zoomLevel + this.ZOOM_STEP);
-        this.setZoom(newZoom);
+        this.setZoom(newZoom, true);
     }
 
     /**
@@ -260,19 +409,20 @@ export class SimplePerspectiveManager {
      */
     private zoomOut(): void {
         const newZoom = Math.max(this.MIN_ZOOM, this.zoomLevel - this.ZOOM_STEP);
-        this.setZoom(newZoom);
+        this.setZoom(newZoom, true);
     }
 
     /**
      * Set specific zoom level
      */
-    private setZoom(newZoom: number): void {
+    public setZoom(newZoom: number, fromUser: boolean = false): void {
         if (newZoom === this.zoomLevel) return;
 
         this.zoomLevel = newZoom;
         this.applyTransform();
         this.updatePanAvailability();
         this.updateZoomDisplay();
+        if (fromUser) this.userZoomLocked = true;
 
         console.log(`🔍 Zoom: ${Math.round(this.zoomLevel * 100)}%`);
     }
@@ -283,6 +433,7 @@ export class SimplePerspectiveManager {
     private resetView(): void {
         this.zoomLevel = 1.0;
         this.panOffset = { x: 0, y: 0 };
+        this.userZoomLocked = false;
         
         // Reset pan mode if active
         if (this.isPanMode) {
@@ -304,23 +455,64 @@ export class SimplePerspectiveManager {
     }
 
     /**
-     * Apply zoom and pan transforms to canvas
+     * Public: update internal canvas reference after external canvas recreation
+     */
+    public updateCanvasReference(): void {
+        this.findCanvasIfNeeded();
+        // Apply a fit once after update as well
+        setTimeout(() => { try { this.fitToContainer(); } catch {} }, 60);
+    }
+
+    /**
+     * Fit the canvas display into its container by reducing zoom when needed (non-destructive).
+     * Keeps world units unchanged; only CSS transform scale is adjusted.
+     */
+    public fitToContainer(padding: number = 24): void {
+        if (!this.canvas || !this.canvasContainer) return;
+        const cRect = this.canvas.getBoundingClientRect();
+        const hostRect = this.canvasContainer.getBoundingClientRect();
+        const availW = Math.max(10, hostRect.width - padding * 2);
+        const availH = Math.max(10, hostRect.height - padding * 2);
+        const scaleW = availW / cRect.width;
+        const scaleH = availH / cRect.height;
+        const target = Math.min(scaleW, scaleH, 1); // never upscale above 100%
+        const clamped = Math.max(this.MIN_ZOOM, Math.min(this.MAX_ZOOM, target));
+        this.setZoom(clamped);
+        // Center after fit
+        this.panOffset = { x: 0, y: 0 };
+        this.applyTransform();
+    }
+
+    /**
+     * Apply zoom and pan transforms via CSS custom properties (not direct style manipulation)
      */
     private applyTransform(): void {
-        if (!this.canvas || !this.canvasContainer) return;
+        if (!this.canvas || !this.canvasContainer) {
+            console.warn('🚨 Cannot apply transform - canvas or container missing:', {
+                canvas: !!this.canvas,
+                canvasContainer: !!this.canvasContainer
+            });
+            return;
+        }
 
+        // Apply transform directly without CSS custom properties
         const transform = `scale(${this.zoomLevel}) translate(${this.panOffset.x}px, ${this.panOffset.y}px)`;
         this.canvas.style.transform = transform;
-        this.canvas.style.transformOrigin = 'center center';
         
-        // Update container overflow behavior based on zoom level
+        console.log('🎨 Transform applied:', {
+            element: this.canvas.tagName,
+            classes: this.canvas.className,
+            zoom: this.zoomLevel,
+            panX: this.panOffset.x,
+            panY: this.panOffset.y,
+            transform: transform
+        });
+        
+        // Update container state via BEM modifier classes
         if (this.zoomLevel > 1.0) {
-            // When zoomed in, ensure we can see the overflow but hide scrollbars
-            // since we're handling scrolling manually
-            this.canvasContainer.style.overflow = 'hidden';
+            this.canvasContainer.classList.add('canvas--zoomed');
         } else {
-            // At normal zoom, restore default overflow behavior
-            this.canvasContainer.style.overflow = 'auto';
+            this.canvasContainer.classList.remove('canvas--zoomed');
         }
         
         // Update grid overlay to match zoom level
@@ -328,14 +520,9 @@ export class SimplePerspectiveManager {
     }
 
     /**
-     * Toggle pan mode (only available when zoomed in ≥120%)
+     * Toggle pan mode (now works at any zoom level)
      */
     private togglePanMode(button: HTMLElement): void {
-        if (this.zoomLevel < this.GRAB_THRESHOLD) {
-            console.log(`📱 Pan mode requires at least ${Math.round(this.GRAB_THRESHOLD * 100)}% zoom`);
-            return;
-        }
-
         this.isPanMode = !this.isPanMode;
 
         if (this.isPanMode) {
@@ -444,35 +631,43 @@ export class SimplePerspectiveManager {
     }
 
     /**
-     * Update pan mode availability based on zoom level
+     * Update pan mode availability - now always available
      */
     private updatePanAvailability(): void {
         const grabButton = document.querySelector('[data-perspective="grab"]') as HTMLElement;
         if (!grabButton) return;
 
-        if (this.zoomLevel < this.GRAB_THRESHOLD) {
-            // Disable pan mode if zoom is too low
-            if (this.isPanMode) {
-                this.isPanMode = false;
-                grabButton.classList.remove('perspective__item--active');
-                this.updateCanvasCursor('');
-            }
-            
-            // Visual indication that grab is unavailable
-            grabButton.style.opacity = '0.5';
-            grabButton.title = `Pan mode (requires ≥${Math.round(this.GRAB_THRESHOLD * 100)}% zoom)`;
-        } else {
-            // Enable grab button
-            grabButton.style.opacity = '1';
-            grabButton.title = 'Pan mode';
-        }
+        // Pan mode is now always available at any zoom level
+        grabButton.style.opacity = '1';
+        grabButton.title = 'Pan mode';
     }
 
     /**
      * Handle mouse down for panning
      */
     private handleMouseDown(event: MouseEvent): void {
-        if (!this.isPanMode || this.zoomLevel < this.GRAB_THRESHOLD) return;
+        // Handle middle mouse button panning (button 1)
+        if (event.button === 1) {
+            this.isMiddleMousePanning = true;
+            this.isPanning = true;
+            this.panStart = { x: event.clientX, y: event.clientY };
+            this.updateCanvasCursor('grabbing');
+            event.preventDefault();
+            return;
+        }
+
+        // Handle spacebar pan mode (works at any zoom level)
+        if (this.isSpacebarPressed) {
+            this.isSpacebarPanning = true;
+            this.isPanning = true; // Set this so mouse move works correctly
+            this.panStart = { x: event.clientX, y: event.clientY };
+            this.updateCanvasCursor('grabbing');
+            event.preventDefault();
+            return;
+        }
+
+        // Handle regular grab tool (now works at any zoom level)
+        if (!this.isPanMode) return;
 
         this.isPanning = true;
         this.panStart = { x: event.clientX, y: event.clientY };
@@ -486,6 +681,24 @@ export class SimplePerspectiveManager {
      * Handle mouse move for panning
      */
     private handleMouseMove(event: MouseEvent): void {
+        // Handle spacebar panning (requires both spacebar pressed AND mouse dragging)
+        if ((this.isSpacebarPanning || this.isMiddleMousePanning) && this.isPanning) {
+            const deltaX = (event.clientX - this.panStart.x) / this.zoomLevel;
+            const deltaY = (event.clientY - this.panStart.y) / this.zoomLevel;
+
+            this.panOffset.x += deltaX;
+            this.panOffset.y += deltaY;
+
+            // No constraints - unlimited panning!
+
+            this.panStart = { x: event.clientX, y: event.clientY };
+            this.applyTransform();
+
+            event.preventDefault();
+            return;
+        }
+
+        // Handle regular grab tool panning
         if (!this.isPanning || !this.isPanMode) return;
 
         const deltaX = (event.clientX - this.panStart.x) / this.zoomLevel;
@@ -494,8 +707,7 @@ export class SimplePerspectiveManager {
         this.panOffset.x += deltaX;
         this.panOffset.y += deltaY;
 
-        // Apply the same constraints as wheel scrolling
-        this.constrainPanOffset();
+        // No constraints - unlimited grab tool panning!
 
         this.panStart = { x: event.clientX, y: event.clientY };
         this.applyTransform();
@@ -509,7 +721,20 @@ export class SimplePerspectiveManager {
     private handleMouseUp(): void {
         if (this.isPanning) {
             this.isPanning = false;
-            this.updateCanvasCursor(this.isPanMode ? 'grab' : '');
+            
+            // If we were middle mouse panning, stop completely
+            if (this.isMiddleMousePanning) {
+                this.isMiddleMousePanning = false;
+                this.updateCanvasCursor('');
+            }
+            // If we were spacebar panning, stop dragging but maintain spacebar mode
+            else if (this.isSpacebarPanning) {
+                this.isSpacebarPanning = false; // Stop spacebar panning when mouse released
+                this.updateCanvasCursor(this.isSpacebarPressed ? 'grab' : '');
+            } else {
+                // Regular grab tool - restore appropriate cursor
+                this.updateCanvasCursor(this.isPanMode ? 'grab' : '');
+            }
         }
     }
 
@@ -657,18 +882,47 @@ export class SimplePerspectiveManager {
      * Update zoom display indicator
      */
     private updateZoomDisplay(): void {
-        const zoomDisplay = document.querySelector('.zoom-display') as HTMLElement;
-        if (zoomDisplay) {
-            const zoomPercent = Math.round(this.zoomLevel * 100);
-            zoomDisplay.textContent = `${zoomPercent}%`;
+        // Try multiple times with slight delays to handle DOM timing issues
+        const tryUpdateZoomDisplay = (attempt: number = 1, maxAttempts: number = 3): void => {
+            // Debug: log DOM inspection
+            const perspectiveContainer = document.querySelector('.engine__perspective');
+            const allZoomDisplays = document.querySelectorAll('.zoom-display, .engine__zoom-display');
             
-            // Update title to show scroll instructions when zoomed
-            if (this.zoomLevel > 1.0) {
-                zoomDisplay.title = `Zoomed to ${zoomPercent}% - Mouse wheel scrolls around canvas, Ctrl/Cmd+wheel zooms`;
+            // Try multiple selectors for backward compatibility
+            const zoomDisplay = document.querySelector('.zoom-display, .engine__zoom-display') as HTMLElement;
+            
+            if (zoomDisplay) {
+                const zoomPercent = Math.round(this.zoomLevel * 100);
+                zoomDisplay.textContent = `${zoomPercent}%`;
+                
+                // Update title to show scroll instructions when zoomed
+                if (this.zoomLevel > 1.0) {
+                    zoomDisplay.title = `Zoomed to ${zoomPercent}% - Mouse wheel scrolls around canvas, Ctrl/Cmd+wheel zooms`;
+                } else {
+                    zoomDisplay.title = `${zoomPercent} zoom - Ctrl/Cmd+wheel to zoom in`;
+                }
+                
+                console.log(`📊 Zoom display updated: ${zoomPercent}%`);
+            } else if (attempt < maxAttempts) {
+                // If element not found and we haven't reached max attempts, try again after a short delay
+                console.log(`🔍 Zoom display not found (attempt ${attempt}/${maxAttempts}), retrying...`);
+                setTimeout(() => tryUpdateZoomDisplay(attempt + 1, maxAttempts), 50);
             } else {
-                zoomDisplay.title = `${zoomPercent} zoom - Ctrl/Cmd+wheel to zoom in`;
+                // Only show debug info and warning on final attempt
+                console.log('� DOM Debug:', {
+                    perspectiveContainer: !!perspectiveContainer,
+                    allZoomDisplays: allZoomDisplays.length,
+                    zoomDisplays: Array.from(allZoomDisplays).map(el => ({
+                        class: el.className,
+                        text: el.textContent,
+                        parent: el.parentElement?.className
+                    }))
+                });
+                console.warn('�🚨 Zoom display element not found after multiple attempts (tried .zoom-display, .engine__zoom-display)');
             }
-        }
+        };
+        
+        tryUpdateZoomDisplay();
     }
 
     /**
@@ -738,8 +992,9 @@ export class SimplePerspectiveManager {
         // Remove grid overlay
         this.removeGridOverlay();
         
-        // Remove event listeners
-        document.removeEventListener('keydown', this.handleKeyboardShortcuts.bind(this));
+        // Remove event listeners using the same bound method and options
+        document.removeEventListener('keydown', this.boundKeyboardHandler, true);
+        document.removeEventListener('keyup', this.boundKeyupHandler, true);
         
         if (this.canvasContainer) {
             this.canvasContainer.removeEventListener('wheel', this.handleWheelZoom.bind(this));

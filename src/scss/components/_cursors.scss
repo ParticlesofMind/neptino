@@ -38,44 +38,5 @@
   }
 }
 
-// Canvas-specific cursor styling
-// ==========================================================================
-
-// Apply cursor styles directly to canvas element
-#canvas-container canvas {
-  // Default fallback
-  cursor: crosshair;
-  
-  // Tool-specific cursors applied via JavaScript
-  &.tool-pen {
-    cursor: url('/src/assets/cursors/pen-cursor.svg') 2 2, crosshair;
-  }
-  
-  &.tool-brush {
-    cursor: url('/src/assets/cursors/brush-cursor.svg') 3 21, crosshair;
-  }
-  
-  &.tool-eraser {
-    cursor: none; // Custom eraser cursor handled by JavaScript
-  }
-  
-  &.tool-text {
-    cursor: text;
-  }
-  
-  &.tool-selection {
-    cursor: default;
-  }
-  
-  &.tool-shapes {
-    cursor: crosshair;
-  }
-}
-
-// Remove any outline/border from the PIXI canvas to avoid distracting blue rings
-#pixi-canvas,
-#canvas-container canvas {
-  outline: none !important;
-  border: none !important;
-  box-shadow: none !important;
-}
+// Canvas-specific cursor styling - moved to _canvas.scss
+// This file now only contains general cursor utilities

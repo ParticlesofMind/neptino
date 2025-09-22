@@ -1,12 +1,18 @@
 /**
- * Canvas Layout Manager
+ * Canvas Layout  public useGridLayout(): void {
+    if (!this.canvasContainer) return;
+
+    this.canvasContainer.classList.add('canvas--grid');
+    
+    console.log('📐 Canvas layout: Grid mode (perspective tools in column)');
+  }
  * Handles different layout modes for the canvas and perspective tools
  */
 
 export class CanvasLayoutManager {
   private canvasContainer: HTMLElement | null = null;
 
-  constructor(containerSelector: string = '#canvas-container') {
+  constructor(containerSelector: string = '.canvas') {
     this.canvasContainer = document.querySelector(containerSelector);
     
     if (!this.canvasContainer) {
@@ -21,8 +27,8 @@ export class CanvasLayoutManager {
   public useGridLayout(): void {
     if (!this.canvasContainer) return;
 
-    this.canvasContainer.classList.remove('engine__canvas--compact');
-    this.canvasContainer.classList.add('engine__canvas--grid');
+    this.canvasContainer.classList.remove('canvas--compact');
+    this.canvasContainer.classList.add('canvas--grid');
     
     console.log('📐 Canvas layout: Grid mode (perspective tools in separate column)');
   }
@@ -34,8 +40,7 @@ export class CanvasLayoutManager {
   public useCompactLayout(): void {
     if (!this.canvasContainer) return;
 
-    this.canvasContainer.classList.remove('engine__canvas--grid');
-    this.canvasContainer.classList.add('engine__canvas--compact');
+    this.canvasContainer.classList.remove('canvas--grid');
     
     console.log('📐 Canvas layout: Compact mode (perspective tools overlaid)');
   }
@@ -46,7 +51,7 @@ export class CanvasLayoutManager {
   public toggleLayout(): void {
     if (!this.canvasContainer) return;
 
-    const isGrid = this.canvasContainer.classList.contains('engine__canvas--grid');
+    const isGrid = this.canvasContainer.classList.contains('canvas--grid');
     
     if (isGrid) {
       this.useCompactLayout();
@@ -76,17 +81,13 @@ export class CanvasLayoutManager {
    */
   public getCurrentLayout(): 'grid' | 'compact' | 'none' {
     if (!this.canvasContainer) return 'none';
-
-    if (this.canvasContainer.classList.contains('engine__canvas--grid')) {
+    
+    if (this.canvasContainer.classList.contains('canvas--grid')) {
       return 'grid';
-    } else if (this.canvasContainer.classList.contains('engine__canvas--compact')) {
-      return 'compact';
     } else {
-      return 'none';
+      return 'compact';
     }
-  }
-
-  /**
+  }  /**
    * Set up responsive layout changes
    */
   public setupResponsiveLayout(): void {

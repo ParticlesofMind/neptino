@@ -78,8 +78,8 @@ export class CanvasLayers {
   private addBackgroundFill(): void {
     this.backgroundGraphics = new Graphics();
     
-    const width = this.app.canvas.width;
-    const height = this.app.canvas.height;
+    const width = (this.app as any).screen?.width || this.app.renderer.screen.width;
+    const height = (this.app as any).screen?.height || this.app.renderer.screen.height;
     
     // Draw white rectangle covering entire canvas
     this.backgroundGraphics
@@ -97,8 +97,8 @@ export class CanvasLayers {
    */
   public addGrid(gridSize: number = 20, color: number = 0xf0f0f0): void {
     const gridGraphics = new Graphics();
-    const width = this.app.canvas.width;
-    const height = this.app.canvas.height;
+    const width = (this.app as any).screen?.width || this.app.renderer.screen.width;
+    const height = (this.app as any).screen?.height || this.app.renderer.screen.height;
 
     // Vertical lines
     for (let x = 0; x <= width; x += gridSize) {

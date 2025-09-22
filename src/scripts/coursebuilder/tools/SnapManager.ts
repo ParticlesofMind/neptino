@@ -7,25 +7,27 @@
  * - smart: enable dynamic guide behavior (objects + canvas centers/edges)
  */
 
-import { Container, Point, Rectangle } from 'pixi.js';
+import { Point, Container, Rectangle } from 'pixi.js';
+import { canvasDimensionManager } from '../utils/CanvasDimensionManager';
 
 type SnapMode = 'grid' | 'smart' | 'none';
 
-interface SnapPrefs {
-  gridSize: number;
-  threshold: number; // snap distance
-  equalTolerance: number; // px tolerance for equal spacing highlight
-  matchWidth: boolean; // enable dimension width matching during creation
-  matchHeight: boolean; // enable dimension height matching during creation
-  centerBiasMultiplier: number; // multiplier to make center snapping easier
-  enableCenterBias: boolean; // toggle for center bias snapping
-  enableMidpoints: boolean;  // toggle midpoint candidate generation
-  enableSymmetryGuides: boolean; // toggle short center/midpoint guides
-}
+  interface SnapPrefs {
+    gridSize: number;
+    threshold: number; // snap distance
+    equalTolerance: number; // px tolerance for equal spacing highlight
+    matchWidth: boolean; // enable dimension width matching during creation
+    matchHeight: boolean; // enable dimension height matching during creation
+    centerBiasMultiplier: number; // multiplier to make center snapping easier
+    enableCenterBias: boolean; // toggle for center bias snapping
+    enableMidpoints: boolean;  // toggle midpoint candidate generation
+    enableSymmetryGuides: boolean; // toggle short center/midpoint guides
+    stickyHysteresis?: number; // px distance to break snap lock
+  }
 
 class SnapManager {
   private activeMode: SnapMode = 'smart';
-  private prefs: SnapPrefs = { gridSize: 20, threshold: 6, equalTolerance: 1, matchWidth: true, matchHeight: true, centerBiasMultiplier: 1.75, enableCenterBias: true, enableMidpoints: true, enableSymmetryGuides: true };
+  private prefs: SnapPrefs = { gridSize: 20, threshold: 8, equalTolerance: 1, matchWidth: true, matchHeight: true, centerBiasMultiplier: 2.4, enableCenterBias: true, enableMidpoints: true, enableSymmetryGuides: true, stickyHysteresis: 14 };
 
   // Simple accessors
   public getActiveMode(): SnapMode { return this.activeMode; }
@@ -72,17 +74,41 @@ class SnapManager {
       // Smart = align to other objects and canvas edges/centers
       const cand = this.getCandidates(options);
 
-      // Symmetry bias: prefer snapping to canvas centers with a larger effective threshold
+      // Symmetry bias: prefer snapping to centers (canvas + object centers) with a larger effective threshold
       const centerBias = Math.max(1, this.prefs.centerBiasMultiplier || 1);
-      const cx = (cand.canvas.v && cand.canvas.v[1] !== undefined) ? cand.canvas.v[1] : undefined;
-      const cy = (cand.canvas.h && cand.canvas.h[1] !== undefined) ? cand.canvas.h[1] : undefined;
-      if (this.prefs.enableCenterBias && cx !== undefined) {
-        const dx = Math.abs(x - cx);
-        if (dx <= this.prefs.threshold * centerBias) x = cx;
-      }
-      if (this.prefs.enableCenterBias && cy !== undefined) {
-        const dy = Math.abs(y - cy);
-        if (dy <= this.prefs.threshold * centerBias) y = cy;
+      if (this.prefs.enableCenterBias) {
+        const centerXs: number[] = [];
+        const centerYs: number[] = [];
+        // Canvas centers
+        if (cand.canvas?.v?.length) {
+          const canvasCx = cand.canvas.v[Math.floor(cand.canvas.v.length / 2)];
+          if (typeof canvasCx === 'number') centerXs.push(canvasCx);
+        }
+        if (cand.canvas?.h?.length) {
+          const canvasCy = cand.canvas.h[Math.floor(cand.canvas.h.length / 2)];
+          if (typeof canvasCy === 'number') centerYs.push(canvasCy);
+        }
+        // Object centers (precomputed for efficiency)
+        if (Array.isArray((cand as any).vCenters)) centerXs.push(...((cand as any).vCenters as number[]));
+        if (Array.isArray((cand as any).hCenters)) centerYs.push(...((cand as any).hCenters as number[]));
+        // Snap X to nearest center line
+        if (centerXs.length) {
+          let best = x; let bestD = this.prefs.threshold * centerBias + 1;
+          for (const cx of centerXs) {
+            const d = Math.abs(x - cx);
+            if (d < bestD && d <= this.prefs.threshold * centerBias) { bestD = d; best = cx; }
+          }
+          x = best;
+        }
+        // Snap Y to nearest center line
+        if (centerYs.length) {
+          let best = y; let bestD = this.prefs.threshold * centerBias + 1;
+          for (const cy of centerYs) {
+            const d = Math.abs(y - cy);
+            if (d < bestD && d <= this.prefs.threshold * centerBias) { bestD = d; best = cy; }
+          }
+          y = best;
+        }
       }
 
       // Fall back to nearest candidates if not center-snapped
@@ -113,7 +139,7 @@ class SnapManager {
   /**
    * Gather simple vertical/horizontal snap lines from other objects' bounds
    */
-  private collectObjectSnapLines(options?: { exclude?: any[]; container?: Container; rect?: Rectangle; margin?: number }): { vLines: number[]; hLines: number[] } {
+  private collectObjectSnapLines(options?: { exclude?: any[]; container?: Container; rect?: Rectangle; margin?: number }): { vLines: number[]; hLines: number[]; vCenters: number[]; hCenters: number[] } {
     const vLines: number[] = [];
     const hLines: number[] = [];
 
@@ -176,11 +202,11 @@ class SnapManager {
       const localCenters = centers.map(c => ({ x: toLocalX(c.x), y: toLocalY(c.y) }));
       // Add midpoints between object centers to encourage symmetry snapping
       if (this.prefs.enableMidpoints) this.addMidpoints(localCenters, v, h);
-      return { vLines: v, hLines: h };
+      return { vLines: v, hLines: h, vCenters: localCenters.map(c => c.x), hCenters: localCenters.map(c => c.y) };
     }
     // World space path (rare): still add midpoints in world units
     if (this.prefs.enableMidpoints) this.addMidpoints(centers, vLines, hLines);
-    return { vLines, hLines };
+    return { vLines, hLines, vCenters: centers.map(c => c.x), hCenters: centers.map(c => c.y) };
   }
 
   /**
@@ -221,6 +247,8 @@ class SnapManager {
     canvas: { v: number[]; h: number[] };
     threshold: number;
     dims: { width: number; height: number };
+    vCenters?: number[];
+    hCenters?: number[];
   } {
     const dims = this.getCanvasDimensions();
     const centers = { cx: dims.width / 2, cy: dims.height / 2 };
@@ -236,7 +264,7 @@ class SnapManager {
         h: canvas.h.map(toLocalY),
       };
     }
-    return { vLines: obj.vLines, hLines: obj.hLines, canvas, threshold: this.prefs.threshold, dims };
+    return { vLines: obj.vLines, hLines: obj.hLines, canvas, threshold: this.prefs.threshold, dims, vCenters: obj.vCenters, hCenters: obj.hCenters };
   }
 
   /**
@@ -262,8 +290,9 @@ class SnapManager {
       if (cssW && cssH) return { width: cssW, height: cssH } as any;
       return { width: canvas.width, height: canvas.height };
     }
-    // Final fallback to defaults
-    return { width: 900, height: 1200 };
+    // Final fallback to defaults from CanvasDimensionManager
+    const defaultDims = canvasDimensionManager.getDefaultDimensions();
+    return { width: defaultDims.width, height: defaultDims.height };
   }
 
   // ---- State & UI helpers ----
@@ -289,10 +318,11 @@ class SnapManager {
         if (typeof (this.prefs as any).equalTolerance !== 'number') this.prefs.equalTolerance = 1;
         if (typeof (this.prefs as any).matchWidth !== 'boolean') this.prefs.matchWidth = true;
         if (typeof (this.prefs as any).matchHeight !== 'boolean') this.prefs.matchHeight = true;
-        if (typeof (this.prefs as any).centerBiasMultiplier !== 'number') this.prefs.centerBiasMultiplier = 1.75;
+        if (typeof (this.prefs as any).centerBiasMultiplier !== 'number') this.prefs.centerBiasMultiplier = 2.4;
         if (typeof (this.prefs as any).enableCenterBias !== 'boolean') this.prefs.enableCenterBias = true;
         if (typeof (this.prefs as any).enableMidpoints !== 'boolean') this.prefs.enableMidpoints = true;
         if (typeof (this.prefs as any).enableSymmetryGuides !== 'boolean') this.prefs.enableSymmetryGuides = true;
+        if (typeof (this.prefs as any).stickyHysteresis !== 'number') (this.prefs as any).stickyHysteresis = 14;
       }
     } catch {}
   }

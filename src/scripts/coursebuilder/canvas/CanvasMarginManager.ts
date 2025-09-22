@@ -5,8 +5,10 @@
  */
 
 import { PageLayoutSettings } from '../../backend/courses/settings/pageSetupHandler';
-import { MarginSettings } from '../tools/BoundaryUtils';
+import { MarginSettings } from '../types/canvas';
 import { Graphics } from 'pixi.js';
+import { canvasDimensionManager } from '../utils/CanvasDimensionManager';
+import { UnitConverter } from '../utils/UnitConverter';
 
 export class CanvasMarginManager {
   private static instance: CanvasMarginManager;
@@ -20,7 +22,8 @@ export class CanvasMarginManager {
       top: 96,    // ~2.54cm at 96 DPI
       right: 96,  // ~2.54cm at 96 DPI  
       bottom: 96, // ~2.54cm at 96 DPI
-      left: 96    // ~2.54cm at 96 DPI
+      left: 96,   // ~2.54cm at 96 DPI
+      unit: 'px'
     };
   }
 
@@ -37,42 +40,15 @@ export class CanvasMarginManager {
    */
   public setMarginsFromPageLayout(settings: PageLayoutSettings): void {
     const { margins } = settings;
-    const dpi = 96; // Standard DPI for web
 
-    // Convert all units to pixels
-    let pixelMargins: MarginSettings;
-    
-    switch (margins.unit) {
-      case 'inches':
-        pixelMargins = {
-          top: margins.top * dpi,
-          right: margins.right * dpi,
-          bottom: margins.bottom * dpi,
-          left: margins.left * dpi
-        };
-        break;
-      case 'cm':
-        // 1 inch = 2.54 cm, so cm to pixels = (cm / 2.54) * dpi
-        pixelMargins = {
-          top: (margins.top / 2.54) * dpi,
-          right: (margins.right / 2.54) * dpi,
-          bottom: (margins.bottom / 2.54) * dpi,
-          left: (margins.left / 2.54) * dpi
-        };
-        break;
-      case 'mm':
-        // 1 inch = 25.4 mm, so mm to pixels = (mm / 25.4) * dpi
-        pixelMargins = {
-          top: (margins.top / 25.4) * dpi,
-          right: (margins.right / 25.4) * dpi,
-          bottom: (margins.bottom / 25.4) * dpi,
-          left: (margins.left / 25.4) * dpi
-        };
-        break;
-      default:
-        console.error('Unknown margin unit:', margins.unit);
-        return;
-    }
+    // Use UnitConverter for consistent unit conversion
+    const pixelMargins = UnitConverter.marginsToPixels({
+      top: margins.top,
+      right: margins.right,
+      bottom: margins.bottom,
+      left: margins.left,
+      unit: margins.unit as any // PageSetupHandler uses different unit type
+    });
 
     this.currentMargins = pixelMargins;
     console.log('📏 Updated canvas margins to pixels:', this.currentMargins);
@@ -112,8 +88,23 @@ export class CanvasMarginManager {
     // Create new margin graphics
     this.marginGraphics = new Graphics();
     
-    const canvasWidth = 900;   // Canvas width
-    const canvasHeight = 1200; // Canvas height
+    // Use consistent canvas dimensions from CanvasDimensionManager
+    const dimensions = canvasDimensionManager.getCurrentDimensions();
+    let canvasWidth = dimensions.width;   // 1200
+    let canvasHeight = dimensions.height; // 1800
+    
+    // Legacy: try to get from PIXI app but validate against expected dimensions
+    try {
+      const app = (window as any).canvasAPI?.getApp?.();
+      if (app && ((app as any).screen || app.renderer?.screen)) {
+        const screen = (app as any).screen || app.renderer.screen;
+        // Only use screen dimensions if they match our expected ratio
+        if (screen.width && screen.height) {
+          canvasWidth = screen.width; 
+          canvasHeight = screen.height;
+        }
+      }
+    } catch {}
     const margins = this.currentMargins;
     
     // Professional blue lines for margins
@@ -121,26 +112,35 @@ export class CanvasMarginManager {
     const lineWidth = 1;
     const alpha = 0.8; // Clear and visible
 
+    // Align to device pixels for crisp 1px lines
+    const half = 0.5;
+    const maxX = Math.round(canvasWidth) - half;
+    const maxY = Math.round(canvasHeight) - half;
+    const yTop = Math.round(margins.top) + half;
+    const yBottom = Math.round(canvasHeight - margins.bottom) + half;
+    const xLeft = Math.round(margins.left) + half;
+    const xRight = Math.round(canvasWidth - margins.right) + half;
+
     // Draw clean margin boundary lines using modern PIXI.js API
     this.marginGraphics
       // Top margin line
-      .moveTo(0, margins.top)
-      .lineTo(canvasWidth, margins.top)
+      .moveTo(half, yTop)
+      .lineTo(maxX, yTop)
       .stroke({ color: marginColor, width: lineWidth, alpha })
       
       // Right margin line  
-      .moveTo(canvasWidth - margins.right, 0)
-      .lineTo(canvasWidth - margins.right, canvasHeight)
+      .moveTo(xRight, half)
+      .lineTo(xRight, maxY)
       .stroke({ color: marginColor, width: lineWidth, alpha })
       
       // Bottom margin line
-      .moveTo(0, canvasHeight - margins.bottom)
-      .lineTo(canvasWidth, canvasHeight - margins.bottom)
+      .moveTo(half, yBottom)
+      .lineTo(maxX, yBottom)
       .stroke({ color: marginColor, width: lineWidth, alpha })
       
       // Left margin line
-      .moveTo(margins.left, 0)
-      .lineTo(margins.left, canvasHeight)
+      .moveTo(xLeft, half)
+      .lineTo(xLeft, maxY)
       .stroke({ color: marginColor, width: lineWidth, alpha });
 
     this.marginGraphics.label = 'blue-margin-lines';

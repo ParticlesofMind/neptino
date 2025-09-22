@@ -82,10 +82,18 @@ export class SmartGuides {
       if (Math.abs(bBottom - rCy) <= threshold) ensureLine(hLines, rCy).rects.push(r);
       if (Math.abs(bBottom - rBottom) <= threshold) ensureLine(hLines, rBottom).rects.push(r);
     }
-    // Include canvas guides (edges and center) as candidates as well
+    // Include canvas guides (edges and center) only when near the selection to reduce clutter
     try {
-      for (const x of candidates.canvas.v) { const ln: any = ensureLine(vLines, x); ln.isCanvas = true; }
-      for (const y of candidates.canvas.h) { const ln: any = ensureLine(hLines, y); ln.isCanvas = true; }
+      const bias = Math.max(1, snapManager.getPrefs().centerBiasMultiplier || 1);
+      const canvasThresh = (candidates.threshold || 6) * bias;
+      for (const x of candidates.canvas.v) {
+        const dx = Math.min(Math.abs(bLeft - x), Math.abs(bCx - x), Math.abs(bRight - x));
+        if (dx <= canvasThresh) { const ln: any = ensureLine(vLines, x); ln.isCanvas = true; }
+      }
+      for (const y of candidates.canvas.h) {
+        const dy = Math.min(Math.abs(bTop - y), Math.abs(bCy - y), Math.abs(bBottom - y));
+        if (dy <= canvasThresh) { const ln: any = ensureLine(hLines, y); ln.isCanvas = true; }
+      }
     } catch {}
 
     for (const l of vLines) l.rects.push(b.clone());
@@ -158,7 +166,7 @@ export class SmartGuides {
           if (!acc || d < acc.d) return { pos: y, d };
           return acc;
         }, null);
-        const thr = threshold;
+        const thr = threshold * (snapManager.getPrefs().centerBiasMultiplier || 1);
         const shortMargin = 20;
         const tick = 6;
         if (nearestV && nearestV.d <= thr) {
@@ -204,7 +212,7 @@ export class SmartGuides {
         const n = (node as any).name || '';
         if (
           n === 'selection-box' ||
-          (typeof n === 'string' && (n.startsWith('transform-handle-') || n === 'selection-size-indicator')) ||
+          (typeof n === 'string' && (n.startsWith('transform-handle-') || n.startsWith('round-handle-') || n === 'selection-size-indicator')) ||
           node === this.guideGfx || node === this.guideLabels
         ) {
           // do not consider overlay graphics as snap candidates

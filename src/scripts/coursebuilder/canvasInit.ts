@@ -16,10 +16,10 @@ import { ToolCoordinator } from './ui/ToolCoordinator';
 import { initializeAnimationUI } from './animation/AnimationUI';
 import { animationState } from './animation/AnimationState';
 import { LayersPanel } from './ui/LayersPanel';
-
-// Canvas dimensions - centralized in one place (4:3 aspect ratio)
-const CANVAS_WIDTH = 900;
-const CANVAS_HEIGHT = 1200;
+import { CANVAS_WIDTH, CANVAS_HEIGHT, calculateFitZoom } from './utils/canvasSizing';
+import { runFullValidation } from './utils/canvasSizingValidation';
+import { initializeCanvasSystem, validateCanvasSystem } from './utils/canvasSystemInit';
+import { canvasDimensionManager } from './utils/CanvasDimensionManager';
 
 console.log('📦 CanvasAPI import successful:', CanvasAPI);
 
@@ -32,12 +32,18 @@ let layoutManager: CanvasLayoutManager | null = null;
 let toolCoordinator: ToolCoordinator | null = null;
 let layersPanel: LayersPanel | null = null;
 
+// Global flag to prevent multiple initializations
+let isInitializing = false;
+
 /**
  * Initialize canvas when coursebuilder page loads
  */
 export async function initializeCanvas(): Promise<void> {
     try {
         console.log('🔍 Checking for canvas container...');
+
+        // Initialize the consolidated canvas system first
+        initializeCanvasSystem();
 
         // Check if we're on coursebuilder page with canvas container
         const canvasContainer = document.getElementById('canvas-container');
@@ -46,6 +52,18 @@ export async function initializeCanvas(): Promise<void> {
             return;
         }
 
+        // Prevent multiple initializations
+        if (isInitializing) {
+            console.log('⚠️ Canvas initialization already in progress - skipping');
+            return;
+        }
+        
+        if (canvasAPI && canvasAPI.isReady()) {
+            console.log('⚠️ Canvas already initialized - skipping');
+            return;
+        }
+
+        isInitializing = true;
         console.log('✅ Canvas container found:', canvasContainer);
 
         console.log('🎨 Starting canvas initialization...');
@@ -58,14 +76,23 @@ export async function initializeCanvas(): Promise<void> {
         const dpr = window.devicePixelRatio || 1;
         console.log(`📱 Device Pixel Ratio: ${dpr}x`);
         console.log(`🖥️ Viewport: ${window.innerWidth}×${window.innerHeight}`);
-        console.log(`📄 Canvas: ${CANVAS_WIDTH}×${CANVAS_HEIGHT} (4:3 aspect ratio)`);
+        
+        // Get consistent canvas dimensions from CanvasDimensionManager
+        const dimensions = canvasDimensionManager.getCurrentDimensions();
+        const canvasWidth = dimensions.width;  // 1200
+        const canvasHeight = dimensions.height; // 1800
+        console.log(`📄 Canvas: ${canvasWidth}×${canvasHeight} (from CanvasDimensionManager)`);
 
-        // Initialize with fixed dimensions
+        // Initialize with calculated dimensions
         await canvasAPI.init({
-            width: CANVAS_WIDTH,
-            height: CANVAS_HEIGHT,
+            width: canvasWidth,
+            height: canvasHeight,
             backgroundColor: 0xffffff,
         });
+
+        // Make canvas dimensions available to global functions
+        (window as any).currentCanvasWidth = canvasWidth;
+        (window as any).currentCanvasHeight = canvasHeight;
 
         console.log('✅ Canvas initialized!');
 
@@ -83,6 +110,30 @@ export async function initializeCanvas(): Promise<void> {
         // Update canvas reference in perspective manager now that canvas is created
         if (perspectiveManager && 'updateCanvasReference' in perspectiveManager) {
             (perspectiveManager as any).updateCanvasReference();
+            
+            // Apply calculated initial zoom for optimal canvas viewing
+            const containerElement = document.querySelector('#canvas-container') as HTMLElement;
+            if (containerElement && containerElement.clientWidth > 0 && containerElement.clientHeight > 0) {
+                const initialZoom = calculateFitZoom(
+                    containerElement.clientWidth,
+                    containerElement.clientHeight
+                );
+                console.log(`🔍 Applying initial zoom: ${(initialZoom * 100).toFixed(1)}% for container ${containerElement.clientWidth}×${containerElement.clientHeight}`);
+                
+                // Apply the zoom through the perspective manager
+                if ('setZoom' in perspectiveManager) {
+                    (perspectiveManager as any).setZoom?.(initialZoom);
+                }
+            } else {
+                console.warn('⚠️ Container element not found or has zero dimensions, skipping initial zoom');
+            }
+            
+            // Fit canvas view into container once on init so it never starts oversized
+            try { (perspectiveManager as any).fitToContainer?.(); } catch (error) {
+                console.warn('⚠️ Failed to fit canvas to container:', error);
+            }
+        } else {
+            console.warn('⚠️ Perspective manager not available or missing updateCanvasReference method');
         }
 
         // Bind minimal snap menu UI to perspective tools
@@ -198,10 +249,51 @@ export async function initializeCanvas(): Promise<void> {
                     expectedDimensions: {
                         width: CANVAS_WIDTH,
                         height: CANVAS_HEIGHT,
-                        aspectRatio: '4:3'
+                        aspectRatio: '2:3'
                     }
                 });
             }
+        };
+
+        // Canvas sizing validation
+        (window as any).validateCanvasSizing = () => {
+            console.log('🔍 Running canvas sizing validation...');
+            const validation = runFullValidation();
+            
+            if (validation.isValid) {
+                console.log('✅ Canvas sizing validation passed');
+            } else {
+                console.error('❌ Canvas sizing validation failed');
+            }
+            
+            if (validation.errors.length > 0) {
+                console.error('Errors:', validation.errors);
+            }
+            
+            if (validation.warnings.length > 0) {
+                console.warn('Warnings:', validation.warnings);
+            }
+            
+            console.log('Metadata:', validation.metadata);
+            return validation;
+        };
+
+        // Canvas system validation (new consolidated validation)
+        (window as any).validateCanvasSystem = () => {
+            console.log('🔍 Running consolidated canvas system validation...');
+            const validation = validateCanvasSystem();
+            
+            if (validation.isValid) {
+                console.log('✅ Canvas system validation passed');
+            } else {
+                console.error('❌ Canvas system validation failed');
+                console.error('Issues:', validation.issues);
+                if (validation.recommendations.length > 0) {
+                    console.warn('Recommendations:', validation.recommendations);
+                }
+            }
+            
+            return validation;
         };
 
         // Simple canvas resize command
@@ -217,6 +309,17 @@ export async function initializeCanvas(): Promise<void> {
             console.log(`📐 Resizing canvas to ${newWidth}×${newHeight}`);
             canvasAPI.resize(newWidth, newHeight);
             console.log(`✅ Canvas resized to ${newWidth}×${newHeight}`);
+        };
+
+        // Performance diagnostics command
+        (window as any).canvasDiagnostics = () => {
+            if (!canvasAPI) {
+                console.warn('⚠️ Canvas not initialized');
+                return null;
+            }
+            const diagnostics = canvasAPI.getPerformanceDiagnostics();
+            console.table(diagnostics);
+            return diagnostics;
         };
 
         // Wait for canvas to be fully ready before getting info
@@ -254,13 +357,18 @@ export async function initializeCanvas(): Promise<void> {
             toolStateManager.forceSyncVerification();
         }
 
+        // PerfHUD disabled by default to keep UI clean and avoid layout overlays in production.
+        // To enable for debugging, call window.installPerfHUD?.()
+
         console.log('✅ Canvas initialization completed successfully');
+        isInitializing = false;
     } catch (error) {
         console.error('❌ Canvas initialization failed:', error);
         console.error(
             '❌ Error stack:',
             error instanceof Error ? error.stack : 'No stack available',
         );
+        isInitializing = false;
     }
 }
 

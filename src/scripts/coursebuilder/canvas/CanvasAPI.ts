@@ -36,6 +36,14 @@ export class CanvasAPI {
     plugins: 'topleft',
     links: 'topleft',
   };
+  
+  // Performance: Debounce canvas resize operations
+  private resizeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingResizeOperation: { width: number; height: number } | null = null;
+  
+  // Performance monitoring
+  private resizeCount = 0;
+  private lastResizeTime = 0;
 
   constructor(containerSelector: string) {
     this.pixiApp = new PixiApp(containerSelector);
@@ -74,6 +82,7 @@ export class CanvasAPI {
 
       // Step 5: Create tool manager
       this.toolManager = new ToolManager();
+      try { (window as any).toolManager = this.toolManager; } catch {}
 
       // Step 5.1: Connect display manager to tool manager (CRITICAL!)
       this.toolManager.setDisplayManager(this.displayManager);
@@ -148,8 +157,11 @@ export class CanvasAPI {
    * Get canvas dimensions
    */
   public getDimensions(): { width: number; height: number } {
+    const app = this.getApp();
+    if (!app) return { width: 0, height: 0 };
     try {
-      return this.pixiApp.getDimensions();
+      const screen = (app as any).screen || app.renderer.screen;
+      return { width: screen.width, height: screen.height };
     } catch (error) {
       console.warn('⚠️ Could not get dimensions - canvas not ready:', error);
       return { width: 0, height: 0 };
@@ -828,8 +840,8 @@ export class CanvasAPI {
       if (!app) return;
       let t = 0;
       const dur = 0.4; // seconds
-      const cb = (delta: number) => {
-        t += (app.ticker.deltaMS || 16) / 1000;
+      const cb = (ticker: any) => {
+        t += (ticker.deltaMS || 16) / 1000;
         const p = Math.min(1, t / dur);
         gfx.alpha = 1 - p;
         if (p >= 1) {
@@ -946,23 +958,102 @@ export class CanvasAPI {
   }
 
   /**
-   * Resize the canvas
+   * Resize the canvas with performance optimizations and debouncing
    */
   public resize(width: number, height: number): void {
+    // Performance tracking
+    const now = performance.now();
+    this.resizeCount++;
+    const timeSinceLastResize = now - this.lastResizeTime;
+    
+    if (timeSinceLastResize < 50) {
+      console.warn(`⚡ Rapid resize detected! ${this.resizeCount} resizes, ${timeSinceLastResize.toFixed(1)}ms since last`);
+    }
+    this.lastResizeTime = now;
+    
+    // Store the latest resize request
+    this.pendingResizeOperation = { width, height };
+    
+    // Clear any pending resize timer
+    if (this.resizeDebounceTimer) {
+      clearTimeout(this.resizeDebounceTimer);
+    }
+    
+    // Debounce resize operations to prevent rapid calls during viewport changes
+    this.resizeDebounceTimer = setTimeout(() => {
+      this.performResize();
+    }, 16); // ~60fps debounce for smooth resize
+  }
+
+  /**
+   * Perform the actual resize operation
+   */
+  private performResize(): void {
+    if (!this.pendingResizeOperation) return;
+    
+    const { width, height } = this.pendingResizeOperation;
     const app = this.getApp();
     if (!app) {
       console.warn('⚠️ Cannot resize - app not ready');
       return;
     }
 
-    app.renderer.resize(width, height);
-    
-    // Recreate background to match new size
-    if (this.layers) {
-      this.layers.clearLayer('background');
+    // Get current dimensions to avoid unnecessary operations
+    const currentDims = this.getDimensions();
+    if (currentDims.width === width && currentDims.height === height) {
+      console.log('📐 Canvas already at target size, skipping resize');
+      this.pendingResizeOperation = null;
+      return;
     }
 
-    console.log('📐 Canvas resized:', { width, height });
+    // Perform the actual resize
+    app.renderer.resize(width, height);
+    
+    // Only update background margins without clearing the entire layer
+    if (this.layers) {
+      const bg = this.layers.getLayer('background');
+      if (bg) {
+        try { 
+          canvasMarginManager.setContainer(bg); // This triggers visual update automatically
+        } catch (e) {
+          console.warn('⚠️ Failed to update margin guides:', e);
+        }
+      }
+    }
+
+    console.log('📐 Canvas resized efficiently:', { width, height });
+    this.pendingResizeOperation = null;
+  }
+
+  /**
+   * Get performance diagnostics for debugging canvas issues
+   */
+  public getPerformanceDiagnostics() {
+    const app = this.getApp();
+    const dimensions = this.getDimensions();
+    const dpr = window.devicePixelRatio || 1;
+    
+    return {
+      canvas: {
+        logicalSize: dimensions,
+        actualPixels: {
+          width: dimensions.width * dpr,
+          height: dimensions.height * dpr,
+        },
+        totalPixels: dimensions.width * dimensions.height * dpr * dpr,
+        devicePixelRatio: dpr,
+      },
+      performance: {
+        resizeCount: this.resizeCount,
+        timeSinceLastResize: this.lastResizeTime ? performance.now() - this.lastResizeTime : 0,
+        hasPendingResize: !!this.pendingResizeOperation,
+      },
+      pixi: {
+        rendererType: app ? (app.renderer.type === 1 ? 'webgl' : 'canvas') : 'unknown',
+        resolution: app ? app.renderer.resolution : 0,
+        isWebGL: app ? app.renderer.type === 1 : false,
+      },
+    };
   }
 
   /**

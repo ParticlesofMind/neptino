@@ -4,6 +4,7 @@
  */
 
 import { supabase } from "../../supabase";
+import { UnitConverter } from "../../../coursebuilder/utils/UnitConverter";
 
 export interface MarginSettings {
  top: number;
@@ -108,20 +109,29 @@ export class MarginSettingsHandler {
  ): void {
  if (fromUnit === toUnit) return;
 
- const conversionFactor = fromUnit === "inches" ? 2.54 : 1 / 2.54; // inches to cm or cm to inches
+ // Use UnitConverter for consistent conversion
+ const fromUnitType = fromUnit === "inches" ? "inches" : "cm";
+ const toUnitType = toUnit === "inches" ? "inches" : "cm";
 
- this.currentSettings.top = parseFloat(
- (this.currentSettings.top * conversionFactor).toFixed(2),
+ // Convert margin settings to compatible format
+ const marginsForConversion = {
+   top: this.currentSettings.top,
+   right: this.currentSettings.right,
+   bottom: this.currentSettings.bottom,
+   left: this.currentSettings.left,
+   unit: fromUnitType as any
+ };
+
+ const converted = UnitConverter.convertMargins(
+   marginsForConversion,
+   fromUnitType,
+   toUnitType
  );
- this.currentSettings.bottom = parseFloat(
- (this.currentSettings.bottom * conversionFactor).toFixed(2),
- );
- this.currentSettings.left = parseFloat(
- (this.currentSettings.left * conversionFactor).toFixed(2),
- );
- this.currentSettings.right = parseFloat(
- (this.currentSettings.right * conversionFactor).toFixed(2),
- );
+
+ this.currentSettings.top = UnitConverter.roundForUnit(converted.top, toUnitType);
+ this.currentSettings.bottom = UnitConverter.roundForUnit(converted.bottom, toUnitType);
+ this.currentSettings.left = UnitConverter.roundForUnit(converted.left, toUnitType);
+ this.currentSettings.right = UnitConverter.roundForUnit(converted.right, toUnitType);
 
  console.log(
  `📏 Converted margins from ${fromUnit} to ${toUnit}:`,
@@ -289,26 +299,8 @@ export class MarginSettingsHandler {
  this.courseBuilder &&
  typeof this.courseBuilder.updateCanvasMargins === "function"
  ) {
- // Convert to pixels (assuming 96 DPI)
- const dpi = 96;
- const marginsInPixels = {
- top:
- this.currentSettings.unit === "inches"
- ? this.currentSettings.top * dpi
- : (this.currentSettings.top / 2.54) * dpi,
- bottom:
- this.currentSettings.unit === "inches"
- ? this.currentSettings.bottom * dpi
- : (this.currentSettings.bottom / 2.54) * dpi,
- left:
- this.currentSettings.unit === "inches"
- ? this.currentSettings.left * dpi
- : (this.currentSettings.left / 2.54) * dpi,
- right:
- this.currentSettings.unit === "inches"
- ? this.currentSettings.right * dpi
- : (this.currentSettings.right / 2.54) * dpi,
- };
+ // Use UnitConverter for consistent pixel conversion
+ const marginsInPixels = this.getMarginPixels();
 
  this.courseBuilder.updateCanvasMargins(marginsInPixels);
  } else {
@@ -352,24 +344,23 @@ export class MarginSettingsHandler {
  left: number;
  right: number;
  } {
- const dpi = 96;
+ // Use UnitConverter for consistent pixel conversion
+ const unitType = this.currentSettings.unit === "inches" ? "inches" : "cm";
+ const marginsForConversion = {
+   top: this.currentSettings.top,
+   right: this.currentSettings.right,
+   bottom: this.currentSettings.bottom,
+   left: this.currentSettings.left,
+   unit: unitType as any
+ };
+
+ const pixelMargins = UnitConverter.marginsToPixels(marginsForConversion);
+ 
  return {
- top:
- this.currentSettings.unit === "inches"
- ? this.currentSettings.top * dpi
- : (this.currentSettings.top / 2.54) * dpi,
- bottom:
- this.currentSettings.unit === "inches"
- ? this.currentSettings.bottom * dpi
- : (this.currentSettings.bottom / 2.54) * dpi,
- left:
- this.currentSettings.unit === "inches"
- ? this.currentSettings.left * dpi
- : (this.currentSettings.left / 2.54) * dpi,
- right:
- this.currentSettings.unit === "inches"
- ? this.currentSettings.right * dpi
- : (this.currentSettings.right / 2.54) * dpi,
+   top: pixelMargins.top,
+   bottom: pixelMargins.bottom,
+   left: pixelMargins.left,
+   right: pixelMargins.right
  };
  }
 

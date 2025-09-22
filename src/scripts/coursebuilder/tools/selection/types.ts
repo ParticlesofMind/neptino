@@ -13,7 +13,7 @@ export interface SelectionSettings {
 }
 
 export interface TransformHandle {
-  type: "corner" | "edge" | "rotation";
+  type: "corner" | "edge" | "rotation" | "rounding";
   position: "tl" | "tr" | "bl" | "br" | "t" | "r" | "b" | "l" | "rotate";
   graphics?: Graphics;   // optional for synthetic rotation hotspots
   bounds?: Rectangle;    // optional for synthetic rotation hotspots

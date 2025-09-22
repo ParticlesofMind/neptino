@@ -11,6 +11,7 @@
  */
 
 import { Application } from 'pixi.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../utils/canvasSizing';
 
 export interface PixiAppConfig {
   width: number;
@@ -42,17 +43,18 @@ export class PixiApp {
       return this.app;
     }
 
-    // Higher resolution for crisp graphics at all zoom levels
+    // Optimized resolution for performance and quality balance
     const devicePixelRatio = window.devicePixelRatio || 1;
-    const highQualityResolution = Math.max(devicePixelRatio, 2); // Minimum 2x resolution for crisp zoom
+    // Cap resolution at 2x to prevent excessive memory usage on high-DPI displays
+    const optimizedResolution = Math.min(devicePixelRatio, 2); 
 
     const defaultConfig: PixiAppConfig = {
-      width: 900,           // Canvas width (4:3 aspect ratio)
-      height: 1200,         // Canvas height (4:3 aspect ratio)
+      width: CANVAS_WIDTH,  // Canvas width from canvasSizing.ts
+      height: CANVAS_HEIGHT, // Canvas height from canvasSizing.ts
       backgroundColor: 0xffffff, // White background
       antialias: true,      // Enable antialiasing for smooth edges
-      resolution: highQualityResolution, // High resolution for crisp rendering at all zoom levels
-      autoDensity: false    // Disable automatic CSS size adjustment to maintain intended canvas size
+      resolution: optimizedResolution, // Capped resolution for performance
+      autoDensity: true     // Ensure CSS size matches logical width/height
     };
 
     const finalConfig = { ...defaultConfig, ...config };
@@ -96,7 +98,8 @@ export class PixiApp {
 
     try {
       // Check if container has grid layout class
-      const hasGridLayout = this.container.classList.contains('engine__canvas--grid');
+      const hasGridLayout = this.container.classList.contains('canvas--grid') || 
+                            this.container.classList.contains('engine__canvas--grid');
       
       if (hasGridLayout) {
         // For grid layout, preserve existing content and insert canvas in proper grid position
@@ -126,12 +129,7 @@ export class PixiApp {
         // Make canvas focusable for keyboard handling
         (this.app.canvas as any).tabIndex = 0;
         
-        // Manual CSS sizing to match the intended canvas dimensions
-        // Since autoDensity is disabled, we need to set the display size manually
-        this.app.canvas.style.width = `${this.app.canvas.width / (this.app.renderer.resolution || 1)}px`;
-        this.app.canvas.style.height = `${this.app.canvas.height / (this.app.renderer.resolution || 1)}px`;
-        
-        console.log(`📐 Canvas CSS size set to: ${this.app.canvas.style.width} × ${this.app.canvas.style.height}`);
+        // With autoDensity=true, PIXI manages CSS size automatically to match logical dimensions
       } catch {}
 
       this.mounted = true;
@@ -155,20 +153,9 @@ export class PixiApp {
    * Get canvas dimensions
    */
   public getDimensions(): { width: number; height: number } {
-    if (!this.app) {
-      return { width: 0, height: 0 };
-    }
-    
-    // Check if canvas is available - it might not be ready immediately after init
-    if (!this.app.canvas) {
-      console.warn('⚠️ Canvas not yet available - returning zero dimensions');
-      return { width: 0, height: 0 };
-    }
-    
-    return {
-      width: this.app.canvas.width,
-      height: this.app.canvas.height
-    };
+    if (!this.app) return { width: 0, height: 0 };
+    const screen = (this.app as any).screen || this.app.renderer.screen;
+    return { width: screen.width, height: screen.height };
   }
 
   /**
@@ -195,7 +182,18 @@ export class PixiApp {
     }
 
     if (this.container) {
-      this.container.innerHTML = '';
+      // Remove only the canvas element, preserve other grid elements like perspective tools
+      const canvas = this.container.querySelector('canvas');
+      if (canvas) {
+        canvas.remove();
+      }
+      
+      // If no grid layout, clear everything (legacy behavior)
+      const hasGridLayout = this.container.classList.contains('canvas--grid') || 
+                            this.container.classList.contains('engine__canvas--grid');
+      if (!hasGridLayout) {
+        this.container.innerHTML = '';
+      }
     }
 
     this.mounted = false;

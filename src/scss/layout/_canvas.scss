@@ -1,0 +1,91 @@
+// ==========================================================================
+// CANVAS - PIXI Canvas Element Styling
+// ==========================================================================
+// Handles ONLY the canvas element itself, not layout or positioning
+// Layout and positioning is handled by _engine.scss
+
+.canvas, #pixi-canvas {
+  // Base canvas element (PIXI canvas) - make it clearly visible
+  border: 2px solid black;
+  border-radius: 8px; // Gentle rounded corners
+  outline: none;
+  display: block;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  
+  // Default cursor for drawing
+  cursor: crosshair;
+
+  // Tool-specific cursors
+  &--tool-pen {
+    cursor: url('/src/assets/cursors/pen-cursor.svg') 2 2, crosshair;
+  }
+  
+  &--tool-brush {
+    cursor: url('/src/assets/cursors/brush-cursor.svg') 3 21, crosshair;
+  }
+  
+  &--tool-eraser {
+    cursor: none; // Custom eraser cursor handled by JavaScript
+  }
+  
+  &--tool-text {
+    cursor: text;
+  }
+  
+  &--tool-selection {
+    cursor: default;
+  }
+  
+  &--tool-shapes {
+    cursor: crosshair;
+  }
+
+  // Remove browser focus styling
+  &:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  // Canvas states
+  &--loading {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  &--error {
+    filter: grayscale(100%);
+    opacity: 0.3;
+  }
+
+  &--disabled {
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  // Zoom state - applied by SimplePerspectiveManager
+  &--zoomed {
+    // State tracking for canvas when zoomed in
+    // Can be used for conditional styling if needed
+    position: relative;
+  }
+
+  // Utility states
+  &--no-select {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+
+  &--high-contrast {
+    filter: contrast(150%);
+  }
+
+  // Print mode optimization
+  @media print {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    box-shadow: none !important;
+  }
+}

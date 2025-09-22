@@ -70,6 +70,8 @@
     }
 
     &__nav-course {
+        grid-column: 4;
+        grid-row: 1;
         display: flex;
         gap: var(--spacing-4);
     }
@@ -88,16 +90,9 @@
     }
 
     &__search {
-      
         grid-column: 2;
         grid-row: 2;
-        // RESET any common grid-item styling applied above
-       
-     
-
         align-items: stretch;
-
-        // Build fresh layout
         display: flex;
         flex-direction: column;
         gap: var(--spacing-2);
@@ -144,9 +139,13 @@
         background: var(--color-neutral-100); // Slightly grey container area
         overflow: auto; // Enable scrolling for large content
         padding: 2rem;
-        display: flex;
-        justify-content: center; // Center the canvas horizontally
-        align-items: flex-start; // Align to top vertically
+        
+        // Canvas is a 3-column grid: perspective tools, canvas area, spacer
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 1rem;
+        align-items: flex-start;
+        
         position: relative; // Allow absolute-positioned overlay cards
 
         box-shadow:
@@ -154,13 +153,180 @@
             inset -6px -6px 12px rgba(255, 255, 255, 0.8),
             2px 2px 6px rgba(0, 0, 0, 0.05);
 
-
         // Remove any default border/outline to avoid visual distraction
         border: none !important;
         outline: none !important;
+
+        // PIXI Canvas positioning in grid
+        canvas {
+            grid-column: 2; // Middle column in canvas grid
+            justify-self: center;
+            align-self: start;
+        }
+
     }
 
-  
+    // Perspective tools positioning - slim vertical toolbar
+    &__perspective {
+        grid-column: 1; // First column in canvas grid
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 0.5rem 0.25rem;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        position: sticky;
+        top: 50%; // Center vertically in the canvas area
+        transform: translateY(-50%); // Offset by half its height for true centering
+        align-self: center; // Center horizontally within its grid column
+        width: 48px; // Fixed slim width
+        min-width: 48px;
+
+        // Zoom display is an element within perspective
+        .zoom-display {
+            font-size: 0.625rem; // Smaller text
+            font-weight: 600;
+            color: var(--color-primary-600);
+            background: var(--color-primary-50);
+            border: 1px solid var(--color-primary-200);
+            border-radius: 3px;
+            padding: 0.125rem 0.25rem;
+            text-align: center;
+            white-space: nowrap;
+            min-height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        // Perspective tool items - compact button style
+        .perspective__item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--color-neutral-300);
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: var(--color-primary-50);
+                border-color: var(--color-primary-300);
+                transform: translateY(-1px);
+            }
+
+            &--active {
+                background: var(--color-primary-100);
+                border-color: var(--color-primary-400);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .perspective__icon {
+                width: 16px;
+                height: 16px;
+                opacity: 0.8;
+            }
+
+            .icon-label {
+                display: none; // Hide labels in slim mode
+            }
+        }
+    }
+
+    // Snap Menu - positioned dynamically by JavaScript
+    .snap-menu {
+        // Position is set by JavaScript - don't override with CSS
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid var(--color-neutral-300);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        padding: 8px;
+        min-width: 200px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(-10px); // Slide animation offset
+        transition: all 0.2s ease;
+
+        // Show state
+        &.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0); // Slide in when open
+        }
+
+        // Menu items
+        &__item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--color-neutral-700);
+            transition: all 0.15s ease;
+
+            &:hover {
+                background: var(--color-primary-50);
+                color: var(--color-primary-700);
+            }
+
+            &--active {
+                background: var(--color-primary-100);
+                color: var(--color-primary-800);
+                font-weight: 500;
+            }
+
+            .icon {
+                width: 14px;
+                height: 14px;
+                opacity: 0.7;
+            }
+        }
+
+        // Control rows
+        &__row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 0;
+            font-size: 12px;
+
+            label {
+                font-weight: 500;
+                color: var(--color-neutral-600);
+                white-space: nowrap;
+            }
+
+            input[type="number"] {
+                width: 50px;
+                padding: 2px 4px;
+                border: 1px solid var(--color-neutral-300);
+                border-radius: 3px;
+                font-size: 11px;
+            }
+
+            input[type="checkbox"] {
+                margin-right: 4px;
+            }
+        }
+
+        // Controls section
+        &__controls {
+            border-top: 1px solid var(--color-neutral-200);
+            margin-top: 8px;
+            padding-top: 8px;
+        }
+    }
+
+    // Preview area
     &__preview {
         grid-column: 4;
         grid-row: 2;

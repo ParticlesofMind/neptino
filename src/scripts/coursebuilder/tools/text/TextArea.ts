@@ -27,9 +27,8 @@ export class TextArea implements ITextArea {
   private flowManager: TextFlowManager;
   private lines: LineInfo[] = [];
   private lineHeight: number = 20;
-  private minHeight: number = 10;
-  private measureText: PixiText | null = null;
   private minHeight: number;
+  private measureText: PixiText | null = null;
 
   constructor(config: TextAreaConfig, parent: Container) {
     this.id = `text-area-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;

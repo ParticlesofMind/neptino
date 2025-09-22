@@ -26,6 +26,7 @@ export class ToolManager {
   private displayManager: DisplayObjectManager | null = null;
   private currentContainer: Container | null = null;
   private uiLayer: Container | null = null;
+  private allowPasteboard: boolean = true; // allow drawing outside content margins
 
  constructor() {
         this.settings = {
@@ -266,10 +267,13 @@ export class ToolManager {
  * Boundary Management
  * Provides canvas boundary utilities for all tools using user-specified margins
  */
- public getCanvasBounds(): CanvasBounds {
+  public getCanvasBounds(): CanvasBounds {
+ if (this.allowPasteboard) {
+   return BoundaryUtils.getCanvasExtents(this.currentContainer || undefined);
+ }
  const userMargins = canvasMarginManager.getMargins();
  return BoundaryUtils.getCanvasBounds(this.currentContainer || undefined, userMargins);
- }
+  }
 
  public clampPointToBounds(point: Point): Point {
  const bounds = this.getCanvasBounds();

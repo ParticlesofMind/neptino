@@ -41,8 +41,7 @@ export class SelectionOverlay {
     const selectionBox = new Graphics();
     selectionBox.name = 'selection-box';
     selectionBox.eventMode = 'none';
-    selectionBox.roundRect(0, 0, bounds.width, bounds.height, 4);
-    selectionBox.stroke({ width: 2, color: 0x4a79a4, alpha: 0.6 });
+    // Intentionally do not draw the selection rectangle to avoid distracting outlines
     if (this.overlayCenter && this.overlayBaseBounds) {
       const cx = bounds.x + bounds.width * 0.5;
       const cy = bounds.y + bounds.height * 0.5;
@@ -58,8 +57,11 @@ export class SelectionOverlay {
     }
     (this.uiContainer || container).addChild(selectionBox);
     const { handles } = this.createHandles(bounds);
-    handles.forEach(h => (this.uiContainer || container)!.addChild(h.graphics!));
-    this.group = { objects: [...objects], bounds, transformHandles: handles, selectionBox } as any;
+    // Optional: add rounding handles for single shape selections
+    const rounding = this.createRoundingHandles(objects, container);
+    const allHandles = handles.concat(rounding);
+    allHandles.forEach(h => (this.uiContainer || container)!.addChild(h.graphics!));
+    this.group = { objects: [...objects], bounds, transformHandles: allHandles, selectionBox } as any;
     this.sizeIndicator.update(bounds, container);
   }
 
@@ -69,8 +71,7 @@ export class SelectionOverlay {
     this.group.bounds = bounds;
     const g = this.group.selectionBox;
     g.clear();
-    g.roundRect(0, 0, bounds.width, bounds.height, 4);
-    g.stroke({ width: 2, color: 0x4a79a4, alpha: 0.6 });
+    // Do not draw selection rectangle (keep handles only)
     if (this.overlayCenter && this.overlayBaseBounds) {
       const cx = bounds.x + bounds.width * 0.5;
       const cy = bounds.y + bounds.height * 0.5;
@@ -103,12 +104,15 @@ export class SelectionOverlay {
       });
     } else {
       this.group.transformHandles.forEach(h => {
+        if (h.type === 'rounding') return; // handled below
         const pos = this.getHandlePosition(bounds, h.position);
         h.graphics!.position.set(pos.x, pos.y);
         h.bounds!.x = pos.x - hs; h.bounds!.y = pos.y - hs;
         h.center = new Point(pos.x, pos.y);
       });
     }
+    // Update rounding handles to match object corners in container space
+    this.updateRoundingHandles(container);
     this.sizeIndicator.update(bounds, container);
   }
 
@@ -118,8 +122,7 @@ export class SelectionOverlay {
     const g = this.group.selectionBox;
     const cx = center.x, cy = center.y;
     g.clear();
-    g.roundRect(0, 0, base.width, base.height, 4);
-    g.stroke({ width: 2, color: 0x4a79a4, alpha: 0.6 });
+    // Do not draw selection rectangle during rotation preview
     g.pivot.set(base.width * 0.5, base.height * 0.5);
     g.position.set(cx, cy);
     g.rotation = angle;
@@ -215,6 +218,82 @@ export class SelectionOverlay {
       case 'b': return new Point(bounds.x + bounds.width / 2, bounds.y + bounds.height);
       case 'l': return new Point(bounds.x, bounds.y + bounds.height / 2);
       default: return new Point(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+    }
+  }
+
+  // ----- Rounding handles for corner curvature editing -----
+  private createRoundingHandles(objects: any[], container: Container): TransformHandle[] {
+    try {
+      if (!objects || objects.length !== 1) return [];
+      const obj = objects[0];
+      const isShape = (obj as any).__toolType === 'shapes' || (obj as any).__meta?.kind === 'shapes';
+      const type = (obj as any).__meta?.shapeType || '';
+      if (!isShape) return [];
+      if (type !== 'rectangle' && type !== 'triangle') return [];
+
+      const positions = this.computeRoundingHandlePositions(obj, container, type);
+      const size = 8; const hs = size / 2;
+      const mk = (key: string, x: number, y: number): TransformHandle => {
+        const g = new Graphics();
+        g.name = `round-handle-${key}`;
+        g.eventMode = 'none';
+        g.circle(0, 0, hs).fill({ color: 0xffffff }).stroke({ width: 1, color: 0x10b981 });
+        g.position.set(x, y);
+        return { type: 'rounding', position: (key as any), graphics: g, bounds: new Rectangle(x - hs, y - hs, size, size), center: new Point(x, y) } as TransformHandle;
+      };
+      const out: TransformHandle[] = [];
+      for (const k of Object.keys(positions)) {
+        const p = (positions as any)[k];
+        out.push(mk(k, p.x, p.y));
+      }
+      return out;
+    } catch { return []; }
+  }
+
+  private updateRoundingHandles(container: Container): void {
+    if (!this.group) return;
+    const objs = this.group.objects || [];
+    if (objs.length !== 1) return;
+    const obj = objs[0];
+    const type = (obj as any).__meta?.shapeType || '';
+    if (type !== 'rectangle' && type !== 'triangle') return;
+    const positions = this.computeRoundingHandlePositions(obj, container, type);
+    const s = 8; const hs = s / 2;
+    for (const h of this.group.transformHandles) {
+      if (h.type !== 'rounding') continue;
+      const p = (positions as any)[h.position];
+      if (!p) continue;
+      h.graphics!.position.set(p.x, p.y);
+      h.bounds!.x = p.x - hs; h.bounds!.y = p.y - hs;
+      h.center = new Point(p.x, p.y);
+    }
+  }
+
+  private computeRoundingHandlePositions(obj: any, container: Container, shapeType: string): Record<string, Point> {
+    if (shapeType === 'rectangle') {
+      // Use object's local bounds corners, but offset inward to avoid conflicts with corner anchors
+      const b = obj.getLocalBounds() as Rectangle;
+      const inset = 16; // Distance from corner to avoid anchor point conflicts
+      const to = (x: number, y: number) => container.toLocal(obj.toGlobal(new Point(x, y)));
+      return {
+        tl: to(b.x + inset, b.y + inset),           // Top-left: move inward from corner
+        tr: to(b.x + b.width - inset, b.y + inset), // Top-right: move inward from corner
+        br: to(b.x + b.width - inset, b.y + b.height - inset), // Bottom-right: move inward from corner
+        bl: to(b.x + inset, b.y + b.height - inset), // Bottom-left: move inward from corner
+      };
+    } else {
+      // Triangle vertices: move inward from vertices to avoid anchor conflicts
+      const b = obj.getLocalBounds() as Rectangle;
+      const inset = 16; // Distance from vertex to avoid anchor point conflicts
+      const top = new Point(b.x + b.width / 2, b.y + inset); // Move down from top vertex
+      const br = new Point(b.x + b.width - inset, b.y + b.height - inset); // Move inward from bottom-right
+      const bl = new Point(b.x + inset, b.y + b.height - inset); // Move inward from bottom-left
+      const to = (p: Point) => container.toLocal(obj.toGlobal(p));
+      return {
+        t: to(top),
+        br: to(br),
+        bl: to(bl),
+      } as any;
     }
   }
 

@@ -5,27 +5,10 @@
 
 import { Point, Rectangle, Container } from "pixi.js";
 import { canvasMarginManager } from '../canvas/CanvasMarginManager';
-
-export interface CanvasBounds {
-  width: number;
-  height: number;
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-}
-
-export interface MarginSettings {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-}
+import { canvasDimensionManager } from '../utils/CanvasDimensionManager';
+import { CanvasBounds, MarginSettings } from '../types/canvas';
 
 export class BoundaryUtils {
-  // Canvas dimensions (4:3 aspect ratio)
-  public static readonly CANVAS_WIDTH = 900;
-  public static readonly CANVAS_HEIGHT = 1200;
 
   /**
    * Get canvas bounds from container with user-specified margins
@@ -36,16 +19,18 @@ export class BoundaryUtils {
     }
     const appliedMargins = margins;
     
-    // If container is provided, try to get bounds from it
-    let canvasWidth = BoundaryUtils.CANVAS_WIDTH;
-    let canvasHeight = BoundaryUtils.CANVAS_HEIGHT;
+    // Use CanvasDimensionManager for consistent dimensions
+    const dimensions = canvasDimensionManager.getCurrentDimensions();
+    let canvasWidth = dimensions.width;
+    let canvasHeight = dimensions.height;
     
+    // Legacy: If container is provided, try to get bounds from it
     if (container && container.parent) {
       // Try to get actual canvas dimensions from the container's parent (the stage)
       const stage = container.parent;
       if (stage && (stage as any).screen) {
-        canvasWidth = (stage as any).screen.width || BoundaryUtils.CANVAS_WIDTH;
-        canvasHeight = (stage as any).screen.height || BoundaryUtils.CANVAS_HEIGHT;
+        canvasWidth = (stage as any).screen.width || canvasWidth;
+        canvasHeight = (stage as any).screen.height || canvasHeight;
       }
     }
 
@@ -57,6 +42,29 @@ export class BoundaryUtils {
       right: canvasWidth - appliedMargins.right,
       bottom: canvasHeight - appliedMargins.bottom
     };
+  }
+
+  /**
+   * Get full canvas extents (no margins) in logical PIXI screen units
+   */
+  public static getCanvasExtents(container?: Container): CanvasBounds {
+    // Use CanvasDimensionManager for consistent dimensions
+    const dimensions = canvasDimensionManager.getCurrentDimensions();
+    let canvasWidth = dimensions.width;
+    let canvasHeight = dimensions.height;
+    
+    try {
+      if (container && container.parent && (container.parent as any).screen) {
+        const screen = (container.parent as any).screen;
+        canvasWidth = screen.width || canvasWidth;
+        canvasHeight = screen.height || canvasHeight;
+      } else if (typeof window !== 'undefined') {
+        const app = (window as any).canvasAPI?.getApp?.();
+        const screen = app?.screen || app?.renderer?.screen;
+        if (screen) { canvasWidth = screen.width || canvasWidth; canvasHeight = screen.height || canvasHeight; }
+      }
+    } catch {}
+    return { width: canvasWidth, height: canvasHeight, left: 0, top: 0, right: canvasWidth, bottom: canvasHeight };
   }
 
   /**

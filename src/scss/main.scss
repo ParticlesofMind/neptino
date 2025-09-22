@@ -35,16 +35,16 @@
 @use 'layout/curriculum';
 @use 'layout/classification';
 @use 'layout/engine';
+@use 'layout/canvas';             // Canvas layout system (BEM methodology)
 @use 'layout/settings';
 @use 'layout/page-setup';  
-@use 'layout/layout-lesson';       // Page setup component
-@use 'layout/animations';          // Animation scene components
-@use 'layout/print';               // Print-only styles (A4 canvas)
+@use 'layout/layout-lesson';      // Page setup component
+@use 'layout/animations';         // Animation scene components
+@use 'layout/print';              // Print-only styles (A4 canvas)
 // PAGES (page styling)
 // ==========================================================================
 @use 'pages/home';
 @use 'pages/courses';
-@use 'pages/coursebuilder-create';
 @use 'pages/coursebuilder-setup';
 
 // COMPONENTS (Reusable UI components)

@@ -195,6 +195,9 @@ export class ShapesTool extends BaseTool {
                     strokeColor: this.settings.color,
                     fillEnabled: this.settings.fillEnabled,
                     fillColor: this.settings.fillColor,
+                    cornerMode: 'uniform',
+                    cornerRadius: Math.max(0, this.settings.cornerRadius || 0),
+                    cornerRadii: {},
                 };
                 if (this.settings.shapeType === 'rectangle' && this.settings.cornerRadius) {
                     meta.cornerRadius = this.settings.cornerRadius;

@@ -8,10 +8,11 @@ import { SmartGuides } from './SmartGuides';
 import { SelectionMarquee } from './SelectionMarquee';
 import { TransformController } from './TransformController';
 import { SelectionGrouping } from './SelectionGrouping';
+import { redrawShapeFromMeta } from '../shapes/ShapeRedraw';
+import { RoundCorners, RoundingState } from './RoundCorners';
 import { SelectionStyling } from './SelectionStyling';
 import { animationState } from '../../animation/AnimationState';
 import { determineSelectionType, moveObjectByContainerDelta } from './SelectionUtils';
-import { buildNodeDesc, constructNodeFromDesc, NodeDesc } from './ClipboardFactory';
 import { historyManager } from '../../canvas/HistoryManager';
 
 type Mode = 'idle' | 'drag' | 'scale' | 'rotate';
@@ -34,6 +35,10 @@ export class SelectionTool extends BaseTool {
   private dragStart = new Point();
   private mode: Mode = 'idle';
   private lastPointerGlobal: Point | null = null;
+  // Rounding (corner curvature) state
+  private roundingState: RoundingState = RoundCorners.createRoundingState();
+  // Sticky snap state during drag so alignment feels "magnetic"
+  private snapLock: { x?: number; y?: number; targetX?: 'left' | 'center' | 'right'; targetY?: 'top' | 'center' | 'bottom' } = {};
 
   constructor() {
     super('selection', 'default');
@@ -53,6 +58,56 @@ export class SelectionTool extends BaseTool {
     const group = this.overlay.getGroup();
     const handle = this.overlay.findHandleAtPoint(p, true);
     if (handle && group) {
+      if (handle.type === 'rounding') {
+        // Corner rounding editing using new utility
+        const selectedObject = (this.selected && this.selected.length === 1) ? this.selected[0] : null;
+        
+        // DEBUG: Log object state before corner rounding
+        if (selectedObject) {
+          console.log('🔄 CORNER ROUNDING CLICK DETECTED');
+          console.log('📍 Object position BEFORE rounding:', {
+            x: selectedObject.x,
+            y: selectedObject.y,
+            bounds: {
+              x: selectedObject.getBounds().x,
+              y: selectedObject.getBounds().y,
+              width: selectedObject.getBounds().width,
+              height: selectedObject.getBounds().height
+            }
+          });
+          console.log('🎯 Handle info:', {
+            type: handle.type,
+            position: handle.position
+          });
+        }
+        
+        if (selectedObject && RoundCorners.supportsRounding(selectedObject)) {
+          console.log('✅ Starting corner rounding...');
+          RoundCorners.startRounding(
+            this.roundingState, 
+            handle.position, 
+            selectedObject, 
+            handle.position
+          );
+          
+          // DEBUG: Log object state immediately after startRounding
+          console.log('📍 Object position AFTER startRounding:', {
+            x: selectedObject.x,
+            y: selectedObject.y,
+            bounds: {
+              x: selectedObject.getBounds().x,
+              y: selectedObject.getBounds().y,
+              width: selectedObject.getBounds().width,
+              height: selectedObject.getBounds().height
+            }
+          });
+          
+          this.isDragging = true; 
+          this.mode = 'drag'; 
+          this.cursor = 'pointer';
+        }
+        return;
+      }
       this.mode = handle.type === 'rotation' ? 'rotate' : 'scale'; this.cursor = this.cursorForHandle(handle); this.isDragging = true;
       if (handle.type === 'rotation') {
         const b = group.bounds.clone(); const cx = b.x + b.width * 0.5; const cy = b.y + b.height * 0.5; const dx0 = p.x - cx; const dy0 = p.y - cy; (this as any)._rotateStartRef = Math.atan2(dy0, dx0); (this as any)._rotateBase = b; (this as any)._rotateCenter = new Point(cx, cy);
@@ -64,11 +119,8 @@ export class SelectionTool extends BaseTool {
         handle,
         p,
         {
-          getCanvasBounds: this.manager && this.manager.getCanvasBounds ? () => this.manager.getCanvasBounds() : undefined,
-          allowMirroring: true,
           restorePivotOnEnd: false,
           rotationSnapDeg: 15,
-          scaleSnapStep: 0.05,
           modifiers: { shiftKey: event.shiftKey, altKey: (event as any).altKey, ctrlKey: (event as any).ctrlKey || (event as any).metaKey },
         }
       );
@@ -112,6 +164,51 @@ export class SelectionTool extends BaseTool {
 
   public onPointerMove(event: FederatedPointerEvent, container: Container): void {
     if (!this.isActive) return; const p = container.toLocal(event.global); this.lastPointerGlobal = new Point(event.global.x, event.global.y);
+    // Corner rounding interaction using new utility
+    if (this.roundingState.active) {
+      // DEBUG: Log object state before update
+      console.log('🔄 CORNER ROUNDING MOVE - Object position before update:', {
+        x: this.roundingState.object?.x,
+        y: this.roundingState.object?.y
+      });
+      
+      const updated = RoundCorners.updateCornerRadius(this.roundingState, event.global);
+      if (updated && this.roundingState.object) {
+        try {
+          // CRITICAL FIX: Save position before redraw to prevent displacement to (0,0)
+          const savedPosition = {
+            x: this.roundingState.object.x,
+            y: this.roundingState.object.y
+          };
+          
+          console.log('📍 SAVED position before redraw:', savedPosition);
+          
+          // Redraw the shape with new corner radius
+          redrawShapeFromMeta(this.roundingState.object);
+          
+          // CRITICAL FIX: Force restore the saved position after redraw
+          this.roundingState.object.x = savedPosition.x;
+          this.roundingState.object.y = savedPosition.y;
+          
+          console.log('📍 RESTORED position after redraw:', {
+            x: this.roundingState.object.x,
+            y: this.roundingState.object.y
+          });
+          
+          // Update the overlay handles to follow the new geometry
+          this.overlay.refreshBoundsOnly(container);
+          
+          // DEBUG: Log after overlay refresh
+          console.log('📍 Object position AFTER overlay refresh:', {
+            x: this.roundingState.object.x,
+            y: this.roundingState.object.y
+          });
+        } catch (error) {
+          console.warn('Error redrawing shape during corner rounding:', error);
+        }
+      }
+      return;
+    }
     if ((this.transformer as any).isActive && (this.transformer as any).isActive()) {
       this.transformer.update(p, { shiftKey: event.shiftKey, altKey: (event as any).altKey, ctrlKey: (event as any).ctrlKey || (event as any).metaKey });
       const mode = this.mode; const group = this.overlay.getGroup();
@@ -123,29 +220,99 @@ export class SelectionTool extends BaseTool {
     if (this.isDraggingGroup && this.overlay.getGroup()) {
       let dx = p.x - this.dragStart.x; let dy = p.y - this.dragStart.y;
       try {
-        // First, snap pointer itself
+        // First, snap the pointer itself to make coarse snapping easy
         const snapped = snapManager.snapPoint(p, { container, exclude: this.selected });
         if (snapped) { dx = snapped.x - this.dragStart.x; dy = snapped.y - this.dragStart.y; }
 
-        // Symmetry: also try snapping the selection center to candidates independently of pointer
+        // Magnetic alignment: snap selection edges/center with stickiness
         const group = this.overlay.getGroup()!;
         const gb = group.bounds;
         const cand = snapManager.getCandidates({ container, exclude: this.selected, rect: group.bounds, margin: 200 });
-        const cx0 = gb.x + gb.width * 0.5;
-        const cy0 = gb.y + gb.height * 0.5;
-        const cxAfter = cx0 + dx;
-        const cyAfter = cy0 + dy;
-        const bias = Math.max(1, snapManager.getPrefs().centerBiasMultiplier || 1);
-        const thr = (snapManager.getPrefs().threshold || 6) * bias;
-        // Find nearest vertical/horizontal candidate to the center
-        let bestVX = cxAfter; let bestVD = thr + 1;
+        const prefs = snapManager.getPrefs();
+        const bias = Math.max(1, prefs.centerBiasMultiplier || 1);
+        const thr = (prefs.threshold || 6) * bias;
+        const release = Math.max(thr, (prefs as any).stickyHysteresis || Math.round(thr * 1.6));
+
+        // Compute ghost placement after current delta
+        const leftAfter = gb.x + dx;
+        const rightAfter = gb.x + gb.width + dx;
+        const cxAfter = gb.x + gb.width * 0.5 + dx;
+        const topAfter = gb.y + dy;
+        const bottomAfter = gb.y + gb.height + dy;
+        const cyAfter = gb.y + gb.height * 0.5 + dy;
+
         const vLines = (cand.canvas.v || []).concat(cand.vLines || []);
-        for (const vx of vLines) { const d = Math.abs(cxAfter - vx); if (d < bestVD && d <= thr) { bestVD = d; bestVX = vx; } }
-        let bestHY = cyAfter; let bestHD = thr + 1;
         const hLines = (cand.canvas.h || []).concat(cand.hLines || []);
-        for (const hy of hLines) { const d = Math.abs(cyAfter - hy); if (d < bestHD && d <= thr) { bestHD = d; bestHY = hy; } }
-        if (bestVD <= thr) { dx += (bestVX - cxAfter); }
-        if (bestHD <= thr) { dy += (bestHY - cyAfter); }
+
+        // Helper to find nearest candidate for axis
+        const nearest = (value: number, lines: number[], limit: number): { pos: number; d: number } | null => {
+          let best: { pos: number; d: number } | null = null;
+          for (const ln of lines) {
+            const d = Math.abs(value - ln);
+            if (d <= limit && (!best || d < best.d)) best = { pos: ln, d };
+          }
+          return best;
+        };
+
+        // Evaluate X candidates for left/center/right, preferring center if equal
+        const nxL = nearest(leftAfter, vLines, thr);
+        const nxC = nearest(cxAfter, vLines, thr);
+        const nxR = nearest(rightAfter, vLines, thr);
+        let snapX: { pos: number; target: 'left' | 'center' | 'right' } | null = null;
+        if (nxL || nxC || nxR) {
+          const pick = [nxC && { ...nxC, tgt: 'center' as const }, nxL && { ...nxL, tgt: 'left' as const }, nxR && { ...nxR, tgt: 'right' as const }]
+            .filter(Boolean) as Array<{ pos: number; d: number; tgt: 'left' | 'center' | 'right' }>;
+          pick.sort((a, b) => a.d - b.d);
+          const best = pick[0]!; snapX = { pos: best.pos, target: best.tgt };
+        }
+
+        // Evaluate Y candidates for top/center/bottom, preferring center if equal
+        const nyT = nearest(topAfter, hLines, thr);
+        const nyC = nearest(cyAfter, hLines, thr);
+        const nyB = nearest(bottomAfter, hLines, thr);
+        let snapY: { pos: number; target: 'top' | 'center' | 'bottom' } | null = null;
+        if (nyT || nyC || nyB) {
+          const pick = [nyC && { ...nyC, tgt: 'center' as const }, nyT && { ...nyT, tgt: 'top' as const }, nyB && { ...nyB, tgt: 'bottom' as const }]
+            .filter(Boolean) as Array<{ pos: number; d: number; tgt: 'top' | 'center' | 'bottom' }>;
+          pick.sort((a, b) => a.d - b.d);
+          const best = pick[0]!; snapY = { pos: best.pos, target: best.tgt };
+        }
+
+        // Apply sticky locks if already engaged; otherwise engage when within threshold
+        if (this.snapLock.x != null && this.snapLock.targetX) {
+          const current = this.snapLock.targetX === 'left' ? leftAfter : this.snapLock.targetX === 'right' ? rightAfter : cxAfter;
+          if (Math.abs(current - this.snapLock.x) <= release) {
+            const targetVal = this.snapLock.x;
+            if (this.snapLock.targetX === 'left') dx += (targetVal - leftAfter);
+            else if (this.snapLock.targetX === 'right') dx += (targetVal - rightAfter);
+            else dx += (targetVal - cxAfter);
+          } else {
+            this.snapLock.x = undefined; this.snapLock.targetX = undefined;
+          }
+        } else if (snapX) {
+          // Engage lock and align immediately
+          this.snapLock.x = snapX.pos; this.snapLock.targetX = snapX.target;
+          if (snapX.target === 'left') dx += (snapX.pos - leftAfter);
+          else if (snapX.target === 'right') dx += (snapX.pos - rightAfter);
+          else dx += (snapX.pos - cxAfter);
+        }
+
+        if (this.snapLock.y != null && this.snapLock.targetY) {
+          const current = this.snapLock.targetY === 'top' ? topAfter : this.snapLock.targetY === 'bottom' ? bottomAfter : cyAfter;
+          if (Math.abs(current - this.snapLock.y) <= release) {
+            const targetVal = this.snapLock.y;
+            if (this.snapLock.targetY === 'top') dy += (targetVal - topAfter);
+            else if (this.snapLock.targetY === 'bottom') dy += (targetVal - bottomAfter);
+            else dy += (targetVal - cyAfter);
+          } else {
+            this.snapLock.y = undefined; this.snapLock.targetY = undefined;
+          }
+        } else if (snapY) {
+          this.snapLock.y = snapY.pos; this.snapLock.targetY = snapY.target;
+          if (snapY.target === 'top') dy += (snapY.pos - topAfter);
+          else if (snapY.target === 'bottom') dy += (snapY.pos - bottomAfter);
+          else dy += (snapY.pos - cyAfter);
+        }
       } catch {}
       this.selected.forEach((obj) => { if (obj.position) { obj.position.x += dx; obj.position.y += dy; } }); this.dragStart.x += dx; this.dragStart.y += dy; this.overlay.refreshBoundsOnly(container); try { const b = this.overlay.getGroup()?.bounds; if (b) this.guides.update(container, this.selected, b); } catch {} return;
     }
@@ -155,6 +322,28 @@ export class SelectionTool extends BaseTool {
 
   public onPointerUp(event: FederatedPointerEvent, container: Container): void {
     if (!this.isActive) return; const p = container.toLocal(event.global);
+    
+    if (this.roundingState.active) { 
+      // DEBUG: Log object state before stopping corner rounding
+      console.log('🔄 CORNER ROUNDING ENDING');
+      const currentObject = this.roundingState.object; // Store reference before stopRounding clears it
+      if (currentObject) {
+        console.log('📍 Object position BEFORE stopRounding:', {
+          x: currentObject.x,
+          y: currentObject.y
+        });
+      }
+      
+      RoundCorners.stopRounding(this.roundingState);
+      
+      // DEBUG: Log object state after stopping corner rounding
+      if (currentObject) {
+        console.log('📍 Object position AFTER stopRounding:', {
+          x: currentObject.x,
+          y: currentObject.y
+        });
+      }
+    }
     if ((this.transformer as any).isActive && (this.transformer as any).isActive()) { this.transformer.end(); this.overlay.refreshBoundsOnly(container); this.isDragging = false; this.mode = 'idle'; this.cursor = 'default'; this.guides.clear(); return; }
     if (this.isDraggingGroup) { this.isDraggingGroup = false; }
     if (this.marquee.isActive()) { this.selected = this.marquee.finish(p, container, this.click, this.selected); this.overlay.refresh(this.selected, container); }
@@ -286,6 +475,7 @@ export class SelectionTool extends BaseTool {
 
   private cursorForHandle(h: any): string {
     if (h.type === 'rotation') return 'crosshair';
+    if (h.type === 'rounding') return 'pointer';
     if (h.type === 'edge') { switch (h.position) { case 't': case 'b': return 'ns-resize'; case 'l': case 'r': return 'ew-resize'; } }
     switch (h.position) { case 'tl': case 'br': return 'nwse-resize'; case 'tr': case 'bl': return 'nesw-resize'; default: return 'move'; }
   }
