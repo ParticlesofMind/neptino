@@ -1029,9 +1029,11 @@ export class ToolStateManager {
      */
     public updateCanvasCursor(): void {
         const canvas = document.querySelector('#pixi-canvas') as HTMLElement;
+        const container = document.querySelector('.engine__canvas') as HTMLElement;
+        
         if (!canvas) return;
 
-        // Remove all cursor classes
+        // Remove all cursor classes from canvas
         canvas.classList.remove(
             'cursor-pen',
             'cursor-eraser',
@@ -1039,23 +1041,41 @@ export class ToolStateManager {
             'cursor-brush',
         );
 
-        // Add cursor class for current tool
+        // 🎯 NEW: Also remove cursor classes from container
+        if (container) {
+            container.classList.remove(
+                'cursor-pen',
+                'cursor-eraser',
+                'cursor-text',
+                'cursor-brush',
+            );
+        }
+
+        // Add cursor class for current tool to both canvas and container
+        let cursorClass = 'cursor-default';
         switch (this.currentTool) {
             case 'pen':
-                canvas.classList.add('cursor-pen');
+                cursorClass = 'cursor-pen';
                 break;
             case 'eraser':
-                canvas.classList.add('cursor-eraser');
+                cursorClass = 'cursor-eraser';
                 break;
             case 'text':
-                canvas.classList.add('cursor-text');
+                cursorClass = 'cursor-text';
                 break;
             case 'brush':
-                canvas.classList.add('cursor-brush');
+                cursorClass = 'cursor-brush';
                 break;
             default:
-                canvas.classList.add('cursor-default');
+                cursorClass = 'cursor-default';
                 break;
+        }
+
+        canvas.classList.add(cursorClass);
+        
+        // 🎯 NEW: Apply same cursor to container for unified experience
+        if (container) {
+            container.classList.add(cursorClass);
         }
     }
 
