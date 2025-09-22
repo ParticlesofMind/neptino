@@ -167,7 +167,6 @@ export class ToolManager {
    // Update tool settings
    this.updateToolSettings(toolName);
 
-   console.log(`🔧 Tool set to: ${toolName}`);
    return true;
  } public getActiveTool(): Tool | null {
  return this.activeTool;

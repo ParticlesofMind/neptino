@@ -30,7 +30,6 @@ export class UIEventHandler {
                     try { (e as any)?.preventDefault?.(); } catch {}
                     const toolName = btn.dataset.tool;
                     if (toolName) {
-                        console.log(`🔧 UI: Tool selection (delegated) -> ${toolName}`);
                         this.toolStateManager.setTool(toolName);
                     }
                 }
@@ -376,7 +375,6 @@ export class UIEventHandler {
             return;
         }
 
-        console.log(`🎨 UI: Color changed for ${colorSelector} to ${colorHex}`);
 
         // Map compound selectors to tool and property
         const toolMapping: { [key: string]: { tool: string; property: string } } = {
@@ -395,7 +393,6 @@ export class UIEventHandler {
             settings[mapping.property] = colorHex;
             this.toolStateManager.updateToolSettings(mapping.tool, settings);
             
-            console.log(`🎨 UI: Updated ${mapping.tool}.${mapping.property} to ${colorHex}`);
         } else {
             console.warn(`🎨 UI: Unknown color selector: ${colorSelector}`);
         }
@@ -411,7 +408,6 @@ export class UIEventHandler {
             return;
         }
 
-        console.log(`🔶 SHAPES: Selected shape type: ${shapeType}`);
 
         // Activate the shapes tool first
         this.toolStateManager.setTool('shapes');
@@ -434,7 +430,6 @@ export class UIEventHandler {
         if (canvasAPI) {
             try {
                 canvasAPI.setToolSettings('shapes', { shapeType });
-                console.log(`🔶 CANVAS: Applied shape type: ${shapeType}`);
             } catch (error) {
                 console.error('❌ CANVAS: Error applying shape settings:', error);
             }
@@ -447,7 +442,6 @@ export class UIEventHandler {
     private initializeDefaultShapeSelection(): void {
         const savedShape = this.toolStateManager.getSelectedShape() || 'rectangle';
         
-        console.log(`🔶 SHAPES: Initializing with saved shape: ${savedShape}`);
         
         // Set the Select2 value
         const shapeSelect = document.querySelector('#shapes-select') as HTMLSelectElement;
@@ -478,7 +472,6 @@ export class UIEventHandler {
             return;
         }
 
-        console.log(`🔤 UI: Font changed to ${fontFamily}`);
         
         // Update text tool settings
         this.toolStateManager.updateToolSettings('text', {
@@ -496,7 +489,6 @@ export class UIEventHandler {
             return;
         }
 
-        console.log(`✏️ UI: Stroke type changed to ${strokeType}`);
         
         // Update pen tool settings
         this.toolStateManager.updateToolSettings('pen', {
@@ -517,14 +509,12 @@ export class UIEventHandler {
                 return;
             }
 
-            console.log('🎨 INIT: Initializing color dropdowns with saved values...');
 
             // Restore pen colors
             if (toolSettings.pen.strokeColor) {
                 const penStroke = (window as any).$('#pen-stroke-select');
                 if (penStroke.length) {
                     penStroke.val(toolSettings.pen.strokeColor).trigger('change.select2');
-                    console.log(`🎨 INIT: Set pen stroke color to ${toolSettings.pen.strokeColor}`);
                 }
             }
 
@@ -532,7 +522,6 @@ export class UIEventHandler {
                 const penFill = (window as any).$('#pen-fill-select');
                 if (penFill.length) {
                     penFill.val(toolSettings.pen.fillColor).trigger('change.select2');
-                    console.log(`🎨 INIT: Set pen fill color to ${toolSettings.pen.fillColor}`);
                 }
             }
 
@@ -541,7 +530,6 @@ export class UIEventHandler {
                 const brushColor = (window as any).$('#brush-color-select');
                 if (brushColor.length) {
                     brushColor.val(toolSettings.brush.color).trigger('change.select2');
-                    console.log(`🎨 INIT: Set brush color to ${toolSettings.brush.color}`);
                 }
             }
 
@@ -550,7 +538,6 @@ export class UIEventHandler {
                 const shapesStroke = (window as any).$('#shapes-stroke-select');
                 if (shapesStroke.length) {
                     shapesStroke.val(toolSettings.shapes.color).trigger('change.select2');
-                    console.log(`🎨 INIT: Set shapes stroke color to ${toolSettings.shapes.color}`);
                 }
             }
 
@@ -558,7 +545,6 @@ export class UIEventHandler {
                 const shapesFill = (window as any).$('#shapes-fill-select');
                 if (shapesFill.length) {
                     shapesFill.val(toolSettings.shapes.fillColor).trigger('change.select2');
-                    console.log(`🎨 INIT: Set shapes fill color to ${toolSettings.shapes.fillColor}`);
                 }
             }
 
@@ -567,7 +553,6 @@ export class UIEventHandler {
                 const textColor = (window as any).$('#text-color-select');
                 if (textColor.length) {
                     textColor.val(toolSettings.text.color).trigger('change.select2');
-                    console.log(`🎨 INIT: Set text color to ${toolSettings.text.color}`);
                 }
             }
         };

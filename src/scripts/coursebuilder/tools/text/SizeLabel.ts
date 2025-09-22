@@ -35,7 +35,6 @@ export class SizeLabel {
     });
     this.container.addChild(this.label);
 
-    console.log('📝 SizeLabel created');
   }
 
   public show(width: number, height: number, position: TextPosition): void {
@@ -68,7 +67,6 @@ export class SizeLabel {
     this.container.x = aligned.x;
     this.container.y = aligned.y;
 
-    console.log(`📝 SizeLabel updated: ${Math.round(width)}×${Math.round(height)} at (${aligned.x}, ${aligned.y})`);
   }
 
   public hide(): void {
@@ -85,6 +83,5 @@ export class SizeLabel {
       this.container.parent.removeChild(this.container);
     }
     this.container.destroy();
-    console.log('📝 SizeLabel destroyed');
   }
 }

@@ -194,7 +194,6 @@ export class TableCreator {
                 }
                 clickCount = 0;
 
-                console.log(`🔷 TABLE: Double-click detected - entering edit mode`);
 
                 // Find the container by traversing up the display tree
                 let container = cellGraphics.parent;

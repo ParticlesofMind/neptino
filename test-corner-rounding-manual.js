@@ -22,23 +22,19 @@ function testCornerRounding() {
         return;
       }
 
-      console.log('✅ Canvas API is ready');
 
       // Step 1: Set tool to shapes and create a rectangle
-      console.log('📐 Setting tool to shapes...');
       window.toolStateManager?.setTool('shapes');
 
       // Wait a moment for tool to activate
       setTimeout(() => {
         try {
           // Step 2: Get the drawing layer and create a rectangle manually
-          console.log('🎨 Creating a test rectangle...');
           
           // Get the shapes tool and check if it has a method to create shapes
           const shapesTool = window.toolStateManager?.getCurrentTool?.();
           
           if (!shapesTool) {
-            console.log('⚠️ Could not get shapes tool, trying direct approach...');
             
             // Alternative: Create graphics object directly via display manager
             const drawingLayer = window.canvasAPI.getDrawingLayer();
@@ -64,11 +60,7 @@ function testCornerRounding() {
               
               // Add to drawing layer
               drawingLayer.addChild(graphics);
-              
-              console.log('📦 Rectangle created at:', { x: graphics.x, y: graphics.y, meta: graphics.meta });
-              
-              // Step 3: Switch to selection tool
-              console.log('🎯 Switching to selection tool...');
+  
               window.toolStateManager?.setTool('selection');
               
               setTimeout(() => {
@@ -165,4 +157,3 @@ function testCornerRounding() {
 // Export for console use
 window.testCornerRounding = testCornerRounding;
 
-console.log('✅ Test function loaded. Run: testCornerRounding()');

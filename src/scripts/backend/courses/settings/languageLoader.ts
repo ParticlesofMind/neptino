@@ -40,7 +40,6 @@ export async function loadCourseLanguages(): Promise<CourseLanguage[]> {
     // Sort languages by name for better UX
     cachedLanguages = data.languages.sort((a, b) => a.name.localeCompare(b.name));
     
-    console.log('📚 Loaded', cachedLanguages.length, 'course languages');
     return cachedLanguages;
 
   } catch (error) {
@@ -95,7 +94,6 @@ export async function populateCourseLanguageSelect(selectElement: HTMLSelectElem
       selectElement.appendChild(option);
     });
 
-    console.log('📚 Populated course language select with', languages.length, 'languages');
 
   } catch (error) {
     console.error('Error populating course language select:', error);
@@ -129,20 +127,16 @@ if (typeof window !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {
       const languageSelect = document.getElementById('course-language') as HTMLSelectElement;
       if (languageSelect) {
-        console.log('🌍 Found course language select, populating...');
         populateCourseLanguageSelect(languageSelect);
       } else {
-        console.log('⚠️ Course language select not found');
       }
     });
   } else {
     // DOM already loaded
     const languageSelect = document.getElementById('course-language') as HTMLSelectElement;
     if (languageSelect) {
-      console.log('🌍 Found course language select (DOM ready), populating...');
       populateCourseLanguageSelect(languageSelect);
     } else {
-      console.log('⚠️ Course language select not found (DOM ready)');
     }
   }
 }

@@ -524,7 +524,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (id) canvasAPI.showSnapHintForId(id);
           })();
         } else if (item.type === 'videos') {
-          console.log(`🎬 DEBUG: Drop handler adding video - ${item.title || 'Video'} at (${x}, ${y})`);
           if (typeof canvasAPI.addVideoElement === 'function') {
             const id = canvasAPI.addVideoElement(
               item.previewUrl || item.contentUrl || '',

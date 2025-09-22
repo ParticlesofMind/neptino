@@ -9,7 +9,6 @@ export class HistoryManager {
   private redoStack: HistoryAction[] = [];
 
   push(action: HistoryAction): void {
-    try { action.label && console.log(`⏪ History push: ${action.label}`); } catch {}
     this.undoStack.push(action);
     this.redoStack.length = 0; // clear redo on new action
   }

@@ -28,7 +28,6 @@ export class EraserTool extends BaseTool {
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
  // 🔒 CRITICAL: Only respond if this tool is active
  if (!this.isActive) {
-   console.log('🗑️ ERASER: Ignoring pointer down - tool not active');
    return;
  }
 
@@ -298,7 +297,6 @@ export class EraserTool extends BaseTool {
  // Hide default cursor on the entire document when eraser is active
  document.body.style.cursor = "none";
  
- console.log('🗑️ ERASER: Professional cursor created with enhanced canvas boundary detection');
  }
 
  private updateCursorPosition(event: FederatedPointerEvent): void {

@@ -26,7 +26,6 @@ export class TextCursor implements ITextCursor {
     this.graphics.zIndex = 2000; // Ensure cursor is above everything else including creation guide
     parent.addChild(this.graphics);
 
-    console.log('📝 TextCursor created with high z-index');
   }
 
   public get visible(): boolean {
@@ -48,7 +47,6 @@ export class TextCursor implements ITextCursor {
   public setVisible(visible: boolean): void {
     if (this._visible === visible) return;
     
-    console.log(`📝 Setting cursor visibility: ${visible}`);
     this._visible = visible;
     
     if (visible) {
@@ -78,7 +76,6 @@ export class TextCursor implements ITextCursor {
     // Redraw to ensure visibility with new position
     this.redraw();
     
-    console.log(`📝 Cursor positioned at (${aligned.x}, ${aligned.y}), visible: ${this._visible}`);
   }
 
   public setHeight(height: number): void {
@@ -98,14 +95,12 @@ export class TextCursor implements ITextCursor {
     this.graphics.visible = true;
     this.redraw();
 
-    console.log(`📝 Starting cursor blinking at (${this._graphicsPosition.x}, ${this._graphicsPosition.y})`);
 
     // Start blinking animation
     this.blinkTimer = window.setInterval(() => {
       this.isBlinkVisible = !this.isBlinkVisible;
       this.graphics.visible = this.isBlinkVisible && this._visible;
       if (this.isBlinkVisible) {
-        console.log(`📝 Cursor blink ON at (${this._graphicsPosition.x}, ${this._graphicsPosition.y})`);
       }
     }, 500); // Blink every 500ms
   }
@@ -121,7 +116,6 @@ export class TextCursor implements ITextCursor {
     this.stopBlinking();
     this.graphics.parent?.removeChild(this.graphics);
     this.graphics.destroy();
-    console.log('📝 TextCursor destroyed');
   }
 
   private redraw(): void {
@@ -136,6 +130,5 @@ export class TextCursor implements ITextCursor {
     // Ensure visibility
     this.graphics.visible = this._visible && this.isBlinkVisible;
     
-    console.log(`📝 Cursor redrawn at (${this._graphicsPosition.x}, ${this._graphicsPosition.y}) height: ${this.height}, visible: ${this.graphics.visible}`);
   }
 }

@@ -73,7 +73,6 @@ export function calculateFitZoom(
   const clampedScale = Math.max(0.2, Math.min(1.0, optimalScale));
   
   // Log the calculation for debugging
-  console.log(`📐 Zoom calculation: container ${containerWidth}×${containerHeight}, padding ${padding}, available ${availableWidth}×${availableHeight}, scale ${clampedScale.toFixed(3)}`);
   
   return clampedScale;
 }

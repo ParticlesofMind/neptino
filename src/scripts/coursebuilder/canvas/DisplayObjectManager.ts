@@ -262,7 +262,6 @@ export class DisplayObjectManager {
     if (!displayObject) return false;
     
     displayObject.visible = visible;
-    console.log('👁️ Set visibility:', { id, visible });
     return true;
   }
 
@@ -274,7 +273,6 @@ export class DisplayObjectManager {
     if (!displayObject) return false;
     
     displayObject.alpha = Math.max(0, Math.min(1, alpha));
-    console.log('💫 Set alpha:', { id, alpha: displayObject.alpha });
     return true;
   }
 
@@ -287,7 +285,6 @@ export class DisplayObjectManager {
     
     displayObject.x = x;
     displayObject.y = y;
-    console.log('📍 Set position:', { id, x, y });
     return true;
   }
 
@@ -300,7 +297,6 @@ export class DisplayObjectManager {
     
     displayObject.scale.x = scaleX;
     displayObject.scale.y = scaleY ?? scaleX;
-    console.log('📏 Set scale:', { id, scaleX, scaleY: displayObject.scale.y });
     return true;
   }
 
@@ -312,7 +308,6 @@ export class DisplayObjectManager {
     if (!displayObject) return false;
     
     displayObject.rotation = rotation;
-    console.log('🔄 Set rotation:', { id, rotation });
     return true;
   }
 
@@ -361,8 +356,6 @@ export class DisplayObjectManager {
    * Destroy the manager and clean up all objects
    */
   public destroy(): void {
-    console.log('🗑️ Destroying DisplayObjectManager...');
     this.clear();
-    console.log('✅ DisplayObjectManager destroyed');
   }
 }

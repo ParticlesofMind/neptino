@@ -48,11 +48,9 @@ export class TableManager implements Tool {
     }
 
     onActivate(): void {
-        console.log("🔷 TABLE: Table tool activated");
     }
 
     onDeactivate(): void {
-        console.log("🔷 TABLE: Table tool deactivated");
         this.cellEditor.forceExitEditMode();
         this.contextMenu.hideMenu();
     }
@@ -65,7 +63,6 @@ export class TableManager implements Tool {
         // Enforce margins: only allow starting inside the content area
         const canvasBounds = this.toolManager?.getCanvasBounds ? this.toolManager.getCanvasBounds() : undefined;
         if (canvasBounds && !BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
-            console.log(`🔷 TABLE: 🚫 Start point in margin area rejected at (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`);
             return;
         }
 
@@ -92,7 +89,6 @@ export class TableManager implements Tool {
         this.cellEditor.forceExitEditMode();
         this.contextMenu.hideMenu();
         
-        console.log("🔷 TABLE: Pointer up completed with cleanup");
     }
 
     updateSettings(settings: any): void {
@@ -176,6 +172,5 @@ export class TableManager implements Tool {
             }
         }
         
-        console.log(`🔷 TABLE: Created table ${tableId} at (${x}, ${y}) with size ${width}x${height}`);
     }
 }

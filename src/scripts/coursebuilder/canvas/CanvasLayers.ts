@@ -59,7 +59,6 @@ export class CanvasLayers {
     // Enable z-index sorting
     this.app.stage.sortableChildren = true;
 
-    console.log('🎭 Canvas layers created: background(0), drawing(1), ui(2)');
 
     return { background, drawing, ui };
   }
@@ -89,7 +88,6 @@ export class CanvasLayers {
     this.backgroundGraphics.label = 'background-fill';
     this.layers.background.addChild(this.backgroundGraphics);
 
-    console.log('⬜ Background fill added:', { width, height });
   }
 
   /**
@@ -114,7 +112,6 @@ export class CanvasLayers {
     gridGraphics.label = 'background-grid';
     
     this.layers.background.addChild(gridGraphics);
-    console.log('📏 Background grid added:', { gridSize, color });
   }
 
   /**
@@ -145,7 +142,6 @@ export class CanvasLayers {
       layer.removeChildren();
     }
 
-    console.log(`🧹 Layer '${layerName}' cleared`);
   }
 
   /**
@@ -161,7 +157,6 @@ export class CanvasLayers {
    */
   public setLayerVisibility(layerName: keyof LayerSystem, visible: boolean): void {
     this.layers[layerName].visible = visible;
-    console.log(`👁️ Layer '${layerName}' visibility:`, visible);
   }
 
   /**
@@ -196,6 +191,5 @@ export class CanvasLayers {
     });
 
     this.backgroundGraphics = null;
-    console.log('🗑️ Canvas layers destroyed');
   }
 }

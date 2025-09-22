@@ -14,7 +14,6 @@ export function getCourseId(): string | null {
  const courseId = urlParams.get('courseId') || urlParams.get('id');
  
  if (courseId) {
- console.log('🔍 Course ID detected from URL:', courseId);
  }
  
  return courseId;

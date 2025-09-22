@@ -25,7 +25,6 @@ export class TextSelection {
     this.graphics.zIndex = 1500; // Below cursor (2000) but above text
     parent.addChild(this.graphics);
     
-    console.log('📝 TextSelection created');
   }
 
   public get hasSelection(): boolean {
@@ -70,7 +69,6 @@ export class TextSelection {
       this.clearVisualSelection();
     }
 
-    console.log(`📝 Selection set: ${this._selectionStart} to ${this._selectionEnd}, hasSelection: ${this._hasSelection}`);
   }
 
   /**
@@ -97,7 +95,6 @@ export class TextSelection {
     const end = this.findWordEnd(text, position);
 
     this.setSelection(start, end);
-    console.log(`📝 Selected word: "${this.selectedText}" at position ${position}`);
   }
 
   /**
@@ -107,7 +104,6 @@ export class TextSelection {
     if (!this.textArea) return;
     
     this.setSelection(0, this.textArea.text.length);
-    console.log('📝 Selected all text');
   }
 
   /**
@@ -133,7 +129,6 @@ export class TextSelection {
       this.clearVisualSelection();
     }
 
-    console.log(`📝 Extended selection to position ${position}`);
   }
 
   /**
@@ -153,7 +148,6 @@ export class TextSelection {
       this.clearVisualSelection();
     }
 
-    console.log(`📝 Started selection from ${this._selectionStart} to ${this._selectionEnd}`);
   }
 
   /**
@@ -169,7 +163,6 @@ export class TextSelection {
     this.textArea.deleteText(start, length);
     this.clearSelection();
 
-    console.log(`📝 Deleted selection from ${start} to ${end}`);
     return true;
   }
 
@@ -193,7 +186,6 @@ export class TextSelection {
     
     this.clearSelection();
 
-    console.log(`📝 Replaced selection with "${newText}"`);
     return start + newText.length; // Return new cursor position
   }
 
@@ -201,7 +193,6 @@ export class TextSelection {
     this.clearSelection();
     this.graphics.parent?.removeChild(this.graphics);
     this.graphics.destroy();
-    console.log('📝 TextSelection destroyed');
   }
 
   private renderSelection(): void {
@@ -251,7 +242,6 @@ export class TextSelection {
       this.renderMultiLineSelection(start, end, globalStartPos, globalEndPos, lineHeight, textLines, textAreaContainer, textAreaBounds);
     }
 
-    console.log(`📝 Rendered selection from (${globalStartPos.x}, ${globalStartPos.y}) to (${globalEndPos.x}, ${globalEndPos.y})`);
   }
 
   /**
@@ -320,7 +310,6 @@ export class TextSelection {
         .rect(rect.x, rect.y, rect.width, rect.height)
         .fill({ color: 0x0066CC, alpha: 0.3 }); // Blue highlight
         
-      console.log(`📝 Multi-line selection line ${lineIndex}: (${rect.x}, ${rect.y}) ${rect.width}×${rect.height}`);
     }
   }
 

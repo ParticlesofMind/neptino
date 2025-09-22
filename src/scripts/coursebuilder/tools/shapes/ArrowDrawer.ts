@@ -13,7 +13,6 @@ export class ArrowDrawer extends BaseShapeDrawer {
         const angle = Math.atan2(dy, dx);
         const length = Math.sqrt(dx * dx + dy * dy);
         
-        console.log(`🔶 SHAPES: Drawing arrow from (${Math.round(context.startX)}, ${Math.round(context.startY)}) to (${Math.round(context.currentX)}, ${Math.round(context.currentY)}) with length ${Math.round(length)}`);
         
         // Arrow head size
         const headLength = Math.min(20, length * 0.3);

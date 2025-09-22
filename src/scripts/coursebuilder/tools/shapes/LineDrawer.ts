@@ -8,7 +8,6 @@ import { ShapeDrawingContext, StrokeStyle, FillStyle } from "./types";
 
 export class LineDrawer extends BaseShapeDrawer {
     draw(context: ShapeDrawingContext, strokeStyle: StrokeStyle, _fillStyle?: FillStyle): void {
-        console.log(`🔶 SHAPES: Drawing line from (${Math.round(context.startX)}, ${Math.round(context.startY)}) to (${Math.round(context.currentX)}, ${Math.round(context.currentY)})`);
         
         this.graphics
             .moveTo(context.startX, context.startY)

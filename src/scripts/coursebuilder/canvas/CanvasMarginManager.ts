@@ -51,7 +51,6 @@ export class CanvasMarginManager {
     });
 
     this.currentMargins = pixelMargins;
-    console.log('📏 Updated canvas margins to pixels:', this.currentMargins);
     
     // Update visual margins if canvas is available
     this.updateMarginVisuals();
@@ -148,7 +147,6 @@ export class CanvasMarginManager {
     // Add to container (should be background or guides layer)
     this.container.addChild(this.marginGraphics);
     
-    console.log('📏 Updated clean blue margin lines:', margins);
   }  /**
    * Hide margin visuals
    */

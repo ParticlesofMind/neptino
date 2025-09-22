@@ -175,7 +175,6 @@ export class TableContextMenu {
     private clearCell(cell: TableCell): void {
         // Reset to placeholder text
         cell.text.text = `R${cell.row + 1}C${cell.column + 1}`;
-        console.log(`🔷 TABLE: Cleared cell R${cell.row + 1}C${cell.column + 1}`);
     }
 
     private copyCell(cell: TableCell): void {
@@ -198,7 +197,6 @@ export class TableContextMenu {
             document.body.removeChild(textArea);
         }
 
-        console.log(`🔷 TABLE: Copied cell R${cell.row + 1}C${cell.column + 1}: "${textToCopy}"`);
     }
 
     private async pasteCell(cell: TableCell): Promise<void> {
@@ -214,7 +212,6 @@ export class TableContextMenu {
 
             if (pastedText.trim()) {
                 cell.text.text = pastedText.trim();
-                console.log(`🔷 TABLE: Pasted into cell R${cell.row + 1}C${cell.column + 1}: "${pastedText}"`);
             }
         } catch (err) {
             console.error("Failed to paste text: ", err);
@@ -228,44 +225,37 @@ export class TableContextMenu {
 
     // Row and Column Operations (These are placeholders - full implementation would require table restructuring)
     private insertRowAbove(cell: TableCell): void {
-        console.log(`🔷 TABLE: Insert row above R${cell.row + 1} (not implemented)`);
         // TODO: Implement row insertion
         alert("Row insertion feature coming soon!");
     }
 
     private insertRowBelow(cell: TableCell): void {
-        console.log(`🔷 TABLE: Insert row below R${cell.row + 1} (not implemented)`);
         // TODO: Implement row insertion
         alert("Row insertion feature coming soon!");
     }
 
     private insertColumnLeft(cell: TableCell): void {
-        console.log(`🔷 TABLE: Insert column left of C${cell.column + 1} (not implemented)`);
         // TODO: Implement column insertion
         alert("Column insertion feature coming soon!");
     }
 
     private insertColumnRight(cell: TableCell): void {
-        console.log(`🔷 TABLE: Insert column right of C${cell.column + 1} (not implemented)`);
         // TODO: Implement column insertion
         alert("Column insertion feature coming soon!");
     }
 
     private deleteRow(cell: TableCell): void {
-        console.log(`🔷 TABLE: Delete row R${cell.row + 1} (not implemented)`);
         // TODO: Implement row deletion
         alert("Row deletion feature coming soon!");
     }
 
     private deleteColumn(cell: TableCell): void {
-        console.log(`🔷 TABLE: Delete column C${cell.column + 1} (not implemented)`);
         // TODO: Implement column deletion
         alert("Column deletion feature coming soon!");
     }
 
     // Table Actions
     private showTableProperties(table: PixiTableData): void {
-        console.log(`🔷 TABLE: Show properties for table ${table.id} (not implemented)`);
         // TODO: Implement table properties dialog
         alert("Table properties dialog coming soon!");
     }
@@ -277,17 +267,14 @@ export class TableContextMenu {
                 cell.text.text = `R${rowIndex + 1}C${colIndex + 1}`;
             });
         });
-        console.log(`🔷 TABLE: Cleared all cells in table ${table.id}`);
     }
 
     private addRow(table: PixiTableData): void {
-        console.log(`🔷 TABLE: Add row to table ${table.id} (not implemented)`);
         // TODO: Implement add row
         alert("Add row feature coming soon!");
     }
 
     private addColumn(table: PixiTableData): void {
-        console.log(`🔷 TABLE: Add column to table ${table.id} (not implemented)`);
         // TODO: Implement add column
         alert("Add column feature coming soon!");
     }
@@ -307,7 +294,6 @@ export class TableContextMenu {
 
             // Clean up
             table.container.destroy();
-            console.log(`🔷 TABLE: Deleted table ${table.id}`);
         }
     }
 }

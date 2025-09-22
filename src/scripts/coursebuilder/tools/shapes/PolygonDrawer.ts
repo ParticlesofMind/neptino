@@ -26,7 +26,6 @@ export class PolygonDrawer extends BaseShapeDrawer {
         const centerY = context.startY + context.height / 2;
         const radius = Math.max(Math.abs(context.width), Math.abs(context.height)) / 2;
         
-        console.log(`🔶 SHAPES: Drawing ${this.sides}-sided polygon at center (${Math.round(centerX)}, ${Math.round(centerY)}) with radius ${Math.round(radius)}`);
         
         // Generate polygon points
         const points: number[] = [];

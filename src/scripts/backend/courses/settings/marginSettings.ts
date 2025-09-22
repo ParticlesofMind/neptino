@@ -321,7 +321,6 @@ export class MarginSettingsHandler {
  */
  public setCourseId(courseId: string): void {
  this.courseId = courseId;
- console.log('📏 Setting course ID for margin settings:', courseId);
  this.loadSettingsFromDatabase(courseId);
  }
 

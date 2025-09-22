@@ -62,20 +62,17 @@ export class TextTool extends BaseTool {
 
     this.inputHandler = null; // Will be created when first needed
 
-    console.log('📝 TextTool initialized with drag-to-create system');
   }
 
   private ensureInputHandler(container: Container): TextInputHandler {
     if (!this.inputHandler) {
       this.inputHandler = new TextInputHandler(container);
-      console.log('📝 TextInputHandler created with container');
     }
     return this.inputHandler;
   }
 
     onPointerDown(event: FederatedPointerEvent, container: Container): void {
     if (!this.isActive) {
-      console.log('📝 TextTool: Ignoring pointer down - tool not active');
       return;
     }
 
@@ -86,14 +83,12 @@ export class TextTool extends BaseTool {
     const canvasBounds = this.manager.getCanvasBounds();
     const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
     
-    console.log(`📝 TextTool pointer down at (${clampedPoint.x.toFixed(1)}, ${clampedPoint.y.toFixed(1)})`);
 
     // Check if clicking inside an existing text area
     // Use global point for hit-testing against text areas
     const globalClamped = (container as any).toGlobal ? (container as any).toGlobal(clampedPoint) : event.global;
     const existingTextArea = this.findTextAreaAtPoint(globalClamped);
     if (existingTextArea) {
-      console.log('📝 Clicked inside existing text area');
       // Convert to text-area local coordinates for precise caret placement
       const localInText = existingTextArea.pixiContainer.toLocal(globalClamped);
 
@@ -107,7 +102,6 @@ export class TextTool extends BaseTool {
       const inputHandler = this.ensureInputHandler(container);
       if (isDoubleClick) {
         // Double-click: place caret and fully enter edit mode
-        console.log('📝 Double-click inside text area - entering edit mode');
         this.handleTextAreaDoubleClick(existingTextArea, localInText);
       } else {
         // Single-click: place caret and prepare for drag selection
@@ -125,12 +119,10 @@ export class TextTool extends BaseTool {
         Math.abs(clampedPoint.x - this.lastClickPoint.x) < 10 && 
         Math.abs(clampedPoint.y - this.lastClickPoint.y) < 10) {
       
-      console.log('📝 Double-click detected - starting text creation');
       this.proportionalDrag = !!(event as any).shiftKey;
       this.startDragCreation(clampedPoint, container);
     } else {
       // Single click on empty area - deactivate current text
-      console.log('📝 Single click on empty area - deactivating current text');
       this.deactivateCurrentTextArea();
     }
 
@@ -201,7 +193,6 @@ export class TextTool extends BaseTool {
       });
       (window as any).textTool = api;
     } catch {}
-    console.log('📝 TextTool activated');
   }
 
   onDeactivate(): void {
@@ -210,7 +201,6 @@ export class TextTool extends BaseTool {
     this.cleanupDragState();
     this.deactivateCurrentTextArea();
     this.cleanupCursorManagement();
-    console.log('📝 TextTool deactivated');
   }
 
   /**
@@ -300,7 +290,6 @@ export class TextTool extends BaseTool {
       } catch {}
       // Refresh flow/metrics to match new style
       try { (this.activeTextArea as any).refreshTextMetrics?.(); } catch {}
-      console.log('📝 Updated settings for active text area');
       // Update caret color to ensure contrast and height to line metrics
       try {
         const caretColor = this.computeCaretColor(this.settings.color, (this.activeTextArea as any).settings?.backgroundColor);
@@ -331,7 +320,6 @@ export class TextTool extends BaseTool {
       }
       
       textArea.destroy();
-      console.log(`📝 TextArea removed: ${textArea.id}`);
     }
   }
 
@@ -343,7 +331,6 @@ export class TextTool extends BaseTool {
     this.textAreas = [];
     this.activeTextArea = null;
     this.inputHandler?.setActiveTextArea(null);
-    console.log('📝 All text areas cleared');
   }
 
   /**
@@ -357,7 +344,6 @@ export class TextTool extends BaseTool {
       // Convert global point to local point within the text area
       const localPoint = textArea.pixiContainer.toLocal(point);
       this.handleTextAreaDoubleClick(textArea, localPoint);
-      console.log('📝 Activated text area for editing from selection tool');
     } else {
       console.warn('📝 Could not find text area for PIXI text object');
     }
@@ -391,7 +377,6 @@ export class TextTool extends BaseTool {
   }
 
   private startDragCreation(localPoint: Point, container: Container): void {
-    console.log(`📝 Starting drag creation at (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`);
     
     this.state = {
       mode: 'creating',
@@ -475,7 +460,6 @@ export class TextTool extends BaseTool {
       }
     }
     
-    console.log(`📝 Drag preview updated: ${rectWidth}×${rectHeight} at (${Math.round(rectX)}, ${Math.round(rectY)})`);
   }
 
   private finalizeDragCreation(container: Container): void {
@@ -517,9 +501,7 @@ export class TextTool extends BaseTool {
       // Show persistent creation guide with size label at the text area bounds
       this.showCreationGuide(bounds, container);
       
-      console.log('📝 Text area created and creation guide positioned at bounds');
     } else {
-      console.log('📝 Drag too small, no text area created');
       // Only cleanup if no text area was created
       this.cleanupDragState();
     }
@@ -579,7 +561,6 @@ export class TextTool extends BaseTool {
     (this.textCursor as any).setGraphicsPosition(startPos.x, startPos.y);
     this.textCursor.setVisible(true);
     
-    console.log(`📝 Cursor activated at position (${startPos.x}, ${startPos.y}) with height ${this.textCursor.pixiGraphics.height}`);
     
     this.state.mode = 'active';
   }
@@ -633,7 +614,6 @@ export class TextTool extends BaseTool {
     }
     this.state.mode = 'inactive';
     
-    console.log('📝 Text area deactivated');
   }
 
   // ======= Test/Debug accessors =======
@@ -719,7 +699,6 @@ export class TextTool extends BaseTool {
       (this.textCursor as any).setGraphicsPosition(graphicsPos.x, graphicsPos.y);
     }
     
-    console.log(`📝 Text area double-clicked for editing: ${textArea.id}`);
   }
 
   private findTextAreaAtPoint(point: Point): TextArea | null {
@@ -775,7 +754,6 @@ export class TextTool extends BaseTool {
       this.inputHandler.destroy();
     }
     
-    console.log('📝 TextTool destroyed');
   }
 
   // Static helper methods for UI

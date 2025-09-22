@@ -28,15 +28,10 @@ export class ScheduleCourseManager {
     // Get course ID from parameter, URL, or session storage
     this.courseId = courseId || this.getCourseId();
 
-    console.log('📅 ScheduleCourseManager initializing with course ID:', this.courseId);
-    console.log('📅 Constructor received courseId parameter:', courseId);
-    console.log('📅 Current window.location.search:', window.location.search);
-    console.log('📅 Current window.location.href:', window.location.href);
 
     // Always store instance globally for debugging, even without course ID
     if (typeof window !== "undefined") {
       (window as any).scheduleManagerInstance = this;
-      console.log('📅 Schedule manager instance stored globally');
     }
 
     if (!this.courseId) {
@@ -61,14 +56,12 @@ export class ScheduleCourseManager {
     const courseIdFromUrl = urlParams.get('courseId') || urlParams.get('id');
 
     if (courseIdFromUrl) {
-      console.log('📅 Course ID from URL:', courseIdFromUrl);
       return courseIdFromUrl;
     }
 
     // Fallback to session storage (for backward compatibility)
     const courseIdFromSession = sessionStorage.getItem("currentCourseId");
     if (courseIdFromSession) {
-      console.log('📅 Course ID from session storage:', courseIdFromSession);
       return courseIdFromSession;
     }
 
@@ -287,7 +280,6 @@ export class ScheduleCourseManager {
   }
 
   private renderSchedulePreview(): void {
-    console.log('📅 Rendering schedule preview with', this.currentSchedule?.length || 0, 'sessions');
 
     const previewContainer = this.schedulePreviewSection.querySelector('.schedule__content');
     if (!previewContainer) {
@@ -307,7 +299,6 @@ export class ScheduleCourseManager {
 
     // Show schedule rows or placeholder
     if (this.currentSchedule.length > 0) {
-      console.log('📅 Rendering', this.currentSchedule.length, 'schedule rows');
       this.currentSchedule.forEach((session, index) => {
         const row = this.createScheduleRow(session, index);
         previewContainer.appendChild(row);
@@ -316,7 +307,6 @@ export class ScheduleCourseManager {
       // Hide any existing placeholder and show the preview
       this.schedulePreviewSection.style.display = 'block';
     } else {
-      console.log('📅 No schedule data - showing placeholder');
       // Show placeholder if no schedule
       const placeholder = document.createElement('div');
       placeholder.className = 'schedule__placeholder';
@@ -444,7 +434,6 @@ export class ScheduleCourseManager {
       return;
     }
 
-    console.log('📅 Loading existing schedule for course ID:', this.courseId);
 
     try {
       const { data, error } = await supabase
@@ -458,17 +447,14 @@ export class ScheduleCourseManager {
         throw error;
       }
 
-      console.log('📅 Raw schedule data from Supabase:', data);
 
       if (data?.schedule_settings && Array.isArray(data.schedule_settings)) {
-        console.log('📅 Found existing schedule with', data.schedule_settings.length, 'sessions');
         this.currentSchedule = data.schedule_settings;
         this.renderSchedulePreview();
         this.lockScheduleConfig();
         this.showDeleteScheduleButton();
       } else {
         // No existing schedule or invalid data - ensure currentSchedule is empty array
-        console.log('📅 No existing schedule found or invalid data format');
         this.currentSchedule = [];
         this.hideSchedulePreview();
         this.unlockScheduleConfig();
@@ -534,7 +520,6 @@ export class ScheduleCourseManager {
     }
 
     this.courseId = courseId;
-    console.log('📅 Course ID updated for schedule manager:', courseId);
 
     // Immediately reload data with new course ID
     this.loadExistingSchedule();

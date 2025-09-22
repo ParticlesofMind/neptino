@@ -166,7 +166,6 @@ export class LoadTemplatesModal {
    * Shows a preview of the template (placeholder implementation)
    */
   public async previewTemplate(templateId: string): Promise<void> {
-    console.log('Previewing template:', templateId);
     // Implementation would show a preview modal
     alert('Template preview functionality coming soon!');
   }

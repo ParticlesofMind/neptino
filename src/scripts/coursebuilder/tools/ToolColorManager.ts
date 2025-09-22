@@ -114,7 +114,6 @@ export class ToolColorManager {
 
       document.dispatchEvent(legacyEvent);
 
-      console.log(`Color changed for ${toolType} (${mapping.tool}.${mapping.property}):`, color);
     } else {
       // Fallback for simple tool types
       const event = new CustomEvent('toolColorChange', {
@@ -134,7 +133,6 @@ export class ToolColorManager {
 
       document.dispatchEvent(legacyEvent);
 
-      console.log(`Color changed for ${toolType} tool:`, color);
     }
   }
 

@@ -4,7 +4,6 @@
 
     this.canvasContainer.classList.add('canvas--grid');
     
-    console.log('📐 Canvas layout: Grid mode (perspective tools in column)');
   }
  * Handles different layout modes for the canvas and perspective tools
  */
@@ -30,7 +29,6 @@ export class CanvasLayoutManager {
     this.canvasContainer.classList.remove('canvas--compact');
     this.canvasContainer.classList.add('canvas--grid');
     
-    console.log('📐 Canvas layout: Grid mode (perspective tools in separate column)');
   }
 
   /**
@@ -42,7 +40,6 @@ export class CanvasLayoutManager {
 
     this.canvasContainer.classList.remove('canvas--grid');
     
-    console.log('📐 Canvas layout: Compact mode (perspective tools overlaid)');
   }
 
   /**
@@ -73,7 +70,6 @@ export class CanvasLayoutManager {
       this.useGridLayout();
     }
     
-    console.log(`📐 Canvas layout: Auto mode (${viewportWidth < 1200 ? 'compact' : 'grid'} for ${viewportWidth}px viewport)`);
   }
 
   /**
@@ -99,7 +95,6 @@ export class CanvasLayoutManager {
       this.useAutoLayout();
     });
 
-    console.log('📐 Canvas responsive layout setup complete');
   }
 
   /**
@@ -112,10 +107,5 @@ export class CanvasLayoutManager {
     (window as any).useCompactLayout = () => this.useCompactLayout();
     (window as any).useAutoLayout = () => this.useAutoLayout();
     
-    console.log('🔧 Canvas layout debug commands added:');
-    console.log('  - toggleCanvasLayout() - Toggle between grid and compact');
-    console.log('  - useGridLayout() - Force grid layout');
-    console.log('  - useCompactLayout() - Force compact layout');
-    console.log('  - useAutoLayout() - Auto-select based on viewport');
   }
 }

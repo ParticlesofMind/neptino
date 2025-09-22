@@ -28,7 +28,6 @@ export class DeleteCourseManager {
   private initialize(): void {
     this.deleteButton = document.getElementById('delete-course-btn') as HTMLButtonElement;
     this.setupEventListeners();
-    console.log('🗑️ Delete Course Manager initialized');
   }
 
   private getCourseIdFromStorage(): string | null {
@@ -171,7 +170,6 @@ export class DeleteCourseManager {
     }
 
     try {
-      console.log('🗑️ Starting course deletion process for:', this.courseId);
       
       const result = await this.deleteCourseFromDatabase(this.courseId);
 
@@ -209,7 +207,6 @@ export class DeleteCourseManager {
   private async deleteCourseFromDatabase(courseId: string): Promise<CourseDeleteResult> {
     try {
       // Delete related data first (foreign key constraints)
-      console.log('🧹 Cleaning up related course data...');
 
       // Delete course sessions/schedules
       const { error: sessionsError } = await supabase
@@ -242,7 +239,6 @@ export class DeleteCourseManager {
       }
 
       // Delete the main course record
-      console.log('🗑️ Deleting main course record...');
       const { error: courseError } = await supabase
         .from('courses')
         .delete()
@@ -252,7 +248,6 @@ export class DeleteCourseManager {
         throw new Error(`Failed to delete course: ${courseError.message}`);
       }
 
-      console.log('✅ Course deleted successfully');
       return {
         success: true,
         message: 'Course deleted successfully'
@@ -311,7 +306,6 @@ export class DeleteCourseManager {
    */
   public setCourseId(courseId: string): void {
     this.courseId = courseId;
-    console.log('🗑️ Delete manager course ID updated:', courseId);
   }
 
   /**
@@ -328,7 +322,6 @@ export class DeleteCourseManager {
     if (this.confirmationModal) {
       this.hideDeleteConfirmation();
     }
-    console.log('🗑️ Delete Course Manager destroyed');
   }
 }
 

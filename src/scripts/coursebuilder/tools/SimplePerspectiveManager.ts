@@ -80,7 +80,6 @@ export class SimplePerspectiveManager {
                 this.canvasContainer?.focus();
             });
             
-            console.log('🎨 Canvas container found and configured for focus');
         }
         
         if (!this.canvasContainer) {
@@ -94,7 +93,6 @@ export class SimplePerspectiveManager {
         // Initialize zoom display
         setTimeout(() => this.updateZoomDisplay(), 100); // Small delay to ensure DOM is ready
 
-        console.log('🔍 Simple Perspective Manager initialized');
     }
 
     /**
@@ -117,7 +115,6 @@ export class SimplePerspectiveManager {
                     try { this.fitToContainer(); } catch {}
                 }, 50);
             } else {
-                console.log('🔍 Canvas not found yet, retrying in 100ms...');
                 // Try again later if canvas not found
                 setTimeout(() => this.findCanvas(), 100);
             }
@@ -154,7 +151,6 @@ export class SimplePerspectiveManager {
             this.canvas = this.canvasContainer.querySelector('canvas');
             if (this.canvas) {
                 this.setupCanvasInteractions();
-                console.log('🎨 Canvas reference updated for grid functionality');
             } else {
                 console.warn('🚨 Canvas element not found for grid functionality');
             }
@@ -179,7 +175,6 @@ export class SimplePerspectiveManager {
         document.addEventListener('keydown', this.boundKeyboardHandler, { capture: true, passive: false });
         document.addEventListener('keyup', this.boundKeyupHandler, { capture: true, passive: false });
         
-        console.log('⌨️ Keyboard shortcuts bound for zoom controls');
         
         // Note: Wheel zoom is bound directly to canvas in setupCanvasInteractions()
         // Refit on window resize if user hasn't adjusted zoom manually
@@ -215,7 +210,6 @@ export class SimplePerspectiveManager {
             case 'grid':
                 // Grid button is now handled by SnapMenu system
                 // Don't handle it here to avoid conflicts
-                console.log('Grid button clicked - handled by SnapMenu system');
                 break;
             default:
                 console.warn('Unknown perspective action:', action);
@@ -254,7 +248,6 @@ export class SimplePerspectiveManager {
             event.code === 'Equal' ||
             event.code === 'NumpadEqual'
         )) {
-            console.log('🔍 Zoom in shortcut detected');
             event.preventDefault();
             event.stopPropagation();
             this.zoomIn();
@@ -267,7 +260,6 @@ export class SimplePerspectiveManager {
             event.code === 'NumpadSubtract' ||
             event.code === 'Minus'
         )) {
-            console.log('🔍 Zoom out shortcut detected');
             event.preventDefault();
             event.stopPropagation();
             this.zoomOut();
@@ -327,7 +319,6 @@ export class SimplePerspectiveManager {
         // Change cursor to grab
         this.updateCanvasCursor('grab');
         
-        console.log('🖐️ Spacebar pan mode activated');
     }
 
     /**
@@ -357,7 +348,6 @@ export class SimplePerspectiveManager {
             this.wasToolActiveBeforeSpacebar = null;
         }
         
-        console.log('🖐️ Spacebar pan mode deactivated');
     }
 
     /**
@@ -424,7 +414,6 @@ export class SimplePerspectiveManager {
         this.updateZoomDisplay();
         if (fromUser) this.userZoomLocked = true;
 
-        console.log(`🔍 Zoom: ${Math.round(this.zoomLevel * 100)}%`);
     }
 
     /**
@@ -451,7 +440,6 @@ export class SimplePerspectiveManager {
         this.updatePanAvailability();
         this.updateZoomDisplay();
 
-        console.log('↩️ View reset to 100%');
     }
 
     /**
@@ -545,7 +533,6 @@ export class SimplePerspectiveManager {
             this.reactivateDrawingTools();
         }
 
-        console.log(`✋ Pan mode ${this.isPanMode ? 'enabled' : 'disabled'}`);
     }
 
     /**
@@ -562,7 +549,6 @@ export class SimplePerspectiveManager {
                 // 🎯 CRITICAL: Reactivate drawing tools when grab is deactivated
                 this.reactivateDrawingTools();
                 
-                console.log('✋ Grab mode deactivated by external tool selection');
             }
         }
     }
@@ -581,13 +567,11 @@ export class SimplePerspectiveManager {
             if (canvasAPI) {
                 if (typeof canvasAPI.enableDrawingEvents === 'function') {
                     canvasAPI.enableDrawingEvents();
-                    console.log('✅ CANVAS: Drawing events re-enabled');
                 }
                 
                 // Then reactivate the canvas with the drawing tool
                 if (typeof canvasAPI.setTool === 'function') {
                     canvasAPI.setTool(lastTool);
-                    console.log(`🎨 CANVAS: Drawing tools reactivated with tool: ${lastTool}`);
                 }
             }
             
@@ -600,7 +584,6 @@ export class SimplePerspectiveManager {
                 });
                 // Set the current tool as active
                 toolButton.classList.add('active');
-                console.log(`🔧 UI: Reactivated drawing tool button: ${lastTool}`);
             }
         }
     }
@@ -613,13 +596,11 @@ export class SimplePerspectiveManager {
         const toolStateManager = (window as any).toolStateManager;
         if (toolStateManager && typeof toolStateManager.deactivateAllDrawingTools === 'function') {
             toolStateManager.deactivateAllDrawingTools();
-            console.log('🔧 GRAB: Deactivated all drawing tools');
         } else {
             // Fallback: Direct UI manipulation if toolStateManager method not available
             document.querySelectorAll('[data-tool]').forEach(btn => {
                 btn.classList.remove('active');
             });
-            console.log('🔧 GRAB: Deactivated drawing tools (fallback method)');
         }
     }
 
@@ -766,7 +747,6 @@ export class SimplePerspectiveManager {
         // Apply grid styling to canvas
         this.applyGridStyling();
         
-        console.log(`📐 Grid ${this.gridEnabled ? 'enabled' : 'disabled'} - Canvas found: ${!!this.canvas}`);
     }
 
     /**
@@ -818,7 +798,6 @@ export class SimplePerspectiveManager {
         // Insert overlay into the canvas container
         this.canvasContainer.appendChild(this.gridOverlay);
         
-        console.log('📐 Grid overlay created and positioned over canvas');
     }
 
     /**
@@ -874,7 +853,6 @@ export class SimplePerspectiveManager {
         if (this.gridOverlay && this.gridOverlay.parentNode) {
             this.gridOverlay.parentNode.removeChild(this.gridOverlay);
             this.gridOverlay = null;
-            console.log('📐 Grid overlay removed');
         }
     }
 
@@ -902,10 +880,8 @@ export class SimplePerspectiveManager {
                     zoomDisplay.title = `${zoomPercent} zoom - Ctrl/Cmd+wheel to zoom in`;
                 }
                 
-                console.log(`📊 Zoom display updated: ${zoomPercent}%`);
             } else if (attempt < maxAttempts) {
                 // If element not found and we haven't reached max attempts, try again after a short delay
-                console.log(`🔍 Zoom display not found (attempt ${attempt}/${maxAttempts}), retrying...`);
                 setTimeout(() => tryUpdateZoomDisplay(attempt + 1, maxAttempts), 50);
             } else {
                 // Only show debug info and warning on final attempt
@@ -964,7 +940,6 @@ export class SimplePerspectiveManager {
             overlayInDOM: this.gridOverlay ? this.gridOverlay.parentNode !== null : false,
             overlayTransform: this.gridOverlay ? this.gridOverlay.style.transform : null
         };
-        console.log('🔍 Grid Debug Status:', status);
         return status;
     }
 
@@ -982,7 +957,6 @@ export class SimplePerspectiveManager {
             gridButton.classList.add('perspective__item--active');
         }
         
-        console.log('🔧 Grid force enabled for debugging');
     }
 
     /**
@@ -1011,6 +985,5 @@ export class SimplePerspectiveManager {
             element.removeEventListener('click', this.handlePerspectiveAction.bind(this));
         });
         
-        console.log('🔍 Simple Perspective Manager destroyed');
     }
 }

@@ -59,7 +59,6 @@ export class CanvasAPI {
     }
 
     try {
-      console.log('🚀 Initializing complete canvas system...');
 
       // Step 1: Create PIXI app
       const app = await this.pixiApp.create(config);
@@ -104,7 +103,6 @@ export class CanvasAPI {
       }
 
       this.initialized = true;
-      console.log('✅ Canvas system initialized successfully');
 
     } catch (error) {
       console.error('❌ Failed to initialize canvas system:', error);
@@ -359,7 +357,6 @@ export class CanvasAPI {
       return null;
     }
 
-    console.log(`🎬 DEBUG: addVideoElement called with URL: ${url}, title: ${title}, position: (${x}, ${y})`);
 
     // Create a simple container with consistent dimensions
     const { container, id } = this.displayManager.createContainer();
@@ -468,7 +465,6 @@ export class CanvasAPI {
 
     // Ensure we wait for first frame, then swap sprite texture
     waitForFirstFrame().then(() => {
-      console.log('📹 Video data loaded, initializing PIXI video texture');
       // Create a proper Texture from the VideoSource with quality optimization
       const texture = Texture.from(videoSource);
       // Keep auto-updating frames managed by VideoSource
@@ -595,7 +591,6 @@ export class CanvasAPI {
       try {
         // Ensure the first frame/texture is ready before toggling
         if (video.readyState < 2) {
-          console.log('⏳ Waiting for video to become ready before play...');
           await new Promise<void>((resolve) => {
             const onReady = () => { cleanup(); resolve(); };
             const cleanup = () => {
@@ -611,14 +606,11 @@ export class CanvasAPI {
           video.pause();
           playButton.visible = true;
           isPlaying = false;
-          console.log('⏸️ Video paused');
         } else {
-          console.log(`🎬 Attempting to play video: ${title}`);
           await video.play();
           // VideoSource autoUpdate should handle texture updates during playback
           playButton.visible = false;
           isPlaying = true;
-          console.log('✅ Video playing successfully');
         }
       } catch (error) {
         console.error('❌ Failed to toggle video playback:', error);
@@ -653,7 +645,6 @@ export class CanvasAPI {
       videoElement: video
     };
     
-    console.log(`📹 Video element added: ${title} at (${x}, ${y})`);
     return id;
   }
 
@@ -740,7 +731,6 @@ export class CanvasAPI {
 
       (container as any).metadata = { type: 'audio', url, title, element: audio };
 
-      console.log(`🎵 Audio UI added: ${title} at (${x}, ${y})`);
       return id;
     } catch (e) {
       console.error('❌ Failed to add audio element:', e);
@@ -757,7 +747,6 @@ export class CanvasAPI {
     const success = this.setTool(toolName);
     const currentTool = this.getActiveTool();
     
-    console.log(`🧪 Tool test: ${toolName} -> ${success ? 'SUCCESS' : 'FAILED'} -> Current: ${currentTool}`);
     return currentTool;
   }
 
@@ -773,8 +762,6 @@ export class CanvasAPI {
 
     try {
       if (this.displayManager) {
-        console.log('✅ Test drawing: Canvas and DisplayObjectManager ready');
-        console.log('📊 Drawing layer children:', drawingLayer.children.length);
         return true;
       } else {
         console.error('❌ No display manager available');
@@ -804,7 +791,6 @@ export class CanvasAPI {
       this.displayManager.clear();
     }
     
-    console.log('🧹 User drawings cleared');
   }
 
   /**
@@ -1001,7 +987,6 @@ export class CanvasAPI {
     // Get current dimensions to avoid unnecessary operations
     const currentDims = this.getDimensions();
     if (currentDims.width === width && currentDims.height === height) {
-      console.log('📐 Canvas already at target size, skipping resize');
       this.pendingResizeOperation = null;
       return;
     }
@@ -1021,7 +1006,6 @@ export class CanvasAPI {
       }
     }
 
-    console.log('📐 Canvas resized efficiently:', { width, height });
     this.pendingResizeOperation = null;
   }
 
@@ -1072,7 +1056,6 @@ export class CanvasAPI {
 
     try {
       // For now, return placeholder - we'll implement proper export later
-      console.log('📸 Canvas export requested (placeholder)');
       return 'data:image/png;base64,placeholder';
 
     } finally {
@@ -1129,7 +1112,6 @@ export class CanvasAPI {
       }
     }
 
-    console.log('🧹 Debug visuals cleared from canvas');
   }
 
   /**
@@ -1159,6 +1141,5 @@ export class CanvasAPI {
     this.pixiApp.destroy();
     this.initialized = false;
     
-    console.log('🗑️ Complete canvas system destroyed');
   }
 }

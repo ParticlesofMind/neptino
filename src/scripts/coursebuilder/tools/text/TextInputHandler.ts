@@ -42,7 +42,6 @@ export class TextInputHandler implements ITextInputHandler {
     document.addEventListener('keyup', this.boundKeyUp, { capture: true } as any);
     document.addEventListener('input', this.boundInput);
 
-    console.log('📝 TextInputHandler created');
   }
 
   public setActiveTextArea(textArea: ITextArea | null): void {
@@ -86,7 +85,6 @@ export class TextInputHandler implements ITextInputHandler {
     this.activeTextArea = null;
     this.activeCursor = null;
     
-    console.log('📝 TextInputHandler destroyed');
   }
 
   public setOnTextChange(cb: ((text: string) => void) | null): void {
@@ -205,7 +203,6 @@ export class TextInputHandler implements ITextInputHandler {
       if (newCursorPos >= 0) {
         this.cursorPosition = newCursorPos;
         this.updateCursorPosition();
-        console.log(`📝 Replaced selection with character '${char}' at position ${this.cursorPosition}`);
         return;
       }
     }
@@ -217,7 +214,6 @@ export class TextInputHandler implements ITextInputHandler {
       try { this.onTextChange(this.activeTextArea.text); } catch {}
     }
     
-    console.log(`📝 Inserted character '${char}' at position ${this.cursorPosition - char.length}`);
   }
 
   /**
@@ -242,11 +238,9 @@ export class TextInputHandler implements ITextInputHandler {
       this.cursorPosition = end;
       this.updateCursorPosition();
       this.isMouseDown = false;
-      console.log('📝 Triple-click detected - selected line');
     } else if (this.lastClickCount === 2) {
       // Double click: select word
       this.textSelection.selectWordAt(clickPosition);
-      console.log('📝 Double-click detected - selected word');
       this.isMouseDown = false;
     } else {
       // Single click - position cursor and start potential selection
@@ -288,7 +282,6 @@ export class TextInputHandler implements ITextInputHandler {
 
   private handleSelectAll(): void {
     this.textSelection.selectAll();
-    console.log('📝 Selected all text via Ctrl/Cmd+A');
   }
 
   private handleBackspace(): void {
@@ -605,7 +598,6 @@ export class TextInputHandler implements ITextInputHandler {
     // Ensure cursor is visible immediately after movement/typing
     this.activeCursor.startBlinking();
     
-    console.log(`🔍 Cursor updated to text position ${this.cursorPosition} at graphics position (${graphicsPos.x.toFixed(1)}, ${graphicsPos.y.toFixed(1)})`);
   }
 
   /**

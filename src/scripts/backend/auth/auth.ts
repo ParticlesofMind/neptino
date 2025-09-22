@@ -60,7 +60,6 @@ export async function signIn(email: string, password: string) {
 
       if (isDev && isInvalidCreds) {
         try {
-          console.log('🔧 Dev mode: attempting auto sign-up since credentials are unknown.');
           // Heuristic: guess a sensible default role from current path
           const path = typeof window !== 'undefined' ? window.location.pathname : '';
           const inferredRole = path.includes('/teacher/')
@@ -90,7 +89,6 @@ export async function signIn(email: string, password: string) {
           // In local dev with confirmations disabled, we usually get a session immediately
           if (signupResult.data.user) {
             currentUser = signupResult.data.user;
-            console.log('✅ Dev auto sign-up successful; signed in.');
             return { success: true, info: 'Account created and signed in (dev).' };
           }
 
@@ -102,7 +100,6 @@ export async function signIn(email: string, password: string) {
           }
           if (retry.data.user) {
             currentUser = retry.data.user;
-            console.log('✅ Dev auto sign-up + retry sign-in successful.');
             return { success: true, info: 'Account created and signed in (dev).' };
           }
         } catch (autoErr) {
@@ -298,7 +295,6 @@ export class AuthFormHandler {
  submitButton.disabled = true;
 
     try {
-      console.log('🔐 Attempting to sign in with:', email);
       
       const result = await signIn(email, password);
 
@@ -351,7 +347,6 @@ export class AuthFormHandler {
  submitButton.disabled = true;
 
  try {
- console.log('📝 Attempting to sign up:', { email, fullName, role });
  
  const result = await signUp(email, password, fullName, role);
 

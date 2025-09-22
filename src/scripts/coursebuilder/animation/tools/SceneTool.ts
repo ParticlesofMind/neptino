@@ -27,7 +27,6 @@ export class SceneTool extends BaseTool {
     const p = container.toLocal(event.global);
     this.start = new Point(p.x, p.y);
     
-    console.log('🎬 SceneTool: Starting scene creation at', this.start);
     
     // Create preview rectangle on UI layer for clarity
     const ui = animationState.getUiLayer();
@@ -42,7 +41,6 @@ export class SceneTool extends BaseTool {
         .stroke({ color: 0x4a79a4, width: 2 })
         .fill({ color: 0x4a79a4, alpha: 0.1 });
       
-      console.log('🎬 SceneTool: Preview created on UI layer with initial size');
     } else {
       console.warn('🎬 SceneTool: No UI layer available for preview');
     }
@@ -110,7 +108,6 @@ export class SceneTool extends BaseTool {
       .stroke({ color: 0x4a79a4, width: 2 })
       .fill({ color: 0x4a79a4, alpha: 0.1 });
       
-    console.log(`🎬 SceneTool: Preview updated - (${x.toFixed(1)}, ${y.toFixed(1)}) ${constrainedWidth.toFixed(1)}x${constrainedHeight.toFixed(1)} (${aspectRatio.toFixed(2)}:1)`);
   }
 
   onPointerUp(event: FederatedPointerEvent, container: Container): void {
@@ -164,14 +161,12 @@ export class SceneTool extends BaseTool {
     
     // Require meaningful drag distance to create scene
     if (constrainedWidth < 100 || constrainedHeight < 60) {
-      console.log('🎬 Scene creation cancelled - insufficient drag distance');
       return;
     }
 
     // CRITICAL FIX: Clear existing scenes to prevent UI fragmentation
     // Only one scene should be active at a time to maintain cohesive interface
     animationState.clearScenes();
-    console.log('🎬 Creating new scene, cleared previous scenes');
 
     const bounds = this.normalizeBounds(x, y, constrainedWidth, constrainedHeight);
     const scene = new Scene(bounds, undefined, aspectRatioStr);
@@ -179,7 +174,6 @@ export class SceneTool extends BaseTool {
     scene.setDuration(animationState.getSceneDuration());
     animationState.addScene(scene);
     try { scene.setSelected(true); } catch {}
-    console.log('🎬 New scene created:', bounds, 'with aspect ratio:', aspectRatioStr);
   }
 
   private normalizeBounds(x: number, y: number, width: number, height: number): SceneBounds {
@@ -208,17 +202,14 @@ export class SceneTool extends BaseTool {
       }
     }
     this.preview = null;
-    console.log('🎬 SceneTool: Cleaned up preview');
   }
 
   onActivate(): void { 
     super.onActivate(); 
-    console.log('🎬 SceneTool: Activated - ready for drag-to-create');
   }
   
   onDeactivate(): void { 
     super.onDeactivate(); 
     this.cleanup();
-    console.log('🎬 SceneTool: Deactivated');
   }
 }

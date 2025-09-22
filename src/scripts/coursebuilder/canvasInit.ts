@@ -21,7 +21,6 @@ import { runFullValidation } from './utils/canvasSizingValidation';
 import { initializeCanvasSystem, validateCanvasSystem } from './utils/canvasSystemInit';
 import { canvasDimensionManager } from './utils/CanvasDimensionManager';
 
-console.log('📦 CanvasAPI import successful:', CanvasAPI);
 
 // Global canvas instance
 let canvasAPI: CanvasAPI | null = null;
@@ -40,7 +39,6 @@ let isInitializing = false;
  */
 export async function initializeCanvas(): Promise<void> {
     try {
-        console.log('🔍 Checking for canvas container...');
 
         // Initialize the consolidated canvas system first
         initializeCanvasSystem();
@@ -48,40 +46,31 @@ export async function initializeCanvas(): Promise<void> {
         // Check if we're on coursebuilder page with canvas container
         const canvasContainer = document.getElementById('canvas-container');
         if (!canvasContainer) {
-            console.log('📄 No canvas container found - skipping canvas init');
             return;
         }
 
         // Prevent multiple initializations
         if (isInitializing) {
-            console.log('⚠️ Canvas initialization already in progress - skipping');
             return;
         }
         
         if (canvasAPI && canvasAPI.isReady()) {
-            console.log('⚠️ Canvas already initialized - skipping');
             return;
         }
 
         isInitializing = true;
-        console.log('✅ Canvas container found:', canvasContainer);
 
-        console.log('🎨 Starting canvas initialization...');
 
         // Create canvas API
         canvasAPI = new CanvasAPI('#canvas-container');
-        console.log('✅ CanvasAPI instance created');
 
         // Log canvas dimensions info
         const dpr = window.devicePixelRatio || 1;
-        console.log(`📱 Device Pixel Ratio: ${dpr}x`);
-        console.log(`🖥️ Viewport: ${window.innerWidth}×${window.innerHeight}`);
         
         // Get consistent canvas dimensions from CanvasDimensionManager
         const dimensions = canvasDimensionManager.getCurrentDimensions();
         const canvasWidth = dimensions.width;  // 1200
         const canvasHeight = dimensions.height; // 1800
-        console.log(`📄 Canvas: ${canvasWidth}×${canvasHeight} (from CanvasDimensionManager)`);
 
         // Initialize with calculated dimensions
         await canvasAPI.init({
@@ -94,18 +83,13 @@ export async function initializeCanvas(): Promise<void> {
         (window as any).currentCanvasWidth = canvasWidth;
         (window as any).currentCanvasHeight = canvasHeight;
 
-        console.log('✅ Canvas initialized!');
 
         // Initialize Canvas Layout Manager
-        console.log('📐 Initializing canvas layout manager...');
         layoutManager = new CanvasLayoutManager('#canvas-container');
         layoutManager.setupResponsiveLayout(); // Auto-select layout based on viewport
-        console.log('✅ Canvas layout manager initialized!');
 
         // Initialize Perspective Manager (zoom/pan controls)
-        console.log('🔍 Initializing perspective controls...');
         perspectiveManager = new SimplePerspectiveManager();
-        console.log('✅ SimplePerspectiveManager initialized with zoom/pan controls');
 
         // Update canvas reference in perspective manager now that canvas is created
         if (perspectiveManager && 'updateCanvasReference' in perspectiveManager) {
@@ -118,7 +102,6 @@ export async function initializeCanvas(): Promise<void> {
                     containerElement.clientWidth,
                     containerElement.clientHeight
                 );
-                console.log(`🔍 Applying initial zoom: ${(initialZoom * 100).toFixed(1)}% for container ${containerElement.clientWidth}×${containerElement.clientHeight}`);
                 
                 // Apply the zoom through the perspective manager
                 if ('setZoom' in perspectiveManager) {
@@ -147,14 +130,12 @@ export async function initializeCanvas(): Promise<void> {
 
 
         // Initialize UI system with clean architecture
-        console.log('🎛️ Connecting UI to canvas...');
         toolStateManager = new ToolStateManager();
         
         // Wait a bit to ensure DOM is fully ready before binding events
         await new Promise(resolve => setTimeout(resolve, 200));
         
         uiEventHandler = new UIEventHandler(toolStateManager);
-        console.log('✅ UIEventHandler created and events bound');
         
         // Expose UIEventHandler on window for Select2 integration
         (window as any).uiEventHandler = uiEventHandler;
@@ -163,26 +144,20 @@ export async function initializeCanvas(): Promise<void> {
         try { initializeAnimationUI(toolStateManager); } catch (e) { console.warn('⚠️ Failed to init AnimationUI', e); }
 
         // Initialize Tool Coordinator for unified tool management
-        console.log('🎯 Initializing Tool Coordinator...');
         toolCoordinator = new ToolCoordinator();
-        console.log('✅ ToolCoordinator initialized - enforcing single tool rule');
 
         // Initialize Layers Panel (UI for layer ordering/visibility)
-        console.log('🧱 Initializing Layers panel...');
         layersPanel = new LayersPanel();
         (window as any).layersPanel = layersPanel;
         layersPanel.refresh();
-        console.log('✅ Layers panel ready');
 
         // Initialize color selectors for all tools
-        console.log('🎨 Initializing tool color selectors...');
         toolColorManager.init();
 
         // Listen for color selector changes
         document.addEventListener('toolColorChange', (event: Event) => {
             const customEvent = event as CustomEvent;
             const { tool, hex } = customEvent.detail;
-            console.log(`🎨 Color selector change for ${tool}: ${hex}`);
             if (canvasAPI) {
                 canvasAPI.setToolColor(hex);
             }
@@ -191,9 +166,7 @@ export async function initializeCanvas(): Promise<void> {
         // Clean architecture: All UI events are handled through ToolStateManager
         // No callbacks needed - ToolStateManager directly manages canvas state
         
-        console.log('✅ UI connected to canvas with clean architecture');
 
-        console.log('🔍 Zoom/pan perspective controls initialized and ready');
 
         // Make available globally for debugging and demos
         (window as any).canvasAPI = canvasAPI;
@@ -205,11 +178,6 @@ export async function initializeCanvas(): Promise<void> {
         
         // Expose TextTool for font debugging
         (window as any).TextTool = TextTool;
-        console.log('🔧 TextTool exposed globally for debugging - use TextTool.debugReinitializeFonts() to reload fonts');
-        console.log('🔧 Debug commands: perspectiveManager.debugGrid(), perspectiveManager.forceEnableGrid()');
-        console.log('🎯 Tool Coordinator commands: toolCoordinator.debugState(), toolCoordinator.resetAllTools()');
-        console.log('📐 Canvas commands: showCanvasInfo(), resizeCanvas()');
-        console.log('📐 Layout commands: toggleCanvasLayout(), useGridLayout(), useCompactLayout(), useAutoLayout()');
 
         // Add layout manager debug commands
         if (layoutManager) {
@@ -257,11 +225,9 @@ export async function initializeCanvas(): Promise<void> {
 
         // Canvas sizing validation
         (window as any).validateCanvasSizing = () => {
-            console.log('🔍 Running canvas sizing validation...');
             const validation = runFullValidation();
             
             if (validation.isValid) {
-                console.log('✅ Canvas sizing validation passed');
             } else {
                 console.error('❌ Canvas sizing validation failed');
             }
@@ -274,17 +240,14 @@ export async function initializeCanvas(): Promise<void> {
                 console.warn('Warnings:', validation.warnings);
             }
             
-            console.log('Metadata:', validation.metadata);
             return validation;
         };
 
         // Canvas system validation (new consolidated validation)
         (window as any).validateCanvasSystem = () => {
-            console.log('🔍 Running consolidated canvas system validation...');
             const validation = validateCanvasSystem();
             
             if (validation.isValid) {
-                console.log('✅ Canvas system validation passed');
             } else {
                 console.error('❌ Canvas system validation failed');
                 console.error('Issues:', validation.issues);
@@ -306,9 +269,7 @@ export async function initializeCanvas(): Promise<void> {
             const newWidth = width || CANVAS_WIDTH;
             const newHeight = height || CANVAS_HEIGHT;
             
-            console.log(`📐 Resizing canvas to ${newWidth}×${newHeight}`);
             canvasAPI.resize(newWidth, newHeight);
-            console.log(`✅ Canvas resized to ${newWidth}×${newHeight}`);
         };
 
         // Performance diagnostics command
@@ -327,7 +288,6 @@ export async function initializeCanvas(): Promise<void> {
             for (let i = 0; i < maxAttempts; i++) {
                 if (canvasAPI && canvasAPI.isReady()) {
                     try {
-                        console.log('📊 Canvas info:', canvasAPI.getCanvasInfo());
                         return;
                     } catch (infoError) {
                         console.warn(`⚠️ Attempt ${i + 1}: Could not get canvas info:`, infoError);
@@ -342,11 +302,9 @@ export async function initializeCanvas(): Promise<void> {
         await waitForCanvas();
 
         // Final synchronization check after everything is initialized
-        console.log('🔍 Performing final tool synchronization check...');
         if (toolStateManager && canvasAPI) {
             const uiTool = toolStateManager.getCurrentTool();
             const canvasTool = canvasAPI.getActiveTool();
-            console.log(`Final sync check - UI: "${uiTool}", Canvas: "${canvasTool}"`);
             
             if (uiTool !== canvasTool) {
                 console.warn('⚠️ Final sync mismatch detected - correcting...');
@@ -360,7 +318,6 @@ export async function initializeCanvas(): Promise<void> {
         // PerfHUD disabled by default to keep UI clean and avoid layout overlays in production.
         // To enable for debugging, call window.installPerfHUD?.()
 
-        console.log('✅ Canvas initialization completed successfully');
         isInitializing = false;
     } catch (error) {
         console.error('❌ Canvas initialization failed:', error);
@@ -376,15 +333,12 @@ export async function initializeCanvas(): Promise<void> {
  * Initialize canvas when DOM is ready
  */
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('📄 DOM loaded - attempting canvas initialization...');
     // Small delay to ensure coursebuilder page is fully loaded
     setTimeout(initializeCanvas, 100);
 });
 
 // Also try immediate initialization in case DOM is already loaded
 if (document.readyState === 'loading') {
-    console.log('📄 Document still loading - waiting for DOMContentLoaded');
 } else {
-    console.log('📄 Document already loaded - initializing canvas immediately');
     setTimeout(initializeCanvas, 100);
 }

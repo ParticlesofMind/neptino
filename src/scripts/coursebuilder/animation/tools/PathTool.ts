@@ -17,16 +17,13 @@ export class PathTool extends BaseTool {
   }
   
   onActivate(): void {
-    console.log('🎯 PathTool: Activated');
   }
 
   onDeactivate(): void {
-    console.log('🎯 PathTool: Deactivated');
     this.reset();
   }
 
   onPointerDown(event: FederatedPointerEvent, container: Container): void {
-    console.log('🎯 PathTool: Pointer down');
     
     // Find object at click position
     const globalPt = event.global;
@@ -34,17 +31,14 @@ export class PathTool extends BaseTool {
     
     this.activeObject = this.findObjectAt(globalPt, container);
     if (!this.activeObject) {
-      console.log('🎯 PathTool: No object found');
       return;
     }
 
-    console.log(`🎯 PathTool: Selected ${this.activeObject.constructor.name}`);
     
     // Find scene
     const scene = animationState.findSceneAt(local);
     this.activeSceneId = scene?.getId() || null;
     if (!this.activeSceneId || !scene) {
-      console.log('🎯 PathTool: No scene found');
       return;
     }
 
@@ -62,8 +56,6 @@ export class PathTool extends BaseTool {
     const sceneContentLocal = scene.getContentContainer().toLocal(objectCenterGlobal);
     this.pathPoints.push(new Point(sceneContentLocal.x, sceneContentLocal.y));
     
-    console.log(`🎯 PathTool: Started path at object center scene-relative (${sceneContentLocal.x.toFixed(1)}, ${sceneContentLocal.y.toFixed(1)})`);
-    console.log(`🎯 PathTool: Object bounds: x=${objectBounds.x.toFixed(1)}, y=${objectBounds.y.toFixed(1)}, w=${objectBounds.width.toFixed(1)}, h=${objectBounds.height.toFixed(1)}`);
   }
 
   onPointerMove(event: FederatedPointerEvent, container: Container): void {
@@ -113,7 +105,6 @@ export class PathTool extends BaseTool {
   onPointerUp(_event: FederatedPointerEvent, _container: Container): void {
     if (!this.isDragging || !this.activeObject || !this.activeSceneId) return;
     
-    console.log('🎯 PathTool: Pointer up, finishing path');
     
     // Add final point based on object's final center position
     const scene = animationState.getScenes().find(s => s.getId() === this.activeSceneId);
@@ -125,7 +116,6 @@ export class PathTool extends BaseTool {
       );
       const sceneContentLocal = scene.getContentContainer().toLocal(objectCenterGlobal);
       this.pathPoints.push(new Point(sceneContentLocal.x, sceneContentLocal.y));
-      console.log(`🎯 PathTool: Final path point at object center (${sceneContentLocal.x.toFixed(1)}, ${sceneContentLocal.y.toFixed(1)})`);
     }
     
     // Create animation
@@ -179,7 +169,6 @@ export class PathTool extends BaseTool {
   private createAnimation(): void {
     if (!this.activeObject || !this.activeSceneId || this.pathPoints.length < 2) return;
     
-    console.log(`🎯 PathTool: Creating animation with ${this.pathPoints.length} points`);
     
     // Find the scene and register the animation path
     const scene = animationState.getScenes().find(s => s.getId() === this.activeSceneId);
@@ -196,15 +185,10 @@ export class PathTool extends BaseTool {
       // Use path points directly as they are already in scene-relative coordinates
       const simplified = this.simplifyPath(this.pathPoints, scene.getDuration());
 
-      console.log(`🎯 PathTool: Using scene-relative path points:`);
-      console.log(`🎯   - Original path points:`, this.pathPoints.slice(0, 3).map(p => `(${p.x.toFixed(1)}, ${p.y.toFixed(1)})`));
-      console.log(`🎯   - Simplified points:`, simplified.slice(0, 3).map(p => `(${p.x.toFixed(1)}, ${p.y.toFixed(1)})`));
 
       // Register the animation path with the scene using scene-relative coordinates
       scene.addAnimationPathSceneRelative(objectId, simplified);
       
-      console.log(`🎯 PathTool: Registered animation path for object ${objectId} in scene ${this.activeSceneId}`);
-      console.log(`🎯 PathTool: Simplified from ${this.pathPoints.length} to ${simplified.length} anchors`);
     } else {
       console.warn(`🎯 PathTool: Scene ${this.activeSceneId} not found`);
     }

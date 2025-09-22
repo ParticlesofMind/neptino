@@ -17,7 +17,6 @@ export class CircleDrawer extends BaseShapeDrawer {
         const centerX = context.startX + context.width / 2;
         const centerY = context.startY + context.height / 2;
         
-        console.log(`🔶 SHAPES: Drawing circle at center (${Math.round(centerX)}, ${Math.round(centerY)}) with radius ${Math.round(radius)}`);
         
         this.graphics.circle(centerX, centerY, radius);
         

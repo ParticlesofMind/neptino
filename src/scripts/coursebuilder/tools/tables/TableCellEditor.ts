@@ -46,7 +46,6 @@ export class TableCellEditor {
         // Set this table as the one in edit mode
         this.tableInEditMode = tableData;
         this.highlightTableInEditMode(tableData);
-        console.log(`🔷 TABLE: Table ${tableData.id} is now in edit mode`);
 
         // Create text editing area using PIXI TextArea
         const cellGlobalX = tableData.x + cell.bounds.x;
@@ -144,7 +143,6 @@ export class TableCellEditor {
             document.addEventListener("click", this.handleGlobalClick);
         }, 10);
 
-        console.log(`🔷 TABLE: Started editing cell R${cell.row + 1}C${cell.column + 1} with PIXI TextArea`);
     }
 
     private endCellEditing(): void {
@@ -169,7 +167,6 @@ export class TableCellEditor {
         // Clean up text input
         this.cleanupTextInput();
 
-        console.log(`🔷 TABLE: Ended editing cell R${cell.row + 1}C${cell.column + 1}`);
 
         this.editingCell = null;
 
@@ -177,7 +174,6 @@ export class TableCellEditor {
     }
 
     private exitTableEditMode(): void {
-        console.log('🔷 TABLE: Exiting table edit mode');
 
         if (this.tableInEditMode) {
             this.removeTableEditModeHighlight(this.tableInEditMode);

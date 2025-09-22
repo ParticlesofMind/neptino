@@ -27,7 +27,6 @@ export class CreationGuide {
     // Create size label
     this.sizeLabel = new SizeLabel(parent);
 
-    console.log('📝 CreationGuide created');
   }
 
   public show(bounds: TextAreaBounds): void {
@@ -42,7 +41,6 @@ export class CreationGuide {
     };
     this.sizeLabel.show(bounds.width, bounds.height, labelPosition);
 
-    console.log(`📝 CreationGuide shown: ${bounds.width}×${bounds.height} at (${bounds.x}, ${bounds.y})`);
   }
 
   public updateBounds(bounds: TextAreaBounds): void {
@@ -63,7 +61,6 @@ export class CreationGuide {
     this.visible = false;
     this.graphics.visible = false;
     this.sizeLabel.hide();
-    console.log('📝 CreationGuide hidden');
   }
 
   public get isVisible(): boolean {
@@ -99,6 +96,5 @@ export class CreationGuide {
     }
     this.graphics.destroy();
     this.sizeLabel.destroy();
-    console.log('📝 CreationGuide destroyed');
   }
 }

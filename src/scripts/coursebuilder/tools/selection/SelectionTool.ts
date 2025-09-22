@@ -8,7 +8,6 @@ import { SmartGuides } from './SmartGuides';
 import { SelectionMarquee } from './SelectionMarquee';
 import { TransformController } from './TransformController';
 import { SelectionGrouping } from './SelectionGrouping';
-import { redrawShapeFromMeta } from '../shapes/ShapeRedraw';
 import { RoundCorners, RoundingState } from './RoundCorners';
 import { SelectionStyling } from './SelectionStyling';
 import { animationState } from '../../animation/AnimationState';
@@ -64,7 +63,6 @@ export class SelectionTool extends BaseTool {
         
         // DEBUG: Log object state before corner rounding
         if (selectedObject) {
-          console.log('🔄 CORNER ROUNDING CLICK DETECTED');
           console.log('📍 Object position BEFORE rounding:', {
             x: selectedObject.x,
             y: selectedObject.y,
@@ -82,7 +80,6 @@ export class SelectionTool extends BaseTool {
         }
         
         if (selectedObject && RoundCorners.supportsRounding(selectedObject)) {
-          console.log('✅ Starting corner rounding...');
           RoundCorners.startRounding(
             this.roundingState, 
             handle.position, 
@@ -174,38 +171,14 @@ export class SelectionTool extends BaseTool {
       
       const updated = RoundCorners.updateCornerRadius(this.roundingState, event.global);
       if (updated && this.roundingState.object) {
-        try {
-          // CRITICAL FIX: Save position before redraw to prevent displacement to (0,0)
-          const savedPosition = {
-            x: this.roundingState.object.x,
-            y: this.roundingState.object.y
-          };
-          
-          console.log('📍 SAVED position before redraw:', savedPosition);
-          
-          // Redraw the shape with new corner radius
-          redrawShapeFromMeta(this.roundingState.object);
-          
-          // CRITICAL FIX: Force restore the saved position after redraw
-          this.roundingState.object.x = savedPosition.x;
-          this.roundingState.object.y = savedPosition.y;
-          
-          console.log('📍 RESTORED position after redraw:', {
-            x: this.roundingState.object.x,
-            y: this.roundingState.object.y
-          });
-          
-          // Update the overlay handles to follow the new geometry
-          this.overlay.refreshBoundsOnly(container);
-          
-          // DEBUG: Log after overlay refresh
-          console.log('📍 Object position AFTER overlay refresh:', {
-            x: this.roundingState.object.x,
-            y: this.roundingState.object.y
-          });
-        } catch (error) {
-          console.warn('Error redrawing shape during corner rounding:', error);
-        }
+        // Update the overlay handles to follow the new geometry
+        this.overlay.refreshBoundsOnly(container);
+        
+        // DEBUG: Log after overlay refresh
+        console.log('📍 Object position AFTER update and overlay refresh:', {
+          x: this.roundingState.object.x,
+          y: this.roundingState.object.y
+        });
       }
       return;
     }
@@ -325,7 +298,6 @@ export class SelectionTool extends BaseTool {
     
     if (this.roundingState.active) { 
       // DEBUG: Log object state before stopping corner rounding
-      console.log('🔄 CORNER ROUNDING ENDING');
       const currentObject = this.roundingState.object; // Store reference before stopRounding clears it
       if (currentObject) {
         console.log('📍 Object position BEFORE stopRounding:', {

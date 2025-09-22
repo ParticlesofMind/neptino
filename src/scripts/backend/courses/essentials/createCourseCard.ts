@@ -37,7 +37,6 @@ export class CoursesManager {
 
   private async loadCourses(): Promise<void> {
     try {
-      console.log('🔄 Loading user courses...');
 
       // Show loading state
       this.showLoadingState();
@@ -45,11 +44,9 @@ export class CoursesManager {
       const courses = await getUserCourses();
 
       if (courses && courses.length > 0) {
-        console.log(`✅ Loaded ${courses.length} courses`);
         this.displayCourses(courses);
         this.hideNoCoursesMessage();
       } else {
-        console.log('ℹ️ No courses found for user');
         this.showNoCoursesMessage();
       }
     } catch (error) {

@@ -58,7 +58,6 @@ export class HighQualityZoom {
         
         this.applyTransform();
         
-        console.log(`🔍 High-Quality Zoom: ${Math.round(this.zoomLevel * 100)}%`);
     }
     
     /**

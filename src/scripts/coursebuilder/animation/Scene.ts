@@ -363,8 +363,6 @@ export class Scene {
     graphic.clear();
     if (points.length === 0) return;
 
-    console.log(`🎨 Drawing path visual with points:`, points.slice(0, 3).map(p => `(${p.x.toFixed(1)}, ${p.y.toFixed(1)})`));
-    console.log(`🎨 Path graphic parent container position:`, graphic.parent?.position || 'no parent');
     
     graphic.moveTo(points[0].x, points[0].y);
     for (let i = 1; i < points.length; i++) {
@@ -594,7 +592,6 @@ export class Scene {
   }
 
   private createPlaybackControls(): void {
-    console.log('Creating PIXI-based playback controls for scene:', this.id);
     
     // Create PIXI container for controls - positioned like the drag handle
     this.controlsContainer = new Container();
@@ -1174,17 +1171,11 @@ export class Scene {
       boundsOffsetX,
       boundsOffsetY
     });
-    console.log(`🎬 Added animation path for object ${objectId} with ${points.length} points`);
-    console.log(`🎬 Stored bounds offset: (${boundsOffsetX.toFixed(1)}, ${boundsOffsetY.toFixed(1)})`);
     const first = points[0];
     if (targetObject && first) {
-      console.log(`🎬 Setting object ${objectId} to first path point: (${first.x.toFixed(1)}, ${first.y.toFixed(1)})`);
-      console.log(`🎬 Object current position before: (${targetObject.position.x.toFixed(1)}, ${targetObject.position.y.toFixed(1)})`);
-      console.log(`🎬 Object global position before: (${targetObject.getGlobalPosition().x.toFixed(1)}, ${targetObject.getGlobalPosition().y.toFixed(1)})`);
       
       // Get the object's bounds to account for visual offset
       const bounds = targetObject.getBounds();
-      console.log(`🎬 Object bounds before positioning: x=${bounds.x.toFixed(1)}, y=${bounds.y.toFixed(1)}, width=${bounds.width.toFixed(1)}, height=${bounds.height.toFixed(1)}`);
       
       // Try center-based positioning approach
       // Convert path point from root space to contentContainer local space
@@ -1194,19 +1185,11 @@ export class Scene {
       const centerY = bounds.y + bounds.height / 2;
       const centerOffsetX = centerX - targetObject.position.x;
       const centerOffsetY = centerY - targetObject.position.y;
-      console.log(`🎬 Object center offset from position: (${centerOffsetX.toFixed(1)}, ${centerOffsetY.toFixed(1)})`);
-      console.log(`🎬 Converting path point from root (${first.x.toFixed(1)}, ${first.y.toFixed(1)}) to local (${localFirst.x.toFixed(1)}, ${localFirst.y.toFixed(1)})`);
       
       // Position the object so its center aligns with the local path point
       targetObject.position.set(localFirst.x - centerOffsetX, localFirst.y - centerOffsetY);
       
-      console.log(`🎬 Object position after: (${targetObject.position.x.toFixed(1)}, ${targetObject.position.y.toFixed(1)})`);
-      console.log(`🎬 Object global position after: (${targetObject.getGlobalPosition().x.toFixed(1)}, ${targetObject.getGlobalPosition().y.toFixed(1)})`);
-      console.log(`🎬 Object bounds:`, targetObject.getBounds());
       const boundsAfter = targetObject.getBounds();
-      console.log(`🎬 Object bounds details: x=${boundsAfter.x.toFixed(1)}, y=${boundsAfter.y.toFixed(1)}, width=${boundsAfter.width.toFixed(1)}, height=${boundsAfter.height.toFixed(1)}`);
-      console.log(`🎬 Object pivot: (${targetObject.pivot.x.toFixed(1)}, ${targetObject.pivot.y.toFixed(1)})`);
-      console.log(`🎬 Object anchor:`, (targetObject as any).anchor ? `(${(targetObject as any).anchor.x.toFixed(1)}, ${(targetObject as any).anchor.y.toFixed(1)})` : 'no anchor');
       // Clear any existing debug markers
       const existingMarker = this.pathOverlay!.getChildByName('DebugMarker');
       if (existingMarker) {

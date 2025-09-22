@@ -13,7 +13,6 @@ export class ToolCoordinator {
 
     constructor() {
         this.initializeReferences();
-        console.log('🎯 ToolCoordinator initialized - enforcing single tool rule');
     }
 
     /**
@@ -25,10 +24,20 @@ export class ToolCoordinator {
         this.perspectiveManager = (window as any).perspectiveManager;
 
         if (!this.toolStateManager) {
-            console.warn('⚠️ ToolCoordinator: ToolStateManager not found on window');
+            // Delay warning to allow for initialization race conditions
+            setTimeout(() => {
+                if (!this.toolStateManager) {
+                    console.warn('⚠️ ToolCoordinator: ToolStateManager not found on window');
+                }
+            }, 1000);
         }
         if (!this.perspectiveManager) {
-            console.warn('⚠️ ToolCoordinator: PerspectiveManager not found on window');
+            // Delay warning to allow for initialization race conditions  
+            setTimeout(() => {
+                if (!this.perspectiveManager) {
+                    console.warn('⚠️ ToolCoordinator: PerspectiveManager not found on window');
+                }
+            }, 1000);
         }
     }
 
@@ -37,7 +46,6 @@ export class ToolCoordinator {
      * Automatically deactivates any active perspective tools
      */
     public setDrawingTool(tool: string): void {
-        console.log(`🎯 COORDINATOR: Setting drawing tool to "${tool}"`);
 
         // If perspective tool is active, deactivate it
         if (this.activeToolType === 'perspective') {
@@ -49,7 +57,6 @@ export class ToolCoordinator {
         this.activeDrawingTool = tool;
         this.activePerspectiveTool = null;
 
-        console.log(`✅ COORDINATOR: Drawing tool "${tool}" is now active`);
     }
 
     /**
@@ -57,7 +64,6 @@ export class ToolCoordinator {
      * Automatically deactivates any active drawing tools
      */
     public setPerspectiveTool(tool: string): void {
-        console.log(`🎯 COORDINATOR: Setting perspective tool to "${tool}"`);
 
         // If drawing tool is active, deactivate it
         if (this.activeToolType === 'drawing') {
@@ -69,14 +75,12 @@ export class ToolCoordinator {
         this.activePerspectiveTool = tool;
         this.activeDrawingTool = null;
 
-        console.log(`✅ COORDINATOR: Perspective tool "${tool}" is now active`);
     }
 
     /**
      * Deactivate all drawing tools
      */
     private deactivateDrawingTools(): void {
-        console.log('🔧 COORDINATOR: Deactivating drawing tools');
         
         if (this.toolStateManager && typeof this.toolStateManager.deactivateAllDrawingTools === 'function') {
             this.toolStateManager.deactivateAllDrawingTools();
@@ -86,7 +90,6 @@ export class ToolCoordinator {
                 btn.classList.remove('active');
                 btn.classList.remove('tools__item--active');
             });
-            console.log('🔧 COORDINATOR: Used fallback method to deactivate drawing tools');
         }
     }
 
@@ -94,7 +97,6 @@ export class ToolCoordinator {
      * Deactivate all perspective tools
      */
     private deactivatePerspectiveTools(): void {
-        console.log('🔧 COORDINATOR: Deactivating perspective tools');
         
         if (this.perspectiveManager && typeof this.perspectiveManager.deactivateGrabTool === 'function') {
             this.perspectiveManager.deactivateGrabTool();
@@ -136,7 +138,6 @@ export class ToolCoordinator {
      * Reset all tools to default state
      */
     public resetAllTools(): void {
-        console.log('🔄 COORDINATOR: Resetting all tools to default state');
         
         this.deactivateDrawingTools();
         this.deactivatePerspectiveTools();
@@ -150,7 +151,6 @@ export class ToolCoordinator {
             this.toolStateManager.setTool('selection');
         }
 
-        console.log('✅ COORDINATOR: All tools reset - selection tool active');
     }
 
     /**
@@ -171,6 +171,5 @@ export class ToolCoordinator {
      */
     public updateReferences(): void {
         this.initializeReferences();
-        console.log('🔄 COORDINATOR: References updated');
     }
 }

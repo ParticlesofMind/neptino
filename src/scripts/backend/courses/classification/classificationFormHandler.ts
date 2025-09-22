@@ -51,7 +51,6 @@ export class ClassificationFormHandler {
    */
   private get isNewCourse(): boolean {
     const isNew = isNewCourseMode();
-    console.log('📋 isNewCourse check:', isNew);
     return isNew;
   }
 

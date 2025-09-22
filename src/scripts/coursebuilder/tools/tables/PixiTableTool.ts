@@ -76,12 +76,10 @@ export class PixiTableTool extends BaseTool {
       fontFamily: "Inter"
     };
 
-    console.log('🔷 PixiTableTool initialized with pure PIXI.js implementation');
   }
 
   onPointerDown(event: FederatedPointerEvent, container: Container): void {
     if (!this.isActive) {
-      console.log('🔷 PixiTableTool: Ignoring pointer down - tool not active');
       return;
     }
 
@@ -91,12 +89,10 @@ export class PixiTableTool extends BaseTool {
     const canvasBounds = this.manager.getCanvasBounds();
     const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
     
-    console.log(`🔷 PixiTableTool pointer down at (${clampedPoint.x.toFixed(1)}, ${clampedPoint.y.toFixed(1)})`);
 
     // Check if clicking on an existing table cell
     const clickedCell = this.findCellAtPoint(clampedPoint);
     if (clickedCell) {
-      console.log('🔷 Clicked on table cell - activating for editing');
       this.activateCell(clickedCell);
       return;
     }
@@ -129,18 +125,15 @@ export class PixiTableTool extends BaseTool {
 
   onActivate(): void {
     super.onActivate();
-    console.log('🔷 PixiTableTool activated');
   }
 
   onDeactivate(): void {
     super.onDeactivate();
     this.cleanupDragState();
     this.deactivateCurrentCell();
-    console.log('🔷 PixiTableTool deactivated');
   }
 
   private startTableCreation(localPoint: Point, container: Container): void {
-    console.log(`🔷 Starting table creation at (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)})`);
     
     this.state = {
       mode: 'creating',
@@ -230,9 +223,7 @@ export class PixiTableTool extends BaseTool {
     
     if (width >= minTableSize && height >= minTableSize) {
       this.createTable(container);
-      console.log('🔷 Table created successfully');
     } else {
-      console.log('🔷 Table drag too small, no table created');
     }
 
     this.cleanupDragState();
@@ -308,7 +299,6 @@ export class PixiTableTool extends BaseTool {
     container.addChild(tableContainer);
     this.tables.push(table);
     
-    console.log(`🔷 Created table ${tableId} with ${this.settings.rows}×${this.settings.columns} cells`);
   }
 
   private createTableCell(
@@ -442,7 +432,6 @@ export class PixiTableTool extends BaseTool {
     
     this.state.mode = 'editing';
     
-    console.log(`🔷 Activated cell R${cell.row + 1}C${cell.column + 1}`);
   }
 
   private deactivateCurrentCell(): void {
@@ -507,7 +496,6 @@ export class PixiTableTool extends BaseTool {
       // Remove from array
       this.tables.splice(index, 1);
       
-      console.log(`🔷 Table ${tableId} removed`);
     }
   }
 
@@ -525,6 +513,5 @@ export class PixiTableTool extends BaseTool {
     
     this.tables = [];
     
-    console.log('🔷 PixiTableTool destroyed');
   }
 }

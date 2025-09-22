@@ -47,7 +47,6 @@ export class PageSetupHandler {
     // Initialize margin manager with default settings
     canvasMarginManager.setMarginsFromPageLayout(this.currentSettings);
     
-    console.log("📄 Page Setup Handler initialized with defaults:", this.currentSettings);
   }
 
   private bindEvents(): void {
@@ -87,7 +86,6 @@ export class PageSetupHandler {
     const oldUnit = this.currentSettings.margins.unit;
 
     if (newUnit !== oldUnit) {
-      console.log("📏 Converting units from", oldUnit, "to", newUnit);
       
       // Convert existing margin values
       this.convertMarginUnits(oldUnit, newUnit);
@@ -144,13 +142,11 @@ export class PageSetupHandler {
     this.currentSettings.margins.left = parseFloat(marginsInMm.left.toFixed(precision));
     this.currentSettings.margins.right = parseFloat(marginsInMm.right.toFixed(precision));
 
-    console.log("📏 Converted margins:", this.currentSettings.margins);
   }
 
   private handleOrientationChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.currentSettings.orientation = input.value as "portrait" | "landscape";
-    console.log("📄 Orientation changed to:", this.currentSettings.orientation);
     this.debouncedSave();
     this.updatePreview();
   }
@@ -158,7 +154,6 @@ export class PageSetupHandler {
   private handleCanvasSizeChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.currentSettings.canvas_size = input.value as "a4" | "us-letter" | "a3";
-    console.log("📄 Canvas size changed to:", this.currentSettings.canvas_size);
     this.debouncedSave();
     this.updatePreview();
   }
@@ -170,7 +165,6 @@ export class PageSetupHandler {
     if (marginType && marginType !== 'unit') {
       const value = parseFloat(input.value) || 0;
       this.currentSettings.margins[marginType] = value;
-      console.log(`📄 Margin ${marginType} changed to: ${value}${this.currentSettings.margins.unit}`);
       this.debouncedSave();
       this.updatePreview();
     }
@@ -339,7 +333,6 @@ export class PageSetupHandler {
     }
 
     try {
-      console.log("📄 Saving page layout settings to database...", this.currentSettings);
 
       const { error } = await supabase
         .from("courses")
@@ -351,7 +344,6 @@ export class PageSetupHandler {
       }
 
       this.showSaveStatus("saved");
-      console.log("📄 Page layout settings saved successfully");
     } catch (error) {
       console.error("📄 Failed to save page layout settings:", error);
       this.showSaveStatus("error");
@@ -360,14 +352,12 @@ export class PageSetupHandler {
 
   private showSaveStatus(status: "saving" | "saved" | "error"): void {
     // You can implement a save status indicator here if needed
-    console.log(`📄 Save status: ${status}`);
   }
 
   public async loadSettingsFromDatabase(courseId: string): Promise<void> {
     this.courseId = courseId;
 
     try {
-      console.log("📄 Loading page layout settings from database for course:", courseId);
 
       const { data: course, error } = await supabase
         .from("courses")
@@ -392,12 +382,10 @@ export class PageSetupHandler {
           canvas_size: course.course_layout.canvas_size || this.currentSettings.canvas_size
         };
         
-        console.log("📄 Loaded page layout settings from database:", this.currentSettings);
         
         // Update margin manager immediately with loaded settings
         canvasMarginManager.setMarginsFromPageLayout(this.currentSettings);
       } else {
-        console.log("📄 No existing page layout settings found, using defaults");
         // Still update margin manager with defaults
         canvasMarginManager.setMarginsFromPageLayout(this.currentSettings);
       }
@@ -411,7 +399,6 @@ export class PageSetupHandler {
 
   public setCourseId(courseId: string): void {
     this.courseId = courseId;
-    console.log('📄 Setting course ID for page setup:', courseId);
     this.loadSettingsFromDatabase(courseId);
   }
 

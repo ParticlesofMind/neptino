@@ -12,7 +12,6 @@ export class TriangleDrawer extends BaseShapeDrawer {
             return;
         }
         
-        console.log(`🔶 SHAPES: Drawing triangle at (${context.startX}, ${context.startY}) with size ${context.width}x${context.height}`);
         
         // Equilateral triangle pointing up
         const topX = context.startX + context.width / 2;

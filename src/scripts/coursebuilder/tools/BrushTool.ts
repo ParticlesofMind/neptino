@@ -37,7 +37,6 @@ export class BrushTool extends BaseTool {
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
  // 🔒 CRITICAL: Only respond if this tool is active
  if (!this.isActive) {
-   console.log('🖍️ BRUSH: Ignoring pointer down - tool not active');
    return;
  }
 
@@ -56,7 +55,6 @@ export class BrushTool extends BaseTool {
   // 🚫 MARGIN PROTECTION: Prevent creation in margin areas
   const canvasBounds = this.manager.getCanvasBounds();
   if (!BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
-    console.log(`🖍️ BRUSH: 🚫 Click in margin area rejected - point (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)}) outside content area`);
     return; // Exit early - no creation allowed in margins
   }
 

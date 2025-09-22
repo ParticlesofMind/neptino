@@ -34,7 +34,6 @@ export class StaticCourseCardManager {
 
     const courseId = getCourseId();
     if (!courseId) {
-      console.log('📋 No courseId in URL - keeping static course card as placeholder');
       return;
     }
 
@@ -46,7 +45,6 @@ export class StaticCourseCardManager {
         return;
       }
 
-      console.log('✅ Updating static course card with real data:', courseData);
       this.updateCardContent(courseData);
       this.updateCardActions(courseId);
       

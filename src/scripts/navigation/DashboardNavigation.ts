@@ -14,7 +14,6 @@ export class DashboardNavigation {
     
     // Only initialize if we actually have dashboard elements
     if (this.articles.length === 0) {
-      console.log('No content articles found - skipping dashboard navigation');
       return;
     }
     

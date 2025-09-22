@@ -60,7 +60,6 @@ export class PixiApp {
     const finalConfig = { ...defaultConfig, ...config };
 
     try {
-      console.log('🎨 Creating PIXI Application with high-quality settings...', finalConfig);
 
       this.app = new Application();
       await this.app.init({
@@ -69,8 +68,6 @@ export class PixiApp {
         hello: false, // Disable PIXI hello message
       });
 
-      console.log('✅ PIXI Application created successfully with high-quality rendering');
-      console.log(`📐 Canvas size: ${finalConfig.width}x${finalConfig.height}, Resolution: ${finalConfig.resolution}x`);
       return this.app;
 
     } catch (error) {
@@ -134,7 +131,6 @@ export class PixiApp {
 
       this.mounted = true;
 
-      console.log('✅ Canvas mounted to', this.containerSelector);
 
     } catch (error) {
       console.error('❌ Failed to mount canvas:', error);
@@ -197,6 +193,5 @@ export class PixiApp {
     }
 
     this.mounted = false;
-    console.log('🗑️ PixiApp destroyed');
   }
 }

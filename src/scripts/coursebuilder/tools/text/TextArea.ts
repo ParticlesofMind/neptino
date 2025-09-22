@@ -78,7 +78,6 @@ export class TextArea implements ITextArea {
     this.textObject.y = alignToPixel(5); // 5px padding from top
     this.container.addChild(this.textObject);
 
-    console.log(`📝 TextArea text object created with wordWrapWidth: ${contentWidth}`);
 
     // Initialize measurement helpers and minHeight
     this.minHeight = Math.max(10, this._bounds.height);
@@ -91,7 +90,6 @@ export class TextArea implements ITextArea {
     // Initial render
     this.render();
 
-    console.log(`📝 TextArea created: ${this.id}`);
   }
 
   public get bounds(): TextAreaBounds {
@@ -124,7 +122,6 @@ export class TextArea implements ITextArea {
     this._isActive = active;
     this.updateBorderStyle();
     
-    console.log(`📝 TextArea ${this.id} ${active ? 'activated' : 'deactivated'}`);
   }
 
   public updateBounds(bounds: TextAreaBounds): void {
@@ -141,7 +138,6 @@ export class TextArea implements ITextArea {
     
     this.render();
     
-    console.log(`📝 TextArea bounds updated: ${bounds.width}x${bounds.height}, new wordWrapWidth: ${contentWidth}`);
   }
 
   public updateText(text: string): void {
@@ -198,7 +194,6 @@ export class TextArea implements ITextArea {
     if (this._text.length === 0 || index === 0) {
       const x = this.textObject.x; // Already includes 5px padding
       const y = this.textObject.y; // Already includes 5px padding
-      console.log(`📝 Cursor position for index ${index}: (${x}, ${y}) - empty text or start`);
       return alignPointToPixel(x, y);
     }
 
@@ -227,7 +222,6 @@ export class TextArea implements ITextArea {
     const y = this.textObject.y + (lineIndex * this.lineHeight);
     
     
-    console.log(`📝 Cursor position for index ${index}: (${x}, ${y}) - line ${lineIndex}`);
     return alignPointToPixel(x, y);
   }
 
@@ -247,7 +241,6 @@ export class TextArea implements ITextArea {
     this.container.destroy({ children: true });
     try { this.measureText?.destroy(); } catch {}
     try { (this.flowManager as any)?.destroy?.(); } catch {}
-    console.log(`📝 TextArea destroyed: ${this.id}`);
   }
 
   private calculateLineHeight(): void {
@@ -284,7 +277,6 @@ export class TextArea implements ITextArea {
     this.container.x = alignedPos.x;
     this.container.y = alignedPos.y;
     
-    console.log(`📝 TextArea render: bounds=${this._bounds.width}x${this._bounds.height}, wordWrapWidth=${contentWidth}, text="${this._text}"`);
   }
 
   /** Refresh measurement and flow when style changes */
@@ -319,7 +311,6 @@ export class TextArea implements ITextArea {
     // Draw rectangle
     this.border.rect(0, 0, this._bounds.width, this._bounds.height);
     
-    console.log(`📝 Border drawn: ${this._bounds.width}x${this._bounds.height}, active: ${this._isActive}`);
   }
 
   private getBorderColor(): number {

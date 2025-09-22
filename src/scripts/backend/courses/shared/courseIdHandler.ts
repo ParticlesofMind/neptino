@@ -49,7 +49,6 @@ export class CourseIdHandler {
  // Show the course code display
  this.courseCodeDisplay.style.display = 'flex';
  
- console.log('📋 Course ID displayed:', courseId);
  }
 
  /**
@@ -76,7 +75,6 @@ export class CourseIdHandler {
  // Show success feedback
  this.showCopyFeedback(true);
 
- console.log('📋 Course ID copied to clipboard:', courseId);
 
  } catch (error) {
  console.error('Failed to copy course ID:', error);

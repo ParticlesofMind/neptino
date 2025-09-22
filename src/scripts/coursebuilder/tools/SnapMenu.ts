@@ -44,18 +44,15 @@ export function bindSnapMenu(perspectiveManager?: any): void {
     snapMenu.style.top = `${top}px`;
     snapMenu.style.zIndex = '1001';
     
-    console.log('Snap menu positioned at:', { left, top, perspectiveRect, containerRect });
   };
 
   const openMenu = () => {
     positionMenu();
     snapMenu.classList.add('open');
-    console.log('Snap menu opened');
   };
   
   const closeMenu = () => {
     snapMenu.classList.remove('open');
-    console.log('Snap menu closed');
   };
 
   const updateSelectedOption = (activeMode: string) => {
@@ -99,7 +96,6 @@ export function bindSnapMenu(perspectiveManager?: any): void {
     e.stopPropagation();
     e.stopImmediatePropagation(); // Prevent other handlers from firing
     
-    console.log('Snap anchor clicked, menu open:', snapMenu.classList.contains('open'));
     
     if (snapMenu.classList.contains('open')) {
       closeMenu();
@@ -178,7 +174,6 @@ export function bindSnapMenu(perspectiveManager?: any): void {
       }
       if (sg && typeof prefs?.enableSymmetryGuides === 'boolean') sg.checked = !!prefs.enableSymmetryGuides;
     } catch {}
-    console.log('SnapMenu: Initialized successfully with mode:', currentMode);
   } catch (error) {
     console.warn('Failed to initialize snap menu state:', error);
     updateSelectedOption('grid'); // fallback to grid

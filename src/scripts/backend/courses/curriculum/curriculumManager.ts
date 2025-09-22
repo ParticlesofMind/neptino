@@ -95,7 +95,6 @@ class CurriculumManager {
    this.currentPreviewMode = "all"; // Force to show full structure by default
    this.savePreviewMode(this.currentPreviewMode); // Save the default
 
-   console.log('📚 CurriculumManager initializing with course ID:', this.courseId);
 
  if (!this.courseId) {
  console.warn("⚠️ No course ID available for curriculum management - some features may be limited");
@@ -121,18 +120,15 @@ class CurriculumManager {
  const courseIdFromUrl = urlParams.get('courseId') || urlParams.get('id');
  
  if (courseIdFromUrl) {
- console.log('📚 Course ID from URL:', courseIdFromUrl);
  return courseIdFromUrl;
  }
 
  // Fallback to session storage (for backward compatibility)
  const courseIdFromSession = sessionStorage.getItem("currentCourseId");
  if (courseIdFromSession) {
- console.log('📚 Course ID from session storage:', courseIdFromSession);
  return courseIdFromSession;
  }
 
- console.log('📚 No course ID found for curriculum manager');
  return "";
  }
 
@@ -187,15 +183,12 @@ class CurriculumManager {
   private setInitialActiveButton(): void {
     // Use setTimeout to ensure DOM is fully ready
     setTimeout(() => {
-      console.log('🎯 Setting initial active button for mode:', this.currentPreviewMode);
       const previewModeButtons = this.curriculumPreviewSection?.querySelectorAll('button[data-mode]');
-      console.log('🔘 Found buttons for initial setup:', previewModeButtons?.length);
       
       previewModeButtons?.forEach((btn) => {
         btn.classList.remove('button--active');
         if (btn.getAttribute('data-mode') === this.currentPreviewMode) {
           btn.classList.add('button--active');
-          console.log('✅ Set initial active class on button:', btn.textContent?.trim());
         }
       });
     }, 100);
@@ -323,7 +316,6 @@ class CurriculumManager {
      
      // Try again after a short delay in case DOM isn't ready
      setTimeout(() => {
-       console.log('🔄 Retrying duration configuration setup...');
        this.setupDurationConfiguration();
      }, 1000);
      return;
@@ -335,7 +327,6 @@ class CurriculumManager {
      const durationType = button.dataset.duration as keyof typeof this.durationPresets;
      
      button.addEventListener('click', () => {
-       console.log('👆 User clicked duration button:', durationType);
        
        // Remove active class from all options
        durationOptions.forEach(opt => {
@@ -367,7 +358,6 @@ class CurriculumManager {
          recommendationText: this.getRecommendationText(durationType, this.scheduledLessonDuration)
        };
        
-       console.log('🎯 User selected preset, updating inputs and regenerating curriculum');
        // Regenerate and save curriculum with new structure
        this.regenerateAndSaveCurriculum();
      });
@@ -399,7 +389,6 @@ class CurriculumManager {
    const tasksInput = document.getElementById('curriculum-tasks') as HTMLInputElement;
 
    if (!topicsInput || !objectivesInput || !tasksInput) {
-     console.log('📝 Input elements not found for population');
      return;
    }
 
@@ -487,7 +476,6 @@ class CurriculumManager {
 
    // Debounce the actual save operation
    this.saveTimeout = window.setTimeout(() => {
-     console.log('⏱️ Debounce timeout expired, now saving...');
      this.regenerateAndSaveCurriculum();
    }, 500); // Wait 500ms after last change
  }
@@ -616,7 +604,6 @@ class CurriculumManager {
      // Update configuration based on selection (visual only, don't update inputs)
      this.updateConfigurationFromSelection(durationType, recommendationElement);
      
-     console.log(`✅ Auto-selected recommended duration: ${durationType} (${this.scheduledLessonDuration} minutes)`);
    }
  }
 
@@ -642,7 +629,6 @@ class CurriculumManager {
      });
      
      // Double-check the content load config values
-     console.log('🔍 Current contentLoadConfig object:', JSON.stringify(this.contentLoadConfig, null, 2));
 
      // Get the number of lessons from schedule
      const { data: scheduleData } = await supabase
@@ -652,7 +638,6 @@ class CurriculumManager {
        .single();
 
      const numLessons = scheduleData?.course_sessions || 1;
-     console.log('📊 Number of lessons:', numLessons);
      
      // Create new curriculum structure with current settings
      const newCurriculum = this.createCurriculumStructure(numLessons);
@@ -702,7 +687,6 @@ class CurriculumManager {
      }
 
      // Save to database
-     console.log('💾 Saving curriculum to database...');
      console.log('📋 Final curriculum structure before save:', {
        lessonsCount: newCurriculum.length,
        firstLesson: newCurriculum[0] ? {
@@ -723,7 +707,6 @@ class CurriculumManager {
      this.currentCurriculum = newCurriculum;
      this.renderCurriculumPreview();
 
-     console.log('✅ Curriculum regenerated and saved with new structure');
    } catch (error) {
      console.error("❌ Error regenerating curriculum:", error);
    }
@@ -777,7 +760,6 @@ class CurriculumManager {
  topics: [],
  };
 
- console.log(`📖 Creating lesson ${i} with ${this.contentLoadConfig.topicsPerLesson} topics`);
 
  for (let j = 1; j <= this.contentLoadConfig.topicsPerLesson; j++) {
  const topic: CurriculumTopic = {
@@ -798,11 +780,9 @@ class CurriculumManager {
  }
 
  lesson.topics.push(topic);
- console.log(`  📋 Added topic ${j} with ${topic.objectives.length} objectives and ${topic.tasks.length} tasks`);
  }
 
  curriculum.push(lesson);
- console.log(`✅ Completed lesson ${i} with ${lesson.topics.length} topics`);
  }
 
  console.log('🎯 Final curriculum structure created:', {
@@ -843,9 +823,7 @@ class CurriculumManager {
      throw error;
    }
 
-   console.log('✅ Curriculum saved successfully to database');
  } private setPreviewMode(mode: PreviewMode): void {
-   console.log('🎛️ Setting preview mode to:', mode);
    this.currentPreviewMode = mode;
    
    // Save to localStorage
@@ -853,13 +831,11 @@ class CurriculumManager {
 
    // Update active button styling
    const previewModeButtons = this.curriculumPreviewSection.querySelectorAll('button[data-mode]');
-   console.log('🔘 Found preview mode buttons:', previewModeButtons.length);
    
    previewModeButtons.forEach((btn) => {
      btn.classList.remove('button--active');
      if (btn.getAttribute('data-mode') === mode) {
        btn.classList.add('button--active');
-       console.log('✅ Set active class on button:', btn.textContent?.trim());
      }
    });
 
@@ -1193,7 +1169,6 @@ class CurriculumManager {
    }
 
    try {
-     console.log('📚 Loading existing curriculum for course:', this.courseId);
      const { data, error } = await supabase
        .from("courses")
        .select("curriculum_data")

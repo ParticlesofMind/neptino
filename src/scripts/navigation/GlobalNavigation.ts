@@ -283,7 +283,6 @@ export class GlobalNavigation {
  this.closeLanguageDropdown();
  
  // Here you would typically handle the actual language change
- console.log('Language changed to:', langCode);
  }
 
  private closeLanguageDropdown(): void {

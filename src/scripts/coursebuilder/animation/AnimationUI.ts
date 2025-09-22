@@ -174,7 +174,6 @@ export class AnimationUI {
     });
     syncLoop();
 
-    console.log('🎬 AnimationUI: Scene options panel created and added to options container');
 
     // Duration slider setup
     const durationSlider = scenePanel.querySelector('[data-duration-slider]') as HTMLInputElement;

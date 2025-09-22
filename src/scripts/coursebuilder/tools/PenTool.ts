@@ -77,7 +77,6 @@ export class PenTool extends BaseTool {
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
  // 🔒 CRITICAL: Only respond if this tool is active
  if (!this.isActive) {
-   console.log('✏️ PEN: Ignoring pointer down - tool not active');
    return;
  }
 
@@ -93,7 +92,6 @@ export class PenTool extends BaseTool {
  // 🚫 MARGIN PROTECTION: Prevent creation in margin areas
  const canvasBounds = this.manager.getCanvasBounds();
  if (!BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
- console.log(`✏️ PEN: 🚫 Click in margin area rejected - point (${Math.round(localPoint.x)}, ${Math.round(localPoint.y)}) outside content area`);
  return; // Exit early - no creation allowed in margins
  }
  
@@ -356,7 +354,6 @@ export class PenTool extends BaseTool {
  
  // Give user tips on how to close the path for fill
  if (this.currentPath.nodes.length === 3 && this.settings.fillColor && this.settings.fillColor !== 'transparent') {
- console.log(`✏️ PEN: 💡 TIP: Click near the first node or press SPACEBAR to close this path and apply fill color ${this.settings.fillColor}`);
  }
 
  // Update path graphics
@@ -544,7 +541,6 @@ export class PenTool extends BaseTool {
  // No animation - static indicator
  
  container.addChild(this.hoverIndicator);
- console.log('✏️ PEN: Showing subtle green completion indicator');
  }
 
  /**
@@ -618,10 +614,8 @@ export class PenTool extends BaseTool {
  
  // Apply fill first (if specified)
  if (fillColorToUse && fillColorToUse !== 'transparent' && fillColorToUse !== '') {
-   console.log(`✏️ PEN: Applying fill color ${fillColorToUse} to closed shape`);
    finalShape.fill({ color: hexToNumber(fillColorToUse) });
  } else {
-   console.log(`✏️ PEN: No fill applied - fill color is ${fillColorToUse || 'undefined'}`);
  }
  
  // Then apply stroke
@@ -917,7 +911,6 @@ export class PenTool extends BaseTool {
 
  // Log fill color changes for debugging
  if (settings.fillColor) {
- console.log(`✏️ PEN: Fill color updated to ${settings.fillColor}`);
  }
  }
 

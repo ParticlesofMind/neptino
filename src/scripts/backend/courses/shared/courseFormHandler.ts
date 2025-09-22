@@ -373,7 +373,6 @@ export class CourseFormHandler {
                             // Check if the option text contains the language name
                             if (optionText.toLowerCase().includes(value.toLowerCase())) {
                                 selectField.value = option.value; // Use the code, not the name
-                                console.log(`✅ Found language match: "${value}" → "${option.value}" (${optionText})`);
                                 found = true;
                                 break;
                             }
@@ -605,7 +604,6 @@ export class CourseFormHandler {
                 // Enable course builder features
                 this.enableCourseBuilderFeatures(result.courseId);
 
-                console.log('📋 Course created with ID:', result.courseId);
                 
                 // Navigate to next section after successful creation
                 if (this.sectionConfig.section === 'essentials') {
@@ -756,11 +754,9 @@ export class CourseFormHandler {
             courseCodeDisplay.style.display = 'flex';
         }
 
-        console.log('📋 Course ID displayed:', courseId);
     }
 
     private enableCourseBuilderFeatures(courseId: string): void {
-        console.log("🔧 Enabling course builder features for course:", courseId);
 
         // Enable next button or any other course-specific features
         const nextButton = document.getElementById('next-btn');

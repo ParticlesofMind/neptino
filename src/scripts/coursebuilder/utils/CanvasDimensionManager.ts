@@ -67,7 +67,6 @@ export class CanvasDimensionManager {
     }
     
     this.currentDimensions = { width, height };
-    console.log('📐 Canvas dimensions updated:', this.currentDimensions);
     
     // Notify any listeners that dimensions changed
     this.notifyDimensionChange();

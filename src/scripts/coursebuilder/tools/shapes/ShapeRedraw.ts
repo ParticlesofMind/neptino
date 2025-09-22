@@ -7,7 +7,16 @@ export type CornerRadii = Partial<Record<CornerKey, number>> & Partial<Record<Tr
 
 export function redrawShapeFromMeta(g: Graphics): boolean {
   const meta = (g as any).__meta as any;
-  if (!meta || meta.kind !== 'shapes') return false;
+  
+  console.log('🔍 REDRAW ENTRY - meta check:', {
+    'has_meta': !!meta,
+    'meta_kind': meta?.kind,
+    'meta_shapeType': meta?.shapeType
+  });
+  
+  if (!meta || meta.kind !== 'shapes') {
+    return false;
+  }
   
   // DEBUG: Log object state before redraw
   console.log('🔍 REDRAW DEBUG - BEFORE:', {
@@ -36,6 +45,15 @@ export function redrawShapeFromMeta(g: Graphics): boolean {
     const y = meta.y ?? meta.startY ?? 0;
     const w = meta.width ?? (g.getLocalBounds?.()?.width || (g as any).width || 0);
     const h = meta.height ?? (g.getLocalBounds?.()?.height || (g as any).height || 0);
+
+    console.log('🔍 REDRAW DEBUG - CALCULATED COORDINATES:', {
+      'calculated_x': x,
+      'calculated_y': y,
+      'calculated_w': w,
+      'calculated_h': h,
+      'meta.x_exists': meta.x !== undefined,
+      'meta.startX_exists': meta.startX !== undefined
+    });
 
     // CRITICAL FIX: The shape should be drawn at (0,0) in local coordinates,
     // and the object position should be set to the meta coordinates
@@ -71,7 +89,7 @@ export function redrawShapeFromMeta(g: Graphics): boolean {
     });
     
     return true;
-  } catch {
+  } catch (error) {
     return false;
   }
 }

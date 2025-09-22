@@ -181,7 +181,6 @@ export class CanvasEvents {
     // Clear HTML table dragging states
     document.querySelectorAll('.coursebuilder-table.dragging').forEach(table => {
       table.classList.remove('dragging');
-      console.log('🚑 CLEANUP: Removed dragging class from HTML table');
     });
 
     // Clear any global CSS classes that might indicate dragging
@@ -205,7 +204,6 @@ export class CanvasEvents {
    * This is a safety net to prevent elements from getting stuck in dragging state
    */
   private handleGlobalMouseUp(): void {
-    console.log('🚑 GLOBAL: Document mouse up detected - clearing all drag states');
     this.clearAllDragStates();
   }
 
@@ -358,7 +356,6 @@ export class CanvasEvents {
     // Destroy tool manager
     this.toolManager.destroy();
 
-    console.log('🗑️ Canvas events destroyed');
   }
 
   /**
@@ -366,7 +363,6 @@ export class CanvasEvents {
    */
   public enableDrawingEvents(): void {
     this.isEnabled = true;
-    console.log('✅ Canvas drawing events ENABLED');
   }
 
   /**
@@ -374,7 +370,6 @@ export class CanvasEvents {
    */
   public disableDrawingEvents(): void {
     this.isEnabled = false;
-    console.log('🚫 Canvas drawing events DISABLED');
   }
 
   /**

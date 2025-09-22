@@ -15,11 +15,9 @@ export class CourseBuilderNavigation {
  constructor() {
  // Only initialize if we're actually on the coursebuilder page
  if (!this.isOnCourseBuilderPage()) {
- console.log('🧭 Not on coursebuilder page - skipping CourseBuilder navigation');
  return;
  }
 
- console.log('🧭 Initializing CourseBuilder Navigation...');
  
  this.sections = document.querySelectorAll('.coursebuilder__setup, .coursebuilder__create, .coursebuilder__preview, .coursebuilder__launch');
  this.nextButton = document.getElementById('next-btn');
@@ -27,7 +25,6 @@ export class CourseBuilderNavigation {
  
  this.initialize();
  
- console.log('🧭 CourseBuilder Navigation initialized');
  }
 
  private isOnCourseBuilderPage(): boolean {
@@ -68,14 +65,11 @@ export class CourseBuilderNavigation {
 
  private initializeFromHash(): void {
  const hash = window.location.hash.substring(1);
- console.log('🧭 Initializing from hash:', hash);
  
  if (hash && this.isValidSection(hash)) {
  this.currentSection = hash;
- console.log('🧭 Valid hash detected, setting current section to:', hash);
  } else {
  this.currentSection = 'setup';
- console.log('🧭 No valid hash, defaulting to setup');
  if (!hash) {
  history.replaceState(null, '', '#setup');
  }
@@ -97,31 +91,24 @@ export class CourseBuilderNavigation {
  }
 
  private activateSection(sectionId: string): void {
- console.log(`🧭 Activating section: ${sectionId}`);
  
  // Get all coursebuilder sections
  const allSections = document.querySelectorAll('[class*="coursebuilder__"]');
- console.log(`🔍 Found ${allSections.length} coursebuilder sections:`, allSections);
  
  // Hide all coursebuilder elements
  this.sections.forEach(element => {
- console.log(`🔍 Processing element:`, element, element.className);
  element.classList.remove('coursebuilder__setup--active', 'coursebuilder__create--active', 'coursebuilder__preview--active', 'coursebuilder__launch--active');
  element.setAttribute('aria-hidden', 'true');
- console.log(`🔍 After hiding:`, element.className);
  });
  
  // Show target coursebuilder element
  const targetElement = document.querySelector(`.coursebuilder__${sectionId}`);
- console.log(`🎯 Looking for: .coursebuilder__${sectionId}`, targetElement);
  if (targetElement) {
  targetElement.classList.add(`coursebuilder__${sectionId}--active`);
  targetElement.setAttribute('aria-hidden', 'false');
- console.log(`🎯 Successfully navigated to coursebuilder element: ${sectionId}`, targetElement.className);
  
  // Initialize aside navigation when entering setup section
  if (sectionId === 'setup') {
- console.log('🧭 Entering setup section - initializing aside navigation');
  setTimeout(() => {
  new AsideNavigation();
  }, 50); // Small delay to ensure DOM is ready
@@ -129,8 +116,6 @@ export class CourseBuilderNavigation {
  
  // Additional debugging - check computed styles
  const computedStyle = window.getComputedStyle(targetElement);
- console.log(`🎨 Computed display style:`, computedStyle.display);
- console.log(`🎨 Computed grid-template-columns:`, computedStyle.gridTemplateColumns);
  } else {
  console.error(`❌ Coursebuilder element not found: ${sectionId}`);
  }
@@ -224,11 +209,9 @@ export class AsideNavigation {
  constructor() {
  // Only initialize if we're in the setup section
  if (!this.isInSetupSection()) {
- console.log('🧭 Not in setup section - skipping aside navigation');
  return;
  }
 
- console.log('🧭 Initializing Aside Navigation...');
  
  this.asideLinks = document.querySelectorAll('.link--menu[data-section]');
  this.contentSections = document.querySelectorAll('.content__article[id]');
@@ -251,7 +234,6 @@ export class AsideNavigation {
  return;
  }
 
- console.log('🧭 Aside navigation initializing with', this.asideLinks.length, 'links and', this.contentSections.length, 'sections');
 
  this.bindEvents();
  this.restoreActiveSection();
@@ -274,7 +256,6 @@ export class AsideNavigation {
  return;
  }
 
- console.log('🧭 Aside link clicked:', target.textContent, 'Target section:', targetSection);
 
  this.activateSection(target, targetSection);
  this.saveActiveSection(targetSection);
@@ -294,7 +275,6 @@ export class AsideNavigation {
  // If we're already on the target section, do nothing (prevents double-click issues)
  if (activeLink.classList.contains('link--menu-active') && 
      targetSection.classList.contains('content__article--active')) {
- console.log('🎯 Section already active, no changes needed:', targetSectionId);
  return;
  }
  
@@ -319,14 +299,12 @@ export class AsideNavigation {
  // Accept the actual element instead of searching for it again
  activeLink.classList.add('link--menu-active');
  targetSection.classList.add('content__article--active');
- console.log('🎯 Successfully activated article:', targetSection.id);
  }
 
  private restoreActiveSection(): void {
  const savedSection = localStorage.getItem(this.STORAGE_KEY);
 
  if (savedSection) {
- console.log('🧭 Restoring saved section:', savedSection);
  const savedLink = document.querySelector(`[data-section="${savedSection}"]`) as HTMLAnchorElement;
  
  if (savedLink && document.getElementById(savedSection)) {
@@ -337,7 +315,6 @@ export class AsideNavigation {
  }
  }
  
- console.log('🧭 No saved section, setting default');
  this.setDefaultSection();
  }
 
@@ -347,7 +324,6 @@ export class AsideNavigation {
  const firstSectionId = firstLink?.getAttribute("data-section");
 
  if (firstLink && firstSectionId) {
- console.log('🎯 Setting default section:', firstSectionId);
  this.activateSection(firstLink, firstSectionId);
  } else {
  console.error('🚨 No valid first link found - navigation may be broken');
@@ -355,14 +331,12 @@ export class AsideNavigation {
  const firstArticle = this.contentSections[0];
  if (firstArticle) {
  firstArticle.classList.add('content__article--active');
- console.log('🆘 Emergency fallback: activated first article directly:', firstArticle.id);
  }
  }
  }
 
  private saveActiveSection(sectionId: string): void {
  localStorage.setItem(this.STORAGE_KEY, sectionId);
- console.log('🧭 Saved active section to localStorage:', sectionId);
  }
 
  public destroy(): void {
@@ -453,7 +427,6 @@ export class ModalHandler {
     // Prevent body scroll
     document.body.style.overflow = 'hidden';
 
-    console.log(`🔄 Modal shown: ${modalId}`);
   }
 
   public hideModal(): void {
@@ -465,7 +438,6 @@ export class ModalHandler {
     // Restore body scroll
     document.body.style.overflow = '';
 
-    console.log('🔄 Modal hidden');
   }
 
   public static getInstance(): ModalHandler {

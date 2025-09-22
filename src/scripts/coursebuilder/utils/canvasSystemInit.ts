@@ -12,7 +12,6 @@ import { UnitConverter } from './UnitConverter';
  * Call this early in canvas initialization
  */
 export function initializeCanvasSystem(): void {
-  console.log('🏗️ Initializing consolidated canvas system...');
 
   // Ensure default dimensions are set
   canvasDimensionManager.resetToDefaults();
@@ -35,24 +34,18 @@ export function initializeCanvasSystem(): void {
       // Validation
       validateSystem: () => {
         const dimValidation = canvasDimensionManager.validateDimensions();
-        console.log('📐 Dimension validation:', dimValidation);
         return dimValidation;
       }
     };
     
-    console.log('🔧 Canvas system debug tools added to window.canvasSystem');
   }
   
   // Listen for dimension changes
   if (typeof window !== 'undefined') {
     window.addEventListener('canvas:dimensionsChanged', (event: any) => {
-      console.log('📐 Canvas dimensions changed:', event.detail);
     });
   }
   
-  console.log('✅ Consolidated canvas system initialized');
-  console.log('📐 Default dimensions:', canvasDimensionManager.getCurrentDimensions());
-  console.log('📏 Default margins:', canvasMarginManager.getMargins());
 }
 
 /**

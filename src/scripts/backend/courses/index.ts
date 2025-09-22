@@ -27,7 +27,6 @@ export class CourseBuilder {
  // Make this instance globally accessible
  if (typeof window !== 'undefined') {
  (window as any).courseBuilderInstance = this;
- console.log('📋 CourseBuilder instance registered globally');
  }
  }
 
@@ -152,7 +151,6 @@ export class CourseBuilder {
  
  // Update URL without reloading the page
  window.history.replaceState({}, '', url.toString());
- console.log('📋 Updated URL with course ID:', url.toString());
  }
 
  private initializeCurrentSection(): void {
@@ -203,15 +201,12 @@ export class CourseBuilder {
 
  private loadSection(sectionId: string): void {
  try {
- console.log(`📋 Loading section: ${sectionId}`);
  
  if (!this.courseId) {
- console.log('📋 CREATE NEW COURSE MODE - Limited functionality until course is created');
  }
 
  // Cleanup previous form handler
  if (this.currentFormHandler) {
- console.log('📋 Cleaning up previous form handler');
  this.currentFormHandler = null;
  }
  
@@ -222,12 +217,10 @@ export class CourseBuilder {
  if (this.scheduleManager) {
  // If we have a course ID, make sure the schedule manager has the latest data
  if (this.courseId) {
- console.log('📋 Refreshing schedule manager with course ID:', this.courseId);
  this.scheduleManager.setCourseId(this.courseId);
  }
 
  } else {
- console.log('📋 Schedule manager not initialized (create new course mode)');
  }
  } else if (sectionId === "curriculum") {
  // Curriculum manager is already initialized - just ensure preview is visible
@@ -235,7 +228,6 @@ export class CourseBuilder {
  // Trigger a refresh to show/hide preview as needed
  this.curriculumManager.refreshDisplay();
  } else {
- console.log('📋 Curriculum manager not initialized (create new course mode)');
  }
  // Also initialize form handler for curriculum form data
  this.currentFormHandler = new CourseFormHandler(sectionId);
@@ -246,7 +238,6 @@ export class CourseBuilder {
 
  // Log form handler initialization
  if (this.currentFormHandler) {
- console.log(`📋 Form handler initialized for section: ${sectionId}`);
  }
  } catch (error) {
  console.warn(`No handler available for section: ${sectionId}`, error);
@@ -301,9 +292,7 @@ document.addEventListener("DOMContentLoaded", () => {
  if (hasSetupSection && isInSetupSection && !courseBuilderInitialized) {
  courseBuilderInitialized = true;
  new CourseBuilder();
- console.log(
- "CourseBuilder (form handler) initialized from courses/index.ts",
- );
+
  }
 });
 

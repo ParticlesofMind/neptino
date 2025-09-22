@@ -267,10 +267,17 @@ async function verifyPedagogyColumn() {
       statusDiv.className = 'save-status__text';
     }
   } catch (err: any) {
-    form.dataset.blockSave = 'true';
-    if (statusDiv) {
-      statusDiv.textContent = 'Pedagogy cannot be saved: missing column course_pedagogy. Ask an admin to run the migration.';
-      statusDiv.className = 'save-status__text save-status__text--error';
+    // Only show pedagogy column warning if we're actually on the pedagogy section
+    if (window.location.hash === '#pedagogy' || document.querySelector('#pedagogy:not([style*="display: none"])')) {
+      form.dataset.blockSave = 'true';
+      if (statusDiv) {
+        statusDiv.textContent = 'Pedagogy cannot be saved: missing column course_pedagogy. Ask an admin to run the migration.';
+        statusDiv.className = 'save-status__text save-status__text--error';
+      }
+      console.warn('⚠️ Course pedagogy column missing - saving blocked for pedagogy section');
+    } else {
+      // Just silently block saving without the warning noise during startup
+      form.dataset.blockSave = 'true';
     }
   }
 }
