@@ -13,9 +13,13 @@ export interface CanvasDimensions {
   height: number;
 }
 
-// Fixed canvas dimensions as requested (A4 portrait)
-export const CANVAS_WIDTH = 1200;
-export const CANVAS_HEIGHT = 1800;
+// Workspace dimensions for infinite canvas (10x larger than artboard)
+export const CANVAS_WIDTH = 12000;
+export const CANVAS_HEIGHT = 18000;
+
+// Artboard dimensions for final output (A4 portrait)
+export const ARTBOARD_WIDTH = 1200;
+export const ARTBOARD_HEIGHT = 1800;
 
 /**
  * Get consistent canvas dimensions
@@ -63,11 +67,11 @@ export function calculateFitZoom(
     return 0.2; // Minimum zoom
   }
   
-  const scaleX = availableWidth / CANVAS_WIDTH;
-  const scaleY = availableHeight / CANVAS_HEIGHT;
-  
-  // Use the smaller scale to ensure canvas fits entirely
-  const optimalScale = Math.min(scaleX, scaleY);
+  // For infinite canvas, calculate scale based on artboard dimensions (not full workspace)
+  // This ensures the artboard fits nicely in the viewport
+  const artboardScaleX = availableWidth / ARTBOARD_WIDTH;
+  const artboardScaleY = availableHeight / ARTBOARD_HEIGHT;
+  const optimalScale = Math.min(artboardScaleX, artboardScaleY);
   
   // Clamp between 20% and 100% for usability
   const clampedScale = Math.max(0.2, Math.min(1.0, optimalScale));

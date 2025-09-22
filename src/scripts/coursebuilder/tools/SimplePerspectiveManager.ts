@@ -15,7 +15,7 @@ export class SimplePerspectiveManager {
     private canvasContainer: HTMLElement | null = null;
     
     // Zoom settings
-    private zoomLevel: number = 1.0; // 100%
+    private zoomLevel: number = 0.8; // 80% (new default 100%)
     private userZoomLocked: boolean = false; // stop auto-fit after user changes zoom
     private readonly ZOOM_STEP = 0.2; // 20%
     private readonly MIN_ZOOM = 0.2; // 20%
@@ -366,8 +366,8 @@ export class SimplePerspectiveManager {
             return;
         }
 
-        // Handle normal scrolling when zoomed in (like grab tool)
-        if (this.zoomLevel > 1.0) {
+        // Handle normal scrolling when zoomed above baseline (like grab tool)
+        if (this.zoomLevel > 0.8) {
             event.preventDefault();
             
             const scrollSpeed = 2;
@@ -420,7 +420,7 @@ export class SimplePerspectiveManager {
      * Reset view to 100% zoom and center
      */
     private resetView(): void {
-        this.zoomLevel = 1.0;
+        this.zoomLevel = 0.8; // Reset to new default (was 80%, now our 100%)
         this.panOffset = { x: 0, y: 0 };
         this.userZoomLocked = false;
         
@@ -463,7 +463,7 @@ export class SimplePerspectiveManager {
         const availH = Math.max(10, hostRect.height - padding * 2);
         const scaleW = availW / cRect.width;
         const scaleH = availH / cRect.height;
-        const target = Math.min(scaleW, scaleH, 1); // never upscale above 100%
+        const target = Math.min(scaleW, scaleH, 0.8); // never upscale above new 100% (0.8)
         const clamped = Math.max(this.MIN_ZOOM, Math.min(this.MAX_ZOOM, target));
         this.setZoom(clamped);
         // Center after fit
@@ -496,8 +496,8 @@ export class SimplePerspectiveManager {
             transform: transform
         });
         
-        // Update container state via BEM modifier classes
-        if (this.zoomLevel > 1.0) {
+        // Update container state via BEM modifier classes  
+        if (this.zoomLevel > 0.8) {
             this.canvasContainer.classList.add('canvas--zoomed');
         } else {
             this.canvasContainer.classList.remove('canvas--zoomed');
@@ -870,14 +870,15 @@ export class SimplePerspectiveManager {
             const zoomDisplay = document.querySelector('.zoom-display, .engine__zoom-display') as HTMLElement;
             
             if (zoomDisplay) {
-                const zoomPercent = Math.round(this.zoomLevel * 100);
+                // Convert internal zoom to display percentage (0.8 internal = 100% display)
+                const zoomPercent = Math.round((this.zoomLevel / 0.8) * 100);
                 zoomDisplay.textContent = `${zoomPercent}%`;
                 
-                // Update title to show scroll instructions when zoomed
-                if (this.zoomLevel > 1.0) {
+                // Update title to show scroll instructions when zoomed above baseline
+                if (this.zoomLevel > 0.8) {
                     zoomDisplay.title = `Zoomed to ${zoomPercent}% - Mouse wheel scrolls around canvas, Ctrl/Cmd+wheel zooms`;
                 } else {
-                    zoomDisplay.title = `${zoomPercent} zoom - Ctrl/Cmd+wheel to zoom in`;
+                    zoomDisplay.title = `${zoomPercent}% zoom - Ctrl/Cmd+wheel to zoom in`;
                 }
                 
             } else if (attempt < maxAttempts) {

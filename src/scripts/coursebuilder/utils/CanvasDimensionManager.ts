@@ -9,11 +9,11 @@ import { CanvasDimensions } from '../types/canvas';
 export class CanvasDimensionManager {
   private static instance: CanvasDimensionManager;
   
-  // Fixed canvas dimensions - A4 portrait (1200x1800)
+  // Standard canvas dimensions (A4 portrait: 1200x1800)
   private readonly DEFAULT_WIDTH = 1200;
   private readonly DEFAULT_HEIGHT = 1800;
   
-  // Current dimensions (may differ from defaults if manually set)
+  // Current dimensions 
   private currentDimensions: CanvasDimensions;
   
   private constructor() {
