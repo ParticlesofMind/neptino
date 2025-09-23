@@ -77,25 +77,25 @@ export class BoundaryUtils {
 
   /**
    * Clamp a point to stay within canvas bounds
+   * INFINITE DRAWING: Allow drawing beyond canvas boundaries
    */
-  public static clampPoint(point: Point, bounds: CanvasBounds): Point {
-    const clampedX = Math.max(bounds.left, Math.min(bounds.right, point.x));
-    const clampedY = Math.max(bounds.top, Math.min(bounds.bottom, point.y));
-    return new Point(clampedX, clampedY);
+  public static clampPoint(point: Point, _bounds: CanvasBounds): Point {
+    // Allow drawing anywhere - no clamping for infinite drawing
+    return point;
   }
 
   /**
    * Clamp a point to stay within canvas bounds (with object dimensions)
+   * INFINITE DRAWING: Allow positioning anywhere
    */
   public static clampPointWithSize(
     point: Point, 
-    objectWidth: number, 
-    objectHeight: number, 
-    bounds: CanvasBounds
+    _objectWidth: number, 
+    _objectHeight: number, 
+    _bounds: CanvasBounds
   ): Point {
-    const clampedX = Math.max(bounds.left, Math.min(bounds.right - objectWidth, point.x));
-    const clampedY = Math.max(bounds.top, Math.min(bounds.bottom - objectHeight, point.y));
-    return new Point(clampedX, clampedY);
+    // Allow positioning anywhere for infinite drawing
+    return point;
   }
 
   /**
@@ -111,18 +111,18 @@ export class BoundaryUtils {
   /**
    * Check if a point is within the content area (not in margins)
    * This is stricter than isPointWithinBounds - it prevents creation in margin areas
+   * INFINITE DRAWING: Allow creation anywhere
    */
-  public static isPointInContentArea(point: Point, bounds: CanvasBounds): boolean {
+  public static isPointInContentArea(_point: Point, _bounds: CanvasBounds): boolean {
     // Test bypass: allow all points during E2E tests
     try {
       if (typeof window !== 'undefined' && (window as any).__TEST_MODE__) {
         return true;
       }
     } catch {}
-    return point.x > bounds.left && 
-           point.x < bounds.right &&
-           point.y > bounds.top && 
-           point.y < bounds.bottom;
+    
+    // Allow creation anywhere for infinite drawing
+    return true;
   }
 
   /**
