@@ -20,6 +20,7 @@ import { CANVAS_WIDTH, CANVAS_HEIGHT, calculateFitZoom } from './utils/canvasSiz
 import { runFullValidation } from './utils/canvasSizingValidation';
 import { initializeCanvasSystem, validateCanvasSystem } from './utils/canvasSystemInit';
 import { canvasDimensionManager } from './utils/CanvasDimensionManager';
+import { activateGSAPFeatures } from './GSAPCanvasIntegration';
 
 
 // Global canvas instance
@@ -317,6 +318,14 @@ export async function initializeCanvas(): Promise<void> {
 
         // PerfHUD disabled by default to keep UI clean and avoid layout overlays in production.
         // To enable for debugging, call window.installPerfHUD?.()
+
+        // 🎬 Activate GSAP features for enhanced animations
+        try {
+            activateGSAPFeatures();
+            console.log('🚀 GSAP animation features activated!');
+        } catch (error) {
+            console.warn('⚠️ GSAP activation failed:', error);
+        }
 
         isInitializing = false;
     } catch (error) {

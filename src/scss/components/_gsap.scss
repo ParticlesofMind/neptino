@@ -1,0 +1,211 @@
+/**
+ * GSAP Animation Controls
+ * Styles for the GSAP animation UI panel
+ */
+
+.tools__item--gsap {
+  .gsap-section {
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 8px;
+    border: 1px solid #e1e5e9;
+    margin: 8px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .gsap-title {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    &::before {
+      content: '';
+      width: 3px;
+      height: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 2px;
+    }
+  }
+
+  .gsap-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .gsap-btn {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 6px !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-weight: 500;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%) !important;
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+  }
+
+  .gsap-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .gsap-control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .label--small {
+      font-size: 11px;
+      font-weight: 500;
+      color: #6c757d;
+      min-width: 60px;
+      margin: 0;
+    }
+
+    .input--small {
+      flex: 1;
+      font-size: 12px;
+      padding: 4px 8px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      background: white;
+
+      &:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        outline: none;
+      }
+    }
+
+    .input--number {
+      max-width: 80px;
+    }
+  }
+
+  .gsap-info {
+    .text--small {
+      font-size: 11px;
+      line-height: 1.4;
+      margin: 0;
+      padding: 8px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      border-left: 3px solid #667eea;
+    }
+
+    .text--muted {
+      color: #6c757d;
+    }
+  }
+
+  // Animation status indicators
+  .gsap-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #28a745;
+    margin-top: 8px;
+
+    &::before {
+      content: '✓';
+      font-weight: bold;
+    }
+
+    &.gsap-status--error {
+      color: #dc3545;
+
+      &::before {
+        content: '✗';
+      }
+    }
+
+    &.gsap-status--warning {
+      color: #ffc107;
+
+      &::before {
+        content: '⚠';
+      }
+    }
+  }
+
+  // Responsive adjustments
+  @media (max-width: 768px) {
+    .gsap-buttons {
+      grid-template-columns: 1fr;
+    }
+
+    .gsap-control-group {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 4px;
+
+      .label--small {
+        min-width: auto;
+      }
+    }
+  }
+}
+
+// Animation effects for the GSAP panel itself
+.tools__item--gsap {
+  animation: gsapPanelSlideIn 0.3s ease-out;
+}
+
+@keyframes gsapPanelSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Pulse effect for active GSAP buttons
+.gsap-btn--active {
+  animation: gsapButtonPulse 2s infinite;
+}
+
+@keyframes gsapButtonPulse {
+  0% {
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.5);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+}

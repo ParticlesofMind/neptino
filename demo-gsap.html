@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSAP Integration Demo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/8.2.6/pixi.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/PixiPlugin.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #1e1e1e;
+            color: white;
+        }
+        #controls {
+            margin-bottom: 20px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #canvas-container {
+            border: 2px solid #444;
+            border-radius: 8px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎬 GSAP + PixiJS Integration Demo</h1>
+    <p>Demonstrating advanced animations with GSAP enhanced PixiJS Scene</p>
+    
+    <div id="controls">
+        <button onclick="demo.bounceAnimation()">🏀 Bounce Animation</button>
+        <button onclick="demo.pathAnimation()">🛤️ Path Following</button>
+        <button onclick="demo.staggeredEntrance()">📝 Staggered Text</button>
+        <button onclick="demo.filterEffects()">✨ Filter Effects</button>
+        <button onclick="demo.reset()">🔄 Reset</button>
+    </div>
+    
+    <div id="canvas-container"></div>
+
+    <script>
+        // Register GSAP plugins
+        gsap.registerPlugin(MotionPathPlugin);
+        gsap.registerPlugin(PixiPlugin);
+        PixiPlugin.registerPIXI(PIXI);
+
+        class GSAPDemo {
+            constructor() {
+                this.app = new PIXI.Application({
+                    width: 800,
+                    height: 600,
+                    backgroundColor: 0x2c3e50,
+                    antialias: true
+                });
+                
+                document.getElementById('canvas-container').appendChild(this.app.view);
+                
+                this.objects = [];
+                this.timeline = gsap.timeline();
+                
+                this.createObjects();
+            }
+            
+            createObjects() {
+                // Create a bouncing ball
+                this.ball = new PIXI.Graphics();
+                this.ball.beginFill(0xe74c3c);
+                this.ball.drawCircle(0, 0, 30);
+                this.ball.endFill();
+                this.ball.x = 100;
+                this.ball.y = 100;
+                this.app.stage.addChild(this.ball);
+                this.objects.push(this.ball);
+                
+                // Create text elements for staggered animation
+                this.texts = [];
+                const words = ['GSAP', 'Enhanced', 'PixiJS', 'Animations'];
+                words.forEach((word, i) => {
+                    const text = new PIXI.Text(word, {
+                        fontSize: 48,
+                        fill: 0x3498db,
+                        fontWeight: 'bold'
+                    });
+                    text.x = 150 + (i * 120);
+                    text.y = 300;
+                    text.anchor.set(0.5);
+                    text.scale.set(0);
+                    text.alpha = 0;
+                    this.app.stage.addChild(text);
+                    this.texts.push(text);
+                    this.objects.push(text);
+                });
+                
+                // Create shape for path animation
+                this.shape = new PIXI.Graphics();
+                this.shape.beginFill(0x9b59b6);
+                this.shape.drawPolygon([0, 0, 40, 0, 20, 35]);
+                this.shape.endFill();
+                this.shape.x = 50;
+                this.shape.y = 450;
+                this.shape.pivot.set(20, 18);
+                this.app.stage.addChild(this.shape);
+                this.objects.push(this.shape);
+                
+                // Create filter target
+                this.filterTarget = new PIXI.Graphics();
+                this.filterTarget.beginFill(0xf39c12);
+                this.filterTarget.drawRect(0, 0, 100, 100);
+                this.filterTarget.endFill();
+                this.filterTarget.x = 600;
+                this.filterTarget.y = 200;
+                this.app.stage.addChild(this.filterTarget);
+                this.objects.push(this.filterTarget);
+            }
+            
+            bounceAnimation() {
+                this.timeline.clear();
+                
+                // Reset position
+                this.ball.x = 100;
+                this.ball.y = 100;
+                
+                this.timeline
+                    .to(this.ball, {
+                        duration: 1,
+                        x: 700,
+                        ease: "bounce.out"
+                    })
+                    .to(this.ball, {
+                        duration: 0.8,
+                        y: 500,
+                        ease: "bounce.out"
+                    })
+                    .to(this.ball, {
+                        duration: 1.2,
+                        x: 100,
+                        y: 100,
+                        ease: "elastic.out(1, 0.3)"
+                    });
+            }
+            
+            pathAnimation() {
+                this.timeline.clear();
+                
+                // Reset shape
+                this.shape.x = 50;
+                this.shape.y = 450;
+                this.shape.rotation = 0;
+                
+                const path = "M50,450 Q400,200 750,400 Q500,500 50,450";
+                
+                this.timeline.to(this.shape, {
+                    duration: 4,
+                    motionPath: {
+                        path: path,
+                        autoRotate: true,
+                        alignOrigin: [0.5, 0.5]
+                    },
+                    ease: "power2.inOut"
+                });
+            }
+            
+            staggeredEntrance() {
+                this.timeline.clear();
+                
+                // Reset texts
+                this.texts.forEach(text => {
+                    text.scale.set(0);
+                    text.alpha = 0;
+                    text.rotation = 0;
+                });
+                
+                this.timeline.staggerTo(this.texts, 0.8, {
+                    scale: 1,
+                    alpha: 1,
+                    rotation: Math.PI * 0.1,
+                    ease: "back.out(1.7)"
+                }, 0.2);
+            }
+            
+            filterEffects() {
+                this.timeline.clear();
+                
+                // Create blur filter
+                const blurFilter = new PIXI.BlurFilter();
+                this.filterTarget.filters = [blurFilter];
+                
+                this.timeline
+                    .to(blurFilter, {
+                        duration: 1,
+                        blur: 20,
+                        ease: "power2.out"
+                    })
+                    .to(this.filterTarget, {
+                        duration: 1,
+                        alpha: 0.3,
+                        ease: "power2.out"
+                    }, 0)
+                    .to(blurFilter, {
+                        duration: 1,
+                        blur: 0,
+                        ease: "power2.in"
+                    })
+                    .to(this.filterTarget, {
+                        duration: 1,
+                        alpha: 1,
+                        ease: "power2.in"
+                    }, 2);
+            }
+            
+            reset() {
+                this.timeline.clear();
+                
+                // Reset all objects to initial states
+                this.ball.x = 100;
+                this.ball.y = 100;
+                
+                this.shape.x = 50;
+                this.shape.y = 450;
+                this.shape.rotation = 0;
+                
+                this.texts.forEach((text, i) => {
+                    text.scale.set(1);
+                    text.alpha = 1;
+                    text.rotation = 0;
+                });
+                
+                this.filterTarget.alpha = 1;
+                this.filterTarget.filters = [];
+            }
+        }
+        
+        // Initialize demo
+        const demo = new GSAPDemo();
+        
+        console.log('🎬 GSAP + PixiJS Demo Ready!');
+        console.log('Available animations:', [
+            'demo.bounceAnimation()',
+            'demo.pathAnimation()',
+            'demo.staggeredEntrance()',
+            'demo.filterEffects()',
+            'demo.reset()'
+        ]);
+    </script>
+</body>
+</html>
