@@ -49,6 +49,11 @@ export class TextCursor implements ITextCursor {
     
     this._visible = visible;
     
+    if (!this.graphics) {
+      console.warn('TextCursor: graphics is null, cannot set visibility');
+      return;
+    }
+    
     if (visible) {
       // Force visible immediately on show
       this.isBlinkVisible = true;
@@ -65,6 +70,12 @@ export class TextCursor implements ITextCursor {
   }
 
   public setGraphicsPosition(x: number, y: number): void {
+    // Add null check to prevent crash
+    if (!this.graphics) {
+      console.warn('TextCursor: graphics is null, cannot set position');
+      return;
+    }
+    
     const aligned = alignPointToPixel(x, y);
     this._graphicsPosition.x = aligned.x;
     this._graphicsPosition.y = aligned.y;
@@ -75,7 +86,6 @@ export class TextCursor implements ITextCursor {
     
     // Redraw to ensure visibility with new position
     this.redraw();
-    
   }
 
   public setHeight(height: number): void {
@@ -91,17 +101,20 @@ export class TextCursor implements ITextCursor {
   public startBlinking(): void {
     this.stopBlinking(); // Clear any existing timer
     
+    if (!this.graphics) {
+      console.warn('TextCursor: graphics is null, cannot start blinking');
+      return;
+    }
+    
     this.isBlinkVisible = true;
     this.graphics.visible = true;
     this.redraw();
 
-
     // Start blinking animation
     this.blinkTimer = window.setInterval(() => {
+      if (!this.graphics) return; // Safety check during animation
       this.isBlinkVisible = !this.isBlinkVisible;
       this.graphics.visible = this.isBlinkVisible && this._visible;
-      if (this.isBlinkVisible) {
-      }
     }, 500); // Blink every 500ms
   }
 
@@ -114,11 +127,18 @@ export class TextCursor implements ITextCursor {
 
   public destroy(): void {
     this.stopBlinking();
-    this.graphics.parent?.removeChild(this.graphics);
-    this.graphics.destroy();
+    if (this.graphics) {
+      this.graphics.parent?.removeChild(this.graphics);
+      this.graphics.destroy();
+    }
   }
 
   private redraw(): void {
+    if (!this.graphics) {
+      console.warn('TextCursor: graphics is null, cannot redraw');
+      return;
+    }
+    
     this.graphics.clear();
     
     // Modern caret: solid 2px bar for crisp visibility
@@ -129,6 +149,5 @@ export class TextCursor implements ITextCursor {
     
     // Ensure visibility
     this.graphics.visible = this._visible && this.isBlinkVisible;
-    
   }
 }

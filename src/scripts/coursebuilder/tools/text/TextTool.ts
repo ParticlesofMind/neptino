@@ -168,13 +168,23 @@ export class TextTool extends BaseTool {
   onPointerUp(_event: FederatedPointerEvent, container: Container): void {
     if (!this.isActive) return;
 
+    // CRITICAL: Reset drag state first to prevent mouse sticking
+    const wasDragging = this.state.isDragging;
+    
+    // Reset state immediately
+    this.state.isDragging = false;
+    this.state.hasStarted = false;
+
     // Notify input handler of mouse up
     const inputHandler = this.ensureInputHandler(container);
     inputHandler.handleMouseUp();
 
-    if (this.state.isDragging) {
+    if (wasDragging) {
       this.finalizeDragCreation(container);
     }
+    
+    // Ensure cursor is reset to text cursor
+    this.setCanvasCursor('text');
   }
 
   onActivate(): void {
@@ -343,7 +353,24 @@ export class TextTool extends BaseTool {
     if (textArea) {
       // Convert global point to local point within the text area
       const localPoint = textArea.pixiContainer.toLocal(point);
-      this.handleTextAreaDoubleClick(textArea, localPoint);
+      
+      // Activate the text area for editing
+      this.activateTextArea(textArea);
+      
+      // Position cursor at click location for precise editing
+      const cursorPos = textArea.getCursorPositionFromPoint(localPoint);
+      if (this.textCursor) {
+        this.textCursor.setPosition(cursorPos);
+        const graphicsPos = textArea.getCharacterPosition(cursorPos);
+        (this.textCursor as any).setGraphicsPosition(graphicsPos.x, graphicsPos.y);
+        this.textCursor.setVisible(true);
+        this.textCursor.startBlinking();
+      }
+      
+      // Update input handler cursor position
+      if (this.inputHandler) {
+        (this.inputHandler as any).cursorPosition = cursorPos;
+      }
     } else {
       console.warn('📝 Could not find text area for PIXI text object');
     }
@@ -463,7 +490,11 @@ export class TextTool extends BaseTool {
   }
 
   private finalizeDragCreation(container: Container): void {
-    if (!this.dragPreview) return;
+    if (!this.dragPreview) {
+      // No drag preview means no drag operation - just reset state
+      this.cleanupDragState();
+      return;
+    }
 
     let width = Math.abs(this.currentPoint.x - this.startPoint.x);
     let height = Math.abs(this.currentPoint.y - this.startPoint.y);
@@ -501,22 +532,24 @@ export class TextTool extends BaseTool {
       // Show persistent creation guide with size label at the text area bounds
       this.showCreationGuide(bounds, container);
       
+      this.state.mode = 'active';
     } else {
       // Only cleanup if no text area was created
       this.cleanupDragState();
+      this.state.mode = 'inactive';
     }
 
-    // Reset drag state - CRITICAL: This prevents the guide from following cursor
-    this.state = {
-      mode: width >= minSize && height >= minSize ? 'active' : 'inactive',
-      isDragging: false,
-      hasStarted: false
-    };
+    // CRITICAL: Always reset drag state completely
+    this.state.isDragging = false;
+    this.state.hasStarted = false;
     
     // Clear drag points to prevent any residual attachment
     this.startPoint.set(0, 0);
     this.currentPoint.set(0, 0);
     this.proportionalDrag = false;
+    
+    // Reset cursor to default state
+    this.setCanvasCursor('text');
   }
 
 
@@ -530,13 +563,23 @@ export class TextTool extends BaseTool {
     this.activeTextArea = textArea;
     textArea.setActive(true);
     
-    // Create/update cursor
+    // Create/update cursor with safety checks
     if (!this.textCursor) {
-      this.textCursor = new TextCursor(textArea.pixiContainer, textArea.textLineHeight);
+      try {
+        this.textCursor = new TextCursor(textArea.pixiContainer, textArea.textLineHeight);
+      } catch (error) {
+        console.error('Failed to create TextCursor:', error);
+        return;
+      }
     } else {
       // Move cursor to new text area by recreating it
-      this.textCursor.destroy();
-      this.textCursor = new TextCursor(textArea.pixiContainer, textArea.textLineHeight);
+      try {
+        this.textCursor.destroy();
+        this.textCursor = new TextCursor(textArea.pixiContainer, textArea.textLineHeight);
+      } catch (error) {
+        console.error('Failed to recreate TextCursor:', error);
+        return;
+      }
     }
     
     // Set proper cursor height and dynamic color based on text settings
@@ -550,17 +593,20 @@ export class TextTool extends BaseTool {
     const inputHandler = this.ensureInputHandler(textArea.pixiContainer);
     inputHandler.setActiveTextArea(textArea);
     inputHandler.setActiveCursor(this.textCursor);
+    
+    // Focus the canvas for keyboard events
     try {
-      // Ensure keyboard events route to the page
       this.canvasElement = document.querySelector('#pixi-canvas');
       (this.canvasElement as any)?.focus?.();
     } catch {}
     
-    // Position cursor at start
+    // Position cursor at start (will be overridden by specific placement if needed)
     const startPos = textArea.getCharacterPosition(0);
-    (this.textCursor as any).setGraphicsPosition(startPos.x, startPos.y);
-    this.textCursor.setVisible(true);
-    
+    if (this.textCursor) {
+      (this.textCursor as any).setGraphicsPosition(startPos.x, startPos.y);
+      this.textCursor.setVisible(true);
+      this.textCursor.startBlinking();
+    }
     
     this.state.mode = 'active';
   }
@@ -625,6 +671,9 @@ export class TextTool extends BaseTool {
   }
   public get settingsPublic(): TextSettings {
     return this.settings;
+  }
+  public get inputHandlerPublic(): TextInputHandler | null {
+    return this.inputHandler;
   }
 
   /**
@@ -697,8 +746,14 @@ export class TextTool extends BaseTool {
       this.textCursor.setPosition(cursorPos);
       const graphicsPos = textArea.getCharacterPosition(cursorPos);
       (this.textCursor as any).setGraphicsPosition(graphicsPos.x, graphicsPos.y);
+      this.textCursor.setVisible(true);
+      this.textCursor.startBlinking();
     }
     
+    // Update input handler cursor position
+    if (this.inputHandler) {
+      (this.inputHandler as any).cursorPosition = cursorPos;
+    }
   }
 
   private findTextAreaAtPoint(point: Point): TextArea | null {
@@ -720,6 +775,14 @@ export class TextTool extends BaseTool {
       isDragging: false,
       hasStarted: false
     };
+    
+    // Clear drag points
+    this.startPoint.set(0, 0);
+    this.currentPoint.set(0, 0);
+    this.proportionalDrag = false;
+    
+    // Reset cursor
+    this.setCanvasCursor('text');
   }
 
   private cleanupDragPreview(): void {

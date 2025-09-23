@@ -44,6 +44,21 @@ export class TextInputHandler implements ITextInputHandler {
 
   }
 
+  /**
+   * Get current cursor position (for debugging and external access)
+   */
+  public get currentCursorPosition(): number {
+    return this.cursorPosition;
+  }
+
+  /**
+   * Set cursor position (for external updates)
+   */
+  public set currentCursorPosition(position: number) {
+    this.cursorPosition = position;
+    this.updateCursorPosition();
+  }
+
   public setActiveTextArea(textArea: ITextArea | null): void {
     this.activeTextArea = textArea;
     
@@ -69,6 +84,13 @@ export class TextInputHandler implements ITextInputHandler {
     this.textSelection.selectAll();
     // Keep caret blinking and visible while selection is active
     this.updateCursorPosition();
+  }
+
+  /**
+   * Public API: insert character (for debugging and external access)
+   */
+  public insertCharacter(char: string): void {
+    this.insertCharacterInternal(char);
   }
 
   public destroy(): void {
@@ -159,12 +181,12 @@ export class TextInputHandler implements ITextInputHandler {
         break;
     }
 
-    // Fallback: handle printable characters on keydown as well (keypress may not fire in all environments)
+    // Handle printable characters including space
     const isSpace = (event.key === ' ' || (event as any).code === 'Space');
     if ((event.key && event.key.length === 1) || isSpace) {
       if (!event.ctrlKey && !event.metaKey && !event.altKey) {
         const ch = isSpace ? ' ' : event.key;
-        this.insertCharacter(ch);
+        this.insertCharacterInternal(ch);
         event.preventDefault();
         event.stopPropagation();
         try { (event as any).stopImmediatePropagation?.(); } catch {}
@@ -191,10 +213,10 @@ export class TextInputHandler implements ITextInputHandler {
     const inputEvent = event as InputEvent;
     if (!this.activeTextArea || !inputEvent.data) return;
     
-    this.insertCharacter(inputEvent.data);
+    this.insertCharacterInternal(inputEvent.data);
   }
 
-  private insertCharacter(char: string): void {
+  private insertCharacterInternal(char: string): void {
     if (!this.activeTextArea) return;
 
     // Handle selection replacement first
@@ -448,13 +470,13 @@ export class TextInputHandler implements ITextInputHandler {
   private handleEnter(): void {
     if (!this.activeTextArea) return;
 
-    this.insertCharacter('\n');
+    this.insertCharacterInternal('\n');
   }
 
   private handleTab(): void {
     if (!this.activeTextArea) return;
 
-    this.insertCharacter('    '); // Insert 4 spaces
+    this.insertCharacterInternal('    '); // Insert 4 spaces
   }
 
   /**
@@ -643,7 +665,7 @@ export class TextInputHandler implements ITextInputHandler {
   private isNavigationOrEditKey(key: string): boolean {
     const navKeys = [
       'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 
-      'ArrowUp', 'ArrowDown', 'Home', 'End', 'Enter', 'Tab'
+      'ArrowUp', 'ArrowDown', 'Home', 'End', 'Enter', 'Tab', ' '
     ];
     return navKeys.includes(key);
   }

@@ -135,8 +135,6 @@ export class SelectionTool extends BaseTool {
         setTimeout(() => {
           const textTool = this.manager?.getActiveTool && this.manager.getActiveTool();
           (textTool as any)?.activateTextObjectForEditing?.(object, point, cont);
-          // After activating editing via selection tool (double-click), select all text
-          (textTool as any)?.selectAllTextInActiveArea?.();
         }, 0);
       } catch {}
       }

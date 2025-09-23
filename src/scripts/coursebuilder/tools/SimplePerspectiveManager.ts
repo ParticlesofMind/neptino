@@ -228,6 +228,16 @@ export class SimplePerspectiveManager {
         
         if (isInputElement) return;
 
+        // Don't handle spacebar if we're in text editing mode
+        const toolStateManager = (window as any).toolStateManager;
+        const textTool = (window as any).textTool;
+        if (toolStateManager && textTool && 
+            toolStateManager.getCurrentTool() === 'text' && 
+            textTool.activeTextAreaPublic) {
+            // Text tool is active and has an active text area - don't intercept spacebar
+            return;
+        }
+
         // Handle spacebar for temporary pan mode
         if (event.code === 'Space') {
             if (!this.isSpacebarPressed) {
@@ -288,6 +298,16 @@ export class SimplePerspectiveManager {
      * Handle keyup events (mainly for spacebar release)
      */
     private handleKeyup(event: KeyboardEvent): void {
+        // Don't handle spacebar if we're in text editing mode
+        const toolStateManager = (window as any).toolStateManager;
+        const textTool = (window as any).textTool;
+        if (toolStateManager && textTool && 
+            toolStateManager.getCurrentTool() === 'text' && 
+            textTool.activeTextAreaPublic) {
+            // Text tool is active and has an active text area - don't intercept spacebar
+            return;
+        }
+
         // Only handle spacebar release for pan mode
         if (event.code === 'Space' && this.isSpacebarPressed) {
             this.deactivateSpacebarPan();
