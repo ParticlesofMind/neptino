@@ -351,6 +351,11 @@ export class TextTool extends BaseTool {
     const textArea = this.findTextAreaByPixiObject(pixiTextObject);
     
     if (textArea) {
+      // Switch to text tool for editing
+      if (this.manager && typeof this.manager.setActiveTool === 'function') {
+        this.manager.setActiveTool('text');
+      }
+      
       // Convert global point to local point within the text area
       const localPoint = textArea.pixiContainer.toLocal(point);
       

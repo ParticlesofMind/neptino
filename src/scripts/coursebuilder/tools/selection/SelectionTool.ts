@@ -53,7 +53,38 @@ export class SelectionTool extends BaseTool {
   public override setDisplayObjectManager(manager: any): void { super.setDisplayObjectManager(manager); this.clipboardSvc.setDisplayManager(manager); }
 
   public onPointerDown(event: FederatedPointerEvent, container: Container): void {
-    if (!this.isActive) return; this.container = container; const p = container.toLocal(event.global); this.lastPointerGlobal = new Point(event.global.x, event.global.y);
+    if (!this.isActive) return; 
+    this.container = container; 
+    const p = container.toLocal(event.global); 
+    this.lastPointerGlobal = new Point(event.global.x, event.global.y);
+
+    // First, check for double-click on text objects (highest priority)
+    const textClickResult = this.click.handleClick(
+      p,
+      container,
+      { shiftKey: event.shiftKey, altKey: (event as any).altKey, ctrlKey: (event as any).ctrlKey || (event as any).metaKey },
+      (object, point, cont) => {
+        try {
+          // Get the text tool directly from the manager
+          const toolManager = (window as any).toolStateManager;
+          const textTool = toolManager?.tools?.get('text');
+          
+          if (textTool && textTool.activateTextObjectForEditing) {
+            // Convert local point to global point for the text tool
+            const globalPoint = cont.toGlobal(point);
+            textTool.activateTextObjectForEditing(object, globalPoint, cont);
+          }
+        } catch (error) {
+          console.warn('Failed to activate text editing:', error);
+        }
+      }
+    );
+
+    // If it was a double-click on text, stop processing here
+    if (textClickResult.isDoubleClick && this.click.isTextObject(textClickResult.clickedObject)) {
+      return;
+    }
+
     const group = this.overlay.getGroup();
     const handle = this.overlay.findHandleAtPoint(p, true);
     if (handle && group) {
@@ -124,32 +155,11 @@ export class SelectionTool extends BaseTool {
       return;
     }
 
-    // Detect double-click on text before initiating group drag
-    const result = this.click.handleClick(
-      p,
-      container,
-      { shiftKey: event.shiftKey, altKey: (event as any).altKey, ctrlKey: (event as any).ctrlKey || (event as any).metaKey },
-      (object, point, cont) => {
-      try {
-        (window as any).toolStateManager?.setTool('text');
-        setTimeout(() => {
-          const textTool = this.manager?.getActiveTool && this.manager.getActiveTool();
-          (textTool as any)?.activateTextObjectForEditing?.(object, point, cont);
-        }, 0);
-      } catch {}
-      }
-    );
-
-    if (result.isDoubleClick && this.click.isTextObject(result.clickedObject)) {
-      // Consumed by text editing
-      return;
-    }
-
     if (group && this.overlay.pointInRect(p, group.bounds)) {
       this.isDraggingGroup = true; this.mode = 'drag'; this.cursor = 'grabbing'; this.isDragging = true; this.dragStart.copyFrom(p); return;
     }
-    if (result.clickedObject) {
-      const action = this.click.getSelectionAction(result.clickedObject, this.selected, event.shiftKey); this.selected = this.click.applySelectionAction(action, this.selected); this.overlay.refresh(this.selected, container);
+    if (textClickResult.clickedObject) {
+      const action = this.click.getSelectionAction(textClickResult.clickedObject, this.selected, event.shiftKey); this.selected = this.click.applySelectionAction(action, this.selected); this.overlay.refresh(this.selected, container);
       const bounds = this.overlay.getGroup()?.bounds; if (bounds && this.overlay.pointInRect(p, bounds)) { this.isDraggingGroup = true; this.mode = 'drag'; this.cursor = 'grabbing'; this.isDragging = true; this.dragStart.copyFrom(p); try { this.guides.update(container, this.selected, bounds); } catch {} }
       this.emitSelectionContext();
       return;
