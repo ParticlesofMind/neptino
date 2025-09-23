@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Spacebar Cursor Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .instructions {
+            background: #f0f0f0;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        iframe {
+            border: 1px solid #ccc;
+            width: 100%;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Text Tool Spacebar Cursor Test</h1>
+    
+    <div class="instructions">
+        <h3>Test Instructions:</h3>
+        <ol>
+            <li>Click the "Text" tool in the coursebuilder below</li>
+            <li>Drag to create a text area</li>
+            <li>Type some text: "Hello world test"</li>
+            <li>Pay attention to the cursor (caret) position after typing spaces</li>
+            <li><strong>Expected:</strong> Cursor should be visible and move after each space character</li>
+            <li><strong>Bug:</strong> Previously cursor would remain at the last non-space character</li>
+        </ol>
+    </div>
+
+    <iframe src="http://localhost:3001/src/pages/teacher/coursebuilder.html#create"></iframe>
+    
+    <div style="margin-top: 20px;">
+        <p><strong>Testing:</strong> Type "a b c d" and verify cursor moves after each space</p>
+        <p><strong>Also test:</strong> Spacebar should not trigger canvas pan (no jumping/moving of the canvas)</p>
+    </div>
+</body>
+</html>

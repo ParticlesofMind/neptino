@@ -232,6 +232,17 @@ export class TextInputHandler implements ITextInputHandler {
     this.activeTextArea.insertText(char, this.cursorPosition);
     this.cursorPosition += char.length;
     this.updateCursorPosition();
+    
+    // Special handling for space characters to ensure cursor visibility
+    if (char === ' ') {
+      // Force cursor to be visible immediately after space insertion
+      if (this.activeCursor) {
+        this.activeCursor.setVisible(true);
+        // Restart blinking to ensure the cursor is visible
+        this.activeCursor.startBlinking();
+      }
+    }
+    
     if (this.onTextChange) {
       try { this.onTextChange(this.activeTextArea.text); } catch {}
     }
@@ -620,6 +631,10 @@ export class TextInputHandler implements ITextInputHandler {
     // Ensure cursor is visible immediately after movement/typing
     this.activeCursor.startBlinking();
     
+    // Force render update to ensure text changes are reflected
+    if (this.activeTextArea && (this.activeTextArea as any).render) {
+      (this.activeTextArea as any).render();
+    }
   }
 
   /**

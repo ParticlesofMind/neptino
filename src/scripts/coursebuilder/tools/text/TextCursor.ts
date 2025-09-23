@@ -106,6 +106,7 @@ export class TextCursor implements ITextCursor {
       return;
     }
     
+    // Always start with cursor visible
     this.isBlinkVisible = true;
     this.graphics.visible = true;
     this.redraw();
