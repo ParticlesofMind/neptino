@@ -14,6 +14,7 @@ export class SelectionMarquee {
     this.active = true; this.start.copyFrom(p); this.shift = shift;
     if (!this.gfx) this.gfx = new Graphics();
     const g = this.gfx; g.clear(); g.name = 'selection-marquee'; g.eventMode = 'none';
+    (g as any).__isVisualAid = true; // Mark for layer filtering
     (this.uiContainer || container).addChild(g);
     this.update(p);
   }

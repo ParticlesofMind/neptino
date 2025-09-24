@@ -112,6 +112,9 @@ export class Scene {
     this.contentContainer.name = 'SceneContent';
     this.contentContainer.position.set(bounds.width / 2, bounds.height / 2);
     this.contentContainer.zIndex = 1; // Above path overlay but below interaction layer
+    // Mark content container so objects within it are properly grouped in layers
+    (this.contentContainer as any).__sceneContent = true;
+    (this.contentContainer as any).__parentSceneId = this.id;
     
     // Create mask to clip content to scene bounds
     this.contentMask = new Graphics();
@@ -135,9 +138,11 @@ export class Scene {
     this.createInteractionHandles();
     this.createPlaybackControls();
     
-    // Set the scene ID for identification
+    // Set the scene ID for identification and mark as user content for layers
     (this.root as any).__sceneRef = this;
     (this.root as any).__sceneId = this.id;
+    (this.root as any).__toolType = 'scene'; // Mark as user content for layers panel
+    (this.root as any).__meta = { kind: 'video', name: `Animation Scene ${this.id.split('_')[1]}` };
     
     // Make the container interactive for selection/scaling only
     this.root.eventMode = 'static';
@@ -148,11 +153,19 @@ export class Scene {
     this.root.on('pointerout', () => this.setHovered(false));
     this.root.on('pointerdown', (event) => this.handleRootPointerDown(event));
     
-    // Register with animation state
-    const uiLayer = animationState.getUiLayer();
-    if (uiLayer) {
-      uiLayer.addChild(this.root);
+    // Register with animation state - add to drawing layer so it appears in layers panel
+    const displayManager = animationState.getDisplayManager();
+    if (displayManager) {
+      // Use display manager to add to drawing layer so it appears in layers panel
+      displayManager.add(this.root);
       animationState.addScene(this);
+    } else {
+      // Fallback to UI layer if display manager not available
+      const uiLayer = animationState.getUiLayer();
+      if (uiLayer) {
+        uiLayer.addChild(this.root);
+        animationState.addScene(this);
+      }
     }
   }
 
@@ -271,18 +284,28 @@ export class Scene {
       this.dragHandle.visible = this.isSelected;
       this.dragHandle.eventMode = this.isSelected ? 'static' : 'none';
       
-      // Position drag handle below the PIXI playback controls
-      const controlsHeight = 60; // PIXI controls are smaller
+      // Position drag handle below the PIXI playback controls - MOVED FURTHER DOWN
+      const controlsHeight = 75; // Updated to account for new controls position (65px + control height)
       this.dragHandle.position.set(
         midX - handleWidth / 2,
-        h + controlsHeight + 20 // Controls + gap
+        h + controlsHeight + 30 // Controls + larger gap (was 20px)
       );
     }
 
-    // Show/hide PIXI controls with selection state
+    // Show/hide PIXI controls with selection state and update their position/scale
     if (this.controlsContainer) {
       this.controlsContainer.visible = this.isSelected;
       this.controlsContainer.eventMode = this.isSelected ? 'static' : 'none';
+      
+      // Update controls position to stay centered and properly positioned - MOVED SLIGHTLY DOWN
+      this.controlsContainer.position.set(midX, h + 65); // Always centered horizontally, below scene (was 50px)
+      
+      // Scale controls proportionally with scene size (but with reasonable limits)
+      const scaleX = w / 400; // Base scene width for reference
+      const scaleY = h / 300; // Base scene height for reference
+      const avgScale = (scaleX + scaleY) / 2;
+      const controlScale = Math.max(0.7, Math.min(1.3, avgScale)); // Limit scale between 0.7x and 1.3x
+      this.controlsContainer.scale.set(controlScale);
     }
 
     this.updatePathInteractivity();
@@ -379,6 +402,7 @@ export class Scene {
     anchor.fill({ color: 0xffffff, alpha: 1 });
     anchor.stroke({ color: 0x4a79a4, width: 2, alpha: 0.9 });
     anchor.position.set(point.x, point.y);
+    (anchor as any).__isVisualAid = true; // Mark for layer filtering
     this.registerSceneControl(anchor, 'pointer');
     anchor.on('pointerdown', (event: FederatedPointerEvent) => this.beginAnchorDrag(objectId, index, event));
     anchor.on('pointerover', () => this.highlightAnchor(anchor, true));
@@ -615,29 +639,51 @@ export class Scene {
     // Timeline container (above buttons)
     const timelineY = -15;
     
-    // Create timeline background
+    // Create timeline background - THICKER for better visibility
     const timelineBg = new Graphics();
-    timelineBg.roundRect(-120, -3, 240, 6, 3); // 240px wide timeline
+    timelineBg.roundRect(-120, -5, 240, 10, 5); // 240px wide timeline, 10px thick
     timelineBg.fill({ color: 0xf0f0f0 });
     timelineBg.position.set(0, timelineY);
+    timelineBg.eventMode = 'static';
+    timelineBg.cursor = 'pointer';
+    
+    // Add timeline click functionality for direct seeking
+    timelineBg.on('pointerdown', (e) => {
+      const local = timelineBg.toLocal(e.global);
+      const relativeX = local.x + 120; // Convert to 0-240 range
+      const newT = Math.max(0, Math.min(1, relativeX / 240));
+      this.setTime(newT);
+      e.stopPropagation();
+    });
+    
+    this.registerSceneControl(timelineBg);
     this.controlsContainer.addChild(timelineBg);
     
-    // Create timeline progress
+    // Create timeline progress - THICKER to match background
     const timelineProgress = new Graphics();
-    timelineProgress.roundRect(0, 0, 120, 6, 3); // Half width initially for demo
+    const initialProgress = 240 * this.t; // Start with current time progress
+    timelineProgress.roundRect(0, 0, initialProgress, 10, 5);
     timelineProgress.fill({ color: 0x80bfff });
-    timelineProgress.position.set(-120, timelineY - 3);
+    timelineProgress.position.set(-120, timelineY - 5);
     this.controlsContainer.addChild(timelineProgress);
     
-    // Create timeline handle
+    // Create timeline handle - LARGER for better visibility
     const timelineHandle = new Graphics();
-    timelineHandle.circle(0, 0, 8);
+    timelineHandle.circle(0, 0, 10);
     timelineHandle.fill({ color: 0x80bfff });
     timelineHandle.stroke({ color: 0xffffff, width: 2 });
-    timelineHandle.position.set(-60, timelineY); // Middle of timeline
+    timelineHandle.position.set(-120 + (240 * this.t), timelineY); // Position based on current time
     timelineHandle.eventMode = 'static';
     timelineHandle.cursor = 'pointer';
     this.registerSceneControl(timelineHandle);
+    
+    // Add timeline handle drag functionality
+    timelineHandle.on('pointerdown', (e) => {
+      this.isTimelineDragging = true;
+      this.attachGlobalPointerListeners();
+      e.stopPropagation();
+    });
+    
     this.controlsContainer.addChild(timelineHandle);
     
     // Button container (below timeline)
@@ -663,8 +709,8 @@ export class Scene {
     forwardButton.on('pointerdown', () => this.nudgeTimeSeconds(0.5));
     this.controlsContainer.addChild(forwardButton);
     
-    // Hide trajectory button (eye icon)
-    const hideButton = this.createPixiButton(buttonSpacing * 1.5, buttonY, buttonSize, 0x66bb6a); // Different color
+    // Hide trajectory button (eye icon) - NOW BLUE like other controls
+    const hideButton = this.createPixiButton(buttonSpacing * 1.5, buttonY, buttonSize, 0x80bfff); // Blue like other buttons
     this.drawEyeIcon(hideButton, false); // Start with eye open
     hideButton.on('pointerdown', () => this.toggleTrajectoryVisibility());
     this.controlsContainer.addChild(hideButton);
@@ -675,8 +721,8 @@ export class Scene {
     (this.controlsContainer as any).playButton = playButton;
     (this.controlsContainer as any).hideButton = hideButton;
     
-    // Position the controls container just below the scene, centered
-    this.controlsContainer.position.set(midX, h + 50); // 50px below scene
+    // Position the controls container just below the scene, centered - MOVED SLIGHTLY DOWN
+    this.controlsContainer.position.set(midX, h + 65); // 65px below scene (was 50px)
     this.controlsContainer.visible = this.isSelected;
     
     // Add to the scene's interaction layer
@@ -758,17 +804,17 @@ export class Scene {
     const icon = new Graphics();
     
     if (crossed) {
-      // Eye with slash
+      // Eye with WHITE slash (when trajectories are hidden)
       icon.ellipse(0, 0, 8, 5);
       icon.stroke({ color: 0xffffff, width: 1.5 });
       icon.circle(0, 0, 2);
       icon.fill({ color: 0xffffff });
-      // Diagonal slash
+      // WHITE diagonal slash through the eye
       icon.moveTo(-6, -4);
       icon.lineTo(6, 4);
-      icon.stroke({ color: 0xff4444, width: 2 });
+      icon.stroke({ color: 0xffffff, width: 2.5 }); // WHITE and thicker for visibility
     } else {
-      // Regular eye
+      // Regular eye (when trajectories are visible)
       icon.ellipse(0, 0, 8, 5);
       icon.stroke({ color: 0xffffff, width: 1.5 });
       icon.circle(0, 0, 2);
@@ -794,14 +840,28 @@ export class Scene {
     const timelineHandle = (this.controlsContainer as any)?.timelineHandle;
     
     if (timelineProgress && timelineHandle) {
-      // Update progress bar width (240px total timeline width)
+      // Update progress bar width (240px total timeline width) - THICKER
       const progressWidth = 240 * this.t;
       timelineProgress.clear();
-      timelineProgress.roundRect(0, 0, progressWidth, 6, 3);
+      timelineProgress.roundRect(0, 0, progressWidth, 10, 5);
       timelineProgress.fill({ color: 0x80bfff });
       
       // Update handle position (-120 to +120 range)
-      timelineHandle.position.x = -120 + (240 * this.t);
+      const handleX = -120 + (240 * this.t);
+      timelineHandle.position.x = handleX;
+      
+      // Update handle appearance when at the end - LARGER handle
+      if (this.t >= 1) {
+        timelineHandle.clear();
+        timelineHandle.circle(0, 0, 10);
+        timelineHandle.fill({ color: 0xff6b6b }); // Red color when at end
+        timelineHandle.stroke({ color: 0xffffff, width: 2 });
+      } else {
+        timelineHandle.clear();
+        timelineHandle.circle(0, 0, 10);
+        timelineHandle.fill({ color: 0x80bfff }); // Normal blue color
+        timelineHandle.stroke({ color: 0xffffff, width: 2 });
+      }
     }
   }
 
@@ -815,6 +875,17 @@ export class Scene {
   }
 
   private updateHideToggleIcon(): void {
+    // Update PIXI eye button icon
+    const hideButton = (this.controlsContainer as any)?.hideButton;
+    if (hideButton) {
+      // Remove old icon (keep background, remove icon graphics)
+      hideButton.children.slice(1).forEach((child: any) => hideButton.removeChild(child));
+      
+      // Redraw icon with current state
+      this.drawEyeIcon(hideButton, this.hideTrajDuringPlayback);
+    }
+    
+    // Legacy HTML button support (if it exists)
     if (!this.hideTrajButton) return;
     const icon = this.hideTrajButton.querySelector('img') as HTMLImageElement;
     if (icon) {
@@ -899,15 +970,30 @@ export class Scene {
     }
   }
 
-  private updateTimelineFromEvent(_event: FederatedPointerEvent): void {
-    // This method is no longer needed since we handle timeline interaction in DOM
-    // The addTimelineInteraction method handles click and drag for DOM timeline
+  private updateTimelineFromEvent(event: FederatedPointerEvent): void {
+    // Handle timeline dragging for PIXI controls
+    if (!this.controlsContainer || !this.isTimelineDragging) return;
+    
+    const timelineBg = this.controlsContainer.children.find(child => 
+      child instanceof Graphics && child.width > 200 // Find the timeline background
+    ) as Graphics;
+    
+    if (timelineBg) {
+      const local = timelineBg.toLocal(event.global);
+      const relativeX = local.x + 120; // Convert to 0-240 range
+      const newT = Math.max(0, Math.min(1, relativeX / 240));
+      this.setTime(newT);
+    }
   }
 
   private togglePlayback(): void {
     if (this.isPlaying) {
       this.pause();
     } else {
+      // If at the end of the animation, restart from beginning
+      if (this.t >= 1) {
+        this.setTime(0);
+      }
       this.play();
     }
   }
@@ -1189,7 +1275,6 @@ export class Scene {
       // Position the object so its center aligns with the local path point
       targetObject.position.set(localFirst.x - centerOffsetX, localFirst.y - centerOffsetY);
       
-      const boundsAfter = targetObject.getBounds();
       // Clear any existing debug markers
       const existingMarker = this.pathOverlay!.getChildByName('DebugMarker');
       if (existingMarker) {

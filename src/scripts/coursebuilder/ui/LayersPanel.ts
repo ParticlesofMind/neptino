@@ -20,25 +20,19 @@ export class LayersPanel {
   }
 
   private bindGlobalListeners(): void {
-    document.addEventListener('displayObject:added', () => this.safeRefreshSoon());
-    document.addEventListener('displayObject:removed', () => this.safeRefreshSoon());
+    // Immediate refresh on object changes
+    document.addEventListener('displayObject:added', () => this.refresh());
+    document.addEventListener('displayObject:removed', () => this.refresh());
+    
+    // Listen for tool changes to refresh visibility
+    document.addEventListener('tool:changed', () => this.refresh());
+    
+    // Set up periodic refresh to catch any missed changes
+    setInterval(() => this.refresh(), 1000);
   }
 
   private bindControls(): void {
-    try {
-      const grp = document.getElementById('layers-group');
-      const ungrp = document.getElementById('layers-ungroup');
-      grp?.addEventListener('click', () => {
-        const canvasAPI = (window as any).canvasAPI;
-        canvasAPI?.groupSelection();
-        this.safeRefreshSoon();
-      });
-      ungrp?.addEventListener('click', () => {
-        const canvasAPI = (window as any).canvasAPI;
-        canvasAPI?.ungroupSelection();
-        this.safeRefreshSoon();
-      });
-    } catch {}
+    // Controls removed - group/ungroup buttons no longer needed
   }
 
   private safeRefreshSoon(): void {
@@ -47,7 +41,20 @@ export class LayersPanel {
 
   private renderChildren(parent: Container, list: HTMLOListElement): void {
     const children = parent.children.slice();
-    children.forEach((child) => {
+    // Filter out visual aids, UI elements, and temporary objects
+    const realObjects = children.filter(child => this.isRealObject(child));
+    
+    // Track processed objects to avoid duplicates
+    const processedIds = new Set<string>();
+    
+    realObjects.forEach((child) => {
+      const id = this.getId(child);
+      if (id && processedIds.has(id)) {
+        // Skip duplicates
+        return;
+      }
+      if (id) processedIds.add(id);
+      
       const li = this.buildLayerItem(child);
       list.appendChild(li);
     });
@@ -60,41 +67,66 @@ export class LayersPanel {
     const id = this.getId(obj) || '';
     li.dataset.layerId = id;
 
-    // Expander for containers
-    const isContainer = (obj as any).children && Array.isArray((obj as any).children);
+    // Create main content wrapper
+    const content = document.createElement('div');
+    content.className = 'layer__content';
+    li.appendChild(content);
+
+    // Left side: expander + thumbnail + name
+    const leftSide = document.createElement('div');
+    leftSide.className = 'layer__left';
+    content.appendChild(leftSide);
+
+    // Expander for containers - only show if object has 2+ real children (excluding visual aids)
+    const children = (obj as any).children;
+    const realChildren = children ? children.filter((c: any) => this.isRealObject(c)) : [];
+    const isContainer = realChildren.length >= 2;
     let expander: HTMLButtonElement | null = null;
     let childrenList: HTMLOListElement | null = null;
     if (isContainer) {
       expander = document.createElement('button');
-      expander.className = 'layer__expander layer__toggle';
+      expander.className = 'layer__expander';
       expander.textContent = '▶';
       expander.setAttribute('aria-label', 'Toggle children');
-      li.appendChild(expander);
+      leftSide.appendChild(expander);
     }
 
-    // Thumbnail
+    // Compact thumbnail
     const thumb = document.createElement('div');
     thumb.className = 'layer__thumbnail';
     this.updateThumbnail(obj, thumb);
-    li.appendChild(thumb);
+    leftSide.appendChild(thumb);
 
-    // Name input
+    // Name input - use intelligent naming as default
     const nameInput = document.createElement('input');
     nameInput.className = 'layer__name-input';
     nameInput.type = 'text';
-    nameInput.value = (obj as any).name || (obj as any).__meta?.name || this.fallbackName(obj);
+    
+    // Use intelligent naming by default, but allow custom names to override
+    const customName = (obj as any).name || (obj as any).__meta?.name;
+    const intelligentName = this.fallbackName(obj);
+    nameInput.value = customName || intelligentName;
+    
     nameInput.addEventListener('change', () => {
-      const val = nameInput.value || this.fallbackName(obj);
+      const val = nameInput.value || intelligentName;
       try { (obj as any).name = val; } catch {}
       try { if ((obj as any).__meta) (obj as any).__meta.name = val; } catch {}
     });
-    li.appendChild(nameInput);
+    leftSide.appendChild(nameInput);
+
+    // Right side: visibility and lock toggles
+    const rightSide = document.createElement('div');
+    rightSide.className = 'layer__controls';
+    content.appendChild(rightSide);
 
     // Visibility toggle
     const vis = document.createElement('button');
     vis.className = 'layer__toggle layer__visibility';
+    vis.title = 'Toggle visibility';
     const visImg = document.createElement('img');
     visImg.alt = 'Visibility';
+    visImg.width = 16;
+    visImg.height = 16;
     const updateVisIcon = () => {
       const v = (obj as any).visible !== false;
       visImg.src = v ? '/src/assets/icons/eye.svg' : '/src/assets/icons/eye-off.svg';
@@ -105,13 +137,16 @@ export class LayersPanel {
       (obj as any).visible = !(obj as any).visible;
       updateVisIcon();
     });
-    li.appendChild(vis);
+    rightSide.appendChild(vis);
 
     // Lock toggle
     const lock = document.createElement('button');
     lock.className = 'layer__toggle layer__lock';
+    lock.title = 'Toggle lock';
     const lockImg = document.createElement('img');
     lockImg.alt = 'Lock';
+    lockImg.width = 16;
+    lockImg.height = 16;
     const updateLockIcon = () => {
       const locked = !!(obj as any).__locked;
       lockImg.src = locked ? '/src/assets/icons/lock.svg' : '/src/assets/icons/unlock.svg';
@@ -125,80 +160,7 @@ export class LayersPanel {
       try { (obj as any).interactiveChildren = !locked; } catch {}
       updateLockIcon();
     });
-    li.appendChild(lock);
-
-    // Z-order quick actions: send back/front and step forward/backward
-    const toFront = document.createElement('button');
-    toFront.className = 'layer__toggle layer__front';
-    toFront.title = 'Bring to front';
-    toFront.textContent = '⤴';
-    toFront.addEventListener('click', () => {
-      const parent = (obj as any).parent;
-      if (!parent) return;
-      try { parent.removeChild(obj as any); parent.addChild(obj as any); } catch {}
-      this.safeRefreshSoon();
-    });
-    li.appendChild(toFront);
-
-    const toBack = document.createElement('button');
-    toBack.className = 'layer__toggle layer__back';
-    toBack.title = 'Send to back';
-    toBack.textContent = '⤵';
-    toBack.addEventListener('click', () => {
-      const parent = (obj as any).parent;
-      if (!parent) return;
-      try { parent.removeChild(obj as any); parent.addChildAt(obj as any, 0); } catch {}
-      this.safeRefreshSoon();
-    });
-    li.appendChild(toBack);
-
-    const forward = document.createElement('button');
-    forward.className = 'layer__toggle layer__forward';
-    forward.title = 'Bring forward one step';
-    forward.textContent = '▶';
-    forward.addEventListener('click', () => {
-      const parent = (obj as any).parent;
-      if (!parent) return;
-      try {
-        const idx = parent.getChildIndex ? parent.getChildIndex(obj as any) : parent.children.indexOf(obj as any);
-        const newIdx = Math.min(parent.children.length - 1, idx + 1);
-        if (typeof parent.setChildIndex === 'function') {
-          parent.setChildIndex(obj as any, newIdx);
-        } else {
-          parent.removeChild(obj as any);
-          parent.addChildAt(obj as any, newIdx);
-        }
-      } catch {}
-      this.safeRefreshSoon();
-    });
-    li.appendChild(forward);
-
-    const backward = document.createElement('button');
-    backward.className = 'layer__toggle layer__backward';
-    backward.title = 'Send backward one step';
-    backward.textContent = '◀';
-    backward.addEventListener('click', () => {
-      const parent = (obj as any).parent;
-      if (!parent) return;
-      try {
-        const idx = parent.getChildIndex ? parent.getChildIndex(obj as any) : parent.children.indexOf(obj as any);
-        const newIdx = Math.max(0, idx - 1);
-        if (typeof parent.setChildIndex === 'function') {
-          parent.setChildIndex(obj as any, newIdx);
-        } else {
-          parent.removeChild(obj as any);
-          parent.addChildAt(obj as any, newIdx);
-        }
-      } catch {}
-      this.safeRefreshSoon();
-    });
-    li.appendChild(backward);
-
-    // Drag handle
-    const drag = document.createElement('span');
-    drag.className = 'layer__drag-handle';
-    drag.textContent = '⋮⋮';
-    li.appendChild(drag);
+    rightSide.appendChild(lock);
 
     // DnD handlers
     li.addEventListener('dragstart', (e) => {
@@ -278,8 +240,9 @@ export class LayersPanel {
         map[idStr] = nextOpen;
         localStorage.setItem('layersPanel:expansion', JSON.stringify(map));
       });
-      // Render children now
-      (obj as any).children?.forEach((c: any) => {
+      // Render children now - filter out visual aids and UI elements
+      const realChildren = (obj as any).children?.filter((c: any) => this.isRealObject(c)) || [];
+      realChildren.forEach((c: any) => {
         const cli = this.buildLayerItem(c);
         childrenList!.appendChild(cli);
       });
@@ -296,8 +259,86 @@ export class LayersPanel {
   }
 
   private fallbackName(obj: Container): string {
-    const cn = (obj as any).constructor?.name || 'Object';
-    return cn;
+    // Check for tool metadata first
+    const meta = (obj as any).__meta;
+    const toolType = (obj as any).__toolType;
+    
+    // Handle objects with metadata (shapes, brush, pen, etc.)
+    if (meta && meta.kind) {
+      switch (meta.kind) {
+        case 'shapes':
+          return this.getShapeName(meta.shapeType || 'rectangle');
+        case 'brush':
+          return 'stroke';
+        case 'pen':
+          return 'line';
+        case 'tables':
+          return 'table';
+        case 'video':
+          return meta.name || 'video'; // Use custom name for scenes
+        case 'scene':
+          return meta.name || 'animation scene';
+        default:
+          return meta.kind;
+      }
+    }
+    
+    // Handle objects by tool type
+    if (toolType) {
+      switch (toolType) {
+        case 'container':
+          return 'group';
+        case 'brush':
+          return 'stroke';
+        case 'pen':
+          return 'line';
+        case 'shapes':
+          return 'rectangle'; // Default shape
+        case 'text':
+          return 'text';
+        case 'tables':
+          return 'table';
+        case 'scene':
+          return meta?.name || 'animation scene'; // Scene/video objects
+        default:
+          return toolType;
+      }
+    }
+    
+    // Handle by PIXI class type
+    const className = (obj as any).constructor?.name || 'Object';
+    switch (className) {
+      case 'Text':
+        return 'text';
+      case 'Graphics':
+        // Try to determine what kind of graphics this is
+        if ((obj as any).children && (obj as any).children.length > 1) {
+          return 'group';
+        }
+        return 'graphic';
+      case 'Container':
+        if ((obj as any).children && (obj as any).children.length > 1) {
+          return 'group';
+        }
+        return 'container';
+      case 'Sprite':
+        return 'image';
+      default:
+        return className.toLowerCase();
+    }
+  }
+  
+  private getShapeName(shapeType: string): string {
+    const shapeNames: Record<string, string> = {
+      'rectangle': 'rectangle',
+      'circle': 'circle', 
+      'ellipse': 'ellipse',
+      'triangle': 'triangle',
+      'line': 'line',
+      'arrow': 'arrow',
+      'polygon': 'polygon'
+    };
+    return shapeNames[shapeType] || 'shape';
   }
 
   private getId(obj: any): string | null {
@@ -339,5 +380,77 @@ export class LayersPanel {
     } catch {}
     // Fallback placeholder
     el.style.background = '#f3f4f6';
+  }
+
+  /**
+   * Filter out visual aids, UI elements, and temporary objects
+   * Only show actual user-created content in layers
+   */
+  private isRealObject(obj: any): boolean {
+    if (!obj) return false;
+
+    // Filter by object name patterns (visual aids and UI elements)
+    const name = (obj.name || '').toLowerCase();
+    const excludedNames = [
+      'cursor', 'guide', 'overlay', 'handle', 'anchor', 'marquee', 'indicator',
+      'preview', 'helper', 'visual', 'aid', 'temp', 'temporary', 'ui-',
+      'selection-', 'snap-', 'drag-', 'resize-', 'path-', 'scene-',
+      'interaction', 'background-fill', 'grid', 'ruler'
+    ];
+    
+    if (excludedNames.some(excluded => name.includes(excluded))) {
+      return false;
+    }
+
+    // Filter by constructor name (UI elements)
+    const className = obj.constructor?.name || '';
+    if (className === 'TextCursor') return false;
+    
+    // Filter by high zIndex (UI overlays typically have high zIndex)
+    if (obj.zIndex && obj.zIndex > 1000) return false;
+    
+    // Filter by special properties that indicate UI/visual aid objects
+    if (obj.__isVisualAid || obj.__isUIElement || obj.__isTemporary) return false;
+    
+    // Filter by parent container type (if in UI layer, be more selective)
+    const parent = obj.parent;
+    if (parent && parent.label === 'ui-layer') {
+      // In UI layer, only show objects that have a tool type (user-created content)
+      if (!obj.__toolType && !obj.__meta?.kind) return false;
+    }
+    
+    // Filter by alpha (very transparent objects are likely visual aids)
+    if (obj.alpha !== undefined && obj.alpha < 0.01) return false;
+    
+    // Allow objects with tool types (user-created content)
+    if (obj.__toolType || obj.__meta?.kind) return true;
+    
+    // Allow Text objects (user content)
+    if (className === 'Text') return true;
+    
+    // Allow Sprite objects (user images)
+    if (className === 'Sprite') return true;
+    
+    // Allow containers that have user content children
+    if (className === 'Container' && obj.children && obj.children.length > 0) {
+      // Check if any child is a real object (recursive check to avoid infinite loops)
+      const hasRealChildren = obj.children.some((child: any) => {
+        // Basic check to avoid recursion issues
+        if (child === obj) return false;
+        return this.isRealObject(child);
+      });
+      return hasRealChildren;
+    }
+    
+    // Allow Graphics objects that are not in excluded categories
+    if (className === 'Graphics') {
+      // Graphics without tool type might still be user content if they have substance
+      const bounds = obj.getLocalBounds?.();
+      if (bounds && (bounds.width > 1 || bounds.height > 1)) {
+        return true;
+      }
+    }
+    
+    return false;
   }
 }

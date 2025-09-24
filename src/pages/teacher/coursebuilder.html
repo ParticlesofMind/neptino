@@ -1034,28 +1034,6 @@
           <div class="engine__canvas-spacer"></div>
         </div>
 
-        <!-- Canvas Navigation -->
-        <div class="engine__nav-course nav-course">
-          <div class="nav-course__item nav-course__item--active" data-preview="outline">
-            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-toc.svg" alt="">
-            <span class="icon-label">Outline</span>
-          </div>
-          <div class="nav-course__item" data-preview="preview">
-            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-thumbnail.svg"
-              alt="">
-            <span class="icon-label">Preview</span>
-          </div>
-          <div class="nav-course__item" data-preview="marks">
-            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-bookmark.svg"
-              alt="">
-            <span class="icon-label">Marks</span>
-          </div>
-          <div class="nav-course__item" data-preview="layers">
-            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/navigation/navigation-layers.svg" alt="Layers icon">
-            <span class="icon-label">Layers</span>
-          </div>
-        </div>
-
         <!-- Canvas Preview -->
         <div class="engine__preview preview">
           <!-- Outline Preview -->
@@ -1076,10 +1054,7 @@
           <!-- Layers Panel -->
           <div class="preview__content" id="preview-layers">
             <div class="layers-panel">
-              <div class="layers-controls button-group" style="display:flex; gap:8px; padding:6px 4px;">
-                <button id="layers-group" class="button button--small button--outline">Group</button>
-                <button id="layers-ungroup" class="button button--small button--outline">Ungroup</button>
-              </div>
+              <h3 class="layers-panel__title">Layers</h3>
               <ol class="layers-list" id="layers-list-root"></ol>
             </div>
           </div>

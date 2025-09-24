@@ -6,11 +6,12 @@
 
 .engine {
     display: grid;
-    grid-template-columns: 0.5fr 2fr 7fr 1.5fr; // Reverted to original proportions
+    grid-template-columns: 0.5fr 2.5fr 7fr 1.75fr; // Keep 4 columns but expand tools area
     grid-template-rows: 0.075fr 1fr; // Increased to 90px to ensure labels have adequate space
     height: calc(100vh - 7vh); // Constrain to available viewport space minus header
     width: 100%;
     gap: 0.5rem;
+    padding: 0.5rem; 
 
     // Responsive adjustments
     @media (max-width: 1400px) {
@@ -60,20 +61,8 @@
     }
 
     &__tools {
-        grid-column: 3;
+        grid-column: 3 / 5;
         grid-row: 1;
-    }
-
-    &__nav {
-        grid-column: 4;
-        grid-row: 1;
-    }
-
-    &__nav-course {
-        grid-column: 4;
-        grid-row: 1;
-        display: flex;
-        gap: var(--spacing-4);
     }
 
     // ==========================================================================
@@ -437,8 +426,7 @@
 // ==========================================================================
 
 .mode__item,
-.media__item, 
-.nav-course__item,
+.media__item,
 .tools__item {
   position: relative;
   display: flex;

@@ -177,7 +177,13 @@ export class DisplayObjectManager {
    */
   public createContainer(parent?: Container): { container: Container; id: string } {
     const container = new Container();
+    
+    // Mark as container type for layers panel
+    (container as any).__toolType = 'container';
+    
     const id = this.add(container, parent);
+    
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('📦 Created container:', { id }); } catch {}
     
     return { container, id };
   }

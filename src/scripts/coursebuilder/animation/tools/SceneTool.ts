@@ -34,6 +34,8 @@ export class SceneTool extends BaseTool {
       this.preview = new Graphics();
       this.preview.alpha = 0.8;
       this.preview.zIndex = 1000; // Ensure preview is on top
+      this.preview.name = 'scene-preview';
+      (this.preview as any).__isVisualAid = true; // Mark for layer filtering
       ui.addChild(this.preview);
       
       // Draw initial preview at click point

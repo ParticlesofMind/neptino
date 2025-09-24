@@ -24,6 +24,8 @@ export class TextCursor implements ITextCursor {
     this.graphics = new Graphics();
     this.graphics.eventMode = 'none'; // Don't interfere with input events
     this.graphics.zIndex = 2000; // Ensure cursor is above everything else including creation guide
+    this.graphics.name = 'text-cursor'; // Mark as visual aid
+    (this.graphics as any).__isVisualAid = true; // Mark for layer filtering
     parent.addChild(this.graphics);
 
   }

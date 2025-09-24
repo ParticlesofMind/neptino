@@ -257,6 +257,8 @@ export class PooledGraphicsFactory {
     graphics.fill({ color: 0xffffff, alpha: 1 });
     graphics.stroke({ color: 0x4a79a4, width: 2, alpha: 0.9 });
     graphics.position.set(point.x, point.y);
+    graphics.name = 'anchor-point'; // Mark as visual aid
+    (graphics as any).__isVisualAid = true; // Mark for layer filtering
     return graphics;
   }
 

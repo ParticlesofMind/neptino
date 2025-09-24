@@ -52,15 +52,7 @@ export class UIEventHandler {
             );
         });
 
-        // Navigation selection events
-        document
-            .querySelectorAll('.engine__nav-course .nav-course__item')
-            .forEach(button => {
-                button.addEventListener(
-                    'click',
-                    this.handleNavigationSelection.bind(this),
-                );
-            });
+        // Navigation selection events - removed (nav-course section no longer exists)
 
         // Color palette events
         document.querySelectorAll('.color-square').forEach(color => {
@@ -178,19 +170,7 @@ export class UIEventHandler {
         this.toolStateManager.setSelectedMedia(mediaType);
     }
 
-    /**
-     * Handle navigation selection
-     */
-    private handleNavigationSelection(event: Event): void {
-        event.preventDefault();
-        const button = event.currentTarget as HTMLElement;
-        const label = button.querySelector('.icon-label');
-        const navTitle = label?.textContent;
-
-        if (!navTitle) return;
-
-        this.toolStateManager.setSelectedNavigation(navTitle);
-    }
+    // Navigation selection handler removed - nav-course section no longer exists
 
     /**
      * Handle color selection

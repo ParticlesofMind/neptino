@@ -192,11 +192,11 @@ export class GSAPPathTool extends BaseTool {
       scene.addObject(this.activeObject);
     }
     
-    // Simplify the path for optimal animation
-    const simplified = this.simplifyPath(this.pathPoints, scene.getDuration());
+    // Use path as drawn - NO SMOOTHING/REFINEMENT per user request
+    const pathToUse = this.pathPoints; // Keep original unmodified path
     
     // Create GSAP path animation with enhanced features
-    gsapManager.animateObjectAlongPath(this.activeObject, simplified, {
+    gsapManager.animateObjectAlongPath(this.activeObject, pathToUse, {
       duration: scene.getDuration() / 1000,
       ease: 'power2.inOut',
       autoRotate: false, // Can be configured
@@ -206,9 +206,9 @@ export class GSAPPathTool extends BaseTool {
     });
     
     // Also register with the native scene system for compatibility
-    scene.addAnimationPathSceneRelative(objectId, simplified);
+    scene.addAnimationPathSceneRelative(objectId, pathToUse);
     
-    console.log(`🎯 Created enhanced GSAP animation for object ${objectId} with ${simplified.length} points`);
+    console.log(`🎯 Created enhanced GSAP animation for object ${objectId} with ${pathToUse.length} points`);
   }
 
   private reset(): void {

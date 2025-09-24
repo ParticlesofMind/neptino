@@ -276,10 +276,6 @@ export class ToolStateManager {
         const firstMedia = document.querySelector(
             '[data-media]',
         ) as HTMLElement;
-        const firstNav = document.querySelector(
-            '.engine__nav-course .nav-course__item',
-        ) as HTMLElement;
-
         if (firstMode?.dataset.mode) {
             this.currentMode = firstMode.dataset.mode;
         }
@@ -289,10 +285,8 @@ export class ToolStateManager {
         if (firstMedia?.dataset.media) {
             this.selectedMedia = firstMedia.dataset.media;
         }
-        if (firstNav?.querySelector('.icon-label')?.textContent) {
-            this.selectedNavigation =
-                firstNav.querySelector('.icon-label')!.textContent;
-        }
+        // Default to Layers since nav-course is removed
+        this.selectedNavigation = 'Layers';
     } /**
      * Save current states to localStorage
      */
@@ -446,9 +440,7 @@ export class ToolStateManager {
             btn.classList.remove('tools__item--active');
         });
         
-        // Clear internal state (keep current tool reference for later reactivation)
-        const previousTool = this.currentTool;
-        // Don't change currentTool - keep it for when we reactivate
+        // Clear internal state - keep currentTool for when we reactivate
         
         // CRITICAL: Disable canvas drawing events completely
         const canvasAPI = (window as any).canvasAPI;
@@ -885,50 +877,28 @@ export class ToolStateManager {
      * Update navigation UI to reflect current selection
      */
     private updateNavigationUI(navTitle: string | null): void {
-        // Remove selected class from all navigation items
-        document
-            .querySelectorAll('.engine__nav-course .nav-course__item')
-            .forEach(element => {
-                element.classList.remove('nav-course__item--active');
-            });
-
-        // Add selected class to current navigation if one is selected
-        if (navTitle) {
-            const navItems = document.querySelectorAll(
-                '.engine__nav-course .nav-course__item',
-            );
-            navItems.forEach(item => {
-                const label = item.querySelector('.icon-label');
-                if (label && label.textContent === navTitle) {
-                    item.classList.add('nav-course__item--active');
-                }
-            });
-        }
-
-        // Toggle preview content visibility based on selected tab
+        // Navigation tabs removed - show appropriate preview content
         const mapTitleToId = (title: string | null): string | null => {
             switch (title) {
                 case 'Outline': return 'preview-outline';
                 case 'Preview': return 'preview-canvas';
                 case 'Marks': return 'preview-marks';
                 case 'Layers': return 'preview-layers';
-                default: return null;
+                default: return 'preview-layers'; // Default to layers
             }
         };
+        
         const targetId = mapTitleToId(navTitle);
         document.querySelectorAll('.engine__preview .preview__content').forEach(el => {
             el.classList.remove('preview__content--active');
             (el as HTMLElement).style.display = 'none';
         });
+        
         if (targetId) {
             const panel = document.getElementById(targetId);
             if (panel) {
                 panel.classList.add('preview__content--active');
                 (panel as HTMLElement).style.display = 'block';
-                // If Layers panel, refresh its contents
-                if (targetId === 'preview-layers') {
-                    try { (window as any).layersPanel?.refresh(); } catch {}
-                }
             }
         }
     }
@@ -1014,6 +984,7 @@ export class ToolStateManager {
         if (toolName === 'scene' && this.currentMode !== 'animate') {
             toolSettings = null as any;
         }
+
         if (toolSettings) {
             toolSettings.style.display = 'flex';
         } else if (placeholder) {

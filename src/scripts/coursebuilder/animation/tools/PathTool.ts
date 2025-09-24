@@ -182,12 +182,13 @@ export class PathTool extends BaseTool {
         scene.addObject(this.activeObject);
       }
       
-      // Use path points directly as they are already in scene-relative coordinates
-      const simplified = this.simplifyPath(this.pathPoints, scene.getDuration());
+      // Use path points directly as drawn - NO SMOOTHING/REFINEMENT
+      // User wants paths to stay exactly as drawn without simplification
+      const pathToUse = this.pathPoints; // Use original path without simplification
 
 
       // Register the animation path with the scene using scene-relative coordinates
-      scene.addAnimationPathSceneRelative(objectId, simplified);
+      scene.addAnimationPathSceneRelative(objectId, pathToUse);
       
     } else {
       console.warn(`🎯 PathTool: Scene ${this.activeSceneId} not found`);
@@ -265,4 +266,6 @@ export class PathTool extends BaseTool {
       start.y + (end.y - start.y) * segmentT
     );
   }
+
+
 }

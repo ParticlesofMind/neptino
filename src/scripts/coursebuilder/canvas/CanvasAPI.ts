@@ -819,6 +819,8 @@ export class CanvasAPI {
       gfx.roundRect(bounds.x - 3, bounds.y - 3, bounds.width + 6, bounds.height + 6, 6)
         .stroke({ color: 0x2563eb, width: 3, alpha: 1 });
       gfx.zIndex = 9999;
+      gfx.name = 'snap-hint';
+      (gfx as any).__isVisualAid = true; // Mark for layer filtering
       uiLayer.addChild(gfx);
 
       // Fade-out animation over ~400ms

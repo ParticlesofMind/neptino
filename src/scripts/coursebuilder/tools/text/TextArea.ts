@@ -47,6 +47,8 @@ export class TextArea implements ITextArea {
     (this.container as any).isTextObject = true;
     (this.container as any).textAreaId = this.id;
     (this.container as any).__textArea = this;
+    (this.container as any).__toolType = 'text';
+    (this.container as any).__meta = { type: 'text-area', id: this.id };
     
     parent.addChild(this.container);
 
@@ -54,6 +56,7 @@ export class TextArea implements ITextArea {
     this.border = new Graphics();
     // Ensure border is drawn above text content for visibility
     this.border.zIndex = 100;
+    (this.border as any).__isVisualAid = true; // This is UI chrome, not user content
     this.container.addChild(this.border);
 
     // Create text object
@@ -76,6 +79,8 @@ export class TextArea implements ITextArea {
     });
     this.textObject.x = alignToPixel(5); // 5px padding from left
     this.textObject.y = alignToPixel(5); // 5px padding from top
+    // Mark the text object as internal content, not a separate layer
+    (this.textObject as any).__isVisualAid = true; // This is internal to the text area, not standalone content
     this.container.addChild(this.textObject);
 
 
