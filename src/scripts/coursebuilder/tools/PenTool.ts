@@ -13,23 +13,35 @@ import {
 } from "./SharedResources";
 import { BoundaryUtils } from "./BoundaryUtils";
 import { historyManager } from "../canvas/HistoryManager";
+import { PathBooleanOperations, BooleanOperation, PathData } from "./PathBooleanOperations";
 
 interface PenSettings {
  size: number;
  strokeColor: string;   // Primary stroke color
  fillColor: string;     // Fill color for closed shapes
  strokeType?: string;   // Line style (solid, dashed)
+ mode: 'pen' | 'bend';  // Pen mode (click to place) or bend mode (drag to curve)
+}
+
+// Enhanced point type system like Figma
+enum VectorPointType {
+ Corner = 'corner',     // No handles or independent handles
+ Smooth = 'smooth',     // Handles are collinear but can have different lengths
+ Mirrored = 'mirrored'  // Handles are mirrored (same length, opposite direction)
 }
 
 interface VectorNode {
  position: Point;
  graphics: Graphics;
+ pointType: VectorPointType;
  // Cubic bezier handles (optional). If absent, treat as corner.
  handleIn?: Point | null;
  handleOut?: Point | null;
  // Visuals for handles while editing
  handleInGraphics?: { line: Graphics; knob: Graphics } | null;
  handleOutGraphics?: { line: Graphics; knob: Graphics } | null;
+ // Visual state
+ isSelected?: boolean;
 }
 
 interface VectorPath {
@@ -63,6 +75,15 @@ export class PenTool extends BaseTool {
   private static readonly NODE_HIT_TOLERANCE = 8;
   private static readonly HANDLE_KNOB_RADIUS = 3;
   private static readonly DEFAULT_HANDLE_LEN = 30;
+  
+  // Enhanced features
+  private selectedNodeIndex: number = -1;
+  private pathJoinIndicator: Graphics | null = null;
+  private bendModePreview: Graphics | null = null;
+  private pathSegmentHover: Graphics | null = null;
+  private contextMenu: HTMLElement | null = null;
+  private selectedPaths: Graphics[] = []; // For Boolean operations
+  private multiSelectMode: boolean = false;
 
  constructor() {
          super("pen", "url('/src/assets/cursors/pen-cursor.svg') 2 2, crosshair");
@@ -71,6 +92,7 @@ export class PenTool extends BaseTool {
  strokeColor: '#1a1a1a',  // Black stroke
  fillColor: '#f8fafc',    // White fill
  strokeType: 'solid',     // Solid lines by default
+ mode: 'pen',             // Default to pen mode
  };
  }
 
@@ -80,11 +102,17 @@ export class PenTool extends BaseTool {
    return;
  }
 
+ // Handle right-click for context menu
+ if (event.button === 2) { // Right mouse button
+   this.handleRightClick(event, container);
+   return;
+ }
+
  console.log(
  `✏️ PEN: Node placement at (${Math.round(event.global.x)}, ${Math.round(event.global.y)})`,
  );
  console.log(
- `✏️ PEN: Settings - Stroke: ${this.settings.strokeColor}, Size: ${this.settings.size}px, Fill: ${this.settings.fillColor}`,
+ `✏️ PEN: Settings - Stroke: ${this.settings.strokeColor}, Size: ${this.settings.size}px, Fill: ${this.settings.fillColor}, Mode: ${this.settings.mode}`,
  );
 
  const localPoint = container.toLocal(event.global);
@@ -107,13 +135,30 @@ export class PenTool extends BaseTool {
  
  this.lastMousePosition.copyFrom(clampedPoint);
 
+ // Bend mode: different behavior for click and drag to create curves
+ if (this.settings.mode === 'bend') {
+   this.handleBendModePointerDown(event, container, clampedPoint);
+   return;
+ }
+
  // If not currently drawing, check if clicking an existing pen shape to edit
  if (!this.currentPath) {
+   // Handle multi-selection with Ctrl/Cmd
+   if ((event as any).ctrlKey || (event as any).metaKey) {
+     this.handleMultiplePathSelection(event, container);
+     return;
+   }
+   
    const penShape = this.findPenShapeAt(container, event.global);
    if (penShape) {
      this.enterEditModeFromShape(penShape as Graphics, container);
      return;
    }
+ }
+
+ // Check for path joining opportunity
+ if (!this.currentPath && this.checkPathJoinOpportunity(container, clampedPoint)) {
+   return;
  }
 
  // If editing existing path, interpret click as selection/drag start
@@ -126,13 +171,14 @@ export class PenTool extends BaseTool {
      if (hit.kind === 'anchor') {
        const idx = hit.index;
        if (this.lastClickedNodeIndex === idx && now - this.lastClickTime < 300) {
-         this.toggleNodeType(this.currentPath.nodes[idx], idx, container);
+         this.cycleNodeType(this.currentPath.nodes[idx], idx, container);
          this.lastClickTime = 0; // reset
          this.updatePathGraphics();
          return;
        }
        this.lastClickTime = now;
        this.lastClickedNodeIndex = idx;
+       this.selectNode(idx);
      }
 
      // Start dragging
@@ -143,7 +189,8 @@ export class PenTool extends BaseTool {
      this.lastMousePosition.copyFrom(local);
      return; // do not add nodes in edit mode
    }
-   // Clicked empty space in edit mode: no-op (could deselect)
+   // Clicked empty space in edit mode: deselect
+   this.deselectAllNodes();
    return;
  }
 
@@ -201,6 +248,16 @@ export class PenTool extends BaseTool {
  const canvasBounds = this.manager.getCanvasBounds();
  let clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
 
+ // Enhanced hover feedback for bend mode
+ if (this.settings.mode === 'bend' && !this.isPointerDown) {
+   this.updateBendModeHover(clampedPoint, container);
+ }
+
+ // Enhanced path joining feedback
+ if (!this.currentPath || !this.isEditingExistingPath) {
+   this.checkPathJoinOpportunity(container, clampedPoint);
+ }
+
  // If Shift held and we have an anchor (last node), snap preview to straight line
  const shiftHeld = (event as any).shiftKey === true;
  if (shiftHeld && this.currentPath && this.currentPath.nodes.length > 0) {
@@ -227,13 +284,14 @@ export class PenTool extends BaseTool {
 
  this.lastMousePosition.copyFrom(clampedPoint);
 
- // Editing drag logic
+ // Editing drag logic with enhanced handle behavior
  if (this.currentPath && this.isEditingExistingPath && this.isPointerDown && this.activeDragNode) {
    const node = this.activeDragNode;
    const prev = new Point(this.lastMousePosition.x, this.lastMousePosition.y);
    const p = clampedPoint;
    const dx = p.x - prev.x;
    const dy = p.y - prev.y;
+   
    if (this.dragMode === 'anchor') {
      // Move anchor and translate handles accordingly
      node.position.x += dx;
@@ -243,17 +301,41 @@ export class PenTool extends BaseTool {
    } else if (this.dragMode === 'handle-in') {
      // Set handleIn to current point
      node.handleIn = new Point(p.x, p.y);
-     if (this.maintainMirrorOnHandleDrag) {
+     
+     // Apply point type behavior
+     if (node.pointType === VectorPointType.Mirrored) {
        const vx = node.position.x - p.x;
        const vy = node.position.y - p.y;
        node.handleOut = new Point(node.position.x + vx, node.position.y + vy);
+     } else if (node.pointType === VectorPointType.Smooth && this.maintainMirrorOnHandleDrag) {
+       // Smooth: keep collinear but allow different lengths
+       const vx = node.position.x - p.x;
+       const vy = node.position.y - p.y;
+       const len = Math.hypot(vx, vy);
+       if (len > 0 && node.handleOut) {
+         const outLen = Math.hypot(node.handleOut.x - node.position.x, node.handleOut.y - node.position.y);
+         const ratio = outLen / len;
+         node.handleOut = new Point(node.position.x + vx * ratio, node.position.y + vy * ratio);
+       }
      }
    } else if (this.dragMode === 'handle-out') {
      node.handleOut = new Point(p.x, p.y);
-     if (this.maintainMirrorOnHandleDrag) {
+     
+     // Apply point type behavior
+     if (node.pointType === VectorPointType.Mirrored) {
        const vx = node.position.x - p.x;
        const vy = node.position.y - p.y;
        node.handleIn = new Point(node.position.x + vx, node.position.y + vy);
+     } else if (node.pointType === VectorPointType.Smooth && this.maintainMirrorOnHandleDrag) {
+       // Smooth: keep collinear but allow different lengths
+       const vx = node.position.x - p.x;
+       const vy = node.position.y - p.y;
+       const len = Math.hypot(vx, vy);
+       if (len > 0 && node.handleIn) {
+         const inLen = Math.hypot(node.handleIn.x - node.position.x, node.handleIn.y - node.position.y);
+         const ratio = inLen / len;
+         node.handleIn = new Point(node.position.x + vx * ratio, node.position.y + vy * ratio);
+       }
      }
    }
 
@@ -273,15 +355,30 @@ export class PenTool extends BaseTool {
    }
 
    if (this.isDraggingHandles) {
-     // For a smooth point, handles are mirrored
-     const outX = this.activeDragNode.position.x + dx;
-     const outY = this.activeDragNode.position.y + dy;
-     const inX = this.activeDragNode.position.x - dx;
-     const inY = this.activeDragNode.position.y - dy;
-
-     this.activeDragNode.handleOut = new Point(outX, outY);
-     this.activeDragNode.handleIn = new Point(inX, inY);
-     this.updateHandleGraphics(this.activeDragNode, container);
+     // Create handles based on the node's point type
+     const node = this.activeDragNode;
+     
+     if (node.pointType === VectorPointType.Mirrored) {
+       // Mirrored: both handles same length, opposite direction
+       const outX = node.position.x + dx;
+       const outY = node.position.y + dy;
+       const inX = node.position.x - dx;
+       const inY = node.position.y - dy;
+       node.handleOut = new Point(outX, outY);
+       node.handleIn = new Point(inX, inY);
+     } else {
+       // Corner or Smooth: create handles independently (smooth behavior applied later)
+       node.handleOut = new Point(node.position.x + dx, node.position.y + dy);
+       node.handleIn = new Point(node.position.x - dx, node.position.y - dy);
+       
+       // Set point type to smooth if not already set
+       if (node.pointType === VectorPointType.Corner) {
+         node.pointType = VectorPointType.Smooth;
+       }
+     }
+     
+     this.updateHandleGraphics(node, container);
+     this.updateNodeVisuals(node);
      // Redraw path with curves
      this.updatePathGraphics();
      // While dragging handles, hide the straight preview segment
@@ -341,10 +438,12 @@ export class PenTool extends BaseTool {
  const node: VectorNode = {
  position: position.clone(),
  graphics: nodeGraphics,
+ pointType: VectorPointType.Corner, // Default to corner point
  handleIn: null,
  handleOut: null,
  handleInGraphics: null,
  handleOutGraphics: null,
+ isSelected: false,
  };
 
  this.currentPath.nodes.push(node);
@@ -736,7 +835,7 @@ export class PenTool extends BaseTool {
 
  }
 
- // Handle keyboard events for path completion
+ // Handle keyboard events for path completion and node operations
  public onKeyDown(event: KeyboardEvent): void {
  if (!this.currentPath) return;
 
@@ -759,6 +858,64 @@ export class PenTool extends BaseTool {
  this.completePath(true);
  }
  event.preventDefault();
+ break;
+ case "Delete":
+ case "Backspace":
+ // Delete selected node
+ if (this.selectedNodeIndex >= 0 && this.isEditingExistingPath) {
+   this.removeNodeAtIndex(this.selectedNodeIndex);
+   event.preventDefault();
+ }
+ break;
+ case "=":
+ case "+":
+ // Add point (when hovering over segment)
+ if (this.isEditingExistingPath && this.pathSegmentHover) {
+   // Implementation would need segment hover tracking
+   event.preventDefault();
+ }
+ break;
+ case "Tab":
+ // Cycle point type for selected node
+ if (this.selectedNodeIndex >= 0 && this.isEditingExistingPath && this.currentPath) {
+   this.cycleNodeType(this.currentPath.nodes[this.selectedNodeIndex], this.selectedNodeIndex, 
+     this.currentPath.pathGraphics.parent as Container);
+   this.updatePathGraphics();
+   event.preventDefault();
+ }
+ break;
+ case "b":
+ case "B":
+ // Toggle bend mode
+ if (event.ctrlKey || event.metaKey) {
+   this.settings.mode = this.settings.mode === 'pen' ? 'bend' : 'pen';
+   console.log(`✏️ PEN: Switched to ${this.settings.mode} mode`);
+   event.preventDefault();
+ }
+ break;
+ case "u":
+ case "U":
+ // Union operation
+ if ((event.ctrlKey || event.metaKey) && this.selectedPaths.length >= 2) {
+   this.performBooleanOperation(BooleanOperation.Union, this.currentPath?.pathGraphics.parent as Container);
+   event.preventDefault();
+ }
+ break;
+ case "s":
+ case "S":
+ // Subtract operation
+ if ((event.ctrlKey || event.metaKey) && event.shiftKey && this.selectedPaths.length >= 2) {
+   this.performBooleanOperation(BooleanOperation.Subtract, this.currentPath?.pathGraphics.parent as Container);
+   event.preventDefault();
+ }
+ break;
+ case "i":
+ case "I":
+ // Intersect operation
+ if ((event.ctrlKey || event.metaKey) && this.selectedPaths.length >= 2) {
+   this.performBooleanOperation(BooleanOperation.Intersect, this.currentPath?.pathGraphics.parent as Container);
+   event.preventDefault();
+ }
  break;
  }
  }
@@ -831,9 +988,15 @@ export class PenTool extends BaseTool {
  // Remove keyboard listeners
  document.removeEventListener("keydown", this.handleKeyDown);
 
- // Clean up preview line and hover indicator
+ // Clean up all visual indicators and selections
  this.removePreviewLine();
  this.removeHoverIndicator();
+ this.removeSnapIndicator();
+ this.removePathJoinIndicator();
+ this.removeBendModePreview();
+ this.hideContextMenu();
+ this.clearPathSelection();
+ this.deselectAllNodes();
  }
 
   private handleKeyDown = (): void => {
@@ -952,6 +1115,7 @@ export class PenTool extends BaseTool {
         strokeColor: meta.strokeColor ?? this.settings.strokeColor,
         fillColor: meta.fillColor ?? this.settings.fillColor,
         strokeType: 'solid',
+        mode: 'pen', // Always pen mode when editing existing paths
       },
     };
     (this.currentPath.pathGraphics as any).__toolType = 'pen';
@@ -971,10 +1135,12 @@ export class PenTool extends BaseTool {
       const node: VectorNode = {
         position: pos.clone(),
         graphics: nodeGraphics,
+        pointType: VectorPointType.Corner, // Default when recreating from metadata
         handleIn: n.in ? new Point(n.in.x, n.in.y) : null,
         handleOut: n.out ? new Point(n.out.x, n.out.y) : null,
         handleInGraphics: null,
         handleOutGraphics: null,
+        isSelected: false,
       };
       this.currentPath.nodes.push(node);
       this.updateHandleGraphics(node, container);
@@ -1006,40 +1172,831 @@ export class PenTool extends BaseTool {
     return null;
   }
 
-  private toggleNodeType(node: VectorNode, idx: number, container: Container): void {
-    const hasHandles = !!(node.handleIn || node.handleOut);
-    if (hasHandles) {
-      // Convert to corner
-      node.handleIn = null; node.handleOut = null;
-      this.updateHandleGraphics(node, container);
-    } else {
-      // Convert to smooth with default mirrored handles
-      // Direction heuristic: use neighboring points if available
-      let dirX = 1, dirY = 0;
-      const prev = this.currentPath?.nodes[idx - 1];
-      const next = this.currentPath?.nodes[idx + 1];
-      if (prev && next) {
-        const vx = next.position.x - prev.position.x;
-        const vy = next.position.y - prev.position.y;
-        const len = Math.hypot(vx, vy) || 1;
-        dirX = vx / len; dirY = vy / len;
-      } else if (prev) {
-        const vx = node.position.x - prev.position.x;
-        const vy = node.position.y - prev.position.y;
-        const len = Math.hypot(vx, vy) || 1;
-        dirX = vx / len; dirY = vy / len;
-      } else if (next) {
-        const vx = next.position.x - node.position.x;
-        const vy = next.position.y - node.position.y;
-        const len = Math.hypot(vx, vy) || 1;
-        dirX = vx / len; dirY = vy / len;
+  // ===== ENHANCED FEATURES =====
+
+  /**
+   * Handle right-click for context menu operations
+   */
+  private handleRightClick(event: FederatedPointerEvent, container: Container): void {
+    const local = container.toLocal(event.global);
+    
+    if (this.currentPath && this.isEditingExistingPath) {
+      // Check if right-clicking on node (delete) or path segment (add point)
+      const hit = this.pickNodeOrHandle(local);
+      if (hit && hit.kind === 'anchor') {
+        this.showNodeContextMenu(event, hit.index);
+      } else {
+        // Check if clicking on path segment
+        const segmentHit = this.pickPathSegment(local);
+        if (segmentHit !== null) {
+          this.showSegmentContextMenu(event, segmentHit, local);
+        }
       }
-      const lenH = PenTool.DEFAULT_HANDLE_LEN;
-      node.handleOut = new Point(node.position.x + dirX * lenH, node.position.y + dirY * lenH);
-      node.handleIn  = new Point(node.position.x - dirX * lenH, node.position.y - dirY * lenH);
-      this.updateHandleGraphics(node, container);
     }
   }
+
+  /**
+   * Handle bend mode pointer down - click and drag to create instant curves
+   */
+  private handleBendModePointerDown(event: FederatedPointerEvent, container: Container, point: Point): void {
+    // In bend mode, clicking on existing path segments adds curves
+    if (!this.currentPath) {
+      const penShape = this.findPenShapeAt(container, event.global);
+      if (penShape) {
+        this.enterEditModeFromShape(penShape as Graphics, container);
+        // Fall through to bend the segment
+      } else {
+        return; // No existing path to bend
+      }
+    }
+
+    if (this.currentPath && this.isEditingExistingPath) {
+      const segmentIndex = this.pickPathSegment(point);
+      if (segmentIndex !== null) {
+        this.startBendOperation(segmentIndex, point, container);
+      }
+    }
+  }
+
+  /**
+   * Check if we can join two path endpoints
+   */
+  private checkPathJoinOpportunity(container: Container, point: Point): boolean {
+    const nearbyEndpoint = this.findNearbyPathEndpoint(container, point);
+    if (nearbyEndpoint) {
+      this.showPathJoinIndicator(nearbyEndpoint.position, container);
+      
+      // Auto-join if clicking close enough to an endpoint
+      if (this.currentPath && this.currentPath.nodes.length > 0) {
+        const distance = Math.hypot(
+          point.x - nearbyEndpoint.position.x,
+          point.y - nearbyEndpoint.position.y
+        );
+        
+        if (distance < 8) { // Close enough to join
+          this.joinPaths(nearbyEndpoint.path, container);
+          return true;
+        }
+      }
+      return false;
+    }
+    this.removePathJoinIndicator();
+    return false;
+  }
+
+  /**
+   * Join current path with another path
+   */
+  private joinPaths(targetPath: Graphics, container: Container): void {
+    if (!this.currentPath) return;
+    
+    const targetMeta = (targetPath as any).__meta;
+    if (!targetMeta || !targetMeta.nodes) return;
+    
+    // Extract target path data
+    const targetNodes = targetMeta.nodes as any[];
+    const isTargetClosed = targetMeta.closed;
+    
+    if (isTargetClosed) {
+      console.log('✏️ PEN: Cannot join to closed path');
+      return;
+    }
+    
+    // Determine which endpoint of target to join to
+    const currentLastNode = this.currentPath.nodes[this.currentPath.nodes.length - 1];
+    const targetFirst = new Point(targetNodes[0].x, targetNodes[0].y);
+    const targetLast = new Point(targetNodes[targetNodes.length - 1].x, targetNodes[targetNodes.length - 1].y);
+    
+    const distToFirst = Math.hypot(
+      currentLastNode.position.x - targetFirst.x,
+      currentLastNode.position.y - targetFirst.y
+    );
+    const distToLast = Math.hypot(
+      currentLastNode.position.x - targetLast.x,
+      currentLastNode.position.y - targetLast.y
+    );
+    
+    // Add target nodes to current path
+    let nodesToAdd = targetNodes;
+    if (distToFirst < distToLast) {
+      // Join to first node - use nodes in order
+      nodesToAdd = targetNodes.slice(1); // Skip first node to avoid duplication
+    } else {
+      // Join to last node - reverse the order and skip last node
+      nodesToAdd = targetNodes.slice(0, -1).reverse();
+    }
+    
+    // Create graphics for new nodes and add them to current path
+    nodesToAdd.forEach(nodeData => {
+      const nodeGraphics = new Graphics();
+      nodeGraphics.circle(0, 0, PEN_CONSTANTS.NODE_SIZE);
+      nodeGraphics.fill({ color: PEN_CONSTANTS.NODE_COLOR });
+      nodeGraphics.stroke({
+        width: PEN_CONSTANTS.NODE_STROKE_WIDTH,
+        color: 0xffffff,
+      });
+      nodeGraphics.position.set(nodeData.x, nodeData.y);
+      nodeGraphics.eventMode = "static";
+      container.addChild(nodeGraphics);
+
+      const node: VectorNode = {
+        position: new Point(nodeData.x, nodeData.y),
+        graphics: nodeGraphics,
+        pointType: VectorPointType.Corner,
+        handleIn: nodeData.in ? new Point(nodeData.in.x, nodeData.in.y) : null,
+        handleOut: nodeData.out ? new Point(nodeData.out.x, nodeData.out.y) : null,
+        handleInGraphics: null,
+        handleOutGraphics: null,
+        isSelected: false,
+      };
+
+      this.currentPath!.nodes.push(node);
+      this.updateHandleGraphics(node, container);
+    });
+    
+    // Remove the target path since it's now part of current path
+    if (targetPath.parent) {
+      targetPath.parent.removeChild(targetPath);
+    }
+    
+    // Update current path graphics
+    this.updatePathGraphics();
+    
+    console.log(`✏️ PEN: Joined paths - now has ${this.currentPath.nodes.length} nodes`);
+  }
+
+  /**
+   * Enhanced node type cycling: Corner -> Smooth -> Mirrored -> Corner
+   */
+  private cycleNodeType(node: VectorNode, idx: number, container: Container): void {
+    switch (node.pointType) {
+      case VectorPointType.Corner:
+        // Convert to Smooth
+        node.pointType = VectorPointType.Smooth;
+        this.createDefaultHandles(node, idx);
+        break;
+      case VectorPointType.Smooth:
+        // Convert to Mirrored
+        node.pointType = VectorPointType.Mirrored;
+        this.enforceHandleMirroring(node);
+        break;
+      case VectorPointType.Mirrored:
+        // Convert back to Corner
+        node.pointType = VectorPointType.Corner;
+        node.handleIn = null;
+        node.handleOut = null;
+        break;
+    }
+    this.updateHandleGraphics(node, container);
+    this.updateNodeVisuals(node);
+  }
+
+  /**
+   * Select a node for editing
+   */
+  private selectNode(index: number): void {
+    this.selectedNodeIndex = index;
+    if (this.currentPath && this.currentPath.nodes[index]) {
+      this.currentPath.nodes[index].isSelected = true;
+      this.updateNodeVisuals(this.currentPath.nodes[index]);
+    }
+  }
+
+  /**
+   * Deselect all nodes
+   */
+  private deselectAllNodes(): void {
+    this.selectedNodeIndex = -1;
+    if (this.currentPath) {
+      this.currentPath.nodes.forEach(node => {
+        node.isSelected = false;
+        this.updateNodeVisuals(node);
+      });
+    }
+  }
+
+  /**
+   * Create default handles for a node based on neighboring nodes
+   */
+  private createDefaultHandles(node: VectorNode, idx: number): void {
+    if (!this.currentPath) return;
+    
+    let dirX = 1, dirY = 0;
+    const prev = this.currentPath.nodes[idx - 1];
+    const next = this.currentPath.nodes[idx + 1];
+    
+    if (prev && next) {
+      const vx = next.position.x - prev.position.x;
+      const vy = next.position.y - prev.position.y;
+      const len = Math.hypot(vx, vy) || 1;
+      dirX = vx / len; dirY = vy / len;
+    } else if (prev) {
+      const vx = node.position.x - prev.position.x;
+      const vy = node.position.y - prev.position.y;
+      const len = Math.hypot(vx, vy) || 1;
+      dirX = vx / len; dirY = vy / len;
+    } else if (next) {
+      const vx = next.position.x - node.position.x;
+      const vy = next.position.y - node.position.y;
+      const len = Math.hypot(vx, vy) || 1;
+      dirX = vx / len; dirY = vy / len;
+    }
+    
+    const lenH = PenTool.DEFAULT_HANDLE_LEN;
+    node.handleOut = new Point(node.position.x + dirX * lenH, node.position.y + dirY * lenH);
+    node.handleIn = new Point(node.position.x - dirX * lenH, node.position.y - dirY * lenH);
+  }
+
+  /**
+   * Enforce handle mirroring for mirrored point type
+   */
+  private enforceHandleMirroring(node: VectorNode): void {
+    if (!node.handleOut && !node.handleIn) return;
+    
+    if (node.handleOut) {
+      const dx = node.handleOut.x - node.position.x;
+      const dy = node.handleOut.y - node.position.y;
+      node.handleIn = new Point(node.position.x - dx, node.position.y - dy);
+    } else if (node.handleIn) {
+      const dx = node.handleIn.x - node.position.x;
+      const dy = node.handleIn.y - node.position.y;
+      node.handleOut = new Point(node.position.x - dx, node.position.y - dy);
+    }
+  }
+
+  /**
+   * Update node visual appearance based on type and selection state
+   */
+  private updateNodeVisuals(node: VectorNode): void {
+    if (!node.graphics) return;
+    
+    node.graphics.clear();
+    
+    // Different colors for different point types
+    let nodeColor = PEN_CONSTANTS.NODE_COLOR;
+    switch (node.pointType) {
+      case VectorPointType.Corner:
+        nodeColor = 0x64748b; // Gray for corner
+        break;
+      case VectorPointType.Smooth:
+        nodeColor = 0x3b82f6; // Blue for smooth
+        break;
+      case VectorPointType.Mirrored:
+        nodeColor = 0x10b981; // Green for mirrored
+        break;
+    }
+    
+    // Larger size if selected
+    const size = node.isSelected ? PEN_CONSTANTS.NODE_SIZE + 2 : PEN_CONSTANTS.NODE_SIZE;
+    
+    node.graphics.circle(0, 0, size);
+    node.graphics.fill({ color: nodeColor });
+    node.graphics.stroke({
+      width: node.isSelected ? 2 : PEN_CONSTANTS.NODE_STROKE_WIDTH,
+      color: node.isSelected ? 0xffffff : 0xffffff,
+    });
+  }
+
+  /**
+   * Pick a path segment at the given point
+   */
+  private pickPathSegment(point: Point): number | null {
+    if (!this.currentPath || this.currentPath.nodes.length < 2) return null;
+    
+    for (let i = 0; i < this.currentPath.nodes.length - 1; i++) {
+      const start = this.currentPath.nodes[i].position;
+      const end = this.currentPath.nodes[i + 1].position;
+      
+      // Simple distance to line segment check
+      const distToSegment = this.distanceToLineSegment(point, start, end);
+      if (distToSegment < 8) { // 8px tolerance
+        return i; // Return the index of the starting node of the segment
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Calculate distance from point to line segment
+   */
+  private distanceToLineSegment(point: Point, start: Point, end: Point): number {
+    const A = point.x - start.x;
+    const B = point.y - start.y;
+    const C = end.x - start.x;
+    const D = end.y - start.y;
+
+    const dot = A * C + B * D;
+    const lenSq = C * C + D * D;
+    let param = -1;
+    if (lenSq !== 0) {
+      param = dot / lenSq;
+    }
+
+    let xx, yy;
+    if (param < 0) {
+      xx = start.x;
+      yy = start.y;
+    } else if (param > 1) {
+      xx = end.x;
+      yy = end.y;
+    } else {
+      xx = start.x + param * C;
+      yy = start.y + param * D;
+    }
+
+    const dx = point.x - xx;
+    const dy = point.y - yy;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  /**
+   * Find nearby path endpoint for joining
+   */
+  private findNearbyPathEndpoint(container: Container, point: Point): { position: Point; path: Graphics } | null {
+    try {
+      for (const child of container.children) {
+        const type = (child as any).__toolType;
+        const meta = (child as any).__meta;
+        if (type !== 'pen' || !meta || meta.closed) continue;
+        
+        const nodes = meta.nodes as any[];
+        if (!nodes || nodes.length < 2) continue;
+        
+        // Check first and last node as endpoints
+        const first = new Point(nodes[0].x, nodes[0].y);
+        const last = new Point(nodes[nodes.length - 1].x, nodes[nodes.length - 1].y);
+        
+        if (Math.hypot(point.x - first.x, point.y - first.y) < 12) {
+          return { position: first, path: child as Graphics };
+        }
+        if (Math.hypot(point.x - last.x, point.y - last.y) < 12) {
+          return { position: last, path: child as Graphics };
+        }
+      }
+    } catch {}
+    return null;
+  }
+
+  /**
+   * Show path join indicator
+   */
+  private showPathJoinIndicator(position: Point, container: Container): void {
+    if (!this.pathJoinIndicator) {
+      this.pathJoinIndicator = new Graphics();
+      this.pathJoinIndicator.zIndex = 2000;
+      container.addChild(this.pathJoinIndicator);
+    }
+    this.pathJoinIndicator.clear();
+    this.pathJoinIndicator.circle(0, 0, 8);
+    this.pathJoinIndicator.fill({ color: 0x10b981, alpha: 0.7 });
+    this.pathJoinIndicator.stroke({ width: 2, color: 0x059669, alpha: 0.9 });
+    this.pathJoinIndicator.position.set(position.x, position.y);
+  }
+
+  /**
+   * Remove path join indicator
+   */
+  private removePathJoinIndicator(): void {
+    if (this.pathJoinIndicator && this.pathJoinIndicator.parent) {
+      this.pathJoinIndicator.parent.removeChild(this.pathJoinIndicator);
+      this.pathJoinIndicator = null;
+    }
+  }
+
+  /**
+   * Start bend operation on a path segment
+   */
+  private startBendOperation(segmentIndex: number, point: Point, container: Container): void {
+    if (!this.currentPath) return;
+    
+    // Add a new node at the bend point if the segment is straight
+    const startNode = this.currentPath.nodes[segmentIndex];
+    const endNode = this.currentPath.nodes[segmentIndex + 1];
+    
+    // Calculate the position along the segment
+    const t = this.getParameterAlongSegment(point, startNode.position, endNode.position);
+    const newPos = new Point(
+      startNode.position.x + (endNode.position.x - startNode.position.x) * t,
+      startNode.position.y + (endNode.position.y - startNode.position.y) * t
+    );
+    
+    // Create new node
+    this.insertNodeAtPosition(segmentIndex + 1, newPos, container);
+    
+    // Make it a smooth point with handles
+    const newNode = this.currentPath.nodes[segmentIndex + 1];
+    newNode.pointType = VectorPointType.Smooth;
+    this.createDefaultHandles(newNode, segmentIndex + 1);
+    this.updateHandleGraphics(newNode, container);
+    this.updatePathGraphics();
+  }
+
+  /**
+   * Get parameter t along line segment where point is closest
+   */
+  private getParameterAlongSegment(point: Point, start: Point, end: Point): number {
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const lengthSquared = dx * dx + dy * dy;
+    
+    if (lengthSquared === 0) return 0;
+    
+    const t = ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared;
+    return Math.max(0, Math.min(1, t));
+  }
+
+  /**
+   * Insert a new node at the specified position in the path
+   */
+  private insertNodeAtPosition(index: number, position: Point, container: Container): void {
+    if (!this.currentPath) return;
+    
+    // Create node graphics
+    const nodeGraphics = new Graphics();
+    nodeGraphics.circle(0, 0, PEN_CONSTANTS.NODE_SIZE);
+    nodeGraphics.fill({ color: PEN_CONSTANTS.NODE_COLOR });
+    nodeGraphics.stroke({
+      width: PEN_CONSTANTS.NODE_STROKE_WIDTH,
+      color: 0xffffff,
+    });
+    nodeGraphics.position.set(position.x, position.y);
+    nodeGraphics.eventMode = "static";
+    container.addChild(nodeGraphics);
+
+    // Create node object
+    const node: VectorNode = {
+      position: position.clone(),
+      graphics: nodeGraphics,
+      pointType: VectorPointType.Corner,
+      handleIn: null,
+      handleOut: null,
+      handleInGraphics: null,
+      handleOutGraphics: null,
+      isSelected: false,
+    };
+
+    // Insert at the specified index
+    this.currentPath.nodes.splice(index, 0, node);
+  }
+
+  /**
+   * Remove a node from the path
+   */
+  private removeNodeAtIndex(index: number): void {
+    if (!this.currentPath || index < 0 || index >= this.currentPath.nodes.length) return;
+    if (this.currentPath.nodes.length <= 2) return; // Don't allow removing if only 2 nodes left
+    
+    const node = this.currentPath.nodes[index];
+    
+    // Remove graphics
+    if (node.graphics.parent) {
+      node.graphics.parent.removeChild(node.graphics);
+    }
+    if (node.handleInGraphics) {
+      try {
+        node.handleInGraphics.line.parent?.removeChild(node.handleInGraphics.line);
+        node.handleInGraphics.knob.parent?.removeChild(node.handleInGraphics.knob);
+      } catch {}
+    }
+    if (node.handleOutGraphics) {
+      try {
+        node.handleOutGraphics.line.parent?.removeChild(node.handleOutGraphics.line);
+        node.handleOutGraphics.knob.parent?.removeChild(node.handleOutGraphics.knob);
+      } catch {}
+    }
+    
+    // Remove from array
+    this.currentPath.nodes.splice(index, 1);
+    
+    // Update selected index
+    if (this.selectedNodeIndex === index) {
+      this.selectedNodeIndex = -1;
+    } else if (this.selectedNodeIndex > index) {
+      this.selectedNodeIndex--;
+    }
+    
+    this.updatePathGraphics();
+  }
+
+  /**
+   * Show context menu for node operations
+   */
+  private showNodeContextMenu(event: FederatedPointerEvent, nodeIndex: number): void {
+    this.hideContextMenu();
+    
+    const menu = document.createElement('div');
+    menu.className = 'pen-tool-context-menu';
+    menu.style.cssText = `
+      position: fixed;
+      left: ${event.clientX}px;
+      top: ${event.clientY}px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      z-index: 10000;
+      min-width: 150px;
+    `;
+    
+    const deleteOption = document.createElement('div');
+    deleteOption.textContent = 'Delete Point';
+    deleteOption.style.cssText = 'padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee;';
+    deleteOption.onmouseenter = () => deleteOption.style.backgroundColor = '#f5f5f5';
+    deleteOption.onmouseleave = () => deleteOption.style.backgroundColor = 'white';
+    deleteOption.onclick = () => {
+      this.removeNodeAtIndex(nodeIndex);
+      this.hideContextMenu();
+    };
+    
+    const convertOption = document.createElement('div');
+    convertOption.textContent = 'Convert Point Type';
+    convertOption.style.cssText = 'padding: 8px 12px; cursor: pointer;';
+    if (this.multiSelectMode) {
+      convertOption.style.cssText += 'border-bottom: 1px solid #eee;';
+    }
+    convertOption.onmouseenter = () => convertOption.style.backgroundColor = '#f5f5f5';
+    convertOption.onmouseleave = () => convertOption.style.backgroundColor = 'white';
+    convertOption.onclick = () => {
+      if (this.currentPath) {
+        this.cycleNodeType(this.currentPath.nodes[nodeIndex], nodeIndex, this.currentPath.pathGraphics.parent as Container);
+        this.updatePathGraphics();
+      }
+      this.hideContextMenu();
+    };
+    
+    menu.appendChild(deleteOption);
+    menu.appendChild(convertOption);
+    
+    // Add Boolean operations if multiple paths are selected
+    if (this.multiSelectMode && this.selectedPaths.length >= 2) {
+      const separator = document.createElement('div');
+      separator.style.cssText = 'height: 1px; background: #eee; margin: 4px 0;';
+      menu.appendChild(separator);
+      
+      const booleanOperations = [
+        { name: 'Union', operation: BooleanOperation.Union },
+        { name: 'Subtract', operation: BooleanOperation.Subtract },
+        { name: 'Intersect', operation: BooleanOperation.Intersect },
+        { name: 'Exclude', operation: BooleanOperation.Exclude }
+      ];
+      
+      booleanOperations.forEach((op, index) => {
+        const opOption = document.createElement('div');
+        opOption.textContent = op.name;
+        opOption.style.cssText = 'padding: 8px 12px; cursor: pointer;';
+        if (index < booleanOperations.length - 1) {
+          opOption.style.cssText += 'border-bottom: 1px solid #eee;';
+        }
+        opOption.onmouseenter = () => opOption.style.backgroundColor = '#f5f5f5';
+        opOption.onmouseleave = () => opOption.style.backgroundColor = 'white';
+        opOption.onclick = () => {
+          if (this.currentPath) {
+            this.performBooleanOperation(op.operation, this.currentPath.pathGraphics.parent as Container);
+          }
+          this.hideContextMenu();
+        };
+        menu.appendChild(opOption);
+      });
+    }
+    
+    document.body.appendChild(menu);
+    this.contextMenu = menu;
+    
+    // Close menu when clicking elsewhere
+    setTimeout(() => {
+      document.addEventListener('click', this.hideContextMenu.bind(this), { once: true });
+    }, 0);
+  }
+
+  /**
+   * Show context menu for path segment operations
+   */
+  private showSegmentContextMenu(event: FederatedPointerEvent, segmentIndex: number, point: Point): void {
+    this.hideContextMenu();
+    
+    const menu = document.createElement('div');
+    menu.className = 'pen-tool-context-menu';
+    menu.style.cssText = `
+      position: fixed;
+      left: ${event.clientX}px;
+      top: ${event.clientY}px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      z-index: 10000;
+      min-width: 150px;
+    `;
+    
+    const addOption = document.createElement('div');
+    addOption.textContent = 'Add Point';
+    addOption.style.cssText = 'padding: 8px 12px; cursor: pointer;';
+    addOption.onmouseenter = () => addOption.style.backgroundColor = '#f5f5f5';
+    addOption.onmouseleave = () => addOption.style.backgroundColor = 'white';
+    addOption.onclick = () => {
+      if (this.currentPath) {
+        this.insertNodeAtPosition(segmentIndex + 1, point, this.currentPath.pathGraphics.parent as Container);
+        this.updatePathGraphics();
+      }
+      this.hideContextMenu();
+    };
+    
+    menu.appendChild(addOption);
+    document.body.appendChild(menu);
+    this.contextMenu = menu;
+    
+    // Close menu when clicking elsewhere
+    setTimeout(() => {
+      document.addEventListener('click', this.hideContextMenu.bind(this), { once: true });
+    }, 0);
+  }
+
+  /**
+   * Hide context menu
+   */
+  private hideContextMenu(): void {
+    if (this.contextMenu) {
+      this.contextMenu.remove();
+      this.contextMenu = null;
+    }
+  }
+
+  /**
+   * Update bend mode hover effects
+   */
+  private updateBendModeHover(point: Point, container: Container): void {
+    // Remove existing hover
+    this.removeBendModePreview();
+    
+    // Find pen shapes to bend
+    const penShape = this.findPenShapeAt(container, container.toGlobal(point));
+    if (penShape) {
+      const meta = (penShape as any).__meta;
+      if (meta && meta.nodes) {
+        // Check if hovering over a path segment
+        const localPoint = point;
+        const segmentIndex = this.pickPathSegmentFromMeta(localPoint, meta.nodes);
+        if (segmentIndex !== null) {
+          this.showBendModePreview(point, container);
+        }
+      }
+    }
+  }
+
+  /**
+   * Pick path segment from metadata nodes
+   */
+  private pickPathSegmentFromMeta(point: Point, nodes: any[]): number | null {
+    for (let i = 0; i < nodes.length - 1; i++) {
+      const start = new Point(nodes[i].x, nodes[i].y);
+      const end = new Point(nodes[i + 1].x, nodes[i + 1].y);
+      
+      const distToSegment = this.distanceToLineSegment(point, start, end);
+      if (distToSegment < 8) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Show bend mode preview
+   */
+  private showBendModePreview(point: Point, container: Container): void {
+    if (!this.bendModePreview) {
+      this.bendModePreview = new Graphics();
+      this.bendModePreview.zIndex = 1999;
+      container.addChild(this.bendModePreview);
+    }
+    
+    this.bendModePreview.clear();
+    this.bendModePreview.circle(0, 0, 6);
+    this.bendModePreview.fill({ color: 0x8b5cf6, alpha: 0.7 });
+    this.bendModePreview.stroke({ width: 2, color: 0x7c3aed, alpha: 0.9 });
+    this.bendModePreview.position.set(point.x, point.y);
+  }
+
+  /**
+   * Remove bend mode preview
+   */
+  private removeBendModePreview(): void {
+    if (this.bendModePreview && this.bendModePreview.parent) {
+      this.bendModePreview.parent.removeChild(this.bendModePreview);
+      this.bendModePreview = null;
+    }
+  }
+
+  /**
+   * Handle multiple path selection for Boolean operations
+   */
+  private handleMultiplePathSelection(event: FederatedPointerEvent, container: Container): void {
+    const penShape = this.findPenShapeAt(container, event.global);
+    if (penShape && (event as any).ctrlKey) {
+      // Add to selection
+      if (!this.selectedPaths.includes(penShape)) {
+        this.selectedPaths.push(penShape);
+        this.highlightPath(penShape, true);
+      } else {
+        // Remove from selection
+        this.selectedPaths = this.selectedPaths.filter(p => p !== penShape);
+        this.highlightPath(penShape, false);
+      }
+      this.multiSelectMode = this.selectedPaths.length > 1;
+    } else if (!event.ctrlKey) {
+      // Clear selection
+      this.clearPathSelection();
+    }
+  }
+
+  /**
+   * Highlight path for selection
+   */
+  private highlightPath(path: Graphics, highlight: boolean): void {
+    if (highlight) {
+      // Add selection glow
+      path.filters = []; // Simple approach - in a full implementation, add glow filter
+      path.alpha = 0.8;
+    } else {
+      // Remove selection glow
+      path.filters = [];
+      path.alpha = 1.0;
+    }
+  }
+
+  /**
+   * Clear path selection
+   */
+  private clearPathSelection(): void {
+    this.selectedPaths.forEach(path => this.highlightPath(path, false));
+    this.selectedPaths = [];
+    this.multiSelectMode = false;
+  }
+
+  /**
+   * Perform Boolean operation on selected paths
+   */
+  private performBooleanOperation(operation: BooleanOperation, container: Container): void {
+    if (this.selectedPaths.length < 2) {
+      console.log('✏️ PEN: Need at least 2 paths selected for Boolean operations');
+      return;
+    }
+
+    const pathA = this.extractPathData(this.selectedPaths[0]);
+    const pathB = this.extractPathData(this.selectedPaths[1]);
+
+    if (!pathA || !pathB) {
+      console.log('✏️ PEN: Could not extract path data for Boolean operation');
+      return;
+    }
+
+    const result = PathBooleanOperations.performOperation(pathA, pathB, operation);
+    if (result) {
+      // Create new graphics from result
+      const newGraphics = PathBooleanOperations.createGraphicsFromPath(result);
+      (newGraphics as any).__toolType = 'pen';
+      (newGraphics as any).__meta = {
+        kind: 'pen',
+        closed: result.closed,
+        nodes: result.nodes,
+        size: result.size || 2,
+        strokeColor: result.strokeColor || '#1a1a1a',
+        fillColor: result.fillColor || '#f8fafc',
+      };
+
+      // Remove original paths
+      this.selectedPaths.forEach(path => {
+        if (path.parent) {
+          path.parent.removeChild(path);
+        }
+      });
+
+      // Add new path
+      container.addChild(newGraphics);
+      
+      // Clear selection
+      this.clearPathSelection();
+
+      console.log(`✏️ PEN: Performed ${operation} operation`);
+    }
+  }
+
+  /**
+   * Extract path data from graphics object
+   */
+  private extractPathData(graphics: Graphics): PathData | null {
+    const meta = (graphics as any).__meta;
+    if (!meta || !meta.nodes) return null;
+
+    return {
+      nodes: meta.nodes,
+      closed: meta.closed || false,
+      strokeColor: meta.strokeColor,
+      fillColor: meta.fillColor,
+      size: meta.size
+    };
+  }
+
+  // ===== END ENHANCED FEATURES =====
 
  // Get available colors for UI
  static getAvailableColors(): string[] {

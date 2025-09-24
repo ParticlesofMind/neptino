@@ -14,6 +14,7 @@ interface ToolSettings {
         strokeColor: string;
         fillColor: string;
         strokeType?: string;
+        mode?: 'pen' | 'bend';
     };
     text: {
         fontFamily: string;

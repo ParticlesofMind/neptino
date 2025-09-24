@@ -17,6 +17,9 @@ export interface ToolSettings {
  pen: {
  color: string;
  size: number;
+ strokeColor?: string;
+ fillColor?: string;
+ mode?: 'pen' | 'bend';
  };
  text: {
  fontFamily: string;
