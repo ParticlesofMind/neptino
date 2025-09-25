@@ -78,7 +78,7 @@ test.describe('Text Tool - Focused Fixes v2', () => {
     }
   });
 
-  test('should allow creation with infinite drawing boundaries', async ({ page }) => {
+  test('should allow creation within canvas boundaries', async ({ page }) => {
     const bounds = await page.evaluate(() => {
       const bounds = window.canvasAPI?.getContentBounds();
       return bounds ? { left: bounds.left, top: bounds.top, width: bounds.width, height: bounds.height } : null;
@@ -87,7 +87,7 @@ test.describe('Text Tool - Focused Fixes v2', () => {
     expect(bounds).not.toBeNull();
     
     if (bounds) {
-      // Since boundary protection allows infinite drawing, create text area anywhere
+      // Create text area within canvas bounds
       const centerX = bounds.left + bounds.width / 2;
       const centerY = bounds.top + bounds.height / 2;
       

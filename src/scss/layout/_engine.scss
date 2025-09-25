@@ -6,7 +6,7 @@
 
 .engine {
     display: grid;
-    grid-template-columns: 0.5fr 2.5fr 7fr 1.75fr; // Keep 4 columns but expand tools area
+    grid-template-columns: 0.5fr 2.5fr 7fr 2fr; // Keep 4 columns but expand tools area
     grid-template-rows: 0.075fr 1fr; // Increased to 90px to ensure labels have adequate space
     height: calc(100vh - 7vh); // Constrain to available viewport space minus header
     width: 100%;
