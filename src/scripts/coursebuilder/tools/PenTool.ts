@@ -748,6 +748,17 @@ export class PenTool extends BaseTool {
       };
     } catch {}
     container.addChild(finalShape);
+    
+    // 🚨 CRITICAL: Register with DisplayObjectManager so it shows in layers panel
+    if (this.displayManager) {
+      try {
+        this.displayManager.add(finalShape, container);
+        console.log('✏️ PEN: Registered closed shape with DisplayObjectManager');
+      } catch (error) {
+        console.warn('Failed to register pen shape with DisplayObjectManager:', error);
+      }
+    }
+    
     // If editing, swap shapes and push history to allow undo back to original
     if (this.originalShapeForEdit) {
       const orig = this.originalShapeForEdit;
@@ -799,6 +810,16 @@ export class PenTool extends BaseTool {
     };
     (this.currentPath.pathGraphics as any).__toolType = 'pen';
   } catch {}
+
+  // 🚨 CRITICAL: Register with DisplayObjectManager so it shows in layers panel
+  if (this.displayManager && this.currentPath.pathGraphics) {
+    try {
+      this.displayManager.add(this.currentPath.pathGraphics, this.currentPath.pathGraphics.parent || undefined);
+      console.log('✏️ PEN: Registered open path with DisplayObjectManager');
+    } catch (error) {
+      console.warn('Failed to register pen path with DisplayObjectManager:', error);
+    }
+  }
 
  console.log(
  `✏️ PEN: Completed open path with ${this.currentPath.nodes.length} nodes - Stroke: ${strokeColorToUse}`,

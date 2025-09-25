@@ -13,6 +13,7 @@ import {
 } from "./SharedResources";
 import { BoundaryUtils } from "./BoundaryUtils";
 import { createHighQualityGraphics, alignToPixel } from "../utils/graphicsQuality";
+import { historyManager } from "../canvas/HistoryManager.js";
 
 interface BrushSettings {
  color: string;
@@ -199,6 +200,70 @@ export class BrushTool extends BaseTool {
           color: this.settings.color,
         };
       } catch {}
+
+      // 🚨 CRITICAL: Register with DisplayObjectManager so it shows in layers panel
+      if (this.displayManager) {
+        try {
+          // Check if already registered (object was added to container in onPointerDown)
+          const existingId = this.displayManager.getIdForObject(this.currentStroke);
+          if (!existingId) {
+            // Register the completed stroke
+            this.displayManager.add(this.currentStroke, this.currentStroke.parent || undefined);
+            console.log('🖍️ BRUSH: Registered completed stroke with DisplayObjectManager');
+          } else {
+            console.log('🖍️ BRUSH: Stroke already registered with DisplayObjectManager');
+          }
+        } catch (error) {
+          console.warn('Failed to register brush stroke with DisplayObjectManager:', error);
+        }
+      }
+
+      // Add history entry for brush stroke creation
+      try {
+        const strokeRef = this.currentStroke;
+        const parentContainer = strokeRef.parent as Container;
+        const index = parentContainer ? parentContainer.getChildIndex(strokeRef) : -1;
+        
+        historyManager.push({
+          label: 'Brush Stroke',
+          undo: () => {
+            try {
+              // Remove from display
+              if (strokeRef.parent) {
+                strokeRef.parent.removeChild(strokeRef);
+              }
+              
+              // Remove from DisplayObjectManager
+              if (this.displayManager && (this.displayManager as any).remove) {
+                (this.displayManager as any).remove(strokeRef);
+              }
+            } catch (error) {
+              console.warn('Failed to undo brush stroke:', error);
+            }
+          },
+          redo: () => {
+            try {
+              // Re-add to display
+              if (parentContainer) {
+                if (index >= 0 && index <= parentContainer.children.length) {
+                  parentContainer.addChildAt(strokeRef, Math.min(index, parentContainer.children.length));
+                } else {
+                  parentContainer.addChild(strokeRef);
+                }
+              }
+              
+              // Re-register with DisplayObjectManager
+              if (this.displayManager && (this.displayManager as any).add) {
+                (this.displayManager as any).add(strokeRef, parentContainer);
+              }
+            } catch (error) {
+              console.warn('Failed to redo brush stroke:', error);
+            }
+          }
+        });
+      } catch (error) {
+        console.warn('Failed to add brush stroke to history:', error);
+      }
     }
   }
 

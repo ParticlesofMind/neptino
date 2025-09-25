@@ -39,6 +39,16 @@ export class CanvasEvents {
   }
 
   /**
+   * Check if spacebar panning is currently active (prevents tool events)
+   */
+  private isSpacebarPanningActive(): boolean {
+    const perspectiveManager = (window as any).perspectiveManager;
+    return perspectiveManager && typeof perspectiveManager.isSpacebarPanningActive === 'function' 
+           ? perspectiveManager.isSpacebarPanningActive() 
+           : false;
+  }
+
+  /**
    * Set up all pointer event listeners
    */
   public initialize(): void {
@@ -77,6 +87,15 @@ export class CanvasEvents {
   private handlePointerDown(event: FederatedPointerEvent): void {
     if (!this.isEnabled) return;
 
+    // 🚫 SPACEBAR PANNING: Block tool events when spacebar is pressed
+    if (this.isSpacebarPanningActive()) {
+      console.log('🖱️ Canvas pointer DOWN: BLOCKED (spacebar panning active)');
+      this.pointerBlocked = true;
+      this.toolHasPointerCapture = false;
+      this.updateCursor();
+      return;
+    }
+
     console.log('🖱️ Canvas pointer DOWN:', {
       global: { x: Math.round(event.global.x), y: Math.round(event.global.y) },
       local: { x: Math.round(event.getLocalPosition(this.drawingLayer).x), y: Math.round(event.getLocalPosition(this.drawingLayer).y) },
@@ -103,6 +122,11 @@ export class CanvasEvents {
    */
   private handlePointerMove(event: FederatedPointerEvent): void {
     if (!this.isEnabled) return;
+
+    // 🚫 SPACEBAR PANNING: Block tool events when spacebar is pressed
+    if (this.isSpacebarPanningActive()) {
+      return;
+    }
 
     if (this.pointerBlocked) {
       return;
@@ -137,6 +161,13 @@ export class CanvasEvents {
    */
   private handlePointerUp(event: FederatedPointerEvent): void {
     if (!this.isEnabled) return;
+
+    // 🚫 SPACEBAR PANNING: Block tool events when spacebar is pressed
+    if (this.isSpacebarPanningActive()) {
+      this.pointerBlocked = false;
+      this.toolHasPointerCapture = false;
+      return;
+    }
 
     const shouldRoute = this.toolHasPointerCapture || this.shouldRouteToToolManager(event);
 

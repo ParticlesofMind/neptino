@@ -16,7 +16,7 @@ export interface ShapesSettings {
         | "line"
         | "arrow"
         | "polygon";
-    cornerRadius?: number; // For rounded rectangles
+
     sides?: number; // For polygons
 }
 

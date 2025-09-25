@@ -18,6 +18,7 @@ import { TextInputHandler } from "./TextInputHandler.js";
 import { CreationGuide } from "./CreationGuide.js";
 import { SizeLabel } from "./SizeLabel.js";
 import { PROFESSIONAL_COLORS, TEXT_SIZES, FONT_FAMILIES } from "../SharedResources.js";
+import { historyManager } from "../../canvas/HistoryManager.js";
 
 export class TextTool extends BaseTool {
   private state: TextInteractionState = {
@@ -529,6 +530,81 @@ export class TextTool extends BaseTool {
       };
       const textArea = new TextArea(config, container);
       this.textAreas.push(textArea);
+      
+      // 🚨 CRITICAL: Register with DisplayObjectManager so it shows in layers panel
+      if (this.displayManager) {
+        try {
+          this.displayManager.add(textArea.pixiContainer, container);
+          console.log('📝 TEXT: Registered text area with DisplayObjectManager');
+        } catch (error) {
+          console.warn('Failed to register text area with DisplayObjectManager:', error);
+        }
+      }
+      
+      // Add history entry for text area creation
+      try {
+        const textAreaRef = textArea;
+        const parentContainer = container;
+        const index = parentContainer.getChildIndex(textArea.pixiContainer);
+        
+        historyManager.push({
+          label: 'Create Text Area',
+          undo: () => {
+            try {
+              // Remove from text areas list
+              const textAreaIndex = this.textAreas.indexOf(textAreaRef);
+              if (textAreaIndex !== -1) {
+                this.textAreas.splice(textAreaIndex, 1);
+              }
+              
+              // Deactivate if this was the active text area
+              if (this.activeTextArea === textAreaRef) {
+                this.activeTextArea = null;
+                this.inputHandler?.setActiveTextArea(null);
+              }
+              
+              // Remove from display
+              if (textAreaRef.pixiContainer.parent) {
+                textAreaRef.pixiContainer.parent.removeChild(textAreaRef.pixiContainer);
+              }
+              
+              // Remove from DisplayObjectManager
+              if (this.displayManager && (this.displayManager as any).remove) {
+                (this.displayManager as any).remove(textAreaRef.pixiContainer);
+              }
+              
+              textAreaRef.destroy();
+            } catch (error) {
+              console.warn('Failed to undo text area creation:', error);
+            }
+          },
+          redo: () => {
+            try {
+              // Re-add to text areas list
+              if (!this.textAreas.includes(textAreaRef)) {
+                this.textAreas.push(textAreaRef);
+              }
+              
+              // Re-add to display
+              if (index >= 0 && index <= parentContainer.children.length) {
+                parentContainer.addChildAt(textAreaRef.pixiContainer, Math.min(index, parentContainer.children.length));
+              } else {
+                parentContainer.addChild(textAreaRef.pixiContainer);
+              }
+              
+              // Re-register with DisplayObjectManager
+              if (this.displayManager && (this.displayManager as any).add) {
+                (this.displayManager as any).add(textAreaRef.pixiContainer, parentContainer);
+              }
+            } catch (error) {
+              console.warn('Failed to redo text area creation:', error);
+            }
+          }
+        });
+      } catch (error) {
+        console.warn('Failed to add text area creation to history:', error);
+      }
+      
       this.activateTextArea(textArea);
       
       // Hide drag preview and size label

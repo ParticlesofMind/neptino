@@ -65,14 +65,18 @@ const isDoubleClick = clickedObject &&
 
   public getObjectsAtPoint(point: Point, container: Container): any[] {
     const hits: any[] = [];
+    const globalPoint = container.toGlobal(point);
+    
     const visit = (node: any) => {
       if (!node) return;
       // Skip entire scene containers and their subtree; scenes are not selectable targets
       if ((node as any).__sceneRef) return;
       try {
         if (this.isSelectableObject(node)) {
-          const b = node.getBounds();
-          if (point.x >= b.x && point.x <= b.x + b.width && point.y >= b.y && point.y <= b.y + b.height) {
+          // Use global bounds and global point for consistent hit testing
+          const bounds = node.getBounds();
+          if (globalPoint.x >= bounds.x && globalPoint.x <= bounds.x + bounds.width && 
+              globalPoint.y >= bounds.y && globalPoint.y <= bounds.y + bounds.height) {
             hits.push(node);
           }
         }

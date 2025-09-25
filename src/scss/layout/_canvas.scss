@@ -5,13 +5,13 @@
 // Layout and positioning is handled by _engine.scss
 
 .canvas, #pixi-canvas {
-  // Base canvas element (PIXI canvas) - make it clearly visible
-  border: 2px solid black;
-  border-radius: 8px; // Gentle rounded corners
+  // Base canvas element (PIXI canvas) - clean, borderless design
+  border: none;
+  border-radius: 0;
   outline: none;
   display: block;
   background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: none;
   
   // Default cursor for drawing
   cursor: crosshair;

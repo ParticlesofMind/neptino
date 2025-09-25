@@ -47,7 +47,7 @@ export class SelectionStyling {
     const x = meta.x ?? meta.startX ?? 0; const y = meta.y ?? meta.startY ?? 0; const w = meta.width ?? Math.abs((meta.currentX ?? 0) - (meta.startX ?? 0)); const h = meta.height ?? Math.abs((meta.currentY ?? 0) - (meta.startY ?? 0));
     gfx.clear();
     switch (meta.shapeType) {
-      case 'rectangle': { const r = meta.cornerRadius ?? 0; if (r > 0) gfx.roundRect(x, y, w, h, r); else gfx.rect(x, y, w, h); break; }
+      case 'rectangle': { gfx.rect(x, y, w, h); break; }
       case 'circle': { const cx = x + w / 2; const cy = y + h / 2; const radius = Math.max(Math.abs(w), Math.abs(h)) / 2; gfx.ellipse(cx, cy, radius, radius); break; }
       case 'ellipse': { const cx = x + w / 2; const cy = y + h / 2; gfx.ellipse(cx, cy, Math.abs(w / 2), Math.abs(h / 2)); break; }
       case 'triangle': { const topX = x + w / 2, topY = y; const blX = x, blY = y + h; const brX = x + w, brY = y + h; gfx.moveTo(topX, topY).lineTo(blX, blY).lineTo(brX, brY).closePath(); break; }

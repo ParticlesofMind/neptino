@@ -889,7 +889,7 @@ export class ToolStateManager {
         };
         
         const targetId = mapTitleToId(navTitle);
-        document.querySelectorAll('.engine__preview .preview__content').forEach(el => {
+        document.querySelectorAll('.engine__preview.preview__content').forEach(el => {
             el.classList.remove('preview__content--active');
             (el as HTMLElement).style.display = 'none';
         });

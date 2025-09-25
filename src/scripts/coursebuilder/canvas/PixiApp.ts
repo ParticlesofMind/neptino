@@ -66,6 +66,17 @@ export class PixiApp {
         ...finalConfig,
         preference: 'webgl', // Prefer WebGL for better performance and quality
         hello: false, // Disable PIXI hello message
+        // PIXI v8 enhanced settings
+        powerPreference: 'high-performance', // Use dedicated GPU if available
+        preserveDrawingBuffer: false, // Better performance for non-screenshot apps
+      });
+
+      // Enable v8 performance features
+      this.app.renderer.runners.contextChange.add({
+        contextChange: () => {
+          // Enable enhanced blending modes
+          (this.app!.renderer as any).state.blendModes = true;
+        }
       });
 
       return this.app;

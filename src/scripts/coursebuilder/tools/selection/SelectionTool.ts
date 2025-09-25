@@ -8,7 +8,6 @@ import { SmartGuides } from './SmartGuides';
 import { SelectionMarquee } from './SelectionMarquee';
 import { TransformController } from './TransformController';
 import { SelectionGrouping } from './SelectionGrouping';
-import { RoundCorners, RoundingState } from './RoundCorners';
 import { SelectionStyling } from './SelectionStyling';
 import { animationState } from '../../animation/AnimationState';
 import { determineSelectionType, moveObjectByContainerDelta } from './SelectionUtils';
@@ -34,8 +33,6 @@ export class SelectionTool extends BaseTool {
   private dragStart = new Point();
   private mode: Mode = 'idle';
   private lastPointerGlobal: Point | null = null;
-  // Rounding (corner curvature) state
-  private roundingState: RoundingState = RoundCorners.createRoundingState();
   // Sticky snap state during drag so alignment feels "magnetic"
   private snapLock: { x?: number; y?: number; targetX?: 'left' | 'center' | 'right'; targetY?: 'top' | 'center' | 'bottom' } = {};
 
@@ -80,6 +77,8 @@ export class SelectionTool extends BaseTool {
       }
     );
 
+
+
     // If it was a double-click on text, stop processing here
     if (textClickResult.isDoubleClick && this.click.isTextObject(textClickResult.clickedObject)) {
       return;
@@ -88,54 +87,6 @@ export class SelectionTool extends BaseTool {
     const group = this.overlay.getGroup();
     const handle = this.overlay.findHandleAtPoint(p, true);
     if (handle && group) {
-      if (handle.type === 'rounding') {
-        // Corner rounding editing using new utility
-        const selectedObject = (this.selected && this.selected.length === 1) ? this.selected[0] : null;
-        
-        // DEBUG: Log object state before corner rounding
-        if (selectedObject) {
-          console.log('📍 Object position BEFORE rounding:', {
-            x: selectedObject.x,
-            y: selectedObject.y,
-            bounds: {
-              x: selectedObject.getBounds().x,
-              y: selectedObject.getBounds().y,
-              width: selectedObject.getBounds().width,
-              height: selectedObject.getBounds().height
-            }
-          });
-          console.log('🎯 Handle info:', {
-            type: handle.type,
-            position: handle.position
-          });
-        }
-        
-        if (selectedObject && RoundCorners.supportsRounding(selectedObject)) {
-          RoundCorners.startRounding(
-            this.roundingState, 
-            handle.position, 
-            selectedObject, 
-            handle.position
-          );
-          
-          // DEBUG: Log object state immediately after startRounding
-          console.log('📍 Object position AFTER startRounding:', {
-            x: selectedObject.x,
-            y: selectedObject.y,
-            bounds: {
-              x: selectedObject.getBounds().x,
-              y: selectedObject.getBounds().y,
-              width: selectedObject.getBounds().width,
-              height: selectedObject.getBounds().height
-            }
-          });
-          
-          this.isDragging = true; 
-          this.mode = 'drag'; 
-          this.cursor = 'pointer';
-        }
-        return;
-      }
       this.mode = handle.type === 'rotation' ? 'rotate' : 'scale'; this.cursor = this.cursorForHandle(handle); this.isDragging = true;
       if (handle.type === 'rotation') {
         const b = group.bounds.clone(); const cx = b.x + b.width * 0.5; const cy = b.y + b.height * 0.5; const dx0 = p.x - cx; const dy0 = p.y - cy; (this as any)._rotateStartRef = Math.atan2(dy0, dx0); (this as any)._rotateBase = b; (this as any)._rotateCenter = new Point(cx, cy);
@@ -164,37 +115,25 @@ export class SelectionTool extends BaseTool {
       this.emitSelectionContext();
       return;
     }
+    
+    // Only start marquee selection if no object was clicked
     this.marquee.startMarquee(p, container, !!event.shiftKey);
   }
 
   public onPointerMove(event: FederatedPointerEvent, container: Container): void {
     if (!this.isActive) return; const p = container.toLocal(event.global); this.lastPointerGlobal = new Point(event.global.x, event.global.y);
-    // Corner rounding interaction using new utility
-    if (this.roundingState.active) {
-      // DEBUG: Log object state before update
-      console.log('🔄 CORNER ROUNDING MOVE - Object position before update:', {
-        x: this.roundingState.object?.x,
-        y: this.roundingState.object?.y
-      });
-      
-      const updated = RoundCorners.updateCornerRadius(this.roundingState, event.global);
-      if (updated && this.roundingState.object) {
-        // Update the overlay handles to follow the new geometry
-        this.overlay.refreshBoundsOnly(container);
-        
-        // DEBUG: Log after overlay refresh
-        console.log('📍 Object position AFTER update and overlay refresh:', {
-          x: this.roundingState.object.x,
-          y: this.roundingState.object.y
-        });
-      }
-      return;
-    }
     if ((this.transformer as any).isActive && (this.transformer as any).isActive()) {
       this.transformer.update(p, { shiftKey: event.shiftKey, altKey: (event as any).altKey, ctrlKey: (event as any).ctrlKey || (event as any).metaKey });
       const mode = this.mode; const group = this.overlay.getGroup();
       if (mode === 'rotate' && (this as any)._rotateCenter && (this as any)._rotateBase && group) {
-        const cx = (this as any)._rotateCenter.x; const cy = (this as any)._rotateCenter.y; const dx = p.x - cx; const dy = p.y - cy; const currentAngle = Math.atan2(dy, dx); const delta = currentAngle - (this as any)._rotateStartRef; this.overlay.setRotationPreview(new Point(cx, cy), (this as any)._rotateBase, delta);
+        const cx = (this as any)._rotateCenter.x; const cy = (this as any)._rotateCenter.y; const dx = p.x - cx; const dy = p.y - cy; const currentAngle = Math.atan2(dy, dx); 
+        let delta = currentAngle - (this as any)._rotateStartRef; 
+        // Apply same snapping logic as TransformController when shift is held
+        if (event.shiftKey) {
+          const rotationSnapRad = 15 * Math.PI / 180; // 15 degrees in radians
+          delta = Math.round(delta / rotationSnapRad) * rotationSnapRad;
+        }
+        this.overlay.setRotationPreview(new Point(cx, cy), (this as any)._rotateBase, delta);
       } else { this.overlay.refreshBoundsOnly(container); const b = this.overlay.getGroup()?.bounds; if (b) try { this.guides.update(container, this.selected, b); } catch {} }
       return;
     }
@@ -303,27 +242,6 @@ export class SelectionTool extends BaseTool {
 
   public onPointerUp(event: FederatedPointerEvent, container: Container): void {
     if (!this.isActive) return; const p = container.toLocal(event.global);
-    
-    if (this.roundingState.active) { 
-      // DEBUG: Log object state before stopping corner rounding
-      const currentObject = this.roundingState.object; // Store reference before stopRounding clears it
-      if (currentObject) {
-        console.log('📍 Object position BEFORE stopRounding:', {
-          x: currentObject.x,
-          y: currentObject.y
-        });
-      }
-      
-      RoundCorners.stopRounding(this.roundingState);
-      
-      // DEBUG: Log object state after stopping corner rounding
-      if (currentObject) {
-        console.log('📍 Object position AFTER stopRounding:', {
-          x: currentObject.x,
-          y: currentObject.y
-        });
-      }
-    }
     if ((this.transformer as any).isActive && (this.transformer as any).isActive()) { this.transformer.end(); this.overlay.refreshBoundsOnly(container); this.isDragging = false; this.mode = 'idle'; this.cursor = 'default'; this.guides.clear(); return; }
     if (this.isDraggingGroup) { this.isDraggingGroup = false; }
     if (this.marquee.isActive()) { this.selected = this.marquee.finish(p, container, this.click, this.selected); this.overlay.refresh(this.selected, container); }
@@ -366,14 +284,51 @@ export class SelectionTool extends BaseTool {
     if ((key === 'Backspace' || key === 'Delete') && this.selected.length > 0) {
       // Capture object refs and placement for history
       const removed = this.selected.map(obj => ({ obj, parent: obj.parent as Container | null, index: obj.parent ? obj.parent.getChildIndex(obj) : -1 }));
-      // Remove without destroying so we can undo/redo cleanly
-      removed.forEach(({ obj }) => { try { if (obj.parent) obj.parent.removeChild(obj); } catch {} });
+      
+      // Remove from DisplayObjectManager first (this will handle parent removal and fire events)
+      removed.forEach(({ obj }) => { 
+        try { 
+          if (this.displayManager && (this.displayManager as any).remove) {
+            // Use DisplayObjectManager.remove() which handles parent removal and events
+            (this.displayManager as any).remove(obj);
+          } else if (obj.parent) {
+            // Fallback to direct removal if DisplayObjectManager unavailable
+            obj.parent.removeChild(obj); 
+          }
+        } catch {} 
+      });
+      
       this.selected = []; this.overlay.clear();
       try {
         historyManager.push({
           label: 'Delete',
-          undo: () => { removed.forEach(({ obj, parent, index }) => { if (!parent) return; try { if (index >= 0 && index <= parent.children.length) parent.addChildAt(obj, Math.min(index, parent.children.length)); else parent.addChild(obj); } catch {} }); },
-          redo: () => { removed.forEach(({ obj }) => { try { if (obj.parent) obj.parent.removeChild(obj); } catch {} }); },
+          undo: () => { 
+            removed.forEach(({ obj, parent, index }) => { 
+              if (!parent) return; 
+              try { 
+                if (index >= 0 && index <= parent.children.length) {
+                  parent.addChildAt(obj, Math.min(index, parent.children.length)); 
+                } else {
+                  parent.addChild(obj); 
+                }
+                // Re-register with DisplayObjectManager on undo
+                if (this.displayManager && (this.displayManager as any).add) {
+                  (this.displayManager as any).add(obj, parent);
+                }
+              } catch {} 
+            }); 
+          },
+          redo: () => { 
+            removed.forEach(({ obj }) => { 
+              try { 
+                if (this.displayManager && (this.displayManager as any).remove) {
+                  (this.displayManager as any).remove(obj);
+                } else if (obj.parent) {
+                  obj.parent.removeChild(obj); 
+                }
+              } catch {} 
+            }); 
+          },
         });
       } catch {}
       event.preventDefault(); return; }
@@ -454,8 +409,20 @@ export class SelectionTool extends BaseTool {
   }
 
   private cursorForHandle(h: any): string {
-    if (h.type === 'rotation') return 'crosshair';
-    if (h.type === 'rounding') return 'pointer';
+    if (h.type === 'rotation') {
+      // Return directional rotation cursors using Lucide icons based on your mapping:
+      // corner-down-left → bottom right corner (br)
+      // corner-down-right → bottom left corner (bl)  
+      // corner-up-left → top right corner (tr)
+      // corner-up-right → top left corner (tl)
+      switch (h.position) {
+        case 'tl': return 'url("/src/assets/icons/corner-up-right-icon.svg") 12 12, crosshair';  // top-left corner
+        case 'tr': return 'url("/src/assets/icons/corner-up-left-icon.svg") 12 12, crosshair';   // top-right corner  
+        case 'bl': return 'url("/src/assets/icons/corner-down-right-icon.svg") 12 12, crosshair'; // bottom-left corner
+        case 'br': return 'url("/src/assets/icons/corner-down-left-icon.svg") 12 12, crosshair';  // bottom-right corner
+        default: return 'crosshair'; // fallback for center rotation handles
+      }
+    }
     if (h.type === 'edge') { switch (h.position) { case 't': case 'b': return 'ns-resize'; case 'l': case 'r': return 'ew-resize'; } }
     switch (h.position) { case 'tl': case 'br': return 'nwse-resize'; case 'tr': case 'bl': return 'nesw-resize'; default: return 'move'; }
   }

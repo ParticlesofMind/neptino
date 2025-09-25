@@ -98,6 +98,7 @@ export class DisplayObjectManager {
    */
   public remove(id: string | any): boolean {
     let displayObject: any;
+    let actualId: string | null = null;
     
     // Handle both ID and direct object removal
     if (typeof id === 'string') {
@@ -106,12 +107,14 @@ export class DisplayObjectManager {
         console.warn('⚠️ Cannot remove - display object not found:', id);
         return false;
       }
+      actualId = id;
       this.allObjects.delete(id);
     } else {
       displayObject = id; // Direct object passed
       // Remove from map by finding the ID
       for (const [mapId, obj] of this.allObjects) {
         if (obj === displayObject) {
+          actualId = mapId;
           this.allObjects.delete(mapId);
           break;
         }
@@ -137,8 +140,8 @@ export class DisplayObjectManager {
       try { displayObject.destroy(); } catch {}
     }
     
-    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('🗑️ Removed display object:', { id: typeof id === 'string' ? id : 'direct', type: displayObject.constructor.name }); } catch {}
-    try { document.dispatchEvent(new CustomEvent('displayObject:removed', { detail: { id } })); } catch {}
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('🗑️ Removed display object:', { id: actualId || 'unknown', type: displayObject.constructor.name }); } catch {}
+    try { document.dispatchEvent(new CustomEvent('displayObject:removed', { detail: { id: actualId, object: displayObject } })); } catch {}
     
     return true;
   }

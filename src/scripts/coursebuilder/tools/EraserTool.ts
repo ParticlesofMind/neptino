@@ -3,9 +3,64 @@
  * Precision brush-based deletion with professional visual feedback
  */
 
-import { FederatedPointerEvent, Container, Graphics, Point } from "pixi.js";
+import { FederatedPointerEvent, Container, Grap console.log(
+ `🗑️ ERASER: Removing object (${child.constructor.name}) at bounds (${Math.round(bounds.x)}, ${Math.round(bounds.y)}, ${Math.round(bounds.width)}x${Math.round(bounds.height)})`,
+ );
+ 
+ // Store data for history before removal
+ const childRef = child;
+ const parentContainer = container;
+ const index = parentContainer.getChildIndex(child);
+ 
+ // Remove the object
+ if (this.displayManager && (this.displayManager as any).remove) {
+   (this.displayManager as any).remove(child);
+ } else {
+   container.removeChild(child);
+   child.destroy();
+ }
+ 
+ // Add history entry for eraser action
+ try {
+   historyManager.push({
+     label: 'Erase Object',
+     undo: () => {
+       try {
+         // Re-add to display
+         if (index >= 0 && index <= parentContainer.children.length) {
+           parentContainer.addChildAt(childRef, Math.min(index, parentContainer.children.length));
+         } else {
+           parentContainer.addChild(childRef);
+         }
+         
+         // Re-register with DisplayObjectManager
+         if (this.displayManager && (this.displayManager as any).add) {
+           (this.displayManager as any).add(childRef, parentContainer);
+         }
+       } catch (error) {
+         console.warn('Failed to undo eraser action:', error);
+       }
+     },
+     redo: () => {
+       try {
+         // Remove again
+         if (this.displayManager && (this.displayManager as any).remove) {
+           (this.displayManager as any).remove(childRef);
+         } else if (childRef.parent) {
+           childRef.parent.removeChild(childRef);
+           childRef.destroy();
+         }
+       } catch (error) {
+         console.warn('Failed to redo eraser action:', error);
+       }
+     }
+   });
+ } catch (error) {
+   console.warn('Failed to add eraser action to history:', error);
+ }t } from "pixi.js";
 import { BaseTool } from "./ToolInterface";
 import { STROKE_SIZES } from "./SharedResources";
+import { historyManager } from "../canvas/HistoryManager.js";
 
 interface EraserSettings {
  size: number;
@@ -139,8 +194,13 @@ export class EraserTool extends BaseTool {
  console.log(
  `�️ ERASER: Removing object (${child.constructor.name}) at bounds (${Math.round(bounds.x)}, ${Math.round(bounds.y)}, ${Math.round(bounds.width)}x${Math.round(bounds.height)})`,
  );
- container.removeChild(child);
- child.destroy();
+ // Use DisplayObjectManager.remove() if available for proper layer panel sync
+ if (this.displayManager && (this.displayManager as any).remove) {
+   (this.displayManager as any).remove(child);
+ } else {
+   container.removeChild(child);
+   child.destroy();
+ }
  }
  }
  }

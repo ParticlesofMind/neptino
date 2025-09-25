@@ -19,6 +19,7 @@ import {
     StrokeStyle, 
     FillStyle 
 } from "./types";
+import { historyManager } from "../../canvas/HistoryManager.js";
 
 export class ShapesTool extends BaseTool {
     private isDrawing: boolean = false;
@@ -48,7 +49,7 @@ export class ShapesTool extends BaseTool {
             fillColor: PROFESSIONAL_COLORS[13], // Light gray fill
             fillEnabled: false,
             shapeType: "rectangle",
-            cornerRadius: 0,
+
             sides: 6, // For hexagon default
         };
 
@@ -188,6 +189,55 @@ export class ShapesTool extends BaseTool {
                 }
             }
 
+            // Add history entry for shape creation
+            if (this.currentShape) {
+                try {
+                    const shapeRef = this.currentShape;
+                    const parentContainer = shapeRef.parent as Container;
+                    const index = parentContainer ? parentContainer.getChildIndex(shapeRef) : -1;
+                    
+                    historyManager.push({
+                        label: `Create ${this.settings.shapeType.charAt(0).toUpperCase() + this.settings.shapeType.slice(1)}`,
+                        undo: () => {
+                            try {
+                                // Remove from display
+                                if (shapeRef.parent) {
+                                    shapeRef.parent.removeChild(shapeRef);
+                                }
+                                
+                                // Remove from DisplayObjectManager
+                                if (this.displayManager && (this.displayManager as any).remove) {
+                                    (this.displayManager as any).remove(shapeRef);
+                                }
+                            } catch (error) {
+                                console.warn('Failed to undo shape creation:', error);
+                            }
+                        },
+                        redo: () => {
+                            try {
+                                // Re-add to display
+                                if (parentContainer) {
+                                    if (index >= 0 && index <= parentContainer.children.length) {
+                                        parentContainer.addChildAt(shapeRef, Math.min(index, parentContainer.children.length));
+                                    } else {
+                                        parentContainer.addChild(shapeRef);
+                                    }
+                                }
+                                
+                                // Re-register with DisplayObjectManager
+                                if (this.displayManager && (this.displayManager as any).add) {
+                                    (this.displayManager as any).add(shapeRef, parentContainer);
+                                }
+                            } catch (error) {
+                                console.warn('Failed to redo shape creation:', error);
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.warn('Failed to add shape creation to history:', error);
+                }
+            }
+
             // Attach metadata for selection-based restyling
             try {
                 // Derive meta from the final rendered context when available
@@ -207,13 +257,7 @@ export class ShapesTool extends BaseTool {
                     strokeColor: this.settings.color,
                     fillEnabled: this.settings.fillEnabled,
                     fillColor: this.settings.fillColor,
-                    cornerMode: 'uniform',
-                    cornerRadius: Math.max(0, this.settings.cornerRadius || 0),
-                    cornerRadii: {},
                 };
-                if (this.settings.shapeType === 'rectangle' && this.settings.cornerRadius) {
-                    meta.cornerRadius = this.settings.cornerRadius;
-                }
                 if (this.settings.shapeType === 'polygon' && this.settings.sides) {
                     meta.sides = this.settings.sides;
                 }
@@ -267,10 +311,7 @@ export class ShapesTool extends BaseTool {
     private configureDrawerSettings(): void {
         if (!this.drawerFactory) return;
 
-        // Configure rectangle drawer
-        if (this.settings.shapeType === "rectangle" && this.settings.cornerRadius) {
-            this.drawerFactory.getRectangleDrawer().setCornerRadius(this.settings.cornerRadius);
-        }
+
 
         // Configure polygon drawer
         if (this.settings.shapeType === "polygon" && this.settings.sides) {
@@ -441,13 +482,10 @@ export class ShapesTool extends BaseTool {
     setShapeType(
         shapeType: ShapesSettings["shapeType"],
     ): void {
-        const previousType = this.settings.shapeType;
         this.settings.shapeType = shapeType;
     }
 
-    setCornerRadius(radius: number): void {
-        this.settings.cornerRadius = Math.max(0, radius);
-    }
+
 
     setPolygonSides(sides: number): void {
         this.settings.sides = Math.max(3, sides);

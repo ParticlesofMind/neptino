@@ -8,7 +8,7 @@ import { ToolStateManager } from './ui/ToolStateManager';
 import { UIEventHandler } from './ui/UIEventHandler';
 import { toolColorManager } from './tools/ToolColorManager';
 import { TextTool } from './tools/text/TextTool';
-import { SimplePerspectiveManager } from './tools/SimplePerspectiveManager';
+import { HighQualityZoom } from './canvas/HighQualityZoom';
 import { snapManager } from './tools/SnapManager';
 import { bindSnapMenu } from './tools/SnapMenu';
 import { CanvasLayoutManager } from './ui/CanvasLayoutManager';
@@ -21,13 +21,14 @@ import { runFullValidation } from './utils/canvasSizingValidation';
 import { initializeCanvasSystem, validateCanvasSystem } from './utils/canvasSystemInit';
 import { canvasDimensionManager } from './utils/CanvasDimensionManager';
 import { activateGSAPFeatures } from './GSAPCanvasIntegration';
+import { canvasMarginManager } from './canvas/CanvasMarginManager';
 
 
 // Global canvas instance
 let canvasAPI: CanvasAPI | null = null;
 let toolStateManager: ToolStateManager | null = null;
 let uiEventHandler: UIEventHandler | null = null;
-let perspectiveManager: SimplePerspectiveManager | null = null;
+let perspectiveManager: HighQualityZoom | null = null;
 let layoutManager: CanvasLayoutManager | null = null;
 let toolCoordinator: ToolCoordinator | null = null;
 let layersPanel: LayersPanel | null = null;
@@ -89,35 +90,38 @@ export async function initializeCanvas(): Promise<void> {
         layoutManager = new CanvasLayoutManager('#canvas-container');
         layoutManager.setupResponsiveLayout(); // Auto-select layout based on viewport
 
-        // Initialize Perspective Manager (zoom/pan controls)
-        perspectiveManager = new SimplePerspectiveManager();
-
-        // Update canvas reference in perspective manager now that canvas is created
-        if (perspectiveManager && 'updateCanvasReference' in perspectiveManager) {
-            (perspectiveManager as any).updateCanvasReference();
+        // Initialize High-Quality Zoom System (PIXI-based zoom/pan controls)
+        const app = canvasAPI.getApp();
+        if (app) {
+            perspectiveManager = new HighQualityZoom(app);
             
-            // Apply calculated initial zoom for optimal canvas viewing
-            const containerElement = document.querySelector('#canvas-container') as HTMLElement;
-            if (containerElement && containerElement.clientWidth > 0 && containerElement.clientHeight > 0) {
-                const initialZoom = calculateFitZoom(
-                    containerElement.clientWidth,
-                    containerElement.clientHeight
-                );
-                
-                // Apply the zoom through the perspective manager
-                if ('setZoom' in perspectiveManager) {
-                    (perspectiveManager as any).setZoom?.(initialZoom);
-                }
-            } else {
-                console.warn('⚠️ Container element not found or has zero dimensions, skipping initial zoom');
+            // Set the drawing layer for zoom targeting
+            const drawingLayer = canvasAPI.getLayer('drawing');
+            if (drawingLayer && 'setDrawingLayer' in perspectiveManager) {
+                (perspectiveManager as any).setDrawingLayer(drawingLayer);
             }
+        }
+
+        // Initialize zoom settings for the high-quality zoom system
+        if (perspectiveManager) {
+            // Show canvas at actual 1200×1800 size (100% zoom) instead of auto-scaling
+            perspectiveManager.setZoom(1.0);
+            console.log(`🎯 Canvas displayed at actual size: 1.0x (1200×1800 pixels)`);
             
-            // Fit canvas view into container once on init so it never starts oversized
-            try { (perspectiveManager as any).fitToContainer?.(); } catch (error) {
-                console.warn('⚠️ Failed to fit canvas to container:', error);
+            // Set up wheel event handling for zoom/pan
+            if (app) {
+                const canvas = app.canvas;
+                if (canvas) {
+                    canvas.addEventListener('wheel', (event: WheelEvent) => {
+                        if (perspectiveManager?.handleWheel(event, event.clientX, event.clientY)) {
+                            // Zoom system handled the event
+                        }
+                    }, { passive: false });
+                    console.log('🎯 Wheel event handler set up for high-quality zoom');
+                }
             }
         } else {
-            console.warn('⚠️ Perspective manager not available or missing updateCanvasReference method');
+            console.warn('⚠️ High-quality zoom system not available');
         }
 
         // Bind minimal snap menu UI to perspective tools
@@ -176,6 +180,7 @@ export async function initializeCanvas(): Promise<void> {
         (window as any).perspectiveManager = perspectiveManager;
         (window as any).layoutManager = layoutManager;
         (window as any).toolCoordinator = toolCoordinator;
+        (window as any).canvasMarginManager = canvasMarginManager;
         
         // Expose TextTool for font debugging
         (window as any).TextTool = TextTool;

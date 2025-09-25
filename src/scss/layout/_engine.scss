@@ -125,9 +125,9 @@
     &__canvas {
         grid-column: 3;
         grid-row: 2;
-        background: var(--color-neutral-100); // Slightly grey container area
+        background: white; // Clean white background instead of grey
         overflow: auto; // Enable scrolling for large content
-        padding: 2rem;
+        padding: 0.5rem; // Minimal padding to show full canvas size
         
         // Canvas is a 3-column grid: perspective tools, canvas area, spacer
         display: grid;

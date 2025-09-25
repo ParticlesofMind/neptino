@@ -43,9 +43,18 @@ export class LayersPanel {
       this.clearThumbnailCache(); // Clear cache when objects change
       this.debouncedRefresh();
     });
-    document.addEventListener('displayObject:removed', () => {
+    document.addEventListener('displayObject:removed', (event: any) => {
       this.clearThumbnailCache(); // Clear cache when objects change
-      this.debouncedRefresh();
+      
+      // For removals, use a shorter debounce to make the UI more responsive
+      // Also log the removal event for debugging
+      try { 
+        if ((window as any).__NEPTINO_DEBUG_LOGS) {
+          console.log('🗑️ Layer panel received removal event:', event.detail); 
+        }
+      } catch {}
+      
+      this.debouncedRefresh(8); // Faster refresh for removals (8ms vs 16ms)
     });
     
     // Listen for tool changes to refresh visibility (less frequent, can be immediate)
@@ -79,23 +88,41 @@ export class LayersPanel {
 
 
   private renderChildren(parent: Container, list: HTMLOListElement): void {
+    if (!parent || !parent.children) return;
+    
     const children = parent.children.slice();
     // Filter out visual aids, UI elements, and temporary objects
-    const realObjects = children.filter(child => this.isRealObject(child));
+    const realObjects = children.filter(child => {
+      // Extra validation: make sure object still exists and isn't destroyed
+      try {
+        return child && !child.destroyed && this.isRealObject(child);
+      } catch {
+        return false; // Skip objects that cause errors
+      }
+    });
     
     // Track processed objects to avoid duplicates
     const processedIds = new Set<string>();
     
     realObjects.forEach((child) => {
-      const id = this.getId(child);
-      if (id && processedIds.has(id)) {
-        // Skip duplicates
-        return;
+      try {
+        const id = this.getId(child);
+        if (id && processedIds.has(id)) {
+          // Skip duplicates
+          return;
+        }
+        if (id) processedIds.add(id);
+        
+        const li = this.buildLayerItem(child);
+        list.appendChild(li);
+      } catch (error) {
+        // Skip objects that cause errors during processing
+        try { 
+          if ((window as any).__NEPTINO_DEBUG_LOGS) {
+            console.warn('⚠️ Error processing layer item:', error); 
+          }
+        } catch {}
       }
-      if (id) processedIds.add(id);
-      
-      const li = this.buildLayerItem(child);
-      list.appendChild(li);
     });
   }
 
