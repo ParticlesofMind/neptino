@@ -244,6 +244,7 @@ export class LayersPanel {
       const realChildren = (obj as any).children?.filter((c: any) => this.isRealObject(c)) || [];
       realChildren.forEach((c: any) => {
         const cli = this.buildLayerItem(c);
+        cli.classList.add('card--nested'); // Add nested styling class
         childrenList!.appendChild(cli);
       });
     }
@@ -424,6 +425,15 @@ export class LayersPanel {
     
     // Allow objects with tool types (user-created content)
     if (obj.__toolType || obj.__meta?.kind) return true;
+    
+    // Allow animation scene objects - these should always show in layers
+    if (obj.__sceneRef || obj.__sceneId || obj.name === 'AnimationScene') return true;
+    
+    // Allow scene content containers - objects inside animation scenes
+    if (obj.__sceneContent || obj.__parentSceneId || obj.__inScene) return true;
+    
+    // Allow objects that have been assigned unique IDs for animation tracking
+    if (obj.objectId) return true;
     
     // Allow Text objects (user content)
     if (className === 'Text') return true;

@@ -1087,11 +1087,37 @@ export class Scene {
         (object as any).objectId = `obj_${Date.now()}_${Math.floor(Math.random() * 9999)}`;
       }
 
+      // Mark the object as scene content for layers panel
+      (object as any).__inScene = true;
+      (object as any).__parentSceneId = this.id;
+      
+      // Ensure the object has some tool type so it shows up in layers
+      if (!(object as any).__toolType && !(object as any).__meta?.kind) {
+        // Try to detect what type of object this is
+        if (object.constructor?.name === 'Text') {
+          (object as any).__toolType = 'text';
+        } else if (object.constructor?.name === 'Graphics') {
+          (object as any).__toolType = 'graphics';
+        } else if (object.constructor?.name === 'Sprite') {
+          (object as any).__toolType = 'sprite';
+        } else if (object.children && object.children.length > 0) {
+          (object as any).__toolType = 'container';
+        } else {
+          (object as any).__toolType = 'object';
+        }
+      }
       
       object.position.set(localPos.x, localPos.y);
       // Add to content container instead of root so it gets clipped
       this.contentContainer.addChild(object);
-          }
+      
+      // Notify layers panel that an object was added
+      try {
+        document.dispatchEvent(new CustomEvent('displayObject:added', { 
+          detail: { id: (object as any).objectId, object: object } 
+        }));
+      } catch {}
+    }
   }
 
   removeObject(object: Container): void {

@@ -69,25 +69,41 @@
   letter-spacing: 0.5px;
 }
 
+// Layers list styling
+.layers-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  
+  // Nested layers list (children container)
+  .layers-list {
+    margin-top: 4px;
+    padding-left: 4px; // Small indent for nested list
+    border-left: 1px solid var(--color-neutral-200);
+  }
+}
+
 // Layer card variant for Layers panel - Sophisticated & Compact Design
 .card--layer {
-  padding: 6px 8px;
+  padding: 8px 10px;
   border: 1px solid var(--color-neutral-200);
-  margin-bottom: 2px;
+  margin-bottom: 3px;
   background: var(--color-background);
   border-radius: var(--radius-small);
   cursor: grab;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 
   &:hover {
-    border-color: var(--color-neutral-300);
-    background: var(--color-neutral-50);
-    transform: translateX(2px);
+    border-color: var(--color-primary-300);
+    background: var(--color-primary-25);
+    transform: translateX(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   }
 
   &:active {
     cursor: grabbing;
+    transform: translateX(0);
   }
 
   // Main content layout
@@ -199,9 +215,17 @@
 
   // Nested layer styling
   &--nested {
-    margin-left: 16px;
-    border-left: 2px solid var(--color-neutral-200);
+    margin-left: 20px;  // More spacing for nested items
+    margin-top: 4px;    // Additional vertical spacing between nested items
+    margin-bottom: 4px; // Additional vertical spacing between nested items
+    border-left: 2px solid var(--color-primary-200);
     border-radius: 0 var(--radius-small) var(--radius-small) 0;
+    background: var(--color-neutral-25);
+    
+    &:hover {
+      border-left-color: var(--color-primary-400);
+      background: var(--color-primary-50);
+    }
   }
 }
 

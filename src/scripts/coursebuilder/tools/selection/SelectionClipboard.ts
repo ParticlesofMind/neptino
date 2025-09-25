@@ -307,13 +307,27 @@ export class SelectionClipboard {
       }
       case 'container': {
         const group = new Container();
+        // Mark as container type for layers panel
+        (group as any).__toolType = 'container';
         this.addToContainer(group, target);
         this.applyTransform(group, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
         this.applyProps(group, (desc as any).props);
         for (const ch of desc.children) {
           const node = this.constructNode(ch, group, 0);
-          if (Array.isArray(node)) node.forEach(n => group.addChild(n));
-          else if (node) group.addChild(node);
+          // Don't add to group directly - constructNode already adds to container via addToContainer
+          // The child objects are already added to the proper parent through the DisplayObjectManager
+          if (!node) continue;
+          
+          // If addToContainer wasn't called (shouldn't happen, but safety check)
+          if (Array.isArray(node)) {
+            node.forEach(n => {
+              if (n && !n.parent) {
+                this.addToContainer(n, group);
+              }
+            });
+          } else if (node && !node.parent) {
+            this.addToContainer(node, group);
+          }
         }
         return group;
       }

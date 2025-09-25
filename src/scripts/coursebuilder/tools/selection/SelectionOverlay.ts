@@ -41,7 +41,14 @@ export class SelectionOverlay {
     const selectionBox = new Graphics();
     selectionBox.name = 'selection-box';
     selectionBox.eventMode = 'none';
-    // Intentionally do not draw the selection rectangle to avoid distracting outlines
+    // Draw selection rectangle with same blue border as animation scenes
+    selectionBox
+      .roundRect(0, 0, bounds.width, bounds.height, 4)
+      .stroke({ 
+        color: 0x4a79a4, 
+        width: 2, 
+        alpha: 0.6 
+      });
     if (this.overlayCenter && this.overlayBaseBounds) {
       const cx = bounds.x + bounds.width * 0.5;
       const cy = bounds.y + bounds.height * 0.5;
@@ -71,7 +78,13 @@ export class SelectionOverlay {
     this.group.bounds = bounds;
     const g = this.group.selectionBox;
     g.clear();
-    // Do not draw selection rectangle (keep handles only)
+    // Draw selection rectangle with same blue border as animation scenes
+    g.roundRect(0, 0, bounds.width, bounds.height, 4)
+     .stroke({ 
+       color: 0x4a79a4, 
+       width: 2, 
+       alpha: 0.6 
+     });
     if (this.overlayCenter && this.overlayBaseBounds) {
       const cx = bounds.x + bounds.width * 0.5;
       const cy = bounds.y + bounds.height * 0.5;
@@ -122,7 +135,13 @@ export class SelectionOverlay {
     const g = this.group.selectionBox;
     const cx = center.x, cy = center.y;
     g.clear();
-    // Do not draw selection rectangle during rotation preview
+    // Draw selection rectangle during rotation preview with same blue border as animation scenes
+    g.roundRect(0, 0, base.width, base.height, 4)
+     .stroke({ 
+       color: 0x4a79a4, 
+       width: 2, 
+       alpha: 0.6 
+     });
     g.pivot.set(base.width * 0.5, base.height * 0.5);
     g.position.set(cx, cy);
     g.rotation = angle;
