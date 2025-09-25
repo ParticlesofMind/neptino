@@ -54,6 +54,28 @@ export class DisplayObjectManager {
   public addWithId(displayObject: any, id: string, parent?: Container): string {
     const targetParent = parent || this.rootContainer;
     
+    // Auto-assign tool type if not already set (for layers panel recognition)
+    if (!(displayObject as any).__toolType && !(displayObject as any).__meta?.kind) {
+      const className = displayObject.constructor?.name || '';
+      switch (className) {
+        case 'Text':
+          (displayObject as any).__toolType = 'text';
+          break;
+        case 'Graphics':
+          (displayObject as any).__toolType = 'graphics';
+          break;
+        case 'Sprite':
+          (displayObject as any).__toolType = 'sprite';
+          break;
+        case 'Container':
+          // Only mark as container if it has children or will have children
+          if (displayObject.children && displayObject.children.length > 0) {
+            (displayObject as any).__toolType = 'container';
+          }
+          break;
+      }
+    }
+    
     // Add to parent container
     targetParent.addChild(displayObject);
     
@@ -64,7 +86,7 @@ export class DisplayObjectManager {
     // Legacy compatibility
     this.objects.add(displayObject);
     
-    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('➕ Added display object:', { id, type: displayObject.constructor.name, parentChildren: targetParent.children.length }); } catch {}
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('➕ Added display object:', { id, type: displayObject.constructor.name, toolType: (displayObject as any).__toolType, parentChildren: targetParent.children.length }); } catch {}
     // Notify UI layers panel
     try { document.dispatchEvent(new CustomEvent('displayObject:added', { detail: { id, object: displayObject } })); } catch {}
     
@@ -167,6 +189,10 @@ export class DisplayObjectManager {
   public createGraphics(parent?: Container): { graphics: Graphics; id: string } {
     const graphics = new Graphics();
     try { (graphics as any).eventMode = 'none'; (graphics as any).interactiveChildren = false; } catch {}
+    
+    // Mark with tool type so layers panel recognizes it as a real object
+    (graphics as any).__toolType = 'graphics';
+    
     const id = this.add(graphics, parent);
     
     return { graphics, id };
@@ -193,6 +219,10 @@ export class DisplayObjectManager {
    */
   public createText(text: string, style?: any, parent?: Container): { text: Text; id: string } {
     const textObj = new Text({ text, style });
+    
+    // Mark with tool type so layers panel recognizes it as a real object
+    (textObj as any).__toolType = 'text';
+    
     const id = this.add(textObj, parent);
     
     return { text: textObj, id };

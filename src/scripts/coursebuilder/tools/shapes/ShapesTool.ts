@@ -171,6 +171,23 @@ export class ShapesTool extends BaseTool {
                 console.warn(`🔶 SHAPES: Shape not added to any parent!`);
             }
 
+            // CRITICAL: Register the completed shape with DisplayObjectManager so it shows in layers panel
+            if (this.displayManager && this.currentShape) {
+                try {
+                    // Mark with proper tool type for layers panel
+                    (this.currentShape as any).__toolType = 'shapes';
+                    
+                    // Register with DisplayObjectManager (this will trigger displayObject:added event)
+                    const id = this.displayManager.getIdForObject(this.currentShape);
+                    if (!id) {
+                        // Object wasn't registered yet, add it now
+                        this.displayManager.add(this.currentShape, this.currentShape.parent || undefined);
+                    }
+                } catch (error) {
+                    console.warn('Failed to register shape with DisplayObjectManager:', error);
+                }
+            }
+
             // Attach metadata for selection-based restyling
             try {
                 // Derive meta from the final rendered context when available

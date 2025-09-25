@@ -2,6 +2,9 @@ import { Container, Application } from 'pixi.js';
 
 export class LayersPanel {
   private listEl: HTMLOListElement | null = null;
+  private refreshTimeout: number | null = null;
+  private isRefreshing: boolean = false;
+  private thumbnailCache: Map<string, string> = new Map();
 
   constructor() {
     this.listEl = document.getElementById('layers-list-root') as HTMLOListElement | null;
@@ -10,34 +13,70 @@ export class LayersPanel {
   }
 
   public refresh(): void {
-    if (!this.listEl) return;
+    if (!this.listEl || this.isRefreshing) return;
+    
+    this.isRefreshing = true;
+    
     const canvasAPI = (window as any).canvasAPI;
-    if (!canvasAPI) return;
+    if (!canvasAPI) {
+      this.isRefreshing = false;
+      return;
+    }
+    
     const drawingLayer = canvasAPI.getDrawingLayer();
-    if (!drawingLayer) return;
-    this.listEl.innerHTML = '';
-    this.renderChildren(drawingLayer as any as Container, this.listEl);
+    if (!drawingLayer) {
+      this.isRefreshing = false;
+      return;
+    }
+    
+    // Use requestAnimationFrame for smooth updates
+    requestAnimationFrame(() => {
+      this.listEl!.innerHTML = '';
+      this.renderChildren(drawingLayer as any as Container, this.listEl!);
+      this.isRefreshing = false;
+    });
   }
 
   private bindGlobalListeners(): void {
-    // Immediate refresh on object changes
-    document.addEventListener('displayObject:added', () => this.refresh());
-    document.addEventListener('displayObject:removed', () => this.refresh());
+    // Debounced refresh on object changes - prevent rapid successive refreshes
+    document.addEventListener('displayObject:added', () => {
+      this.clearThumbnailCache(); // Clear cache when objects change
+      this.debouncedRefresh();
+    });
+    document.addEventListener('displayObject:removed', () => {
+      this.clearThumbnailCache(); // Clear cache when objects change
+      this.debouncedRefresh();
+    });
     
-    // Listen for tool changes to refresh visibility
-    document.addEventListener('tool:changed', () => this.refresh());
+    // Listen for tool changes to refresh visibility (less frequent, can be immediate)
+    document.addEventListener('tool:changed', () => this.debouncedRefresh(100));
     
-    // Set up periodic refresh to catch any missed changes
-    setInterval(() => this.refresh(), 1000);
+    // Remove the aggressive 1-second interval - it's unnecessary and causes flickering
+    // Objects will refresh when they actually change via the event listeners above
+  }
+
+  private debouncedRefresh(delay: number = 16): void {
+    // Clear any pending refresh
+    if (this.refreshTimeout) {
+      clearTimeout(this.refreshTimeout);
+    }
+    
+    // Schedule new refresh with debouncing (default 16ms = ~60fps)
+    this.refreshTimeout = window.setTimeout(() => {
+      this.refresh();
+      this.refreshTimeout = null;
+    }, delay);
+  }
+
+  private clearThumbnailCache(): void {
+    this.thumbnailCache.clear();
   }
 
   private bindControls(): void {
     // Controls removed - group/ungroup buttons no longer needed
   }
 
-  private safeRefreshSoon(): void {
-    setTimeout(() => this.refresh(), 0);
-  }
+
 
   private renderChildren(parent: Container, list: HTMLOListElement): void {
     const children = parent.children.slice();
@@ -216,7 +255,8 @@ export class LayersPanel {
         } catch {}
       }
       // Refresh the UI after drop to reflect new structure
-      this.refresh();
+      this.clearThumbnailCache(); // Clear cache since structure changed
+      this.debouncedRefresh(50); // Slightly longer delay for drag operations
     });
 
     // Children list
@@ -357,28 +397,46 @@ export class LayersPanel {
   }
 
   private updateThumbnail(obj: any, el: HTMLElement): void {
+    const objId = this.getId(obj);
+    if (!objId) {
+      el.style.background = '#f3f4f6';
+      return;
+    }
+
+    // Check cache first to avoid expensive regeneration
+    const cached = this.thumbnailCache.get(objId);
+    if (cached) {
+      el.style.backgroundImage = `url(${cached})`;
+      return;
+    }
+
     try {
       const canvasAPI = (window as any).canvasAPI;
       const app = canvasAPI?.getApp() as Application | null;
       if (!app) return;
       const renderer: any = app.renderer as any;
       const extract = renderer.extract;
+      
       if (extract && typeof extract.canvas === 'function') {
         const cnv = extract.canvas(obj);
         const url = cnv.toDataURL('image/png');
+        this.thumbnailCache.set(objId, url); // Cache the result
         el.style.backgroundImage = `url(${url})`;
         return;
       }
+      
       if (typeof renderer.generateTexture === 'function') {
         const tex = renderer.generateTexture(obj);
         const spr = new (window as any).PIXI.Sprite(tex);
         const extracted = renderer.extract.canvas(spr);
         const url = extracted.toDataURL('image/png');
+        this.thumbnailCache.set(objId, url); // Cache the result
         el.style.backgroundImage = `url(${url})`;
         tex.destroy(true);
         return;
       }
     } catch {}
+    
     // Fallback placeholder
     el.style.background = '#f3f4f6';
   }
@@ -435,30 +493,37 @@ export class LayersPanel {
     // Allow objects that have been assigned unique IDs for animation tracking
     if (obj.objectId) return true;
     
-    // Allow Text objects (user content)
+    // IMPORTANT: Always allow basic PIXI objects created by users
+    // Text objects should always appear in layers
     if (className === 'Text') return true;
     
-    // Allow Sprite objects (user images)
-    if (className === 'Sprite') return true;
-    
-    // Allow containers that have user content children
-    if (className === 'Container' && obj.children && obj.children.length > 0) {
-      // Check if any child is a real object (recursive check to avoid infinite loops)
-      const hasRealChildren = obj.children.some((child: any) => {
-        // Basic check to avoid recursion issues
-        if (child === obj) return false;
-        return this.isRealObject(child);
-      });
-      return hasRealChildren;
-    }
-    
-    // Allow Graphics objects that are not in excluded categories
+    // Graphics objects should appear if they have actual content
     if (className === 'Graphics') {
-      // Graphics without tool type might still be user content if they have substance
+      // Check if graphics has been drawn on (has actual visual content)
       const bounds = obj.getLocalBounds?.();
-      if (bounds && (bounds.width > 1 || bounds.height > 1)) {
+      if (bounds && (bounds.width > 0 || bounds.height > 0)) {
         return true;
       }
+    }
+    
+    // Sprite objects (images) should always appear in layers
+    if (className === 'Sprite') return true;
+    
+    // Allow containers that have user content children or are likely user-created
+    if (className === 'Container') {
+      // If container has children, check if any are real objects
+      if (obj.children && obj.children.length > 0) {
+        const hasRealChildren = obj.children.some((child: any) => {
+          // Basic check to avoid recursion issues
+          if (child === obj) return false;
+          return this.isRealObject(child);
+        });
+        if (hasRealChildren) return true;
+      }
+      
+      // Also allow containers that have been explicitly added by DisplayObjectManager
+      // (they get __id property when added)
+      if (obj.__id) return true;
     }
     
     return false;
