@@ -310,13 +310,12 @@ export class ToolStateManager {
      * Set initial selected states
      */
     private setInitialSelections(): void {
-        // Use immediate execution instead of setTimeout to prevent race conditions
-        // Ensure UI state is synchronized with canvas state immediately
+        // Set UI state immediately but defer canvas synchronization until canvas is ready
         
         this.setMode(this.currentMode);
         
-        // CRITICAL: Ensure the tool change is properly propagated
-        this.setTool(this.currentTool);
+        // Update UI state only - don't sync with canvas yet since it may not be ready
+        this.updateToolUI(this.currentTool);
         
         // Always set media and navigation since they now have default values
         this.setSelectedMedia(this.selectedMedia);
@@ -328,10 +327,35 @@ export class ToolStateManager {
         // CRITICAL: Restore saved tool settings to HTML elements
         this.restoreToolSettingsToUI();
 
-        // Add verification step to ensure synchronization
-        setTimeout(() => {
-            this.verifyToolSynchronization();
-        }, 500);
+        // Defer canvas synchronization until canvas API is available
+        this.scheduleCanvasSynchronization();
+    }
+
+    /**
+     * Schedule canvas synchronization when canvas API becomes available
+     */
+    private scheduleCanvasSynchronization(): void {
+        const maxAttempts = 10;
+        let attempts = 0;
+        
+        const trySync = () => {
+            attempts++;
+            const canvasAPI = (window as any).canvasAPI;
+            
+            if (canvasAPI && canvasAPI.isReady && canvasAPI.isReady()) {
+                // Canvas is ready - perform full tool synchronization
+                this.setTool(this.currentTool);
+                console.log('🔧 SYNC: Initial tool synchronization completed');
+            } else if (attempts < maxAttempts) {
+                // Canvas not ready yet - try again
+                setTimeout(trySync, 100);
+            } else {
+                console.warn('⚠️ SYNC: Canvas API not available after maximum attempts - will sync when manually triggered');
+            }
+        };
+        
+        // Start trying immediately, then retry if needed
+        trySync();
     }
 
     /**
@@ -1083,7 +1107,7 @@ export class ToolStateManager {
         // Get the canvas API instance if available globally
         const canvasAPI = (window as any).canvasAPI;
         if (!canvasAPI) {
-            console.warn('⚠️ SYNC: Canvas API not available for verification');
+            // Canvas not available yet - this is normal during initialization
             return;
         }
 
@@ -1091,9 +1115,8 @@ export class ToolStateManager {
             const canvasActiveTool = canvasAPI.getActiveTool();
             const uiActiveTool = this.getCurrentTool();
             
-            
             if (canvasActiveTool !== uiActiveTool) {
-                console.warn(`⚠️ SYNC MISMATCH: UI shows "${uiActiveTool}" but canvas has "${canvasActiveTool}"`);
+                console.log(`🔧 SYNC: Aligning canvas tool "${canvasActiveTool}" to UI tool "${uiActiveTool}"`);
                 
                 // Force synchronization by setting the tool again
                 this.setTool(uiActiveTool);
@@ -1101,12 +1124,10 @@ export class ToolStateManager {
                 // Re-verify after a short delay
                 setTimeout(() => {
                     const newCanvasTool = canvasAPI.getActiveTool();
-                    if (newCanvasTool === uiActiveTool) {
-                    } else {
+                    if (newCanvasTool !== uiActiveTool) {
                         console.error('❌ SYNC: Failed to synchronize tools - manual refresh may be needed');
                     }
                 }, 100);
-            } else {
             }
         } catch (error) {
             console.warn('⚠️ SYNC: Error during tool synchronization verification:', error);

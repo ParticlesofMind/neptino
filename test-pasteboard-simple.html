@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Pasteboard Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-results {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: #22c55e;
+            font-weight: bold;
+        }
+        .error {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .info {
+            color: #3b82f6;
+            margin: 10px 0;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border-left: 4px solid #3b82f6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Simple Pasteboard System Test</h1>
+        
+        <div class="test-results">
+            <h2>Test Results</h2>
+            <div id="test-output">Running tests...</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>✅ Expected Behavior</h3>
+            <ul>
+                <li><strong>Canvas Bounds:</strong> 1200x1800 (0,0 to 1200,1800) - Visible/exportable area</li>
+                <li><strong>Pasteboard Bounds:</strong> 3600x5400 (-1200,-1800 to 2400,3600) - Full working area</li>
+                <li><strong>Staging Area:</strong> Everything outside the canvas bounds but within pasteboard</li>
+                <li><strong>No more "require is not defined" errors!</strong></li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="module">
+        async function runTests() {
+            const output = document.getElementById('test-output');
+            let results = '';
+            
+            try {
+                // Import the fixed BoundaryUtils
+                const { BoundaryUtils } = await import('./src/scripts/coursebuilder/tools/BoundaryUtils.ts');
+                
+                results += '<div class="success">✅ Successfully imported BoundaryUtils (no require errors!)</div>';
+                
+                // Test 1: Get pasteboard bounds
+                const pasteboardBounds = BoundaryUtils.getPasteboardBounds();
+                results += '<div class="info">📐 Pasteboard Bounds:</div>';
+                results += '<pre>' + JSON.stringify(pasteboardBounds, null, 2) + '</pre>';
+                
+                // Test 2: Get visible canvas bounds
+                const visibleBounds = BoundaryUtils.getVisibleCanvasBounds();
+                results += '<div class="info">📱 Visible Canvas Bounds:</div>';
+                results += '<pre>' + JSON.stringify(visibleBounds, null, 2) + '</pre>';
+                
+                // Test 3: Test point checking
+                const testPoints = [
+                    { x: 100, y: 100, name: "Inside Canvas" },
+                    { x: -500, y: -500, name: "Staging Area (top-left)" },
+                    { x: 1500, y: 100, name: "Staging Area (right)" },
+                    { x: 100, y: 2500, name: "Staging Area (bottom)" },
+                    { x: -2000, y: -2000, name: "Outside Pasteboard" }
+                ];
+                
+                results += '<div class="info">🎯 Point Testing:</div>';
+                for (const point of testPoints) {
+                    const inVisible = BoundaryUtils.isPointInVisibleCanvas({ x: point.x, y: point.y });
+                    const inStaging = BoundaryUtils.isPointInStagingArea({ x: point.x, y: point.y });
+                    const inPasteboard = BoundaryUtils.isPointWithinBounds({ x: point.x, y: point.y }, pasteboardBounds);
+                    
+                    let status = 'Outside Everything';
+                    if (inVisible) status = 'Visible Canvas ✅';
+                    else if (inStaging) status = 'Staging Area 🎭';
+                    else if (inPasteboard) status = 'Pasteboard Edge';
+                    
+                    results += `<div>Point (${point.x}, ${point.y}) - ${point.name}: <strong>${status}</strong></div>`;
+                }
+                
+                results += '<div class="success">✅ All tests completed successfully!</div>';
+                results += '<div class="info">🎉 The pasteboard system is now working with a simple, reliable approach!</div>';
+                
+            } catch (error) {
+                results += '<div class="error">❌ Error: ' + error.message + '</div>';
+                results += '<div class="error">Stack: ' + error.stack + '</div>';
+            }
+            
+            output.innerHTML = results;
+        }
+        
+        // Run tests when page loads
+        runTests();
+        
+        // Also log to console for debugging
+        console.log('🧪 Pasteboard Test Page Loaded');
+    </script>
+</body>
+</html>

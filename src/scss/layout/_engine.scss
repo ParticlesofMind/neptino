@@ -6,173 +6,176 @@
 
 .engine {
     display: grid;
-    grid-template-columns: 0.5fr 2.5fr 7fr 2fr; // Keep 4 columns but expand tools area
-    grid-template-rows: 0.075fr 1fr; // Increased to 90px to ensure labels have adequate space
-    height: calc(100vh - 7vh); // Constrain to available viewport space minus header
-    width: 100%;
+    grid-template-columns: auto 2fr 7fr 2fr;
     gap: 0.5rem;
+    height: calc(100vh - 7vh);
+    width: 100%;
     padding: 0.5rem; 
 
-    // Responsive adjustments
-    @media (max-width: 1400px) {
-        grid-template-columns: 0.5fr 2fr 7fr 1.5fr; // Keep original proportions
-    }
 
-    @media (max-width: 1200px) {
-        grid-template-columns: 0.5fr 2fr 7fr 1.5fr; // Keep original proportions
-    }
-
-    @media (max-width: 992px) {
-        grid-template-columns: 1fr; // Stack vertically on mobile
-        grid-template-rows: auto auto auto auto;
-        height: auto;
-        
-        &__mode { grid-column: 1; grid-row: 1; }
-        &__search { grid-column: 1; grid-row: 2; min-height: 300px; }
-        &__canvas { grid-column: 1; grid-row: 3; min-height: 400px; }
-        &__preview { grid-column: 1; grid-row: 4; min-height: 200px; }
-        &__tools { display: none; } // Hide tools on mobile for space
-        &__nav { display: none; } // Hide nav on mobile for space
-    }
-
-    // Common styling for all grid items
+    // Common styling for grid items
     >* {
-        background: var(--color-background); // Even lighter - pure white
+        background: var(--color-background);
         border-radius: var(--radius-large);
-        border: 1px solid var(--color-neutral-200); // Lighter border for modern look
-        padding: var(--spacing-2); // Reduced from var(--spacing-3) to give more room for icons
+        border: 1px solid var(--color-neutral-200);
         box-shadow:
             0 1px 3px rgba(0, 0, 0, 0.05),
-            0 1px 2px rgba(0, 0, 0, 0.1); // Softer, more subtle shadow
-        display: flex; // Ensure flex layout for proper alignment
-        align-items: center; // Center content vertically
-        overflow: hidden; // Prevent content from overflowing
+            0 1px 2px rgba(0, 0, 0, 0.1);
     }
 
     // ==========================================================================
-    // ROW 1 - SPECIFIC POSITIONING & LAYOUT
+    // NEW LAYOUT POSITIONING
     // ==========================================================================
 
-    &__mode {
-        grid-column: 1 / 3;
-        grid-row: 1;
-        display: flex;
-        gap: var(--spacing-4);
-    }
-
-    &__tools {
-        grid-column: 3 / 5;
-        grid-row: 1;
-    }
-
-    // ==========================================================================
-    // ROW 2 - SPECIFIC POSITIONING & LAYOUT
-    // ==========================================================================
-
-    &__media {
-        grid-column: 1;
-        grid-row: 2;
-        display: flex;
+    // Left side: Perspective tools + Mode selector
+    &__perspective {
+            display: flex;
         flex-direction: column;
-        gap: var(--spacing-4);
+        gap: 0.5rem; // Increased gap for better spacing
+        background: rgba(255, 255, 255, 0.95);
+        padding: 0.75rem 0.5rem; // More padding
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        width: 60px; // Slightly wider
+        min-width: 60px;
         align-items: center;
     }
 
-    &__search {
-        grid-column: 2;
-        grid-row: 2;
-        align-items: stretch;
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing-2);
-        height: 100%;
-        min-height: 0; // Critical for internal scroll areas
-        min-width: 0;  // Prevent right-side clipping
-        overflow: hidden; // Panel itself doesn't scroll; child does
 
-        // Input spacing (kept simple)
-        .search__input {
+
+    // Search panel
+    &__search {
+     
+        display: grid;
+     
+        padding: var(--spacing-2);
+        height: auto;
+
+        &__input {
             width: 100%;
             box-sizing: border-box;
             margin: 0 0 var(--spacing-2) 0;
         }
 
-        // Panel wraps results and fills remaining space
-        .search__panel {
+        &__panel {
             display: flex;
             flex-direction: column;
             gap: var(--spacing-2);
             flex: 1 1 auto;
-            min-height: 0; // Allow results to become scroll container
+            min-height: 0;
         }
 
-        // Results are the only scroll area
-        .search__results {
+        &__results {
             flex: 1 1 auto;
             min-height: 0;
-            overflow-y: auto; // Native scroll
+            overflow-y: auto;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 16px; // Spacing between cards
+            gap: 16px;
             padding: 10px;
-            // Prevent single item from stretching to panel height
             align-content: start;
             align-items: start;
             grid-auto-rows: max-content;
         }
     }
 
+    // Canvas area - full height with tools positioned inside
     &__canvas {
-        grid-column: 3;
-        grid-row: 2;
-        background: white; // Clean white background instead of grey
-        overflow: auto; // Enable scrolling for large content
-        padding: 0.5rem; // Minimal padding to show full canvas size
-        
-        // Canvas is a 3-column grid: perspective tools, canvas area, spacer
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        gap: 1rem;
+        grid-area: canvas;
+        background: white;
+        overflow: hidden;
+        padding: 0;
+        display: flex;
+        justify-content: center;
         align-items: flex-start;
-        
-        position: relative; // Allow absolute-positioned overlay cards
+        position: relative;
 
         box-shadow:
             inset 6px 6px 12px rgba(0, 0, 0, 0.1),
             inset -6px -6px 12px rgba(255, 255, 255, 0.8),
             2px 2px 6px rgba(0, 0, 0, 0.05);
 
-        // Remove any default border/outline to avoid visual distraction
         border: none !important;
         outline: none !important;
 
-        // PIXI Canvas positioning in grid
+        // PIXI Canvas positioning
         canvas {
-            grid-column: 2; // Middle column in canvas grid
             justify-self: center;
             align-self: start;
         }
-
     }
 
-    // Perspective tools positioning - slim vertical toolbar
-    &__perspective {
-        grid-column: 1; // First column in canvas grid
+    // Navigation positioning - positioned inside canvas on right
+    &__navigation--canvas {
+        position: absolute;
+        right: var(--spacing-3);
+        top: var(--spacing-3);
+        bottom: var(--spacing-3);
+        width: 280px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: var(--radius-medium);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(8px);
+        z-index: 100;
+        overflow-y: auto;
+        padding: var(--spacing-3);
         display: flex;
         flex-direction: column;
-        gap: 0.25rem;
+    }
+
+    // Tools positioning - positioned inside canvas at bottom
+    &__tools.tools--canvas {
+        position: absolute;
+        bottom: var(--spacing-3);
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-2);
         background: rgba(255, 255, 255, 0.95);
-        padding: 0.5rem 0.25rem;
-        border-radius: 6px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(4px);
-        z-index: 1000;
-        position: sticky;
-        top: 50%; // Center vertically in the canvas area
-        transform: translateY(-50%); // Offset by half its height for true centering
-        align-self: center; // Center horizontally within its grid column
-        width: 48px; // Fixed slim width
-        min-width: 48px;
+        padding: var(--spacing-3);
+        border-radius: var(--radius-medium);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(8px);
+        z-index: 100;
+        min-width: 600px; // Ensure enough space for tools
+
+        // Options row (top)
+        .tools__options {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--spacing-2);
+        }
+
+        // Tools row (bottom)
+        .tools__selection {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--spacing-2);
+        }
+    }
+
+    // Perspective tools positioning - positioned inside canvas on left
+    &__perspective {
+        position: absolute;
+        left: var(--spacing-3);
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-2); // Increased spacing between icons as requested
+        background: rgba(255, 255, 255, 0.95);
+        padding: var(--spacing-3);
+        border-radius: var(--radius-medium);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(8px);
+        z-index: 100;
+        width: auto;
+        min-width: auto;
 
         // Zoom display is an element within perspective
         .zoom-display {

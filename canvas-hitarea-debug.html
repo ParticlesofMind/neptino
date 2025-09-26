@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Hit Area Debug</title>
+    <style>
+        body { margin: 20px; font-family: Arial, sans-serif; }
+        .info { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Canvas Hit Area Debug</h1>
+    <div class="info" id="info">Loading...</div>
+    
+    <script type="module">
+        // Wait for the main canvas to be ready
+        setTimeout(() => {
+            try {
+                const canvasAPI = window.canvasAPI;
+                if (canvasAPI && canvasAPI.isReady()) {
+                    const app = canvasAPI.getApp();
+                    if (app) {
+                        const hitArea = app.stage.hitArea;
+                        const screen = app.screen;
+                        
+                        document.getElementById('info').innerHTML = `
+                            <strong>Current Canvas Status:</strong><br>
+                            Screen: ${screen.width} × ${screen.height}<br>
+                            Hit Area: ${JSON.stringify({
+                                x: hitArea.x,
+                                y: hitArea.y,
+                                width: hitArea.width,
+                                height: hitArea.height
+                            })}<br>
+                            Hit Area Type: ${hitArea.constructor.name}<br>
+                            <br>
+                            <strong>Expected vs Actual:</strong><br>
+                            Expected: Extended area larger than screen<br>
+                            Actual: ${hitArea.width > screen.width ? '✅ Extended' : '❌ Same as screen'}
+                        `;
+                        
+                        console.log('Canvas API ready:', canvasAPI);
+                        console.log('App screen:', screen);
+                        console.log('Stage hit area:', hitArea);
+                        console.log('Hit area is extended?', hitArea.width > screen.width);
+                    } else {
+                        document.getElementById('info').innerHTML = 'App not available';
+                    }
+                } else {
+                    document.getElementById('info').innerHTML = 'Canvas API not ready';
+                }
+            } catch (error) {
+                document.getElementById('info').innerHTML = `Error: ${error.message}`;
+                console.error('Debug error:', error);
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

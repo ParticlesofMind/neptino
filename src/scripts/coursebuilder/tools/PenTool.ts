@@ -117,13 +117,13 @@ export class PenTool extends BaseTool {
 
  const localPoint = container.toLocal(event.global);
  
- // 🚫 MARGIN PROTECTION: Prevent creation in margin areas
- const canvasBounds = this.manager.getCanvasBounds();
- if (!BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
- return; // Exit early - no creation allowed in margins
+ // 🎨 CANVAS AREA: Allow creation in canvas area
+ const canvasBounds = BoundaryUtils.getCanvasDrawingBounds();
+ if (!BoundaryUtils.isPointWithinBounds(localPoint, canvasBounds)) {
+ return; // Exit early - no creation allowed outside canvas
  }
  
- // Point is in content area, safe to proceed
+ // Point is in canvas area, safe to proceed
  let clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
  
  // Log if point was adjusted
@@ -244,8 +244,8 @@ export class PenTool extends BaseTool {
 
  const localPoint = container.toLocal(event.global);
  
- // 🎯 BOUNDARY ENFORCEMENT: Clamp mouse position for preview
- const canvasBounds = this.manager.getCanvasBounds();
+ // CANVAS ENFORCEMENT: Clamp mouse position for preview
+ const canvasBounds = BoundaryUtils.getCanvasDrawingBounds();
  let clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
 
  // Enhanced hover feedback for bend mode

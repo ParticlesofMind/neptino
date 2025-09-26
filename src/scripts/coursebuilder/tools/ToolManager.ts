@@ -16,7 +16,7 @@ import { SceneTool } from "../animation/tools/SceneTool";
 import { PathTool } from "../animation/tools/PathTool";
 import { DisplayObjectManager } from "../canvas/DisplayObjectManager";
 import { BoundaryUtils, CanvasBounds } from "./BoundaryUtils";
-import { canvasMarginManager } from '../canvas/CanvasMarginManager';
+
 import { historyManager } from '../canvas/HistoryManager';
 
 export class ToolManager {
@@ -26,7 +26,7 @@ export class ToolManager {
   private displayManager: DisplayObjectManager | null = null;
   private currentContainer: Container | null = null;
   private uiLayer: Container | null = null;
-  private allowPasteboard: boolean = true; // allow drawing outside content margins
+
 
  constructor() {
         this.settings = {
@@ -267,11 +267,7 @@ export class ToolManager {
  * Provides canvas boundary utilities for all tools using user-specified margins
  */
   public getCanvasBounds(): CanvasBounds {
- if (this.allowPasteboard) {
-   return BoundaryUtils.getCanvasExtents(this.currentContainer || undefined);
- }
- const userMargins = canvasMarginManager.getMargins();
- return BoundaryUtils.getCanvasBounds(this.currentContainer || undefined, userMargins);
+ return BoundaryUtils.getCanvasDrawingBounds();
   }
 
  public clampPointToBounds(point: Point): Point {

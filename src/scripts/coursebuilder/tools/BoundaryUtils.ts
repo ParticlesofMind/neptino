@@ -8,7 +8,28 @@ import { canvasMarginManager } from '../canvas/CanvasMarginManager';
 import { canvasDimensionManager } from '../utils/CanvasDimensionManager';
 import { CanvasBounds, MarginSettings } from '../types/canvas';
 
+// Re-export types for other modules
+export type { CanvasBounds, MarginSettings };
+
 export class BoundaryUtils {
+
+  /**
+   * Get canvas bounds for drawing - simple and straightforward
+   */
+  public static getCanvasDrawingBounds(): CanvasBounds {
+    const canvasDimensions = canvasDimensionManager.getCurrentDimensions();
+    
+    const canvasBounds = {
+      width: canvasDimensions.width,
+      height: canvasDimensions.height,
+      left: 0,
+      top: 0, 
+      right: canvasDimensions.width,
+      bottom: canvasDimensions.height
+    };
+    
+    return canvasBounds;
+  }
 
   /**
    * Get canvas bounds from container with user-specified margins

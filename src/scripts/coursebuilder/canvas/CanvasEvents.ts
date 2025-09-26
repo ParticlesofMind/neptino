@@ -58,7 +58,7 @@ export class CanvasEvents {
     this.app.stage.eventMode = 'static';
     this.app.stage.interactiveChildren = true;
     
-    // Set hit area to entire canvas dimensions
+    // Set hit area to entire PIXI application screen (now extended working area)
     this.app.stage.hitArea = this.app.screen;
 
     // Set up pointer events directly on the stage (for PIXI canvas area)

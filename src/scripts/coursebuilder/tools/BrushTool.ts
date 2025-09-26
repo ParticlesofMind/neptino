@@ -53,13 +53,18 @@ export class BrushTool extends BaseTool {
   // Use local coordinates relative to the container
   const localPoint = container.toLocal(event.global);
 
-  // 🚫 MARGIN PROTECTION: Prevent creation in margin areas
-  const canvasBounds = this.manager.getCanvasBounds();
-  if (!BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
-    return; // Exit early - no creation allowed in margins
+  // 🎨 CANVAS AREA: Allow drawing in canvas area
+  const canvasBounds = BoundaryUtils.getCanvasDrawingBounds();
+  console.log('🖌️ BrushTool onPointerDown: Point', localPoint, 'Bounds:', canvasBounds);
+  
+  if (!BoundaryUtils.isPointWithinBounds(localPoint, canvasBounds)) {
+    console.log('🚫 BrushTool: Point outside canvas bounds, blocking draw');
+    return; // Exit early - outside canvas area
   }
+  
+  console.log('✅ BrushTool: Point within canvas, allowing draw');
 
-  // Align coordinates for pixel-perfect rendering, then clamp to bounds
+  // Align coordinates for pixel-perfect rendering, then clamp to canvas bounds
   const alignedPoint = { x: alignToPixel(localPoint.x), y: alignToPixel(localPoint.y) };
   const clampedAligned = BoundaryUtils.clampPoint(new Point(alignedPoint.x, alignedPoint.y), canvasBounds);
 
@@ -99,8 +104,8 @@ export class BrushTool extends BaseTool {
 
  // Use local coordinates relative to the container
  const localPoint = container.toLocal(event.global);
- // 🎯 Clamp to canvas bounds to prevent drawing into margins
- const canvasBoundsMove = this.manager.getCanvasBounds();
+ // Clamp to canvas bounds
+ const canvasBoundsMove = BoundaryUtils.getCanvasDrawingBounds();
  let clampedLocal = BoundaryUtils.clampPoint(localPoint, canvasBoundsMove);
  // If shift is held, snap to straight line from constrainStart (or first point)
  const shiftHeld = (event as any).shiftKey === true;

@@ -89,21 +89,12 @@ export class CanvasMarginManager {
     
     // Use consistent canvas dimensions from CanvasDimensionManager
     const dimensions = canvasDimensionManager.getCurrentDimensions();
-    let canvasWidth = dimensions.width;   // 1200
-    let canvasHeight = dimensions.height; // 1800
+    const canvasWidth = dimensions.width;   // 1200
+    const canvasHeight = dimensions.height; // 1800
     
-    // Legacy: try to get from PIXI app but validate against expected dimensions
-    try {
-      const app = (window as any).canvasAPI?.getApp?.();
-      if (app && ((app as any).screen || app.renderer?.screen)) {
-        const screen = (app as any).screen || app.renderer.screen;
-        // Only use screen dimensions if they match our expected ratio
-        if (screen.width && screen.height) {
-          canvasWidth = screen.width; 
-          canvasHeight = screen.height;
-        }
-      }
-    } catch {}
+    // Use canvas coordinates directly (pasteboard system removed)
+    const offsetX = 0;
+    const offsetY = 0;
     const margins = this.currentMargins;
     
     // Professional blue lines for margins
@@ -111,38 +102,43 @@ export class CanvasMarginManager {
     const lineWidth = 1;
     const alpha = 0.8; // Clear and visible
 
-    // Align to device pixels for crisp 1px lines
+    // Align to device pixels for crisp 1px lines (offset to canvas position)
     const half = 0.5;
-    const maxX = Math.round(canvasWidth) - half;
-    const maxY = Math.round(canvasHeight) - half;
-    const yTop = Math.round(margins.top) + half;
-    const yBottom = Math.round(canvasHeight - margins.bottom) + half;
-    const xLeft = Math.round(margins.left) + half;
-    const xRight = Math.round(canvasWidth - margins.right) + half;
+    const maxX = Math.round(offsetX + canvasWidth) - half;
+    const maxY = Math.round(offsetY + canvasHeight) - half;
+    const yTop = Math.round(offsetY + margins.top) + half;
+    const yBottom = Math.round(offsetY + canvasHeight - margins.bottom) + half;
+    const xLeft = Math.round(offsetX + margins.left) + half;
+    const xRight = Math.round(offsetX + canvasWidth - margins.right) + half;
 
-    // Draw clean margin boundary lines using modern PIXI.js API
+    // Draw canvas border (outer rectangle, offset to correct position)
+    this.marginGraphics
+      .rect(offsetX + half, offsetY + half, canvasWidth - 1, canvasHeight - 1)
+      .stroke({ color: marginColor, width: 2, alpha: 0.9 });
+
+    // Draw margin boundary lines using modern PIXI.js API (offset to correct position)
     this.marginGraphics
       // Top margin line
-      .moveTo(half, yTop)
+      .moveTo(offsetX + half, yTop)
       .lineTo(maxX, yTop)
       .stroke({ color: marginColor, width: lineWidth, alpha })
       
       // Right margin line  
-      .moveTo(xRight, half)
+      .moveTo(xRight, offsetY + half)
       .lineTo(xRight, maxY)
       .stroke({ color: marginColor, width: lineWidth, alpha })
       
       // Bottom margin line
-      .moveTo(half, yBottom)
+      .moveTo(offsetX + half, yBottom)
       .lineTo(maxX, yBottom)
       .stroke({ color: marginColor, width: lineWidth, alpha })
       
       // Left margin line
-      .moveTo(xLeft, half)
+      .moveTo(xLeft, offsetY + half)
       .lineTo(xLeft, maxY)
       .stroke({ color: marginColor, width: lineWidth, alpha });
 
-    this.marginGraphics.label = 'blue-margin-lines';
+    this.marginGraphics.label = 'canvas-border-and-margin-lines';
     
     // Add to container (should be background or guides layer)
     this.container.addChild(this.marginGraphics);

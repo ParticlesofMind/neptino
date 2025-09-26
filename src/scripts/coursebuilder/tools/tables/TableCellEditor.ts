@@ -8,6 +8,7 @@ import { TableCell, TableSettings, PixiTableData } from "./TableTypes";
 import { TextArea } from "../text/TextArea.js";
 import { TextInputHandler } from "../text/TextInputHandler.js";
 import { TextAreaConfig, TextSettings } from "../text/types.js";
+import { historyManager } from "../../canvas/HistoryManager.js";
 
 export class TableCellEditor {
     private settings: TableSettings;
@@ -16,6 +17,7 @@ export class TableCellEditor {
     private editingCell: TableCell | null = null;
     private tableInEditMode: PixiTableData | null = null;
     private activeTables: PixiTableData[];
+    private originalCellText: string = "";
 
     constructor(settings: TableSettings, activeTables: PixiTableData[]) {
         this.settings = settings;
@@ -29,6 +31,9 @@ export class TableCellEditor {
 
         this.editingCell = cell;
         cell.isEditing = true;
+        
+        // Store original text for history tracking
+        this.originalCellText = cell.text.text;
 
         // Highlight the cell being edited
         this.highlightEditingCell(cell);
@@ -150,13 +155,35 @@ export class TableCellEditor {
 
         const cell = this.editingCell;
         const newText = this.textArea.text.trim();
+        const oldText = this.originalCellText;
 
         // Update cell text - show placeholder if empty, otherwise show the text
-        if (newText) {
-            cell.text.text = newText;
-        } else {
-            // Restore placeholder text if empty
-            cell.text.text = `R${cell.row + 1}C${cell.column + 1}`;
+        const finalText = newText || `R${cell.row + 1}C${cell.column + 1}`;
+        cell.text.text = finalText;
+
+        // Add history entry for cell text change (only if text actually changed)
+        if (oldText !== finalText) {
+            try {
+                historyManager.push({
+                    label: 'Edit Table Cell',
+                    undo: () => {
+                        try {
+                            cell.text.text = oldText;
+                        } catch (error) {
+                            console.warn('Failed to undo cell text edit:', error);
+                        }
+                    },
+                    redo: () => {
+                        try {
+                            cell.text.text = finalText;
+                        } catch (error) {
+                            console.warn('Failed to redo cell text edit:', error);
+                        }
+                    }
+                });
+            } catch (error) {
+                console.warn('Failed to add cell text edit to history:', error);
+            }
         }
 
         cell.isEditing = false;

@@ -11,6 +11,7 @@
  */
 
 import { Application, Container, Graphics } from 'pixi.js';
+import { canvasDimensionManager } from '../utils/CanvasDimensionManager';
 
 export interface LayerSystem {
   background: Container;
@@ -77,17 +78,15 @@ export class CanvasLayers {
   private addBackgroundFill(): void {
     this.backgroundGraphics = new Graphics();
     
-    const width = (this.app as any).screen?.width || this.app.renderer.screen.width;
-    const height = (this.app as any).screen?.height || this.app.renderer.screen.height;
+    const canvasDims = canvasDimensionManager.getCurrentDimensions();
     
-    // Draw white rectangle covering entire canvas
+    // Simple white background for the canvas
     this.backgroundGraphics
-      .rect(0, 0, width, height)
+      .rect(0, 0, canvasDims.width, canvasDims.height)
       .fill({ color: 0xffffff, alpha: 1 });
 
     this.backgroundGraphics.label = 'background-fill';
     this.layers.background.addChild(this.backgroundGraphics);
-
   }
 
   /**

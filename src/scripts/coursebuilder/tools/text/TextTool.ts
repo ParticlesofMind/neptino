@@ -80,8 +80,8 @@ export class TextTool extends BaseTool {
     const localPoint = container.toLocal(event.global);
     const currentTime = Date.now();
     
-    // 🎯 BOUNDARY ENFORCEMENT: Clamp to canvas bounds from the start
-    const canvasBounds = this.manager.getCanvasBounds();
+    // CANVAS ENFORCEMENT: Clamp to canvas bounds from the start
+    const canvasBounds = BoundaryUtils.getCanvasDrawingBounds();
     const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
     
 
@@ -144,8 +144,8 @@ export class TextTool extends BaseTool {
     const localPoint = container.toLocal(event.global);
 
     if (this.state.isDragging && this.dragPreview) {
-      // 🎯 BOUNDARY ENFORCEMENT: Clamp to canvas bounds
-      const canvasBounds = this.manager.getCanvasBounds();
+      // CANVAS ENFORCEMENT: Clamp to canvas bounds
+      const canvasBounds = BoundaryUtils.getCanvasDrawingBounds();
       const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
       
       this.currentPoint.copyFrom(clampedPoint);
@@ -573,7 +573,7 @@ export class TextTool extends BaseTool {
                 (this.displayManager as any).remove(textAreaRef.pixiContainer);
               }
               
-              textAreaRef.destroy();
+              // Don't destroy - keep text area alive for redo functionality
             } catch (error) {
               console.warn('Failed to undo text area creation:', error);
             }

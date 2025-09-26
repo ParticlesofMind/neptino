@@ -10,6 +10,7 @@ import { TableCreator } from "./TableCreator";
 import { TableCellEditor } from "./TableCellEditor";
 import { TableContextMenu } from "./TableContextMenu";
 import { BoundaryUtils } from "../BoundaryUtils";
+import { historyManager } from "../../canvas/HistoryManager.js";
 
 export class TableManager implements Tool {
     name = "tables";
@@ -60,15 +61,15 @@ export class TableManager implements Tool {
 
         if (this.cellEditor.isInEditMode()) return;
 
-        // Enforce margins: only allow starting inside the content area
-        const canvasBounds = this.toolManager?.getCanvasBounds ? this.toolManager.getCanvasBounds() : undefined;
-        if (canvasBounds && !BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
+        // Enforce pasteboard: only allow starting inside the extended working area
+        const canvasBounds = BoundaryUtils.getCanvasDrawingBounds();
+        if (!BoundaryUtils.isPointWithinBounds(localPoint, canvasBounds)) {
             return;
         }
 
         this.isDrawing = true;
-        // Clamp start within bounds
-        const clampedStart = canvasBounds ? BoundaryUtils.clampPoint(localPoint, canvasBounds) : localPoint;
+        // Clamp start within pasteboard bounds
+        const clampedStart = BoundaryUtils.clampPoint(localPoint, canvasBounds);
         this.startPoint = clampedStart;
         this.currentPoint = clampedStart;
     }
@@ -76,8 +77,8 @@ export class TableManager implements Tool {
     onPointerMove(event: FederatedPointerEvent, container: Container): void {
         if (!this.isDrawing) return;
         const local = container.toLocal(event.global);
-        const canvasBounds = this.toolManager?.getCanvasBounds ? this.toolManager.getCanvasBounds() : undefined;
-        this.currentPoint = canvasBounds ? BoundaryUtils.clampPoint(local, canvasBounds) : local;
+        const canvasBounds = BoundaryUtils.getCanvasDrawingBounds();
+        this.currentPoint = BoundaryUtils.clampPoint(local, canvasBounds);
     }
 
     onPointerUp(_event: FederatedPointerEvent, container: Container): void {
@@ -120,11 +121,9 @@ export class TableManager implements Tool {
             let y = Math.min(this.startPoint.y, this.currentPoint.y);
             let w = width;
             let h = height;
-            const canvasBounds = this.toolManager?.getCanvasBounds ? this.toolManager.getCanvasBounds() : undefined;
-            if (canvasBounds) {
-                const clamped = BoundaryUtils.clampRectangle(new Rectangle(x, y, w, h), canvasBounds);
-                x = clamped.x; y = clamped.y; w = clamped.width; h = clamped.height;
-            }
+            const canvasBounds = BoundaryUtils.getCanvasDrawingBounds();
+            const clamped = BoundaryUtils.clampRectangle(new Rectangle(x, y, w, h), canvasBounds);
+            x = clamped.x; y = clamped.y; w = clamped.width; h = clamped.height;
             this.createTable(container, x, y, w, h);
         }
     }
@@ -170,6 +169,51 @@ export class TableManager implements Tool {
             if (selectionTool && typeof selectionTool.markAsNewlyCreated === 'function') {
                 selectionTool.markAsNewlyCreated([tableData.container]);
             }
+        }
+        
+        // Add history entry for table creation
+        try {
+            historyManager.push({
+                label: 'Create Table',
+                undo: () => {
+                    try {
+                        // Remove table from activeTables array
+                        const tableIndex = this.activeTables.findIndex(t => t.id === tableData.id);
+                        if (tableIndex >= 0) {
+                            this.activeTables.splice(tableIndex, 1);
+                        }
+                        
+                        // Remove from display (but don't destroy - keep for redo)
+                        if (this.displayManager && (this.displayManager as any).remove) {
+                            (this.displayManager as any).remove(tableData.container);
+                        } else if (tableData.container.parent) {
+                            tableData.container.parent.removeChild(tableData.container);
+                            // Don't destroy - keep object alive for redo functionality
+                        }
+                    } catch (error) {
+                        console.warn('Failed to undo table creation:', error);
+                    }
+                },
+                redo: () => {
+                    try {
+                        // Re-add to activeTables array
+                        if (!this.activeTables.find(t => t.id === tableData.id)) {
+                            this.activeTables.push(tableData);
+                        }
+                        
+                        // Re-add to display
+                        if (this.displayManager && (this.displayManager as any).add) {
+                            (this.displayManager as any).add(tableData.container);
+                        } else {
+                            container.addChild(tableData.container);
+                        }
+                    } catch (error) {
+                        console.warn('Failed to redo table creation:', error);
+                    }
+                }
+            });
+        } catch (error) {
+            console.warn('Failed to add table creation to history:', error);
         }
         
     }

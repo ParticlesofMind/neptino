@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Undo Canvas Issue</title>
+    <style>
+        body { margin: 20px; font-family: Arial, sans-serif; }
+        #test-area { margin: 20px 0; }
+        button { margin: 5px; padding: 10px; }
+        #canvas-container { border: 2px solid #ccc; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Undo Canvas Test</h1>
+    <div id="test-area">
+        <button onclick="simulateDraw()">Simulate Draw</button>
+        <button onclick="testUndo()">Test Undo (Ctrl+Z)</button>
+        <button onclick="testRedo()">Test Redo (Ctrl+Shift+Z)</button>
+        <button onclick="checkCanvas()">Check Canvas State</button>
+    </div>
+    
+    <div id="canvas-container">
+        <canvas id="test-canvas" width="400" height="300" style="border: 1px solid #999;"></canvas>
+    </div>
+    
+    <div id="output"></div>
+
+    <script type="module">
+        // Import the coursebuilder modules to test
+        import { HistoryManager } from './src/scripts/coursebuilder/canvas/HistoryManager.js';
+        import { CanvasLayers } from './src/scripts/coursebuilder/canvas/CanvasLayers.js';
+        import { DisplayObjectManager } from './src/scripts/coursebuilder/canvas/DisplayObjectManager.js';
+        import { Application, Container, Graphics } from 'pixi.js';
+
+        let app, canvasLayers, historyManager, displayManager;
+        
+        async function initTest() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<p>Initializing test...</p>';
+            
+            try {
+                // Create PIXI app
+                app = new Application({
+                    width: 400,
+                    height: 300,
+                    backgroundColor: 0xf0f0f0,
+                    canvas: document.getElementById('test-canvas')
+                });
+                
+                // Initialize layers
+                canvasLayers = new CanvasLayers(app.stage);
+                displayManager = new DisplayObjectManager(canvasLayers.getLayer('drawing'));
+                historyManager = new HistoryManager();
+                
+                output.innerHTML += '<p>✅ Test initialized successfully</p>';
+                
+                // Check initial state
+                checkCanvas();
+                
+            } catch (error) {
+                output.innerHTML += `<p>❌ Error: ${error.message}</p>`;
+                console.error('Test init error:', error);
+            }
+        }
+        
+        window.simulateDraw = function() {
+            const output = document.getElementById('output');
+            try {
+                // Create a simple red circle
+                const circle = new Graphics();
+                circle.circle(100, 100, 20);
+                circle.fill(0xff0000);
+                
+                const drawingLayer = canvasLayers.getLayer('drawing');
+                drawingLayer.addChild(circle);
+                
+                // Add to history
+                historyManager.push({
+                    label: 'Draw Circle',
+                    undo: () => {
+                        drawingLayer.removeChild(circle);
+                    },
+                    redo: () => {
+                        drawingLayer.addChild(circle);
+                    }
+                });
+                
+                output.innerHTML += '<p>🔴 Drew red circle</p>';
+                checkCanvas();
+                
+            } catch (error) {
+                output.innerHTML += `<p>❌ Draw error: ${error.message}</p>`;
+            }
+        };
+        
+        window.testUndo = function() {
+            const output = document.getElementById('output');
+            try {
+                const success = historyManager.undo();
+                output.innerHTML += `<p>⬅️ Undo: ${success ? 'success' : 'no action to undo'}</p>`;
+                checkCanvas();
+            } catch (error) {
+                output.innerHTML += `<p>❌ Undo error: ${error.message}</p>`;
+            }
+        };
+        
+        window.testRedo = function() {
+            const output = document.getElementById('output');
+            try {
+                const success = historyManager.redo();
+                output.innerHTML += `<p>➡️ Redo: ${success ? 'success' : 'no action to redo'}</p>`;
+                checkCanvas();
+            } catch (error) {
+                output.innerHTML += `<p>❌ Redo error: ${error.message}</p>`;
+            }
+        };
+        
+        window.checkCanvas = function() {
+            const output = document.getElementById('output');
+            try {
+                const backgroundLayer = canvasLayers.getLayer('background');
+                const drawingLayer = canvasLayers.getLayer('drawing');
+                
+                const info = {
+                    backgroundVisible: backgroundLayer.visible,
+                    backgroundChildren: backgroundLayer.children.length,
+                    drawingChildren: drawingLayer.children.length,
+                    appStageChildren: app.stage.children.length
+                };
+                
+                output.innerHTML += `<p>📊 Canvas State: Background visible=${info.backgroundVisible}, Background children=${info.backgroundChildren}, Drawing children=${info.drawingChildren}, Stage children=${info.appStageChildren}</p>`;
+                
+            } catch (error) {
+                output.innerHTML += `<p>❌ Check error: ${error.message}</p>`;
+            }
+        };
+        
+        // Initialize when page loads
+        initTest();
+    </script>
+</body>
+</html>

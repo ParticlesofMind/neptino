@@ -4,6 +4,7 @@
  */
 
 import { TableCell, PixiTableData } from "./TableTypes";
+import { historyManager } from "../../canvas/HistoryManager.js";
 
 interface MenuAction {
     label: string;
@@ -173,8 +174,37 @@ export class TableContextMenu {
 
     // Cell Actions
     private clearCell(cell: TableCell): void {
+        // Store original text for history
+        const originalText = cell.text.text;
+        const placeholderText = `R${cell.row + 1}C${cell.column + 1}`;
+        
         // Reset to placeholder text
-        cell.text.text = `R${cell.row + 1}C${cell.column + 1}`;
+        cell.text.text = placeholderText;
+        
+        // Add history entry for cell clear (only if text actually changed)
+        if (originalText !== placeholderText) {
+            try {
+                historyManager.push({
+                    label: 'Clear Table Cell',
+                    undo: () => {
+                        try {
+                            cell.text.text = originalText;
+                        } catch (error) {
+                            console.warn('Failed to undo cell clear:', error);
+                        }
+                    },
+                    redo: () => {
+                        try {
+                            cell.text.text = placeholderText;
+                        } catch (error) {
+                            console.warn('Failed to redo cell clear:', error);
+                        }
+                    }
+                });
+            } catch (error) {
+                console.warn('Failed to add cell clear to history:', error);
+            }
+        }
     }
 
     private copyCell(cell: TableCell): void {

@@ -175,6 +175,16 @@ export class CanvasDimensionManager {
       }
     };
   }
+
+  /**
+   * Get working area dimensions (canvas only - pasteboard removed)
+   */
+  public getWorkingAreaInfo(): any {
+    return {
+      message: 'Working area is now the canvas dimensions only (pasteboard system removed)',
+      canvasDimensions: this.getCurrentDimensions()
+    };
+  }
 }
 
 // Export singleton instance

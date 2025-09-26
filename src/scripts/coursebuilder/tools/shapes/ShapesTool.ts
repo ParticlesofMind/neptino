@@ -82,13 +82,13 @@ export class ShapesTool extends BaseTool {
         // Use local coordinates relative to the container
         const localPoint = container.toLocal(event.global);
 
-        // 🚫 MARGIN PROTECTION: Prevent creation in margin areas
-        const canvasBounds = this.manager.getCanvasBounds();
-        if (!BoundaryUtils.isPointInContentArea(localPoint, canvasBounds)) {
-            return; // Exit early - no creation allowed in margins
+        // 🎨 CANVAS AREA: Allow creation in canvas area
+        const canvasBounds = BoundaryUtils.getCanvasDrawingBounds();
+        if (!BoundaryUtils.isPointWithinBounds(localPoint, canvasBounds)) {
+            return; // Exit early - no creation allowed outside canvas
         }
 
-        // Point is in content area, safe to proceed
+        // Point is in canvas area, safe to proceed
         const clampedStartPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
 
         this.startPoint.copyFrom(clampedStartPoint);
@@ -128,8 +128,8 @@ export class ShapesTool extends BaseTool {
         // Use local coordinates relative to the container
         const localPoint = container.toLocal(event.global);
 
-        // 🎯 BOUNDARY ENFORCEMENT: Clamp current point to canvas bounds
-        const canvasBounds = this.manager.getCanvasBounds();
+        // CANVAS ENFORCEMENT: Clamp current point to canvas bounds
+        const canvasBounds = BoundaryUtils.getCanvasDrawingBounds();
         const clampedCurrentPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
         const snapped = snapManager.snapPoint(clampedCurrentPoint);
         this.currentPoint.copyFrom(snapped);

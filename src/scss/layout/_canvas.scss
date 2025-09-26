@@ -5,9 +5,7 @@
 // Layout and positioning is handled by _engine.scss
 
 .canvas, #pixi-canvas {
-  // Base canvas element (PIXI canvas) - clean, borderless design
-  border: none;
-  border-radius: 0;
+  // Base canvas element (PIXI canvas) - will have border applied by engine layout
   outline: none;
   display: block;
   background: white;

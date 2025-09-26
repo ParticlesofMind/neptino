@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite Canvas Test - Fixed</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-results {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: #22c55e;
+            font-weight: bold;
+        }
+        .error {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .info {
+            color: #3b82f6;
+            margin: 10px 0;
+        }
+        .warning {
+            color: #f59e0b;
+            font-weight: bold;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border-left: 4px solid #3b82f6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .coordinate-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .coordinate-test {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+        }
+        .coordinate-test.visible {
+            border-color: #22c55e;
+            background: #f0fdf4;
+        }
+        .coordinate-test.staging {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        .coordinate-test.outside {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Infinite Canvas Test - FIXED VERSION</h1>
+        
+        <div class="test-results">
+            <h2>✅ Expected Results After Fix</h2>
+            <ul>
+                <li><strong>Stage Position:</strong> Moved by (-1200, -1800) to center canvas</li>
+                <li><strong>Canvas Area:</strong> Now appears at viewport (0,0)</li>
+                <li><strong>Staging Areas:</strong> Accessible at negative coordinates</li>
+                <li><strong>Creation Allowed:</strong> Tools can create elements anywhere in pasteboard</li>
+            </ul>
+        </div>
+        
+        <div class="test-results">
+            <h2>Test Results</h2>
+            <div id="test-output">Running comprehensive tests...</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🧪 Coordinate System Test</h3>
+            <div id="coordinate-tests"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        async function runComprehensiveTests() {
+            const output = document.getElementById('test-output');
+            const coordTests = document.getElementById('coordinate-tests');
+            let results = '';
+            
+            try {
+                // Import the fixed BoundaryUtils
+                const { BoundaryUtils } = await import('./src/scripts/coursebuilder/tools/BoundaryUtils.ts');
+                
+                results += '<div class="success">✅ Successfully imported BoundaryUtils!</div>';
+                
+                // Test 1: Get bounds
+                const pasteboardBounds = BoundaryUtils.getPasteboardBounds();
+                const visibleBounds = BoundaryUtils.getVisibleCanvasBounds();
+                
+                results += '<div class="info">📐 Pasteboard Bounds (Extended Working Area):</div>';
+                results += '<pre>' + JSON.stringify(pasteboardBounds, null, 2) + '</pre>';
+                
+                results += '<div class="info">📱 Visible Canvas Bounds (Export Area):</div>';
+                results += '<pre>' + JSON.stringify(visibleBounds, null, 2) + '</pre>';
+                
+                // Test 2: Verify the coordinate system is correct
+                const expectedPasteboard = {
+                    width: 3600,
+                    height: 5400,
+                    left: -1200,
+                    top: -1800,
+                    right: 2400,
+                    bottom: 3600
+                };
+                
+                const expectedVisible = {
+                    width: 1200,
+                    height: 1800,
+                    left: 0,
+                    top: 0,
+                    right: 1200,
+                    bottom: 1800
+                };
+                
+                const pasteboardCorrect = JSON.stringify(pasteboardBounds) === JSON.stringify(expectedPasteboard);
+                const visibleCorrect = JSON.stringify(visibleBounds) === JSON.stringify(expectedVisible);
+                
+                if (pasteboardCorrect && visibleCorrect) {
+                    results += '<div class="success">✅ Coordinate system is CORRECT!</div>';
+                } else {
+                    results += '<div class="error">❌ Coordinate system mismatch!</div>';
+                    if (!pasteboardCorrect) {
+                        results += '<div class="error">Expected pasteboard: ' + JSON.stringify(expectedPasteboard) + '</div>';
+                    }
+                    if (!visibleCorrect) {
+                        results += '<div class="error">Expected visible: ' + JSON.stringify(expectedVisible) + '</div>';
+                    }
+                }
+                
+                // Test 3: Test coordinate classification
+                const testPoints = [
+                    // Visible canvas area
+                    { x: 100, y: 100, name: "Canvas Center", expected: "visible" },
+                    { x: 0, y: 0, name: "Canvas Top-Left", expected: "visible" },
+                    { x: 1199, y: 1799, name: "Canvas Bottom-Right", expected: "visible" },
+                    
+                    // Staging areas
+                    { x: -100, y: 100, name: "Left Staging", expected: "staging" },
+                    { x: 100, y: -100, name: "Top Staging", expected: "staging" },
+                    { x: 1300, y: 100, name: "Right Staging", expected: "staging" },
+                    { x: 100, y: 1900, name: "Bottom Staging", expected: "staging" },
+                    
+                    // Outside pasteboard
+                    { x: -1500, y: -2000, name: "Far Outside", expected: "outside" }
+                ];
+                
+                let coordinateGrid = '<div class="coordinate-grid">';
+                let allCorrect = true;
+                
+                for (const point of testPoints) {
+                    const inVisible = BoundaryUtils.isPointInVisibleCanvas({ x: point.x, y: point.y });
+                    const inStaging = BoundaryUtils.isPointInStagingArea({ x: point.x, y: point.y });
+                    const inPasteboard = BoundaryUtils.isPointWithinBounds({ x: point.x, y: point.y }, pasteboardBounds);
+                    
+                    let actual = 'outside';
+                    let cssClass = 'outside';
+                    if (inVisible) {
+                        actual = 'visible';
+                        cssClass = 'visible';
+                    } else if (inStaging) {
+                        actual = 'staging';
+                        cssClass = 'staging';
+                    }
+                    
+                    const correct = actual === point.expected;
+                    if (!correct) allCorrect = false;
+                    
+                    coordinateGrid += `
+                        <div class="coordinate-test ${cssClass}">
+                            <strong>${point.name}</strong><br>
+                            (${point.x}, ${point.y})<br>
+                            <small>Expected: ${point.expected}</small><br>
+                            <small>Actual: ${actual}</small>
+                            ${correct ? '✅' : '❌'}
+                        </div>
+                    `;
+                }
+                coordinateGrid += '</div>';
+                
+                coordTests.innerHTML = coordinateGrid;
+                
+                if (allCorrect) {
+                    results += '<div class="success">✅ All coordinate classifications are CORRECT!</div>';
+                } else {
+                    results += '<div class="error">❌ Some coordinate classifications are wrong!</div>';
+                }
+                
+                // Test 4: Stage positioning check (if we can access it)
+                try {
+                    const app = (window as any).canvasAPI?.getApp?.();
+                    if (app && app.stage) {
+                        const stagePos = app.stage.position;
+                        results += '<div class="info">🎭 Stage Position:</div>';
+                        results += '<pre>x: ' + stagePos.x + ', y: ' + stagePos.y + '</pre>';
+                        
+                        if (stagePos.x === -1200 && stagePos.y === -1800) {
+                            results += '<div class="success">✅ Stage is correctly positioned for infinite canvas!</div>';
+                        } else {
+                            results += '<div class="warning">⚠️ Stage position might not be optimal</div>';
+                            results += '<div class="info">Expected: x: -1200, y: -1800</div>';
+                        }
+                    } else {
+                        results += '<div class="info">ℹ️ Canvas not initialized yet (expected for test page)</div>';
+                    }
+                } catch (e) {
+                    results += '<div class="info">ℹ️ Stage position check skipped (canvas not available)</div>';
+                }
+                
+                results += '<div class="success">🎉 All boundary utility tests completed!</div>';
+                results += '<div class="info">Ready to test in actual coursebuilder canvas!</div>';
+                
+            } catch (error) {
+                results += '<div class="error">❌ Error: ' + error.message + '</div>';
+                results += '<div class="error">Stack: ' + error.stack + '</div>';
+            }
+            
+            output.innerHTML = results;
+        }
+        
+        // Run tests when page loads
+        runComprehensiveTests();
+        
+        console.log('🧪 Comprehensive Infinite Canvas Test Started');
+    </script>
+</body>
+</html>

@@ -85,8 +85,8 @@ export class PixiTableTool extends BaseTool {
 
     const localPoint = container.toLocal(event.global);
     
-    // Boundary enforcement
-    const canvasBounds = this.manager.getCanvasBounds();
+    // Canvas boundary enforcement
+    const canvasBounds = BoundaryUtils.getCanvasDrawingBounds();
     const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
     
 
@@ -107,7 +107,7 @@ export class PixiTableTool extends BaseTool {
     const localPoint = container.toLocal(event.global);
 
     if (this.state.isDragging && this.dragPreview) {
-      const canvasBounds = this.manager.getCanvasBounds();
+      const canvasBounds = BoundaryUtils.getCanvasDrawingBounds();
       const clampedPoint = BoundaryUtils.clampPoint(localPoint, canvasBounds);
       
       this.currentPoint.copyFrom(clampedPoint);

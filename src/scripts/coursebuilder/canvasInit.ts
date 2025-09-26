@@ -172,8 +172,7 @@ export async function initializeCanvas(): Promise<void> {
         // No callbacks needed - ToolStateManager directly manages canvas state
         
 
-
-        // Make available globally for debugging and demos
+        // Make available globally for debugging and demos - CRITICAL: Do this BEFORE tool synchronization
         (window as any).canvasAPI = canvasAPI;
         (window as any).toolStateManager = toolStateManager;
         (window as any).toolColorManager = toolColorManager;
@@ -313,7 +312,7 @@ export async function initializeCanvas(): Promise<void> {
             const canvasTool = canvasAPI.getActiveTool();
             
             if (uiTool !== canvasTool) {
-                console.warn('⚠️ Final sync mismatch detected - correcting...');
+                console.log('🔧 SYNC: Final tool alignment - setting canvas to match UI');
                 canvasAPI.setTool(uiTool);
             }
             

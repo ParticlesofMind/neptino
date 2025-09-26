@@ -11,7 +11,7 @@
  */
 
 import { Application } from 'pixi.js';
-import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../utils/canvasSizing';
+import { canvasDimensionManager } from '../utils/CanvasDimensionManager';
 
 export interface PixiAppConfig {
   width: number;
@@ -48,9 +48,12 @@ export class PixiApp {
     // Cap resolution at 2x to prevent excessive memory usage on high-DPI displays
     const optimizedResolution = Math.min(devicePixelRatio, 2); 
 
+    // Get canvas dimensions - simple and straightforward
+    const canvasDims = canvasDimensionManager.getCurrentDimensions();
+
     const defaultConfig: PixiAppConfig = {
-      width: CANVAS_WIDTH,  // Canvas width from canvasSizing.ts
-      height: CANVAS_HEIGHT, // Canvas height from canvasSizing.ts
+      width: canvasDims.width,   // Canvas width
+      height: canvasDims.height, // Canvas height
       backgroundColor: 0xffffff, // White background
       antialias: true,      // Enable antialiasing for smooth edges
       resolution: optimizedResolution, // Capped resolution for performance
