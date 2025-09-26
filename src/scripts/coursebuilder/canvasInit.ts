@@ -22,6 +22,7 @@ import { initializeCanvasSystem, validateCanvasSystem } from './utils/canvasSyst
 import { canvasDimensionManager } from './utils/CanvasDimensionManager';
 import { activateGSAPFeatures } from './GSAPCanvasIntegration';
 import { canvasMarginManager } from './canvas/CanvasMarginManager';
+import { FloatingElementsManager } from './ui/FloatingElementsManager';
 
 
 // Global canvas instance
@@ -32,6 +33,7 @@ let perspectiveManager: HighQualityZoom | null = null;
 let layoutManager: CanvasLayoutManager | null = null;
 let toolCoordinator: ToolCoordinator | null = null;
 let layersPanel: LayersPanel | null = null;
+let floatingElementsManager: FloatingElementsManager | null = null;
 
 // Global flag to prevent multiple initializations
 let isInitializing = false;
@@ -188,6 +190,12 @@ export async function initializeCanvas(): Promise<void> {
         if (layoutManager) {
             layoutManager.addDebugCommands();
         }
+
+        // Initialize floating elements manager for sticky positioning
+        try {
+            floatingElementsManager = new FloatingElementsManager();
+            (window as any).floatingElementsManager = floatingElementsManager;
+        } catch (e) { console.warn('⚠️ Failed to init FloatingElementsManager', e); }
 
         // Initialize animation state with app + layers
         try {
