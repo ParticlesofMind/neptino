@@ -6,12 +6,11 @@
 
 .engine {
     display: grid;
-    grid-template-columns: auto 2fr 7fr 2fr;
+    grid-template-columns: auto 2.5fr 7fr 2.5fr;
     gap: 0.5rem;
     height: calc(100vh - 7vh);
     width: 100%;
-    padding: 0.5rem; 
-
+    padding: 0.5rem;
 
     // Common styling for grid items
     >* {
@@ -24,183 +23,26 @@
     }
 
     // ==========================================================================
-    // NEW LAYOUT POSITIONING
+    // GRID LAYOUT POSITIONING
     // ==========================================================================
 
-    // Left side: Perspective tools + Mode selector
-    &__perspective {
-            display: flex;
+    // Media panel - First grid column
+    &__media {
+        grid-column: 1;
+        display: flex;
         flex-direction: column;
-        gap: 0.5rem; // Increased gap for better spacing
-        background: rgba(255, 255, 255, 0.95);
-        padding: 0.75rem 0.5rem; // More padding
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(4px);
-        z-index: 1000;
-        width: 60px; // Slightly wider
-        min-width: 60px;
-        align-items: center;
-    }
+        gap: 0.5rem;
+        padding: 0.75rem;
+        overflow-y: auto;
 
-
-
-    // Search panel
-    &__search {
-     
-        display: grid;
-     
-        padding: var(--spacing-2);
-        height: auto;
-
-        &__input {
-            width: 100%;
-            box-sizing: border-box;
-            margin: 0 0 var(--spacing-2) 0;
-        }
-
-        &__panel {
+        // Media items - same styling as perspective and tools
+        .media__item {
             display: flex;
             flex-direction: column;
-            gap: var(--spacing-2);
-            flex: 1 1 auto;
-            min-height: 0;
-        }
-
-        &__results {
-            flex: 1 1 auto;
-            min-height: 0;
-            overflow-y: auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 16px;
-            padding: 10px;
-            align-content: start;
-            align-items: start;
-            grid-auto-rows: max-content;
-        }
-    }
-
-    // Canvas area - full height with tools positioned inside
-    &__canvas {
-        grid-area: canvas;
-        background: white;
-        overflow: hidden;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        position: relative;
-
-        box-shadow:
-            inset 6px 6px 12px rgba(0, 0, 0, 0.1),
-            inset -6px -6px 12px rgba(255, 255, 255, 0.8),
-            2px 2px 6px rgba(0, 0, 0, 0.05);
-
-        border: none !important;
-        outline: none !important;
-
-        // PIXI Canvas positioning
-        canvas {
-            justify-self: center;
-            align-self: start;
-        }
-    }
-
-    // Navigation positioning - positioned inside canvas on right
-    &__navigation--canvas {
-        position: absolute;
-        right: var(--spacing-3);
-        top: var(--spacing-3);
-        bottom: var(--spacing-3);
-        width: 280px;
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: var(--radius-medium);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        backdrop-filter: blur(8px);
-        z-index: 100;
-        overflow-y: auto;
-        padding: var(--spacing-3);
-        display: flex;
-        flex-direction: column;
-    }
-
-    // Tools positioning - positioned inside canvas at bottom
-    &__tools.tools--canvas {
-        position: absolute;
-        bottom: var(--spacing-3);
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing-2);
-        background: rgba(255, 255, 255, 0.95);
-        padding: var(--spacing-3);
-        border-radius: var(--radius-medium);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        backdrop-filter: blur(8px);
-        z-index: 100;
-        min-width: 600px; // Ensure enough space for tools
-
-        // Options row (top)
-        .tools__options {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: var(--spacing-2);
-        }
-
-        // Tools row (bottom)
-        .tools__selection {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: var(--spacing-2);
-        }
-    }
-
-    // Perspective tools positioning - positioned inside canvas on left
-    &__perspective {
-        position: absolute;
-        left: var(--spacing-3);
-        top: 50%;
-        transform: translateY(-50%);
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing-2); // Increased spacing between icons as requested
-        background: rgba(255, 255, 255, 0.95);
-        padding: var(--spacing-3);
-        border-radius: var(--radius-medium);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        backdrop-filter: blur(8px);
-        z-index: 100;
-        width: auto;
-        min-width: auto;
-
-        // Zoom display is an element within perspective
-        .zoom-display {
-            font-size: 0.625rem; // Smaller text
-            font-weight: 600;
-            color: var(--color-primary-600);
-            background: var(--color-primary-50);
-            border: 1px solid var(--color-primary-200);
-            border-radius: 3px;
-            padding: 0.125rem 0.25rem;
-            text-align: center;
-            white-space: nowrap;
-            min-height: 20px;
-            display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        // Perspective tool items - compact button style
-        .perspective__item {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
+            gap: 0.25rem;
+            padding: 0.75rem 0.5rem;
             border-radius: 4px;
             background: rgba(255, 255, 255, 0.9);
             border: 1px solid var(--color-neutral-300);
@@ -219,20 +61,237 @@
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             }
 
-            .perspective__icon {
-                width: 16px;
-                height: 16px;
-                opacity: 0.8;
-            }
+            // Icons are handled by _icons.scss
 
-            .icon-label {
-                display: none; // Hide labels in slim mode
-            }
+            // Icon labels handled by shared engine__controls styling
         }
     }
 
+    // Left side: Perspective tools + Mode selector
+    &__perspective {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem; // Increased gap for better spacing
+        background: rgba(255, 255, 255, 0.95);
+        padding: 0.75rem 0.5rem; // More padding
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(4px);
+        align-items: center;
+    }
+
+    // Search panel - Second grid column
+    &__search {
+        grid-column: 2;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        height: 100%;
+    }
+
+    // Canvas area - Third grid column (main center area)
+    &__canvas {
+        grid-column: 3;
+        background: white;
+        overflow: auto;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        position: relative;
+
+        box-shadow:
+            inset 6px 6px 12px rgba(0, 0, 0, 0.1),
+            inset -6px -6px 12px rgba(255, 255, 255, 0.8),
+            2px 2px 6px rgba(0, 0, 0, 0.05);
+
+        border: none;
+        outline: none;
+
+        // PIXI Canvas positioning
+        canvas {
+            justify-self: center;
+            align-self: start;
+        }
+    }
+
+    // Layers panel - Fourth grid column (formerly navigation)
+    &__layers {
+        grid-column: 4;
+        display: flex;
+        flex-direction: column;
+        padding: var(--spacing-3);
+        overflow-y: auto;
+    }
+
+    // Controls container - groups modes and tools on same row
+    &__controls {
+        position: absolute;
+        bottom: var(--spacing-3);
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: row;
+        align-items: flex-end; // Align to bottom so modes stay in place
+        gap: var(--spacing-3);
+        z-index: 100;
+
+        // Shared styling for both modes and tools
+        > * {
+            background: rgba(255, 255, 255, 0.95);
+            padding: var(--spacing-3);
+            border-radius: var(--radius-medium);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(8px);
+        }
+
+        // Shared icon-label styling for all child components
+        .icon-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--color-neutral-700);
+            text-align: center;
+            margin-top: 0.25rem;
+            line-height: 1.2;
+            white-space: nowrap;
+            visibility: visible;
+            opacity: 1;
+            max-width: none;
+            overflow: visible;
+        }
+    }
+
+    // Mode selector - explicit styling to match tools
+    &__modes {
+        display: flex;
+        flex-direction: row;
+        gap: var(--spacing-2);
+        // Force same height as tools by matching their structure
+        min-height: 80px; // Approximate tools height
+        align-items: center;
+        justify-content: center;
+    }
+
+    // Tools - explicit styling
+    &__tools {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-2);
+        min-width: 600px; // Ensure enough space for tools
+        min-height: 80px; // Ensure consistent height
+    }
+
+    // Tools Options Row
+    &__tools-options {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: var(--spacing-2);
+
+        // Tool option items within the options row
+        .tools__item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: var(--spacing-2);
+            padding: var(--spacing-2);
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--color-neutral-200);
+            border-radius: 4px;
+            min-width: auto;
+            width: auto;
+            height: auto;
+
+            // Override the column layout for options
+            flex-direction: row;
+        }
+    }
+
+    // Tools Selection Row
+    &__tools-selection {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: var(--spacing-2);
+    }
+
+    // Perspective tools positioning - positioned inside canvas on left
+    &__perspective {
+        position: absolute;
+        left: var(--spacing-3);
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-1);
+        background: rgba(255, 255, 255, 0.95);
+        padding: var(--spacing-2);
+        border-radius: var(--radius-medium);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(8px);
+        z-index: 100;
+        width: auto;
+        min-width: auto;
+
+        // Zoom display is an element within perspective
+        &__zoom-display {
+            font-size: 0.625rem; // Smaller text
+            font-weight: 600;
+            color: var(--color-primary-600);
+            background: var(--color-primary-50);
+            border: 1px solid var(--color-primary-200);
+            border-radius: 3px;
+            padding: 0.125rem 0.25rem;
+            text-align: center;
+            white-space: nowrap;
+            min-height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        // Perspective tool items - compact vertical layout
+        &__item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.125rem;
+            padding: 0.375rem 0.25rem;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--color-neutral-300);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 48px;
+            width: 48px;
+
+            &:hover {
+                background: var(--color-primary-50);
+                border-color: var(--color-primary-300);
+                transform: translateY(-1px);
+            }
+
+            &--active {
+                background: var(--color-primary-100);
+                border-color: var(--color-primary-400);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            // Icons are handled by _icons.scss
+
+            // Icon labels handled by shared engine__controls styling  
+            .icon-label {
+                font-size: 0.625rem; // Perspective uses smaller text
+            }
+        }
+
+
+    }
+
     // Snap Menu - positioned dynamically by JavaScript
-    .snap-menu {
+    &__snap-menu {
         // Position is set by JavaScript - don't override with CSS
         z-index: 1000;
         background: rgba(255, 255, 255, 0.95);
@@ -246,75 +305,11 @@
         transform: translateX(-10px); // Slide animation offset
         transition: all 0.2s ease;
 
-        // Show state
-        &.open {
+        // Show state modifier
+        &--open {
             opacity: 1;
             visibility: visible;
             transform: translateX(0); // Slide in when open
-        }
-
-        // Menu items
-        &__item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            color: var(--color-neutral-700);
-            transition: all 0.15s ease;
-
-            &:hover {
-                background: var(--color-primary-50);
-                color: var(--color-primary-700);
-            }
-
-            &--active {
-                background: var(--color-primary-100);
-                color: var(--color-primary-800);
-                font-weight: 500;
-            }
-
-            .icon {
-                width: 14px;
-                height: 14px;
-                opacity: 0.7;
-            }
-        }
-
-        // Control rows
-        &__row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 4px 0;
-            font-size: 12px;
-
-            label {
-                font-weight: 500;
-                color: var(--color-neutral-600);
-                white-space: nowrap;
-            }
-
-            input[type="number"] {
-                width: 50px;
-                padding: 2px 4px;
-                border: 1px solid var(--color-neutral-300);
-                border-radius: 3px;
-                font-size: 11px;
-            }
-
-            input[type="checkbox"] {
-                margin-right: 4px;
-            }
-        }
-
-        // Controls section
-        &__controls {
-            border-top: 1px solid var(--color-neutral-200);
-            margin-top: 8px;
-            padding-top: 8px;
         }
     }
 
@@ -324,6 +319,202 @@
         grid-row: 2;
         overflow-y: auto;
         align-items: flex-start; // Override center alignment for preview
+    }
+}
+
+// ==========================================================================
+// SNAP MENU - BEM STYLING FOR SNAP MENU COMPONENT
+// ==========================================================================
+
+.snap-menu {
+    // Position is set by JavaScript - don't override with CSS
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--color-neutral-300);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 8px;
+    min-width: 200px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-10px); // Slide animation offset
+    transition: all 0.2s ease;
+    position: absolute;
+
+    // Show state modifier
+    &--open {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(0); // Slide in when open
+    }
+
+    // Menu items
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        color: var(--color-neutral-700);
+        transition: all 0.15s ease;
+
+        &:hover {
+            background: var(--color-primary-50);
+            color: var(--color-primary-700);
+        }
+
+        &--active {
+            background: var(--color-primary-100);
+            color: var(--color-primary-800);
+            font-weight: 500;
+        }
+    }
+
+    // Icons are handled by _icons.scss
+
+    // Control rows
+    &__row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+        font-size: 12px;
+
+        label {
+            font-weight: 500;
+            color: var(--color-neutral-600);
+            white-space: nowrap;
+        }
+
+        input[type="number"] {
+            width: 50px;
+            padding: 2px 4px;
+            border: 1px solid var(--color-neutral-300);
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 4px;
+        }
+    }
+
+    // Controls section
+    &__controls {
+        border-top: 1px solid var(--color-neutral-200);
+        margin-top: 8px;
+        padding-top: 8px;
+    }
+}
+
+// ==========================================================================
+// PERSPECTIVE COMPONENT - BEM STYLING FOR PERSPECTIVE TOOLS
+// ==========================================================================
+
+.perspective {
+    &__item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid var(--color-neutral-300);
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background: var(--color-primary-50);
+            border-color: var(--color-primary-300);
+            transform: translateY(-1px);
+        }
+
+        &--active {
+            background: var(--color-primary-100);
+            border-color: var(--color-primary-400);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    }
+
+    // Icons are handled by _icons.scss
+
+    &__divider {
+        height: 1px;
+        background: var(--color-neutral-300);
+        margin: var(--spacing-2) 0;
+    }
+}
+
+// ==========================================================================
+// MODE COMPONENT - BEM STYLING FOR MODE SELECTOR
+// ==========================================================================
+
+.mode {
+    &__item {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        box-sizing: border-box;
+        padding: var(--spacing-1);
+        border: 1px solid var(--color-neutral-200);
+        border-radius: var(--radius-medium);
+        background: var(--color-background);
+        box-shadow:
+            0 1px 2px rgba(0, 0, 0, 0.05),
+            0 1px 1px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+            transform: translateY(-1px);
+            background: var(--color-neutral-50);
+            border-color: var(--color-neutral-300);
+            box-shadow:
+                0 2px 4px rgba(0, 0, 0, 0.08),
+                0 1px 2px rgba(0, 0, 0, 0.12);
+        }
+
+        // Compact modifier for mode items inside perspective
+        &--compact {
+            width: auto;
+            height: 32px;
+            padding: var(--spacing-1) var(--spacing-2);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-1);
+        }
+
+        // Mode label styling
+        &__label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        // Active state
+        &--active {
+            background: var(--color-primary-200);
+            border-color: var(--color-primary-300);
+            box-shadow:
+                0 2px 4px rgba(26, 140, 255, 0.15),
+                0 1px 2px rgba(26, 140, 255, 0.1);
+
+            &:hover {
+                background: var(--color-primary-300);
+                border-color: var(--color-primary-400);
+                transform: translateY(-1px);
+                box-shadow:
+                    0 3px 6px rgba(26, 140, 255, 0.2),
+                    0 2px 4px rgba(26, 140, 255, 0.15);
+            }
+        }
     }
 }
 
@@ -341,22 +532,45 @@
     &__selection {
         display: flex;
         gap: var(--spacing-4);
-
-        // Mode-specific tool containers
-        &--build,
-        &--animate {
-            display: flex;
-            gap: var(--spacing-4);
-        }
     }
 
-    // Tool selection items - layout structure only
+    // Mode-specific tool containers
+    &--build,
+    &--animate {
+        display: flex;
+        gap: var(--spacing-4);
+    }
+
+    // Tool selection items - visual styling like perspective and media
     &__item {
         display: flex;
         flex-direction: column;
-        gap: var(--spacing-2);
+        gap: var(--spacing-1);
         align-items: center;
         justify-content: center;
+        min-width: 64px;
+        padding: var(--spacing-2);
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid var(--color-neutral-300);
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background: var(--color-primary-50);
+            border-color: var(--color-primary-300);
+            transform: translateY(-1px);
+        }
+
+        &--active {
+            background: var(--color-primary-100);
+            border-color: var(--color-primary-400);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        // Icons are handled by _icons.scss
+
+        // Icon labels handled by shared engine__controls styling
 
         // Checkbox container for scene settings
         .checkbox-container {
@@ -364,7 +578,7 @@
             align-items: center;
             gap: var(--spacing-2);
             font-size: var(--font-size-small);
-            
+
             input[type="checkbox"] {
                 width: 16px;
                 height: 16px;
@@ -381,8 +595,8 @@
         gap: var(--spacing-3);
         margin-left: var(--spacing-4);
         overflow: visible;
-        border: none !important;
-        box-shadow: none !important;
+        border: none;
+        box-shadow: none;
 
         // Override layout for tool items in options area (settings should be horizontal)
         .tools__item {
@@ -390,188 +604,176 @@
             width: auto;
             height: auto;
             gap: var(--spacing-2);
-            // Remove border for items inside tools options
-            border: none !important;
-            box-shadow: none !important;
-            background: transparent !important;
-        }
+            padding: var(--spacing-2);
+            // Keep some visual indication but more subtle
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid var(--color-neutral-200);
+            border-radius: 4px;
 
-        // Compact, horizontal Path settings (speed/ease/visibility)
-        .tools__item--path {
-            display: flex;
-            align-items: center;
-            flex-wrap: nowrap;
-            gap: 6px;
-
-            // Keep labels subtle and tight
-            span { font-size: 11px; opacity: 0.8; white-space: nowrap; }
-
-            // Make buttons truly small and auto-sized within this panel
-            .button {
-                padding: 2px 8px;
-                font-size: 11px;
-                line-height: 1.2;
-                min-height: 22px;
-                width: auto; // override wide small buttons
-            }
-
-            .button-group {
+            // Path settings modifier
+            &--path {
                 display: flex;
-                gap: 4px;
+                align-items: center;
                 flex-wrap: nowrap;
+                gap: 6px;
+
+                // Keep labels subtle and tight
+                span {
+                    font-size: 11px;
+                    opacity: 0.8;
+                    white-space: nowrap;
+                }
+
+                // Make buttons truly small and auto-sized within this panel
+                .button {
+                    padding: 2px 8px;
+                    font-size: 11px;
+                    line-height: 1.2;
+                    min-height: 22px;
+                    width: auto; // override wide small buttons
+                }
+
+                .button-group {
+                    display: flex;
+                    gap: 4px;
+                    flex-wrap: nowrap;
+                }
+            }
+        }
+
+        // Engine tools options styling
+        .engine__tools-options & {
+            .tools__item {
+                flex-direction: row;
+                width: auto;
+                height: auto;
+                gap: var(--spacing-2);
+                border: none;
+                box-shadow: none;
+                background: transparent;
             }
         }
     }
 }
 
 // ==========================================================================
-// COURSEBUILDER TOOLBAR ITEM STYLING
+// MEDIA COMPONENT - BEM STYLING FOR MEDIA ITEMS
 // ==========================================================================
 
-.mode__item,
-.media__item,
-.tools__item {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  // Perfect 50x50 square
-  width: 50px;
-  height: 50px;
-  box-sizing: border-box;
-  padding: var(--spacing-1); // Reduced padding to fit content better
-  
-  // Add border and styling to the entire item container
-  border: 1px solid var(--color-neutral-200);
-  border-radius: var(--radius-medium);
-  background: var(--color-background);
-  box-shadow: 
-    0 1px 2px rgba(0, 0, 0, 0.05),
-    0 1px 1px rgba(0, 0, 0, 0.08);
-  cursor: pointer;
-  transition: all 0.2s ease;
+.media {
+    &__item {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        box-sizing: border-box;
+        padding: var(--spacing-1);
+        border: 1px solid var(--color-neutral-200);
+        border-radius: var(--radius-medium);
+        background: var(--color-background);
+        box-shadow:
+            0 1px 2px rgba(0, 0, 0, 0.05),
+            0 1px 1px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+        transition: all 0.2s ease;
 
-  &:hover {
-    transform: translateY(-1px);
-    background: var(--color-neutral-50);
-    border-color: var(--color-neutral-300);
-    box-shadow:
-      0 2px 4px rgba(0, 0, 0, 0.08),
-      0 1px 2px rgba(0, 0, 0, 0.12);
+        &:hover {
+            transform: translateY(-1px);
+            background: var(--color-neutral-50);
+            border-color: var(--color-neutral-300);
+            box-shadow:
+                0 2px 4px rgba(0, 0, 0, 0.08),
+                0 1px 2px rgba(0, 0, 0, 0.12);
+        }
+
+        // Active state styling with lighter blue
+        &--active {
+            background: var(--color-primary-200);
+            border-color: var(--color-primary-300);
+            box-shadow:
+                0 2px 4px rgba(26, 140, 255, 0.15),
+                0 1px 2px rgba(26, 140, 255, 0.1);
+
+            &:hover {
+                background: var(--color-primary-300);
+                border-color: var(--color-primary-400);
+                transform: translateY(-1px);
+                box-shadow:
+                    0 3px 6px rgba(26, 140, 255, 0.2),
+                    0 2px 4px rgba(26, 140, 255, 0.15);
+            }
+        }
+    }
 }
 
 // ==========================================================================
-// SEARCH PANEL (engine__search children)
+// SEARCH COMPONENT - BEM STYLING FOR SEARCH PANEL
 // ==========================================================================
 
+.search {
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-2);
+    height: 100%;
 
-.search__filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-2);
-  flex-shrink: 0; // Prevent filters from shrinking
-}
-
-.search__results {
-  flex: 1 1 auto; // Fill available space
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 16px; // More spacing between thumbnails
-  padding: 10px;
-  overflow-y: auto; // Native scroll
-  min-height: 0; // Allow scrolling within flex parent
-  
-  // Avoid stretching when only a few items
-  align-content: start;
-  align-items: start;
-  grid-auto-rows: max-content;
-
-  // Responsive grid adjustments
-  @media (max-width: 1200px) {
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 12px;
-  }
-  
-  @media (max-width: 992px) {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 14px;
-    padding: 8px;
-  }
-  
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  }
-}
-
-.search__panel {
-  height: 100%;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
-  flex: 1 1 auto; // Let panel fill and shrink within engine__search
-  min-height: 0; // Allow flex child to shrink
-  max-height: 100%; // Prevent overflow
-}
-
-  // Active state styling with lighter blue
-  &--active {
-    background: var(--color-primary-200); // Much lighter blue
-    border-color: var(--color-primary-300);
-    box-shadow:
-      0 2px 4px rgba(26, 140, 255, 0.15),
-      0 1px 2px rgba(26, 140, 255, 0.1);
-
-    // Make sure the label text is white
-    .icon-label {
-      color: white !important; // Force white text on blue background
+    &__input {
+        width: 100%;
+        box-sizing: border-box;
+        height: 1.5rem;
+        flex-shrink: 0; // Prevent input from shrinking
+        margin-bottom: var(--spacing-2); // Add space below input
     }
 
-    // Make SVG icons white when active
-    .icon--base {
-      filter: brightness(0) invert(1); // Convert any colored SVG to white
+    &__panel {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-2);
+        flex: 1 1 auto;
+        min-height: 0;
+        height: 100%;
+        width: 100%;
     }
 
-    &:hover {
-      background: var(--color-primary-300); // Slightly darker on hover
-      border-color: var(--color-primary-400);
-      transform: translateY(-1px);
-      box-shadow:
-        0 3px 6px rgba(26, 140, 255, 0.2),
-        0 2px 4px rgba(26, 140, 255, 0.15);
+    &__filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-2);
+        flex-shrink: 0; // Prevent filters from shrinking
     }
-  }
 
-  // Label styling
-  .icon-label {
-    margin-top: var(--spacing-1);
-    font-size: 7pt;
-    font-weight: var(--font-weight-semibold);
-    line-height: 1;
-    white-space: nowrap;
-    text-align: center;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--color-text-secondary);
-    transition: color 0.2s ease;
-  }
+    &__results {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 16px;
+        padding: 10px;
+        align-content: start;
+        align-items: start;
+        grid-auto-rows: max-content;
 
-  // Icon styling - make the actual SVG smaller to fit with text
-  .icon--base {
-    flex-shrink: 0;
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    transition: filter 0.2s ease;
-    // Override the base icon size completely
-    width: 28px !important;
-    height: 28px !important;
-    min-width: 28px !important;
-    min-height: 28px !important;
-    max-width: 28px !important;
-    max-height: 28px !important;
-  }
+        // Responsive grid adjustments
+        @media (max-width: 1200px) {
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 12px;
+        }
+
+        @media (max-width: 992px) {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 14px;
+            padding: 8px;
+        }
+
+        @media (max-width: 768px) {
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        }
+    }
 }
+
+// Icon labels are handled within their specific components above (media__item, tools__item)
+
+// All icon styling is handled by _icons.scss component

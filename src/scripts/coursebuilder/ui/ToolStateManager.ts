@@ -990,16 +990,16 @@ export class ToolStateManager {
         }
 
         document
-            .querySelectorAll('.tools__options .tools__item')
+            .querySelectorAll('.engine__tools-options .tools__item')
             .forEach(settings => {
                 (settings as HTMLElement).style.display = 'none';
             });
 
         // Show settings for current tool (updated BEM selector)
         let toolSettings = (document.querySelector(
-            `.tools__options .tools__item--${toolName}`,
+            `.engine__tools-options .tools__item--${toolName}`,
         ) as HTMLElement) || (document.querySelector(
-            `.tools__options [data-settings-for="${toolName}"]`,
+            `.engine__tools-options [data-settings-for="${toolName}"]`,
         ) as HTMLElement);
         if (toolName === 'selection' && this.currentMode !== 'animate') {
             toolSettings = null as any;
@@ -1080,7 +1080,7 @@ export class ToolStateManager {
      */
     private showSettingsPanelFor(toolName: string | null): void {
         // Hide all panels
-        document.querySelectorAll('.tools__options .tools__item').forEach(el => {
+        document.querySelectorAll('.engine__tools-options .tools__item').forEach(el => {
             (el as HTMLElement).style.display = 'none';
         });
         const placeholder = document.querySelector('.tools__placeholder') as HTMLElement | null;
@@ -1089,8 +1089,8 @@ export class ToolStateManager {
             return;
         }
         // Show specific panel
-        const panel = (document.querySelector(`.tools__options .tools__item--${toolName}`) as HTMLElement) ||
-                      (document.querySelector(`.tools__options [data-settings-for="${toolName}"]`) as HTMLElement);
+        const panel = (document.querySelector(`.engine__tools-options .tools__item--${toolName}`) as HTMLElement) ||
+                      (document.querySelector(`.engine__tools-options [data-settings-for="${toolName}"]`) as HTMLElement);
         if (panel) {
             panel.style.display = 'flex';
         } else if (placeholder) {

@@ -54,7 +54,7 @@ export class AnimationUI {
       }
 
       // Hide selection speed panel when not in animate mode
-      const selPanel = document.querySelector('.engine__tools .tools__options .tools__item--selection') as HTMLElement | null;
+      const selPanel = document.querySelector('.engine__tools .engine__tools-options .tools__item--selection') as HTMLElement | null;
       if (selPanel) selPanel.style.display = (cm === 'animate') ? selPanel.style.display : 'none';
       try { pathOverlay.refresh(); } catch {}
     });
@@ -104,7 +104,7 @@ export class AnimationUI {
 
   /** Options panels for animate tools */
   private ensureOptionsPanels(): void {
-    const options = document.querySelector('.engine__tools .tools__options') as HTMLElement | null;
+    const options = document.querySelector('.engine__tools .engine__tools-options') as HTMLElement | null;
     if (!options) return;
 
     const existingScenePanel = options.querySelector('.tools__item--scene');

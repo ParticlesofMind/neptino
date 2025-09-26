@@ -634,7 +634,8 @@
 
             <div class="pedagogy-ui" id="pedagogy-ui">
               <div class="pedagogy-ui__left">
-                <div class="pedagogy-grid" id="pedagogy-grid" role="application" aria-label="Pedagogical coordinate plane" tabindex="0">
+                <div class="pedagogy-grid" id="pedagogy-grid" role="application"
+                  aria-label="Pedagogical coordinate plane" tabindex="0">
                   <!-- Grid backdrop via CSS; central axes via pseudo elements -->
                   <div class="axis-label axis-label--left">Essentialist</div>
                   <div class="axis-label axis-label--right">Progressive</div>
@@ -665,7 +666,8 @@
               <div class="pedagogy-ui__right">
                 <section class="pedagogy-summary">
                   <h3 class="pedagogy-summary__title" id="pedagogy-approach-title">Balanced</h3>
-                  <div class="pedagogy-summary__subtitle" id="pedagogy-approach-subtitle"><em>Essentialist × Behaviorist ↔ Progressive × Constructivist</em></div>
+                  <div class="pedagogy-summary__subtitle" id="pedagogy-approach-subtitle"><em>Essentialist × Behaviorist
+                      ↔ Progressive × Constructivist</em></div>
                   <p class="pedagogy-summary__description" id="pedagogy-approach-desc">
                     A balanced blend of teacher guidance, student agency, and mixed knowledge construction.
                   </p>
@@ -908,9 +910,40 @@
       <div class="engine">
 
 
-
-
-
+        <div class="engine__media media">
+          <div class="media__item" data-media="files">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-files.svg" alt="">
+            <span class="icon-label">Files</span>
+          </div>
+          <div class="media__item" data-media="images">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-image.svg" alt="">
+            <span class="icon-label">Images</span>
+          </div>
+          <div class="media__item" data-media="videos">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-video.svg" alt="">
+            <span class="icon-label">Videos</span>
+          </div>
+          <div class="media__item" data-media="audio">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-audio.svg" alt="">
+            <span class="icon-label">Audio</span>
+          </div>
+          <div class="media__item" data-media="text">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-text.svg" alt="">
+            <span class="icon-label">Text</span>
+          </div>
+          <div class="media__item" data-media="plugin">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-plugins.svg" alt="">
+            <span class="icon-label">Plugins</span>
+          </div>
+          <div class="media__item" data-media="links">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-link.svg" alt="">
+            <span class="icon-label">Links</span>
+          </div>
+          <div class="media__item" data-media="interactive">
+            <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-interactive.svg" alt="">
+            <span class="icon-label">Interactive</span>
+          </div>
+        </div>
         <!-- Search -->
         <div class="engine__search search">
           <input class="search__input input input--search" type="search" placeholder="Search media..."
@@ -920,51 +953,61 @@
         <!-- Canvas Area -->
         <div class="engine__canvas canvas canvas--grid" id="canvas-container">
           <!-- Canvas will be inserted here by JavaScript -->
-          
+
           <!-- Left Side: Perspective + Mode (inside canvas) -->
           <div class="engine__perspective">
             <!-- Zoom Indicator -->
-            <div class="zoom-display" title="Current zoom level - Ctrl/Cmd+wheel to zoom">100%</div>
-            
-            <div class="perspective__item" data-perspective="zoom-in" title="Zoom In">
+            <div class="engine__zoom-display" title="Current zoom level - Ctrl/Cmd+wheel to zoom">100%</div>
+
+            <div class="engine__item" data-perspective="zoom-in" title="Zoom In">
               <img src="/src/assets/icons/coursebuilder/perspective/zoomin-icon.svg" alt="Zoom In"
-                class="perspective__icon icon icon--base">
+                class="engine__icon icon icon--base">
+              <span class="icon-label">Zoom In</span>
             </div>
-            <div class="perspective__item" data-perspective="zoom-out" title="Zoom Out">
+            <div class="engine__item" data-perspective="zoom-out" title="Zoom Out">
               <img src="/src/assets/icons/coursebuilder/perspective/zoomout-icon.svg" alt="Zoom Out"
-                class="perspective__icon icon icon--base">
+                class="engine__icon icon icon--base">
+              <span class="icon-label">Zoom Out</span>
             </div>
 
-            <div class="perspective__item" data-perspective="reset" title="Reset View">
+            <div class="engine__item" data-perspective="reset" title="Reset View">
               <img src="/src/assets/icons/coursebuilder/perspective/reset-icon.svg" alt="Reset View"
-                class="perspective__icon icon icon--base">
+                class="engine__icon icon icon--base">
+              <span class="icon-label">Reset</span>
             </div>
 
-            <div class="perspective__item" data-perspective="grab" title="grab">
+            <div class="engine__item" data-perspective="grab" title="grab">
               <img src="/src/assets/icons/coursebuilder/perspective/grab-icon.svg" alt="grab"
-                class="perspective__icon icon icon--base">
-            </div>
-            
-            <!-- Grid button (opens Snap Menu) -->
-            <div class="perspective__item" data-perspective="grid" title="Snapping" data-snap-anchor>
-              <img src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Snapping"
-                class="perspective__icon icon icon--base">
+                class="engine__icon icon icon--base">
+              <span class="icon-label">Grab</span>
             </div>
 
-            <!-- Mode Selector - Build and Animate only -->
-            <div class="perspective__divider"></div>
-            <div class="mode__item mode__item--compact" data-mode="build">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-build.svg" alt="">
-            </div>
-            <div class="mode__item mode__item--compact" data-mode="animate">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" alt="">
+            <!-- Grid button (opens Snap Menu) -->
+            <div class="engine__item" data-perspective="grid" title="Snapping" data-snap-anchor>
+              <img src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Snapping"
+                class="engine__icon icon icon--base">
+              <span class="icon-label">Grid</span>
             </div>
           </div>
 
-          <!-- Bottom: Tools (2 rows - inside canvas) -->
-          <div class="engine__tools tools tools--canvas">
+          <!-- Bottom: Modes and Tools Container -->
+          <div class="engine__controls">
+            <!-- Mode Selector -->
+            <div class="engine__modes">
+              <div class="mode__item mode__item--compact" data-mode="build">
+                <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-build.svg" alt="">
+                <span class="icon-label">Build</span>
+              </div>
+              <div class="mode__item mode__item--compact" data-mode="animate">
+                <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" alt="">
+                <span class="icon-label">Animate</span>
+              </div>
+            </div>
+
+            <!-- Tools (2 rows) -->
+            <div class="engine__tools engine__tools--canvas">
             <!-- Tool Options Row (Top) -->
-            <div class="tools__options">
+            <div class="engine__tools-options">
               <!-- Pen Settings -->
               <div class="tools__item tools__item--pen" style="display: none;">
                 <input type="number" min="1" max="15" value="2" class="input input--number" title="Pen Size"
@@ -983,7 +1026,8 @@
                   <option value="#64748b" data-color="#64748b">Slate</option>
                   <option value="#f8fafc" data-color="#f8fafc">White</option>
                 </select>
-                <select id="pen-fill-select" class="input input--color" data-color-selector="pen-fill" title="Fill Color">
+                <select id="pen-fill-select" class="input input--color" data-color-selector="pen-fill"
+                  title="Fill Color">
                   <option value="transparent" data-color="transparent">No Fill</option>
                   <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
                   <option value="#4a7c59" data-color="#4a7c59">Green</option>
@@ -1008,12 +1052,16 @@
                   <option value="14" data-label="Header3">Header 3 (14 pt)</option>
                 </select>
 
-                <div class="text-style-controls" aria-label="Text Style" style="display:flex; gap:6px; align-items:center;">
-                  <button type="button" class="tools__button text-style-btn icon icon--base" data-text-style="bold" title="Bold">B</button>
-                  <button type="button" class="tools__button text-style-btn icon icon--base" data-text-style="italic" title="Italic">I</button>
+                <div class="text-style-controls" aria-label="Text Style"
+                  style="display:flex; gap:6px; align-items:center;">
+                  <button type="button" class="tools__button text-style-btn icon icon--base" data-text-style="bold"
+                    title="Bold">B</button>
+                  <button type="button" class="tools__button text-style-btn icon icon--base" data-text-style="italic"
+                    title="Italic">I</button>
                 </div>
 
-                <select id="font-family-select" class="input input--select" title="Font Family" data-setting="fontFamily">
+                <select id="font-family-select" class="input input--select" title="Font Family"
+                  data-setting="fontFamily">
                   <option value="Arial" data-font-family="Arial">Arial</option>
                   <option value="Times New Roman" data-font-family="Times New Roman">Times New Roman</option>
                   <option value="Georgia" data-font-family="Georgia">Georgia</option>
@@ -1058,11 +1106,13 @@
               <!-- Shapes Settings -->
               <div class="tools__item tools__item--shapes" style="display: none;">
                 <select id="shapes-select" class="input input--select" title="Shape Type" data-setting="shapeType">
-                  <option value="rectangle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-rectangle.svg">
+                  <option value="rectangle"
+                    data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-rectangle.svg">
                     Rectangle</option>
                   <option value="triangle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-triangle.svg">
                     Triangle</option>
-                  <option value="circle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-circle.svg">Circle
+                  <option value="circle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-circle.svg">
+                    Circle
                   </option>
                   <option value="line" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-line.svg">Line
                   </option>
@@ -1125,15 +1175,12 @@
 
               <!-- Animate settings panels are injected by AnimationUI (scene loop, path speed) -->
 
-              <div class="tools__placeholder" style="display: flex;">
-                <span class="tools__placeholder-text">Select a tool to see options</span>
-              </div>
             </div>
 
             <!-- Tools Row (Bottom) -->
-            <div class="tools__selection">
+            <div class="engine__tools-selection">
               <!-- Build Mode Tools -->
-              <div class="tools__selection--build" data-mode-tools="build">
+              <div class="tools tools--build" data-mode-tools="build">
                 <div class="tools__item tools__item--active" data-tool="selection">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
                     class="tools__icon icon icon--base">
@@ -1172,7 +1219,7 @@
               </div>
 
               <!-- Animate Mode Tools -->
-              <div class="tools__selection--animate" data-mode-tools="animate" style="display: none;">
+              <div class="tools tools--animate" data-mode-tools="animate" style="display: none;">
                 <div class="tools__item tools__item--active" data-tool="selection">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
                     class="tools__icon icon icon--base">
@@ -1192,46 +1239,56 @@
             </div>
           </div>
 
-          <!-- Right Side: Navigation (inside canvas) -->
-          <div class="engine__navigation engine__navigation--canvas">
-            <!-- Layers Panel -->
-            <div class="preview__content" id="preview-layers">
-              <div class="layers-panel">
-                <h3 class="layers-panel__title">Layers</h3>
-                <ol class="layers-list" id="layers-list-root"></ol>
-              </div>
-            </div>
-          </div>
+          </div> <!-- End engine__controls -->
+
+          <!-- Navigation inside canvas can be added here if needed -->
 
           <!-- Snap Menu (positioned inside canvas) -->
           <div class="snap-menu" id="snap-menu" data-snap-menu>
             <div class="snap-menu__item snap-menu__item--active" data-snap-option="grid">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Grid"><span>Snap to Grid</span>
+              <img class="snap-menu__icon icon icon--base"
+                src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Grid"><span>Snap to Grid</span>
             </div>
             <div class="snap-menu__item" data-snap-option="smart">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Smart"><span>Smart Guides</span>
+              <img class="snap-menu__icon icon icon--base"
+                src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Smart"><span>Smart Guides</span>
             </div>
             <!-- Preferences -->
             <div class="snap-menu__controls">
-              <div class="snap-menu__row"><label>Snap Threshold</label><input type="number" min="0" max="50" step="1" value="6" data-snap-threshold></div>
-              <div class="snap-menu__row"><label>Equal Tolerance</label><input type="number" min="0" max="10" step="1" value="1" data-snap-equaltol></div>
-              <div class="snap-menu__row"><label><input type="checkbox" checked data-dim-match-width> Match Width</label></div>
-              <div class="snap-menu__row"><label><input type="checkbox" checked data-dim-match-height> Match Height</label></div>
+              <div class="snap-menu__row"><label>Snap Threshold</label><input type="number" min="0" max="50" step="1"
+                  value="6" data-snap-threshold></div>
+              <div class="snap-menu__row"><label>Equal Tolerance</label><input type="number" min="0" max="10" step="1"
+                  value="1" data-snap-equaltol></div>
+              <div class="snap-menu__row"><label><input type="checkbox" checked data-dim-match-width> Match
+                  Width</label></div>
+              <div class="snap-menu__row"><label><input type="checkbox" checked data-dim-match-height> Match
+                  Height</label></div>
             </div>
             <!-- Distribute actions -->
             <div class="snap-menu__row">
               <div class="snap-menu__item" data-distribute="horizontal">
-                <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Distribute H"><span>Distribute Horizontally</span>
+                <img class="snap-menu__icon icon icon--base"
+                  src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Distribute H"><span>Distribute
+                  Horizontally</span>
               </div>
               <div class="snap-menu__item" data-distribute="vertical">
-                <img class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Distribute V"><span>Distribute Vertically</span>
+                <img class="snap-menu__icon icon icon--base"
+                  src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Distribute V"><span>Distribute
+                  Vertically</span>
               </div>
             </div>
           </div>
         </div>
 
-
-
+        <!-- Layers Panel - Fourth Column (formerly navigation) -->
+        <div class="engine__layers">
+          <div class="preview__content" id="preview-layers">
+            <div class="layers-panel">
+              <h3 class="layers-panel__title">Layers</h3>
+              <ol class="layers-list" id="layers-list-root"></ol>
+            </div>
+          </div>
+        </div>
 
       </div>
     </div>
@@ -1255,7 +1312,7 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <!-- Select2 JavaScript -->
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  
+
   <!-- Core application scripts -->
   <script type="module" src="/src/scripts/app.ts"></script>
   <!-- Language loader for course languages -->
@@ -1444,7 +1501,7 @@
       });
 
       // Text style buttons
-      $('.text-style-btn').on('click', function() {
+      $('.text-style-btn').on('click', function () {
         var style = $(this).data('text-style');
         var isActive = $(this).hasClass('active');
         var makeActive = !isActive;

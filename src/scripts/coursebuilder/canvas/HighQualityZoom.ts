@@ -139,7 +139,7 @@ export class HighQualityZoom {
      */
     private updateZoomDisplay(): void {
         // Try to find and update the zoom display element
-        const zoomDisplay = document.querySelector('.zoom-display') as HTMLElement;
+        const zoomDisplay = document.querySelector('.engine__zoom-display') as HTMLElement;
         
         if (zoomDisplay) {
             // Convert zoom level to percentage (1.0 = 100%)
@@ -485,10 +485,10 @@ export class HighQualityZoom {
     private toggleGrabTool(button: HTMLElement): void {
         if (this.isGrabToolActive) {
             this.deactivateGrabTool();
-            button.classList.remove('perspective__item--active');
+            button.classList.remove('engine__item--active');
         } else {
             this.activateGrabTool();
-            button.classList.add('perspective__item--active');
+            button.classList.add('engine__item--active');
         }
     }
 }

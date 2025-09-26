@@ -113,7 +113,7 @@ export class UIEventHandler {
     // Determine which tool settings panel an element belongs to (from tools__options)
     private inferToolFromElement(el: Element | null): string | null {
         if (!el) return null;
-        const container = (el as HTMLElement).closest('.tools__options .tools__item');
+        const container = (el as HTMLElement).closest('.engine__tools-options .tools__item');
         if (!container) return null;
         const classList = Array.from(container.classList);
         const cls = classList.find(c => c.startsWith('tools__item--'));

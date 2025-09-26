@@ -79,7 +79,7 @@ test.describe('Canvas Zoom & Border Issues', () => {
     expect(initialZoomInfo.currentZoom).toBeGreaterThan(0);
     
     // Check if zoom indicator in UI shows correct value
-    const zoomDisplayText = await page.locator('.zoom-display, [class*="zoom"]').first().textContent();
+    const zoomDisplayText = await page.locator('.engine__zoom-display, [class*="zoom"]').first().textContent();
     console.log('📊 Zoom Display Text:', zoomDisplayText);
     
     // Should show some percentage, not stuck at 100%

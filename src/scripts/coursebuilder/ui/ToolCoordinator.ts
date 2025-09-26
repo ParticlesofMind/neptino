@@ -107,7 +107,7 @@ export class ToolCoordinator {
             if (btn.getAttribute('data-perspective') !== 'zoom-in' && 
                 btn.getAttribute('data-perspective') !== 'zoom-out' && 
                 btn.getAttribute('data-perspective') !== 'reset') {
-                btn.classList.remove('perspective__item--active');
+                btn.classList.remove('engine__item--active');
             }
         });
     }
