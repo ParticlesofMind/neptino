@@ -54,7 +54,7 @@ export class AnimationUI {
       }
 
       // Hide selection speed panel when not in animate mode
-      const selPanel = document.querySelector('.engine__tools .engine__tools-options .tools__item--selection') as HTMLElement | null;
+      const selPanel = document.querySelector('.engine__tools .engine__tools-options .engine__tools-item--selection') as HTMLElement | null;
       if (selPanel) selPanel.style.display = (cm === 'animate') ? selPanel.style.display : 'none';
       try { pathOverlay.refresh(); } catch {}
     });
@@ -74,13 +74,13 @@ export class AnimationUI {
     }
 
     // Update active classes within animate container
-    animContainer.querySelectorAll('.tools__item').forEach(el => {
-      el.classList.remove('tools__item--active', 'active');
+    animContainer.querySelectorAll('.engine__tools-item').forEach(el => {
+      el.classList.remove('engine__tools-item--active', 'active');
     });
     const activeBtn = animContainer.querySelector(`[data-tool="${currentTool}"]`);
-    const activeItem = activeBtn?.closest('.tools__item');
+    const activeItem = activeBtn?.closest('.engine__tools-item');
     if (activeItem) {
-      activeItem.classList.add('tools__item--active', 'active');
+      activeItem.classList.add('engine__tools-item--active', 'active');
     }
 
     // Clicks are handled by UIEventHandler via delegation; no need to bind here
@@ -92,13 +92,13 @@ export class AnimationUI {
     const buildContainer = document.querySelector('[data-mode-tools="build"]') as HTMLElement | null;
     if (!buildContainer) return;
     const currentTool = this.toolState.getCurrentTool();
-    buildContainer.querySelectorAll('.tools__item').forEach(el => {
-      el.classList.remove('tools__item--active', 'active');
+    buildContainer.querySelectorAll('.engine__tools-item').forEach(el => {
+      el.classList.remove('engine__tools-item--active', 'active');
     });
     const activeBtn = buildContainer.querySelector(`[data-tool="${currentTool}"]`);
-    const activeItem = activeBtn?.closest('.tools__item');
+    const activeItem = activeBtn?.closest('.engine__tools-item');
     if (activeItem) {
-      activeItem.classList.add('tools__item--active', 'active');
+      activeItem.classList.add('engine__tools-item--active', 'active');
     }
   }
 
@@ -107,13 +107,13 @@ export class AnimationUI {
     const options = document.querySelector('.engine__tools .engine__tools-options') as HTMLElement | null;
     if (!options) return;
 
-    const existingScenePanel = options.querySelector('.tools__item--scene');
+    const existingScenePanel = options.querySelector('.engine__tools-item--scene');
     if (existingScenePanel) {
       existingScenePanel.remove();
     }
 
     const scenePanel = createEl(`
-      <div class="tools__item tools__item--scene" style="display:none; align-items:center; gap:16px; padding:8px;">
+      <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--scene" style="display:none; align-items:center; gap:16px; padding:8px;">
         <button type="button" class="button button--small button--outline" data-anim-loop title="Loop Animation" style="min-width:36px;">∞</button>
         
         <div class="scene-controls" style="display:flex; align-items:center; gap:12px;">
@@ -218,10 +218,10 @@ export class AnimationUI {
     syncDuration();
     syncResolution();
 
-    let pathPanel = options.querySelector('.tools__item--path') as HTMLElement | null;
+    let pathPanel = options.querySelector('.engine__tools-item--path') as HTMLElement | null;
     if (!pathPanel) {
       pathPanel = createEl(`
-        <div class="tools__item tools__item--path" style="display:none; font-size:12px; opacity:0.75;">
+        <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--path" style="display:none; font-size:12px; opacity:0.75;">
           Path options will appear here when ready. Adjust trajectories directly on the canvas.
         </div>
       `);

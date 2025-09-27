@@ -88,7 +88,7 @@ export class ToolCoordinator {
             // Fallback: Direct UI manipulation
             document.querySelectorAll('[data-tool]').forEach(btn => {
                 btn.classList.remove('active');
-                btn.classList.remove('tools__item--active');
+                btn.classList.remove('engine__tools-item--active');
             });
         }
     }
@@ -107,7 +107,7 @@ export class ToolCoordinator {
             if (btn.getAttribute('data-perspective') !== 'zoom-in' && 
                 btn.getAttribute('data-perspective') !== 'zoom-out' && 
                 btn.getAttribute('data-perspective') !== 'reset') {
-                btn.classList.remove('engine__item--active');
+                btn.classList.remove('engine__perspective-item--active');
             }
         });
     }

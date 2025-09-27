@@ -27,7 +27,14 @@ export function bindSnapMenu(perspectiveManager?: any): void {
   }
 
   const positionMenu = () => {
-    // Position menu to the right of the perspective tools container
+    // Use FloatingElementsManager if available for consistent positioning
+    const floatingManager = (window as any).floatingElementsManager;
+    if (floatingManager && typeof floatingManager.positionSnapMenu === 'function') {
+      floatingManager.positionSnapMenu();
+      return;
+    }
+    
+    // Fallback to original positioning logic
     const perspective = container.querySelector('.engine__perspective') as HTMLElement | null;
     if (!perspective) return;
     
@@ -43,16 +50,15 @@ export function bindSnapMenu(perspectiveManager?: any): void {
     snapMenu.style.left = `${left}px`;
     snapMenu.style.top = `${top}px`;
     snapMenu.style.zIndex = '1001';
-    
   };
 
   const openMenu = () => {
     positionMenu();
-    snapMenu.classList.add('open');
+    snapMenu.classList.add('snap-menu--open');
   };
   
   const closeMenu = () => {
-    snapMenu.classList.remove('open');
+    snapMenu.classList.remove('snap-menu--open');
   };
 
   const updateSelectedOption = (activeMode: string) => {
@@ -97,7 +103,7 @@ export function bindSnapMenu(perspectiveManager?: any): void {
     e.stopImmediatePropagation(); // Prevent other handlers from firing
     
     
-    if (snapMenu.classList.contains('open')) {
+    if (snapMenu.classList.contains('snap-menu--open')) {
       closeMenu();
     } else {
       openMenu();

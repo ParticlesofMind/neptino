@@ -113,12 +113,12 @@ export class UIEventHandler {
     // Determine which tool settings panel an element belongs to (from tools__options)
     private inferToolFromElement(el: Element | null): string | null {
         if (!el) return null;
-        const container = (el as HTMLElement).closest('.engine__tools-options .tools__item');
+        const container = (el as HTMLElement).closest('.engine__tools-options .engine__tools-item');
         if (!container) return null;
         const classList = Array.from(container.classList);
-        const cls = classList.find(c => c.startsWith('tools__item--'));
+        const cls = classList.find(c => c.startsWith('engine__tools-item--'));
         if (!cls) return null;
-        const tool = cls.replace('tools__item--', '');
+        const tool = cls.replace('engine__tools-item--', '');
         return tool || null;
     }
 
@@ -266,7 +266,7 @@ export class UIEventHandler {
     private handleNumberButtonClick(event: Event): void {
         const button = event.currentTarget as HTMLButtonElement;
         const action = button.dataset.action;
-        const toolItem = button.closest('.tools__item');
+        const toolItem = button.closest('.engine__tools-item');
         const numberInput = toolItem?.querySelector('input[type="number"][data-setting]') as HTMLInputElement;
         
         if (!numberInput || !action) return;

@@ -461,7 +461,7 @@ export class ToolStateManager {
         // Clear visual states for all drawing tool buttons
         document.querySelectorAll('[data-tool]').forEach(btn => {
             btn.classList.remove('active');
-            btn.classList.remove('tools__item--active');
+            btn.classList.remove('engine__tools-item--active');
         });
         
         // Clear internal state - keep currentTool for when we reactivate
@@ -814,10 +814,10 @@ export class ToolStateManager {
     private updateModeUI(modeName: string): void {
         // Remove selected class from all mode items
         document.querySelectorAll('[data-mode]').forEach(element => {
-            element.classList.remove('mode__item--active');
-            const parentItem = element.closest('.mode__item');
+            element.classList.remove('engine__modes-item--active');
+            const parentItem = element.closest('.engine__modes-item');
             if (parentItem) {
-                parentItem.classList.remove('mode__item--active');
+                parentItem.classList.remove('engine__modes-item--active');
             }
         });
 
@@ -826,9 +826,9 @@ export class ToolStateManager {
             `[data-mode="${modeName}"]`,
         );
         if (selectedMode) {
-            const parentItem = selectedMode.closest('.mode__item');
+            const parentItem = selectedMode.closest('.engine__modes-item');
             if (parentItem) {
-                parentItem.classList.add('mode__item--active');
+                parentItem.classList.add('engine__modes-item--active');
             }
         }
     }
@@ -844,7 +844,7 @@ export class ToolStateManager {
 
         // Clear active states from ALL tool items across all modes
         document.querySelectorAll('[data-tool]').forEach(toolItem => {
-            toolItem.classList.remove('tools__item--active');
+            toolItem.classList.remove('engine__tools-item--active');
         });
 
         // Show the appropriate tool container for current mode
@@ -855,7 +855,7 @@ export class ToolStateManager {
             // Set the selection tool as active in the new mode's container
             const selectionTool = activeToolContainer.querySelector('[data-tool="selection"]');
             if (selectionTool) {
-                selectionTool.classList.add('tools__item--active');
+                selectionTool.classList.add('engine__tools-item--active');
             }
         } else {
             // Fallback to build mode if mode-specific container not found
@@ -864,7 +864,7 @@ export class ToolStateManager {
                 (buildContainer as HTMLElement).style.display = 'flex';
                 const selectionTool = buildContainer.querySelector('[data-tool="selection"]');
                 if (selectionTool) {
-                    selectionTool.classList.add('tools__item--active');
+                    selectionTool.classList.add('engine__tools-item--active');
                 }
             }
         }
@@ -876,10 +876,10 @@ export class ToolStateManager {
     private updateMediaUI(mediaId: string | null): void {
         // Remove selected class from all media items
         document.querySelectorAll('[data-media]').forEach(element => {
-            element.classList.remove('media__item--active');
-            const parentItem = element.closest('.media__item');
+            element.classList.remove('engine__media-item--active');
+            const parentItem = element.closest('.engine__media-item');
             if (parentItem) {
-                parentItem.classList.remove('media__item--active');
+                parentItem.classList.remove('engine__media-item--active');
             }
         });
 
@@ -889,9 +889,9 @@ export class ToolStateManager {
                 `[data-media="${mediaId}"]`,
             );
             if (selectedMedia) {
-                const parentItem = selectedMedia.closest('.media__item');
+                const parentItem = selectedMedia.closest('.engine__media-item');
                 if (parentItem) {
-                    parentItem.classList.add('media__item--active');
+                    parentItem.classList.add('engine__media-item--active');
                 }
             }
         }
@@ -962,7 +962,7 @@ export class ToolStateManager {
     private updateToolUI(toolName: string): void {
         // Remove selected class from all tool items in all containers
         document.querySelectorAll('.tools__item').forEach(element => {
-            element.classList.remove('tools__item--active');
+            element.classList.remove('engine__tools-item--active');
             element.classList.remove('active'); // compatibility for tests
         });
 
@@ -975,7 +975,7 @@ export class ToolStateManager {
             if (selectedTool) {
                 const parentItem = selectedTool.closest('.tools__item');
                 if (parentItem) {
-                    parentItem.classList.add('tools__item--active');
+                    parentItem.classList.add('engine__tools-item--active');
                     parentItem.classList.add('active'); // compatibility for tests
                 }
             }
@@ -990,14 +990,14 @@ export class ToolStateManager {
         }
 
         document
-            .querySelectorAll('.engine__tools-options .tools__item')
+            .querySelectorAll('.engine__tools-options .engine__tools-item')
             .forEach(settings => {
                 (settings as HTMLElement).style.display = 'none';
             });
 
         // Show settings for current tool (updated BEM selector)
         let toolSettings = (document.querySelector(
-            `.engine__tools-options .tools__item--${toolName}`,
+            `.engine__tools-options .engine__tools-item--${toolName}`,
         ) as HTMLElement) || (document.querySelector(
             `.engine__tools-options [data-settings-for="${toolName}"]`,
         ) as HTMLElement);
@@ -1080,7 +1080,7 @@ export class ToolStateManager {
      */
     private showSettingsPanelFor(toolName: string | null): void {
         // Hide all panels
-        document.querySelectorAll('.engine__tools-options .tools__item').forEach(el => {
+        document.querySelectorAll('.engine__tools-options .engine__tools-item').forEach(el => {
             (el as HTMLElement).style.display = 'none';
         });
         const placeholder = document.querySelector('.tools__placeholder') as HTMLElement | null;
@@ -1089,7 +1089,7 @@ export class ToolStateManager {
             return;
         }
         // Show specific panel
-        const panel = (document.querySelector(`.engine__tools-options .tools__item--${toolName}`) as HTMLElement) ||
+        const panel = (document.querySelector(`.engine__tools-options .engine__tools-item--${toolName}`) as HTMLElement) ||
                       (document.querySelector(`.engine__tools-options [data-settings-for="${toolName}"]`) as HTMLElement);
         if (panel) {
             panel.style.display = 'flex';

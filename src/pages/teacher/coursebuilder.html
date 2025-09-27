@@ -910,42 +910,42 @@
       <div class="engine">
 
 
-        <div class="engine__media media">
-          <div class="media__item" data-media="files">
+        <div class="engine__media">
+          <div class="engine__media-item" data-media="files">
             <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-files.svg" alt="">
             <span class="icon-label">Files</span>
           </div>
-          <div class="media__item" data-media="images">
+          <div class="engine__media-item" data-media="images">
             <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-image.svg" alt="">
             <span class="icon-label">Images</span>
           </div>
-          <div class="media__item" data-media="videos">
+          <div class="engine__media-item" data-media="videos">
             <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-video.svg" alt="">
             <span class="icon-label">Videos</span>
           </div>
-          <div class="media__item" data-media="audio">
+          <div class="engine__media-item" data-media="audio">
             <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-audio.svg" alt="">
             <span class="icon-label">Audio</span>
           </div>
-          <div class="media__item" data-media="text">
+          <div class="engine__media-item" data-media="text">
             <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-text.svg" alt="">
             <span class="icon-label">Text</span>
           </div>
-          <div class="media__item" data-media="plugin">
+          <div class="engine__media-item" data-media="plugin">
             <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-plugins.svg" alt="">
             <span class="icon-label">Plugins</span>
           </div>
-          <div class="media__item" data-media="links">
+          <div class="engine__media-item" data-media="links">
             <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-link.svg" alt="">
             <span class="icon-label">Links</span>
           </div>
-          <div class="media__item" data-media="interactive">
+          <div class="engine__media-item" data-media="interactive">
             <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-interactive.svg" alt="">
             <span class="icon-label">Interactive</span>
           </div>
         </div>
         <!-- Search -->
-        <div class="engine__search search">
+        <div class="engine__search">
           <input class="search__input input input--search" type="search" placeholder="Search media..."
             id="media-search-input">
         </div>
@@ -957,35 +957,35 @@
           <!-- Left Side: Perspective + Mode (inside canvas) -->
           <div class="engine__perspective">
             <!-- Zoom Indicator -->
-            <div class="engine__zoom-display" title="Current zoom level - Ctrl/Cmd+wheel to zoom">100%</div>
+            <div class="engine__perspective-zoom" title="Current zoom level - Ctrl/Cmd+wheel to zoom">100%</div>
 
-            <div class="engine__item" data-perspective="zoom-in" title="Zoom In">
+            <div class="engine__perspective-item" data-perspective="zoom-in" title="Zoom In">
               <img src="/src/assets/icons/coursebuilder/perspective/zoomin-icon.svg" alt="Zoom In"
-                class="engine__icon icon icon--base">
+                class="icon icon--base">
               <span class="icon-label">Zoom In</span>
             </div>
-            <div class="engine__item" data-perspective="zoom-out" title="Zoom Out">
+            <div class="engine__perspective-item" data-perspective="zoom-out" title="Zoom Out">
               <img src="/src/assets/icons/coursebuilder/perspective/zoomout-icon.svg" alt="Zoom Out"
-                class="engine__icon icon icon--base">
+                class="icon icon--base">
               <span class="icon-label">Zoom Out</span>
             </div>
 
-            <div class="engine__item" data-perspective="reset" title="Reset View">
+            <div class="engine__perspective-item" data-perspective="reset" title="Reset View">
               <img src="/src/assets/icons/coursebuilder/perspective/reset-icon.svg" alt="Reset View"
-                class="engine__icon icon icon--base">
+                class="icon icon--base">
               <span class="icon-label">Reset</span>
             </div>
 
-            <div class="engine__item" data-perspective="grab" title="grab">
+            <div class="engine__perspective-item" data-perspective="grab" title="grab">
               <img src="/src/assets/icons/coursebuilder/perspective/grab-icon.svg" alt="grab"
-                class="engine__icon icon icon--base">
+                class="icon icon--base">
               <span class="icon-label">Grab</span>
             </div>
 
             <!-- Grid button (opens Snap Menu) -->
-            <div class="engine__item" data-perspective="grid" title="Snapping" data-snap-anchor>
+            <div class="engine__perspective-item" data-perspective="grid" title="Snapping" data-snap-anchor>
               <img src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Snapping"
-                class="engine__icon icon icon--base">
+                class="icon icon--base">
               <span class="icon-label">Grid</span>
             </div>
           </div>
@@ -994,11 +994,11 @@
           <div class="engine__controls">
             <!-- Mode Selector -->
             <div class="engine__modes">
-              <div class="mode__item mode__item--compact" data-mode="build">
+              <div class="engine__modes-item engine__modes-item--compact" data-mode="build">
                 <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-build.svg" alt="">
                 <span class="icon-label">Build</span>
               </div>
-              <div class="mode__item mode__item--compact" data-mode="animate">
+              <div class="engine__modes-item engine__modes-item--compact" data-mode="animate">
                 <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" alt="">
                 <span class="icon-label">Animate</span>
               </div>
@@ -1009,7 +1009,7 @@
             <!-- Tool Options Row (Top) -->
             <div class="engine__tools-options">
               <!-- Pen Settings -->
-              <div class="tools__item tools__item--pen" style="display: none;">
+              <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--pen" style="display: none;">
                 <input type="number" min="1" max="15" value="2" class="input input--number" title="Pen Size"
                   data-setting="size">
 
@@ -1043,7 +1043,7 @@
               </div>
 
               <!-- Text Settings -->
-              <div class="tools__item tools__item--text" style="display: none;">
+              <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--text" style="display: none;">
                 <select id="text-size-select" class="input input--select" title="Text Size" data-setting="fontSize">
                   <option value="12" data-label="Normal">Normal Text (12 pt)</option>
                   <option value="26" data-label="Title">Title (26 pt)</option>
@@ -1084,7 +1084,7 @@
               </div>
 
               <!-- Brush Settings -->
-              <div class="tools__item tools__item--brush" style="display: none;">
+              <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--brush" style="display: none;">
                 <input type="number" min="10" max="50" value="20" class="input input--number" title="Brush Size"
                   data-setting="size">
 
@@ -1104,7 +1104,7 @@
               </div>
 
               <!-- Shapes Settings -->
-              <div class="tools__item tools__item--shapes" style="display: none;">
+              <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--shapes" style="display: none;">
                 <select id="shapes-select" class="input input--select" title="Shape Type" data-setting="shapeType">
                   <option value="rectangle"
                     data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-rectangle.svg">
@@ -1156,13 +1156,13 @@
               </div>
 
               <!-- Eraser Settings -->
-              <div class="tools__item tools__item--eraser" style="display: none;">
+              <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--eraser" style="display: none;">
                 <input type="number" min="5" max="50" value="20" class="input input--number" title="Eraser Size"
                   data-setting="size">
               </div>
 
               <!-- Table Settings -->
-              <div class="tools__item tools__item--tables" style="display: none;">
+              <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--tables" style="display: none;">
                 <input type="number" min="1" max="20" value="3" class="input input--number" title="Table Size"
                   data-setting="size">
 
@@ -1181,58 +1181,58 @@
             <div class="engine__tools-selection">
               <!-- Build Mode Tools -->
               <div class="tools tools--build" data-mode-tools="build">
-                <div class="tools__item tools__item--active" data-tool="selection">
+                <div class="engine__tools-item engine__tools-item--active" data-tool="selection">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
-                    class="tools__icon icon icon--base">
+                    class="icon icon--base">
                   <span class="icon-label">Select</span>
                 </div>
-                <div class="tools__item" data-tool="pen">
+                <div class="engine__tools-item" data-tool="pen">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Pen Tool"
-                    class="tools__icon icon icon--base">
+                    class="icon icon--base">
                   <span class="icon-label">Pen</span>
                 </div>
-                <div class="tools__item" data-tool="brush">
+                <div class="engine__tools-item" data-tool="brush">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" alt="Brush Tool"
-                    class="tools__icon icon icon--base">
+                    class="icon icon--base">
                   <span class="icon-label">Brush</span>
                 </div>
-                <div class="tools__item" data-tool="text">
+                <div class="engine__tools-item" data-tool="text">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" alt="Text Tool"
-                    class="tools__icon icon icon--base">
+                    class="icon icon--base">
                   <span class="icon-label">Text</span>
                 </div>
-                <div class="tools__item" data-tool="shapes">
+                <div class="engine__tools-item" data-tool="shapes">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" alt="Shapes Tool"
-                    class="tools__icon icon icon--base">
+                    class="icon icon--base">
                   <span class="icon-label">Shapes</span>
                 </div>
-                <div class="tools__item" data-tool="tables">
+                <div class="engine__tools-item" data-tool="tables">
                   <img src="/src/assets/icons/coursebuilder/media/media-table.svg" alt="Table Tool"
-                    class="tools__icon icon icon--base">
+                    class="icon icon--base">
                   <span class="icon-label">Tables</span>
                 </div>
-                <div class="tools__item" data-tool="eraser">
+                <div class="engine__tools-item" data-tool="eraser">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" alt="Eraser Tool"
-                    class="tools__icon icon icon--base">
+                    class="icon icon--base">
                   <span class="icon-label">Eraser</span>
                 </div>
               </div>
 
               <!-- Animate Mode Tools -->
               <div class="tools tools--animate" data-mode-tools="animate" style="display: none;">
-                <div class="tools__item tools__item--active" data-tool="selection">
+                <div class="engine__tools-item engine__tools-item--active" data-tool="selection">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
-                    class="tools__icon icon icon--base">
+                    class="icon icon--base">
                   <span class="icon-label">Select</span>
                 </div>
-                <div class="tools__item" data-tool="scene">
+                <div class="engine__tools-item" data-tool="scene">
                   <img src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" alt="Scene Tool"
-                    class="tools__icon icon icon--base">
+                    class="icon icon--base">
                   <span class="icon-label">Scene</span>
                 </div>
-                <div class="tools__item" data-tool="path">
+                <div class="engine__tools-item" data-tool="path">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Path Tool"
-                    class="tools__icon icon icon--base">
+                    class="icon icon--base">
                   <span class="icon-label">Path</span>
                 </div>
               </div>
@@ -1253,17 +1253,7 @@
               <img class="snap-menu__icon icon icon--base"
                 src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Smart"><span>Smart Guides</span>
             </div>
-            <!-- Preferences -->
-            <div class="snap-menu__controls">
-              <div class="snap-menu__row"><label>Snap Threshold</label><input type="number" min="0" max="50" step="1"
-                  value="6" data-snap-threshold></div>
-              <div class="snap-menu__row"><label>Equal Tolerance</label><input type="number" min="0" max="10" step="1"
-                  value="1" data-snap-equaltol></div>
-              <div class="snap-menu__row"><label><input type="checkbox" checked data-dim-match-width> Match
-                  Width</label></div>
-              <div class="snap-menu__row"><label><input type="checkbox" checked data-dim-match-height> Match
-                  Height</label></div>
-            </div>
+      
             <!-- Distribute actions -->
             <div class="snap-menu__row">
               <div class="snap-menu__item" data-distribute="horizontal">

@@ -137,7 +137,7 @@ test.describe('Canvas Functionality Fix Tests', () => {
   test('Zoom indicator should update correctly', async ({ page }) => {
     console.log('🧪 Testing zoom indicator...');
     
-    const zoomDisplay = page.locator('.engine__zoom-display');
+    const zoomDisplay = page.locator('.engine__perspective-zoom');
     await expect(zoomDisplay).toBeVisible();
     
     const initialZoom = await zoomDisplay.textContent();
