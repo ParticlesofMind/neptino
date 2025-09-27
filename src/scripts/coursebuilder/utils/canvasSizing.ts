@@ -41,12 +41,12 @@ export function calculateFitZoom(
   // Input validation
   if (!Number.isFinite(containerWidth) || containerWidth <= 0) {
     console.warn('Invalid containerWidth:', containerWidth, 'falling back to default zoom');
-    return 0.5; // Fallback zoom level
+    return 0.6; // Our new default zoom level (displays as 100%)
   }
   
   if (!Number.isFinite(containerHeight) || containerHeight <= 0) {
     console.warn('Invalid containerHeight:', containerHeight, 'falling back to default zoom');
-    return 0.5; // Fallback zoom level
+    return 0.6; // Our new default zoom level (displays as 100%)
   }
   
   if (!Number.isFinite(padding) || padding < 0) {
@@ -64,7 +64,7 @@ export function calculateFitZoom(
   // Additional safety check
   if (availableWidth <= 0 || availableHeight <= 0) {
     console.warn('Container too small after padding. Container:', containerWidth, 'x', containerHeight, 'Padding:', padding);
-    return 0.2; // Minimum zoom
+    return 0.25; // Minimum zoom (25%)
   }
   
   // Calculate scale based on artboard dimensions
@@ -73,8 +73,9 @@ export function calculateFitZoom(
   const artboardScaleY = availableHeight / ARTBOARD_HEIGHT;
   const optimalScale = Math.min(artboardScaleX, artboardScaleY);
   
-  // Clamp between 20% and 100% for usability
-  const clampedScale = Math.max(0.2, Math.min(1.0, optimalScale));
+  // Clamp between 25% and our new 100% (0.6) for usability
+  // If optimal scale would be higher than 0.6, return 0.6 (our new 100%)
+  const clampedScale = Math.max(0.25, Math.min(0.6, optimalScale));
   
   // Log the calculation for debugging
   

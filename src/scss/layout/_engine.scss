@@ -4,11 +4,13 @@
 
 .engine {
     display: grid;
-    grid-template-columns: auto 2.5fr 7fr 2.5fr;
+    grid-template-columns: auto 2.5fr 7fr 2fr;
     gap: 0.5rem;
-    height: calc(100vh - 5vh);
+    height: calc(100vh - 3rem);
     width: 100%;
     padding: 0.5rem;
+    position: relative;
+    overflow: hidden; // Prevent child elements from extending past viewport
 
     // Common styling for direct children (grid items)
     >* {
@@ -32,6 +34,12 @@
         gap: 0.5rem;
         padding: 0.75rem;
         overflow-y: auto;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+        
+        &::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
     }
 
     // Media items
@@ -69,26 +77,37 @@
         display: flex;
         flex-direction: column;
         overflow-y: auto;
-        height: 100%;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+        
+        &::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
     }
 
-    // Canvas area - Third column
+    // Canvas area - Third column (now takes up the space of former third and fourth columns)
     &__canvas {
         grid-column: 3;
-        background: white;
+        background: var(--color-background);
         overflow: auto;
         padding: 0;
         display: flex;
         justify-content: center;
         align-items: flex-start;
         position: relative;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+        
+        &::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
 
+        // Use consistent styling with other panels
+        border-radius: var(--radius-large);
+        border: 1px solid var(--color-neutral-200);
         box-shadow:
-            inset 6px 6px 12px rgba(0, 0, 0, 0.1),
-            inset -6px -6px 12px rgba(255, 255, 255, 0.8),
-            2px 2px 6px rgba(0, 0, 0, 0.05);
-
-        border: none;
+            0 1px 3px rgba(0, 0, 0, 0.05),
+            0 1px 2px rgba(0, 0, 0, 0.1);
         outline: none;
 
         canvas {
@@ -97,21 +116,103 @@
         }
     }
 
-    // Layers panel - Fourth column
-    &__layers {
+    // Panel container - Fourth column
+    &__panel {
         grid-column: 4;
         display: flex;
         flex-direction: column;
-        padding: var(--spacing-3);
-        overflow-y: auto;
+        overflow: hidden;
+        
+        // Responsive behavior
+        @media (max-width: 1200px) {
+            display: none; // Hide on smaller screens
+        }
     }
 
-    // Preview area (alternative fourth column content)
-    &__preview {
-        grid-column: 4;
-        overflow-y: auto;
-        align-items: flex-start;
+    // Panel header with tabs
+    &__panel-header {
+        display: flex;
+        background: var(--color-neutral-100);
+        border-bottom: 1px solid var(--color-neutral-200);
+        border-radius: var(--radius-large) var(--radius-large) 0 0;
     }
+
+    // Panel tab buttons
+    &__panel-tab {
+        flex: 1;
+        padding: var(--spacing-2) var(--spacing-3);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--color-neutral-600);
+        transition: all 0.2s ease;
+        border-bottom: 2px solid transparent;
+
+        &:hover {
+            background: var(--color-neutral-50);
+            color: var(--color-neutral-700);
+        }
+
+        &--active {
+            background: var(--color-background);
+            color: var(--color-neutral-900);
+            border-bottom-color: var(--color-primary-500);
+            font-weight: 600;
+        }
+
+        &:first-child {
+            border-top-left-radius: var(--radius-large);
+        }
+
+        &:last-child {
+            border-top-right-radius: var(--radius-large);
+        }
+    }
+
+    // Panel content area
+    &__panel-content {
+        flex: 1;
+        overflow-y: auto;
+        background: var(--color-background);
+        border-radius: 0 0 var(--radius-large) var(--radius-large);
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+        
+        &::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+    }
+
+    // Individual panel views
+    &__panel-view {
+        display: none;
+        height: 100%;
+
+        &--active {
+            display: flex;
+            flex-direction: column;
+        }
+    }
+
+    // Legacy layers panel styling (now within panel view)
+    &__layers {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    // Navigation panel styling
+    &__navigation {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: var(--spacing-3);
+        gap: var(--spacing-2);
+    }
+
+
 
     // ==========================================================================
     // CANVAS OVERLAY ELEMENTS
@@ -182,7 +283,6 @@
 
     // Controls container - modes and tools positioned on the left
     &__controls {
-
         display: flex !important;
         flex-direction: column !important;
         align-items: flex-start;
@@ -264,29 +364,13 @@
     &__tools {
         display: flex;
         flex-direction: row-reverse; // Reverse to put selection first, options second
-        align-items: flex-start;
+        align-items: center;
         gap: var(--spacing-2);
         width: auto;
 
         &--canvas {
             flex-direction: row-reverse !important;
         }
-    }
-
-    // Tools options row - positioned to the right of tools selection
-    &__tools-options {
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: flex-start;
-        align-items: center;
-        gap: var(--spacing-2);
-        width: auto;
-        padding: 0; // Remove padding from container
-        background: none; // Remove background from container
-        border-radius: 0;
-        box-shadow: none;
-        backdrop-filter: none;
-        flex-wrap: wrap;
     }
 
     // Tools selection row - styled like perspective with white background
@@ -304,8 +388,6 @@
         backdrop-filter: blur(8px);
     }
 
-    // Tools items
-    // Tools items
     &__tools-item {
         display: flex;
         flex-direction: column;
@@ -328,9 +410,60 @@
         }
 
         &--active {
-            background: #B3D7FF;
-            border-color: #9AC8FF;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: #B3D7FF !important;
+            border-color: #9AC8FF !important;
+            color: #333 !important;
+            box-shadow: 0 2px 8px rgba(179, 215, 255, 0.4) !important;
+            transform: none !important;
+            
+            &:hover {
+                background: #A5CFFF !important;
+                border-color: #8BBEFF !important;
+                transform: none !important;
+            }
+        }
+
+        // Horizontal layout for settings panels
+        &--horizontal {
+            flex-direction: row;
+            width: auto;
+            height: auto;
+            padding: var(--spacing-2);
+            gap: var(--spacing-2);
+            cursor: default;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.9);
+                border-color: var(--color-neutral-300);
+                transform: none;
+            }
+        }
+    }
+
+    // Override horizontal layout when inside tools-options for vertical stacking
+    &__tools-options &__tools-item--horizontal {
+        flex-direction: column;
+        width: 80px;
+        align-items: center;
+        justify-content: flex-start;
+        gap: var(--spacing-1);
+        
+        // Individual elements within each tool item should stack vertically
+        .color-selector {
+            margin-bottom: var(--spacing-1);
+            
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+        
+        .input {
+            margin-bottom: var(--spacing-1);
+            width: 100%;
+            
+            &:last-child {
+                margin-bottom: 0;
+            }
         }
     }
 
@@ -418,14 +551,11 @@
     // ==========================================================================
 
     .tools {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center;
         gap: var(--spacing-2);
 
         &--build {
-            display: flex !important;
-            flex-direction: column !important;
+            display: flex;
+            flex-direction: column;
 
             &[style*="display: none"] {
                 display: none !important;
@@ -467,17 +597,19 @@
     .search {
         display: flex;
         flex-direction: column;
-        padding: var(--spacing-2);
-        height: 100%;
+        padding: 1rem; 
+        gap: 0.5rem;
 
+
+        &__input { 
+            padding: 1rem; 
+            width: 85%;
+        }
         &__panel {
             display: flex;
             flex-direction: column;
             gap: var(--spacing-2);
             min-height: 0;
-            height: 100%;
-            width: 100%;
-            padding: 1rem;
         }
 
         &__filters {
@@ -487,14 +619,18 @@
         }
 
         &__results {
-            min-height: 0;
             overflow-y: auto;
             display: grid;
             gap: 0.5rem;
-            padding: 10px;
             align-content: start;
             align-items: start;
             grid-auto-rows: max-content;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+            
+            &::-webkit-scrollbar {
+                display: none; /* Chrome, Safari, Opera */
+            }
 
             @media (max-width: 1200px) {
                 grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -516,7 +652,6 @@
 
 
 .icon-label {
-
     display: block;
     font-size: 0.75rem;
     font-weight: 500;

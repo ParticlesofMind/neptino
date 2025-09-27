@@ -8,6 +8,7 @@ export class LayersPanel {
 
   constructor() {
     this.listEl = document.getElementById('layers-list-root') as HTMLOListElement | null;
+    
     this.bindGlobalListeners();
     this.bindControls();
   }
@@ -36,6 +37,8 @@ export class LayersPanel {
       this.isRefreshing = false;
     });
   }
+
+
 
   private bindGlobalListeners(): void {
     // Debounced refresh on object changes - prevent rapid successive refreshes
@@ -84,6 +87,8 @@ export class LayersPanel {
   private bindControls(): void {
     // Controls removed - group/ungroup buttons no longer needed
   }
+
+
 
 
 

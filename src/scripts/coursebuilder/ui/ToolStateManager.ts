@@ -712,7 +712,7 @@ export class ToolStateManager {
         document.querySelectorAll('input[type="number"][data-setting]').forEach(input => {
             const numberInput = input as HTMLInputElement;
             const setting = numberInput.dataset.setting!;
-            const toolContainer = numberInput.closest('.tools__item[data-tool]') as HTMLElement;
+            const toolContainer = numberInput.closest('.engine__tools-item[data-tool]') as HTMLElement;
             
             if (toolContainer) {
                 const toolName = toolContainer.dataset.tool!;
@@ -730,7 +730,7 @@ export class ToolStateManager {
         document.querySelectorAll('select[data-setting]').forEach(select => {
             const selectElement = select as HTMLSelectElement;
             const setting = selectElement.dataset.setting!;
-            const toolContainer = selectElement.closest('.tools__item[data-tool]') as HTMLElement;
+            const toolContainer = selectElement.closest('.engine__tools-item[data-tool]') as HTMLElement;
             
             if (toolContainer) {
                 const toolName = toolContainer.dataset.tool!;
@@ -747,7 +747,7 @@ export class ToolStateManager {
         document.querySelectorAll('input[type="number"][data-setting]').forEach(input => {
             const numberInput = input as HTMLInputElement;
             const setting = numberInput.dataset.setting!;
-            const toolContainer = numberInput.closest('.tools__item[data-tool]') as HTMLElement;
+            const toolContainer = numberInput.closest('.engine__tools-item[data-tool]') as HTMLElement;
             
             if (toolContainer) {
                 const toolName = toolContainer.dataset.tool!;
@@ -899,32 +899,11 @@ export class ToolStateManager {
 
     /**
      * Update navigation UI to reflect current selection
+     * Note: Layers panel is now a floating overlay, no longer managed through preview content
      */
-    private updateNavigationUI(navTitle: string | null): void {
-        // Navigation tabs removed - show appropriate preview content
-        const mapTitleToId = (title: string | null): string | null => {
-            switch (title) {
-                case 'Outline': return 'preview-outline';
-                case 'Preview': return 'preview-canvas';
-                case 'Marks': return 'preview-marks';
-                case 'Layers': return 'preview-layers';
-                default: return 'preview-layers'; // Default to layers
-            }
-        };
-        
-        const targetId = mapTitleToId(navTitle);
-        document.querySelectorAll('.engine__preview.preview__content').forEach(el => {
-            el.classList.remove('preview__content--active');
-            (el as HTMLElement).style.display = 'none';
-        });
-        
-        if (targetId) {
-            const panel = document.getElementById(targetId);
-            if (panel) {
-                panel.classList.add('preview__content--active');
-                (panel as HTMLElement).style.display = 'block';
-            }
-        }
+    private updateNavigationUI(_navTitle: string | null): void {
+        // Navigation functionality simplified since layers panel is now floating
+        // Other preview content management can be added here if needed in the future
     }
 
     /**
@@ -961,7 +940,7 @@ export class ToolStateManager {
      */
     private updateToolUI(toolName: string): void {
         // Remove selected class from all tool items in all containers
-        document.querySelectorAll('.tools__item').forEach(element => {
+        document.querySelectorAll('.engine__tools-item').forEach(element => {
             element.classList.remove('engine__tools-item--active');
             element.classList.remove('active'); // compatibility for tests
         });
@@ -973,7 +952,7 @@ export class ToolStateManager {
         if (activeToolContainer) {
             const selectedTool = activeToolContainer.querySelector(`[data-tool="${toolName}"]`);
             if (selectedTool) {
-                const parentItem = selectedTool.closest('.tools__item');
+                const parentItem = selectedTool.closest('.engine__tools-item');
                 if (parentItem) {
                     parentItem.classList.add('engine__tools-item--active');
                     parentItem.classList.add('active'); // compatibility for tests

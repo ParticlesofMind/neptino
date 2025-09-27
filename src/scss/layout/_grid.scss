@@ -5,7 +5,9 @@
 // Main page grid container
 .grid {
     display: grid;
-    min-height: 100vh; // Full viewport height
+    height: 100vh; // Fixed viewport height
+    max-height: 100vh; // Prevent overflow
+    overflow: hidden; // Prevent scrollbar
     grid-template-rows: auto minmax(0, 1fr) auto; // header auto, main flexible but can shrink, footer auto
     grid-template-areas:
         "header"

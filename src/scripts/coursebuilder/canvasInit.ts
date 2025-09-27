@@ -16,6 +16,7 @@ import { ToolCoordinator } from './ui/ToolCoordinator';
 import { initializeAnimationUI } from './animation/AnimationUI';
 import { animationState } from './animation/AnimationState';
 import { LayersPanel } from './ui/LayersPanel';
+import { PanelManager } from './ui/PanelManager';
 import { CANVAS_WIDTH, CANVAS_HEIGHT, calculateFitZoom } from './utils/canvasSizing';
 import { runFullValidation } from './utils/canvasSizingValidation';
 import { initializeCanvasSystem, validateCanvasSystem } from './utils/canvasSystemInit';
@@ -106,9 +107,9 @@ export async function initializeCanvas(): Promise<void> {
 
         // Initialize zoom settings for the high-quality zoom system
         if (perspectiveManager) {
-            // Show canvas at actual 1200×1800 size (100% zoom) instead of auto-scaling
-            perspectiveManager.setZoom(1.0);
-            console.log(`🎯 Canvas displayed at actual size: 1.0x (1200×1800 pixels)`);
+            // Reset to our new default zoom level with proper centering
+            perspectiveManager.resetZoom();
+            console.log(`🎯 Canvas displayed at optimal size: 0.6x (60% of 1200×1800 pixels, shown as 100%)`);
             
             // Set up wheel event handling for zoom/pan
             if (app) {
@@ -157,6 +158,10 @@ export async function initializeCanvas(): Promise<void> {
         layersPanel = new LayersPanel();
         (window as any).layersPanel = layersPanel;
         layersPanel.refresh();
+
+        // Initialize Panel Manager (handles tabbed panel switching)
+        const panelManager = new PanelManager();
+        (window as any).panelManager = panelManager;
 
         // Initialize color selectors for all tools
         toolColorManager.init();

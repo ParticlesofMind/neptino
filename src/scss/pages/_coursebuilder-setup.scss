@@ -155,3 +155,30 @@
         }
     }
 }
+
+// ==========================================================================
+// FIX FOR COLLAPSING MARGINS ON PLACEHOLDER ELEMENTS
+// ==========================================================================
+
+.placeholder {
+    margin: 0; // Remove default paragraph margins that cause collapsing margin issues
+    padding: var(--spacing-4);
+    color: var(--color-neutral-500);
+    text-align: center;
+    font-style: italic;
+}
+
+// Additional fix for any p elements that might cause overflow issues
+.coursebuilder {
+    p {
+        &:last-child {
+            margin-bottom: 0; // Prevent last paragraph from creating collapsing margins
+        }
+    }
+    
+    // Ensure containers have overflow hidden to prevent margin collapse issues
+    &__preview,
+    &__launch {
+        overflow: hidden; // Prevent collapsing margins from extending container height
+    }
+}

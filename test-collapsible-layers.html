@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Collapsible Layers Panel</title>
+    <link rel="stylesheet" href="/src/scss/main.scss">
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+        }
+        
+        .test-container {
+            height: 100vh;
+            padding: 1rem;
+        }
+        
+        .test-info {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 300px;
+            z-index: 999;
+        }
+        
+        .test-controls {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .test-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            background: #3b82f6;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .test-btn:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+        <div class="test-info">
+            <h3>Collapsible Layers Panel Test</h3>
+            <p>The layers panel should now:</p>
+            <ul>
+                <li>Float on the right side at full viewport height</li>
+                <li>When <strong>collapsed</strong>: stretch vertically across full height (narrow width)</li>
+                <li>When <strong>expanded</strong>: normal width with full height</li>
+                <li>Toggle with the arrow button</li>
+                <li>Remember state in localStorage</li>
+                <li>Show "LAYERS" vertically when collapsed</li>
+            </ul>
+            <div class="test-controls">
+                <button class="test-btn" onclick="testCollapse()">Toggle Panel</button>
+                <button class="test-btn" onclick="testRefresh()">Refresh Panel</button>
+            </div>
+        </div>    <div class="test-container">
+        <div class="engine">
+            <!-- Media panel - First column -->
+            <div class="engine__media">
+                <div style="padding: 1rem; text-align: center; color: #666;">
+                    Media Panel<br>
+                    <small>(Column 1)</small>
+                </div>
+            </div>
+
+            <!-- Search panel - Second column -->
+            <div class="engine__search">
+                <div style="padding: 1rem; text-align: center; color: #666;">
+                    Search Panel<br>
+                    <small>(Column 2)</small>
+                </div>
+            </div>
+
+            <!-- Canvas area - Third column (expanded) -->
+            <div class="engine__canvas">
+                <div style="padding: 2rem; text-align: center; color: #666; background: white; border-radius: 8px; margin: 1rem;">
+                    Canvas Area<br>
+                    <small>(Now takes full width of columns 3)</small><br><br>
+                    <div style="background: #f0f0f0; padding: 1rem; border-radius: 4px; margin-top: 1rem;">
+                        This area now has more space since we converted from 4 columns to 3 columns.
+                    </div>
+                    <div style="position: absolute; top: 50%; right: 350px; transform: translateY(-50%); background: rgba(255,0,0,0.1); padding: 0.5rem; border-radius: 4px; font-size: 12px; border: 1px dashed #ff0000;">
+                        👉 Notice: When collapsed, the layers panel should stretch<br>
+                        vertically across the FULL HEIGHT of the viewport,<br>
+                        not just shrink horizontally!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Layers Panel - Now floating overlay -->
+            <div class="engine__layers" id="layers-panel-container">
+                <div class="layers-panel">
+                    <div class="layers-panel__header">
+                        <h3 class="layers-panel__title">Layers</h3>
+                        <button class="layers-panel__toggle" id="layers-toggle" title="Collapse layers panel">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15,18 9,12 15,6"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="layers-panel__content">
+                        <ol class="layers-list" id="layers-list-root">
+                            <!-- Mock layer items for testing -->
+                            <li class="layer__item card card--layer">
+                                <div class="layer__content">
+                                    <div class="layer__left">
+                                        <div class="layer__thumbnail" style="background: #ff6b6b;"></div>
+                                        <input class="layer__name-input" type="text" value="Background Shape">
+                                    </div>
+                                    <div class="layer__controls">
+                                        <button class="layer__toggle layer__visibility" title="Toggle visibility">
+                                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyI+PC9jaXJjbGU+PHBhdGggZD0iTTEyIDFzLTQgNi00IDExIDQgMTEgNCA3IDQtMTEgNC0xMXoiPjwvcGF0aD48L3N2Zz4K" alt="Visibility" width="14" height="14">
+                                        </button>
+                                        <button class="layer__toggle layer__lock" title="Toggle lock">
+                                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiI+PHJlY3QgeD0iMyIgeT0iMTEiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxMSIgcng9IjIiIHJ5PSIyIj48L3JlY3Q+PGNpcmNsZSBjeD0iMTIiIGN5PSIxNiIgcj0iMSI+PC9jaXJjbGU+PHBhdGggZD0iTTcgMTFWN2E1IDUgMCAwIDEgMTAgMHY0Ij48L3BhdGg+PC9zdmc+" alt="Lock" width="14" height="14">
+                                        </button>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="layer__item card card--layer">
+                                <div class="layer__content">
+                                    <div class="layer__left">
+                                        <div class="layer__thumbnail" style="background: #4ecdc4;"></div>
+                                        <input class="layer__name-input" type="text" value="Text Element">
+                                    </div>
+                                    <div class="layer__controls">
+                                        <button class="layer__toggle layer__visibility" title="Toggle visibility">
+                                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyI+PC9jaXJjbGU+PHBhdGggZD0iTTEyIDFzLTQgNi00IDExIDQgMTEgNCA3IDQtMTEgNC0xMXoiPjwvcGF0aD48L3N2Zz4K" alt="Visibility" width="14" height="14">
+                                        </button>
+                                        <button class="layer__toggle layer__lock" title="Toggle lock">
+                                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiI+PHJlY3QgeD0iMyIgeT0iMTEiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxMSIgcng9IjIiIHJ5PSIyIj48L3JlY3Q+PGNpcmNsZSBjeD0iMTIiIGN5PSIxNiIgcj0iMSI+PC9jaXJjbGU+PHBhdGggZD0iTTcgMTFWN2E1IDUgMCAwIDEgMTAgMHY0Ij48L3BhdGg+PC9zdmc+" alt="Lock" width="14" height="14">
+                                        </button>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="layer__item card card--layer">
+                                <div class="layer__content">
+                                    <div class="layer__left">
+                                        <div class="layer__thumbnail" style="background: #45b7d1;"></div>
+                                        <input class="layer__name-input" type="text" value="Image Layer">
+                                    </div>
+                                    <div class="layer__controls">
+                                        <button class="layer__toggle layer__visibility" title="Toggle visibility">
+                                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyI+PC9jaXJjbGU+PHBhdGggZD0iTTEyIDFzLTQgNi00IDExIDQgMTEgNCA3IDQtMTEgNC0xMXoiPjwvcGF0aD48L3N2Zz4K" alt="Visibility" width="14" height="14">
+                                        </button>
+                                        <button class="layer__toggle layer__lock" title="Toggle lock">
+                                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiI+PHJlY3QgeD0iMyIgeT0iMTEiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxMSIgcng9IjIiIHJ5PSIyIj48L3JlY3Q+PGNpcmNsZSBjeD0iMTIiIGN5PSIxNiIgcj0iMSI+PC9jaXJjbGU+PHBhdGggZD0iTTcgMTFWN2E1IDUgMCAwIDEgMTAgMHY0Ij48L3BhdGg+PC9zdmc+" alt="Lock" width="14" height="14">
+                                        </button>
+                                    </div>
+                                </div>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple test implementation of the collapsible functionality
+        class TestLayersPanel {
+            constructor() {
+                this.panelContainer = document.getElementById('layers-panel-container');
+                this.toggleButton = document.getElementById('layers-toggle');
+                this.isCollapsed = false;
+                
+                this.initializeCollapsibleFunctionality();
+            }
+            
+            initializeCollapsibleFunctionality() {
+                if (!this.toggleButton || !this.panelContainer) return;
+
+                // Load collapsed state from localStorage
+                const savedState = localStorage.getItem('layersPanel:collapsed');
+                this.isCollapsed = savedState === 'true';
+                
+                // Apply initial state
+                this.updatePanelState();
+
+                // Bind toggle button click
+                this.toggleButton.addEventListener('click', () => {
+                    this.toggleCollapse();
+                });
+            }
+            
+            toggleCollapse() {
+                this.isCollapsed = !this.isCollapsed;
+                this.updatePanelState();
+                
+                // Save state to localStorage
+                localStorage.setItem('layersPanel:collapsed', this.isCollapsed.toString());
+            }
+            
+            updatePanelState() {
+                if (!this.panelContainer || !this.toggleButton) return;
+
+                if (this.isCollapsed) {
+                    this.panelContainer.classList.add('engine__layers--collapsed');
+                    this.toggleButton.classList.add('layers-panel__toggle--collapsed');
+                    this.toggleButton.setAttribute('title', 'Expand layers panel');
+                } else {
+                    this.panelContainer.classList.remove('engine__layers--collapsed');
+                    this.toggleButton.classList.remove('layers-panel__toggle--collapsed');
+                    this.toggleButton.setAttribute('title', 'Collapse layers panel');
+                }
+            }
+            
+            setCollapsed(collapsed) {
+                this.isCollapsed = collapsed;
+                this.updatePanelState();
+                localStorage.setItem('layersPanel:collapsed', this.isCollapsed.toString());
+            }
+        }
+        
+        // Initialize test panel
+        const testPanel = new TestLayersPanel();
+        
+        // Test functions
+        function testCollapse() {
+            testPanel.toggleCollapse();
+        }
+        
+        function testRefresh() {
+            console.log('Panel state:', testPanel.isCollapsed ? 'collapsed' : 'expanded');
+            alert('Check console for panel state. Panel is currently ' + (testPanel.isCollapsed ? 'collapsed' : 'expanded'));
+        }
+        
+        // Make test panel available globally
+        window.testPanel = testPanel;
+        
+        console.log('Test layers panel initialized. Use testCollapse() and testRefresh() to test functionality.');
+    </script>
+</body>
+</html>

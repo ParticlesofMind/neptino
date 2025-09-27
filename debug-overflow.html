@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Overflow Issue</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        
+        .debug-container {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 10000;
+            font-size: 12px;
+            max-width: 300px;
+        }
+        
+        .debug-info {
+            margin: 5px 0;
+        }
+        
+        .highlight-overflow {
+            border: 3px solid red !important;
+            background: rgba(255,0,0,0.1) !important;
+        }
+        
+        .test-section {
+            margin: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 9999;
+        }
+        
+        button {
+            margin: 2px;
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            background: #f8f8f8;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        button:hover {
+            background: #e8e8e8;
+        }
+        
+        .test-results {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 11px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <div class="debug-info">Document Height: <span id="docHeight">-</span>px</div>
+        <div class="debug-info">Viewport Height: <span id="viewHeight">-</span>px</div>
+        <div class="debug-info">Body Height: <span id="bodyHeight">-</span>px</div>
+        <div class="debug-info">Scroll Height: <span id="scrollHeight">-</span>px</div>
+        <div class="debug-info">Elements > Viewport: <span id="overflowCount">-</span></div>
+    </div>
+
+    <div class="controls">
+        <button onclick="runOverflowTest()">Find Overflow Elements</button>
+        <button onclick="testCoursebuilderPage()">Test Coursebuilder</button>
+        <button onclick="highlightTallElements()">Highlight Tall Elements</button>
+        <button onclick="clearHighlights()">Clear Highlights</button>
+        <button onclick="checkPositioning()">Check Positioning</button>
+        <div class="test-results" id="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Overflow Debug Tool</h2>
+        <p>This tool will help identify what's causing the excess whitespace in coursebuilder.html</p>
+        <p>Click the buttons above to run different tests.</p>
+        
+        <h3>Tests Available:</h3>
+        <ul>
+            <li><strong>Find Overflow Elements</strong> - Finds elements extending beyond viewport</li>
+            <li><strong>Test Coursebuilder</strong> - Load and analyze the actual coursebuilder page</li>
+            <li><strong>Highlight Tall Elements</strong> - Shows elements taller than viewport</li>
+            <li><strong>Check Positioning</strong> - Finds absolutely positioned elements that might cause issues</li>
+        </ul>
+    </div>
+
+    <script>
+        function updateStats() {
+            document.getElementById('docHeight').textContent = document.documentElement.scrollHeight;
+            document.getElementById('viewHeight').textContent = window.innerHeight;
+            document.getElementById('bodyHeight').textContent = document.body.scrollHeight;
+            document.getElementById('scrollHeight').textContent = document.documentElement.scrollHeight;
+        }
+
+        function runOverflowTest() {
+            const results = document.getElementById('results');
+            const overflowElements = [];
+            const viewportHeight = window.innerHeight;
+            
+            // Check all elements
+            const allElements = document.querySelectorAll('*');
+            let overflowCount = 0;
+            
+            allElements.forEach((el, index) => {
+                const rect = el.getBoundingClientRect();
+                const computedStyle = window.getComputedStyle(el);
+                
+                // Check if element extends beyond viewport
+                if (rect.bottom > viewportHeight + window.scrollY) {
+                    overflowCount++;
+                    const elementInfo = {
+                        tag: el.tagName,
+                        id: el.id || 'no-id',
+                        class: el.className || 'no-class',
+                        bottom: Math.round(rect.bottom),
+                        height: Math.round(rect.height),
+                        position: computedStyle.position,
+                        zIndex: computedStyle.zIndex
+                    };
+                    overflowElements.push(elementInfo);
+                    
+                    // Highlight element
+                    el.classList.add('highlight-overflow');
+                }
+            });
+            
+            document.getElementById('overflowCount').textContent = overflowCount;
+            
+            results.textContent = `Found ${overflowCount} elements extending beyond viewport:\\n\\n` +
+                overflowElements.slice(0, 10).map(el => 
+                    `${el.tag}#${el.id}.${el.class}\\n` +
+                    `  Bottom: ${el.bottom}px, Height: ${el.height}px\\n` +
+                    `  Position: ${el.position}, Z-Index: ${el.zIndex}\\n`
+                ).join('\\n');
+                
+            if (overflowElements.length > 10) {
+                results.textContent += `\\n... and ${overflowElements.length - 10} more`;
+            }
+        }
+
+        function testCoursebuilderPage() {
+            const results = document.getElementById('results');
+            results.textContent = 'Loading coursebuilder page for analysis...';
+            
+            // Create iframe to load coursebuilder
+            const iframe = document.createElement('iframe');
+            iframe.src = '/src/pages/teacher/coursebuilder.html';
+            iframe.style.width = '1px';
+            iframe.style.height = '1px';
+            iframe.style.opacity = '0';
+            iframe.style.position = 'absolute';
+            iframe.style.top = '-1000px';
+            
+            iframe.onload = function() {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    const iframeHeight = iframeDoc.documentElement.scrollHeight;
+                    const iframeViewHeight = iframe.contentWindow.innerHeight;
+                    
+                    results.textContent = `Coursebuilder Analysis:\\n` +
+                        `Document Height: ${iframeHeight}px\\n` +
+                        `Iframe View Height: ${iframeViewHeight}px\\n` +
+                        `Excess Height: ${iframeHeight - iframeViewHeight}px\\n\\n`;
+                    
+                    // Find the tallest elements
+                    const elements = iframeDoc.querySelectorAll('*');
+                    const tallElements = [];
+                    
+                    elements.forEach(el => {
+                        const rect = el.getBoundingClientRect();
+                        if (rect.height > 100) {
+                            tallElements.push({
+                                tag: el.tagName,
+                                id: el.id || 'no-id',
+                                class: el.className || 'no-class',
+                                height: Math.round(rect.height),
+                                bottom: Math.round(rect.bottom)
+                            });
+                        }
+                    });
+                    
+                    tallElements.sort((a, b) => b.height - a.height);
+                    results.textContent += 'Tallest elements:\\n' +
+                        tallElements.slice(0, 10).map(el => 
+                            `${el.tag}#${el.id} - ${el.height}px (bottom: ${el.bottom}px)`
+                        ).join('\\n');
+                        
+                } catch (e) {
+                    results.textContent = 'Error accessing iframe: ' + e.message;
+                }
+                
+                document.body.removeChild(iframe);
+            };
+            
+            iframe.onerror = function() {
+                results.textContent = 'Failed to load coursebuilder page';
+                document.body.removeChild(iframe);
+            };
+            
+            document.body.appendChild(iframe);
+        }
+
+        function highlightTallElements() {
+            const results = document.getElementById('results');
+            const tallElements = [];
+            const viewportHeight = window.innerHeight;
+            
+            document.querySelectorAll('*').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if (rect.height > viewportHeight * 0.8) {
+                    tallElements.push({
+                        element: el,
+                        height: rect.height,
+                        tag: el.tagName
+                    });
+                    el.style.border = '2px solid blue';
+                    el.style.backgroundColor = 'rgba(0,0,255,0.1)';
+                }
+            });
+            
+            results.textContent = `Found ${tallElements.length} elements taller than 80% of viewport:\\n` +
+                tallElements.map(el => `${el.tag}: ${Math.round(el.height)}px`).join('\\n');
+        }
+
+        function checkPositioning() {
+            const results = document.getElementById('results');
+            const positionedElements = [];
+            
+            document.querySelectorAll('*').forEach(el => {
+                const style = window.getComputedStyle(el);
+                if (['absolute', 'fixed', 'sticky'].includes(style.position)) {
+                    const rect = el.getBoundingClientRect();
+                    positionedElements.push({
+                        tag: el.tagName,
+                        id: el.id || 'no-id',
+                        class: el.className || 'no-class',
+                        position: style.position,
+                        top: style.top,
+                        bottom: style.bottom,
+                        height: Math.round(rect.height),
+                        actualBottom: Math.round(rect.bottom)
+                    });
+                    
+                    el.style.outline = '2px solid orange';
+                }
+            });
+            
+            results.textContent = `Found ${positionedElements.length} positioned elements:\\n\\n` +
+                positionedElements.map(el => 
+                    `${el.tag}#${el.id}\\n` +
+                    `  Position: ${el.position}\\n` +
+                    `  Top: ${el.top}, Bottom: ${el.bottom}\\n` +
+                    `  Height: ${el.height}px, Actual Bottom: ${el.actualBottom}px\\n`
+                ).join('\\n');
+        }
+
+        function clearHighlights() {
+            document.querySelectorAll('*').forEach(el => {
+                el.classList.remove('highlight-overflow');
+                el.style.border = '';
+                el.style.backgroundColor = '';
+                el.style.outline = '';
+            });
+            document.getElementById('results').textContent = 'Highlights cleared';
+        }
+
+        // Update stats on load and scroll
+        updateStats();
+        window.addEventListener('scroll', updateStats);
+        window.addEventListener('resize', updateStats);
+        
+        // Auto-run overflow test on load
+        setTimeout(runOverflowTest, 500);
+    </script>
+</body>
+</html>

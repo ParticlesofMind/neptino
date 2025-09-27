@@ -15,7 +15,7 @@ export interface ZoomConfig {
 export class HighQualityZoom {
     private app: Application;
     private stage: Container;
-    private zoomLevel: number = 1.0;
+    private zoomLevel: number = 0.6; // Start at our new default "100%" zoom
     private config: ZoomConfig;
     
     // Pan offset for the zoomed view
@@ -30,8 +30,8 @@ export class HighQualityZoom {
         this.stage = app.stage;
         
         this.config = {
-            minZoom: 0.2,
-            maxZoom: 5.0, // Allow higher zoom for detailed work
+            minZoom: 0.25, // 25% minimum zoom
+            maxZoom: 5.0,  // 500% maximum zoom
             zoomStep: 0.2,
             smoothZoom: true,
             ...config
@@ -71,22 +71,74 @@ export class HighQualityZoom {
      * Zoom in by one step
      */
     public zoomIn(centerX?: number, centerY?: number): void {
-        this.setZoom(this.zoomLevel + this.config.zoomStep, centerX, centerY);
+        if (centerX !== undefined && centerY !== undefined) {
+            // Zoom around specific point (mouse position)
+            this.setZoom(this.zoomLevel + this.config.zoomStep, centerX, centerY);
+        } else {
+            // Zoom and re-center (for toolbar button clicks)
+            this.setZoom(this.zoomLevel + this.config.zoomStep);
+            this.recenterCanvas();
+        }
     }
     
     /**
      * Zoom out by one step
      */
     public zoomOut(centerX?: number, centerY?: number): void {
-        this.setZoom(this.zoomLevel - this.config.zoomStep, centerX, centerY);
+        if (centerX !== undefined && centerY !== undefined) {
+            // Zoom around specific point (mouse position)
+            this.setZoom(this.zoomLevel - this.config.zoomStep, centerX, centerY);
+        } else {
+            // Zoom and re-center (for toolbar button clicks)
+            this.setZoom(this.zoomLevel - this.config.zoomStep);
+            this.recenterCanvas();
+        }
     }
     
     /**
      * Reset zoom to 100% and center the view
      */
     public resetZoom(): void {
-        this.zoomLevel = 1.0;
-        this.panOffset = { x: 0, y: 0 };
+        this.zoomLevel = 0.6; // Our new "100%" zoom level
+        this.panOffset = this.calculateCenteredPanOffset();
+        this.applyTransform();
+    }
+
+    /**
+     * Calculate pan offset to center the canvas at current zoom level
+     */
+    private calculateCenteredPanOffset(): { x: number, y: number } {
+        const app = this.app;
+        const containerWidth = app.screen.width;
+        const containerHeight = app.screen.height;
+        
+        // Canvas dimensions
+        const canvasWidth = 1200;
+        const canvasHeight = 1800;
+        
+        // At current zoom level, calculate the effective canvas size
+        const effectiveCanvasWidth = canvasWidth * this.zoomLevel;
+        const effectiveCanvasHeight = canvasHeight * this.zoomLevel;
+        
+        // Calculate true centering with smaller, more reasonable offsets
+        const baseCenterX = (containerWidth - effectiveCanvasWidth) / 2;
+        const baseCenterY = (containerHeight - effectiveCanvasHeight) / 2;
+        
+        // Much smaller offsets for fine-tuning, not dramatic repositioning
+        const rightOffset = 0;  // Reduced from 150 - just a subtle shift right
+        const downOffset = -300;   // Reduced from 50 - just account for top toolbar
+        
+        return { 
+            x: baseCenterX + rightOffset, 
+            y: baseCenterY + downOffset 
+        };
+    }
+
+    /**
+     * Re-center the canvas at the current zoom level
+     */
+    private recenterCanvas(): void {
+        this.panOffset = this.calculateCenteredPanOffset();
         this.applyTransform();
     }
     
@@ -127,8 +179,31 @@ export class HighQualityZoom {
      * Constrain panning to reasonable bounds
      */
     private constrainPan(): void {
-        const maxPanX = (this.zoomLevel - 1) * this.app.screen.width / 2;
-        const maxPanY = (this.zoomLevel - 1) * this.app.screen.height / 2;
+        const containerWidth = this.app.screen.width;
+        const containerHeight = this.app.screen.height;
+        
+        // Calculate the effective canvas size at current zoom
+        const effectiveCanvasWidth = 1200 * this.zoomLevel;
+        const effectiveCanvasHeight = 1800 * this.zoomLevel;
+        
+        // For very zoomed out views (smaller than container), allow more freedom but prevent going too far
+        if (effectiveCanvasWidth < containerWidth && effectiveCanvasHeight < containerHeight) {
+            // Allow some movement but keep the canvas reasonably visible
+            const maxOffsetX = containerWidth * 0.3; // Allow 30% of container width offset
+            const maxOffsetY = containerHeight * 0.3; // Allow 30% of container height offset
+            
+            this.panOffset.x = Math.max(-maxOffsetX, Math.min(maxOffsetX, this.panOffset.x));
+            this.panOffset.y = Math.max(-maxOffsetY, Math.min(maxOffsetY, this.panOffset.y));
+            return;
+        }
+        
+        // For zoomed-in views, constrain to prevent losing the canvas entirely
+        const overflowX = Math.max(0, (effectiveCanvasWidth - containerWidth) / 2);
+        const overflowY = Math.max(0, (effectiveCanvasHeight - containerHeight) / 2);
+        
+        // Allow panning within reasonable bounds
+        const maxPanX = overflowX + containerWidth * 0.2; // Extra 20% tolerance
+        const maxPanY = overflowY + containerHeight * 0.2; // Extra 20% tolerance
         
         this.panOffset.x = Math.max(-maxPanX, Math.min(maxPanX, this.panOffset.x));
         this.panOffset.y = Math.max(-maxPanY, Math.min(maxPanY, this.panOffset.y));
@@ -142,15 +217,16 @@ export class HighQualityZoom {
         const zoomDisplay = document.querySelector('.engine__perspective-zoom') as HTMLElement;
         
         if (zoomDisplay) {
-            // Convert zoom level to percentage (1.0 = 100%)
-            const zoomPercent = Math.round(this.zoomLevel * 100);
-            zoomDisplay.textContent = `${zoomPercent}%`;
+            // Convert internal zoom level to display percentage
+            // 0.6 internal zoom = 100% display, 0.25 = 42%, 5.0 = 833%
+            const displayPercent = Math.round((this.zoomLevel / 0.6) * 100);
+            zoomDisplay.textContent = `${displayPercent}%`;
             
             // Update title with helpful information
-            if (this.zoomLevel > 1.0) {
-                zoomDisplay.title = `Zoomed to ${zoomPercent}% - Mouse wheel scrolls around canvas, Ctrl/Cmd+wheel zooms`;
+            if (this.zoomLevel > 0.6) {
+                zoomDisplay.title = `Zoomed to ${displayPercent}% - Mouse wheel scrolls around canvas, Ctrl/Cmd+wheel zooms`;
             } else {
-                zoomDisplay.title = `${zoomPercent}% zoom - Ctrl/Cmd+wheel to zoom in`;
+                zoomDisplay.title = `${displayPercent}% zoom - Ctrl/Cmd+wheel to zoom in`;
             }
         }
     }
@@ -207,8 +283,8 @@ export class HighQualityZoom {
             return true;
         }
         
-        // Handle pan when zoomed
-        if (this.zoomLevel > 1.0) {
+        // Handle pan when zoomed above default level
+        if (this.zoomLevel > 0.6) {
             event.preventDefault();
             this.pan(-event.deltaX / this.zoomLevel, -event.deltaY / this.zoomLevel);
             return true;
@@ -250,6 +326,14 @@ export class HighQualityZoom {
         // Reset to default zoom that fits content
         this.resetZoom();
         console.log('🎯 Canvas fitted to container (HighQualityZoom)');
+    }
+
+    /**
+     * Public method to re-center the canvas at current zoom level
+     */
+    public centerCanvas(): void {
+        this.recenterCanvas();
+        console.log('🎯 Canvas re-centered at current zoom level');
     }
 
     /**
@@ -466,10 +550,10 @@ export class HighQualityZoom {
      * Reset zoom and pan to defaults
      */
     private resetView(): void {
-        this.zoomLevel = 1.0;
-        this.panOffset = { x: 0, y: 0 };
+        this.zoomLevel = 0.6; // Our new "100%" zoom level
+        this.panOffset = this.calculateCenteredPanOffset();
         this.applyTransform();
-        console.log('🔍 View reset to 100%');
+        console.log('🔍 View reset to 100% (0.6 internal zoom)');
     }
 
     /**

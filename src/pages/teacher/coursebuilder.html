@@ -945,9 +945,11 @@
           </div>
         </div>
         <!-- Search -->
-        <div class="engine__search">
+        <div class="engine__search search">
           <input class="search__input input input--search" type="search" placeholder="Search media..."
             id="media-search-input">
+
+
         </div>
 
         <!-- Canvas Area -->
@@ -1013,33 +1015,8 @@
                 <input type="number" min="1" max="15" value="2" class="input input--number" title="Pen Size"
                   data-setting="size">
 
-                <select id="pen-stroke-select" class="input input--color" data-color-selector="pen-stroke"
-                  title="Stroke Color">
-                  <option value="#1a1a1a" data-color="#1a1a1a" selected>Black</option>
-                  <option value="#4a7c59" data-color="#4a7c59">Green</option>
-                  <option value="#4a79a4" data-color="#4a79a4">Blue</option>
-                  <option value="#a74a4a" data-color="#a74a4a">Red</option>
-                  <option value="#6b7280" data-color="#6b7280">Gray</option>
-                  <option value="#b87333" data-color="#b87333">Orange</option>
-                  <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
-                  <option value="#b8a642" data-color="#b8a642">Yellow</option>
-                  <option value="#64748b" data-color="#64748b">Slate</option>
-                  <option value="#f8fafc" data-color="#f8fafc">White</option>
-                </select>
-                <select id="pen-fill-select" class="input input--color" data-color-selector="pen-fill"
-                  title="Fill Color">
-                  <option value="transparent" data-color="transparent">No Fill</option>
-                  <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
-                  <option value="#4a7c59" data-color="#4a7c59">Green</option>
-                  <option value="#4a79a4" data-color="#4a79a4">Blue</option>
-                  <option value="#a74a4a" data-color="#a74a4a">Red</option>
-                  <option value="#6b7280" data-color="#6b7280">Gray</option>
-                  <option value="#b87333" data-color="#b87333">Orange</option>
-                  <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
-                  <option value="#b8a642" data-color="#b8a642">Yellow</option>
-                  <option value="#64748b" data-color="#64748b">Slate</option>
-                  <option value="#f8fafc" data-color="#f8fafc" selected>White</option>
-                </select>
+                <div class="color-selector" data-color-selector="pen-stroke" data-initial-color="#1a1a1a" title="Stroke Color"></div>
+                <div class="color-selector" data-color-selector="pen-fill" data-initial-color="#f8fafc" data-allow-transparent="true" title="Fill Color"></div>
               </div>
 
               <!-- Text Settings -->
@@ -1069,18 +1046,7 @@
                   <option value="Tahoma" data-font-family="Tahoma">Tahoma</option>
                 </select>
 
-                <select id="text-color-select" class="input input--color" data-color-selector="text" title="Text Color">
-                  <option value="#1a1a1a" data-color="#1a1a1a" selected>Black</option>
-                  <option value="#4a7c59" data-color="#4a7c59">Green</option>
-                  <option value="#4a79a4" data-color="#4a79a4">Blue</option>
-                  <option value="#a74a4a" data-color="#a74a4a">Red</option>
-                  <option value="#6b7280" data-color="#6b7280">Gray</option>
-                  <option value="#b87333" data-color="#b87333">Orange</option>
-                  <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
-                  <option value="#b8a642" data-color="#b8a642">Yellow</option>
-                  <option value="#64748b" data-color="#64748b">Slate</option>
-                  <option value="#f8fafc" data-color="#f8fafc">White</option>
-                </select>
+                <div class="color-selector" data-color-selector="text" data-initial-color="#1a1a1a" title="Text Color"></div>
               </div>
 
               <!-- Brush Settings -->
@@ -1088,71 +1054,18 @@
                 <input type="number" min="10" max="50" value="20" class="input input--number" title="Brush Size"
                   data-setting="size">
 
-                <select id="brush-color-select" class="input input--color" data-color-selector="brush"
-                  title="Brush Color">
-                  <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
-                  <option value="#4a7c59" data-color="#4a7c59" selected>Green</option>
-                  <option value="#4a79a4" data-color="#4a79a4">Blue</option>
-                  <option value="#a74a4a" data-color="#a74a4a">Red</option>
-                  <option value="#6b7280" data-color="#6b7280">Gray</option>
-                  <option value="#b87333" data-color="#b87333">Orange</option>
-                  <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
-                  <option value="#b8a642" data-color="#b8a642">Yellow</option>
-                  <option value="#64748b" data-color="#64748b">Slate</option>
-                  <option value="#f8fafc" data-color="#f8fafc">White</option>
-                </select>
+                <div class="color-selector" data-color-selector="brush" data-initial-color="#4a7c59" title="Brush Color"></div>
               </div>
 
               <!-- Shapes Settings -->
               <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--shapes" style="display: none;">
-                <select id="shapes-select" class="input input--select" title="Shape Type" data-setting="shapeType">
-                  <option value="rectangle"
-                    data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-rectangle.svg">
-                    Rectangle</option>
-                  <option value="triangle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-triangle.svg">
-                    Triangle</option>
-                  <option value="circle" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-circle.svg">
-                    Circle
-                  </option>
-                  <option value="line" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-line.svg">Line
-                  </option>
-                  <option value="arrow" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-arrow.svg">Arrow
-                  </option>
-                  <option value="polygon" data-image="/src/assets/icons/coursebuilder/tools/shapes/shape-polygon.svg">
-                    Polygon</option>
-                </select>
+                <div class="shape-selector" data-shape-selector="shapes" data-initial-shape="rectangle" title="Shape Type"></div>
 
                 <input type="number" min="1" max="20" value="2" class="input input--number" title="Shape Thickness"
                   data-setting="strokeWidth">
 
-                <select id="shapes-stroke-select" class="input input--color" data-color-selector="shapes-stroke"
-                  title="Shape Stroke">
-                  <option value="#1f2937" data-color="#1f2937" selected>Dark Charcoal</option>
-                  <option value="#4a7c59" data-color="#4a7c59">Green</option>
-                  <option value="#4a79a4" data-color="#4a79a4">Blue</option>
-                  <option value="#a74a4a" data-color="#a74a4a">Red</option>
-                  <option value="#6b7280" data-color="#6b7280">Gray</option>
-                  <option value="#b87333" data-color="#b87333">Orange</option>
-                  <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
-                  <option value="#b8a642" data-color="#b8a642">Yellow</option>
-                  <option value="#64748b" data-color="#64748b">Slate</option>
-                  <option value="#f8fafc" data-color="#f8fafc">White</option>
-                </select>
-
-                <select id="shapes-fill-select" class="input input--color" data-color-selector="shapes-fill"
-                  title="Shape Fill">
-                  <option value="transparent" data-color="transparent" selected>No Fill</option>
-                  <option value="#1a1a1a" data-color="#1a1a1a">Black</option>
-                  <option value="#4a7c59" data-color="#4a7c59">Green</option>
-                  <option value="#4a79a4" data-color="#4a79a4">Blue</option>
-                  <option value="#a74a4a" data-color="#a74a4a">Red</option>
-                  <option value="#6b7280" data-color="#6b7280">Gray</option>
-                  <option value="#b87333" data-color="#b87333">Orange</option>
-                  <option value="#7c5a9b" data-color="#7c5a9b">Purple</option>
-                  <option value="#b8a642" data-color="#b8a642">Yellow</option>
-                  <option value="#64748b" data-color="#64748b">Slate</option>
-                  <option value="#f8fafc" data-color="#f8fafc">White</option>
-                </select>
+                <div class="color-selector" data-color-selector="shapes-stroke" data-initial-color="#1f2937" title="Shape Stroke"></div>
+                <div class="color-selector" data-color-selector="shapes-fill" data-initial-color="transparent" data-allow-transparent="true" title="Shape Fill"></div>
               </div>
 
               <!-- Eraser Settings -->
@@ -1177,7 +1090,7 @@
 
             </div>
 
-            <!-- Tools Row (Bottom) -->
+           
             <div class="engine__tools-selection">
               <!-- Build Mode Tools -->
               <div class="tools tools--build" data-mode-tools="build">
@@ -1270,12 +1183,56 @@
           </div>
         </div>
 
-        <!-- Layers Panel - Fourth Column (formerly navigation) -->
-        <div class="engine__layers">
-          <div class="preview__content" id="preview-layers">
-            <div class="layers-panel">
-              <h3 class="layers-panel__title">Layers</h3>
-              <ol class="layers-list" id="layers-list-root"></ol>
+        <!-- Layers Panel - Now floating overlay on the right -->
+        <div class="engine__panel">
+          <div class="engine__panel-header">
+            <button class="engine__panel-tab engine__panel-tab--active" data-panel="layers">
+              Layers
+            </button>
+            <button class="engine__panel-tab" data-panel="navigation">
+              Navigation
+            </button>
+          </div>
+          <div class="engine__panel-content">
+            <!-- Layers Panel View -->
+            <div class="engine__panel-view engine__panel-view--active" data-view="layers">
+              <div class="engine__layers">
+                <div class="layers-panel">
+                  <div class="layers-panel__content">
+                    <ol class="layers-list" id="layers-list-root"></ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Navigation Panel View -->
+            <div class="engine__panel-view" data-view="navigation">
+              <div class="engine__navigation">
+                <div class="navigation-content">
+                  <h4>Course Structure</h4>
+                  <div class="nav-item">
+                    <strong>Lesson 1</strong>
+                    <p>Introduction to the topic</p>
+                  </div>
+                  <div class="nav-item nav-item--active">
+                    <strong>Lesson 2</strong>
+                    <p>Current lesson - main concepts</p>
+                  </div>
+                  <div class="nav-item">
+                    <strong>Lesson 3</strong>
+                    <p>Advanced topics and examples</p>
+                  </div>
+                  
+                  <h4>Quick Actions</h4>
+                  <div class="nav-item">
+                    <strong>Save Progress</strong>
+                    <p>Save current lesson state</p>
+                  </div>
+                  <div class="nav-item">
+                    <strong>Preview Course</strong>
+                    <p>Preview the entire course</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1305,6 +1262,8 @@
 
   <!-- Core application scripts -->
   <script type="module" src="/src/scripts/app.ts"></script>
+  <!-- Custom selector initialization -->
+  <script type="module" src="/src/scripts/coursebuilder/tools/CustomSelectorInit.ts"></script>
   <!-- Language loader for course languages -->
   <script type="module" src="/src/scripts/backend/courses/settings/languageLoader.ts"></script>
   <!-- Navigation system (handles all coursebuilder navigation) -->
@@ -1338,28 +1297,7 @@
         return $state;
       }
 
-      // Custom template for Select2 to show only color swatches
-      function formatColorOption(state) {
-        if (!state.id) { return state.text; }
-
-        var colorValue = $(state.element).data('color');
-        if (!colorValue) { return state.text; }
-
-        // Handle "no fill" option with diagonal red line
-        if (colorValue === 'transparent') {
-          var $state = $(
-            '<span><div style="width: 20px; height: 20px; background: white; border: 1px solid #ccc; border-radius: 3px; display: inline-block; position: relative; overflow: hidden;">' +
-            '<div style="position: absolute; top: -1px; left: -1px; width: 28px; height: 2px; background: red; transform: rotate(45deg); transform-origin: 0 0;"></div>' +
-            '</div></span>'
-          );
-          return $state;
-        }
-
-        var $state = $(
-          '<span><div style="width: 20px; height: 20px; background-color: ' + colorValue + '; border: 1px solid #ccc; border-radius: 3px; display: inline-block;"></div></span>'
-        );
-        return $state;
-      }
+      // Color templates no longer needed - using custom color selectors
 
       // Custom template for font families with font preview
       function formatFontOption(state) {
@@ -1386,47 +1324,9 @@
         return $state;
       }
 
-      // Initialize Select2 for shapes dropdown
-      $('#shapes-select').select2({
-        templateResult: formatShapeOption,
-        templateSelection: function (state) {
-          if (!state.id) { return state.text; }
+      // Shapes dropdown now uses custom shape selector instead of Select2
 
-          var imageUrl = $(state.element).data('image');
-          if (!imageUrl) { return state.text; }
-
-          var $state = $('<span><img src="' + imageUrl + '" width="24" height="24" alt="' + state.text + '" style="vertical-align: middle;" /></span>');
-          return $state;
-        },
-        minimumResultsForSearch: -1,
-        width: '100%'
-      });
-
-      // Initialize Select2 for all color dropdowns
-      $('#shapes-stroke-select, #shapes-fill-select, #pen-stroke-select, #pen-fill-select, #text-color-select, #brush-color-select').select2({
-        templateResult: formatColorOption,
-        templateSelection: function (state) {
-          if (!state.id) { return state.text; }
-
-          var colorValue = $(state.element).data('color');
-          if (!colorValue) { return state.text; }
-
-          // Handle "no fill" option in selection display
-          if (colorValue === 'transparent') {
-            var $state = $(
-              '<span><div style="width: 28px; height: 28px; background: white; border: 1px solid #ccc; border-radius: 4px; display: inline-block; position: relative; overflow: hidden;">' +
-              '<div style="position: absolute; top: -1px; left: -1px; width: 40px; height: 3px; background: red; transform: rotate(45deg); transform-origin: 0 0;"></div>' +
-              '</div></span>'
-            );
-            return $state;
-          }
-
-          var $state = $('<span><div style="width: 28px; height: 28px; background-color: ' + colorValue + '; border: 1px solid #ccc; border-radius: 4px; display: inline-block;"></div></span>');
-          return $state;
-        },
-        minimumResultsForSearch: -1,
-        width: '100%'
-      });
+      // Color dropdowns now use custom color selectors instead of Select2
 
       // Initialize Select2 for font family dropdown
       $('#font-family-select').select2({
@@ -1444,23 +1344,9 @@
 
 
       // Handle shape selection change
-      $('#shapes-select').on('select2:select', function (e) {
-        var data = e.params.data;
-        if (window.uiEventHandler && window.uiEventHandler.handleShapeSelection) {
-          window.uiEventHandler.handleShapeSelection(data.id);
-        }
-      });
+      // Shape selection changes now handled by custom shape selector
 
-      // Handle color selection changes
-      $('#shapes-stroke-select, #shapes-fill-select, #pen-stroke-select, #pen-fill-select, #text-color-select, #brush-color-select').on('select2:select', function (e) {
-        var data = e.params.data;
-        var colorSelector = $(this).data('color-selector');
-
-        // Trigger existing color selection logic
-        if (window.uiEventHandler && window.uiEventHandler.handleColorChange) {
-          window.uiEventHandler.handleColorChange(colorSelector, data.id);
-        }
-      });
+      // Color selection changes now handled by custom color selectors
 
       // Handle font family changes
       $('#font-family-select').on('select2:select', function (e) {

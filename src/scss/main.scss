@@ -54,6 +54,8 @@
 @use 'components/dropdown';       // Dropdown component system
 @use 'components/inputs';         // Form inputs
 @use 'components/select2-overrides'; // Select2 library styling overrides
+@use 'components/color-selector'; // Custom color selector component
+@use 'components/shape-selector'; // Custom shape selector component
 @use 'components/alerts';         // Alert/notification components
 @use 'components/notifications';  // Toast/notification components
 @use 'components/cards';          // Card component system
