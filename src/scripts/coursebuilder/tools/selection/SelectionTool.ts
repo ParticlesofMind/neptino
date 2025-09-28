@@ -4,7 +4,7 @@ import { snapManager } from '../SnapManager';
 import { ClickSelection } from './clickSelection';
 import { SelectionClipboard } from './SelectionClipboard';
 import { SelectionOverlay } from './SelectionOverlay';
-import { SmartGuides } from './SmartGuides';
+import { SmartGuides } from './EnhancedSmartGuides';
 import { SelectionMarquee } from './SelectionMarquee';
 import { TransformController } from './TransformController';
 import { SelectionGrouping } from './SelectionGrouping';
@@ -134,7 +134,20 @@ export class SelectionTool extends BaseTool {
           delta = Math.round(delta / rotationSnapRad) * rotationSnapRad;
         }
         this.overlay.setRotationPreview(new Point(cx, cy), (this as any)._rotateBase, delta);
-      } else { this.overlay.refreshBoundsOnly(container); const b = this.overlay.getGroup()?.bounds; if (b) try { this.guides.update(container, this.selected, b); } catch {} }
+      } else { 
+        this.overlay.refreshBoundsOnly(container); 
+        const b = this.overlay.getGroup()?.bounds; 
+        if (b) {
+          try { 
+            // Use resize guides during scale operations
+            if (this.mode === 'scale') {
+              this.guides.updateResizeGuides(container, this.selected, b, 'both');
+            } else {
+              this.guides.update(container, this.selected, b); 
+            }
+          } catch {} 
+        }
+      }
       return;
     }
     if (this.isDraggingGroup && this.overlay.getGroup()) {
@@ -144,7 +157,7 @@ export class SelectionTool extends BaseTool {
         const snapped = snapManager.snapPoint(p, { container, exclude: this.selected });
         if (snapped) { dx = snapped.x - this.dragStart.x; dy = snapped.y - this.dragStart.y; }
 
-        // Magnetic alignment: snap selection edges/center with stickiness
+        // Enhanced magnetic alignment with dynamic equal-spacing snap
         const group = this.overlay.getGroup()!;
         const gb = group.bounds;
         const cand = snapManager.getCandidates({ container, exclude: this.selected, rect: group.bounds, margin: 200 });
@@ -153,6 +166,13 @@ export class SelectionTool extends BaseTool {
         const thr = (prefs.threshold || 6) * bias;
         const release = Math.max(thr, (prefs as any).stickyHysteresis || Math.round(thr * 1.6));
 
+        // Calculate dynamic equal-spacing snap opportunities
+        const dynamicSnap = this.guides.calculateDynamicSnap(
+          new Rectangle(gb.x + dx, gb.y + dy, gb.width, gb.height),
+          container,
+          this.selected
+        );
+
         // Compute ghost placement after current delta
         const leftAfter = gb.x + dx;
         const rightAfter = gb.x + gb.width + dx;
@@ -160,6 +180,33 @@ export class SelectionTool extends BaseTool {
         const topAfter = gb.y + dy;
         const bottomAfter = gb.y + gb.height + dy;
         const cyAfter = gb.y + gb.height * 0.5 + dy;
+
+        // Apply dynamic equal-spacing snap with higher priority
+        if (dynamicSnap.snapX && dynamicSnap.snapX.type === 'equal-spacing') {
+          const equalSpacingBias = prefs.equalSpacingBias || 1.5;
+          const equalThr = thr * equalSpacingBias;
+          const currentCenter = cxAfter;
+          const distance = Math.abs(currentCenter - dynamicSnap.snapX.pos);
+          
+          if (distance <= equalThr) {
+            dx += (dynamicSnap.snapX.pos - currentCenter);
+            this.snapLock.x = dynamicSnap.snapX.pos;
+            this.snapLock.targetX = 'center';
+          }
+        }
+
+        if (dynamicSnap.snapY && dynamicSnap.snapY.type === 'equal-spacing') {
+          const equalSpacingBias = prefs.equalSpacingBias || 1.5;
+          const equalThr = thr * equalSpacingBias;
+          const currentCenter = cyAfter;
+          const distance = Math.abs(currentCenter - dynamicSnap.snapY.pos);
+          
+          if (distance <= equalThr) {
+            dy += (dynamicSnap.snapY.pos - currentCenter);
+            this.snapLock.y = dynamicSnap.snapY.pos;
+            this.snapLock.targetY = 'center';
+          }
+        }
 
         const vLines = (cand.canvas.v || []).concat(cand.vLines || []);
         const hLines = (cand.canvas.h || []).concat(cand.hLines || []);

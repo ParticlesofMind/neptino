@@ -13,11 +13,11 @@ export interface CanvasDimensions {
   height: number;
 }
 
-// Canvas dimensions for standard artboard (A4 portrait)
-export const CANVAS_WIDTH = 1200;
-export const CANVAS_HEIGHT = 1800;
+// Canvas dimensions for large testing canvas (maintains 2:3 ratio)
+export const CANVAS_WIDTH = 4000;
+export const CANVAS_HEIGHT = 6000;
 
-// Artboard dimensions for final output (same as canvas)
+// Artboard dimensions for final output (student view area)
 export const ARTBOARD_WIDTH = 1200;
 export const ARTBOARD_HEIGHT = 1800;
 

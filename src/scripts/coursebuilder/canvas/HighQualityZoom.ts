@@ -15,7 +15,7 @@ export interface ZoomConfig {
 export class HighQualityZoom {
     private app: Application;
     private stage: Container;
-    private zoomLevel: number = 0.6; // Start at our new default "100%" zoom
+    private zoomLevel: number = 0.3; // Start at 30% to show 1200x1800 student view at "100%" UI zoom
     private config: ZoomConfig;
     
     // Pan offset for the zoomed view
@@ -99,7 +99,7 @@ export class HighQualityZoom {
      * Reset zoom to 100% and center the view
      */
     public resetZoom(): void {
-        this.zoomLevel = 0.6; // Our new "100%" zoom level
+        this.zoomLevel = 0.3; // 30% zoom shows 1200x1800 student view at "100%" UI zoom
         this.panOffset = this.calculateCenteredPanOffset();
         this.applyTransform();
     }
@@ -550,10 +550,10 @@ export class HighQualityZoom {
      * Reset zoom and pan to defaults
      */
     private resetView(): void {
-        this.zoomLevel = 0.6; // Our new "100%" zoom level
+        this.zoomLevel = 0.3; // 30% zoom shows 1200x1800 student view at "100%" UI zoom
         this.panOffset = this.calculateCenteredPanOffset();
         this.applyTransform();
-        console.log('🔍 View reset to 100% (0.6 internal zoom)');
+        console.log('🔍 View reset to 100% (0.3 internal zoom)');
     }
 
     /**

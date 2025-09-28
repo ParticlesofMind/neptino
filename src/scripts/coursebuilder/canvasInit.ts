@@ -109,7 +109,7 @@ export async function initializeCanvas(): Promise<void> {
         if (perspectiveManager) {
             // Reset to our new default zoom level with proper centering
             perspectiveManager.resetZoom();
-            console.log(`🎯 Canvas displayed at optimal size: 0.6x (60% of 1200×1800 pixels, shown as 100%)`);
+            console.log(`🎯 Canvas displayed at optimal size: 0.3x (30% of 4000×6000 pixels showing 1200×1800 student view as 100%)`);
             
             // Set up wheel event handling for zoom/pan
             if (app) {
@@ -132,6 +132,10 @@ export async function initializeCanvas(): Promise<void> {
             bindSnapMenu(perspectiveManager); 
             // Initialize snap manager with saved state
             snapManager.initialize();
+            
+            // Initialize enhanced snap menu handler
+            const { enhancedSnapMenuHandler } = await import('./ui/EnhancedSnapMenuHandler');
+            enhancedSnapMenuHandler.initialize();
         } catch (error) {
             console.warn('Failed to initialize snap menu:', error);
         }

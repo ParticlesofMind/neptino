@@ -23,11 +23,46 @@ type SnapMode = 'grid' | 'smart' | 'none';
     enableMidpoints: boolean;  // toggle midpoint candidate generation
     enableSymmetryGuides: boolean; // toggle short center/midpoint guides
     stickyHysteresis?: number; // px distance to break snap lock
+    
+    // Enhanced Figma-like features
+    equalSpacingBias: number; // multiplier for equal spacing snap strength (0.5-3.0)
+    showDistToAll: boolean; // show distance labels to nearest non-aligned objects
+    enableResizeGuides: boolean; // show width/height matching guides during resize
+    enableInteractiveLabels: boolean; // make gap labels draggable for redistribution
+    enableSmartSelection: boolean; // detect equal-spaced groups with reorder dots
+    guideExtendMode: 'selection' | 'viewport' | 'canvas'; // how far guides extend
+    guideFadeDistance: number; // distance at which guides start to fade
+    enableFullCanvasLines: boolean; // option for full-canvas guide lines
+    enableColorCoding: boolean; // use different colors for different guide types
+    distanceUnits: 'px' | '%' | 'pt'; // units for distance labels
   }
 
 class SnapManager {
   private activeMode: SnapMode = 'smart';
-  private prefs: SnapPrefs = { gridSize: 20, threshold: 8, equalTolerance: 1, matchWidth: true, matchHeight: true, centerBiasMultiplier: 2.4, enableCenterBias: true, enableMidpoints: true, enableSymmetryGuides: true, stickyHysteresis: 14 };
+  private prefs: SnapPrefs = { 
+    gridSize: 20, 
+    threshold: 8, 
+    equalTolerance: 1, 
+    matchWidth: true, 
+    matchHeight: true, 
+    centerBiasMultiplier: 2.4, 
+    enableCenterBias: true, 
+    enableMidpoints: true, 
+    enableSymmetryGuides: true, 
+    stickyHysteresis: 14,
+    
+    // Enhanced Figma-like features
+    equalSpacingBias: 1.5,
+    showDistToAll: true,
+    enableResizeGuides: true,
+    enableInteractiveLabels: false, // disabled by default for simplicity
+    enableSmartSelection: true,
+    guideExtendMode: 'selection',
+    guideFadeDistance: 200,
+    enableFullCanvasLines: false,
+    enableColorCoding: true,
+    distanceUnits: 'px'
+  };
 
   // Simple accessors
   public getActiveMode(): SnapMode { return this.activeMode; }
@@ -252,7 +287,22 @@ class SnapManager {
   } {
     const dims = this.getCanvasDimensions();
     const centers = { cx: dims.width / 2, cy: dims.height / 2 };
-    let canvas = { v: [0, centers.cx, dims.width], h: [0, centers.cy, dims.height] };
+    
+    // Include both full canvas boundaries and student view area boundaries
+    // Student view is 1200x1800 centered in the canvas
+    const studentViewWidth = 1200;
+    const studentViewHeight = 1800;
+    const studentViewLeft = (dims.width - studentViewWidth) / 2;
+    const studentViewRight = studentViewLeft + studentViewWidth;
+    const studentViewTop = (dims.height - studentViewHeight) / 2;
+    const studentViewBottom = studentViewTop + studentViewHeight;
+    const studentViewCenterX = studentViewLeft + studentViewWidth / 2;
+    const studentViewCenterY = studentViewTop + studentViewHeight / 2;
+    
+    let canvas = { 
+      v: [0, studentViewLeft, studentViewCenterX, studentViewRight, centers.cx, dims.width].sort((a, b) => a - b),
+      h: [0, studentViewTop, studentViewCenterY, studentViewBottom, centers.cy, dims.height].sort((a, b) => a - b)
+    };
     const obj = this.collectObjectSnapLines(options);
     // If a container is provided, convert canvas lines to that container's local space
     if (options?.container) {

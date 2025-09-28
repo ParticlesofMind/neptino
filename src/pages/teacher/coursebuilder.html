@@ -1180,6 +1180,47 @@
                   Vertically</span>
               </div>
             </div>
+
+            <!-- Enhanced Smart Guides Settings -->
+            <div class="snap-menu__divider"></div>
+            <div class="snap-menu__section">
+              <div class="snap-menu__label">Smart Guide Features</div>
+              
+              <div class="snap-menu__toggle" data-smart-setting="showDistToAll">
+                <input type="checkbox" id="showDistToAll" checked>
+                <label for="showDistToAll">Distance Labels</label>
+              </div>
+              
+              <div class="snap-menu__toggle" data-smart-setting="enableResizeGuides">
+                <input type="checkbox" id="enableResizeGuides" checked>
+                <label for="enableResizeGuides">Resize Guides</label>
+              </div>
+              
+              <div class="snap-menu__toggle" data-smart-setting="enableSmartSelection">
+                <input type="checkbox" id="enableSmartSelection" checked>
+                <label for="enableSmartSelection">Smart Selection</label>
+              </div>
+              
+              <div class="snap-menu__toggle" data-smart-setting="enableColorCoding">
+                <input type="checkbox" id="enableColorCoding" checked>
+                <label for="enableColorCoding">Color Coding</label>
+              </div>
+              
+              <div class="snap-menu__range">
+                <label for="equalSpacingBias">Equal Spacing Sensitivity</label>
+                <input type="range" id="equalSpacingBias" min="0.5" max="3.0" step="0.1" value="1.5">
+                <span class="snap-menu__range-value">1.5x</span>
+              </div>
+              
+              <div class="snap-menu__select">
+                <label for="guideExtendMode">Guide Extension</label>
+                <select id="guideExtendMode">
+                  <option value="selection">Selection Area</option>
+                  <option value="viewport">Viewport</option>
+                  <option value="canvas">Full Canvas</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 
