@@ -18,24 +18,42 @@ export class LayersPanel {
     
     this.isRefreshing = true;
     
-    const canvasAPI = (window as any).canvasAPI;
-    if (!canvasAPI) {
+    try {
+      const canvasAPI = (window as any).canvasAPI;
+      if (!canvasAPI) {
+        console.warn('⚠️ LayersPanel refresh: canvasAPI not available');
+        this.isRefreshing = false;
+        return;
+      }
+      
+      const drawingLayer = canvasAPI.getDrawingLayer();
+      if (!drawingLayer) {
+        console.warn('⚠️ LayersPanel refresh: drawingLayer not available');
+        this.isRefreshing = false;
+        return;
+      }
+      
+      // Use requestAnimationFrame for smooth updates
+      requestAnimationFrame(() => {
+        try {
+          if (this.listEl) {
+            this.listEl.innerHTML = '';
+            this.renderChildren(drawingLayer as any as Container, this.listEl);
+          }
+        } catch (renderError) {
+          console.error('❌ LayersPanel render error:', renderError);
+          // Try to recover by showing a basic error message
+          if (this.listEl) {
+            this.listEl.innerHTML = '<li class="layer__item" style="color: red; padding: 8px;">Error: Unable to render layers. Please refresh the page.</li>';
+          }
+        } finally {
+          this.isRefreshing = false;
+        }
+      });
+    } catch (error) {
+      console.error('❌ LayersPanel refresh error:', error);
       this.isRefreshing = false;
-      return;
     }
-    
-    const drawingLayer = canvasAPI.getDrawingLayer();
-    if (!drawingLayer) {
-      this.isRefreshing = false;
-      return;
-    }
-    
-    // Use requestAnimationFrame for smooth updates
-    requestAnimationFrame(() => {
-      this.listEl!.innerHTML = '';
-      this.renderChildren(drawingLayer as any as Container, this.listEl!);
-      this.isRefreshing = false;
-    });
   }
 
 
@@ -97,59 +115,107 @@ export class LayersPanel {
 
 
   private renderChildren(parent: Container, list: HTMLOListElement): void {
-    if (!parent || !parent.children) return;
+    if (!parent || !parent.children || !list) {
+      console.warn('⚠️ renderChildren: Invalid parameters');
+      return;
+    }
     
-    const children = parent.children.slice();
-    // Filter out visual aids, UI elements, and temporary objects
-    const realObjects = children.filter(child => {
-      // Extra validation: make sure object still exists and isn't destroyed
-      try {
-        return child && !child.destroyed && this.isRealObject(child);
-      } catch {
-        return false; // Skip objects that cause errors
-      }
-    });
-    
-    // Track processed objects to avoid duplicates
-    const processedIds = new Set<string>();
-    
-    realObjects.forEach((child) => {
-      try {
-        const id = this.getId(child);
-        if (id && processedIds.has(id)) {
-          // Skip duplicates
-          return;
+    try {
+      const children = parent.children.slice();
+      
+      // Filter out visual aids, UI elements, and temporary objects
+      const realObjects = children.filter(child => {
+        // Extra validation: make sure object still exists and isn't destroyed
+        try {
+          return child && 
+                 !child.destroyed && 
+                 this.isRealObject(child) &&
+                 child.parent === parent; // Ensure parent relationship is consistent
+        } catch (filterError) {
+          console.warn('⚠️ Error filtering child object:', filterError);
+          return false; // Skip objects that cause errors
         }
-        if (id) processedIds.add(id);
-        
-        const li = this.buildLayerItem(child);
-        list.appendChild(li);
-        
-        // Special handling for animation scenes: also show objects from their content containers
-        if ((child as any).__sceneRef || (child as any).name === 'AnimationScene') {
-          const scene = (child as any).__sceneRef;
-          if (scene && scene.getContentContainer) {
-            const contentContainer = scene.getContentContainer();
-            if (contentContainer && contentContainer.children && contentContainer.children.length > 0) {
-              // Find the child list element for this scene to add scene objects to it
-              const childrenList = li.querySelector('ol.layers-list') as HTMLOListElement;
-              if (childrenList) {
-                // Render the scene's content objects as children of the scene
-                this.renderChildren(contentContainer, childrenList);
+      });
+      
+      // Track processed objects to avoid duplicates and infinite loops
+      const processedIds = new Set<string>();
+      const processedObjects = new Set<Container>();
+      
+      realObjects.forEach((child) => {
+        try {
+          // Prevent infinite loops with object circular references
+          if (processedObjects.has(child)) {
+            console.warn('⚠️ Skipping duplicate object reference');
+            return;
+          }
+          processedObjects.add(child);
+          
+          const id = this.getId(child);
+          if (id && processedIds.has(id)) {
+            console.warn('⚠️ Skipping duplicate ID:', id);
+            return;
+          }
+          if (id) processedIds.add(id);
+          
+          const li = this.buildLayerItem(child);
+          if (li) {
+            list.appendChild(li);
+            
+            // Special handling for animation scenes: also show objects from their content containers
+            if ((child as any).__sceneRef || (child as any).name === 'AnimationScene') {
+              const scene = (child as any).__sceneRef;
+              if (scene && scene.getContentContainer) {
+                const contentContainer = scene.getContentContainer();
+                if (contentContainer && contentContainer.children && contentContainer.children.length > 0) {
+                  // Find the child list element for this scene to add scene objects to it
+                  const childrenList = li.querySelector('ol.layers-list') as HTMLOListElement;
+                  if (childrenList) {
+                    // Recursively render children with depth limit to prevent infinite recursion
+                    const currentDepth = this.getDepth(list);
+                    if (currentDepth < 10) { // Max depth of 10 levels
+                      this.renderChildren(contentContainer, childrenList);
+                    } else {
+                      console.warn('⚠️ Max nesting depth reached for scene, skipping deeper children');
+                    }
+                  }
+                }
               }
             }
           }
+        } catch (itemError) {
+          console.warn('⚠️ Failed to render layer item:', itemError, {
+            childType: child?.constructor?.name,
+            childId: this.getId(child),
+            hasParent: !!child?.parent
+          });
         }
-      } catch (error) {
-        // Skip objects that cause errors during processing
-        try { 
-          if ((window as any).__NEPTINO_DEBUG_LOGS) {
-            console.warn('⚠️ Error processing layer item:', error); 
-          }
-        } catch {}
-      }
-    });
+      });
+      
+    } catch (globalError) {
+      console.error('❌ renderChildren failed:', globalError);
+      // Add error indicator to the list
+      const errorLi = document.createElement('li');
+      errorLi.className = 'layer__item layer__error';
+      errorLi.style.color = 'red';
+      errorLi.style.fontStyle = 'italic';
+      errorLi.textContent = 'Error loading layers';
+      list.appendChild(errorLi);
+    }
+  }
 
+  /**
+   * Get the nesting depth of a list element to prevent infinite recursion
+   */
+  private getDepth(element: HTMLElement): number {
+    let depth = 0;
+    let current = element.parentElement;
+    while (current) {
+      if (current.classList.contains('layers-list')) {
+        depth++;
+      }
+      current = current.parentElement;
+    }
+    return depth;
   }
 
   private buildLayerItem(obj: Container): HTMLLIElement {
@@ -280,48 +346,140 @@ export class LayersPanel {
       e.preventDefault();
       const dragId = e.dataTransfer?.getData('text/layer-id');
       if (!dragId) return;
-      const canvasAPI = (window as any).canvasAPI;
-      const app = canvasAPI?.getApp() as Application | null;
-      const drawingLayer = canvasAPI?.getDrawingLayer() as Container | null;
-      const displayManager = (window as any)._displayManager as any;
-      if (!app || !drawingLayer || !displayManager) return;
+      
+      try {
+        const canvasAPI = (window as any).canvasAPI;
+        const app = canvasAPI?.getApp() as Application | null;
+        const drawingLayer = canvasAPI?.getDrawingLayer() as Container | null;
+        const displayManager = (window as any)._displayManager as any;
+        if (!app || !drawingLayer || !displayManager) {
+          console.warn('⚠️ Drop operation failed: Missing required components');
+          return;
+        }
 
-      const dragged = this.getObjectById(dragId);
-      if (!dragged) return;
+        const dragged = this.getObjectById(dragId);
+        if (!dragged) {
+          console.warn('⚠️ Drop operation failed: Dragged object not found:', dragId);
+          return;
+        }
 
-      const dropTargetId = (e.currentTarget as HTMLElement).dataset.layerId || '';
-      const dropTarget = this.getObjectById(dropTargetId);
-      if (!dropTarget) return;
+        const dropTargetId = (e.currentTarget as HTMLElement).dataset.layerId || '';
+        const dropTarget = this.getObjectById(dropTargetId);
+        if (!dropTarget) {
+          console.warn('⚠️ Drop operation failed: Drop target not found:', dropTargetId);
+          return;
+        }
 
-      // If drop target is container and Alt not pressed, nest as child
-      if ((dropTarget as any).addChild && !(e as DragEvent).altKey) {
-        try {
-          if (dragged.parent) dragged.parent.removeChild(dragged);
-          (dropTarget as any).addChild(dragged);
-        } catch {}
-      } else {
-        // Reorder within same parent of drop target
-        const parentCont = dropTarget.parent as Container;
-        if (!parentCont) return;
-        try {
-          if (dragged.parent !== parentCont) {
-            dragged.parent?.removeChild(dragged);
-            parentCont.addChild(dragged);
+        // Ensure we don't create circular references (dragging parent into child)
+        if (this.wouldCreateCycle(dragged, dropTarget)) {
+          console.warn('⚠️ Drop operation prevented: Would create circular reference');
+          return;
+        }
+
+        // Store original parent for rollback if needed
+        const originalParent = dragged.parent;
+        const originalIndex = originalParent ? originalParent.children.indexOf(dragged) : -1;
+
+        // If drop target is container and Alt not pressed, nest as child
+        if ((dropTarget as any).addChild && !(e as DragEvent).altKey) {
+          try {
+            if (dragged.parent) {
+              dragged.parent.removeChild(dragged);
+            }
+            (dropTarget as any).addChild(dragged);
+            
+            // Dispatch update event for proper tracking
+            document.dispatchEvent(new CustomEvent('displayObject:updated', { 
+              detail: { id: dragId, object: dragged, action: 'reparented' } 
+            }));
+            
+            console.log('✅ Successfully nested object as child');
+          } catch (error) {
+            console.error('❌ Failed to nest object:', error);
+            // Rollback on failure
+            if (originalParent && originalIndex >= 0) {
+              try {
+                if (dragged.parent) dragged.parent.removeChild(dragged);
+                originalParent.addChildAt(dragged, originalIndex);
+              } catch (rollbackError) {
+                console.error('❌ Rollback failed:', rollbackError);
+              }
+            }
+            return;
           }
-          // Compute new index based on DOM order of that list
-          const containerLi = (e.currentTarget as HTMLElement).parentElement as HTMLOListElement;
-          const ids = Array.from(containerLi.querySelectorAll(':scope > li')).map(li => (li as HTMLElement).dataset.layerId || '');
-          const newOrder = ids
-            .map((i) => this.getObjectById(i))
-            .filter(Boolean) as Container[];
-          newOrder.forEach((child, idx) => {
-            try { parentCont.addChildAt(child as any, idx); } catch {}
-          });
-        } catch {}
+        } else {
+          // Reorder within same parent of drop target
+          const parentCont = dropTarget.parent as Container;
+          if (!parentCont) {
+            console.warn('⚠️ Drop operation failed: Drop target has no parent');
+            return;
+          }
+          
+          try {
+            // Only move if not already in the same parent
+            if (dragged.parent !== parentCont) {
+              if (dragged.parent) {
+                dragged.parent.removeChild(dragged);
+              }
+              parentCont.addChild(dragged);
+            }
+            
+            // Compute new index based on DOM order of that list
+            const containerLi = (e.currentTarget as HTMLElement).parentElement as HTMLOListElement;
+            if (containerLi) {
+              const ids = Array.from(containerLi.querySelectorAll(':scope > li'))
+                .map(li => (li as HTMLElement).dataset.layerId || '')
+                .filter(id => id); // Filter out empty IDs
+              
+              const validObjects = ids
+                .map((i) => this.getObjectById(i))
+                .filter(Boolean) as Container[];
+              
+              // Only reorder if we have valid objects
+              if (validObjects.length > 0) {
+                validObjects.forEach((child, idx) => {
+                  try { 
+                    if (child.parent === parentCont) {
+                      parentCont.addChildAt(child as any, idx); 
+                    }
+                  } catch (reorderError) {
+                    console.warn('⚠️ Failed to reorder child at index', idx, ':', reorderError);
+                  }
+                });
+              }
+            }
+            
+            // Dispatch update event for proper tracking
+            document.dispatchEvent(new CustomEvent('displayObject:updated', { 
+              detail: { id: dragId, object: dragged, action: 'reordered' } 
+            }));
+            
+            console.log('✅ Successfully reordered object');
+          } catch (error) {
+            console.error('❌ Failed to reorder object:', error);
+            // Rollback on failure
+            if (originalParent && originalIndex >= 0) {
+              try {
+                if (dragged.parent) dragged.parent.removeChild(dragged);
+                originalParent.addChildAt(dragged, originalIndex);
+              } catch (rollbackError) {
+                console.error('❌ Rollback failed:', rollbackError);
+              }
+            }
+            return;
+          }
+        }
+        
+        // Clear cache and refresh UI after successful operation
+        this.clearThumbnailCache();
+        this.debouncedRefresh(100); // Longer delay to ensure stability
+        
+      } catch (globalError) {
+        console.error('❌ Drop operation failed with global error:', globalError);
+        // Force refresh to restore UI state
+        this.clearThumbnailCache();
+        this.debouncedRefresh(200);
       }
-      // Refresh the UI after drop to reflect new structure
-      this.clearThumbnailCache(); // Clear cache since structure changed
-      this.debouncedRefresh(50); // Slightly longer delay for drag operations
     });
 
     // Children list
@@ -489,6 +647,25 @@ export class LayersPanel {
     const dm = (window as any)._displayManager as any;
     if (dm && typeof dm.getIdForObject === 'function') return dm.getIdForObject(obj);
     return null;
+  }
+
+  /**
+   * Check if moving dragged object into dropTarget would create a circular reference
+   * (e.g., moving a parent into one of its own children)
+   */
+  private wouldCreateCycle(dragged: Container, dropTarget: Container): boolean {
+    if (!dragged || !dropTarget) return false;
+    
+    // Check if dropTarget is a descendant of dragged
+    let current = dropTarget.parent;
+    while (current) {
+      if (current === dragged) {
+        return true; // Found cycle: dropTarget is descendant of dragged
+      }
+      current = current.parent;
+    }
+    
+    return false;
   }
 
   private getObjectById(id: string): Container | null {
