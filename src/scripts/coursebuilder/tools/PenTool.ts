@@ -14,41 +14,10 @@ import {
 import { BoundaryUtils } from "./BoundaryUtils";
 import { historyManager } from "../canvas/HistoryManager";
 import { PathBooleanOperations, BooleanOperation, PathData } from "./PathBooleanOperations";
+import { PenPathSettings, VectorNode, VectorPath, VectorPointType } from "./pen/PenGeometry";
 
-interface PenSettings {
- size: number;
- strokeColor: string;   // Primary stroke color
- fillColor: string;     // Fill color for closed shapes
- strokeType?: string;   // Line style (solid, dashed)
+interface PenSettings extends PenPathSettings {
  mode: 'pen' | 'bend';  // Pen mode (click to place) or bend mode (drag to curve)
-}
-
-// Enhanced point type system like Figma
-enum VectorPointType {
- Corner = 'corner',     // No handles or independent handles
- Smooth = 'smooth',     // Handles are collinear but can have different lengths
- Mirrored = 'mirrored'  // Handles are mirrored (same length, opposite direction)
-}
-
-interface VectorNode {
- position: Point;
- graphics: Graphics;
- pointType: VectorPointType;
- // Cubic bezier handles (optional). If absent, treat as corner.
- handleIn?: Point | null;
- handleOut?: Point | null;
- // Visuals for handles while editing
- handleInGraphics?: { line: Graphics; knob: Graphics } | null;
- handleOutGraphics?: { line: Graphics; knob: Graphics } | null;
- // Visual state
- isSelected?: boolean;
-}
-
-interface VectorPath {
- nodes: VectorNode[];
- pathGraphics: Graphics;
- isComplete: boolean;
- settings: PenSettings;
 }
 
 export class PenTool extends BaseTool {
@@ -1127,7 +1096,7 @@ export class PenTool extends BaseTool {
     try { shape.visible = false; } catch {}
 
     // Create a working path
-    this.currentPath = {
+    const workingPath: VectorPath = this.currentPath = {
       nodes: [],
       pathGraphics: new Graphics(),
       isComplete: false,
@@ -1136,11 +1105,10 @@ export class PenTool extends BaseTool {
         strokeColor: meta.strokeColor ?? this.settings.strokeColor,
         fillColor: meta.fillColor ?? this.settings.fillColor,
         strokeType: 'solid',
-        mode: 'pen', // Always pen mode when editing existing paths
       },
     };
-    (this.currentPath.pathGraphics as any).__toolType = 'pen';
-    container.addChild(this.currentPath.pathGraphics);
+    (workingPath.pathGraphics as any).__toolType = 'pen';
+    container.addChild(workingPath.pathGraphics);
 
     // Recreate nodes and visuals
     for (const n of meta.nodes as any[]) {
@@ -1163,7 +1131,7 @@ export class PenTool extends BaseTool {
         handleOutGraphics: null,
         isSelected: false,
       };
-      this.currentPath.nodes.push(node);
+      workingPath.nodes.push(node);
       this.updateHandleGraphics(node, container);
     }
 

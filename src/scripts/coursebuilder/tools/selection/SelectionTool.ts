@@ -12,6 +12,7 @@ import { SelectionStyling } from './SelectionStyling';
 import { animationState } from '../../animation/AnimationState';
 import { determineSelectionType, moveObjectByContainerDelta } from './SelectionUtils';
 import { historyManager } from '../../canvas/HistoryManager';
+import { PenPathEditor } from '../pen/PenPathEditor';
 
 type Mode = 'idle' | 'drag' | 'scale' | 'rotate';
 
@@ -24,6 +25,7 @@ export class SelectionTool extends BaseTool {
   private grouping = new SelectionGrouping();
   private styling = new SelectionStyling();
   private clipboardSvc: SelectionClipboard;
+  private penEditor: PenPathEditor;
 
   private selected: any[] = [];
   private container: Container | null = null;
@@ -48,6 +50,10 @@ export class SelectionTool extends BaseTool {
       getContainer: () => this.container || this.displayManager?.getRoot() || null,
       displayManager: this.displayManager,
     });
+    this.penEditor = new PenPathEditor({
+      onCommit: this.handlePenEditFinalize,
+      onCancel: this.handlePenEditFinalize,
+    });
   }
 
   public setUILayer(container: Container) { this.container = container; this.overlay.setUILayer(container); this.guides.setUILayer(container); this.marquee.setUILayer(container); }
@@ -56,11 +62,19 @@ export class SelectionTool extends BaseTool {
   public onPointerDown(event: FederatedPointerEvent, container: Container): void {
     if (!this.isActive) return; 
     this.container = container; 
-    const p = container.toLocal(event.global); 
     this.lastPointerGlobal = new Point(event.global.x, event.global.y);
 
-    // First, check for double-click on text objects (highest priority)
-    const textClickResult = this.click.handleClick(
+    if (this.penEditor.isEditing()) {
+      const consumed = this.penEditor.handlePointerDown(event, container);
+      if (consumed) {
+        return;
+      }
+    }
+
+    const p = container.toLocal(event.global);
+
+    // First, check for double-click interactions (text highest priority)
+    const clickResult = this.click.handleClick(
       p,
       container,
       { shiftKey: event.shiftKey, altKey: (event as any).altKey, ctrlKey: (event as any).ctrlKey || (event as any).metaKey },
@@ -84,8 +98,17 @@ export class SelectionTool extends BaseTool {
 
 
     // If it was a double-click on text, stop processing here
-    if (textClickResult.isDoubleClick && this.click.isTextObject(textClickResult.clickedObject)) {
+    if (clickResult.isTextDoubleClick) {
       return;
+    }
+
+    if (clickResult.isDoubleClick) {
+      const clicked = clickResult.clickedObject;
+      if (clicked && this.isPenShape(clicked)) {
+        if (this.beginPenEditing(clicked, container)) {
+          return;
+        }
+      }
     }
 
     const group = this.overlay.getGroup();
@@ -124,8 +147,8 @@ export class SelectionTool extends BaseTool {
     if (group && this.overlay.pointInRect(p, group.bounds)) {
       this.isDraggingGroup = true; this.mode = 'drag'; this.cursor = 'grabbing'; this.isDragging = true; this.dragStart.copyFrom(p); return;
     }
-    if (textClickResult.clickedObject) {
-      const action = this.click.getSelectionAction(textClickResult.clickedObject, this.selected, event.shiftKey); this.selected = this.click.applySelectionAction(action, this.selected); this.overlay.refresh(this.selected, container);
+    if (clickResult.clickedObject) {
+      const action = this.click.getSelectionAction(clickResult.clickedObject, this.selected, event.shiftKey); this.selected = this.click.applySelectionAction(action, this.selected); this.overlay.refresh(this.selected, container);
       this.updateObjectSelectionStates();
       const bounds = this.overlay.getGroup()?.bounds; if (bounds && this.overlay.pointInRect(p, bounds)) { this.isDraggingGroup = true; this.mode = 'drag'; this.cursor = 'grabbing'; this.isDragging = true; this.dragStart.copyFrom(p); try { this.guides.update(container, this.selected, bounds); } catch {} }
       this.emitSelectionContext();
@@ -137,7 +160,14 @@ export class SelectionTool extends BaseTool {
   }
 
   public onPointerMove(event: FederatedPointerEvent, container: Container): void {
-    if (!this.isActive) return; const p = container.toLocal(event.global); this.lastPointerGlobal = new Point(event.global.x, event.global.y);
+    if (!this.isActive) return; this.lastPointerGlobal = new Point(event.global.x, event.global.y);
+
+    if (this.penEditor.isEditing()) {
+      this.penEditor.handlePointerMove(event, container);
+      return;
+    }
+
+    const p = container.toLocal(event.global);
     if ((this.transformer as any).isActive && (this.transformer as any).isActive()) {
       this.transformer.update(p, { shiftKey: event.shiftKey, altKey: (event as any).altKey, ctrlKey: (event as any).ctrlKey || (event as any).metaKey });
       const mode = this.mode; const group = this.overlay.getGroup();
@@ -305,7 +335,12 @@ export class SelectionTool extends BaseTool {
   }
 
   public onPointerUp(event: FederatedPointerEvent, container: Container): void {
-    if (!this.isActive) return; const p = container.toLocal(event.global);
+    if (!this.isActive) return; 
+    if (this.penEditor.isEditing()) {
+      this.penEditor.handlePointerUp(event);
+      return;
+    }
+    const p = container.toLocal(event.global);
   if ((this.transformer as any).isActive && (this.transformer as any).isActive()) { this.transformer.end(); this.overlay.refreshBoundsOnly(container); this.rotateBaseRect = null; this.rotateCenter = null; this.rotateBaseAngle = 0; this.rotateStartRef = 0; this.isDragging = false; this.mode = 'idle'; this.cursor = 'default'; this.guides.clear(); return; }
     if (this.isDraggingGroup) { this.isDraggingGroup = false; }
     if (this.marquee.isActive()) { this.selected = this.marquee.finish(p, container, this.click, this.selected); this.overlay.refresh(this.selected, container); this.updateObjectSelectionStates(); }
@@ -313,7 +348,7 @@ export class SelectionTool extends BaseTool {
   }
 
   public onActivate(): void { super.onActivate(); document.addEventListener('selection:distribute', this.handleDistribute); }
-  public onDeactivate(): void { super.onDeactivate(); this.overlay.clear(); this.guides.clear(); if (this.container) {/* keep */} document.removeEventListener('selection:distribute', this.handleDistribute); }
+  public onDeactivate(): void { super.onDeactivate(); if (this.penEditor.isEditing()) { this.penEditor.cancel(); } this.overlay.clear(); this.guides.clear(); if (this.container) {/* keep */} document.removeEventListener('selection:distribute', this.handleDistribute); }
 
   private handleDistribute = (evt: Event) => {
     const group = this.overlay.getGroup(); if (!group || !this.container) return; const e = evt as CustomEvent; const dir = e.detail && (e.detail.direction as 'horizontal' | 'vertical'); if (!dir) return; this.distribute(dir);
@@ -331,9 +366,36 @@ export class SelectionTool extends BaseTool {
     this.overlay.refreshBoundsOnly(this.container!);
   }
 
+  private beginPenEditing(target: any, container: Container): boolean {
+    if (!target) return false;
+    if (!this.penEditor.startEditing(target, container)) {
+      return false;
+    }
+    this.selected = [target];
+    this.overlay.clear();
+    this.guides.clear();
+    this.cursor = 'default';
+    this.isDragging = false;
+    this.mode = 'idle';
+    this.updateObjectSelectionStates();
+    this.emitSelectionContext();
+    return true;
+  }
+
+  private isPenShape(obj: any): boolean {
+    return !!(obj && (obj as any).__toolType === 'pen');
+  }
+
   // Keyboard shortcuts
   public onKeyDown(event: KeyboardEvent): void {
-    if (!this.isActive) return; const key = event.key; const isMeta = event.metaKey || event.ctrlKey;
+    if (!this.isActive) return; 
+    if (this.penEditor.isEditing()) {
+      if (this.penEditor.handleKeyDown(event)) {
+        event.preventDefault();
+        return;
+      }
+    }
+    const key = event.key; const isMeta = event.metaKey || event.ctrlKey;
     if (isMeta && (key === 'c' || key === 'C')) { const ok = this.clipboardSvc.copy(); if (ok) { console.log('📋 COPY: selection copied'); event.preventDefault(); } else { console.log('📋 COPY: nothing copied'); } return; }
     if (isMeta && (key === 'v' || key === 'V')) { const created = this.clipboardSvc.pasteAt(this.lastPointerGlobal || null); if (created.length) { this.selected = created; this.overlay.refresh(this.selected, this.container || this.displayManager?.getRoot()!); this.updateObjectSelectionStates(); console.log(`📋 PASTE: created ${created.length} item(s)`); } else { console.log('📋 PASTE: clipboard empty or construct failed'); } event.preventDefault(); return; }
     if (isMeta && (key === 'd' || key === 'D')) { const ok = this.clipboardSvc.copy(); if (ok) { const created = this.clipboardSvc.pasteAt(this.lastPointerGlobal || null); if (created.length) { this.selected = created; if (this.container) this.overlay.refresh(this.selected, this.container); this.updateObjectSelectionStates(); console.log(`📄 DUPLICATE: ${created.length} item(s)`); } } event.preventDefault(); return; }
@@ -505,4 +567,14 @@ export class SelectionTool extends BaseTool {
       console.warn('Failed to update scene selection states:', error);
     }
   }
+
+  private handlePenEditFinalize = () => {
+    if (this.container && this.selected.length) {
+      this.overlay.refresh(this.selected, this.container);
+    } else {
+      this.overlay.clear();
+    }
+    this.updateObjectSelectionStates();
+    this.emitSelectionContext();
+  };
 }

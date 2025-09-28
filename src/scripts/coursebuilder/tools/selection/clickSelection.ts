@@ -21,7 +21,7 @@ export class ClickSelection {
  container: Container,
  modifiers: boolean | { shiftKey?: boolean; altKey?: boolean; ctrlKey?: boolean },
  onTextEdit?: (object: any, point: Point, container: Container) => void
- ): { clickedObject: any; isDoubleClick: boolean } {
+ ): { clickedObject: any; isDoubleClick: boolean; isTextDoubleClick: boolean } {
  const mod = typeof modifiers === 'boolean' ? { shiftKey: modifiers } : (modifiers || {});
  const hitStack = this.getObjectsAtPoint(point, container);
  let clickedObject = hitStack[0] || null;
@@ -46,12 +46,12 @@ export class ClickSelection {
  const currentTime = now;
 
 // Check for double-click on text objects
-const isDoubleClick = clickedObject && 
+const isDoubleClick = !!clickedObject && 
   clickedObject === this.lastClickedObject && 
-  currentTime - this.lastClickTime < this.DOUBLE_CLICK_TIMEOUT &&
-  this.isTextObject(clickedObject);
+  currentTime - this.lastClickTime < this.DOUBLE_CLICK_TIMEOUT;
+const isTextDoubleClick = isDoubleClick && this.isTextObject(clickedObject);
  
- if (isDoubleClick && onTextEdit) {
+ if (isTextDoubleClick && onTextEdit) {
  onTextEdit(clickedObject, point, container);
  }
  
@@ -60,7 +60,7 @@ const isDoubleClick = clickedObject &&
  this.lastClickedObject = clickedObject;
  this.lastClickPoint = new Point(point.x, point.y);
 
- return { clickedObject, isDoubleClick };
+ return { clickedObject, isDoubleClick, isTextDoubleClick };
  }
 
   public getObjectsAtPoint(point: Point, container: Container): any[] {
