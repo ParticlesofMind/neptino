@@ -141,7 +141,9 @@ export class PixiApp {
         (this.app.canvas as any).tabIndex = 0;
         
         // With autoDensity=true, PIXI manages CSS size automatically to match logical dimensions
-      } catch {}
+      } catch (error) {
+        console.warn('Failed to set canvas focus properties:', error);
+      }
 
       this.mounted = true;
 

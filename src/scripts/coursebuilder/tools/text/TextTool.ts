@@ -774,7 +774,9 @@ export class TextTool extends BaseTool {
       const textArea = new TextArea(config, parent);
       this.textAreas.push(textArea);
       this.activateTextArea(textArea);
-    } catch {}
+    } catch (error) {
+      console.warn('Failed to create debug text area:', error);
+    }
   }
 
   /** Test helper: insert text into active text area */

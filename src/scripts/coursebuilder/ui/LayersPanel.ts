@@ -73,7 +73,9 @@ export class LayersPanel {
         if ((window as any).__NEPTINO_DEBUG_LOGS) {
           console.log('🗑️ Layer panel received removal event:', event.detail); 
         }
-      } catch {}
+      } catch (error) {
+        console.warn('Error logging removal event:', error);
+      }
       
       this.debouncedRefresh(8); // Faster refresh for removals (8ms vs 16ms)
     });
@@ -279,8 +281,12 @@ export class LayersPanel {
     
     nameInput.addEventListener('change', () => {
       const val = nameInput.value || intelligentName;
-      try { (obj as any).name = val; } catch {}
-      try { if ((obj as any).__meta) (obj as any).__meta.name = val; } catch {}
+      try { (obj as any).name = val; } catch (error) {
+        console.warn('Failed to set object name:', error);
+      }
+      try { if ((obj as any).__meta) (obj as any).__meta.name = val; } catch (error) {
+        console.warn('Failed to set meta name:', error);
+      }
     });
     leftSide.appendChild(nameInput);
 
@@ -326,8 +332,12 @@ export class LayersPanel {
     lock.addEventListener('click', () => {
       const locked = !(obj as any).__locked;
       (obj as any).__locked = locked;
-      try { (obj as any).eventMode = locked ? 'none' : 'static'; } catch {}
-      try { (obj as any).interactiveChildren = !locked; } catch {}
+      try { (obj as any).eventMode = locked ? 'none' : 'static'; } catch (error) {
+        console.warn('Failed to set eventMode:', error);
+      }
+      try { (obj as any).interactiveChildren = !locked; } catch (error) {
+        console.warn('Failed to set interactiveChildren:', error);
+      }
       updateLockIcon();
     });
     rightSide.appendChild(lock);
@@ -713,7 +723,9 @@ export class LayersPanel {
         tex.destroy(true);
         return;
       }
-    } catch {}
+    } catch (error) {
+      console.warn('Failed to generate thumbnail:', error);
+    }
     
     // Fallback placeholder
     el.style.background = '#f3f4f6';

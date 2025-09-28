@@ -53,10 +53,11 @@ export async function signIn(email: string, password: string) {
 
       // Development convenience: auto-create account on first sign-in attempt
       // Only enable in development to avoid accidental account creation in prod
-      const isDev = (import.meta as any)?.env?.VITE_APP_ENV === 'development';
+      const isDev = import.meta.env?.VITE_APP_ENV === 'development';
       const isInvalidCreds =
-        typeof (error as any)?.message === 'string' &&
-        (error as any).message.toLowerCase().includes('invalid login credentials');
+        error && 
+        typeof error.message === 'string' &&
+        error.message.toLowerCase().includes('invalid login credentials');
 
       if (isDev && isInvalidCreds) {
         try {

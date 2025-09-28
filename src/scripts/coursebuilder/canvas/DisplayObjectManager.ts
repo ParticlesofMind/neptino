@@ -24,7 +24,9 @@ export class DisplayObjectManager {
   constructor(rootContainer: Container) {
     this.rootContainer = rootContainer;
     this.root = rootContainer; // Legacy alias
-    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('🖼️ DisplayObjectManager initialized'); } catch {}
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('🖼️ DisplayObjectManager initialized'); } catch (error) {
+      // Silent fallback for debug logging
+    }
   }
 
   /**
@@ -81,7 +83,9 @@ export class DisplayObjectManager {
     
     // Store reference
     this.allObjects.set(id, displayObject);
-    try { (displayObject as any).__id = id; } catch {}
+    try { (displayObject as any).__id = id; } catch (error) {
+      console.warn('Failed to set display object ID:', error);
+    }
     
     // Legacy compatibility
     this.objects.add(displayObject);
@@ -137,7 +141,9 @@ export class DisplayObjectManager {
         displayObject.destroy();
       }
     } catch {
-      try { displayObject.destroy(); } catch {}
+      try { displayObject.destroy(); } catch (error) {
+        console.warn('Failed to destroy display object:', error);
+      }
     }
     
     try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('🗑️ Removed display object:', { id: actualId || 'unknown', type: displayObject.constructor.name }); } catch {}

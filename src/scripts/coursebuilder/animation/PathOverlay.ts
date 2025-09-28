@@ -22,7 +22,15 @@ export class PathOverlay {
 
   clear(): void {
     if (!this.root) return;
-    try { this.root.removeChildren().forEach(c => (c as any).destroy?.()); } catch {}
+    try { 
+      this.root.removeChildren().forEach(c => {
+        if (typeof (c as any).destroy === 'function') {
+          (c as any).destroy();
+        }
+      }); 
+    } catch (error) {
+      console.warn('Failed to clear path overlay children:', error);
+    }
   }
 
   refresh(): void {

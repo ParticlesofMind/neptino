@@ -447,7 +447,9 @@ class MediaInterface {
         };
         document.addEventListener('dragend', removeDragClass);
       }
-    } catch {}
+    } catch (error) {
+      console.warn('Failed to setup media drag behavior:', error);
+    }
   }
 }
 
@@ -553,7 +555,9 @@ document.addEventListener('DOMContentLoaded', () => {
           const id = canvasAPI.addText(`🔗 ${item.title}`, x, y);
           if (id) canvasAPI.showSnapHintForId(id);
         }
-      } catch {}
+      } catch (error) {
+        console.warn('Failed to add media item to canvas:', error);
+      }
     });
   }
 });

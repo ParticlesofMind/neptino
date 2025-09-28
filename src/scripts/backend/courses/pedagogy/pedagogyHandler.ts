@@ -31,7 +31,9 @@ function parseStored(value: string | null): XY | null {
     if (typeof parsed?.x === 'number' && typeof parsed?.y === 'number') {
       return { x: clamp(parsed.x, -100, 100), y: clamp(parsed.y, -100, 100) };
     }
-  } catch {}
+  } catch (error) {
+    console.warn('Failed to parse pedagogy value:', error);
+  }
 
   const presets: Record<string, XY> = {
     Traditional: { x: -75, y: -75 },
