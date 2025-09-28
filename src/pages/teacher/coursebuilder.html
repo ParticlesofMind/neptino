@@ -1086,14 +1086,14 @@
                 </select>
               </div>
 
-              <!-- Animate settings panels are injected by AnimationUI (scene loop, path speed) -->
+              <!-- Animate settings panels are injected by AnimationUI (scene loop, path speed, modify options) -->
 
             </div>
 
            
             <div class="engine__tools-selection">
               <!-- Build Mode Tools -->
-              <div class="tools tools--build" data-mode-tools="build">
+              <div class="engine__tools-group engine__tools-group--build" data-mode-tools="build">
                 <div class="engine__tools-item engine__tools-item--active" data-tool="selection">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
                     class="icon icon--base">
@@ -1132,7 +1132,7 @@
               </div>
 
               <!-- Animate Mode Tools -->
-              <div class="tools tools--animate" data-mode-tools="animate" style="display: none;">
+              <div class="engine__tools-group engine__tools-group--animate" data-mode-tools="animate" style="display: none;">
                 <div class="engine__tools-item engine__tools-item--active" data-tool="selection">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
                     class="icon icon--base">
@@ -1148,6 +1148,11 @@
                     class="icon icon--base">
                   <span class="icon-label">Path</span>
                 </div>
+                <div class="engine__tools-item" data-tool="modify">
+                  <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" alt="Modify Tool"
+                    class="icon icon--base">
+                  <span class="icon-label">Modify</span>
+                </div>
               </div>
             </div>
           </div>
@@ -1157,62 +1162,62 @@
           <!-- Navigation inside canvas can be added here if needed -->
 
           <!-- Snap Menu (positioned inside canvas) -->
-          <div class="snap-menu" id="snap-menu" data-snap-menu>
-            <div class="snap-menu__item snap-menu__item--active" data-snap-option="grid">
-              <img class="snap-menu__icon icon icon--base"
+          <div class="engine__snap-menu" id="snap-menu" data-snap-menu>
+            <div class="engine__snap-item engine__snap-item--active" data-snap-option="grid">
+              <img class="engine__snap-icon icon icon--base"
                 src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Grid"><span>Snap to Grid</span>
             </div>
-            <div class="snap-menu__item" data-snap-option="smart">
-              <img class="snap-menu__icon icon icon--base"
+            <div class="engine__snap-item" data-snap-option="smart">
+              <img class="engine__snap-icon icon icon--base"
                 src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Smart"><span>Smart Guides</span>
             </div>
       
             <!-- Distribute actions -->
-            <div class="snap-menu__row">
-              <div class="snap-menu__item" data-distribute="horizontal">
-                <img class="snap-menu__icon icon icon--base"
+            <div class="engine__snap-row">
+              <div class="engine__snap-item" data-distribute="horizontal">
+                <img class="engine__snap-icon icon icon--base"
                   src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Distribute H"><span>Distribute
                   Horizontally</span>
               </div>
-              <div class="snap-menu__item" data-distribute="vertical">
-                <img class="snap-menu__icon icon icon--base"
+              <div class="engine__snap-item" data-distribute="vertical">
+                <img class="engine__snap-icon icon icon--base"
                   src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Distribute V"><span>Distribute
                   Vertically</span>
               </div>
             </div>
 
             <!-- Enhanced Smart Guides Settings -->
-            <div class="snap-menu__divider"></div>
-            <div class="snap-menu__section">
-              <div class="snap-menu__label">Smart Guide Features</div>
+            <div class="engine__snap-divider"></div>
+            <div class="engine__snap-section">
+              <div class="engine__snap-label">Smart Guide Features</div>
               
-              <div class="snap-menu__toggle" data-smart-setting="showDistToAll">
+              <div class="engine__snap-toggle" data-smart-setting="showDistToAll">
                 <input type="checkbox" id="showDistToAll" checked>
                 <label for="showDistToAll">Distance Labels</label>
               </div>
               
-              <div class="snap-menu__toggle" data-smart-setting="enableResizeGuides">
+              <div class="engine__snap-toggle" data-smart-setting="enableResizeGuides">
                 <input type="checkbox" id="enableResizeGuides" checked>
                 <label for="enableResizeGuides">Resize Guides</label>
               </div>
               
-              <div class="snap-menu__toggle" data-smart-setting="enableSmartSelection">
+              <div class="engine__snap-toggle" data-smart-setting="enableSmartSelection">
                 <input type="checkbox" id="enableSmartSelection" checked>
                 <label for="enableSmartSelection">Smart Selection</label>
               </div>
               
-              <div class="snap-menu__toggle" data-smart-setting="enableColorCoding">
+              <div class="engine__snap-toggle" data-smart-setting="enableColorCoding">
                 <input type="checkbox" id="enableColorCoding" checked>
                 <label for="enableColorCoding">Color Coding</label>
               </div>
               
-              <div class="snap-menu__range">
+              <div class="engine__snap-range">
                 <label for="equalSpacingBias">Equal Spacing Sensitivity</label>
                 <input type="range" id="equalSpacingBias" min="0.5" max="3.0" step="0.1" value="1.5">
-                <span class="snap-menu__range-value">1.5x</span>
+                <span class="engine__snap-range-value">1.5x</span>
               </div>
               
-              <div class="snap-menu__select">
+              <div class="engine__snap-select">
                 <label for="guideExtendMode">Guide Extension</label>
                 <select id="guideExtendMode">
                   <option value="selection">Selection Area</option>

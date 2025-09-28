@@ -4,6 +4,7 @@
  */
 
 import { Application, Container } from 'pixi.js';
+import { calculateFitZoom } from '../utils/canvasSizing';
 
 export interface ZoomConfig {
     minZoom: number;
@@ -15,7 +16,7 @@ export interface ZoomConfig {
 export class HighQualityZoom {
     private app: Application;
     private stage: Container;
-    private zoomLevel: number = 0.3; // Start at 30% to show 1200x1800 student view at "100%" UI zoom
+    private zoomLevel: number; // Will be set to fit-to-view zoom in constructor
     private config: ZoomConfig;
     
     // Pan offset for the zoomed view
@@ -37,8 +38,32 @@ export class HighQualityZoom {
             ...config
         };
         
+        // Calculate initial zoom to fit canvas with borders visible (this becomes our "100%" zoom)
+        this.zoomLevel = this.calculateFitToViewZoom();
+        
         // Bind perspective tool events
         this.bindPerspectiveEvents();
+    }
+    
+    /**
+     * Calculate zoom level to fit the canvas with borders visible
+     * This becomes our default "100%" zoom
+     */
+    private calculateFitToViewZoom(): number {
+        const containerWidth = this.app.screen.width;
+        const containerHeight = this.app.screen.height;
+        
+        // Use the existing calculateFitZoom function with appropriate padding
+        // This will show the artboard (canvas content area) with borders visible
+        const baseFitZoom = calculateFitZoom(containerWidth, containerHeight, 40); // 40px padding for better visibility
+        
+        // Zoom out a moderate amount by reducing the fit zoom by 35%
+        // This creates good padding around the canvas without being too far
+        const zoomedOutFitZoom = baseFitZoom * 0.65;
+        
+        console.log(`🎯 Calculated fit-to-view zoom: ${baseFitZoom.toFixed(3)} -> zoomed out: ${zoomedOutFitZoom.toFixed(3)} for container ${containerWidth}x${containerHeight}`);
+        
+        return zoomedOutFitZoom;
     }
     
     /**
@@ -96,10 +121,10 @@ export class HighQualityZoom {
     }
     
     /**
-     * Reset zoom to 100% and center the view
+     * Reset zoom to 100% (fit-to-view) and center the view
      */
     public resetZoom(): void {
-        this.zoomLevel = 0.3; // 30% zoom shows 1200x1800 student view at "100%" UI zoom
+        this.zoomLevel = this.calculateFitToViewZoom(); // 100% = fit-to-view zoom
         this.panOffset = this.calculateCenteredPanOffset();
         this.applyTransform();
     }
@@ -218,12 +243,13 @@ export class HighQualityZoom {
         
         if (zoomDisplay) {
             // Convert internal zoom level to display percentage
-            // 0.6 internal zoom = 100% display, 0.25 = 42%, 5.0 = 833%
-            const displayPercent = Math.round((this.zoomLevel / 0.6) * 100);
+            // Fit-to-view zoom = 100% display, proportional scaling for other levels
+            const fitToViewZoom = this.calculateFitToViewZoom();
+            const displayPercent = Math.round((this.zoomLevel / fitToViewZoom) * 100);
             zoomDisplay.textContent = `${displayPercent}%`;
             
             // Update title with helpful information
-            if (this.zoomLevel > 0.6) {
+            if (this.zoomLevel > fitToViewZoom) {
                 zoomDisplay.title = `Zoomed to ${displayPercent}% - Mouse wheel scrolls around canvas, Ctrl/Cmd+wheel zooms`;
             } else {
                 zoomDisplay.title = `${displayPercent}% zoom - Ctrl/Cmd+wheel to zoom in`;
@@ -283,8 +309,9 @@ export class HighQualityZoom {
             return true;
         }
         
-        // Handle pan when zoomed above default level
-        if (this.zoomLevel > 0.6) {
+        // Handle pan when zoomed above fit-to-view level (above "100%")
+        const fitToViewZoom = this.calculateFitToViewZoom();
+        if (this.zoomLevel > fitToViewZoom) {
             event.preventDefault();
             this.pan(-event.deltaX / this.zoomLevel, -event.deltaY / this.zoomLevel);
             return true;
@@ -550,10 +577,10 @@ export class HighQualityZoom {
      * Reset zoom and pan to defaults
      */
     private resetView(): void {
-        this.zoomLevel = 0.3; // 30% zoom shows 1200x1800 student view at "100%" UI zoom
+        this.zoomLevel = this.calculateFitToViewZoom(); // 100% = fit-to-view zoom
         this.panOffset = this.calculateCenteredPanOffset();
         this.applyTransform();
-        console.log('🔍 View reset to 100% (0.3 internal zoom)');
+        console.log('🔍 View reset to 100% (fit-to-view zoom)');
     }
 
     /**

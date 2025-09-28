@@ -393,12 +393,12 @@ class SnapManager {
     // Update menu item selection state
     const menu = document.querySelector('[data-snap-menu]') as HTMLElement | null;
     if (menu) {
-      menu.querySelectorAll('.snap-menu__item').forEach(item => {
-        item.classList.remove('snap-menu__item--active');
+      menu.querySelectorAll('.engine__snap-item').forEach(item => {
+        item.classList.remove('engine__snap-item--active');
       });
       const activeItem = menu.querySelector(`[data-snap-option="${this.activeMode}"]`);
       if (activeItem) {
-        activeItem.classList.add('snap-menu__item--active');
+        activeItem.classList.add('engine__snap-item--active');
       }
     }
   }

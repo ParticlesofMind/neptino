@@ -53,6 +53,16 @@ export interface ToolSettings {
   path?: {
     // Path options - trajectory adjustments handled directly on canvas
   };
+  modify?: {
+    // Modify tool options - timeline-sensitive property changes
+    fillColor?: string;
+    strokeColor?: string;
+    color?: string;
+    size?: number;
+    strokeWidth?: number;
+    scale?: { x: number; y: number };
+    alpha?: number;
+  };
 }
 
 export interface Tool {

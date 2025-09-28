@@ -54,26 +54,24 @@ export function bindSnapMenu(perspectiveManager?: any): void {
 
   const openMenu = () => {
     positionMenu();
-    snapMenu.classList.add('snap-menu--open');
+    snapMenu.classList.add('engine__snap-menu--open');
   };
   
   const closeMenu = () => {
-    snapMenu.classList.remove('snap-menu--open');
+    snapMenu.classList.remove('engine__snap-menu--open');
   };
 
   const updateSelectedOption = (activeMode: string) => {
     // Remove active class from all items
-    snapMenu.querySelectorAll('.snap-menu__item').forEach(item => {
-      item.classList.remove('snap-menu__item--active');
+    snapMenu.querySelectorAll('.engine__snap-item').forEach(item => {
+      item.classList.remove('engine__snap-item--active');
     });
-    
-    // Add active class to selected item
+
+    // Set the active item
     const activeItem = snapMenu.querySelector(`[data-snap-option="${activeMode}"]`);
     if (activeItem) {
-      activeItem.classList.add('snap-menu__item--active');
-    }
-    
-    // Update the anchor button icon and label to reflect selected option
+      activeItem.classList.add('engine__snap-item--active');
+    }    // Update the anchor button icon and label to reflect selected option
     const anchorImg = snapAnchor.querySelector('img') as HTMLImageElement;
     const anchorLabel = snapAnchor.querySelector('.icon-label') as HTMLElement;
     
@@ -103,7 +101,7 @@ export function bindSnapMenu(perspectiveManager?: any): void {
     e.stopImmediatePropagation(); // Prevent other handlers from firing
     
     
-    if (snapMenu.classList.contains('snap-menu--open')) {
+    if (snapMenu.classList.contains('engine__snap-menu--open')) {
       closeMenu();
     } else {
       openMenu();

@@ -69,8 +69,20 @@ const isDoubleClick = clickedObject &&
     
     const visit = (node: any) => {
       if (!node) return;
-      // Skip entire scene containers and their subtree; scenes are not selectable targets
-      if ((node as any).__sceneRef) return;
+      // Handle scene containers specially: they ARE selectable, but we don't traverse their children
+      if ((node as any).__sceneRef) {
+        try {
+          if (this.isSelectableObject(node)) {
+            // Use global bounds and global point for consistent hit testing
+            const bounds = node.getBounds();
+            if (globalPoint.x >= bounds.x && globalPoint.x <= bounds.x + bounds.width && 
+                globalPoint.y >= bounds.y && globalPoint.y <= bounds.y + bounds.height) {
+              hits.push(node);
+            }
+          }
+        } catch {}
+        return; // Don't traverse scene children - only the scene itself is selectable
+      }
       try {
         if (this.isSelectableObject(node)) {
           // Use global bounds and global point for consistent hit testing
@@ -101,8 +113,13 @@ const isDoubleClick = clickedObject &&
       return false;
     }
 
-    // Skip scene containers and anything inside them
-    let cur: any = object;
+    // Scenes themselves ARE selectable
+    if ((object as any).__sceneRef) {
+      return true;
+    }
+
+    // Skip anything inside scene containers (but not the scene itself)
+    let cur: any = object.parent;
     for (let i = 0; i < 8 && cur; i++) {
       if ((cur as any).__sceneRef) return false;
       cur = cur.parent;

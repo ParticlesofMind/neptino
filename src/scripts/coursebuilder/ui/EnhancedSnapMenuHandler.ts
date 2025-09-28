@@ -36,7 +36,7 @@ export class EnhancedSnapMenuHandler {
     const equalSpacingBias = this.menu.querySelector('#equalSpacingBias') as HTMLInputElement;
     if (equalSpacingBias) {
       this.settings.set('equalSpacingBias', equalSpacingBias);
-      const valueDisplay = this.menu.querySelector('.snap-menu__range-value');
+      const valueDisplay = this.menu.querySelector('.engine__snap-range-value');
       
       equalSpacingBias.addEventListener('input', () => {
         const value = parseFloat(equalSpacingBias.value);
@@ -83,7 +83,7 @@ export class EnhancedSnapMenuHandler {
     if (element && element.type === 'range') {
       element.value = value.toString();
       // Update display value
-      const valueDisplay = this.menu?.querySelector('.snap-menu__range-value');
+      const valueDisplay = this.menu?.querySelector('.engine__snap-range-value');
       if (valueDisplay) valueDisplay.textContent = `${value.toFixed(1)}x`;
     }
   }
@@ -128,7 +128,7 @@ export class EnhancedSnapMenuHandler {
   private toggleAdvancedSettings(show: boolean): void {
     if (!this.menu) return;
     
-    const advancedSection = this.menu.querySelector('.snap-menu__section');
+    const advancedSection = this.menu.querySelector('.engine__snap-section');
     if (advancedSection) {
       (advancedSection as HTMLElement).style.display = show ? 'flex' : 'none';
     }

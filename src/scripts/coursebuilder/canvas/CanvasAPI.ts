@@ -1070,7 +1070,7 @@ export class CanvasAPI {
    * Get current zoom level (basic implementation)
    */
   public getZoomLevel(): number {
-    return 0.6; // Our new default zoom level (displays as 100%)
+    return 1.0; // Default 100% zoom level (1:1 pixel ratio)
   }
 
   /**

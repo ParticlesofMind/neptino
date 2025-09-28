@@ -1,0 +1,41 @@
+// ==========================================================================
+// ENGINE GRID LAYOUT - CORE GRID SYSTEM
+// ==========================================================================
+
+.engine {
+    display: grid;
+    grid-template-columns: auto 2.5fr 7fr 2fr;
+    gap: 0.5rem;
+    height: calc(100vh - 3rem);
+    width: 100%;
+    padding: 0.5rem;
+    position: relative;
+    overflow: hidden; // Prevent child elements from extending past viewport
+
+    // Common styling for direct children (grid items)
+    >* {
+        background: var(--color-background);
+        border-radius: var(--radius-large);
+        border: 1px solid var(--color-neutral-200);
+        box-shadow:
+            0 1px 3px rgba(0, 0, 0, 0.05),
+            0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+
+}
+
+.icon-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-neutral-700);
+    text-align: center;
+    margin-top: 0.25rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    user-select: none; /* Prevent text selection on tool icon labels */
+    -webkit-user-select: none; /* Safari compatibility */
+    -moz-user-select: none; /* Firefox compatibility */
+    -ms-user-select: none; /* IE/Edge compatibility */
+}

@@ -17,11 +17,10 @@ import { initializeAnimationUI } from './animation/AnimationUI';
 import { animationState } from './animation/AnimationState';
 import { LayersPanel } from './ui/LayersPanel';
 import { PanelManager } from './ui/PanelManager';
-import { CANVAS_WIDTH, CANVAS_HEIGHT, calculateFitZoom } from './utils/canvasSizing';
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from './utils/canvasSizing';
 import { runFullValidation } from './utils/canvasSizingValidation';
 import { initializeCanvasSystem, validateCanvasSystem } from './utils/canvasSystemInit';
 import { canvasDimensionManager } from './utils/CanvasDimensionManager';
-import { activateGSAPFeatures } from './GSAPCanvasIntegration';
 import { canvasMarginManager } from './canvas/CanvasMarginManager';
 import { FloatingElementsManager } from './ui/FloatingElementsManager';
 
@@ -70,8 +69,6 @@ export async function initializeCanvas(): Promise<void> {
         canvasAPI = new CanvasAPI('#canvas-container');
 
         // Log canvas dimensions info
-        const dpr = window.devicePixelRatio || 1;
-        
         // Get consistent canvas dimensions from CanvasDimensionManager
         const dimensions = canvasDimensionManager.getCurrentDimensions();
         const canvasWidth = dimensions.width;  // 1200
@@ -109,7 +106,7 @@ export async function initializeCanvas(): Promise<void> {
         if (perspectiveManager) {
             // Reset to our new default zoom level with proper centering
             perspectiveManager.resetZoom();
-            console.log(`🎯 Canvas displayed at optimal size: 0.3x (30% of 4000×6000 pixels showing 1200×1800 student view as 100%)`);
+            console.log(`🎯 Canvas displayed at 100% zoom (1:1 pixel ratio)`);
             
             // Set up wheel event handling for zoom/pan
             if (app) {
@@ -173,7 +170,7 @@ export async function initializeCanvas(): Promise<void> {
         // Listen for color selector changes
         document.addEventListener('toolColorChange', (event: Event) => {
             const customEvent = event as CustomEvent;
-            const { tool, hex } = customEvent.detail;
+            const { hex } = customEvent.detail;
             if (canvasAPI) {
                 canvasAPI.setToolColor(hex);
             }
@@ -339,14 +336,6 @@ export async function initializeCanvas(): Promise<void> {
 
         // PerfHUD disabled by default to keep UI clean and avoid layout overlays in production.
         // To enable for debugging, call window.installPerfHUD?.()
-
-        // 🎬 Activate GSAP features for enhanced animations
-        try {
-            activateGSAPFeatures();
-            console.log('🚀 GSAP animation features activated!');
-        } catch (error) {
-            console.warn('⚠️ GSAP activation failed:', error);
-        }
 
         isInitializing = false;
     } catch (error) {

@@ -54,7 +54,6 @@ export class Scene {
   private lastTime: number = 0;
   private interactionLayer: Container | null = null;
   private dragOverlay: Graphics | null = null;
-  private dragHandle: Graphics | null = null;
   private pathOverlay: Container | null = null;
   private pathVisuals: Map<string, PathVisual> = new Map();
   private resizeHandles: Map<ResizeHandlePosition, Graphics> = new Map();
@@ -112,7 +111,7 @@ export class Scene {
     this.contentContainer.name = 'SceneContent';
     this.contentContainer.position.set(bounds.width / 2, bounds.height / 2);
     this.contentContainer.zIndex = 1; // Above path overlay but below interaction layer
-    // Mark content container so objects within it are properly grouped in layers
+    // Mark content container for internal tracking (but don't make it appear in layers)
     (this.contentContainer as any).__sceneContent = true;
     (this.contentContainer as any).__parentSceneId = this.id;
     
@@ -204,12 +203,7 @@ export class Scene {
     this.pathOverlay.eventMode = 'passive';
     this.root.addChild(this.pathOverlay);
 
-    this.dragHandle = new Graphics();
-    this.dragHandle.name = 'SceneDragHandle';
-    this.registerSceneControl(this.dragHandle, 'move');
-    this.drawDragHandle(60);
-    this.dragHandle.on('pointerdown', (event: FederatedPointerEvent) => this.beginSceneDrag(event));
-    this.interactionLayer.addChild(this.dragHandle);
+    // Drag handle removed - scenes are now draggable like regular objects
 
     const handles: Array<{ key: ResizeHandlePosition; cursor: string }> = [
       { key: 'tl', cursor: 'nwse-resize' },
@@ -238,12 +232,7 @@ export class Scene {
     handle.stroke({ color: 0x4a79a4, width: 1 });
   }
 
-  private drawDragHandle(handleWidth: number): void {
-    if (!this.dragHandle) return;
-    this.dragHandle.clear();
-    this.dragHandle.roundRect(0, 0, handleWidth, 12, 4);
-    this.dragHandle.fill({ color: 0x80bfff, alpha: 0.9 }); // Updated to match theme blue
-  }
+
 
   private layoutInteractionHandles(): void {
     if (!this.dragOverlay) return;
@@ -274,37 +263,29 @@ export class Scene {
       const pos = positions[key];
       if (!pos) return;
       handle.position.set(pos.x, pos.y);
+      // Only show resize handles when selected
       handle.visible = this.isSelected;
       handle.eventMode = this.isSelected ? 'static' : 'none';
+      handle.alpha = 1.0;
     });
 
-    if (this.dragHandle) {
-      const handleWidth = Math.min(Math.max(w * 0.4, 40), 120);
-      this.drawDragHandle(handleWidth);
-      this.dragHandle.visible = this.isSelected;
-      this.dragHandle.eventMode = this.isSelected ? 'static' : 'none';
-      
-      // Position drag handle below the PIXI playback controls - MOVED FURTHER DOWN
-      const controlsHeight = 75; // Updated to account for new controls position (65px + control height)
-      this.dragHandle.position.set(
-        midX - handleWidth / 2,
-        h + controlsHeight + 30 // Controls + larger gap (was 20px)
-      );
-    }
+    // Drag handle removed - scenes now behave like regular selectable objects
 
-    // Show/hide PIXI controls with selection state and update their position/scale
+    // Update PIXI controls position and scale - now positioned inside scene
     if (this.controlsContainer) {
-      this.controlsContainer.visible = this.isSelected;
-      this.controlsContainer.eventMode = this.isSelected ? 'static' : 'none';
+      // Always show controls
+      this.controlsContainer.visible = true;
+      this.controlsContainer.eventMode = 'static';
+      this.controlsContainer.alpha = 0.9; // Slightly transparent
       
-      // Update controls position to stay centered and properly positioned - MOVED SLIGHTLY DOWN
-      this.controlsContainer.position.set(midX, h + 65); // Always centered horizontally, below scene (was 50px)
+      // Position controls INSIDE the scene at the bottom
+      this.controlsContainer.position.set(midX, h - 35); // 35px from bottom, inside scene
       
       // Scale controls proportionally with scene size (but with reasonable limits)
       const scaleX = w / 400; // Base scene width for reference
       const scaleY = h / 300; // Base scene height for reference
       const avgScale = (scaleX + scaleY) / 2;
-      const controlScale = Math.max(0.7, Math.min(1.3, avgScale)); // Limit scale between 0.7x and 1.3x
+      const controlScale = Math.max(0.6, Math.min(1.0, avgScale)); // Smaller scale since inside scene
       this.controlsContainer.scale.set(controlScale);
     }
 
@@ -478,20 +459,6 @@ export class Scene {
     });
   }
 
-  private beginSceneDrag(event: FederatedPointerEvent): void {
-    const uiLayer = animationState.getUiLayer();
-    if (!uiLayer) return;
-    const local = uiLayer.toLocal(event.global);
-    this.interactionState = {
-      mode: 'drag',
-      startPointer: new Point(local.x, local.y),
-      startBounds: { ...this.bounds }
-    };
-    this.setSelected(true);
-    this.attachGlobalPointerListeners();
-    event.stopPropagation();
-  }
-
   private beginSceneResize(handle: ResizeHandlePosition, event: FederatedPointerEvent): void {
     const uiLayer = animationState.getUiLayer();
     if (!uiLayer) return;
@@ -609,10 +576,13 @@ export class Scene {
 
   private handleRootPointerDown(event: FederatedPointerEvent): void {
     const target = event.target as any;
+    // Don't interfere with scene controls
     if (target && target.__sceneControl) {
       return;
     }
-    this.setSelected(true);
+    
+    // Let the selection tool handle selection and movement
+    // Don't prevent event propagation - let SelectionTool see this event
   }
 
   private createPlaybackControls(): void {
@@ -721,9 +691,11 @@ export class Scene {
     (this.controlsContainer as any).playButton = playButton;
     (this.controlsContainer as any).hideButton = hideButton;
     
-    // Position the controls container just below the scene, centered - MOVED SLIGHTLY DOWN
-    this.controlsContainer.position.set(midX, h + 65); // 65px below scene (was 50px)
-    this.controlsContainer.visible = this.isSelected;
+    // Position the controls container INSIDE the scene at the bottom
+    this.controlsContainer.position.set(midX, h - 35); // 35px from bottom, inside scene
+    // Always show controls when scene is visible
+    this.controlsContainer.visible = true;
+    this.controlsContainer.alpha = 0.9; // Slightly transparent so content behind is visible
     
     // Add to the scene's interaction layer
     if (this.interactionLayer) {
@@ -1008,30 +980,58 @@ export class Scene {
   private drawBorder(): void {
     this.borderGraphics.clear();
     
-    const alpha = this.isSelected ? 0.6 : 0.3;
-    const color = this.isSelected ? 0x4a79a4 : 0x666666;
-    
-    // Draw subtle border
-    this.borderGraphics
-      .roundRect(0, 0, this.bounds.width, this.bounds.height, 4)
-      .stroke({ 
-        color: color, 
-        width: this.isSelected ? 2 : 1, 
-        alpha: alpha 
-      });
-    
+    if (this.isSelected) {
+      // Full border with resize handles when selected
+      const alpha = 0.6;
+      const color = 0x4a79a4;
+      
+      this.borderGraphics
+        .roundRect(0, 0, this.bounds.width, this.bounds.height, 4)
+        .stroke({ 
+          color: color, 
+          width: 2, 
+          alpha: alpha 
+        });
+    } else {
+      // Subtle border when not selected (to remind that something is there)
+      this.borderGraphics
+        .roundRect(0, 0, this.bounds.width, this.bounds.height, 4)
+        .stroke({ 
+          color: 0x999999, 
+          width: 1, 
+          alpha: 0.2 
+        });
+    }
   }
 
   private setHovered(hovered: boolean): void {
-    if (!this.isSelected) {
-      this.borderGraphics.alpha = hovered ? 0.8 : 0.5;
+    // Only show visual feedback on hover if not selected
+    if (!this.isSelected && hovered) {
+      // Show a subtle border on hover
+      this.borderGraphics.clear();
+      this.borderGraphics
+        .roundRect(0, 0, this.bounds.width, this.bounds.height, 4)
+        .stroke({ 
+          color: 0x888888, 
+          width: 1, 
+          alpha: 0.4 
+        });
+    } else if (!this.isSelected && !hovered) {
+      // Clear border when not hovered and not selected
+      this.borderGraphics.clear();
     }
   }
 
   setSelected(selected: boolean): void {
-    this.isSelected = selected;
-    this.drawBorder();
-    this.layoutInteractionHandles();
+    if (this.isSelected !== selected) {
+      this.isSelected = selected;
+      this.drawBorder();
+      this.layoutInteractionHandles();
+    }
+  }
+
+  getSelected(): boolean {
+    return this.isSelected;
   }
 
   getRoot(): Container {
@@ -1047,12 +1047,43 @@ export class Scene {
   }
 
   contains(pt: Point): boolean {
-    const uiLayer = animationState.getUiLayer();
-    if (!uiLayer) return false;
+    // Simple and robust bounds checking using the scene's global position and size
+    const globalBounds = this.getGlobalBounds();
+    const result = pt.x >= globalBounds.x && pt.x <= globalBounds.x + globalBounds.width &&
+                   pt.y >= globalBounds.y && pt.y <= globalBounds.y + globalBounds.height;
     
-    const local = this.root.toLocal(pt, uiLayer);
-    return local.x >= 0 && local.x <= this.bounds.width && 
-           local.y >= 0 && local.y <= this.bounds.height;
+    console.log('🎬 Scene.contains:', {
+      point: pt,
+      globalBounds,
+      result
+    });
+    
+    return result;
+  }
+  
+  getGlobalBounds(): { x: number; y: number; width: number; height: number } {
+    // Use the scene border graphics which represents the actual visual bounds
+    try {
+      if (this.borderGraphics) {
+        const borderBounds = this.borderGraphics.getBounds();
+        return {
+          x: borderBounds.x,
+          y: borderBounds.y,
+          width: borderBounds.width,
+          height: borderBounds.height
+        };
+      }
+    } catch (error) {
+      console.warn('Failed to get border bounds:', error);
+    }
+    
+    // Fallback: use the stored bounds directly since they should be in global coordinates
+    return {
+      x: this.bounds.x,
+      y: this.bounds.y,
+      width: this.bounds.width,
+      height: this.bounds.height
+    };
   }
 
   getBounds(): SceneBounds {
@@ -1077,6 +1108,9 @@ export class Scene {
       const globalPos = object.getGlobalPosition();
       // Convert to content container local coordinates (centered coordinate system)
       const localPos = this.contentContainer.toLocal(globalPos, uiLayer);
+      
+      // Get the DisplayObjectManager to properly handle the object transfer
+      const displayManager = animationState.getDisplayManager();
       
       if (object.parent) {
         object.parent.removeChild(object);
@@ -1111,10 +1145,21 @@ export class Scene {
       // Add to content container instead of root so it gets clipped
       this.contentContainer.addChild(object);
       
-      // Notify layers panel that an object was added
+      // If there's a display manager, make sure it knows about the new parent relationship
+      if (displayManager) {
+        // Update the display manager's tracking of this object
+        const objectId = (object as any).__id || (object as any).objectId;
+        if (objectId && displayManager.get(objectId)) {
+          // Object was previously managed by DisplayObjectManager
+          // We don't remove it from the manager since it still exists, just in a different parent
+          console.log('🎬 Scene: Object', objectId, 'moved to scene content container');
+        }
+      }
+      
+      // Notify layers panel that an object was added to scene
       try {
         document.dispatchEvent(new CustomEvent('displayObject:added', { 
-          detail: { id: (object as any).objectId, object: object } 
+          detail: { id: (object as any).objectId || (object as any).__id, object: object } 
         }));
       } catch {}
     }
@@ -1123,6 +1168,34 @@ export class Scene {
   removeObject(object: Container): void {
     if (object.parent === this.contentContainer) {
       this.contentContainer.removeChild(object);
+      
+      // Clean up scene-related properties
+      delete (object as any).__inScene;
+      delete (object as any).__parentSceneId;
+      
+      // Move object back to main drawing layer
+      const displayManager = animationState.getDisplayManager();
+      if (displayManager) {
+        // Add back to drawing layer via display manager
+        displayManager.add(object);
+        console.log('🎬 Scene: Object moved from scene back to drawing layer');
+      } else {
+        // Fallback: add to UI layer
+        const uiLayer = animationState.getUiLayer();
+        if (uiLayer) {
+          uiLayer.addChild(object);
+        }
+      }
+      
+      // Notify layers panel that object was removed from scene
+      try {
+        document.dispatchEvent(new CustomEvent('displayObject:removed', { 
+          detail: { id: (object as any).objectId || (object as any).__id, object: object } 
+        }));
+        document.dispatchEvent(new CustomEvent('displayObject:added', { 
+          detail: { id: (object as any).objectId || (object as any).__id, object: object } 
+        }));
+      } catch {}
     } else if (object.parent === this.root) {
       this.root.removeChild(object);
     }
@@ -1132,15 +1205,83 @@ export class Scene {
     return this.contentContainer.children.filter(child => child instanceof Container) as Container[];
   }
 
+  /**
+   * Check if an object is currently inside this scene
+   */
+  containsObject(object: Container): boolean {
+    return (object as any).__parentSceneId === this.id || object.parent === this.contentContainer;
+  }
+
+  /**
+   * Move all objects out of this scene back to the main drawing layer
+   */
+  moveAllObjectsOut(): void {
+    const objects = this.getObjects();
+    objects.forEach(obj => this.removeObject(obj));
+  }
+
+  /**
+   * Remove animation path from an object
+   */
+  removeAnimationPath(objectId: string): void {
+    if (this.animationPaths.has(objectId)) {
+      this.animationPaths.delete(objectId);
+      
+      // Find the object and remove trajectory marking
+      const targetObject = this.findObjectById(objectId);
+      if (targetObject) {
+        delete (targetObject as any).__hasTrajectory;
+        delete (targetObject as any).__trajectoryId;
+        
+        // Notify layers panel of the change
+        try {
+          document.dispatchEvent(new CustomEvent('displayObject:updated', { 
+            detail: { id: objectId, object: targetObject } 
+          }));
+        } catch {}
+      }
+      
+      // Clear path visual if it exists
+      const visual = this.pathVisuals.get(objectId);
+      if (visual) {
+        // Remove visual elements from the scene
+        if (visual.container.parent) {
+          visual.container.parent.removeChild(visual.container);
+        }
+        visual.container.destroy({ children: true });
+        this.pathVisuals.delete(objectId);
+      }
+      console.log('🎬 Scene: Removed animation path for object', objectId);
+    }
+  }
+
+  /**
+   * Check if an object has an animation path
+   */
+  hasAnimationPath(objectId: string): boolean {
+    return this.animationPaths.has(objectId);
+  }
+
   destroy(): void {
     // Stop animation
     this.pause();
     this.detachGlobalPointerListeners();
     
+    // Remove from animation state
     animationState.removeScene(this);
+    
+    // Clean up HTML controls if they exist
+    if (this.hideTrajButton && this.hideTrajButton.parentNode) {
+      this.hideTrajButton.parentNode.removeChild(this.hideTrajButton);
+    }
     
     // Clean up event listeners
     this.root.removeAllListeners();
+    
+    // Clear visual elements
+    this.borderGraphics?.clear();
+    this.pathVisuals.clear();
+    this.resizeHandles.clear();
     
     if (this.root.parent) {
       this.root.parent.removeChild(this.root);
@@ -1230,6 +1371,33 @@ export class Scene {
         object.position.y += centerOffsetY;
       }
     });
+
+    // Apply property modifications from ModifyTool at current time
+    this.updateObjectPropertyModifications();
+  }
+
+  private updateObjectPropertyModifications(): void {
+    // Get all objects in the scene and apply their property modifications
+    this.contentContainer.children.forEach(child => {
+      try {
+        // Get the modify tool and apply property changes for current time
+        const modifyTool = this.getModifyTool();
+        if (modifyTool) {
+          modifyTool.updateObjectPropertiesForTime(child, this.t);
+        }
+      } catch (error) {
+        // Silently handle any errors to prevent animation disruption
+      }
+    });
+  }
+
+  private getModifyTool(): any {
+    try {
+      const toolManager = (window as any).toolManager;
+      return toolManager?.tools?.get?.('modify');
+    } catch {
+      return null;
+    }
   }
 
   private interpolateAlongPath(points: Point[], t: number): Point {

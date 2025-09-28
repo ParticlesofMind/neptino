@@ -14,6 +14,7 @@ import { EraserTool } from "./EraserTool";
 import { TableManager } from "./tables/TableManager";
 import { SceneTool } from "../animation/tools/SceneTool";
 import { PathTool } from "../animation/tools/PathTool";
+import { ModifyTool } from "../animation/tools/ModifyTool";
 import { DisplayObjectManager } from "../canvas/DisplayObjectManager";
 import { BoundaryUtils, CanvasBounds } from "./BoundaryUtils";
 
@@ -110,6 +111,7 @@ export class ToolManager {
         // Animation tools (animate mode)
         this.tools.set("scene", new SceneTool(this));
         this.tools.set("path", new PathTool());
+        this.tools.set("modify", new ModifyTool());
 
         // Set tool manager reference on all tools
         this.tools.forEach((tool) => {

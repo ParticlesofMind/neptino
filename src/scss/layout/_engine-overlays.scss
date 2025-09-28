@@ -1,0 +1,70 @@
+// ==========================================================================
+// ENGINE CANVAS OVERLAYS - PERSPECTIVE AND OVERLAY ELEMENTS
+// ==========================================================================
+
+.engine {
+    // Perspective controls - positioned inside canvas on the right
+
+
+        // Controls positioning handled by FloatingElementsManager.ts
+
+    &__perspective {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-2);
+        background: rgba(255, 255, 255, 0.95);
+        padding: var(--spacing-2);
+        border-radius: var(--radius-medium);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(8px);
+        z-index: 100;
+        width: 60px;
+    }
+
+    // Zoom display within perspective
+    &__perspective-zoom {
+        font-size: 0.5rem;
+        font-weight: 600;
+        color: var(--color-primary-600);
+        background: var(--color-primary-50);
+        border: 1px solid var(--color-primary-200);
+        border-radius: 3px;
+        padding: 0.125rem 0.2rem;
+        text-align: center;
+        white-space: nowrap;
+        min-height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+
+    // Perspective items
+    &__perspective-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.1rem;
+        padding: 0.25rem;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid var(--color-neutral-300);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        width: 100%;
+
+        &:hover {
+            background: var(--color-primary-50);
+            border-color: var(--color-primary-300);
+            transform: translateY(-1px);
+        }
+
+        &--active {
+            background: #B3D7FF;
+            border-color: #9AC8FF;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    }
+}

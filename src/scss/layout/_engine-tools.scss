@@ -1,0 +1,235 @@
+// ==========================================================================
+// ENGINE TOOLS - TOOLS, MODES, AND CONTROL SYSTEMS
+// ==========================================================================
+
+.engine {
+    // Controls container - positioning handled by FloatingElementsManager.ts
+    &__controls {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: var(--spacing-4);
+        z-index: 200;
+    }
+
+    // Mode selector - styled like tools with white background
+    &__modes {
+        display: flex;
+        flex-direction: row;
+        gap: var(--spacing-2);
+        width: auto;
+        background: rgba(255, 255, 255, 0.95);
+        padding: var(--spacing-2);
+        border-radius: var(--radius-medium);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(8px);
+    }
+
+    // Mode items
+    &__modes-item {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        padding: var(--spacing-1);
+        border: 1px solid var(--color-neutral-200);
+        border-radius: var(--radius-medium);
+        background: var(--color-background);
+        box-shadow:
+            0 1px 2px rgba(0, 0, 0, 0.05),
+            0 1px 1px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+            transform: translateY(-1px);
+            background: var(--color-neutral-50);
+            border-color: var(--color-neutral-300);
+            box-shadow:
+                0 2px 4px rgba(0, 0, 0, 0.08),
+                0 1px 2px rgba(0, 0, 0, 0.12);
+        }
+
+        &--active {
+            background: #B3D7FF;
+            border-color: #9AC8FF;
+            box-shadow:
+                0 2px 4px rgba(179, 215, 255, 0.15),
+                0 1px 2px rgba(179, 215, 255, 0.1);
+
+            &:hover {
+                background: #9AC8FF;
+                border-color: #81B9FF;
+                transform: translateY(-1px);
+                box-shadow:
+                    0 3px 6px rgba(179, 215, 255, 0.2),
+                    0 2px 4px rgba(179, 215, 255, 0.15);
+            }
+        }
+
+        &--compact {
+            width: 50px;
+            height: 50px;
+            padding: var(--spacing-1);
+            flex-direction: column;
+            gap: 0.125rem;
+        }
+    }
+
+    // Engine-specific tool container - now positioned by parent controls
+    &__tools {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-2);
+        width: auto;
+
+        &--canvas {
+            flex-direction: column !important;
+        }
+    }
+
+    // Tools options positioned above main tools without affecting alignment
+    &__tools-options {
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-bottom: var(--spacing-2);
+        z-index: 10;
+        display: flex;
+        flex-direction: row;
+        gap: var(--spacing-2);
+        width: auto;
+        background: rgba(255, 255, 255, 0.95);
+        padding: var(--spacing-2);
+        border-radius: var(--radius-medium);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(8px);
+    }
+
+    // Tools selection row - styled like perspective with white background
+    &__tools-selection {
+        display: flex;
+        flex-direction: row;
+        gap: var(--spacing-2);
+        width: auto;
+        background: rgba(255, 255, 255, 0.95);
+        padding: var(--spacing-2);
+        border-radius: var(--radius-medium);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(8px);
+    }
+
+    // Tools group containers for build/animate modes
+    &__tools-group {     
+        display: flex;
+        flex-direction: row;
+        gap: var(--spacing-2);
+        width: auto;
+        background: rgba(255, 255, 255, 0.95);
+        padding: var(--spacing-2);
+        border-radius: var(--radius-medium);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(8px);
+    }
+
+    &__tools-item {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-1);
+        width: 50px;
+        height: 50px;
+        align-items: center;
+        justify-content: center;
+        padding: var(--spacing-2);
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid var(--color-neutral-300);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none; /* Prevent text selection on tool buttons */
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+
+        &:hover {
+            background: var(--color-primary-50);
+            border-color: var(--color-primary-300);
+            transform: translateY(-1px);
+        }
+
+        &--active {
+            background: #B3D7FF !important;
+            border-color: #9AC8FF !important;
+            color: #333 !important;
+            box-shadow: 0 2px 8px rgba(179, 215, 255, 0.4) !important;
+            transform: none !important;
+
+            &:hover {
+                background: #A5CFFF !important;
+                border-color: #8BBEFF !important;
+                transform: none !important;
+            }
+        }
+
+        // Horizontal layout for settings panels
+        &--horizontal {
+            flex-direction: row;
+            width: auto;
+            height: auto;
+            padding: var(--spacing-2);
+            gap: var(--spacing-2);
+            cursor: default;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.9);
+                border-color: var(--color-neutral-300);
+                transform: none;
+            }
+        }
+    }
+
+    // Tools options items - uniform styling like regular tool items
+    &__tools-options &__tools-item--horizontal {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        min-width: 120px;
+        height: 50px;
+        padding: var(--spacing-2);
+        border-radius: var(--radius-medium);
+        background: var(--color-background);
+        border: 1px solid var(--color-neutral-200);
+        box-shadow:
+            0 1px 2px rgba(0, 0, 0, 0.05),
+            0 1px 1px rgba(0, 0, 0, 0.08);
+        gap: var(--spacing-2);
+        cursor: default;
+        transition: all 0.2s ease;
+
+        &:hover {
+            transform: translateY(-1px);
+            background: var(--color-neutral-50);
+            border-color: var(--color-neutral-300);
+            box-shadow:
+                0 2px 4px rgba(0, 0, 0, 0.08),
+                0 1px 2px rgba(0, 0, 0, 0.12);
+        }
+
+        .color-selector {
+            margin: 0;
+            flex-shrink: 0;
+        }
+
+        .input {
+            margin: 0;
+            min-width: 60px;
+            flex: 1;
+        }
+    }
+}

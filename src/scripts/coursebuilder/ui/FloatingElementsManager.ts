@@ -83,17 +83,17 @@ export class FloatingElementsManager {
             this.perspectiveElement.style.zIndex = '100';
         }
 
-        // Position controls on the LEFT side of the canvas
+        // Position controls at the BOTTOM CENTER of the canvas
         if (this.controlsElement) {
-            const controlsLeft = canvasRect.left + 4; // Small margin from canvas edge
-            const controlsTop = canvasRect.top + (canvasRect.height / 2);
+            const controlsLeft = canvasRect.left + (canvasRect.width / 2); // Center horizontally
+            const controlsTop = canvasRect.bottom - 80; // 80px from bottom - moved down
 
             this.controlsElement.style.position = 'fixed';
             this.controlsElement.style.left = `${controlsLeft}px`;
             this.controlsElement.style.right = 'auto';
             this.controlsElement.style.top = `${controlsTop}px`;
-            this.controlsElement.style.transform = 'translateY(-50%)';
-            this.controlsElement.style.zIndex = '100';
+            this.controlsElement.style.transform = 'translateX(-50%)';
+            this.controlsElement.style.zIndex = '200';
         }
 
         // Position snap menu next to perspective tools (only if it's open/visible)
@@ -104,7 +104,7 @@ export class FloatingElementsManager {
         if (!this.snapMenuElement || !this.perspectiveElement) return;
 
         // Only position if the menu is open/visible
-        if (!this.snapMenuElement.classList.contains('snap-menu--open')) {
+        if (!this.snapMenuElement.classList.contains('engine__snap-menu--open')) {
             return;
         }
 

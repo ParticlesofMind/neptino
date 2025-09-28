@@ -166,9 +166,12 @@ export class SceneTool extends BaseTool {
       return;
     }
 
-    // CRITICAL FIX: Clear existing scenes to prevent UI fragmentation
-    // Only one scene should be active at a time to maintain cohesive interface
-    animationState.clearScenes();
+    // Allow multiple animation scenes to coexist
+    // Deselect all existing scenes before selecting the new one
+    const existingScenes = animationState.getScenes();
+    existingScenes.forEach(existingScene => {
+      try { existingScene.setSelected(false); } catch {}
+    });
 
     const bounds = this.normalizeBounds(x, y, constrainedWidth, constrainedHeight);
     const scene = new Scene(bounds, undefined, aspectRatioStr);

@@ -59,6 +59,10 @@ export class LayersPanel {
       
       this.debouncedRefresh(8); // Faster refresh for removals (8ms vs 16ms)
     });
+    document.addEventListener('displayObject:updated', () => {
+      this.clearThumbnailCache(); // Clear cache when objects change
+      this.debouncedRefresh(8); // Fast refresh for updates
+    });
     
     // Listen for tool changes to refresh visibility (less frequent, can be immediate)
     document.addEventListener('tool:changed', () => this.debouncedRefresh(100));
@@ -120,6 +124,22 @@ export class LayersPanel {
         
         const li = this.buildLayerItem(child);
         list.appendChild(li);
+        
+        // Special handling for animation scenes: also show objects from their content containers
+        if ((child as any).__sceneRef || (child as any).name === 'AnimationScene') {
+          const scene = (child as any).__sceneRef;
+          if (scene && scene.getContentContainer) {
+            const contentContainer = scene.getContentContainer();
+            if (contentContainer && contentContainer.children && contentContainer.children.length > 0) {
+              // Find the child list element for this scene to add scene objects to it
+              const childrenList = li.querySelector('ol.layers-list') as HTMLOListElement;
+              if (childrenList) {
+                // Render the scene's content objects as children of the scene
+                this.renderChildren(contentContainer, childrenList);
+              }
+            }
+          }
+        }
       } catch (error) {
         // Skip objects that cause errors during processing
         try { 
@@ -129,6 +149,7 @@ export class LayersPanel {
         } catch {}
       }
     });
+
   }
 
   private buildLayerItem(obj: Container): HTMLLIElement {
@@ -151,7 +172,19 @@ export class LayersPanel {
     // Expander for containers - only show if object has 2+ real children (excluding visual aids)
     const children = (obj as any).children;
     const realChildren = children ? children.filter((c: any) => this.isRealObject(c)) : [];
-    const isContainer = realChildren.length >= 2;
+    
+    // Special handling for animation scenes - they should always be expandable if they have content
+    let isContainer = realChildren.length >= 2;
+    if ((obj as any).__sceneRef || (obj as any).name === 'AnimationScene') {
+      const scene = (obj as any).__sceneRef;
+      if (scene && scene.getContentContainer) {
+        const contentContainer = scene.getContentContainer();
+        if (contentContainer && contentContainer.children && contentContainer.children.length > 0) {
+          // Scene has content, so it should be expandable
+          isContainer = true;
+        }
+      }
+    }
     let expander: HTMLButtonElement | null = null;
     let childrenList: HTMLOListElement | null = null;
     if (isContainer) {
@@ -335,70 +368,106 @@ export class LayersPanel {
     // Check for tool metadata first
     const meta = (obj as any).__meta;
     const toolType = (obj as any).__toolType;
+    const hasTrajectory = (obj as any).__hasTrajectory;
+    
+    let baseName = '';
     
     // Handle objects with metadata (shapes, brush, pen, etc.)
     if (meta && meta.kind) {
       switch (meta.kind) {
         case 'shapes':
-          return this.getShapeName(meta.shapeType || 'rectangle');
+          baseName = this.getShapeName(meta.shapeType || 'rectangle');
+          break;
         case 'brush':
-          return 'stroke';
+          baseName = 'stroke';
+          break;
         case 'pen':
-          return 'line';
+          baseName = 'line';
+          break;
         case 'tables':
-          return 'table';
+          baseName = 'table';
+          break;
         case 'video':
-          return meta.name || 'video'; // Use custom name for scenes
+          baseName = meta.name || 'video'; // Use custom name for scenes
+          break;
         case 'scene':
-          return meta.name || 'animation scene';
+          baseName = meta.name || 'animation scene';
+          break;
         default:
-          return meta.kind;
+          baseName = meta.kind;
       }
     }
     
-    // Handle objects by tool type
-    if (toolType) {
+    // Handle objects by tool type if no metadata provided a name
+    if (!baseName && toolType) {
       switch (toolType) {
         case 'container':
-          return 'group';
+          baseName = 'group';
+          break;
         case 'brush':
-          return 'stroke';
+          baseName = 'stroke';
+          break;
         case 'pen':
-          return 'line';
+          baseName = 'line';
+          break;
         case 'shapes':
-          return 'rectangle'; // Default shape
+          baseName = 'rectangle'; // Default shape
+          break;
         case 'text':
-          return 'text';
+          baseName = 'text';
+          break;
         case 'tables':
-          return 'table';
+          baseName = 'table';
+          break;
         case 'scene':
-          return meta?.name || 'animation scene'; // Scene/video objects
+          baseName = meta?.name || 'animation scene'; // Scene/video objects
+          break;
         default:
-          return toolType;
+          baseName = toolType;
       }
     }
     
-    // Handle by PIXI class type
-    const className = (obj as any).constructor?.name || 'Object';
-    switch (className) {
-      case 'Text':
-        return 'text';
-      case 'Graphics':
-        // Try to determine what kind of graphics this is
-        if ((obj as any).children && (obj as any).children.length > 1) {
-          return 'group';
-        }
-        return 'graphic';
-      case 'Container':
-        if ((obj as any).children && (obj as any).children.length > 1) {
-          return 'group';
-        }
-        return 'container';
-      case 'Sprite':
-        return 'image';
-      default:
-        return className.toLowerCase();
+    // Handle by PIXI class type if still no name
+    if (!baseName) {
+      const className = (obj as any).constructor?.name || 'Object';
+      switch (className) {
+        case 'Text':
+          baseName = 'text';
+          break;
+        case 'Graphics':
+          // Try to determine what kind of graphics this is
+          if ((obj as any).children && (obj as any).children.length > 1) {
+            baseName = 'group';
+          } else {
+            baseName = 'graphic';
+          }
+          break;
+        case 'Container':
+          if ((obj as any).children && (obj as any).children.length > 1) {
+            baseName = 'group';
+          } else {
+            baseName = 'container';
+          }
+          break;
+        case 'Sprite':
+          baseName = 'image';
+          break;
+        default:
+          baseName = className.toLowerCase();
+      }
     }
+    
+    // Fallback if still no name
+    if (!baseName) {
+      baseName = 'object';
+    }
+    
+    // Add trajectory indicator if the object has a trajectory
+    if (hasTrajectory) {
+      baseName += ' (trajectory)';
+    }
+    
+    return baseName;
   }
   
   private getShapeName(shapeType: string): string {
@@ -519,8 +588,11 @@ export class LayersPanel {
     // Allow animation scene objects - these should always show in layers
     if (obj.__sceneRef || obj.__sceneId || obj.name === 'AnimationScene') return true;
     
-    // Allow scene content containers - objects inside animation scenes
-    if (obj.__sceneContent || obj.__parentSceneId || obj.__inScene) return true;
+    // Allow objects inside animation scenes, but NOT the scene content containers themselves
+    if (obj.__parentSceneId || obj.__inScene) return true;
+    
+    // Exclude scene content containers - these are internal structure, not user objects
+    if (obj.__sceneContent && obj.name === 'SceneContent') return false;
     
     // Allow objects that have been assigned unique IDs for animation tracking
     if (obj.objectId) return true;

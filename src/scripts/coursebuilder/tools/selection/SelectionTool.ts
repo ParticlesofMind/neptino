@@ -44,7 +44,7 @@ export class SelectionTool extends BaseTool {
     super('selection', 'default');
     this.clipboardSvc = new SelectionClipboard({
       getSelected: () => this.selected,
-      setSelected: (arr) => { this.selected = arr; },
+      setSelected: (arr) => { this.selected = arr; this.updateObjectSelectionStates(); },
       getContainer: () => this.container || this.displayManager?.getRoot() || null,
       displayManager: this.displayManager,
     });
@@ -126,6 +126,7 @@ export class SelectionTool extends BaseTool {
     }
     if (textClickResult.clickedObject) {
       const action = this.click.getSelectionAction(textClickResult.clickedObject, this.selected, event.shiftKey); this.selected = this.click.applySelectionAction(action, this.selected); this.overlay.refresh(this.selected, container);
+      this.updateObjectSelectionStates();
       const bounds = this.overlay.getGroup()?.bounds; if (bounds && this.overlay.pointInRect(p, bounds)) { this.isDraggingGroup = true; this.mode = 'drag'; this.cursor = 'grabbing'; this.isDragging = true; this.dragStart.copyFrom(p); try { this.guides.update(container, this.selected, bounds); } catch {} }
       this.emitSelectionContext();
       return;
@@ -307,7 +308,7 @@ export class SelectionTool extends BaseTool {
     if (!this.isActive) return; const p = container.toLocal(event.global);
   if ((this.transformer as any).isActive && (this.transformer as any).isActive()) { this.transformer.end(); this.overlay.refreshBoundsOnly(container); this.rotateBaseRect = null; this.rotateCenter = null; this.rotateBaseAngle = 0; this.rotateStartRef = 0; this.isDragging = false; this.mode = 'idle'; this.cursor = 'default'; this.guides.clear(); return; }
     if (this.isDraggingGroup) { this.isDraggingGroup = false; }
-    if (this.marquee.isActive()) { this.selected = this.marquee.finish(p, container, this.click, this.selected); this.overlay.refresh(this.selected, container); }
+    if (this.marquee.isActive()) { this.selected = this.marquee.finish(p, container, this.click, this.selected); this.overlay.refresh(this.selected, container); this.updateObjectSelectionStates(); }
     this.mode = 'idle'; this.isDragging = false; this.cursor = 'default'; this.guides.clear(); this.emitSelectionContext();
   }
 
@@ -334,8 +335,8 @@ export class SelectionTool extends BaseTool {
   public onKeyDown(event: KeyboardEvent): void {
     if (!this.isActive) return; const key = event.key; const isMeta = event.metaKey || event.ctrlKey;
     if (isMeta && (key === 'c' || key === 'C')) { const ok = this.clipboardSvc.copy(); if (ok) { console.log('📋 COPY: selection copied'); event.preventDefault(); } else { console.log('📋 COPY: nothing copied'); } return; }
-    if (isMeta && (key === 'v' || key === 'V')) { const created = this.clipboardSvc.pasteAt(this.lastPointerGlobal || null); if (created.length) { this.selected = created; this.overlay.refresh(this.selected, this.container || this.displayManager?.getRoot()!); console.log(`📋 PASTE: created ${created.length} item(s)`); } else { console.log('📋 PASTE: clipboard empty or construct failed'); } event.preventDefault(); return; }
-    if (isMeta && (key === 'd' || key === 'D')) { const ok = this.clipboardSvc.copy(); if (ok) { const created = this.clipboardSvc.pasteAt(this.lastPointerGlobal || null); if (created.length) { this.selected = created; if (this.container) this.overlay.refresh(this.selected, this.container); console.log(`📄 DUPLICATE: ${created.length} item(s)`); } } event.preventDefault(); return; }
+    if (isMeta && (key === 'v' || key === 'V')) { const created = this.clipboardSvc.pasteAt(this.lastPointerGlobal || null); if (created.length) { this.selected = created; this.overlay.refresh(this.selected, this.container || this.displayManager?.getRoot()!); this.updateObjectSelectionStates(); console.log(`📋 PASTE: created ${created.length} item(s)`); } else { console.log('📋 PASTE: clipboard empty or construct failed'); } event.preventDefault(); return; }
+    if (isMeta && (key === 'd' || key === 'D')) { const ok = this.clipboardSvc.copy(); if (ok) { const created = this.clipboardSvc.pasteAt(this.lastPointerGlobal || null); if (created.length) { this.selected = created; if (this.container) this.overlay.refresh(this.selected, this.container); this.updateObjectSelectionStates(); console.log(`📄 DUPLICATE: ${created.length} item(s)`); } } event.preventDefault(); return; }
     if (isMeta && (key === 'x' || key === 'X')) { if (this.clipboardSvc.cut()) { this.overlay.clear(); console.log('✂️ CUT: selection cut'); } event.preventDefault(); return; }
     if (isMeta && (key === 'g' || key === 'G') && !event.shiftKey) { if (this.groupSelection()) { this.overlay.refresh(this.selected, this.container || this.displayManager?.getRoot()!); console.log('🧩 GROUP: grouped selection'); } event.preventDefault(); return; }
     if (isMeta && (key === 'g' || key === 'G') && event.shiftKey) { if (this.ungroupSelection()) { this.overlay.refresh(this.selected, this.container || this.displayManager?.getRoot()!); console.log('🧩 UNGROUP: ungrouped selection'); } event.preventDefault(); return; }
@@ -361,7 +362,7 @@ export class SelectionTool extends BaseTool {
         } catch {} 
       });
       
-      this.selected = []; this.overlay.clear();
+      this.selected = []; this.overlay.clear(); this.updateObjectSelectionStates();
       try {
         historyManager.push({
           label: 'Delete',
@@ -395,7 +396,7 @@ export class SelectionTool extends BaseTool {
         });
       } catch {}
       event.preventDefault(); return; }
-    if (key === 'Escape' && this.selected.length > 0) { this.selected = []; this.overlay.clear(); event.preventDefault(); return; }
+    if (key === 'Escape' && this.selected.length > 0) { this.selected = []; this.overlay.clear(); this.updateObjectSelectionStates(); event.preventDefault(); return; }
   }
 
   public updateSettings(settings: any): void { this.settings = { ...this.settings, ...settings }; }
@@ -420,9 +421,9 @@ export class SelectionTool extends BaseTool {
     if (changed && this.container) { this.overlay.refresh(this.selected, this.container); }
   }
   public copySelection(): boolean { return this.clipboardSvc.copy(); }
-  public pasteSelection(): boolean { const created = this.clipboardSvc.pasteAt(this.lastPointerGlobal || null); if (created.length) { this.selected = created; if (this.container) this.overlay.refresh(this.selected, this.container); return true; } return false; }
-  public groupSelection(): boolean { const r = this.grouping.group(this.selected, this.container, this.displayManager); if (r && this.container) { this.selected = r.newSelection; this.overlay.refresh(this.selected, this.container); return true; } return false; }
-  public ungroupSelection(): boolean { const r = this.grouping.ungroup(this.selected, this.container, this.displayManager); if (r && this.container) { this.selected = r.newSelection; this.overlay.refresh(this.selected, this.container); return true; } return false; }
+  public pasteSelection(): boolean { const created = this.clipboardSvc.pasteAt(this.lastPointerGlobal || null); if (created.length) { this.selected = created; if (this.container) this.overlay.refresh(this.selected, this.container); this.updateObjectSelectionStates(); return true; } return false; }
+  public groupSelection(): boolean { const r = this.grouping.group(this.selected, this.container, this.displayManager); if (r && this.container) { this.selected = r.newSelection; this.overlay.refresh(this.selected, this.container); this.updateObjectSelectionStates(); return true; } return false; }
+  public ungroupSelection(): boolean { const r = this.grouping.ungroup(this.selected, this.container, this.displayManager); if (r && this.container) { this.selected = r.newSelection; this.overlay.refresh(this.selected, this.container); this.updateObjectSelectionStates(); return true; } return false; }
 
   // Layer and lock helpers
   private toggleLock(): void {
@@ -491,4 +492,17 @@ export class SelectionTool extends BaseTool {
   }
 
   private emitSelectionContext(): void { try { const type = determineSelectionType(this.selected); const detail = { type, count: this.selected.length } as any; const evt = new CustomEvent('selection:context', { detail }); document.dispatchEvent(evt); } catch {} }
+
+  private updateObjectSelectionStates(): void {
+    // Get all scenes from animation state and update their selection status
+    try {
+      const scenes = animationState.getScenes();
+      scenes.forEach(scene => {
+        const isSelected = this.selected.includes(scene.getRoot());
+        scene.setSelected(isSelected);
+      });
+    } catch (error) {
+      console.warn('Failed to update scene selection states:', error);
+    }
+  }
 }

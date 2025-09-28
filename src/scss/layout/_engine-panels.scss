@@ -1,0 +1,244 @@
+// ==========================================================================
+// ENGINE PANELS - MEDIA, SEARCH, CANVAS, PANEL COMPONENTS
+// ==========================================================================
+
+.engine {
+    // Media panel - First column
+    &__media {
+        grid-column: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    }
+
+    // Media items
+    &__media-item {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-1);
+        width: 50px;
+        height: 50px;
+        align-items: center;
+        justify-content: center;
+        padding: var(--spacing-2);
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid var(--color-neutral-300);
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background: var(--color-primary-50);
+            border-color: var(--color-primary-300);
+            transform: translateY(-1px);
+        }
+
+        &--active {
+            background: #B3D7FF;
+            border-color: #9AC8FF;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    }
+
+    // Search panel - Second column
+    &__search {
+        grid-column: 2;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    }
+
+    // Canvas area - Third column
+    &__canvas {
+        grid-column: 3;
+        background: var(--color-background);
+        overflow: auto;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        position: relative;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        border-radius: var(--radius-large);
+        border: 1px solid var(--color-neutral-200);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05),
+        0 1px 2px rgba(0, 0, 0, 0.1);
+        outline: none;
+
+        canvas {
+            justify-self: center;
+            align-self: start;
+        }
+    }
+
+    // Panel container - Fourth column
+    &__panel {
+        grid-column: 4;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+
+        @media (max-width: 1200px) {
+            display: none;
+        }
+    }
+
+    // Panel header with tabs
+    &__panel-header {
+        display: flex;
+        background: var(--color-neutral-100);
+        border-bottom: 1px solid var(--color-neutral-200);
+        border-radius: var(--radius-large) var(--radius-large) 0 0;
+    }
+
+    // Panel tab buttons
+    &__panel-tab {
+        flex: 1;
+        padding: var(--spacing-2) var(--spacing-3);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--color-neutral-600);
+        transition: all 0.2s ease;
+        border-bottom: 2px solid transparent;
+
+        &:hover {
+            background: var(--color-neutral-50);
+            color: var(--color-neutral-700);
+        }
+
+        &--active {
+            background: var(--color-background);
+            color: var(--color-neutral-900);
+            border-bottom-color: var(--color-primary-500);
+            font-weight: 600;
+        }
+
+        &:first-child {
+            border-top-left-radius: var(--radius-large);
+        }
+
+        &:last-child {
+            border-top-right-radius: var(--radius-large);
+        }
+    }
+
+    // Panel content area
+    &__panel-content {
+        flex: 1;
+        overflow-y: auto;
+        background: var(--color-background);
+        border-radius: 0 0 var(--radius-large) var(--radius-large);
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    }
+
+    // Individual panel views
+    &__panel-view {
+        display: none;
+        height: 100%;
+
+        &--active {
+            display: flex;
+            flex-direction: column;
+        }
+    }
+
+    // Legacy layers panel styling
+    &__layers {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    // Navigation panel styling
+    &__navigation {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: var(--spacing-3);
+        gap: var(--spacing-2);
+    }
+
+    // Search component
+    .search {
+        display: flex;
+        flex-direction: column;
+        padding: 1rem;
+        gap: 0.5rem;
+
+        &__input {
+            padding: 1rem;
+            width: 85%;
+        }
+
+        &__panel {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-2);
+            min-height: 0;
+        }
+
+        &__filters {
+            display: flex;
+            gap: var(--spacing-2);
+            flex-shrink: 0;
+        }
+
+        &__results {
+            overflow-y: auto;
+            display: grid;
+            gap: 0.5rem;
+            align-content: start;
+            align-items: start;
+            grid-auto-rows: max-content;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+
+            &::-webkit-scrollbar {
+                display: none;
+            }
+
+            @media (max-width: 1200px) {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+                gap: 12px;
+            }
+
+            @media (max-width: 992px) {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 14px;
+                padding: 8px;
+            }
+
+            @media (max-width: 768px) {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+        }
+    }
+}

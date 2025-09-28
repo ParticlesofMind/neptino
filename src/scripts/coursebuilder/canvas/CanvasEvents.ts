@@ -250,7 +250,7 @@ export class CanvasEvents {
    * Determine if pointer move should be logged (avoid spam)
    */
   private shouldLogMove(toolName: string): boolean {
-    // Only log moves for tools that are actively drawing
+    // Only log moves for tools that are actively drawing/dragging
     const activeTool = this.toolManager.getActiveTool();
     
     if (toolName === 'pen') {
@@ -264,7 +264,12 @@ export class CanvasEvents {
     }
     
     if (toolName === 'selection') {
-      // Log selection moves when dragging
+      // Log selection moves only when actually dragging an object
+      return (activeTool as any)?.isDragging === true;
+    }
+    
+    if (toolName === 'path') {
+      // Log path moves only when dragging an object
       return (activeTool as any)?.isDragging === true;
     }
 

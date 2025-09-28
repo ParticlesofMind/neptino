@@ -54,6 +54,15 @@ interface ToolSettings {
     path?: {
         // Path options - trajectory adjustments handled directly on canvas
     };
+    modify?: {
+        fillColor?: string;
+        strokeColor?: string;
+        color?: string;
+        size?: number;
+        strokeWidth?: number;
+        scale?: { x: number; y: number };
+        alpha?: number;
+    };
 }
 
 interface IconState {
@@ -373,7 +382,7 @@ export class ToolStateManager {
         // Enforce allowed tools per mode
         const allowedByMode: Record<string, Set<string>> = {
             build: new Set(['selection','pen','brush','text','shapes','eraser','tables']),
-            animate: new Set(['selection','scene','path']),
+            animate: new Set(['selection','scene','path','modify']),
             workflow: new Set(['selection']),
             optimize: new Set(['selection'])
         } as any;
