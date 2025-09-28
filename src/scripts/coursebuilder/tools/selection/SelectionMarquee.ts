@@ -35,8 +35,9 @@ export class SelectionMarquee {
     for (const child of children) {
       if (!click.isSelectableObject(child)) continue;
       try {
-        const b = child.getBounds();
-        if (this.intersects(r, b)) picked.push(child);
+        const bounds = this.toContainerSpaceBounds(child, container);
+        if (!bounds) continue;
+        if (this.containsRect(r, bounds)) picked.push(child);
       } catch {}
     }
     if (this.gfx && this.gfx.parent) this.gfx.parent.removeChild(this.gfx);
@@ -56,8 +57,35 @@ export class SelectionMarquee {
     return new Rectangle(x, y, w, h);
   }
 
-  private intersects(a: Rectangle, wb: any): boolean {
-    const x2 = wb.x + wb.width; const y2 = wb.y + wb.height;
-    return !(x2 < a.x || wb.x > a.x + a.width || y2 < a.y || wb.y > a.y + a.height);
+  private toContainerSpaceBounds(child: any, container: Container): Rectangle | null {
+    try {
+      const worldBounds = child.getBounds?.();
+      if (!worldBounds) return null;
+
+      const topLeft = container.toLocal(new Point(worldBounds.x, worldBounds.y));
+      const bottomRight = container.toLocal(new Point(worldBounds.x + worldBounds.width, worldBounds.y + worldBounds.height));
+
+      const x = Math.min(topLeft.x, bottomRight.x);
+      const y = Math.min(topLeft.y, bottomRight.y);
+      const width = Math.abs(bottomRight.x - topLeft.x);
+      const height = Math.abs(bottomRight.y - topLeft.y);
+
+      if (!Number.isFinite(width) || !Number.isFinite(height) || width < 0.01 || height < 0.01) {
+        return null;
+      }
+
+      return new Rectangle(x, y, width, height);
+    } catch {
+      return null;
+    }
+  }
+
+  private containsRect(containerRect: Rectangle, candidate: Rectangle): boolean {
+    const epsilon = 0.5;
+    const withinX = candidate.x >= containerRect.x - epsilon &&
+      candidate.x + candidate.width <= containerRect.x + containerRect.width + epsilon;
+    const withinY = candidate.y >= containerRect.y - epsilon &&
+      candidate.y + candidate.height <= containerRect.y + containerRect.height + epsilon;
+    return withinX && withinY;
   }
 }

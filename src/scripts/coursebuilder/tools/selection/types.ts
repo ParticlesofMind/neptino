@@ -22,11 +22,25 @@ export interface TransformHandle {
   center?: Point; // handle center in parent container local coordinates
 }
 
+export interface SelectionFrame {
+ center: Point;
+ width: number;
+ height: number;
+ rotation: number;
+ corners: {
+  tl: Point;
+  tr: Point;
+  br: Point;
+  bl: Point;
+ };
+}
+
 export interface SelectionGroup {
  objects: any[];
  bounds: Rectangle;
  transformHandles: TransformHandle[];
  selectionBox: Graphics;
+ frame: SelectionFrame;
 }
 
 export interface SelectionState {

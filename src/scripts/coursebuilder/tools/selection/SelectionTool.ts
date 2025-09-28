@@ -35,6 +35,10 @@ export class SelectionTool extends BaseTool {
   private lastPointerGlobal: Point | null = null;
   // Sticky snap state during drag so alignment feels "magnetic"
   private snapLock: { x?: number; y?: number; targetX?: 'left' | 'center' | 'right'; targetY?: 'top' | 'center' | 'bottom' } = {};
+  private rotateBaseRect: Rectangle | null = null;
+  private rotateCenter: Point | null = null;
+  private rotateStartRef = 0;
+  private rotateBaseAngle = 0;
 
   constructor() {
     super('selection', 'default');
@@ -89,7 +93,18 @@ export class SelectionTool extends BaseTool {
     if (handle && group) {
       this.mode = handle.type === 'rotation' ? 'rotate' : 'scale'; this.cursor = this.cursorForHandle(handle); this.isDragging = true;
       if (handle.type === 'rotation') {
-        const b = group.bounds.clone(); const cx = b.x + b.width * 0.5; const cy = b.y + b.height * 0.5; const dx0 = p.x - cx; const dy0 = p.y - cy; (this as any)._rotateStartRef = Math.atan2(dy0, dx0); (this as any)._rotateBase = b; (this as any)._rotateCenter = new Point(cx, cy);
+        const frame = group.frame;
+        const bounds = group.bounds.clone();
+        const cx = frame?.center.x ?? bounds.x + bounds.width * 0.5;
+        const cy = frame?.center.y ?? bounds.y + bounds.height * 0.5;
+        const dx0 = p.x - cx; const dy0 = p.y - cy;
+        this.rotateStartRef = Math.atan2(dy0, dx0);
+        this.rotateCenter = new Point(cx, cy);
+        const baseWidth = frame?.width ?? bounds.width;
+        const baseHeight = frame?.height ?? bounds.height;
+        this.rotateBaseRect = new Rectangle(0, 0, baseWidth, baseHeight);
+        this.rotateBaseAngle = frame?.rotation ?? 0;
+        this.overlay.setRotationState(this.rotateCenter, this.rotateBaseRect, this.rotateBaseAngle);
       }
       this.transformer.begin(
         this.selected,
@@ -125,15 +140,16 @@ export class SelectionTool extends BaseTool {
     if ((this.transformer as any).isActive && (this.transformer as any).isActive()) {
       this.transformer.update(p, { shiftKey: event.shiftKey, altKey: (event as any).altKey, ctrlKey: (event as any).ctrlKey || (event as any).metaKey });
       const mode = this.mode; const group = this.overlay.getGroup();
-      if (mode === 'rotate' && (this as any)._rotateCenter && (this as any)._rotateBase && group) {
-        const cx = (this as any)._rotateCenter.x; const cy = (this as any)._rotateCenter.y; const dx = p.x - cx; const dy = p.y - cy; const currentAngle = Math.atan2(dy, dx); 
-        let delta = currentAngle - (this as any)._rotateStartRef; 
+      if (mode === 'rotate' && this.rotateCenter && this.rotateBaseRect && group) {
+        const cx = this.rotateCenter.x; const cy = this.rotateCenter.y; const dx = p.x - cx; const dy = p.y - cy; const currentAngle = Math.atan2(dy, dx); 
+        let delta = currentAngle - this.rotateStartRef; 
         // Apply same snapping logic as TransformController when shift is held
         if (event.shiftKey) {
           const rotationSnapRad = 15 * Math.PI / 180; // 15 degrees in radians
           delta = Math.round(delta / rotationSnapRad) * rotationSnapRad;
         }
-        this.overlay.setRotationPreview(new Point(cx, cy), (this as any)._rotateBase, delta);
+        const previewAngle = this.rotateBaseAngle + delta;
+        this.overlay.setRotationPreview(new Point(cx, cy), this.rotateBaseRect, previewAngle);
       } else { 
         this.overlay.refreshBoundsOnly(container); 
         const b = this.overlay.getGroup()?.bounds; 
@@ -289,7 +305,7 @@ export class SelectionTool extends BaseTool {
 
   public onPointerUp(event: FederatedPointerEvent, container: Container): void {
     if (!this.isActive) return; const p = container.toLocal(event.global);
-    if ((this.transformer as any).isActive && (this.transformer as any).isActive()) { this.transformer.end(); this.overlay.refreshBoundsOnly(container); this.isDragging = false; this.mode = 'idle'; this.cursor = 'default'; this.guides.clear(); return; }
+  if ((this.transformer as any).isActive && (this.transformer as any).isActive()) { this.transformer.end(); this.overlay.refreshBoundsOnly(container); this.rotateBaseRect = null; this.rotateCenter = null; this.rotateBaseAngle = 0; this.rotateStartRef = 0; this.isDragging = false; this.mode = 'idle'; this.cursor = 'default'; this.guides.clear(); return; }
     if (this.isDraggingGroup) { this.isDraggingGroup = false; }
     if (this.marquee.isActive()) { this.selected = this.marquee.finish(p, container, this.click, this.selected); this.overlay.refresh(this.selected, container); }
     this.mode = 'idle'; this.isDragging = false; this.cursor = 'default'; this.guides.clear(); this.emitSelectionContext();

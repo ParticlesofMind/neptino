@@ -48,6 +48,10 @@ export class CourseBuilderNavigation {
  this.handleHashChange();
  });
 
+ window.addEventListener('popstate', (event) => {
+ this.handlePopState(event);
+ });
+
  // Next button functionality
  if (this.nextButton) {
  this.nextButton.addEventListener('click', () => {
@@ -71,16 +75,34 @@ export class CourseBuilderNavigation {
  } else {
  this.currentSection = 'setup';
  if (!hash) {
- history.replaceState(null, '', '#setup');
+ this.updateHistoryState(this.currentSection, 'replace');
  }
  }
  this.activateSection(this.currentSection);
+ this.updateHistoryState(this.currentSection, 'replace');
  }
 
  private handleHashChange(): void {
  const hash = window.location.hash.substring(1);
  if (hash && this.isValidSection(hash)) {
  this.currentSection = hash;
+ this.activateSection(this.currentSection);
+ this.updateButtons();
+ this.updateHistoryState(this.currentSection, 'replace');
+ }
+ }
+
+ private handlePopState(event: PopStateEvent): void {
+ const stateSection = (event.state && event.state.sectionId) as string | undefined;
+ const hashSection = window.location.hash.substring(1);
+ const targetSection = stateSection || (hashSection && this.isValidSection(hashSection) ? hashSection : undefined);
+
+ if (targetSection && this.isValidSection(targetSection)) {
+ this.currentSection = targetSection;
+ this.activateSection(this.currentSection);
+ this.updateButtons();
+ } else if (!hashSection) {
+ this.currentSection = 'setup';
  this.activateSection(this.currentSection);
  this.updateButtons();
  }
@@ -93,8 +115,6 @@ export class CourseBuilderNavigation {
  private activateSection(sectionId: string): void {
  
  // Get all coursebuilder sections
- const allSections = document.querySelectorAll('[class*="coursebuilder__"]');
- 
  // Hide all coursebuilder elements
  this.sections.forEach(element => {
  element.classList.remove('coursebuilder__setup--active', 'coursebuilder__create--active', 'coursebuilder__preview--active', 'coursebuilder__launch--active');
@@ -113,9 +133,8 @@ export class CourseBuilderNavigation {
  new AsideNavigation();
  }, 50); // Small delay to ensure DOM is ready
  }
- 
- // Additional debugging - check computed styles
- const computedStyle = window.getComputedStyle(targetElement);
+
+      this.resetScrollPosition();
  } else {
  console.error(`❌ Coursebuilder element not found: ${sectionId}`);
  }
@@ -145,9 +164,15 @@ export class CourseBuilderNavigation {
  }
 
  private navigateToSection(sectionId: string): void {
- if (this.isValidSection(sectionId)) {
- window.location.hash = sectionId;
+ if (!this.isValidSection(sectionId) || sectionId === this.currentSection) {
+ return;
  }
+
+ this.updateHistoryState(sectionId, 'push');
+
+ this.currentSection = sectionId;
+ this.activateSection(this.currentSection);
+ this.updateButtons();
  }
 
  private updateButtons(): void {
@@ -194,6 +219,44 @@ export class CourseBuilderNavigation {
  };
  return displayNames[sectionId] || sectionId;
  }
+
+  private resetScrollPosition(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const reset = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+
+      if (typeof document !== 'undefined') {
+        if (document.body) {
+          document.body.scrollTop = 0;
+        }
+        if (document.documentElement) {
+          document.documentElement.scrollTop = 0;
+        }
+      }
+    };
+
+    reset();
+    requestAnimationFrame(reset);
+    setTimeout(reset, 50);
+  }
+
+  private updateHistoryState(sectionId: string, mode: 'push' | 'replace'): void {
+    if (typeof window === 'undefined' || typeof history === 'undefined') {
+      return;
+    }
+
+    const url = new URL(window.location.href);
+    url.hash = sectionId;
+
+    if (mode === 'push') {
+      history.pushState({ sectionId }, '', url);
+    } else {
+      history.replaceState({ sectionId }, '', url);
+    }
+  }
 }
 
 /**
