@@ -50,7 +50,7 @@ export class ShapesTool extends BaseTool {
             fillEnabled: false,
             shapeType: "rectangle",
 
-            sides: 6, // For hexagon default
+            points: 5, // For star default
         };
 
         // Bind keyboard events for proportional drawing
@@ -258,8 +258,8 @@ export class ShapesTool extends BaseTool {
                     fillEnabled: this.settings.fillEnabled,
                     fillColor: this.settings.fillColor,
                 };
-                if (this.settings.shapeType === 'polygon' && this.settings.sides) {
-                    meta.sides = this.settings.sides;
+                if (this.settings.shapeType === 'star' && this.settings.points) {
+                    meta.points = this.settings.points;
                 }
                 (this.currentShape as any).__toolType = 'shapes';
                 (this.currentShape as any).__meta = meta;
@@ -313,9 +313,9 @@ export class ShapesTool extends BaseTool {
 
 
 
-        // Configure polygon drawer
-        if (this.settings.shapeType === "polygon" && this.settings.sides) {
-            this.drawerFactory.getPolygonDrawer().setSides(this.settings.sides);
+        // Configure star drawer
+        if (this.settings.shapeType === "star" && this.settings.points) {
+            this.drawerFactory.getStarDrawer().setPoints(this.settings.points);
         }
     }
 
@@ -487,8 +487,8 @@ export class ShapesTool extends BaseTool {
 
 
 
-    setPolygonSides(sides: number): void {
-        this.settings.sides = Math.max(3, sides);
+    setStarPoints(points: number): void {
+        this.settings.points = Math.max(3, points);
     }
 
     toggleFill(): void {

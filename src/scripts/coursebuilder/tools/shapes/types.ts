@@ -10,14 +10,30 @@ export interface ShapesSettings {
     fillEnabled: boolean;
     shapeType:
         | "rectangle"
+        | "square"
         | "triangle" 
         | "circle"
         | "ellipse"
+        | "rhombus"
+        | "parallelogram"
+        | "trapezoid"
+        | "pentagon"
+        | "hexagon"
+        | "octagon"
+        | "star"
+        | "sphere"
+        | "cube"
+        | "cuboid"
+        | "cylinder"
+        | "cone"
+        | "pyramid"
+        | "torus"
+        | "prism"
         | "line"
-        | "arrow"
-        | "polygon";
+        | "arrow";
 
-    sides?: number; // For polygons
+    sides?: number; // For polygons (deprecated, use specific shape types instead)
+    points?: number; // For stars
 }
 
 export interface ShapeDrawingContext {

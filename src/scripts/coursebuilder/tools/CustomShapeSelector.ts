@@ -19,10 +19,16 @@ export class CustomShapeSelector {
 
   // Available shapes
   private shapes: ShapeOption[] = [
+    // Basic 2D shapes
     { 
       name: 'Rectangle', 
       value: 'rectangle', 
       icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-rectangle.svg' 
+    },
+    { 
+      name: 'Square', 
+      value: 'square', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-square.svg' 
     },
     { 
       name: 'Triangle', 
@@ -35,6 +41,94 @@ export class CustomShapeSelector {
       icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-circle.svg' 
     },
     { 
+      name: 'Ellipse', 
+      value: 'ellipse', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-ellipse.svg' 
+    },
+    
+    // Quadrilaterals
+    { 
+      name: 'Rhombus', 
+      value: 'rhombus', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-rhombus.svg' 
+    },
+    { 
+      name: 'Parallelogram', 
+      value: 'parallelogram', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-parallelogram.svg' 
+    },
+    { 
+      name: 'Trapezoid', 
+      value: 'trapezoid', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-trapezoid.svg' 
+    },
+    
+    // Polygons
+    { 
+      name: 'Pentagon', 
+      value: 'pentagon', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-pentagon.svg' 
+    },
+    { 
+      name: 'Hexagon', 
+      value: 'hexagon', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-hexagon.svg' 
+    },
+    { 
+      name: 'Octagon', 
+      value: 'octagon', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-octagon.svg' 
+    },
+    { 
+      name: 'Star', 
+      value: 'star', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-star.svg' 
+    },
+    
+    // 3D shapes
+    { 
+      name: 'Sphere', 
+      value: 'sphere', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-sphere.svg' 
+    },
+    { 
+      name: 'Cube', 
+      value: 'cube', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-cube.svg' 
+    },
+    { 
+      name: 'Cuboid', 
+      value: 'cuboid', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-cuboid.svg' 
+    },
+    { 
+      name: 'Cylinder', 
+      value: 'cylinder', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-cylinder.svg' 
+    },
+    { 
+      name: 'Cone', 
+      value: 'cone', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-cone.svg' 
+    },
+    { 
+      name: 'Pyramid', 
+      value: 'pyramid', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-pyramid.svg' 
+    },
+    { 
+      name: 'Torus', 
+      value: 'torus', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-torus.svg' 
+    },
+    { 
+      name: 'Prism', 
+      value: 'prism', 
+      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-prism.svg' 
+    },
+    
+    // Lines and arrows
+    { 
       name: 'Line', 
       value: 'line', 
       icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-line.svg' 
@@ -43,11 +137,6 @@ export class CustomShapeSelector {
       name: 'Arrow', 
       value: 'arrow', 
       icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-arrow.svg' 
-    },
-    { 
-      name: 'Polygon', 
-      value: 'polygon', 
-      icon: '/src/assets/icons/coursebuilder/tools/shapes/shape-polygon.svg' 
     }
   ];
 

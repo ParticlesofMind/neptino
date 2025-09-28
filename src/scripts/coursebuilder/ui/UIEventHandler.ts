@@ -397,12 +397,27 @@ export class UIEventHandler {
         this.toolStateManager.updateToolSettings('shapes', {
             shapeType: shapeType as
                 | 'rectangle'
+                | 'square'
                 | 'triangle'
                 | 'circle'
                 | 'ellipse'
+                | 'rhombus'
+                | 'parallelogram'
+                | 'trapezoid'
+                | 'pentagon'
+                | 'hexagon'
+                | 'octagon'
+                | 'star'
+                | 'sphere'
+                | 'cube'
+                | 'cuboid'
+                | 'cylinder'
+                | 'cone'
+                | 'pyramid'
+                | 'torus'
+                | 'prism'
                 | 'line'
-                | 'arrow'
-                | 'polygon',
+                | 'arrow',
         });
 
         // Ensure the canvas gets the updated shape settings immediately
