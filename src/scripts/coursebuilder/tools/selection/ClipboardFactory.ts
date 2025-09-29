@@ -19,8 +19,10 @@ export function createBrushFromMeta(meta: any, offset: number): Graphics | null 
   if (!meta || !meta.points || meta.points.length < 2) return null;
   const gfx = new Graphics(); const color = colorToNumber(meta.color) ?? 0x000000; const width = Math.max(1, meta.size ?? 2);
   const pts = meta.points.map((p: any) => ({ x: (p.x || 0) + offset, y: (p.y || 0) + offset }));
+  const alpha = typeof meta.opacity === 'number' ? Math.max(0, Math.min(1, meta.opacity)) : 1;
   gfx.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) gfx.lineTo(pts[i].x, pts[i].y);
-  gfx.stroke({ width, color, cap: 'round', join: 'round' }); try { meta.points = pts; } catch {}
+  gfx.stroke({ width, color, cap: 'round', join: 'round' }); gfx.alpha = alpha;
+  try { meta.points = pts; meta.opacity = alpha; } catch {}
   return gfx;
 }
 

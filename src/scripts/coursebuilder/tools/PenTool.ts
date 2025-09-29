@@ -65,6 +65,27 @@ export class PenTool extends BaseTool {
  };
  }
 
+ private markAsPenControl(graphic: Graphics | null | undefined, label: string = ''): void {
+ if (!graphic) {
+ return;
+ }
+ try {
+ graphic.eventMode = 'none';
+ (graphic as any).interactive = false;
+ (graphic as any).interactiveChildren = false;
+ } catch {}
+ const suffix = label ? `-${label}` : '';
+ try {
+ graphic.name = `pen-control${suffix}`;
+ } catch {}
+ try {
+ (graphic as any).__penControl = true;
+ if ((graphic as any).__toolType) {
+ delete (graphic as any).__toolType;
+ }
+ } catch {}
+ }
+
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
  // 🔒 CRITICAL: Only respond if this tool is active
  if (!this.isActive) {
@@ -165,6 +186,21 @@ export class PenTool extends BaseTool {
 
  // Check if we're continuing an existing path or starting a new one
  if (this.currentPath && this.currentPath.nodes.length > 0) {
+   // Illustrator-style handle reset: clicking the last node removes its outgoing handle
+   if (!this.isEditingExistingPath) {
+     const lastNode = this.currentPath.nodes[this.currentPath.nodes.length - 1];
+     const distToLast = Math.hypot(
+       clampedPoint.x - lastNode.position.x,
+       clampedPoint.y - lastNode.position.y,
+     );
+     if (distToLast <= PenTool.NODE_HIT_TOLERANCE) {
+       this.resetOutgoingHandle(lastNode, container);
+       this.updatePathGraphics();
+       this.updatePreviewLine(container);
+       return;
+     }
+   }
+
   // Check if clicking near the first node to close the path
   const firstNode = this.currentPath.nodes[0];
  const distance = Math.sqrt(
@@ -316,6 +352,7 @@ export class PenTool extends BaseTool {
 
  // If pointer is down on the last placed node, interpret as handle dragging
  if (this.isPointerDown && this.activeDragNode && this.dragStartAtNode) {
+   const node = this.activeDragNode;
    const dx = clampedPoint.x - this.dragStartAtNode.x;
    const dy = clampedPoint.y - this.dragStartAtNode.y;
    const dist = Math.hypot(dx, dy);
@@ -325,8 +362,6 @@ export class PenTool extends BaseTool {
 
    if (this.isDraggingHandles) {
      // Create handles based on the node's point type
-     const node = this.activeDragNode;
-     
      if (node.pointType === VectorPointType.Mirrored) {
        // Mirrored: both handles same length, opposite direction
        const outX = node.position.x + dx;
@@ -345,6 +380,7 @@ export class PenTool extends BaseTool {
          node.pointType = VectorPointType.Smooth;
        }
      }
+     this.autoAssignPreviousHandle(node, dx, dy, container);
      
      this.updateHandleGraphics(node, container);
      this.updateNodeVisuals(node);
@@ -399,9 +435,9 @@ export class PenTool extends BaseTool {
    color: 0xffffff,
  });
  nodeGraphics.position.set(position.x, position.y);
- nodeGraphics.eventMode = "static";
 
  container.addChild(nodeGraphics);
+ this.markAsPenControl(nodeGraphics, 'node');
 
  // Create node object
  const node: VectorNode = {
@@ -449,13 +485,7 @@ export class PenTool extends BaseTool {
   for (let i = 1; i < this.currentPath.nodes.length; i++) {
     const prev = this.currentPath.nodes[i - 1];
     const curr = this.currentPath.nodes[i];
-    const c1 = prev.handleOut ?? null;
-    const c2 = curr.handleIn ?? null;
-    if (c1 && c2) {
-      path.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, curr.position.x, curr.position.y);
-    } else {
-      path.lineTo(curr.position.x, curr.position.y);
-    }
+    this.drawSegment(path, prev, curr);
   }
   // Only apply stroke during the drawing process (not fill)
   // The fill will be applied when the path is completed and closed
@@ -491,8 +521,11 @@ export class PenTool extends BaseTool {
 
   if (!this.previewLine) {
   this.previewLine = new Graphics();
+  this.markAsPenControl(this.previewLine, 'preview');
   this.previewLine.alpha = PEN_CONSTANTS.PREVIEW_LINE_ALPHA;
   container.addChild(this.previewLine);
+  } else {
+  this.markAsPenControl(this.previewLine, 'preview');
   }
 
  const lastNode = this.currentPath.nodes[this.currentPath.nodes.length - 1];
@@ -503,7 +536,18 @@ export class PenTool extends BaseTool {
 
   this.previewLine.clear();
   this.previewLine.moveTo(lastNode.position.x, lastNode.position.y);
-  this.previewLine.lineTo(this.lastMousePosition.x, this.lastMousePosition.y);
+  if (lastNode.handleOut) {
+    this.previewLine.bezierCurveTo(
+      lastNode.handleOut.x,
+      lastNode.handleOut.y,
+      lastNode.handleOut.x,
+      lastNode.handleOut.y,
+      this.lastMousePosition.x,
+      this.lastMousePosition.y,
+    );
+  } else {
+    this.previewLine.lineTo(this.lastMousePosition.x, this.lastMousePosition.y);
+  }
   this.previewLine.stroke({
     width: this.currentPath.settings.size,
     color: hexToNumber(this.currentPath.settings.strokeColor),
@@ -541,10 +585,12 @@ export class PenTool extends BaseTool {
         line = new Graphics();
         container.addChild(line);
       }
+      this.markAsPenControl(line, `handle-${kind}-line`);
       if (!knob) {
         knob = new Graphics();
         container.addChild(knob);
       }
+      this.markAsPenControl(knob, `handle-${kind}-knob`);
       // Style
       line.clear();
       line.moveTo(anchor.x, anchor.y);
@@ -560,6 +606,81 @@ export class PenTool extends BaseTool {
 
     node.handleInGraphics = drawHandle('in', node.position, node.handleIn, node.handleInGraphics || undefined);
     node.handleOutGraphics = drawHandle('out', node.position, node.handleOut, node.handleOutGraphics || undefined);
+  }
+
+  private autoAssignPreviousHandle(node: VectorNode, dx: number, dy: number, container: Container): void {
+    if (!this.currentPath || this.isEditingExistingPath) return;
+    const index = this.currentPath.nodes.indexOf(node);
+    if (index !== this.currentPath.nodes.length - 1 || index <= 0) return;
+    const prev = this.currentPath.nodes[index - 1];
+    if (!prev) return;
+    if (Math.abs(dx) < 0.001 && Math.abs(dy) < 0.001) return;
+    if (prev.handleOut && prev.pointType !== VectorPointType.Corner) {
+      return;
+    }
+
+    prev.handleOut = new Point(prev.position.x + dx, prev.position.y + dy);
+    if (!prev.handleIn) {
+      prev.handleIn = new Point(prev.position.x - dx, prev.position.y - dy);
+    }
+    if (prev.pointType === VectorPointType.Corner) {
+      prev.pointType = VectorPointType.Smooth;
+    }
+    this.updateHandleGraphics(prev, container);
+    this.updateNodeVisuals(prev);
+  }
+
+  private resetOutgoingHandle(node: VectorNode, container: Container): void {
+    if (!node) return;
+
+    node.handleOut = null;
+    node.handleOutGraphics = null;
+
+    // Breaking the outgoing handle converts the point to a corner for the next segment
+    node.pointType = VectorPointType.Corner;
+
+    this.updateHandleGraphics(node, container);
+    this.updateNodeVisuals(node);
+  }
+
+  private drawSegment(path: Graphics, prev: VectorNode, curr: VectorNode): void {
+    const c1 = prev.handleOut ?? null;
+    const c2 = curr.handleIn ?? null;
+    if (c1 && c2) {
+      path.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, curr.position.x, curr.position.y);
+    } else if (c1) {
+      path.bezierCurveTo(c1.x, c1.y, c1.x, c1.y, curr.position.x, curr.position.y);
+    } else if (c2) {
+      path.bezierCurveTo(c2.x, c2.y, c2.x, c2.y, curr.position.x, curr.position.y);
+    } else {
+      path.lineTo(curr.position.x, curr.position.y);
+    }
+  }
+
+  private ensureClosingHandles(): void {
+    if (!this.currentPath || this.currentPath.nodes.length < 2) return;
+    const nodes = this.currentPath.nodes;
+    const first = nodes[0];
+    const last = nodes[nodes.length - 1];
+    if (!first || !last) return;
+
+    if (last.handleOut && (!first.handleIn || first.pointType === VectorPointType.Corner)) {
+      const dx = last.handleOut.x - last.position.x;
+      const dy = last.handleOut.y - last.position.y;
+      first.handleIn = new Point(first.position.x - dx, first.position.y - dy);
+      if (first.pointType === VectorPointType.Corner) {
+        first.pointType = VectorPointType.Smooth;
+      }
+    }
+
+    if (first.handleIn && (!last.handleOut || last.pointType === VectorPointType.Corner)) {
+      const dx = first.position.x - first.handleIn.x;
+      const dy = first.position.y - first.handleIn.y;
+      last.handleOut = new Point(last.position.x + dx, last.position.y + dy);
+      if (last.pointType === VectorPointType.Corner) {
+        last.pointType = VectorPointType.Smooth;
+      }
+    }
   }
 
  /**
@@ -591,6 +712,7 @@ export class PenTool extends BaseTool {
  */
  private showHoverIndicator(position: Point, container: Container): void {
  this.hoverIndicator = new Graphics();
+ this.markAsPenControl(this.hoverIndicator, 'hover');
  
  // Create a subtle, desaturated green circle (no blinking)
  this.hoverIndicator.circle(0, 0, PEN_CONSTANTS.NODE_SIZE + 2);
@@ -628,6 +750,7 @@ export class PenTool extends BaseTool {
  private showSnapIndicator(position: Point, container: Container): void {
    if (!this.snapIndicator) {
      this.snapIndicator = new Graphics();
+     this.markAsPenControl(this.snapIndicator, 'snap');
      this.snapIndicator.zIndex = 2000;
      container.addChild(this.snapIndicator);
    }
@@ -646,7 +769,9 @@ export class PenTool extends BaseTool {
  private completePath(closeShape: boolean = false): void {
  if (!this.currentPath) return;
 
-  if (closeShape && this.currentPath.nodes.length >= 3) {
+  if (closeShape && this.currentPath.nodes.length >= 2) {
+ // Ensure first and last nodes have mirrored handles for smooth closure
+ this.ensureClosingHandles();
  // Create a new graphics object for the final filled shape
  const finalShape = new Graphics();
  const strokeColorToUse = this.currentPath.settings.strokeColor;
@@ -659,25 +784,13 @@ export class PenTool extends BaseTool {
  for (let i = 1; i < this.currentPath.nodes.length; i++) {
    const prev = this.currentPath.nodes[i - 1];
    const curr = this.currentPath.nodes[i];
-   const c1 = prev.handleOut ?? null;
-   const c2 = curr.handleIn ?? null;
-   if (c1 && c2) {
-     finalShape.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, curr.position.x, curr.position.y);
-   } else {
-     finalShape.lineTo(curr.position.x, curr.position.y);
-   }
+   this.drawSegment(finalShape, prev, curr);
  }
  
  // Close the path back to the first node
  // If last->first has handles, use them for a smooth close
  const last = this.currentPath.nodes[this.currentPath.nodes.length - 1];
- const c1Close = last.handleOut ?? null;
- const c2Close = firstNode.handleIn ?? null;
- if (c1Close && c2Close) {
-   finalShape.bezierCurveTo(c1Close.x, c1Close.y, c2Close.x, c2Close.y, firstNode.position.x, firstNode.position.y);
- } else {
-   finalShape.lineTo(firstNode.position.x, firstNode.position.y);
- }
+ this.drawSegment(finalShape, last, firstNode);
  finalShape.closePath();
  
  // Apply fill first (if specified)
@@ -1095,6 +1208,15 @@ export class PenTool extends BaseTool {
     this.originalShapeForEdit = shape;
     try { shape.visible = false; } catch {}
 
+    const toContainerPoint = (coords: { x: number; y: number } | null) => {
+      if (!coords) {
+        return null;
+      }
+      const localPoint = new Point(coords.x, coords.y);
+      const globalPoint = shape.toGlobal(localPoint);
+      return container.toLocal(globalPoint);
+    };
+
     // Create a working path
     const workingPath: VectorPath = this.currentPath = {
       nodes: [],
@@ -1110,23 +1232,46 @@ export class PenTool extends BaseTool {
     (workingPath.pathGraphics as any).__toolType = 'pen';
     container.addChild(workingPath.pathGraphics);
 
-    // Recreate nodes and visuals
+    // Recreate nodes and visuals with transformed coordinates
     for (const n of meta.nodes as any[]) {
-      const pos = new Point(n.x, n.y);
+      const pos = toContainerPoint({ x: n.x, y: n.y }) ?? new Point(n.x, n.y);
+      const handleIn = toContainerPoint(n.in);
+      const handleOut = toContainerPoint(n.out);
+      let inferredPointType = VectorPointType.Corner;
+      if (handleIn && handleOut) {
+        const vxIn = pos.x - handleIn.x;
+        const vyIn = pos.y - handleIn.y;
+        const vxOut = handleOut.x - pos.x;
+        const vyOut = handleOut.y - pos.y;
+        const lenIn = Math.hypot(vxIn, vyIn);
+        const lenOut = Math.hypot(vxOut, vyOut);
+        if (lenIn > 0 && lenOut > 0) {
+          const dot = vxIn * vxOut + vyIn * vyOut;
+          const cosAngle = dot / (lenIn * lenOut);
+          if (Math.abs(cosAngle + 1) < 0.02 && Math.abs(lenIn - lenOut) < 0.5) {
+            inferredPointType = VectorPointType.Mirrored;
+          } else {
+            inferredPointType = VectorPointType.Smooth;
+          }
+        } else {
+          inferredPointType = VectorPointType.Smooth;
+        }
+      }
+
       const nodeGraphics = new Graphics();
       nodeGraphics.circle(0, 0, PEN_CONSTANTS.NODE_SIZE);
       nodeGraphics.fill({ color: PEN_CONSTANTS.NODE_COLOR });
       nodeGraphics.stroke({ width: PEN_CONSTANTS.NODE_STROKE_WIDTH, color: 0xffffff });
       nodeGraphics.position.set(pos.x, pos.y);
-      nodeGraphics.eventMode = 'static';
       container.addChild(nodeGraphics);
+  this.markAsPenControl(nodeGraphics, 'node');
 
       const node: VectorNode = {
         position: pos.clone(),
         graphics: nodeGraphics,
-        pointType: VectorPointType.Corner, // Default when recreating from metadata
-        handleIn: n.in ? new Point(n.in.x, n.in.y) : null,
-        handleOut: n.out ? new Point(n.out.x, n.out.y) : null,
+  pointType: inferredPointType,
+        handleIn: handleIn ?? (n.in ? new Point(n.in.x, n.in.y) : null),
+        handleOut: handleOut ?? (n.out ? new Point(n.out.x, n.out.y) : null),
         handleInGraphics: null,
         handleOutGraphics: null,
         isSelected: false,
@@ -1285,8 +1430,8 @@ export class PenTool extends BaseTool {
         color: 0xffffff,
       });
       nodeGraphics.position.set(nodeData.x, nodeData.y);
-      nodeGraphics.eventMode = "static";
       container.addChild(nodeGraphics);
+      this.markAsPenControl(nodeGraphics, 'node');
 
       const node: VectorNode = {
         position: new Point(nodeData.x, nodeData.y),
@@ -1531,7 +1676,8 @@ export class PenTool extends BaseTool {
    */
   private showPathJoinIndicator(position: Point, container: Container): void {
     if (!this.pathJoinIndicator) {
-      this.pathJoinIndicator = new Graphics();
+    this.pathJoinIndicator = new Graphics();
+    this.markAsPenControl(this.pathJoinIndicator, 'join');
       this.pathJoinIndicator.zIndex = 2000;
       container.addChild(this.pathJoinIndicator);
     }
@@ -1609,8 +1755,8 @@ export class PenTool extends BaseTool {
       color: 0xffffff,
     });
     nodeGraphics.position.set(position.x, position.y);
-    nodeGraphics.eventMode = "static";
     container.addChild(nodeGraphics);
+    this.markAsPenControl(nodeGraphics, 'node');
 
     // Create node object
     const node: VectorNode = {
@@ -1854,6 +2000,7 @@ export class PenTool extends BaseTool {
   private showBendModePreview(point: Point, container: Container): void {
     if (!this.bendModePreview) {
       this.bendModePreview = new Graphics();
+      this.markAsPenControl(this.bendModePreview, 'bend-preview');
       this.bendModePreview.zIndex = 1999;
       container.addChild(this.bendModePreview);
     }

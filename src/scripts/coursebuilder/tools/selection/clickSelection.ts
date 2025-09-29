@@ -113,6 +113,10 @@ const isTextDoubleClick = isDoubleClick && this.isTextObject(clickedObject);
       return false;
     }
 
+    if ((object as any).__penControl) {
+      return false;
+    }
+
     // Scenes themselves ARE selectable
     if ((object as any).__sceneRef) {
       return true;

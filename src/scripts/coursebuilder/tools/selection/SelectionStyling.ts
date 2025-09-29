@@ -23,10 +23,12 @@ export class SelectionStyling {
     if (!meta || !meta.points || meta.points.length < 2) return false;
     const color = colorToNumber(settings.color) ?? colorToNumber(meta.color) ?? 0x000000;
     const width = (settings.size ?? meta.size ?? 2) as number;
+    const opacity = typeof settings.opacity === 'number' ? Math.max(0, Math.min(1, settings.opacity)) : (typeof meta.opacity === 'number' ? Math.max(0, Math.min(1, meta.opacity)) : 1);
     gfx.clear(); gfx.moveTo(meta.points[0].x, meta.points[0].y);
     for (let i = 1; i < meta.points.length; i++) { const p = meta.points[i]; gfx.lineTo(p.x, p.y); }
     gfx.stroke({ width, color, cap: 'round', join: 'round' });
-    meta.size = width; meta.color = typeof settings.color === 'string' ? settings.color : meta.color; gfx.__meta = meta; return true;
+    gfx.alpha = opacity;
+    meta.size = width; meta.color = typeof settings.color === 'string' ? settings.color : meta.color; meta.opacity = opacity; gfx.__meta = meta; return true;
   }
 
   private restylePen(gfx: any, meta: any, settings: any): boolean {

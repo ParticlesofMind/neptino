@@ -62,7 +62,9 @@ export const FONT_FAMILIES = [
  * Convert hex color to PIXI number format
  */
 export function hexToNumber(hex: string): number {
- return parseInt(hex.replace("#", ""), 16);
+ const result = parseInt(hex.replace("#", ""), 16);
+ console.log(`🎨 hexToNumber: "${hex}" -> ${result} (0x${result.toString(16)})`);
+ return result;
 }
 
 /**
@@ -180,8 +182,8 @@ export const TEXT_CONSTANTS = {
  * Brush tool constants for authentic marker experience
  */
 export const BRUSH_CONSTANTS = {
- FIXED_OPACITY: 0.4, // Authentic marker transparency
- OVERLAP_OPACITY: 0.6, // When strokes overlap
+ FIXED_OPACITY: 0.65, // Authentic marker transparency (increased for better color vibrancy)
+ OVERLAP_OPACITY: 0.8, // When strokes overlap
  MIN_DISTANCE: 3, // Minimum distance between points for smoothing
  TEXTURE_VARIATION: 0.1, // Slight opacity variation for texture
  MARKER_TIP_STYLE: "round", // Always round like real markers

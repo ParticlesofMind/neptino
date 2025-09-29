@@ -353,6 +353,10 @@ export class PenPathEditor {
   private updatePathGraphics(): void {
     if (!this.workingPath || !this.settings || this.nodes.length === 0) return;
 
+    if (this.isClosed && this.nodes.length > 1) {
+      this.ensureClosingHandles();
+    }
+
     const path = this.workingPath;
     path.clear();
 
@@ -366,24 +370,12 @@ export class PenPathEditor {
     for (let i = 1; i < this.nodes.length; i++) {
       const prev = this.nodes[i - 1];
       const curr = this.nodes[i];
-      const c1 = prev.handleOut ?? null;
-      const c2 = curr.handleIn ?? null;
-      if (c1 && c2) {
-        path.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, curr.position.x, curr.position.y);
-      } else {
-        path.lineTo(curr.position.x, curr.position.y);
-      }
+      this.drawSegment(path, prev, curr);
     }
 
     if (this.isClosed && this.nodes.length > 2) {
       const last = this.nodes[this.nodes.length - 1];
-      const c1Close = last.handleOut ?? null;
-      const c2Close = first.handleIn ?? null;
-      if (c1Close && c2Close) {
-        path.bezierCurveTo(c1Close.x, c1Close.y, c2Close.x, c2Close.y, first.position.x, first.position.y);
-      } else {
-        path.lineTo(first.position.x, first.position.y);
-      }
+      this.drawSegment(path, last, first);
       path.closePath();
       const fill = this.settings.fillColor;
       if (fill && fill !== 'transparent' && fill !== '') {
@@ -399,6 +391,76 @@ export class PenPathEditor {
       cap: 'round',
       join: 'round',
     });
+  }
+
+  private drawSegment(path: Graphics, prev: VectorNode, curr: VectorNode): void {
+    const c1 = prev.handleOut ?? null;
+    const c2 = curr.handleIn ?? null;
+    if (c1 && c2) {
+      path.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, curr.position.x, curr.position.y);
+    } else if (c1) {
+      path.bezierCurveTo(c1.x, c1.y, c1.x, c1.y, curr.position.x, curr.position.y);
+    } else if (c2) {
+      path.bezierCurveTo(c2.x, c2.y, c2.x, c2.y, curr.position.x, curr.position.y);
+    } else {
+      path.lineTo(curr.position.x, curr.position.y);
+    }
+  }
+
+  private drawMetaSegment(path: Graphics, prev: PenShapeNodeMeta, curr: PenShapeNodeMeta): void {
+    const c1 = prev.out ?? null;
+    const c2 = curr.in ?? null;
+    if (c1 && c2) {
+      path.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, curr.x, curr.y);
+    } else if (c1) {
+      path.bezierCurveTo(c1.x, c1.y, c1.x, c1.y, curr.x, curr.y);
+    } else if (c2) {
+      path.bezierCurveTo(c2.x, c2.y, c2.x, c2.y, curr.x, curr.y);
+    } else {
+      path.lineTo(curr.x, curr.y);
+    }
+  }
+
+  private ensureClosingHandles(): void {
+    if (!this.isClosed || this.nodes.length < 2) return;
+    const container = this.container;
+    if (!container) return;
+    const first = this.nodes[0];
+    const last = this.nodes[this.nodes.length - 1];
+    if (!first || !last) return;
+
+    let updatedFirst = false;
+    let updatedLast = false;
+
+    if (last.handleOut && (!first.handleIn || first.pointType === VectorPointType.Corner)) {
+      const dx = last.handleOut.x - last.position.x;
+      const dy = last.handleOut.y - last.position.y;
+      first.handleIn = new Point(first.position.x - dx, first.position.y - dy);
+      if (first.pointType === VectorPointType.Corner) {
+        first.pointType = VectorPointType.Smooth;
+      }
+      updatedFirst = true;
+    }
+
+    if (first.handleIn && (!last.handleOut || last.pointType === VectorPointType.Corner)) {
+      const dx = first.position.x - first.handleIn.x;
+      const dy = first.position.y - first.handleIn.y;
+      last.handleOut = new Point(last.position.x + dx, last.position.y + dy);
+      if (last.pointType === VectorPointType.Corner) {
+        last.pointType = VectorPointType.Smooth;
+      }
+      updatedLast = true;
+    }
+
+    if (updatedFirst) {
+      this.updateHandleGraphics(first, container);
+      this.updateNodeVisuals(first);
+    }
+
+    if (updatedLast) {
+      this.updateHandleGraphics(last, container);
+      this.updateNodeVisuals(last);
+    }
   }
 
   private updateHandleGraphics(node: VectorNode, container: Container): void {
@@ -627,24 +689,12 @@ export class PenPathEditor {
     for (let i = 1; i < nodes.length; i++) {
       const prev = nodes[i - 1];
       const curr = nodes[i];
-      const c1 = prev.out ?? null;
-      const c2 = curr.in ?? null;
-      if (c1 && c2) {
-        shape.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, curr.x, curr.y);
-      } else {
-        shape.lineTo(curr.x, curr.y);
-      }
+      this.drawMetaSegment(shape, prev, curr);
     }
 
     if (meta.closed && nodes.length > 2) {
       const last = nodes[nodes.length - 1];
-      const c1Close = last.out ?? null;
-      const c2Close = first.in ?? null;
-      if (c1Close && c2Close) {
-        shape.bezierCurveTo(c1Close.x, c1Close.y, c2Close.x, c2Close.y, first.x, first.y);
-      } else {
-        shape.lineTo(first.x, first.y);
-      }
+      this.drawMetaSegment(shape, last, first);
       shape.closePath();
       if (meta.fillColor && meta.fillColor !== 'transparent' && meta.fillColor !== '') {
         try {

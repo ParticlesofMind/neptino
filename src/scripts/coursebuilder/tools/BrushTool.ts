@@ -18,6 +18,7 @@ import { historyManager } from "../canvas/HistoryManager.js";
 interface BrushSettings {
  color: string;
  size: number;
+ opacity?: number;
 }
 
 export class BrushTool extends BaseTool {
@@ -26,13 +27,16 @@ export class BrushTool extends BaseTool {
   private lastPoint: Point = new Point(0, 0);
   private strokePoints: Point[] = [];
   private constrainStart: Point | null = null; // anchor for shift-straight-line
+    private currentStrokeOpacity: number = BRUSH_CONSTANTS.FIXED_OPACITY;
 
  constructor() {
          super("brush", "url('/src/assets/cursors/brush-cursor.svg') 3 21, crosshair");
  this.settings = {
  color: BRUSH_COLORS[0], // Start with classic yellow
  size: STROKE_SIZES.BRUSH[1], // Start with 12px
+ opacity: BRUSH_CONSTANTS.FIXED_OPACITY,
  };
+ console.log(`🎨 BRUSH constructor: Initial settings=${JSON.stringify(this.settings)}`);
  }
 
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
@@ -46,7 +50,9 @@ export class BrushTool extends BaseTool {
  // Create new graphics object for this stroke with authentic marker properties
  this.currentStroke = createHighQualityGraphics();
  this.currentStroke.eventMode = "static";
- this.currentStroke.alpha = BRUSH_CONSTANTS.FIXED_OPACITY; // Fixed opacity like real markers
+ const baseOpacity = this.resolveOpacity();
+ this.currentStrokeOpacity = baseOpacity;
+ this.currentStroke.alpha = baseOpacity; // Fixed opacity like real markers
   // Tag for selection-based option routing
   (this.currentStroke as any).__toolType = 'brush';
 
@@ -80,7 +86,7 @@ export class BrushTool extends BaseTool {
  // Set stroke style with authentic marker characteristics
  const color = hexToNumber(this.settings.color);
  console.log(
- `🖍️ BRUSH: Setting high-quality marker stroke - color: ${color} (from ${this.settings.color}), width: ${this.settings.size}`,
+ `🎨 BRUSH onPointerDown: color=${this.settings.color} -> ${color} (hex: 0x${color.toString(16)}), width=${this.settings.size}, opacity=${baseOpacity}`,
  );
 
  // Start the drawing path - just moveTo, don't stroke yet
@@ -157,24 +163,34 @@ export class BrushTool extends BaseTool {
  this.currentStroke.lineTo(clampedLocal.x, clampedLocal.y);
  
  // Apply the stroke style
+ const previewColor = hexToNumber(this.settings.color);
+ console.log(
+   `🎨 BRUSH onPointerMove: PREVIEW stroke - color=${this.settings.color} -> ${previewColor} (hex: 0x${previewColor.toString(16)}), width=${this.settings.size}`
+ );
  this.currentStroke.stroke({
  width: this.settings.size,
- color: hexToNumber(this.settings.color),
+ color: previewColor,
  cap: "round",
  join: "round",
  });
  }
 
- // Add slight texture variation for authentic marker feel
+ // Add slight texture variation for authentic marker feel (preview only)
+ const baseOpacity = this.resolveOpacity();
  const opacityVariation =
  1 + (Math.random() - 0.5) * BRUSH_CONSTANTS.TEXTURE_VARIATION;
  const adjustedOpacity = Math.max(
- 0.3,
- Math.min(1, BRUSH_CONSTANTS.FIXED_OPACITY * opacityVariation),
+ 0,
+ Math.min(1, baseOpacity * opacityVariation),
  );
 
- // Apply subtle opacity variation
- this.currentStroke.alpha = adjustedOpacity;
+ // Apply subtle opacity variation to preview, but keep consistent base for final
+ this.currentStrokeOpacity = baseOpacity; // Use base opacity for final stroke
+ this.currentStroke.alpha = adjustedOpacity; // Use variation for preview
+ 
+ console.log(
+   `🎨 BRUSH onPointerMove: opacity - base=${baseOpacity}, variation=${opacityVariation.toFixed(3)}, adjusted=${adjustedOpacity.toFixed(3)}, final will use=${this.currentStrokeOpacity}`
+ );
 
  // Update tracking
  this.lastPoint.copyFrom(clampedLocal);
@@ -194,7 +210,69 @@ export class BrushTool extends BaseTool {
 
     // Apply final authentic marker properties
     if (this.currentStroke) {
-      this.currentStroke.alpha = BRUSH_CONSTANTS.FIXED_OPACITY;
+      // 🎨 CRITICAL FIX: Re-apply the final stroke style to ensure color consistency
+      // Clear and redraw the final stroke with exact settings
+      console.log(`🎨 BRUSH onPointerUp: STARTING FINAL STROKE RENDERING`);
+      console.log(`🎨 BRUSH onPointerUp: settings.color=${this.settings.color}, final opacity=${this.currentStrokeOpacity}`);
+      
+      this.currentStroke.clear();
+      
+      if (this.strokePoints.length > 0) {
+        this.currentStroke.moveTo(this.strokePoints[0].x, this.strokePoints[0].y);
+        
+        for (let i = 1; i < this.strokePoints.length; i++) {
+          this.currentStroke.lineTo(this.strokePoints[i].x, this.strokePoints[i].y);
+        }
+        
+        // Apply final stroke style with consistent color
+        const finalColor = hexToNumber(this.settings.color);
+        console.log(
+          `🎨 BRUSH onPointerUp: FINAL stroke - color=${this.settings.color} -> ${finalColor} (hex: 0x${finalColor.toString(16)}), width=${this.settings.size}`
+        );
+        
+        this.currentStroke.stroke({
+          width: this.settings.size,
+          color: finalColor,
+          cap: "round",
+          join: "round",
+        });
+        
+        console.log(`🎨 BRUSH onPointerUp: Applied final stroke style`);
+      }
+      
+      // Set final opacity
+      this.currentStroke.alpha = this.currentStrokeOpacity;
+      
+      // 🎨 CRITICAL FIX: Ensure no tint is applied (tint can wash out colors)
+      this.currentStroke.tint = 0xFFFFFF; // Explicitly set to white (no tint)
+      
+      // 🎨 DEBUG: Check for potential double-alpha issues
+      const worldAlpha = (this.currentStroke as any).worldAlpha || this.currentStroke.alpha;
+      const parentAlpha = this.currentStroke.parent ? (this.currentStroke.parent as any).alpha || 1 : 1;
+      
+      console.log(`🎨 BRUSH onPointerUp: Set final alpha to ${this.currentStrokeOpacity}`);
+      console.log(`🎨 BRUSH onPointerUp: Alpha check - object: ${this.currentStroke.alpha}, world: ${worldAlpha}, parent: ${parentAlpha}`);
+      
+      // Log final Graphics object state
+      console.log(`🎨 BRUSH onPointerUp: FINAL GRAPHICS STATE:`, {
+        alpha: this.currentStroke.alpha,
+        visible: this.currentStroke.visible,
+        renderable: this.currentStroke.renderable,
+        tint: (this.currentStroke as any).tint,
+        blendMode: (this.currentStroke as any).blendMode,
+        worldAlpha: (this.currentStroke as any).worldAlpha
+      });
+      
+      // Try to inspect the graphics internal data
+      try {
+        const graphicsData = (this.currentStroke as any).geometry || (this.currentStroke as any)._geometry;
+        if (graphicsData) {
+          console.log(`🎨 BRUSH onPointerUp: Graphics geometry data:`, graphicsData);
+        }
+      } catch (e) {
+        console.log(`🎨 BRUSH onPointerUp: Could not inspect graphics geometry:`, e);
+      }
+      
       // Attach metadata for later re-styling via selection
       try {
         const pts = this.strokePoints.map(p => ({ x: p.x, y: p.y }));
@@ -203,6 +281,7 @@ export class BrushTool extends BaseTool {
           points: pts,
           size: this.settings.size,
           color: this.settings.color,
+          opacity: this.currentStrokeOpacity,
         };
       } catch {}
 
@@ -276,10 +355,16 @@ export class BrushTool extends BaseTool {
  this.currentStroke = null;
  this.strokePoints = [];
  this.constrainStart = null;
+ this.currentStrokeOpacity = this.resolveOpacity();
 }
 
  updateSettings(settings: BrushSettings): void {
+ console.log(`🎨 BRUSH updateSettings: OLD=${JSON.stringify(this.settings)} NEW=${JSON.stringify(settings)}`);
  this.settings = { ...this.settings, ...settings };
+ if (typeof this.settings.opacity === 'number') {
+   this.settings.opacity = Math.max(0, Math.min(1, this.settings.opacity));
+ }
+ console.log(`🎨 BRUSH updateSettings: FINAL=${JSON.stringify(this.settings)}`);
  }
 
  // Get available brush colors for UI
@@ -295,5 +380,20 @@ export class BrushTool extends BaseTool {
  // Get authentic marker opacity (fixed like real brushes)
  static getMarkerOpacity(): number {
  return BRUSH_CONSTANTS.FIXED_OPACITY;
+ }
+
+ private resolveOpacity(): number {
+ const settingOpacity = typeof this.settings?.opacity === 'number'
+   ? this.settings.opacity
+   : undefined;
+ const opacity = settingOpacity ?? BRUSH_CONSTANTS.FIXED_OPACITY;
+ const result = Math.max(0, Math.min(1, opacity));
+ 
+ // 🎨 TEMPORARY FIX: Ensure minimum viable opacity for color vibrancy
+ const minOpacity = 0.6; // Minimum 60% for good color visibility
+ const finalResult = Math.max(result, minOpacity);
+ 
+ console.log(`🎨 BRUSH resolveOpacity: setting=${settingOpacity}, fixed=${BRUSH_CONSTANTS.FIXED_OPACITY}, calculated=${result}, final=${finalResult}`);
+ return finalResult;
  }
 }
