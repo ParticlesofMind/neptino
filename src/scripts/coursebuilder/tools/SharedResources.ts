@@ -182,7 +182,7 @@ export const TEXT_CONSTANTS = {
  * Brush tool constants for authentic marker experience
  */
 export const BRUSH_CONSTANTS = {
- FIXED_OPACITY: 0.65, // Authentic marker transparency (increased for better color vibrancy)
+ FIXED_OPACITY: 0.85, // Authentic marker transparency (increased for maximum color vibrancy)
  OVERLAP_OPACITY: 0.8, // When strokes overlap
  MIN_DISTANCE: 3, // Minimum distance between points for smoothing
  TEXTURE_VARIATION: 0.1, // Slight opacity variation for texture

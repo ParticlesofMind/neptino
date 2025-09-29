@@ -390,7 +390,7 @@ export class BrushTool extends BaseTool {
  const result = Math.max(0, Math.min(1, opacity));
  
  // 🎨 TEMPORARY FIX: Ensure minimum viable opacity for color vibrancy
- const minOpacity = 0.6; // Minimum 60% for good color visibility
+ const minOpacity = 0.75; // Minimum 75% for excellent color visibility
  const finalResult = Math.max(result, minOpacity);
  
  console.log(`🎨 BRUSH resolveOpacity: setting=${settingOpacity}, fixed=${BRUSH_CONSTANTS.FIXED_OPACITY}, calculated=${result}, final=${finalResult}`);
