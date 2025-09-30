@@ -5,7 +5,7 @@
 
 import { snapManager } from './SnapManager';
 
-export function bindSnapMenu(perspectiveManager?: any): void {
+export function bindSnapMenu(): void {
   const container = document.getElementById('canvas-container');
   if (!container) {
     console.warn('SnapMenu: canvas-container not found');
@@ -76,11 +76,11 @@ export function bindSnapMenu(perspectiveManager?: any): void {
     const anchorLabel = snapAnchor.querySelector('.icon-label') as HTMLElement;
     
     const iconMap: Record<string, { src: string; label: string }> = {
-      grid: { 
-        src: '/src/assets/icons/coursebuilder/perspective/grid-icon.svg', 
-        label: 'Grid' 
-      },
       smart: { 
+        src: '/src/assets/icons/coursebuilder/perspective/snap-smart.svg', 
+        label: 'Smart' 
+      },
+      none: { 
         src: '/src/assets/icons/coursebuilder/perspective/snap-smart.svg', 
         label: 'Smart' 
       }
@@ -108,34 +108,134 @@ export function bindSnapMenu(perspectiveManager?: any): void {
     }
   });
 
+  // Handle smart guides toggle
+  const smartGuidesToggle = snapMenu.querySelector('#smart-guides-toggle') as HTMLInputElement | null;
+  if (smartGuidesToggle) {
+    // Load saved state
+    try {
+      const savedState = localStorage.getItem('smartGuidesEnabled');
+      if (savedState !== null) {
+        smartGuidesToggle.checked = savedState === 'true';
+      }
+    } catch (error) {
+      console.warn('Failed to load smart guides state:', error);
+    }
+
+    // Handle toggle changes
+    smartGuidesToggle.addEventListener('change', (e) => {
+      e.stopPropagation();
+      const isEnabled = smartGuidesToggle.checked;
+
+      // Save state to localStorage
+      try {
+        localStorage.setItem('smartGuidesEnabled', String(isEnabled));
+      } catch (error) {
+        console.warn('Failed to save smart guides state:', error);
+      }
+
+      // If toggling off smart guides, switch to none mode (no guides)
+      if (!isEnabled) {
+        snapManager.setActiveMode('none');
+        updateSelectedOption('smart'); // Keep UI showing smart but guides disabled
+      }
+      // If toggling on smart guides, switch to smart mode
+      else {
+        snapManager.setActiveMode('smart');
+        updateSelectedOption('smart');
+      }
+    });
+  }
+
   // Handle option selection
   snapMenu.querySelectorAll<HTMLElement>('[data-snap-option]').forEach(item => {
     item.addEventListener('click', (e) => {
+      // Don't handle clicks on the checkbox itself
+      if ((e.target as HTMLElement).id === 'smart-guides-toggle') {
+        e.stopPropagation();
+        return;
+      }
+
       e.preventDefault();
       e.stopPropagation();
-      
-      const mode = item.getAttribute('data-snap-option') || 'grid';
-      
+
+      const mode = item.getAttribute('data-snap-option') || 'smart';
+
+      // Check if smart guides is disabled and enable it when clicking on smart option
+      if (mode === 'smart' && smartGuidesToggle && !smartGuidesToggle.checked) {
+        smartGuidesToggle.checked = true;
+        try {
+          localStorage.setItem('smartGuidesEnabled', 'true');
+        } catch (error) {
+          console.warn('Failed to save smart guides state:', error);
+        }
+      }
+
       // Update snap manager state
-      try { 
-        (snapManager as any).setActiveMode(mode); 
+      try {
+        (snapManager as any).setActiveMode(mode);
       } catch (error) {
         console.warn('Failed to set snap mode:', error);
       }
-      
-      // Update grid overlay for grid mode
-      try { 
-        if (perspectiveManager && typeof perspectiveManager.setGridEnabled === 'function') { 
-          perspectiveManager.setGridEnabled(mode === 'grid'); 
-        } 
-      } catch (error) {
-        console.warn('Failed to update grid overlay:', error);
-      }
-      
+
       // Update UI to reflect selection
       updateSelectedOption(mode);
-      
+
       closeMenu();
+    });
+  });
+
+  // Handle distribute actions
+  snapMenu.querySelectorAll<HTMLElement>('[data-distribute]').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const distributeMode = item.getAttribute('data-distribute');
+      
+      // Remove active class from all distribute items
+      snapMenu.querySelectorAll('[data-distribute]').forEach(distItem => {
+        distItem.classList.remove('engine__snap-item--active');
+      });
+      
+      // Add active class to clicked item
+      item.classList.add('engine__snap-item--active');
+      
+      // Save distribute mode preference
+      try {
+        localStorage.setItem('distributeMode', distributeMode || 'horizontal');
+      } catch (error) {
+        console.warn('Failed to save distribute mode:', error);
+      }
+
+      // TODO: Implement actual distribute functionality
+      console.log('Distribute mode selected:', distributeMode);
+    });
+  });
+
+  // Handle guide mode actions
+  snapMenu.querySelectorAll<HTMLElement>('[data-guide-mode]').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const guideMode = item.getAttribute('data-guide-mode');
+      
+      // Remove active class from all guide mode items
+      snapMenu.querySelectorAll('[data-guide-mode]').forEach(guideItem => {
+        guideItem.classList.remove('engine__snap-item--active');
+      });
+      
+      // Add active class to clicked item
+      item.classList.add('engine__snap-item--active');
+      
+      // Update snap manager preferences
+      try {
+        (snapManager as any).setPrefs?.({ guideExtendMode: guideMode });
+      } catch (error) {
+        console.warn('Failed to set guide extend mode:', error);
+      }
+
+      console.log('Guide extension mode selected:', guideMode);
     });
   });
 
@@ -154,8 +254,36 @@ export function bindSnapMenu(perspectiveManager?: any): void {
 
   // Initialize the UI with the current snap manager state
   try {
-    const currentMode = (snapManager as any).getActiveMode?.() || 'grid';
+    const currentMode = (snapManager as any).getActiveMode?.() || 'smart';
     updateSelectedOption(currentMode);
+    
+    // Load saved distribute mode
+    try {
+      const savedDistributeMode = localStorage.getItem('distributeMode') || 'horizontal';
+      snapMenu.querySelectorAll('[data-distribute]').forEach(item => {
+        item.classList.remove('engine__snap-item--active');
+        if (item.getAttribute('data-distribute') === savedDistributeMode) {
+          item.classList.add('engine__snap-item--active');
+        }
+      });
+    } catch (error) {
+      console.warn('Failed to load distribute mode:', error);
+    }
+    
+    // Load saved guide extend mode 
+    try {
+      const prefs = (snapManager as any).getPrefs?.();
+      if (prefs?.guideExtendMode) {
+        snapMenu.querySelectorAll('[data-guide-mode]').forEach(item => {
+          item.classList.remove('engine__snap-item--active');
+          if (item.getAttribute('data-guide-mode') === prefs.guideExtendMode) {
+            item.classList.add('engine__snap-item--active');
+          }
+        });
+      }
+    } catch (error) {
+      console.warn('Failed to load guide extend mode:', error);
+    }
     // Initialize preferences inputs
     try {
       const prefs = (snapManager as any).getPrefs?.();
@@ -180,7 +308,7 @@ export function bindSnapMenu(perspectiveManager?: any): void {
     } catch {}
   } catch (error) {
     console.warn('Failed to initialize snap menu state:', error);
-    updateSelectedOption('grid'); // fallback to grid
+    updateSelectedOption('smart'); // fallback to smart
   }
 
   // Bind threshold and equal tolerance inputs

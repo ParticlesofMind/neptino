@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Snap System Test</title>
+    <link href="src/scss/main.scss" rel="stylesheet" type="text/css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .test-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            margin: 10px 0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Final Snap System Test</h1>
+        <p>Testing the cleaned up snap system with no grid dependencies</p>
+        
+        <!-- Canvas Container with Snap Menu -->
+        <div id="canvas-container" style="position: relative; background: #fafafa; border: 2px solid #ddd; height: 400px; margin: 20px 0;">
+            
+            <!-- Perspective Tools -->
+            <div class="engine__perspective" style="position: absolute; top: 10px; left: 10px; display: flex; gap: 8px; background: white; padding: 8px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div class="engine__perspective-item" data-perspective="zoomin" title="Zoom In">
+                    <img src="/src/assets/icons/coursebuilder/perspective/zoomin-icon.svg" alt="Zoom In" class="icon icon--base">
+                    <span class="icon-label">Zoom In</span>
+                </div>
+                <div class="engine__perspective-item" data-perspective="zoomout" title="Zoom Out">
+                    <img src="/src/assets/icons/coursebuilder/perspective/zoomout-icon.svg" alt="Zoom Out" class="icon icon--base">
+                    <span class="icon-label">Zoom Out</span>
+                </div>
+                <div class="engine__perspective-item" data-perspective="reset" title="Reset View">
+                    <img src="/src/assets/icons/coursebuilder/perspective/reset-icon.svg" alt="Reset View" class="icon icon--base">
+                    <span class="icon-label">Reset</span>
+                </div>
+                <div class="engine__perspective-item" data-perspective="grab" title="grab">
+                    <img src="/src/assets/icons/coursebuilder/perspective/grab-icon.svg" alt="grab" class="icon icon--base">
+                    <span class="icon-label">Grab</span>
+                </div>
+                <!-- Grid button (opens Snap Menu) -->
+                <div class="engine__perspective-item" data-perspective="grid" title="Snapping" data-snap-anchor>
+                    <img src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Snapping" class="icon icon--base">
+                    <span class="icon-label">Smart</span>
+                </div>
+            </div>
+
+            <!-- Snap Menu -->
+            <div class="engine__snap-menu" data-snap-menu style="position: absolute; display: none;">
+                <div class="engine__snap-header">
+                    <h3>Smart Guides</h3>
+                    <div class="engine__snap-toggle">
+                        <input type="checkbox" id="smart-guides-toggle" class="engine__snap-toggle-checkbox" checked>
+                        <label for="smart-guides-toggle" class="engine__snap-toggle-label">Enable Smart Guides</label>
+                    </div>
+                </div>
+
+                <div class="engine__snap-content">
+                    <div class="engine__snap-section">
+                        <h4>Feature Toggles</h4>
+                        <div class="engine__snap-toggles">
+                            <div class="engine__snap-toggle">
+                                <input type="checkbox" id="match-width" class="engine__snap-toggle-checkbox" data-dim-match-width checked>
+                                <label for="match-width" class="engine__snap-toggle-label">Match Width</label>
+                            </div>
+                            <div class="engine__snap-toggle">
+                                <input type="checkbox" id="match-height" class="engine__snap-toggle-checkbox" data-dim-match-height checked>
+                                <label for="match-height" class="engine__snap-toggle-label">Match Height</label>
+                            </div>
+                            <div class="engine__snap-toggle">
+                                <input type="checkbox" id="snap-midpoints" class="engine__snap-toggle-checkbox" data-snap-midpoints checked>
+                                <label for="snap-midpoints" class="engine__snap-toggle-label">Snap to Midpoints</label>
+                            </div>
+                            <div class="engine__snap-toggle">
+                                <input type="checkbox" id="symmetry-guides" class="engine__snap-toggle-checkbox" data-symmetry-guides checked>
+                                <label for="symmetry-guides" class="engine__snap-toggle-label">Symmetry Guides</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="engine__snap-section">
+                        <h4>Distribute</h4>
+                        <div class="engine__snap-distribute">
+                            <div class="engine__snap-item engine__snap-item--active" data-distribute="horizontal">
+                                <span>Horizontal</span>
+                            </div>
+                            <div class="engine__snap-item" data-distribute="vertical">
+                                <span>Vertical</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="engine__snap-section">
+                        <h4>Guide Extension</h4>
+                        <div class="engine__snap-guide-modes">
+                            <div class="engine__snap-item engine__snap-item--active" data-guide-mode="selection">
+                                <span>Selection</span>
+                            </div>
+                            <div class="engine__snap-item" data-guide-mode="viewport">
+                                <span>Viewport</span>
+                            </div>
+                            <div class="engine__snap-item" data-guide-mode="canvas">
+                                <span>Canvas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="status-messages">
+            <div class="status info">Click the snap button (grid icon) to open the menu and test functionality</div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Mock SnapManager for testing
+        window.snapManager = {
+            getActiveMode: () => 'smart',
+            setActiveMode: (mode) => {
+                console.log('SnapManager: setActiveMode called with:', mode);
+                addStatus(`Snap mode changed to: ${mode}`, 'success');
+            },
+            setPrefs: (prefs) => {
+                console.log('SnapManager: setPrefs called with:', prefs);
+                addStatus(`Preferences updated: ${JSON.stringify(prefs)}`, 'info');
+            },
+            initialize: () => {
+                console.log('SnapManager: initialized');
+                addStatus('SnapManager initialized', 'success');
+            }
+        };
+
+        function addStatus(message, type = 'info') {
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            document.getElementById('status-messages').appendChild(statusDiv);
+        }
+
+        // Import the cleaned up snap menu
+        import('/src/scripts/coursebuilder/tools/SnapMenu.js').then(({ bindSnapMenu }) => {
+            try {
+                bindSnapMenu();
+                addStatus('SnapMenu bound successfully - no grid dependencies', 'success');
+            } catch (error) {
+                addStatus(`Error binding SnapMenu: ${error.message}`, 'error');
+                console.error('SnapMenu binding error:', error);
+            }
+        }).catch(error => {
+            addStatus(`Failed to import SnapMenu: ${error.message}`, 'error');
+            console.error('Import error:', error);
+        });
+
+        // Test smart guides toggle functionality
+        document.addEventListener('change', (e) => {
+            if (e.target.id === 'smart-guides-toggle') {
+                const isEnabled = e.target.checked;
+                addStatus(`Smart guides toggle: ${isEnabled ? 'ON' : 'OFF'}`, isEnabled ? 'success' : 'info');
+                
+                if (!isEnabled) {
+                    addStatus('When OFF: All snapping should be disabled', 'info');
+                } else {
+                    addStatus('When ON: Smart snapping is active', 'success');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

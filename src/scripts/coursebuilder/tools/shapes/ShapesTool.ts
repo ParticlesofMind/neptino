@@ -384,6 +384,11 @@ export class ShapesTool extends BaseTool {
 
     // Compute and apply dimension snapping (width/height matching to nearby objects)
     private applyDimensionSnapping(container: Container): void {
+        // Only apply dimension snapping if smart guides are enabled
+        if (!snapManager.isSmartEnabled()) {
+            return;
+        }
+        
         const prefs = (snapManager as any).getPrefs?.() || { threshold: 6, matchWidth: true, matchHeight: true };
         const threshold = prefs.threshold ?? 6;
         const enableW = prefs.matchWidth !== false;

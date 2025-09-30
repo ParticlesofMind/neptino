@@ -4,7 +4,7 @@ import { snapManager } from '../SnapManager';
 import { ClickSelection } from './clickSelection';
 import { SelectionClipboard } from './SelectionClipboard';
 import { SelectionOverlay } from './SelectionOverlay';
-import { SmartGuides } from './EnhancedSmartGuides';
+import { SmartGuides } from './guides';
 import { SelectionMarquee } from './SelectionMarquee';
 import { TransformController } from './TransformController';
 import { SelectionGrouping } from './SelectionGrouping';
@@ -35,8 +35,6 @@ export class SelectionTool extends BaseTool {
   private dragStart = new Point();
   private mode: Mode = 'idle';
   private lastPointerGlobal: Point | null = null;
-  // Sticky snap state during drag so alignment feels "magnetic"
-  private snapLock: { x?: number; y?: number; targetX?: 'left' | 'center' | 'right'; targetY?: 'top' | 'center' | 'bottom' } = {};
   private rotateBaseRect: Rectangle | null = null;
   private rotateCenter: Point | null = null;
   private rotateStartRef = 0;
@@ -205,128 +203,7 @@ export class SelectionTool extends BaseTool {
         if (snapped) { dx = snapped.x - this.dragStart.x; dy = snapped.y - this.dragStart.y; }
 
         // Enhanced magnetic alignment with dynamic equal-spacing snap
-        const group = this.overlay.getGroup()!;
-        const gb = group.bounds;
-        const cand = snapManager.getCandidates({ container, exclude: this.selected, rect: group.bounds, margin: 200 });
-        const prefs = snapManager.getPrefs();
-        const bias = Math.max(1, prefs.centerBiasMultiplier || 1);
-        const thr = (prefs.threshold || 6) * bias;
-        const release = Math.max(thr, (prefs as any).stickyHysteresis || Math.round(thr * 1.6));
-
-        // Calculate dynamic equal-spacing snap opportunities
-        const dynamicSnap = this.guides.calculateDynamicSnap(
-          new Rectangle(gb.x + dx, gb.y + dy, gb.width, gb.height),
-          container,
-          this.selected
-        );
-
-        // Compute ghost placement after current delta
-        const leftAfter = gb.x + dx;
-        const rightAfter = gb.x + gb.width + dx;
-        const cxAfter = gb.x + gb.width * 0.5 + dx;
-        const topAfter = gb.y + dy;
-        const bottomAfter = gb.y + gb.height + dy;
-        const cyAfter = gb.y + gb.height * 0.5 + dy;
-
-        // Apply dynamic equal-spacing snap with higher priority
-        if (dynamicSnap.snapX && dynamicSnap.snapX.type === 'equal-spacing') {
-          const equalSpacingBias = prefs.equalSpacingBias || 1.5;
-          const equalThr = thr * equalSpacingBias;
-          const currentCenter = cxAfter;
-          const distance = Math.abs(currentCenter - dynamicSnap.snapX.pos);
-          
-          if (distance <= equalThr) {
-            dx += (dynamicSnap.snapX.pos - currentCenter);
-            this.snapLock.x = dynamicSnap.snapX.pos;
-            this.snapLock.targetX = 'center';
-          }
-        }
-
-        if (dynamicSnap.snapY && dynamicSnap.snapY.type === 'equal-spacing') {
-          const equalSpacingBias = prefs.equalSpacingBias || 1.5;
-          const equalThr = thr * equalSpacingBias;
-          const currentCenter = cyAfter;
-          const distance = Math.abs(currentCenter - dynamicSnap.snapY.pos);
-          
-          if (distance <= equalThr) {
-            dy += (dynamicSnap.snapY.pos - currentCenter);
-            this.snapLock.y = dynamicSnap.snapY.pos;
-            this.snapLock.targetY = 'center';
-          }
-        }
-
-        const vLines = (cand.canvas.v || []).concat(cand.vLines || []);
-        const hLines = (cand.canvas.h || []).concat(cand.hLines || []);
-
-        // Helper to find nearest candidate for axis
-        const nearest = (value: number, lines: number[], limit: number): { pos: number; d: number } | null => {
-          let best: { pos: number; d: number } | null = null;
-          for (const ln of lines) {
-            const d = Math.abs(value - ln);
-            if (d <= limit && (!best || d < best.d)) best = { pos: ln, d };
-          }
-          return best;
-        };
-
-        // Evaluate X candidates for left/center/right, preferring center if equal
-        const nxL = nearest(leftAfter, vLines, thr);
-        const nxC = nearest(cxAfter, vLines, thr);
-        const nxR = nearest(rightAfter, vLines, thr);
-        let snapX: { pos: number; target: 'left' | 'center' | 'right' } | null = null;
-        if (nxL || nxC || nxR) {
-          const pick = [nxC && { ...nxC, tgt: 'center' as const }, nxL && { ...nxL, tgt: 'left' as const }, nxR && { ...nxR, tgt: 'right' as const }]
-            .filter(Boolean) as Array<{ pos: number; d: number; tgt: 'left' | 'center' | 'right' }>;
-          pick.sort((a, b) => a.d - b.d);
-          const best = pick[0]!; snapX = { pos: best.pos, target: best.tgt };
-        }
-
-        // Evaluate Y candidates for top/center/bottom, preferring center if equal
-        const nyT = nearest(topAfter, hLines, thr);
-        const nyC = nearest(cyAfter, hLines, thr);
-        const nyB = nearest(bottomAfter, hLines, thr);
-        let snapY: { pos: number; target: 'top' | 'center' | 'bottom' } | null = null;
-        if (nyT || nyC || nyB) {
-          const pick = [nyC && { ...nyC, tgt: 'center' as const }, nyT && { ...nyT, tgt: 'top' as const }, nyB && { ...nyB, tgt: 'bottom' as const }]
-            .filter(Boolean) as Array<{ pos: number; d: number; tgt: 'top' | 'center' | 'bottom' }>;
-          pick.sort((a, b) => a.d - b.d);
-          const best = pick[0]!; snapY = { pos: best.pos, target: best.tgt };
-        }
-
-        // Apply sticky locks if already engaged; otherwise engage when within threshold
-        if (this.snapLock.x != null && this.snapLock.targetX) {
-          const current = this.snapLock.targetX === 'left' ? leftAfter : this.snapLock.targetX === 'right' ? rightAfter : cxAfter;
-          if (Math.abs(current - this.snapLock.x) <= release) {
-            const targetVal = this.snapLock.x;
-            if (this.snapLock.targetX === 'left') dx += (targetVal - leftAfter);
-            else if (this.snapLock.targetX === 'right') dx += (targetVal - rightAfter);
-            else dx += (targetVal - cxAfter);
-          } else {
-            this.snapLock.x = undefined; this.snapLock.targetX = undefined;
-          }
-        } else if (snapX) {
-          // Engage lock and align immediately
-          this.snapLock.x = snapX.pos; this.snapLock.targetX = snapX.target;
-          if (snapX.target === 'left') dx += (snapX.pos - leftAfter);
-          else if (snapX.target === 'right') dx += (snapX.pos - rightAfter);
-          else dx += (snapX.pos - cxAfter);
-        }
-
-        if (this.snapLock.y != null && this.snapLock.targetY) {
-          const current = this.snapLock.targetY === 'top' ? topAfter : this.snapLock.targetY === 'bottom' ? bottomAfter : cyAfter;
-          if (Math.abs(current - this.snapLock.y) <= release) {
-            const targetVal = this.snapLock.y;
-            if (this.snapLock.targetY === 'top') dy += (targetVal - topAfter);
-            else if (this.snapLock.targetY === 'bottom') dy += (targetVal - bottomAfter);
-            else dy += (targetVal - cyAfter);
-          } else {
-            this.snapLock.y = undefined; this.snapLock.targetY = undefined;
-          }
-        } else if (snapY) {
-          this.snapLock.y = snapY.pos; this.snapLock.targetY = snapY.target;
-          if (snapY.target === 'top') dy += (snapY.pos - topAfter);
-          else if (snapY.target === 'bottom') dy += (snapY.pos - bottomAfter);
-          else dy += (snapY.pos - cyAfter);
-        }
+        // Manual snapping disabled - smart guides control all alignment
       } catch {}
       this.selected.forEach((obj) => { if (obj.position) { obj.position.x += dx; obj.position.y += dy; } }); this.dragStart.x += dx; this.dragStart.y += dy; this.overlay.refreshBoundsOnly(container); try { const b = this.overlay.getGroup()?.bounds; if (b) this.guides.update(container, this.selected, b); } catch {} return;
     }
@@ -347,11 +224,34 @@ export class SelectionTool extends BaseTool {
     this.mode = 'idle'; this.isDragging = false; this.cursor = 'default'; this.guides.clear(); this.emitSelectionContext();
   }
 
-  public onActivate(): void { super.onActivate(); document.addEventListener('selection:distribute', this.handleDistribute); }
-  public onDeactivate(): void { super.onDeactivate(); if (this.penEditor.isEditing()) { this.penEditor.cancel(); } this.overlay.clear(); this.guides.clear(); if (this.container) {/* keep */} document.removeEventListener('selection:distribute', this.handleDistribute); }
+  public onActivate(): void { 
+    super.onActivate(); 
+    document.addEventListener('selection:distribute', this.handleDistribute);
+    document.addEventListener('keydown', this.handleKeyDown);
+    document.addEventListener('keyup', this.handleKeyUp);
+  }
+  
+  public onDeactivate(): void { 
+    super.onDeactivate(); 
+    if (this.penEditor.isEditing()) { this.penEditor.cancel(); } 
+    this.overlay.clear(); 
+    this.guides.clear(); 
+    if (this.container) {/* keep */} 
+    document.removeEventListener('selection:distribute', this.handleDistribute);
+    document.removeEventListener('keydown', this.handleKeyDown);
+    document.removeEventListener('keyup', this.handleKeyUp);
+  }
 
   private handleDistribute = (evt: Event) => {
     const group = this.overlay.getGroup(); if (!group || !this.container) return; const e = evt as CustomEvent; const dir = e.detail && (e.detail.direction as 'horizontal' | 'vertical'); if (!dir) return; this.distribute(dir);
+  };
+
+  private handleKeyDown = (evt: KeyboardEvent) => {
+    this.guides.handleKeyDown(evt);
+  };
+
+  private handleKeyUp = (evt: KeyboardEvent) => {
+    this.guides.handleKeyUp(evt);
   };
 
   private distribute(direction: 'horizontal' | 'vertical'): void {

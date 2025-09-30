@@ -124,9 +124,9 @@ export async function initializeCanvas(): Promise<void> {
             console.warn('⚠️ High-quality zoom system not available');
         }
 
-        // Bind minimal snap menu UI to perspective tools
+        // Bind minimal snap menu UI
         try { 
-            bindSnapMenu(perspectiveManager); 
+            bindSnapMenu(); 
             // Initialize snap manager with saved state
             snapManager.initialize();
             

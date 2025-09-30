@@ -1163,34 +1163,14 @@
 
           <!-- Snap Menu (positioned inside canvas) -->
           <div class="engine__snap-menu" id="snap-menu" data-snap-menu>
-            <div class="engine__snap-item engine__snap-item--active" data-snap-option="grid">
-              <img class="engine__snap-icon icon icon--base"
-                src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Grid"><span>Snap to Grid</span>
-            </div>
-            <div class="engine__snap-item" data-snap-option="smart">
-              <img class="engine__snap-icon icon icon--base"
-                src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Smart"><span>Smart Guides</span>
-            </div>
-      
-            <!-- Distribute actions -->
-            <div class="engine__snap-row">
-              <div class="engine__snap-item" data-distribute="horizontal">
-                <img class="engine__snap-icon icon icon--base"
-                  src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Distribute H"><span>Distribute
-                  Horizontally</span>
-              </div>
-              <div class="engine__snap-item" data-distribute="vertical">
-                <img class="engine__snap-icon icon icon--base"
-                  src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Distribute V"><span>Distribute
-                  Vertically</span>
-              </div>
+            <!-- Smart Guides Toggle -->
+            <div class="engine__snap-item engine__snap-item--active" data-snap-option="smart">
+              <input type="checkbox" id="smart-guides-toggle" class="engine__snap-toggle-checkbox" checked>
+              <span>Smart Guides</span>
             </div>
 
             <!-- Enhanced Smart Guides Settings -->
-            <div class="engine__snap-divider"></div>
             <div class="engine__snap-section">
-              <div class="engine__snap-label">Smart Guide Features</div>
-              
               <div class="engine__snap-toggle" data-smart-setting="showDistToAll">
                 <input type="checkbox" id="showDistToAll" checked>
                 <label for="showDistToAll">Distance Labels</label>
@@ -1210,20 +1190,40 @@
                 <input type="checkbox" id="enableColorCoding" checked>
                 <label for="enableColorCoding">Color Coding</label>
               </div>
-              
-              <div class="engine__snap-range">
-                <label for="equalSpacingBias">Equal Spacing Sensitivity</label>
-                <input type="range" id="equalSpacingBias" min="0.5" max="3.0" step="0.1" value="1.5">
-                <span class="engine__snap-range-value">1.5x</span>
+            </div>
+
+            <!-- Distribute actions -->
+            <div class="engine__snap-divider"></div>
+            <div class="engine__snap-row">
+              <div class="engine__snap-item" data-distribute="horizontal">
+                <img class="engine__snap-icon icon icon--base"
+                  src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Distribute H"><span>Distribute
+                  Horizontally</span>
               </div>
-              
-              <div class="engine__snap-select">
-                <label for="guideExtendMode">Guide Extension</label>
-                <select id="guideExtendMode">
-                  <option value="selection">Selection Area</option>
-                  <option value="viewport">Viewport</option>
-                  <option value="canvas">Full Canvas</option>
-                </select>
+              <div class="engine__snap-item" data-distribute="vertical">
+                <img class="engine__snap-icon icon icon--base"
+                  src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg" alt="Distribute V"><span>Distribute
+                  Vertically</span>
+              </div>
+            </div>
+
+            <!-- Guide Extension -->
+            <div class="engine__snap-divider"></div>
+            <div class="engine__snap-guide-modes">
+              <label>Guide Extension</label>
+              <div class="engine__snap-row">
+                <div class="engine__snap-item engine__snap-item--small" data-guide-mode="selection">
+                  <img class="engine__snap-icon icon icon--base"
+                    src="/src/assets/icons/coursebuilder/perspective/selection-icon.svg" alt="Selection"><span>Selection</span>
+                </div>
+                <div class="engine__snap-item engine__snap-item--small" data-guide-mode="viewport">
+                  <img class="engine__snap-icon icon icon--base"
+                    src="/src/assets/icons/coursebuilder/perspective/viewport-icon.svg" alt="Viewport"><span>Viewport</span>
+                </div>
+                <div class="engine__snap-item engine__snap-item--small engine__snap-item--active" data-guide-mode="canvas">
+                  <img class="engine__snap-icon icon icon--base"
+                    src="/src/assets/icons/coursebuilder/perspective/canvas-icon.svg" alt="Canvas"><span>Canvas</span>
+                </div>
               </div>
             </div>
           </div>

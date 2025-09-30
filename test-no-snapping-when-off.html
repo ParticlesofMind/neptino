@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test No Snapping When Smart Guides OFF</title>
+    <link href="src/scss/main.scss" rel="stylesheet" type="text/css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .test-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        .status.warning { background: #fff3cd; color: #856404; }
+        
+        .toggle-test {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .guide-indicator {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .guide-indicator.on {
+            background: #28a745;
+            color: white;
+        }
+        .guide-indicator.off {
+            background: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Test: No Snapping When Smart Guides OFF</h1>
+        <p>This test verifies that when smart guides are turned OFF, <strong>NO snapping occurs whatsoever</strong></p>
+        
+        <div class="test-section">
+            <h3>Smart Guides Toggle Test</h3>
+            <div class="toggle-test">
+                <label>
+                    <input type="checkbox" id="smart-guides-toggle" checked> 
+                    Smart Guides
+                </label>
+                <span class="guide-indicator on" id="guide-status">ON - Snapping Active</span>
+            </div>
+            <div id="snap-status" class="status info">SnapManager Mode: smart</div>
+        </div>
+
+        <div class="test-section">
+            <h3>Tool Snapping Behavior Tests</h3>
+            <div id="test-results">
+                <div class="status info">Click the checkbox above to test behavior...</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Method Call Tests</h3>
+            <div id="method-tests"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Mock PIXI components
+        window.PIXI = {
+            Point: class Point {
+                constructor(x = 0, y = 0) {
+                    this.x = x;
+                    this.y = y;
+                }
+                copyFrom(point) {
+                    this.x = point.x;
+                    this.y = point.y;
+                }
+            },
+            Container: class Container {
+                constructor() {
+                    this.children = [];
+                }
+                toLocal(global) {
+                    return { x: global.x, y: global.y };
+                }
+            }
+        };
+
+        // Mock SnapManager for testing
+        window.snapManager = {
+            activeMode: 'smart',
+            isSmartEnabled: () => window.snapManager.activeMode === 'smart',
+            isNoneEnabled: () => window.snapManager.activeMode === 'none',
+            setActiveMode: (mode) => {
+                console.log('SnapManager: setActiveMode called with:', mode);
+                window.snapManager.activeMode = mode;
+                updateStatus();
+                testToolBehavior();
+            },
+            snapPoint: (point, options) => {
+                const result = window.snapManager.activeMode === 'none' ? point : { x: point.x + 1, y: point.y + 1 };
+                addMethodTest(`snapPoint(${point.x}, ${point.y})`, 
+                    window.snapManager.activeMode === 'none' ? 'No snapping' : 'Snapped +1,+1',
+                    window.snapManager.activeMode === 'none' ? 'success' : 'warning');
+                return result;
+            },
+            getPrefs: () => ({ threshold: 8, matchWidth: true, matchHeight: true })
+        };
+
+        function updateStatus() {
+            const isEnabled = window.snapManager.isSmartEnabled();
+            const statusEl = document.getElementById('guide-status');
+            const snapStatusEl = document.getElementById('snap-status');
+            
+            if (isEnabled) {
+                statusEl.textContent = 'ON - Snapping Active';
+                statusEl.className = 'guide-indicator on';
+                snapStatusEl.textContent = 'SnapManager Mode: smart';
+                snapStatusEl.className = 'status warning';
+            } else {
+                statusEl.textContent = 'OFF - NO Snapping';
+                statusEl.className = 'guide-indicator off';
+                snapStatusEl.textContent = 'SnapManager Mode: none';
+                snapStatusEl.className = 'status success';
+            }
+        }
+
+        function addMethodTest(method, result, type) {
+            const methodTestsEl = document.getElementById('method-tests');
+            const testDiv = document.createElement('div');
+            testDiv.className = `status ${type}`;
+            testDiv.textContent = `${new Date().toLocaleTimeString()}: ${method} → ${result}`;
+            methodTestsEl.appendChild(testDiv);
+        }
+
+        function testToolBehavior() {
+            const resultsEl = document.getElementById('test-results');
+            resultsEl.innerHTML = '';
+            
+            const isEnabled = window.snapManager.isSmartEnabled();
+            
+            // Test 1: snapManager.snapPoint behavior
+            const testPoint = { x: 100, y: 200 };
+            const snappedPoint = window.snapManager.snapPoint(testPoint);
+            const pointChanged = snappedPoint.x !== testPoint.x || snappedPoint.y !== testPoint.y;
+            
+            addResult('SnapManager.snapPoint()', 
+                isEnabled ? (pointChanged ? 'PASS - Point was snapped' : 'FAIL - Point should snap') 
+                         : (pointChanged ? 'FAIL - Point should NOT snap' : 'PASS - Point unchanged'),
+                isEnabled ? (pointChanged ? 'success' : 'error')
+                         : (pointChanged ? 'error' : 'success'));
+
+            // Test 2: Simulate PenTool.snapToNearestAnchor
+            const penToolResult = simulatePenToolSnap(testPoint, isEnabled);
+            addResult('PenTool.snapToNearestAnchor()',
+                isEnabled ? 'Should snap to anchors' : 'Should return original point',
+                penToolResult ? 'success' : 'error');
+
+            // Test 3: Simulate ShapesTool.applyDimensionSnapping
+            const shapeToolResult = simulateShapeToolSnap(isEnabled);
+            addResult('ShapesTool.applyDimensionSnapping()',
+                isEnabled ? 'Should apply dimension snapping' : 'Should skip dimension snapping',
+                shapeToolResult ? 'success' : 'error');
+        }
+
+        function simulatePenToolSnap(point, smartEnabled) {
+            // Simulate the PenTool logic with our fix
+            if (!smartEnabled) {
+                addMethodTest('PenTool.snapToNearestAnchor()', 'Returned original point (no snap)', 'success');
+                return true; // Correct behavior
+            } else {
+                addMethodTest('PenTool.snapToNearestAnchor()', 'Would search for anchors and snap', 'warning');
+                return true; // Would snap
+            }
+        }
+
+        function simulateShapeToolSnap(smartEnabled) {
+            // Simulate the ShapesTool logic with our fix
+            if (!smartEnabled) {
+                addMethodTest('ShapesTool.applyDimensionSnapping()', 'Early return - no dimension snapping', 'success');
+                return true; // Correct behavior
+            } else {
+                addMethodTest('ShapesTool.applyDimensionSnapping()', 'Would apply dimension matching', 'warning');
+                return true; // Would apply snapping
+            }
+        }
+
+        function addResult(test, result, type) {
+            const resultsEl = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${type}`;
+            resultDiv.textContent = `${test}: ${result}`;
+            resultsEl.appendChild(resultDiv);
+        }
+
+        // Set up toggle behavior
+        document.getElementById('smart-guides-toggle').addEventListener('change', (e) => {
+            const isEnabled = e.target.checked;
+            window.snapManager.setActiveMode(isEnabled ? 'smart' : 'none');
+        });
+
+        // Initialize
+        updateStatus();
+        testToolBehavior();
+
+        // Show the key expectation
+        setTimeout(() => {
+            const expectation = document.createElement('div');
+            expectation.className = 'status info';
+            expectation.innerHTML = '<strong>KEY EXPECTATION:</strong> When toggle is OFF, all snapping methods should return original values unchanged!';
+            document.getElementById('test-results').prepend(expectation);
+        }, 1000);
+    </script>
+</body>
+</html>

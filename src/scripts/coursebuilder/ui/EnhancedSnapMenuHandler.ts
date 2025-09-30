@@ -16,6 +16,10 @@ export class EnhancedSnapMenuHandler {
     this.bindSettingsControls();
     this.loadSettings();
     this.bindEvents();
+    
+    // Always show advanced settings initially since smart guides toggle is checked by default
+    // Users should see what features are available
+    this.toggleAdvancedSettings();
   }
 
   private bindSettingsControls(): void {
@@ -32,27 +36,24 @@ export class EnhancedSnapMenuHandler {
       }
     });
 
-    // Bind range sliders
-    const equalSpacingBias = this.menu.querySelector('#equalSpacingBias') as HTMLInputElement;
-    if (equalSpacingBias) {
-      this.settings.set('equalSpacingBias', equalSpacingBias);
-      const valueDisplay = this.menu.querySelector('.engine__snap-range-value');
-      
-      equalSpacingBias.addEventListener('input', () => {
-        const value = parseFloat(equalSpacingBias.value);
-        if (valueDisplay) valueDisplay.textContent = `${value.toFixed(1)}x`;
-        this.handleSettingChange('equalSpacingBias', value);
-      });
-    }
+    // Bind range sliders - removed equal spacing bias
+    // Bind guide mode buttons
+    const guideModeButtons = this.menu.querySelectorAll('[data-guide-mode]');
+    guideModeButtons.forEach(button => {
+      const mode = button.getAttribute('data-guide-mode');
+      if (mode) {
+        this.settings.set(`guideMode_${mode}`, button as HTMLElement);
+      }
+    });
 
-    // Bind select dropdown
-    const guideExtendMode = this.menu.querySelector('#guideExtendMode') as HTMLSelectElement;
-    if (guideExtendMode) {
-      this.settings.set('guideExtendMode', guideExtendMode);
-      guideExtendMode.addEventListener('change', () => {
-        this.handleSettingChange('guideExtendMode', guideExtendMode.value);
-      });
-    }
+    // Bind distribute buttons  
+    const distributeButtons = this.menu.querySelectorAll('[data-distribute]');
+    distributeButtons.forEach(button => {
+      const mode = button.getAttribute('data-distribute');
+      if (mode) {
+        this.settings.set(`distribute_${mode}`, button as HTMLElement);
+      }
+    });
   }
 
   private loadSettings(): void {
@@ -64,11 +65,11 @@ export class EnhancedSnapMenuHandler {
     this.setCheckboxValue('enableSmartSelection', prefs.enableSmartSelection);
     this.setCheckboxValue('enableColorCoding', prefs.enableColorCoding);
 
-    // Load range settings
-    this.setRangeValue('equalSpacingBias', prefs.equalSpacingBias);
-
-    // Load select settings
-    this.setSelectValue('guideExtendMode', prefs.guideExtendMode);
+    // Load guide mode from preferences
+    this.loadGuideMode(prefs.guideExtendMode);
+    
+    // Load distribute mode from localStorage
+    this.loadDistributeMode();
   }
 
   private setCheckboxValue(setting: string, value: boolean): void {
@@ -95,6 +96,42 @@ export class EnhancedSnapMenuHandler {
     }
   }
 
+  private loadGuideMode(mode: string): void {
+    if (!this.menu) return;
+    
+    // Remove active class from all guide mode items
+    this.menu.querySelectorAll('[data-guide-mode]').forEach(item => {
+      item.classList.remove('engine__snap-item--active');
+    });
+    
+    // Add active class to selected mode
+    const activeItem = this.menu.querySelector(`[data-guide-mode="${mode}"]`);
+    if (activeItem) {
+      activeItem.classList.add('engine__snap-item--active');
+    }
+  }
+
+  private loadDistributeMode(): void {
+    if (!this.menu) return;
+    
+    try {
+      const savedMode = localStorage.getItem('distributeMode') || 'horizontal';
+      
+      // Remove active class from all distribute items
+      this.menu.querySelectorAll('[data-distribute]').forEach(item => {
+        item.classList.remove('engine__snap-item--active');
+      });
+      
+      // Add active class to saved mode
+      const activeItem = this.menu.querySelector(`[data-distribute="${savedMode}"]`);
+      if (activeItem) {
+        activeItem.classList.add('engine__snap-item--active');
+      }
+    } catch (error) {
+      console.warn('Failed to load distribute mode:', error);
+    }
+  }
+
   private handleSettingChange(setting: string, value: any): void {
     const currentPrefs = snapManager.getPrefs();
     const newPrefs = { ...currentPrefs, [setting]: value };
@@ -114,9 +151,9 @@ export class EnhancedSnapMenuHandler {
 
   private bindEvents(): void {
     // Listen for snap mode changes to show/hide advanced settings
-    document.addEventListener('snap:mode-changed', (e: any) => {
-      const isSmartMode = e.detail?.mode === 'smart';
-      this.toggleAdvancedSettings(isSmartMode);
+    document.addEventListener('snap:mode-changed', () => {
+      // Always show advanced settings - users should see what features are available
+      this.toggleAdvancedSettings();
     });
 
     // Listen for external setting updates
@@ -125,12 +162,16 @@ export class EnhancedSnapMenuHandler {
     });
   }
 
-  private toggleAdvancedSettings(show: boolean): void {
+  private toggleAdvancedSettings(): void {
     if (!this.menu) return;
     
     const advancedSection = this.menu.querySelector('.engine__snap-section');
     if (advancedSection) {
-      (advancedSection as HTMLElement).style.display = show ? 'flex' : 'none';
+      // Always show the advanced settings when the menu is open
+      // Users should be able to see and configure these settings regardless of current mode
+      (advancedSection as HTMLElement).style.display = 'flex';
+      (advancedSection as HTMLElement).style.visibility = 'visible';
+      (advancedSection as HTMLElement).style.opacity = '1';
     }
   }
 

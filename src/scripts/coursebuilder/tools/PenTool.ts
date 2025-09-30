@@ -15,6 +15,7 @@ import { BoundaryUtils } from "./BoundaryUtils";
 import { historyManager } from "../canvas/HistoryManager";
 import { PathBooleanOperations, BooleanOperation, PathData } from "./PathBooleanOperations";
 import { PenPathSettings, VectorNode, VectorPath, VectorPointType } from "./pen/PenGeometry";
+import { snapManager } from "./SnapManager";
 
 interface PenSettings extends PenPathSettings {
  mode: 'pen' | 'bend';  // Pen mode (click to place) or bend mode (drag to curve)
@@ -279,10 +280,14 @@ export class PenTool extends BaseTool {
    // No constraint
  }
 
- // Show snap anchor hover if near any anchor
- const snap = this.findNearestAnchor(container, clampedPoint, 8);
- if (snap) {
-   this.showSnapIndicator(snap, container);
+ // Show snap anchor hover if near any anchor (only when smart guides enabled)
+ if (snapManager.isSmartEnabled()) {
+   const snap = this.findNearestAnchor(container, clampedPoint, 8);
+   if (snap) {
+     this.showSnapIndicator(snap, container);
+   } else {
+     this.removeSnapIndicator();
+   }
  } else {
    this.removeSnapIndicator();
  }
@@ -1110,6 +1115,11 @@ export class PenTool extends BaseTool {
    * Find nearest anchor point on existing objects and snap within tolerance
    */
   private snapToNearestAnchor(container: Container, p: Point, tolerance: number = 8): Point {
+    // Only snap if smart guides are enabled
+    if (!snapManager.isSmartEnabled()) {
+      return p;
+    }
+    
     const best = this.findNearestAnchor(container, p, tolerance);
     if (best) return best;
     return p;
