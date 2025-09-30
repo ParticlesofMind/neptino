@@ -9,7 +9,7 @@ import { DistanceCalculator } from './DistanceCalculator';
 import { SpacingDetector } from './SpacingDetector';
 import { GuideRenderer } from './GuideRenderer';
 import { GUIDE_LIMITS } from './config';
-import { snapManager } from '../../SnapManager';
+import { snapManager } from './SnapManager';
 
 export class SmartGuides {
   private alignmentDetector: AlignmentDetector;
@@ -47,13 +47,93 @@ export class SmartGuides {
    * Update guides during object manipulation (required by SelectionTool)
    */
   public update(container: Container, _selectedObjects: any[], draggedBounds: any): void {
-    if (!this.ui) return;
+    console.log('🔄 SmartGuides.update called with bounds:', draggedBounds);
     
-    // Convert to our internal format
+    if (!this.ui) {
+      console.warn('⚠️ SmartGuides UI layer not set');
+      return;
+    }
+    
+    // Get current reference mode from SnapManager
+    const prefs = snapManager.getPrefs();
+    const referenceMode = prefs.referenceMode || 'canvas';
+    
+    console.log('📐 Smart Guide Reference Mode:', referenceMode);
+    
+    // Always render grid first if "Show Grid" is enabled (independent of reference mode)
+    if (prefs.showGrid) {
+      this.renderGrid(prefs.gridSpacing || 20);
+    }
+    
+    // Handle different reference modes
+    switch (referenceMode) {
+      case 'canvas':
+        this.handleCanvasReference(container, draggedBounds);
+        break;
+      case 'object':
+        this.handleObjectReference(container, draggedBounds);
+        break;
+      case 'grid':
+        this.handleGridReference(container, draggedBounds);
+        break;
+      default:
+        console.warn('⚠️ Unknown reference mode:', referenceMode);
+        this.handleCanvasReference(container, draggedBounds); // fallback
+    }
+  }
+
+  /**
+   * Handle Canvas Reference mode - guides extend across entire canvas
+   */
+  private handleCanvasReference(container: Container, draggedBounds: any): void {
+    console.log('🖼️ Canvas Reference mode - guides extend across entire canvas');
+    
     const draggedObject = this.boundsToSnapObject(draggedBounds);
     const nearbyObjects = this.findNearbyObjects(container, draggedBounds);
     
-    this.startGuides(draggedObject, nearbyObjects);
+    // In canvas mode, we show both object-to-object and canvas alignment guides
+    // with full canvas extension
+    this.startGuides(draggedObject, nearbyObjects, 'canvas');
+  }
+
+  /**
+   * Handle Object Reference mode - guides limited to objects being aligned
+   */
+  private handleObjectReference(container: Container, draggedBounds: any): void {
+    console.log('🎯 Object Reference mode - guides limited to objects');
+    
+    const draggedObject = this.boundsToSnapObject(draggedBounds);
+    const nearbyObjects = this.findNearbyObjects(container, draggedBounds);
+    
+    // In object mode, we only show object-to-object guides with limited extension
+    this.startGuides(draggedObject, nearbyObjects, 'object');
+  }
+
+  /**
+   * Handle Grid Reference mode - snap to grid without guide lines
+   */
+  private handleGridReference(_container: Container, _draggedBounds: any): void {
+    console.log('📐 Grid Reference mode - snap to grid positions');
+    
+    // In grid mode, we don't show alignment guides, just the grid (which is handled globally)
+    // Grid snapping is handled by SnapManager.snapPoint(), not visual guides
+    // The grid itself is rendered globally when showGrid is enabled
+    
+    // Clear any existing alignment guides since we don't show lines in grid mode
+    this.clear();
+  }
+
+  /**
+   * Render grid overlay
+   */
+  private renderGrid(spacing: number): void {
+    if (!this.ui) return;
+    
+    // Get canvas dimensions
+    const candidateResult = snapManager.getCandidates();
+    const dims = candidateResult.dims;
+    
+    this.renderer.renderGrid(this.ui, dims.width, dims.height, spacing);
   }
 
   /**
@@ -69,6 +149,25 @@ export class SmartGuides {
    */
   public clear(): void {
     this.stopGuides();
+  }
+
+  /**
+   * Show or hide the grid based on current settings
+   */
+  public updateGrid(): void {
+    if (!this.ui) return;
+    
+    const prefs = snapManager.getPrefs();
+    
+    if (prefs.showGrid) {
+      this.renderGrid(prefs.gridSpacing || 20);
+    } else {
+      // Clear grid by clearing the renderer and redrawing any active guides
+      this.renderer.clear();
+      if (this.state.isActive) {
+        this.updateGuides();
+      }
+    }
   }
 
   /**
@@ -94,11 +193,16 @@ export class SmartGuides {
    */
   public startGuides(
     draggedObject: SnapObjectBounds, 
-    nearbyObjects: SnapObjectBounds[]
+    nearbyObjects: SnapObjectBounds[],
+    referenceMode: 'canvas' | 'object' | 'grid' = 'canvas'
   ): void {
     this.state.isActive = true;
     this.state.draggedObject = draggedObject;
     this.state.nearbyObjects = nearbyObjects;
+    
+    // Store reference mode in state for updateGuides
+    (this.state as any).referenceMode = referenceMode;
+    
     this.updateGuides();
   }
 
@@ -106,7 +210,10 @@ export class SmartGuides {
    * Update guides during drag
    */
   public updateGuides(): void {
-    if (!this.state.isActive || !this.state.draggedObject || !this.ui) return;
+    if (!this.state.isActive || !this.state.draggedObject || !this.ui) {
+      console.log('⏭️ Skipping guide update - not active or missing data');
+      return;
+    }
 
     const now = performance.now();
     if (now - this.state.lastRenderTime < GUIDE_LIMITS.MIN_RENDER_INTERVAL) {
@@ -114,20 +221,58 @@ export class SmartGuides {
     }
     this.state.lastRenderTime = now;
 
+    console.log('🎨 Updating guides for dragged object:', this.state.draggedObject);
+    console.log('🎨 Nearby objects:', this.state.nearbyObjects.length);
+
     this.renderer.clear();
+    
+    // Get reference mode from state
+    const referenceMode = (this.state as any).referenceMode || 'canvas';
+    console.log('📐 Reference mode in updateGuides:', referenceMode);
     
     // Convert to Rectangle format for compatibility
     const draggedRect = this.convertToRectangle(this.state.draggedObject);
     const nearbyRects = this.state.nearbyObjects.map(obj => this.convertToRectangle(obj));
 
-    // Generate alignment guides
-    const alignmentGuides = this.alignmentDetector.generateAlignmentGuides(
-      draggedRect,
-      nearbyRects,
-      this.ui
-    );
+    console.log('📏 Dragged rectangle:', draggedRect);
+    console.log('📏 Nearby rectangles:', nearbyRects.length);
 
-    // Generate distance labels if Alt/Option is pressed
+    // Generate guides based on reference mode
+    let alignmentGuides: AlignmentGuide[] = [];
+    
+    switch (referenceMode) {
+      case 'canvas':
+        // Canvas mode: Show both object and canvas guides with full extension
+        alignmentGuides = this.alignmentDetector.generateAlignmentGuides(
+          draggedRect,
+          nearbyRects,
+          this.ui,
+          'canvas'
+        );
+        break;
+        
+      case 'object':
+        // Object mode: Only object-to-object guides with limited extension
+        alignmentGuides = this.alignmentDetector.generateObjectOnlyGuides(
+          draggedRect,
+          nearbyRects,
+          'object'
+        );
+        break;
+        
+      case 'grid':
+        // Grid mode: No guides, just grid if enabled
+        const prefs = snapManager.getPrefs();
+        if (prefs.showGrid) {
+          const candidateResult = snapManager.getCandidates();
+          this.renderer.renderGrid(this.ui, candidateResult.dims.width, candidateResult.dims.height, prefs.gridSpacing || 20);
+        }
+        return; // Exit early, no other guides needed
+    }
+
+    console.log('📐 Generated alignment guides:', alignmentGuides.length);
+
+    // Generate distance labels if Alt/Option is pressed (not for grid mode)
     const distanceLabels: DistanceLabel[] = this.state.showDistanceLabels
       ? this.distanceCalculator.generateDistanceLabels(
           draggedRect,
@@ -135,11 +280,14 @@ export class SmartGuides {
         )
       : [];
 
-    // Generate equal spacing guides
+    // Generate equal spacing guides (not for grid mode)
     const spacingGroups = this.spacingDetector.detectEqualSpacing(
       draggedRect,
       nearbyRects
     );
+
+    console.log('📏 Distance labels:', distanceLabels.length);
+    console.log('📊 Spacing groups:', spacingGroups.length);
 
     // Render all guides
     this.renderer.drawAlignmentGuides(alignmentGuides);
@@ -147,6 +295,7 @@ export class SmartGuides {
     this.renderer.drawEqualSpacingGuides(spacingGroups);
 
     this.state.activeGuides = alignmentGuides;
+    console.log('✅ Guide rendering complete');
   }
 
   /**
@@ -167,53 +316,108 @@ export class SmartGuides {
    * Find nearby objects for guide calculations using SnapManager
    */
   private findNearbyObjects(container: Container, draggedBounds: any): SnapObjectBounds[] {
+    console.log('🔍 Finding nearby objects for smart guides...');
     const objects: SnapObjectBounds[] = [];
     
     if (!snapManager.isSmartEnabled()) {
+      console.log('⚠️ Smart snapping is disabled, returning empty objects list');
       return objects;
     }
 
-    // Use SnapManager to get object snap lines and bounds  
-    snapManager.getCandidates({ 
-      container,
-      rect: new Rectangle(draggedBounds.x, draggedBounds.y, draggedBounds.width, draggedBounds.height),
-      margin: 200 // Look for objects within 200px
-    });
+    try {
+      // Use SnapManager to get object snap lines and bounds  
+      const candidateResult = snapManager.getCandidates({ 
+        container,
+        rect: new Rectangle(draggedBounds.x, draggedBounds.y, draggedBounds.width, draggedBounds.height),
+        margin: 200 // Look for objects within 200px
+      });
 
-    // Get the DisplayObjectManager to access actual objects
-    const dom = (window as any)._displayManager as { getObjects?: () => any[] } | undefined;
-    const objectList = dom?.getObjects?.() || [];
+      console.log('📊 SnapManager candidates result:', candidateResult);
 
-    for (const obj of objectList) {
-      if (!obj?.getBounds || obj.visible === false) continue;
+      // Try to get objects from DisplayObjectManager first
+      const dom = (window as any)._displayManager as { getObjects?: () => any[] } | undefined;
+      let objectList = dom?.getObjects?.() || [];
       
-      try {
-        const bounds = obj.getBounds();
+      // Fallback: try to get objects from container children
+      if (objectList.length === 0) {
+        console.log('📋 Fallback: getting objects from container children');
+        objectList = this.getObjectsFromContainer(container);
+      }
+
+      console.log(`📦 Found ${objectList.length} potential objects for alignment`);
+
+      for (const obj of objectList) {
+        if (!obj?.getBounds || obj.visible === false) continue;
         
-        // Skip the dragged object itself (rough bounds check)
-        if (Math.abs(bounds.x - draggedBounds.x) < 1 && 
-            Math.abs(bounds.y - draggedBounds.y) < 1 &&
-            Math.abs(bounds.width - draggedBounds.width) < 1 &&
-            Math.abs(bounds.height - draggedBounds.height) < 1) {
+        try {
+          const bounds = obj.getBounds();
+          
+          // Skip the dragged object itself (with some tolerance for floating point precision)
+          if (this.isSameObject(bounds, draggedBounds)) {
+            console.log('⏭️ Skipping dragged object');
+            continue;
+          }
+
+          // Convert to SnapObjectBounds format
+          const snapObj = {
+            x: bounds.x,
+            y: bounds.y,
+            width: bounds.width,
+            height: bounds.height,
+            centerX: bounds.x + bounds.width / 2,
+            centerY: bounds.y + bounds.height / 2
+          };
+          
+          objects.push(snapObj);
+          console.log(`✅ Added object: ${bounds.x}, ${bounds.y}, ${bounds.width}x${bounds.height}`);
+        } catch (e) {
+          // Skip objects that can't provide bounds
+          console.warn('⚠️ Failed to get bounds for object:', e);
           continue;
         }
-
-        // Convert to SnapObjectBounds format
-        objects.push({
-          x: bounds.x,
-          y: bounds.y,
-          width: bounds.width,
-          height: bounds.height,
-          centerX: bounds.x + bounds.width / 2,
-          centerY: bounds.y + bounds.height / 2
-        });
-      } catch (e) {
-        // Skip objects that can't provide bounds
-        continue;
       }
+    } catch (error) {
+      console.error('❌ Error in findNearbyObjects:', error);
     }
     
+    console.log(`🎯 Final objects count for alignment: ${objects.length}`);
     return objects;
+  }
+
+  /**
+   * Get objects from container hierarchy (fallback method)
+   */
+  private getObjectsFromContainer(container: Container): any[] {
+    const objects: any[] = [];
+    
+    const traverseContainer = (cont: Container) => {
+      for (const child of cont.children) {
+        if (child.visible && typeof child.getBounds === 'function' && 
+            (child as any).__toolType !== 'ui' && // Skip UI elements
+            !(child as any).__isGuide) { // Skip guide graphics
+          objects.push(child);
+        }
+        
+        // Recursively check child containers
+        if (child instanceof Container) {
+          traverseContainer(child);
+        }
+      }
+    };
+    
+    traverseContainer(container);
+    return objects;
+  }
+
+  /**
+   * Check if two bounds represent the same object
+   */
+  private isSameObject(bounds1: any, bounds2: any): boolean {
+    const tolerance = 2; // Allow some tolerance for floating point precision
+    return Math.abs(bounds1.x - bounds2.x) < tolerance && 
+           Math.abs(bounds1.y - bounds2.y) < tolerance &&
+           Math.abs(bounds1.width - bounds2.width) < tolerance &&
+           Math.abs(bounds1.height - bounds2.height) < tolerance;
   }
 
   /**
@@ -252,7 +456,33 @@ export class SmartGuides {
    */
   public destroy(): void {
     this.stopGuides();
-    this.renderer.clear();
+    this.renderer.destroy();
+  }
+
+  /**
+   * Debug method to test smart guides manually
+   */
+  public debugTest(): void {
+    console.log('🧪 Testing Smart Guides System');
+    console.log('State:', this.state);
+    console.log('UI Layer:', this.ui);
+    console.log('Renderer initialized:', !!this.renderer);
+    
+    if (!this.ui) {
+      console.error('❌ UI layer not set - call setUILayer first');
+      return;
+    }
+    
+    // Create a test scenario
+    const testBounds = { x: 100, y: 100, width: 50, height: 50 };
+    const testContainer = this.ui.parent as Container;
+    
+    if (testContainer) {
+      this.update(testContainer, [], testBounds);
+      console.log('✅ Test update called');
+    } else {
+      console.error('❌ Could not find container for test');
+    }
   }
 
   /**

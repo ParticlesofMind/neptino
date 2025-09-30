@@ -9,8 +9,8 @@ import { UIEventHandler } from './ui/UIEventHandler';
 import { toolColorManager } from './tools/ToolColorManager';
 import { TextTool } from './tools/text/TextTool';
 import { HighQualityZoom } from './canvas/HighQualityZoom';
-import { snapManager } from './tools/SnapManager';
-import { bindSnapMenu } from './tools/SnapMenu';
+import { snapManager } from './tools/selection/guides/SnapManager';
+import { bindSnapMenu } from './tools/selection/guides/SnapMenu';
 import { CanvasLayoutManager } from './ui/CanvasLayoutManager';
 import { ToolCoordinator } from './ui/ToolCoordinator';
 import { initializeAnimationUI } from './animation/AnimationUI';
@@ -131,7 +131,7 @@ export async function initializeCanvas(): Promise<void> {
             snapManager.initialize();
             
             // Initialize enhanced snap menu handler
-            const { enhancedSnapMenuHandler } = await import('./ui/EnhancedSnapMenuHandler');
+            const { enhancedSnapMenuHandler } = await import('./tools/selection/guides/EnhancedSnapMenuHandler');
             enhancedSnapMenuHandler.initialize();
         } catch (error) {
             console.warn('Failed to initialize snap menu:', error);

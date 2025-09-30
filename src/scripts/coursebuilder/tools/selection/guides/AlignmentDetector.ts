@@ -3,7 +3,7 @@
  */
 
 import { Rectangle, Container } from 'pixi.js';
-import { snapManager } from '../../SnapManager';
+import { snapManager } from './SnapManager';
 import { AlignmentGuide } from './types';
 
 export class AlignmentDetector {
@@ -14,21 +14,33 @@ export class AlignmentDetector {
   public generateAlignmentGuides(
     targetBounds: Rectangle, 
     nearbyObjects: Rectangle[], 
-    container: Container
+    container: Container,
+    referenceMode: 'canvas' | 'object' | 'grid' = 'canvas'
   ): AlignmentGuide[] {
+    console.log('🔍 AlignmentDetector.generateAlignmentGuides called');
+    console.log('🎯 Target bounds:', targetBounds);
+    console.log('📦 Nearby objects:', nearbyObjects.length);
+    console.log('📐 Reference mode:', referenceMode);
+
     // Get precision threshold from SnapManager
     const threshold = snapManager.getPrefs().threshold || 8;
+    console.log('📏 Alignment threshold:', threshold);
     
     // Object-to-object alignment guides (higher priority)
-    const objectGuides = this.getObjectAlignmentGuides(nearbyObjects, targetBounds, threshold);
+    const objectGuides = this.getObjectAlignmentGuides(nearbyObjects, targetBounds, threshold, referenceMode);
+    console.log('🎯 Object guides generated:', objectGuides.length);
     
-    // Canvas alignment guides (lower priority)  
-    const canvasGuides = this.getCanvasAlignmentGuides(container, targetBounds, threshold);
+    // For canvas mode, also include canvas alignment guides
+    let canvasGuides: AlignmentGuide[] = [];
+    if (referenceMode === 'canvas') {
+      canvasGuides = this.getCanvasAlignmentGuides(container, targetBounds, threshold);
+      console.log('🖼️ Canvas guides generated:', canvasGuides.length);
+    }
     
     // Combine and sort by relevance and strength
     const allGuides = [...objectGuides, ...canvasGuides];
     
-    return allGuides
+    const filteredGuides = allGuides
       .filter(guide => this.isGuideRelevant(guide, targetBounds, threshold * 3))
       .sort((a, b) => {
         // Prioritize object-to-object guides over canvas guides
@@ -38,6 +50,42 @@ export class AlignmentDetector {
         return b.strength - a.strength;
       })
       .slice(0, 10); // Limit to most relevant guides
+
+    console.log('✅ Final filtered guides:', filteredGuides.length);
+    filteredGuides.forEach((guide, i) => {
+      console.log(`  ${i + 1}. ${guide.type} at ${guide.position}, strength: ${guide.strength}, objects: ${guide.objects.length}`);
+    });
+
+    return filteredGuides;
+  }
+
+  /**
+   * Generate only object-to-object alignment guides (for object reference mode)
+   */
+  public generateObjectOnlyGuides(
+    targetBounds: Rectangle, 
+    nearbyObjects: Rectangle[],
+    referenceMode: 'object' = 'object'
+  ): AlignmentGuide[] {
+    console.log('🎯 AlignmentDetector.generateObjectOnlyGuides called');
+    console.log('🎯 Target bounds:', targetBounds);
+    console.log('📦 Nearby objects:', nearbyObjects.length);
+
+    // Get precision threshold from SnapManager
+    const threshold = snapManager.getPrefs().threshold || 8;
+    console.log('📏 Alignment threshold:', threshold);
+    
+    // Only object-to-object alignment guides with limited extension
+    const objectGuides = this.getObjectAlignmentGuides(nearbyObjects, targetBounds, threshold, referenceMode);
+    console.log('🎯 Object-only guides generated:', objectGuides.length);
+    
+    const filteredGuides = objectGuides
+      .filter(guide => this.isGuideRelevant(guide, targetBounds, threshold * 2)) // Tighter filtering for object mode
+      .sort((a, b) => b.strength - a.strength)
+      .slice(0, 8); // Fewer guides for cleaner object mode
+
+    console.log('✅ Final object-only guides:', filteredGuides.length);
+    return filteredGuides;
   }
 
   /**
@@ -116,7 +164,8 @@ export class AlignmentDetector {
   private getObjectAlignmentGuides(
     objects: Rectangle[], 
     targetBounds?: Rectangle, 
-    threshold: number = 8
+    threshold: number = 8,
+    _referenceMode: 'canvas' | 'object' | 'grid' = 'canvas'
   ): AlignmentGuide[] {
     const guides: AlignmentGuide[] = [];
     

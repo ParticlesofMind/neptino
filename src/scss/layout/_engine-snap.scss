@@ -263,4 +263,52 @@
             color: var(--color-text-primary);
         }
     }
+    
+    // Grid Options section (shown when Grid Reference is selected)
+    &__snap-grid-options {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-2);
+        padding: var(--spacing-2) 0;
+        border-top: 1px solid var(--color-neutral-200);
+        margin-top: var(--spacing-2);
+        
+        // Animation for show/hide
+        transition: opacity 0.2s ease, max-height 0.2s ease;
+        overflow: hidden;
+    }
+    
+    &__snap-grid-spacing {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
+        
+        label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            flex-shrink: 0;
+        }
+        
+        input[type="number"] {
+            width: 60px;
+            padding: var(--spacing-1) var(--spacing-2);
+            border: 1px solid var(--color-neutral-300);
+            border-radius: var(--radius-small);
+            font-size: 0.875rem;
+            text-align: center;
+            
+            &:focus {
+                outline: none;
+                border-color: var(--color-primary-600);
+                box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+            }
+        }
+        
+        .grid-spacing-unit {
+            font-size: 0.875rem;
+            color: var(--color-neutral-600);
+            flex-shrink: 0;
+        }
+    }
 }

@@ -3,7 +3,7 @@
  * Manages the UI for enhanced smart guides settings
  */
 
-import { snapManager } from '../tools/SnapManager';
+import { snapManager } from './SnapManager';
 
 export class EnhancedSnapMenuHandler {
   private menu: HTMLElement | null = null;

@@ -11,7 +11,7 @@ import {
     hexToNumber,
 } from "../SharedResources";
 import { BoundaryUtils } from "../BoundaryUtils";
-import { snapManager } from "../SnapManager";
+import { snapManager } from "../selection/guides/SnapManager";
 import { ShapeDrawerFactory } from "./ShapeDrawerFactory";
 import { 
     ShapesSettings, 

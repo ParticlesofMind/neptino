@@ -1207,23 +1207,37 @@
               </div>
             </div>
 
-            <!-- Guide Extension -->
+            <!-- Smart Guide Reference Modes -->
             <div class="engine__snap-divider"></div>
             <div class="engine__snap-guide-modes">
-              <label>Guide Extension</label>
+              <label>Smart Guide Reference</label>
               <div class="engine__snap-row">
-                <div class="engine__snap-item engine__snap-item--small" data-guide-mode="selection">
+                <div class="engine__snap-item engine__snap-item--small engine__snap-item--active" data-reference-mode="canvas" title="Smart guides snap objects to canvas edges, center, or quadrants. Provides absolute positioning relative to the viewport; guides appear as lines from canvas boundaries during drag, with minimal tolerance for alignment.">
                   <img class="engine__snap-icon icon icon--base"
-                    src="/src/assets/icons/coursebuilder/perspective/selection-icon.svg" alt="Selection"><span>Selection</span>
+                    src="/src/assets/icons/coursebuilder/perspective/canvas-icon.svg" alt="Canvas Reference"><span>Canvas Reference</span>
                 </div>
-                <div class="engine__snap-item engine__snap-item--small" data-guide-mode="viewport">
+                <div class="engine__snap-item engine__snap-item--small" data-reference-mode="object" title="Smart guides align to other objects' edges, centers, or paths. Dynamic snapping based on nearby elements; shows temporary guide lines connecting matching points, with adjustable sensitivity for crowded scenes.">
                   <img class="engine__snap-icon icon icon--base"
-                    src="/src/assets/icons/coursebuilder/perspective/viewport-icon.svg" alt="Viewport"><span>Viewport</span>
+                    src="/src/assets/icons/coursebuilder/perspective/selection-icon.svg" alt="Object Reference"><span>Object Reference</span>
                 </div>
-                <div class="engine__snap-item engine__snap-item--small engine__snap-item--active" data-guide-mode="canvas">
+                <div class="engine__snap-item engine__snap-item--small" data-reference-mode="grid" title="Smart guides follow a predefined grid system (e.g., pixel or custom intervals). Restricts movement to grid increments; displays persistent grid lines or dots, enforcing uniform spacing unlike freeform object snapping.">
                   <img class="engine__snap-icon icon icon--base"
-                    src="/src/assets/icons/coursebuilder/perspective/canvas-icon.svg" alt="Canvas"><span>Canvas</span>
+                    src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg" alt="Grid Reference"><span>Grid Reference</span>
                 </div>
+              </div>
+            </div>
+
+            <!-- Grid Options (only visible when Grid Reference is selected) -->
+            <div class="engine__snap-grid-options" id="grid-options" style="display: none;">
+              <div class="engine__snap-toggle">
+                <input type="checkbox" id="show-grid" checked>
+                <label for="show-grid">Show grid</label>
+              </div>
+              
+              <div class="engine__snap-grid-spacing">
+                <label for="grid-spacing">Grid spacing:</label>
+                <input type="number" id="grid-spacing" min="1" max="100" value="20" class="input input--number">
+                <span class="grid-spacing-unit">px</span>
               </div>
             </div>
           </div>

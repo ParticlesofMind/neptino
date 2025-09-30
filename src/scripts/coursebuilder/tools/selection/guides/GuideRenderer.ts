@@ -1,5 +1,19 @@
 /**
- * Visual rendering of guide lines and labels
+ * Visual rendering  public clearAll(): void {
+    // Clear graphics content without destroying objects
+    if (this.guideGfx) {
+      this.guideGfx.clear();
+    }
+    if (this.distanceGfx) {
+      this.distanceGfx.clear();
+    }
+    if (this.gridGfx) {
+      this.gridGfx.clear();
+    }
+    if (this.labelContainer) {
+      this.labelContainer.removeChildren();
+    }
+  }nes and labels
  */
 
 import { Graphics, Container, Text } from 'pixi.js';
@@ -9,23 +23,45 @@ import { GUIDE_COLORS, GUIDE_LIMITS, VISUAL_SETTINGS } from './config';
 export class GuideRenderer {
   private guideGfx: Graphics | null = null;
   private distanceGfx: Graphics | null = null;
+  private gridGfx: Graphics | null = null;
   private labelContainer: Container | null = null;
+  private ui: Container | null = null;
 
   public initialize(ui: Container): void {
+    this.ui = ui;
     this.initializeGuideGraphics(ui);
     this.initializeDistanceGraphics(ui);
+    this.initializeGridGraphics(ui);
     this.initializeLabelContainer(ui);
   }
 
   public clear(): void {
-    this.clearGraphics();
+    // Clear graphics content without destroying objects
+    if (this.guideGfx) {
+      this.guideGfx.clear();
+    }
+    if (this.distanceGfx) {
+      this.distanceGfx.clear();
+    }
+    if (this.labelContainer) {
+      this.labelContainer.removeChildren();
+    }
   }
 
   /**
    * Render alignment guides as blue lines with enhanced visibility
    */
   public drawAlignmentGuides(guides: AlignmentGuide[]): void {
+    // Ensure graphics object exists
+    if (!this.guideGfx && this.ui) {
+      this.initializeGuideGraphics(this.ui);
+    }
     if (!this.guideGfx) return;
+    
+    // Clear previous guides
+    this.guideGfx.clear();
+    
+    console.log(`🔵 Drawing ${guides.length} alignment guides`);
     
     for (const guide of guides.slice(0, GUIDE_LIMITS.MAX_ALIGNMENT_GUIDES)) {
       // Enhanced alpha calculation for better visibility
@@ -36,6 +72,8 @@ export class GuideRenderer {
       // Stronger lines for object-to-object alignments
       const lineWidth = guide.objects.length > 0 ? 2 : 1;
       const color = GUIDE_COLORS.alignment;
+      
+      console.log(`🔵 Guide: ${guide.type} at ${guide.position}, strength: ${guide.strength}, alpha: ${alpha}`);
       
       if (guide.type === 'vertical') {
         // Draw full-height vertical line
@@ -57,7 +95,13 @@ export class GuideRenderer {
    * Render distance labels with red backgrounds
    */
   public drawDistanceLabels(labels: DistanceLabel[]): void {
+    // Ensure label container exists
+    if (!this.labelContainer && this.ui) {
+      this.initializeLabelContainer(this.ui);
+    }
     if (!this.labelContainer) return;
+    
+    console.log(`🏷️ Drawing ${labels.length} distance labels`);
     
     for (const label of labels) {
       this.createDistanceLabel(
@@ -72,7 +116,13 @@ export class GuideRenderer {
    * Render equal spacing guides as pink lines
    */
   public drawEqualSpacingGuides(groups: EqualSpacingGroup[]): void {
+    // Ensure graphics object exists
+    if (!this.guideGfx && this.ui) {
+      this.initializeGuideGraphics(this.ui);
+    }
     if (!this.guideGfx) return;
+    
+    console.log(`📐 Drawing ${groups.length} equal spacing groups`);
     
     for (const group of groups.slice(0, GUIDE_LIMITS.MAX_EQUAL_SPACING_GROUPS)) {
       const color = GUIDE_COLORS.equalSpacing;
@@ -152,6 +202,8 @@ export class GuideRenderer {
       this.guideGfx = new Graphics();
       this.guideGfx.zIndex = 10000;
       this.guideGfx.eventMode = 'none';
+      // Mark as guide graphics so object detection can skip it
+      (this.guideGfx as any).__isGuide = true;
       ui.addChild(this.guideGfx);
     } else {
       this.guideGfx.clear();
@@ -163,9 +215,24 @@ export class GuideRenderer {
       this.distanceGfx = new Graphics();
       this.distanceGfx.zIndex = 10001;
       this.distanceGfx.eventMode = 'none';
+      // Mark as guide graphics so object detection can skip it
+      (this.distanceGfx as any).__isGuide = true;
       ui.addChild(this.distanceGfx);
     } else {
       this.distanceGfx.clear();
+    }
+  }
+
+  private initializeGridGraphics(ui: Container): void {
+    if (!this.gridGfx) {
+      this.gridGfx = new Graphics();
+      this.gridGfx.zIndex = 9999; // Below guides but above content
+      this.gridGfx.eventMode = 'none';
+      // Mark as guide graphics so object detection can skip it
+      (this.gridGfx as any).__isGuide = true;
+      ui.addChild(this.gridGfx);
+    } else {
+      this.gridGfx.clear();
     }
   }
 
@@ -174,10 +241,19 @@ export class GuideRenderer {
       this.labelContainer = new Container();
       this.labelContainer.zIndex = 10003;
       this.labelContainer.eventMode = 'none';
+      // Mark as guide graphics so object detection can skip it
+      (this.labelContainer as any).__isGuide = true;
       ui.addChild(this.labelContainer);
     } else {
       try { this.labelContainer.removeChildren(); } catch {}
     }
+  }
+
+  /**
+   * Destroy and clean up all graphics (called when renderer is destroyed)
+   */
+  public destroy(): void {
+    this.clearGraphics();
   }
 
   private clearGraphics(): void {
@@ -197,6 +273,50 @@ export class GuideRenderer {
       this.labelContainer.parent.removeChild(this.labelContainer);
       this.labelContainer.destroy();
       this.labelContainer = null;
+    }
+  }
+
+  /**
+   * Render grid lines for grid reference mode
+   */
+  public renderGrid(ui: Container, canvasWidth: number, canvasHeight: number, spacing: number): void {
+    // Initialize grid graphics if needed
+    if (!this.gridGfx && ui) {
+      this.initializeGridGraphics(ui);
+    }
+    
+    if (!this.gridGfx) {
+      console.warn('⚠️ Grid graphics not initialized for grid rendering');
+      return;
+    }
+
+    console.log('📐 Rendering grid:', { canvasWidth, canvasHeight, spacing });
+
+    // Clear existing grid
+    this.gridGfx.clear();
+
+    // Set grid line style - lighter and more subtle than guide lines
+    this.gridGfx.stroke({ width: 1, color: 0x007AFF, alpha: 0.2 });
+
+    // Draw vertical grid lines
+    for (let x = 0; x <= canvasWidth; x += spacing) {
+      this.gridGfx.moveTo(x, 0);
+      this.gridGfx.lineTo(x, canvasHeight);
+    }
+
+    // Draw horizontal grid lines
+    for (let y = 0; y <= canvasHeight; y += spacing) {
+      this.gridGfx.moveTo(0, y);
+      this.gridGfx.lineTo(canvasWidth, y);
+    }
+
+    console.log('✅ Grid rendered with spacing:', spacing);
+  }
+
+  public clearGrid(): void {
+    if (this.gridGfx) {
+      this.gridGfx.clear();
+      console.log('✅ Grid cleared');
     }
   }
 }

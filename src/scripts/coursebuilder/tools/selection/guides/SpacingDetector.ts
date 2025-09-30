@@ -3,7 +3,7 @@
  */
 
 import { Rectangle } from 'pixi.js';
-import { snapManager } from '../../SnapManager';
+import { snapManager } from './SnapManager';
 import { EqualSpacingGroup } from './types';
 import { GUIDE_THRESHOLDS } from './config';
 

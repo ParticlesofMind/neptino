@@ -1,6 +1,6 @@
 import { Container, FederatedPointerEvent, Point, Rectangle } from 'pixi.js';
 import { BaseTool } from '../ToolInterface';
-import { snapManager } from '../SnapManager';
+import { snapManager } from './guides/SnapManager';
 import { ClickSelection } from './clickSelection';
 import { SelectionClipboard } from './SelectionClipboard';
 import { SelectionOverlay } from './SelectionOverlay';
@@ -54,7 +54,18 @@ export class SelectionTool extends BaseTool {
     });
   }
 
-  public setUILayer(container: Container) { this.container = container; this.overlay.setUILayer(container); this.guides.setUILayer(container); this.marquee.setUILayer(container); }
+  public setUILayer(container: Container) { 
+    this.container = container; 
+    this.overlay.setUILayer(container); 
+    this.guides.setUILayer(container); 
+    this.marquee.setUILayer(container); 
+    
+    // Add debug command for smart guides
+    (window as any).testSmartGuides = () => {
+      console.log('🧪 Testing Smart Guides from SelectionTool');
+      this.guides.debugTest();
+    };
+  }
   public override setDisplayObjectManager(manager: any): void { super.setDisplayObjectManager(manager); this.clipboardSvc.setDisplayManager(manager); }
 
   public onPointerDown(event: FederatedPointerEvent, container: Container): void {

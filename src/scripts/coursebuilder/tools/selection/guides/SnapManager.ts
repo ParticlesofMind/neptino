@@ -8,7 +8,7 @@
  */
 
 import { Point, Container, Rectangle } from 'pixi.js';
-import { canvasDimensionManager } from '../utils/CanvasDimensionManager';
+import { canvasDimensionManager } from '../../../utils/CanvasDimensionManager';
 
 type SnapMode = 'smart' | 'none';
 
@@ -140,8 +140,25 @@ class SnapManager {
     if (this.activeMode === 'none') return new Point(x, y);
 
     if (this.activeMode === 'smart') {
+      // Check reference mode for different snapping behaviors
+      const referenceMode = this.prefs.referenceMode || 'canvas';
+      
+      // Handle grid reference mode separately
+      if (referenceMode === 'grid') {
+        return this.snapToGrid(p);
+      }
+      
+      // For canvas and object modes, use existing logic but filter appropriately
       // Smart = align to other objects and canvas edges/centers
       const cand = this.getCandidates(options);
+      
+      // Filter based on reference mode
+      let canvasLines = { v: cand.canvas.v || [], h: cand.canvas.h || [] };
+      
+      if (referenceMode === 'object') {
+        // Object mode: only use object lines, not canvas lines
+        canvasLines = { v: [], h: [] };
+      }
 
       // Figma-style magnetic snapping: stronger pull for alignments
       if (this.prefs.enableFigmaMode && this.prefs.magneticSnapping) {
@@ -151,13 +168,13 @@ class SnapManager {
         if (this.prefs.enableCenterBias) {
           const centerXs: number[] = [];
           const centerYs: number[] = [];
-          // Canvas centers
-          if (cand.canvas?.v?.length) {
-            const canvasCx = cand.canvas.v[Math.floor(cand.canvas.v.length / 2)];
+          // Canvas centers (only if canvas mode)
+          if (referenceMode === 'canvas' && canvasLines.v.length) {
+            const canvasCx = canvasLines.v[Math.floor(canvasLines.v.length / 2)];
             if (typeof canvasCx === 'number') centerXs.push(canvasCx);
           }
-          if (cand.canvas?.h?.length) {
-            const canvasCy = cand.canvas.h[Math.floor(cand.canvas.h.length / 2)];
+          if (referenceMode === 'canvas' && canvasLines.h.length) {
+            const canvasCy = canvasLines.h[Math.floor(canvasLines.h.length / 2)];
             if (typeof canvasCy === 'number') centerYs.push(canvasCy);
           }
           // Object centers (precomputed for efficiency)
@@ -191,10 +208,10 @@ class SnapManager {
         }
 
         // Enhanced edge snapping with magnetic behavior
-        const vLines = cand.vLines.concat(cand.canvas.v || []);
-        const hLines = cand.hLines.concat(cand.canvas.h || []);
-        x = this.snapAxisMagnetic(x, vLines, magneticThreshold);
-        y = this.snapAxisMagnetic(y, hLines, magneticThreshold);
+        const vLinesForSnap = cand.vLines.concat(canvasLines.v);
+        const hLinesForSnap = cand.hLines.concat(canvasLines.h);
+        x = this.snapAxisMagnetic(x, vLinesForSnap, magneticThreshold);
+        y = this.snapAxisMagnetic(y, hLinesForSnap, magneticThreshold);
       } else {
         // Original snapping behavior
         // Symmetry bias: prefer snapping to centers (canvas + object centers) with a larger effective threshold
@@ -202,13 +219,13 @@ class SnapManager {
         if (this.prefs.enableCenterBias) {
           const centerXs: number[] = [];
           const centerYs: number[] = [];
-          // Canvas centers
-          if (cand.canvas?.v?.length) {
-            const canvasCx = cand.canvas.v[Math.floor(cand.canvas.v.length / 2)];
+          // Canvas centers (only if canvas mode)
+          if (referenceMode === 'canvas' && canvasLines.v.length) {
+            const canvasCx = canvasLines.v[Math.floor(canvasLines.v.length / 2)];
             if (typeof canvasCx === 'number') centerXs.push(canvasCx);
           }
-          if (cand.canvas?.h?.length) {
-            const canvasCy = cand.canvas.h[Math.floor(cand.canvas.h.length / 2)];
+          if (referenceMode === 'canvas' && canvasLines.h.length) {
+            const canvasCy = canvasLines.h[Math.floor(canvasLines.h.length / 2)];
             if (typeof canvasCy === 'number') centerYs.push(canvasCy);
           }
           // Object centers (precomputed for efficiency)
@@ -235,10 +252,10 @@ class SnapManager {
         }
 
         // Fall back to nearest candidates if not center-snapped
-        const vLines = cand.vLines.concat(cand.canvas.v || []);
-        const hLines = cand.hLines.concat(cand.canvas.h || []);
-        x = this.snapAxis(x, vLines);
-        y = this.snapAxis(y, hLines);
+        const vLinesForSnap = cand.vLines.concat(canvasLines.v);
+        const hLinesForSnap = cand.hLines.concat(canvasLines.h);
+        x = this.snapAxis(x, vLinesForSnap);
+        y = this.snapAxis(y, hLinesForSnap);
       }
     }
 
@@ -519,6 +536,27 @@ class SnapManager {
       const val = parseInt(btn.dataset.value || '0', 10);
       btn.classList.toggle('active', val === this.prefs.threshold);
     });
+  }
+
+  /**
+   * Snap to grid positions only
+   */
+  private snapToGrid(p: Point): Point {
+    const gridSpacing = this.prefs.gridSpacing || 20;
+    const threshold = this.prefs.threshold || 8;
+    
+    const x = p.x;
+    const y = p.y;
+    
+    // Find nearest grid points
+    const nearestGridX = Math.round(x / gridSpacing) * gridSpacing;
+    const nearestGridY = Math.round(y / gridSpacing) * gridSpacing;
+    
+    // Snap if within threshold
+    const snapX = Math.abs(x - nearestGridX) <= threshold ? nearestGridX : x;
+    const snapY = Math.abs(y - nearestGridY) <= threshold ? nearestGridY : y;
+    
+    return new Point(snapX, snapY);
   }
 }
 

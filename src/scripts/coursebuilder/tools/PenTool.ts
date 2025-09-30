@@ -15,7 +15,7 @@ import { BoundaryUtils } from "./BoundaryUtils";
 import { historyManager } from "../canvas/HistoryManager";
 import { PathBooleanOperations, BooleanOperation, PathData } from "./PathBooleanOperations";
 import { PenPathSettings, VectorNode, VectorPath, VectorPointType } from "./pen/PenGeometry";
-import { snapManager } from "./SnapManager";
+import { snapManager } from "./selection/guides/SnapManager";
 
 interface PenSettings extends PenPathSettings {
  mode: 'pen' | 'bend';  // Pen mode (click to place) or bend mode (drag to curve)
