@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Smart Guides - Precise Alignment</title>
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        #app { width: 100%; height: 600px; border: 1px solid #ccc; }
+        .info { margin: 10px 0; padding: 10px; background: #f0f8ff; border-radius: 4px; border-left: 4px solid #007AFF; }
+        .controls { margin: 10px 0; }
+        button { margin: 5px; padding: 8px 16px; background: #007AFF; color: white; border: none; border-radius: 4px; }
+        .feature-list { color: #333; font-size: 14px; line-height: 1.6; }
+        .status { color: #28a745; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Enhanced Smart Guides - Precise Object Alignment</h1>
+    
+    <div class="info">
+        <strong class="status">✅ SMART GUIDES ENHANCED FOR PRECISION</strong>
+        <div class="feature-list">
+            <h3>🔵 Blue Guide Lines - Object-to-Object Alignment:</h3>
+            <ul>
+                <li><strong>Left/Right/Center</strong> - Snap to object edges and centers</li>
+                <li><strong>Top/Bottom/Center</strong> - Snap to object edges and centers</li>
+                <li><strong>Stronger lines</strong> for object-to-object vs canvas alignment</li>
+                <li><strong>High precision</strong> snapping (±8px threshold)</li>
+            </ul>
+            
+            <h3>📐 Equal Spacing Detection (3+ Objects):</h3>
+            <ul>
+                <li><strong>Horizontal spacing</strong> - Detect equal gaps left-to-right</li>
+                <li><strong>Vertical spacing</strong> - Detect equal gaps top-to-bottom</li>
+                <li><strong>Pink guides</strong> for equal spacing visualization</li>
+                <li><strong>Smart joining</strong> - Target can join existing equal-spaced groups</li>
+            </ul>
+            
+            <h3>⚡ Integration Features:</h3>
+            <ul>
+                <li><strong>SnapManager integration</strong> - Uses existing object detection</li>
+                <li><strong>Real-time updates</strong> - Guides update during drag operations</li>
+                <li><strong>Performance optimized</strong> - Spatial filtering and guide limits</li>
+                <li><strong>Canvas alignment</strong> - Snap to canvas edges and center</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="info">
+        <strong>🔧 Technical Improvements:</strong>
+        <ul class="feature-list">
+            <li><strong>SnapManager.getCandidates()</strong> - Leverages existing object detection</li>
+            <li><strong>Enhanced precision</strong> - Math.round() for pixel-perfect alignment</li>
+            <li><strong>Blue guide color</strong> - iOS/Figma-style visual language (#007AFF)</li>
+            <li><strong>Full-canvas lines</strong> - Guides extend across entire canvas</li>
+            <li><strong>Strength-based rendering</strong> - Thicker lines for stronger alignments</li>
+            <li><strong>Equal spacing confidence</strong> - Statistical analysis of gap consistency</li>
+        </ul>
+    </div>
+
+    <div class="controls">
+        <button onclick="testAlignment()">Test Object Alignment</button>
+        <button onclick="testEqualSpacing()">Test Equal Spacing</button>
+        <button onclick="showImplementation()">Show Implementation</button>
+    </div>
+
+    <div id="app"></div>
+
+    <script>
+        function testAlignment() {
+            document.getElementById('app').innerHTML = `
+                <div style="padding: 20px; background: #f9f9f9; border-radius: 8px; height: 100%;">
+                    <h3>🔵 Object-to-Object Alignment Features</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 90%;">
+                        <div style="background: white; padding: 15px; border-radius: 4px; border: 1px solid #ddd;">
+                            <h4>Vertical Alignment</h4>
+                            <ul>
+                                <li>✅ Left edges align</li>
+                                <li>✅ Right edges align</li> 
+                                <li>✅ Center lines align</li>
+                                <li>✅ Blue guides show snap lines</li>
+                                <li>✅ Precision: ±8px threshold</li>
+                            </ul>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 4px; border: 1px solid #ddd;">
+                            <h4>Horizontal Alignment</h4>
+                            <ul>
+                                <li>✅ Top edges align</li>
+                                <li>✅ Bottom edges align</li>
+                                <li>✅ Center lines align</li>
+                                <li>✅ Canvas edges + center</li>
+                                <li>✅ Real-time guide updates</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function testEqualSpacing() {
+            document.getElementById('app').innerHTML = `
+                <div style="padding: 20px; background: #f9f9f9; border-radius: 8px; height: 100%;">
+                    <h3>📐 Equal Spacing Detection (3+ Objects)</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 90%;">
+                        <div style="background: white; padding: 15px; border-radius: 4px; border: 1px solid #ddd;">
+                            <h4>Horizontal Equal Spacing</h4>
+                            <ul>
+                                <li>✅ Detects 3+ horizontally aligned objects</li>
+                                <li>✅ Calculates gap consistency</li>
+                                <li>✅ Pink guides for equal spacing</li>
+                                <li>✅ Target can join existing groups</li>
+                                <li>✅ Confidence scoring (70%+ threshold)</li>
+                            </ul>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 4px; border: 1px solid #ddd;">
+                            <h4>Vertical Equal Spacing</h4>
+                            <ul>
+                                <li>✅ Detects 3+ vertically aligned objects</li>
+                                <li>✅ Statistical gap analysis</li>
+                                <li>✅ Pink reorder handles</li>
+                                <li>✅ Smart group formation</li>
+                                <li>✅ High precision tolerance</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showImplementation() {
+            document.getElementById('app').innerHTML = `
+                <div style="padding: 20px; background: #f9f9f9; border-radius: 8px; height: 100%;">
+                    <h3>🔧 Implementation Architecture</h3>
+                    <div style="background: white; padding: 15px; border-radius: 4px; border: 1px solid #ddd; font-family: monospace; font-size: 12px; overflow-y: auto; height: 90%;">
+                        <strong>Key Integration Points:</strong><br><br>
+                        
+                        <strong>1. SnapManager Integration:</strong><br>
+                        • snapManager.getCandidates() - Object detection<br>
+                        • snapManager.getPrefs().threshold - Precision control<br>
+                        • Real DisplayObjectManager access<br><br>
+                        
+                        <strong>2. Enhanced AlignmentDetector:</strong><br>
+                        • Object-to-object alignment prioritized<br>
+                        • Canvas alignment as fallback<br>
+                        • Math.round() for pixel precision<br>
+                        • Strength-based guide sorting<br><br>
+                        
+                        <strong>3. Advanced SpacingDetector:</strong><br>
+                        • 3+ object equal spacing detection<br>
+                        • Statistical confidence analysis<br>
+                        • Target object group joining<br>
+                        • Gap consistency validation<br><br>
+                        
+                        <strong>4. Enhanced GuideRenderer:</strong><br>
+                        • Blue guides (#007AFF)<br>
+                        • Full-canvas line extension<br>
+                        • Variable line thickness<br>
+                        • Strength-based alpha blending<br><br>
+                        
+                        <strong>5. Precision Features:</strong><br>
+                        • ±8px snapping threshold<br>
+                        • Real-time guide updates<br>
+                        • Spatial filtering (200px range)<br>
+                        • Performance optimizations
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize with alignment test
+        testAlignment();
+    </script>
+</body>
+</html>

@@ -9,6 +9,7 @@ import { DistanceCalculator } from './DistanceCalculator';
 import { SpacingDetector } from './SpacingDetector';
 import { GuideRenderer } from './GuideRenderer';
 import { GUIDE_LIMITS } from './config';
+import { snapManager } from '../../SnapManager';
 
 export class SmartGuides {
   private alignmentDetector: AlignmentDetector;
@@ -45,7 +46,7 @@ export class SmartGuides {
   /**
    * Update guides during object manipulation (required by SelectionTool)
    */
-  public update(container: Container, selectedObjects: any[], draggedBounds: any): void {
+  public update(container: Container, _selectedObjects: any[], draggedBounds: any): void {
     if (!this.ui) return;
     
     // Convert to our internal format
@@ -58,7 +59,7 @@ export class SmartGuides {
   /**
    * Update resize guides (required by SelectionTool)
    */
-  public updateResizeGuides(container: Container, selectedObjects: any[], bounds: any, mode: string): void {
+  public updateResizeGuides(container: Container, selectedObjects: any[], bounds: any, _mode: string): void {
     // For resize operations, treat similar to regular update
     this.update(container, selectedObjects, bounds);
   }
@@ -129,8 +130,8 @@ export class SmartGuides {
     // Generate distance labels if Alt/Option is pressed
     const distanceLabels: DistanceLabel[] = this.state.showDistanceLabels
       ? this.distanceCalculator.generateDistanceLabels(
-          this.state.draggedObject,
-          this.state.nearbyObjects
+          draggedRect,
+          nearbyRects
         )
       : [];
 
@@ -163,14 +164,54 @@ export class SmartGuides {
   }
 
   /**
-   * Find nearby objects for guide calculations
+   * Find nearby objects for guide calculations using SnapManager
    */
   private findNearbyObjects(container: Container, draggedBounds: any): SnapObjectBounds[] {
-    // Simple implementation - in a real scenario this would use spatial indexing
     const objects: SnapObjectBounds[] = [];
     
-    // This is a simplified version - you'd want to iterate through container children
-    // and extract their bounds, excluding the dragged object
+    if (!snapManager.isSmartEnabled()) {
+      return objects;
+    }
+
+    // Use SnapManager to get object snap lines and bounds  
+    snapManager.getCandidates({ 
+      container,
+      rect: new Rectangle(draggedBounds.x, draggedBounds.y, draggedBounds.width, draggedBounds.height),
+      margin: 200 // Look for objects within 200px
+    });
+
+    // Get the DisplayObjectManager to access actual objects
+    const dom = (window as any)._displayManager as { getObjects?: () => any[] } | undefined;
+    const objectList = dom?.getObjects?.() || [];
+
+    for (const obj of objectList) {
+      if (!obj?.getBounds || obj.visible === false) continue;
+      
+      try {
+        const bounds = obj.getBounds();
+        
+        // Skip the dragged object itself (rough bounds check)
+        if (Math.abs(bounds.x - draggedBounds.x) < 1 && 
+            Math.abs(bounds.y - draggedBounds.y) < 1 &&
+            Math.abs(bounds.width - draggedBounds.width) < 1 &&
+            Math.abs(bounds.height - draggedBounds.height) < 1) {
+          continue;
+        }
+
+        // Convert to SnapObjectBounds format
+        objects.push({
+          x: bounds.x,
+          y: bounds.y,
+          width: bounds.width,
+          height: bounds.height,
+          centerX: bounds.x + bounds.width / 2,
+          centerY: bounds.y + bounds.height / 2
+        });
+      } catch (e) {
+        // Skip objects that can't provide bounds
+        continue;
+      }
+    }
     
     return objects;
   }

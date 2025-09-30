@@ -22,27 +22,33 @@ export class GuideRenderer {
   }
 
   /**
-   * Render alignment guides as red lines
+   * Render alignment guides as blue lines with enhanced visibility
    */
   public drawAlignmentGuides(guides: AlignmentGuide[]): void {
     if (!this.guideGfx) return;
     
     for (const guide of guides.slice(0, GUIDE_LIMITS.MAX_ALIGNMENT_GUIDES)) {
-      const alpha = Math.min(
-        VISUAL_SETTINGS.GUIDE_ALPHA_MAX, 
-        VISUAL_SETTINGS.GUIDE_ALPHA_BASE + guide.strength * VISUAL_SETTINGS.GUIDE_ALPHA_PER_STRENGTH
-      );
+      // Enhanced alpha calculation for better visibility
+      const baseAlpha = 0.8;
+      const strengthMultiplier = Math.min(0.2, guide.strength * 0.05);
+      const alpha = Math.min(1.0, baseAlpha + strengthMultiplier);
+      
+      // Stronger lines for object-to-object alignments
+      const lineWidth = guide.objects.length > 0 ? 2 : 1;
+      const color = GUIDE_COLORS.alignment;
       
       if (guide.type === 'vertical') {
+        // Draw full-height vertical line
         this.guideGfx
-          .moveTo(Math.round(guide.position) + 0.5, 0)
-          .lineTo(Math.round(guide.position) + 0.5, 10000)
-          .stroke({ width: 1, color: GUIDE_COLORS.alignment, alpha });
+          .moveTo(Math.round(guide.position) + 0.5, -5000)
+          .lineTo(Math.round(guide.position) + 0.5, 15000)
+          .stroke({ width: lineWidth, color, alpha });
       } else {
+        // Draw full-width horizontal line  
         this.guideGfx
-          .moveTo(0, Math.round(guide.position) + 0.5)
-          .lineTo(10000, Math.round(guide.position) + 0.5)
-          .stroke({ width: 1, color: GUIDE_COLORS.alignment, alpha });
+          .moveTo(-5000, Math.round(guide.position) + 0.5)
+          .lineTo(15000, Math.round(guide.position) + 0.5)
+          .stroke({ width: lineWidth, color, alpha });
       }
     }
   }

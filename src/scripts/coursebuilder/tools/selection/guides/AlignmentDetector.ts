@@ -16,144 +16,263 @@ export class AlignmentDetector {
     nearbyObjects: Rectangle[], 
     container: Container
   ): AlignmentGuide[] {
-    const canvasGuides = this.getCanvasAlignmentGuides(container);
-    const objectGuides = this.getObjectAlignmentGuides(nearbyObjects);
+    // Get precision threshold from SnapManager
+    const threshold = snapManager.getPrefs().threshold || 8;
     
-    return [...canvasGuides, ...objectGuides]
-      .filter(guide => this.isGuideRelevant(guide, targetBounds))
-      .sort((a, b) => b.strength - a.strength);
+    // Object-to-object alignment guides (higher priority)
+    const objectGuides = this.getObjectAlignmentGuides(nearbyObjects, targetBounds, threshold);
+    
+    // Canvas alignment guides (lower priority)  
+    const canvasGuides = this.getCanvasAlignmentGuides(container, targetBounds, threshold);
+    
+    // Combine and sort by relevance and strength
+    const allGuides = [...objectGuides, ...canvasGuides];
+    
+    return allGuides
+      .filter(guide => this.isGuideRelevant(guide, targetBounds, threshold * 3))
+      .sort((a, b) => {
+        // Prioritize object-to-object guides over canvas guides
+        if (a.objects.length > 0 && b.objects.length === 0) return -1;
+        if (a.objects.length === 0 && b.objects.length > 0) return 1;
+        // Then by strength (number of aligned objects)
+        return b.strength - a.strength;
+      })
+      .slice(0, 10); // Limit to most relevant guides
   }
 
   /**
    * Get canvas edge and center alignment guides
    */
-  private getCanvasAlignmentGuides(container: Container): AlignmentGuide[] {
+  private getCanvasAlignmentGuides(
+    container: Container, 
+    targetBounds?: Rectangle, 
+    threshold: number = 8
+  ): AlignmentGuide[] {
     const guides: AlignmentGuide[] = [];
-    const candidates = snapManager.getCandidates({ container });
     
-    // Canvas vertical guides
-    for (const x of candidates.canvas.v) {
-      guides.push({
-        type: 'vertical',
-        position: x,
-        alignmentType: x === candidates.dims.width / 2 ? 'center' : 'edge',
-        objects: [],
-        strength: x === candidates.dims.width / 2 ? 2 : 1
-      });
-    }
+    // Get canvas bounds
+    const canvasBounds = container.getBounds();
     
-    // Canvas horizontal guides
-    for (const y of candidates.canvas.h) {
-      guides.push({
-        type: 'horizontal',
-        position: y,
-        alignmentType: y === candidates.dims.height / 2 ? 'center' : 'edge',
-        objects: [],
-        strength: y === candidates.dims.height / 2 ? 2 : 1
-      });
+    // Canvas vertical positions (left, center, right)
+    const canvasVerticals = [
+      { pos: canvasBounds.x, type: 'edge' as const },
+      { pos: canvasBounds.x + canvasBounds.width / 2, type: 'center' as const },
+      { pos: canvasBounds.x + canvasBounds.width, type: 'edge' as const }
+    ];
+    
+    // Canvas horizontal positions (top, center, bottom)
+    const canvasHorizontals = [
+      { pos: canvasBounds.y, type: 'edge' as const },
+      { pos: canvasBounds.y + canvasBounds.height / 2, type: 'center' as const },
+      { pos: canvasBounds.y + canvasBounds.height, type: 'edge' as const }
+    ];
+    
+    // Only show canvas guides if target is close to them
+    if (targetBounds) {
+      const targetLeft = targetBounds.x;
+      const targetCenterX = targetBounds.x + targetBounds.width / 2;
+      const targetRight = targetBounds.x + targetBounds.width;
+      const targetTop = targetBounds.y;
+      const targetCenterY = targetBounds.y + targetBounds.height / 2;
+      const targetBottom = targetBounds.y + targetBounds.height;
+      
+      // Check vertical canvas alignments
+      for (const canvas of canvasVerticals) {
+        if (this.isWithinThreshold(targetLeft, canvas.pos, threshold * 2) ||
+            this.isWithinThreshold(targetCenterX, canvas.pos, threshold * 2) ||
+            this.isWithinThreshold(targetRight, canvas.pos, threshold * 2)) {
+          guides.push({
+            type: 'vertical',
+            position: Math.round(canvas.pos),
+            alignmentType: canvas.type,
+            objects: [], // Canvas guides don't have objects
+            strength: 0.5 // Lower priority than object guides
+          });
+        }
+      }
+      
+      // Check horizontal canvas alignments
+      for (const canvas of canvasHorizontals) {
+        if (this.isWithinThreshold(targetTop, canvas.pos, threshold * 2) ||
+            this.isWithinThreshold(targetCenterY, canvas.pos, threshold * 2) ||
+            this.isWithinThreshold(targetBottom, canvas.pos, threshold * 2)) {
+          guides.push({
+            type: 'horizontal',
+            position: Math.round(canvas.pos),
+            alignmentType: canvas.type,
+            objects: [], // Canvas guides don't have objects
+            strength: 0.5 // Lower priority than object guides
+          });
+        }
+      }
     }
     
     return guides;
   }
 
   /**
-   * Get object-to-object alignment guides
+   * Get object-to-object alignment guides with enhanced precision
    */
-  private getObjectAlignmentGuides(nearbyObjects: Rectangle[]): AlignmentGuide[] {
+  private getObjectAlignmentGuides(
+    objects: Rectangle[], 
+    targetBounds?: Rectangle, 
+    threshold: number = 8
+  ): AlignmentGuide[] {
     const guides: AlignmentGuide[] = [];
-    const threshold = snapManager.getPrefs().threshold;
     
-    const verticalAlignments = new Map<number, Rectangle[]>();
-    const horizontalAlignments = new Map<number, Rectangle[]>();
+    if (objects.length === 0) return guides;
     
-    // Group objects by alignment positions
-    for (const obj of nearbyObjects) {
-      this.addToAlignmentMap(verticalAlignments, obj.x, obj, threshold);
-      this.addToAlignmentMap(verticalAlignments, obj.x + obj.width / 2, obj, threshold);
-      this.addToAlignmentMap(verticalAlignments, obj.x + obj.width, obj, threshold);
+    // Create maps to group objects by alignment positions
+    const verticalPositions = new Map<number, Rectangle[]>();
+    const horizontalPositions = new Map<number, Rectangle[]>();
+    
+    // Collect alignment positions from all objects
+    for (const obj of objects) {
+      // Vertical alignment positions (left, center, right)
+      const leftX = Math.round(obj.x);
+      const centerX = Math.round(obj.x + obj.width / 2);
+      const rightX = Math.round(obj.x + obj.width);
       
-      this.addToAlignmentMap(horizontalAlignments, obj.y, obj, threshold);
-      this.addToAlignmentMap(horizontalAlignments, obj.y + obj.height / 2, obj, threshold);
-      this.addToAlignmentMap(horizontalAlignments, obj.y + obj.height, obj, threshold);
+      this.addToPositionMap(verticalPositions, leftX, obj, threshold);
+      this.addToPositionMap(verticalPositions, centerX, obj, threshold);
+      this.addToPositionMap(verticalPositions, rightX, obj, threshold);
+      
+      // Horizontal alignment positions (top, center, bottom)
+      const topY = Math.round(obj.y);
+      const centerY = Math.round(obj.y + obj.height / 2);
+      const bottomY = Math.round(obj.y + obj.height);
+      
+      this.addToPositionMap(horizontalPositions, topY, obj, threshold);
+      this.addToPositionMap(horizontalPositions, centerY, obj, threshold);
+      this.addToPositionMap(horizontalPositions, bottomY, obj, threshold);
     }
     
-    // Convert to guides
-    this.convertAlignmentsToGuides(verticalAlignments, 'vertical', guides);
-    this.convertAlignmentsToGuides(horizontalAlignments, 'horizontal', guides);
+    // Check if target would align with any positions
+    if (targetBounds) {
+      const targetLeft = Math.round(targetBounds.x);
+      const targetCenterX = Math.round(targetBounds.x + targetBounds.width / 2);
+      const targetRight = Math.round(targetBounds.x + targetBounds.width);
+      const targetTop = Math.round(targetBounds.y);
+      const targetCenterY = Math.round(targetBounds.y + targetBounds.height / 2);
+      const targetBottom = Math.round(targetBounds.y + targetBounds.height);
+      
+      // Check vertical alignments
+      for (const [position, alignedObjects] of verticalPositions.entries()) {
+        if (this.isWithinThreshold(targetLeft, position, threshold) ||
+            this.isWithinThreshold(targetCenterX, position, threshold) ||
+            this.isWithinThreshold(targetRight, position, threshold)) {
+          guides.push({
+            type: 'vertical',
+            position,
+            alignmentType: this.getAlignmentType(position, alignedObjects[0]),
+            objects: alignedObjects,
+            strength: alignedObjects.length + 1 // +1 for target
+          });
+        }
+      }
+      
+      // Check horizontal alignments
+      for (const [position, alignedObjects] of horizontalPositions.entries()) {
+        if (this.isWithinThreshold(targetTop, position, threshold) ||
+            this.isWithinThreshold(targetCenterY, position, threshold) ||
+            this.isWithinThreshold(targetBottom, position, threshold)) {
+          guides.push({
+            type: 'horizontal',
+            position,
+            alignmentType: this.getAlignmentType(position, alignedObjects[0]),
+            objects: alignedObjects,
+            strength: alignedObjects.length + 1 // +1 for target
+          });
+        }
+      }
+    } else {
+      // No target bounds, just create guides for existing alignments
+      for (const [position, alignedObjects] of verticalPositions.entries()) {
+        if (alignedObjects.length >= 2) {
+          guides.push({
+            type: 'vertical',
+            position,
+            alignmentType: this.getAlignmentType(position, alignedObjects[0]),
+            objects: alignedObjects,
+            strength: alignedObjects.length
+          });
+        }
+      }
+      
+      for (const [position, alignedObjects] of horizontalPositions.entries()) {
+        if (alignedObjects.length >= 2) {
+          guides.push({
+            type: 'horizontal',
+            position,
+            alignmentType: this.getAlignmentType(position, alignedObjects[0]),
+            objects: alignedObjects,
+            strength: alignedObjects.length
+          });
+        }
+      }
+    }
     
     return guides;
   }
 
-  private addToAlignmentMap(
+  /**
+   * Helper to add object to position map with tolerance
+   */
+  private addToPositionMap(
     map: Map<number, Rectangle[]>, 
     position: number, 
     rect: Rectangle, 
     threshold: number
   ): void {
+    // Find existing position within threshold
     for (const [existingPos, objects] of map.entries()) {
       if (Math.abs(existingPos - position) <= threshold) {
         objects.push(rect);
         return;
       }
     }
+    
+    // No existing position found, create new one
     map.set(position, [rect]);
   }
 
-  private convertAlignmentsToGuides(
-    alignments: Map<number, Rectangle[]>,
-    type: 'vertical' | 'horizontal',
-    guides: AlignmentGuide[]
-  ): void {
-    alignments.forEach((objects, position) => {
-      if (objects.length >= 2) {
-        guides.push({
-          type,
-          position,
-          alignmentType: this.determineAlignmentType(objects, position, type),
-          objects,
-          strength: objects.length
-        });
-      }
-    });
+  /**
+   * Check if two positions are within threshold
+   */
+  private isWithinThreshold(pos1: number, pos2: number, threshold: number): boolean {
+    return Math.abs(pos1 - pos2) <= threshold;
   }
 
-  private determineAlignmentType(
-    objects: Rectangle[], 
-    position: number, 
-    type: 'vertical' | 'horizontal'
-  ): 'edge' | 'center' {
-    let centerCount = 0;
-    
-    for (const obj of objects) {
-      const center = type === 'vertical' 
-        ? obj.x + obj.width / 2 
-        : obj.y + obj.height / 2;
-      
-      if (Math.abs(center - position) <= 2) {
-        centerCount++;
-      }
-    }
-    
-    return centerCount > objects.length / 2 ? 'center' : 'edge';
-  }
-
-  private isGuideRelevant(guide: AlignmentGuide, targetBounds: Rectangle): boolean {
-    const threshold = snapManager.getPrefs().threshold * 2;
-    
+  /**
+   * Check if guide is relevant to target bounds
+   */
+  private isGuideRelevant(
+    guide: AlignmentGuide, 
+    targetBounds: Rectangle, 
+    maxDistance: number = 100
+  ): boolean {
     if (guide.type === 'vertical') {
-      const distances = [
-        Math.abs(targetBounds.x - guide.position),
-        Math.abs(targetBounds.x + targetBounds.width / 2 - guide.position),
-        Math.abs(targetBounds.x + targetBounds.width - guide.position)
-      ];
-      return Math.min(...distances) <= threshold;
+      return Math.abs(guide.position - targetBounds.x) <= maxDistance ||
+             Math.abs(guide.position - (targetBounds.x + targetBounds.width / 2)) <= maxDistance ||
+             Math.abs(guide.position - (targetBounds.x + targetBounds.width)) <= maxDistance;
     } else {
-      const distances = [
-        Math.abs(targetBounds.y - guide.position),
-        Math.abs(targetBounds.y + targetBounds.height / 2 - guide.position),
-        Math.abs(targetBounds.y + targetBounds.height - guide.position)
-      ];
-      return Math.min(...distances) <= threshold;
+      return Math.abs(guide.position - targetBounds.y) <= maxDistance ||
+             Math.abs(guide.position - (targetBounds.y + targetBounds.height / 2)) <= maxDistance ||
+             Math.abs(guide.position - (targetBounds.y + targetBounds.height)) <= maxDistance;
     }
+  }
+
+  /**
+   * Determine alignment type based on position relative to object
+   */
+  private getAlignmentType(position: number, rect: Rectangle): 'edge' | 'center' {
+    const centerX = rect.x + rect.width / 2;
+    const centerY = rect.y + rect.height / 2;
+    
+    if (Math.abs(position - centerX) < 1 || Math.abs(position - centerY) < 1) {
+      return 'center';
+    }
+    
+    return 'edge';
   }
 }

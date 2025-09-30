@@ -17,13 +17,136 @@ export class SpacingDetector {
     nearbyObjects: Rectangle[]
   ): EqualSpacingGroup[] {
     const tolerance = snapManager.getPrefs().equalTolerance || 2;
+    const groups: EqualSpacingGroup[] = [];
     
+    if (nearbyObjects.length < 2) return groups;
+    
+    // Find horizontal equal spacing (left to right)
     const horizontalGroups = this.findEqualSpacingGroups(nearbyObjects, 'x', tolerance);
+    
+    // Find vertical equal spacing (top to bottom)  
     const verticalGroups = this.findEqualSpacingGroups(nearbyObjects, 'y', tolerance);
     
-    return [...horizontalGroups, ...verticalGroups]
-      .filter(group => this.couldTargetJoinGroup(targetBounds, group))
-      .sort((a, b) => b.confidence - a.confidence);
+    // Check if target could join any existing groups
+    for (const group of horizontalGroups) {
+      if (this.couldTargetJoinGroup(targetBounds, group)) {
+        groups.push({
+          ...group,
+          confidence: group.confidence * 1.2 // Boost confidence when target can join
+        });
+      }
+    }
+    
+    for (const group of verticalGroups) {
+      if (this.couldTargetJoinGroup(targetBounds, group)) {
+        groups.push({
+          ...group,
+          confidence: group.confidence * 1.2 // Boost confidence when target can join
+        });
+      }
+    }
+    
+    // Also check if target could create new groups with existing objects
+    const newHorizontalGroups = this.findPotentialGroups(targetBounds, nearbyObjects, 'x');
+    const newVerticalGroups = this.findPotentialGroups(targetBounds, nearbyObjects, 'y');
+    
+    groups.push(...newHorizontalGroups, ...newVerticalGroups);
+    
+    return groups
+      .filter(group => group.confidence >= GUIDE_THRESHOLDS.EQUAL_SPACING_CONFIDENCE)
+      .sort((a, b) => b.confidence - a.confidence)
+      .slice(0, 3); // Limit to top 3 most confident groups
+  }
+
+  /**
+   * Find potential equal spacing groups that target could form with nearby objects
+   */
+  private findPotentialGroups(
+    targetBounds: Rectangle,
+    nearbyObjects: Rectangle[],
+    axis: 'x' | 'y'
+  ): EqualSpacingGroup[] {
+    const groups: EqualSpacingGroup[] = [];
+    
+    // Try different combinations of 2+ nearby objects with target
+    for (let i = 0; i < nearbyObjects.length - 1; i++) {
+      for (let j = i + 1; j < nearbyObjects.length; j++) {
+        const obj1 = nearbyObjects[i];
+        const obj2 = nearbyObjects[j];
+        
+        // Create potential 3-object group with target
+        const testGroup = this.createTestGroup([obj1, obj2, targetBounds], axis);
+        if (testGroup && testGroup.confidence >= 0.7) {
+          groups.push(testGroup);
+        }
+      }
+    }
+    
+    return groups;
+  }
+
+  /**
+   * Create a test group from objects for equal spacing analysis
+   */
+  private createTestGroup(objects: Rectangle[], axis: 'x' | 'y'): EqualSpacingGroup | null {
+    if (objects.length < 3) return null;
+    
+    // Sort objects by position along the axis
+    const sorted = [...objects].sort((a, b) => {
+      return axis === 'x' ? a.x - b.x : a.y - b.y;
+    });
+    
+    // Calculate gaps between consecutive objects
+    const gaps: number[] = [];
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const obj1 = sorted[i];
+      const obj2 = sorted[i + 1];
+      
+      if (axis === 'x') {
+        gaps.push(obj2.x - (obj1.x + obj1.width));
+      } else {
+        gaps.push(obj2.y - (obj1.y + obj1.height));
+      }
+    }
+    
+    // Check if gaps are approximately equal
+    const avgGap = gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length;
+    const confidence = this.calculateSpacingConfidence(gaps, avgGap);
+    
+    if (confidence < 0.6) return null;
+    
+    const first = sorted[0];
+    const last = sorted[sorted.length - 1];
+    
+    return {
+      objects: sorted,
+      axis,
+      gap: avgGap,
+      startPos: axis === 'x' ? first.x : first.y,
+      endPos: axis === 'x' ? last.x + last.width : last.y + last.height,
+      confidence
+    };
+  }
+
+  /**
+   * Calculate confidence score for spacing consistency
+   */
+  private calculateSpacingConfidence(gaps: number[], avgGap: number): number {
+    if (gaps.length === 0) return 0;
+    
+    // Calculate variance from average
+    const variance = gaps.reduce((sum, gap) => {
+      const diff = Math.abs(gap - avgGap);
+      return sum + (diff * diff);
+    }, 0) / gaps.length;
+    
+    const stdDev = Math.sqrt(variance);
+    
+    // Higher confidence for lower standard deviation
+    const maxAllowedDev = avgGap * 0.1; // 10% tolerance
+    const confidence = Math.max(0, 1 - (stdDev / maxAllowedDev));
+    
+    return Math.min(1, confidence);
   }
 
   /**

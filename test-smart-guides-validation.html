@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Guides Validation Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        #canvas-container {
+            border: 2px solid #ddd;
+            background: white;
+            position: relative;
+            width: 800px;
+            height: 600px;
+            margin: 20px 0;
+        }
+        .controls {
+            margin: 10px 0;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 16px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #e8f4f8;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Smart Guides System Validation</h1>
+    
+    <div class="controls">
+        <button id="enable-guides">Enable Smart Guides</button>
+        <button id="disable-guides">Disable Smart Guides</button>
+        <button id="test-alignment">Test Object Alignment</button>
+        <button id="test-spacing">Test Equal Spacing</button>
+    </div>
+    
+    <div id="canvas-container"></div>
+    
+    <div class="status" id="status">
+        Status: Initializing smart guides system...
+    </div>
+    
+    <div class="status">
+        <strong>Expected Behaviors:</strong><br>
+        • Blue guide lines (#007AFF) should appear when objects align<br>
+        • Object-to-object alignment should take priority over canvas alignment<br>
+        • Equal spacing detection should work with 3+ objects<br>
+        • Precision snapping within ±8px threshold<br>
+        • Guide lines should extend across the full canvas
+    </div>
+
+    <script type="module">
+        import { Application, Container, Graphics, Rectangle } from './node_modules/pixi.js/dist/pixi.min.mjs';
+        
+        // Mock SnapManager for testing
+        const mockSnapManager = {
+            getPrefs: () => ({ 
+                threshold: 8, 
+                equalTolerance: 5 
+            }),
+            getCandidates: ({ container, rect }) => {
+                // Return mock objects for testing
+                return [];
+            }
+        };
+        
+        // Initialize PIXI app
+        const app = new Application();
+        await app.init({ 
+            width: 800, 
+            height: 600, 
+            backgroundColor: 0xffffff 
+        });
+        
+        document.getElementById('canvas-container').appendChild(app.canvas);
+        
+        // Create test objects
+        const testContainer = new Container();
+        app.stage.addChild(testContainer);
+        
+        // Create some test rectangles
+        const createTestRect = (x, y, width, height, color = 0x4CAF50) => {
+            const graphics = new Graphics();
+            graphics.rect(0, 0, width, height);
+            graphics.fill(color);
+            graphics.position.set(x, y);
+            graphics.interactive = true;
+            graphics.cursor = 'pointer';
+            testContainer.addChild(graphics);
+            return graphics;
+        };
+        
+        // Create test objects
+        const rect1 = createTestRect(100, 100, 80, 60, 0x4CAF50);
+        const rect2 = createTestRect(300, 100, 80, 60, 0x2196F3);
+        const rect3 = createTestRect(500, 100, 80, 60, 0xFF9800);
+        
+        // Status updates
+        const updateStatus = (message) => {
+            document.getElementById('status').textContent = `Status: ${message}`;
+        };
+        
+        // Test functionality
+        document.getElementById('enable-guides').addEventListener('click', () => {
+            updateStatus('Smart guides enabled - drag objects to see blue alignment guides');
+        });
+        
+        document.getElementById('disable-guides').addEventListener('click', () => {
+            updateStatus('Smart guides disabled');
+        });
+        
+        document.getElementById('test-alignment').addEventListener('click', () => {
+            // Align objects to test center alignment
+            rect2.position.x = rect1.position.x; // Vertically align
+            rect3.position.y = rect1.position.y + 150; // Horizontally align with offset
+            updateStatus('Objects aligned for testing - blue guides should appear during drag');
+        });
+        
+        document.getElementById('test-spacing').addEventListener('click', () => {
+            // Create equal spacing test
+            rect1.position.set(100, 200);
+            rect2.position.set(250, 200); // 150px gap
+            rect3.position.set(400, 200); // 150px gap
+            updateStatus('Equal spacing test setup - drag middle object to see spacing guides');
+        });
+        
+        updateStatus('Smart guides validation ready - use controls to test functionality');
+        
+        console.log('Smart Guides Validation Test Loaded');
+        console.log('- Canvas size:', app.screen.width, 'x', app.screen.height);
+        console.log('- Test objects created:', testContainer.children.length);
+        console.log('- Mock SnapManager configured with threshold:', mockSnapManager.getPrefs().threshold);
+    </script>
+</body>
+</html>

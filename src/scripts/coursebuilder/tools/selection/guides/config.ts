@@ -5,11 +5,11 @@
 import { GuideColors } from './types';
 
 export const GUIDE_COLORS: GuideColors = {
-  alignment: 0xff4444,        // Figma red
-  distance: 0xff4444,         // Figma red for distances
-  equalSpacing: 0xff69b4,     // Figma pink
-  smartSelection: 0xff69b4,   // Figma pink for handles
-  tooLarge: 0xff9500          // Orange for warnings
+  alignment: 0x007AFF,        // Blue for alignment guides (like iOS/Figma)
+  distance: 0x007AFF,         // Blue for distance labels  
+  equalSpacing: 0xFF69B4,     // Pink for equal spacing
+  smartSelection: 0xFF69B4,   // Pink for handles
+  tooLarge: 0xFF9500          // Orange for warnings
 };
 
 export const GUIDE_LIMITS = {
