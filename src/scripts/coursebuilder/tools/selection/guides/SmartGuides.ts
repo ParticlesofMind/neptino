@@ -162,11 +162,8 @@ export class SmartGuides {
     if (prefs.showGrid) {
       this.renderGrid(prefs.gridSpacing || 20);
     } else {
-      // Clear grid by clearing the renderer and redrawing any active guides
-      this.renderer.clear();
-      if (this.state.isActive) {
-        this.updateGuides();
-      }
+      // Clear only the grid, don't touch other guides
+      this.renderer.clearGrid();
     }
   }
 
