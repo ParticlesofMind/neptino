@@ -17,7 +17,7 @@
  */
 
 import { Graphics, Container, Text } from 'pixi.js';
-import { AlignmentGuide, DistanceLabel, EqualSpacingGroup } from './types';
+import { AlignmentGuide, DistanceLabel, EqualSpacingGroup, GuideVisualStyle } from './types';
 import { GUIDE_COLORS, GUIDE_LIMITS, VISUAL_SETTINGS } from './config';
 
 export class GuideRenderer {
@@ -26,6 +26,7 @@ export class GuideRenderer {
   private gridGfx: Graphics | null = null;
   private labelContainer: Container | null = null;
   private ui: Container | null = null;
+  private theme: 'auto' | 'light' | 'dark' = 'auto';
 
   public initialize(ui: Container): void {
     this.ui = ui;
@@ -33,6 +34,20 @@ export class GuideRenderer {
     this.initializeDistanceGraphics(ui);
     this.initializeGridGraphics(ui);
     this.initializeLabelContainer(ui);
+  }
+
+  public setTheme(theme: 'auto' | 'light' | 'dark'): void {
+    this.theme = theme;
+  }
+
+  private resolveAccentColor(): number {
+    const prefersDark = this.theme === 'dark' || (this.theme === 'auto' && typeof document !== 'undefined' && document.body?.classList.contains('theme-dark'));
+    return prefersDark ? GUIDE_COLORS.darkThemeAlternate : GUIDE_COLORS.alignment;
+  }
+
+  private resolveTextColor(): number {
+    const prefersDark = this.theme === 'dark' || (this.theme === 'auto' && typeof document !== 'undefined' && document.body?.classList.contains('theme-dark'));
+    return prefersDark ? 0xffffff : 0x1f1f1f;
   }
 
   public clear(): void {
@@ -60,34 +75,90 @@ export class GuideRenderer {
     
     // Clear previous guides
     this.guideGfx.clear();
-    
-    console.log(`🔵 Drawing ${guides.length} alignment guides`);
-    
+
+    const accent = this.resolveAccentColor();
+
     for (const guide of guides.slice(0, GUIDE_LIMITS.MAX_ALIGNMENT_GUIDES)) {
-      // Enhanced alpha calculation for better visibility
-      const baseAlpha = 0.8;
-      const strengthMultiplier = Math.min(0.2, guide.strength * 0.05);
-      const alpha = Math.min(1.0, baseAlpha + strengthMultiplier);
-      
-      // Stronger lines for object-to-object alignments
-      const lineWidth = guide.objects.length > 0 ? 2 : 1;
-      const color = GUIDE_COLORS.alignment;
-      
-      console.log(`🔵 Guide: ${guide.type} at ${guide.position}, strength: ${guide.strength}, alpha: ${alpha}`);
-      
+      const baseAlpha = VISUAL_SETTINGS.GUIDE_ALPHA_BASE;
+      const alpha = Math.min(
+        VISUAL_SETTINGS.GUIDE_ALPHA_MAX,
+        baseAlpha + guide.strength * VISUAL_SETTINGS.GUIDE_ALPHA_PER_STRENGTH
+      );
+
+      const isObjectGuide = guide.source.startsWith('object');
+      const lineWidth = isObjectGuide ? 2.2 : 1.6;
+      const style = guide.visualStyle || (guide.alignmentType === 'center' ? 'dashed' : 'solid');
+
+      this.drawGuideLine(guide, accent, lineWidth, alpha, style);
+    }
+  }
+
+  private drawGuideLine(
+    guide: AlignmentGuide,
+    color: number,
+    lineWidth: number,
+    alpha: number,
+    style: GuideVisualStyle
+  ): void {
+    if (!this.guideGfx) return;
+
+    const dashLength = VISUAL_SETTINGS.DASH_PHASE;
+    const gap = VISUAL_SETTINGS.DASH_GAP;
+    const verticalStart = -6000;
+    const verticalEnd = 16000;
+    const horizontalStart = -6000;
+    const horizontalEnd = 16000;
+    const position = Math.round(guide.position) + 0.5;
+
+    const drawSegment = (x1: number, y1: number, x2: number, y2: number) => {
+      this.guideGfx!.moveTo(x1, y1);
+      this.guideGfx!.lineTo(x2, y2);
+      this.guideGfx!.stroke({ width: lineWidth, color, alpha });
+    };
+
+    if (style === 'dashed') {
       if (guide.type === 'vertical') {
-        // Draw full-height vertical line
-        this.guideGfx
-          .moveTo(Math.round(guide.position) + 0.5, -5000)
-          .lineTo(Math.round(guide.position) + 0.5, 15000)
-          .stroke({ width: lineWidth, color, alpha });
+        for (let y = verticalStart; y < verticalEnd; y += dashLength + gap) {
+          const yEnd = Math.min(verticalEnd, y + dashLength);
+          drawSegment(position, y, position, yEnd);
+        }
       } else {
-        // Draw full-width horizontal line  
-        this.guideGfx
-          .moveTo(-5000, Math.round(guide.position) + 0.5)
-          .lineTo(15000, Math.round(guide.position) + 0.5)
-          .stroke({ width: lineWidth, color, alpha });
+        for (let x = horizontalStart; x < horizontalEnd; x += dashLength + gap) {
+          const xEnd = Math.min(horizontalEnd, x + dashLength);
+          drawSegment(x, position, xEnd, position);
+        }
       }
+    } else {
+      if (guide.type === 'vertical') {
+        drawSegment(position, verticalStart, position, verticalEnd);
+      } else {
+        drawSegment(horizontalStart, position, horizontalEnd, position);
+      }
+    }
+  }
+
+  private drawSpacingTick(
+    x: number,
+    y: number,
+    orientation: 'vertical' | 'horizontal',
+    color: number,
+    alpha: number
+  ): void {
+    if (!this.guideGfx) return;
+
+    const length = VISUAL_SETTINGS.DISTANCE_LABEL_OFFSET * 0.6;
+    if (orientation === 'vertical') {
+      const pos = Math.round(x) + 0.5;
+      this.guideGfx
+        .moveTo(pos, y - length)
+        .lineTo(pos, y + length)
+        .stroke({ width: 1.2, color, alpha });
+    } else {
+      const pos = Math.round(y) + 0.5;
+      this.guideGfx
+        .moveTo(x - length, pos)
+        .lineTo(x + length, pos)
+        .stroke({ width: 1.2, color, alpha });
     }
   }
 
@@ -100,9 +171,7 @@ export class GuideRenderer {
       this.initializeLabelContainer(this.ui);
     }
     if (!this.labelContainer) return;
-    
-    console.log(`🏷️ Drawing ${labels.length} distance labels`);
-    
+
     for (const label of labels) {
       this.createDistanceLabel(
         label.x, 
@@ -121,27 +190,47 @@ export class GuideRenderer {
       this.initializeGuideGraphics(this.ui);
     }
     if (!this.guideGfx) return;
-    
-    console.log(`📐 Drawing ${groups.length} equal spacing groups`);
-    
+
+    const accent = this.resolveAccentColor();
+    const alpha = 0.85;
+
     for (const group of groups.slice(0, GUIDE_LIMITS.MAX_EQUAL_SPACING_GROUPS)) {
-      const color = GUIDE_COLORS.equalSpacing;
-      
+      const color = accent;
+      const baselineAlpha = alpha;
+
       if (group.axis === 'x') {
         const y = group.objects[0].y + group.objects[0].height / 2;
         this.guideGfx
           .moveTo(group.startPos, Math.round(y) + 0.5)
           .lineTo(group.endPos, Math.round(y) + 0.5)
-          .stroke({ width: 2, color, alpha: 0.8 });
-        
+          .stroke({ width: 1.6, color, alpha: baselineAlpha });
+
+        for (let i = 0; i < group.objects.length - 1; i++) {
+          const current = group.objects[i];
+          const next = group.objects[i + 1];
+          const rightEdge = current.x + current.width;
+          const leftEdge = next.x;
+          this.drawSpacingTick(rightEdge, Math.round(y) + 0.5, 'vertical', color, baselineAlpha);
+          this.drawSpacingTick(leftEdge, Math.round(y) + 0.5, 'vertical', color, baselineAlpha);
+        }
+
         this.drawSpacingLabels(group, y, 'horizontal');
       } else {
         const x = group.objects[0].x + group.objects[0].width / 2;
         this.guideGfx
           .moveTo(Math.round(x) + 0.5, group.startPos)
           .lineTo(Math.round(x) + 0.5, group.endPos)
-          .stroke({ width: 2, color, alpha: 0.8 });
-        
+          .stroke({ width: 1.6, color, alpha: baselineAlpha });
+
+        for (let i = 0; i < group.objects.length - 1; i++) {
+          const current = group.objects[i];
+          const next = group.objects[i + 1];
+          const bottomEdge = current.y + current.height;
+          const topEdge = next.y;
+          this.drawSpacingTick(Math.round(x) + 0.5, bottomEdge, 'horizontal', color, baselineAlpha);
+          this.drawSpacingTick(Math.round(x) + 0.5, topEdge, 'horizontal', color, baselineAlpha);
+        }
+
         this.drawSpacingLabels(group, x, 'vertical');
       }
     }
@@ -152,40 +241,43 @@ export class GuideRenderer {
     position: number, 
     orientation: 'horizontal' | 'vertical'
   ): void {
+    const offset = VISUAL_SETTINGS.DISTANCE_LABEL_OFFSET;
     for (let i = 0; i < group.objects.length - 1; i++) {
       const obj1 = group.objects[i];
       const obj2 = group.objects[i + 1];
       
       if (orientation === 'horizontal') {
         const midX = (obj1.x + obj1.width + obj2.x) / 2;
-        this.createDistanceLabel(midX, position - 20, `${Math.round(group.gap)}px`);
+        this.createDistanceLabel(midX, position - offset, `${Math.round(group.gap)}px`);
       } else {
         const midY = (obj1.y + obj1.height + obj2.y) / 2;
-        this.createDistanceLabel(position + 20, midY, `${Math.round(group.gap)}px`);
+        this.createDistanceLabel(position + offset, midY, `${Math.round(group.gap)}px`);
       }
     }
   }
 
   private createDistanceLabel(x: number, y: number, text: string): void {
     if (!this.labelContainer) return;
-    
-    const bg = new Graphics();
-    const textObj = new Text({ 
-      text, 
-      style: { 
-        fontFamily: 'Arial', 
-        fontSize: 10, 
-        fill: 0xffffff,
-        fontWeight: 'bold'
-      } 
+
+    const accent = this.resolveAccentColor();
+    const textObj = new Text({
+      text,
+      style: {
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif',
+        fontSize: 10,
+        fill: this.resolveTextColor(),
+        fontWeight: '600'
+      }
     });
-    
+
     const boxW = Math.ceil(textObj.width + VISUAL_SETTINGS.LABEL_PADDING_X * 2);
     const boxH = Math.ceil(textObj.height + VISUAL_SETTINGS.LABEL_PADDING_Y * 2);
-    
-    bg.rect(0, 0, boxW, boxH)
-      .fill({ color: GUIDE_COLORS.distance, alpha: 1 });
-    
+
+    const bg = new Graphics();
+    bg.roundRect(0, 0, boxW, boxH, 3)
+      .fill({ color: 0xffffff, alpha: VISUAL_SETTINGS.LABEL_BACKGROUND_ALPHA })
+      .stroke({ width: 1, color: accent, alpha: 0.25 });
+
     const container = new Container();
     container.eventMode = 'none';
     
@@ -279,7 +371,14 @@ export class GuideRenderer {
   /**
    * Render grid lines for grid reference mode
    */
-  public renderGrid(ui: Container, canvasWidth: number, canvasHeight: number, spacing: number): void {
+  public renderGrid(
+    ui: Container,
+    canvasWidth: number,
+    canvasHeight: number,
+    spacing: number,
+    style: 'dots' | 'lines' | 'hybrid' = 'dots',
+    theme: 'auto' | 'light' | 'dark' = 'auto'
+  ): void {
     // Initialize grid graphics if needed
     if (!this.gridGfx && ui) {
       this.initializeGridGraphics(ui);
@@ -290,27 +389,55 @@ export class GuideRenderer {
       return;
     }
 
-    console.log('📐 Rendering grid:', { canvasWidth, canvasHeight, spacing });
+  this.setTheme(theme);
+  const grid = this.gridGfx;
 
     // Clear existing grid
-    this.gridGfx.clear();
+  grid.clear();
 
-    // Set grid line style - lighter and more subtle than guide lines
-    this.gridGfx.stroke({ width: 1, color: 0x007AFF, alpha: 0.2 });
+    const accent = this.resolveAccentColor();
+    const dotSize = VISUAL_SETTINGS.GRID_DOT_SIZE;
+    const majorInterval = Math.max(1, VISUAL_SETTINGS.GRID_MAJOR_INTERVAL);
 
-    // Draw vertical grid lines
-    for (let x = 0; x <= canvasWidth; x += spacing) {
-      this.gridGfx.moveTo(x, 0);
-      this.gridGfx.lineTo(x, canvasHeight);
+    const drawLines = (step: number, alpha: number) => {
+      for (let x = 0; x <= canvasWidth; x += step) {
+        grid
+          .moveTo(Math.round(x) + 0.5, 0)
+          .lineTo(Math.round(x) + 0.5, canvasHeight)
+          .stroke({ width: 1, color: accent, alpha });
+      }
+      for (let y = 0; y <= canvasHeight; y += step) {
+        grid
+          .moveTo(0, Math.round(y) + 0.5)
+          .lineTo(canvasWidth, Math.round(y) + 0.5)
+          .stroke({ width: 1, color: accent, alpha });
+      }
+    };
+
+    const drawDots = (step: number, alpha: number) => {
+      for (let x = 0; x <= canvasWidth; x += step) {
+        for (let y = 0; y <= canvasHeight; y += step) {
+          grid
+            .rect(x - dotSize / 2, y - dotSize / 2, dotSize, dotSize)
+            .fill({ color: accent, alpha });
+        }
+      }
+    };
+
+    switch (style) {
+      case 'lines':
+        drawLines(spacing, 0.18);
+        break;
+      case 'hybrid': {
+        drawLines(spacing * majorInterval, 0.22);
+        drawDots(spacing, 0.12);
+        break;
+      }
+      case 'dots':
+      default:
+        drawDots(spacing, 0.16);
+        break;
     }
-
-    // Draw horizontal grid lines
-    for (let y = 0; y <= canvasHeight; y += spacing) {
-      this.gridGfx.moveTo(0, y);
-      this.gridGfx.lineTo(canvasWidth, y);
-    }
-
-    console.log('✅ Grid rendered with spacing:', spacing);
   }
 
   public clearGrid(): void {

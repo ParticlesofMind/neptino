@@ -5,13 +5,31 @@ import { historyManager } from '../../canvas/HistoryManager';
 
 type TransformDesc = { x: number; y: number; scaleX: number; scaleY: number; rotation: number; pivotX?: number; pivotY?: number; anchorX?: number; anchorY?: number; skewX?: number; skewY?: number };
 type CommonProps = { alpha?: number; blendMode?: number; tint?: number; roundPixels?: boolean; filters?: any[] };
-type TextDesc = { kind: 'text'; text: string; style: any; transform: TransformDesc; props?: CommonProps };
-type SpriteDesc = { kind: 'sprite'; texture: Texture; transform: TransformDesc; props?: CommonProps };
-type MetaGraphicsDesc = { kind: 'shapes' | 'pen' | 'brush'; meta: any; transform: TransformDesc; props?: CommonProps };
+type ExtraProps = {
+  toolType?: string;
+  meta?: any;
+  metadata?: any;
+  name?: string;
+  cursor?: string;
+  eventMode?: any;
+  interactive?: boolean;
+  interactiveChildren?: boolean;
+  sortableChildren?: boolean;
+  buttonMode?: boolean;
+  visible?: boolean;
+  zIndex?: number;
+  cacheAsBitmap?: boolean;
+};
+type BaseDesc = { transform: TransformDesc; props?: CommonProps; extras?: ExtraProps };
+type TextDesc = BaseDesc & { kind: 'text'; text: string; style: any };
+type SpriteDesc = BaseDesc & { kind: 'sprite'; texture: Texture };
+type MetaGraphicsDesc = BaseDesc & { kind: 'shapes' | 'pen' | 'brush'; meta: any };
 type TableCellDesc = { x: number; y: number; width: number; height: number; text: string; style: any };
-type TableDesc = { kind: 'table'; settings: any; cells: TableCellDesc[]; transform: TransformDesc; props?: CommonProps };
-type ContainerDesc = { kind: 'container'; children: NodeDesc[]; transform: TransformDesc; props?: CommonProps };
-type NodeDesc = TextDesc | SpriteDesc | MetaGraphicsDesc | TableDesc | ContainerDesc;
+type TableDesc = BaseDesc & { kind: 'table'; settings: any; cells: TableCellDesc[] };
+type ContainerDesc = BaseDesc & { kind: 'container'; children: NodeDesc[] };
+type MediaSource = { url?: string; title?: string; posterUrl?: string; thumbnailUrl?: string };
+type MediaDesc = BaseDesc & { kind: 'media'; mediaType: 'audio' | 'video' | string; source: MediaSource };
+type NodeDesc = TextDesc | SpriteDesc | MetaGraphicsDesc | TableDesc | ContainerDesc | MediaDesc;
 
 export class SelectionClipboard {
   private items: NodeDesc[] = [];
@@ -35,6 +53,36 @@ export class SelectionClipboard {
 
   public setDisplayManager(manager: DisplayObjectManager | null) {
     this.displayManager = manager;
+  }
+
+  private cloneData<T>(value: T): T {
+    if (value === null || value === undefined) {
+      return value;
+    }
+    const globalAny = globalThis as any;
+    if (typeof globalAny?.structuredClone === 'function') {
+      try {
+        return globalAny.structuredClone(value);
+      } catch {}
+    }
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch {
+      return value;
+    }
+  }
+
+  private cloneTextStyle(style: any): any {
+    if (!style) return {};
+    if (typeof style.toJSON === 'function') {
+      try {
+        return style.toJSON();
+      } catch {}
+    }
+    if (typeof style === 'object') {
+      return this.cloneData(style);
+    }
+    return style;
   }
 
   public hasClipboard(): boolean {
@@ -170,57 +218,179 @@ export class SelectionClipboard {
     return props;
   }
 
+  private extractExtras(obj: any): ExtraProps {
+    const extras: ExtraProps = {};
+    try {
+      if ((obj as any).__toolType) extras.toolType = String((obj as any).__toolType);
+    } catch {}
+    try {
+      if ((obj as any).__meta && typeof (obj as any).__meta === 'object') {
+        extras.meta = this.cloneData((obj as any).__meta);
+      }
+    } catch {}
+    try {
+      const metadata = (obj as any).metadata;
+      if (metadata && typeof metadata === 'object') {
+        const type = (metadata as any).type;
+        if (type !== 'audio' && type !== 'video') {
+          extras.metadata = this.cloneData(metadata);
+        }
+      }
+    } catch {}
+    try { if (obj.name) extras.name = obj.name; } catch {}
+    try { if (obj.cursor) extras.cursor = obj.cursor; } catch {}
+    try { if (obj.eventMode !== undefined) extras.eventMode = obj.eventMode; } catch {}
+    try { if (typeof obj.interactive === 'boolean') extras.interactive = obj.interactive; } catch {}
+    try { if (typeof obj.interactiveChildren === 'boolean') extras.interactiveChildren = obj.interactiveChildren; } catch {}
+    try { if (typeof obj.sortableChildren === 'boolean') extras.sortableChildren = obj.sortableChildren; } catch {}
+    try { if (typeof obj.buttonMode === 'boolean') extras.buttonMode = obj.buttonMode; } catch {}
+    try { if (typeof obj.visible === 'boolean') extras.visible = obj.visible; } catch {}
+    try { if (typeof obj.zIndex === 'number') extras.zIndex = obj.zIndex; } catch {}
+    try { if (typeof (obj as any).cacheAsBitmap === 'boolean') extras.cacheAsBitmap = (obj as any).cacheAsBitmap; } catch {}
+    return extras;
+  }
+
+  private applyExtras(obj: any, extras?: ExtraProps | null): void {
+    if (!extras) return;
+    if (extras.toolType !== undefined) (obj as any).__toolType = extras.toolType;
+    if (extras.meta !== undefined) (obj as any).__meta = this.cloneData(extras.meta);
+    if (extras.metadata !== undefined) (obj as any).metadata = this.cloneData(extras.metadata);
+    if (extras.name !== undefined) obj.name = extras.name;
+    if (extras.cursor !== undefined) obj.cursor = extras.cursor;
+    if (extras.eventMode !== undefined) obj.eventMode = extras.eventMode;
+    if (extras.interactive !== undefined) obj.interactive = extras.interactive;
+    if (extras.interactiveChildren !== undefined) obj.interactiveChildren = extras.interactiveChildren;
+    if (extras.sortableChildren !== undefined) obj.sortableChildren = extras.sortableChildren;
+    if (extras.buttonMode !== undefined) obj.buttonMode = extras.buttonMode;
+    if (extras.visible !== undefined) obj.visible = extras.visible;
+    if (extras.zIndex !== undefined) obj.zIndex = extras.zIndex;
+    if (extras.cacheAsBitmap !== undefined) (obj as any).cacheAsBitmap = extras.cacheAsBitmap;
+  }
+
+  private applyAllProperties(obj: any, desc: BaseDesc, offset: number): void {
+    const transformWithOffset: TransformDesc = {
+      ...desc.transform,
+      x: desc.transform.x + offset,
+      y: desc.transform.y + offset,
+    };
+    this.applyTransform(obj, transformWithOffset);
+    this.applyProps(obj, desc.props);
+    this.applyExtras(obj, desc.extras);
+  }
+
+  private scheduleTransformReapply(obj: any, desc: BaseDesc, offset: number): void {
+    const reapply = () => this.applyAllProperties(obj, desc, offset);
+    const raf = (globalThis as any).requestAnimationFrame;
+    if (typeof raf === 'function') {
+      raf(() => reapply());
+    } else {
+      setTimeout(reapply, 0);
+    }
+    setTimeout(reapply, 120);
+    setTimeout(reapply, 320);
+  }
+
+  private buildMediaDescriptor(obj: any, tr: TransformDesc, props: CommonProps, extras: ExtraProps): MediaDesc | null {
+    try {
+      const metadata = (obj as any).metadata;
+      if (!metadata || typeof metadata !== 'object' || !metadata.type) return null;
+      const type = String(metadata.type);
+      if (type !== 'audio' && type !== 'video') return null;
+      const source: MediaSource = {};
+      if (metadata.url) source.url = metadata.url;
+      if (metadata.title) source.title = metadata.title;
+      if (metadata.posterUrl) source.posterUrl = metadata.posterUrl;
+      if (metadata.thumbnailUrl) source.thumbnailUrl = metadata.thumbnailUrl;
+      return { kind: 'media', mediaType: type, source, transform: tr, props, extras };
+    } catch {
+      return null;
+    }
+  }
+
   private buildDesc(obj: any): NodeDesc | null {
     const t = this.detectToolType(obj);
     const tr = this.transformOf(obj);
     const props = this.extractProps(obj);
+    const extras = this.extractExtras(obj);
+
+    const mediaDesc = this.buildMediaDescriptor(obj, tr, props, extras);
+    if (mediaDesc) {
+      return mediaDesc;
+    }
+
     if (t === 'text') {
-      try { return { kind: 'text', text: String(obj.text ?? ''), style: { ...(obj.style || {}) }, transform: tr, props }; } catch { return null; }
+      try {
+        return {
+          kind: 'text',
+          text: String(obj.text ?? ''),
+          style: this.cloneTextStyle((obj as any).style),
+          transform: tr,
+          props,
+          extras,
+        };
+      } catch {
+        return null;
+      }
     }
+
     if (t === 'shapes' || t === 'pen' || t === 'brush') {
-      const meta = (obj as any).__meta; if (meta) return { kind: t, meta: JSON.parse(JSON.stringify(meta)), transform: tr, props } as MetaGraphicsDesc; return null;
+      const meta = (obj as any).__meta;
+      if (meta) {
+        return { kind: t, meta: this.cloneData(meta), transform: tr, props, extras } as MetaGraphicsDesc;
+      }
+      return null;
     }
-    // Fallback: graphics with __meta.kind but missing __toolType
+
     if (obj?.constructor?.name === 'Graphics' && (obj as any).__meta && (obj as any).__meta.kind) {
       const kind = String((obj as any).__meta.kind);
       if (kind === 'shapes' || kind === 'pen' || kind === 'brush') {
-        const meta = (obj as any).__meta; return { kind, meta: JSON.parse(JSON.stringify(meta)), transform: tr, props } as MetaGraphicsDesc;
+        const meta = (obj as any).__meta;
+        return { kind: kind as 'shapes' | 'pen' | 'brush', meta: this.cloneData(meta), transform: tr, props, extras };
       }
     }
+
     if ((obj as any).isTable || (obj as any).__toolType === 'tables') {
-      // Build table cells from children that expose tableCell
-      const settings = (obj as any).__meta || {};
+      const settings = this.cloneData((obj as any).__meta || {});
       const cells: TableCellDesc[] = [];
       try {
-        for (const ch of (obj.children || [])) {
-          const cell = (ch as any).tableCell; if (!cell) continue;
+        for (const ch of obj.children || []) {
+          const cell = (ch as any).tableCell;
+          if (!cell) continue;
           if (ch.constructor?.name === 'Graphics') {
-            // find sibling text for this cell
             const textChild = (obj.children || []).find((c: any) => (c as any).tableCell === cell && c.constructor?.name === 'Text');
-            const text = textChild ? String((textChild as any).text || '') : '';
-            const style = textChild ? { ...((textChild as any).style || {}) } : {};
-            cells.push({ x: cell.bounds.x, y: cell.bounds.y, width: cell.bounds.width, height: cell.bounds.height, text, style });
+            const textValue = textChild ? String((textChild as any).text || '') : '';
+            const style = textChild ? this.cloneTextStyle((textChild as any).style) : {};
+            cells.push({ x: cell.bounds.x, y: cell.bounds.y, width: cell.bounds.width, height: cell.bounds.height, text: textValue, style });
           }
         }
       } catch {}
-      return { kind: 'table', settings, cells, transform: tr, props };
+      return { kind: 'table', settings, cells, transform: tr, props, extras };
     }
+
     if ((obj as any).texture) {
-      try { return { kind: 'sprite', texture: (obj as Sprite).texture, transform: tr, props }; } catch { return null; }
+      try {
+        return { kind: 'sprite', texture: (obj as Sprite).texture, transform: tr, props, extras };
+      } catch {
+        return null;
+      }
     }
-    // Generic container tree
+
     if (obj.children && Array.isArray(obj.children) && obj.children.length > 0) {
       const children: NodeDesc[] = [];
-      for (const ch of obj.children) { const d = this.buildDesc(ch); if (d) children.push(d); }
-      return { kind: 'container', children, transform: tr, props };
+      for (const ch of obj.children) {
+        const d = this.buildDesc(ch);
+        if (d) children.push(d);
+      }
+      return { kind: 'container', children, transform: tr, props, extras };
     }
-    // Unknown leaf Graphics: try to snapshot to sprite texture as last resort (avoid losing content)
+
     try {
       if (obj.constructor?.name === 'Graphics') {
         const tex = (Texture as any).from ? (Texture as any).from(obj) : null;
-        if (tex) return { kind: 'sprite', texture: tex, transform: tr } as any;
+        if (tex) return { kind: 'sprite', texture: tex, transform: tr, props, extras } as any;
       }
     } catch {}
+
     return null;
   }
 
@@ -247,15 +417,13 @@ export class SelectionClipboard {
         const t = new Text({ text: desc.text, style: desc.style });
         (t as any).isTextObject = true;
         this.addToContainer(t, target);
-        this.applyTransform(t, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
-        this.applyProps(t, desc.props);
+        this.applyAllProperties(t, desc, offset);
         return t;
       }
       case 'sprite': {
         const sp = new Sprite(desc.texture);
         this.addToContainer(sp, target);
-        this.applyTransform(sp, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
-        this.applyProps(sp, desc.props);
+        this.applyAllProperties(sp, desc, offset);
         return sp;
       }
       case 'shapes': {
@@ -263,8 +431,7 @@ export class SelectionClipboard {
         if (!gfx) return null;
         (gfx as any).__toolType = 'shapes'; (gfx as any).__meta = desc.meta;
         this.addToContainer(gfx, target);
-        this.applyTransform(gfx, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
-        this.applyProps(gfx, desc.props);
+        this.applyAllProperties(gfx, desc, offset);
         return gfx;
       }
       case 'pen': {
@@ -272,8 +439,7 @@ export class SelectionClipboard {
         if (!gfx) return null;
         (gfx as any).__toolType = 'pen'; (gfx as any).__meta = desc.meta;
         this.addToContainer(gfx, target);
-        this.applyTransform(gfx, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
-        this.applyProps(gfx, desc.props);
+        this.applyAllProperties(gfx, desc, offset);
         return gfx;
       }
       case 'brush': {
@@ -281,8 +447,7 @@ export class SelectionClipboard {
         if (!gfx) return null;
         (gfx as any).__toolType = 'brush'; (gfx as any).__meta = desc.meta;
         this.addToContainer(gfx, target);
-        this.applyTransform(gfx, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
-        this.applyProps(gfx, desc.props);
+        this.applyAllProperties(gfx, desc, offset);
         return gfx;
       }
       case 'table': {
@@ -295,14 +460,13 @@ export class SelectionClipboard {
         const bgC = colorToNumber(desc.settings?.backgroundColor || '#ffffff') ?? 0xffffff;
         for (const cell of desc.cells) {
           const g = new Graphics(); g.rect(cell.x, cell.y, cell.width, cell.height); g.fill({ color: bgC }); g.stroke({ width: Math.max(1, borderW), color: borderC });
-          const txt = new Text({ text: cell.text || '', style: { ...(cell.style || {}) } });
+          const txt = new Text({ text: cell.text || '', style: this.cloneData(cell.style || {}) });
           txt.x = cell.x + ((desc.settings?.cellPadding ?? 4) as number); txt.y = cell.y + ((desc.settings?.cellPadding ?? 4) as number);
           (g as any).tableCell = { bounds: { x: cell.x, y: cell.y, width: cell.width, height: cell.height } };
           (txt as any).tableCell = (g as any).tableCell;
           cont.addChild(g); cont.addChild(txt);
         }
-        this.applyTransform(cont, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
-        this.applyProps(cont, desc.props);
+        this.applyAllProperties(cont, desc, offset);
         return cont;
       }
       case 'container': {
@@ -310,8 +474,7 @@ export class SelectionClipboard {
         // Mark as container type for layers panel
         (group as any).__toolType = 'container';
         this.addToContainer(group, target);
-        this.applyTransform(group, { ...desc.transform, x: desc.transform.x + offset, y: desc.transform.y + offset });
-        this.applyProps(group, (desc as any).props);
+        this.applyAllProperties(group, desc, offset);
         for (const ch of desc.children) {
           const node = this.constructNode(ch, group, 0);
           // Don't add to group directly - constructNode already adds to container via addToContainer
@@ -331,7 +494,68 @@ export class SelectionClipboard {
         }
         return group;
       }
+      case 'media': {
+        return this.constructMediaNode(desc, target, offset);
+      }
     }
+    return null;
+  }
+
+  private constructMediaNode(desc: MediaDesc, target: Container, offset: number): any | null {
+    const canvasAPI = (window as any).canvasAPI;
+    const source = desc.source || {};
+    let created: any | null = null;
+    let id: string | null | undefined = null;
+
+    try {
+      if (desc.mediaType === 'audio' && canvasAPI?.addAudioElement) {
+        id = canvasAPI.addAudioElement(source.url || '', source.title || 'Audio', 0, 0);
+      } else if (desc.mediaType === 'video' && canvasAPI?.addVideoElement) {
+        id = canvasAPI.addVideoElement(source.url || '', source.title || 'Video', 0, 0, source.posterUrl);
+      }
+    } catch (error) {
+      console.warn('📋 PASTE media creation failed:', error);
+    }
+
+    created = this.resolveCreatedMediaObject(id);
+
+    if (!created) {
+      console.warn('📋 PASTE warn: unable to recreate media node', desc.mediaType, source);
+      return null;
+    }
+
+    if (created.parent && created.parent !== target) {
+      try { created.parent.removeChild(created); } catch {}
+    }
+    if (created.parent !== target) {
+      target.addChild(created);
+    }
+
+    this.applyAllProperties(created, desc, offset);
+
+    if (desc.mediaType === 'video') {
+      this.scheduleTransformReapply(created, desc, offset);
+    }
+
+    return created;
+  }
+
+  private resolveCreatedMediaObject(id: string | null | undefined): any | null {
+    if (!id) return null;
+    if (this.displayManager) {
+      const obj = this.displayManager.get(id);
+      if (obj) return obj;
+    }
+    try {
+      const root = this.getContainer();
+      if (root) {
+        for (const child of root.children) {
+          if ((child as any).__id === id) {
+            return child;
+          }
+        }
+      }
+    } catch {}
     return null;
   }
   private detectToolType(obj: any): 'text' | 'shapes' | 'pen' | 'brush' | null {

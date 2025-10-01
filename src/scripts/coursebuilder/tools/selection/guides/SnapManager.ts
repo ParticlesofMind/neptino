@@ -9,6 +9,8 @@
 
 import { Point, Container, Rectangle } from 'pixi.js';
 import { canvasDimensionManager } from '../../../utils/CanvasDimensionManager';
+import { SNAP_STRENGTH_TOLERANCE } from './config';
+import { AxisCandidate, SnapStrength } from './types';
 
 type SnapMode = 'smart' | 'none';
 
@@ -38,11 +40,14 @@ type SnapMode = 'smart' | 'none';
     // New Figma-style preferences
     enableFigmaMode: boolean; // Enable Figma-style behavior
     redAlignmentGuides: boolean; // Red guides for alignments
-    distanceLabelsOnAlt: boolean; // Show distances only when Alt/Option is held
-    pinkEqualSpacing: boolean; // Pink guides and handles for equal spacing
-    magneticSnapping: boolean; // Magnetic pull behavior
-    autoShowOnDrag: boolean; // Automatically show guides during drag
-    smartSelectionHandles: boolean; // Pink handles for reordering
+  distanceLabelsOnAlt: boolean; // Show distances only when Alt/Option is held
+  pinkEqualSpacing: boolean; // Pink guides and handles for equal spacing
+  magneticSnapping: boolean; // Magnetic pull behavior
+  autoShowOnDrag: boolean; // Automatically show guides during drag
+  smartSelectionHandles: boolean; // Pink handles for reordering
+  enableQuadrantGuides: boolean; // Optional canvas quadrant guides
+  gridStyle: 'dots' | 'lines' | 'hybrid'; // Visual style for grid overlay
+  theme: 'auto' | 'light' | 'dark'; // Determines default guide color selection
     
     // Smart Guide Reference Modes
     referenceMode: 'canvas' | 'object' | 'grid'; // how smart guides behave
@@ -50,10 +55,21 @@ type SnapMode = 'smart' | 'none';
     gridSpacing: number; // spacing between grid lines in pixels
   }
 
+type CandidateResult = {
+  vertical: AxisCandidate[];
+  horizontal: AxisCandidate[];
+  objectVertical: AxisCandidate[];
+  objectHorizontal: AxisCandidate[];
+  canvasVertical: AxisCandidate[];
+  canvasHorizontal: AxisCandidate[];
+  centers: { x: number[]; y: number[] };
+  dims: { width: number; height: number };
+};
+
 class SnapManager {
   private activeMode: SnapMode = 'smart';
   private prefs: SnapPrefs = { 
-    threshold: 8, 
+    threshold: 6, 
     equalTolerance: 1, 
     matchWidth: true, 
     matchHeight: true, 
@@ -83,17 +99,23 @@ class SnapManager {
     magneticSnapping: true,
     autoShowOnDrag: true,
     smartSelectionHandles: true,
+  enableQuadrantGuides: true,
+  gridStyle: 'dots',
+  theme: 'auto',
     
     // Smart Guide Reference Modes
     referenceMode: 'canvas',
     showGrid: true,
     gridSpacing: 20
   };
+  private temporarilyDisabled = false;
 
   // Simple accessors
   public getActiveMode(): SnapMode { return this.activeMode; }
   public isSmartEnabled(): boolean { return this.activeMode === 'smart'; }
   public isNoneEnabled(): boolean { return this.activeMode === 'none'; }
+  public setTemporaryDisabled(flag: boolean): void { this.temporarilyDisabled = flag; }
+  public isTemporarilyDisabled(): boolean { return this.temporarilyDisabled; }
   public setActiveMode(mode: SnapMode): void {
     this.activeMode = mode;
     this.saveState();
@@ -136,306 +158,333 @@ class SnapManager {
     let x = p.x;
     let y = p.y;
 
-    // If snapping disabled
-    if (this.activeMode === 'none') return new Point(x, y);
-
-    if (this.activeMode === 'smart') {
-      // Check reference mode for different snapping behaviors
-      const referenceMode = this.prefs.referenceMode || 'canvas';
-      
-      // Handle grid reference mode separately
-      if (referenceMode === 'grid') {
-        return this.snapToGrid(p);
-      }
-      
-      // For canvas and object modes, use existing logic but filter appropriately
-      // Smart = align to other objects and canvas edges/centers
-      const cand = this.getCandidates(options);
-      
-      // Filter based on reference mode
-      let canvasLines = { v: cand.canvas.v || [], h: cand.canvas.h || [] };
-      
-      if (referenceMode === 'object') {
-        // Object mode: only use object lines, not canvas lines
-        canvasLines = { v: [], h: [] };
-      }
-
-      // Figma-style magnetic snapping: stronger pull for alignments
-      if (this.prefs.enableFigmaMode && this.prefs.magneticSnapping) {
-        const magneticThreshold = this.prefs.threshold * 1.5; // Larger magnetic field
-        
-        // Enhanced center bias for Figma-style behavior
-        if (this.prefs.enableCenterBias) {
-          const centerXs: number[] = [];
-          const centerYs: number[] = [];
-          // Canvas centers (only if canvas mode)
-          if (referenceMode === 'canvas' && canvasLines.v.length) {
-            const canvasCx = canvasLines.v[Math.floor(canvasLines.v.length / 2)];
-            if (typeof canvasCx === 'number') centerXs.push(canvasCx);
-          }
-          if (referenceMode === 'canvas' && canvasLines.h.length) {
-            const canvasCy = canvasLines.h[Math.floor(canvasLines.h.length / 2)];
-            if (typeof canvasCy === 'number') centerYs.push(canvasCy);
-          }
-          // Object centers (precomputed for efficiency)
-          if (Array.isArray((cand as any).vCenters)) centerXs.push(...((cand as any).vCenters as number[]));
-          if (Array.isArray((cand as any).hCenters)) centerYs.push(...((cand as any).hCenters as number[]));
-          
-          // Snap X to nearest center line with magnetic behavior
-          if (centerXs.length) {
-            let best = x; let bestD = magneticThreshold + 1;
-            for (const cx of centerXs) {
-              const d = Math.abs(x - cx);
-              if (d < bestD && d <= magneticThreshold) { 
-                bestD = d; 
-                best = cx; 
-              }
-            }
-            x = best;
-          }
-          // Snap Y to nearest center line with magnetic behavior
-          if (centerYs.length) {
-            let best = y; let bestD = magneticThreshold + 1;
-            for (const cy of centerYs) {
-              const d = Math.abs(y - cy);
-              if (d < bestD && d <= magneticThreshold) { 
-                bestD = d; 
-                best = cy; 
-              }
-            }
-            y = best;
-          }
-        }
-
-        // Enhanced edge snapping with magnetic behavior
-        const vLinesForSnap = cand.vLines.concat(canvasLines.v);
-        const hLinesForSnap = cand.hLines.concat(canvasLines.h);
-        x = this.snapAxisMagnetic(x, vLinesForSnap, magneticThreshold);
-        y = this.snapAxisMagnetic(y, hLinesForSnap, magneticThreshold);
-      } else {
-        // Original snapping behavior
-        // Symmetry bias: prefer snapping to centers (canvas + object centers) with a larger effective threshold
-        const centerBias = Math.max(1, this.prefs.centerBiasMultiplier || 1);
-        if (this.prefs.enableCenterBias) {
-          const centerXs: number[] = [];
-          const centerYs: number[] = [];
-          // Canvas centers (only if canvas mode)
-          if (referenceMode === 'canvas' && canvasLines.v.length) {
-            const canvasCx = canvasLines.v[Math.floor(canvasLines.v.length / 2)];
-            if (typeof canvasCx === 'number') centerXs.push(canvasCx);
-          }
-          if (referenceMode === 'canvas' && canvasLines.h.length) {
-            const canvasCy = canvasLines.h[Math.floor(canvasLines.h.length / 2)];
-            if (typeof canvasCy === 'number') centerYs.push(canvasCy);
-          }
-          // Object centers (precomputed for efficiency)
-          if (Array.isArray((cand as any).vCenters)) centerXs.push(...((cand as any).vCenters as number[]));
-          if (Array.isArray((cand as any).hCenters)) centerYs.push(...((cand as any).hCenters as number[]));
-          // Snap X to nearest center line
-          if (centerXs.length) {
-            let best = x; let bestD = this.prefs.threshold * centerBias + 1;
-            for (const cx of centerXs) {
-              const d = Math.abs(x - cx);
-              if (d < bestD && d <= this.prefs.threshold * centerBias) { bestD = d; best = cx; }
-            }
-            x = best;
-          }
-          // Snap Y to nearest center line
-          if (centerYs.length) {
-            let best = y; let bestD = this.prefs.threshold * centerBias + 1;
-            for (const cy of centerYs) {
-              const d = Math.abs(y - cy);
-              if (d < bestD && d <= this.prefs.threshold * centerBias) { bestD = d; best = cy; }
-            }
-            y = best;
-          }
-        }
-
-        // Fall back to nearest candidates if not center-snapped
-        const vLinesForSnap = cand.vLines.concat(canvasLines.v);
-        const hLinesForSnap = cand.hLines.concat(canvasLines.h);
-        x = this.snapAxis(x, vLinesForSnap);
-        y = this.snapAxis(y, hLinesForSnap);
-      }
+    if (this.activeMode === 'none' || this.temporarilyDisabled) {
+      return new Point(x, y);
     }
+
+    if (this.activeMode !== 'smart') {
+      return new Point(x, y);
+    }
+
+    const referenceMode = this.prefs.referenceMode || 'canvas';
+    if (referenceMode === 'grid') {
+      return this.snapToGrid(p);
+    }
+
+    const candidates = this.getCandidates(options);
+    const useMagnetic = !!(this.prefs.enableFigmaMode && this.prefs.magneticSnapping);
+
+    const verticalCandidates = referenceMode === 'canvas'
+      ? candidates.vertical
+      : candidates.objectVertical;
+    const horizontalCandidates = referenceMode === 'canvas'
+      ? candidates.horizontal
+      : candidates.objectHorizontal;
+
+    x = this.snapAxisWithStrength(x, verticalCandidates, useMagnetic);
+    y = this.snapAxisWithStrength(y, horizontalCandidates, useMagnetic);
 
     return new Point(x, y);
   }
 
-  /**
-   * Helper: snap a scalar to nearest candidate if within threshold
-   */
-  private snapAxis(value: number, candidates: number[]): number {
-    let best = value;
-    let bestDist = this.prefs.threshold + 1;
-    for (const c of candidates) {
-      const d = Math.abs(value - c);
-      if (d < bestDist && d <= this.prefs.threshold) {
-        best = c; bestDist = d;
+  private snapAxisWithStrength(value: number, candidates: AxisCandidate[], useMagnetic: boolean): number {
+    if (!candidates.length) {
+      return value;
+    }
+
+    let bestValue = value;
+    let bestStrengthIndex = Number.POSITIVE_INFINITY;
+    let bestDistance = Number.POSITIVE_INFINITY;
+
+    for (const candidate of candidates) {
+      const baseTolerance = SNAP_STRENGTH_TOLERANCE[candidate.strength];
+      if (!baseTolerance) continue;
+      const effectiveTolerance = this.getEffectiveTolerance(candidate, baseTolerance, useMagnetic);
+      const distance = Math.abs(value - candidate.value);
+      if (distance > effectiveTolerance) continue;
+
+      const strengthIndex = this.strengthPriority(candidate.strength);
+      if (
+        strengthIndex < bestStrengthIndex ||
+        (strengthIndex === bestStrengthIndex && distance < bestDistance - 0.001)
+      ) {
+        bestStrengthIndex = strengthIndex;
+        bestDistance = distance;
+        bestValue = candidate.value;
       }
     }
-    return best;
+
+    return bestValue;
   }
 
-  /**
-   * Helper: Figma-style magnetic snapping with stronger pull
-   */
-  private snapAxisMagnetic(value: number, candidates: number[], threshold: number): number {
-    let best = value;
-    let bestDist = threshold + 1;
-    for (const c of candidates) {
-      const d = Math.abs(value - c);
-      if (d < bestDist && d <= threshold) {
-        best = c; bestDist = d;
+  private getEffectiveTolerance(candidate: AxisCandidate, baseTolerance: number, useMagnetic: boolean): number {
+    let tolerance = baseTolerance;
+    if (useMagnetic) {
+      tolerance *= 1.5;
+    }
+
+    if (this.prefs.enableCenterBias) {
+      const isCenter = candidate.source === 'canvas-center' || candidate.source === 'object-center';
+      if (isCenter) {
+        tolerance *= Math.max(1, this.prefs.centerBiasMultiplier || 1);
       }
     }
-    return best;
+
+    return tolerance;
   }
 
-  /**
-   * Gather simple vertical/horizontal snap lines from other objects' bounds
-   */
-  private collectObjectSnapLines(options?: { exclude?: any[]; container?: Container; rect?: Rectangle; margin?: number }): { vLines: number[]; hLines: number[]; vCenters: number[]; hCenters: number[] } {
-    const vLines: number[] = [];
-    const hLines: number[] = [];
+  private strengthPriority(strength: SnapStrength): number {
+    switch (strength) {
+      case 'strong':
+        return 0;
+      case 'medium':
+        return 1;
+      default:
+        return 2;
+    }
+  }
 
-    // Attempt to get a global DisplayObjectManager via window (set by Canvas init)
+  private getStrengthForSource(source: AxisCandidate['source']): SnapStrength {
+    switch (source) {
+      case 'canvas-center':
+      case 'grid':
+        return 'strong';
+      case 'canvas-edge':
+      case 'object-edge':
+      case 'object-edge-to-center':
+        return 'medium';
+      default:
+        return 'weak';
+    }
+  }
+
+  private toCandidate(value: number, source: AxisCandidate['source'], axis: 'x' | 'y', container?: Container): AxisCandidate {
+    let localValue = value;
+    if (container) {
+      localValue = axis === 'x'
+        ? container.toLocal(new Point(value, 0)).x
+        : container.toLocal(new Point(0, value)).y;
+    }
+
+    return {
+      value: localValue,
+      source,
+      strength: this.getStrengthForSource(source)
+    };
+  }
+
+  private collectObjectCandidates(options?: { exclude?: any[]; container?: Container; rect?: Rectangle; margin?: number }): {
+    vertical: AxisCandidate[];
+    horizontal: AxisCandidate[];
+    centers: Array<{ x: number; y: number }>;
+  } {
+    const vertical: AxisCandidate[] = [];
+    const horizontal: AxisCandidate[] = [];
+    const centers: Array<{ x: number; y: number }> = [];
+
     const dom = (window as any)._displayManager as { getObjects?: () => any[]; getRoot?: () => Container } | undefined;
     const rootRef = dom?.getRoot ? dom.getRoot() : undefined;
     let objects: any[] = [];
+
     try {
       const list = dom?.getObjects?.();
       if (Array.isArray(list) && list.length > 0) {
         objects = list;
       } else if (dom?.getRoot) {
-        // Fallback: traverse root container to collect display objects
         const root = dom.getRoot();
         const acc: any[] = [];
         const visit = (node: any) => {
           if (!node) return;
           acc.push(node);
-          if (node.children && Array.isArray(node.children)) {
-            for (const child of node.children) visit(child);
+          if (Array.isArray(node.children)) {
+            node.children.forEach(visit);
           }
         };
         if (root) visit(root);
         objects = acc;
       }
     } catch {}
-    const excludeSet = new Set((options?.exclude || []).map(o => o));
 
-    const centers: Array<{ x: number; y: number }> = [];
+    const excludeSet = new Set((options?.exclude || []).map(o => o));
     const rect = options?.rect;
-    const margin = options?.margin ?? 160;
+    const margin = options?.margin ?? 300;
+    const container = options?.container;
+
     for (const obj of objects) {
-      if (rootRef && obj === rootRef) continue; // skip the root container
-      if (!obj?.getBounds || excludeSet.has(obj) || obj.visible === false) continue;
+      if (!obj || obj.visible === false) continue;
+      if (rootRef && obj === rootRef) continue;
+      if ((obj as any).__isGuide) continue;
+      if (excludeSet.has(obj)) continue;
+      if (typeof obj.getBounds !== 'function') continue;
+
       try {
         const b: Rectangle = obj.getBounds();
-        // Optional spatial filter against a reference rect (in world coords for now)
         if (rect) {
-          const ax1 = b.x, ax2 = b.x + b.width, ay1 = b.y, ay2 = b.y + b.height;
-          const bx1 = rect.x - margin, bx2 = rect.x + rect.width + margin;
-          const by1 = rect.y - margin, by2 = rect.y + rect.height + margin;
+          const ax1 = b.x;
+          const ax2 = b.x + b.width;
+          const ay1 = b.y;
+          const ay2 = b.y + b.height;
+          const bx1 = rect.x - margin;
+          const bx2 = rect.x + rect.width + margin;
+          const by1 = rect.y - margin;
+          const by2 = rect.y + rect.height + margin;
           const overlapX = ax2 >= bx1 && ax1 <= bx2;
           const overlapY = ay2 >= by1 && ay1 <= by2;
           if (!overlapX && !overlapY) continue;
         }
-        const cx = b.x + b.width / 2;
-        const cy = b.y + b.height / 2;
-        vLines.push(b.x, cx, b.x + b.width);
-        hLines.push(b.y, cy, b.y + b.height);
-        centers.push({ x: cx, y: cy });
+
+        const left = b.x;
+        const right = b.x + b.width;
+        const top = b.y;
+        const bottom = b.y + b.height;
+        const centerX = left + b.width / 2;
+        const centerY = top + b.height / 2;
+
+        vertical.push(this.toCandidate(left, 'object-edge', 'x', container));
+        vertical.push(this.toCandidate(right, 'object-edge', 'x', container));
+        const centerCandidateX = this.toCandidate(centerX, 'object-center', 'x', container);
+        vertical.push(centerCandidateX);
+
+        horizontal.push(this.toCandidate(top, 'object-edge', 'y', container));
+        horizontal.push(this.toCandidate(bottom, 'object-edge', 'y', container));
+        const centerCandidateY = this.toCandidate(centerY, 'object-center', 'y', container);
+        horizontal.push(centerCandidateY);
+
+        centers.push({ x: centerCandidateX.value, y: centerCandidateY.value });
       } catch {}
     }
-    // If a container is provided, convert world-space lines to that container's local space
-    if (options?.container) {
-      const c = options.container;
-      const toLocalX = (x: number) => c.toLocal(new Point(x, 0)).x;
-      const toLocalY = (y: number) => c.toLocal(new Point(0, y)).y;
-      const v = vLines.map(toLocalX);
-      const h = hLines.map(toLocalY);
-      const localCenters = centers.map(c => ({ x: toLocalX(c.x), y: toLocalY(c.y) }));
-      // Add midpoints between object centers to encourage symmetry snapping
-      if (this.prefs.enableMidpoints) this.addMidpoints(localCenters, v, h);
-      return { vLines: v, hLines: h, vCenters: localCenters.map(c => c.x), hCenters: localCenters.map(c => c.y) };
+
+    if (this.prefs.enableMidpoints) {
+      this.addMidpointCandidates(centers, vertical, horizontal);
     }
-    // World space path (rare): still add midpoints in world units
-    if (this.prefs.enableMidpoints) this.addMidpoints(centers, vLines, hLines);
-    return { vLines, hLines, vCenters: centers.map(c => c.x), hCenters: centers.map(c => c.y) };
+
+    return { vertical, horizontal, centers };
   }
 
-  /**
-   * Extend candidate lines with midpoints between objects' centers.
-   * If too many objects, only use neighbor midpoints to keep cost low.
-   */
-  private addMidpoints(centers: Array<{ x: number; y: number }>, vOut: number[], hOut: number[]): void {
-    const n = centers.length;
-    if (n <= 1) return;
-    if (n <= 50) {
-      for (let i = 0; i < n; i++) {
-        for (let j = i + 1; j < n; j++) {
-          const mx = (centers[i].x + centers[j].x) * 0.5;
-          const my = (centers[i].y + centers[j].y) * 0.5;
-          vOut.push(mx);
-          hOut.push(my);
+  private addMidpointCandidates(
+    centers: Array<{ x: number; y: number }>,
+    vertical: AxisCandidate[],
+    horizontal: AxisCandidate[]
+  ): void {
+    const count = centers.length;
+    if (count <= 1) return;
+
+    const pushCenter = (x: number, y: number) => {
+      const candidateX: AxisCandidate = { value: x, source: 'object-center', strength: 'weak' };
+      const candidateY: AxisCandidate = { value: y, source: 'object-center', strength: 'weak' };
+      vertical.push(candidateX);
+      horizontal.push(candidateY);
+    };
+
+    if (count <= 50) {
+      for (let i = 0; i < count; i++) {
+        for (let j = i + 1; j < count; j++) {
+          pushCenter((centers[i].x + centers[j].x) * 0.5, (centers[i].y + centers[j].y) * 0.5);
         }
       }
       return;
     }
-    // Large scenes: only consecutive neighbors by axis
+
     const byX = centers.slice().sort((a, b) => a.x - b.x);
     for (let i = 0; i < byX.length - 1; i++) {
-      vOut.push((byX[i].x + byX[i + 1].x) * 0.5);
+      pushCenter((byX[i].x + byX[i + 1].x) * 0.5, (byX[i].y + byX[i + 1].y) * 0.5);
     }
+
     const byY = centers.slice().sort((a, b) => a.y - b.y);
     for (let i = 0; i < byY.length - 1; i++) {
-      hOut.push((byY[i].y + byY[i + 1].y) * 0.5);
+      pushCenter((byY[i].x + byY[i + 1].x) * 0.5, (byY[i].y + byY[i + 1].y) * 0.5);
     }
   }
 
-  /**
-   * Public: get snap candidates for guides and snapping decisions
-   */
-  public getCandidates(options?: { exclude?: any[]; container?: Container; rect?: Rectangle; margin?: number }): {
-    vLines: number[];
-    hLines: number[];
-    canvas: { v: number[]; h: number[] };
-    threshold: number;
-    dims: { width: number; height: number };
-    vCenters?: number[];
-    hCenters?: number[];
-  } {
-    const dims = this.getCanvasDimensions();
-    const centers = { cx: dims.width / 2, cy: dims.height / 2 };
-    
-    // Include both full canvas boundaries and student view area boundaries
-    // Student view is 1200x1800 centered in the canvas
-    const studentViewWidth = 1200;
-    const studentViewHeight = 1800;
-    const studentViewLeft = (dims.width - studentViewWidth) / 2;
-    const studentViewRight = studentViewLeft + studentViewWidth;
-    const studentViewTop = (dims.height - studentViewHeight) / 2;
-    const studentViewBottom = studentViewTop + studentViewHeight;
-    const studentViewCenterX = studentViewLeft + studentViewWidth / 2;
-    const studentViewCenterY = studentViewTop + studentViewHeight / 2;
-    
-    let canvas = { 
-      v: [0, studentViewLeft, studentViewCenterX, studentViewRight, centers.cx, dims.width].sort((a, b) => a - b),
-      h: [0, studentViewTop, studentViewCenterY, studentViewBottom, centers.cy, dims.height].sort((a, b) => a - b)
+  private buildCanvasCandidates(
+    dims: { width: number; height: number },
+    container?: Container
+  ): { vertical: AxisCandidate[]; horizontal: AxisCandidate[] } {
+    const vertical: AxisCandidate[] = [];
+    const horizontal: AxisCandidate[] = [];
+
+    const pushVertical = (value: number, source: AxisCandidate['source']) => {
+      vertical.push(this.toCandidate(value, source, 'x', container));
     };
-    const obj = this.collectObjectSnapLines(options);
-    // If a container is provided, convert canvas lines to that container's local space
-    if (options?.container) {
-      const c = options.container;
-      const toLocalX = (x: number) => c.toLocal(new Point(x, 0)).x;
-      const toLocalY = (y: number) => c.toLocal(new Point(0, y)).y;
-      canvas = {
-        v: canvas.v.map(toLocalX),
-        h: canvas.h.map(toLocalY),
-      };
+    const pushHorizontal = (value: number, source: AxisCandidate['source']) => {
+      horizontal.push(this.toCandidate(value, source, 'y', container));
+    };
+
+    pushVertical(0, 'canvas-edge');
+    pushVertical(dims.width, 'canvas-edge');
+    pushVertical(dims.width / 2, 'canvas-center');
+
+    pushHorizontal(0, 'canvas-edge');
+    pushHorizontal(dims.height, 'canvas-edge');
+    pushHorizontal(dims.height / 2, 'canvas-center');
+
+    if (this.prefs.enableQuadrantGuides) {
+      pushVertical(dims.width * 0.25, 'canvas-quadrant');
+      pushVertical(dims.width * 0.75, 'canvas-quadrant');
+      pushHorizontal(dims.height * 0.25, 'canvas-quadrant');
+      pushHorizontal(dims.height * 0.75, 'canvas-quadrant');
     }
-    return { vLines: obj.vLines, hLines: obj.hLines, canvas, threshold: this.prefs.threshold, dims, vCenters: obj.vCenters, hCenters: obj.hCenters };
+
+    // Preserve student view safe area guides for backward compatibility
+    const studentWidth = 1200;
+    const studentHeight = 1800;
+    const studentLeft = (dims.width - studentWidth) / 2;
+    const studentRight = studentLeft + studentWidth;
+    const studentTop = (dims.height - studentHeight) / 2;
+    const studentBottom = studentTop + studentHeight;
+
+    pushVertical(studentLeft, 'canvas-edge');
+    pushVertical(studentRight, 'canvas-edge');
+    pushVertical(studentLeft + studentWidth / 2, 'canvas-center');
+
+    pushHorizontal(studentTop, 'canvas-edge');
+    pushHorizontal(studentBottom, 'canvas-edge');
+    pushHorizontal(studentTop + studentHeight / 2, 'canvas-center');
+
+    return { vertical, horizontal };
+  }
+
+  private mergeCandidates(primary: AxisCandidate[], secondary: AxisCandidate[]): AxisCandidate[] {
+    const map = new Map<string, AxisCandidate>();
+    const push = (candidate: AxisCandidate) => {
+      const key = `${candidate.source}:${Math.round(candidate.value * 1000)}`;
+      const existing = map.get(key);
+      if (!existing || this.strengthPriority(candidate.strength) < this.strengthPriority(existing.strength)) {
+        map.set(key, candidate);
+      }
+    };
+
+    primary.forEach(push);
+    secondary.forEach(push);
+
+    return Array.from(map.values()).sort((a, b) => a.value - b.value);
+  }
+
+  public getCandidates(options?: { exclude?: any[]; container?: Container; rect?: Rectangle; margin?: number }): CandidateResult {
+    const dims = this.getCanvasDimensions();
+    const objectCandidates = this.collectObjectCandidates(options);
+    const canvasCandidates = this.buildCanvasCandidates(dims, options?.container);
+
+    const centersX = objectCandidates.centers.map(c => c.x);
+    const centersY = objectCandidates.centers.map(c => c.y);
+
+    canvasCandidates.vertical
+      .filter(candidate => candidate.source === 'canvas-center')
+      .forEach(candidate => centersX.push(candidate.value));
+    canvasCandidates.horizontal
+      .filter(candidate => candidate.source === 'canvas-center')
+      .forEach(candidate => centersY.push(candidate.value));
+
+    return {
+      vertical: this.mergeCandidates(canvasCandidates.vertical, objectCandidates.vertical),
+      horizontal: this.mergeCandidates(canvasCandidates.horizontal, objectCandidates.horizontal),
+      objectVertical: objectCandidates.vertical,
+      objectHorizontal: objectCandidates.horizontal,
+      canvasVertical: canvasCandidates.vertical,
+      canvasHorizontal: canvasCandidates.horizontal,
+      centers: { x: centersX, y: centersY },
+      dims
+    };
   }
 
   /**
@@ -503,6 +552,15 @@ class SnapManager {
         if (typeof (this.prefs as any).magneticSnapping !== 'boolean') this.prefs.magneticSnapping = true;
         if (typeof (this.prefs as any).autoShowOnDrag !== 'boolean') this.prefs.autoShowOnDrag = true;
         if (typeof (this.prefs as any).smartSelectionHandles !== 'boolean') this.prefs.smartSelectionHandles = true;
+        if (typeof (this.prefs as any).enableQuadrantGuides !== 'boolean') this.prefs.enableQuadrantGuides = true;
+        const gridStyle = (this.prefs as any).gridStyle;
+        if (gridStyle !== 'dots' && gridStyle !== 'lines' && gridStyle !== 'hybrid') {
+          this.prefs.gridStyle = 'dots';
+        }
+        const theme = (this.prefs as any).theme;
+        if (theme !== 'auto' && theme !== 'light' && theme !== 'dark') {
+          this.prefs.theme = 'auto';
+        }
       }
     } catch {}
   }
@@ -543,7 +601,7 @@ class SnapManager {
    */
   private snapToGrid(p: Point): Point {
     const gridSpacing = this.prefs.gridSpacing || 20;
-    const threshold = this.prefs.threshold || 8;
+    const threshold = SNAP_STRENGTH_TOLERANCE.strong;
     
     const x = p.x;
     const y = p.y;

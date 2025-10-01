@@ -49,7 +49,7 @@ class MediaInterface {
 
     this.loadMoreBtn = document.createElement('button');
     this.loadMoreBtn.className = 'button button--outline button--small';
-    this.loadMoreBtn.textContent = 'Load More';
+
     this.loadMoreBtn.style.display = 'none';
     this.loadMoreBtn.addEventListener('click', () => {
       if (this.loading || !this.hasMore) return;
