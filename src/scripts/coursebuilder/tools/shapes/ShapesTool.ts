@@ -258,8 +258,52 @@ export class ShapesTool extends BaseTool {
                     fillEnabled: this.settings.fillEnabled,
                     fillColor: this.settings.fillColor,
                 };
-                if (this.settings.shapeType === 'star' && this.settings.points) {
-                    meta.points = this.settings.points;
+                // Shape-specific meta to ensure faithful redraw/modification
+                switch (this.settings.shapeType) {
+                    case 'star': {
+                        if (this.settings.points) meta.points = Math.max(3, this.settings.points);
+                        // Estimate innerRadius default proportionally to box
+                        meta.innerRadius = Math.round(Math.min(w, h) * 0.4);
+                        break;
+                    }
+                    case 'polygon': {
+                        if ((this.settings as any).sides) meta.sides = Math.max(3, (this.settings as any).sides);
+                        break;
+                    }
+                    case 'parallelogram': {
+                        // Store skew so redraw preserves slant; default to 30% width
+                        meta.skew = Math.round(w * 0.3);
+                        break;
+                    }
+                    case 'trapezoid': {
+                        // Store topWidth to preserve shape; default to 60% width
+                        meta.topWidth = Math.round(w * 0.6);
+                        break;
+                    }
+                    case 'cube': {
+                        // 3D offset for top/right faces
+                        meta.offset = Math.round(Math.min(w, h) * 0.3);
+                        break;
+                    }
+                    case 'cuboid': {
+                        meta.offset = Math.round(Math.min(w, h) * 0.25);
+                        break;
+                    }
+                    case 'cylinder': {
+                        // Cap ellipse thickness
+                        meta.ellipseY = Math.round(h * 0.15);
+                        break;
+                    }
+                    case 'cone': {
+                        meta.ellipseY = Math.round(h * 0.15);
+                        break;
+                    }
+                    case 'torus': {
+                        // Preserve ring thickness via innerRadius; outer is implied by w/h
+                        const outerR = Math.max(w, h) / 2;
+                        meta.innerRadius = Math.round(Math.max(1, outerR * 0.6));
+                        break;
+                    }
                 }
                 (this.currentShape as any).__toolType = 'shapes';
                 (this.currentShape as any).__meta = meta;

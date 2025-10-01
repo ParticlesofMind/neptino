@@ -123,7 +123,8 @@ export class LayersPanel {
     }
     
     try {
-      const children = parent.children.slice();
+      // Reverse so the list shows top-most (front) first
+      const children = parent.children.slice().reverse();
       
       // Filter out visual aids, UI elements, and temporary objects
       const realObjects = children.filter(child => {
@@ -263,16 +264,31 @@ export class LayersPanel {
       leftSide.appendChild(expander);
     }
 
+    // Hover border highlight to indicate grouping target (meta/ctrl-drop)
+    li.addEventListener('dragenter', (ev) => {
+      const dEv = ev as DragEvent;
+      const canGroup = ((dEv.metaKey || dEv.ctrlKey) && (obj as any).addChild);
+      (li as HTMLElement).style.outline = canGroup ? '2px solid #3B82F6' : '';
+    });
+    li.addEventListener('dragover', (ev) => {
+      const dEv = ev as DragEvent;
+      const canGroup = ((dEv.metaKey || dEv.ctrlKey) && (obj as any).addChild);
+      (li as HTMLElement).style.outline = canGroup ? '2px solid #3B82F6' : '';
+    });
+    li.addEventListener('dragleave', () => { (li as HTMLElement).style.outline = ''; });
+    li.addEventListener('drop', () => { (li as HTMLElement).style.outline = ''; });
+
     // Compact thumbnail
     const thumb = document.createElement('div');
     thumb.className = 'layer__thumbnail';
     this.updateThumbnail(obj, thumb);
     leftSide.appendChild(thumb);
 
-    // Name input - use intelligent naming as default
+    // Name input - use intelligent naming as default; editing on double-click only
     const nameInput = document.createElement('input');
     nameInput.className = 'layer__name-input';
     nameInput.type = 'text';
+    nameInput.readOnly = true; // prevent accidental edits during DnD; enable on dblclick
     
     // Use intelligent naming by default, but allow custom names to override
     const customName = (obj as any).name || (obj as any).__meta?.name;
@@ -288,6 +304,16 @@ export class LayersPanel {
         console.warn('Failed to set meta name:', error);
       }
     });
+    nameInput.addEventListener('dblclick', (ev) => {
+      ev.stopPropagation();
+      nameInput.readOnly = false;
+      nameInput.focus();
+      // place cursor at end
+      const v = nameInput.value; nameInput.value = ''; nameInput.value = v;
+    });
+    nameInput.addEventListener('blur', () => { nameInput.readOnly = true; });
+    // Avoid showing text cursor to prioritize DnD affordance
+    nameInput.style.cursor = 'default';
     leftSide.appendChild(nameInput);
 
     // Right side: visibility and lock toggles
@@ -343,6 +369,22 @@ export class LayersPanel {
     rightSide.appendChild(lock);
 
     // DnD handlers
+    // Insertion indicator line (single shared per item; appears centered between items)
+    const indicator = document.createElement('div');
+    indicator.className = 'layers-drop-indicator';
+    Object.assign(indicator.style, {
+      position: 'absolute',
+      left: '0',
+      right: '0',
+      height: '2px',
+      background: '#3B82F6', // blue-500
+      transform: 'translateY(-1px)',
+      pointerEvents: 'none',
+      display: 'none',
+    } as CSSStyleDeclaration);
+    li.style.position = li.style.position || 'relative';
+    li.appendChild(indicator);
+
     li.addEventListener('dragstart', (e) => {
       e.dataTransfer?.setData('text/layer-id', id);
       e.dataTransfer?.setData('text/plain', id);
@@ -351,9 +393,21 @@ export class LayersPanel {
     li.addEventListener('dragover', (e) => {
       e.preventDefault();
       e.dataTransfer!.dropEffect = 'move';
+      // Show single centered indicator between items to avoid double lines
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const y = (e as DragEvent).clientY;
+      const topHalf = y - rect.top < rect.height / 2;
+      // Place line at the boundary being targeted but ensure only one visible at a time
+      // For the hovered item, we show the line at its top if aiming above, bottom if aiming below
+      indicator.style.top = topHalf ? '0' : '100%';
+      // ensure only current indicator shows
+      document.querySelectorAll('.layers-drop-indicator').forEach((el) => { (el as HTMLElement).style.display = 'none'; });
+      indicator.style.display = 'block';
     });
+    li.addEventListener('dragleave', () => { indicator.style.display = 'none'; });
     li.addEventListener('drop', (e) => {
       e.preventDefault();
+      indicator.style.display = 'none';
       const dragId = e.dataTransfer?.getData('text/layer-id');
       if (!dragId) return;
       
@@ -387,94 +441,53 @@ export class LayersPanel {
         }
 
         // Store original parent for rollback if needed
-        const originalParent = dragged.parent;
+        const originalParent = dragged.parent as Container | null;
         const originalIndex = originalParent ? originalParent.children.indexOf(dragged) : -1;
 
-        // If drop target is container and Alt not pressed, nest as child
-        if ((dropTarget as any).addChild && !(e as DragEvent).altKey) {
+        // Determine intent by cursor position:
+        // - Above top half => insert above
+        // - Below bottom half => insert below
+        // - If holding meta/ctrl and target is container => nest inside (group)
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const isAbove = (e as DragEvent).clientY - rect.top < rect.height / 2;
+        const wantNestInside = ((e as DragEvent).metaKey || (e as DragEvent).ctrlKey) && (dropTarget as any).addChild;
+
+        if (wantNestInside && dragged !== dropTarget) {
           try {
-            if (dragged.parent) {
-              dragged.parent.removeChild(dragged);
-            }
+            if (dragged.parent) dragged.parent.removeChild(dragged);
             (dropTarget as any).addChild(dragged);
-            
-            // Dispatch update event for proper tracking
-            document.dispatchEvent(new CustomEvent('displayObject:updated', { 
-              detail: { id: dragId, object: dragged, action: 'reparented' } 
-            }));
-            
-            console.log('✅ Successfully nested object as child');
+            document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id: dragId, object: dragged, action: 'reparented' } }));
+            console.log('✅ Nested object into container (meta/ctrl-drop)');
           } catch (error) {
-            console.error('❌ Failed to nest object:', error);
-            // Rollback on failure
+            console.error('❌ Failed to reparent, rolling back:', error);
             if (originalParent && originalIndex >= 0) {
-              try {
-                if (dragged.parent) dragged.parent.removeChild(dragged);
-                originalParent.addChildAt(dragged, originalIndex);
-              } catch (rollbackError) {
-                console.error('❌ Rollback failed:', rollbackError);
-              }
+              try { if (dragged.parent) dragged.parent.removeChild(dragged); originalParent.addChildAt(dragged, originalIndex); } catch {}
             }
             return;
           }
         } else {
-          // Reorder within same parent of drop target
-          const parentCont = dropTarget.parent as Container;
-          if (!parentCont) {
-            console.warn('⚠️ Drop operation failed: Drop target has no parent');
-            return;
-          }
-          
+          // Reorder relative to dropTarget within dropTarget's parent
+          const parentCont = dropTarget.parent as Container | null;
+          if (!parentCont) { console.warn('⚠️ Drop target has no parent'); return; }
           try {
-            // Only move if not already in the same parent
+            const targetIndex = parentCont.getChildIndex ? parentCont.getChildIndex(dropTarget) : parentCont.children.indexOf(dropTarget);
+            if (targetIndex < 0) return;
+            // Compute insertion index based on desired side
+            const insertIndex = Math.max(0, Math.min(parentCont.children.length, isAbove ? targetIndex : targetIndex + 1));
             if (dragged.parent !== parentCont) {
-              if (dragged.parent) {
-                dragged.parent.removeChild(dragged);
-              }
-              parentCont.addChild(dragged);
+              if (dragged.parent) dragged.parent.removeChild(dragged);
+              parentCont.addChildAt(dragged, insertIndex);
+            } else {
+              const newIndex = Math.max(0, Math.min(parentCont.children.length - 1, insertIndex));
+              if (typeof (parentCont as any).setChildIndex === 'function') (parentCont as any).setChildIndex(dragged, newIndex);
+              else { parentCont.removeChild(dragged); parentCont.addChildAt(dragged, newIndex); }
             }
-            
-            // Compute new index based on DOM order of that list
-            const containerLi = (e.currentTarget as HTMLElement).parentElement as HTMLOListElement;
-            if (containerLi) {
-              const ids = Array.from(containerLi.querySelectorAll(':scope > li'))
-                .map(li => (li as HTMLElement).dataset.layerId || '')
-                .filter(id => id); // Filter out empty IDs
-              
-              const validObjects = ids
-                .map((i) => this.getObjectById(i))
-                .filter(Boolean) as Container[];
-              
-              // Only reorder if we have valid objects
-              if (validObjects.length > 0) {
-                validObjects.forEach((child, idx) => {
-                  try { 
-                    if (child.parent === parentCont) {
-                      parentCont.addChildAt(child as any, idx); 
-                    }
-                  } catch (reorderError) {
-                    console.warn('⚠️ Failed to reorder child at index', idx, ':', reorderError);
-                  }
-                });
-              }
-            }
-            
-            // Dispatch update event for proper tracking
-            document.dispatchEvent(new CustomEvent('displayObject:updated', { 
-              detail: { id: dragId, object: dragged, action: 'reordered' } 
-            }));
-            
-            console.log('✅ Successfully reordered object');
+            document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id: dragId, object: dragged, action: 'reordered' } }));
+            console.log('✅ Reordered object', isAbove ? 'above' : 'below', 'drop target');
           } catch (error) {
-            console.error('❌ Failed to reorder object:', error);
-            // Rollback on failure
+            console.error('❌ Failed to reorder, rolling back:', error);
             if (originalParent && originalIndex >= 0) {
-              try {
-                if (dragged.parent) dragged.parent.removeChild(dragged);
-                originalParent.addChildAt(dragged, originalIndex);
-              } catch (rollbackError) {
-                console.error('❌ Rollback failed:', rollbackError);
-              }
+              try { if (dragged.parent) dragged.parent.removeChild(dragged); originalParent.addChildAt(dragged, originalIndex); } catch {}
             }
             return;
           }
@@ -482,7 +495,7 @@ export class LayersPanel {
         
         // Clear cache and refresh UI after successful operation
         this.clearThumbnailCache();
-        this.debouncedRefresh(100); // Longer delay to ensure stability
+        this.debouncedRefresh(100); // Slight delay for stability after changes
         
       } catch (globalError) {
         console.error('❌ Drop operation failed with global error:', globalError);

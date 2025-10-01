@@ -55,8 +55,13 @@ export function createPenFromMeta(meta: any, offset: number): Graphics | null {
     if (last.out && first.in) gfx.bezierCurveTo(last.out.x, last.out.y, first.in.x, first.in.y, first.x, first.y);
     else gfx.lineTo(first.x, first.y);
     gfx.closePath();
+    // Only apply fill when explicitly enabled/defined.
+    // Some pen paths are closed but intentionally unfilled; duplicating should respect that.
     const fillNum = colorToNumber(meta.fillColor);
-    if (fillNum !== undefined) gfx.fill({ color: fillNum });
+    const fillEnabled = (meta.fillEnabled === true) || (typeof meta.fillColor !== 'undefined' && meta.fillColor !== null && meta.fillColor !== '');
+    if (fillEnabled && fillNum !== undefined) {
+      gfx.fill({ color: fillNum });
+    }
   }
   gfx.stroke({ width, color, cap: 'round', join: 'round' });
   try { meta.nodes = nodes; } catch {}

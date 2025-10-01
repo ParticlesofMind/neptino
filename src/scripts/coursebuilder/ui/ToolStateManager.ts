@@ -82,6 +82,7 @@ export class ToolStateManager {
     private selectedShape: string | null = null;
     private toolSettings: ToolSettings;
     private storageKey = 'coursebuilder-icon-states';
+    private settingsStorageKey = 'coursebuilder-tool-settings';
     private canvasRetryAttempted = false; // Prevent infinite retry loops
     private selectionContextTool: string | null = null; // tool options to show when selection is active
 
@@ -130,6 +131,9 @@ export class ToolStateManager {
 
         // Load saved states from localStorage or set defaults
         this.loadSavedStates();
+
+        // Load any separately persisted tool settings (backward compatibility)
+        this.loadPersistedToolSettings();
 
         // Set initial selected states
         this.setInitialSelections();
@@ -310,9 +314,23 @@ export class ToolStateManager {
                 toolSettings: this.toolSettings, // Save tool settings
             };
             localStorage.setItem(this.storageKey, JSON.stringify(iconState));
+            // Persist tool settings separately to ensure latest values survive UI mismatches
+            try { localStorage.setItem(this.settingsStorageKey, JSON.stringify(this.toolSettings)); } catch {}
         } catch (error) {
             console.warn('Error saving coursebuilder states:', error);
         }
+    }
+
+    /** Load persisted tool settings if present */
+    private loadPersistedToolSettings(): void {
+        try {
+            const raw = localStorage.getItem(this.settingsStorageKey);
+            if (!raw) return;
+            const saved = JSON.parse(raw);
+            if (saved && typeof saved === 'object') {
+                this.toolSettings = { ...this.toolSettings, ...saved } as any;
+            }
+        } catch {}
     }
 
     /**
@@ -716,6 +734,8 @@ export class ToolStateManager {
      * Restore saved tool settings to HTML UI elements
      */
     private restoreToolSettingsToUI(): void {
+        // Ensure correct panel is visible for current context
+        this.updateToolSettingsPanelVisibility();
 
         // Restore number inputs (for size settings)
         document.querySelectorAll('input[type="number"][data-setting]').forEach(input => {
@@ -730,7 +750,7 @@ export class ToolStateManager {
                 if (toolSettings && setting in toolSettings) {
                     const savedValue = toolSettings[setting];
                     numberInput.value = String(savedValue);
-                    
+                    numberInput.dispatchEvent(new Event('change'));
                 }
             }
         });
@@ -748,6 +768,7 @@ export class ToolStateManager {
                 if (toolSettings && setting in toolSettings) {
                     const savedValue = toolSettings[setting];
                     selectElement.value = savedValue;
+                    selectElement.dispatchEvent(new Event('change'));
                 }
             }
         });
@@ -765,6 +786,7 @@ export class ToolStateManager {
                 if (toolSettings && setting in toolSettings) {
                     const savedValue = toolSettings[setting];
                     numberInput.value = String(savedValue);
+                    numberInput.dispatchEvent(new Event('change'));
                 }
             }
         });
@@ -815,6 +837,14 @@ export class ToolStateManager {
                 if (iBtn) iBtn.classList.toggle('active', !!isItalic);
             } catch {}
         }, 100);
+    }
+
+    /** Ensure the options panel reflects the selected tool or selection context */
+    private updateToolSettingsPanelVisibility(): void {
+        const panelTool = (this.currentTool === 'selection' && this.selectionContextTool)
+            ? this.selectionContextTool
+            : this.currentTool;
+        this.showSettingsPanelFor(panelTool);
     }
 
     /**
