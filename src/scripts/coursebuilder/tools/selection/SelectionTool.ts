@@ -467,6 +467,19 @@ export class SelectionTool extends BaseTool {
   private emitSelectionContext(): void { try { const type = determineSelectionType(this.selected); const detail = { type, count: this.selected.length } as any; const evt = new CustomEvent('selection:context', { detail }); document.dispatchEvent(evt); } catch {} }
 
   private updateObjectSelectionStates(): void {
+    // Update selection flags on objects and notify UI
+    try {
+      // Clear previous selection flags across known objects (best-effort)
+      const dm: any = (this as any).displayManager;
+      const all: any[] = dm && dm.getObjects ? dm.getObjects() : [];
+      if (all && Array.isArray(all)) {
+        all.forEach((o: any) => { try { o.__selected = false; } catch {} });
+      }
+      // Set selection flags
+      this.selected.forEach((o) => { try { (o as any).__selected = true; } catch {} });
+      // Emit selection change for panels (layers, etc.)
+      document.dispatchEvent(new CustomEvent('selection:changed', { detail: { count: this.selected.length } }));
+    } catch {}
     // Get all scenes from animation state and update their selection status
     try {
       const scenes = animationState.getScenes();

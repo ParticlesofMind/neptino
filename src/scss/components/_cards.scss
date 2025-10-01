@@ -147,8 +147,17 @@
   background: var(--color-background);
   border-radius: var(--radius-small);
   cursor: grab;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.12s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+
+  &.is-selected {
+    background: var(--color-primary-50, #EFF6FF);
+  }
+
+  &.is-group-target {
+    outline: 2px solid var(--color-primary-500, #3B82F6);
+    outline-offset: -2px;
+  }
 
   &:hover {
     border-color: var(--color-primary-300);
@@ -283,6 +292,22 @@
       background: var(--color-primary-50);
     }
   }
+}
+
+/* Drop indicator centralized styling */
+.layers-drop-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-primary-500, #3B82F6);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease, transform 120ms ease;
+
+  &.is-top { top: 0; transform: translateY(-1px); }
+  &.is-bottom { top: 100%; transform: translateY(-1px); }
+  &.is-visible { opacity: 1; }
 }
 
 // Media card variants

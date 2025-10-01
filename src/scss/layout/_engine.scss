@@ -8,3 +8,10 @@
 @use 'engine-snap';      // Snap menu functionality  @use 'engine-snap';      // Snap menu functionality  
 
 @use 'engine-overlays';  // Perspective and canvas overlays@use 'engine-overlays';  // Perspective and canvas overlays
+
+/* Root-level custom properties for engine UI */
+:root {
+  /* Layers panel DnD center-band thresholds (0..1 ratios) */
+  --layers-center-band-lower: 0.4;
+  --layers-center-band-upper: 0.6;
+}

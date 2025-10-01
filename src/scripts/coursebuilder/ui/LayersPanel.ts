@@ -83,6 +83,20 @@ export class LayersPanel {
       this.clearThumbnailCache(); // Clear cache when objects change
       this.debouncedRefresh(8); // Fast refresh for updates
     });
+    // Update thumbnails on style changes coming from tools
+    document.addEventListener('displayObject:styled', (ev: any) => {
+      const id = ev?.detail?.id;
+      if (!id) { this.debouncedRefresh(32); return; }
+      const thumbEl = this.listEl?.querySelector(`li[data-layer-id="${id}"] .layer__thumbnail`) as HTMLElement | null;
+      if (thumbEl) {
+        const obj = this.getObjectById(id);
+        if (obj) {
+          this.updateThumbnail(obj, thumbEl);
+        }
+      } else {
+        this.debouncedRefresh(32);
+      }
+    });
     
     // Listen for tool changes to refresh visibility (less frequent, can be immediate)
     document.addEventListener('tool:changed', () => this.debouncedRefresh(100));
@@ -228,6 +242,14 @@ export class LayersPanel {
     const id = this.getId(obj) || '';
     li.dataset.layerId = id;
 
+    // Selection highlighting
+    const updateSelectedUI = () => {
+      const selected = !!(obj as any).__selected;
+      li.classList.toggle('is-selected', selected);
+    };
+    updateSelectedUI();
+    document.addEventListener('selection:changed', () => updateSelectedUI());
+
     // Create main content wrapper
     const content = document.createElement('div');
     content.className = 'layer__content';
@@ -268,15 +290,15 @@ export class LayersPanel {
     li.addEventListener('dragenter', (ev) => {
       const dEv = ev as DragEvent;
       const canGroup = ((dEv.metaKey || dEv.ctrlKey) && (obj as any).addChild);
-      (li as HTMLElement).style.outline = canGroup ? '2px solid #3B82F6' : '';
+      li.classList.toggle('is-group-target', !!canGroup);
     });
     li.addEventListener('dragover', (ev) => {
       const dEv = ev as DragEvent;
       const canGroup = ((dEv.metaKey || dEv.ctrlKey) && (obj as any).addChild);
-      (li as HTMLElement).style.outline = canGroup ? '2px solid #3B82F6' : '';
+      li.classList.toggle('is-group-target', !!canGroup);
     });
-    li.addEventListener('dragleave', () => { (li as HTMLElement).style.outline = ''; });
-    li.addEventListener('drop', () => { (li as HTMLElement).style.outline = ''; });
+    li.addEventListener('dragleave', () => { li.classList.remove('is-group-target'); });
+    li.addEventListener('drop', () => { li.classList.remove('is-group-target'); });
 
     // Compact thumbnail
     const thumb = document.createElement('div');
@@ -368,20 +390,17 @@ export class LayersPanel {
     });
     rightSide.appendChild(lock);
 
+    // Context menu (right-click)
+    li.addEventListener('contextmenu', (ev) => {
+      ev.preventDefault();
+      this.openContextMenu(ev.clientX, ev.clientY, obj);
+    });
+
     // DnD handlers
-    // Insertion indicator line (single shared per item; appears centered between items)
+    // Insertion indicator line (single shared per item)
     const indicator = document.createElement('div');
     indicator.className = 'layers-drop-indicator';
-    Object.assign(indicator.style, {
-      position: 'absolute',
-      left: '0',
-      right: '0',
-      height: '2px',
-      background: '#3B82F6', // blue-500
-      transform: 'translateY(-1px)',
-      pointerEvents: 'none',
-      display: 'none',
-    } as CSSStyleDeclaration);
+    indicator.setAttribute('aria-hidden', 'true');
     li.style.position = li.style.position || 'relative';
     li.appendChild(indicator);
 
@@ -393,21 +412,20 @@ export class LayersPanel {
     li.addEventListener('dragover', (e) => {
       e.preventDefault();
       e.dataTransfer!.dropEffect = 'move';
-      // Show single centered indicator between items to avoid double lines
+      // Show single indicator between items
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       const y = (e as DragEvent).clientY;
       const topHalf = y - rect.top < rect.height / 2;
-      // Place line at the boundary being targeted but ensure only one visible at a time
-      // For the hovered item, we show the line at its top if aiming above, bottom if aiming below
-      indicator.style.top = topHalf ? '0' : '100%';
+      indicator.classList.toggle('is-top', topHalf);
+      indicator.classList.toggle('is-bottom', !topHalf);
       // ensure only current indicator shows
-      document.querySelectorAll('.layers-drop-indicator').forEach((el) => { (el as HTMLElement).style.display = 'none'; });
-      indicator.style.display = 'block';
+      document.querySelectorAll('.layers-drop-indicator').forEach((el) => { el.classList.remove('is-visible'); });
+      indicator.classList.add('is-visible');
     });
-    li.addEventListener('dragleave', () => { indicator.style.display = 'none'; });
+    li.addEventListener('dragleave', () => { indicator.classList.remove('is-visible'); });
     li.addEventListener('drop', (e) => {
       e.preventDefault();
-      indicator.style.display = 'none';
+      indicator.classList.remove('is-visible');
       const dragId = e.dataTransfer?.getData('text/layer-id');
       if (!dragId) return;
       
@@ -448,9 +466,19 @@ export class LayersPanel {
         // - Above top half => insert above
         // - Below bottom half => insert below
         // - If holding meta/ctrl and target is container => nest inside (group)
+        // - If hovering centrally inside target (between 35%-65% height), treat as group intent too
         const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-        const isAbove = (e as DragEvent).clientY - rect.top < rect.height / 2;
-        const wantNestInside = ((e as DragEvent).metaKey || (e as DragEvent).ctrlKey) && (dropTarget as any).addChild;
+        const localY = (e as DragEvent).clientY - rect.top;
+        const ratio = rect.height ? localY / rect.height : 0.5;
+        const isAbove = ratio < 0.5;
+        // Center band thresholds use CSS custom properties for easy tuning
+        const root = document.documentElement as HTMLElement;
+        const lowerStr = getComputedStyle(root).getPropertyValue('--layers-center-band-lower').trim() || '0.4';
+        const upperStr = getComputedStyle(root).getPropertyValue('--layers-center-band-upper').trim() || '0.6';
+        const lower = parseFloat(lowerStr);
+        const upper = parseFloat(upperStr);
+        const isCenterBand = ratio >= (isNaN(lower) ? 0.4 : lower) && ratio <= (isNaN(upper) ? 0.6 : upper);
+        const wantNestInside = (((e as DragEvent).metaKey || (e as DragEvent).ctrlKey) || isCenterBand) && (dropTarget as any).addChild;
 
         if (wantNestInside && dragged !== dropTarget) {
           try {
@@ -742,6 +770,74 @@ export class LayersPanel {
     
     // Fallback placeholder
     el.style.background = '#f3f4f6';
+  }
+
+  // Simple reusable context menu for layers
+  private openContextMenu(x: number, y: number, obj: any) {
+    // Remove existing
+    document.querySelectorAll('.context-menu').forEach(el => el.remove());
+    const menu = document.createElement('div');
+    menu.className = 'context-menu context-menu--layers';
+    Object.assign(menu.style, { position: 'fixed', top: `${y}px`, left: `${x}px`, zIndex: '10000' });
+
+    const dm = (window as any)._displayManager as any;
+    const id = this.getId(obj);
+    const locked = !!(obj as any).__locked;
+
+    const addItem = (label: string, onClick: (() => void) | null, disabled = false) => {
+      const item = document.createElement('button');
+      item.className = 'context-menu__item';
+      item.textContent = label;
+      if (disabled || !onClick) {
+        item.disabled = true; item.setAttribute('aria-disabled', 'true');
+      } else {
+        item.addEventListener('click', () => { try { onClick(); } finally { menu.remove(); } });
+      }
+      menu.appendChild(item);
+    };
+
+    addItem('Delete', () => { if (dm && id) dm.remove(id); });
+    addItem('Duplicate', () => {
+      try {
+        const parent = obj.parent;
+        if (!parent) return;
+        const json = (obj as any).toJSON ? (obj as any).toJSON() : null;
+        let clone: any = null;
+        const dmLocal = (window as any)._displayManager as any;
+        if (json && (window as any).PIXI?.Container?.from) {
+          clone = (window as any).PIXI.Container.from(json);
+        } else if ((obj as any).clone) {
+          clone = (obj as any).clone();
+        } else if (dmLocal && typeof dmLocal.add === 'function') {
+          // Create a minimal container as fallback and copy meta
+          const created = dmLocal.createContainer ? dmLocal.createContainer(parent) : null;
+          clone = created?.container || new (window as any).PIXI.Container();
+          if (!created) parent.addChild(clone);
+          try { (clone as any).__meta = JSON.parse(JSON.stringify((obj as any).__meta || {})); } catch {}
+          try { (clone as any).__toolType = (obj as any).__toolType; } catch {}
+        }
+        if (clone) {
+          parent.addChild(clone);
+          const newId = dmLocal?.add ? dmLocal.add(clone, parent) : null;
+          document.dispatchEvent(new CustomEvent('displayObject:added', { detail: { id: newId, object: clone } }));
+        }
+      } catch {}
+    });
+    addItem('Rename', () => {
+      const li = this.listEl?.querySelector(`li[data-layer-id="${id}"]`) as HTMLElement | null;
+      const input = li?.querySelector('.layer__name-input') as HTMLInputElement | null;
+      if (input) { input.readOnly = false; input.focus(); }
+    });
+    addItem('Lock', () => { (obj as any).__locked = true; try { (obj as any).eventMode = 'none'; (obj as any).interactiveChildren = false; } catch {} document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id, object: obj, action: 'lock' } })); }, locked);
+    addItem('Unlock', () => { (obj as any).__locked = false; try { (obj as any).eventMode = 'static'; (obj as any).interactiveChildren = true; } catch {} document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id, object: obj, action: 'unlock' } })); }, !locked);
+
+    document.body.appendChild(menu);
+    const close = () => menu.remove();
+    setTimeout(() => {
+      document.addEventListener('click', close, { once: true });
+      document.addEventListener('contextmenu', close, { once: true });
+      window.addEventListener('blur', close, { once: true });
+    });
   }
 
   /**
