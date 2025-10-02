@@ -17,7 +17,7 @@ function initializeCustomColorSelectors(): void {
   colorSelectors.forEach((container) => {
     const element = container as HTMLElement;
     const selectorType = element.dataset.colorSelector;
-    const initialColor = element.dataset.initialColor || '#1a1a1a';
+    const initialColor = element.dataset.initialColor || '#282a29';
     const allowTransparent = element.dataset.allowTransparent === 'true';
     
     if (!selectorType) return;

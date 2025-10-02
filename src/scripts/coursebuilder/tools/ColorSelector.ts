@@ -16,23 +16,22 @@ export class ColorSelector {
   private onColorChange: (color: ColorOption) => void;
   private isOpen: boolean = false;
 
-  // Neptino's desaturated color palette (most to least used)
+  // Restricted palette per request
   private colors: ColorOption[] = [
-    { name: '', value: 'black', hex: '#1a1a1a' },
-    { name: '', value: 'green', hex: '#4a7c59' },
-    { name: '', value: 'blue', hex: '#4a79a4' },
-    { name: '', value: 'red', hex: '#a74a4a' },
-    { name: '', value: 'gray', hex: '#6b7280' },
-    { name: '', value: 'orange', hex: '#b87333' },
-    { name: '', value: 'purple', hex: '#7c5a9b' },
-    { name: '', value: 'yellow', hex: '#b8a642' },
-    { name: '', value: 'slate', hex: '#64748b' },
-    { name: '', value: 'white', hex: '#f8fafc' }
+    { name: 'Black', value: '#282a29', hex: '#282a29' },
+    { name: 'Grey', value: '#636363', hex: '#636363' },
+    { name: 'Red', value: '#be4e4e', hex: '#be4e4e' },
+    { name: 'Yellow', value: '#e1a70b', hex: '#e1a70b' },
+    { name: 'Orange', value: '#f14a26', hex: '#f14a26' },
+    { name: 'Blue', value: '#3c748d', hex: '#3c748d' },
+    { name: 'Green', value: '#2b8059', hex: '#2b8059' },
+    { name: 'Purple', value: '#6622b0', hex: '#6622b0' },
+    { name: 'White', value: '#fef6eb', hex: '#fef6eb' }
   ];
 
   constructor(
     container: HTMLElement,
-    initialColor: string = '#1a1a1a',
+    initialColor: string = '#282a29',
     onColorChange: (color: ColorOption) => void
   ) {
     this.container = container;

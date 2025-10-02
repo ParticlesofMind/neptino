@@ -128,7 +128,7 @@ export class AnimationUI {
                    step="1"
                    style="width:80px; accent-color:#80bfff;"
                    title="Animation Duration">
-            <span data-duration-display style="font-size:11px; font-weight:500; color:#4a79a4; min-width:24px;">3s</span>
+            <span data-duration-display style="font-size:11px; font-weight:500; color:#3c748d; min-width:24px;">3s</span>
           </div>
           
           <!-- Resolution Selector -->
@@ -148,7 +148,7 @@ export class AnimationUI {
 
     const loopButton = scenePanel.querySelector('[data-anim-loop]') as HTMLButtonElement;
     const activeColor = '#80bfff';
-    const activeBorderColor = '#4a79a4';
+    const activeBorderColor = '#3c748d';
     const activeTextColor = '#0b2a4a';
     
     const syncLoop = () => {
@@ -241,7 +241,7 @@ export class AnimationUI {
           <!-- Pen/Shape Tool Properties -->
           <div class="modify-pen-controls" data-modify-type="pen" style="display:none; align-items:center; gap:8px;">
             <input type="number" min="1" max="15" value="2" class="input input--number" title="Stroke Width" data-modify-property="size" style="width:50px;">
-            <div class="color-selector" data-color-selector="modify-stroke" data-initial-color="#1a1a1a" title="Stroke Color"></div>
+            <div class="color-selector" data-color-selector="modify-stroke" data-initial-color="#282a29" title="Stroke Color"></div>
             <div class="color-selector" data-color-selector="modify-fill" data-initial-color="transparent" data-allow-transparent="true" title="Fill Color"></div>
           </div>
           
@@ -255,19 +255,19 @@ export class AnimationUI {
               <option value="24">24pt</option>
               <option value="32">32pt</option>
             </select>
-            <div class="color-selector" data-color-selector="modify-color" data-initial-color="#1a1a1a" title="Text Color"></div>
+            <div class="color-selector" data-color-selector="modify-color" data-initial-color="#282a29" title="Text Color"></div>
           </div>
           
           <!-- Brush Tool Properties -->
           <div class="modify-brush-controls" data-modify-type="brush" style="display:none; align-items:center; gap:8px;">
             <input type="number" min="10" max="50" value="20" class="input input--number" title="Brush Size" data-modify-property="size" style="width:50px;">
-            <div class="color-selector" data-color-selector="modify-color" data-initial-color="#4a7c59" title="Brush Color"></div>
+            <div class="color-selector" data-color-selector="modify-color" data-initial-color="#2b8059" title="Brush Color"></div>
           </div>
           
           <!-- Shapes Tool Properties -->
           <div class="modify-shapes-controls" data-modify-type="shapes" style="display:none; align-items:center; gap:8px;">
             <input type="number" min="1" max="10" value="2" class="input input--number" title="Stroke Width" data-modify-property="strokeWidth" style="width:50px;">
-            <div class="color-selector" data-color-selector="modify-stroke" data-initial-color="#4a79a4" title="Stroke Color"></div>
+            <div class="color-selector" data-color-selector="modify-stroke" data-initial-color="#3c748d" title="Stroke Color"></div>
             <div class="color-selector" data-color-selector="modify-fill" data-initial-color="transparent" data-allow-transparent="true" title="Fill Color"></div>
           </div>
         </div>
@@ -282,13 +282,13 @@ export class AnimationUI {
           <div class="transform-group" style="display:flex; align-items:center; gap:6px;">
             <label style="font-size:11px; font-weight:500; color:#666;">Scale:</label>
             <input type="range" min="0.1" max="3" step="0.05" value="1" class="input input--range" title="Scale" data-modify-property="scale" style="width:60px; accent-color:#80bfff;">
-            <span class="scale-value" data-scale-display style="font-size:11px; font-weight:500; color:#4a79a4; min-width:32px;">1.00</span>
+            <span class="scale-value" data-scale-display style="font-size:11px; font-weight:500; color:#3c748d; min-width:32px;">1.00</span>
           </div>
           
           <div class="transform-group" style="display:flex; align-items:center; gap:6px;">
             <label style="font-size:11px; font-weight:500; color:#666;">Opacity:</label>
             <input type="range" min="0" max="1" step="0.05" value="1" class="input input--range" title="Opacity" data-modify-property="alpha" style="width:60px; accent-color:#80bfff;">
-            <span class="alpha-value" data-alpha-display style="font-size:11px; font-weight:500; color:#4a79a4; min-width:32px;">100%</span>
+            <span class="alpha-value" data-alpha-display style="font-size:11px; font-weight:500; color:#3c748d; min-width:32px;">100%</span>
           </div>
         </div>
         

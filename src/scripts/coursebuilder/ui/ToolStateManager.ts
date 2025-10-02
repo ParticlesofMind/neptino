@@ -92,26 +92,26 @@ export class ToolStateManager {
                 enabled: true,
             },
             pen: {
-                color: '#1a1a1a',        // Black (matches HTML)
+                color: '#282a29',
                 size: 2,
-                strokeColor: '#1a1a1a',  // Black (matches HTML)
-                fillColor: '#f8fafc',    // White (matches HTML)
+                strokeColor: '#282a29',
+                fillColor: '#fef6eb',
             },
     text: {
                 fontFamily: 'Arial',
                 fontSize: 16,
-                color: '#1a1a1a',        // Black (matches HTML)
+                color: '#282a29',
             },
             brush: {
-                color: '#4a7c59',        // Green (matches HTML)
+                color: '#2b8059',
                 opacity: 0.3,
                 size: 20,
             },
             shapes: {
-                color: '#4a79a4',        // Blue (matches HTML stroke default)
+                color: '#3c748d',
                 strokeWidth: 2,
-                strokeColor: '#4a79a4',  // Blue (matches HTML)
-                fillColor: '#f8fafc',    // White (matches HTML)
+                strokeColor: '#3c748d',
+                fillColor: '#fef6eb',
                 shapeType: 'rectangle',
             },
             eraser: {

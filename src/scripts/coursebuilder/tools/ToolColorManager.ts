@@ -61,17 +61,17 @@ export class ToolColorManager {
   /*
   private getInitialColorForTool(toolType: string): string {
     const initialColors: Record<string, string> = {
-      'pen': '#1a1a1a',         // Black (matches HTML)
-      'pen-stroke': '#1a1a1a',  // Black (matches HTML)
-      'pen-fill': '#f8fafc',    // White (matches HTML)
-      'brush': '#4a7c59',       // Green (matches HTML)
-      'text': '#1a1a1a',        // Black (matches HTML)
-      'shapes': '#4a79a4',      // Blue (matches HTML stroke)
-      'shapes-stroke': '#4a79a4', // Blue (matches HTML)
-      'shapes-fill': '#f8fafc'   // White (matches HTML)
+      'pen': '#282a29',
+      'pen-stroke': '#282a29',
+      'pen-fill': '#fef6eb',
+      'brush': '#2b8059',
+      'text': '#282a29',
+      'shapes': '#3c748d',
+      'shapes-stroke': '#3c748d',
+      'shapes-fill': '#fef6eb'
     };
 
-    return initialColors[toolType] || '#1a1a1a';
+    return initialColors[toolType] || '#282a29';
   }
   */
 

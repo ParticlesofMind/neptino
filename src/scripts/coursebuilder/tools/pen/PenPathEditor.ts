@@ -63,7 +63,7 @@ export class PenPathEditor {
     this.isClosed = !!meta.closed;
     this.settings = {
       size: meta.size ?? 2,
-      strokeColor: meta.strokeColor ?? '#1a1a1a',
+      strokeColor: meta.strokeColor ?? '#282a29',
       fillColor: meta.fillColor ?? 'transparent',
       strokeType: 'solid',
     };
@@ -665,7 +665,7 @@ export class PenPathEditor {
       closed: this.isClosed,
       nodes,
       size: this.settings?.size ?? 2,
-      strokeColor: this.settings?.strokeColor ?? '#1a1a1a',
+      strokeColor: this.settings?.strokeColor ?? '#282a29',
       fillColor: fill,
     };
   }
@@ -705,7 +705,7 @@ export class PenPathEditor {
 
     shape.stroke({
       width: meta.size ?? 2,
-      color: hexToNumber(meta.strokeColor ?? '#1a1a1a'),
+      color: hexToNumber(meta.strokeColor ?? '#282a29'),
       cap: 'round',
       join: 'round',
     });

@@ -59,8 +59,8 @@ export class PenTool extends BaseTool {
          super("pen", "url('/src/assets/cursors/pen-cursor.svg') 2 2, crosshair");
  this.settings = {
  size: STROKE_SIZES.PEN[2], // Start with 3px
- strokeColor: '#1a1a1a',  // Black stroke
- fillColor: '#f8fafc',    // White fill
+ strokeColor: '#282a29',
+ fillColor: '#fef6eb',
  strokeType: 'solid',     // Solid lines by default
  mode: 'pen',             // Default to pen mode
  };

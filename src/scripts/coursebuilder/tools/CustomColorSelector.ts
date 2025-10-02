@@ -18,30 +18,17 @@ export class CustomColorSelector {
   private isOpen: boolean = false;
   private allowTransparent: boolean = false;
 
-  // Neptino's color palette
-  private penColors: ColorOption[] = [
-    { name: 'Black', value: '#1a1a1a', hex: '#1a1a1a' },
-    { name: 'Green', value: '#4a7c59', hex: '#4a7c59' },
-    { name: 'Blue', value: '#4a79a4', hex: '#4a79a4' },
-    { name: 'Red', value: '#a74a4a', hex: '#a74a4a' },
-    { name: 'Gray', value: '#6b7280', hex: '#6b7280' },
-    { name: 'Orange', value: '#b87333', hex: '#b87333' },
-    { name: 'Purple', value: '#7c5a9b', hex: '#7c5a9b' },
-    { name: 'Yellow', value: '#b8a642', hex: '#b8a642' },
-    { name: 'Slate', value: '#64748b', hex: '#64748b' },
-    { name: 'White', value: '#f8fafc', hex: '#f8fafc' }
-  ];
-
-  private documentColors: ColorOption[] = [
-    { name: 'Black', value: '#000000', hex: '#000000' },
-    { name: 'Purple', value: '#7c5a9b', hex: '#7c5a9b' }
-  ];
-
-  private brandColors: ColorOption[] = [
-    { name: 'Brand Purple', value: '#7c5a9b', hex: '#7c5a9b' },
-    { name: 'Brand Purple Light', value: '#a67db8', hex: '#a67db8' },
-    { name: 'Brand Red', value: '#a74a4a', hex: '#a74a4a' },
-    { name: 'Brand Blue', value: '#4a79a4', hex: '#4a79a4' }
+  // Restricted palette per request
+  private paletteColors: ColorOption[] = [
+    { name: 'Black', value: '#282a29', hex: '#282a29' },
+    { name: 'Grey', value: '#636363', hex: '#636363' },
+    { name: 'Red', value: '#be4e4e', hex: '#be4e4e' },
+    { name: 'Yellow', value: '#e1a70b', hex: '#e1a70b' },
+    { name: 'Orange', value: '#f14a26', hex: '#f14a26' },
+    { name: 'Blue', value: '#3c748d', hex: '#3c748d' },
+    { name: 'Green', value: '#2b8059', hex: '#2b8059' },
+    { name: 'Purple', value: '#6622b0', hex: '#6622b0' },
+    { name: 'White', value: '#fef6eb', hex: '#fef6eb' }
   ];
 
   private transparentOption: ColorOption = {
@@ -52,7 +39,7 @@ export class CustomColorSelector {
 
   constructor(
     container: HTMLElement,
-    initialColor: string = '#1a1a1a',
+    initialColor: string = '#282a29',
     onColorChange: (color: ColorOption) => void,
     allowTransparent: boolean = false
   ) {
@@ -61,7 +48,7 @@ export class CustomColorSelector {
     this.allowTransparent = allowTransparent;
     
     // Find initial color in palette
-    this.currentColor = this.findColorByValue(initialColor) || this.penColors[0];
+    this.currentColor = this.findColorByValue(initialColor) || this.paletteColors[0];
     
     this.init();
   }
@@ -99,17 +86,9 @@ export class CustomColorSelector {
     this.dropdown.setAttribute('role', 'listbox');
     this.dropdown.setAttribute('aria-label', 'Color options');
 
-    // Pen colors section
-    const penSection = this.createColorSection('Pen colors', this.penColors, 'pen');
-    this.dropdown.appendChild(penSection);
-
-    // Document colors section  
-    const docSection = this.createColorSection('Document colors', this.documentColors, 'document');
-    this.dropdown.appendChild(docSection);
-
-    // Brand colors section
-    const brandSection = this.createColorSection('Brand colors', this.brandColors, 'brand');
-    this.dropdown.appendChild(brandSection);
+    // Single palette section only
+    const paletteSection = this.createColorSection('Colors', this.paletteColors, 'pen');
+    this.dropdown.appendChild(paletteSection);
 
     // Add transparent option if allowed
     if (this.allowTransparent) {
@@ -166,22 +145,7 @@ export class CustomColorSelector {
       grid.appendChild(colorEl);
     });
 
-    // Add "add color" button for custom colors (only for document colors)
-    if (iconType === 'document') {
-      const addColorBtn = document.createElement('button');
-      addColorBtn.className = 'color-selector__add-color';
-      addColorBtn.type = 'button';
-      addColorBtn.setAttribute('aria-label', 'Add custom color');
-      addColorBtn.textContent = '+';
-      
-      addColorBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.openColorPicker();
-      });
-
-      grid.appendChild(addColorBtn);
-    }
+    // No custom colors
 
     section.appendChild(grid);
     return section;
@@ -401,7 +365,7 @@ export class CustomColorSelector {
   }
 
   private findColorByValue(value: string): ColorOption | null {
-    const allColors = [...this.penColors, ...this.documentColors, ...this.brandColors];
+    const allColors = [...this.paletteColors];
     if (this.allowTransparent && value === 'transparent') {
       return this.transparentOption;
     }
@@ -409,35 +373,8 @@ export class CustomColorSelector {
   }
 
   private openColorPicker(): void {
-    // Create a hidden color input for custom color selection
-    const colorInput = document.createElement('input');
-    colorInput.type = 'color';
-    colorInput.style.position = 'absolute';
-    colorInput.style.left = '-9999px';
-    colorInput.value = this.currentColor.hex === 'transparent' ? '#000000' : this.currentColor.hex;
-    
-    document.body.appendChild(colorInput);
-    
-    colorInput.addEventListener('change', () => {
-      const customColor: ColorOption = {
-        name: 'Custom',
-        value: colorInput.value,
-        hex: colorInput.value
-      };
-      
-      // Add to document colors if not already there
-      if (!this.documentColors.find(c => c.hex === customColor.hex)) {
-        this.documentColors.push(customColor);
-        // Recreate dropdown to include new color
-        this.dropdown.remove();
-        this.createDropdown();
-      }
-      
-      this.selectColor(customColor);
-      document.body.removeChild(colorInput);
-    });
-    
-    colorInput.click();
+    // Disabled: custom colors not allowed in this mode
+    return;
   }
 
   // Public methods

@@ -8,7 +8,7 @@ export const SceneColors = {
   // Primary theme colors
   primary: 0x80bfff,           // #80bfff - main blue color
   primaryHover: 0x99ccff,      // #99ccff - lighter blue for hover
-  primaryDark: 0x4a79a4,       // #4a79a4 - darker blue (legacy)
+  primaryDark: 0x3c748d,       // #3c748d - updated blue
   
   // Neutral colors
   white: 0xffffff,             // #ffffff
