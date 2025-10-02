@@ -3,6 +3,8 @@
  * Lightweight HTML context menu for canvas interactions (copy/paste, delete)
  */
 
+import { copySelection, pasteSelection, duplicateSelection, deleteSelectionViaKeyEvent } from './contextMenuActions';
+
 export class CanvasContextMenu {
   private menuEl: HTMLDivElement | null = null;
   private hasSelection: boolean = false;
@@ -124,33 +126,8 @@ export class CanvasContextMenu {
   private hide(): void { if (this.menuEl) this.menuEl.style.display = 'none'; }
 
   // Actions
-  private handleCopy(): void {
-    try {
-      const canvasAPI = (window as any).canvasAPI;
-      if (canvasAPI) {
-        const ok = canvasAPI.copySelection();
-        if (ok) this.hasClipboard = true;
-      }
-    } catch {}
-  }
-  private handlePaste(): void {
-    try {
-      const canvasAPI = (window as any).canvasAPI;
-      if (canvasAPI) {
-        canvasAPI.pasteSelection();
-      }
-    } catch {}
-  }
-  private handleDuplicate(): void {
-    // Copy then Paste in one action
-    this.handleCopy();
-    // small async to ensure clipboard state propagates
-    setTimeout(() => this.handlePaste(), 0);
-  }
-  private handleDelete(): void {
-    // Simulate Delete key to reuse existing selection tool handling
-    const evt = new KeyboardEvent('keydown', { key: 'Delete' });
-    document.dispatchEvent(evt);
-  }
+  private handleCopy(): void { try { if (copySelection()) this.hasClipboard = true; } catch {} }
+  private handlePaste(): void { try { pasteSelection(); } catch {} }
+  private handleDuplicate(): void { try { duplicateSelection(); } catch {} }
+  private handleDelete(): void { try { deleteSelectionViaKeyEvent(); } catch {} }
 }
-

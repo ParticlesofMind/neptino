@@ -3,11 +3,13 @@
   position: fixed;
   min-width: 160px;
   background: #ffffff;
-  color: #111827; /* gray-900 */
-  border: 1px solid #E5E7EB; /* gray-200 */
+  color: #111827;
+  /* gray-900 */
+  border: 1px solid #E5E7EB;
+  /* gray-200 */
   border-radius: 6px;
   padding: var(--spacing-1) 0;
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   z-index: 10000;
 }
 
@@ -28,11 +30,13 @@
 
 .context-menu__item[aria-disabled='true'],
 .context-menu__item:disabled {
-  color: #6B7280; /* gray-500 */
+  color: #4B5563;
+  /* gray-600: darker for clearer disabled state */
   cursor: not-allowed;
 }
 
 /* Modifier block for layers context menu */
 .context-menu {
   &--layers {}
+  &--canvas-base {}
 }

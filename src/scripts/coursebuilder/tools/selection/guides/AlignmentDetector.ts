@@ -134,7 +134,9 @@ export class AlignmentDetector {
             position: Math.round(canvas.pos),
             alignmentType: canvas.type,
             objects: [], // Canvas guides don't have objects
-            strength: 0.5 // Lower priority than object guides
+            strength: 0.5, // Lower priority than object guides
+            source: canvas.type === 'center' ? 'canvas-center' : 'canvas-edge',
+            visualStyle: 'solid'
           });
         }
       }
@@ -149,7 +151,9 @@ export class AlignmentDetector {
             position: Math.round(canvas.pos),
             alignmentType: canvas.type,
             objects: [], // Canvas guides don't have objects
-            strength: 0.5 // Lower priority than object guides
+            strength: 0.5, // Lower priority than object guides
+            source: canvas.type === 'center' ? 'canvas-center' : 'canvas-edge',
+            visualStyle: 'solid'
           });
         }
       }
@@ -215,7 +219,9 @@ export class AlignmentDetector {
             position,
             alignmentType: this.getAlignmentType(position, alignedObjects[0]),
             objects: alignedObjects,
-            strength: alignedObjects.length + 1 // +1 for target
+            strength: alignedObjects.length + 1, // +1 for target
+            source: this.getAlignmentType(position, alignedObjects[0]) === 'center' ? 'object-center' : 'object-edge',
+            visualStyle: 'solid'
           });
         }
       }
@@ -230,7 +236,9 @@ export class AlignmentDetector {
             position,
             alignmentType: this.getAlignmentType(position, alignedObjects[0]),
             objects: alignedObjects,
-            strength: alignedObjects.length + 1 // +1 for target
+            strength: alignedObjects.length + 1, // +1 for target
+            source: this.getAlignmentType(position, alignedObjects[0]) === 'center' ? 'object-center' : 'object-edge',
+            visualStyle: 'solid'
           });
         }
       }
@@ -243,7 +251,9 @@ export class AlignmentDetector {
             position,
             alignmentType: this.getAlignmentType(position, alignedObjects[0]),
             objects: alignedObjects,
-            strength: alignedObjects.length
+            strength: alignedObjects.length,
+            source: this.getAlignmentType(position, alignedObjects[0]) === 'center' ? 'object-center' : 'object-edge',
+            visualStyle: 'solid'
           });
         }
       }
@@ -255,7 +265,9 @@ export class AlignmentDetector {
             position,
             alignmentType: this.getAlignmentType(position, alignedObjects[0]),
             objects: alignedObjects,
-            strength: alignedObjects.length
+            strength: alignedObjects.length,
+            source: this.getAlignmentType(position, alignedObjects[0]) === 'center' ? 'object-center' : 'object-edge',
+            visualStyle: 'solid'
           });
         }
       }

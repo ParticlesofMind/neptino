@@ -23,6 +23,7 @@ import { initializeCanvasSystem, validateCanvasSystem } from './utils/canvasSyst
 import { canvasDimensionManager } from './utils/CanvasDimensionManager';
 import { canvasMarginManager } from './canvas/CanvasMarginManager';
 import { FloatingElementsManager } from './ui/FloatingElementsManager';
+import { initCanvasBaseContextMenu } from './ui/CanvasBaseContextMenu';
 
 
 // Global canvas instance
@@ -202,6 +203,9 @@ export async function initializeCanvas(): Promise<void> {
             floatingElementsManager = new FloatingElementsManager();
             (window as any).floatingElementsManager = floatingElementsManager;
         } catch (e) { console.warn('⚠️ Failed to init FloatingElementsManager', e); }
+
+        // Initialize base canvas context menu (right-click on canvas area)
+        try { initCanvasBaseContextMenu('#canvas-container'); } catch (e) { console.warn('⚠️ Failed to init CanvasBaseContextMenu', e); }
 
         // Initialize animation state with app + layers
         try {

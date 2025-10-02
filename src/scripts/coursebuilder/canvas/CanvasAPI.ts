@@ -745,6 +745,7 @@ export class CanvasAPI {
     if (!this.isReady()) return 'canvas-not-ready';
     
     const success = this.setTool(toolName);
+    void success;
     const currentTool = this.getActiveTool();
     
     return currentTool;

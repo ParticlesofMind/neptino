@@ -66,6 +66,9 @@ export class TextToolDemo {
     // Test 3: Drawing layer access
     const drawingLayer = this.canvas.getDrawingLayer();
 
+    // Mark variables as used for strict TS
+    void activeTool; void isReady; void drawingLayer;
+
     this.showFeatures();
   }
 

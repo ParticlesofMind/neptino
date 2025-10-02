@@ -21,6 +21,7 @@ export interface ShapesSettings {
         | "hexagon"
         | "octagon"
         | "star"
+        | "polygon" // deprecated: legacy support
         | "sphere"
         | "cube"
         | "cuboid"

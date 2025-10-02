@@ -38,7 +38,7 @@ export function activateGSAPFeatures(): void {
  */
 function patchSceneCreation(): void {
     // Store original Scene constructor
-    const originalScene = Scene;
+  const originalScene = Scene; void originalScene;
     
     // Create enhanced Scene factory
     (window as any).createEnhancedScene = function(bounds: any) {

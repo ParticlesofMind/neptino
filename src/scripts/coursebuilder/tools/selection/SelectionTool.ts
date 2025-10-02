@@ -391,7 +391,25 @@ export class SelectionTool extends BaseTool {
     }
     // Default behavior for styling
     const changed = this.styling.apply(toolName, settings, this.selected);
-    if (changed && this.container) { this.overlay.refresh(this.selected, this.container); }
+    if (changed) {
+      // Notify interested UI (LayersPanel) so thumbnails can refresh without full rerender
+      try {
+        const dm: any = (this as any).displayManager;
+        for (const obj of this.selected) {
+          let id: string | null = null;
+          try { id = (obj as any).__id || (obj as any).objectId || (dm?.getIdForObject?.(obj) ?? null); } catch {}
+          if (!id) {
+            // Assign a temporary objectId for event correlation if none exists
+            const tmp = `sel_${Date.now()}_${Math.floor(Math.random() * 9999)}`;
+            try { (obj as any).objectId = tmp; } catch {}
+            id = tmp;
+          }
+          try { document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id, object: obj, action: 'styled' } })); } catch {}
+          try { document.dispatchEvent(new CustomEvent('displayObject:styled', { detail: { id, object: obj } })); } catch {}
+        }
+      } catch {}
+      if (this.container) { this.overlay.refresh(this.selected, this.container); }
+    }
   }
   public copySelection(): boolean { return this.clipboardSvc.copy(); }
   public pasteSelection(): boolean { const created = this.clipboardSvc.pasteAt(this.lastPointerGlobal || null); if (created.length) { this.selected = created; if (this.container) this.overlay.refresh(this.selected, this.container); this.updateObjectSelectionStates(); return true; } return false; }

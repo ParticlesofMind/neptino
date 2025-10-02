@@ -43,6 +43,7 @@ export function initializeCanvasSystem(): void {
   // Listen for dimension changes
   if (typeof window !== 'undefined') {
     window.addEventListener('canvas:dimensionsChanged', (event: any) => {
+      void event;
     });
   }
   

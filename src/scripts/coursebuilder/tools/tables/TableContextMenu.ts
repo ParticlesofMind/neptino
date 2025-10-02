@@ -255,37 +255,44 @@ export class TableContextMenu {
 
     // Row and Column Operations (These are placeholders - full implementation would require table restructuring)
     private insertRowAbove(cell: TableCell): void {
+        void cell;
         // TODO: Implement row insertion
         alert("Row insertion feature coming soon!");
     }
 
     private insertRowBelow(cell: TableCell): void {
+        void cell;
         // TODO: Implement row insertion
         alert("Row insertion feature coming soon!");
     }
 
     private insertColumnLeft(cell: TableCell): void {
+        void cell;
         // TODO: Implement column insertion
         alert("Column insertion feature coming soon!");
     }
 
     private insertColumnRight(cell: TableCell): void {
+        void cell;
         // TODO: Implement column insertion
         alert("Column insertion feature coming soon!");
     }
 
     private deleteRow(cell: TableCell): void {
+        void cell;
         // TODO: Implement row deletion
         alert("Row deletion feature coming soon!");
     }
 
     private deleteColumn(cell: TableCell): void {
+        void cell;
         // TODO: Implement column deletion
         alert("Column deletion feature coming soon!");
     }
 
     // Table Actions
     private showTableProperties(table: PixiTableData): void {
+        void table;
         // TODO: Implement table properties dialog
         alert("Table properties dialog coming soon!");
     }
@@ -300,11 +307,13 @@ export class TableContextMenu {
     }
 
     private addRow(table: PixiTableData): void {
+        void table;
         // TODO: Implement add row
         alert("Add row feature coming soon!");
     }
 
     private addColumn(table: PixiTableData): void {
+        void table;
         // TODO: Implement add column
         alert("Add column feature coming soon!");
     }

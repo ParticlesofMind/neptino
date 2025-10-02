@@ -244,6 +244,7 @@ export class PooledGraphicsFactory {
     const graphics = this.pool.acquireStrokeGraphics();
     graphics.alpha = alpha;
     (graphics as any).__toolType = 'brush';
+    void color; void width;
     // Note: color and width will be applied via GraphicsContext system
     return graphics;
   }

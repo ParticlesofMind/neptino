@@ -71,6 +71,7 @@ export class SelectionStyling {
       case 'cone': { const cx8 = x + w / 2; const topX = cx8; const topY = y; const baseY = y + h; const radiusX = w / 2; const radiusY = (meta.ellipseY ?? (h * 0.15)); gfx.moveTo(topX, topY).lineTo(x, baseY - radiusY).lineTo(x + w, baseY - radiusY).closePath(); gfx.ellipse(cx8, baseY - radiusY, radiusX, radiusY); break; }
       case 'torus': {
         const cx9 = x + w / 2, cy9 = y + h / 2; const outerR = Math.max(Math.abs(w), Math.abs(h)) / 2; const innerR = Math.max(1, Math.min(outerR - 1, meta.innerRadius ?? outerR * 0.6)); // draw as two concentric paths approximation
+        void innerR;
         gfx.ellipse(cx9, cy9, outerR, outerR); if (fillEnabled) { /* holes not directly supported by Graphics fill; leave geometry intact */ } break;
       }
       default: { gfx.rect(x, y, w, h); }

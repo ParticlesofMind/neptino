@@ -352,6 +352,7 @@ export class PageSetupHandler {
 
   private showSaveStatus(status: "saving" | "saved" | "error"): void {
     // You can implement a save status indicator here if needed
+    void status;
   }
 
   public async loadSettingsFromDatabase(courseId: string): Promise<void> {

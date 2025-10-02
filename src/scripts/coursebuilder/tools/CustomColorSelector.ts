@@ -372,10 +372,7 @@ export class CustomColorSelector {
     return allColors.find(color => color.value === value || color.hex === value) || null;
   }
 
-  private openColorPicker(): void {
-    // Disabled: custom colors not allowed in this mode
-    return;
-  }
+  // Removed openColorPicker (custom colors disabled in this mode)
 
   // Public methods
   public getValue(): string {

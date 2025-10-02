@@ -189,6 +189,8 @@ export class SelectionOverlay {
     }
 
     this.overlayCenter = center;
+    // Mark overlayCenter as read to satisfy strict TS usage checks
+    void this.overlayCenter;
     return this.buildFrame(center, width, height, rotation);
   }
 

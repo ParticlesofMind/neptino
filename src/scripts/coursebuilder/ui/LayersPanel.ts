@@ -11,6 +11,24 @@ export class LayersPanel {
     
     this.bindGlobalListeners();
     this.bindControls();
+
+    // Lightweight debug helper: inspect center-band thresholds quickly from console
+    try {
+      if (!(window as any).testLayersCenterBand) {
+        (window as any).testLayersCenterBand = () => {
+          const root = document.documentElement as HTMLElement;
+          const lowerStr = getComputedStyle(root).getPropertyValue('--layers-center-band-lower').trim() || '0.4';
+          const upperStr = getComputedStyle(root).getPropertyValue('--layers-center-band-upper').trim() || '0.6';
+          const lower = parseFloat(lowerStr);
+          const upper = parseFloat(upperStr);
+          const isValid = isFinite(lower) && isFinite(upper) && lower >= 0 && upper <= 1 && lower < upper;
+          const samples = [0.1, 0.3, 0.45, 0.5, 0.7, 0.9].map((ratio) => ({ ratio, isCenter: ratio >= lower && ratio <= upper }));
+          const result = { lower, upper, isValid, samples };
+          console.log('🧪 Layers DnD center-band check:', result);
+          return result;
+        };
+      }
+    } catch {}
   }
 
   public refresh(): void {
@@ -79,7 +97,22 @@ export class LayersPanel {
       
       this.debouncedRefresh(8); // Faster refresh for removals (8ms vs 16ms)
     });
-    document.addEventListener('displayObject:updated', () => {
+    document.addEventListener('displayObject:updated', (ev: any) => {
+      try {
+        const id = ev?.detail?.id as string | undefined;
+        if (id && this.listEl) {
+          // Targeted thumbnail update to avoid full refresh when only style changed
+          const thumbEl = this.listEl.querySelector(`li[data-layer-id="${id}"] .layer__thumbnail`) as HTMLElement | null;
+          if (thumbEl) {
+            const obj = this.getObjectById(id);
+            if (obj) {
+              this.updateThumbnail(obj, thumbEl);
+              return; // Skip broader refresh if we handled the update directly
+            }
+          }
+        }
+      } catch {}
+      // Fallback to the usual refresh path
       this.clearThumbnailCache(); // Clear cache when objects change
       this.debouncedRefresh(8); // Fast refresh for updates
     });
@@ -286,15 +319,29 @@ export class LayersPanel {
       leftSide.appendChild(expander);
     }
 
-    // Hover border highlight to indicate grouping target (meta/ctrl-drop)
+    // Hover border highlight to indicate grouping target when hovering center band or meta/ctrl
     li.addEventListener('dragenter', (ev) => {
       const dEv = ev as DragEvent;
-      const canGroup = ((dEv.metaKey || dEv.ctrlKey) && (obj as any).addChild);
+      const rect = (dEv.currentTarget as HTMLElement).getBoundingClientRect();
+      const localY = dEv.clientY - rect.top;
+      const ratio = rect.height ? localY / rect.height : 0.5;
+      const lower = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--layers-center-band-lower').trim() || '0.4');
+      const upper = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--layers-center-band-upper').trim() || '0.6');
+      const isCenterBand = ratio >= (isNaN(lower) ? 0.4 : lower) && ratio <= (isNaN(upper) ? 0.6 : upper);
+      const metaCtrl = dEv.metaKey || dEv.ctrlKey;
+      const canGroup = ((metaCtrl || isCenterBand));
       li.classList.toggle('is-group-target', !!canGroup);
     });
     li.addEventListener('dragover', (ev) => {
       const dEv = ev as DragEvent;
-      const canGroup = ((dEv.metaKey || dEv.ctrlKey) && (obj as any).addChild);
+      const rect = (dEv.currentTarget as HTMLElement).getBoundingClientRect();
+      const localY = dEv.clientY - rect.top;
+      const ratio = rect.height ? localY / rect.height : 0.5;
+      const lower = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--layers-center-band-lower').trim() || '0.4');
+      const upper = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--layers-center-band-upper').trim() || '0.6');
+      const isCenterBand = ratio >= (isNaN(lower) ? 0.4 : lower) && ratio <= (isNaN(upper) ? 0.6 : upper);
+      const metaCtrl = dEv.metaKey || dEv.ctrlKey;
+      const canGroup = ((metaCtrl || isCenterBand));
       li.classList.toggle('is-group-target', !!canGroup);
     });
     li.addEventListener('dragleave', () => { li.classList.remove('is-group-target'); });
@@ -415,12 +462,24 @@ export class LayersPanel {
       // Show single indicator between items
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       const y = (e as DragEvent).clientY;
-      const topHalf = y - rect.top < rect.height / 2;
-      indicator.classList.toggle('is-top', topHalf);
-      indicator.classList.toggle('is-bottom', !topHalf);
-      // ensure only current indicator shows
-      document.querySelectorAll('.layers-drop-indicator').forEach((el) => { el.classList.remove('is-visible'); });
-      indicator.classList.add('is-visible');
+      const localY = y - rect.top;
+      const ratio = rect.height ? localY / rect.height : 0.5;
+      const lower = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--layers-center-band-lower').trim() || '0.4');
+      const upper = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--layers-center-band-upper').trim() || '0.6');
+      const isCenterBand = ratio >= (isNaN(lower) ? 0.4 : lower) && ratio <= (isNaN(upper) ? 0.6 : upper);
+      if (isCenterBand) {
+        // Hide insert indicator when the intention is to group inside
+        indicator.classList.remove('is-visible');
+        indicator.classList.remove('is-top');
+        indicator.classList.remove('is-bottom');
+      } else {
+        const topHalf = ratio < 0.5;
+        indicator.classList.toggle('is-top', topHalf);
+        indicator.classList.toggle('is-bottom', !topHalf);
+        // ensure only current indicator shows
+        document.querySelectorAll('.layers-drop-indicator').forEach((el) => { el.classList.remove('is-visible'); });
+        indicator.classList.add('is-visible');
+      }
     });
     li.addEventListener('dragleave', () => { indicator.classList.remove('is-visible'); });
     li.addEventListener('drop', (e) => {
@@ -478,9 +537,10 @@ export class LayersPanel {
         const lower = parseFloat(lowerStr);
         const upper = parseFloat(upperStr);
         const isCenterBand = ratio >= (isNaN(lower) ? 0.4 : lower) && ratio <= (isNaN(upper) ? 0.6 : upper);
-        const wantNestInside = (((e as DragEvent).metaKey || (e as DragEvent).ctrlKey) || isCenterBand) && (dropTarget as any).addChild;
+        const metaCtrl = (e as DragEvent).metaKey || (e as DragEvent).ctrlKey;
+        const wantNestInside = (metaCtrl || isCenterBand);
 
-        if (wantNestInside && dragged !== dropTarget) {
+        if (wantNestInside && dragged !== dropTarget && (dropTarget as any).addChild) {
           try {
             if (dragged.parent) dragged.parent.removeChild(dragged);
             (dropTarget as any).addChild(dragged);
@@ -488,6 +548,45 @@ export class LayersPanel {
             console.log('✅ Nested object into container (meta/ctrl-drop)');
           } catch (error) {
             console.error('❌ Failed to reparent, rolling back:', error);
+            if (originalParent && originalIndex >= 0) {
+              try { if (dragged.parent) dragged.parent.removeChild(dragged); originalParent.addChildAt(dragged, originalIndex); } catch {}
+            }
+            return;
+          }
+        } else if (wantNestInside && dragged !== dropTarget && !(dropTarget as any).addChild) {
+          // Auto-create a group container and place both dropTarget and dragged into it
+          const parentCont = dropTarget.parent as Container | null;
+          if (!parentCont) { console.warn('⚠️ Drop target has no parent'); return; }
+          try {
+            const dmLocal = (window as any)._displayManager as any;
+            const { container: group } = dmLocal && typeof dmLocal.createContainer === 'function'
+              ? dmLocal.createContainer(parentCont)
+              : { container: new (window as any).PIXI.Container() };
+            if (!(group as any).parent) parentCont.addChild(group);
+
+            // Insert group at the position of the drop target
+            const targetIndex = parentCont.getChildIndex ? parentCont.getChildIndex(dropTarget) : parentCont.children.indexOf(dropTarget);
+            try { if (typeof parentCont.setChildIndex === 'function') parentCont.setChildIndex(group, targetIndex); } catch {}
+
+            // Preserve world positions while regrouping
+            const moveInto = (child: any) => {
+              try {
+                const world = child.getGlobalPosition ? child.getGlobalPosition(new (window as any).PIXI.Point()) : { x: child.x || 0, y: child.y || 0 };
+                child.parent?.removeChild(child);
+                (group as any).addChild(child);
+                const local = (group as any).toLocal ? (group as any).toLocal(world) : world;
+                child.position?.set(local.x, local.y);
+              } catch {}
+            };
+            moveInto(dropTarget);
+            moveInto(dragged);
+
+            document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id: dragId, object: dragged, action: 'grouped' } }));
+            const dropId = this.getId(dropTarget);
+            if (dropId) document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id: dropId, object: dropTarget, action: 'grouped' } }));
+            console.log('✅ Auto-grouped items via DnD into new container');
+          } catch (error) {
+            console.error('❌ Failed to auto-group via DnD, rolling back:', error);
             if (originalParent && originalIndex >= 0) {
               try { if (dragged.parent) dragged.parent.removeChild(dragged); originalParent.addChildAt(dragged, originalIndex); } catch {}
             }

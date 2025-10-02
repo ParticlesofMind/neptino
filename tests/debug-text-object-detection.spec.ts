@@ -74,7 +74,7 @@ test.describe('Debug Selection Tool Text Object Detection', () => {
       const objectsAtPoint = clickSelection.getObjectsAtPoint(localPoint, container);
       
       // Check each object
-      const objectDetails = objectsAtPoint.map((obj, index) => ({
+      const objectDetails = objectsAtPoint.map((obj: any, index: number) => ({
         index,
         constructor: obj?.constructor?.name,
         isTextObject: clickSelection.isTextObject(obj),
@@ -106,7 +106,7 @@ test.describe('Debug Selection Tool Text Object Detection', () => {
     expect(debugInfo.objectCount).toBeGreaterThan(0);
     
     // Check if at least one object is identified as a text object
-    const hasTextObject = debugInfo.objectDetails?.some(obj => obj.isTextObject);
+    const hasTextObject = debugInfo.objectDetails?.some((obj: any) => obj.isTextObject);
     expect(hasTextObject).toBe(true);
     
     // 4. Try the double-click
