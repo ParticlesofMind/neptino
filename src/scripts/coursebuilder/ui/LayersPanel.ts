@@ -298,7 +298,8 @@ export class LayersPanel {
     const realChildren = children ? children.filter((c: any) => this.isRealObject(c)) : [];
     
     // Special handling for animation scenes - they should always be expandable if they have content
-    let isContainer = realChildren.length >= 2;
+    // Treat declared containers as expandable regardless (to allow collapsing even with 1 child)
+    let isContainer = ((obj as any).__toolType === 'container') || realChildren.length >= 2;
     if ((obj as any).__sceneRef || (obj as any).name === 'AnimationScene') {
       const scene = (obj as any).__sceneRef;
       if (scene && scene.getContentContainer) {
@@ -331,6 +332,7 @@ export class LayersPanel {
       const metaCtrl = dEv.metaKey || dEv.ctrlKey;
       const canGroup = ((metaCtrl || isCenterBand));
       li.classList.toggle('is-group-target', !!canGroup);
+      li.classList.toggle('is-center-band', !!isCenterBand);
     });
     li.addEventListener('dragover', (ev) => {
       const dEv = ev as DragEvent;
@@ -343,9 +345,10 @@ export class LayersPanel {
       const metaCtrl = dEv.metaKey || dEv.ctrlKey;
       const canGroup = ((metaCtrl || isCenterBand));
       li.classList.toggle('is-group-target', !!canGroup);
+      li.classList.toggle('is-center-band', !!isCenterBand);
     });
-    li.addEventListener('dragleave', () => { li.classList.remove('is-group-target'); });
-    li.addEventListener('drop', () => { li.classList.remove('is-group-target'); });
+    li.addEventListener('dragleave', () => { li.classList.remove('is-group-target'); li.classList.remove('is-center-band'); });
+    li.addEventListener('drop', () => { li.classList.remove('is-group-target'); li.classList.remove('is-center-band'); });
 
     // Compact thumbnail
     const thumb = document.createElement('div');
@@ -539,13 +542,29 @@ export class LayersPanel {
         const isCenterBand = ratio >= (isNaN(lower) ? 0.4 : lower) && ratio <= (isNaN(upper) ? 0.6 : upper);
         const metaCtrl = (e as DragEvent).metaKey || (e as DragEvent).ctrlKey;
         const wantNestInside = (metaCtrl || isCenterBand);
+        const isContainerTarget = ((dropTarget as any).__toolType === 'container') || (String((dropTarget as any).name || '').toLowerCase() === 'group');
 
-        if (wantNestInside && dragged !== dropTarget && (dropTarget as any).addChild) {
+        if (wantNestInside && dragged !== dropTarget && isContainerTarget) {
           try {
             if (dragged.parent) dragged.parent.removeChild(dragged);
             (dropTarget as any).addChild(dragged);
+            try { (dropTarget as any).sortableChildren = true; } catch {}
             document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id: dragId, object: dragged, action: 'reparented' } }));
             console.log('✅ Nested object into container (meta/ctrl-drop)');
+
+            // Auto-expand the target container in layers panel so items are visible
+            try {
+              const dropId = this.getId(dropTarget) || '';
+              if (dropId) {
+                const map = this.getExpansionMap();
+                map[dropId] = true;
+                localStorage.setItem('layersPanel:expansion', JSON.stringify(map));
+              }
+            } catch {}
+
+            // Immediate refresh to show nested item without delay
+            this.clearThumbnailCache();
+            this.refresh();
           } catch (error) {
             console.error('❌ Failed to reparent, rolling back:', error);
             if (originalParent && originalIndex >= 0) {
@@ -553,15 +572,19 @@ export class LayersPanel {
             }
             return;
           }
-        } else if (wantNestInside && dragged !== dropTarget && !(dropTarget as any).addChild) {
+        } else if (wantNestInside && dragged !== dropTarget && !isContainerTarget) {
           // Auto-create a group container and place both dropTarget and dragged into it
           const parentCont = dropTarget.parent as Container | null;
           if (!parentCont) { console.warn('⚠️ Drop target has no parent'); return; }
           try {
             const dmLocal = (window as any)._displayManager as any;
-            const { container: group } = dmLocal && typeof dmLocal.createContainer === 'function'
+            const created = dmLocal && typeof dmLocal.createContainer === 'function'
               ? dmLocal.createContainer(parentCont)
-              : { container: new (window as any).PIXI.Container() };
+              : { container: new (window as any).PIXI.Container(), id: '' };
+            const group = created.container;
+            try { (group as any).__toolType = 'container'; } catch {}
+            try { (group as any).name = (group as any).name || 'group'; } catch {}
+            try { (group as any).sortableChildren = true; } catch {}
             if (!(group as any).parent) parentCont.addChild(group);
 
             // Insert group at the position of the drop target
@@ -578,13 +601,51 @@ export class LayersPanel {
                 child.position?.set(local.x, local.y);
               } catch {}
             };
+            // Move objects into the new group (preserving world positions)
             moveInto(dropTarget);
             moveInto(dragged);
+
+            // Sanity check: ensure both objects ended up inside the new group; if not, force reparent
+            try {
+              const ensureInGroup = (child: any) => {
+                if (child.parent !== group) {
+                  try {
+                    const world = child.getGlobalPosition ? child.getGlobalPosition(new (window as any).PIXI.Point()) : { x: child.x || 0, y: child.y || 0 };
+                    child.parent?.removeChild(child);
+                    (group as any).addChild(child);
+                    const local = (group as any).toLocal ? (group as any).toLocal(world) : world;
+                    child.position?.set(local.x, local.y);
+                  } catch (err) {
+                    console.warn('⚠️ Fallback reparent (no world transform):', err);
+                    try { child.parent?.removeChild(child); (group as any).addChild(child); } catch {}
+                  }
+                }
+              };
+              ensureInGroup(dropTarget);
+              ensureInGroup(dragged);
+            } catch {}
 
             document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id: dragId, object: dragged, action: 'grouped' } }));
             const dropId = this.getId(dropTarget);
             if (dropId) document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id: dropId, object: dropTarget, action: 'grouped' } }));
             console.log('✅ Auto-grouped items via DnD into new container');
+
+            // Auto-expand the newly created group so both children are visible immediately
+            try {
+              const groupId = (created as any).id || (this.getId(group) || '');
+              if (groupId) {
+                const map = this.getExpansionMap();
+                map[groupId] = true;
+                localStorage.setItem('layersPanel:expansion', JSON.stringify(map));
+                // Mark selection to the new group for consistency with other grouping methods
+                try { (group as any).__selected = true; } catch {}
+                try { document.dispatchEvent(new CustomEvent('selection:changed', { detail: { count: 1 } })); } catch {}
+              }
+            } catch {}
+
+            // Force an immediate refresh to avoid a transient empty group render
+            this.clearThumbnailCache();
+            this.refresh();
           } catch (error) {
             console.error('❌ Failed to auto-group via DnD, rolling back:', error);
             if (originalParent && originalIndex >= 0) {

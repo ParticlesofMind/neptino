@@ -36,6 +36,19 @@ export class CanvasBaseContextMenu {
     if (!container) return;
     container.addEventListener('contextmenu', (ev) => this.handleContextMenu(ev));
 
+    // Fallback: capture contextmenu anywhere within the container subtree
+    // Some overlays may swallow bubbling; capturing ensures our menu still appears
+    document.addEventListener('contextmenu', (ev) => {
+      const target = ev.target as HTMLElement | null;
+      if (!target) return;
+      // Ignore if a layers-panel or existing context menu consumed this
+      const isWithinMenu = !!target.closest('.context-menu');
+      const inCanvas = !!target.closest(this.containerSelector);
+      if (inCanvas && !isWithinMenu) {
+        this.handleContextMenu(ev as MouseEvent);
+      }
+    }, { capture: true });
+
     document.addEventListener('click', () => this.hide());
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.hide(); });
   }

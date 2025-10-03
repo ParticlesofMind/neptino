@@ -10,7 +10,7 @@
   border-radius: 6px;
   padding: var(--spacing-1) 0;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  z-index: 10000;
+  z-index: 100001; /* Above any tool overlays/dropdowns */
 }
 
 .context-menu__item {
