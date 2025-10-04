@@ -3,13 +3,23 @@
 // ==========================================================================
 
 .engine {
-    // Media panel - First column
-    &__media {
+    // Content column - wraps media navigation + search
+    &__content {
         grid-column: 1;
+        display: flex;
+        align-items: stretch;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        overflow: hidden;
+        min-height: 0;
+    }
+
+    // Media panel
+    &__media {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
-        padding: 0.75rem;
+        flex: 0 0 auto;
         overflow-y: auto;
         scrollbar-width: none;
         -ms-overflow-style: none;
@@ -48,11 +58,13 @@
         }
     }
 
-    // Search panel - Second column
+    // Search panel
     &__search {
-        grid-column: 2;
         display: flex;
         flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        gap: 0.5rem;
         overflow-y: auto;
         scrollbar-width: none;
         -ms-overflow-style: none;
@@ -60,11 +72,21 @@
         &::-webkit-scrollbar {
             display: none;
         }
+
+        .search__input {
+            flex: none;
+            padding: 0.5rem;
+            border-radius: var(--radius-md, 8px);
+            border: 1px solid var(--color-neutral-200);
+            box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.08));
+            background: var(--color-surface, #fff);
+            font-size: var(--font-size-base);
+        }
     }
 
-    // Canvas area - Third column
+    // Canvas area - Second column in new layout
     &__canvas {
-        grid-column: 3;
+        grid-column: 2;
         background: var(--color-background);
         overflow: auto;
         padding: 0;
@@ -91,9 +113,9 @@
         }
     }
 
-    // Panel container - Fourth column
+    // Panel container - Third column in new layout
     &__panel {
-        grid-column: 4;
+        grid-column: 3;
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -195,7 +217,7 @@
 
         &__input {
             padding: 1rem;
-            width: 85%;
+            width: 100%;
         }
 
         &__panel {
