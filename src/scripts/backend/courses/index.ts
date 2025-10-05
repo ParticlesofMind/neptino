@@ -155,7 +155,7 @@ export class CourseBuilder {
 
  private initializeCurrentSection(): void {
  // Initialize the currently active section
- const activeSection = document.querySelector('.content__article--active');
+const activeSection = document.querySelector('.coursebuilder__section--active');
  if (activeSection) {
  const sectionId = activeSection.id;
  this.loadSection(sectionId);
@@ -182,15 +182,15 @@ export class CourseBuilder {
 
  private navigateToSection(sectionId: string): void {
  // Hide all articles
- const articles = document.querySelectorAll('.content__article');
+const articles = document.querySelectorAll('.coursebuilder__section');
  articles.forEach((article) => {
- article.classList.remove('content__article--active');
+  article.classList.remove('coursebuilder__section--active');
  });
 
  // Show target article
  const targetArticle = document.getElementById(sectionId);
  if (targetArticle) {
- targetArticle.classList.add('content__article--active');
+  targetArticle.classList.add('coursebuilder__section--active');
  this.currentSection = sectionId;
  this.loadSection(sectionId);
  }

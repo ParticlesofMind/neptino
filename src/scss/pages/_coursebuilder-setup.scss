@@ -35,12 +35,6 @@
             overflow: hidden;
             width: 100%;
             height: 100%; // Use available height within grid, not full viewport
-
-            // Explicitly hide any sidebar that might be showing
-            .sidebar,
-            aside {
-                display: none !important;
-            }
         }
     }
 
@@ -61,18 +55,14 @@
 // SETUP COURSEBUILDER ELEMENT LAYOUT
 // ==========================================================================
 
-.coursebuilder__setup {
-    .sidebar {
-    
-        // On mobile, remove sidebar from grid layout since it's fixed positioned
-        @media (max-width: 768px) {
-            position: fixed;
-            width: 100vw;
-            height: 50px;
-            margin: 0;
-            padding: 0;
-            grid-column: 1 / -1; // Span all columns on mobile
-        }
+.coursebuilder__sidebar {
+    @media (max-width: 768px) {
+        position: fixed;
+        width: 100vw;
+        height: 50px;
+        margin: 0;
+        padding: 0;
+        grid-column: 1 / -1; // Span all columns on mobile
     }
 }
 
@@ -125,7 +115,7 @@
 
 
 // Enhance content for coursebuilder-specific layout  
-.content {
+.coursebuilder__content {
     padding: var(--spacing-6); // More padding for forms
 
     // Mobile adjustments
@@ -137,22 +127,18 @@
         border-radius: 0;
         box-shadow: none;
     }
+}
 
-    // ==========================================================================
-    // CONTENT ELEMENTS (BEM: Elements)
-    // ==========================================================================
+.coursebuilder__section {
+    display: none;
 
-    &__article {
-        &--active {
-            display: block;
-            width: 100%; // Ensure active articles span full width
-        }
+    &--active {
+        display: block;
+        width: 100%; // Ensure active sections span full width
     }
 
-    &__section {
-        &:not(:last-child) {
-            margin-bottom: var(--spacing-8);
-        }
+    &:not(:last-child) {
+        margin-bottom: var(--spacing-8);
     }
 }
 

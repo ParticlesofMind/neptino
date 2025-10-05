@@ -277,7 +277,7 @@ export class AsideNavigation {
 
  
  this.asideLinks = document.querySelectorAll('.link--menu[data-section]');
- this.contentSections = document.querySelectorAll('.content__article[id]');
+    this.contentSections = document.querySelectorAll('.coursebuilder__section[id]');
  this.boundHandleLinkClick = this.handleLinkClick.bind(this);
 
  this.init();
@@ -336,8 +336,8 @@ export class AsideNavigation {
  }
  
  // If we're already on the target section, do nothing (prevents double-click issues)
- if (activeLink.classList.contains('link--menu-active') && 
-     targetSection.classList.contains('content__article--active')) {
+    if (activeLink.classList.contains('link--menu-active') && 
+        targetSection.classList.contains('coursebuilder__section--active')) {
  return;
  }
  
@@ -353,16 +353,16 @@ export class AsideNavigation {
  link.classList.remove('link--menu-active');
  });
 
- this.contentSections.forEach((section: HTMLElement) => {
- section.classList.remove('content__article--active');
- });
- }
+    this.contentSections.forEach((section: HTMLElement) => {
+      section.classList.remove('coursebuilder__section--active');
+    });
+  }
 
- private setActiveStates(activeLink: HTMLAnchorElement, targetSection: HTMLElement): void {
- // Accept the actual element instead of searching for it again
- activeLink.classList.add('link--menu-active');
- targetSection.classList.add('content__article--active');
- }
+  private setActiveStates(activeLink: HTMLAnchorElement, targetSection: HTMLElement): void {
+    // Accept the actual element instead of searching for it again
+    activeLink.classList.add('link--menu-active');
+    targetSection.classList.add('coursebuilder__section--active');
+  }
 
  private restoreActiveSection(): void {
  const savedSection = localStorage.getItem(this.STORAGE_KEY);
@@ -393,9 +393,9 @@ export class AsideNavigation {
  // As a last resort, try to activate the first article directly
  const firstArticle = this.contentSections[0];
  if (firstArticle) {
- firstArticle.classList.add('content__article--active');
- }
- }
+      firstArticle.classList.add('coursebuilder__section--active');
+    }
+  }
  }
 
  private saveActiveSection(sectionId: string): void {

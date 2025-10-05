@@ -40,7 +40,7 @@
   <main class="grid__main coursebuilder">
     <!-- Setup View -->
     <div class="coursebuilder__setup" aria-hidden="false" id="setup">
-      <aside class="sidebar">
+      <aside class="sidebar coursebuilder-sidebar coursebuilder__sidebar">
         <nav class="ul ul--sidebar">
           <ul class="ul ul--menu">
             <li class="ul__item ul__item--heading">
@@ -123,9 +123,9 @@
         </nav>
       </aside>
 
-      <div class="content">
+      <div class="content coursebuilder__content">
         <!-- Essentials Article -->
-        <article id="essentials" class="content__article content__article--active">
+        <article id="essentials" class="coursebuilder__section coursebuilder__section--active">
           <form class="form" id="course-essentials-form">
             <label class="form__label">
               Course Name
@@ -166,7 +166,7 @@
           </form>
         </article>
         <!-- Classification Article -->
-        <article class="content__article" id="classification">
+        <article class="coursebuilder__section" id="classification">
           <form class="form classification" id="course-classification-form">
 
             <!-- Row 1: Basic Information -->
@@ -288,7 +288,7 @@
           </form>
         </article>
         <!-- Templates Article -->
-        <article class="content__article" id="templates">
+        <article class="coursebuilder__section" id="templates">
           <!-- Template Actions -->
 
 
@@ -321,7 +321,7 @@
 
         </article>
         <!-- Create Template Modal -->
-        <div class="modal coursebuilder-modal" id="create-template-modal">
+        <div class="modal modal--coursebuilder" id="create-template-modal">
           <div class="modal__backdrop">
             <div class="modal__content">
               <div class="modal__header">
@@ -332,7 +332,7 @@
                 </button>
               </div>
 
-              <form class="form coursebuilder-form modal__body" id="create-template-form">
+              <form class="form modal__body" id="create-template-form">
                 <label class="form__label">
                   Template Name*
                   <input class="input" type="text" name="template-name" required placeholder="Enter template name" />
@@ -366,7 +366,7 @@
           </div>
         </div>
         <!-- Load Template Modal -->
-        <div class="modal coursebuilder-modal" id="load-template-modal">
+        <div class="modal modal--coursebuilder" id="load-template-modal">
           <div class="modal__backdrop">
             <div class="modal__content">
               <div class="modal__header">
@@ -422,7 +422,7 @@
           </div>
         </div>
         <!-- Schedule Article -->
-        <article class="content__article" id="schedule">
+        <article class="coursebuilder__section" id="schedule">
           <!-- Schedule Layout -->
           <div class="schedule">
             <!-- Schedule Configuration -->
@@ -517,7 +517,7 @@
           </div>
         </article>
         <!-- Curriculum Article -->
-        <article class="content__article" id="curriculum">
+        <article class="coursebuilder__section" id="curriculum">
           <div class="curriculum">
             <div class="curriculum__config">
               <h3 class="heading">Curriculum Configuration</h3>
@@ -600,35 +600,35 @@
           </div>
         </article>
         <!-- Settings Article -->
-        <article class="content__article" id="settings">
+        <article class="coursebuilder__section" id="settings">
           <div class="placeholder">
             <!-- General settings content will be added here -->
           </div>
         </article>
         <!-- Marketplace Article -->
 
-        <article class="content__article" id="marketplace">
+        <article class="coursebuilder__section" id="marketplace">
           <p class="placeholder">
             Marketplace integration features will be available here...
           </p>
         </article>
 
         <!-- Resources Article -->
-        <article class="content__article" id="resources">
+        <article class="coursebuilder__section" id="resources">
           <div class="placeholder">
             <!-- Resources content will be added here -->
           </div>
         </article>
 
         <!-- Students Article -->
-        <article class="content__article" id="students">
+        <article class="coursebuilder__section" id="students">
           <div class="placeholder">
             <!-- Students content will be added here -->
           </div>
         </article>
 
         <!-- Pedagogy Article -->
-        <article class="content__article" id="pedagogy">
+        <article class="coursebuilder__section" id="pedagogy">
           <form class="form pedagogy" id="course-pedagogy-form">
             <input type="hidden" name="course_pedagogy" id="course-pedagogy-input" />
 
@@ -687,7 +687,7 @@
         </article>
 
         <!-- Course Visibility Article -->
-        <article class="content__article" id="course-visibility">
+        <article class="coursebuilder__section" id="course-visibility">
           <!-- Course Visibility Settings -->
           <div class="settings__section">
             <h4 class="settings__heading">Course Visibility</h4>
@@ -729,28 +729,28 @@
         </article>
 
         <!-- Pricing & Monetization Article -->
-        <article class="content__article" id="pricing-monetization">
+        <article class="coursebuilder__section" id="pricing-monetization">
           <div class="placeholder">
             <!-- Pricing & Monetization content will be added here -->
           </div>
         </article>
 
         <!-- External Integrations & APIs Article -->
-        <article class="content__article" id="external-integrations">
+        <article class="coursebuilder__section" id="external-integrations">
           <div class="placeholder">
             <!-- External Integrations & APIs content will be added here -->
           </div>
         </article>
 
         <!-- Communication Article -->
-        <article class="content__article" id="communication">
+        <article class="coursebuilder__section" id="communication">
           <div class="placeholder">
             <!-- Communication content will be added here -->
           </div>
         </article>
 
         <!-- Page Setup Article -->
-        <article class="content__article" id="page-setup">
+        <article class="coursebuilder__section" id="page-setup">
           <div class="page-setup">
             <div class="page-setup__config">
               <h3 class="header">Page Configuration</h3>
@@ -853,42 +853,42 @@
         </article>
 
         <!-- Interface Article -->
-        <article class="content__article" id="interface">
+        <article class="coursebuilder__section" id="interface">
           <div class="placeholder">
             <!-- Interface content will be added here -->
           </div>
         </article>
 
         <!-- Themes Article -->
-        <article class="content__article" id="themes">
+        <article class="coursebuilder__section" id="themes">
           <div class="placeholder">
             <!-- Themes content will be added here -->
           </div>
         </article>
 
         <!-- Accessibility & Comfort Article -->
-        <article class="content__article" id="accessibility-comfort">
+        <article class="coursebuilder__section" id="accessibility-comfort">
           <div class="placeholder">
             <!-- Accessibility & Comfort content will be added here -->
           </div>
         </article>
 
         <!-- Notifications & Alerts Article -->
-        <article class="content__article" id="notifications-alerts">
+        <article class="coursebuilder__section" id="notifications-alerts">
           <div class="placeholder">
             <!-- Notifications & Alerts content will be added here -->
           </div>
         </article>
 
         <!-- Data Management & Backup Article -->
-        <article class="content__article" id="data-management">
+        <article class="coursebuilder__section" id="data-management">
           <div class="placeholder">
             <!-- Data Management & Backup content will be added here -->
           </div>
         </article>
 
         <!-- Advanced Settings Article -->
-        <article class="content__article" id="advanced-settings">
+        <article class="coursebuilder__section" id="advanced-settings">
           <!-- Danger Zone -->
           <div class="settings__section settings__section--danger">
             <h3 class="settings__heading settings__heading--danger">
@@ -1302,14 +1302,14 @@
 
     <!-- Preview View -->
     <div class="coursebuilder__preview" aria-hidden="true" id="preview">
-      <article class="content__article content__article--preview">
+      <article class="coursebuilder__section coursebuilder__section--preview">
         <p class="placeholder">Course preview will be displayed here...</p>
       </article>
     </div>
 
     <!-- Launch View -->
     <div class="coursebuilder__launch" aria-hidden="true" id="launch">
-      <article class="content__article content__article--launch">
+      <article class="coursebuilder__section coursebuilder__section--launch">
         <p class="placeholder">Course launch options will be available here...</p>
       </article>
     </div>
