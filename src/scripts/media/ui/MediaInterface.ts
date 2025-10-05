@@ -19,7 +19,6 @@ class MediaInterface {
   private container!: HTMLElement;
   private resultsEl!: HTMLElement;
   private filtersEl!: HTMLElement;
-  private loadMoreBtn!: HTMLButtonElement;
   private selectedProviderKey: string | null = null;
 
   init() {
@@ -35,34 +34,14 @@ class MediaInterface {
     
     // filters removed per request (keep node to maintain layout hooks)
     this.filtersEl = document.createElement('div');
-    this.filtersEl.className = 'search__filters';
-    this.filtersEl.style.display = 'none';
+    this.filtersEl.className = 'search__filters search__filters--hidden';
 
     this.resultsEl = document.createElement('div');
     this.resultsEl.className = 'search__results';
 
-    const actions = document.createElement('div');
-    actions.style.display = 'flex';
-    actions.style.justifyContent = 'flex-end';
-    actions.style.alignItems = 'center';
-    actions.style.gap = '8px';
-
-    this.loadMoreBtn = document.createElement('button');
-    this.loadMoreBtn.className = 'button button--outline button--small';
-
-    this.loadMoreBtn.style.display = 'none';
-    this.loadMoreBtn.addEventListener('click', () => {
-      if (this.loading || !this.hasMore) return;
-      this.page += 1;
-      this.search(false);
-    });
-
-    actions.appendChild(this.loadMoreBtn);
-
     // Provider/Connect/Upload removed per request (stock provider is used behind the scenes)
     this.container.appendChild(this.filtersEl);
     this.container.appendChild(this.resultsEl);
-    this.container.appendChild(actions);
     host.appendChild(this.container);
 
     // Listen media tab clicks
@@ -138,15 +117,14 @@ class MediaInterface {
   private async search(clear: boolean, allowEmpty = false) {
     if (!this.query && !allowEmpty && this.selectedProviderKey !== 'files:local' && !(this.selectedProviderKey || '').includes(':stock')) {
       this.resultsEl.innerHTML = '';
-      this.loadMoreBtn.style.display = 'none';
       return;
     }
     if (this.loading) return;
     this.loading = true;
 
     const loader = document.createElement('div');
+    loader.className = 'search__loader';
     loader.textContent = 'Searching...';
-    loader.style.gridColumn = '1 / -1';
     if (clear) {
       this.resultsEl.innerHTML = '';
     }
@@ -161,9 +139,8 @@ class MediaInterface {
       const result = this.selectedProviderKey
         ? await mediaManager.searchWithProvider(this.selectedProviderKey, this.query)
         : await mediaManager.search(this.currentType, this.query, opts);
-      this.hasMore = result.hasMore;
+    this.hasMore = result.hasMore;
       this.renderResults(result, clear);
-      this.loadMoreBtn.style.display = this.hasMore ? 'inline-flex' : 'none';
     } catch (e: any) {
       this.renderErrorWithConnect(e?.message || String(e));
     } finally {
@@ -175,30 +152,25 @@ class MediaInterface {
 
   private renderErrorWithConnect(message: string) {
     const wrap = document.createElement('div');
-    wrap.style.gridColumn = '1 / -1';
-    wrap.style.display = 'flex';
-    wrap.style.flexDirection = 'column';
-    wrap.style.gap = '6px';
+    wrap.className = 'search__error';
 
     const msg = document.createElement('div');
     msg.textContent = `Error: ${message}`;
-    msg.style.color = 'var(--color-danger-600)';
+    msg.className = 'search__error-message';
     wrap.appendChild(msg);
 
     if (this.selectedProviderKey === 'files:google-drive' || this.selectedProviderKey === 'files:dropbox') {
       const hint = document.createElement('div');
-      hint.style.fontSize = '12px';
-      hint.style.color = 'var(--color-text-secondary)';
+      hint.className = 'search__error-hint';
       hint.textContent = 'Paste an access token to connect:';
       const row = document.createElement('div');
-      row.style.display = 'flex';
-      row.style.gap = '6px';
+      row.className = 'search__error-controls';
       const input = document.createElement('input');
       input.type = 'password';
-      input.className = 'input';
+      input.className = 'input search__error-input';
       input.placeholder = 'Access token';
       const btn = document.createElement('button');
-      btn.className = 'button button--primary button--small';
+      btn.className = 'button button--primary button--small search__error-button';
       btn.textContent = 'Save Token';
       btn.addEventListener('click', () => {
         const token = input.value.trim();
@@ -228,7 +200,7 @@ class MediaInterface {
     if (result.items.length === 0 && result.page === 1) {
       const empty = document.createElement('div');
       empty.textContent = 'No results.';
-      empty.style.gridColumn = '1 / -1';
+      empty.className = 'search__empty';
       this.resultsEl.appendChild(empty);
       return;
     }
@@ -241,13 +213,9 @@ class MediaInterface {
 
   private renderItemCard(item: MediaItem): HTMLElement {
     const card = document.createElement('div');
-    card.className = `media media--${item.type} card`;
-    card.style.padding = '8px';
-    card.style.display = 'flex';
-    card.style.flexDirection = 'column';
-    card.style.gap = '6px';
-    card.style.borderRadius = '8px';
-    
+    const typeModifier = (item.type || 'files').replace(/[^a-z0-9-]/gi, '').toLowerCase() || 'files';
+    card.className = `card card--${typeModifier}`;
+
     // Make the entire card draggable for all media types
     card.draggable = true;
     card.addEventListener('dragstart', (ev) => this.onDragStart(ev, item));
@@ -256,37 +224,27 @@ class MediaInterface {
       const img = document.createElement('img');
       img.src = item.thumbnailUrl;
       img.alt = item.title || '';
-      img.classList.add('card__preview', 'media__preview');
-      img.style.width = '100%';
-      img.style.objectFit = 'cover';
-      img.style.borderRadius = '6px';
+      img.className = 'card__preview card__preview--image';
       img.draggable = false; // Prevent nested drag
       card.appendChild(img);
     }
 
     if (item.type === 'videos' && (item.previewUrl || item.thumbnailUrl)) {
-      let vid: HTMLVideoElement | null = null;
       if (item.previewUrl) {
-        vid = document.createElement('video');
-        vid.controls = false; // custom overlay controls
-        vid.muted = true; // allow autoplay on user click in some browsers
-        vid.src = item.previewUrl;
-        vid.classList.add('card__preview', 'media__preview');
-        vid.style.width = '100%';
-        vid.style.objectFit = 'cover';
-        vid.style.borderRadius = '6px';
-        vid.draggable = false; // Prevent nested drag
-        card.appendChild(vid);
+        const videoPreview = document.createElement('video');
+        videoPreview.controls = false; // custom overlay controls
+        videoPreview.muted = true; // allow autoplay on user click in some browsers
+        videoPreview.src = item.previewUrl;
+        videoPreview.className = 'card__preview card__preview--video';
+        videoPreview.draggable = false; // Prevent nested drag
+        card.appendChild(videoPreview);
       } else if (item.thumbnailUrl) {
-        const thumb = document.createElement('img');
-        thumb.src = item.thumbnailUrl;
-        thumb.alt = item.title || '';
-        thumb.classList.add('card__preview', 'media__preview');
-        thumb.style.width = '100%';
-        thumb.style.objectFit = 'cover';
-        thumb.style.borderRadius = '6px';
-        thumb.draggable = false; // Prevent nested drag
-        card.appendChild(thumb);
+        const videoThumb = document.createElement('img');
+        videoThumb.src = item.thumbnailUrl;
+        videoThumb.alt = item.title || '';
+        videoThumb.className = 'card__preview card__preview--video-thumbnail';
+        videoThumb.draggable = false; // Prevent nested drag
+        card.appendChild(videoThumb);
       }
       // No in-card overlay controls (keep previews simple)
     }
@@ -294,28 +252,20 @@ class MediaInterface {
     if (item.type === 'audio') {
       // Create visual representation for audio items
       const audioWrapper = document.createElement('div');
-      audioWrapper.style.width = '100%';
-      audioWrapper.classList.add('card__preview', 'media__preview');
-      audioWrapper.style.backgroundColor = 'var(--color-warning-100)';
-      audioWrapper.style.borderRadius = '6px';
-      audioWrapper.style.display = 'flex';
-      audioWrapper.style.alignItems = 'center';
-      audioWrapper.style.justifyContent = 'center';
-      audioWrapper.style.border = '2px solid var(--color-warning-300)';
-      
+      audioWrapper.className = 'card__preview card__preview--audio';
+
       const audioIcon = document.createElement('div');
       audioIcon.innerHTML = '🔊';
-      audioIcon.style.fontSize = '32px';
+      audioIcon.className = 'card__icon card__icon--audio';
       audioWrapper.appendChild(audioIcon);
-      
+
       card.appendChild(audioWrapper);
       // Add audio element; no overlay controls (keep preview simple)
       if (item.previewUrl) {
         const audio = document.createElement('audio');
         audio.controls = false;
         audio.src = item.previewUrl;
-        audio.style.width = '100%';
-        audio.style.marginTop = '4px';
+        audio.className = 'card__audio';
         audio.draggable = false; // Prevent nested drag
         card.appendChild(audio);
       }
@@ -324,93 +274,59 @@ class MediaInterface {
     // Add visual indicators for non-media types
     if (item.type === 'text') {
       const textWrapper = document.createElement('div');
-      textWrapper.style.width = '100%';
-      textWrapper.style.height = '100px';
-      textWrapper.style.backgroundColor = 'var(--color-neutral-100)';
-      textWrapper.style.borderRadius = '6px';
-      textWrapper.style.display = 'flex';
-      textWrapper.style.alignItems = 'center';
-      textWrapper.style.justifyContent = 'center';
-      textWrapper.style.border = '2px solid var(--color-neutral-300)';
-      
+      textWrapper.className = 'card__preview card__preview--text';
+
       const textIcon = document.createElement('div');
       textIcon.innerHTML = '📝';
-      textIcon.style.fontSize = '32px';
+      textIcon.className = 'card__icon card__icon--text';
       textWrapper.appendChild(textIcon);
-      
+
       card.appendChild(textWrapper);
     }
 
     if (item.type === 'plugins') {
       const pluginWrapper = document.createElement('div');
-      pluginWrapper.style.width = '100%';
-      pluginWrapper.style.height = '100px';
-      pluginWrapper.style.backgroundColor = 'var(--color-purple-100, #f3f0ff)';
-      pluginWrapper.style.borderRadius = '6px';
-      pluginWrapper.style.display = 'flex';
-      pluginWrapper.style.alignItems = 'center';
-      pluginWrapper.style.justifyContent = 'center';
-      pluginWrapper.style.border = '2px solid var(--color-purple-300, #c4b5fd)';
-      
+      pluginWrapper.className = 'card__preview card__preview--plugin';
+
       const pluginIcon = document.createElement('div');
       pluginIcon.innerHTML = '🔌';
-      pluginIcon.style.fontSize = '32px';
+      pluginIcon.className = 'card__icon card__icon--plugin';
       pluginWrapper.appendChild(pluginIcon);
-      
+
       card.appendChild(pluginWrapper);
     }
 
     if (item.type === 'links') {
       const linkWrapper = document.createElement('div');
-      linkWrapper.style.width = '100%';
-      linkWrapper.classList.add('card__preview');
-      linkWrapper.style.backgroundColor = 'var(--color-sky-100, #e0f2fe)';
-      linkWrapper.style.borderRadius = '6px';
-      linkWrapper.style.display = 'flex';
-      linkWrapper.style.alignItems = 'center';
-      linkWrapper.style.justifyContent = 'center';
-      linkWrapper.style.border = '2px solid var(--color-sky-300, #7dd3fc)';
-      
+      linkWrapper.className = 'card__preview card__preview--link';
+
       const linkIcon = document.createElement('div');
       linkIcon.innerHTML = '🔗';
-      linkIcon.style.fontSize = '32px';
+      linkIcon.className = 'card__icon card__icon--link';
       linkWrapper.appendChild(linkIcon);
-      
+
       card.appendChild(linkWrapper);
     }
 
     if (item.type === 'files' && !item.thumbnailUrl) {
       const fileWrapper = document.createElement('div');
-      fileWrapper.style.width = '100%';
-      fileWrapper.classList.add('card__preview');
-      fileWrapper.style.backgroundColor = 'var(--color-neutral-100)';
-      fileWrapper.style.borderRadius = '6px';
-      fileWrapper.style.display = 'flex';
-      fileWrapper.style.alignItems = 'center';
-      fileWrapper.style.justifyContent = 'center';
-      fileWrapper.style.border = '2px solid var(--color-neutral-300)';
-      
+      fileWrapper.className = 'card__preview card__preview--file';
+
       const fileIcon = document.createElement('div');
       fileIcon.innerHTML = '📄';
-      fileIcon.style.fontSize = '32px';
+      fileIcon.className = 'card__icon card__icon--file';
       fileWrapper.appendChild(fileIcon);
-      
+
       card.appendChild(fileWrapper);
     }
 
     const title = document.createElement('div');
     title.textContent = item.title || '(untitled)';
-    title.style.fontSize = '12px';
-    title.style.fontWeight = '600';
-    title.style.lineHeight = '1.2';
+    title.className = 'card__title';
     card.appendChild(title);
 
     const meta = document.createElement('div');
-    meta.style.fontSize = '11px';
-    meta.style.color = 'var(--color-text-secondary)';
-    meta.style.display = 'flex';
-    meta.style.flexDirection = 'column';
-    meta.style.gap = '2px';
+    meta.className = 'card__meta';
     if (item.author) meta.appendChild(this.kv('By', item.author));
     if (item.license) meta.appendChild(this.kv('License', item.license));
     if (item.durationSec) meta.appendChild(this.kv('Duration', `${Math.round(item.durationSec)}s`));
@@ -423,6 +339,7 @@ class MediaInterface {
 
   private kv(k: string, v: string) {
     const el = document.createElement('div');
+    el.className = 'card__meta-item';
     el.textContent = `${k}: ${v}`;
     return el;
   }
@@ -438,11 +355,11 @@ class MediaInterface {
       const target = ev.target as HTMLElement;
       const card = target.closest('.card') as HTMLElement;
       if (card) {
-        card.classList.add('dragging');
+        card.classList.add('card--dragging');
         
         // Remove the class after drag ends
         const removeDragClass = () => {
-          card.classList.remove('dragging');
+          card.classList.remove('card--dragging');
           document.removeEventListener('dragend', removeDragClass);
         };
         document.addEventListener('dragend', removeDragClass);

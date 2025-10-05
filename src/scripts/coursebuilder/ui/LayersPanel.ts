@@ -270,7 +270,7 @@ export class LayersPanel {
 
   private buildLayerItem(obj: Container): HTMLLIElement {
     const li = document.createElement('li');
-    li.className = 'layer__item card card--layer';
+    li.className = 'layer__item';
     (li as any).draggable = true;
     const id = this.getId(obj) || '';
     li.dataset.layerId = id;
@@ -278,7 +278,7 @@ export class LayersPanel {
     // Selection highlighting
     const updateSelectedUI = () => {
       const selected = !!(obj as any).__selected;
-      li.classList.toggle('is-selected', selected);
+      li.classList.toggle('layer__item--selected', selected);
     };
     updateSelectedUI();
     document.addEventListener('selection:changed', () => updateSelectedUI());
@@ -331,8 +331,8 @@ export class LayersPanel {
       const isCenterBand = ratio >= (isNaN(lower) ? 0.4 : lower) && ratio <= (isNaN(upper) ? 0.6 : upper);
       const metaCtrl = dEv.metaKey || dEv.ctrlKey;
       const canGroup = ((metaCtrl || isCenterBand));
-      li.classList.toggle('is-group-target', !!canGroup);
-      li.classList.toggle('is-center-band', !!isCenterBand);
+      li.classList.toggle('layer__item--group-target', !!canGroup);
+      li.classList.toggle('layer__item--center-band', !!isCenterBand);
     });
     li.addEventListener('dragover', (ev) => {
       const dEv = ev as DragEvent;
@@ -344,11 +344,17 @@ export class LayersPanel {
       const isCenterBand = ratio >= (isNaN(lower) ? 0.4 : lower) && ratio <= (isNaN(upper) ? 0.6 : upper);
       const metaCtrl = dEv.metaKey || dEv.ctrlKey;
       const canGroup = ((metaCtrl || isCenterBand));
-      li.classList.toggle('is-group-target', !!canGroup);
-      li.classList.toggle('is-center-band', !!isCenterBand);
+      li.classList.toggle('layer__item--group-target', !!canGroup);
+      li.classList.toggle('layer__item--center-band', !!isCenterBand);
     });
-    li.addEventListener('dragleave', () => { li.classList.remove('is-group-target'); li.classList.remove('is-center-band'); });
-    li.addEventListener('drop', () => { li.classList.remove('is-group-target'); li.classList.remove('is-center-band'); });
+    li.addEventListener('dragleave', () => {
+      li.classList.remove('layer__item--group-target');
+      li.classList.remove('layer__item--center-band');
+    });
+    li.addEventListener('drop', () => {
+      li.classList.remove('layer__item--group-target');
+      li.classList.remove('layer__item--center-band');
+    });
 
     // Compact thumbnail
     const thumb = document.createElement('div');
@@ -472,22 +478,32 @@ export class LayersPanel {
       const isCenterBand = ratio >= (isNaN(lower) ? 0.4 : lower) && ratio <= (isNaN(upper) ? 0.6 : upper);
       if (isCenterBand) {
         // Hide insert indicator when the intention is to group inside
-        indicator.classList.remove('is-visible');
-        indicator.classList.remove('is-top');
-        indicator.classList.remove('is-bottom');
+        indicator.classList.remove('layers-drop-indicator--visible');
+        indicator.classList.remove('layers-drop-indicator--top');
+        indicator.classList.remove('layers-drop-indicator--bottom');
       } else {
         const topHalf = ratio < 0.5;
-        indicator.classList.toggle('is-top', topHalf);
-        indicator.classList.toggle('is-bottom', !topHalf);
         // ensure only current indicator shows
-        document.querySelectorAll('.layers-drop-indicator').forEach((el) => { el.classList.remove('is-visible'); });
-        indicator.classList.add('is-visible');
+        document.querySelectorAll('.layers-drop-indicator').forEach((el) => {
+          el.classList.remove('layers-drop-indicator--visible');
+          el.classList.remove('layers-drop-indicator--top');
+          el.classList.remove('layers-drop-indicator--bottom');
+        });
+        indicator.classList.toggle('layers-drop-indicator--top', topHalf);
+        indicator.classList.toggle('layers-drop-indicator--bottom', !topHalf);
+        indicator.classList.add('layers-drop-indicator--visible');
       }
     });
-    li.addEventListener('dragleave', () => { indicator.classList.remove('is-visible'); });
+    li.addEventListener('dragleave', () => {
+      indicator.classList.remove('layers-drop-indicator--visible');
+      indicator.classList.remove('layers-drop-indicator--top');
+      indicator.classList.remove('layers-drop-indicator--bottom');
+    });
     li.addEventListener('drop', (e) => {
       e.preventDefault();
-      indicator.classList.remove('is-visible');
+      indicator.classList.remove('layers-drop-indicator--visible');
+      indicator.classList.remove('layers-drop-indicator--top');
+      indicator.classList.remove('layers-drop-indicator--bottom');
       const dragId = e.dataTransfer?.getData('text/layer-id');
       if (!dragId) return;
       
@@ -718,7 +734,7 @@ export class LayersPanel {
       const realChildren = (obj as any).children?.filter((c: any) => this.isRealObject(c)) || [];
       realChildren.forEach((c: any) => {
         const cli = this.buildLayerItem(c);
-        cli.classList.add('card--nested'); // Add nested styling class
+        cli.classList.add('layer__item--nested');
         childrenList!.appendChild(cli);
       });
     }
