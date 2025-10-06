@@ -7,12 +7,7 @@
     &__content {
         grid-column: 1;
         display: flex;
-        align-items: stretch;
-        gap: 0.5rem;
-        padding: 0.5rem;
         overflow: hidden;
-        min-height: 0;
-        min-width: 0;
         flex: 1 1 auto;
         width: 100%;
         max-width: 100%;
@@ -23,7 +18,7 @@
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
-        flex: 0 0 clamp(3.5vw, 2.5vw, 4.5vw);
+        flex: 0 0 clamp(3.25vw, 2.5vw, 4.5vw);
         overflow-y: auto;
         scrollbar-width: none;
         -ms-overflow-style: none;
@@ -38,38 +33,6 @@
         flex-direction: column;
         gap: var(--spacing-3);
         align-items: flex-start;
-        --engine-search-max: 560px;
-        --search-card-width: 380px;
-        --search-card-height: 300px;
-        --search-card-preview-height: 170px;
-        flex: 1 1 var(--engine-search-max);
-        min-width: 0;
-        width: min(100%, var(--engine-search-max));
-        max-width: var(--engine-search-max);
-
-        .input--search {
-            width: 100%;
-            max-width: var(--search-card-width);
-        }
-
-        .search__panel {
-            width: 100%;
-            min-width: 0;
-        }
-
-        @media (max-width: 1480px) {
-            --engine-search-max: 460px;
-            --search-card-width: clamp(320px, 32vw, 360px);
-            --search-card-height: clamp(250px, 32vw, 280px);
-            --search-card-preview-height: clamp(140px, 16vw, 155px);
-        }
-
-        @media (max-width: 1280px) {
-            --engine-search-max: 100%;
-            --search-card-width: clamp(240px, 42vw, 300px);
-            --search-card-height: clamp(220px, 38vw, 250px);
-            --search-card-preview-height: clamp(120px, 18vw, 135px);
-        }
     }
 
     // Media items
