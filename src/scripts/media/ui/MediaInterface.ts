@@ -20,6 +20,9 @@ class MediaInterface {
   private resultsEl!: HTMLElement;
   private filtersEl!: HTMLElement;
   private selectedProviderKey: string | null = null;
+  private infoOverlay: HTMLElement | null = null;
+  private lastFocusedElement: HTMLElement | null = null;
+  private keydownListener: ((event: KeyboardEvent) => void) | null = null;
 
   init() {
     mediaManager.init();
@@ -333,8 +336,275 @@ class MediaInterface {
     if (item.filesize) meta.appendChild(this.kv('Size', `${Math.round(item.filesize / 1024)} KB`));
     card.appendChild(meta);
 
+    const actions = document.createElement('div');
+    actions.className = 'card__actions';
+
+    const infoButton = document.createElement('button');
+    infoButton.type = 'button';
+    infoButton.className = 'card__info-button';
+    infoButton.textContent = 'Info';
+    infoButton.setAttribute('aria-label', `View details for ${item.title || 'media item'}`);
+    infoButton.draggable = false;
+    infoButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this.showInfoPopup(item);
+    });
+    infoButton.addEventListener('pointerdown', (event) => event.stopPropagation());
+    infoButton.addEventListener('dragstart', (event) => event.preventDefault());
+
+    actions.appendChild(infoButton);
+    card.appendChild(actions);
+
     // Remove Add/Open buttons – drag-and-drop only
     return card;
+  }
+
+  private showInfoPopup(item: MediaItem) {
+    this.hideInfoPopup();
+
+    this.lastFocusedElement = document.activeElement as HTMLElement | null;
+
+    const overlay = this.buildInfoOverlay(item);
+    this.infoOverlay = overlay;
+    document.body.appendChild(overlay);
+    document.body.classList.add('media-info-overlay-open');
+
+    const closeButton = overlay.querySelector<HTMLElement>('.card__close');
+    closeButton?.focus({ preventScroll: true });
+
+    this.keydownListener = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        this.hideInfoPopup();
+      }
+    };
+
+    document.addEventListener('keydown', this.keydownListener);
+  }
+
+  private hideInfoPopup() {
+    if (this.infoOverlay) {
+      this.infoOverlay.remove();
+      this.infoOverlay = null;
+    }
+
+    if (this.keydownListener) {
+      document.removeEventListener('keydown', this.keydownListener);
+      this.keydownListener = null;
+    }
+
+    document.body.classList.remove('media-info-overlay-open');
+
+    if (this.lastFocusedElement) {
+      try {
+        this.lastFocusedElement.focus({ preventScroll: true });
+      } catch {
+        // ignore focus errors
+      }
+      this.lastFocusedElement = null;
+    }
+  }
+
+  private buildInfoOverlay(item: MediaItem): HTMLElement {
+    const overlay = document.createElement('div');
+    overlay.className = 'media-info-overlay';
+    overlay.addEventListener('click', (event) => {
+      if (event.target === overlay) {
+        this.hideInfoPopup();
+      }
+    });
+
+    const card = document.createElement('div');
+    card.className = 'card card--media-info media-info';
+    card.setAttribute('role', 'dialog');
+    card.setAttribute('aria-modal', 'true');
+    card.setAttribute('aria-label', `${item.title || 'Media item'} details`);
+    overlay.appendChild(card);
+
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'card__close';
+    closeButton.setAttribute('aria-label', 'Close media details');
+    closeButton.innerHTML = '&times;';
+    closeButton.addEventListener('click', () => this.hideInfoPopup());
+    closeButton.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        this.hideInfoPopup();
+      }
+    });
+    card.appendChild(closeButton);
+
+    const layout = document.createElement('div');
+    layout.className = 'media-info__layout';
+    card.appendChild(layout);
+
+    const details = document.createElement('div');
+    details.className = 'media-info__details';
+    layout.appendChild(details);
+
+    const detailList = document.createElement('div');
+    detailList.className = 'media-info__list';
+    details.appendChild(detailList);
+
+    const metadata = item.metadata || {};
+    const placeholderUrl = 'https://example.com/media-resource';
+    const description = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.';
+    const ageRating = (metadata.ageRating as string) || 'Not rated';
+    const creator = item.author || (metadata.creator as string) || 'Unknown';
+    const duration = (item.type === 'videos' || item.type === 'audio') ? this.formatDuration(item.durationSec) : 'Not applicable';
+    const fileSize = this.formatFileSize(item.filesize);
+    const format = this.inferFormat(item);
+    const license = item.license || (metadata.license as string) || 'Not provided';
+    const source = (metadata.source as string) || 'Stock library';
+    const tagsValue = this.formatTags(metadata.tags);
+    const uploadDate = this.formatDate(metadata.uploadDate);
+
+    this.appendDetail(detailList, 'URL', placeholderUrl);
+    this.appendDetail(detailList, 'Description', description);
+    this.appendDetail(detailList, 'Age Rating', ageRating);
+    this.appendDetail(detailList, 'Title', item.title || '(untitled)');
+    this.appendDetail(detailList, 'Author / Creator', creator);
+    this.appendDetail(detailList, 'Duration', duration);
+    this.appendDetail(detailList, 'File Size', fileSize);
+    this.appendDetail(detailList, 'Format', format);
+    this.appendDetail(detailList, 'License / Copyright', license);
+    this.appendDetail(detailList, 'Source', source);
+    this.appendDetail(detailList, 'Tags / Keywords', tagsValue);
+    this.appendDetail(detailList, 'Upload Date', uploadDate);
+
+    const preview = document.createElement('div');
+    preview.className = 'media-info__preview';
+    layout.appendChild(preview);
+
+    const previewFrame = document.createElement('div');
+    previewFrame.className = 'media-info__preview-frame';
+    const previewContent = this.buildPreviewContent(item);
+    previewFrame.appendChild(previewContent);
+    preview.appendChild(previewFrame);
+
+    const previewNote = document.createElement('div');
+    previewNote.className = 'media-info__preview-note';
+    previewNote.textContent = 'Preview is for reference only. Drag to the canvas to add this media.';
+    preview.appendChild(previewNote);
+
+    return overlay;
+  }
+
+  private buildPreviewContent(item: MediaItem): HTMLElement {
+    if (item.type === 'videos' && (item.previewUrl || item.contentUrl)) {
+      const video = document.createElement('video');
+      video.controls = true;
+      video.playsInline = true;
+      video.preload = 'metadata';
+      video.src = item.previewUrl || item.contentUrl || '';
+      return video;
+    }
+
+    if (item.type === 'audio' && (item.previewUrl || item.contentUrl)) {
+      const audio = document.createElement('audio');
+      audio.controls = true;
+      audio.preload = 'metadata';
+      audio.src = item.previewUrl || item.contentUrl || '';
+      return audio;
+    }
+
+    if ((item.previewUrl || item.thumbnailUrl) && item.type !== 'audio') {
+      const img = document.createElement('img');
+      img.src = item.previewUrl || item.thumbnailUrl || '';
+      img.alt = item.title || 'Media preview';
+      return img;
+    }
+
+    const placeholder = document.createElement('div');
+    placeholder.className = 'media-info__preview-fallback';
+    placeholder.textContent = 'Preview not available for this media type.';
+    return placeholder;
+  }
+
+  private appendDetail(container: HTMLElement, label: string, value: string) {
+    const item = document.createElement('div');
+    item.className = 'media-info__item';
+
+    const labelEl = document.createElement('span');
+    labelEl.className = 'media-info__label';
+    labelEl.textContent = label;
+    item.appendChild(labelEl);
+
+    const valueEl = document.createElement('span');
+    valueEl.className = 'media-info__value';
+    valueEl.textContent = value;
+    item.appendChild(valueEl);
+
+    container.appendChild(item);
+  }
+
+  private formatDuration(seconds?: number): string {
+    if (!seconds && seconds !== 0) {
+      return 'Unknown';
+    }
+
+    const totalSeconds = Math.max(0, Math.round(seconds));
+    const minutes = Math.floor(totalSeconds / 60);
+    const remainder = totalSeconds % 60;
+    if (minutes === 0) {
+      return `${remainder}s`;
+    }
+    return `${minutes}m ${remainder.toString().padStart(2, '0')}s`;
+  }
+
+  private formatFileSize(bytes?: number): string {
+    if (!bytes) {
+      return 'Unknown';
+    }
+
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let size = bytes;
+    let unitIndex = 0;
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex += 1;
+    }
+    return `${size.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+  }
+
+  private inferFormat(item: MediaItem): string {
+    const metadataFormat = item.metadata?.format as string | undefined;
+    if (metadataFormat) {
+      return metadataFormat;
+    }
+    const url = item.contentUrl || item.previewUrl;
+    if (!url) {
+      return 'Unknown';
+    }
+    const match = url.split('.').pop();
+    return match ? match.toUpperCase() : 'Unknown';
+  }
+
+  private formatTags(tags: unknown): string {
+    if (Array.isArray(tags)) {
+      return tags.length ? tags.join(', ') : 'No keywords provided';
+    }
+    if (typeof tags === 'string' && tags.trim().length > 0) {
+      return tags;
+    }
+    return 'No keywords provided';
+  }
+
+  private formatDate(value: unknown): string {
+    if (typeof value === 'number') {
+      const date = new Date(value);
+      if (!Number.isNaN(date.getTime())) {
+        return date.toLocaleDateString();
+      }
+    }
+
+    if (typeof value === 'string' || value instanceof Date) {
+      const date = value instanceof Date ? value : new Date(value);
+      if (!Number.isNaN(date.getTime())) {
+        return date.toLocaleDateString();
+      }
+    }
+    return 'Unknown';
   }
 
   private kv(k: string, v: string) {
