@@ -94,10 +94,10 @@
     }
 
     // Small square delete button variant (for inline deletions)
-    &.button--small {
+    &--small {
       width: 2rem;
-      height: 2rem;
-      min-height: 2rem;
+      height: 1rem;
+      min-height: 0.5rem;
       padding: 0;
       display: inline-flex;
       align-items: center;

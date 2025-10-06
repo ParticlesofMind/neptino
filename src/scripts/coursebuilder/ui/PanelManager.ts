@@ -2,14 +2,20 @@ export class PanelManager {
   private currentPanel: string;
   private tabs: NodeListOf<HTMLButtonElement>;
   private views: NodeListOf<HTMLElement>;
+  private select: HTMLSelectElement | null;
 
   constructor() {
     this.tabs = document.querySelectorAll('.engine__panel-tab');
     this.views = document.querySelectorAll('.engine__panel-view');
-    
+    this.select = document.querySelector('[data-panel-select]');
+
     // Load saved panel from localStorage or default to 'layers'
     this.currentPanel = localStorage.getItem('enginePanel:activePanel') || 'layers';
-    
+
+    if (this.select) {
+      this.select.value = this.currentPanel;
+    }
+
     this.initializePanels();
     this.bindEvents();
   }
@@ -28,6 +34,15 @@ export class PanelManager {
         }
       });
     });
+
+    if (this.select) {
+      this.select.addEventListener('change', (e) => {
+        const panelName = (e.target as HTMLSelectElement).value;
+        if (panelName) {
+          this.switchPanel(panelName);
+        }
+      });
+    }
   }
 
   private switchPanel(panelName: string): void {
@@ -51,6 +66,10 @@ export class PanelManager {
         view.classList.remove('engine__panel-view--active');
       }
     });
+
+    if (this.select && this.select.value !== panelName) {
+      this.select.value = panelName;
+    }
 
     // Save to localStorage
     localStorage.setItem('enginePanel:activePanel', panelName);

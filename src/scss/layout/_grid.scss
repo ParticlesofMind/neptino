@@ -24,7 +24,6 @@
         min-height: 0; // Allow grid to shrink if needed
         height: 100%; // Ensure it takes full available height from parent grid
     
-        
         // Auth page modifier - center content without stretching
         &--auth {
             place-items: center;

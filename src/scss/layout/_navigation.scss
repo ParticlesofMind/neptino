@@ -17,8 +17,9 @@
     &--header {
         grid-auto-flow: column;
         justify-content: space-between;
+        align-items: center;
         width: 100%;
-        height: 2rem; 
+        height: 1.5rem; 
     }
 
     // Footer navigation modifier  

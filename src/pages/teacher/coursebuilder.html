@@ -1246,12 +1246,21 @@
         <!-- Layers Panel - Now floating overlay on the right -->
         <div class="engine__panel">
           <div class="engine__panel-header">
-            <button class="engine__panel-tab engine__panel-tab--active" data-panel="layers">
-              Layers
-            </button>
-            <button class="engine__panel-tab" data-panel="navigation">
-              Navigation
-            </button>
+            <div class="engine__panel-tabs">
+              <button class="engine__panel-tab engine__panel-tab--active" data-panel="layers">
+                Layers
+              </button>
+              <button class="engine__panel-tab" data-panel="navigation">
+                Navigation
+              </button>
+            </div>
+            <div class="engine__panel-select">
+              <select class="engine__panel-select-input" data-panel-select aria-label="Panel view">
+                <option value="layers" selected>Layers</option>
+                <option value="navigation">Navigation</option>
+              </select>
+              <span class="engine__panel-select-icon" aria-hidden="true"></span>
+            </div>
           </div>
           <div class="engine__panel-content">
             <!-- Layers Panel View -->
