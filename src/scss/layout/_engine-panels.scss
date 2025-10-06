@@ -10,7 +10,7 @@
         overflow: hidden;
         flex: 1 1 auto;
         width: 100%;
-        max-width: 100%;
+       
     }
 
     // Media panel
@@ -307,17 +307,6 @@
             scrollbar-width: none;
             -ms-overflow-style: none;
 
-            &::-webkit-scrollbar {
-                display: none;
-            }
-
-            @media (max-width: 992px) {
-                padding: 8px;
-            }
-
-            @media (max-width: 768px) {
-                padding: 8px;
-            }
         }
 
         &__load-more {
