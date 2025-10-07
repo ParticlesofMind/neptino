@@ -7,6 +7,16 @@
   border-radius: var(--radius-medium);
   border: 1px solid var(--color-neutral-200);
   padding: var(--spacing-3);
+  --card-preview-aspect: 4 / 3;
+  --card-preview-padding: 0;
+  --card-preview-border-width: 0px;
+  --card-preview-border-color: transparent;
+  --card-preview-background: transparent;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+
   // ------------------------------------------------------------------------
   // Elements
   // ------------------------------------------------------------------------
@@ -32,47 +42,56 @@
   &__preview {
     display: block;
     width: 100%;
-    border-radius: 6px;
+    margin-bottom: var(--spacing-2);
+    border-radius: var(--radius-small);
+    aspect-ratio: var(--card-preview-aspect, 4 / 3);
+    border: var(--card-preview-border-width, 0px) solid var(--card-preview-border-color, transparent);
+    background-color: var(--card-preview-background, transparent);
+    padding: var(--card-preview-padding, 0);
+    box-sizing: border-box;
     object-fit: cover;
+    overflow: hidden;
+
+    &--image,
+    &--video,
+    &--video-thumbnail {
+      height: 100%;
+    
+    }
+
+    &--audio,
+    &--text,
+    &--plugin,
+    &--link,
+    &--file {
+      display: grid;
+      place-items: center;
+      --card-preview-padding: 1rem;
+      --card-preview-border-width: 2px;
+      --card-preview-border-color: var(--color-neutral-300);
+      --card-preview-background: var(--color-neutral-100);
+    }
+
+    &--audio {
+      --card-preview-border-color: var(--color-warning-300);
+      --card-preview-background: var(--color-warning-100);
+    }
+
+    &--plugin {
+      --card-preview-border-color: var(--color-purple-300, #c4b5fd);
+      --card-preview-background: var(--color-purple-100, #f3f0ff);
+    }
+
+    &--link {
+      --card-preview-border-color: var(--color-sky-300, #7dd3fc);
+      --card-preview-background: var(--color-sky-100, #e0f2fe);
+    }
   }
 
   &__preview--image,
   &__preview--video,
   &__preview--video-thumbnail {
     display: block;
-  }
-
-  &__preview--audio,
-  &__preview--text,
-  &__preview--plugin,
-  &__preview--link,
-  &__preview--file {
-    display: grid;
-    place-items: center;
-    padding: 1rem;
-    border-radius: 6px;
-    border: 2px solid var(--color-neutral-300);
-    background-color: var(--color-neutral-100);
-  }
-
-  &__preview--audio {
-    border-color: var(--color-warning-300);
-    background-color: var(--color-warning-100);
-  }
-
-  &__preview--plugin {
-    border-color: var(--color-purple-300, #c4b5fd);
-    background-color: var(--color-purple-100, #f3f0ff);
-  }
-
-  &__preview--link {
-    border-color: var(--color-sky-300, #7dd3fc);
-    background-color: var(--color-sky-100, #e0f2fe);
-  }
-
-  &__preview--file {
-    border-color: var(--color-neutral-300);
-    background-color: var(--color-neutral-100);
   }
 
   &__icon {
@@ -114,6 +133,7 @@
     justify-content: end;
     gap: var(--spacing-2);
     align-items: center;
+    margin-top: auto;
   }
 
   &__actions--stacked {
@@ -271,6 +291,7 @@
     grid-auto-rows: min-content;
     gap: var(--spacing-3);
     align-content: start;
+    flex: 1;
   }
 
   &__info {
