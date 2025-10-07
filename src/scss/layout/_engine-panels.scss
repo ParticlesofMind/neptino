@@ -3,22 +3,23 @@
 // ==========================================================================
 
 .engine {
-    // Content column - wraps media navigation + search
     &__content {
-        grid-column: 1;
-        display: flex;
+        display: grid;
+        grid-template-columns:
+            minmax(clamp(4.5rem, 6vw, 6.75rem), max-content)
+            minmax(0, 1fr);
+        align-items: start;
+        gap: var(--spacing-3);
         overflow: hidden;
-        flex: 1 1 auto;
         width: 100%;
-       
+        padding: 0.25rem;
     }
 
-    // Media panel
     &__media {
-        display: flex;
-        flex-direction: column;
+        inline-size: clamp(4.5rem, 6vw, 6.75rem);
+        display: grid;
+        grid-auto-rows: minmax(3.25rem, max-content);
         gap: 0.5rem;
-        flex: 0 0 clamp(3.25vw, 2.5vw, 4.5vw);
         overflow-y: auto;
         scrollbar-width: none;
         -ms-overflow-style: none;
@@ -29,21 +30,20 @@
     }
 
     &__search {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-auto-flow: row;
+        grid-auto-rows: min-content;
         gap: var(--spacing-3);
-        align-items: flex-start;
+        align-content: start;
     }
 
-    // Media items
     &__media-item {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-auto-flow: row;
         gap: var(--spacing-1);
         width: 50px;
         height: 50px;
-        align-items: center;
-        justify-content: center;
+        place-items: center;
         padding: var(--spacing-2);
         border-radius: 4px;
         background: rgba(255, 255, 255, 0.9);
@@ -64,15 +64,12 @@
         }
     }
 
-    // Canvas area - Second column in new layout
     &__canvas {
-        grid-column: 2;
         background: var(--color-background);
         overflow: auto;
         padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
+        display: grid;
+        place-content: start center;
         position: relative;
         scrollbar-width: none;
         -ms-overflow-style: none;
@@ -95,34 +92,23 @@
         }
     }
 
-    // Panel container - Third column in new layout
     &__panel {
-        grid-column: 3;
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: var(--spacing-1);
         overflow: hidden;
         min-width: 0;
         width: 100%;
-        max-width: clamp(280px, 22vw, 320px);
-
-        @media (max-width: 1480px) {
-            max-width: clamp(240px, 26vw, 300px);
-        }
-
-        @media (max-width: 1380px) {
-            max-width: clamp(190px, 24vw, 240px);
-        }
-
-        @media (max-width: 1280px) {
-            max-width: clamp(170px, 32vw, 220px);
-        }
+        min-inline-size: clamp(17rem, 22vw, 19rem);
+        max-inline-size: clamp(18rem, 24vw, 22rem);
+        container-type: inline-size;
+        container-name: engine-panel;
     }
 
-    // Panel header with tabs
     &__panel-header {
-        display: flex;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
-        justify-content: space-between;
         gap: var(--spacing-2);
         background: var(--color-neutral-100);
         border-bottom: 1px solid var(--color-neutral-200);
@@ -131,15 +117,16 @@
     }
 
     &__panel-tabs {
-        display: flex;
-        flex: 1 1 auto;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
         border-radius: inherit;
         overflow: hidden;
     }
 
-    // Panel tab buttons
     &__panel-tab {
-        flex: 1;
+        display: grid;
+        place-items: center;
         padding: var(--spacing-2) var(--spacing-3);
         background: transparent;
         border: none;
@@ -174,7 +161,7 @@
     &__panel-select {
         position: relative;
         display: none;
-        flex: 0 0 clamp(160px, 20vw, 220px);
+        inline-size: clamp(160px, 20vw, 220px);
         margin-left: auto;
     }
 
@@ -210,14 +197,14 @@
         pointer-events: none;
     }
 
-    @media (max-width: 1380px) {
+    @container engine-panel (max-width: 21rem) {
         &__panel-tabs {
             display: none;
         }
 
         &__panel-select {
-            display: inline-flex;
-            width: clamp(160px, 20vw, 220px);
+            display: grid;
+            inline-size: clamp(160px, 20vw, 220px);
         }
 
         &__navigation {
@@ -236,9 +223,9 @@
         }
     }
 
-    // Panel content area
     &__panel-content {
-        flex: 1;
+        display: grid;
+        grid-auto-flow: row;
         overflow-y: auto;
         background: var(--color-background);
         border-radius: 0 0 var(--radius-large) var(--radius-large);
@@ -250,28 +237,28 @@
         }
     }
 
-    // Individual panel views
     &__panel-view {
         display: none;
         height: 100%;
 
         &--active {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-auto-flow: row;
+            grid-auto-rows: min-content;
         }
     }
 
-    // Legacy layers panel styling
     &__layers {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-auto-flow: row;
+        grid-auto-rows: min-content;
         height: 100%;
     }
 
-    // Navigation panel styling
     &__navigation {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-auto-flow: row;
+        grid-auto-rows: min-content;
         height: 100%;
         padding: var(--spacing-3);
         gap: var(--spacing-2);
@@ -279,29 +266,30 @@
 
     // Search component
     .search {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-auto-flow: row;
+        grid-auto-rows: min-content;
         gap: var(--spacing-2);
-        align-items: stretch;
         width: 100%;
         max-width: var(--search-card-width, 260px);
         margin: 0 auto;
 
         &__panel {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-auto-flow: row;
+            grid-auto-rows: min-content;
             gap: var(--spacing-3);
             min-height: 0;
-            align-items: stretch;
             width: 100%;
             max-width: 100%;
             align-self: stretch;
         }
 
         &__filters {
-            display: flex;
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: max-content;
             gap: var(--spacing-2);
-            flex-shrink: 0;
 
             &--hidden {
                 display: none;
@@ -316,11 +304,10 @@
         }
 
         &__load-more {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            display: inline-grid;
+            place-items: center;
             gap: 0.25rem;
-            align-self: flex-end;
+            justify-self: end;
             margin-top: 0.5rem;
 
             &--hidden {
@@ -345,8 +332,9 @@
 
         &__error {
             grid-column: 1 / -1;
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-auto-flow: row;
+            grid-auto-rows: min-content;
             gap: 0.375rem;
             padding: 0.75rem;
             border-radius: var(--radius-small, 6px);
@@ -365,21 +353,21 @@
         }
 
         &__error-controls {
-            display: flex;
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(0, max-content);
             gap: 0.375rem;
             align-items: center;
         }
 
         &__error-input {
-            flex: 1;
+            min-width: 0;
         }
 
         &__error-button {
-            flex-shrink: 0;
+            justify-self: start;
         }
 
-        .input--search {
-            width: 100%;
-        }
+     
     }
 }

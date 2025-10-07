@@ -227,7 +227,7 @@ export class EnhancedSnapMenuHandler {
     if (advancedSection) {
       // Always show the advanced settings when the menu is open
       // Users should be able to see and configure these settings regardless of current mode
-      (advancedSection as HTMLElement).style.display = 'flex';
+      (advancedSection as HTMLElement).style.display = 'grid';
       (advancedSection as HTMLElement).style.visibility = 'visible';
       (advancedSection as HTMLElement).style.opacity = '1';
     }

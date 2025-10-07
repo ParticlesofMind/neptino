@@ -113,12 +113,12 @@ export class AnimationUI {
     }
 
     const scenePanel = createEl(`
-      <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--scene" style="display:none; align-items:center; gap:16px; padding:8px;">
+      <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--scene" style="display:none; padding:8px;">
         <button type="button" class="button button--small button--outline" data-anim-loop title="Loop Animation" style="min-width:36px;">∞</button>
         
-        <div class="scene-controls" style="display:flex; align-items:center; gap:12px;">
+        <div class="scene-controls">
           <!-- Duration Slider -->
-          <div class="duration-control" style="display:flex; align-items:center; gap:8px;">
+          <div class="duration-control">
             <label style="font-size:11px; font-weight:500; color:#666;">Duration:</label>
             <input type="range" 
                    data-duration-slider 
@@ -132,7 +132,7 @@ export class AnimationUI {
           </div>
           
           <!-- Resolution Selector -->
-          <div class="resolution-control" style="display:flex; align-items:center; gap:8px;">
+          <div class="resolution-control">
 
             <select data-resolution-select 
                     style="font-size:11px; padding:2px 6px; border:1px solid #ddd; border-radius:3px; background:white;">
@@ -234,19 +234,19 @@ export class AnimationUI {
     }
 
     const modifyPanel = createEl(`
-      <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--modify" style="display:none; align-items:center; gap:16px; padding:8px;">
+      <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--modify" style="display:none; padding:8px;">
         
         <!-- Object-Specific Properties in a clean row -->
-        <div class="modify-object-controls" style="display:flex; align-items:center; gap:12px;">
+        <div class="modify-object-controls">
           <!-- Pen/Shape Tool Properties -->
-          <div class="modify-pen-controls" data-modify-type="pen" style="display:none; align-items:center; gap:8px;">
+          <div class="modify-pen-controls" data-modify-type="pen" style="display:none;">
             <input type="number" min="1" max="15" value="2" class="input input--number" title="Stroke Width" data-modify-property="size" style="width:50px;">
             <div class="color-selector" data-color-selector="modify-stroke" data-initial-color="#282a29" title="Stroke Color"></div>
             <div class="color-selector" data-color-selector="modify-fill" data-initial-color="transparent" data-allow-transparent="true" title="Fill Color"></div>
           </div>
           
           <!-- Text Tool Properties -->  
-          <div class="modify-text-controls" data-modify-type="text" style="display:none; align-items:center; gap:8px;">
+          <div class="modify-text-controls" data-modify-type="text" style="display:none;">
             <select class="input input--select" title="Font Size" data-modify-property="fontSize" style="width:80px; font-size:11px; padding:2px 6px;">
               <option value="12">12pt</option>
               <option value="14">14pt</option>
@@ -259,13 +259,13 @@ export class AnimationUI {
           </div>
           
           <!-- Brush Tool Properties -->
-          <div class="modify-brush-controls" data-modify-type="brush" style="display:none; align-items:center; gap:8px;">
+          <div class="modify-brush-controls" data-modify-type="brush" style="display:none;">
             <input type="number" min="10" max="50" value="20" class="input input--number" title="Brush Size" data-modify-property="size" style="width:50px;">
             <div class="color-selector" data-color-selector="modify-color" data-initial-color="#2b8059" title="Brush Color"></div>
           </div>
           
           <!-- Shapes Tool Properties -->
-          <div class="modify-shapes-controls" data-modify-type="shapes" style="display:none; align-items:center; gap:8px;">
+          <div class="modify-shapes-controls" data-modify-type="shapes" style="display:none;">
             <input type="number" min="1" max="10" value="2" class="input input--number" title="Stroke Width" data-modify-property="strokeWidth" style="width:50px;">
             <div class="color-selector" data-color-selector="modify-stroke" data-initial-color="#3c748d" title="Stroke Color"></div>
             <div class="color-selector" data-color-selector="modify-fill" data-initial-color="transparent" data-allow-transparent="true" title="Fill Color"></div>
@@ -273,19 +273,19 @@ export class AnimationUI {
         </div>
         
         <!-- Status Message -->
-        <div class="modify-status" style="display:flex; align-items:center; flex:1;">
+        <div class="modify-status">
           <span data-modify-status style="color:#666; font-size:9px; font-style:italic;">Select an object to modify its properties over time</span>
         </div>
         
         <!-- Universal Transform Controls -->
-        <div class="modify-transform-controls" data-modify-transforms style="display:none; align-items:center; gap:8px;">
-          <div class="transform-group" style="display:flex; align-items:center; gap:6px;">
+        <div class="modify-transform-controls" data-modify-transforms style="display:none;">
+          <div class="transform-group">
             <label style="font-size:11px; font-weight:500; color:#666;">Scale:</label>
             <input type="range" min="0.1" max="3" step="0.05" value="1" class="input input--range" title="Scale" data-modify-property="scale" style="width:60px; accent-color:#80bfff;">
             <span class="scale-value" data-scale-display style="font-size:11px; font-weight:500; color:#3c748d; min-width:32px;">1.00</span>
           </div>
           
-          <div class="transform-group" style="display:flex; align-items:center; gap:6px;">
+          <div class="transform-group">
             <label style="font-size:11px; font-weight:500; color:#666;">Opacity:</label>
             <input type="range" min="0" max="1" step="0.05" value="1" class="input input--range" title="Opacity" data-modify-property="alpha" style="width:60px; accent-color:#80bfff;">
             <span class="alpha-value" data-alpha-display style="font-size:11px; font-weight:500; color:#3c748d; min-width:32px;">100%</span>
@@ -293,7 +293,7 @@ export class AnimationUI {
         </div>
         
         <!-- Status Message -->
-        <div class="modify-status" style="flex:1; font-size:11px; color:var(--color-text-secondary); text-align:right; padding-right:8px;">
+        <div class="modify-status" style="font-size:11px; color:var(--color-text-secondary); text-align:right; padding-right:8px;">
         </div>
       </div>
     `);
@@ -410,21 +410,21 @@ export class AnimationUI {
       // Show relevant property controls based on object type
       switch (objectType) {
         case 'pen':
-          if (penControls) penControls.style.display = 'flex';
+          if (penControls) penControls.style.display = 'grid';
           break;
         case 'text':
-          if (textControls) textControls.style.display = 'flex';
+          if (textControls) textControls.style.display = 'grid';
           break;
         case 'brush':
-          if (brushControls) brushControls.style.display = 'flex';
+          if (brushControls) brushControls.style.display = 'grid';
           break;
         case 'shapes':
-          if (shapesControls) shapesControls.style.display = 'flex';
+          if (shapesControls) shapesControls.style.display = 'grid';
           break;
       }
       
       // Always show transform controls when object is selected
-      if (transformControls) transformControls.style.display = 'flex';
+      if (transformControls) transformControls.style.display = 'grid';
       
       // Initialize current values from selected object
       this.initializeControlValues(panel, detail);

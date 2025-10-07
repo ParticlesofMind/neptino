@@ -180,9 +180,8 @@
         text-align: center;
         min-height: 50px;
         max-width: 24rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: grid;
+        place-items: center;
 
         &::-webkit-file-upload-button,
         &::file-selector-button {

@@ -3,10 +3,12 @@
 // ==========================================================================
 
 .engine {
+
     // Controls container - positioning handled by FloatingElementsManager.ts
     &__controls {
-        display: flex;
-        flex-direction: row;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: max-content;
         align-items: center;
         gap: var(--spacing-4);
         z-index: 200;
@@ -14,8 +16,9 @@
 
     // Mode selector - styled like tools with white background
     &__modes {
-        display: flex;
-        flex-direction: row;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: max-content;
         gap: var(--spacing-2);
         width: auto;
         background: rgba(255, 255, 255, 0.95);
@@ -27,10 +30,10 @@
 
     // Mode items
     &__modes-item {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: max-content;
+        place-items: center;
         width: 50px;
         height: 50px;
         padding: var(--spacing-1);
@@ -73,7 +76,8 @@
             width: 50px;
             height: 50px;
             padding: var(--spacing-1);
-            flex-direction: column;
+            grid-auto-flow: row;
+            grid-auto-rows: max-content;
             gap: 0.125rem;
         }
     }
@@ -81,14 +85,15 @@
     // Engine-specific tool container - now positioned by parent controls
     &__tools {
         position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+        display: grid;
+        grid-auto-flow: row;
+        grid-auto-rows: max-content;
+        justify-items: center;
         gap: var(--spacing-2);
         width: auto;
 
         &--canvas {
-            flex-direction: column !important;
+            grid-auto-flow: row !important;
         }
     }
 
@@ -100,8 +105,9 @@
         transform: translateX(-50%);
         margin-bottom: var(--spacing-2);
         z-index: 10;
-        display: flex;
-        flex-direction: row;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: max-content;
         gap: var(--spacing-2);
         width: auto;
         background: rgba(255, 255, 255, 0.95);
@@ -113,8 +119,9 @@
 
     // Tools selection row - styled like perspective with white background
     &__tools-selection {
-        display: flex;
-        flex-direction: row;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: max-content;
         gap: var(--spacing-2);
         width: auto;
         background: rgba(255, 255, 255, 0.95);
@@ -125,9 +132,10 @@
     }
 
     // Tools group containers for build/animate modes
-    &__tools-group {     
-        display: flex;
-        flex-direction: row;
+    &__tools-group {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: max-content;
         gap: var(--spacing-2);
         width: auto;
         background: rgba(255, 255, 255, 0.95);
@@ -138,20 +146,21 @@
     }
 
     &__tools-item {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-auto-flow: row;
+        grid-auto-rows: max-content;
         gap: var(--spacing-1);
         width: 50px;
         height: 50px;
-        align-items: center;
-        justify-content: center;
+        place-items: center;
         padding: var(--spacing-2);
         border-radius: 4px;
         background: rgba(255, 255, 255, 0.9);
         border: 1px solid var(--color-neutral-300);
         cursor: pointer;
         transition: all 0.2s ease;
-        user-select: none; /* Prevent text selection on tool buttons */
+        user-select: none;
+        /* Prevent text selection on tool buttons */
         -webkit-user-select: none;
         -moz-user-select: none;
         -ms-user-select: none;
@@ -178,7 +187,8 @@
 
         // Horizontal layout for settings panels
         &--horizontal {
-            flex-direction: row;
+            grid-auto-flow: column;
+            grid-auto-columns: max-content;
             width: auto;
             height: auto;
             padding: var(--spacing-2);
@@ -195,10 +205,10 @@
 
     // Tools options items - uniform styling like regular tool items
     &__tools-options &__tools-item--horizontal {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: max-content;
+        place-items: center;
         min-width: 120px;
         height: 50px;
         padding: var(--spacing-2);
@@ -223,13 +233,69 @@
 
         .color-selector {
             margin: 0;
-            flex-shrink: 0;
+            justify-self: start;
         }
 
         .input {
             margin: 0;
             min-width: 60px;
-            flex: 1;
+            justify-self: stretch;
+        }
+
+        .text-style-controls {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: max-content;
+            gap: 6px;
+            align-items: center;
         }
     }
+}
+
+.scene-controls {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    align-items: center;
+    gap: 12px;
+}
+
+.duration-control,
+.resolution-control,
+.modify-pen-controls,
+.modify-text-controls,
+.modify-brush-controls,
+.modify-shapes-controls,
+.modify-transform-controls {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    align-items: center;
+    gap: 8px;
+}
+
+.modify-object-controls {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    align-items: center;
+    gap: 12px;
+}
+
+.transform-group {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    align-items: center;
+    gap: 6px;
+}
+
+.modify-status {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    align-items: center;
+    gap: 8px;
+    justify-content: space-between;
+    min-width: 0;
 }

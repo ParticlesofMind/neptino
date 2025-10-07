@@ -889,7 +889,7 @@ export class ToolStateManager {
         // Show the appropriate tool container for current mode
         const activeToolContainer = document.querySelector(`[data-mode-tools="${modeName}"]`);
         if (activeToolContainer) {
-            (activeToolContainer as HTMLElement).style.display = 'flex';
+            (activeToolContainer as HTMLElement).style.display = 'grid';
             
             // Set the selection tool as active in the new mode's container
             const selectionTool = activeToolContainer.querySelector('[data-tool="selection"]');
@@ -900,7 +900,7 @@ export class ToolStateManager {
             // Fallback to build mode if mode-specific container not found
             const buildContainer = document.querySelector('[data-mode-tools="build"]');
             if (buildContainer) {
-                (buildContainer as HTMLElement).style.display = 'flex';
+                (buildContainer as HTMLElement).style.display = 'grid';
                 const selectionTool = buildContainer.querySelector('[data-tool="selection"]');
                 if (selectionTool) {
                     selectionTool.classList.add('engine__tools-item--active');
@@ -1028,10 +1028,10 @@ export class ToolStateManager {
         }
 
         if (toolSettings) {
-            toolSettings.style.display = 'flex';
+            toolSettings.style.display = 'grid';
         } else if (placeholder) {
             // Show placeholder if no tool settings found
-            placeholder.style.display = 'flex';
+            placeholder.style.display = 'grid';
         }
 
         // Update canvas cursor
@@ -1103,16 +1103,16 @@ export class ToolStateManager {
         });
         const placeholder = document.querySelector('.tools__placeholder') as HTMLElement | null;
         if (!toolName) {
-            if (placeholder) placeholder.style.display = 'flex';
+            if (placeholder) placeholder.style.display = 'grid';
             return;
         }
         // Show specific panel
         const panel = (document.querySelector(`.engine__tools-options .engine__tools-item--${toolName}`) as HTMLElement) ||
                       (document.querySelector(`.engine__tools-options [data-settings-for="${toolName}"]`) as HTMLElement);
         if (panel) {
-            panel.style.display = 'flex';
+            panel.style.display = 'grid';
         } else if (placeholder) {
-            placeholder.style.display = 'flex';
+            placeholder.style.display = 'grid';
         }
     }
 

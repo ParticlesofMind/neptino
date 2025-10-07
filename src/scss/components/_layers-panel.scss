@@ -3,17 +3,16 @@
 // ==========================================================================
 
 .layers-panel {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   height: 100%;
 
   &__header {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    justify-content: space-between;
     padding: var(--spacing-3);
     border-bottom: 1px solid var(--color-neutral-200);
-    flex-shrink: 0;
     transition: all 0.3s ease;
   }
 
@@ -34,12 +33,10 @@
     background: var(--color-neutral-100);
     border-radius: var(--radius-small);
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    place-items: center;
     transition: all 0.2s ease;
     color: var(--color-neutral-600);
-    flex-shrink: 0;
 
     &:hover {
       background: var(--color-neutral-200);
@@ -61,7 +58,6 @@
   }
 
   &__content {
-    flex: 1;
     overflow-y: auto;
     padding: var(--spacing-3);
     min-height: 0;
@@ -133,25 +129,29 @@
   }
 
   &__content {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    justify-content: space-between;
     width: 100%;
+    gap: 6px;
   }
 
   &__left {
-    display: flex;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
     align-items: center;
     gap: 6px;
-    flex: 1;
     min-width: 0;
+    justify-self: stretch;
   }
 
   &__controls {
-    display: flex;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
     align-items: center;
     gap: 4px;
-    flex-shrink: 0;
   }
 
   &__expander {
@@ -161,13 +161,11 @@
     border: none;
     background: transparent;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    place-items: center;
     font-size: 10px;
     color: var(--color-neutral-500);
     border-radius: 2px;
-    flex-shrink: 0;
 
     &:hover {
       background: var(--color-neutral-100);
@@ -184,11 +182,9 @@
     background-repeat: no-repeat;
     background-position: center;
     background-color: var(--color-neutral-50);
-    flex-shrink: 0;
   }
 
   &__name-input {
-    flex: 1;
     border: none;
     outline: none;
     font-size: 12px;
@@ -210,9 +206,8 @@
     border: none;
     background: transparent;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    place-items: center;
     border-radius: 3px;
     transition: all 0.15s ease;
 

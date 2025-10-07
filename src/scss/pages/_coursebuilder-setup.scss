@@ -7,6 +7,8 @@
 // ==========================================================================
 
 .coursebuilder {
+    container-type: inline-size;
+    container-name: coursebuilder-shell;
     &__setup,
     &__create,
     &__preview,
@@ -30,8 +32,9 @@
 
     &__create {
         &.coursebuilder__create--active {
-            display: flex;
-            flex: 1;
+            display: grid;
+            grid-auto-flow: row;
+            grid-auto-rows: min-content;
             overflow: hidden;
             width: 100%;
             height: 100%; // Use available height within grid, not full viewport
@@ -55,17 +58,6 @@
 // SETUP COURSEBUILDER ELEMENT LAYOUT
 // ==========================================================================
 
-.coursebuilder__sidebar {
-    @media (max-width: 768px) {
-        position: fixed;
-        width: 100vw;
-        height: 50px;
-        margin: 0;
-        padding: 0;
-        grid-column: 1 / -1; // Span all columns on mobile
-    }
-}
-
 // ==========================================================================
 // COURSEBUILDER SETUP - Enhanced with unified content system
 // ==========================================================================
@@ -73,15 +65,35 @@
 .coursebuilder {
     &__setup {
         display: grid;
-        grid-template-columns: auto 1fr; // Sidebar and content
+        grid-template-columns: minmax(240px, clamp(26vw, 280px, 340px)) minmax(0, 1fr); // Sidebar and content
         gap: var(--spacing-4);
+        container-type: inline-size;
+        container-name: coursebuilder-setup;
+    }
+}
 
-        // Mobile responsive
-        @media (max-width: 768px) {
-            grid-template-columns: 1fr;
-            grid-template-rows: 1fr auto;
-            gap: 0;
-        }
+@container coursebuilder-setup (max-width: 52rem) {
+    .coursebuilder__setup {
+        grid-template-columns: 1fr;
+        grid-auto-rows: min-content;
+        gap: var(--spacing-3);
+    }
+
+    .coursebuilder__sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        margin: 0;
+        padding: 0;
+        grid-column: 1 / -1;
+    }
+
+    .coursebuilder__content {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
     }
 }
 
@@ -103,12 +115,8 @@
 
     &__row {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
         gap: var(--spacing-4);
-
-        @media (max-width: 768px) {
-            grid-template-columns: 1fr;
-        }
     }
 }
 
@@ -117,16 +125,6 @@
 // Enhance content for coursebuilder-specific layout  
 .coursebuilder__content {
     padding: var(--spacing-6); // More padding for forms
-
-    // Mobile adjustments
-    @media (max-width: 768px) {
-        width: 100vw;
-        height: 100%; // Use available height within container
-        margin: 0;
-        margin-bottom: 60px;
-        border-radius: 0;
-        box-shadow: none;
-    }
 }
 
 .coursebuilder__section {
