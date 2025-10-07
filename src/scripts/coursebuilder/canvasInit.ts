@@ -82,6 +82,9 @@ export async function initializeCanvas(): Promise<void> {
             backgroundColor: 0xffffff,
         });
 
+        // Expose canvas API early so dependent UI components can bind immediately
+        (window as any).canvasAPI = canvasAPI;
+
         // Make canvas dimensions available to global functions
         (window as any).currentCanvasWidth = canvasWidth;
         (window as any).currentCanvasHeight = canvasHeight;
@@ -90,6 +93,7 @@ export async function initializeCanvas(): Promise<void> {
         // Initialize Canvas Layout Manager
         layoutManager = new CanvasLayoutManager('#canvas-container');
         layoutManager.setupResponsiveLayout(); // Auto-select layout based on viewport
+        (window as any).layoutManager = layoutManager;
 
         // Initialize High-Quality Zoom System (PIXI-based zoom/pan controls)
         const app = canvasAPI.getApp();
@@ -124,6 +128,7 @@ export async function initializeCanvas(): Promise<void> {
         } else {
             console.warn('⚠️ High-quality zoom system not available');
         }
+        (window as any).perspectiveManager = perspectiveManager;
 
         // Bind minimal snap menu UI
         try { 
@@ -138,9 +143,23 @@ export async function initializeCanvas(): Promise<void> {
             console.warn('Failed to initialize snap menu:', error);
         }
 
+        // Initialize color selectors before tool state manager restores settings
+        (window as any).toolColorManager = toolColorManager;
+        toolColorManager.init();
+
+        // Sync canvas colors whenever tool color selectors change
+        document.addEventListener('toolColorChange', (event: Event) => {
+            const customEvent = event as CustomEvent;
+            const { hex } = customEvent.detail;
+            if (canvasAPI) {
+                canvasAPI.setToolColor(hex);
+            }
+        });
+
 
         // Initialize UI system with clean architecture
         toolStateManager = new ToolStateManager();
+        (window as any).toolStateManager = toolStateManager;
         
         // Wait a bit to ensure DOM is fully ready before binding events
         await new Promise(resolve => setTimeout(resolve, 200));
@@ -155,6 +174,7 @@ export async function initializeCanvas(): Promise<void> {
 
         // Initialize Tool Coordinator for unified tool management
         toolCoordinator = new ToolCoordinator();
+        (window as any).toolCoordinator = toolCoordinator;
 
         // Initialize Layers Panel (UI for layer ordering/visibility)
         layersPanel = new LayersPanel();
@@ -164,18 +184,6 @@ export async function initializeCanvas(): Promise<void> {
         // Initialize Panel Manager (handles tabbed panel switching)
         const panelManager = new PanelManager();
         (window as any).panelManager = panelManager;
-
-        // Initialize color selectors for all tools
-        toolColorManager.init();
-
-        // Listen for color selector changes
-        document.addEventListener('toolColorChange', (event: Event) => {
-            const customEvent = event as CustomEvent;
-            const { hex } = customEvent.detail;
-            if (canvasAPI) {
-                canvasAPI.setToolColor(hex);
-            }
-        });
 
         // Clean architecture: All UI events are handled through ToolStateManager
         // No callbacks needed - ToolStateManager directly manages canvas state
