@@ -368,7 +368,7 @@ class MediaInterface {
     const overlay = this.buildInfoOverlay(item);
     this.infoOverlay = overlay;
     document.body.appendChild(overlay);
-    document.body.classList.add('media-info-overlay-open');
+    document.body.classList.add('media-info-overlay--open');
 
     const closeButton = overlay.querySelector<HTMLElement>('.card__close');
     closeButton?.focus({ preventScroll: true });
@@ -393,7 +393,7 @@ class MediaInterface {
       this.keydownListener = null;
     }
 
-    document.body.classList.remove('media-info-overlay-open');
+    document.body.classList.remove('media-info-overlay--open');
 
     if (this.lastFocusedElement) {
       try {

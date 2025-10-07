@@ -282,7 +282,11 @@
         display: flex;
         flex-direction: column;
         gap: var(--spacing-2);
-     
+        align-items: stretch;
+        width: 100%;
+        max-width: var(--search-card-width, 260px);
+        margin: 0 auto;
+
         &__panel {
             display: flex;
             flex-direction: column;
@@ -290,6 +294,8 @@
             min-height: 0;
             align-items: stretch;
             width: 100%;
+            max-width: 100%;
+            align-self: stretch;
         }
 
         &__filters {
@@ -306,7 +312,7 @@
             overflow-y: auto;
             scrollbar-width: none;
             -ms-overflow-style: none;
-
+            width: 100%;
         }
 
         &__load-more {
@@ -370,6 +376,10 @@
 
         &__error-button {
             flex-shrink: 0;
+        }
+
+        .input--search {
+            width: 100%;
         }
     }
 }
