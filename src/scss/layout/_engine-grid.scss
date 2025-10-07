@@ -35,17 +35,7 @@
     }
 }
 
-.engine__content {
-    grid-area: content;
-}
 
-.engine__canvas {
-    grid-area: canvas;
-}
-
-.engine__panel {
-    grid-area: panel;
-}
 
 @container engine-shell (max-width: 87rem) {
     .engine {
