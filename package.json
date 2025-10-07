@@ -19,7 +19,10 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,scss,css,html}\"",
     "clean": "rm -rf dist node_modules/.vite",
     "reset": "npm run clean && npm install && npm run dev",
-    "fonts:generate": "node scripts/generate-bitmap-fonts.js"
+    "fonts:generate": "node scripts/generate-bitmap-fonts.js",
+    "bem:check": "npm --prefix scripts run bem:check",
+    "bem:fix": "npm --prefix scripts run bem:fix",
+    "bem:watch": "npm --prefix scripts run bem:watch"
   },
   "keywords": [
     "education",

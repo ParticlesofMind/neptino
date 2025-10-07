@@ -95,35 +95,54 @@
 
 .cursor-pen,
 .canvas.cursor-pen,
-#pixi-canvas.cursor-pen,
-.engine__canvas.cursor-pen {
+#pixi-canvas.cursor-pen {
   cursor: url('/src/assets/cursors/pen-cursor.svg') 2 2, crosshair;
 }
 
 .cursor-brush,
 .canvas.cursor-brush,
-#pixi-canvas.cursor-brush,
-.engine__canvas.cursor-brush {
+#pixi-canvas.cursor-brush {
   cursor: url('/src/assets/cursors/brush-cursor.svg') 3 21, crosshair;
 }
 
 .cursor-eraser,
 .canvas.cursor-eraser,
-#pixi-canvas.cursor-eraser,
-.engine__canvas.cursor-eraser {
+#pixi-canvas.cursor-eraser {
   cursor: none; // Custom eraser cursor handled by JavaScript
 }
 
 .cursor-text,
 .canvas.cursor-text,
-#pixi-canvas.cursor-text,
-.engine__canvas.cursor-text {
+#pixi-canvas.cursor-text {
   cursor: text;
 }
 
 .cursor-default,
 .canvas.cursor-default,
-#pixi-canvas.cursor-default,
-.engine__canvas.cursor-default {
+#pixi-canvas.cursor-default {
   cursor: default;
+}
+
+.engine {
+  &__canvas {
+    &.cursor-pen {
+      cursor: url('/src/assets/cursors/pen-cursor.svg') 2 2, crosshair;
+    }
+
+    &.cursor-brush {
+      cursor: url('/src/assets/cursors/brush-cursor.svg') 3 21, crosshair;
+    }
+
+    &.cursor-eraser {
+      cursor: none;
+    }
+
+    &.cursor-text {
+      cursor: text;
+    }
+
+    &.cursor-default {
+      cursor: default;
+    }
+  }
 }

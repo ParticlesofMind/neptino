@@ -1,0 +1,14 @@
+{
+  "rules": {
+    "requireNesting": true,
+    "maxElementDepth": 1,
+    "allowUtilityClasses": true,
+    "utilityPrefixes": ["is-", "has-", "js-"]
+  },
+  "ignore": [
+    "node_modules/**",
+    "dist/**",
+    "*.min.*"
+  ],
+  "autoFix": false
+}

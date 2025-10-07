@@ -338,13 +338,14 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
-    .card__actions {
-      margin-top: auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(8rem, max-content));
-      justify-content: start;
-      gap: var(--spacing-1);
-    }
+  }
+
+  &--course &__actions {
+    margin-top: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, max-content));
+    justify-content: start;
+    gap: var(--spacing-1);
   }
 
   &--media-info {
