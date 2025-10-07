@@ -3,7 +3,6 @@
 // ==========================================================================
 
 .engine {
-    
     &__content {
         display: grid;
         grid-template-columns: minmax(clamp(2.5rem, 3.5rem, 5.5rem), max-content) minmax(0, 0.8fr);
@@ -96,8 +95,6 @@
         overflow: hidden;
         min-width: 0;
         width: 100%;
-        min-inline-size: clamp(17rem, 22vw, 19rem);
-        max-inline-size: clamp(18rem, 24vw, 22rem);
         container-type: inline-size;
         container-name: engine-panel;
     }
