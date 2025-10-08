@@ -1,46 +1,22 @@
 // ==========================================================================
-// SIDEBAR COMPONENT - Navigation sidebar for dashboard layouts
-// ==========================================================================
-
-// ==========================================================================
-// SETUP SIDEBAR - RESPONSIVE DESIGN
+// SIDEBAR COMPONENT - BEM Methodology
 // ==========================================================================
 
 .sidebar {
-
-  background: rgba(248, 248, 248, 0.95); // Slightly darker than pure white
+  // ==========================================================================
+  // BLOCK BASE STYLES
+  // ==========================================================================
+  background: rgba(248, 248, 248, 0.95);
   backdrop-filter: blur(8px);
   border-right: 1px solid var(--color-neutral-200);
-  padding: 1rem; 
-
-  // Span full height of parent container
+  padding: 1rem;
   height: 100%;
-
-
-  // Mobile styles - COMPACT bottom bar
-  @media (max-width: 768px) {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100vw;
-    margin: 0;
-    border-radius: 0;
-    border-right: none;
-    border-top: 1px solid var(--color-neutral-200);
-    z-index: var(--z-sticky);
-    background: rgba(248, 248, 248, 0.98); // Slightly darker for mobile too
-    backdrop-filter: blur(12px);
-    overflow: visible;
-  }
-}
-
-
-// Coursebuilder sidebar specific styles
-.coursebuilder-sidebar {
   min-width: 220px;
   width: 220px;
-  
+
+  // ==========================================================================
+  // ELEMENTS
+  // ==========================================================================
   &__heading {
     font-size: var(--font-size-small);
     font-weight: var(--font-weight-semibold);
@@ -49,7 +25,7 @@
     color: var(--color-text-secondary);
     margin: 0 0 var(--spacing-3) 0;
     padding: 0 var(--spacing-4);
-    
+
     &:not(:first-child) {
       margin-top: var(--spacing-6);
     }
@@ -63,7 +39,6 @@
 
   &__item {
     margin: 0;
-   
   }
 
   &__link {
@@ -75,16 +50,24 @@
     margin: 0 var(--spacing-2);
     transition: var(--transition-fast);
     font-size: var(--font-size-base);
-    
-    &:hover {
-      background-color: var(--color-neutral-100);
-      color: var(--color-primary-500);
-    }
-    
-    &--active {
-      background-color: var(--color-primary-100);
-      color: var(--color-primary-700);
-      font-weight: var(--font-weight-medium);
-    }
+  }
+
+  // ==========================================================================
+  // MODIFIERS
+  // ==========================================================================
+  // No modifiers needed at this time.
+
+  // ==========================================================================
+  // STATES & INTERACTIONS
+  // ==========================================================================
+  &__link:hover {
+    background-color: var(--color-neutral-100);
+    color: var(--color-primary-500);
+  }
+
+  &__link[aria-current="page"] {
+    background-color: var(--color-primary-100);
+    color: var(--color-primary-700);
+    font-weight: var(--font-weight-medium);
   }
 }

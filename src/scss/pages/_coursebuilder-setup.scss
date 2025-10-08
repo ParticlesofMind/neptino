@@ -127,10 +127,10 @@
     padding: var(--spacing-6); // More padding for forms
 }
 
-.coursebuilder__section {
+.content__section {
     display: none;
 
-    &--active {
+    &.is-active {
         display: block;
         width: 100%; // Ensure active sections span full width
     }

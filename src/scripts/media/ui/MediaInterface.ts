@@ -216,8 +216,34 @@ class MediaInterface {
 
   private renderItemCard(item: MediaItem): HTMLElement {
     const card = document.createElement('div');
-    const typeModifier = (item.type || 'files').replace(/[^a-z0-9-]/gi, '').toLowerCase() || 'files';
-    card.className = `card card--${typeModifier}`;
+    const cardClasses = ['card'];
+
+    // Add type-specific modifiers to the card itself
+    const type = item.type || 'files';
+    switch (type) {
+      case 'images':
+      case 'videos':
+        // No special card modifier needed for these media types
+        break;
+      case 'audio':
+        cardClasses.push('card--preview-media', 'card--preview-audio');
+        break;
+      case 'text':
+        cardClasses.push('card--preview-media');
+        break;
+      case 'plugins':
+        cardClasses.push('card--preview-media', 'card--preview-plugin');
+        break;
+      case 'links':
+        cardClasses.push('card--preview-media', 'card--preview-link');
+        break;
+      case 'files':
+        if (!item.thumbnailUrl) {
+          cardClasses.push('card--preview-media');
+        }
+        break;
+    }
+    card.className = cardClasses.join(' ');
 
     // Make the entire card draggable for all media types
     card.draggable = true;
@@ -227,7 +253,7 @@ class MediaInterface {
       const img = document.createElement('img');
       img.src = item.thumbnailUrl;
       img.alt = item.title || '';
-      img.className = 'card__preview card__preview--image';
+      img.className = 'card__preview';
       img.draggable = false; // Prevent nested drag
       card.appendChild(img);
     }
@@ -235,53 +261,49 @@ class MediaInterface {
     if (item.type === 'videos' && (item.previewUrl || item.thumbnailUrl)) {
       if (item.previewUrl) {
         const videoPreview = document.createElement('video');
-        videoPreview.controls = false; // custom overlay controls
-        videoPreview.muted = true; // allow autoplay on user click in some browsers
+        videoPreview.controls = false;
+        videoPreview.muted = true;
         videoPreview.src = item.previewUrl;
-        videoPreview.className = 'card__preview card__preview--video';
-        videoPreview.draggable = false; // Prevent nested drag
+        videoPreview.className = 'card__preview';
+        videoPreview.draggable = false;
         card.appendChild(videoPreview);
       } else if (item.thumbnailUrl) {
         const videoThumb = document.createElement('img');
         videoThumb.src = item.thumbnailUrl;
         videoThumb.alt = item.title || '';
-        videoThumb.className = 'card__preview card__preview--video-thumbnail';
-        videoThumb.draggable = false; // Prevent nested drag
+        videoThumb.className = 'card__preview';
+        videoThumb.draggable = false;
         card.appendChild(videoThumb);
       }
-      // No in-card overlay controls (keep previews simple)
     }
 
     if (item.type === 'audio') {
-      // Create visual representation for audio items
       const audioWrapper = document.createElement('div');
-      audioWrapper.className = 'card__preview card__preview--audio';
+      audioWrapper.className = 'card__preview';
 
       const audioIcon = document.createElement('div');
       audioIcon.innerHTML = '🔊';
-      audioIcon.className = 'card__icon card__icon--audio';
+      audioIcon.className = 'card__icon';
       audioWrapper.appendChild(audioIcon);
 
       card.appendChild(audioWrapper);
-      // Add audio element; no overlay controls (keep preview simple)
       if (item.previewUrl) {
         const audio = document.createElement('audio');
         audio.controls = false;
         audio.src = item.previewUrl;
         audio.className = 'card__audio';
-        audio.draggable = false; // Prevent nested drag
+        audio.draggable = false;
         card.appendChild(audio);
       }
     }
 
-    // Add visual indicators for non-media types
     if (item.type === 'text') {
       const textWrapper = document.createElement('div');
-      textWrapper.className = 'card__preview card__preview--text';
+      textWrapper.className = 'card__preview';
 
       const textIcon = document.createElement('div');
       textIcon.innerHTML = '📝';
-      textIcon.className = 'card__icon card__icon--text';
+      textIcon.className = 'card__icon';
       textWrapper.appendChild(textIcon);
 
       card.appendChild(textWrapper);
@@ -289,11 +311,11 @@ class MediaInterface {
 
     if (item.type === 'plugins') {
       const pluginWrapper = document.createElement('div');
-      pluginWrapper.className = 'card__preview card__preview--plugin';
+      pluginWrapper.className = 'card__preview';
 
       const pluginIcon = document.createElement('div');
       pluginIcon.innerHTML = '🔌';
-      pluginIcon.className = 'card__icon card__icon--plugin';
+      pluginIcon.className = 'card__icon';
       pluginWrapper.appendChild(pluginIcon);
 
       card.appendChild(pluginWrapper);
@@ -301,11 +323,11 @@ class MediaInterface {
 
     if (item.type === 'links') {
       const linkWrapper = document.createElement('div');
-      linkWrapper.className = 'card__preview card__preview--link';
+      linkWrapper.className = 'card__preview';
 
       const linkIcon = document.createElement('div');
       linkIcon.innerHTML = '🔗';
-      linkIcon.className = 'card__icon card__icon--link';
+      linkIcon.className = 'card__icon';
       linkWrapper.appendChild(linkIcon);
 
       card.appendChild(linkWrapper);
@@ -313,11 +335,11 @@ class MediaInterface {
 
     if (item.type === 'files' && !item.thumbnailUrl) {
       const fileWrapper = document.createElement('div');
-      fileWrapper.className = 'card__preview card__preview--file';
+      fileWrapper.className = 'card__preview';
 
       const fileIcon = document.createElement('div');
       fileIcon.innerHTML = '📄';
-      fileIcon.className = 'card__icon card__icon--file';
+      fileIcon.className = 'card__icon';
       fileWrapper.appendChild(fileIcon);
 
       card.appendChild(fileWrapper);

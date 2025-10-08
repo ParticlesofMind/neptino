@@ -1,57 +1,53 @@
 // ==========================================================================
 // SETTINGS COMPONENT - BEM Methodology
 // ==========================================================================
+@use '../abstracts/mixins' as *;
 
 .settings {
   // ==========================================================================
+  // BLOCK BASE STYLES
+  // ==========================================================================
+  // This block is a container, so it has no base styles itself.
+
+  // ==========================================================================
   // ELEMENTS
   // ==========================================================================
-  
   &__section {
     padding: var(--spacing-6);
     margin-bottom: var(--spacing-6);
     background: var(--color-background);
     border: 1px solid var(--color-neutral-200);
     border-radius: var(--radius-large);
-    
+
     &:last-child {
       margin-bottom: 0;
     }
-    
-    // Danger zone styling
-    &--danger {
-      border-color: var(--color-error-200);
-      background: var(--color-error-50);
-    }
   }
-  
+
   &__heading {
     font-size: var(--font-size-large);
     font-weight: var(--font-weight-semibold);
     color: var(--color-text-primary);
     margin: 0 0 var(--spacing-4) 0;
-    
-    // Danger zone heading
-    &--danger {
-      color: var(--color-error-600);
-    }
   }
-  
+
   &__description {
     color: var(--color-text-secondary);
     margin-bottom: var(--spacing-4);
     line-height: var(--line-height-relaxed);
   }
-  
+
   &__label {
     font-weight: var(--font-weight-medium);
     color: var(--color-text-primary);
     margin-bottom: var(--spacing-2);
   }
-  
+
   &__status {
-    display: flex;
+    display: grid;
+    grid-auto-flow: column;
     align-items: center;
+    justify-content: start;
     margin-top: var(--spacing-4);
     padding: var(--spacing-3);
     background: var(--color-neutral-50);
@@ -59,48 +55,41 @@
     font-size: var(--font-size-small);
     color: var(--color-text-secondary);
   }
-  
+
   &__status-text {
     font-style: italic;
   }
-  
-  // ==========================================================================
-  // MARGIN SETTINGS SPECIFIC
-  // ==========================================================================
-  
-  &__margins {
-    display: flex;
-    flex-direction: column;
+
+  &__margins,
+  &__checkboxes {
+    display: grid;
     gap: var(--spacing-5);
   }
-  
+
   &__units {
-    display: flex;
+    display: grid;
+    grid-auto-flow: column;
     align-items: center;
     gap: var(--spacing-4);
+    justify-content: start;
   }
-  
+
   &__unit-options {
-    display: flex;
-    gap: var(--spacing-4);
-  }
-  
-  &__grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-auto-flow: column;
     gap: var(--spacing-4);
-    
-    @media (max-width: 768px) {
-      grid-template-columns: 1fr;
-    }
   }
-  
+
+  &__grid {
+    @include grid-responsive(minmax(200px, 1fr), var(--spacing-4));
+  }
+
   &__input-wrapper {
     position: relative;
-    display: flex;
+    display: grid;
     align-items: center;
   }
-  
+
   &__unit {
     position: absolute;
     right: var(--spacing-3);
@@ -108,14 +97,17 @@
     font-size: var(--font-size-small);
     pointer-events: none;
   }
-  
+
   // ==========================================================================
-  // CHECKBOXES SECTION
+  // MODIFIERS
   // ==========================================================================
-  
-  &__checkboxes {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-4);
+  &--danger {
+    .settings__section {
+      border-color: var(--color-error-200);
+      background: var(--color-error-50);
+    }
+    .settings__heading {
+      color: var(--color-error-600);
+    }
   }
 }

@@ -276,8 +276,8 @@ export class AsideNavigation {
  }
 
  
- this.asideLinks = document.querySelectorAll('.link--menu[data-section]');
-    this.contentSections = document.querySelectorAll('.coursebuilder__section[id]');
+ this.asideLinks = document.querySelectorAll('.sidebar__link[data-section]');
+    this.contentSections = document.querySelectorAll('.content__section[id]');
  this.boundHandleLinkClick = this.handleLinkClick.bind(this);
 
  this.init();
@@ -336,8 +336,8 @@ export class AsideNavigation {
  }
  
  // If we're already on the target section, do nothing (prevents double-click issues)
-    if (activeLink.classList.contains('link--menu-active') && 
-        targetSection.classList.contains('coursebuilder__section--active')) {
+    if (activeLink.hasAttribute('aria-current') &&
+        targetSection.classList.contains('is-active')) {
  return;
  }
  
@@ -350,18 +350,18 @@ export class AsideNavigation {
 
  private removeActiveStates(): void {
  this.asideLinks.forEach((link: HTMLAnchorElement) => {
- link.classList.remove('link--menu-active');
+ link.removeAttribute('aria-current');
  });
 
     this.contentSections.forEach((section: HTMLElement) => {
-      section.classList.remove('coursebuilder__section--active');
+      section.classList.remove('is-active');
     });
   }
 
   private setActiveStates(activeLink: HTMLAnchorElement, targetSection: HTMLElement): void {
     // Accept the actual element instead of searching for it again
-    activeLink.classList.add('link--menu-active');
-    targetSection.classList.add('coursebuilder__section--active');
+    activeLink.setAttribute('aria-current', 'page');
+    targetSection.classList.add('is-active');
   }
 
  private restoreActiveSection(): void {
@@ -393,7 +393,7 @@ export class AsideNavigation {
  // As a last resort, try to activate the first article directly
  const firstArticle = this.contentSections[0];
  if (firstArticle) {
-      firstArticle.classList.add('coursebuilder__section--active');
+        firstArticle.classList.add('is-active');
     }
   }
  }

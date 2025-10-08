@@ -1,5 +1,12 @@
-/* Modal Base */
+// ==========================================================================
+// MODAL COMPONENT - BEM Methodology
+// ==========================================================================
+@use '../abstracts/mixins' as *;
+
 .modal {
+  // ==========================================================================
+  // BLOCK BASE STYLES
+  // ==========================================================================
   position: fixed;
   top: 0;
   left: 0;
@@ -10,7 +17,9 @@
   visibility: hidden;
   transition: opacity var(--transition-normal), visibility var(--transition-normal);
 
-  /* Modal Backdrop */
+  // ==========================================================================
+  // ELEMENTS
+  // ==========================================================================
   &__backdrop {
     position: absolute;
     top: 0;
@@ -19,35 +28,31 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(2px);
-    display: flex;
+    display: grid;
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-8);
+    padding: clamp(var(--spacing-3), 5vw, var(--spacing-8));
   }
 
-  /* Modal Content */
   &__content {
     background: var(--color-background);
     border-radius: var(--radius-large);
     box-shadow: var(--shadow-extra-large);
+    width: 100%;
     max-width: 90vw;
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
     transform: scale(0.95) translateY(-20px);
     transition: transform var(--transition-normal);
-
-    .modal--active & {
-      transform: scale(1) translateY(0);
-    }
   }
 
-  /* Modal Header */
   &__header {
-    display: flex;
+    display: grid;
+    grid-auto-flow: column;
     align-items: center;
     justify-content: space-between;
-    padding: var(--spacing-8);
+    padding: clamp(var(--spacing-5), 4vw, var(--spacing-8));
     border-bottom: 1px solid var(--color-border-primary);
   }
 
@@ -60,24 +65,22 @@
 
   &__close {
     margin-left: auto;
-
     &:hover {
       background-color: var(--color-background-secondary);
     }
   }
 
-  /* Modal Body */
   &__body {
-    padding: var(--spacing-8);
+    padding: clamp(var(--spacing-5), 4vw, var(--spacing-8));
   }
 
-  /* Modal Footer */
   &__footer {
-    display: flex;
+    display: grid;
+    grid-auto-flow: column;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: end;
     gap: var(--spacing-3);
-    padding: var(--spacing-8);
+    padding: clamp(var(--spacing-5), 4vw, var(--spacing-8));
     border-top: 1px solid var(--color-border-primary);
   }
 
@@ -86,140 +89,124 @@
     color: var(--color-text-primary);
     line-height: var(--line-height-relaxed);
   }
-  
+
   &__warning {
     margin-bottom: var(--spacing-3);
     color: var(--color-error-600);
     font-weight: var(--font-weight-medium);
   }
-  
+
   &__list {
     margin: var(--spacing-3) 0 var(--spacing-4) var(--spacing-5);
     color: var(--color-text-secondary);
-    
     li {
       margin-bottom: var(--spacing-1);
     }
   }
-  
+
   &__confirmation {
     margin-top: var(--spacing-5);
     padding: var(--spacing-4);
     background: var(--color-error-50);
     border: 1px solid var(--color-error-200);
     border-radius: var(--radius-medium);
-    
-    .form__label {
-      margin-bottom: 0;
-      font-size: var(--font-size-small);
-      color: var(--color-error-700);
-    }
-    
-    .input {
-      margin-top: var(--spacing-2);
-      border-color: var(--color-error-300);
-      
-      &:focus {
-        border-color: var(--color-error-500);
-        box-shadow: 0 0 0 3px var(--color-error-100);
-      }
-    }
   }
 
   // ==========================================================================
   // MODIFIERS
   // ==========================================================================
-
   &--active {
     opacity: 1;
     visibility: visible;
+    .modal__content {
+      transform: scale(1) translateY(0);
+    }
   }
 
-  /* Delete Course Modal Modifier */
   &--delete {
     .modal__content {
-      width: 100%;
       max-width: 500px;
+    }
+    .modal__confirmation {
+      .form__label {
+        margin-bottom: 0;
+        font-size: var(--font-size-small);
+        color: var(--color-error-700);
+      }
+      .input {
+        margin-top: var(--spacing-2);
+        border-color: var(--color-error-300);
+        &:focus {
+          border-color: var(--color-error-500);
+          box-shadow: 0 0 0 3px var(--color-error-100);
+        }
+      }
+    }
+  }
+
+  &--coursebuilder {
+    .modal__content {
+      max-width: 600px;
     }
   }
 }
 
-/* CourseBuilder Specific Modal Styles */
-.modal--coursebuilder {
-  .modal__content {
-    width: 100%;
-    max-width: 600px;
-  }
-}
-
-/* CourseBuilder Template Browser */
+// ==========================================================================
+// TEMPLATE BROWSER COMPONENT - BEM Methodology
+// ==========================================================================
 .template-browser {
-  .template-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: var(--spacing-5);
+  // ==========================================================================
+  // ELEMENTS
+  // ==========================================================================
+  &__grid {
+    @include grid-responsive(250px, var(--spacing-5));
     margin-bottom: var(--spacing-8);
   }
 
-  .template-card {
+  &__card {
     border: 1px solid var(--color-border-primary);
     border-radius: var(--radius-medium);
     padding: var(--spacing-5);
     cursor: pointer;
     transition: all var(--transition-normal);
-
-    &:hover {
-      border-color: var(--color-primary);
-      box-shadow: var(--shadow-small);
-    }
-
-    &--selected {
-      border-color: var(--color-primary);
-      background-color: var(--color-primary-light);
-    }
   }
 
-  .template-card__title {
+  &__title {
     font-weight: var(--font-weight-semibold);
     margin-bottom: var(--spacing-2);
     color: var(--color-text-primary);
   }
 
-  .template-card__description {
+  &__description {
     font-size: var(--font-size-small);
     color: var(--color-text-secondary);
     margin-bottom: var(--spacing-3);
   }
 
-  .template-card__meta {
-    display: flex;
+  &__meta {
+    display: grid;
+    grid-auto-flow: column;
     justify-content: space-between;
     align-items: center;
     font-size: var(--font-size-extra-small);
     color: var(--color-text-tertiary);
   }
-}
 
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-  .modal__backdrop {
-    padding: var(--spacing-3);
-  }
-
-  .modal__content {
-    max-width: 100%;
-    max-height: 95vh;
-  }
-
-  .modal__header,
-  .modal__body,
-  .modal__footer {
-    padding: var(--spacing-5);
-  }
-
-  .template-browser {
-    .template-grid {
-      grid-template-columns: 1fr;
+  // ==========================================================================
+  // MODIFIERS
+  // ==========================================================================
+  &--card-selected {
+    .template-browser__card {
+      border-color: var(--color-primary);
+      background-color: var(--color-primary-light);
     }
+  }
+
+  // ==========================================================================
+  // STATES & INTERACTIONS
+  // ==========================================================================
+  &__card:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-small);
   }
 }

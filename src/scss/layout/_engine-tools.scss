@@ -1,301 +1,178 @@
 // ==========================================================================
-// ENGINE TOOLS - TOOLS, MODES, AND CONTROL SYSTEMS
+// ENGINE TOOLS - TOOLS, MODES, AND CONTROL SYSTEMS - BEM Methodology
 // ==========================================================================
 
 .engine {
-
-    // Controls container - positioning handled by FloatingElementsManager.ts
-    &__controls {
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: max-content;
-        align-items: center;
-        gap: var(--spacing-4);
-        z-index: 200;
-    }
-
-    // Mode selector - styled like tools with white background
-    &__modes {
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: max-content;
-        gap: var(--spacing-2);
-        width: auto;
-        background: rgba(255, 255, 255, 0.95);
-        padding: var(--spacing-2);
-        border-radius: var(--radius-medium);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        backdrop-filter: blur(8px);
-    }
-
-    // Mode items
-    &__modes-item {
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: max-content;
-        place-items: center;
-        width: 50px;
-        height: 50px;
-        padding: var(--spacing-1);
-        border: 1px solid var(--color-neutral-200);
-        border-radius: var(--radius-medium);
-        background: var(--color-background);
-        box-shadow:
-            0 1px 2px rgba(0, 0, 0, 0.05),
-            0 1px 1px rgba(0, 0, 0, 0.08);
-        cursor: pointer;
-        transition: all 0.2s ease;
-
-        &:hover {
-            transform: translateY(-1px);
-            background: var(--color-neutral-50);
-            border-color: var(--color-neutral-300);
-            box-shadow:
-                0 2px 4px rgba(0, 0, 0, 0.08),
-                0 1px 2px rgba(0, 0, 0, 0.12);
-        }
-
-        &--active {
-            background: #B3D7FF;
-            border-color: #9AC8FF;
-            box-shadow:
-                0 2px 4px rgba(179, 215, 255, 0.15),
-                0 1px 2px rgba(179, 215, 255, 0.1);
-
-            &:hover {
-                background: #9AC8FF;
-                border-color: #81B9FF;
-                transform: translateY(-1px);
-                box-shadow:
-                    0 3px 6px rgba(179, 215, 255, 0.2),
-                    0 2px 4px rgba(179, 215, 255, 0.15);
-            }
-        }
-
-        &--compact {
-            width: 50px;
-            height: 50px;
-            padding: var(--spacing-1);
-            grid-auto-flow: row;
-            grid-auto-rows: max-content;
-            gap: 0.125rem;
-        }
-    }
-
-    // Engine-specific tool container - now positioned by parent controls
-    &__tools {
-        position: relative;
-        display: grid;
-        grid-auto-flow: row;
-        grid-auto-rows: max-content;
-        justify-items: center;
-        gap: var(--spacing-2);
-        width: auto;
-
-        &--canvas {
-            grid-auto-flow: row !important;
-        }
-    }
-
-    // Tools options positioned above main tools without affecting alignment
-    &__tools-options {
-        position: absolute;
-        bottom: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        margin-bottom: var(--spacing-2);
-        z-index: 10;
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: max-content;
-        gap: var(--spacing-2);
-        width: auto;
-        background: rgba(255, 255, 255, 0.95);
-        padding: var(--spacing-2);
-        border-radius: var(--radius-medium);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        backdrop-filter: blur(8px);
-    }
-
-    // Tools selection row - styled like perspective with white background
-    &__tools-selection {
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: max-content;
-        gap: var(--spacing-2);
-        width: auto;
-        background: rgba(255, 255, 255, 0.95);
-        padding: var(--spacing-2);
-        border-radius: var(--radius-medium);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        backdrop-filter: blur(8px);
-    }
-
-    // Tools group containers for build/animate modes
-    &__tools-group {
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: max-content;
-        gap: var(--spacing-2);
-        width: auto;
-        background: rgba(255, 255, 255, 0.95);
-        padding: var(--spacing-2);
-        border-radius: var(--radius-medium);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        backdrop-filter: blur(8px);
-    }
-
-    &__tools-item {
-        display: grid;
-        grid-auto-flow: row;
-        grid-auto-rows: max-content;
-        gap: var(--spacing-1);
-        width: 50px;
-        height: 50px;
-        place-items: center;
-        padding: var(--spacing-2);
-        border-radius: 4px;
-        background: rgba(255, 255, 255, 0.9);
-        border: 1px solid var(--color-neutral-300);
-        cursor: pointer;
-        transition: all 0.2s ease;
-        user-select: none;
-        /* Prevent text selection on tool buttons */
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-
-        &:hover {
-            background: var(--color-primary-50);
-            border-color: var(--color-primary-300);
-            transform: translateY(-1px);
-        }
-
-        &--active {
-            background: #B3D7FF !important;
-            border-color: #9AC8FF !important;
-            color: #333 !important;
-            box-shadow: 0 2px 8px rgba(179, 215, 255, 0.4) !important;
-            transform: none !important;
-
-            &:hover {
-                background: #A5CFFF !important;
-                border-color: #8BBEFF !important;
-                transform: none !important;
-            }
-        }
-
-        // Horizontal layout for settings panels
-        &--horizontal {
-            grid-auto-flow: column;
-            grid-auto-columns: max-content;
-            width: auto;
-            height: auto;
-            padding: var(--spacing-2);
-            gap: var(--spacing-2);
-            cursor: default;
-
-            &:hover {
-                background: rgba(255, 255, 255, 0.9);
-                border-color: var(--color-neutral-300);
-                transform: none;
-            }
-        }
-    }
-
-    // Tools options items - uniform styling like regular tool items
-    &__tools-options &__tools-item--horizontal {
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: max-content;
-        place-items: center;
-        min-width: 120px;
-        height: 50px;
-        padding: var(--spacing-2);
-        border-radius: var(--radius-medium);
-        background: var(--color-background);
-        border: 1px solid var(--color-neutral-200);
-        box-shadow:
-            0 1px 2px rgba(0, 0, 0, 0.05),
-            0 1px 1px rgba(0, 0, 0, 0.08);
-        gap: var(--spacing-2);
-        cursor: default;
-        transition: all 0.2s ease;
-
-        &:hover {
-            transform: translateY(-1px);
-            background: var(--color-neutral-50);
-            border-color: var(--color-neutral-300);
-            box-shadow:
-                0 2px 4px rgba(0, 0, 0, 0.08),
-                0 1px 2px rgba(0, 0, 0, 0.12);
-        }
-
-        .color-selector {
-            margin: 0;
-            justify-self: start;
-        }
-
-        .input {
-            margin: 0;
-            min-width: 60px;
-            justify-self: stretch;
-        }
-
-        .text-style-controls {
-            display: grid;
-            grid-auto-flow: column;
-            grid-auto-columns: max-content;
-            gap: 6px;
-            align-items: center;
-        }
-    }
-}
-
-.scene-controls {
+  // ==========================================================================
+  // ELEMENTS
+  // ==========================================================================
+  &__controls,
+  &__modes,
+  &__tools-selection,
+  &__tools-group {
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: max-content;
     align-items: center;
-    gap: 12px;
+    gap: var(--spacing-2);
+    width: auto;
+    background: rgba(255, 255, 255, 0.95);
+    padding: var(--spacing-2);
+    border-radius: var(--radius-medium);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(8px);
+  }
+
+  &__controls {
+    gap: var(--spacing-4);
+    background: none;
+    padding: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  &__modes-item,
+  &__tools-item {
+    display: grid;
+    place-items: center;
+    width: 50px;
+    height: 50px;
+    padding: var(--spacing-1);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-medium);
+    background: var(--color-background);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 1px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+
+  &__tools {
+    position: relative;
+    display: grid;
+    grid-auto-flow: row;
+    grid-auto-rows: max-content;
+    justify-items: center;
+    gap: var(--spacing-2);
+    width: auto;
+  }
+
+  &__tools-options {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: var(--spacing-2);
+    z-index: 10;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    gap: var(--spacing-2);
+    width: auto;
+    background: rgba(255, 255, 255, 0.95);
+    padding: var(--spacing-2);
+    border-radius: var(--radius-medium);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(8px);
+  }
+
+  &__tools-option {
+    display: grid;
+    grid-auto-flow: column;
+    place-items: center;
+    min-width: 120px;
+    height: 50px;
+    padding: var(--spacing-2);
+    border-radius: var(--radius-medium);
+    background: var(--color-background);
+    border: 1px solid var(--color-neutral-200);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 1px rgba(0, 0, 0, 0.08);
+    gap: var(--spacing-2);
+    cursor: default;
+    transition: all 0.2s ease;
+  }
+
+  // ==========================================================================
+  // MODIFIERS
+  // ==========================================================================
+  &--mode-active,
+  &--tool-active {
+    .engine__modes-item,
+    .engine__tools-item {
+      background: #B3D7FF !important;
+      border-color: #9AC8FF !important;
+      color: #333 !important;
+      box-shadow: 0 2px 8px rgba(179, 215, 255, 0.4) !important;
+      transform: none !important;
+    }
+  }
+
+  &--mode-compact {
+    .engine__modes-item {
+      width: 50px;
+      height: 50px;
+      padding: var(--spacing-1);
+      grid-auto-flow: row;
+      gap: 0.125rem;
+    }
+  }
+
+  // ==========================================================================
+  // STATES & INTERACTIONS
+  // ==========================================================================
+  &__modes-item:hover,
+  &__tools-item:hover {
+    transform: translateY(-1px);
+    background: var(--color-neutral-50);
+    border-color: var(--color-neutral-300);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.12);
+  }
+
+  &__tools-option:hover {
+    transform: translateY(-1px);
+    background: var(--color-neutral-50);
+    border-color: var(--color-neutral-300);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.12);
+  }
+
+  &--mode-active .engine__modes-item:hover,
+  &--tool-active .engine__tools-item:hover {
+    background: #A5CFFF !important;
+    border-color: #8BBEFF !important;
+    transform: none !important;
+  }
 }
 
+// ==========================================================================
+// Standalone Controls (Not part of .engine block but used within it)
+// ==========================================================================
+.scene-controls,
 .duration-control,
 .resolution-control,
 .modify-pen-controls,
 .modify-text-controls,
 .modify-brush-controls,
 .modify-shapes-controls,
-.modify-transform-controls {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: max-content;
-    align-items: center;
-    gap: 8px;
+.modify-transform-controls,
+.modify-object-controls,
+.transform-group,
+.modify-status {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  align-items: center;
+  gap: 8px;
 }
 
-.modify-object-controls {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: max-content;
-    align-items: center;
-    gap: 12px;
+.modify-object-controls,
+.scene-controls {
+  gap: 12px;
 }
 
 .transform-group {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: max-content;
-    align-items: center;
-    gap: 6px;
+  gap: 6px;
 }
 
 .modify-status {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: max-content;
-    align-items: center;
-    gap: 8px;
-    justify-content: space-between;
-    min-width: 0;
+  justify-content: space-between;
 }

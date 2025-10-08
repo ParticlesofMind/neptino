@@ -1,56 +1,33 @@
-/* ==========================================================================
-   HEADER LAYOUT COMPONENT
-   ========================================================================== */
+// ==========================================================================
+// HEADER LAYOUT COMPONENT - BEM Methodology
+// ==========================================================================
 
 .header {
-  padding: var(--spacing-3) var(--spacing-5);
-  // Modern glassmorphism background
+  // ==========================================================================
+  // BLOCK BASE STYLES
+  // ==========================================================================
+  padding: clamp(var(--spacing-2), 2vw, var(--spacing-3)) clamp(var(--spacing-4), 3vw, var(--spacing-5));
   background: rgba(var(--color-background-rgb), 0.85);
-  backdrop-filter: blur(12px) saturate(1.1);
-  
-  // Subtle border for definition
+  backdrop-filter: blur(clamp(10px, 5vw, 12px)) saturate(1.1);
   border-bottom: 1px solid rgba(var(--color-background-rgb), 0.2);
-  
-  // Smooth depth with modern box-shadow
-  box-shadow: 
-    0 1px 3px rgba(0, 0, 0, 0.02),
-    0 4px 12px rgba(0, 0, 0, 0.04);
-  
-  // Ensure it stays above other elements
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 4px 12px rgba(0, 0, 0, 0.04);
   position: relative;
   z-index: 100;
-
-  // Smooth transitions for any state changes
   transition: all 0.2s ease-in-out;
+  background-image: linear-gradient(135deg, rgba(var(--color-background-rgb), 0.9) 0%, rgba(var(--color-background-rgb), 0.75) 100%);
 
-  // Subtle background gradient for depth
-  background-image: 
-    linear-gradient(
-      135deg,
-      rgba(var(--color-background-rgb), 0.9) 0%,
-      rgba(var(--color-background-rgb), 0.75) 100%
-    );
-
-  // Enhanced styling for different header variants
+  // ==========================================================================
+  // MODIFIERS
+  // ==========================================================================
   &--home {
-    // Slightly more prominent for home pages
     backdrop-filter: blur(16px) saturate(1.2);
-    box-shadow: 
-      0 2px 4px rgba(0, 0, 0, 0.03),
-      0 8px 16px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03), 0 8px 16px rgba(0, 0, 0, 0.05);
   }
 
   &--signin,
   &--signup {
-    // Clean minimal look for auth pages
     background: rgba(var(--color-background-rgb), 0.95);
     backdrop-filter: blur(8px);
     border-bottom-color: rgba(var(--color-background-rgb), 0.3);
-  }
-
-  // Responsive adjustments
-  @media (max-width: 768px) {
-    padding: var(--spacing-2) var(--spacing-4);
-    backdrop-filter: blur(10px) saturate(1.05);
   }
 }

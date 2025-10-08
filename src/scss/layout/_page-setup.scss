@@ -1,106 +1,57 @@
 // ==========================================================================
 // PAGE SETUP - BEM Component for page configuration
 // ==========================================================================
+@use '../abstracts/mixins' as *;
 
-// Main page-setup container - grid layout with config and preview
 .page-setup {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr;
-  gap: var(--spacing-6);
+  // ==========================================================================
+  // BLOCK BASE STYLES
+  // ==========================================================================
+  @include grid-responsive(minmax(300px, 1fr), var(--spacing-6));
   height: 100%;
   min-height: 0;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
-  }
 
-  // Config panel - left column
-  &__config {
-    display: flex;
-    flex-direction: column;
-    background: var(--color-background);
-    border: 1px solid var(--color-neutral-200);
-    border-radius: var(--radius-medium);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    min-height: 0;
-    overflow: hidden;
-
-    // Header inside config panel
-    .header,
-    h3 {
-      flex-shrink: 0;
-      padding: var(--spacing-4) var(--spacing-5);
-      margin: 0;
-      border-bottom: 1px solid var(--color-neutral-200);
-      background: var(--color-neutral-50);
-      color: var(--color-text-primary);
-      font-weight: var(--font-weight-semibold);
-    }
-  }
-
-  // Preview panel - right column
+  // ==========================================================================
+  // ELEMENTS
+  // ==========================================================================
+  &__config,
   &__preview {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: auto 1fr;
     background: var(--color-background);
     border: 1px solid var(--color-neutral-200);
     border-radius: var(--radius-medium);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     min-height: 0;
     overflow: hidden;
-
-    // Header inside preview panel
-    .header,
-    h3 {
-      flex-shrink: 0;
-      padding: var(--spacing-4) var(--spacing-5);
-      margin: 0;
-      border-bottom: 1px solid var(--color-neutral-200);
-      background: var(--color-neutral-50);
-      color: var(--color-text-primary);
-      font-weight: var(--font-weight-semibold);
-    }
   }
 
-  // Content area for scrolling
+  &__header {
+    padding: var(--spacing-4) var(--spacing-5);
+    margin: 0;
+    border-bottom: 1px solid var(--color-neutral-200);
+    background: var(--color-neutral-50);
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-semibold);
+  }
+
   &__content {
-    flex: 1;
     padding: var(--spacing-5);
     overflow-y: auto;
     min-height: 0;
-    
-    // Custom scrollbar styling
-    &::-webkit-scrollbar {
-      width: 8px;
-    }
 
-    &::-webkit-scrollbar-track {
-      background: var(--color-neutral-100);
-      border-radius: var(--radius-small);
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: var(--color-neutral-400);
-      border-radius: var(--radius-small);
-
-      &:hover {
-        background: var(--color-neutral-500);
-      }
-    }
+    &::-webkit-scrollbar { width: 8px; }
+    &::-webkit-scrollbar-track { background: var(--color-neutral-100); border-radius: var(--radius-small); }
+    &::-webkit-scrollbar-thumb { background: var(--color-neutral-400); border-radius: var(--radius-small); }
+    &::-webkit-scrollbar-thumb:hover { background: var(--color-neutral-500); }
   }
 
-  // Configuration sections
   &__section {
-    margin-bottom: var(--spacing-6);
-    
-    &:last-child {
-      margin-bottom: 0;
+    &:not(:last-child) {
+      margin-bottom: var(--spacing-6);
     }
   }
 
-  // Section labels
   &__label {
     display: block;
     font-weight: var(--font-weight-semibold);
@@ -109,41 +60,40 @@
     font-size: var(--font-size-medium);
   }
 
-  // Option groups (radio buttons)
-  &__options {
-    display: flex;
-    flex-direction: column;
+  &__unit-options,
+  &__orientation-options,
+  &__size-options {
+    display: grid;
     gap: var(--spacing-2);
+  }
 
-    // Horizontal layout for units
-    &--horizontal {
-      flex-direction: row;
-      gap: var(--spacing-4);
-    }
+  &__unit-options {
+    grid-auto-flow: column;
+    justify-content: start;
+    gap: var(--spacing-4);
   }
 
   &__option {
-    display: flex;
+    display: grid;
+    grid-auto-flow: column;
     align-items: center;
     gap: var(--spacing-2);
     padding: var(--spacing-2);
     border-radius: var(--radius-small);
     cursor: pointer;
     transition: var(--transition-fast);
+    justify-content: start;
 
     &:hover {
       background: var(--color-neutral-50);
     }
-
     input[type="radio"] {
       margin: 0;
     }
   }
 
-  // Margins section
   &__margins {
-    display: flex;
-    flex-direction: column;
+    display: grid;
     gap: var(--spacing-4);
   }
 
@@ -154,8 +104,7 @@
   }
 
   &__margin {
-    display: flex;
-    flex-direction: column;
+    display: grid;
     gap: var(--spacing-1);
     font-size: var(--font-size-small);
     color: var(--color-text-secondary);
@@ -171,13 +120,9 @@
     margin-left: var(--spacing-2);
   }
 
-  // Canvas preview
   &__canvas-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    place-items: center;
     padding: var(--spacing-5);
     gap: var(--spacing-4);
   }
@@ -188,15 +133,13 @@
     background: white;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     max-width: 100%;
-    max-height: 500px; /* Increased from 400px to accommodate larger preview */
+    max-height: 500px;
     width: auto;
     height: auto;
   }
 
   &__canvas-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: grid;
     gap: var(--spacing-2);
     text-align: center;
   }
@@ -210,5 +153,16 @@
   &__margins-info {
     font-size: var(--font-size-small);
     color: var(--color-text-secondary);
+  }
+
+  // ==========================================================================
+  // MODIFIERS
+  // ==========================================================================
+  &--options-horizontal {
+    .page-setup__options {
+      grid-auto-flow: column;
+      justify-content: start;
+      gap: var(--spacing-4);
+    }
   }
 }

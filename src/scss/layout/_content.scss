@@ -6,14 +6,10 @@
   // Base content container styles
   background: rgba(var(--color-background-rgb), 0.85);
   backdrop-filter: blur(8px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 
-
-  // Mobile responsive
-  @media (max-width: 768px) {
-    border-radius: var(--radius-medium);
-    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
-  }
+  // Unified styling for all viewports, removing the need for @media queries.
+  border-radius: var(--radius-medium);
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
 
   // ==========================================================================
   // CONTENT ARTICLES (BEM: Elements)
@@ -27,4 +23,3 @@
 // ==========================================================================
 // MAIN LAYOUT COMPONENT - Container for sidebar + content
 // ==========================================================================
-

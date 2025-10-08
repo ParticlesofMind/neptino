@@ -1,208 +1,77 @@
 // ==========================================================================
 // CLASSIFICATION COMPONENT - BEM Methodology
 // ==========================================================================
+@use '../abstracts/mixins' as *;
 
 .classification {
+  // ==========================================================================
+  // BLOCK BASE STYLES
+  // ==========================================================================
   display: grid;
   gap: var(--spacing-6);
-  
+
   // ==========================================================================
-  // CLASSIFICATION ROWS (BEM: Elements)
+  // ELEMENTS
   // ==========================================================================
-  
-  &__row {
-    display: grid;
-    gap: var(--spacing-4);
-    align-items: end; // Align form fields to bottom for consistent baseline
-    
-    // Row 1: Class Year + Curricular Framework
-    &--basic {
-      grid-template-columns: 1fr 1fr;
-      
-      @media (max-width: 768px) {
-        grid-template-columns: 1fr;
-      }
-    }
-    
-    // Row 2: Domain + Subject + Topic + Subtopic
-    &--hierarchy {
-      grid-template-columns: repeat(4, 1fr);
-      
-      @media (max-width: 1024px) {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      
-      @media (max-width: 768px) {
-        grid-template-columns: 1fr;
-      }
-    }
-    
-    // Row 3: Course Sequence (Previous + Current + Next)
-    &--sequence {
-      grid-template-columns: repeat(3, 1fr);
-      
-      @media (max-width: 768px) {
-        grid-template-columns: 1fr;
-      }
-    }
-  }
-  
-  // ==========================================================================
-  // CLASSIFICATION SECTION (BEM: Element)
-  // ==========================================================================
-  
   &__section {
     display: grid;
     gap: var(--spacing-4);
-    
+
     &:not(:last-child) {
       padding-bottom: var(--spacing-6);
       border-bottom: 1px solid var(--color-neutral-200);
     }
-    
-    // Section header
-    &-header {
-      display: grid;
-      gap: var(--spacing-2);
-      margin-bottom: var(--spacing-2);
-    }
-    
-    &-title {
-      font-size: var(--font-size-large);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-primary);
-      margin: 0;
-      
-      // Optional text styling
-      .form__label-optional {
-        font-weight: var(--font-weight-normal);
-        color: var(--color-text-secondary);
-        font-size: var(--font-size-small);
-      }
-    }
-    
-    &-description {
-      font-size: var(--font-size-small);
-      color: var(--color-text-secondary);
-      line-height: 1.5;
-      margin: 0;
-    }
   }
-  
-  // ==========================================================================
-  // CLASSIFICATION FIELD (BEM: Element)
-  // ==========================================================================
-  
+
+  &__header {
+    display: grid;
+    gap: var(--spacing-2);
+    margin-bottom: var(--spacing-2);
+  }
+
+  &__title {
+    font-size: var(--font-size-large);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0;
+  }
+
+  &__description {
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  &__row,
+  &__row-basic,
+  &__row-hierarchy,
+  &__row-sequence {
+    display: grid;
+    gap: var(--spacing-4);
+    align-items: end;
+  }
+
+  &__row-basic {
+    @include grid-responsive(minmax(250px, 1fr), var(--spacing-4));
+  }
+
+  &__row-hierarchy {
+    @include grid-responsive(minmax(200px, 1fr), var(--spacing-4));
+  }
+
+  &__row-sequence {
+    @include grid-responsive(minmax(220px, 1fr), var(--spacing-4));
+  }
+
   &__field {
     display: grid;
     gap: var(--spacing-2);
-    
-    // Field label
-    .form__label {
-      display: grid;
-      gap: var(--spacing-2);
-      font-size: var(--font-size-small);
-      font-weight: var(--font-weight-medium);
-      color: var(--color-text-primary);
-      margin: 0;
-      
-      // Hint text
-      .form__label-hint {
-        font-weight: var(--font-weight-normal);
-        color: var(--color-text-secondary);
-        font-size: var(--font-size-small);
-      }
-      
-      // Optional text
-      .form__label-optional {
-        font-weight: var(--font-weight-normal);
-        color: var(--color-text-secondary);
-        font-size: var(--font-size-small);
-      }
-    }
-    
-    // Select element styling
-    .form__select {
-      width: 100%;
-      padding: var(--spacing-3) var(--spacing-4);
-      border: 1px solid var(--color-neutral-300);
-      border-radius: var(--radius-medium);
-      background: var(--color-background);
-      font-family: inherit;
-      font-size: var(--font-size-base);
-      color: var(--color-text-primary);
-      transition: all 0.2s ease;
-      cursor: pointer;
-      
-      // Hover state
-      &:hover {
-        border-color: var(--color-primary-400);
-        background: var(--color-primary-25);
-      }
-      
-      // Focus state
-      &:focus {
-        outline: none;
-        border-color: var(--color-primary-500);
-        box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
-        background: var(--color-background);
-      }
-      
-      // Disabled state
-      &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        background: var(--color-neutral-50);
-        color: var(--color-text-disabled);
-        
-        &:hover {
-          border-color: var(--color-neutral-300);
-          background: var(--color-neutral-50);
-        }
-      }
-      
-      // Success state (when option is selected)
-      &:valid:not(:placeholder-shown) {
-        border-color: var(--color-success-400);
-        background: var(--color-success-25);
-        
-        &:hover {
-          border-color: var(--color-success-500);
-          background: var(--color-success-50);
-        }
-      }
-      
-      // Error state
-      &:invalid {
-        border-color: var(--color-danger-400);
-        background: var(--color-danger-25);
-        
-        &:hover {
-          border-color: var(--color-danger-500);
-          background: var(--color-danger-50);
-        }
-      }
-    }
-    
-    // Loading state modifier
-    &--loading {
-      .form__select {
-        background-image: url("data:image/svg+xml,%3csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10' stroke='%236B7280' stroke-width='2' stroke-linecap='round'/%3e%3c/svg%3e");
-        background-repeat: no-repeat;
-        background-position: right var(--spacing-3) center;
-        background-size: 16px;
-        padding-right: var(--spacing-10);
-        animation: spin 1s linear infinite;
-      }
-    }
   }
-  
-  // ==========================================================================
-  // SAVE STATUS (BEM: Element)
-  // ==========================================================================
-  
+
   &__status {
-    display: flex;
+    display: grid;
+    grid-auto-flow: column;
     align-items: center;
     gap: var(--spacing-2);
     padding: var(--spacing-3) var(--spacing-4);
@@ -212,78 +81,53 @@
     font-size: var(--font-size-small);
     color: var(--color-text-secondary);
     margin-top: var(--spacing-4);
-    
-    // Success state
-    &--success {
+    justify-content: start;
+  }
+
+  &__status-text {
+    margin: 0;
+  }
+
+  &__status-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  // ==========================================================================
+  // MODIFIERS
+  // ==========================================================================
+  &--field-loading {
+    .form__select {
+      background-image: url("data:image/svg+xml,%3csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10' stroke='%236B7280' stroke-width='2' stroke-linecap='round'/%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right var(--spacing-3) center;
+      background-size: 16px;
+      padding-right: var(--spacing-10);
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  &--status-success {
+    .classification__status {
       background: var(--color-success-25);
       border-color: var(--color-success-200);
       color: var(--color-success-700);
     }
-    
-    // Error state
-    &--error {
+  }
+
+  &--status-error {
+    .classification__status {
       background: var(--color-danger-25);
       border-color: var(--color-danger-200);
       color: var(--color-danger-700);
     }
-    
-    // Saving state
-    &--saving {
+  }
+
+  &--status-saving {
+    .classification__status {
       background: var(--color-warning-25);
       border-color: var(--color-warning-200);
       color: var(--color-warning-700);
-    }
-    
-    // Status text
-    &-text {
-      flex: 1;
-      margin: 0;
-    }
-    
-    // Status icon
-    &-icon {
-      width: 16px;
-      height: 16px;
-      flex-shrink: 0;
-    }
-  }
-}
-
-// ==========================================================================
-// FORM SECTION ENHANCEMENT (BEM: Block modifier)
-// ==========================================================================
-
-.form {
-  &__section {
-    display: grid;
-    gap: var(--spacing-4);
-    
-    &:not(:last-child) {
-      padding-bottom: var(--spacing-6);
-      border-bottom: 1px solid var(--color-neutral-200);
-      margin-bottom: var(--spacing-6);
-    }
-    
-    // Section title
-    &-title {
-      font-size: var(--font-size-large);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-primary);
-      margin: 0;
-      
-      .form__label-optional {
-        font-weight: var(--font-weight-normal);
-        color: var(--color-text-secondary);
-        font-size: var(--font-size-small);
-      }
-    }
-    
-    // Section description
-    &-description {
-      font-size: var(--font-size-small);
-      color: var(--color-text-secondary);
-      line-height: 1.5;
-      margin: 0;
     }
   }
 }
@@ -291,35 +135,11 @@
 // ==========================================================================
 // ANIMATIONS
 // ==========================================================================
-
 @keyframes spin {
   from {
     transform: rotate(0deg);
   }
   to {
     transform: rotate(360deg);
-  }
-}
-
-// ==========================================================================
-// RESPONSIVE ADJUSTMENTS
-// ==========================================================================
-
-@media (max-width: 768px) {
-  .classification {
-    gap: var(--spacing-4);
-    
-    &__row {
-      gap: var(--spacing-3);
-    }
-    
-    &__section {
-      gap: var(--spacing-3);
-      
-      &:not(:last-child) {
-        padding-bottom: var(--spacing-4);
-        margin-bottom: var(--spacing-4);
-      }
-    }
   }
 }
