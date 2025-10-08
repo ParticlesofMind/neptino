@@ -352,6 +352,16 @@ export class CanvasEvents {
     return this.toolManager.ungroupSelection();
   }
 
+  /** Flip selection horizontally */
+  public flipSelectionHorizontal(): boolean {
+    return this.toolManager.flipSelectionHorizontal();
+  }
+
+  /** Flip selection vertically */
+  public flipSelectionVertical(): boolean {
+    return this.toolManager.flipSelectionVertical();
+  }
+
   // Layer helpers for external callers (LayersPanel, etc.)
   public bringToFront(): void { (this.toolManager as any)?.bringToFront?.(); }
   public sendToBack(): void { (this.toolManager as any)?.sendToBack?.(); }

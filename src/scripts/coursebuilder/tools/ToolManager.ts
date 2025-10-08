@@ -354,6 +354,24 @@ export class ToolManager {
     return false;
   }
 
+  /** Flip current selection horizontally */
+  public flipSelectionHorizontal(): boolean {
+    const sel = this.tools.get('selection') as any;
+    if (sel && typeof sel.flipHorizontal === 'function') {
+      try { return !!sel.flipHorizontal(); } catch {}
+    }
+    return false;
+  }
+
+  /** Flip current selection vertically */
+  public flipSelectionVertical(): boolean {
+    const sel = this.tools.get('selection') as any;
+    if (sel && typeof sel.flipVertical === 'function') {
+      try { return !!sel.flipVertical(); } catch {}
+    }
+    return false;
+  }
+
   // Layer/lock helpers
   public bringToFront(): void { const sel = this.tools.get('selection') as any; try { sel?.bringToFront?.(); } catch {} }
   public sendToBack(): void { const sel = this.tools.get('selection') as any; try { sel?.sendToBack?.(); } catch {} }

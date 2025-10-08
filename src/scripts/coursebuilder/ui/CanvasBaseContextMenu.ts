@@ -3,7 +3,7 @@
  * Base context menu for canvas right-click with core actions.
  */
 
-import { copySelection, pasteSelection, duplicateSelection, groupSelection, ungroupSelection } from './contextMenuActions';
+import { copySelection, pasteSelection, duplicateSelection, groupSelection, ungroupSelection, flipSelectionHorizontal, flipSelectionVertical } from './contextMenuActions';
 
 export class CanvasBaseContextMenu {
   private menuEl: HTMLDivElement | null = null;
@@ -73,6 +73,8 @@ export class CanvasBaseContextMenu {
     items.push({ label: 'Duplicate', action: () => this.handleDuplicate(), enabled: this.hasSelection });
     items.push({ label: 'Group', action: () => this.handleGroup(), enabled: this.hasSelection });
     items.push({ label: 'Ungroup', action: () => this.handleUngroup(), enabled: this.hasSelection });
+    items.push({ label: 'Flip Horizontally', action: () => this.handleFlipHorizontal(), enabled: this.hasSelection });
+    items.push({ label: 'Flip Vertically', action: () => this.handleFlipVertical(), enabled: this.hasSelection });
 
     for (const it of items) {
       const btn = document.createElement('button');
@@ -111,6 +113,8 @@ export class CanvasBaseContextMenu {
   private handleDuplicate(): void { try { duplicateSelection(); } catch {} }
   private handleGroup(): void { try { groupSelection(); } catch {} }
   private handleUngroup(): void { try { ungroupSelection(); } catch {} }
+  private handleFlipHorizontal(): void { try { flipSelectionHorizontal(); } catch {} }
+  private handleFlipVertical(): void { try { flipSelectionVertical(); } catch {} }
 }
 
 // Auto-init helper if needed

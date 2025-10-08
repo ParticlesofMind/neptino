@@ -252,6 +252,18 @@ export class CanvasAPI {
     return (this.events as any).ungroupSelection();
   }
 
+  /** Flip selection horizontally */
+  public flipSelectionHorizontal(): boolean {
+    if (!this.events) return false;
+    return (this.events as any).flipSelectionHorizontal();
+  }
+
+  /** Flip selection vertically */
+  public flipSelectionVertical(): boolean {
+    if (!this.events) return false;
+    return (this.events as any).flipSelectionVertical();
+  }
+
   /**
    * Enable canvas drawing events (allow drawing tools to work)
    */

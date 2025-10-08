@@ -10,7 +10,7 @@ import { TransformController } from './TransformController';
 import { SelectionGrouping } from './SelectionGrouping';
 import { SelectionStyling } from './SelectionStyling';
 import { animationState } from '../../animation/AnimationState';
-import { determineSelectionType, moveObjectByContainerDelta } from './SelectionUtils';
+import { determineSelectionType, moveObjectByContainerDelta, computeCombinedBoundsLocal } from './SelectionUtils';
 import { historyManager } from '../../canvas/HistoryManager';
 import { PenPathEditor } from '../pen/PenPathEditor';
 
@@ -415,6 +415,127 @@ export class SelectionTool extends BaseTool {
   public pasteSelection(): boolean { const created = this.clipboardSvc.pasteAt(this.lastPointerGlobal || null); if (created.length) { this.selected = created; if (this.container) this.overlay.refresh(this.selected, this.container); this.updateObjectSelectionStates(); return true; } return false; }
   public groupSelection(): boolean { const r = this.grouping.group(this.selected, this.container, this.displayManager); if (r && this.container) { this.selected = r.newSelection; this.overlay.refresh(this.selected, this.container); this.updateObjectSelectionStates(); return true; } return false; }
   public ungroupSelection(): boolean { const r = this.grouping.ungroup(this.selected, this.container, this.displayManager); if (r && this.container) { this.selected = r.newSelection; this.overlay.refresh(this.selected, this.container); this.updateObjectSelectionStates(); return true; } return false; }
+  public flipHorizontal(): boolean { return this.flipSelection('horizontal'); }
+  public flipVertical(): boolean { return this.flipSelection('vertical'); }
+
+  private flipSelection(axis: 'horizontal' | 'vertical'): boolean {
+    if (!this.selected.length) return false;
+    const container = this.container || this.displayManager?.getRoot?.();
+    if (!container) return false;
+
+    const bounds = computeCombinedBoundsLocal(this.selected, container);
+    const widthOk = bounds.width > 0.0001;
+    const heightOk = bounds.height > 0.0001;
+    if ((axis === 'horizontal' && !widthOk) || (axis === 'vertical' && !heightOk)) {
+      return false;
+    }
+
+    const center = new Point(
+      bounds.x + bounds.width * 0.5,
+      bounds.y + bounds.height * 0.5,
+    );
+
+    const originalStates: Array<{ obj: any; position: { x: number; y: number }; scale: { x: number; y: number } }> = [];
+    const nextStates: Array<{ obj: any; position: { x: number; y: number }; scale: { x: number; y: number } }> = [];
+
+    let changed = false;
+
+    for (const obj of this.selected) {
+      const parent = obj?.parent;
+      if (!parent) continue;
+
+      const pos = {
+        x: Number(obj.position?.x ?? 0),
+        y: Number(obj.position?.y ?? 0),
+      };
+      const scale = {
+        x: Number(obj.scale?.x ?? 1),
+        y: Number(obj.scale?.y ?? 1),
+      };
+
+      originalStates.push({ obj, position: { ...pos }, scale: { ...scale } });
+
+      const globalPos = parent.toGlobal(new Point(pos.x, pos.y));
+      const localInContainer = container.toLocal(globalPos);
+
+      const mirroredLocal = new Point(
+        axis === 'horizontal' ? (center.x * 2 - localInContainer.x) : localInContainer.x,
+        axis === 'vertical' ? (center.y * 2 - localInContainer.y) : localInContainer.y,
+      );
+
+      const mirroredGlobal = container.toGlobal(mirroredLocal);
+      const mirroredParent = parent.toLocal(mirroredGlobal);
+
+      const newScale = {
+        x: axis === 'horizontal' ? -scale.x || 0 : scale.x,
+        y: axis === 'vertical' ? -scale.y || 0 : scale.y,
+      };
+
+      nextStates.push({
+        obj,
+        position: { x: mirroredParent.x, y: mirroredParent.y },
+        scale: newScale,
+      });
+
+      if (!changed) {
+        if (Math.abs(mirroredParent.x - pos.x) > 0.0001 || Math.abs(mirroredParent.y - pos.y) > 0.0001) {
+          changed = true;
+        } else if (Math.abs(newScale.x - scale.x) > 0.0001 || Math.abs(newScale.y - scale.y) > 0.0001) {
+          changed = true;
+        }
+      }
+    }
+
+    if (!nextStates.length || !changed) return false;
+
+    const applyStates = (states: Array<{ obj: any; position: { x: number; y: number }; scale: { x: number; y: number } }>) => {
+      for (const state of states) {
+        const target = state.obj;
+        if (!target) continue;
+        try {
+          if (target.position) {
+            target.position.x = state.position.x;
+            target.position.y = state.position.y;
+          }
+          if (target.scale) {
+            target.scale.x = state.scale.x;
+            target.scale.y = state.scale.y;
+          }
+        } catch {}
+        try {
+          const dm: any = (this as any).displayManager;
+          let id: string | null = null;
+          try { id = (target as any).__id || (target as any).objectId || (dm?.getIdForObject?.(target) ?? null); } catch {}
+          if (!id) {
+            const tmp = `sel_${Date.now()}_${Math.floor(Math.random() * 9999)}`;
+            try { (target as any).objectId = tmp; } catch {}
+            id = tmp;
+          }
+          document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id, object: target, action: 'transform' } }));
+        } catch {}
+      }
+      const activeContainer = this.container || this.displayManager?.getRoot?.();
+      if (activeContainer) {
+        this.overlay.refresh(this.selected, activeContainer);
+      } else {
+        this.overlay.clear();
+      }
+      this.updateObjectSelectionStates();
+    };
+
+    applyStates(nextStates);
+
+    const label = axis === 'horizontal' ? 'Flip Horizontal' : 'Flip Vertical';
+    try {
+      historyManager.push({
+        label,
+        undo: () => applyStates(originalStates),
+        redo: () => applyStates(nextStates),
+      });
+    } catch {}
+
+    return true;
+  }
 
   // Layer and lock helpers
   private toggleLock(): void {

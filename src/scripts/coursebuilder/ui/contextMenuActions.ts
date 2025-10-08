@@ -8,6 +8,8 @@ type CanvasAPIType = {
   pasteSelection?: () => boolean;
   groupSelection?: () => boolean;
   ungroupSelection?: () => boolean;
+  flipSelectionHorizontal?: () => boolean;
+  flipSelectionVertical?: () => boolean;
 };
 
 function getCanvasAPI(): CanvasAPIType | null {
@@ -68,6 +70,24 @@ export function ungroupSelection(): boolean {
   }
 }
 
+export function flipSelectionHorizontal(): boolean {
+  const api = getCanvasAPI();
+  try {
+    return api?.flipSelectionHorizontal?.() ?? false;
+  } catch {
+    return false;
+  }
+}
+
+export function flipSelectionVertical(): boolean {
+  const api = getCanvasAPI();
+  try {
+    return api?.flipSelectionVertical?.() ?? false;
+  } catch {
+    return false;
+  }
+}
+
 export function deleteSelectionViaKeyEvent(): void {
   // Reuse existing delete key handling wired in tools
   try {
@@ -75,4 +95,3 @@ export function deleteSelectionViaKeyEvent(): void {
     document.dispatchEvent(evt);
   } catch {}
 }
-
