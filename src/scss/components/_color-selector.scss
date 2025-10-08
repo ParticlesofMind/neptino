@@ -1,16 +1,21 @@
 // ==========================================================================
-// COLOR SELECTOR COMPONENT
+// COLOR SELECTOR COMPONENT - BEM Methodology
 // ==========================================================================
-// Custom color selector to replace Select2 dropdowns
+@use '../abstracts/mixins' as *;
 
 .color-selector {
+  // ==========================================================================
+  // BLOCK BASE STYLES
+  // ==========================================================================
   position: relative;
   display: inline-block;
 
+  // ==========================================================================
+  // ELEMENTS
+  // ==========================================================================
   &__trigger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-grid;
+    place-items: center;
     width: 32px;
     height: 32px;
     border-radius: var(--radius-medium);
@@ -25,41 +30,14 @@
       transform: translateY(-1px);
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
+  }
 
-    &--active {
-      border-color: var(--color-primary-500);
-      box-shadow: 0 0 0 3px var(--color-primary-100);
-    }
-
-    // Color swatch inside the trigger
-    &-swatch {
-      width: 24px;
-      height: 24px;
-      border-radius: var(--radius-small);
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      position: relative;
-
-      // Handle transparent/no fill option
-      &--transparent {
-        background: linear-gradient(45deg, #ccc 25%, transparent 25%), 
-                    linear-gradient(-45deg, #ccc 25%, transparent 25%), 
-                    linear-gradient(45deg, transparent 75%, #ccc 75%), 
-                    linear-gradient(-45deg, transparent 75%, #ccc 75%);
-        background-size: 4px 4px;
-        background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
-        
-        &::after {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%) rotate(45deg);
-          width: 20px;
-          height: 1px;
-          background: #ff4444;
-        }
-      }
-    }
+  &__swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-small);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    position: relative;
   }
 
   &__dropdown {
@@ -68,27 +46,16 @@
     left: 50%;
     transform: translateX(-50%);
     z-index: 10001;
-    
     background: white;
     border-radius: var(--radius-large);
-    box-shadow: 
-      0 4px 12px rgba(0, 0, 0, 0.15),
-      0 0 0 1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
     padding: var(--spacing-3);
     min-width: 280px;
-    
     opacity: 0;
     visibility: hidden;
     transform: translateX(-50%) translateY(-8px);
     transition: all 0.2s ease;
 
-    &--open {
-      opacity: 1;
-      visibility: visible;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    // Arrow pointing to trigger
     &::before {
       content: '';
       position: absolute;
@@ -105,32 +72,25 @@
   }
 
   &__section {
-    margin-bottom: var(--spacing-4);
-
-    &:last-child {
-      margin-bottom: 0;
+    &:not(:last-child) {
+      margin-bottom: var(--spacing-4);
     }
+  }
 
-    &-title {
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-medium);
-      color: var(--color-text-secondary);
-      margin-bottom: var(--spacing-2);
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-2);
+  &__section-title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-2);
+    display: grid;
+    grid-auto-flow: column;
+    align-items: center;
+    gap: var(--spacing-2);
+    justify-content: start;
+  }
 
-      .icon {
-        width: 16px;
-        height: 16px;
-      }
-    }
-
-    &-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: var(--spacing-2);
-    }
+  &__section-grid {
+    @include grid-responsive(32px, var(--spacing-2));
   }
 
   &__color {
@@ -146,8 +106,54 @@
       transform: scale(1.1);
       border-color: var(--color-neutral-400);
     }
+  }
 
-    &--selected {
+  &__add-color {
+    display: none; // Disabled per original file
+  }
+
+  // ==========================================================================
+  // MODIFIERS
+  // ==========================================================================
+  &--active {
+    .color-selector__trigger {
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 3px var(--color-primary-100);
+    }
+  }
+
+  &--open {
+    .color-selector__dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  &--swatch-transparent {
+    .color-selector__swatch {
+      background: linear-gradient(45deg, #ccc 25%, transparent 25%),
+                  linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                  linear-gradient(45deg, transparent 75%, #ccc 75%),
+                  linear-gradient(-45deg, transparent 75%, #ccc 75%);
+      background-size: 4px 4px;
+      background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(45deg);
+        width: 20px;
+        height: 1px;
+        background: #ff4444;
+      }
+    }
+  }
+
+  &--color-selected {
+    .color-selector__color {
       border-color: var(--color-primary-500);
       box-shadow: 0 0 0 2px var(--color-primary-100);
       transform: scale(1.05);
@@ -164,12 +170,13 @@
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
       }
     }
+  }
 
-    // Transparent/no fill option
-    &--transparent {
-      background: linear-gradient(45deg, #ccc 25%, transparent 25%), 
-                  linear-gradient(-45deg, #ccc 25%, transparent 25%), 
-                  linear-gradient(45deg, transparent 75%, #ccc 75%), 
+  &--color-transparent {
+    .color-selector__color {
+      background: linear-gradient(45deg, #ccc 25%, transparent 25%),
+                  linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                  linear-gradient(45deg, transparent 75%, #ccc 75%),
                   linear-gradient(-45deg, transparent 75%, #ccc 75%);
       background-size: 4px 4px;
       background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
@@ -186,40 +193,11 @@
         background: #ff4444;
         border-radius: 1px;
       }
-
-      &.color-selector__color--selected::after {
-        color: #ff4444;
-        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-      }
-    }
-  }
-
-  // Custom colors disabled: remove add button styling
-  &__add-color { display: none; }
-}
-
-// ==========================================================================
-// RESPONSIVE ADJUSTMENTS
-// ==========================================================================
-
-@media (max-width: 768px) {
-  .color-selector {
-    &__dropdown {
-      min-width: 240px;
-      left: 0;
-      transform: none;
-
-      &--open {
-        transform: translateY(0);
-      }
-
-      &::before {
-        left: 32px;
-      }
     }
 
-    &__section-grid {
-      grid-template-columns: repeat(5, 1fr);
+    &.color-selector--color-selected .color-selector__color::after {
+      color: #ff4444;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
     }
   }
 }

@@ -3,32 +3,18 @@
 // ==========================================================================
 
 .dropdown {
+  // ==========================================================================
+  // BLOCK BASE STYLES
+  // ==========================================================================
   position: relative;
   display: inline-block;
-  
-  // ==========================================================================
-  // DROPDOWN TOGGLE (BEM: Element)
-  // ==========================================================================
-  
-    &--right .dropdown__menu {
-    right: 0;
-    left: auto;
-  }
-  
-  // Left-aligned menu
-  &--left .dropdown__menu {
-    right: auto;
-    left: 0;
-  }
-  
-  // Wide menu
-  &--wide .dropdown__menu {
-    min-width: 240px;
-  }
 
-
+  // ==========================================================================
+  // ELEMENTS
+  // ==========================================================================
   &__toggle {
-    display: flex;
+    display: inline-grid;
+    grid-auto-flow: column;
     align-items: center;
     gap: var(--spacing-2);
     padding: var(--spacing-2) var(--spacing-3);
@@ -41,36 +27,18 @@
     font-weight: var(--font-weight-medium);
     transition: color 0.2s ease;
     white-space: nowrap;
-    
-    &:hover {
-      color: var(--color-primary-500);
-    }
-    
-    &:focus {
-      outline: 2px solid var(--color-primary-500);
-      outline-offset: 2px;
-      border-radius: var(--radius-small);
-    }
-    
-    &[aria-expanded="true"] .dropdown__icon {
-      transform: rotate(180deg);
-    }
   }
-  
+
   &__text {
     font-weight: var(--font-weight-medium);
   }
-  
+
   &__icon {
     transition: transform 0.2s ease;
     width: 12px;
     height: 12px;
   }
-  
-  // ==========================================================================
-  // DROPDOWN MENU (BEM: Element)
-  // ==========================================================================
-  
+
   &__menu {
     position: absolute;
     top: 100%;
@@ -84,30 +52,16 @@
     z-index: var(--z-dropdown);
     list-style: none;
     margin: 0;
-    
-    // Hidden by default
     opacity: 0;
     visibility: hidden;
     transform: translateY(-4px);
     transition: all 0.15s ease;
-    
-    &--active {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-    
-    // Left-aligned variant
-    &--left {
-      right: auto;
-      left: 0;
-    }
   }
-  
+
   &__item {
     margin: 0;
   }
-  
+
   &__link {
     display: block;
     width: 100%;
@@ -122,30 +76,8 @@
     cursor: pointer;
     border-radius: var(--radius-small);
     transition: all 0.15s ease;
-    
-    &:hover {
-      background: var(--color-primary-50);
-      color: var(--color-primary-600);
-    }
-    
-    &:focus {
-      background: var(--color-primary-100);
-      color: var(--color-primary-700);
-      outline: 2px solid var(--color-primary-500);
-      outline-offset: 2px;
-    }
-    
-    &--active {
-      background: var(--color-primary-100);
-      color: var(--color-primary-700);
-      font-weight: var(--font-weight-medium);
-    }
   }
-  
-  // ==========================================================================
-  // DROPDOWN UTILITIES (BEM: Elements)
-  // ==========================================================================
-  
+
   &__divider {
     height: 1px;
     background: var(--color-neutral-200);
@@ -164,12 +96,79 @@
     border-bottom: 1px solid var(--color-neutral-200);
     margin: 0 calc(-1 * var(--spacing-2)) var(--spacing-1);
   }
-  
+
   &__empty {
     padding: var(--spacing-3);
     text-align: center;
     color: var(--color-text-secondary);
     font-size: var(--font-size-small);
     font-style: italic;
+  }
+
+  // ==========================================================================
+  // MODIFIERS
+  // ==========================================================================
+  &--open {
+    .dropdown__menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .dropdown__icon {
+      transform: rotate(180deg);
+    }
+  }
+
+  &--align-right {
+    .dropdown__menu {
+      right: 0;
+      left: auto;
+    }
+  }
+
+  &--align-left {
+    .dropdown__menu {
+      right: auto;
+      left: 0;
+    }
+  }
+
+  &--wide {
+    .dropdown__menu {
+      min-width: 240px;
+    }
+  }
+
+  // ==========================================================================
+  // STATES & INTERACTIONS
+  // ==========================================================================
+  &__toggle {
+    &:hover {
+      color: var(--color-primary-500);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--color-primary-500);
+      outline-offset: 2px;
+      border-radius: var(--radius-small);
+    }
+  }
+
+  &__link {
+    &:hover {
+      background: var(--color-primary-50);
+      color: var(--color-primary-600);
+    }
+    &:focus-visible {
+      background: var(--color-primary-100);
+      color: var(--color-primary-700);
+      outline: 2px solid var(--color-primary-500);
+      outline-offset: 2px;
+    }
+    // Use attribute selector for active state to avoid element modifiers
+    &[aria-current="true"] {
+      background: var(--color-primary-100);
+      color: var(--color-primary-700);
+      font-weight: var(--font-weight-medium);
+    }
   }
 }

@@ -1,15 +1,20 @@
 // ==========================================================================
 // FORM COMPONENT - BEM Methodology
 // ==========================================================================
+@use '../abstracts/mixins' as *;
 
 .form {
-  // Base form styles - used as semantic wrapper
+  // ==========================================================================
+  // BLOCK BASE STYLES
+  // ==========================================================================
   display: grid;
   gap: var(--spacing-6);
   margin: 0 auto;
   padding: var(--spacing-8);
 
-  // Form header (title + description)
+  // ==========================================================================
+  // ELEMENTS
+  // ==========================================================================
   &__header {
     display: grid;
     gap: var(--spacing-3);
@@ -17,94 +22,38 @@
   }
 
   &__title {
-    // Inherits from .heading component
-    margin-bottom: 0; // Grid gap handles spacing
+    margin: 0;
   }
 
   &__description {
-    // Inherits from .paragraph component  
-    margin-bottom: 0; // Grid gap handles spacing
+    margin: 0;
   }
 
-  // Form body (inputs + submit)
   &__body {
     display: grid;
     gap: var(--spacing-5);
   }
 
-  // Form icons (for auth forms)
-  &__icon {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--color-neutral-400);
-    pointer-events: none;
-    z-index: 1;
-    transition: var(--transition-fast);
-    
-    // Icon sizing to ensure proper alignment
-    width: 20px;
-    height: 20px;
-    
-    // Slight adjustment for better visual alignment with text
-    margin-top: -1px;
+  &__row {
+    display: grid;
+    gap: var(--spacing-4);
+    align-items: end;
+    @include grid-responsive(200px, var(--spacing-4));
   }
 
-  &__submit {
-    // Inherits from .button component
-    margin-top: var(--spacing-3);
+  &__field {
+    display: grid;
+    gap: var(--spacing-2);
+    position: relative; // For icon positioning
   }
 
-  // Form footer (links, additional text)
-  &__footer {
-    text-align: center;
-  }
-
-  &__footer-text {
-    // Inherits from .paragraph component
-    margin-bottom: 0; // Grid gap handles spacing
-    font-size: var(--font-size-small);
-  }
-
-  // Form modifiers
-  &--signup,
-  &--signin {
-
-    max-width: 400px; 
-    // Auth forms - specific styling can be added here if needed
-    .input {
-      &--auth:focus + .form__icon,
-      &--auth:focus ~ .form__icon {
-        color: var(--color-primary-500);
-      }
-    }
-  }
-
-  // Legacy form structure support
-  &__group {
-    margin-bottom: var(--spacing-4);
-    
-    // For grouped inputs with icons (auth forms)
-    position: relative;
-    
-    &:focus-within .form__icon {
-      color: var(--color-primary-500);
-    }
-    
-    // Remove margin from form__body groups to let grid handle spacing
-    .form__body & {
-      margin-bottom: 0;
-    }
-  }
-  
   &__label {
     display: block;
-    margin-bottom: var(--spacing-2);
     font-weight: var(--font-weight-medium);
     color: var(--color-text);
 
-    &-optional {
+    &-optional,
+    &-hint {
       font-size: var(--font-size-xs);
       font-weight: var(--font-weight-normal);
       color: var(--color-text-secondary);
@@ -113,29 +62,11 @@
     }
 
     &-hint {
-      display: block;
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-normal);
-      color: var(--color-text-secondary);
-      text-transform: none;
-      letter-spacing: normal;
       margin-top: 2px;
       font-style: italic;
     }
-
-    .form--classification & {
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-semibold);
-      text-transform: uppercase;
-      letter-spacing: 0.025em;
-      margin-bottom: var(--spacing-2);
-    }
-
-    .form--classification &-optional {
-      font-size: var(--font-size-xs);
-    }
   }
-  
+
   &__input,
   &__textarea,
   &__select {
@@ -147,101 +78,140 @@
     font-size: var(--font-size-base);
     transition: var(--transition-fast);
     background: var(--color-background);
-    
+
     &:focus {
-      outline: none;
-      border-color: var(--color-primary-500);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      @include input-focus;
     }
-    
+
     &:disabled {
       background: var(--color-neutral-50);
       color: var(--color-text-disabled);
       cursor: not-allowed;
-      
       &:hover {
         border-color: var(--color-neutral-300);
       }
     }
   }
-  
+
   &__select {
     cursor: pointer;
-    
     &:not(:disabled):hover {
       border-color: var(--color-primary-400);
     }
   }
-  
+
   &__textarea {
     resize: vertical;
     min-height: 80px;
   }
-  
+
   &__checkbox-group {
-    display: flex;
+    display: grid;
+    grid-auto-flow: column;
     align-items: center;
     gap: var(--spacing-3);
-    margin-bottom: var(--spacing-3);
+    justify-content: start;
   }
-  
+
   &__checkbox {
     margin: 0;
   }
-}
 
+  &__icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(50%);
+    color: var(--color-neutral-400);
+    pointer-events: none;
+    width: 20px;
+    height: 20px;
+  }
 
+  &__actions {
+    margin-top: var(--spacing-6);
+    padding-top: var(--spacing-4);
+    border-top: 1px solid var(--color-neutral-100);
+  }
 
-// ==========================================================================
-// FORMS
-// ==========================================================================
+  &__submit {
+    margin-top: var(--spacing-3);
+  }
 
-.form {
-  &__row {
-    display: flex;
+  &__footer {
+    text-align: center;
+  }
+
+  &__footer-text {
+    font-size: var(--font-size-small);
+    margin: 0;
+  }
+
+  // ==========================================================================
+  // MODIFIERS
+  // ==========================================================================
+  &--auth {
+    max-width: 400px;
+  }
+
+  &--compact {
     gap: var(--spacing-4);
-    align-items: end;
-    margin-bottom: var(--spacing-6);
+  }
 
-    &--hierarchical {
-      margin-bottom: var(--spacing-8);
+  &--inline {
+    .form__row {
+      @include grid-responsive(150px, var(--spacing-4));
     }
   }
 
-  &__group {
-    margin-bottom: var(--spacing-4);
-
-    &--actions {
-      margin-top: var(--spacing-6);
-      padding-top: var(--spacing-4);
-      border-top: 1px solid var(--color-neutral-100);
-    }
-
-    .form__row--hierarchical & {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .form__row--sequence & {
-      flex: 1;
+  &--hierarchical,
+  &--sequence {
+    .form__row {
+      grid-template-columns: repeat(auto-fill, minmax(0, 1fr));
     }
   }
 
-  .form--classification &__row {
-    position: relative;
+  // ==========================================================================
+  // MODIFIER-SPECIFIC ELEMENT STYLING
+  // ==========================================================================
+  &--auth {
+    .form__field:focus-within .form__icon {
+      color: var(--color-primary-500);
+    }
+  }
 
-    &:not(:last-child)::after {
-      content: '';
-      position: absolute;
-      bottom: calc(-1 * var(--spacing-3));
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: linear-gradient(to right,
-        transparent,
-        var(--color-neutral-200) 20%,
-        var(--color-neutral-200) 80%,
-        transparent);
+  &--compact {
+    .form__row {
+      gap: var(--spacing-3);
+    }
+    .form__input,
+    .form__textarea,
+    .form__select {
+      padding: var(--spacing-2);
+    }
+  }
+
+  &--classification {
+    .form__label {
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+    .form__label-optional {
+      font-size: var(--font-size-xs);
+    }
+    .form__row {
+      position: relative;
+      &:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        bottom: calc(-1 * var(--spacing-3));
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(to right, transparent, var(--color-neutral-200) 20%, var(--color-neutral-200) 80%, transparent);
+      }
     }
   }
 }

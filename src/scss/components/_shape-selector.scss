@@ -1,16 +1,21 @@
 // ==========================================================================
-// SHAPE SELECTOR COMPONENT
+// SHAPE SELECTOR COMPONENT - BEM Methodology
 // ==========================================================================
-// Custom shape selector to replace Select2 shape dropdown
+@use '../abstracts/mixins' as *;
 
 .shape-selector {
+  // ==========================================================================
+  // BLOCK BASE STYLES
+  // ==========================================================================
   position: relative;
   display: inline-block;
 
+  // ==========================================================================
+  // ELEMENTS
+  // ==========================================================================
   &__trigger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-grid;
+    place-items: center;
     width: 32px;
     height: 32px;
     border-radius: var(--radius-medium);
@@ -19,29 +24,13 @@
     transition: all 0.2s ease;
     background: var(--color-background);
     position: relative;
+  }
 
-    &:hover {
-      border-color: var(--color-primary-400);
-      transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    &--active {
-      border-color: var(--color-primary-500);
-      box-shadow: 0 0 0 3px var(--color-primary-100);
-    }
-
-    // Shape icon inside the trigger
-    &-icon {
-      width: 20px;
-      height: 20px;
-      opacity: 0.8;
-      transition: opacity 0.2s ease;
-
-      .shape-selector__trigger:hover & {
-        opacity: 1;
-      }
-    }
+  &__trigger-icon {
+    width: 20px;
+    height: 20px;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
   }
 
   &__dropdown {
@@ -50,27 +39,16 @@
     left: 50%;
     transform: translateX(-50%);
     z-index: 10001;
-    
     background: white;
     border-radius: var(--radius-large);
-    box-shadow: 
-      0 4px 12px rgba(0, 0, 0, 0.15),
-      0 0 0 1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
     padding: var(--spacing-3);
     min-width: 200px;
-    
     opacity: 0;
     visibility: hidden;
     transform: translateX(-50%) translateY(-8px);
     transition: all 0.2s ease;
 
-    &--open {
-      opacity: 1;
-      visibility: visible;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    // Arrow pointing to trigger
     &::before {
       content: '';
       position: absolute;
@@ -91,27 +69,20 @@
     font-weight: var(--font-weight-medium);
     color: var(--color-text-secondary);
     margin-bottom: var(--spacing-3);
-    display: flex;
+    display: grid;
+    grid-auto-flow: column;
     align-items: center;
     gap: var(--spacing-2);
-
-    .icon {
-      width: 16px;
-      height: 16px;
-    }
+    justify-content: start;
   }
 
   &__grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--spacing-2);
+    @include grid-responsive(60px, var(--spacing-2));
   }
 
   &__shape {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    place-items: center;
     gap: var(--spacing-1);
     padding: var(--spacing-2);
     border-radius: var(--radius-medium);
@@ -119,14 +90,60 @@
     cursor: pointer;
     transition: all 0.2s ease;
     background: var(--color-neutral-50);
+  }
 
+  &__shape-icon {
+    width: 24px;
+    height: 24px;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+  }
+
+  &__shape-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    text-align: center;
+    transition: all 0.2s ease;
+  }
+
+  // ==========================================================================
+  // MODIFIERS
+  // ==========================================================================
+  &--active {
+    .shape-selector__trigger {
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 3px var(--color-primary-100);
+    }
+  }
+
+  &--open {
+    .shape-selector__dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  // ==========================================================================
+  // STATES & INTERACTIONS
+  // ==========================================================================
+  &__trigger:hover {
+    border-color: var(--color-primary-400);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    .shape-selector__trigger-icon {
+      opacity: 1;
+    }
+  }
+
+  &__shape {
     &:hover {
       background: var(--color-primary-50);
       border-color: var(--color-primary-200);
       transform: translateY(-1px);
     }
 
-    &--selected {
+    &[aria-selected="true"] {
       background: var(--color-primary-100);
       border-color: var(--color-primary-500);
       box-shadow: 0 0 0 2px var(--color-primary-100);
@@ -140,46 +157,6 @@
         color: var(--color-primary-700);
         font-weight: var(--font-weight-medium);
       }
-    }
-
-    &-icon {
-      width: 24px;
-      height: 24px;
-      opacity: 0.7;
-      transition: all 0.2s ease;
-    }
-
-    &-label {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-secondary);
-      text-align: center;
-      transition: all 0.2s ease;
-    }
-  }
-}
-
-// ==========================================================================
-// RESPONSIVE ADJUSTMENTS
-// ==========================================================================
-
-@media (max-width: 768px) {
-  .shape-selector {
-    &__dropdown {
-      min-width: 180px;
-      left: 0;
-      transform: none;
-
-      &--open {
-        transform: translateY(0);
-      }
-
-      &::before {
-        left: 32px;
-      }
-    }
-
-    &__grid {
-      grid-template-columns: repeat(2, 1fr);
     }
   }
 }

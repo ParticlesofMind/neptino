@@ -155,7 +155,7 @@ export class CourseBuilder {
 
  private initializeCurrentSection(): void {
  // Initialize the currently active section
-const activeSection = document.querySelector('.coursebuilder__section--active');
+const activeSection = document.querySelector('.content__section.is-active');
  if (activeSection) {
  const sectionId = activeSection.id;
  this.loadSection(sectionId);
@@ -182,15 +182,15 @@ const activeSection = document.querySelector('.coursebuilder__section--active');
 
  private navigateToSection(sectionId: string): void {
  // Hide all articles
-const articles = document.querySelectorAll('.coursebuilder__section');
+const articles = document.querySelectorAll('.content__section');
  articles.forEach((article) => {
-  article.classList.remove('coursebuilder__section--active');
+  article.classList.remove('is-active');
  });
 
  // Show target article
  const targetArticle = document.getElementById(sectionId);
  if (targetArticle) {
-  targetArticle.classList.add('coursebuilder__section--active');
+  targetArticle.classList.add('is-active');
  this.currentSection = sectionId;
  this.loadSection(sectionId);
  }
