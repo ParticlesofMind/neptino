@@ -30,14 +30,40 @@
       transform: translateY(-1px);
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
+
+    &--active {
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 3px var(--color-primary-100);
+    }
   }
 
-  &__swatch {
+  &__trigger-swatch {
     width: 24px;
     height: 24px;
     border-radius: var(--radius-small);
     border: 1px solid rgba(0, 0, 0, 0.1);
+    background: var(--color-background);
     position: relative;
+
+    &--transparent {
+      background: linear-gradient(45deg, #ccc 25%, transparent 25%),
+                  linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                  linear-gradient(45deg, transparent 75%, #ccc 75%),
+                  linear-gradient(-45deg, transparent 75%, #ccc 75%);
+      background-size: 4px 4px;
+      background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(45deg);
+        width: 20px;
+        height: 1px;
+        background: #ff4444;
+      }
+    }
   }
 
   &__dropdown {
@@ -68,6 +94,12 @@
       border-right: 8px solid transparent;
       border-bottom: 8px solid white;
       filter: drop-shadow(0 -2px 4px rgba(0, 0, 0, 0.1));
+    }
+
+    &--open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
     }
   }
 
@@ -106,6 +138,51 @@
       transform: scale(1.1);
       border-color: var(--color-neutral-400);
     }
+
+    &--selected {
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 2px var(--color-primary-100);
+      transform: scale(1.05);
+
+      &::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      }
+    }
+
+    &--transparent {
+      background: linear-gradient(45deg, #ccc 25%, transparent 25%),
+                  linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                  linear-gradient(45deg, transparent 75%, #ccc 75%),
+                  linear-gradient(-45deg, transparent 75%, #ccc 75%);
+      background-size: 4px 4px;
+      background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
+      border: 2px solid var(--color-neutral-300);
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(45deg);
+        width: 24px;
+        height: 2px;
+        background: #ff4444;
+        border-radius: 1px;
+      }
+
+      &.color-selector__color--selected::after {
+        color: #ff4444;
+        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+      }
+    }
   }
 
   &__add-color {
@@ -131,7 +208,7 @@
   }
 
   &--swatch-transparent {
-    .color-selector__swatch {
+    .color-selector__trigger-swatch {
       background: linear-gradient(45deg, #ccc 25%, transparent 25%),
                   linear-gradient(-45deg, #ccc 25%, transparent 25%),
                   linear-gradient(45deg, transparent 75%, #ccc 75%),
@@ -152,7 +229,8 @@
     }
   }
 
-  &--color-selected {
+  &--color-selected,
+  &--color-transparent {
     .color-selector__color {
       border-color: var(--color-primary-500);
       box-shadow: 0 0 0 2px var(--color-primary-100);

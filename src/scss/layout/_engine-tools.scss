@@ -3,12 +3,14 @@
 // ==========================================================================
 
 .engine {
+
   // ==========================================================================
   // ELEMENTS
   // ==========================================================================
   &__controls,
   &__modes,
   &__tools-selection,
+  &__tools-options,
   &__tools-group {
     display: grid;
     grid-auto-flow: column;
@@ -47,26 +49,41 @@
     user-select: none;
   }
 
-  &__tools {
-    position: relative;
-    display: grid;
-    grid-auto-flow: row;
-    grid-auto-rows: max-content;
-    justify-items: center;
-    gap: var(--spacing-2);
-    width: auto;
+
+  &__modes-item--active,
+  &__modes-item.active {
+    background: #B3D7FF;
+    border-color: #9AC8FF;
+    color: var(--color-neutral-900);
+    box-shadow: 0 2px 8px rgba(179, 215, 255, 0.45);
+  }
+
+  &__modes-item--active .icon-label,
+  &__modes-item.active .icon-label {
+    color: var(--color-neutral-900);
+  }
+
+  &__modes-item--active:hover,
+  &__modes-item.active:hover {
+    background: #B3D7FF;
+    border-color: #9AC8FF;
+    color: var(--color-neutral-900);
+    box-shadow: 0 2px 10px rgba(179, 215, 255, 0.5);
+  }
+
+  &__modes-item--active:hover .icon-label,
+  &__modes-item.active:hover .icon-label {
+    color: var(--color-neutral-900);
   }
 
   &__tools-options {
     position: absolute;
     bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    margin-bottom: var(--spacing-2);
     z-index: 10;
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: max-content;
+    align-items: center;
     gap: var(--spacing-2);
     width: auto;
     background: rgba(255, 255, 255, 0.95);
@@ -92,11 +109,52 @@
     transition: all 0.2s ease;
   }
 
+  &__tools-item--horizontal {
+    width: auto;
+    min-width: 0;
+    height: auto;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    align-items: center;
+    justify-content: flex-start;
+    justify-items: start;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2);
+  }
+
+  &__tools-item--active,
+  &__tools-item.active {
+    background: #B3D7FF;
+    border-color: #9AC8FF;
+    color: var(--color-neutral-900);
+    box-shadow: 0 2px 8px rgba(179, 215, 255, 0.45);
+  }
+
+  &__tools-item--active .icon-label,
+  &__tools-item.active .icon-label {
+    color: var(--color-neutral-900);
+  }
+
+  &__tools-item--active:hover,
+  &__tools-item.active:hover {
+    background: #B3D7FF;
+    border-color: #9AC8FF;
+    color: var(--color-neutral-900);
+    box-shadow: 0 2px 10px rgba(179, 215, 255, 0.5);
+  }
+
+  &__tools-item--active:hover .icon-label,
+  &__tools-item.active:hover .icon-label {
+    color: var(--color-neutral-900);
+  }
+
   // ==========================================================================
   // MODIFIERS
   // ==========================================================================
   &--mode-active,
   &--tool-active {
+
     .engine__modes-item,
     .engine__tools-item {
       background: #B3D7FF !important;
@@ -176,3 +234,5 @@
 .modify-status {
   justify-content: space-between;
 }
+
+
