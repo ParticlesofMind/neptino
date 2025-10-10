@@ -9,6 +9,26 @@ function debounce<T extends (...args: any[]) => void>(fn: T, delay = 300) {
   };
 }
 
+function createLocalTestImage(idSuffix: string, title: string, filename: string): MediaItem {
+  const assetUrl = new URL(`../../../assets/drawingTests/${filename}`, import.meta.url).href;
+  return {
+    id: `local-test-${idSuffix}`,
+    type: 'images',
+    title,
+    thumbnailUrl: assetUrl,
+    previewUrl: assetUrl,
+    contentUrl: assetUrl,
+    author: 'Local Test Assets',
+  };
+}
+
+const LOCAL_TEST_IMAGES: MediaItem[] = [
+  createLocalTestImage('elephant', 'Elephant Test', 'elephant-test.svg'),
+  createLocalTestImage('bee', 'Bee Test', 'bee-test.svg'),
+  createLocalTestImage('flower', 'Flower Test', 'flower-test.svg'),
+  createLocalTestImage('werewolf', 'Werewolf Test', 'werewolf-test.svg'),
+];
+
 class MediaInterface {
   private currentType: MediaType = 'files';
   private query = '';
@@ -199,8 +219,14 @@ class MediaInterface {
   }
 
   private renderResults(result: SearchResult, clear: boolean) {
-    if (clear) this.resultsEl.innerHTML = '';
-    if (result.items.length === 0 && result.page === 1) {
+    let injectedLocalTests = false;
+    if (clear) {
+      this.resultsEl.innerHTML = '';
+      if (result.page === 1) {
+        injectedLocalTests = this.appendLocalTestImages();
+      }
+    }
+    if (result.items.length === 0 && result.page === 1 && !injectedLocalTests) {
       const empty = document.createElement('div');
       empty.textContent = 'No results.';
       empty.className = 'search__empty';
@@ -212,6 +238,17 @@ class MediaInterface {
       const card = this.renderItemCard(item);
       this.resultsEl.appendChild(card);
     }
+  }
+
+  private appendLocalTestImages(): boolean {
+    if (this.currentType !== 'images') return false;
+    if (!LOCAL_TEST_IMAGES.length) return false;
+    for (const item of LOCAL_TEST_IMAGES) {
+      const card = this.renderItemCard(item);
+      card.setAttribute('data-source', 'local-test');
+      this.resultsEl.appendChild(card);
+    }
+    return true;
   }
 
   private renderItemCard(item: MediaItem): HTMLElement {

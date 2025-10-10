@@ -32,6 +32,7 @@ export class PenPathEditor {
   private activeNode: VectorNode | null = null;
   private dragMode: DragMode = 'none';
   private maintainMirrorOnHandleDrag = true;
+  private overlayLayer: Container | null = null;
 
   private lastClickTime = 0;
   private lastClickedNodeIndex = -1;
@@ -71,10 +72,28 @@ export class PenPathEditor {
     this.shape.visible = false;
     this.isActive = true;
 
+    if (container.sortableChildren !== true) {
+      try {
+        container.sortableChildren = true;
+      } catch {}
+    }
+
+    this.overlayLayer = new Container();
+    this.overlayLayer.eventMode = 'none';
+    this.overlayLayer.sortableChildren = true;
+    this.overlayLayer.zIndex = (this.shape.zIndex ?? 0) + 0.1;
+    this.syncOverlayWithShape();
+    container.addChild(this.overlayLayer);
+
+    const overlay = this.overlayLayer;
+    if (!overlay) {
+      return false;
+    }
+
     this.workingPath = new Graphics();
     this.workingPath.eventMode = 'none';
-    this.workingPath.zIndex = (this.shape.zIndex ?? 0) + 0.1;
-    container.addChild(this.workingPath);
+    this.workingPath.zIndex = 0;
+    overlay.addChild(this.workingPath);
 
     this.nodes = meta.nodes.map((n) => {
       const nodeGraphics = new Graphics();
@@ -83,8 +102,8 @@ export class PenPathEditor {
       nodeGraphics.stroke({ width: PEN_CONSTANTS.NODE_STROKE_WIDTH, color: 0xffffff });
       nodeGraphics.position.set(n.x, n.y);
       nodeGraphics.eventMode = 'none';
-      nodeGraphics.zIndex = (this.shape?.zIndex ?? 0) + 0.2;
-      container.addChild(nodeGraphics);
+      nodeGraphics.zIndex = 1;
+      overlay.addChild(nodeGraphics);
 
       const node: VectorNode = {
         position: new Point(n.x, n.y),
@@ -97,15 +116,9 @@ export class PenPathEditor {
         isSelected: false,
       };
 
-      this.updateHandleGraphics(node, container);
+      this.updateHandleGraphics(node, overlay);
       return node;
     });
-
-    if (container.sortableChildren !== true) {
-      try {
-        container.sortableChildren = true;
-      } catch {}
-    }
 
     this.deselectAllNodes();
     this.updatePathGraphics();
@@ -116,7 +129,7 @@ export class PenPathEditor {
   public handlePointerDown(event: FederatedPointerEvent, container: Container): boolean {
     if (!this.isActive) return false;
 
-    const local = container.toLocal(event.global);
+    const local = this.globalToShapeLocal(event.global);
     this.lastPointer.copyFrom(local);
 
     const hit = this.pickNodeOrHandle(local);
@@ -124,7 +137,7 @@ export class PenPathEditor {
       const now = performance.now();
       if (hit.kind === 'anchor') {
         if (this.lastClickedNodeIndex === hit.index && now - this.lastClickTime < 300) {
-          this.cycleNodeType(this.nodes[hit.index], hit.index, container);
+          this.cycleNodeType(this.nodes[hit.index], hit.index, this.overlayLayer ?? container);
           this.updatePathGraphics();
           this.lastClickTime = 0;
           this.lastClickedNodeIndex = -1;
@@ -152,7 +165,7 @@ export class PenPathEditor {
 
   public handlePointerMove(event: FederatedPointerEvent, container: Container): boolean {
     if (!this.isActive) return false;
-    const local = container.toLocal(event.global);
+    const local = this.globalToShapeLocal(event.global);
 
     if (this.isPointerDown && this.activeNode) {
       const prev = this.lastPointer;
@@ -206,7 +219,7 @@ export class PenPathEditor {
         }
       }
 
-      this.updateHandleGraphics(node, container);
+      this.updateHandleGraphics(node, this.overlayLayer ?? container);
       this.updateNodeVisuals(node);
       this.updatePathGraphics();
       this.lastPointer.copyFrom(local);
@@ -243,7 +256,11 @@ export class PenPathEditor {
         return true;
       case 'Tab':
         if (this.selectedNodeIndex >= 0) {
-          this.cycleNodeType(this.nodes[this.selectedNodeIndex], this.selectedNodeIndex, this.container!);
+          this.cycleNodeType(
+            this.nodes[this.selectedNodeIndex],
+            this.selectedNodeIndex,
+            this.overlayLayer ?? this.container!,
+          );
           this.updatePathGraphics();
         }
         return true;
@@ -327,6 +344,10 @@ export class PenPathEditor {
     this.isPointerDown = false;
     this.activeNode = null;
     this.dragMode = 'none';
+    if (this.overlayLayer && this.overlayLayer.parent) {
+      this.overlayLayer.parent.removeChild(this.overlayLayer);
+    }
+    this.overlayLayer = null;
     this.container = null;
   }
 
@@ -352,6 +373,7 @@ export class PenPathEditor {
 
   private updatePathGraphics(): void {
     if (!this.workingPath || !this.settings || this.nodes.length === 0) return;
+    this.syncOverlayWithShape();
 
     if (this.isClosed && this.nodes.length > 1) {
       this.ensureClosingHandles();
@@ -453,14 +475,28 @@ export class PenPathEditor {
     }
 
     if (updatedFirst) {
-      this.updateHandleGraphics(first, container);
+      this.updateHandleGraphics(first, this.overlayLayer ?? container);
       this.updateNodeVisuals(first);
     }
 
     if (updatedLast) {
-      this.updateHandleGraphics(last, container);
+      this.updateHandleGraphics(last, this.overlayLayer ?? container);
       this.updateNodeVisuals(last);
     }
+  }
+
+  private syncOverlayWithShape(): void {
+    if (!this.overlayLayer || !this.shape) return;
+    this.overlayLayer.position.copyFrom(this.shape.position);
+    this.overlayLayer.scale.copyFrom(this.shape.scale);
+    this.overlayLayer.pivot.copyFrom(this.shape.pivot);
+    this.overlayLayer.skew.copyFrom(this.shape.skew);
+    this.overlayLayer.rotation = this.shape.rotation ?? 0;
+  }
+
+  private globalToShapeLocal(global: Point): Point {
+    if (!this.shape) return new Point(global.x, global.y);
+    return this.shape.toLocal(global);
   }
 
   private updateHandleGraphics(node: VectorNode, container: Container): void {
@@ -484,12 +520,14 @@ export class PenPathEditor {
       let knob = bundle?.knob;
       if (!line) {
         line = new Graphics();
-        line.zIndex = (this.shape?.zIndex ?? 0) + 0.05;
+        line.zIndex = 0.5;
+        line.eventMode = 'none';
         container.addChild(line);
       }
       if (!knob) {
         knob = new Graphics();
-        knob.zIndex = (this.shape?.zIndex ?? 0) + 0.06;
+        knob.zIndex = 0.6;
+        knob.eventMode = 'none';
         container.addChild(knob);
       }
 
@@ -569,7 +607,7 @@ export class PenPathEditor {
         node.handleOut = null;
         break;
     }
-    this.updateHandleGraphics(node, container);
+    this.updateHandleGraphics(node, this.overlayLayer ?? container);
     this.updateNodeVisuals(node);
   }
 

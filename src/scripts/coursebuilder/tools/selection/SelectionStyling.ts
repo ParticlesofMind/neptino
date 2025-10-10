@@ -1,3 +1,5 @@
+import { Graphics } from 'pixi.js';
+import { PenShapeNodeMeta } from '../pen/PenGeometry';
 import { colorToNumber, detectToolType } from './SelectionUtils';
 
 export class SelectionStyling {
@@ -31,14 +33,75 @@ export class SelectionStyling {
     meta.size = width; meta.color = typeof settings.color === 'string' ? settings.color : meta.color; meta.opacity = opacity; gfx.__meta = meta; return true;
   }
 
-  private restylePen(gfx: any, meta: any, settings: any): boolean {
-    if (!meta || !meta.nodes || meta.nodes.length < 2) return false;
-    const color = colorToNumber(settings.strokeColor || settings.color) ?? colorToNumber(meta.strokeColor) ?? 0x000000;
-    const width = (settings.size ?? meta.size ?? 2) as number;
-    gfx.clear(); const nodes = meta.nodes as Array<{ x: number; y: number }>;
-    gfx.moveTo(nodes[0].x, nodes[0].y); for (let i = 1; i < nodes.length; i++) { const p = nodes[i]; gfx.lineTo(p.x, p.y); }
-    if (meta.closed) { gfx.lineTo(nodes[0].x, nodes[0].y); gfx.closePath(); const fillCandidate = (settings.fillColor !== undefined) ? settings.fillColor : meta.fillColor; const fillNum = colorToNumber(fillCandidate); if (fillNum !== undefined) { gfx.fill({ color: fillNum }); } }
-    gfx.stroke({ width, color, cap: 'round', join: 'round' }); meta.size = width; meta.strokeColor = typeof (settings.strokeColor || settings.color) === 'string' ? (settings.strokeColor || settings.color) : meta.strokeColor; gfx.__meta = meta; return true;
+  private restylePen(gfx: Graphics, meta: any, settings: any): boolean {
+    if (!meta || !Array.isArray(meta.nodes) || meta.nodes.length < 2) return false;
+
+    const nodes = meta.nodes as PenShapeNodeMeta[];
+    const strokeColorStr =
+      typeof (settings.strokeColor ?? settings.color) === 'string'
+        ? (settings.strokeColor ?? settings.color)
+        : meta.strokeColor;
+    const strokeColorNum = colorToNumber(strokeColorStr) ?? colorToNumber(meta.strokeColor) ?? 0x000000;
+    const strokeWidth = (settings.size ?? meta.size ?? 2) as number;
+
+    if (strokeColorStr) meta.strokeColor = strokeColorStr;
+    meta.size = strokeWidth;
+
+    if ('fillColor' in settings) {
+      meta.fillColor = settings.fillColor;
+    }
+
+    gfx.clear();
+
+    const first = nodes[0];
+    gfx.moveTo(first.x, first.y);
+    for (let i = 1; i < nodes.length; i++) {
+      const prev = nodes[i - 1];
+      const curr = nodes[i];
+      this.drawPenSegment(gfx, prev, curr);
+    }
+
+    if (meta.closed && nodes.length > 2) {
+      const last = nodes[nodes.length - 1];
+      this.drawPenSegment(gfx, last, first);
+      gfx.closePath();
+
+      const fillCandidate = 'fillColor' in settings ? settings.fillColor : meta.fillColor;
+      const fillColorNum = colorToNumber(fillCandidate);
+      if (
+        fillCandidate !== null &&
+        fillCandidate !== undefined &&
+        fillCandidate !== '' &&
+        fillCandidate !== 'transparent' &&
+        fillColorNum !== undefined
+      ) {
+        gfx.fill({ color: fillColorNum });
+      }
+    }
+
+    gfx.stroke({
+      width: strokeWidth,
+      color: strokeColorNum,
+      cap: 'round',
+      join: 'round',
+    });
+
+    (gfx as any).__meta = meta;
+    return true;
+  }
+
+  private drawPenSegment(gfx: Graphics, prev: PenShapeNodeMeta, curr: PenShapeNodeMeta): void {
+    const out = prev.out ?? null;
+    const inn = curr.in ?? null;
+    if (out && inn) {
+      gfx.bezierCurveTo(out.x, out.y, inn.x, inn.y, curr.x, curr.y);
+    } else if (out) {
+      gfx.bezierCurveTo(out.x, out.y, out.x, out.y, curr.x, curr.y);
+    } else if (inn) {
+      gfx.bezierCurveTo(inn.x, inn.y, inn.x, inn.y, curr.x, curr.y);
+    } else {
+      gfx.lineTo(curr.x, curr.y);
+    }
   }
 
   private restyleShape(gfx: any, meta: any, settings: any): boolean {

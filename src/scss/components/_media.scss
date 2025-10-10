@@ -3,6 +3,19 @@
 // ==========================================================================
 
 .search {
+  &__panel {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: var(--spacing-3);
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  &__filters {
+    min-height: 0;
+  }
+
   &__results {
     display: grid;
     gap: var(--search-card-gap, 0.75rem);
@@ -12,7 +25,9 @@
     align-content: start;
     justify-items: stretch;
     width: 100%;
-
+    overflow-y: auto;
+    min-height: 0;
+    padding-right: 0.25rem; // keeps scrollbar off cards without forcing outer overflow
   }
 }
 

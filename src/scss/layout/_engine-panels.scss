@@ -8,20 +8,18 @@
     &__content {
         display: grid;
         grid-template-columns: minmax(clamp(2.5rem, 3.5rem, 5.5rem), max-content) minmax(0, 0.8fr);
-        align-items: start;
+     
         overflow: hidden;
         width: 100%;
         padding: 0.25rem;
+        height: 100%;
+        min-height: 0;
     }
 
     &__media {
         display: grid;
         justify-items: center;
-        gap: 0.5rem;
-        overflow-y: auto;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-
+    
         &::-webkit-scrollbar {
             display: none;
         }
@@ -29,10 +27,12 @@
 
     &__search {
         display: grid;
-        grid-auto-flow: row;
-        grid-auto-rows: min-content;
+        grid-template-rows: auto minmax(0, 1fr);
         gap: var(--spacing-3);
         align-content: start;
+        overflow: hidden;
+        height: 100%;
+        min-height: 0;
     }
 
     &__media-item {
