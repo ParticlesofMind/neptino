@@ -8,14 +8,15 @@
   // BLOCK BASE STYLES
   // ==========================================================================
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: var(--spacing-3);
-  padding: var(--spacing-3);
+  grid-template-rows: auto auto auto auto;
+  gap: var(--spacing-2);
+  padding: 0;
   background-color: var(--color-background);
   border-radius: var(--radius-medium);
   border: 1px solid var(--color-neutral-200);
   height: 100%;
   position: relative;
+  overflow: hidden;
 
   // CSS Custom Properties for elements
   --card-preview-aspect: 4 / 3;
@@ -56,6 +57,7 @@
     line-height: 1.3;
     margin: 0;
     word-wrap: break-word;
+    padding: 0 var(--spacing-3);
   }
 
   &__description {
@@ -66,17 +68,25 @@
   }
 
   &__preview {
-    display: block;
+    display: grid;
+    place-items: center;
     width: 100%;
-    margin-bottom: var(--spacing-2);
-    border-radius: var(--radius-small);
+    margin: 0;
+    border-radius: 0;
     aspect-ratio: var(--card-preview-aspect, 4 / 3);
-    border: var(--card-preview-border-width, 0px) solid var(--card-preview-border-color, transparent);
-    background-color: var(--card-preview-background, transparent);
+    border: none;
+    border-bottom: 1px solid var(--color-neutral-200);
+    background-color: var(--color-neutral-50);
     padding: var(--card-preview-padding, 0);
     box-sizing: border-box;
     object-fit: cover;
     overflow: hidden;
+    
+    img, video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
   }
 
   &__preview-note {
@@ -97,8 +107,8 @@
   }
 
   &__audio {
-    width: 100%;
-    margin-top: 0.25rem;
+    width: calc(100% - var(--spacing-3) * 2);
+    margin: 0 var(--spacing-3);
   }
 
   &__meta {
@@ -108,6 +118,7 @@
     font-size: 0.6875rem;
     color: var(--color-text-secondary);
     margin: 0;
+    padding: 0 var(--spacing-3);
   }
 
   &__meta-item {
@@ -123,6 +134,7 @@
     justify-content: end;
     gap: var(--spacing-2);
     align-items: center;
+    padding: 0 var(--spacing-3) var(--spacing-3) var(--spacing-3);
   }
 
   &__action {

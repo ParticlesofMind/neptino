@@ -7,18 +7,21 @@
 .engine {
     &__content {
         display: grid;
-        grid-template-columns: minmax(clamp(2.5rem, 3.5rem, 5.5rem), max-content) minmax(0, 0.8fr);
+        grid-template-columns: minmax(clamp(2.5rem, 3.5rem, 5.5rem), max-content) minmax(0, 1fr);
      
         overflow: hidden;
         width: 100%;
         padding: 0.25rem;
         height: 100%;
         min-height: 0;
+        gap: 0;
     }
 
     &__media {
         display: grid;
         justify-items: center;
+        gap: var(--spacing-2);
+        align-content: start;
     
         &::-webkit-scrollbar {
             display: none;
@@ -29,18 +32,34 @@
         display: grid;
         grid-template-rows: auto minmax(0, 1fr);
         gap: var(--spacing-3);
-        align-content: start;
         overflow: hidden;
         height: 100%;
         min-height: 0;
+        padding: 0;
+        
+        // Make input and cards the same width
+        > .input--search,
+        > .search__panel {
+            padding-left: var(--spacing-4);
+            padding-right: var(--spacing-4);
+        }
+        
+        // Input already has internal padding, so reset padding and use margin
+        > .input--search {
+            padding-left: 0;
+            padding-right: 0;
+            margin-left: var(--spacing-4);
+            margin-right: var(--spacing-4);
+            width: calc(100% - var(--spacing-4) * 2);
+        }
     }
 
     &__media-item {
         display: grid;
         grid-auto-flow: row;
         gap: var(--spacing-1);
-        width: 50px;
-        height: 50px;
+        width: 60px;
+        height: 60px;
         place-items: center;
         padding: var(--spacing-2);
         border-radius: 4px;
@@ -59,6 +78,10 @@
             background: #B3D7FF;
             border-color: #9AC8FF;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        &[data-media="interactive"] .icon-label {
+            font-size: 0.65rem;
         }
     }
 
@@ -113,7 +136,7 @@
     }
 
     &__panel-tabs {
-        display: grid;
+        display: none; // Always hide tabs, use dropdown instead
         grid-auto-flow: column;
         grid-auto-columns: 1fr;
         border-radius: inherit;
@@ -156,7 +179,7 @@
 
     &__panel-select {
         position: relative;
-        display: none;
+        display: grid; // Always show dropdown
         inline-size: clamp(160px, 20vw, 220px);
         margin-left: auto;
     }
@@ -193,29 +216,19 @@
         pointer-events: none;
     }
 
-    @container engine-panel (max-width: 21rem) {
-        &__panel-tabs {
-            display: none;
-        }
+    // Compact layout adjustments (always applied now)
+    &__navigation {
+        padding: var(--spacing-2);
+        gap: var(--spacing-1);
+    }
 
-        &__panel-select {
-            display: grid;
-            inline-size: clamp(160px, 20vw, 220px);
-        }
-
-        &__navigation {
+    .layers-panel {
+        &__header {
             padding: var(--spacing-2);
-            gap: var(--spacing-1);
         }
 
-        .layers-panel {
-            &__header {
-                padding: var(--spacing-2);
-            }
-
-            &__content {
-                padding: var(--spacing-2);
-            }
+        &__content {
+            padding: var(--spacing-2);
         }
     }
 

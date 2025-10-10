@@ -5,7 +5,7 @@
 .engine {
     --engine-gap: 0.5rem;
     --engine-nav-min: clamp(14rem, 18vw, 17rem);
-    --engine-panel-min: clamp(16rem, 21vw, 20rem);
+    --engine-panel-min: clamp(10rem, 12vw, 12rem);
     --engine-canvas-min: clamp(26rem, 42vw, 48rem);
     container-type: inline-size;
     container-name: engine-shell;
@@ -15,7 +15,7 @@
     grid-template-columns:
         minmax(var(--engine-nav-min), 1fr)
         minmax(var(--engine-canvas-min), 2.6fr)
-        minmax(var(--engine-panel-min), 1fr);
+        minmax(var(--engine-panel-min), 0.6fr);
     grid-auto-rows: minmax(0, 1fr);
     height: calc(100vh - 3rem);
     width: 100%;
