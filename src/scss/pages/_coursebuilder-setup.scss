@@ -1,168 +1,178 @@
-
-
-
-
 // ==========================================================================
-// COURSEBUILDER ELEMENT VISIBILITY CONTROLS
+// COURSEBUILDER SETUP VIEW - BEM Methodology
 // ==========================================================================
 
 .coursebuilder {
-    container-type: inline-size;
-    container-name: coursebuilder-shell;
-    &__setup,
-    &__create,
-    &__preview,
-    &__launch {
+    // ==========================================================================
+    // BLOCK BASE STYLES
+    // ==========================================================================
+    // Core coursebuilder sections are hidden when aria-hidden is true.
+
+    &__setup[aria-hidden="true"],
+    &__create[aria-hidden="true"],
+    &__preview[aria-hidden="true"],
+    &__launch[aria-hidden="true"] {
         display: none;
-
-        // When aria-hidden="true", force hide everything
-        &[aria-hidden="true"] {
-            display: none !important;
-            visibility: hidden !important;
-        }
-    }
-
-    &__setup {
-        &.coursebuilder__setup--active {
-            display: grid;
-            gap: 0;
-            width: 100%;
-        }
-    }
-
-    &__create {
-        &.coursebuilder__create--active {
-            display: grid;
-            grid-auto-flow: row;
-            grid-auto-rows: min-content;
-            overflow: hidden;
-            width: 100%;
-            height: 100%; // Use available height within grid, not full viewport
-        }
-    }
-
-    &__preview,
-    &__launch {
-
-        &.coursebuilder__preview--active,
-        &.coursebuilder__launch--active {
-            display: block;
-            padding: 2rem;
-            width: 100%;
-            height: 100%; // Use available height within grid, not full viewport
-        }
+        visibility: hidden;
     }
 }
 
-// ==========================================================================
-// SETUP COURSEBUILDER ELEMENT LAYOUT
-// ==========================================================================
+.coursebuilder-setup {
+    // ==========================================================================
+    // BLOCK BASE STYLES
+    // ==========================================================================
+    display: grid;
+    grid-template-columns: minmax(min(100%, 22rem), 24rem) minmax(0, 1fr);
+    gap: clamp(var(--spacing-4), 3vw, var(--spacing-7));
+    padding: clamp(var(--spacing-4), 4vw, var(--spacing-7));
+    min-height: 100vh;
+    height: 100dvh;
+    align-items: stretch;
+    container-type: inline-size;
+    container-name: coursebuilder-setup;
+    background: transparent;
 
-// ==========================================================================
-// COURSEBUILDER SETUP - Enhanced with unified content system
-// ==========================================================================
+    &[aria-hidden="true"] {
+        display: none;
+    }
 
-.coursebuilder {
-    &__setup {
+    // ==========================================================================
+    // ELEMENTS
+    // ==========================================================================
+
+    &__aside {
         display: grid;
-        grid-template-columns: minmax(200px, max-content) minmax(0, 1fr); // Sidebar sized to content
-        gap: var(--spacing-3);
-        container-type: inline-size;
-        container-name: coursebuilder-setup;
-    }
-}
-
-@container coursebuilder-setup (max-width: 52rem) {
-    .coursebuilder__setup {
-        grid-template-columns: 1fr;
-        grid-auto-rows: min-content;
-        gap: var(--spacing-2);
-    }
-
-    .coursebuilder__sidebar {
-        position: relative;
-        width: 100%;
-        height: auto;
-        margin: 0;
-        padding: 0;
-        grid-column: 1 / -1;
-    }
-
-    .coursebuilder__content {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        border-radius: 0;
-        box-shadow: none;
-    }
-}
-
-// ==========================================================================
-// FORM STYLING (BEM: Block for forms within setup)
-// ==========================================================================
-
-.form {
-    max-width: none; // Allow forms to use full content width
-
-    &__group {
-        margin-bottom: var(--spacing-5);
-
-        &--actions {
-            margin-top: var(--spacing-8);
-            border-top: 1px solid var(--color-neutral-200);
-        }
-    }
-
-    &__row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
         gap: var(--spacing-4);
+        align-content: start;
+        padding: clamp(var(--spacing-4), 3vw, var(--spacing-6));
+        border-radius: var(--radius-medium);
+        background: rgba(var(--color-background-rgb), 0.9);
+        box-shadow: 0 18px 40px -32px rgba(15, 23, 42, 0.45);
+        overflow-y: auto;
+        scrollbar-gutter: stable both-edges;
+        min-height: 0;
+        max-height: 100%;
+    }
+
+    &__main {
+        display: grid;
+        gap: clamp(var(--spacing-5), 4vw, var(--spacing-8));
+        align-content: start;
+        overflow-y: auto;
+        scrollbar-gutter: stable both-edges;
+        padding-right: clamp(var(--spacing-1), 1vw, var(--spacing-2));
+        min-height: 0;
+        max-height: 100%;
     }
 }
 
+@container coursebuilder-setup (max-width: 58rem) {
+    .coursebuilder-setup {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
 
+.coursebuilder-section {
+    // ==========================================================================
+    // BLOCK BASE STYLES
+    // ==========================================================================
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(var(--spacing-2), 1.5vw, var(--spacing-4));
+    align-content: start;
+    align-items: stretch;
+    justify-items: stretch;
+    background: rgba(var(--color-background-rgb), 0.96);
+    border-radius: var(--radius-medium);
+    box-shadow: 0 24px 48px -32px rgba(15, 23, 42, 0.35);
+    min-height: 0;
 
-// Enhance content for coursebuilder-specific layout  
-.coursebuilder__content {
-    padding: var(--spacing-6); // More padding for forms
+    // ==========================================================================
+    // ELEMENTS
+    // ==========================================================================
+
+    &__body {
+        display: grid;
+        gap: clamp(var(--spacing-3), 1.5vw, var(--spacing-5));
+        align-content: start;
+        justify-items: stretch;
+        align-items: stretch;
+        min-height: 0;
+        grid-auto-rows: minmax(0, 1fr);
+    }
+
+    &__config,
+    &__preview {
+        display: grid;
+        gap: var(--spacing-2);
+        align-content: start;
+        justify-items: stretch;
+        padding: clamp(var(--spacing-2), 1vw, var(--spacing-3));
+        border-radius: var(--radius-small);
+        background: rgba(var(--color-background-rgb), 0.88);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        min-height: 0;
+        align-self: stretch;
+    }
+
+    &__preview {
+        background: rgba(var(--color-background-rgb), 0.94);
+    }
+
+    // ==========================================================================
+    // MODIFIERS
+    // ==========================================================================
+
+    &--split {
+        .coursebuilder-section__body {
+            grid-template-columns: minmax(min(100%, 22rem), 26rem) minmax(0, 1fr);
+            align-items: stretch;
+        }
+
+        .coursebuilder-section__config,
+        .coursebuilder-section__preview {
+            max-height: calc(100dvh - 2 * var(--spacing-7));
+            height: 100%;
+            overflow-y: auto;
+            scrollbar-gutter: stable;
+        }
+    }
+
+    // ==========================================================================
+    // STATES & INTERACTIONS
+    // ==========================================================================
+
+    &:focus-within {
+        outline: 2px solid var(--color-primary-300);
+        outline-offset: 3px;
+    }
+
+    > * {
+        width: 100%;
+    }
 }
 
 .content__section {
     display: none;
+    margin: 0;
 
     &.is-active {
-        display: block;
-        width: 100%; // Ensure active sections span full width
-    }
-
-    &:not(:last-child) {
-        margin-bottom: var(--spacing-8);
+        display: grid;
     }
 }
 
-// ==========================================================================
-// FIX FOR COLLAPSING MARGINS ON PLACEHOLDER ELEMENTS
-// ==========================================================================
+.coursebuilder-section .form {
+    width: 100%;
+    margin: 0;
+    padding: clamp(var(--spacing-3), 1.5vw, var(--spacing-4));
+    box-shadow: none;
+    background: transparent;
+}
 
 .placeholder {
-    margin: 0; // Remove default paragraph margins that cause collapsing margin issues
-    padding: var(--spacing-4);
+    margin: 0;
+    padding: var(--spacing-5);
     color: var(--color-neutral-500);
     text-align: center;
     font-style: italic;
-}
-
-// Additional fix for any p elements that might cause overflow issues
-.coursebuilder {
-    p {
-        &:last-child {
-            margin-bottom: 0; // Prevent last paragraph from creating collapsing margins
-        }
-    }
-    
-    // Ensure containers have overflow hidden to prevent margin collapse issues
-    &__preview,
-    &__launch {
-        overflow: hidden; // Prevent collapsing margins from extending container height
-    }
 }

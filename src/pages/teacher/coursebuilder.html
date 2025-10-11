@@ -39,8 +39,8 @@
   </header>
   <main class="grid__main coursebuilder">
     <!-- Setup View -->
-    <div class="coursebuilder__setup" aria-hidden="false" id="setup">
-      <aside class="sidebar">
+    <div class="coursebuilder__setup coursebuilder-setup" aria-hidden="false" id="setup">
+      <aside class="sidebar coursebuilder-setup__aside">
         <nav>
           <ul class="sidebar__list">
             <li class="sidebar__item">
@@ -123,9 +123,9 @@
         </nav>
       </aside>
 
-      <div class="content coursebuilder__content">
+      <div class="content coursebuilder__content coursebuilder-setup__main">
         <!-- Essentials Article -->
-        <article id="essentials" class="content__section content__section--active">
+        <article id="essentials" class="content__section coursebuilder-section">
           <form class="form" id="course-essentials-form">
             <label class="form__label">
               Course Name
@@ -166,7 +166,7 @@
           </form>
         </article>
         <!-- Classification Article -->
-        <article class="content__section" id="classification">
+        <article class="content__section coursebuilder-section" id="classification">
           <form class="form classification" id="course-classification-form">
 
             <!-- Row 1: Basic Information -->
@@ -288,12 +288,12 @@
           </form>
         </article>
         <!-- Templates Article -->
-        <article class="content__section" id="templates">
+        <article class="content__section coursebuilder-section coursebuilder-section--split" id="templates">
           <!-- Template Actions -->
 
 
           <!-- Template Builder -->
-          <div class="template">
+          <div class="template coursebuilder-section__body">
             <div class="template__buttons">
               <button class="button button--primary" id="create-template-btn">
                 + Create New Template
@@ -304,14 +304,14 @@
             </div>
 
 
-            <div class="template__config">
+            <div class="template__config coursebuilder-section__config">
               <h3 class="header">Template Configuration</h3>
               <div class="template__content" id="template-config-content">
                 <p>Select or create a template to configure its settings.</p>
               </div>
             </div>
 
-            <div class="template__preview">
+            <div class="template__preview coursebuilder-section__preview">
               <h3 class="header">Template Preview</h3>
               <div class="template__content" id="template-preview-content">
                 <p>Create a new template or select an existing one to see the preview here.</p>
@@ -422,11 +422,11 @@
           </div>
         </div>
         <!-- Schedule Article -->
-        <article class="content__section" id="schedule">
+        <article class="content__section coursebuilder-section coursebuilder-section--split" id="schedule">
           <!-- Schedule Layout -->
-          <div class="schedule">
+          <div class="schedule coursebuilder-section__body">
             <!-- Schedule Configuration -->
-            <div class="schedule__config" id="schedule-config">
+            <div class="schedule__config coursebuilder-section__config" id="schedule-config">
               <h3 class="schedule__heading">Schedule Configuration</h3>
 
               <form class="form" id="course-schedule-form">
@@ -502,7 +502,7 @@
             </div>
 
             <!-- Schedule Preview -->
-            <div class="schedule__preview" id="schedule-preview">
+            <div class="schedule__preview coursebuilder-section__preview" id="schedule-preview">
               <h3 class="schedule__heading">Schedule Preview</h3>
               <div class="schedule__content">
                 <!-- Schedule rows will be generated here by JavaScript -->
@@ -517,9 +517,9 @@
           </div>
         </article>
         <!-- Curriculum Article -->
-        <article class="content__section" id="curriculum">
-          <div class="curriculum">
-            <div class="curriculum__config">
+        <article class="content__section coursebuilder-section coursebuilder-section--split" id="curriculum">
+          <div class="curriculum coursebuilder-section__body">
+            <div class="curriculum__config coursebuilder-section__config">
               <h3 class="heading">Curriculum Configuration</h3>
 
               <div class="curriculum__duration">
@@ -571,7 +571,7 @@
               </div>
             </div>
 
-            <div class="curriculum__preview">
+            <div class="curriculum__preview coursebuilder-section__preview">
               <div class="curriculum__controls">
 
                 <div class="button-group">
@@ -600,40 +600,40 @@
           </div>
         </article>
         <!-- Settings Article -->
-        <article class="content__section" id="settings">
+        <article class="content__section coursebuilder-section" id="settings">
           <div class="placeholder">
             <!-- General settings content will be added here -->
           </div>
         </article>
         <!-- Marketplace Article -->
 
-        <article class="content__section" id="marketplace">
+        <article class="content__section coursebuilder-section" id="marketplace">
           <p class="placeholder">
             Marketplace integration features will be available here...
           </p>
         </article>
 
         <!-- Resources Article -->
-        <article class="content__section" id="resources">
+        <article class="content__section coursebuilder-section" id="resources">
           <div class="placeholder">
             <!-- Resources content will be added here -->
           </div>
         </article>
 
         <!-- Students Article -->
-        <article class="content__section" id="students">
+        <article class="content__section coursebuilder-section" id="students">
           <div class="placeholder">
             <!-- Students content will be added here -->
           </div>
         </article>
 
         <!-- Pedagogy Article -->
-        <article class="content__section" id="pedagogy">
+        <article class="content__section coursebuilder-section coursebuilder-section--split" id="pedagogy">
           <form class="form pedagogy" id="course-pedagogy-form">
             <input type="hidden" name="course_pedagogy" id="course-pedagogy-input" />
 
-            <div class="pedagogy-ui" id="pedagogy-ui">
-              <div class="pedagogy-ui__left">
+            <div class="pedagogy-ui coursebuilder-section__body" id="pedagogy-ui">
+              <div class="pedagogy-ui__left coursebuilder-section__config">
                 <div class="pedagogy-grid" id="pedagogy-grid" role="application"
                   aria-label="Pedagogical coordinate plane" tabindex="0">
                   <!-- Grid backdrop via CSS; central axes via pseudo elements -->
@@ -663,7 +663,7 @@
                 </div>
               </div>
 
-              <div class="pedagogy-ui__right">
+              <div class="pedagogy-ui__right coursebuilder-section__preview">
                 <section class="pedagogy-summary">
                   <h3 class="pedagogy-summary__title" id="pedagogy-approach-title">Balanced</h3>
                   <div class="pedagogy-summary__subtitle" id="pedagogy-approach-subtitle"><em>Essentialist × Behaviorist
@@ -687,7 +687,7 @@
         </article>
 
         <!-- Course Visibility Article -->
-        <article class="content__section" id="course-visibility">
+        <article class="content__section coursebuilder-section" id="course-visibility">
           <!-- Course Visibility Settings -->
           <div class="settings__section">
             <h4 class="settings__heading">Course Visibility</h4>
@@ -729,30 +729,30 @@
         </article>
 
         <!-- Pricing & Monetization Article -->
-        <article class="content__section" id="pricing-monetization">
+        <article class="content__section coursebuilder-section" id="pricing-monetization">
           <div class="placeholder">
             <!-- Pricing & Monetization content will be added here -->
           </div>
         </article>
 
         <!-- External Integrations & APIs Article -->
-        <article class="content__section" id="external-integrations">
+        <article class="content__section coursebuilder-section" id="external-integrations">
           <div class="placeholder">
             <!-- External Integrations & APIs content will be added here -->
           </div>
         </article>
 
         <!-- Communication Article -->
-        <article class="content__section" id="communication">
+        <article class="content__section coursebuilder-section" id="communication">
           <div class="placeholder">
             <!-- Communication content will be added here -->
           </div>
         </article>
 
         <!-- Page Setup Article -->
-        <article class="content__section" id="page-setup">
-          <div class="page-setup">
-            <div class="page-setup__config">
+        <article class="content__section coursebuilder-section coursebuilder-section--split" id="page-setup">
+          <div class="page-setup coursebuilder-section__body">
+            <div class="page-setup__config coursebuilder-section__config">
               <h3 class="header">Page Configuration</h3>
               <div class="page-setup__content">
                 <!-- Units -->
@@ -839,7 +839,7 @@
               </div>
             </div>
 
-            <div class="page-setup__preview">
+            <div class="page-setup__preview coursebuilder-section__preview">
               <h3 class="header">Page Preview</h3>
               <div class="page-setup__canvas-container">
                 <canvas class="page-setup__canvas" id="page-preview-canvas" width="400" height="500"></canvas>
@@ -853,42 +853,42 @@
         </article>
 
         <!-- Interface Article -->
-        <article class="content__section" id="interface">
+        <article class="content__section coursebuilder-section" id="interface">
           <div class="placeholder">
             <!-- Interface content will be added here -->
           </div>
         </article>
 
         <!-- Themes Article -->
-        <article class="content__section" id="themes">
+        <article class="content__section coursebuilder-section" id="themes">
           <div class="placeholder">
             <!-- Themes content will be added here -->
           </div>
         </article>
 
         <!-- Accessibility & Comfort Article -->
-        <article class="content__section" id="accessibility-comfort">
+        <article class="content__section coursebuilder-section" id="accessibility-comfort">
           <div class="placeholder">
             <!-- Accessibility & Comfort content will be added here -->
           </div>
         </article>
 
         <!-- Notifications & Alerts Article -->
-        <article class="content__section" id="notifications-alerts">
+        <article class="content__section coursebuilder-section" id="notifications-alerts">
           <div class="placeholder">
             <!-- Notifications & Alerts content will be added here -->
           </div>
         </article>
 
         <!-- Data Management & Backup Article -->
-        <article class="content__section" id="data-management">
+        <article class="content__section coursebuilder-section" id="data-management">
           <div class="placeholder">
             <!-- Data Management & Backup content will be added here -->
           </div>
         </article>
 
         <!-- Advanced Settings Article -->
-        <article class="content__section" id="advanced-settings">
+        <article class="content__section coursebuilder-section" id="advanced-settings">
           <!-- Danger Zone -->
           <div class="settings__section settings__section--danger">
             <h3 class="settings__heading settings__heading--danger">
@@ -1317,14 +1317,14 @@
 
     <!-- Preview View -->
     <div class="coursebuilder__preview" aria-hidden="true" id="preview">
-      <article class="content__section content__section--preview">
+      <article class="content__section coursebuilder-section">
         <p class="placeholder">Course preview will be displayed here...</p>
       </article>
     </div>
 
     <!-- Launch View -->
     <div class="coursebuilder__launch" aria-hidden="true" id="launch">
-      <article class="content__section content__section--launch">
+      <article class="content__section coursebuilder-section">
         <p class="placeholder">Course launch options will be available here...</p>
       </article>
     </div>
