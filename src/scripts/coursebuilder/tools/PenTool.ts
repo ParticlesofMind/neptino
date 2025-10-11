@@ -443,6 +443,9 @@ export class PenTool extends BaseTool {
 
  container.addChild(nodeGraphics);
  this.markAsPenControl(nodeGraphics, 'node');
+ 
+ // 🔗 CRITICAL: Store reference to the path graphics for cleanup
+ (nodeGraphics as any).__attachedTo = this.currentPath.pathGraphics;
 
  // Create node object
  const node: VectorNode = {
@@ -596,6 +599,13 @@ export class PenTool extends BaseTool {
         container.addChild(knob);
       }
       this.markAsPenControl(knob, `handle-${kind}-knob`);
+      
+      // 🔗 CRITICAL: Store reference to the path graphics for cleanup
+      if (this.currentPath?.pathGraphics) {
+        (line as any).__attachedTo = this.currentPath.pathGraphics;
+        (knob as any).__attachedTo = this.currentPath.pathGraphics;
+      }
+      
       // Style
       line.clear();
       line.moveTo(anchor.x, anchor.y);
@@ -718,6 +728,11 @@ export class PenTool extends BaseTool {
  private showHoverIndicator(position: Point, container: Container): void {
  this.hoverIndicator = new Graphics();
  this.markAsPenControl(this.hoverIndicator, 'hover');
+ 
+ // 🔗 CRITICAL: Store reference to the path graphics for cleanup
+ if (this.currentPath?.pathGraphics) {
+   (this.hoverIndicator as any).__attachedTo = this.currentPath.pathGraphics;
+ }
  
  // Create a subtle, desaturated green circle (no blinking)
  this.hoverIndicator.circle(0, 0, PEN_CONSTANTS.NODE_SIZE + 2);
@@ -1274,12 +1289,15 @@ export class PenTool extends BaseTool {
       nodeGraphics.stroke({ width: PEN_CONSTANTS.NODE_STROKE_WIDTH, color: 0xffffff });
       nodeGraphics.position.set(pos.x, pos.y);
       container.addChild(nodeGraphics);
-  this.markAsPenControl(nodeGraphics, 'node');
+      this.markAsPenControl(nodeGraphics, 'node');
+      
+      // 🔗 CRITICAL: Store reference to the path graphics for cleanup
+      (nodeGraphics as any).__attachedTo = workingPath.pathGraphics;
 
       const node: VectorNode = {
         position: pos.clone(),
         graphics: nodeGraphics,
-  pointType: inferredPointType,
+        pointType: inferredPointType,
         handleIn: handleIn ?? (n.in ? new Point(n.in.x, n.in.y) : null),
         handleOut: handleOut ?? (n.out ? new Point(n.out.x, n.out.y) : null),
         handleInGraphics: null,
@@ -1442,6 +1460,9 @@ export class PenTool extends BaseTool {
       nodeGraphics.position.set(nodeData.x, nodeData.y);
       container.addChild(nodeGraphics);
       this.markAsPenControl(nodeGraphics, 'node');
+      
+      // 🔗 CRITICAL: Store reference to the path graphics for cleanup
+      (nodeGraphics as any).__attachedTo = this.currentPath!.pathGraphics;
 
       const node: VectorNode = {
         position: new Point(nodeData.x, nodeData.y),
@@ -1767,6 +1788,9 @@ export class PenTool extends BaseTool {
     nodeGraphics.position.set(position.x, position.y);
     container.addChild(nodeGraphics);
     this.markAsPenControl(nodeGraphics, 'node');
+    
+    // 🔗 CRITICAL: Store reference to the path graphics for cleanup
+    (nodeGraphics as any).__attachedTo = this.currentPath.pathGraphics;
 
     // Create node object
     const node: VectorNode = {
@@ -2152,5 +2176,41 @@ export class PenTool extends BaseTool {
  // Get available stroke sizes for UI
  static getAvailableStrokeSizes(): number[] {
  return STROKE_SIZES.PEN;
+ }
+
+ /**
+  * Clean up all control graphics associated with a pen path
+  * This should be called when a pen path is deleted to ensure handles/nodes are removed
+  */
+ public static cleanupPathControls(pathGraphics: Graphics, container: Container): void {
+   if (!pathGraphics || !container) return;
+   
+   // Find and remove all controls attached to this path
+   const controlsToRemove: Graphics[] = [];
+   
+   for (const child of container.children) {
+     const attachedTo = (child as any).__attachedTo;
+     const isPenControl = (child as any).__penControl;
+     
+     // If this control is attached to the path being deleted, mark it for removal
+     if (isPenControl && attachedTo === pathGraphics) {
+       controlsToRemove.push(child as Graphics);
+     }
+   }
+   
+   // Remove all collected controls
+   controlsToRemove.forEach(control => {
+     try {
+       if (control.parent) {
+         control.parent.removeChild(control);
+       }
+     } catch (error) {
+       console.warn('Failed to remove pen control:', error);
+     }
+   });
+   
+   if (controlsToRemove.length > 0) {
+     console.log(`✏️ PEN: Cleaned up ${controlsToRemove.length} control graphics for deleted path`);
+   }
  }
 }

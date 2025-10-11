@@ -322,6 +322,17 @@ export class SelectionTool extends BaseTool {
       // Capture object refs and placement for history
       const removed = this.selected.map(obj => ({ obj, parent: obj.parent as Container | null, index: obj.parent ? obj.parent.getChildIndex(obj) : -1 }));
       
+      // Clean up any pen tool controls before removing objects
+      removed.forEach(({ obj, parent }) => {
+        const toolType = (obj as any).__toolType;
+        if (toolType === 'pen' && parent) {
+          // Dynamically import and call PenTool cleanup
+          import('../PenTool').then(({ PenTool }) => {
+            PenTool.cleanupPathControls(obj as any, parent);
+          }).catch(err => console.warn('Failed to cleanup pen controls:', err));
+        }
+      });
+      
       // Remove from DisplayObjectManager first (this will handle parent removal and fire events)
       removed.forEach(({ obj }) => { 
         try { 
@@ -356,7 +367,15 @@ export class SelectionTool extends BaseTool {
             }); 
           },
           redo: () => { 
-            removed.forEach(({ obj }) => { 
+            removed.forEach(({ obj, parent }) => {
+              // Clean up pen controls on redo as well
+              const toolType = (obj as any).__toolType;
+              if (toolType === 'pen' && parent) {
+                import('../PenTool').then(({ PenTool }) => {
+                  PenTool.cleanupPathControls(obj as any, parent);
+                }).catch(err => console.warn('Failed to cleanup pen controls:', err));
+              }
+              
               try { 
                 if (this.displayManager && (this.displayManager as any).remove) {
                   (this.displayManager as any).remove(obj);
