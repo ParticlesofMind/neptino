@@ -7,7 +7,11 @@
   // ==========================================================================
   // BLOCK BASE STYLES
   // ==========================================================================
-  @include grid-responsive(minmax(300px, 1fr), var(--spacing-6));
+  display: grid;
+  grid-template-columns: repeat(2, minmax(18rem, 1fr));
+  gap: var(--spacing-6);
+  align-items: stretch;
+  overflow-x: auto;
   height: 100%;
   min-height: 0;
 

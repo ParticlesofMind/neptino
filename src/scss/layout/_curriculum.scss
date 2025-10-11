@@ -1,8 +1,10 @@
 
-.curriculum { 
-    display: grid; 
-    grid-template-columns: repeat(2, 1fr);
+.curriculum {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(18rem, 1fr));
     gap: var(--spacing-8);
+    align-items: stretch;
+    overflow-x: auto;
     height: 100%; // Fill the full height of the container
     container-type: inline-size;
     container-name: curriculum-shell;
@@ -438,7 +440,7 @@
 
     // Responsive behavior
     @container curriculum-shell (max-width: 48rem) {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(16rem, 1fr));
         gap: var(--spacing-7);
 
         &__config,

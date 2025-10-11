@@ -65,8 +65,8 @@
 .coursebuilder {
     &__setup {
         display: grid;
-        grid-template-columns: minmax(240px, clamp(26vw, 280px, 340px)) minmax(0, 1fr); // Sidebar and content
-        gap: var(--spacing-4);
+        grid-template-columns: minmax(200px, max-content) minmax(0, 1fr); // Sidebar sized to content
+        gap: var(--spacing-3);
         container-type: inline-size;
         container-name: coursebuilder-setup;
     }
@@ -76,7 +76,7 @@
     .coursebuilder__setup {
         grid-template-columns: 1fr;
         grid-auto-rows: min-content;
-        gap: var(--spacing-3);
+        gap: var(--spacing-2);
     }
 
     .coursebuilder__sidebar {

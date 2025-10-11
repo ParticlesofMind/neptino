@@ -8,12 +8,12 @@
 // ==========================================================================
 .template {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(18rem, 1fr));
   grid-template-rows: auto 1fr;
   gap: var(--spacing-6);
+  align-items: stretch;
+  overflow-x: auto;
   height: 850px;
-
-  @include grid-responsive(minmax(400px, 1fr), var(--spacing-6));
 
   &__buttons {
     grid-column: 1 / -1;
