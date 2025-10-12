@@ -7,13 +7,7 @@
   // ==========================================================================
   // BLOCK BASE STYLES
   // ==========================================================================
-  display: grid;
-  grid-template-columns: repeat(2, minmax(18rem, 1fr));
-  gap: var(--spacing-6);
-  align-items: stretch;
-  overflow-x: auto;
-  height: 100%;
-  min-height: 0;
+  display: contents;
 
   // ==========================================================================
   // ELEMENTS
@@ -22,16 +16,13 @@
   &__preview {
     display: grid;
     grid-template-rows: auto 1fr;
-    background: var(--color-background);
-    border: 1px solid var(--color-neutral-200);
-    border-radius: var(--radius-medium);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     min-height: 0;
     overflow: hidden;
+    gap: var(--spacing-3);
   }
 
   &__header {
-    padding: var(--spacing-4) var(--spacing-5);
+    padding: var(--spacing-3) var(--spacing-4);
     margin: 0;
     border-bottom: 1px solid var(--color-neutral-200);
     background: var(--color-neutral-50);
@@ -40,7 +31,7 @@
   }
 
   &__content {
-    padding: var(--spacing-5);
+    padding: var(--spacing-3);
     overflow-y: auto;
     min-height: 0;
 
@@ -52,7 +43,7 @@
 
   &__section {
     &:not(:last-child) {
-      margin-bottom: var(--spacing-6);
+      margin-bottom: var(--spacing-4);
     }
   }
 
@@ -127,8 +118,8 @@
   &__canvas-container {
     display: grid;
     place-items: center;
-    padding: var(--spacing-5);
-    gap: var(--spacing-4);
+    padding: var(--spacing-3);
+    gap: var(--spacing-3);
   }
 
   &__canvas {

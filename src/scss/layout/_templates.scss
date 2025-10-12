@@ -7,32 +7,33 @@
 // TEMPLATE WRAPPER BLOCK
 // ==========================================================================
 .template {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(18rem, 1fr));
-  grid-template-rows: auto 1fr;
-  gap: var(--spacing-6);
-  align-items: stretch;
-  overflow-x: auto;
-  height: 850px;
+  display: contents;
 
   &__buttons {
     grid-column: 1 / -1;
     display: grid;
     grid-auto-flow: column;
-    gap: var(--spacing-4);
+    gap: var(--spacing-2);
     justify-content: start;
+    align-items: center;
+    padding-block: var(--spacing-1);
+    align-self: start;
+
+    .button {
+      min-width: max-content;
+      padding: var(--spacing-2) var(--spacing-4);
+      border-radius: var(--radius-small);
+      height: auto;
+    }
   }
 
   &__config,
   &__preview {
     display: grid;
     grid-template-rows: auto 1fr;
-    background: var(--color-background);
-    border: 1px solid var(--color-neutral-200);
-    border-radius: var(--radius-medium);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    padding: var(--spacing-4);
+    gap: var(--spacing-3);
     min-height: 0;
+    align-content: start;
   }
 
   &__content {
@@ -99,6 +100,8 @@
 
   &__content {
     padding: var(--spacing-4);
+    display: grid;
+    gap: var(--spacing-3);
   }
 
   // MODIFIERS for color-coding

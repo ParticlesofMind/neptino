@@ -53,15 +53,15 @@
   }
 
   &__row-basic {
-    @include grid-responsive(minmax(250px, 1fr), var(--spacing-4));
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
   }
 
   &__row-hierarchy {
-    @include grid-responsive(minmax(200px, 1fr), var(--spacing-4));
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
   }
 
   &__row-sequence {
-    @include grid-responsive(minmax(220px, 1fr), var(--spacing-4));
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
   }
 
   &__field {

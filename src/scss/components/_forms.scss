@@ -43,7 +43,7 @@
 
   &__field {
     display: grid;
-    gap: var(--spacing-2);
+    gap: clamp(var(--spacing-2), 1.2vw, var(--spacing-4));
     position: relative; // For icon positioning
   }
 
