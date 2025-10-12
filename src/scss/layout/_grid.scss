@@ -10,9 +10,9 @@
     overflow: hidden; // Prevent scrollbar
     grid-template-rows: auto minmax(0, 1fr) auto; // header auto, main flexible but can shrink, footer auto
     grid-template-areas:
-        "header"
-        "main"
-        "footer";
+        'header'
+        'main'
+        'footer';
 
     &__header {
         grid-area: header;
@@ -35,10 +35,8 @@
         grid-area: footer;
     }
 
-
-
     &--small {
         grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: auto;
+        grid-template-rows: repeat(3, 1fr);
     }
 }

@@ -845,7 +845,7 @@ class CurriculumManager {
 
  private renderCurriculumPreview(): void {
    const previewContainer = this.curriculumPreviewSection.querySelector(
-     ".curriculum__content",
+     ".editable-surface",
    );
    if (!previewContainer || !Array.isArray(this.currentCurriculum)) return;
    

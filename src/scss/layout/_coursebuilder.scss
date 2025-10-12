@@ -1,0 +1,584 @@
+// ==========================================================================
+// COURSEBUILDER LAYOUT
+// ==========================================================================
+
+.coursebuilder {
+    &__setup[aria-hidden='true'],
+    &__create[aria-hidden='true'],
+    &__preview[aria-hidden='true'],
+    &__launch[aria-hidden='true'] {
+        display: none;
+        visibility: hidden;
+    }
+
+    &__setup {
+        display: grid;
+        grid-template-columns: clamp(16rem, 18vw, 19rem) minmax(0, 1fr);
+        gap: clamp(var(--spacing-3), 2.5vw, var(--spacing-5));
+        min-height: 100vh;
+        height: 100dvh;
+        align-items: stretch;
+        padding: 0;
+        container-type: inline-size;
+        container-name: coursebuilder-setup;
+    }
+
+    &__aside {
+        position: sticky;
+        top: 0;
+        align-self: stretch;
+        height: 100%;
+    }
+
+    &__setup article[data-course-section] {
+        display: none;
+        grid-template-columns: minmax(0, 1fr);
+        gap: clamp(var(--spacing-2), 1.5vw, var(--spacing-4));
+        align-content: start;
+        align-items: stretch;
+        justify-items: stretch;
+        padding: clamp(var(--spacing-2), 1.5vw, var(--spacing-4));
+        background: rgba(var(--color-background-rgb), 0.96);
+        border-radius: var(--radius-medium);
+        box-shadow: 0 24px 48px -32px rgba(15, 23, 42, 0.35);
+        min-height: 0;
+    }
+
+    &__setup article[data-course-section].is-active {
+        display: grid;
+    }
+
+    &__setup article[data-course-section] .form {
+        width: 100%;
+        margin: 0;
+        padding: clamp(var(--spacing-2), 1.25vw, var(--spacing-3));
+        box-shadow: none;
+        background: transparent;
+        display: grid;
+        gap: var(--spacing-3);
+        align-content: start;
+    }
+
+    &__setup .article__actions {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: max-content;
+        align-items: center;
+        justify-content: start;
+        gap: var(--spacing-3);
+    }
+
+    &__panel {
+        display: grid;
+        gap: var(--spacing-3);
+        align-content: start;
+        padding: clamp(var(--spacing-3), 1.5vw, var(--spacing-4));
+        background: rgba(var(--color-background-rgb), 0.94);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: var(--radius-small);
+    }
+
+    &__panel-title {
+        margin: 0;
+    }
+
+    &__status {
+        margin: 0;
+        font-size: var(--font-size-small);
+        color: var(--color-text-secondary);
+    }
+}
+
+@container coursebuilder-setup (max-width: 58rem) {
+    .coursebuilder__setup {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.placeholder {
+    margin: 0;
+    padding: var(--spacing-5);
+    color: var(--color-neutral-500);
+    text-align: center;
+    font-style: italic;
+}
+
+.article__config,
+.article__preview {
+    background: var(--color-neutral-25);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-extra-large);
+    padding: clamp(var(--spacing-4), 2vw, var(--spacing-6));
+    box-shadow: var(--shadow-medium);
+    min-height: clamp(20rem, 55vh, 36rem);
+    height: 100%;
+    align-self: stretch;
+}
+
+.article__config {
+    display: grid;
+    gap: var(--spacing-4);
+    align-content: start;
+}
+
+.article__preview {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+    justify-content: flex-start;
+}
+
+.article[data-course-section] > .form {
+    background: var(--color-neutral-25);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-extra-large);
+    padding: clamp(var(--spacing-4), 2vw, var(--spacing-6));
+    box-shadow: var(--shadow-medium);
+    display: grid;
+    gap: var(--spacing-4);
+    align-content: start;
+    min-height: clamp(20rem, 55vh, 36rem);
+}
+
+.article[data-course-section] > .form .form__label {
+    gap: var(--spacing-2);
+}
+
+.article[data-course-section] > .placeholder {
+    background: var(--color-neutral-25);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-extra-large);
+    padding: clamp(var(--spacing-4), 2vw, var(--spacing-6));
+    box-shadow: var(--shadow-medium);
+}
+
+@media (max-width: 48rem) {
+    .article__config,
+    .article__preview,
+    .article[data-course-section] > .form {
+        min-height: auto;
+    }
+}
+
+.article--essentials > .form,
+.article--classification > .form {
+    max-width: clamp(32rem, 60vw, 52rem);
+    margin: 0 auto;
+}
+
+.article--classification .coursebuilder__status {
+    margin-top: var(--spacing-3);
+    color: var(--color-text-secondary);
+    text-align: right;
+}
+
+.article--templates .article__header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-3);
+    align-items: center;
+    justify-content: space-between;
+    padding: clamp(var(--spacing-3), 1.5vw, var(--spacing-4));
+    background: var(--color-neutral-25);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-extra-large);
+    box-shadow: var(--shadow-medium);
+}
+
+.article--templates .article__actions {
+    flex: 0 1 auto;
+}
+
+.article--templates .article__actions .button {
+    width: max-content;
+}
+
+.article--templates .article__config,
+.article--templates .article__preview {
+    min-height: clamp(18rem, 50vh, 32rem);
+}
+
+.article--templates .article__config p,
+.article--templates .article__preview p {
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.article--schedule .article__config {
+    gap: var(--spacing-4);
+}
+
+.article--schedule .form--schedule {
+    display: grid;
+    gap: var(--spacing-3);
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    align-content: start;
+}
+
+.article--schedule .form--schedule > .schedule__days,
+.article--schedule .form--schedule > .schedule__actions {
+    grid-column: 1 / -1;
+}
+
+.article--schedule .form--schedule > .form__label {
+    display: grid;
+    gap: var(--spacing-2);
+}
+
+.article--schedule .schedule__days {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+    padding: var(--spacing-3);
+    background: var(--color-background);
+    border: 1px dashed var(--color-neutral-200);
+    border-radius: var(--radius-large);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.article--schedule .schedule__days legend {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-2);
+    width: 100%;
+}
+
+.article--schedule .schedule__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-3);
+    justify-content: flex-end;
+}
+
+.article--schedule .article__preview {
+    justify-content: flex-start;
+}
+
+.article--schedule .schedule__preview {
+    display: grid;
+    gap: var(--spacing-3);
+    align-content: start;
+    padding: var(--spacing-4);
+    background: var(--color-background);
+    border-radius: var(--radius-large);
+    border: 1px solid var(--color-neutral-200);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    height: 100%;
+}
+
+.article--schedule .schedule__content {
+    display: grid;
+    gap: var(--spacing-3);
+    min-height: 12rem;
+    place-content: center;
+    text-align: center;
+    color: var(--color-text-tertiary);
+}
+
+.article--schedule .schedule__total {
+    margin: 0;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+}
+
+.article--pedagogy .article__config {
+    gap: var(--spacing-4);
+}
+
+.article--pedagogy .learning-plane {
+    height: 100%;
+}
+
+.article--pedagogy .learning-plane__summary {
+    display: grid;
+    gap: var(--spacing-3);
+    padding: var(--spacing-4);
+    background: var(--color-background);
+    border-radius: var(--radius-large);
+    border: 1px solid var(--color-neutral-200);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.article--pedagogy .learning-plane__impact-list {
+    display: grid;
+    gap: var(--spacing-2);
+    margin: 0;
+    padding-left: var(--spacing-4);
+}
+
+.article--curriculum .article__config {
+    display: grid;
+    gap: var(--spacing-4);
+    align-content: start;
+    padding: clamp(var(--spacing-4), 2vw, var(--spacing-6));
+    background: var(--color-neutral-25);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-extra-large);
+    box-shadow: var(--shadow-medium);
+    min-height: clamp(22rem, 60vh, 40rem);
+    height: 100%;
+    align-self: stretch;
+}
+
+.article--curriculum .article__config .form--curriculum {
+    padding: 0;
+    gap: var(--spacing-4);
+    height: 100%;
+}
+
+.article--curriculum .article__config .curriculum-config__group {
+    display: grid;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3);
+    background: var(--color-neutral-50);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-large);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.article--curriculum .article__config .curriculum-config__group--durations {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+    align-items: center;
+}
+
+.article--curriculum .article__config .curriculum-config__group--structure {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-3);
+    align-items: flex-start;
+}
+
+.article--curriculum .article__config .curriculum-config__group--structure .form__label {
+    display: grid;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2) var(--spacing-3);
+    background: var(--color-neutral-25);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: var(--radius-medium);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    align-content: start;
+    flex: 1 1 12rem;
+    max-width: 16rem;
+}
+
+.article--curriculum .article__config .curriculum-config__group--structure .form__label .input {
+    max-width: 6.5rem;
+    justify-self: start;
+}
+
+@media (max-width: 48rem) {
+    .article--curriculum .article__config {
+        padding: var(--spacing-4);
+    }
+
+    .article--curriculum .article__config .curriculum-config__group {
+        padding: var(--spacing-3);
+    }
+
+    .article--curriculum .article__config .curriculum-config__group--structure .form__label {
+        flex-basis: 100%;
+        max-width: none;
+    }
+}
+
+.article--curriculum .article__preview {
+    align-self: stretch;
+    display: flex;
+    min-height: clamp(22rem, 60vh, 40rem);
+    height: 100%;
+}
+
+.curriculum__preview {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+    align-items: stretch;
+    padding: clamp(var(--spacing-4), 2vw, var(--spacing-6));
+    flex: 1 1 auto;
+    min-height: inherit;
+}
+
+.curriculum__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+    align-items: center;
+    padding: var(--spacing-2) var(--spacing-3);
+}
+
+.curriculum__controls .button--outline,
+.article--curriculum .article__config .button--outline {
+    background: var(--color-background);
+    color: var(--color-text-secondary);
+    border-color: var(--color-neutral-200);
+    transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.curriculum__controls .button--outline:hover,
+.article--curriculum .article__config .button--outline:hover {
+    background: var(--color-primary-50);
+    border-color: var(--color-primary-300);
+    color: var(--color-primary-600);
+}
+
+.curriculum__controls .button--active {
+    background: var(--color-primary-50);
+    border-color: var(--color-primary-400);
+    color: var(--color-primary-600);
+    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.12);
+}
+
+.editable-surface {
+    position: relative;
+    display: grid;
+    gap: var(--spacing-4);
+    min-height: clamp(20rem, 55vh, 36rem);
+    max-height: clamp(32rem, 75vh, 50rem);
+    padding: clamp(var(--spacing-4), 2vw, var(--spacing-6));
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-extra-large);
+    background: var(--color-background);
+    box-shadow: var(--shadow-medium);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-neutral-300) transparent;
+}
+
+
+.editable-surface::-webkit-scrollbar {
+    width: 0.45rem;
+}
+
+.editable-surface::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.editable-surface::-webkit-scrollbar-thumb:hover {
+    background: var(--color-neutral-400);
+}
+.editable-surface:focus-within {
+    border-color: var(--color-primary-300);
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.12), var(--shadow-medium);
+}
+
+.editable-surface:empty {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    color: var(--color-text-tertiary);
+}
+
+.editable-surface:empty::before {
+    content: "Configure your curriculum settings to generate a preview.";
+    font-size: var(--font-size-small);
+    line-height: var(--line-height-relaxed);
+    max-width: 32ch;
+}
+
+.editable-surface > .lesson {
+    display: grid;
+    gap: var(--spacing-4);
+    padding: var(--spacing-4);
+    border-radius: var(--radius-large);
+    border: 1px solid var(--color-neutral-200);
+    background: var(--color-neutral-25);
+    box-shadow: 0 10px 20px -12px rgba(15, 23, 42, 0.3);
+}
+
+.editable-surface .lesson__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+    align-items: center;
+    color: var(--color-text-tertiary);
+}
+
+.editable-surface .topic {
+    display: grid;
+    gap: var(--spacing-3);
+    padding-top: var(--spacing-4);
+    border-top: 1px solid var(--color-neutral-200);
+}
+
+.editable-surface .topic:first-of-type {
+    border-top: none;
+    padding-top: 0;
+}
+
+.editable-surface .topic__objectives {
+    display: grid;
+    gap: var(--spacing-3);
+}
+
+.editable-surface .objective-group {
+    display: grid;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3) var(--spacing-4);
+    border-radius: var(--radius-large);
+    border: 1px solid var(--color-neutral-200);
+    background: var(--color-background);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.editable-surface .objective-title {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-2);
+}
+
+.editable-surface .objective-text {
+    display: block;
+}
+
+.editable-surface .objective-tasks {
+    border-left: 2px solid var(--color-neutral-200);
+    margin-left: var(--spacing-3);
+    padding-left: var(--spacing-4);
+}
+
+.editable-surface .tasks__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: var(--spacing-2);
+}
+
+.editable-surface .tasks__list li {
+    padding: var(--spacing-2) var(--spacing-3);
+    border-radius: var(--radius-medium);
+    background: var(--color-neutral-50);
+    transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.editable-surface [contenteditable="true"] {
+    border: 1px dashed transparent;
+    border-radius: var(--radius-medium);
+    padding: var(--spacing-2) var(--spacing-3);
+    cursor: text;
+    outline: none;
+    transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.editable-surface [contenteditable="true"]:hover {
+    background: var(--color-neutral-50);
+    border-color: var(--color-neutral-200);
+}
+
+.editable-surface [contenteditable="true"]:focus {
+    background: var(--color-background);
+    border-color: var(--color-primary-300);
+    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.12);
+}
+
+.editable-surface [contenteditable="true"]:empty::before {
+    content: attr(data-placeholder);
+    color: var(--color-text-tertiary);
+    pointer-events: none;
+}

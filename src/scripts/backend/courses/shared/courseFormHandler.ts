@@ -91,7 +91,7 @@ export class CourseFormHandler {
         }
 
         // Try to find the form in the active article 
-        const activeArticle = document.querySelector('.content__section.is-active');
+        const activeArticle = document.querySelector<HTMLElement>('[data-course-section].is-active');
         if (activeArticle) {
             this.form = activeArticle.querySelector("form");
             if (this.form) {
@@ -503,16 +503,19 @@ export class CourseFormHandler {
     }
 
     private handleRemoveImage(): void {
-        const imagePreview = document.getElementById("image-preview");
         const previewImg = document.getElementById(
             "preview-img",
         ) as HTMLImageElement;
+        const removeBtn = document.getElementById(
+            "remove-image",
+        ) as HTMLButtonElement;
         const fileInput = document.getElementById(
             "course-image",
         ) as HTMLInputElement;
 
-        if (imagePreview && previewImg && fileInput) {
-            imagePreview.style.display = "none";
+        if (previewImg && removeBtn && fileInput) {
+            previewImg.style.display = "none";
+            removeBtn.style.display = "none";
             fileInput.value = "";
             previewImg.src = "";
             this.validateForm();
@@ -668,17 +671,20 @@ export class CourseFormHandler {
     // ==========================================================================
 
     private displayExistingImage(imageUrl: string): void {
-        const imagePreview = document.getElementById("image-preview");
         const previewImg = document.getElementById(
             "preview-img",
         ) as HTMLImageElement;
+        const removeBtn = document.getElementById(
+            "remove-image",
+        ) as HTMLButtonElement;
         const fileUploadLabel = this.form?.querySelector(
             ".file-upload__compact-label",
         );
 
-        if (imagePreview && previewImg) {
+        if (previewImg && removeBtn) {
             previewImg.src = imageUrl;
-            imagePreview.style.display = "block";
+            previewImg.style.display = "block";
+            removeBtn.style.display = "block";
 
             if (fileUploadLabel) {
                 const textElement = fileUploadLabel.querySelector('element');
@@ -690,14 +696,17 @@ export class CourseFormHandler {
     }
 
     private showFilePreview(file: File): void {
-        const preview = document.getElementById("image-preview");
         const img = document.getElementById("preview-img") as HTMLImageElement;
+        const removeBtn = document.getElementById(
+            "remove-image",
+        ) as HTMLButtonElement;
 
-        if (preview && img) {
+        if (img && removeBtn) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 img.src = e.target?.result as string;
-                preview.style.display = "block";
+                img.style.display = "block";
+                removeBtn.style.display = "block";
             };
             reader.readAsDataURL(file);
         }

@@ -156,7 +156,7 @@ export class CourseBuilder {
  private initializeCurrentSection(): void {
  console.log('🔍 CourseBuilder - Initializing current section...');
  // Initialize the currently active section
-const activeSection = document.querySelector('.content__section.is-active');
+const activeSection = document.querySelector('[data-course-section].is-active');
  if (activeSection) {
  const sectionId = activeSection.id;
  console.log('✅ Found active section:', sectionId);
@@ -170,7 +170,7 @@ const activeSection = document.querySelector('.content__section.is-active');
 
  private setupSectionNavigation(): void {
  // Listen for aside navigation clicks
- const asideLinks = document.querySelectorAll('aside .link--menu[data-section]');
+ const asideLinks = document.querySelectorAll('.aside__link[data-section]');
  asideLinks.forEach((link) => {
  link.addEventListener("click", (e) => {
  e.preventDefault();
@@ -188,8 +188,8 @@ const activeSection = document.querySelector('.content__section.is-active');
 
  private navigateToSection(sectionId: string): void {
  // Hide all articles
-const articles = document.querySelectorAll('.content__section');
- articles.forEach((article) => {
+const articles = document.querySelectorAll<HTMLElement>('[data-course-section]');
+articles.forEach((article) => {
   article.classList.remove('is-active');
  });
 

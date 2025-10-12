@@ -15,10 +15,20 @@
   &__config,
   &__preview {
     display: grid;
-    grid-template-rows: auto 1fr;
     min-height: 0;
-    overflow: hidden;
     gap: var(--spacing-3);
+  }
+
+  &__config {
+    grid-auto-rows: max-content;
+    padding: var(--spacing-3);
+    overflow-y: auto;
+  }
+
+  &__preview {
+    grid-template-rows: auto 1fr;
+    padding: var(--spacing-3);
+    overflow: hidden;
   }
 
   &__header {
@@ -30,18 +40,9 @@
     font-weight: var(--font-weight-semibold);
   }
 
-  &__content {
-    padding: var(--spacing-3);
-    overflow-y: auto;
-    min-height: 0;
-
-    &::-webkit-scrollbar { width: 8px; }
-    &::-webkit-scrollbar-track { background: var(--color-neutral-100); border-radius: var(--radius-small); }
-    &::-webkit-scrollbar-thumb { background: var(--color-neutral-400); border-radius: var(--radius-small); }
-    &::-webkit-scrollbar-thumb:hover { background: var(--color-neutral-500); }
-  }
-
   &__section {
+    border: 0;
+    padding: 0;
     &:not(:last-child) {
       margin-bottom: var(--spacing-4);
     }

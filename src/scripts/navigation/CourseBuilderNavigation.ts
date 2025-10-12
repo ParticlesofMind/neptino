@@ -264,94 +264,86 @@ export class CourseBuilderNavigation {
  * Handles navigation between articles within the setup section
  */
 export class AsideNavigation {
- private asideLinks!: NodeListOf<HTMLAnchorElement>;
- private contentSections!: NodeListOf<HTMLElement>;
- private readonly STORAGE_KEY = "coursebuilder_active_section";
- private boundHandleLinkClick!: (e: Event) => void;
+  private asideLinks!: NodeListOf<HTMLAnchorElement>;
+  private contentSections!: NodeListOf<HTMLElement>;
+  private readonly STORAGE_KEY = 'coursebuilder_active_section';
+  private boundHandleLinkClick!: (e: Event) => void;
 
- constructor() {
- // Only initialize if we're in the setup section
- if (!this.isInSetupSection()) {
- return;
- }
+  constructor() {
+    // Only initialize if we're in the setup section
+    if (!this.isInSetupSection()) {
+      return;
+    }
 
- 
- this.asideLinks = document.querySelectorAll('.aside__link[data-section]');
-    this.contentSections = document.querySelectorAll('.content__section[id]');
- this.boundHandleLinkClick = this.handleLinkClick.bind(this);
+    this.asideLinks = document.querySelectorAll('.aside__link[data-section]');
+    this.contentSections = document.querySelectorAll<HTMLElement>('[data-course-section][id]');
+    this.boundHandleLinkClick = this.handleLinkClick.bind(this);
 
- this.init();
- }
+    this.init();
+  }
 
-    private isInSetupSection(): boolean {
-        const setupElement = document.querySelector('.coursebuilder__setup');
-        return setupElement !== null;
-    } private init(): void {
- if (this.asideLinks.length === 0) {
- console.warn("No aside links found - aside navigation disabled");
- return;
- }
+  private isInSetupSection(): boolean {
+    const setupElement = document.querySelector('.coursebuilder__setup');
+    return setupElement !== null;
+  }
 
- if (this.contentSections.length === 0) {
- console.warn("No content sections found - aside navigation disabled");
- return;
- }
+  private init(): void {
+    if (this.asideLinks.length === 0) {
+      console.warn('No aside links found - aside navigation disabled');
+      return;
+    }
 
+    if (this.contentSections.length === 0) {
+      console.warn('No content sections found - aside navigation disabled');
+      return;
+    }
 
- this.bindEvents();
- this.restoreActiveSection();
- }
+    this.bindEvents();
+    this.restoreActiveSection();
+  }
 
- private bindEvents(): void {
- this.asideLinks.forEach((link: HTMLAnchorElement) => {
- link.addEventListener("click", this.boundHandleLinkClick);
- });
- }
+  private bindEvents(): void {
+    this.asideLinks.forEach((link: HTMLAnchorElement) => {
+      link.addEventListener('click', this.boundHandleLinkClick);
+    });
+  }
 
- private handleLinkClick(e: Event): void {
- e.preventDefault();
- 
- const target = e.currentTarget as HTMLAnchorElement;
- const targetSection = target.getAttribute("data-section");
+  private handleLinkClick(e: Event): void {
+    e.preventDefault();
 
- if (!targetSection) {
- console.error("No data-section attribute found");
- return;
- }
+    const target = e.currentTarget as HTMLAnchorElement;
+    const targetSection = target.getAttribute('data-section');
 
+    if (!targetSection) {
+      console.error('No data-section attribute found');
+      return;
+    }
 
- this.activateSection(target, targetSection);
- this.saveActiveSection(targetSection);
- }
+    this.activateSection(target, targetSection);
+    this.saveActiveSection(targetSection);
+  }
 
- private activateSection(activeLink: HTMLAnchorElement, targetSectionId: string): void {
- // ATOMIC OPERATION: Validate first, then change state
- // This prevents the content from disappearing if activation fails
- 
- // First, validate that the target section exists
- const targetSection = document.getElementById(targetSectionId);
- if (!targetSection) {
- console.error("Cannot activate section - target section not found:", targetSectionId);
- return; // Fail fast - don't change anything if target doesn't exist
- }
- 
- // If we're already on the target section, do nothing (prevents double-click issues)
-    if (activeLink.hasAttribute('aria-current') &&
-        targetSection.classList.contains('is-active')) {
- return;
- }
- 
- // Only now that we've validated everything, remove current active states
- this.removeActiveStates();
- 
- // Set new active states (we know this will succeed because we validated above)
- this.setActiveStates(activeLink, targetSection);
- }
+  private activateSection(activeLink: HTMLAnchorElement, targetSectionId: string): void {
+    // First, validate that the target section exists
+    const targetSection = document.getElementById(targetSectionId);
+    if (!targetSection) {
+      console.error('Cannot activate section - target section not found:', targetSectionId);
+      return;
+    }
 
- private removeActiveStates(): void {
- this.asideLinks.forEach((link: HTMLAnchorElement) => {
- link.removeAttribute('aria-current');
- });
+    // If we're already on the target section, do nothing (prevents double-click issues)
+    if (activeLink.hasAttribute('aria-current') && targetSection.classList.contains('is-active')) {
+      return;
+    }
+
+    this.removeActiveStates();
+    this.setActiveStates(activeLink, targetSection);
+  }
+
+  private removeActiveStates(): void {
+    this.asideLinks.forEach((link: HTMLAnchorElement) => {
+      link.removeAttribute('aria-current');
+    });
 
     this.contentSections.forEach((section: HTMLElement) => {
       section.classList.remove('is-active');
@@ -359,54 +351,51 @@ export class AsideNavigation {
   }
 
   private setActiveStates(activeLink: HTMLAnchorElement, targetSection: HTMLElement): void {
-    // Accept the actual element instead of searching for it again
     activeLink.setAttribute('aria-current', 'page');
     targetSection.classList.add('is-active');
   }
 
- private restoreActiveSection(): void {
- const savedSection = localStorage.getItem(this.STORAGE_KEY);
+  private restoreActiveSection(): void {
+    const savedSection = localStorage.getItem(this.STORAGE_KEY);
 
- if (savedSection) {
- const savedLink = document.querySelector(`[data-section="${savedSection}"]`) as HTMLAnchorElement;
- 
- if (savedLink && document.getElementById(savedSection)) {
- this.activateSection(savedLink, savedSection);
- return;
- } else {
- console.warn("Saved section not found, setting default");
- }
- }
- 
- this.setDefaultSection();
- }
+    if (savedSection) {
+      const savedLink = document.querySelector(`[data-section="${savedSection}"]`) as HTMLAnchorElement;
 
- private setDefaultSection(): void {
- // Always default to the first link - with robust error handling
- const firstLink = this.asideLinks[0];
- const firstSectionId = firstLink?.getAttribute("data-section");
+      if (savedLink && document.getElementById(savedSection)) {
+        this.activateSection(savedLink, savedSection);
+        return;
+      } else {
+        console.warn('Saved section not found, setting default');
+      }
+    }
 
- if (firstLink && firstSectionId) {
- this.activateSection(firstLink, firstSectionId);
- } else {
- console.error('🚨 No valid first link found - navigation may be broken');
- // As a last resort, try to activate the first article directly
- const firstArticle = this.contentSections[0];
- if (firstArticle) {
+    this.setDefaultSection();
+  }
+
+  private setDefaultSection(): void {
+    const firstLink = this.asideLinks[0];
+    const firstSectionId = firstLink?.getAttribute('data-section');
+
+    if (firstLink && firstSectionId) {
+      this.activateSection(firstLink, firstSectionId);
+    } else {
+      console.error('🚨 No valid first link found - navigation may be broken');
+      const firstArticle = this.contentSections[0];
+      if (firstArticle) {
         firstArticle.classList.add('is-active');
+      }
     }
   }
- }
 
- private saveActiveSection(sectionId: string): void {
- localStorage.setItem(this.STORAGE_KEY, sectionId);
- }
+  private saveActiveSection(sectionId: string): void {
+    localStorage.setItem(this.STORAGE_KEY, sectionId);
+  }
 
- public destroy(): void {
- this.asideLinks.forEach((link: HTMLAnchorElement) => {
- link.removeEventListener("click", this.boundHandleLinkClick);
- });
- }
+  public destroy(): void {
+    this.asideLinks.forEach((link: HTMLAnchorElement) => {
+      link.removeEventListener('click', this.boundHandleLinkClick);
+    });
+  }
 }
 
 /**
@@ -427,10 +416,14 @@ export class ModalHandler {
   }
 
   private init(): void {
-    // Close modal when clicking backdrop
+    // Close modal when clicking backdrop area
     document.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
-      if (target.classList.contains('modal__backdrop')) {
+      const modal = target.closest('.modal') as HTMLElement | null;
+      if (!modal || modal !== this.activeModal) {
+        return;
+      }
+      if (!target.closest('.modal__content')) {
         this.hideModal();
       }
     });
@@ -456,21 +449,7 @@ export class ModalHandler {
   }
 
   private setupModalTriggers(): void {
-    // Create Template modal
-    const createTemplateBtn = document.getElementById('create-template-btn');
-    if (createTemplateBtn) {
-      createTemplateBtn.addEventListener('click', () => {
-        this.showModal('create-template-modal');
-      });
-    }
-
-    // Load Template modal  
-    const loadTemplateBtn = document.getElementById('load-template-btn');
-    if (loadTemplateBtn) {
-      loadTemplateBtn.addEventListener('click', () => {
-        this.showModal('load-template-modal');
-      });
-    }
+    // Modal triggers are managed by feature-specific modules (e.g., TemplateManager)
   }
 
   public showModal(modalId: string): void {
@@ -485,6 +464,7 @@ export class ModalHandler {
 
     // Show the new modal
     modal.classList.add('modal--active');
+    modal.setAttribute('aria-hidden', 'false');
     this.activeModal = modal;
 
     // Prevent body scroll
@@ -496,6 +476,7 @@ export class ModalHandler {
     if (!this.activeModal) return;
 
     this.activeModal.classList.remove('modal--active');
+    this.activeModal.setAttribute('aria-hidden', 'true');
     this.activeModal = null;
 
     // Restore body scroll

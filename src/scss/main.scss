@@ -37,10 +37,10 @@
 @use 'layout/animations';         // Animation scene components
 @use 'layout/print';              // Print-only styles (A4 canvas)
 @use 'layout/article';
-// PAGES (page styling)
+@use 'layout/coursebuilder';
+
 // ==========================================================================
 @use 'pages/home';
-@use 'pages/coursebuilder-setup';
 
 // COMPONENTS (Reusable UI components)
 // ==========================================================================

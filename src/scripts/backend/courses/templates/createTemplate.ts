@@ -4,7 +4,9 @@ import "./templatePreviewHandler.js";
 import '@pixi/layout';
 
 // Import loadTemplates modal to make it available globally
-import './modals/loadTemplates.js';
+import { loadTemplatesModal } from "./modals/loadTemplates.js";
+import { ensureTemplateModals } from "./templateModals.js";
+import { ModalHandler } from "../../../navigation/CourseBuilderNavigation.js";
 
 export interface TemplateData {
   template_id: string;
@@ -40,24 +42,18 @@ export class TemplateManager {
   * Shows the create template modal
   */
   static showCreateTemplateModal(): void {
-    const modal = document.getElementById(
-      "create-template-modal",
-    ) as HTMLElement;
+    ensureTemplateModals();
+
+    const modal = document.getElementById("create-template-modal") as HTMLElement | null;
     if (!modal) {
       console.error("Create template modal not found");
       return;
     }
 
-    // Clear the form for new template creation
-    const form = modal.querySelector(
-      "#create-template-form",
-    ) as HTMLFormElement;
-    if (form) {
-      form.reset();
-    }
+    const form = modal.querySelector("#create-template-form") as HTMLFormElement | null;
+    form?.reset();
 
-    modal.style.display = "flex";
-    modal
+    ModalHandler.getInstance().showModal('create-template-modal');
   }
 
   /**
@@ -65,12 +61,8 @@ export class TemplateManager {
   */
   static hideCreateTemplateModal(): void {
     const modal = document.getElementById("create-template-modal");
-    if (modal) {
-      modal
-
-      setTimeout(() => {
-        modal.style.display = "none";
-      }, 300);
+    if (modal?.classList.contains('modal--active')) {
+      ModalHandler.getInstance().hideModal();
     }
   }
 
@@ -78,16 +70,20 @@ export class TemplateManager {
   * Shows the load template modal using the new LoadTemplatesModal
   */
   static async showLoadTemplateModal(): Promise<void> {
-    // Import and use the new LoadTemplatesModal
-    const { loadTemplatesModal } = await import('./modals/loadTemplates.js');
+    ensureTemplateModals();
 
-    // Set up the callback
     loadTemplatesModal.setOnTemplateSelected((templateId: string) => {
       this.loadTemplate(templateId);
     });
 
-    // Show the modal
     await loadTemplatesModal.show();
+  }
+
+  static hideLoadTemplateModal(): void {
+    const modal = document.getElementById('load-template-modal');
+    if (modal?.classList.contains('modal--active')) {
+      loadTemplatesModal.hide();
+    }
   }
 
   /**
@@ -1354,6 +1350,8 @@ window.TemplateManager = TemplateManager;
 
 // Initialize template modal handlers when DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
+  ensureTemplateModals();
+
   // Create template button handler
   const createTemplateBtn = document.getElementById("create-template-btn");
   if (createTemplateBtn) {

@@ -47,47 +47,45 @@ export class DeleteCourseManager {
     // Create confirmation modal dynamically
     const modalHTML = `
       <div class="modal modal--delete" id="delete-course-modal">
-        <div class="modal__backdrop">
-          <div class="modal__content">
-            <div class="modal__header">
-              <h2 class="modal__title">Delete Course</h2>
-              <button class="button button--subtle button--small modal__close" type="button">
-                &times;
-              </button>
+        <div class="modal__content">
+          <div class="modal__header">
+            <h2 class="modal__title">Delete Course</h2>
+            <button class="button button--subtle button--small modal__close" type="button">
+              &times;
+            </button>
+          </div>
+          <div class="modal__body">
+            <p class="modal__text">
+              Are you absolutely sure you want to delete this course?
+            </p>
+            <p class="modal__warning">
+              <strong>This action cannot be undone.</strong> All course data, including:
+            </p>
+            <ul class="modal__list">
+              <li>Course content and materials</li>
+              <li>Student enrollments and progress</li>
+              <li>Templates and configurations</li>
+              <li>Schedule and curriculum data</li>
+            </ul>
+            <p class="modal__text">will be permanently removed.</p>
+            
+            <div class="modal__confirmation">
+              <label class="form__label">
+                <input type="text" 
+                       class="input" 
+                       id="delete-confirmation-input" 
+                       placeholder="Type 'DELETE' to confirm">
+                Type <strong>DELETE</strong> to confirm deletion
+              </label>
             </div>
-            <div class="modal__body">
-              <p class="modal__text">
-                Are you absolutely sure you want to delete this course?
-              </p>
-              <p class="modal__warning">
-                <strong>This action cannot be undone.</strong> All course data, including:
-              </p>
-              <ul class="modal__list">
-                <li>Course content and materials</li>
-                <li>Student enrollments and progress</li>
-                <li>Templates and configurations</li>
-                <li>Schedule and curriculum data</li>
-              </ul>
-              <p class="modal__text">will be permanently removed.</p>
-              
-              <div class="modal__confirmation">
-                <label class="form__label">
-                  <input type="text" 
-                         class="input" 
-                         id="delete-confirmation-input" 
-                         placeholder="Type 'DELETE' to confirm">
-                  Type <strong>DELETE</strong> to confirm deletion
-                </label>
-              </div>
-            </div>
-            <div class="modal__footer">
-              <button class="button button--outline" type="button" id="cancel-delete-btn">
-                Cancel
-              </button>
-              <button class="button button--delete" type="button" id="confirm-delete-btn" disabled>
-                Delete Course Forever
-              </button>
-            </div>
+          </div>
+          <div class="modal__footer">
+            <button class="button button--outline" type="button" id="cancel-delete-btn">
+              Cancel
+            </button>
+            <button class="button button--delete" type="button" id="confirm-delete-btn" disabled>
+              Delete Course Forever
+            </button>
           </div>
         </div>
       </div>
@@ -138,7 +136,7 @@ export class DeleteCourseManager {
 
     // Show modal
     if (this.confirmationModal) {
-      this.confirmationModal.style.display = 'flex';
+      this.confirmationModal.classList.add('modal--active');
       document.body.style.overflow = 'hidden';
     }
 

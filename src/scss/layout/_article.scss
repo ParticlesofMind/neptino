@@ -1,7 +1,47 @@
+.article {
+    padding: 2rem;
+    gap: 1rem;
+    display: grid;
 
+    &__header {
+        display: flex;
+   
+        gap: var(--spacing-3);
+    }
 
-.article { 
-    padding: 2rem; 
-    display: grid; 
-    gap: 1rem; 
+    &__title {
+        margin: 0;
+        font-size: var(--font-size-large);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    &--templates, &--schedule, &--curriculum, &--pedagogy, &--page-setup {
+        gap: var(--spacing-4);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-areas:
+            "header header"
+            "config preview";
+
+        >.article__header {
+            grid-area: header;
+        }
+
+        >.article__config {
+            grid-area: config;
+        }
+
+        >.article__preview {
+            grid-area: preview;
+            grid-auto-flow: column;
+        }
+
+        @media (max-width: 900px) {
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-areas:
+                "header"
+                "config"
+                "preview";
+        }
+    }
 }
+

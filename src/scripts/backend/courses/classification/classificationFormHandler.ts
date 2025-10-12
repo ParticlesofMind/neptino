@@ -469,10 +469,7 @@ export class ClassificationFormHandler {
   private updateSaveStatus(message: string): void {
     const statusElement = document.getElementById("classification-save-status");
     if (statusElement) {
-      const textElement = statusElement.querySelector('.save-status__text');
-      if (textElement) {
-        textElement.textContent = message;
-      }
+      statusElement.textContent = message;
     }
   }
 

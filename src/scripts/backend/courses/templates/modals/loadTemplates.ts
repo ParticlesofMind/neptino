@@ -1,4 +1,6 @@
 import { supabase } from '../../../supabase.js';
+import { ensureTemplateModals } from '../templateModals.js';
+import { ModalHandler } from '../../../../navigation/CourseBuilderNavigation.js';
 
 interface Template {
   id: string;
@@ -25,22 +27,17 @@ export class LoadTemplatesModal {
    * Shows the load template modal
    */
   public async show(): Promise<void> {
-    const modal = document.getElementById("load-template-modal");
-    if (modal) {
-      modal.style.display = "flex";
-      
-      // Load templates when modal is shown
-      await this.loadTemplates();
+    ensureTemplateModals();
 
-      // Add a small delay to trigger the animation
-      setTimeout(() => {
-        const content = modal.querySelector('.modal__content') as HTMLElement;
-        if (content) {
-          content.style.transform = "scale(1)";
-          content.style.opacity = "1";
-        }
-      }, 10);
+    const modal = document.getElementById("load-template-modal");
+    if (!modal) {
+      console.error("Load template modal not found");
+      return;
     }
+
+    ModalHandler.getInstance().showModal('load-template-modal');
+
+    await this.loadTemplates();
   }
 
   /**
@@ -48,16 +45,8 @@ export class LoadTemplatesModal {
    */
   public hide(): void {
     const modal = document.getElementById("load-template-modal");
-    if (modal) {
-      const content = modal.querySelector('.modal__content') as HTMLElement;
-      if (content) {
-        content.style.transform = "scale(0.9)";
-        content.style.opacity = "0";
-      }
-
-      setTimeout(() => {
-        modal.style.display = "none";
-      }, 300);
+    if (modal?.classList.contains('modal--active')) {
+      ModalHandler.getInstance().hideModal();
     }
   }
 
