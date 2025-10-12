@@ -276,7 +276,7 @@ export class AsideNavigation {
  }
 
  
- this.asideLinks = document.querySelectorAll('.sidebar__link[data-section]');
+ this.asideLinks = document.querySelectorAll('.aside__link[data-section]');
     this.contentSections = document.querySelectorAll('.content__section[id]');
  this.boundHandleLinkClick = this.handleLinkClick.bind(this);
 

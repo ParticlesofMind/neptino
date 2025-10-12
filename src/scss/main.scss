@@ -27,13 +27,9 @@
 @use 'layout/grid';               // Grid system
 @use 'layout/header';             // Site header
 @use 'layout/navigation';         // Navigation components
-@use 'layout/sidebar';            // Sidebar layout
 @use 'layout/content';            // Unified content container
 @use 'layout/footer';             // Site footer
 @use 'layout/templates';
-@use 'layout/schedule';
-@use 'layout/curriculum';
-@use 'layout/classification';
 @use 'layout/engine';
 @use 'layout/canvas';             // Canvas layout system (BEM methodology)
 @use 'layout/settings';
@@ -49,6 +45,7 @@
 
 // COMPONENTS (Reusable UI components)
 // ==========================================================================
+@use 'components/aside';          // Aside component (navigation sidebars)
 @use 'components/icons';          // Sizing utilities for images/icons/logos
 @use 'components/buttons';        // Button styles
 @use 'components/dropdown';       // Dropdown component system

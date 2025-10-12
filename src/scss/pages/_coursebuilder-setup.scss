@@ -3,11 +3,6 @@
 // ==========================================================================
 
 .coursebuilder {
-    // ==========================================================================
-    // BLOCK BASE STYLES
-    // ==========================================================================
-    // Core coursebuilder sections are hidden when aria-hidden is true.
-
     &__setup[aria-hidden="true"],
     &__create[aria-hidden="true"],
     &__preview[aria-hidden="true"],
@@ -18,9 +13,6 @@
 }
 
 .coursebuilder-setup {
-    // ==========================================================================
-    // BLOCK BASE STYLES
-    // ==========================================================================
     display: grid;
     grid-template-columns: clamp(16rem, 18vw, 19rem) minmax(0, 1fr);
     gap: clamp(var(--spacing-3), 2.5vw, var(--spacing-5));
@@ -35,12 +27,6 @@
     &[aria-hidden="true"] {
         display: none;
     }
-
-    // ==========================================================================
-    // ELEMENTS
-    // ==========================================================================
-
-
 
     &__main {
         display: grid;
