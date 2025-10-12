@@ -21,8 +21,8 @@ export class CoursesManager {
   private noCoursesMessage: HTMLElement;
 
   constructor() {
-    this.coursesContainer = document.getElementById(
-      "courses-container",
+    this.coursesContainer = document.querySelector(
+      '[data-js="courses"]',
     ) as HTMLElement;
     this.noCoursesMessage = document.getElementById(
       "no-courses-message",
@@ -62,6 +62,8 @@ export class CoursesManager {
     const existingCards = this.coursesContainer.querySelectorAll('[data-dynamic="true"]');
     existingCards.forEach((card) => card.remove());
 
+    this.coursesContainer.setAttribute('aria-busy', 'true');
+
     // Show loading message
     const loadingElement = document.createElement('div');
     loadingElement.className = 'courses-loading';
@@ -80,6 +82,8 @@ export class CoursesManager {
     if (loadingElement) {
       loadingElement.remove();
     }
+
+    this.coursesContainer.setAttribute('aria-busy', 'false');
   }
 
   private showErrorState(): void {

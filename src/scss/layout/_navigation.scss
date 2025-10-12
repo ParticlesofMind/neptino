@@ -53,7 +53,6 @@
         align-items: center;
         white-space: nowrap;
         
-
         &--cta {
             // Call-to-action items
             margin-left: auto;
@@ -82,7 +81,22 @@
     color: var(--color-text);
     text-decoration: none;
     transition: var(--transition-fast);
-    
+
+    // Brand link modifier
+    &--brand {
+        display: inline-grid;
+        grid-auto-flow: column;
+        grid-auto-columns: max-content;
+        align-items: center;
+        gap: var(--spacing-2);
+        padding: 0;
+        color: inherit;
+
+        &:hover {
+            opacity: 0.8;
+        }
+    }
+
     // Header link modifier
     &--header {
         padding: var(--spacing-3) var(--spacing-4);
@@ -93,6 +107,7 @@
             color: var(--color-primary-500);
         }
         
+        &.is-active,
         &--active {
             background-color: var(--color-primary-100);
             color: var(--color-primary-700);
@@ -119,6 +134,7 @@
             color: var(--color-primary-500);
         }
         
+        &.is-active,
         &--active {
             background-color: var(--color-primary-100);
             color: var(--color-primary-700);
@@ -136,6 +152,7 @@
             color: var(--color-primary-600);
         }
         
+        &.is-active,
         &-active {
             background-color: var(--color-primary-50);
             color: var(--color-primary-700);

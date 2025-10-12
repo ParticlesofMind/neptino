@@ -9,167 +9,203 @@
 </head>
 
 <body class="grid body">
-  <header class="grid__header header header--home">
+  <header class="grid__header header">
     <nav class="header__nav">
-      <ul class="ul ul--header">
-        <li class="ul__item ul__item--brand">
-          <a href="/src/pages/teacher/home.html" class="brand">
-            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
-          </a>
+   
+      <ul class="header__list">
+
+           <a href="/src/pages/teacher/home.html" class="header__brand brand">
+        <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="brand__logo">
+      </a>
+
+      
+        <li class="header__item">
+          <a href="/src/pages/teacher/courses.html" class="header__link">My Courses</a>
         </li>
-        <li class="ul__item"><a href="/src/pages/teacher/courses.html" class="link link--header">My Courses</a></li>
-        <li class="ul__item"><a href="/src/pages/teacher/marketplace.html" class="link link--header">Marketplace</a></li>
-        <li class="ul__item"><a href="/src/pages/teacher/tutorials.html" class="link link--header">Tutorials</a></li>
-        <li class="ul__item ul__item--cta">
-          <button id="logout-btn" class="cta button button--outline">Logout</button>
+        <li class="header__item">
+          <a href="/src/pages/teacher/marketplace.html" class="header__link">Marketplace</a>
+        </li>
+        <li class="header__item">
+          <a href="/src/pages/teacher/tutorials.html" class="header__link">Tutorials</a>
+        </li>
+        <li class="header__item">
+          <button id="logout-btn" class="button button--outline">Logout</button>
         </li>
       </ul>
     </nav>
   </header>
-  <main class="grid__main main main home">
-    <aside class="aside aside--left">
-      <nav class="ul ul--sidebar">
-        <ul class="ul ul--main">
-          <li class="ul__item">
-            <a href="#home" class="link link--main link--active" data-section="home">Home</a>
+
+  <main class="grid__main main">
+    <aside class="main__sidebar sidebar">
+      <nav class="sidebar__nav">
+        <ul class="sidebar__list">
+          <li class="sidebar__item">
+            <a href="#home" class="sidebar__link sidebar__link--active" data-section="home">Home</a>
           </li>
-          <li class="ul__item">
-            <a href="#courses" class="link link--main" data-section="courses">Courses</a>
+          <li class="sidebar__item">
+            <a href="#courses" class="sidebar__link" data-section="courses">Courses</a>
           </li>
-          <li class="ul__item">
-            <a href="#messages" class="link link--main" data-section="messages">Messages</a>
+          <li class="sidebar__item">
+            <a href="#messages" class="sidebar__link" data-section="messages">Messages</a>
           </li>
-          <li class="ul__item">
-            <a href="#contacts" class="link link--main" data-section="contacts">Contacts</a>
+          <li class="sidebar__item">
+            <a href="#contacts" class="sidebar__link" data-section="contacts">Contacts</a>
           </li>
-          <li class="ul__item">
-            <a href="#students" class="link link--main" data-section="students">Students</a>
+          <li class="sidebar__item">
+            <a href="#students" class="sidebar__link" data-section="students">Students</a>
           </li>
-          <li class="ul__item">
-            <a href="#settings" class="link link--main" data-section="settings">Settings</a>
+          <li class="sidebar__item">
+            <a href="#settings" class="sidebar__link" data-section="settings">Settings</a>
           </li>
         </ul>
       </nav>
     </aside>
 
-    <div class="content">
-      <article id="home" class="content__article content__article--active">
-        <div class="card card--metric">
-          <h3>Active Courses</h3>
-          <span class="card__metric-value">5</span>
-        </div>
-        <div class="card card--metric">
-          <h3>Total Students</h3>
-          <span class="card__metric-value">127</span>
-        </div>
-        <div class="card card--metric">
-          <h3>Pending Reviews</h3>
-          <span class="card__metric-value">12</span>
-        </div>
-        <div class="card">
-          <h3>Quick Actions</h3>
-          <p>Create new course content</p>
-        </div>
-        <div class="card">
-          <h3>Recent Activity</h3>
-          <p>View latest student submissions</p>
-        </div>
-        <div class="card">
-          <h3>Messages</h3>
-          <p>8 unread messages</p>
-        </div>
+    <section class="main__content content">
+      <article id="home" class="content__section content__section--active">
+        <figure class="metric">
+          <figcaption class="metric__label">Active Courses</figcaption>
+          <data class="metric__value" value="5">5</data>
+        </figure>
+
+        <figure class="metric">
+          <figcaption class="metric__label">Total Students</figcaption>
+          <data class="metric__value" value="127">127</data>
+        </figure>
+
+        <figure class="metric">
+          <figcaption class="metric__label">Pending Reviews</figcaption>
+          <data class="metric__value" value="12">12</data>
+        </figure>
+
+        <section class="card">
+          <h3 class="card__title">Quick Actions</h3>
+          <button class="card__action button">Create new course content</button>
+        </section>
+
+        <section class="card">
+          <h3 class="card__title">Recent Activity</h3>
+          <a href="#submissions" class="card__link link">View latest student submissions</a>
+        </section>
+
+        <section class="card">
+          <h3 class="card__title">Messages</h3>
+          <a href="#messages" class="card__link link">
+            <data value="8">8</data> unread messages
+          </a>
+        </section>
       </article>
 
-      <article id="courses" class="content__article">
-        <div class="card">
-          <h3>My Courses</h3>
-          <p>Manage your courses</p>
-        </div>
-        <div class="card">
-          <h3>Course Analytics</h3>
-          <p>View performance metrics</p>
-        </div>
-        <div class="card">
-          <h3>Create Course</h3>
-          <p>Start a new course</p>
-        </div>
+      <article id="courses" class="content__section">
+        <section class="card">
+          <h3 class="card__title">My Courses</h3>
+          <p class="card__description">Manage your courses</p>
+        </section>
+
+        <section class="card">
+          <h3 class="card__title">Course Analytics</h3>
+          <p class="card__description">View performance metrics</p>
+        </section>
+
+        <section class="card">
+          <h3 class="card__title">Create Course</h3>
+          <button class="card__action button">Start a new course</button>
+        </section>
       </article>
 
-      <article id="messages" class="content__article">
-        <div class="card">
-          <h3>Inbox</h3>
-          <p>8 new messages</p>
-        </div>
-        <div class="card">
-          <h3>Sent</h3>
-          <p>View sent messages</p>
-        </div>
-        <div class="card">
-          <h3>Compose</h3>
-          <p>Write a new message</p>
-        </div>
+      <article id="messages" class="content__section">
+        <section class="card">
+          <h3 class="card__title">Inbox</h3>
+          <p class="card__description">
+            <data value="8">8</data> new messages
+          </p>
+        </section>
+
+        <section class="card">
+          <h3 class="card__title">Sent</h3>
+          <a href="#sent" class="card__link link">View sent messages</a>
+        </section>
+
+        <section class="card">
+          <h3 class="card__title">Compose</h3>
+          <button class="card__action button">Write a new message</button>
+        </section>
       </article>
 
-      <article id="contacts" class="content__article">
-        <div class="card">
-          <h3>All Contacts</h3>
-          <p>View all contacts</p>
-        </div>
-        <div class="card">
-          <h3>Teachers</h3>
-          <p>Fellow educators</p>
-        </div>
-        <div class="card">
-          <h3>Add Contact</h3>
-          <p>Add new contact</p>
-        </div>
+      <article id="contacts" class="content__section">
+        <section class="card">
+          <h3 class="card__title">All Contacts</h3>
+          <a href="#all-contacts" class="card__link link">View all contacts</a>
+        </section>
+
+        <section class="card">
+          <h3 class="card__title">Teachers</h3>
+          <p class="card__description">Fellow educators</p>
+        </section>
+
+        <section class="card">
+          <h3 class="card__title">Add Contact</h3>
+          <button class="card__action button">Add new contact</button>
+        </section>
       </article>
 
-      <article id="students" class="content__article">
-        <div class="card">
-          <h3>All Students</h3>
-          <p>127 total students</p>
-        </div>
-        <div class="card">
-          <h3>Performance</h3>
-          <p>View student progress</p>
-        </div>
-        <div class="card">
-          <h3>Announcements</h3>
-          <p>Send class updates</p>
-        </div>
+      <article id="students" class="content__section">
+        <section class="card">
+          <h3 class="card__title">All Students</h3>
+          <p class="card__description">
+            <data value="127">127</data> total students
+          </p>
+        </section>
+
+        <section class="card">
+          <h3 class="card__title">Performance</h3>
+          <a href="#performance" class="card__link link">View student progress</a>
+        </section>
+
+        <section class="card">
+          <h3 class="card__title">Announcements</h3>
+          <button class="card__action button">Send class updates</button>
+        </section>
       </article>
 
-      <article id="settings" class="content__article">
-        <div class="card">
-          <h3>Profile Settings</h3>
-          <p>Update your profile</p>
-        </div>
-        <div class="card">
-          <h3>Account Security</h3>
-          <p>Manage passwords & 2FA</p>
-        </div>
-        <div class="card">
-          <h3>Preferences</h3>
-          <p>Customize your experience</p>
-        </div>
+      <article id="settings" class="content__section">
+        <section class="card">
+          <h3 class="card__title">Profile Settings</h3>
+          <a href="#profile" class="card__link link">Update your profile</a>
+        </section>
+
+        <section class="card">
+          <h3 class="card__title">Account Security</h3>
+          <p class="card__description">Manage passwords & 2FA</p>
+        </section>
+
+        <section class="card">
+          <h3 class="card__title">Preferences</h3>
+          <a href="#preferences" class="card__link link">Customize your experience</a>
+        </section>
       </article>
-    </div>
+    </section>
   </main>
+
   <footer class="grid__footer footer">
     <nav class="footer__nav">
-      <ul class="ul ul--footer">
-        <li class="ul__item ul__item--brand">
-          <a href="/src/pages/teacher/home.html" class="brand">
-            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
-          </a>
+      <a href="/src/pages/teacher/home.html" class="footer__brand brand brand--small">
+        <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="brand__logo brand__logo--small">
+      </a>
+      <ul class="footer__list">
+        <li class="footer__item">
+          <a href="#privacy" class="footer__link footer__link--subtle">Privacy Policy</a>
         </li>
-        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Privacy Policy</a></li>
-        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Terms of Service</a></li>
-        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Contact</a></li>
+        <li class="footer__item">
+          <a href="#terms" class="footer__link footer__link--subtle">Terms of Service</a>
+        </li>
+        <li class="footer__item">
+          <a href="#contact" class="footer__link footer__link--subtle">Contact</a>
+        </li>
       </ul>
     </nav>
   </footer>
+
   <script type="module" src="/src/scripts/app.ts"></script>
   <script type="module" src="/src/scripts/navigation/index.ts"></script>
 </body>
