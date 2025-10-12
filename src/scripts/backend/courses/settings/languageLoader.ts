@@ -69,7 +69,9 @@ export async function loadCourseLanguages(): Promise<CourseLanguage[]> {
  */
 export async function populateCourseLanguageSelect(selectElement: HTMLSelectElement): Promise<void> {
   try {
+    console.log('🌐 Populating course language select...');
     const languages = await loadCourseLanguages();
+    console.log('✅ Loaded', languages.length, 'languages');
     
     // Clear existing options except the first placeholder
     const placeholder = selectElement.querySelector('option[value=""]');
@@ -94,9 +96,10 @@ export async function populateCourseLanguageSelect(selectElement: HTMLSelectElem
       selectElement.appendChild(option);
     });
 
+    console.log('✅ Course language select populated with', selectElement.options.length, 'options');
 
   } catch (error) {
-    console.error('Error populating course language select:', error);
+    console.error('❌ Error populating course language select:', error);
   }
 }
 
@@ -122,21 +125,29 @@ export function initializeCourseLanguageSelect(): void {
 
 // Auto-initialize when this module is loaded
 if (typeof window !== 'undefined') {
+  console.log('🌐 Language loader module loaded');
   // If DOM is already loaded, initialize immediately
   if (document.readyState === 'loading') {
+    console.log('⏳ Waiting for DOM to load...');
     document.addEventListener('DOMContentLoaded', () => {
+      console.log('📄 DOM loaded, looking for language select...');
       const languageSelect = document.getElementById('course-language') as HTMLSelectElement;
       if (languageSelect) {
+        console.log('✅ Found language select element, populating...');
         populateCourseLanguageSelect(languageSelect);
       } else {
+        console.warn('❌ Language select element not found (id="course-language")');
       }
     });
   } else {
     // DOM already loaded
+    console.log('📄 DOM already loaded, looking for language select...');
     const languageSelect = document.getElementById('course-language') as HTMLSelectElement;
     if (languageSelect) {
+      console.log('✅ Found language select element, populating...');
       populateCourseLanguageSelect(languageSelect);
     } else {
+      console.warn('❌ Language select element not found (id="course-language")');
     }
   }
 }

@@ -37,26 +37,32 @@ export class CourseFormHandler {
     // ==========================================================================
 
     private getCourseId(): string | null {
-        // Debug current URL
-   
+        console.log('🔍 CourseFormHandler - Getting course ID for section:', this.sectionConfig?.section);
+        console.log('📍 Current URL:', window.location.href);
 
         // First try to get course ID from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
+        console.log('🔗 URL Search Params:', urlParams.toString());
 
         const courseIdFromUrl = urlParams.get('courseId') || urlParams.get('id');
 
         if (courseIdFromUrl && courseIdFromUrl !== 'undefined') {
+            console.log('✅ Found course ID in URL:', courseIdFromUrl);
             return courseIdFromUrl;
         } else {
+            console.log('❌ No course ID in URL parameters');
         }
 
         // Fallback to session storage (for backward compatibility)
         const courseIdFromSession = sessionStorage.getItem("currentCourseId");
         if (courseIdFromSession && courseIdFromSession !== 'undefined') {
+            console.log('✅ Found course ID in sessionStorage:', courseIdFromSession);
             return courseIdFromSession;
         } else {
+            console.log('❌ No course ID in sessionStorage');
         }
 
+        console.log('⚠️ No course ID found - entering CREATE NEW COURSE mode');
         return null;
     }
 
@@ -217,20 +223,24 @@ export class CourseFormHandler {
 
     private async loadExistingData(): Promise<void> {
         if (!this.form || !this.currentCourseId) {
-       
+            console.log('⚠️ Skipping loadExistingData:', {
+                hasForm: !!this.form,
+                hasCourseId: !!this.currentCourseId,
+                courseId: this.currentCourseId
+            });
             return;
         }
 
         try {
-        
+            console.log('📥 Loading existing course data for ID:', this.currentCourseId);
             const courseData = await getCourse(this.currentCourseId);
 
             if (!courseData) {
-            
+                console.warn('⚠️ No course data returned for ID:', this.currentCourseId);
                 return;
             }
 
-         
+            console.log('✅ Course data loaded successfully:', courseData);
             this.populateFormFields(courseData);
 
             // Show course code if we're in essentials section and have a course ID
@@ -240,7 +250,7 @@ export class CourseFormHandler {
 
             setTimeout(() => this.validateForm(), 100);
         } catch (error) {
-       
+            console.error('❌ Error loading existing course data:', error);
         }
     }
 

@@ -154,11 +154,17 @@ export class CourseBuilder {
  }
 
  private initializeCurrentSection(): void {
+ console.log('🔍 CourseBuilder - Initializing current section...');
  // Initialize the currently active section
 const activeSection = document.querySelector('.content__section.is-active');
  if (activeSection) {
  const sectionId = activeSection.id;
+ console.log('✅ Found active section:', sectionId);
  this.loadSection(sectionId);
+ } else {
+ console.warn('⚠️ No active section found, defaulting to essentials');
+ // Default to essentials if no active section
+ this.loadSection('essentials');
  }
  }
 
@@ -201,8 +207,11 @@ const articles = document.querySelectorAll('.content__section');
 
  private loadSection(sectionId: string): void {
  try {
+ console.log('📂 CourseBuilder - Loading section:', sectionId);
+ console.log('📋 Current course ID:', this.courseId);
  
  if (!this.courseId) {
+ console.warn('⚠️ No course ID available');
  }
 
  // Cleanup previous form handler
@@ -233,11 +242,13 @@ const articles = document.querySelectorAll('.content__section');
  this.currentFormHandler = new CourseFormHandler(sectionId);
     } else if (sectionId === "essentials" || sectionId === "settings" || sectionId === "pedagogy") {
       // Initialize generic form handler for form-based sections
+      console.log('✅ Creating CourseFormHandler for section:', sectionId);
       this.currentFormHandler = new CourseFormHandler(sectionId);
     }
 
  // Log form handler initialization
  if (this.currentFormHandler) {
+ console.log('✅ Form handler created successfully');
  }
  } catch (error) {
  console.warn(`No handler available for section: ${sectionId}`, error);

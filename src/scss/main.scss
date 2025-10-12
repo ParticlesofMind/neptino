@@ -29,7 +29,6 @@
 @use 'layout/navigation';         // Navigation components
 @use 'layout/content';            // Unified content container
 @use 'layout/footer';             // Site footer
-@use 'layout/templates';
 @use 'layout/engine';
 @use 'layout/canvas';             // Canvas layout system (BEM methodology)
 @use 'layout/settings';
@@ -50,7 +49,6 @@
 @use 'components/buttons';        // Button styles
 @use 'components/dropdown';       // Dropdown component system
 @use 'components/inputs';         // Form inputs
-@use 'components/select2-overrides'; // Select2 library styling overrides
 @use 'components/color-selector'; // Custom color selector component
 @use 'components/shape-selector'; // Custom shape selector component
 @use 'components/alerts';         // Alert/notification components
@@ -63,5 +61,4 @@
 @use 'components/tables';
 @use 'components/cursors';        // Custom cursors for tools
 @use 'components/media';          // Media cards
-@use 'components/gsap';           // GSAP animation controls
 @use 'components/context-menu';   // Context menu component
