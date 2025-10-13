@@ -1,3 +1,9 @@
+import { TEMPLATE_TYPE_OPTIONS } from "./templateOptions.js";
+
+const templateTypeOptionsMarkup = TEMPLATE_TYPE_OPTIONS
+  .map(({ value, label }) => `<option value="${value}">${label}</option>`)
+  .join("");
+
 const createTemplateModal = `
   <article class="modal modal--coursebuilder" id="create-template-modal" aria-hidden="true">
     <div class="modal__content">
@@ -16,7 +22,7 @@ const createTemplateModal = `
           Template Type*
           <select class="input input--select" name="template-type" required>
             <option value="">Select template type</option>
-            <option value="lesson">Lesson</option>
+            ${templateTypeOptionsMarkup}
           </select>
         </label>
         <label class="form__label">
@@ -52,7 +58,7 @@ const loadTemplateModal = `
           <input class="input" type="text" id="template-search" placeholder="Search templates..." />
           <select class="input input--select" id="template-type-filter">
             <option value="">All Types</option>
-            <option value="lesson">Lesson</option>
+            ${templateTypeOptionsMarkup}
           </select>
         </form>
         <div class="template-browser__content">

@@ -59,17 +59,18 @@ export class CourseBuilder {
  // First try to get course ID from URL parameters
  const urlParams = new URLSearchParams(window.location.search);
  const courseIdFromUrl = urlParams.get('courseId') || urlParams.get('id');
- 
- if (courseIdFromUrl) {
+
+ if (courseIdFromUrl && courseIdFromUrl !== 'undefined') {
  this.courseId = courseIdFromUrl;
+ this.persistCourseId(courseIdFromUrl);
  return;
  }
 
  // If no URL parameter, check if we're in "create new course" mode
- 
+
  // Clear any existing course data from sessionStorage to ensure fresh start
  sessionStorage.removeItem("currentCourseId");
- 
+
  this.courseId = null;
  }
 
@@ -108,7 +109,7 @@ export class CourseBuilder {
  this.courseId = courseId;
  
  // Store in session storage for consistency
- sessionStorage.setItem("currentCourseId", courseId);
+ this.persistCourseId(courseId);
  
  // If managers aren't initialized yet, initialize them now
  if (!this.scheduleManager && !this.curriculumManager) {
@@ -151,6 +152,24 @@ export class CourseBuilder {
  
  // Update URL without reloading the page
  window.history.replaceState({}, '', url.toString());
+ }
+
+ private persistCourseId(courseId: string): void {
+ if (typeof window !== 'undefined') {
+ (window as any).currentCourseId = courseId;
+ }
+
+ try {
+ sessionStorage.setItem("currentCourseId", courseId);
+ } catch (error) {
+ console.warn('⚠️ Unable to persist course ID to sessionStorage:', error);
+ }
+
+ if (typeof window !== 'undefined') {
+ const detail = { courseId };
+ window.dispatchEvent(new CustomEvent('courseIdResolved', { detail }));
+ window.dispatchEvent(new CustomEvent('courseIdUpdated', { detail }));
+ }
  }
 
  private initializeCurrentSection(): void {
@@ -239,11 +258,11 @@ articles.forEach((article) => {
  } else {
  }
  // Also initialize form handler for curriculum form data
- this.currentFormHandler = new CourseFormHandler(sectionId);
+ this.currentFormHandler = new CourseFormHandler(sectionId, this.courseId || undefined);
     } else if (sectionId === "essentials" || sectionId === "settings" || sectionId === "pedagogy") {
       // Initialize generic form handler for form-based sections
       console.log('✅ Creating CourseFormHandler for section:', sectionId);
-      this.currentFormHandler = new CourseFormHandler(sectionId);
+  this.currentFormHandler = new CourseFormHandler(sectionId, this.courseId || undefined);
     }
 
  // Log form handler initialization

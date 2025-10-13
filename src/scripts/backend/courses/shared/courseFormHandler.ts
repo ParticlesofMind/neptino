@@ -20,15 +20,22 @@ export class CourseFormHandler {
     private currentCourseId: string | null = null;
     private validationState: ValidationState = {};
     private debounceTimer: NodeJS.Timeout | null = null;
+    private lastLoadedCourseId: string | null = null;
+    private courseIdEventHandler?: (event: Event) => void;
 
-    constructor(sectionName: string) {
+    constructor(sectionName: string, initialCourseId?: string) {
         const config = getSectionConfig(sectionName);
         if (!config) {
             throw new Error(`No configuration found for section: ${sectionName}`);
         }
 
         this.sectionConfig = config;
-        this.currentCourseId = this.getCourseId();
+        if (initialCourseId && this.isValidCourseId(initialCourseId)) {
+            this.updateResolvedCourseId(initialCourseId);
+        }
+
+        this.currentCourseId = this.currentCourseId || this.getCourseId();
+        this.registerCourseIdListeners();
         this.initialize();
     }
 
@@ -40,30 +47,109 @@ export class CourseFormHandler {
         console.log('🔍 CourseFormHandler - Getting course ID for section:', this.sectionConfig?.section);
         console.log('📍 Current URL:', window.location.href);
 
-        // First try to get course ID from URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        console.log('🔗 URL Search Params:', urlParams.toString());
-
-        const courseIdFromUrl = urlParams.get('courseId') || urlParams.get('id');
-
-        if (courseIdFromUrl && courseIdFromUrl !== 'undefined') {
-            console.log('✅ Found course ID in URL:', courseIdFromUrl);
+        const courseIdFromUrl = this.extractCourseIdFromUrl();
+        if (courseIdFromUrl) {
+            console.log('✅ Course ID resolved from URL:', courseIdFromUrl);
+            this.updateResolvedCourseId(courseIdFromUrl);
             return courseIdFromUrl;
-        } else {
-            console.log('❌ No course ID in URL parameters');
         }
 
-        // Fallback to session storage (for backward compatibility)
-        const courseIdFromSession = sessionStorage.getItem("currentCourseId");
-        if (courseIdFromSession && courseIdFromSession !== 'undefined') {
-            console.log('✅ Found course ID in sessionStorage:', courseIdFromSession);
+        const courseIdFromSession = this.extractCourseIdFromSession();
+        if (courseIdFromSession) {
+            console.log('✅ Course ID restored from session storage:', courseIdFromSession);
+            this.updateResolvedCourseId(courseIdFromSession);
             return courseIdFromSession;
-        } else {
-            console.log('❌ No course ID in sessionStorage');
+        }
+
+        const courseIdFromWindow = this.extractCourseIdFromWindow();
+        if (courseIdFromWindow) {
+            console.log('✅ Course ID obtained from global state:', courseIdFromWindow);
+            this.updateResolvedCourseId(courseIdFromWindow);
+            return courseIdFromWindow;
         }
 
         console.log('⚠️ No course ID found - entering CREATE NEW COURSE mode');
         return null;
+    }
+
+    private extractCourseIdFromUrl(): string | null {
+        const urlParams = new URLSearchParams(window.location.search);
+        const candidate = urlParams.get('courseId') || urlParams.get('id');
+        return this.isValidCourseId(candidate) ? candidate! : null;
+    }
+
+    private extractCourseIdFromSession(): string | null {
+        const candidate = sessionStorage.getItem("currentCourseId");
+        return this.isValidCourseId(candidate) ? candidate! : null;
+    }
+
+    private extractCourseIdFromWindow(): string | null {
+        if (typeof window === 'undefined') return null;
+
+        const globalCandidate = (window as any).currentCourseId;
+        if (this.isValidCourseId(globalCandidate)) {
+            return globalCandidate;
+        }
+
+        const builderInstance = (window as any).courseBuilderInstance;
+        if (builderInstance) {
+            try {
+                if (typeof builderInstance.getCourseId === 'function') {
+                    const candidate = builderInstance.getCourseId();
+                    if (this.isValidCourseId(candidate)) {
+                        return candidate;
+                    }
+                } else if (this.isValidCourseId(builderInstance.courseId)) {
+                    return builderInstance.courseId;
+                }
+            } catch (error) {
+                console.warn('⚠️ Unable to read course ID from courseBuilderInstance:', error);
+            }
+        }
+
+        return null;
+    }
+
+    private isValidCourseId(candidate: unknown): candidate is string {
+        return typeof candidate === 'string' && candidate.trim() !== '' && candidate !== 'undefined';
+    }
+
+    private updateResolvedCourseId(courseId: string): void {
+        this.currentCourseId = courseId;
+
+        if (typeof window !== 'undefined') {
+            (window as any).currentCourseId = courseId;
+            try {
+                sessionStorage.setItem("currentCourseId", courseId);
+            } catch (error) {
+                console.warn('⚠️ Unable to persist course ID to sessionStorage:', error);
+            }
+        }
+    }
+
+    private registerCourseIdListeners(): void {
+        if (typeof window === 'undefined' || this.courseIdEventHandler) {
+            return;
+        }
+
+        this.courseIdEventHandler = (event: Event) => {
+            const detail = (event as CustomEvent).detail;
+            const candidate = detail?.courseId ?? detail?.id;
+            if (this.isValidCourseId(candidate)) {
+                console.log('🔄 CourseFormHandler - Updating course ID from event:', candidate);
+                this.updateResolvedCourseId(candidate);
+                if (!this.form) {
+                    this.findForm();
+                }
+                if (this.currentCourseId && this.form && this.currentCourseId !== this.lastLoadedCourseId) {
+                    void this.loadExistingData();
+                }
+            }
+        };
+
+        window.addEventListener('courseCreated', this.courseIdEventHandler as EventListener);
+        window.addEventListener('courseIdResolved', this.courseIdEventHandler as EventListener);
+        window.addEventListener('courseIdUpdated', this.courseIdEventHandler as EventListener);
     }
 
     // ==========================================================================
@@ -85,6 +171,13 @@ export class CourseFormHandler {
         // First, try to find form by section name (most reliable)
         if (this.sectionConfig.section === 'essentials') {
             this.form = document.querySelector('#course-essentials-form');
+            if (this.form) {
+                return;
+            }
+        }
+
+        if (this.sectionConfig.section === 'pedagogy') {
+            this.form = document.querySelector('#course-pedagogy-form');
             if (this.form) {
                 return;
             }
@@ -243,6 +336,8 @@ export class CourseFormHandler {
             console.log('✅ Course data loaded successfully:', courseData);
             this.populateFormFields(courseData);
 
+            this.lastLoadedCourseId = this.currentCourseId;
+
             // Show course code if we're in essentials section and have a course ID
             if (this.sectionConfig.section === "essentials") {
                 this.showCourseCode(this.currentCourseId);
@@ -318,6 +413,15 @@ export class CourseFormHandler {
 
     private setFieldValue(fieldName: string, value: any): void {
         if (!this.form || value === null || value === undefined) return;
+
+        if (fieldName === 'course_pedagogy' && typeof value === 'object') {
+            try {
+                value = JSON.stringify(value);
+            } catch (error) {
+                console.warn('Unable to serialize course_pedagogy value:', error);
+                return;
+            }
+        }
 
         // Handle classification dropdown fields
         if (this.sectionConfig.section === "classification") {
@@ -484,6 +588,10 @@ export class CourseFormHandler {
         this.validateForm();
         // If DB column is missing for pedagogy, block autosave with a clear message
         const isBlocked = this.form?.dataset.blockSave === 'true';
+        if (this.sectionConfig.section === 'pedagogy') {
+            const inputValue = (this.form?.querySelector('#course-pedagogy-input') as HTMLInputElement | null)?.value;
+            console.log('🎯 Pedagogy input change', { value: inputValue, isBlocked, courseId: this.currentCourseId });
+        }
         if (isBlocked && this.sectionConfig.section === 'pedagogy') {
             this.showStatus('Cannot save: missing course_pedagogy column. Please run the migration.', 'error');
             return;
@@ -653,11 +761,30 @@ export class CourseFormHandler {
                 Object.assign(updateData, formData);
             }
 
+            if (this.sectionConfig.section === 'pedagogy' && formData.course_pedagogy) {
+                try {
+                    const parsed = JSON.parse(formData.course_pedagogy);
+                    updateData.course_pedagogy = parsed;
+                    console.log('📤 Saving course_pedagogy', {
+                        courseId: this.currentCourseId,
+                        payload: parsed,
+                    });
+                } catch (parseError) {
+                    console.warn('⚠️ Invalid course_pedagogy payload, skipping save:', parseError);
+                }
+            }
+
             const result = await updateCourse(this.currentCourseId, updateData);
 
             if (result.success) {
+                if (this.sectionConfig.section === 'pedagogy') {
+                    console.log('✅ Pedagogy save success');
+                }
                 this.showStatus("Saved ✓", "success");
             } else {
+                if (this.sectionConfig.section === 'pedagogy') {
+                    console.error('❌ Pedagogy save failed', result.error);
+                }
                 throw new Error(result.error || "Failed to save");
             }
         } catch (error) {
@@ -777,6 +904,8 @@ export class CourseFormHandler {
 
     private enableCourseBuilderFeatures(courseId: string): void {
 
+        this.updateResolvedCourseId(courseId);
+
         // Enable next button or any other course-specific features
         const nextButton = document.getElementById('next-btn');
         if (nextButton) {
@@ -832,6 +961,6 @@ export class CourseFormHandler {
 // EXPORT
 // ==========================================================================
 
-export function initializeCourseForm(sectionName: string): CourseFormHandler {
-    return new CourseFormHandler(sectionName);
+export function initializeCourseForm(sectionName: string, courseId?: string): CourseFormHandler {
+    return new CourseFormHandler(sectionName, courseId);
 }

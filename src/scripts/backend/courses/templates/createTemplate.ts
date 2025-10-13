@@ -7,12 +7,18 @@ import '@pixi/layout';
 import { loadTemplatesModal } from "./modals/loadTemplates.js";
 import { ensureTemplateModals } from "./templateModals.js";
 import { ModalHandler } from "../../../navigation/CourseBuilderNavigation.js";
+import {
+  BLOCK_CONTENT_TEMPLATES,
+  TEMPLATE_BLOCK_SEQUENCES,
+  TemplateBlockType,
+  TemplateType,
+} from "./templateOptions.js";
 
 export interface TemplateData {
   template_id: string;
   course_id?: string;
   template_description?: string;
-  template_type: "lesson";
+  template_type: TemplateType;
   template_data: {
     name: string;
     blocks: TemplateBlock[];
@@ -22,16 +28,31 @@ export interface TemplateData {
 
 export interface TemplateBlock {
   id: string;
-  type:
-  | "header"
-  | "program"
-  | "resources"
-  | "content"
-  | "assignment"
-  | "footer";
+  type: TemplateBlockType;
   order: number;
-  config: Record<string, any>;
+  config: Record<string, boolean | undefined>;
   content: string;
+}
+
+interface BlockFieldConfig {
+  name: string;
+  label: string;
+  mandatory: boolean;
+  separator?: boolean;
+  indentLevel?: number;
+  inlineGroup?: string;
+  role?: "primary" | "time" | "method" | "social";
+}
+
+interface FieldRow {
+  groupId: string;
+  indentLevel: number;
+  placeholders: {
+    primary?: string;
+    time?: string;
+    method?: string;
+    social?: string;
+  };
 }
 
 export class TemplateManager {
@@ -91,7 +112,7 @@ export class TemplateManager {
   */
   static async updateTemplateField(
     templateId: string,
-    blockType: string,
+    blockType: TemplateBlockType,
     fieldName: string,
     isChecked: boolean,
   ): Promise<void> {
@@ -204,7 +225,7 @@ export class TemplateManager {
   */
   static async createTemplate(formData: {
     name: string;
-    type: "lesson";
+    type: TemplateType;
     description?: string;
   }): Promise<string | null> {
     try {
@@ -218,77 +239,10 @@ export class TemplateManager {
       // Generate a unique template ID
       const templateId = `template_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      // Create default blocks for the template
-      const defaultBlocks: TemplateBlock[] = [
-        {
-          id: "header-1",
-          type: "header",
-          order: 1,
-          config: {
-            lesson_number: true,
-            lesson_title: true,
-            module_title: true,
-            course_title: true,
-            institution_name: true,
-          },
-          content: '<div class="header-section">{{header}}</div>',
-        },
-        {
-          id: "program-1",
-          type: "program",
-          order: 2,
-          config: {
-            competence: true,
-            topic: true,
-            objective: true,
-            task: true,
-          },
-          content: '<div class="program-section">{{program}}</div>',
-        },
-        {
-          id: "resources-1",
-          type: "resources",
-          order: 3,
-          config: {
-            task: true,
-            type: true,
-            origin: true,
-          },
-          content: '<div class="resources-section">{{resources}}</div>',
-        },
-        {
-          id: "content-1",
-          type: "content",
-          order: 4,
-          config: {
-            instruction_area: true,
-            student_area: true,
-            teacher_area: true,
-          },
-          content: '<div class="content-section">{{content}}</div>',
-        },
-        {
-          id: "assignment-1",
-          type: "assignment",
-          order: 5,
-          config: {
-            instruction_area: true,
-            student_area: true,
-            teacher_area: true,
-          },
-          content: '<div class="assignment-section">{{assignment}}</div>',
-        },
-        {
-          id: "footer-1",
-          type: "footer",
-          order: 6,
-          config: {
-            copyright: true,
-            page_number: true,
-          },
-          content: '<footer class="template-footer">{{footer}}</footer>',
-        },
-      ];
+      const blockSequence = TEMPLATE_BLOCK_SEQUENCES[formData.type] ?? TEMPLATE_BLOCK_SEQUENCES.lesson;
+      const defaultBlocks: TemplateBlock[] = blockSequence.map((blockType, index) =>
+        this.createDefaultBlock(blockType, index + 1),
+      );
 
       const templateData: TemplateData = {
         template_id: templateId,
@@ -329,6 +283,28 @@ export class TemplateManager {
       console.error("Failed to create template:", error);
       return null;
     }
+  }
+
+  private static createDefaultBlock(blockType: TemplateBlockType, order: number): TemplateBlock {
+    return {
+      id: `${blockType}-${order}`,
+      type: blockType,
+      order,
+      config: this.buildDefaultBlockConfig(blockType),
+      content:
+        BLOCK_CONTENT_TEMPLATES[blockType] ?? `<div class="${blockType}-section">{{${blockType}}}</div>`,
+    };
+  }
+
+  private static buildDefaultBlockConfig(blockType: TemplateBlockType): Record<string, boolean> {
+    const fields = this.getBlockFieldConfiguration()[blockType] || [];
+    return fields.reduce<Record<string, boolean>>((acc, field) => {
+      if (field.separator) {
+        return acc;
+      }
+      acc[field.name] = field.mandatory ? true : false;
+      return acc;
+    }, {});
   }
 
   /**
@@ -485,6 +461,7 @@ export class TemplateManager {
             <div class="block-item block-item--resources">Resources Block</div>
             <div class="block-item block-item--content">Content Block</div>
             <div class="block-item block-item--assignment">Assignment Block</div>
+            <div class="block-item block-item--scoring">Scoring Block</div>
             <div class="block-item block-item--footer">Footer Block</div>
           </div>
         </div>
@@ -530,6 +507,21 @@ export class TemplateManager {
 
       if (error) {
         throw error;
+      }
+
+      const normalized = this.normalizeTemplateData(data);
+      if (normalized) {
+        try {
+          await supabase
+            .from("templates")
+            .update({
+              template_data: data.template_data,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", data.id);
+        } catch (normalizationError) {
+          console.error("Failed to normalize template structure:", normalizationError);
+        }
       }
 
       // Get current course ID and associate template with it
@@ -610,6 +602,21 @@ export class TemplateManager {
           template.template_id,
         );
 
+        const normalized = this.normalizeTemplateData(template);
+        if (normalized) {
+          try {
+            await supabase
+              .from("templates")
+              .update({
+                template_data: template.template_data,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", template.id);
+          } catch (normalizationError) {
+            console.error("Failed to normalize course template structure:", normalizationError);
+          }
+        }
+
         // Load the template
         this.currentlyLoadedTemplateId = template.id; // Store UUID for database operations
         this.currentlyLoadedTemplateData = template;
@@ -632,15 +639,7 @@ export class TemplateManager {
   /**
   * Gets the field configuration for each block type
   */
-  static getBlockFieldConfiguration(): Record<
-    string,
-    Array<{
-      name: string;
-      label: string;
-      mandatory: boolean;
-      separator?: boolean;
-    }>
-  > {
+  static getBlockFieldConfiguration(): Record<TemplateBlockType, BlockFieldConfig[]> {
     return {
       header: [
         { name: "lesson_number", label: "Lesson number (#)", mandatory: true },
@@ -659,6 +658,24 @@ export class TemplateManager {
         { name: "topic", label: "Topic", mandatory: true },
         { name: "objective", label: "Objective", mandatory: true },
         { name: "task", label: "Task", mandatory: true },
+        {
+          name: "program_method",
+          label: "Method",
+          mandatory: true,
+          role: "method",
+        },
+        {
+          name: "program_social_form",
+          label: "Social form",
+          mandatory: true,
+          role: "social",
+        },
+        {
+          name: "program_time",
+          label: "Time",
+          mandatory: true,
+          role: "time",
+        },
       ],
       resources: [
         { name: "task", label: "Task", mandatory: true },
@@ -681,36 +698,275 @@ export class TemplateManager {
         { name: "concepts", label: "Concepts", mandatory: false },
       ],
       content: [
-
+        {
+          name: "competence",
+          label: "Competence",
+          mandatory: true,
+          inlineGroup: "competence",
+          role: "primary",
+        },
+        {
+          name: "competence_time",
+          label: "Time",
+          mandatory: true,
+          inlineGroup: "competence",
+          role: "time",
+        },
+        {
+          name: "topic",
+          label: "Topic",
+          mandatory: true,
+          indentLevel: 1,
+          inlineGroup: "topic",
+          role: "primary",
+        },
+        {
+          name: "topic_time",
+          label: "Time",
+          mandatory: true,
+          inlineGroup: "topic",
+          role: "time",
+        },
+        {
+          name: "objective",
+          label: "Objective",
+          mandatory: true,
+          indentLevel: 2,
+          inlineGroup: "objective",
+          role: "primary",
+        },
+        {
+          name: "objective_time",
+          label: "Time",
+          mandatory: true,
+          inlineGroup: "objective",
+          role: "time",
+        },
+        {
+          name: "task",
+          label: "Task",
+          mandatory: true,
+          indentLevel: 3,
+          inlineGroup: "task",
+          role: "primary",
+        },
+        {
+          name: "task_time",
+          label: "Time",
+          mandatory: true,
+          inlineGroup: "task",
+          role: "time",
+        },
         {
           name: "instruction_area",
-          label: "Instruction area",
+          label: "Instruction Area",
           mandatory: true,
+          indentLevel: 4,
+          inlineGroup: "instruction",
+          role: "primary",
         },
-
+        {
+          name: "instruction_method",
+          label: "Method",
+          mandatory: true,
+          inlineGroup: "instruction",
+          role: "method",
+        },
+        {
+          name: "instruction_social_form",
+          label: "Social form",
+          mandatory: true,
+          inlineGroup: "instruction",
+          role: "social",
+        },
         {
           name: "student_area",
           label: "Student Area",
-          mandatory: true
+          mandatory: true,
+          indentLevel: 4,
+          inlineGroup: "student",
+          role: "primary",
         },
-
+        {
+          name: "student_method",
+          label: "Method",
+          mandatory: true,
+          inlineGroup: "student",
+          role: "method",
+        },
+        {
+          name: "student_social_form",
+          label: "Social form",
+          mandatory: true,
+          inlineGroup: "student",
+          role: "social",
+        },
         {
           name: "teacher_area",
-          label: "Teacher area",
-          mandatory: true
+          label: "Teacher Area",
+          mandatory: true,
+          indentLevel: 4,
+          inlineGroup: "teacher",
+          role: "primary",
+        },
+        {
+          name: "teacher_method",
+          label: "Method",
+          mandatory: true,
+          inlineGroup: "teacher",
+          role: "method",
+        },
+        {
+          name: "teacher_social_form",
+          label: "Social form",
+          mandatory: true,
+          inlineGroup: "teacher",
+          role: "social",
+        },
+        {
+          name: "include_project",
+          label: "Include Project",
+          mandatory: false,
         },
       ],
       assignment: [
-
+        {
+          name: "competence",
+          label: "Competence",
+          mandatory: true,
+          inlineGroup: "competence",
+          role: "primary",
+        },
+        {
+          name: "competence_time",
+          label: "Time",
+          mandatory: true,
+          inlineGroup: "competence",
+          role: "time",
+        },
+        {
+          name: "topic",
+          label: "Topic",
+          mandatory: true,
+          indentLevel: 1,
+          inlineGroup: "topic",
+          role: "primary",
+        },
+        {
+          name: "topic_time",
+          label: "Time",
+          mandatory: true,
+          inlineGroup: "topic",
+          role: "time",
+        },
+        {
+          name: "objective",
+          label: "Objective",
+          mandatory: true,
+          indentLevel: 2,
+          inlineGroup: "objective",
+          role: "primary",
+        },
+        {
+          name: "objective_time",
+          label: "Time",
+          mandatory: true,
+          inlineGroup: "objective",
+          role: "time",
+        },
+        {
+          name: "task",
+          label: "Task",
+          mandatory: true,
+          indentLevel: 3,
+          inlineGroup: "task",
+          role: "primary",
+        },
+        {
+          name: "task_time",
+          label: "Time",
+          mandatory: true,
+          inlineGroup: "task",
+          role: "time",
+        },
         {
           name: "instruction_area",
-          label: "Instruction area",
+          label: "Instruction Area",
           mandatory: true,
+          indentLevel: 4,
+          inlineGroup: "instruction",
+          role: "primary",
         },
-        { name: "student_area", 
-          label: "Student Area", mandatory: true 
+        {
+          name: "instruction_method",
+          label: "Method",
+          mandatory: true,
+          inlineGroup: "instruction",
+          role: "method",
         },
-        { name: "teacher_area", label: "Teacher area", mandatory: true },
+        {
+          name: "instruction_social_form",
+          label: "Social form",
+          mandatory: true,
+          inlineGroup: "instruction",
+          role: "social",
+        },
+        {
+          name: "student_area",
+          label: "Student Area",
+          mandatory: true,
+          indentLevel: 4,
+          inlineGroup: "student",
+          role: "primary",
+        },
+        {
+          name: "student_method",
+          label: "Method",
+          mandatory: true,
+          inlineGroup: "student",
+          role: "method",
+        },
+        {
+          name: "student_social_form",
+          label: "Social form",
+          mandatory: true,
+          inlineGroup: "student",
+          role: "social",
+        },
+        {
+          name: "teacher_area",
+          label: "Teacher Area",
+          mandatory: true,
+          indentLevel: 4,
+          inlineGroup: "teacher",
+          role: "primary",
+        },
+        {
+          name: "teacher_method",
+          label: "Method",
+          mandatory: true,
+          inlineGroup: "teacher",
+          role: "method",
+        },
+        {
+          name: "teacher_social_form",
+          label: "Social form",
+          mandatory: true,
+          inlineGroup: "teacher",
+          role: "social",
+        },
+        {
+          name: "include_project",
+          label: "Include Project",
+          mandatory: false,
+        },
+      ],
+      scoring: [
+        { name: "criteria", label: "Criteria", mandatory: true },
+        { name: "max_points", label: "Max points", mandatory: true },
+        { name: "passing_threshold", label: "Passing threshold", mandatory: false },
+        { name: "feedback_guidelines", label: "Feedback guidelines", mandatory: false },
+        { name: "rubric_link", label: "Rubric link", mandatory: false },
       ],
       footer: [
         { name: "copyright", label: "Copyright", mandatory: true },
@@ -728,6 +984,126 @@ export class TemplateManager {
   /**
    * Displays the template blocks in the configuration area
    */
+  private static ensureBlockConfigDefaults(block: TemplateBlock): boolean {
+    const fieldConfig = this.getBlockFieldConfiguration()[block.type] || [];
+    if (!block.config) {
+      block.config = {};
+    }
+
+    let changed = false;
+
+    fieldConfig.forEach((field) => {
+      if (field.separator) {
+        return;
+      }
+
+      if (field.mandatory) {
+        if (block.config[field.name] !== true) {
+          block.config[field.name] = true;
+          changed = true;
+        }
+      } else if (typeof block.config[field.name] === "undefined") {
+        block.config[field.name] = false;
+        changed = true;
+    }
+    });
+
+    return changed;
+  }
+
+  private static normalizeTemplateData(templateData: any): boolean {
+    const actualData = templateData?.template_data || templateData;
+    if (!actualData || !Array.isArray(actualData.blocks)) {
+      return false;
+    }
+
+    let hasChanges = false;
+
+    actualData.blocks.forEach((block: TemplateBlock) => {
+      if (this.ensureBlockConfigDefaults(block)) {
+        hasChanges = true;
+      }
+    });
+
+    return hasChanges;
+  }
+
+  private static renderFieldCheckbox(
+    templateId: string | null,
+    block: TemplateBlock,
+    field: BlockFieldConfig,
+  ): string {
+    const templateUuid = templateId ?? this.currentlyLoadedTemplateId ?? "";
+    const isChecked = field.mandatory ? true : Boolean(block.config?.[field.name]);
+    const disabledAttr = field.mandatory ? " checked disabled" : isChecked ? " checked" : "";
+    const updateHandler = !field.mandatory && templateUuid
+      ? ` onchange="TemplateManager.updateTemplateField('${templateUuid}', '${block.type}', '${field.name}', this.checked)"`
+      : "";
+
+    return `
+      <label class="block-config__field">
+        <input
+          type="checkbox"
+          name="${field.name}"
+          data-block="${block.type}"
+          class="input input--checkbox"${disabledAttr}${updateHandler}
+        />
+        <span class="block-config__label">${field.label}</span>
+      </label>
+    `;
+  }
+
+  private static renderBlockConfigRows(
+    templateId: string | null,
+    block: TemplateBlock,
+    fields: BlockFieldConfig[],
+  ): string {
+    if (!fields.length) {
+      return '<p class="block-config__empty">No configurable fields</p>';
+    }
+
+    const rows: Array<{ id: string; indentLevel: number; separator?: boolean; fields: BlockFieldConfig[] }> = [];
+    const rowIndex = new Map<string, number>();
+
+    fields.forEach((field) => {
+      if (field.separator) {
+        rows.push({ id: `separator-${rows.length}`, indentLevel: 0, separator: true, fields: [] });
+        return;
+      }
+
+      const groupId = field.inlineGroup || field.name;
+      if (!rowIndex.has(groupId)) {
+        rowIndex.set(groupId, rows.length);
+        rows.push({
+          id: groupId,
+          indentLevel: field.indentLevel ?? 0,
+          fields: [],
+        });
+      }
+
+      const row = rows[rowIndex.get(groupId)!];
+      row.fields.push(field);
+    });
+
+    return rows
+      .map((row) => {
+        if (row.separator) {
+          return '<div class="template-field-separator"></div>';
+        }
+
+        const indentClass = row.indentLevel
+          ? ` block-config__row--indent-${row.indentLevel}`
+          : "";
+
+        const rowFields = row.fields
+          .map((field) => this.renderFieldCheckbox(templateId, block, field))
+          .join("");
+
+        return `<div class="block-config__row${indentClass}">${rowFields}</div>`;
+      })
+      .join("");
+  }
+
   static displayTemplateBlocks(templateData: any): void {
     const configArea = document.getElementById('template-config-content');
     if (!configArea) {
@@ -737,56 +1113,32 @@ export class TemplateManager {
 
     // Handle both full template object and just template_data
     const actualData = templateData.template_data || templateData;
-    const blocks = actualData.blocks || [];
+  this.normalizeTemplateData(actualData);
+
+  const blocks = actualData.blocks || [];
     const templateId = templateData.id || this.currentlyLoadedTemplateId;
-    const fieldConfig = this.getBlockFieldConfiguration(); const blocksHtml = `
- <div class="template-blocks">
- ${blocks
-        .map((block: TemplateBlock) => {
-          const fields = fieldConfig[block.type] || [];
+    const fieldConfig = this.getBlockFieldConfiguration();
 
-          return `
- <div class="block-config" data-block="${block.type}" data-template-id="${templateId}">
- <div class="">
- <div class="block-item__icon block-item__icon--${block.type}"></div>
- <h4 class="">${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</h4>
- </div>
- <div class="" data-block="${block.type}">
- ${fields
-              .map((field) => {
-                // Check if field is enabled in template data
-                const isChecked =
-                  field.mandatory ||
-                  (block.config && block.config[field.name] === true);
+    const blocksHtml = `
+      <div class="template-blocks">
+        ${blocks
+          .map((block: TemplateBlock) => {
+            const fields = fieldConfig[block.type] || [];
+            const rowsHtml = this.renderBlockConfigRows(templateId, block, fields);
+            const title = block.type.charAt(0).toUpperCase() + block.type.slice(1);
 
-                return `
- ${field.separator ? '<div class="template-field-separator"></div>' : ""}
- <div class="template-field ${field.separator ? "" : ""}">
- <label class="">
- <input 
- type="checkbox" 
- name="${field.name}" 
- data-block="${block.type}"
- data-template-id="${templateData.id}"
- ${field.mandatory ? "checked disabled" : isChecked ? "checked" : ""}
- onchange="TemplateManager.updateTemplateField('${templateId}', '${block.type}', '${field.name}', this.checked)"
- class="input input--checkbox"
- >
- <span class="">
- ${field.label}
- </span>
- </label>
- </div>
- `;
-              })
-              .join("")}
- </div>
- </div>
- `;
-        })
-        .join("")}
- </div>
- `;
+            return `
+              <div class="block-config" data-block="${block.type}" data-template-id="${templateId}">
+                <h4 class="block-config__title">${title}</h4>
+                <div class="block-config__fields">
+                  ${rowsHtml}
+                </div>
+              </div>
+            `;
+          })
+          .join("")}
+      </div>
+    `;
 
     configArea.innerHTML = blocksHtml;
 
@@ -797,13 +1149,14 @@ export class TemplateManager {
   /**
   * Gets description for a block type
   */
-  static getBlockDescription(blockType: string): string {
-    const descriptions: Record<string, string> = {
+  static getBlockDescription(blockType: TemplateBlockType): string {
+    const descriptions: Record<TemplateBlockType, string> = {
       header: "Title and introduction section",
       program: "Learning objectives and outcomes",
       resources: "Files, links, and materials",
       content: "Main lesson content and materials",
       assignment: "Tasks and submissions",
+      scoring: "Evaluation criteria and grading guidance",
       footer: "Credits and additional information",
     };
     return descriptions[blockType] || "Block configuration";
@@ -824,50 +1177,9 @@ export class TemplateManager {
     const basicTemplate = {
       template_data: {
         name: "New Template",
-        blocks: [
-          {
-            id: "header-1",
-            type: "header",
-            order: 1,
-            config: {},
-            content: "Header content will appear here",
-          },
-          {
-            id: "program-1",
-            type: "program",
-            order: 2,
-            config: {},
-            content: "Learning objectives will appear here",
-          },
-          {
-            id: "resources-1",
-            type: "resources",
-            order: 3,
-            config: {},
-            content: "Resources will appear here",
-          },
-          {
-            id: "content-1",
-            type: "content",
-            order: 4,
-            config: {},
-            content: "Main content will appear here",
-          },
-          {
-            id: "assignment-1",
-            type: "assignment",
-            order: 5,
-            config: {},
-            content: "Assignment details will appear here",
-          },
-          {
-            id: "footer-1",
-            type: "footer",
-            order: 6,
-            config: {},
-            content: "Footer content will appear here",
-          },
-        ],
+        blocks: TEMPLATE_BLOCK_SEQUENCES.lesson.map((blockType, index) =>
+          this.createDefaultBlock(blockType, index + 1),
+        ),
       },
     };
 
@@ -916,12 +1228,12 @@ export class TemplateManager {
 
     const blocksHtml = sortedBlocks
       .map((block: TemplateBlock) => {
-        const checkedFields = this.getCheckedFields(block.type);
+        const checkedFields = this.getCheckedFields(block);
 
         return `
  <div class="preview-block preview-block--${block.type}">
  <h4 class="preview-block__title">${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</h4>
- ${this.renderBlockContent(block.type, checkedFields)}
+ ${this.renderBlockContent(block, checkedFields)}
  </div>
  `;
       })
@@ -937,28 +1249,23 @@ export class TemplateManager {
   /**
   * Gets the currently checked fields for a block type from template data
   */
-  static getCheckedFields(
-    blockType: string,
-  ): Array<{ name: string; label: string }> {
+  static getCheckedFields(block: TemplateBlock): BlockFieldConfig[] {
     const fieldConfig = this.getBlockFieldConfiguration();
-    const blockFields = fieldConfig[blockType] || [];
-    const checkedFields: Array<{ name: string; label: string }> = [];
+    const blockFields = fieldConfig[block.type] || [];
+    const checkedFields: BlockFieldConfig[] = [];
 
     blockFields.forEach((field) => {
-      // Include mandatory fields (always checked)
+      if (field.separator) {
+        return;
+      }
+
       if (field.mandatory) {
-        checkedFields.push({ name: field.name, label: field.label });
-      } else {
-        // Include optional fields that are checked in template data
-        if (this.currentlyLoadedTemplateData) {
-          const block =
-            this.currentlyLoadedTemplateData.template_data.blocks.find(
-              (b: any) => b.type === blockType,
-            );
-          if (block && block.config && block.config[field.name] === true) {
-            checkedFields.push({ name: field.name, label: field.label });
-          }
-        }
+        checkedFields.push(field);
+        return;
+      }
+
+      if (block.config && block.config[field.name] === true) {
+        checkedFields.push(field);
       }
     });
 
@@ -969,15 +1276,19 @@ export class TemplateManager {
   * Renders the content for a specific block type
   */
   static renderBlockContent(
-    blockType: string,
-    checkedFields: Array<{ name: string; label: string }>,
+    block: TemplateBlock,
+    checkedFields: BlockFieldConfig[],
   ): string {
-    if (blockType === "resources") {
+    if (block.type === "resources") {
       return this.renderResourcesBlockContent(checkedFields);
     }
 
-    if (blockType === "content" || blockType === "assignment") {
-      return this.renderNestedBlockContent(blockType, checkedFields);
+    if (block.type === "program") {
+      return this.renderProgramBlockContent(checkedFields);
+    }
+
+    if (block.type === "content" || block.type === "assignment") {
+      return this.renderNestedBlockContent(block, checkedFields);
     }
 
     // Default table rendering for other blocks - single row with values only
@@ -986,11 +1297,9 @@ export class TemplateManager {
  <tbody>
  <tr>
  ${checkedFields
-        .map(
-          (field) => `
+        .map((field) => `
  <td>[${field.label}]</td>
- `,
-        )
+ `)
         .join("")}
  </tr>
  </tbody>
@@ -1002,26 +1311,189 @@ export class TemplateManager {
   * Renders the nested hierarchical content for Content and Assignment blocks
   */
   static renderNestedBlockContent(
-    _blockType: string,
-    checkedFields: Array<{ name: string; label: string }>,
+    block: TemplateBlock,
+    checkedFields: BlockFieldConfig[],
   ): string {
-    // Simple table with one cell per row for each field
-    if (checkedFields.length === 0) {
+    const rows = this.buildFieldRows(checkedFields);
+    const baseTable = this.renderRowsTable(rows);
+
+    if (!baseTable) {
       return '<p class="preview-placeholder">No fields selected</p>';
     }
 
+    const includeProject = Boolean(block.config?.include_project);
+    const projectSection = includeProject
+      ? this.renderProjectExtension(block.type === "assignment" ? "Project Assignment" : "Project")
+      : "";
+
+    return `${baseTable}${projectSection}`;
+  }
+
+  private static buildFieldRows(fields: BlockFieldConfig[]): FieldRow[] {
+    const rows: FieldRow[] = [];
+    const rowIndex = new Map<string, number>();
+
+    fields.forEach((field) => {
+      if (field.separator || field.name === "include_project") {
+        return;
+      }
+
+      const groupId = field.inlineGroup || field.name;
+      if (!rowIndex.has(groupId)) {
+        rowIndex.set(groupId, rows.length);
+        rows.push({
+          groupId,
+          indentLevel: field.indentLevel ?? 0,
+          placeholders: {},
+        });
+      }
+
+      const row = rows[rowIndex.get(groupId)!];
+      const placeholder = `[${field.label}]`;
+
+      switch (field.role) {
+        case "time":
+          row.placeholders.time = placeholder;
+          break;
+        case "method":
+          row.placeholders.method = placeholder;
+          break;
+        case "social":
+          row.placeholders.social = placeholder;
+          break;
+        default:
+          row.placeholders.primary = placeholder;
+      }
+    });
+
+    return rows;
+  }
+
+  private static renderRowsTable(rows: FieldRow[]): string {
+    if (!rows.length) {
+      return "";
+    }
+
+    const body = rows.map((row) => this.renderRow(row)).join("");
+
     return `
- <table class="lesson-plan-table">
+ <table class="lesson-plan-table lesson-plan-table--hierarchy">
  <tbody>
- ${checkedFields
-        .map(
-          (field) => `
+ ${body}
+ </tbody>
+ </table>
+ `;
+  }
+
+  private static renderRow(row: FieldRow): string {
+    const indentClass = row.indentLevel
+      ? ` lesson-plan-table__cell--indent-${row.indentLevel}`
+      : "";
+
+    return `
  <tr>
- <td>[${field.label}]</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--primary${indentClass}">${row.placeholders.primary ?? ""}</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--time">${row.placeholders.time ?? ""}</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--method">${row.placeholders.method ?? ""}</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--social">${row.placeholders.social ?? ""}</td>
  </tr>
- `,
-        )
-        .join("")}
+ `;
+  }
+
+  private static renderProjectExtension(sectionTitle: string): string {
+    const projectRows: FieldRow[] = [
+      {
+        groupId: "project_competence",
+        indentLevel: 0,
+        placeholders: {
+          primary: "[Project Competence]",
+          time: "[Time]",
+        },
+      },
+      {
+        groupId: "project_topic",
+        indentLevel: 1,
+        placeholders: {
+          primary: "[Project Topic]",
+          time: "[Time]",
+        },
+      },
+      {
+        groupId: "project_objective",
+        indentLevel: 2,
+        placeholders: {
+          primary: "[Project Objective]",
+          time: "[Time]",
+        },
+      },
+      {
+        groupId: "project_task",
+        indentLevel: 3,
+        placeholders: {
+          primary: "[Project Task]",
+          time: "[Time]",
+        },
+      },
+      {
+        groupId: "project_instruction",
+        indentLevel: 4,
+        placeholders: {
+          primary: "[Project Instruction Area]",
+          method: "[Method]",
+          social: "[Social form]",
+        },
+      },
+      {
+        groupId: "project_student",
+        indentLevel: 4,
+        placeholders: {
+          primary: "[Project Student Area]",
+          method: "[Method]",
+          social: "[Social form]",
+        },
+      },
+      {
+        groupId: "project_teacher",
+        indentLevel: 4,
+        placeholders: {
+          primary: "[Project Teacher Area]",
+          method: "[Method]",
+          social: "[Social form]",
+        },
+      },
+    ];
+
+    return `
+ <h5 class="preview-block__subtitle">${sectionTitle}</h5>
+ ${this.renderRowsTable(projectRows)}
+ `;
+  }
+
+  private static renderProgramBlockContent(
+    fields: BlockFieldConfig[],
+  ): string {
+    const lookup = new Map<string, BlockFieldConfig>();
+    fields.forEach((field) => {
+      lookup.set(field.name, field);
+    });
+
+    const getPlaceholder = (name: string): string => {
+      const field = lookup.get(name);
+      return field ? `[${field.label}]` : "";
+    };
+
+   return `
+ <table class="lesson-plan-table lesson-plan-table--program">
+ <tbody>
+ <tr>
+ <td>${getPlaceholder("competence")}</td>
+ <td>${getPlaceholder("topic")}</td>
+ <td>${getPlaceholder("objective")}</td>
+ <td>${getPlaceholder("task")}</td>
+ <td>${getPlaceholder("program_method")}</td>
+ <td>${getPlaceholder("program_social_form")}</td>
+ <td>${getPlaceholder("program_time")}</td>
+ </tr>
  </tbody>
  </table>
  `;
@@ -1031,7 +1503,7 @@ export class TemplateManager {
   * Renders the special Resources block content with optional glossary table
   */
   static renderResourcesBlockContent(
-    checkedFields: Array<{ name: string; label: string }>,
+    checkedFields: BlockFieldConfig[],
   ): string {
     // Get main resource fields (excluding glossary items)
     const mainFields = checkedFields.filter(
@@ -1119,13 +1591,14 @@ export class TemplateManager {
   /**
   * Gets default content for block preview
   */
-  static getDefaultBlockContent(blockType: string): string {
-    const defaultContent: Record<string, string> = {
+  static getDefaultBlockContent(blockType: TemplateBlockType): string {
+    const defaultContent: Record<TemplateBlockType, string> = {
       header: "Course title and introduction will appear here",
       program: "Learning objectives and outcomes will be displayed here",
       resources: "Files, links, and materials will be listed here",
       content: "Main lesson content and materials will appear here",
       assignment: "Tasks and submission instructions will be shown here",
+      scoring: "Evaluation criteria and scoring details will appear here",
       footer: "Credits and additional information will appear here",
     };
     return defaultContent[blockType] || "Block content will appear here";
@@ -1309,7 +1782,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const formData = new FormData(e.target as HTMLFormElement);
       const templateFormData = {
         name: formData.get("template-name") as string,
-        type: formData.get("template-type") as "lesson",
+        type: formData.get("template-type") as TemplateType,
         description:
           (formData.get("template-description") as string) || undefined,
       };

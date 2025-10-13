@@ -82,6 +82,8 @@ export class TemplatePreviewHandler {
                 return this.renderContentBlock(config);
             case "assignment":
                 return this.renderAssignmentBlock(config);
+            case "scoring":
+                return this.renderScoringBlock(config);
             case "footer":
                 return this.renderFooterBlock(config);
             default:
@@ -115,20 +117,24 @@ export class TemplatePreviewHandler {
     /**
     * Renders program block preview
     */
-    private renderProgramBlock(_config: any): string {
+     private renderProgramBlock(config: any): string {
         return `
  <div class="preview-block preview-block--program">
  <h4 class="preview-block__title">Program</h4>
- <table class="lesson-plan-table">
+ <table class="lesson-plan-table lesson-plan-table--program">
  <tbody>
  <tr>
  <td>[Competence]</td>
  <td>[Topic]</td>
  <td>[Objective]</td>
  <td>[Task]</td>
+ <td>[Method]</td>
+ <td>[Social form]</td>
+ <td>[Time]</td>
  </tr>
  </tbody>
  </table>
+ ${config?.include_project ? this.renderProjectSection("Project") : ""}
  </div>
  `;
     }
@@ -168,32 +174,12 @@ export class TemplatePreviewHandler {
     /**
     * Renders content block preview
     */
-    private renderContentBlock(_config: any): string {
+    private renderContentBlock(config: any): string {
         return `
  <div class="preview-block preview-block--content">
  <h4 class="preview-block__title">Content</h4>
- <table class="lesson-plan-table">
- <tbody>
- <tr>
- <td>[Topic]</td>
- </tr>
- <tr>
- <td>[Objective]</td>
- </tr>
- <tr>
- <td>[Task]</td>
- </tr>
- <tr>
- <td>[Instruction area]</td>
- </tr>
- <tr>
- <td>[Student Area]</td>
- </tr>
- <tr>
- <td>[Teacher area]</td>
- </tr>
- </tbody>
- </table>
+ ${this.renderNestedHierarchy()}
+ ${config?.include_project ? this.renderProjectSection("Project") : ""}
  </div>
  `;
     }
@@ -201,35 +187,98 @@ export class TemplatePreviewHandler {
     /**
     * Renders assignment block preview
     */
-    private renderAssignmentBlock(_config: any): string {
+    private renderAssignmentBlock(config: any): string {
         return `
  <div class="preview-block preview-block--assignment">
  <h4 class="preview-block__title">Assignment</h4>
+ ${this.renderNestedHierarchy()}
+ ${config?.include_project ? this.renderProjectSection("Project Assignment") : ""}
+ </div>
+ `;
+    }
+
+    /**
+    * Renders scoring block preview
+    */
+    private renderScoringBlock(_config: any): string {
+        return `
+ <div class="preview-block preview-block--scoring">
+ <h4 class="preview-block__title">Scoring</h4>
  <table class="lesson-plan-table">
  <tbody>
  <tr>
- <td>[Topic]</td>
- </tr>
- <tr>
- <td>[Objective]</td>
- </tr>
- <tr>
- <td>[Task]</td>
- </tr>
- <tr>
- <td>[Instruction area]</td>
- </tr>
- <tr>
- <td>[Student Area]</td>
- </tr>
- <tr>
- <td>[Teacher area]</td>
+ <td>[Criteria]</td>
+ <td>[Max points]</td>
+ <td>[Passing threshold]</td>
+ <td>[Feedback guidelines]</td>
+ <td>[Rubric link]</td>
  </tr>
  </tbody>
  </table>
  </div>
  `;
     }
+
+    private renderNestedHierarchy(prefix = ""): string {
+          const label = (text: string): string => `[${prefix ? `${prefix} ${text}` : text}]`;
+
+          return `
+ <table class="lesson-plan-table lesson-plan-table--hierarchy">
+ <tbody>
+ <tr>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--primary">${label("Competence")}</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--time">[Time]</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--method"></td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--social"></td>
+ </tr>
+ <tr>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--primary lesson-plan-table__cell--indent-1">${label("Topic")}</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--time">[Time]</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--method"></td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--social"></td>
+ </tr>
+ <tr>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--primary lesson-plan-table__cell--indent-2">${label("Objective")}</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--time">[Time]</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--method"></td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--social"></td>
+ </tr>
+ <tr>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--primary lesson-plan-table__cell--indent-3">${label("Task")}</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--time">[Time]</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--method"></td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--social"></td>
+ </tr>
+ <tr>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--primary lesson-plan-table__cell--indent-4">${label("Instruction Area")}</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--time"></td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--method">[Method]</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--social">[Social form]</td>
+ </tr>
+ <tr>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--primary lesson-plan-table__cell--indent-4">${label("Student Area")}</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--time"></td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--method">[Method]</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--social">[Social form]</td>
+ </tr>
+ <tr>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--primary lesson-plan-table__cell--indent-4">${label("Teacher Area")}</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--time"></td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--method">[Method]</td>
+ <td class="lesson-plan-table__cell lesson-plan-table__cell--social">[Social form]</td>
+ </tr>
+ </tbody>
+ </table>
+ `;
+     }
+
+    private renderProjectSection(title: string): string {
+        const mainSection = this.renderNestedHierarchy("Project");
+          return `
+ <h5 class="preview-block__subtitle">${title}</h5>
+ ${mainSection}
+ `;
+     }
 
     /**
     * Renders footer block preview

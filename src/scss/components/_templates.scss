@@ -41,9 +41,31 @@
 
   &__fields {
     display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+  }
+
+  &__row {
+    display: flex;
     flex-wrap: wrap;
     gap: var(--spacing-2) var(--spacing-4);
     align-items: center;
+  }
+
+  &__row--indent-1 {
+    margin-left: var(--spacing-4);
+  }
+
+  &__row--indent-2 {
+    margin-left: calc(var(--spacing-4) * 2);
+  }
+
+  &__row--indent-3 {
+    margin-left: calc(var(--spacing-4) * 3);
+  }
+
+  &__row--indent-4 {
+    margin-left: calc(var(--spacing-4) * 4);
   }
 
   &__field {
@@ -60,6 +82,11 @@
     &:hover {
       background: var(--color-neutral-50);
     }
+  }
+
+  &__empty {
+    font-size: var(--font-size-small);
+    color: var(--color-text-tertiary);
   }
 
   &__label {
@@ -206,6 +233,34 @@
     &:not(:last-child) {
       border-right: 1px solid var(--color-neutral-200);
     }
+  }
+}
+
+.lesson-plan-table__cell {
+  &--primary {
+    font-weight: var(--font-weight-medium);
+  }
+
+  &--time,
+  &--method,
+  &--social {
+    min-width: 6.5rem;
+  }
+
+  &--indent-1 {
+    padding-left: calc(var(--spacing-4) * 1.5);
+  }
+
+  &--indent-2 {
+    padding-left: calc(var(--spacing-4) * 2.5);
+  }
+
+  &--indent-3 {
+    padding-left: calc(var(--spacing-4) * 3.5);
+  }
+
+  &--indent-4 {
+    padding-left: calc(var(--spacing-4) * 4.5);
   }
 }
 

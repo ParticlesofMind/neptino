@@ -1,11 +1,15 @@
 import { supabase } from '../../../supabase.js';
 import { ensureTemplateModals } from '../templateModals.js';
 import { ModalHandler } from '../../../../navigation/CourseBuilderNavigation.js';
+import {
+  TEMPLATE_TYPE_LABELS,
+  TemplateType,
+} from '../templateOptions.js';
 
 interface Template {
   id: string;
   template_id: string;
-  template_type: 'lesson';
+  template_type: TemplateType;
   template_description?: string;
   created_at: string;
   template_data: {
@@ -18,6 +22,8 @@ interface Template {
 export class LoadTemplatesModal {
   private templates: Template[] = [];
   private onTemplateSelected: ((templateId: string) => void) | null = null;
+  private currentFilterType: TemplateType | "" = "";
+  private filterInitialized = false;
 
   constructor() {
     // No initialization needed for DOM-based approach
@@ -36,6 +42,8 @@ export class LoadTemplatesModal {
     }
 
     ModalHandler.getInstance().showModal('load-template-modal');
+
+    this.initializeFilterControl();
 
     await this.loadTemplates();
   }
@@ -107,17 +115,31 @@ export class LoadTemplatesModal {
     const contentEl = document.getElementById("template-list-content");
     if (!contentEl) return;
 
-    const templatesHtml = this.templates
-      .map((template) => {
+    const filteredTemplates = this.getFilteredTemplates();
+
+    if (filteredTemplates.length === 0) {
+      contentEl.innerHTML = `
+        <div class="template-browser__empty template-browser__empty--inline">
+          <span class="template-browser__empty-icon">🔍</span>
+          <h3 class="template-browser__empty-title">No Templates Match</h3>
+          <p class="template-browser__empty-text">Try selecting a different template type.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const templatesHtml = filteredTemplates
+      .map((template: Template) => {
         const createdDate = new Date(template.created_at).toLocaleDateString();
         const templateName = template.template_data?.name || "Untitled Template";
         const description = template.template_description || "No description provided";
+        const typeLabel = TEMPLATE_TYPE_LABELS[template.template_type];
 
         return `
           <div class="template-card" data-template-id="${template.id}" onclick="loadTemplatesModal.selectTemplate('${template.id}')">
             <div class="template-card__header">
               <h4 class="template-card__title">${templateName}</h4>
-              <span class="template-card__type">${template.template_type}</span>
+              <span class="template-card__type">${typeLabel}</span>
             </div>
             <div class="template-card__description">
               ${description}
@@ -218,6 +240,33 @@ export class LoadTemplatesModal {
    */
   public destroy(): void {
     // Nothing to clean up for DOM-based approach
+  }
+
+  private initializeFilterControl(): void {
+    const filterSelect = document.getElementById("template-type-filter") as HTMLSelectElement | null;
+    if (!filterSelect) {
+      return;
+    }
+
+    if (!this.filterInitialized) {
+      filterSelect.addEventListener("change", () => {
+        this.currentFilterType = (filterSelect.value as TemplateType) || "";
+        this.displayTemplates();
+      });
+      this.filterInitialized = true;
+    }
+
+    filterSelect.value = this.currentFilterType;
+  }
+
+  private getFilteredTemplates(): Template[] {
+    if (!this.currentFilterType) {
+      return this.templates;
+    }
+
+    return this.templates.filter(
+      (template) => template.template_type === this.currentFilterType,
+    );
   }
 }
 

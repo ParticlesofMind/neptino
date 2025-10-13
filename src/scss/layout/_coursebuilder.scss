@@ -18,7 +18,7 @@
         min-height: 100vh;
         height: 100dvh;
         align-items: stretch;
-        padding: 0;
+        padding: 0 0 var(--spacing-4);
         container-type: inline-size;
         container-name: coursebuilder-setup;
     }
@@ -28,13 +28,16 @@
         top: 0;
         align-self: stretch;
         height: 100%;
+        padding-bottom: var(--spacing-4);
+        box-sizing: border-box;
     }
 
     &__setup article[data-course-section] {
         display: none;
         grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr) auto;
         gap: clamp(var(--spacing-2), 1.5vw, var(--spacing-4));
-        align-content: start;
+        align-content: stretch;
         align-items: stretch;
         justify-items: stretch;
         padding: clamp(var(--spacing-2), 1.5vw, var(--spacing-4));
@@ -42,6 +45,9 @@
         border-radius: var(--radius-medium);
         box-shadow: 0 24px 48px -32px rgba(15, 23, 42, 0.35);
         min-height: 0;
+        height: 100%;
+        max-height: 100%;
+        overflow: hidden;
     }
 
     &__setup article[data-course-section].is-active {
@@ -110,9 +116,11 @@
     border-radius: var(--radius-extra-large);
     padding: clamp(var(--spacing-4), 2vw, var(--spacing-6));
     box-shadow: var(--shadow-medium);
-    min-height: clamp(20rem, 55vh, 36rem);
     height: 100%;
     align-self: stretch;
+    width: 100%;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .article__config {
@@ -137,7 +145,10 @@
     display: grid;
     gap: var(--spacing-4);
     align-content: start;
-    min-height: clamp(20rem, 55vh, 36rem);
+    width: 100%;
+    align-self: stretch;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .article[data-course-section] > .form .form__label {
@@ -150,6 +161,9 @@
     border-radius: var(--radius-extra-large);
     padding: clamp(var(--spacing-4), 2vw, var(--spacing-6));
     box-shadow: var(--shadow-medium);
+    align-self: stretch;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 @media (max-width: 48rem) {
@@ -162,8 +176,8 @@
 
 .article--essentials > .form,
 .article--classification > .form {
-    max-width: clamp(32rem, 60vw, 52rem);
-    margin: 0 auto;
+    max-width: none;
+    margin: 0;
 }
 
 
@@ -196,8 +210,8 @@
 
 .article--templates .article__config,
 .article--templates .article__preview {
-    min-height: clamp(18rem, 50vh, 32rem);
-    max-height: clamp(32rem, 70vh, 48rem);
+    min-height: 0;
+    height: 100%;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
@@ -219,6 +233,17 @@
     &::-webkit-scrollbar-thumb:hover {
         background: var(--color-neutral-400);
     }
+}
+
+.article--templates {
+    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr);
+    min-height: 0;
+    height: 100%;
+}
+
+.article--templates .article__config,
+.article--templates .article__preview {
+    align-self: stretch;
 }
 
 .article--templates .article__config p,
@@ -306,6 +331,12 @@
 
 .article--pedagogy .article__config {
     gap: var(--spacing-4);
+}
+
+.article--pedagogy .article__preview {
+    width: clamp(22rem, 28vw, 30rem);
+    max-width: 100%;
+    justify-self: stretch;
 }
 
 .article--pedagogy .learning-plane {

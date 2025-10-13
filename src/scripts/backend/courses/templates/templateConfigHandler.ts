@@ -29,7 +29,7 @@ export class TemplateConfigHandler {
               <div class="block-config__fields">
                 ${block.configFields.map((field: any) => `
                   <label class="block-config__field">
-                    <input type="checkbox" id="field-${block.type}-${field.name}" ${field.defaultValue ? 'checked' : ''} class="input input--checkbox">
+                    <input type="checkbox" id="field-${block.type}-${field.name}" ${(field.required || field.defaultValue) ? 'checked' : ''} ${field.required ? 'disabled' : ''} class="input input--checkbox">
                     <span class="block-config__label">${field.label}</span>
                   </label>
                 `).join('')}

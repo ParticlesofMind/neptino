@@ -10,6 +10,7 @@ export interface CourseCreationData {
  course_description: string;
  course_language: string;
  course_image?: File | null;
+ course_pedagogy?: { x: number; y: number } | null;
  // teacher_id will be auto-filled from auth
  // Other fields will have defaults or be added later
 }
@@ -244,7 +245,7 @@ export async function updateCourse(
 
  if (error) {
  console.error("Error updating course:", error);
- return { success: false, error: "Failed to update course" };
+ return { success: false, error: error.message || "Failed to update course" };
  }
 
  return { success: true };

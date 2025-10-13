@@ -35,17 +35,49 @@ function parseStored(value: string | null): XY | null {
     console.warn('Failed to parse pedagogy value:', error);
   }
 
-  const presets: Record<string, XY> = {
-    Traditional: { x: -75, y: -75 },
-    Progressive: { x: 75, y: 75 },
-    'Guided Discovery': { x: -25, y: 75 },
-    Balanced: { x: 0, y: 0 },
-    Behaviorism: { x: -75, y: -75 },
-    Cognitivism: { x: 0, y: 50 },
-    Constructivism: { x: 25, y: 75 },
-    Connectivism: { x: 75, y: 50 },
-  };
-  if (value in presets) return presets[value];
+  if (value && typeof value === 'string') {
+    const presets: Record<string, XY> = {
+      traditional: { x: -75, y: -75 },
+      progressive: { x: 75, y: 75 },
+      'guided discovery': { x: -25, y: 75 },
+      balanced: { x: 0, y: 0 },
+      behaviorism: { x: -75, y: -75 },
+      cognitivism: { x: 0, y: 50 },
+      constructivism: { x: 25, y: 75 },
+      connectivism: { x: 75, y: 50 },
+    };
+    const lower = value.toLowerCase();
+    if (lower in presets) {
+      return presets[lower];
+    }
+  }
+
+  return null;
+}
+
+function resolveCurrentCourseId(): string | null {
+  if (typeof window === 'undefined') return null;
+
+  const globalId = (window as any).currentCourseId;
+  if (typeof globalId === 'string' && globalId && globalId !== 'undefined') {
+    return globalId;
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlId = urlParams.get('courseId') || urlParams.get('id');
+  if (typeof urlId === 'string' && urlId && urlId !== 'undefined') {
+    return urlId;
+  }
+
+  try {
+    const sessionId = sessionStorage.getItem('currentCourseId');
+    if (typeof sessionId === 'string' && sessionId && sessionId !== 'undefined') {
+      return sessionId;
+    }
+  } catch (error) {
+    console.warn('Unable to read course ID from sessionStorage:', error);
+  }
+
   return null;
 }
 
@@ -134,7 +166,7 @@ function impactBullets(x: number, y: number): string[] {
 
 function attachPedagogyGrid() {
   const input = getInput();
-  const grid = getEl<HTMLElement>('#pedagogy-grid');
+  const grid = getEl<HTMLElement>('.learning-plane__grid');
   const marker = getEl<HTMLElement>('#pedagogy-marker');
   const xOut = getEl<HTMLElement>('#pedagogy-x');
   const yOut = getEl<HTMLElement>('#pedagogy-y');
@@ -145,6 +177,9 @@ function attachPedagogyGrid() {
   const presetButtons = document.querySelectorAll<HTMLButtonElement>('.button--preset');
 
   if (!input || !grid || !marker || !xOut || !yOut || !titleEl || !subtitleEl || !descEl || !listEl) return;
+
+  grid.style.touchAction = 'none';
+  grid.style.cursor = 'pointer';
 
   let state: XY = { x: 0, y: 0 };
 
@@ -198,17 +233,24 @@ function attachPedagogyGrid() {
   // Pointer interactions
   let dragging = false;
   grid.addEventListener('pointerdown', (e) => {
+    (e as PointerEvent).preventDefault();
     dragging = true;
-    (e.target as Element)?.setPointerCapture?.((e as PointerEvent).pointerId);
+    grid.setPointerCapture?.((e as PointerEvent).pointerId);
     setFromEvent((e as PointerEvent).clientX, (e as PointerEvent).clientY);
   });
   grid.addEventListener('pointermove', (e) => {
     if (!dragging) return;
+    (e as PointerEvent).preventDefault();
     setFromEvent((e as PointerEvent).clientX, (e as PointerEvent).clientY);
   });
-  const endDrag = () => { dragging = false; };
-  grid.addEventListener('pointerup', endDrag);
-  grid.addEventListener('pointerleave', endDrag);
+  const endDrag = (e?: PointerEvent) => {
+    dragging = false;
+    if (e?.pointerId !== undefined) {
+      grid.releasePointerCapture?.(e.pointerId);
+    }
+  };
+  grid.addEventListener('pointerup', (e) => endDrag(e as PointerEvent));
+  grid.addEventListener('pointerleave', (e) => endDrag(e as PointerEvent));
 
   // Presets
   presetButtons.forEach(btn => {
@@ -261,26 +303,44 @@ async function verifyPedagogyColumn() {
   if (!form) return;
 
   try {
-    const { error } = await supabase.from('courses').select('course_pedagogy').limit(1);
-    if (error) throw error;
+    const courseId = resolveCurrentCourseId();
+    let query = supabase.from('courses').select('course_pedagogy').limit(1);
+    if (courseId) {
+      query = query.eq('id', courseId);
+    }
+
+    const { error } = await query;
+    if (error) {
+      const message = String(error.message || '').toLowerCase();
+      const code = (error as { code?: string }).code;
+      const missingColumn = code === '42703' || message.includes('column') && message.includes('course_pedagogy');
+
+      if (missingColumn) {
+        // Only show pedagogy column warning if we're actually on the pedagogy section
+        if (window.location.hash === '#pedagogy' || document.querySelector('#pedagogy:not([style*="display: none"])')) {
+          form.dataset.blockSave = 'true';
+          if (statusDiv) {
+            statusDiv.textContent = 'Pedagogy cannot be saved: missing column course_pedagogy. Ask an admin to run the migration.';
+            statusDiv.className = 'save-status__text save-status__text--error';
+          }
+          console.warn('⚠️ Course pedagogy column missing - saving blocked for pedagogy section');
+        } else {
+          form.dataset.blockSave = 'true';
+        }
+        return;
+      }
+
+      console.warn('Pedagogy column verification failed but will not block saving:', error);
+    }
+
     form.dataset.blockSave = 'false';
     if (statusDiv) {
       statusDiv.textContent = 'Changes will be saved automatically';
       statusDiv.className = 'save-status__text';
     }
-  } catch (err: any) {
-    // Only show pedagogy column warning if we're actually on the pedagogy section
-    if (window.location.hash === '#pedagogy' || document.querySelector('#pedagogy:not([style*="display: none"])')) {
-      form.dataset.blockSave = 'true';
-      if (statusDiv) {
-        statusDiv.textContent = 'Pedagogy cannot be saved: missing column course_pedagogy. Ask an admin to run the migration.';
-        statusDiv.className = 'save-status__text save-status__text--error';
-      }
-      console.warn('⚠️ Course pedagogy column missing - saving blocked for pedagogy section');
-    } else {
-      // Just silently block saving without the warning noise during startup
-      form.dataset.blockSave = 'true';
-    }
+  } catch (err) {
+    console.warn('Pedagogy column verification encountered an unexpected issue but saving remains enabled:', err);
+    form.dataset.blockSave = 'false';
   }
 }
 
