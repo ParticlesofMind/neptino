@@ -359,6 +359,22 @@
 
           <form class="form form--curriculum">
 
+            <!-- Module Organization Selection -->
+            <div class="curriculum-config__group curriculum-config__group--modules">
+              <label class="form__label">
+                Module Organization
+                <select class="input input--select" id="module-organization">
+                  <option value="linear">Linear (No modules)</option>
+                  <option value="equal">Equal Modules (Auto-distributed)</option>
+                  <option value="tiered">Tiered (Intro → Core → Project)</option>
+                  <option value="custom">Custom (Instructor-defined)</option>
+                </select>
+              </label>
+              <p class="form__help-text" id="module-organization-help">
+                All lessons appear in a single list.
+              </p>
+            </div>
+
             <div class="curriculum-config__group curriculum-config__group--durations">
               <button class="button button--small button--outline" type="button" data-duration="mini" data-max="30">
                 Mini
@@ -400,8 +416,11 @@
         <section class="article__preview">
           <div class="curriculum__preview">
             <nav class="curriculum__controls" aria-label="Curriculum view modes">
+              <button class="button button--small button--outline" type="button" data-mode="modules" style="display: none;">
+                Modules
+              </button>
               <button class="button button--small button--outline" type="button" data-mode="titles">
-                Titles
+                Lesson Titles
               </button>
               <button class="button button--small button--outline" type="button" data-mode="topics">
                 Topics

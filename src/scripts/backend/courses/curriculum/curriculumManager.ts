@@ -1,5 +1,14 @@
 import { supabase } from "../../supabase.js";
 
+// Module organization types
+type ModuleOrganizationType = "linear" | "equal" | "tiered" | "custom";
+
+interface CurriculumModule {
+ moduleNumber: number;
+ title: string;
+ lessons: CurriculumLesson[];
+}
+
 interface CurriculumLesson {
  lessonNumber: number;
  title: string;
@@ -32,7 +41,9 @@ interface CurriculumStructureConfig {
 
 interface CurriculumDataPayload {
   structure?: CurriculumStructureConfig;
-  lessons: CurriculumLesson[];
+  moduleOrganization?: ModuleOrganizationType;
+  modules?: CurriculumModule[]; // New: lessons organized into modules
+  lessons?: CurriculumLesson[]; // Legacy: for backward compatibility with "linear" mode
 }
 
 interface DurationPreset {
@@ -44,13 +55,15 @@ interface DurationPreset {
   rationale: string;
 }
 
-type PreviewMode = "titles" | "topics" | "objectives" | "tasks" | "all";
+type PreviewMode = "modules" | "titles" | "topics" | "objectives" | "tasks" | "all";
 
 class CurriculumManager {
  private courseId: string;
  private curriculumConfigSection!: HTMLElement;
  private curriculumPreviewSection!: HTMLElement;
- private currentCurriculum: CurriculumLesson[] = [];
+ private currentCurriculum: CurriculumLesson[] = []; // Flat list for internal processing
+ private currentModules: CurriculumModule[] = []; // Hierarchical module structure
+ private moduleOrganization: ModuleOrganizationType = "linear"; // Module organization mode
  private contentLoadConfig: ContentLoadConfig | null = null;
  private currentPreviewMode: PreviewMode = "all";
  private scheduledLessonDuration: number = 0; // Store the actual scheduled duration
@@ -225,6 +238,15 @@ class CurriculumManager {
    if (!this.curriculumConfigSection) {
      console.error("Cannot bind events: required elements not found");
      return;
+   }
+
+   // Module organization dropdown
+   const moduleOrgSelect = document.getElementById('module-organization') as HTMLSelectElement;
+   if (moduleOrgSelect) {
+     moduleOrgSelect.addEventListener('change', (event) => {
+       const value = (event.target as HTMLSelectElement).value as ModuleOrganizationType;
+       this.setModuleOrganization(value);
+     });
    }
 
    // Preview mode buttons
@@ -939,6 +961,134 @@ class CurriculumManager {
    };
  }
 
+ // ============================================================================
+ // MODULE ORGANIZATION HELPERS
+ // ============================================================================
+
+ /**
+  * Extracts a flat list of lessons from a hierarchical module structure
+  */
+ private extractLessonsFromModules(modules: CurriculumModule[]): CurriculumLesson[] {
+   const lessons: CurriculumLesson[] = [];
+   let lessonCounter = 1;
+   
+   for (const module of modules) {
+     for (const lesson of module.lessons) {
+       // Re-number lessons sequentially across all modules
+       lessons.push({
+         ...lesson,
+         lessonNumber: lessonCounter++
+       });
+     }
+   }
+   
+   return lessons;
+ }
+
+ /**
+  * Organizes a flat list of lessons into modules based on organization type
+  */
+ private organizeLessonsIntoModules(lessons: CurriculumLesson[]): CurriculumModule[] {
+   if (this.moduleOrganization === "linear") {
+     // No modules - wrap all lessons in a single implicit module
+     return [];
+   }
+
+   if (this.moduleOrganization === "equal") {
+     return this.distributeEqualModules(lessons);
+   }
+
+   if (this.moduleOrganization === "tiered") {
+     return this.createTieredModules(lessons);
+   }
+
+   if (this.moduleOrganization === "custom") {
+     // Custom organization - use existing module structure if available
+     // Otherwise create a default single module
+     if (this.currentModules.length > 0) {
+       return this.currentModules;
+     }
+     return [{
+       moduleNumber: 1,
+       title: "Module 1",
+       lessons: lessons
+     }];
+   }
+
+   return [];
+ }
+
+ /**
+  * Distributes lessons evenly across modules
+  * Algorithm: divide lessons into n modules with max size difference of 1
+  * Example: 11 lessons → 3 modules = [4, 4, 3]
+  */
+ private distributeEqualModules(lessons: CurriculumLesson[]): CurriculumModule[] {
+   const totalLessons = lessons.length;
+   
+   // Default to 3 modules, but adjust based on lesson count
+   let numModules = 3;
+   if (totalLessons <= 3) numModules = 1;
+   else if (totalLessons <= 6) numModules = 2;
+   else if (totalLessons <= 12) numModules = 3;
+   else if (totalLessons <= 24) numModules = 4;
+   else numModules = Math.ceil(totalLessons / 6); // Approx 6 lessons per module
+
+   const baseSize = Math.floor(totalLessons / numModules);
+   const remainder = totalLessons % numModules;
+
+   const modules: CurriculumModule[] = [];
+   let lessonIndex = 0;
+
+   for (let i = 0; i < numModules; i++) {
+     // First 'remainder' modules get an extra lesson
+     const moduleSize = baseSize + (i < remainder ? 1 : 0);
+     const moduleLessons = lessons.slice(lessonIndex, lessonIndex + moduleSize);
+     
+     modules.push({
+       moduleNumber: i + 1,
+       title: `Module ${i + 1}`,
+       lessons: moduleLessons
+     });
+
+     lessonIndex += moduleSize;
+   }
+
+   return modules;
+ }
+
+ /**
+  * Creates three tiered modules: Introduction, Core Content, and Project/Assessment
+  */
+ private createTieredModules(lessons: CurriculumLesson[]): CurriculumModule[] {
+   const totalLessons = lessons.length;
+   
+   // Tiered distribution: ~20% intro, ~60% core, ~20% project
+   const introSize = Math.max(1, Math.ceil(totalLessons * 0.2));
+   const projectSize = Math.max(1, Math.ceil(totalLessons * 0.2));
+   const coreSize = totalLessons - introSize - projectSize;
+
+   const modules: CurriculumModule[] = [
+     {
+       moduleNumber: 1,
+       title: "Introduction & Foundations",
+       lessons: lessons.slice(0, introSize)
+     },
+     {
+       moduleNumber: 2,
+       title: "Core Content",
+       lessons: lessons.slice(introSize, introSize + coreSize)
+     },
+     {
+       moduleNumber: 3,
+       title: "Application & Assessment",
+       lessons: lessons.slice(introSize + coreSize)
+     }
+   ];
+
+   return modules;
+ }
+
  private async saveCurriculumToDatabase(
    curriculum: CurriculumLesson[],
  ): Promise<void> {
@@ -947,9 +1097,14 @@ class CurriculumManager {
      throw new Error('No course ID available for saving curriculum');
    }
 
+   // Organize lessons into modules based on organization type
+   const modules = this.organizeLessonsIntoModules(curriculum);
+
    console.log('💾 Saving curriculum structure to database:', {
      courseId: this.courseId,
      lessonsCount: curriculum.length,
+     moduleOrganization: this.moduleOrganization,
+     modulesCount: modules.length,
      sampleStructure: curriculum[0] ? {
        topicsCount: curriculum[0].topics.length,
        objectivesCount: curriculum[0].topics[0]?.objectives.length,
@@ -958,9 +1113,19 @@ class CurriculumManager {
    });
 
    const payload: CurriculumDataPayload = {
-     lessons: curriculum,
      structure: this.buildStructurePayload(),
+     moduleOrganization: this.moduleOrganization,
    };
+
+   // Save either as modules or legacy lessons format
+   if (this.moduleOrganization === "linear") {
+     // Legacy format for backward compatibility
+     payload.lessons = curriculum;
+   } else {
+     // New module-based format
+     payload.modules = modules;
+     this.currentModules = modules; // Update current modules
+   }
 
    const { error } = await supabase
      .from("courses")
@@ -985,6 +1150,40 @@ class CurriculumManager {
 
    // Re-render preview with new mode
    this.renderCurriculumPreview();
+ }
+
+ /**
+  * Sets the module organization type and updates UI accordingly
+  */
+ private setModuleOrganization(organization: ModuleOrganizationType): void {
+   this.moduleOrganization = organization;
+
+   // Update help text
+   const helpText = document.getElementById('module-organization-help');
+   const helpMessages: Record<ModuleOrganizationType, string> = {
+     linear: 'All lessons appear in a single list.',
+     equal: 'System divides lessons into equal groups automatically.',
+     tiered: 'Three stages with distinct purposes: Introduction → Core Content → Application.',
+     custom: 'You decide how many modules exist and which lessons go where.'
+   };
+   
+   if (helpText) {
+     helpText.textContent = helpMessages[organization];
+   }
+
+   // Show/hide Modules button
+   const modulesButton = document.querySelector('button[data-mode="modules"]') as HTMLButtonElement;
+   if (modulesButton) {
+     modulesButton.style.display = organization === 'linear' ? 'none' : 'inline-block';
+   }
+
+   console.log('📦 Module organization changed to:', organization);
+
+   // If curriculum exists, reorganize and save
+   if (this.currentCurriculum.length > 0) {
+     this.saveCurriculumToDatabase(this.currentCurriculum);
+     this.renderCurriculumPreview();
+   }
  }
 
  private renderCurriculumPreview(): void {
@@ -1026,6 +1225,46 @@ class CurriculumManager {
            Configure your lesson settings and generate a curriculum to see the preview.
          </div>
        </div>`;
+   } else if (this.currentPreviewMode === "modules") {
+     // Module view - show modules with lesson titles
+     if (this.moduleOrganization === "linear" || this.currentModules.length === 0) {
+       html = `
+         <div class="empty-state">
+           <div class="empty-state__title heading heading--medium text--secondary">Linear Organization</div>
+           <div class="empty-state__message text--small text--tertiary">
+             No modules in linear mode. Switch to "Lesson Titles" to view all lessons.
+           </div>
+         </div>`;
+     } else {
+       // Render modules with their lessons
+       this.currentModules.forEach((module) => {
+         html += `
+           <div class="module">
+             <h2 class="module__title heading heading--xlarge text--primary" contenteditable="true"
+                 data-module="${module.moduleNumber}" data-field="title"
+                 data-placeholder="Click to add module title...">
+               ${module.title || `Module ${module.moduleNumber}`}
+             </h2>
+             <div class="module__meta">
+               <span class="badge badge--info">${module.lessons.length} lessons</span>
+             </div>
+             <div class="module__lessons">`;
+         
+         module.lessons.forEach((lesson) => {
+           html += `
+               <div class="lesson lesson--in-module">
+                 <h3 class="lesson__title heading heading--medium text--secondary" contenteditable="false"
+                     data-lesson="${lesson.lessonNumber}" data-field="title">
+                   ${lesson.title || `Lesson ${lesson.lessonNumber}`}
+                 </h3>
+               </div>`;
+         });
+         
+         html += `
+             </div>
+           </div>`;
+       });
+     }
    } else {
      this.currentCurriculum.forEach((lesson) => {
        if (this.currentPreviewMode === "all") {
@@ -1264,6 +1503,7 @@ class CurriculumManager {
  }
 
  private updateCurriculumData(element: HTMLElement): void {
+ const moduleNum = element.dataset.module ? parseInt(element.dataset.module) : null;
  const lessonNum = parseInt(element.dataset.lesson || "0");
  const topicIndex = element.dataset.topic
  ? parseInt(element.dataset.topic)
@@ -1279,6 +1519,18 @@ class CurriculumManager {
  // Clean the value by removing excessive whitespace and normalizing
  const rawValue = element.textContent || "";
  const newValue = rawValue.replace(/\s+/g, ' ').trim();
+
+ // Handle module title edits
+ if (moduleNum !== null && field === "title") {
+   const module = this.currentModules.find(m => m.moduleNumber === moduleNum);
+   if (module) {
+     module.title = newValue;
+     console.log(`📦 Updated module ${moduleNum} title to: ${newValue}`);
+   }
+   // Save updated modules
+   this.saveCurriculumToDatabase(this.currentCurriculum);
+   return;
+ }
 
  const lesson = this.currentCurriculum.find(
  (l) => l.lessonNumber === lessonNum,
@@ -1398,23 +1650,50 @@ class CurriculumManager {
        
        // Update inputs to match loaded curriculum structure
        this.populateInputsFromExistingCurriculum();
-     } else if (
-       rawCurriculum &&
-       typeof rawCurriculum === "object" &&
-       Array.isArray((rawCurriculum as CurriculumDataPayload).lessons)
-     ) {
-       const payload = rawCurriculum as CurriculumDataPayload;
-       this.currentCurriculum = payload.lessons;
+    } else if (
+      rawCurriculum &&
+      typeof rawCurriculum === "object"
+    ) {
+      const payload = rawCurriculum as CurriculumDataPayload;
 
-       console.log('✅ Loaded existing curriculum payload:', {
-         lessonsCount: this.currentCurriculum.length,
-         hasStructure: Boolean(payload.structure),
-         structure: payload.structure || null,
-       });
+      // Extract module organization and lessons
+      this.moduleOrganization = payload.moduleOrganization || "linear";
 
-       this.applyStructureConfig(payload.structure);
-       this.renderCurriculumPreview();
-       this.populateInputsFromExistingCurriculum();
+      // Determine which structure to use
+      const moduleData = Array.isArray(payload.modules) ? payload.modules : undefined;
+      const lessonData = Array.isArray(payload.lessons) ? payload.lessons : undefined;
+
+      if (moduleData && moduleData.length > 0) {
+        this.currentModules = moduleData;
+        // Flatten modules into lessons for internal processing
+        this.currentCurriculum = this.extractLessonsFromModules(moduleData);
+      } else if (lessonData && lessonData.length > 0) {
+        // Legacy format: lessons at top level
+        this.currentCurriculum = lessonData;
+        this.currentModules = [];
+      } else {
+        this.currentCurriculum = [];
+        this.currentModules = [];
+      }
+
+      console.log('✅ Loaded existing curriculum payload:', {
+        lessonsCount: this.currentCurriculum.length,
+        moduleOrganization: this.moduleOrganization,
+        modulesCount: this.currentModules.length,
+        hasStructure: Boolean(payload.structure),
+        structure: payload.structure || null,
+      });
+
+      this.applyStructureConfig(payload.structure);
+
+      if (this.currentCurriculum.length > 0) {
+        this.renderCurriculumPreview();
+        this.populateInputsFromExistingCurriculum();
+      } else {
+        this.hideCurriculumPreview();
+      }
+
+      this.syncModuleOrganizationUI(); // Sync UI with loaded organization
      } else {
     
        this.hideCurriculumPreview();
@@ -1422,7 +1701,39 @@ class CurriculumManager {
    } catch (error) {
      this.hideCurriculumPreview();
    }
- } /**
+ }
+
+ /**
+  * Syncs the module organization UI elements with current state
+  */
+ private syncModuleOrganizationUI(): void {
+   // Update dropdown
+   const moduleOrgSelect = document.getElementById('module-organization') as HTMLSelectElement;
+   if (moduleOrgSelect) {
+     moduleOrgSelect.value = this.moduleOrganization;
+   }
+
+   // Update help text
+   const helpText = document.getElementById('module-organization-help');
+   const helpMessages: Record<ModuleOrganizationType, string> = {
+     linear: 'All lessons appear in a single list.',
+     equal: 'System divides lessons into equal groups automatically.',
+     tiered: 'Three stages with distinct purposes: Introduction → Core Content → Application.',
+     custom: 'You decide how many modules exist and which lessons go where.'
+   };
+   
+   if (helpText) {
+     helpText.textContent = helpMessages[this.moduleOrganization];
+   }
+
+   // Show/hide Modules button
+   const modulesButton = document.querySelector('button[data-mode="modules"]') as HTMLButtonElement;
+   if (modulesButton) {
+     modulesButton.style.display = this.moduleOrganization === 'linear' ? 'none' : 'inline-block';
+   }
+ }
+
+ /**
  * Set course ID after initialization
  */
  public setCourseId(courseId: string): void {
