@@ -22,6 +22,19 @@ interface ContentLoadConfig {
  recommendationText: string;
 }
 
+interface CurriculumStructureConfig {
+  durationType?: "mini" | "single" | "double" | "triple" | "halfFull";
+  scheduledLessonDuration?: number;
+  topicsPerLesson?: number;
+  objectivesPerTopic?: number;
+  tasksPerObjective?: number;
+}
+
+interface CurriculumDataPayload {
+  structure?: CurriculumStructureConfig;
+  lessons: CurriculumLesson[];
+}
+
 interface DurationPreset {
   type: "mini" | "single" | "double" | "triple" | "halfFull";
   maxDuration: number;
@@ -159,8 +172,9 @@ class CurriculumManager {
  }
 
   private initializeElements(): void {
+    // The curriculum config is actually in .article__config within the curriculum article
     this.curriculumConfigSection = document.querySelector(
-      ".curriculum__config",
+      "#curriculum .article__config",
     ) as HTMLElement;
     this.curriculumPreviewSection = document.querySelector(
       ".curriculum__preview",
@@ -168,7 +182,7 @@ class CurriculumManager {
     
     // Check if all elements were found
     if (!this.curriculumConfigSection) {
-      console.error("curriculum__config element not found");
+      console.error("curriculum config section element not found");
       return;
     }
     if (!this.curriculumPreviewSection) {
@@ -183,15 +197,28 @@ class CurriculumManager {
   private setInitialActiveButton(): void {
     // Use setTimeout to ensure DOM is fully ready
     setTimeout(() => {
-      const previewModeButtons = this.curriculumPreviewSection?.querySelectorAll('button[data-mode]');
-      
-      previewModeButtons?.forEach((btn) => {
-        btn.classList.remove('button--active');
-        if (btn.getAttribute('data-mode') === this.currentPreviewMode) {
-          btn.classList.add('button--active');
-        }
-      });
+      this.highlightPreviewModeButton(this.currentPreviewMode);
     }, 100);
+  }
+
+  private highlightPreviewModeButton(mode: PreviewMode): void {
+    const previewModeButtons =
+      this.curriculumPreviewSection?.querySelectorAll<HTMLButtonElement>(
+        'button[data-mode]',
+      );
+
+    previewModeButtons?.forEach((btn) => {
+      const buttonMode = btn.dataset.mode as PreviewMode | undefined;
+
+      btn.classList.remove("button--primary");
+      btn.classList.remove("button--active");
+      btn.classList.add("button--outline");
+
+      if (buttonMode === mode) {
+        btn.classList.remove("button--outline");
+        btn.classList.add("button--primary");
+      }
+    });
   }
 
  private bindEvents(): void {
@@ -201,12 +228,16 @@ class CurriculumManager {
    }
 
    // Preview mode buttons
-   const previewModeButtons =
+  const previewModeButtons =
      this.curriculumPreviewSection?.querySelectorAll('button[data-mode]');
-   previewModeButtons?.forEach((button) => {
-     button.addEventListener("click", (e) => {
-       const mode = (e.target as HTMLElement).dataset.mode as PreviewMode;
-       this.setPreviewMode(mode);
+  previewModeButtons?.forEach((button) => {
+     button.addEventListener("click", (event) => {
+       const mode = (event.currentTarget as HTMLButtonElement).dataset
+         .mode as PreviewMode | undefined;
+
+       if (mode) {
+         this.setPreviewMode(mode);
+       }
      });
    });
 
@@ -258,8 +289,8 @@ class CurriculumManager {
    this.scheduledLessonDuration = duration;
    
    let selectedPreset: DurationPreset;
-   let isRecommended = true;
-   let recommendationText = "Recommended";
+  const isRecommended = true;
+  const recommendationText = "Recommended";
    
    if (duration <= 30) {
      selectedPreset = this.durationPresets.mini;
@@ -293,22 +324,19 @@ class CurriculumManager {
 
  private setupDurationConfiguration(): void {
    const durationOptions = document.querySelectorAll('button[data-duration]');
-   const recommendationElement = document.getElementById('curriculum-recommendation');
    const topicsInput = document.getElementById('curriculum-topics') as HTMLInputElement;
    const objectivesInput = document.getElementById('curriculum-objectives') as HTMLInputElement;
    const tasksInput = document.getElementById('curriculum-tasks') as HTMLInputElement;
 
    console.log('🔧 Setting up duration configuration...', {
      durationOptions: durationOptions.length,
-     recommendationElement: !!recommendationElement,
      topicsInput: !!topicsInput,
      objectivesInput: !!objectivesInput,
      tasksInput: !!tasksInput
    });
 
-   if (!recommendationElement || !topicsInput || !objectivesInput || !tasksInput) {
+   if (!topicsInput || !objectivesInput || !tasksInput) {
      console.error('❌ Duration configuration elements not found:', {
-       recommendationElement: !!recommendationElement,
        topicsInput: !!topicsInput,
        objectivesInput: !!objectivesInput,
        tasksInput: !!tasksInput
@@ -339,7 +367,7 @@ class CurriculumManager {
        button.classList.add('button--primary');
        
        // Update configuration based on selection
-       this.updateConfigurationFromSelection(durationType, recommendationElement);
+       this.updateConfigurationFromSelection(durationType);
        
        // Update input values and regenerate curriculum (only for user clicks)
        const preset = this.durationPresets[durationType];
@@ -383,68 +411,129 @@ class CurriculumManager {
    this.populateInputsFromExistingCurriculum();
  }
 
- private populateInputsFromExistingCurriculum(): void {
-   const topicsInput = document.getElementById('curriculum-topics') as HTMLInputElement;
-   const objectivesInput = document.getElementById('curriculum-objectives') as HTMLInputElement;
-   const tasksInput = document.getElementById('curriculum-tasks') as HTMLInputElement;
+ private syncStructureInputsWithConfig(): void {
+   const topicsInput = document.getElementById(
+     "curriculum-topics",
+   ) as HTMLInputElement | null;
+   const objectivesInput = document.getElementById(
+     "curriculum-objectives",
+   ) as HTMLInputElement | null;
+   const tasksInput = document.getElementById(
+     "curriculum-tasks",
+   ) as HTMLInputElement | null;
 
-   if (!topicsInput || !objectivesInput || !tasksInput) {
+   if (!topicsInput || !objectivesInput || !tasksInput || !this.contentLoadConfig) {
      return;
    }
 
-   // If we have existing curriculum data, use its structure
-   if (this.currentCurriculum && this.currentCurriculum.length > 0) {
-     const firstLesson = this.currentCurriculum[0];
-     if (firstLesson && firstLesson.topics && firstLesson.topics.length > 0) {
-       const topicsCount = firstLesson.topics.length;
-       const objectivesCount = firstLesson.topics[0].objectives ? firstLesson.topics[0].objectives.length : 2;
-       // Calculate tasks per objective: total tasks divided by objectives
-       const totalTasksInTopic = firstLesson.topics[0].tasks ? firstLesson.topics[0].tasks.length : 4;
-       const tasksPerObjectiveCount = objectivesCount > 0 ? Math.ceil(totalTasksInTopic / objectivesCount) : 2;
-       
-       // Ensure values don't exceed input constraints
-       const validTasksPerObjective = Math.min(Math.max(tasksPerObjectiveCount, 1), 5); // Between 1-5
+   topicsInput.value =
+     this.contentLoadConfig.topicsPerLesson.toString();
+   objectivesInput.value =
+     this.contentLoadConfig.objectivesPerTopic.toString();
+   tasksInput.value =
+     this.contentLoadConfig.tasksPerObjective.toString();
 
-       topicsInput.value = topicsCount.toString();
-       objectivesInput.value = objectivesCount.toString();
-       tasksInput.value = validTasksPerObjective.toString();
+   console.log("📋 Synced inputs with configuration:", {
+     topics: this.contentLoadConfig.topicsPerLesson,
+     objectives: this.contentLoadConfig.objectivesPerTopic,
+     tasks: this.contentLoadConfig.tasksPerObjective,
+   });
+ }
 
-         // Update content load config to match existing structure
-         if (this.contentLoadConfig) {
-           this.contentLoadConfig.topicsPerLesson = topicsCount;
-           this.contentLoadConfig.objectivesPerTopic = objectivesCount;
-           this.contentLoadConfig.tasksPerObjective = validTasksPerObjective;
-           
-           console.log('🔧 ContentLoadConfig updated from existing curriculum:', {
-             topics: this.contentLoadConfig.topicsPerLesson,
-             objectives: this.contentLoadConfig.objectivesPerTopic,
-             tasks: this.contentLoadConfig.tasksPerObjective,
-             totalTasksInTopic: totalTasksInTopic,
-             calculatedTasksPerObjective: tasksPerObjectiveCount,
-             validTasksPerObjective: validTasksPerObjective
-           });
-         }       console.log('📚 Populated inputs from existing curriculum:', {
-         topics: topicsCount,
-         objectives: objectivesCount,
-         tasksPerObjective: validTasksPerObjective,
-         totalTasksInTopic: totalTasksInTopic,
-         calculatedValue: tasksPerObjectiveCount
-       });
-     }
-   } else {
-     // No existing curriculum, set inputs to recommended duration defaults
-     if (this.contentLoadConfig) {
-       topicsInput.value = this.contentLoadConfig.topicsPerLesson.toString();
-       objectivesInput.value = this.contentLoadConfig.objectivesPerTopic.toString();
-       tasksInput.value = this.contentLoadConfig.tasksPerObjective.toString();
-       
-       console.log('📋 Set inputs to default configuration:', {
-         topics: this.contentLoadConfig.topicsPerLesson,
-         objectives: this.contentLoadConfig.objectivesPerTopic,
-         tasks: this.contentLoadConfig.tasksPerObjective
-       });
-     }
+ private clampValue(value: number, min: number, max: number): number {
+   return Math.min(Math.max(value, min), max);
+ }
+
+ private deriveStructureFromCurriculum():
+   | { topics: number; objectives: number; tasksPerObjective: number }
+   | null {
+  if (!Array.isArray(this.currentCurriculum) || !this.currentCurriculum.length) {
+    return null;
    }
+
+   const firstLesson = this.currentCurriculum[0];
+   if (!firstLesson || !Array.isArray(firstLesson.topics) || !firstLesson.topics.length) {
+     return null;
+   }
+
+  const topicsCount = this.clampValue(firstLesson.topics.length, 1, 10);
+  const firstTopic = firstLesson.topics[0];
+  const objectivesCountRaw = Array.isArray(firstTopic?.objectives)
+    ? firstTopic.objectives.length
+    : 0;
+  const tasksCountRaw = Array.isArray(firstTopic?.tasks)
+    ? firstTopic.tasks.length
+    : 0;
+
+  const objectivesCount = this.clampValue(objectivesCountRaw || 1, 1, 5);
+  const tasksPerObjectiveCount =
+    objectivesCount > 0
+      ? Math.ceil(tasksCountRaw / objectivesCount) || 1
+      : 1;
+  const tasksPerObjective = this.clampValue(tasksPerObjectiveCount, 1, 5);
+
+   return {
+     topics: topicsCount,
+     objectives: objectivesCount,
+     tasksPerObjective,
+   };
+ }
+
+ private ensureContentLoadConfigFromCounts(counts: {
+   topics: number;
+  objectives: number;
+  tasksPerObjective: number;
+ }): void {
+   const baseDuration =
+     this.contentLoadConfig?.duration || this.scheduledLessonDuration || 0;
+   const durationType: keyof typeof this.durationPresets =
+     this.contentLoadConfig?.type ||
+     this.getPresetKeyForDuration(baseDuration || this.scheduledLessonDuration);
+
+   const isRecommended = this.isRecommendedDuration(
+     durationType,
+     baseDuration || this.scheduledLessonDuration,
+   );
+
+  const recommendationText = this.getRecommendationText(
+    durationType,
+    baseDuration || this.scheduledLessonDuration,
+  );
+
+  this.contentLoadConfig = {
+    type: durationType as "mini" | "single" | "double" | "triple" | "halfFull",
+    duration: baseDuration || this.scheduledLessonDuration,
+    topicsPerLesson: counts.topics,
+    objectivesPerTopic: counts.objectives,
+    tasksPerObjective: counts.tasksPerObjective,
+    isRecommended,
+    recommendationText,
+  };
+
+  console.log("🔧 ContentLoadConfig derived from existing curriculum:", {
+    durationType,
+    duration: baseDuration || this.scheduledLessonDuration,
+    ...counts,
+  });
+}
+
+ private populateInputsFromExistingCurriculum(): void {
+   const derivedCounts = this.deriveStructureFromCurriculum();
+
+   if (derivedCounts) {
+     this.ensureContentLoadConfigFromCounts(derivedCounts);
+     this.syncStructureInputsWithConfig();
+
+     if (this.isDurationPresetKey(this.contentLoadConfig?.type)) {
+       this.setDurationButtonVisualState(this.contentLoadConfig.type);
+     }
+
+     console.log("📚 Populated inputs from existing curriculum:", derivedCounts);
+     return;
+   }
+
+   // No existing curriculum data; fall back to current configuration defaults
+   this.syncStructureInputsWithConfig();
  }
 
  private handleInputChange(
@@ -460,9 +549,25 @@ class CurriculumManager {
    }
 
    // Update the config immediately
-   const topics = parseInt(topicsInput.value) || 1;
-   const objectives = parseInt(objectivesInput.value) || 1;
-   const tasks = parseInt(tasksInput.value) || 1;
+  const topics = this.clampValue(
+    parseInt(topicsInput.value, 10) || 1,
+    parseInt(topicsInput.min || "1", 10) || 1,
+    parseInt(topicsInput.max || "10", 10) || 10,
+  );
+  const objectives = this.clampValue(
+    parseInt(objectivesInput.value, 10) || 1,
+    parseInt(objectivesInput.min || "1", 10) || 1,
+    parseInt(objectivesInput.max || "5", 10) || 5,
+  );
+  const tasks = this.clampValue(
+    parseInt(tasksInput.value, 10) || 1,
+    parseInt(tasksInput.min || "1", 10) || 1,
+    parseInt(tasksInput.max || "5", 10) || 5,
+  );
+
+  topicsInput.value = topics.toString();
+  objectivesInput.value = objectives.toString();
+  tasksInput.value = tasks.toString();
 
    this.contentLoadConfig.topicsPerLesson = topics;
    this.contentLoadConfig.objectivesPerTopic = objectives;
@@ -481,18 +586,21 @@ class CurriculumManager {
  }
 
  private updateConfigurationFromSelection(
-   durationType: keyof typeof this.durationPresets,
-   recommendationElement: HTMLElement
+   durationType: keyof typeof this.durationPresets
  ): void {
    const isRecommended = this.isRecommendedDuration(durationType, this.scheduledLessonDuration);
    const recommendationText = this.getRecommendationText(durationType, this.scheduledLessonDuration);
    const preset = this.durationPresets[durationType];
    
-   // Update recommendation text and styling
-   recommendationElement.className = `curriculum__recommendation ${isRecommended ? 'curriculum__recommendation--recommended' : 'curriculum__recommendation--not-recommended'}`;
-   recommendationElement.textContent = recommendationText;
+   // Update recommendation element if it exists in the DOM
+   const recommendationElement = document.getElementById('curriculum-recommendation');
+   if (recommendationElement) {
+     // Update recommendation text and styling
+     recommendationElement.className = `curriculum__recommendation ${isRecommended ? 'curriculum__recommendation--recommended' : 'curriculum__recommendation--not-recommended'}`;
+     recommendationElement.textContent = recommendationText;
+   }
 
-   // Update duration info card
+   // Update duration info card if it exists
    const durationInfoCard = document.getElementById('curriculum-duration-info');
    const durationInfoText = durationInfoCard?.querySelector('.curriculum__duration-text');
    
@@ -534,28 +642,45 @@ class CurriculumManager {
    }
  }
 
- private getRecommendationText(_durationType: keyof typeof this.durationPresets, _actualDuration: number): string {
-   // Return empty string to remove recommendation text
+ private getRecommendationText(
+   durationType: keyof typeof this.durationPresets,
+   actualDuration: number,
+ ): string {
+   void durationType;
+   void actualDuration;
+   // Return empty string to remove recommendation text while satisfying lint rules
    return "";
+ }
+
+ private getPresetKeyForDuration(duration: number): keyof typeof this.durationPresets {
+   if (duration <= 30) {
+     return "mini";
+   }
+   if (duration <= 60) {
+     return "single";
+   }
+   if (duration <= 120) {
+     return "double";
+   }
+   if (duration <= 180) {
+     return "triple";
+   }
+   return "halfFull";
+ }
+
+ private isDurationPresetKey(
+   value: string | undefined,
+ ): value is keyof typeof this.durationPresets {
+   return Boolean(value && value in this.durationPresets);
  }
 
  private autoSelectRecommendedDuration(): void {
    if (this.scheduledLessonDuration <= 0) return;
    
    // Find the recommended duration type
-   let recommendedType: keyof typeof this.durationPresets = 'single';
-   
-   if (this.scheduledLessonDuration <= 30) {
-     recommendedType = 'mini';
-   } else if (this.scheduledLessonDuration <= 60) {
-     recommendedType = 'single';
-   } else if (this.scheduledLessonDuration <= 120) {
-     recommendedType = 'double';
-   } else if (this.scheduledLessonDuration <= 180) {
-     recommendedType = 'triple';
-   } else {
-     recommendedType = 'halfFull';
-   }
+   const recommendedType = this.getPresetKeyForDuration(
+     this.scheduledLessonDuration,
+   );
    
    // Update contentLoadConfig with recommended preset values
    const preset = this.durationPresets[recommendedType];
@@ -580,14 +705,17 @@ class CurriculumManager {
    }
    
    // Set the visual state
-   this.setDurationButtonVisualState(recommendedType);
+   const typeToHighlight = this.contentLoadConfig?.type || recommendedType;
+   if (this.isDurationPresetKey(typeToHighlight)) {
+     this.setDurationButtonVisualState(typeToHighlight);
+   }
+
+   // Ensure inputs mirror the current configuration
+   this.syncStructureInputsWithConfig();
  }
 
  private setDurationButtonVisualState(durationType: keyof typeof this.durationPresets): void {
    const durationOptions = document.querySelectorAll('button[data-duration]');
-   const recommendationElement = document.getElementById('curriculum-recommendation');
-   
-   if (!recommendationElement) return;
 
    // Remove active class from all options
    durationOptions.forEach(opt => {
@@ -602,8 +730,7 @@ class CurriculumManager {
      targetButton.classList.add('button--primary');
      
      // Update configuration based on selection (visual only, don't update inputs)
-     this.updateConfigurationFromSelection(durationType, recommendationElement);
-     
+     this.updateConfigurationFromSelection(durationType);
    }
  }
 
@@ -793,6 +920,25 @@ class CurriculumManager {
  return curriculum;
  }
 
+ private buildStructurePayload(): CurriculumStructureConfig | undefined {
+   if (!this.contentLoadConfig) {
+     if (this.scheduledLessonDuration) {
+       return {
+         scheduledLessonDuration: this.scheduledLessonDuration,
+       };
+     }
+     return undefined;
+   }
+
+   return {
+     durationType: this.contentLoadConfig.type,
+     scheduledLessonDuration: this.contentLoadConfig.duration,
+     topicsPerLesson: this.contentLoadConfig.topicsPerLesson,
+     objectivesPerTopic: this.contentLoadConfig.objectivesPerTopic,
+     tasksPerObjective: this.contentLoadConfig.tasksPerObjective,
+   };
+ }
+
  private async saveCurriculumToDatabase(
    curriculum: CurriculumLesson[],
  ): Promise<void> {
@@ -811,10 +957,15 @@ class CurriculumManager {
      } : null
    });
 
+   const payload: CurriculumDataPayload = {
+     lessons: curriculum,
+     structure: this.buildStructurePayload(),
+   };
+
    const { error } = await supabase
      .from("courses")
      .update({
-       curriculum_data: curriculum,
+       curriculum_data: payload,
      })
      .eq("id", this.courseId);
 
@@ -830,14 +981,7 @@ class CurriculumManager {
    this.savePreviewMode(mode);
 
    // Update active button styling
-   const previewModeButtons = this.curriculumPreviewSection.querySelectorAll('button[data-mode]');
-   
-   previewModeButtons.forEach((btn) => {
-     btn.classList.remove('button--active');
-     if (btn.getAttribute('data-mode') === mode) {
-       btn.classList.add('button--active');
-     }
-   });
+   this.highlightPreviewModeButton(mode);
 
    // Re-render preview with new mode
    this.renderCurriculumPreview();
@@ -1161,6 +1305,66 @@ class CurriculumManager {
  this.saveCurriculumToDatabase(this.currentCurriculum);
  }
 
+ private applyStructureConfig(structure?: CurriculumStructureConfig): void {
+   if (!structure) {
+     return;
+   }
+
+   if (
+     typeof structure.scheduledLessonDuration === "number" &&
+     !Number.isNaN(structure.scheduledLessonDuration)
+   ) {
+     this.scheduledLessonDuration = structure.scheduledLessonDuration;
+   }
+
+  const rawDuration =
+    structure.scheduledLessonDuration ??
+    this.contentLoadConfig?.duration ??
+    this.scheduledLessonDuration;
+  
+  // Determine duration type with proper type checking
+  let durationType: keyof typeof this.durationPresets;
+  if (this.isDurationPresetKey(structure.durationType)) {
+    durationType = structure.durationType;
+  } else if (this.contentLoadConfig?.type) {
+    durationType = this.contentLoadConfig.type;
+  } else {
+    durationType = this.getPresetKeyForDuration(rawDuration || this.scheduledLessonDuration);
+  }
+
+  const resolvedDuration =
+    typeof rawDuration === "number" && !Number.isNaN(rawDuration)
+      ? rawDuration
+      : this.scheduledLessonDuration || this.durationPresets[durationType].maxDuration;
+
+  const fallbackPreset = this.durationPresets[durationType];
+
+  this.contentLoadConfig = {
+    type: durationType as "mini" | "single" | "double" | "triple" | "halfFull",
+    duration: resolvedDuration,
+    topicsPerLesson:
+      structure.topicsPerLesson ??
+      this.contentLoadConfig?.topicsPerLesson ??
+      fallbackPreset.defaultTopics,
+     objectivesPerTopic:
+       structure.objectivesPerTopic ??
+       this.contentLoadConfig?.objectivesPerTopic ??
+       fallbackPreset.defaultObjectives,
+     tasksPerObjective:
+       structure.tasksPerObjective ??
+       this.contentLoadConfig?.tasksPerObjective ??
+       fallbackPreset.defaultTasks,
+    isRecommended: this.isRecommendedDuration(durationType, resolvedDuration),
+    recommendationText: this.getRecommendationText(durationType, resolvedDuration),
+  };
+
+   this.syncStructureInputsWithConfig();
+
+   if (this.contentLoadConfig && this.isDurationPresetKey(this.contentLoadConfig.type)) {
+     this.setDurationButtonVisualState(this.contentLoadConfig.type);
+   }
+ }
+
  private async loadExistingCurriculum(): Promise<void> {
    if (!this.courseId) {
      console.warn('📚 Cannot load curriculum: no course ID available');
@@ -1177,8 +1381,11 @@ class CurriculumManager {
 
      if (error) throw error;
 
-     if (data?.curriculum_data && Array.isArray(data.curriculum_data)) {
-       this.currentCurriculum = data.curriculum_data;
+     const rawCurriculum = data?.curriculum_data;
+
+     if (Array.isArray(rawCurriculum)) {
+       // Legacy format: curriculum_data stored as an array of lessons
+       this.currentCurriculum = rawCurriculum;
        console.log('✅ Loaded existing curriculum:', {
          lessonsCount: this.currentCurriculum.length,
          sampleStructure: this.currentCurriculum[0] ? {
@@ -1190,6 +1397,23 @@ class CurriculumManager {
        this.renderCurriculumPreview();
        
        // Update inputs to match loaded curriculum structure
+       this.populateInputsFromExistingCurriculum();
+     } else if (
+       rawCurriculum &&
+       typeof rawCurriculum === "object" &&
+       Array.isArray((rawCurriculum as CurriculumDataPayload).lessons)
+     ) {
+       const payload = rawCurriculum as CurriculumDataPayload;
+       this.currentCurriculum = payload.lessons;
+
+       console.log('✅ Loaded existing curriculum payload:', {
+         lessonsCount: this.currentCurriculum.length,
+         hasStructure: Boolean(payload.structure),
+         structure: payload.structure || null,
+       });
+
+       this.applyStructureConfig(payload.structure);
+       this.renderCurriculumPreview();
        this.populateInputsFromExistingCurriculum();
      } else {
     

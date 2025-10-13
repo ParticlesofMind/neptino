@@ -253,34 +253,8 @@ class MediaInterface {
 
   private renderItemCard(item: MediaItem): HTMLElement {
     const card = document.createElement('div');
-    const cardClasses = ['card'];
-
-    // Add type-specific modifiers to the card itself
-    const type = item.type || 'files';
-    switch (type) {
-      case 'images':
-      case 'videos':
-        // No special card modifier needed for these media types
-        break;
-      case 'audio':
-        cardClasses.push('card--preview-media', 'card--preview-audio');
-        break;
-      case 'text':
-        cardClasses.push('card--preview-media');
-        break;
-      case 'plugins':
-        cardClasses.push('card--preview-media', 'card--preview-plugin');
-        break;
-      case 'links':
-        cardClasses.push('card--preview-media', 'card--preview-link');
-        break;
-      case 'files':
-        if (!item.thumbnailUrl) {
-          cardClasses.push('card--preview-media');
-        }
-        break;
-    }
-    card.className = cardClasses.join(' ');
+    // Unified media card class for all media types
+    card.className = 'card card--media';
 
     // Make the entire card draggable for all media types
     card.draggable = true;

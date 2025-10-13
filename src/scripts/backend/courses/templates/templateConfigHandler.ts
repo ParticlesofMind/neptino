@@ -25,15 +25,13 @@ export class TemplateConfigHandler {
         ${TEMPLATE_BLOCKS.map(
           (block) => `
             <div class="block-config">
-              <h4>${block.label}</h4>
-              <div>
+              <h4 class="block-config__title">${block.label}</h4>
+              <div class="block-config__fields">
                 ${block.configFields.map((field: any) => `
-                  <div class="template-field">
-                    <label>
-                      <input type="checkbox" id="field-${block.type}-${field.name}" ${field.defaultValue ? 'checked' : ''} class="input input--checkbox">
-                      <span>${field.label}</span>
-                    </label>
-                  </div>
+                  <label class="block-config__field">
+                    <input type="checkbox" id="field-${block.type}-${field.name}" ${field.defaultValue ? 'checked' : ''} class="input input--checkbox">
+                    <span class="block-config__label">${field.label}</span>
+                  </label>
                 `).join('')}
               </div>
             </div>

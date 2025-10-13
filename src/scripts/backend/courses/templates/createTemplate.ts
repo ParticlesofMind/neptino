@@ -920,10 +920,8 @@ export class TemplateManager {
 
         return `
  <div class="preview-block preview-block--${block.type}">
- <h4>${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</h4>
- <div class="preview-block__content">
+ <h4 class="preview-block__title">${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</h4>
  ${this.renderBlockContent(block.type, checkedFields)}
- </div>
  </div>
  `;
       })
@@ -982,20 +980,9 @@ export class TemplateManager {
       return this.renderNestedBlockContent(blockType, checkedFields);
     }
 
-    // Default table rendering for other blocks
+    // Default table rendering for other blocks - single row with values only
     return `
- <table class="preview-table">
- <thead>
- <tr>
- ${checkedFields
-        .map(
-          (field) => `
- <th>${field.label}</th>
- `,
-        )
-        .join("")}
- </tr>
- </thead>
+ <table class="lesson-plan-table">
  <tbody>
  <tr>
  ${checkedFields
@@ -1018,84 +1005,26 @@ export class TemplateManager {
     _blockType: string,
     checkedFields: Array<{ name: string; label: string }>,
   ): string {
-    let html = `<div class="template-structure">`;
-
-    // Topic level table
-    html += `
- <div class="nested-table-container nested-table-container--topic">
- <table class="preview-table nested-table nested-table--topic">
- <thead>
- <tr>
- <th>Topic</th>
- </tr>
- </thead>
- <tbody>
- <tr>
- </tr>
- </tbody>
- </table>
- `;
-
-    // Objective level table (nested inside Topic)
-    html += `
- <div class="nested-table-container nested-table-container--objective">
- <table class="preview-table nested-table nested-table--objective">
- <thead>
- <tr>
- <th>Objective</th>
- </tr>
- </thead>
- <tbody>
- <tr>
- </tr>
- </tbody>
- </table>
- `;
-
-    // Task level table (nested inside Objective)
-    html += `
- <div class="nested-table-container nested-table-container--task">
- <table class="preview-table nested-table nested-table--task">
- <thead>
- <tr>
- <th>Task</th>
- </tr>
- </thead>
- <tbody>
- <tr>
- </tr>
- </tbody>
- </table>
- `;
-
-    // Content fields table (nested inside Task) - one row per field
-    if (checkedFields.length > 0) {
-      html += `
- <div class="nested-table-container nested-table-container--content-fields">
- <table class="preview-table nested-table nested-table--content-fields">
- <tbody>
- ${checkedFields
-          .map(
-            (field) => `
- <tr>
- <td>${field.label}</td>
- </tr>
- `,
-          )
-          .join("")}
- </tbody>
- </table>
- </div>
- `;
+    // Simple table with one cell per row for each field
+    if (checkedFields.length === 0) {
+      return '<p class="preview-placeholder">No fields selected</p>';
     }
 
-    // Close nested containers
-    html += `</div>`; // task
-    html += `</div>`; // objective
-    html += `</div>`; // topic
-    html += `</div>`; // template-structure
-
-    return html;
+    return `
+ <table class="lesson-plan-table">
+ <tbody>
+ ${checkedFields
+        .map(
+          (field) => `
+ <tr>
+ <td>[${field.label}]</td>
+ </tr>
+ `,
+        )
+        .join("")}
+ </tbody>
+ </table>
+ `;
   }
 
   /**
@@ -1127,21 +1056,10 @@ export class TemplateManager {
 
     let html = "";
 
-    // Main resources table
+    // Main resources table - single row with values only
     if (mainFields.length > 0) {
       html += `
- <table class="preview-table">
- <thead>
- <tr>
- ${mainFields
-          .map(
-            (field) => `
- <th>${field.label}</th>
- `,
-          )
-          .join("")}
- </tr>
- </thead>
+ <table class="lesson-plan-table">
  <tbody>
  <tr>
  ${mainFields
@@ -1157,36 +1075,23 @@ export class TemplateManager {
  `;
     }
 
-    // Glossary table (only if glossary is included and items are selected)
+    // Glossary table - single row with values only
     if (includeGlossary && glossaryItems.length > 0) {
       html += `
- <div class="template-preview-glossary">
- <h5 class="">Glossary</h5>
- <table class="preview-table">
- <thead>
- <tr>
- ${glossaryItems
-          .map(
-            (item) => `
- <th>${item.label}</th>
- `,
-          )
-          .join("")}
- </tr>
- </thead>
+ <h5 class="preview-block__subtitle">Glossary</h5>
+ <table class="lesson-plan-table">
  <tbody>
  <tr>
  ${glossaryItems
           .map(
-            (_item) => `
- <td>[URL]</td>
+            (item) => `
+ <td>[${item.label} - URL]</td>
  `,
           )
           .join("")}
  </tr>
  </tbody>
  </table>
- </div>
  `;
     }
 

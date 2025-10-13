@@ -95,43 +95,19 @@ export class TemplatePreviewHandler {
     private renderHeaderBlock(_config: any): string {
         return `
  <div class="preview-block preview-block--header">
- <h4>Header</h4>
- <div class="preview-block__content">
- <table class="preview-table">
- <thead>
- <tr>
- <th>Field</th>
- <th>Content</th>
- </tr>
- </thead>
+ <h4 class="preview-block__title">Header</h4>
+ <table class="lesson-plan-table">
  <tbody>
  <tr>
- <td>Lesson Number</td>
- <td>01</td>
- </tr>
- <tr>
- <td>Lesson Title</td>
- <td>Introduction to Course Topics</td>
- </tr>
- <tr>
- <td>Module Title</td>
- <td>Foundation Module</td>
- </tr>
- <tr>
- <td>Course Title</td>
- <td>Complete Course Name</td>
- </tr>
- <tr>
- <td>Institution Name</td>
- <td>Your Institution</td>
- </tr>
- <tr>
- <td>Teacher Name</td>
- <td>Instructor Name</td>
+ <td>[Lesson number (#)]</td>
+ <td>[Lesson title]</td>
+ <td>[Module title]</td>
+ <td>[Course title]</td>
+ <td>[Institution name]</td>
+ <td>[Teacher name]</td>
  </tr>
  </tbody>
  </table>
- </div>
  </div>
  `;
     }
@@ -142,35 +118,17 @@ export class TemplatePreviewHandler {
     private renderProgramBlock(_config: any): string {
         return `
  <div class="preview-block preview-block--program">
- <h4>Program</h4>
- <div class="preview-block__content">
- <table class="preview-table">
- <thead>
- <tr>
- <th>Component</th>
- <th>Details</th>
- </tr>
- </thead>
+ <h4 class="preview-block__title">Program</h4>
+ <table class="lesson-plan-table">
  <tbody>
  <tr>
- <td>Competence</td>
- <td>Core learning competency for this lesson</td>
- </tr>
- <tr>
- <td>Topic</td>
- <td>Main topic or subject area</td>
- </tr>
- <tr>
- <td>Objective</td>
- <td>Specific learning objective to achieve</td>
- </tr>
- <tr>
- <td>Task</td>
- <td>Primary task or activity for students</td>
+ <td>[Competence]</td>
+ <td>[Topic]</td>
+ <td>[Objective]</td>
+ <td>[Task]</td>
  </tr>
  </tbody>
  </table>
- </div>
  </div>
  `;
     }
@@ -181,55 +139,28 @@ export class TemplatePreviewHandler {
     private renderResourcesBlock(_config: any): string {
         return `
  <div class="preview-block preview-block--resources">
- <h4>Resources</h4>
- <div class="preview-block__content">
- <table class="preview-table">
- <thead>
- <tr>
- <th>Resource Type</th>
- <th>Description</th>
- </tr>
- </thead>
+ <h4 class="preview-block__title">Resources</h4>
+ <table class="lesson-plan-table">
  <tbody>
  <tr>
- <td>Task</td>
- <td>Learning task or exercise</td>
- </tr>
- <tr>
- <td>Type</td>
- <td>Resource category (reading, video, activity)</td>
- </tr>
- <tr>
- <td>Origin</td>
- <td>Source or origin of the resource</td>
- </tr>
- <tr>
- <td>State</td>
- <td>Current state (available, pending, archived)</td>
- </tr>
- <tr>
- <td>Quality</td>
- <td>Quality rating or review status</td>
- </tr>
- <tr>
- <td>Include Glossary</td>
- <td>Whether to include terminology glossary</td>
- </tr>
- <tr>
- <td>Historical Figures</td>
- <td>Important people related to topic</td>
- </tr>
- <tr>
- <td>Terminology</td>
- <td>Key terms and definitions</td>
- </tr>
- <tr>
- <td>Concepts</td>
- <td>Core concepts and ideas</td>
+ <td>[Task]</td>
+ <td>[Type]</td>
+ <td>[Origin]</td>
+ <td>[State]</td>
+ <td>[Quality]</td>
  </tr>
  </tbody>
  </table>
- </div>
+ <h5 class="preview-block__subtitle">Glossary</h5>
+ <table class="lesson-plan-table">
+ <tbody>
+ <tr>
+ <td>[Historical figures - URL]</td>
+ <td>[Terminology - URL]</td>
+ <td>[Concepts - URL]</td>
+ </tr>
+ </tbody>
+ </table>
  </div>
  `;
     }
@@ -237,22 +168,32 @@ export class TemplatePreviewHandler {
     /**
     * Renders content block preview
     */
-    private renderContentBlock(config: any): string {
-        const editor = config.editor || "rich-text";
-        const allowMedia = config.allowMedia !== false;
-        const allowTables = config.allowTables !== false;
-
+    private renderContentBlock(_config: any): string {
         return `
  <div class="preview-block preview-block--content">
- <h4>Content</h4>
- <div class="preview-block__content">
- <div class="preview-section">
- <div class="preview-editor">Editor: ${editor}</div>
- ${allowMedia ? '<div class="preview-feature">✓ Media uploads enabled</div>' : ""}
- ${allowTables ? '<div class="preview-feature">✓ Tables enabled</div>' : ""}
- <div class="preview-placeholder">Course content will be displayed here...</div>
- </div>
- </div>
+ <h4 class="preview-block__title">Content</h4>
+ <table class="lesson-plan-table">
+ <tbody>
+ <tr>
+ <td>[Topic]</td>
+ </tr>
+ <tr>
+ <td>[Objective]</td>
+ </tr>
+ <tr>
+ <td>[Task]</td>
+ </tr>
+ <tr>
+ <td>[Instruction area]</td>
+ </tr>
+ <tr>
+ <td>[Student Area]</td>
+ </tr>
+ <tr>
+ <td>[Teacher area]</td>
+ </tr>
+ </tbody>
+ </table>
  </div>
  `;
     }
@@ -260,23 +201,32 @@ export class TemplatePreviewHandler {
     /**
     * Renders assignment block preview
     */
-    private renderAssignmentBlock(config: any): string {
-        const allowSubmissions = config.allowSubmissions !== false;
-        const requireDueDate = config.requireDueDate !== false;
-        const enableGrading = config.enableGrading !== false;
-        const maxSubmissions = config.maxSubmissions || 1;
-
+    private renderAssignmentBlock(_config: any): string {
         return `
  <div class="preview-block preview-block--assignment">
- <h4>Assignment</h4>
- <div class="preview-block__content">
- <div class="preview-section">
- ${allowSubmissions ? `<div class="preview-feature">✓ Student submissions (max: ${maxSubmissions})</div>` : ""}
- ${requireDueDate ? '<div class="preview-feature">✓ Due date required</div>' : ""}
- ${enableGrading ? '<div class="preview-feature">✓ Grading enabled</div>' : ""}
- <div class="preview-placeholder">Assignment details will be displayed here...</div>
- </div>
- </div>
+ <h4 class="preview-block__title">Assignment</h4>
+ <table class="lesson-plan-table">
+ <tbody>
+ <tr>
+ <td>[Topic]</td>
+ </tr>
+ <tr>
+ <td>[Objective]</td>
+ </tr>
+ <tr>
+ <td>[Task]</td>
+ </tr>
+ <tr>
+ <td>[Instruction area]</td>
+ </tr>
+ <tr>
+ <td>[Student Area]</td>
+ </tr>
+ <tr>
+ <td>[Teacher area]</td>
+ </tr>
+ </tbody>
+ </table>
  </div>
  `;
     }
@@ -284,21 +234,18 @@ export class TemplatePreviewHandler {
     /**
     * Renders footer block preview
     */
-    private renderFooterBlock(config: any): string {
-        const showCredits = config.showCredits !== false;
-        const showDate = config.showDate !== false;
-        const showContact = config.showContact === true;
-
+    private renderFooterBlock(_config: any): string {
         return `
  <div class="preview-block preview-block--footer">
- <h4>Footer</h4>
- <div class="preview-block__content">
- <div class="preview-section">
- ${showCredits ? '<div class="preview-feature">✓ Credits displayed</div>' : ""}
- ${showDate ? '<div class="preview-feature">✓ Creation date displayed</div>' : ""}
- ${showContact ? '<div class="preview-feature">✓ Contact information displayed</div>' : ""}
- </div>
- </div>
+ <h4 class="preview-block__title">Footer</h4>
+ <table class="lesson-plan-table">
+ <tbody>
+ <tr>
+ <td>[Copyright by Teacher name, year]</td>
+ <td>[Page number]</td>
+ </tr>
+ </tbody>
+ </table>
  </div>
  `;
     }

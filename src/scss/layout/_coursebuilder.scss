@@ -166,6 +166,7 @@
     margin: 0 auto;
 }
 
+
 .article--classification .coursebuilder__status {
     margin-top: var(--spacing-3);
     color: var(--color-text-secondary);
@@ -196,6 +197,28 @@
 .article--templates .article__config,
 .article--templates .article__preview {
     min-height: clamp(18rem, 50vh, 32rem);
+    max-height: clamp(32rem, 70vh, 48rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-neutral-300) transparent;
+
+    &::-webkit-scrollbar {
+        width: 0.5rem;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: var(--color-neutral-300);
+        border-radius: var(--radius-small);
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background: var(--color-neutral-400);
+    }
 }
 
 .article--templates .article__config p,
@@ -423,11 +446,10 @@
     color: var(--color-primary-600);
 }
 
-.curriculum__controls .button--active {
-    background: var(--color-primary-50);
-    border-color: var(--color-primary-400);
-    color: var(--color-primary-600);
-    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.12);
+.curriculum__controls .button--primary,
+.curriculum__controls .button--active,
+.article--curriculum .article__config .button--primary {
+    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.18);
 }
 
 .editable-surface {
