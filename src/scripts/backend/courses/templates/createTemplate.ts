@@ -393,7 +393,7 @@ export class TemplateManager {
     if (templates.length === 0) {
       configArea.innerHTML = `
         <div class="template-config-placeholder">
-          <h3 class="heading heading--tertiary">Template Configuration</h3>
+          <h3 class="heading heading--tertiary">Create Your First Template</h3>
           <p class="text">You haven't created any templates yet. Create your first template to get started!</p>
           <div class="template-actions">
             <button class="button button--primary" onclick="TemplateManager.showCreateTemplateModal()">
@@ -409,7 +409,7 @@ export class TemplateManager {
     // The Load Template button in the header will handle template selection
     configArea.innerHTML = `
       <div class="template-config-placeholder">
-        <h3 class="heading heading--tertiary">Template Configuration</h3>
+        <h3 class="heading heading--tertiary">Manage Your Templates</h3>
         <p class="text">Use the "Load Template" button above to select and edit an existing template, or create a new one.</p>
       </div>
     `;
@@ -444,7 +444,7 @@ export class TemplateManager {
     if (configArea) {
       configArea.innerHTML = `
         <div class="template-config-placeholder">
-          <h3 class="heading heading--tertiary">Template Configuration</h3>
+          <h3 class="heading heading--tertiary">Configure Templates</h3>
           <p class="text">Template configuration interface is ready. Use the buttons above to create or load templates.</p>
         </div>
       `;
@@ -482,7 +482,7 @@ export class TemplateManager {
     if (templateConfig) {
       templateConfig.innerHTML = `
         <div class="template-config-placeholder">
-          <h3 class="heading heading--tertiary">Template Configuration</h3>
+          <h3 class="heading heading--tertiary">Template Not Loaded</h3>
           <p class="text">Select a template to configure or create a new one...</p>
         </div>
       `;
@@ -583,18 +583,20 @@ export class TemplateManager {
       }
 
       // Query database for template associated with this course
-      const { data: template, error } = await supabase
+      const { data, error } = await supabase
         .from("templates")
         .select("*")
         .eq("course_id", courseId)
-        .single();
+        .order("updated_at", { ascending: false })
+        .limit(1);
 
-      if (error && error.code !== "PGRST116") {
-        // PGRST116 = no rows found
+      if (error) {
         console.error("Error loading course template:", error);
         this.loadExistingTemplates();
         return;
       }
+
+      const template = data?.[0];
 
       if (template) {
         console.log(

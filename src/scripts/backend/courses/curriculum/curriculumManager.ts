@@ -1,21 +1,23 @@
 import { supabase } from "../../supabase.js";
 
 // Module organization types
-type ModuleOrganizationType = "linear" | "equal" | "tiered" | "custom";
+export type ModuleOrganizationType = "linear" | "equal" | "tiered" | "custom";
 
-interface CurriculumModule {
+export interface CurriculumModule {
  moduleNumber: number;
  title: string;
  lessons: CurriculumLesson[];
 }
 
-interface CurriculumLesson {
+export interface CurriculumLesson {
  lessonNumber: number;
  title: string;
  topics: CurriculumTopic[];
+ moduleNumber?: number;
+ templateId?: string; // Template assigned to this lesson/session
 }
 
-interface CurriculumTopic {
+export interface CurriculumTopic {
  title: string;
  objectives: string[];
  tasks: string[];
@@ -31,6 +33,31 @@ interface ContentLoadConfig {
  recommendationText: string;
 }
 
+
+type TemplatePlacementChoice =
+  | "none"
+  | "end-of-each-module"
+  | "specific-modules"
+  | "specific-lessons"
+  | "end-of-course";
+
+interface TemplatePlacementConfig {
+  templateId: string;
+  templateSlug: string;
+  templateName: string;
+  placementType: Exclude<TemplatePlacementChoice, "none">;
+  moduleNumbers?: number[];
+  lessonNumbers?: number[];
+}
+
+interface TemplateSummary {
+  id: string;
+  templateId: string;
+  name: string;
+  type: string;
+  description?: string | null;
+  isMissing?: boolean;
+}
 interface CurriculumStructureConfig {
   durationType?: "mini" | "single" | "double" | "triple" | "halfFull";
   scheduledLessonDuration?: number;
@@ -44,6 +71,8 @@ interface CurriculumDataPayload {
   moduleOrganization?: ModuleOrganizationType;
   modules?: CurriculumModule[]; // New: lessons organized into modules
   lessons?: CurriculumLesson[]; // Legacy: for backward compatibility with "linear" mode
+  templatePlacements?: TemplatePlacementConfig[];
+  courseType?: "minimalist" | "essential" | "complete" | "custom";
 }
 
 interface DurationPreset {
@@ -68,6 +97,19 @@ class CurriculumManager {
  private currentPreviewMode: PreviewMode = "all";
  private scheduledLessonDuration: number = 0; // Store the actual scheduled duration
  private saveTimeout: number | null = null; // For debouncing saves
+ private templatePlacementList: HTMLElement | null = null;
+ private templatePlacements: TemplatePlacementConfig[] = [];
+ private availableTemplates: TemplateSummary[] = [];
+ private templatePlacementSaveTimeout: number | null = null;
+ private courseType: "minimalist" | "essential" | "complete" | "custom" = "essential";
+ private readonly templateAccentPalette: string[] = [
+   "template-accent--sky",
+   "template-accent--violet",
+   "template-accent--amber",
+   "template-accent--teal",
+   "template-accent--rose",
+   "template-accent--slate",
+ ];
 
  // Duration presets with default values and rationale
  private readonly durationPresets: Record<string, DurationPreset> = {
@@ -166,6 +208,12 @@ class CurriculumManager {
  // Load existing curriculum
  await this.loadExistingCurriculum();
 
+ // Load template placement data once curriculum context is ready
+ await this.loadTemplatePlacementData();
+
+ // Sync course type UI (in case no curriculum was loaded)
+ this.syncCourseTypeUI();
+
  // Auto-generate curriculum if we have schedule data but no curriculum
  if (!this.currentCurriculum.length && this.contentLoadConfig) {
  await this.generateCurriculum();
@@ -192,6 +240,9 @@ class CurriculumManager {
     this.curriculumPreviewSection = document.querySelector(
       ".curriculum__preview",
     ) as HTMLElement;
+    this.templatePlacementList = document.getElementById(
+      "curriculum-template-placement-list",
+    );
     
     // Check if all elements were found
     if (!this.curriculumConfigSection) {
@@ -202,11 +253,14 @@ class CurriculumManager {
       console.error("curriculum__preview element not found");
       return;
     }
+
+    if (!this.templatePlacementList) {
+      console.warn("Template placement UI elements not found");
+    }
     
     // Set initial active button for preview mode
     this.setInitialActiveButton();
   }
-
   private setInitialActiveButton(): void {
     // Use setTimeout to ensure DOM is fully ready
     setTimeout(() => {
@@ -233,37 +287,1348 @@ class CurriculumManager {
       }
     });
   }
+  private bindEvents(): void {
+    if (!this.curriculumConfigSection) {
+      console.error("Cannot bind events: required elements not found");
+      return;
+    }
 
- private bindEvents(): void {
-   if (!this.curriculumConfigSection) {
-     console.error("Cannot bind events: required elements not found");
+    // Module organization radio buttons
+    const moduleOrgRadios = document.querySelectorAll<HTMLInputElement>('input[name="module-organization"]');
+    moduleOrgRadios.forEach(radio => {
+      radio.addEventListener('change', (event) => {
+        const target = event.target as HTMLInputElement;
+        if (target.checked) {
+          const value = target.value as ModuleOrganizationType;
+          this.setModuleOrganization(value);
+        }
+      });
+    });
+
+    // Add module button for custom organization
+    const addModuleBtn = document.getElementById('add-module-btn');
+    if (addModuleBtn) {
+      addModuleBtn.addEventListener('click', () => {
+        this.addCustomModule();
+      });
+    }
+
+    // Content volume radio buttons (replacing old button system)
+    const contentVolumeRadios = document.querySelectorAll<HTMLInputElement>('input[name="content-volume"]');
+    contentVolumeRadios.forEach(radio => {
+      radio.addEventListener('change', (event) => {
+        const target = event.target as HTMLInputElement;
+        if (target.checked) {
+          const durationType = target.value as keyof typeof this.durationPresets;
+          if (this.isDurationPresetKey(durationType)) {
+            this.handleDurationSelection(durationType);
+          }
+        }
+      });
+    });
+
+    // Course type radio buttons - filter templates based on selected type
+    const courseTypeRadios = document.querySelectorAll<HTMLInputElement>('input[name="course-type"]');
+    courseTypeRadios.forEach(radio => {
+      radio.addEventListener('change', (event) => {
+        const target = event.target as HTMLInputElement;
+        if (target.checked) {
+          const courseType = target.value as "minimalist" | "essential" | "complete" | "custom";
+          this.handleCourseTypeChange(courseType);
+        }
+      });
+    });
+
+    // Preview mode buttons
+    const previewModeButtons =
+      this.curriculumPreviewSection?.querySelectorAll('button[data-mode]');
+    previewModeButtons?.forEach((button) => {
+      button.addEventListener("click", (event) => {
+        const mode = (event.currentTarget as HTMLButtonElement).dataset
+          .mode as PreviewMode | undefined;
+
+        if (mode) {
+          this.setPreviewMode(mode);
+        }
+      });
+    });
+
+    // Lesson template selector - delegate to preview section
+    if (this.curriculumPreviewSection) {
+      this.curriculumPreviewSection.addEventListener('change', (event) => {
+        const target = event.target as HTMLSelectElement;
+        if (target.classList.contains('lesson__template-dropdown')) {
+          this.handleLessonTemplateChange(target);
+        }
+      });
+    }
+
+    if (this.templatePlacementList) {
+      this.templatePlacementList.addEventListener("click", (event) => {
+        const target = event.target as HTMLElement | null;
+        if (!target) {
+          return;
+        }
+
+        // Handle toggle button clicks
+        const toggleButton = target.closest<HTMLButtonElement>('[data-template-toggle]');
+        if (toggleButton) {
+          event.preventDefault();
+          const card = toggleButton.closest<HTMLElement>('[data-template-card]');
+          if (card) {
+            card.classList.toggle('template-placement-card--collapsed');
+            
+            // Update aria-expanded attribute for accessibility
+            const isExpanded = !card.classList.contains('template-placement-card--collapsed');
+            toggleButton.setAttribute('aria-expanded', isExpanded.toString());
+          }
+          return;
+        }
+
+        const input = target.closest<HTMLInputElement>(
+          "input[type='radio'], input[type='checkbox']",
+        );
+
+        if (!input) {
+          return;
+        }
+
+        event.preventDefault();
+
+        if (input.type === "checkbox") {
+          input.checked = !input.checked;
+        } else {
+          input.checked = true;
+        }
+
+        this.handleTemplatePlacementInputChange(input);
+        input.dataset.templatePlacementHandled = "true";
+      });
+
+      this.templatePlacementList.addEventListener("change", (event) => {
+        const input = event.target as HTMLInputElement | null;
+        if (!input) {
+          return;
+        }
+
+        if (!input.matches("input[type='radio'], input[type='checkbox']")) {
+          return;
+        }
+
+        if (input.dataset.templatePlacementHandled === "true") {
+          delete input.dataset.templatePlacementHandled;
+          return;
+        }
+
+        this.handleTemplatePlacementInputChange(input);
+      });
+    }
+
+    // AI Generation buttons
+    const aiGenerateButtons = document.querySelectorAll<HTMLButtonElement>('[data-ai-generate]');
+    aiGenerateButtons.forEach(button => {
+      button.addEventListener('click', async (event) => {
+        event.preventDefault();
+        const target = button.dataset.aiGenerate;
+        if (target) {
+          await this.handleAIGeneration(target as 'all' | 'modules' | 'lessons' | 'topics' | 'objectives' | 'tasks');
+        }
+      });
+    });
+  }
+
+ // ============================================================================
+ // AI CURRICULUM GENERATION
+ // ============================================================================
+
+ /**
+  * Handle AI generation button clicks
+  */
+ private async handleAIGeneration(target: 'all' | 'modules' | 'lessons' | 'topics' | 'objectives' | 'tasks'): Promise<void> {
+   if (!this.courseId) {
+     alert('Please save the course first before using AI generation.');
      return;
    }
 
-   // Module organization dropdown
-   const moduleOrgSelect = document.getElementById('module-organization') as HTMLSelectElement;
-   if (moduleOrgSelect) {
-     moduleOrgSelect.addEventListener('change', (event) => {
-       const value = (event.target as HTMLSelectElement).value as ModuleOrganizationType;
-       this.setModuleOrganization(value);
-     });
+   // Import AI generator dynamically
+   const { AICurriculumGenerator } = await import('./aiCurriculumGenerator.js');
+   const generator = new AICurriculumGenerator(this.courseId);
+
+   // Show status UI
+   const statusElement = document.getElementById('ai-generation-status');
+   const statusText = statusElement?.querySelector('.ai-generation__status-text');
+   const progressBar = statusElement?.querySelector('.ai-generation__progress-fill') as HTMLElement;
+   
+   if (statusElement) {
+     statusElement.style.display = 'block';
    }
 
-   // Preview mode buttons
-  const previewModeButtons =
-     this.curriculumPreviewSection?.querySelectorAll('button[data-mode]');
-  previewModeButtons?.forEach((button) => {
-     button.addEventListener("click", (event) => {
-       const mode = (event.currentTarget as HTMLButtonElement).dataset
-         .mode as PreviewMode | undefined;
-
-       if (mode) {
-         this.setPreviewMode(mode);
-       }
-     });
+   // Set up progress callback
+   generator.onProgress((progress) => {
+     if (statusText) {
+       statusText.textContent = progress.status;
+     }
+     if (progressBar) {
+       progressBar.style.width = `${progress.progress}%`;
+     }
    });
 
- } private async loadScheduleData(): Promise<void> {
+   try {
+     // Get context selection from checkboxes
+     const includeSchedule = (document.querySelector('input[name="ai-context-schedule"]') as HTMLInputElement)?.checked || false;
+     const includeStructure = (document.querySelector('input[name="ai-context-structure"]') as HTMLInputElement)?.checked || false;
+     const includeExisting = (document.querySelector('input[name="ai-context-existing"]') as HTMLInputElement)?.checked || false;
+
+     // Gather context
+     const context = await generator.gatherContext({
+       includeSchedule,
+       includeStructure,
+       includeExisting,
+     });
+
+     if (!context) {
+       throw new Error('Failed to gather course context');
+     }
+
+     // Generate content
+     const result = await generator.generate({
+       target,
+       context,
+       includeSchedule,
+       includeStructure,
+       includeExisting,
+     });
+
+     // Apply generated content to curriculum
+     await this.applyAIGeneratedContent(target, result);
+
+     // Hide status
+     setTimeout(() => {
+       if (statusElement) {
+         statusElement.style.display = 'none';
+       }
+     }, 2000);
+   } catch (error) {
+     console.error('AI generation failed:', error);
+     if (statusText) {
+       statusText.textContent = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+     }
+     setTimeout(() => {
+       if (statusElement) {
+         statusElement.style.display = 'none';
+       }
+     }, 3000);
+   }
+ }
+
+ /**
+  * Apply AI-generated content to the curriculum
+  */
+ private async applyAIGeneratedContent(target: string, content: any): Promise<void> {
+   try {
+     switch (target) {
+       case 'all':
+         // Replace entire curriculum structure
+         if (Array.isArray(content) && content.length > 0) {
+           this.currentCurriculum = content;
+           await this.saveCurriculumToDatabase(this.currentCurriculum);
+           this.renderCurriculumPreview();
+         }
+         break;
+
+       case 'modules':
+         // Update module titles
+         if (Array.isArray(content) && this.currentModules.length > 0) {
+           console.log('📝 Applying module names:', content);
+           console.log('📦 Current modules before update:', this.currentModules.map(m => m.title));
+           
+           content.forEach((title: string, index: number) => {
+             if (this.currentModules[index]) {
+               console.log(`Updating module ${index + 1}: "${this.currentModules[index].title}" → "${title}"`);
+               this.currentModules[index].title = title;
+             }
+           });
+           
+           console.log('📦 Current modules after update:', this.currentModules.map(m => m.title));
+           
+           // We need to save modules directly, not go through saveCurriculumToDatabase
+           // because that function reorganizes lessons and might lose our module titles
+           const payload: any = {
+             structure: this.buildStructurePayload(),
+             moduleOrganization: this.moduleOrganization,
+             modules: this.currentModules,
+             templatePlacements: this.templatePlacements,
+             courseType: this.courseType,
+           };
+           
+           if (this.moduleOrganization === "linear") {
+             payload.lessons = this.currentCurriculum;
+           }
+           
+           console.log('💾 Saving modules to database:', payload.modules);
+           
+           const { error } = await supabase
+             .from("courses")
+             .update({
+               curriculum_data: payload,
+             })
+             .eq("id", this.courseId);
+           
+           if (error) {
+             console.error('❌ Failed to save module names:', error);
+             throw error;
+           }
+           
+           console.log('✅ Module names saved successfully to database');
+           this.renderCurriculumPreview();
+         } else {
+           console.warn('⚠️ Cannot update modules:', {
+             contentIsArray: Array.isArray(content),
+             contentLength: Array.isArray(content) ? content.length : 0,
+             currentModulesLength: this.currentModules.length,
+             content,
+           });
+         }
+         break;
+
+       case 'lessons':
+         // Update lesson titles
+         if (Array.isArray(content) && this.currentCurriculum.length > 0) {
+           content.forEach((title: string, index: number) => {
+             if (this.currentCurriculum[index]) {
+               this.currentCurriculum[index].title = title;
+             }
+           });
+           await this.saveCurriculumToDatabase(this.currentCurriculum);
+           this.renderCurriculumPreview();
+         }
+         break;
+
+       case 'topics':
+         // Update topic titles - content is array of arrays
+         if (Array.isArray(content)) {
+           content.forEach((lessonTopics: string[], lessonIndex: number) => {
+             if (this.currentCurriculum[lessonIndex]) {
+               lessonTopics.forEach((topicTitle: string, topicIndex: number) => {
+                 if (this.currentCurriculum[lessonIndex].topics[topicIndex]) {
+                   this.currentCurriculum[lessonIndex].topics[topicIndex].title = topicTitle;
+                 }
+               });
+             }
+           });
+           await this.saveCurriculumToDatabase(this.currentCurriculum);
+           this.renderCurriculumPreview();
+         }
+         break;
+
+       case 'objectives':
+         // Update objectives - nested array structure [lesson][topic][objectives]
+         if (Array.isArray(content)) {
+           content.forEach((lessonObjectives: string[][], lessonIndex: number) => {
+             if (this.currentCurriculum[lessonIndex]) {
+               lessonObjectives.forEach((topicObjectives: string[], topicIndex: number) => {
+                 if (this.currentCurriculum[lessonIndex].topics[topicIndex]) {
+                   this.currentCurriculum[lessonIndex].topics[topicIndex].objectives = topicObjectives;
+                 }
+               });
+             }
+           });
+           await this.saveCurriculumToDatabase(this.currentCurriculum);
+           this.renderCurriculumPreview();
+         }
+         break;
+
+       case 'tasks':
+         // Update tasks - nested array structure [lesson][topic][objective][tasks]
+         if (Array.isArray(content)) {
+           content.forEach((lessonTasks: string[][][], lessonIndex: number) => {
+             if (this.currentCurriculum[lessonIndex]) {
+               lessonTasks.forEach((topicTasks: string[][], topicIndex: number) => {
+                 if (this.currentCurriculum[lessonIndex].topics[topicIndex]) {
+                   // Flatten tasks from objective-based to topic-based
+                   const allTasks = topicTasks.flat();
+                   this.currentCurriculum[lessonIndex].topics[topicIndex].tasks = allTasks;
+                 }
+               });
+             }
+           });
+           await this.saveCurriculumToDatabase(this.currentCurriculum);
+           this.renderCurriculumPreview();
+         }
+         break;
+     }
+   } catch (error) {
+     console.error('Failed to apply AI-generated content:', error);
+     throw error;
+   }
+ }
+
+ // ============================================================================
+ // TEMPLATE PLACEMENT MANAGEMENT
+ // ============================================================================
+
+ /**
+  * Maps course types to their allowed template types
+  */
+ private readonly courseTypeTemplateMap = {
+   minimalist: ["lesson", "quiz"],
+   essential: ["lesson", "quiz", "feedback", "assessment", "certificate"],
+   complete: [
+     "lesson",
+     "quiz",
+     "feedback",
+     "assessment",
+     "report",
+     "review",
+     "project",
+     "module_orientation",
+     "course_orientation",
+     "certificate",
+   ],
+   custom: null, // null means all templates are allowed
+ };
+
+ /**
+  * Handles course type selection change
+  */
+ private handleCourseTypeChange(courseType: "minimalist" | "essential" | "complete" | "custom"): void {
+   console.log(`📋 Course type changed to: ${courseType}`);
+   this.courseType = courseType;
+   
+   // Re-render template placement UI with filtered templates
+   this.renderTemplatePlacementUI();
+   
+   // Save the course type to database
+   this.saveCourseTypeToDatabase();
+ }
+
+ /**
+  * Filters templates based on the selected course type
+  */
+ private getFilteredTemplatesForCourseType(): TemplateSummary[] {
+   const allTemplates = this.getTemplatesForPlacementUI();
+   
+   // If custom course type, return all templates
+   if (this.courseType === "custom") {
+     return allTemplates;
+   }
+   
+   // Get allowed template types for this course type
+   const allowedTypes = this.courseTypeTemplateMap[this.courseType];
+   if (!allowedTypes) {
+     return allTemplates;
+   }
+   
+   // Filter templates to only show those matching the course type
+   return allTemplates.filter(template => {
+     // Always include missing templates (they're already placed)
+     if (template.isMissing) {
+       return true;
+     }
+     
+     // Normalize template type to lowercase and replace spaces with underscores
+     const normalizedType = template.type?.toLowerCase().replace(/\s+/g, "_") || "";
+     
+     // Check if this template type is allowed for the current course type
+     return allowedTypes.includes(normalizedType);
+   });
+ }
+
+ /**
+  * Saves the course type to the database
+  */
+ private async saveCourseTypeToDatabase(): Promise<void> {
+   if (!this.courseId) {
+     return;
+   }
+
+   try {
+     // Load current curriculum data
+     const { data: currentData } = await supabase
+       .from("courses")
+       .select("curriculum_data")
+       .eq("id", this.courseId)
+       .single();
+
+     const existingPayload = 
+       currentData?.curriculum_data && typeof currentData.curriculum_data === "object"
+         ? (currentData.curriculum_data as CurriculumDataPayload)
+         : {};
+
+     // Update with new course type
+     const updatedPayload: CurriculumDataPayload = {
+       ...existingPayload,
+       courseType: this.courseType,
+     };
+
+     // Save back to database
+     const { error } = await supabase
+       .from("courses")
+       .update({ curriculum_data: updatedPayload })
+       .eq("id", this.courseId);
+
+     if (error) {
+       console.error("Error saving course type:", error);
+     } else {
+       console.log(`✅ Course type saved: ${this.courseType}`);
+     }
+   } catch (error) {
+     console.error("Error in saveCourseTypeToDatabase:", error);
+   }
+ }
+
+ private async loadTemplatePlacementData(): Promise<void> {
+   if (!this.templatePlacementList) {
+     return;
+   }
+
+   if (!this.courseId) {
+     this.availableTemplates = [];
+     this.renderTemplatePlacementUI();
+     return;
+   }
+
+   try {
+     await this.fetchAvailableTemplates();
+     this.syncTemplatePlacementsWithTemplates();
+     this.syncTemplatePlacementsWithModules();
+     this.syncTemplatePlacementsWithLessons();
+   } catch (error) {
+     console.error("Error loading templates for curriculum placement:", error);
+   } finally {
+     this.renderTemplatePlacementUI();
+   }
+ }
+
+ private async fetchAvailableTemplates(): Promise<void> {
+   if (!this.courseId) {
+     this.availableTemplates = [];
+     return;
+   }
+
+   const { data, error } = await supabase
+     .from("templates")
+     .select(
+       "id, template_id, template_description, template_type, template_data",
+     )
+     .eq("course_id", this.courseId);
+
+   if (error) {
+     throw error;
+   }
+
+   const templates = Array.isArray(data) ? data : [];
+   this.availableTemplates = templates
+     .map((template: any) => {
+       const templateData =
+         typeof template.template_data === "object" && template.template_data
+           ? template.template_data
+           : {};
+       const name =
+         typeof templateData.name === "string" && templateData.name.trim().length
+           ? templateData.name.trim()
+           : template.template_id;
+       return {
+         id: template.id,
+         templateId: template.template_id,
+         name,
+         type: template.template_type,
+         description: template.template_description,
+       } as TemplateSummary;
+     })
+     .sort((a, b) => a.name.localeCompare(b.name));
+ }
+
+ private syncTemplatePlacementsWithTemplates(): void {
+   if (!this.templatePlacements.length || !this.availableTemplates.length) {
+     return;
+   }
+
+   const summaryById = new Map(
+     this.availableTemplates.map((template) => [template.id, template]),
+   );
+
+   this.templatePlacements = this.templatePlacements.map((placement) => {
+     const summary = summaryById.get(placement.templateId);
+     if (summary) {
+       return {
+         ...placement,
+         templateSlug: summary.templateId,
+         templateName: summary.name,
+       };
+     }
+     return placement;
+   });
+ }
+
+ private getTemplatesForPlacementUI(): TemplateSummary[] {
+   const displayTemplates = [...this.availableTemplates];
+   const existingIds = new Set(displayTemplates.map((template) => template.id));
+
+   this.templatePlacements.forEach((placement) => {
+     if (!existingIds.has(placement.templateId)) {
+       displayTemplates.push({
+         id: placement.templateId,
+         templateId: placement.templateSlug,
+         name: `${placement.templateName || placement.templateSlug} (missing)`,
+         type: "missing",
+         description: null,
+         isMissing: true,
+       });
+       existingIds.add(placement.templateId);
+     }
+   });
+
+   return displayTemplates;
+ }
+
+ private renderTemplatePlacementUI(): void {
+   if (!this.templatePlacementList) {
+     return;
+   }
+
+   // Use filtered templates based on course type
+   const templatesForUI = this.getFilteredTemplatesForCourseType();
+
+   if (!templatesForUI.length) {
+     const courseTypeLabel = this.courseType === "custom" 
+       ? "Create a template to unlock placement options."
+       : `No templates available for ${this.courseType} course type. Switch to "Custom" to access all templates.`;
+     this.templatePlacementList.innerHTML =
+       `<p class="template-placement__empty">${courseTypeLabel}</p>`;
+     return;
+   }
+
+  const modules = this.getModulesForPlacement();
+  const moduleCount = modules.length;
+  const lessons = Array.isArray(this.currentCurriculum)
+    ? this.currentCurriculum
+    : [];
+  const lessonCount = lessons.length;
+
+  const moduleTitleLookup = new Map<number, string>();
+  modules.forEach((module) => {
+    const moduleNumber = module.moduleNumber ?? 1;
+    const title = module.title && module.title.trim().length
+      ? module.title
+      : `Module ${moduleNumber}`;
+    moduleTitleLookup.set(moduleNumber, title);
+  });
+
+   const html = templatesForUI
+     .map((template) => {
+       const placement = this.getTemplatePlacement(template.id);
+       const choice: TemplatePlacementChoice = placement
+         ? placement.placementType
+         : "none";
+       const moduleNumbers = placement?.moduleNumbers ?? [];
+      const lessonNumbers = placement?.lessonNumbers ?? [];
+      const showModules = choice === "specific-modules";
+      const showLessons = choice === "specific-lessons";
+       const accentClass = template.isMissing
+         ? ""
+         : this.resolveTemplateAccentClass(template.id || template.templateId);
+       const cardClassName = [
+         "template-placement-card",
+         accentClass,
+         template.isMissing ? "template-placement-card--missing" : "",
+       ]
+         .filter(Boolean)
+         .join(" ");
+       const typeLabel = template.type === "missing"
+         ? "Missing template"
+         : template.type;
+
+        const optionClass = (value: TemplatePlacementChoice): string =>
+          [
+            "template-placement-card__option",
+            choice === value ? "template-placement-card__option--active" : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
+
+       const moduleOptions = moduleCount
+         ? modules
+             .map((module) => {
+               const moduleNumber = module.moduleNumber ?? 1;
+               const checked = moduleNumbers.includes(moduleNumber);
+               const labelTitle = module.title
+                 ? this.escapeHtml(module.title)
+                 : `Module ${moduleNumber}`;
+               return `<label class="template-placement-card__module">
+                 <input type="checkbox" data-template-module="${moduleNumber}" ${
+                 checked ? "checked" : ""
+               }>
+                 <span>${labelTitle}</span>
+               </label>`;
+             })
+             .join("")
+         : '<p class="template-placement-card__modules-empty">Generate curriculum modules to target placements.</p>';
+
+        const moduleSelectionHint =
+          showModules && moduleCount && moduleNumbers.length === 0
+            ? '<p class="template-placement-card__modules-hint">Select at least one module.</p>'
+            : "";
+
+        const lessonOptions = lessonCount
+          ? lessons
+              .map((lesson) => {
+                const lessonNumber = lesson.lessonNumber ?? 0;
+                if (!lessonNumber) {
+                  return "";
+                }
+
+                const checked = lessonNumbers.includes(lessonNumber);
+                const moduleNumber = lesson.moduleNumber ?? undefined;
+                const moduleLabelRaw = moduleNumber
+                  ? moduleTitleLookup.get(moduleNumber) || `Module ${moduleNumber}`
+                  : "";
+                const lessonLabel = lesson.title && lesson.title.trim().length
+                  ? this.escapeHtml(lesson.title)
+                  : `Lesson ${lessonNumber}`;
+                const moduleMeta = moduleLabelRaw
+                  ? `<span class="template-placement-card__lesson-meta">${this.escapeHtml(
+                      moduleLabelRaw,
+                    )}</span>`
+                  : "";
+
+                return `<label class="template-placement-card__lesson">
+                  <input type="checkbox" data-template-lesson="${lessonNumber}" ${
+                    checked ? "checked" : ""
+                  }>
+                  <span class="template-placement-card__lesson-content">
+                    <span class="template-placement-card__lesson-title">${lessonLabel}</span>
+                    ${moduleMeta}
+                  </span>
+                </label>`;
+              })
+              .filter(Boolean)
+              .join("")
+          : '<p class="template-placement-card__lessons-empty">Generate curriculum lessons to target placements.</p>';
+
+        const lessonSelectionHint =
+          showLessons && lessonCount && lessonNumbers.length === 0
+            ? '<p class="template-placement-card__lessons-hint">Select at least one lesson.</p>'
+            : "";
+
+       return `
+        <article class="${cardClassName} template-placement-card--collapsed" data-template-card data-template-id="${template.id}" data-template-type="${this.escapeHtml(
+          template.type ?? "",
+        )}">
+           <header class="template-placement-card__header">
+             <div class="template-placement-card__header-content">
+               <h4 class="template-placement-card__title">${this.escapeHtml(
+                 template.name,
+               )}</h4>
+               <p class="template-placement-card__meta">${this.escapeHtml(
+                 typeLabel ?? "",
+               )}</p>
+             </div>
+             <button type="button" class="template-placement-card__toggle" aria-label="Toggle template details" aria-expanded="false" data-template-toggle>
+               <span class="template-placement-card__toggle-icon">
+                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                   <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+                 </svg>
+               </span>
+             </button>
+           </header>
+             ${
+               template.description
+                 ? `<p class="template-placement-card__description">${this.escapeHtml(
+                     template.description,
+                   )}</p>`
+                 : ""
+             }
+             ${
+               template.isMissing
+                 ? '<p class="template-placement-card__warning">Template not available. Remove or update placement.</p>'
+                 : ""
+             }
+           <div class="template-placement-card__options">
+             <label class="${optionClass("none")}">
+               <input type="radio" name="placement-${template.id}" value="none"${
+                 choice === "none" ? " checked" : ""
+               }>
+               <span>No automatic placement</span>
+             </label>
+             <label class="${optionClass("end-of-each-module")}">
+               <input type="radio" name="placement-${template.id}" value="end-of-each-module"${
+                 choice === "end-of-each-module" ? " checked" : ""
+               } ${moduleCount > 0 ? "" : "disabled"}>
+               <span>End of each module</span>
+             </label>
+             <label class="${optionClass("specific-modules")}">
+               <input type="radio" name="placement-${template.id}" value="specific-modules"${
+                 choice === "specific-modules" ? " checked" : ""
+               } ${moduleCount > 0 ? "" : "disabled"}>
+               <span>Specific modules</span>
+             </label>
+             <div class="template-placement-card__modules"${
+               showModules ? "" : " hidden"
+             }>
+               ${moduleOptions}
+               ${moduleSelectionHint}
+             </div>
+             <label class="${optionClass("specific-lessons")}">
+               <input type="radio" name="placement-${template.id}" value="specific-lessons"${
+                 choice === "specific-lessons" ? " checked" : ""
+               } ${lessonCount > 0 ? "" : "disabled"}>
+               <span>Specific lessons</span>
+             </label>
+             <div class="template-placement-card__lessons"${
+               showLessons ? "" : " hidden"
+             }>
+               ${lessonOptions}
+               ${lessonSelectionHint}
+             </div>
+             <label class="${optionClass("end-of-course")}">
+               <input type="radio" name="placement-${template.id}" value="end-of-course"${
+                 choice === "end-of-course" ? " checked" : ""
+               }>
+               <span>End of course</span>
+             </label>
+           </div>
+         </article>
+       `;
+     })
+     .join("");
+
+   this.templatePlacementList.innerHTML = html;
+ }
+
+ private getModulesForPlacement(): CurriculumModule[] {
+   if (this.currentModules.length) {
+     return this.currentModules;
+   }
+
+   if (!this.currentCurriculum.length) {
+     return [];
+   }
+
+   this.currentCurriculum.forEach((lesson) => {
+     lesson.moduleNumber = lesson.moduleNumber ?? 1;
+   });
+
+   return [
+     {
+       moduleNumber: 1,
+       title: "Module 1",
+       lessons: this.currentCurriculum,
+     },
+   ];
+ }
+
+private handleTemplatePlacementInputChange(input: HTMLInputElement): void {
+  const card = input.closest<HTMLElement>("[data-template-card]");
+  if (!card) {
+    return;
+  }
+
+  const templateId = card.dataset.templateId;
+  if (!templateId) {
+    return;
+  }
+
+  if (input.type === "radio") {
+    const choice = input.value as TemplatePlacementChoice;
+    this.updateTemplatePlacementChoice(templateId, choice);
+    this.renderTemplatePlacementUI();
+    this.renderCurriculumPreview();
+    this.persistTemplatePlacements();
+    return;
+  }
+
+  const moduleValue = input.getAttribute("data-template-module");
+  if (moduleValue) {
+    const moduleNumber = Number(moduleValue);
+    if (Number.isNaN(moduleNumber)) {
+      return;
+    }
+
+    this.updateTemplatePlacementModules(templateId, moduleNumber, input.checked);
+    this.renderCurriculumPreview();
+    this.persistTemplatePlacements();
+    return;
+  }
+
+  const lessonValue = input.getAttribute("data-template-lesson");
+  if (!lessonValue) {
+    return;
+  }
+
+  const lessonNumber = Number(lessonValue);
+  if (Number.isNaN(lessonNumber)) {
+    return;
+  }
+
+  this.updateTemplatePlacementLessons(templateId, lessonNumber, input.checked);
+  this.renderCurriculumPreview();
+  this.persistTemplatePlacements();
+}
+
+private handleLessonTemplateChange(select: HTMLSelectElement): void {
+  const lessonNumber = Number(select.dataset.lessonNumber);
+  if (Number.isNaN(lessonNumber)) {
+    console.error('Invalid lesson number for template selection');
+    return;
+  }
+
+  const templateId = select.value || undefined;
+
+  // Find the lesson in current curriculum
+  const lesson = this.currentCurriculum.find(l => l.lessonNumber === lessonNumber);
+  if (!lesson) {
+    console.error(`Lesson ${lessonNumber} not found`);
+    return;
+  }
+
+  // Update the lesson's templateId
+  lesson.templateId = templateId;
+
+  console.log(`📄 Template ${templateId ? 'assigned' : 'removed'} for Lesson ${lessonNumber}`);
+
+  // Re-render preview to show updated badge
+  this.renderCurriculumPreview();
+
+  // Save to database
+  this.saveCurriculumToDatabase(this.currentCurriculum);
+}
+
+ private updateTemplatePlacementChoice(
+   templateId: string,
+   choice: TemplatePlacementChoice,
+ ): void {
+   const existing = this.getTemplatePlacement(templateId);
+
+   if (choice === "none") {
+     if (existing) {
+       this.templatePlacements = this.templatePlacements.filter(
+         (placement) => placement.templateId !== templateId,
+       );
+     }
+     return;
+   }
+
+   const summary = this.availableTemplates.find((template) => template.id === templateId);
+   const placementType = choice as Exclude<TemplatePlacementChoice, "none">;
+
+   const updated: TemplatePlacementConfig = {
+     templateId,
+     templateSlug: summary?.templateId || existing?.templateSlug || templateId,
+     templateName: summary?.name || existing?.templateName || summary?.templateId || templateId,
+     placementType,
+     moduleNumbers: placementType === "specific-modules" ? [...(existing?.moduleNumbers ?? [])] : undefined,
+    lessonNumbers: placementType === "specific-lessons" ? [...(existing?.lessonNumbers ?? [])] : undefined,
+   };
+
+   if (existing) {
+     this.templatePlacements = this.templatePlacements.map((placement) =>
+       placement.templateId === templateId ? updated : placement,
+     );
+   } else {
+     this.templatePlacements.push(updated);
+   }
+ }
+
+ private updateTemplatePlacementModules(
+   templateId: string,
+   moduleNumber: number,
+   isChecked: boolean,
+ ): void {
+   let placement = this.getTemplatePlacement(templateId);
+
+   if (!placement) {
+     this.updateTemplatePlacementChoice(templateId, "specific-modules");
+     placement = this.getTemplatePlacement(templateId);
+   }
+
+   if (!placement) {
+     return;
+   }
+
+   const moduleNumbers = Array.isArray(placement.moduleNumbers)
+     ? [...placement.moduleNumbers]
+     : [];
+
+   if (isChecked) {
+     if (!moduleNumbers.includes(moduleNumber)) {
+       moduleNumbers.push(moduleNumber);
+     }
+   } else {
+     const index = moduleNumbers.indexOf(moduleNumber);
+     if (index >= 0) {
+       moduleNumbers.splice(index, 1);
+     }
+   }
+
+   moduleNumbers.sort((a, b) => a - b);
+
+   placement.moduleNumbers = moduleNumbers;
+
+   this.templatePlacements = this.templatePlacements.map((entry) =>
+     entry.templateId === templateId ? placement! : entry,
+   );
+ }
+
+  private updateTemplatePlacementLessons(
+    templateId: string,
+    lessonNumber: number,
+    isChecked: boolean,
+  ): void {
+    let placement = this.getTemplatePlacement(templateId);
+
+    if (!placement) {
+      this.updateTemplatePlacementChoice(templateId, "specific-lessons");
+      placement = this.getTemplatePlacement(templateId);
+    }
+
+    if (!placement) {
+      return;
+    }
+
+    const lessonNumbers = Array.isArray(placement.lessonNumbers)
+      ? [...placement.lessonNumbers]
+      : [];
+
+    if (isChecked) {
+      if (!lessonNumbers.includes(lessonNumber)) {
+        lessonNumbers.push(lessonNumber);
+      }
+    } else {
+      const index = lessonNumbers.indexOf(lessonNumber);
+      if (index >= 0) {
+        lessonNumbers.splice(index, 1);
+      }
+    }
+
+    lessonNumbers.sort((a, b) => a - b);
+
+    placement.lessonNumbers = lessonNumbers;
+
+    this.templatePlacements = this.templatePlacements.map((entry) =>
+      entry.templateId === templateId ? placement! : entry,
+    );
+  }
+
+ private getTemplatePlacement(
+   templateId: string,
+ ): TemplatePlacementConfig | undefined {
+   return this.templatePlacements.find((placement) => placement.templateId === templateId);
+ }
+
+private lookupTemplateSummary(
+  templateId: string | null | undefined,
+): TemplateSummary | undefined {
+  if (!templateId) {
+    return undefined;
+  }
+
+  return this.availableTemplates.find((template) => template.id === templateId);
+}
+
+private resolveTemplateAccentClass(templateId: string | null | undefined): string {
+  if (!this.templateAccentPalette.length) {
+    return "";
+  }
+
+  if (!templateId) {
+    return this.templateAccentPalette[0];
+  }
+
+  let hash = 0;
+
+  for (const char of templateId) {
+    hash = (hash + char.charCodeAt(0)) % this.templateAccentPalette.length;
+  }
+
+  return this.templateAccentPalette[hash];
+}
+
+ private persistTemplatePlacements(): void {
+   if (this.templatePlacementSaveTimeout) {
+     clearTimeout(this.templatePlacementSaveTimeout);
+   }
+
+   this.templatePlacementSaveTimeout = window.setTimeout(() => {
+     void this.commitTemplatePlacements();
+   }, 400);
+ }
+
+ private async commitTemplatePlacements(): Promise<void> {
+   this.templatePlacementSaveTimeout = null;
+
+   if (!this.courseId) {
+     return;
+   }
+
+   this.syncTemplatePlacementsWithModules();
+   this.syncTemplatePlacementsWithLessons();
+
+   try {
+     await this.saveCurriculumToDatabase(this.currentCurriculum);
+   } catch (error) {
+     console.error("Failed to persist template placements:", error);
+   }
+ }
+
+ private syncTemplatePlacementsWithModules(): void {
+   const modules = this.getModulesForPlacement();
+   if (!modules.length) {
+     return;
+   }
+
+   const validModuleNumbers = new Set(
+     modules.map((module) => module.moduleNumber ?? 1),
+   );
+
+   this.templatePlacements = this.templatePlacements.map((placement) => {
+     if (placement.placementType !== "specific-modules") {
+       return placement;
+     }
+
+     const filtered = (placement.moduleNumbers ?? []).filter((number) =>
+       validModuleNumbers.has(number),
+     );
+
+     return {
+       ...placement,
+       moduleNumbers: filtered,
+     };
+   });
+ }
+
+ private syncTemplatePlacementsWithLessons(): void {
+   const lessons = Array.isArray(this.currentCurriculum)
+     ? this.currentCurriculum
+     : [];
+
+   if (!lessons.length) {
+     return;
+   }
+
+   const validLessonNumbers = new Set(
+     lessons
+       .map((lesson) => lesson.lessonNumber)
+       .filter(
+         (number): number is number =>
+           typeof number === "number" && !Number.isNaN(number),
+       ),
+   );
+
+   this.templatePlacements = this.templatePlacements.map((placement) => {
+     if (placement.placementType !== "specific-lessons") {
+       return placement;
+     }
+
+     const filtered = (placement.lessonNumbers ?? []).filter((number) =>
+       validLessonNumbers.has(number),
+     );
+
+     return {
+       ...placement,
+       lessonNumbers: filtered,
+     };
+   });
+ }
+
+ private getTemplatePlacementsForModule(
+   moduleNumber: number,
+ ): TemplatePlacementConfig[] {
+   return this.templatePlacements.filter((placement) => {
+     if (placement.placementType === "end-of-each-module") {
+       return true;
+     }
+     if (placement.placementType === "specific-modules") {
+       return (placement.moduleNumbers ?? []).includes(moduleNumber);
+     }
+     return false;
+   });
+ }
+
+ private getTemplatePlacementsForLesson(
+   lessonNumber: number,
+ ): TemplatePlacementConfig[] {
+   return this.templatePlacements.filter(
+     (placement) =>
+       placement.placementType === "specific-lessons" &&
+       (placement.lessonNumbers ?? []).includes(lessonNumber),
+   );
+ }
+
+ private getTemplatePlacementsForCourseEnd(): TemplatePlacementConfig[] {
+   return this.templatePlacements.filter(
+     (placement) => placement.placementType === "end-of-course",
+   );
+ }
+
+ private renderTemplateBlock(
+   placement: TemplatePlacementConfig,
+   context: "module" | "course" | "lesson",
+   module?: CurriculumModule,
+   lesson?: CurriculumLesson,
+ ): string {
+  const summary = this.lookupTemplateSummary(placement.templateId);
+  const isMissing = !summary;
+  const accentClass = isMissing
+    ? ""
+    : this.resolveTemplateAccentClass(
+        summary?.id || placement.templateId || placement.templateSlug,
+      );
+
+   const moduleLabel = module
+     ? module.title && module.title.trim().length
+       ? module.title
+       : `Module ${module.moduleNumber}`
+     : "";
+
+  const lessonLabel = lesson
+    ? lesson.title && lesson.title.trim().length
+      ? lesson.title
+      : `Lesson ${lesson.lessonNumber}`
+    : "";
+
+   let contextLabel: string;
+   if (context === "course") {
+     contextLabel = "End of course";
+   } else if (context === "lesson") {
+     const baseLabel = lessonLabel ? `After ${lessonLabel}` : "Lesson placement";
+     contextLabel = moduleLabel ? `${baseLabel} • ${moduleLabel}` : baseLabel;
+   } else {
+     contextLabel = moduleLabel ? `After ${moduleLabel}` : "Module placement";
+   }
+
+  const slug = placement.templateSlug || placement.templateId;
+  const classNames = [
+    "template-block",
+    `template-block--${context}`,
+    accentClass,
+    isMissing ? "template-block--missing" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const typeLabel = summary?.type || (isMissing ? "Missing template" : "");
+
+   return `
+    <div class="${classNames}" data-template-block="${placement.templateId}" data-template-type="${this.escapeHtml(
+      typeLabel,
+    )}">
+       <div class="template-block__content">
+         <span class="template-block__name">${this.escapeHtml(
+           placement.templateName,
+         )}</span>
+         <span class="template-block__context">${this.escapeHtml(contextLabel)}</span>
+        <span class="template-block__slug">${this.escapeHtml(slug)}</span>
+       </div>
+     </div>
+   `;
+ }
+
+ private renderLessonTemplateSelector(lesson: CurriculumLesson): string {
+   if (!this.availableTemplates.length) {
+     return '';
+   }
+
+   const currentTemplateId = lesson.templateId || '';
+   const currentTemplate = currentTemplateId 
+     ? this.lookupTemplateSummary(currentTemplateId) 
+     : null;
+
+   // Group templates by type
+   const templatesByType = new Map<string, TemplateSummary[]>();
+   this.availableTemplates.forEach(template => {
+     const type = template.type || 'other';
+     if (!templatesByType.has(type)) {
+       templatesByType.set(type, []);
+     }
+     templatesByType.get(type)!.push(template);
+   });
+
+   // Build options HTML
+   let optionsHtml = '<option value="">No Template</option>';
+   
+   templatesByType.forEach((templates, type) => {
+     const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+     optionsHtml += `<optgroup label="${this.escapeHtml(typeLabel)}">`;
+     
+     templates.forEach(template => {
+       const selected = template.id === currentTemplateId ? ' selected' : '';
+       optionsHtml += `<option value="${this.escapeHtml(template.id)}"${selected}>${this.escapeHtml(template.name)}</option>`;
+     });
+     
+     optionsHtml += '</optgroup>';
+   });
+
+   // Generate accent class for visual indicator
+   const accentClass = currentTemplate 
+     ? this.resolveTemplateAccentClass(currentTemplate.id)
+     : '';
+
+   const badgeHtml = currentTemplate
+     ? `<span class="lesson__template-badge ${accentClass}">${this.escapeHtml(currentTemplate.type || 'Template')}</span>`
+     : '';
+
+   return `
+     <div class="lesson__template-selector">
+       <label class="lesson__template-label">
+         <span class="lesson__template-label-text">Template:</span>
+         <select class="lesson__template-dropdown input input--select" data-lesson-number="${lesson.lessonNumber}">
+           ${optionsHtml}
+         </select>
+       </label>
+       ${badgeHtml}
+     </div>
+   `;
+ }
+
+ private normalizeTemplatePlacement(raw: any): TemplatePlacementConfig | null {
+   if (!raw) {
+     return null;
+   }
+
+   const rawTemplateId = typeof raw.templateId === "string" ? raw.templateId : "";
+   if (!rawTemplateId) {
+     return null;
+   }
+
+   const placementType = raw.placementType as TemplatePlacementChoice;
+   if (
+     placementType !== "end-of-each-module" &&
+     placementType !== "specific-modules" &&
+    placementType !== "specific-lessons" &&
+     placementType !== "end-of-course"
+   ) {
+     return null;
+   }
+
+   const moduleNumbers = Array.isArray(raw.moduleNumbers)
+     ? raw.moduleNumbers
+         .map((value: any) => Number(value))
+         .filter((value: number) => !Number.isNaN(value))
+     : undefined;
+
+  const lessonNumbers = Array.isArray(raw.lessonNumbers)
+    ? raw.lessonNumbers
+        .map((value: any) => Number(value))
+        .filter((value: number) => !Number.isNaN(value))
+    : undefined;
+
+   return {
+     templateId: rawTemplateId,
+     templateSlug:
+       typeof raw.templateSlug === "string" && raw.templateSlug
+         ? raw.templateSlug
+         : rawTemplateId,
+     templateName:
+       typeof raw.templateName === "string" && raw.templateName
+         ? raw.templateName
+         : raw.templateSlug || rawTemplateId,
+     placementType,
+     moduleNumbers,
+    lessonNumbers,
+   };
+ }
+
+ private async loadScheduleData(): Promise<void> {
  if (!this.courseId) {
  console.warn('📚 Cannot load schedule data: no course ID available');
  this.displayNoScheduleWarning();
@@ -345,13 +1710,13 @@ class CurriculumManager {
  }
 
  private setupDurationConfiguration(): void {
-   const durationOptions = document.querySelectorAll('button[data-duration]');
+   const contentVolumeRadios = document.querySelectorAll<HTMLInputElement>('input[name="content-volume"]');
    const topicsInput = document.getElementById('curriculum-topics') as HTMLInputElement;
    const objectivesInput = document.getElementById('curriculum-objectives') as HTMLInputElement;
    const tasksInput = document.getElementById('curriculum-tasks') as HTMLInputElement;
 
    console.log('🔧 Setting up duration configuration...', {
-     durationOptions: durationOptions.length,
+     contentVolumeRadios: contentVolumeRadios.length,
      topicsInput: !!topicsInput,
      objectivesInput: !!objectivesInput,
      tasksInput: !!tasksInput
@@ -370,48 +1735,6 @@ class CurriculumManager {
      }, 1000);
      return;
    }
-
-   // Set up click handlers for duration options
-   durationOptions.forEach(option => {
-     const button = option as HTMLButtonElement;
-     const durationType = button.dataset.duration as keyof typeof this.durationPresets;
-     
-     button.addEventListener('click', () => {
-       
-       // Remove active class from all options
-       durationOptions.forEach(opt => {
-         opt.classList.remove('button--primary');
-         opt.classList.add('button--outline'); // Ensure outline class is present
-       });
-       
-       // Add active class to clicked option
-       button.classList.remove('button--outline'); // Remove outline class
-       button.classList.add('button--primary');
-       
-       // Update configuration based on selection
-       this.updateConfigurationFromSelection(durationType);
-       
-       // Update input values and regenerate curriculum (only for user clicks)
-       const preset = this.durationPresets[durationType];
-       topicsInput.value = preset.defaultTopics.toString();
-       objectivesInput.value = preset.defaultObjectives.toString();
-       tasksInput.value = preset.defaultTasks.toString();
-       
-       // Update content load config
-       this.contentLoadConfig = {
-         type: preset.type,
-         duration: this.scheduledLessonDuration,
-         topicsPerLesson: preset.defaultTopics,
-         objectivesPerTopic: preset.defaultObjectives,
-         tasksPerObjective: preset.defaultTasks,
-         isRecommended: this.isRecommendedDuration(durationType, this.scheduledLessonDuration),
-         recommendationText: this.getRecommendationText(durationType, this.scheduledLessonDuration)
-       };
-       
-       // Regenerate and save curriculum with new structure
-       this.regenerateAndSaveCurriculum();
-     });
-   });
 
    // Set up input change handlers to update curriculum in real-time
    [topicsInput, objectivesInput, tasksInput].forEach(input => {
@@ -537,7 +1860,7 @@ class CurriculumManager {
     duration: baseDuration || this.scheduledLessonDuration,
     ...counts,
   });
-}
+ }
 
  private populateInputsFromExistingCurriculum(): void {
    const derivedCounts = this.deriveStructureFromCurriculum();
@@ -605,41 +1928,6 @@ class CurriculumManager {
    this.saveTimeout = window.setTimeout(() => {
      this.regenerateAndSaveCurriculum();
    }, 500); // Wait 500ms after last change
- }
-
- private updateConfigurationFromSelection(
-   durationType: keyof typeof this.durationPresets
- ): void {
-   const isRecommended = this.isRecommendedDuration(durationType, this.scheduledLessonDuration);
-   const recommendationText = this.getRecommendationText(durationType, this.scheduledLessonDuration);
-   const preset = this.durationPresets[durationType];
-   
-   // Update recommendation element if it exists in the DOM
-   const recommendationElement = document.getElementById('curriculum-recommendation');
-   if (recommendationElement) {
-     // Update recommendation text and styling
-     recommendationElement.className = `curriculum__recommendation ${isRecommended ? 'curriculum__recommendation--recommended' : 'curriculum__recommendation--not-recommended'}`;
-     recommendationElement.textContent = recommendationText;
-   }
-
-   // Update duration info card if it exists
-   const durationInfoCard = document.getElementById('curriculum-duration-info');
-   const durationInfoText = durationInfoCard?.querySelector('.curriculum__duration-text');
-   
-   if (durationInfoCard && durationInfoText) {
-     // Show the card
-     durationInfoCard.style.display = 'block';
-     
-     // Generate duration text based on the preset
-     let durationText = '';
-     if (preset.maxDuration === 999) {
-       durationText = 'Ideal for lessons longer than 180 minutes';
-     } else {
-       durationText = `Ideal for lessons up to ${preset.maxDuration} minutes`;
-     }
-     
-     durationInfoText.textContent = durationText;
-   }
  }
 
  private isRecommendedDuration(durationType: keyof typeof this.durationPresets, actualDuration: number): boolean {
@@ -726,34 +2014,31 @@ class CurriculumManager {
      });
    }
    
-   // Set the visual state
+   // Set the visual state (check the appropriate radio button)
    const typeToHighlight = this.contentLoadConfig?.type || recommendedType;
    if (this.isDurationPresetKey(typeToHighlight)) {
-     this.setDurationButtonVisualState(typeToHighlight);
+     this.setDurationRadioState(typeToHighlight);
    }
 
    // Ensure inputs mirror the current configuration
    this.syncStructureInputsWithConfig();
  }
 
- private setDurationButtonVisualState(durationType: keyof typeof this.durationPresets): void {
-   const durationOptions = document.querySelectorAll('button[data-duration]');
-
-   // Remove active class from all options
-   durationOptions.forEach(opt => {
-     opt.classList.remove('button--primary');
-     opt.classList.add('button--outline'); // Ensure outline class is present
-   });
+ private setDurationRadioState(durationType: keyof typeof this.durationPresets): void {
+   const targetRadio = document.querySelector<HTMLInputElement>(
+     `input[name="content-volume"][value="${durationType}"]`
+   );
    
-   // Find and activate the correct button
-   const targetButton = document.querySelector(`[data-duration="${durationType}"]`) as HTMLButtonElement;
-   if (targetButton) {
-     targetButton.classList.remove('button--outline'); // Remove outline class
-     targetButton.classList.add('button--primary');
-     
-     // Update configuration based on selection (visual only, don't update inputs)
-     this.updateConfigurationFromSelection(durationType);
+   if (targetRadio) {
+     targetRadio.checked = true;
    }
+ }
+
+ /**
+  * @deprecated - Use setDurationRadioState instead
+  */
+ private setDurationButtonVisualState(durationType: keyof typeof this.durationPresets): void {
+   this.setDurationRadioState(durationType);
  }
 
  private displayNoScheduleWarning(): void {
@@ -787,6 +2072,13 @@ class CurriculumManager {
        .single();
 
      const numLessons = scheduleData?.course_sessions || 1;
+     
+     console.log('🔍 LESSON COUNT CHECK:', {
+       fromDatabase_course_sessions: scheduleData?.course_sessions,
+       currentCurriculumLength: this.currentCurriculum.length,
+       willCreate: numLessons,
+       discrepancy: this.currentCurriculum.length !== numLessons ? '⚠️ MISMATCH!' : '✅ Match'
+     });
      
      // Create new curriculum structure with current settings
      const newCurriculum = this.createCurriculumStructure(numLessons);
@@ -972,15 +2264,26 @@ class CurriculumManager {
    const lessons: CurriculumLesson[] = [];
    let lessonCounter = 1;
    
+   console.log('🔄 Extracting lessons from modules:', {
+     modulesCount: modules.length,
+     lessonsPerModule: modules.map(m => m.lessons.length)
+   });
+   
    for (const module of modules) {
      for (const lesson of module.lessons) {
        // Re-number lessons sequentially across all modules
        lessons.push({
          ...lesson,
-         lessonNumber: lessonCounter++
+         lessonNumber: lessonCounter++,
+         moduleNumber: module.moduleNumber,
        });
      }
    }
+   
+   console.log('✅ Extracted lessons:', {
+     totalExtracted: lessons.length,
+     lessonNumbers: lessons.map(l => l.lessonNumber)
+   });
    
    return lessons;
  }
@@ -990,29 +2293,43 @@ class CurriculumManager {
   */
  private organizeLessonsIntoModules(lessons: CurriculumLesson[]): CurriculumModule[] {
    if (this.moduleOrganization === "linear") {
-     // No modules - wrap all lessons in a single implicit module
-     return [];
+     if (!lessons.length) {
+       return [];
+     }
+
+     lessons.forEach((lesson) => {
+       lesson.moduleNumber = 1;
+     });
+
+     return [
+       {
+         moduleNumber: 1,
+         title: "Module 1",
+         lessons: lessons,
+       },
+     ];
    }
 
    if (this.moduleOrganization === "equal") {
-     return this.distributeEqualModules(lessons);
+    return this.assignModuleNumbers(this.distributeEqualModules(lessons));
    }
 
    if (this.moduleOrganization === "tiered") {
-     return this.createTieredModules(lessons);
+    return this.assignModuleNumbers(this.createTieredModules(lessons));
    }
 
    if (this.moduleOrganization === "custom") {
      // Custom organization - use existing module structure if available
      // Otherwise create a default single module
      if (this.currentModules.length > 0) {
-       return this.currentModules;
+       return this.assignModuleNumbers(this.currentModules);
      }
-     return [{
+     const fallbackModules = [{
        moduleNumber: 1,
        title: "Module 1",
        lessons: lessons
      }];
+     return this.assignModuleNumbers(fallbackModules);
    }
 
    return [];
@@ -1026,6 +2343,8 @@ class CurriculumManager {
  private distributeEqualModules(lessons: CurriculumLesson[]): CurriculumModule[] {
    const totalLessons = lessons.length;
    
+   console.log('📊 Distributing lessons into equal modules:', { totalLessons });
+   
    // Default to 3 modules, but adjust based on lesson count
    let numModules = 3;
    if (totalLessons <= 3) numModules = 1;
@@ -1037,13 +2356,21 @@ class CurriculumManager {
    const baseSize = Math.floor(totalLessons / numModules);
    const remainder = totalLessons % numModules;
 
+   console.log('📐 Distribution calculation:', { numModules, baseSize, remainder });
+
    const modules: CurriculumModule[] = [];
    let lessonIndex = 0;
 
    for (let i = 0; i < numModules; i++) {
-     // First 'remainder' modules get an extra lesson
-     const moduleSize = baseSize + (i < remainder ? 1 : 0);
-     const moduleLessons = lessons.slice(lessonIndex, lessonIndex + moduleSize);
+     // DISTRIBUTE REMAINDER EVENLY: Last 'remainder' modules get an extra lesson
+     // This avoids front-loading and keeps modules more balanced visually
+     const moduleSize = baseSize + (i >= (numModules - remainder) ? 1 : 0);
+    const moduleLessons = lessons.slice(lessonIndex, lessonIndex + moduleSize);
+    moduleLessons.forEach((lesson) => {
+      lesson.moduleNumber = i + 1;
+    });
+     
+     console.log(`📦 Module ${i + 1}: ${moduleSize} lessons (${moduleLessons.map(l => l.lessonNumber).join(', ')})`);
      
      modules.push({
        moduleNumber: i + 1,
@@ -1054,6 +2381,15 @@ class CurriculumManager {
      lessonIndex += moduleSize;
    }
 
+   return modules;
+ }
+
+ private assignModuleNumbers(modules: CurriculumModule[]): CurriculumModule[] {
+   modules.forEach((module) => {
+     module.lessons.forEach((lesson) => {
+       lesson.moduleNumber = module.moduleNumber;
+     });
+   });
    return modules;
  }
 
@@ -1068,25 +2404,38 @@ class CurriculumManager {
    const projectSize = Math.max(1, Math.ceil(totalLessons * 0.2));
    const coreSize = totalLessons - introSize - projectSize;
 
-   const modules: CurriculumModule[] = [
+   const introLessons = lessons.slice(0, introSize);
+   introLessons.forEach((lesson) => {
+     lesson.moduleNumber = 1;
+   });
+
+   const coreLessons = lessons.slice(introSize, introSize + coreSize);
+   coreLessons.forEach((lesson) => {
+     lesson.moduleNumber = 2;
+   });
+
+   const projectLessons = lessons.slice(introSize + coreSize);
+   projectLessons.forEach((lesson) => {
+     lesson.moduleNumber = 3;
+   });
+
+   return [
      {
        moduleNumber: 1,
        title: "Introduction & Foundations",
-       lessons: lessons.slice(0, introSize)
+       lessons: introLessons,
      },
      {
        moduleNumber: 2,
        title: "Core Content",
-       lessons: lessons.slice(introSize, introSize + coreSize)
+       lessons: coreLessons,
      },
      {
        moduleNumber: 3,
        title: "Application & Assessment",
-       lessons: lessons.slice(introSize + coreSize)
-     }
+       lessons: projectLessons,
+     },
    ];
-
-   return modules;
  }
 
  private async saveCurriculumToDatabase(
@@ -1115,17 +2464,24 @@ class CurriculumManager {
    const payload: CurriculumDataPayload = {
      structure: this.buildStructurePayload(),
      moduleOrganization: this.moduleOrganization,
+     templatePlacements: this.templatePlacements,
+     courseType: this.courseType,
    };
 
    // Save either as modules or legacy lessons format
+   if (modules.length) {
+     payload.modules = modules;
+   }
+
    if (this.moduleOrganization === "linear") {
      // Legacy format for backward compatibility
      payload.lessons = curriculum;
-   } else {
-     // New module-based format
+   } else if (!payload.modules) {
+     // Ensure module-based format persists modules when available
      payload.modules = modules;
-     this.currentModules = modules; // Update current modules
    }
+
+   this.currentModules = modules;
 
    const { error } = await supabase
      .from("courses")
@@ -1138,6 +2494,10 @@ class CurriculumManager {
      console.error('❌ Database save error:', error);
      throw error;
    }
+
+   this.syncTemplatePlacementsWithModules();
+  this.syncTemplatePlacementsWithLessons();
+   this.renderTemplatePlacementUI();
 
  } private setPreviewMode(mode: PreviewMode): void {
    this.currentPreviewMode = mode;
@@ -1158,23 +2518,24 @@ class CurriculumManager {
  private setModuleOrganization(organization: ModuleOrganizationType): void {
    this.moduleOrganization = organization;
 
-   // Update help text
-   const helpText = document.getElementById('module-organization-help');
-   const helpMessages: Record<ModuleOrganizationType, string> = {
-     linear: 'All lessons appear in a single list.',
-     equal: 'System divides lessons into equal groups automatically.',
-     tiered: 'Three stages with distinct purposes: Introduction → Core Content → Application.',
-     custom: 'You decide how many modules exist and which lessons go where.'
-   };
-   
-   if (helpText) {
-     helpText.textContent = helpMessages[organization];
-   }
-
    // Show/hide Modules button
    const modulesButton = document.querySelector('button[data-mode="modules"]') as HTMLButtonElement;
    if (modulesButton) {
      modulesButton.style.display = organization === 'linear' ? 'none' : 'inline-block';
+   }
+
+   // Show/hide and enable/disable custom module configuration
+   const customModulesConfig = document.getElementById('custom-modules-config');
+   if (customModulesConfig) {
+     if (organization === 'custom') {
+       customModulesConfig.removeAttribute('hidden');
+       customModulesConfig.classList.remove('disabled');
+       this.renderCustomModuleRows();
+     } else {
+       // Keep visible but grey out when not custom
+       customModulesConfig.removeAttribute('hidden');
+       customModulesConfig.classList.add('disabled');
+     }
    }
 
    console.log('📦 Module organization changed to:', organization);
@@ -1210,6 +2571,30 @@ class CurriculumManager {
      }))
    });
    
+    const modulesForPreview = this.currentModules.length
+      ? this.currentModules
+      : this.currentCurriculum.length
+        ? this.organizeLessonsIntoModules([...this.currentCurriculum])
+        : [];
+
+    const moduleByNumber = new Map<number, CurriculumModule>();
+    const lessonToModuleNumber = new Map<number, number>();
+    const moduleLastLesson = new Map<number, number>();
+
+    modulesForPreview.forEach((module) => {
+      moduleByNumber.set(module.moduleNumber, module);
+      const lessonsInModule = Array.isArray(module.lessons) ? module.lessons : [];
+      if (lessonsInModule.length > 0) {
+        const lastLesson = lessonsInModule[lessonsInModule.length - 1];
+        moduleLastLesson.set(module.moduleNumber, lastLesson.lessonNumber);
+      }
+      lessonsInModule.forEach((lesson) => {
+        lessonToModuleNumber.set(lesson.lessonNumber, module.moduleNumber);
+      });
+    });
+
+    const courseEndPlacements = this.getTemplatePlacementsForCourseEnd();
+
    // Show loading state first
    previewContainer.innerHTML = '<div class="loading-state text--secondary">Loading curriculum...</div>';
    
@@ -1225,9 +2610,9 @@ class CurriculumManager {
            Configure your lesson settings and generate a curriculum to see the preview.
          </div>
        </div>`;
-   } else if (this.currentPreviewMode === "modules") {
+  } else if (this.currentPreviewMode === "modules") {
      // Module view - show modules with lesson titles
-     if (this.moduleOrganization === "linear" || this.currentModules.length === 0) {
+  if (modulesForPreview.length === 0) {
        html = `
          <div class="empty-state">
            <div class="empty-state__title heading heading--medium text--secondary">Linear Organization</div>
@@ -1237,13 +2622,14 @@ class CurriculumManager {
          </div>`;
      } else {
        // Render modules with their lessons
-       this.currentModules.forEach((module) => {
+      modulesForPreview.forEach((module) => {
+        const moduleNumber = typeof module.moduleNumber === "number" ? module.moduleNumber : 1;
          html += `
            <div class="module">
              <h2 class="module__title heading heading--xlarge text--primary" contenteditable="true"
-                 data-module="${module.moduleNumber}" data-field="title"
+                data-module="${moduleNumber}" data-field="title"
                  data-placeholder="Click to add module title...">
-               ${module.title || `Module ${module.moduleNumber}`}
+               ${module.title || `Module ${moduleNumber}`}
              </h2>
              <div class="module__meta">
                <span class="badge badge--info">${module.lessons.length} lessons</span>
@@ -1257,12 +2643,32 @@ class CurriculumManager {
                      data-lesson="${lesson.lessonNumber}" data-field="title">
                    ${lesson.title || `Lesson ${lesson.lessonNumber}`}
                  </h3>
+                 ${this.renderLessonTemplateSelector(lesson)}
                </div>`;
+
+           const lessonPlacements = this.getTemplatePlacementsForLesson(lesson.lessonNumber);
+           lessonPlacements.forEach((placement) => {
+             html += this.renderTemplateBlock(placement, "lesson", module, lesson);
+           });
          });
-         
+
          html += `
-             </div>
+             </div>`;
+
+         const modulePlacements = this.getTemplatePlacementsForModule(moduleNumber);
+         modulePlacements.forEach((placement) => {
+           html += this.renderTemplateBlock(placement, "module", {
+             ...module,
+             moduleNumber,
+           });
+         });
+
+         html += `
            </div>`;
+       });
+
+       courseEndPlacements.forEach((placement) => {
+         html += this.renderTemplateBlock(placement, "course");
        });
      }
    } else {
@@ -1275,6 +2681,8 @@ class CurriculumManager {
                   data-lesson="${lesson.lessonNumber}" data-field="title" placeholder="Enter lesson title...">
                ${lesson.title || `Lesson ${lesson.lessonNumber}`}
              </h3>
+             
+             ${this.renderLessonTemplateSelector(lesson)}
              
              <div class="lesson__meta">
                <span class="badge badge--secondary">${this.scheduledLessonDuration} minutes</span>
@@ -1352,6 +2760,7 @@ class CurriculumManager {
                   data-placeholder="Click to add lesson title...">
                ${lesson.title || `Lesson ${lesson.lessonNumber}`}
              </h3>
+             ${this.renderLessonTemplateSelector(lesson)}
            </div>`;
            
        } else if (this.currentPreviewMode === "topics") {
@@ -1361,7 +2770,8 @@ class CurriculumManager {
              <h3 class="lesson__title heading heading--large text--primary" contenteditable="false" 
                   data-lesson="${lesson.lessonNumber}" data-field="title">
                ${lesson.title || `Lesson ${lesson.lessonNumber}`}
-             </h3>`;
+             </h3>
+             ${this.renderLessonTemplateSelector(lesson)}`;
              
          lesson.topics.forEach((topic, topicIndex) => {
            html += `
@@ -1383,7 +2793,8 @@ class CurriculumManager {
              <h3 class="lesson__title heading heading--large text--primary" contenteditable="false" 
                   data-lesson="${lesson.lessonNumber}" data-field="title">
                ${lesson.title || `Lesson ${lesson.lessonNumber}`}
-             </h3>`;
+             </h3>
+             ${this.renderLessonTemplateSelector(lesson)}`;
              
          lesson.topics.forEach((topic, topicIndex) => {
            html += `
@@ -1422,7 +2833,8 @@ class CurriculumManager {
              <h3 class="lesson__title heading heading--large text--primary" contenteditable="false" 
                   data-lesson="${lesson.lessonNumber}" data-field="title">
                ${lesson.title || `Lesson ${lesson.lessonNumber}`}
-             </h3>`;
+             </h3>
+             ${this.renderLessonTemplateSelector(lesson)}`;
              
          lesson.topics.forEach((topic, topicIndex) => {
            html += `
@@ -1481,7 +2893,41 @@ class CurriculumManager {
          
          html += `</div>`;
        }
+
+        const lessonPlacements = this.getTemplatePlacementsForLesson(lesson.lessonNumber);
+        if (lessonPlacements.length) {
+          const moduleNumberForLesson = lessonToModuleNumber.get(lesson.lessonNumber);
+          const moduleContextForLesson =
+            typeof moduleNumberForLesson === "number"
+              ? moduleByNumber.get(moduleNumberForLesson)
+              : undefined;
+
+          lessonPlacements.forEach((placement) => {
+            html += this.renderTemplateBlock(
+              placement,
+              "lesson",
+              moduleContextForLesson,
+              lesson,
+            );
+          });
+        }
+
+        const moduleNumber = lessonToModuleNumber.get(lesson.lessonNumber);
+        if (
+          moduleNumber !== undefined &&
+          moduleLastLesson.get(moduleNumber) === lesson.lessonNumber
+        ) {
+          const moduleContext = moduleByNumber.get(moduleNumber);
+          const modulePlacements = this.getTemplatePlacementsForModule(moduleNumber);
+          modulePlacements.forEach((placement) => {
+            html += this.renderTemplateBlock(placement, "module", moduleContext);
+          });
+        }
      });
+
+      courseEndPlacements.forEach((placement) => {
+        html += this.renderTemplateBlock(placement, "course");
+      });
    }
 
    // Update content with smooth transition
@@ -1638,13 +3084,16 @@ class CurriculumManager {
      if (Array.isArray(rawCurriculum)) {
        // Legacy format: curriculum_data stored as an array of lessons
        this.currentCurriculum = rawCurriculum;
+        this.templatePlacements = [];
        console.log('✅ Loaded existing curriculum:', {
          lessonsCount: this.currentCurriculum.length,
          sampleStructure: this.currentCurriculum[0] ? {
            topicsCount: this.currentCurriculum[0].topics.length,
            objectivesCount: this.currentCurriculum[0].topics[0]?.objectives.length,
+
            tasksCount: this.currentCurriculum[0].topics[0]?.tasks.length
          } : null
+
        });
        this.renderCurriculumPreview();
        
@@ -1658,23 +3107,61 @@ class CurriculumManager {
 
       // Extract module organization and lessons
       this.moduleOrganization = payload.moduleOrganization || "linear";
+      
+      // Load course type (default to "essential" if not set)
+      this.courseType = payload.courseType || "essential";
+      
+      // Sync course type UI
+      this.syncCourseTypeUI();
 
       // Determine which structure to use
       const moduleData = Array.isArray(payload.modules) ? payload.modules : undefined;
       const lessonData = Array.isArray(payload.lessons) ? payload.lessons : undefined;
 
       if (moduleData && moduleData.length > 0) {
-        this.currentModules = moduleData;
+        this.currentModules = this.assignModuleNumbers(moduleData);
         // Flatten modules into lessons for internal processing
         this.currentCurriculum = this.extractLessonsFromModules(moduleData);
+        
+        console.log('📚 Loaded from MODULES:', {
+          modulesCount: moduleData.length,
+          totalLessonsExtracted: this.currentCurriculum.length,
+          lessonsByModule: moduleData.map(m => ({ 
+            moduleNum: m.moduleNumber, 
+            lessonsInModule: m.lessons.length,
+            lessonNumbers: m.lessons.map(l => l.lessonNumber)
+          }))
+        });
+        
+        // VALIDATION: Check if lesson count matches course_sessions
+        await this.validateAndFixLessonCount();
       } else if (lessonData && lessonData.length > 0) {
         // Legacy format: lessons at top level
         this.currentCurriculum = lessonData;
         this.currentModules = [];
+        this.currentCurriculum.forEach((lesson) => {
+          lesson.moduleNumber = lesson.moduleNumber ?? 1;
+        });
+        
+        console.log('📚 Loaded from LESSONS:', {
+          lessonsCount: lessonData.length,
+          lessonNumbers: lessonData.map(l => l.lessonNumber)
+        });
       } else {
         this.currentCurriculum = [];
         this.currentModules = [];
       }
+
+      if (Array.isArray(payload.templatePlacements)) {
+        this.templatePlacements = payload.templatePlacements
+          .map((placement) => this.normalizeTemplatePlacement(placement))
+          .filter((placement): placement is TemplatePlacementConfig => placement !== null);
+      } else {
+        this.templatePlacements = [];
+      }
+
+      this.syncTemplatePlacementsWithModules();
+      this.syncTemplatePlacementsWithLessons();
 
       console.log('✅ Loaded existing curriculum payload:', {
         lessonsCount: this.currentCurriculum.length,
@@ -1707,30 +3194,203 @@ class CurriculumManager {
   * Syncs the module organization UI elements with current state
   */
  private syncModuleOrganizationUI(): void {
-   // Update dropdown
-   const moduleOrgSelect = document.getElementById('module-organization') as HTMLSelectElement;
-   if (moduleOrgSelect) {
-     moduleOrgSelect.value = this.moduleOrganization;
+   // Update radio buttons
+   const moduleOrgRadios = document.querySelectorAll<HTMLInputElement>('input[name="module-organization"]');
+   moduleOrgRadios.forEach(radio => {
+     radio.checked = radio.value === this.moduleOrganization;
+   });
+
+   // Show/hide and enable/disable custom module configuration
+   const customModulesConfig = document.getElementById('custom-modules-config');
+   if (customModulesConfig) {
+     if (this.moduleOrganization === 'custom') {
+       customModulesConfig.removeAttribute('hidden');
+       customModulesConfig.classList.remove('disabled');
+       this.renderCustomModuleRows();
+     } else {
+       // Keep visible but grey out when not custom
+       customModulesConfig.removeAttribute('hidden');
+       customModulesConfig.classList.add('disabled');
+     }
    }
 
-   // Update help text
-   const helpText = document.getElementById('module-organization-help');
-   const helpMessages: Record<ModuleOrganizationType, string> = {
-     linear: 'All lessons appear in a single list.',
-     equal: 'System divides lessons into equal groups automatically.',
-     tiered: 'Three stages with distinct purposes: Introduction → Core Content → Application.',
-     custom: 'You decide how many modules exist and which lessons go where.'
-   };
-   
-   if (helpText) {
-     helpText.textContent = helpMessages[this.moduleOrganization];
-   }
-
-   // Show/hide Modules button
+   // Show/hide Modules button in preview
    const modulesButton = document.querySelector('button[data-mode="modules"]') as HTMLButtonElement;
    if (modulesButton) {
      modulesButton.style.display = this.moduleOrganization === 'linear' ? 'none' : 'inline-block';
    }
+ }
+
+ /**
+  * Syncs the course type UI with current state
+  */
+ private syncCourseTypeUI(): void {
+   const courseTypeRadios = document.querySelectorAll<HTMLInputElement>('input[name="course-type"]');
+   courseTypeRadios.forEach(radio => {
+     radio.checked = radio.value === this.courseType;
+   });
+ }
+
+ /**
+  * Renders custom module configuration rows
+  */
+ private renderCustomModuleRows(): void {
+   const customModulesList = document.getElementById('custom-modules-list');
+   if (!customModulesList) {
+     return;
+   }
+
+   const totalLessons = this.currentCurriculum.length;
+   if (totalLessons === 0) {
+     customModulesList.innerHTML = '<p class="form__help-text">Generate a curriculum first to define custom modules.</p>';
+     return;
+   }
+
+   // Build module rows from current module structure
+   const modules = this.currentModules.length > 0 
+     ? this.currentModules 
+     : [{ moduleNumber: 1, title: 'Module 1', lessons: this.currentCurriculum }];
+
+   let html = '';
+   modules.forEach((module, index) => {
+     const lastLesson = module.lessons[module.lessons.length - 1];
+     const lastLessonNumber = lastLesson ? lastLesson.lessonNumber : (index + 1);
+     
+     html += `
+       <div class="custom-module-row" data-module-index="${index}">
+         <span class="custom-module-row__label">Module ${index + 1}</span>
+         <div class="custom-module-row__input-group">
+           <span>Lesson 1 →</span>
+           <input 
+             type="number" 
+             class="input input--number custom-module-row__input" 
+             min="1" 
+             max="${totalLessons}" 
+             value="${lastLessonNumber}"
+             data-module-end="${index}"
+           />
+         </div>
+         ${index > 0 ? '<button type="button" class="custom-module-row__remove" data-remove-module="' + index + '">×</button>' : '<span style="width: 2rem;"></span>'}
+       </div>
+     `;
+   });
+
+   customModulesList.innerHTML = html;
+
+   // Bind events to module inputs and remove buttons
+   customModulesList.querySelectorAll<HTMLInputElement>('.custom-module-row__input').forEach(input => {
+     input.addEventListener('change', () => {
+       this.updateCustomModulesFromInputs();
+     });
+   });
+
+   customModulesList.querySelectorAll<HTMLButtonElement>('[data-remove-module]').forEach(button => {
+     button.addEventListener('click', (event) => {
+       const index = parseInt((event.target as HTMLButtonElement).dataset.removeModule || '0');
+       this.removeCustomModule(index);
+     });
+   });
+ }
+
+ /**
+  * Adds a new custom module
+  */
+ private addCustomModule(): void {
+   if (!this.currentCurriculum.length) {
+     alert('Generate a curriculum first before adding custom modules.');
+     return;
+   }
+
+   // Add a new module to the end
+   const lastModule = this.currentModules[this.currentModules.length - 1];
+   const lastLesson = lastModule ? lastModule.lessons[lastModule.lessons.length - 1] : this.currentCurriculum[this.currentCurriculum.length - 1];
+   const nextLessonNumber = lastLesson ? lastLesson.lessonNumber + 1 : 1;
+
+   if (nextLessonNumber > this.currentCurriculum.length) {
+     alert('All lessons are already assigned to modules.');
+     return;
+   }
+
+   this.renderCustomModuleRows();
+ }
+
+ /**
+  * Removes a custom module
+  */
+ private removeCustomModule(index: number): void {
+   if (index === 0) {
+     return; // Can't remove first module
+   }
+
+   // Recalculate modules after removal
+   this.updateCustomModulesFromInputs();
+   this.renderCustomModuleRows();
+ }
+
+ /**
+  * Updates module structure based on custom module inputs
+  */
+ private updateCustomModulesFromInputs(): void {
+   const inputs = document.querySelectorAll<HTMLInputElement>('.custom-module-row__input');
+   const boundaries: number[] = Array.from(inputs).map(input => parseInt(input.value));
+
+   // Rebuild modules based on boundaries
+   const newModules: CurriculumModule[] = [];
+   let startLesson = 1;
+
+   boundaries.forEach((endLesson, index) => {
+     const moduleLessons = this.currentCurriculum.filter(
+       lesson => lesson.lessonNumber >= startLesson && lesson.lessonNumber <= endLesson
+     );
+
+     if (moduleLessons.length > 0) {
+       newModules.push({
+         moduleNumber: index + 1,
+         title: `Module ${index + 1}`,
+         lessons: moduleLessons.map(lesson => ({ ...lesson, moduleNumber: index + 1 }))
+       });
+     }
+
+     startLesson = endLesson + 1;
+   });
+
+   this.currentModules = newModules;
+   this.currentCurriculum = this.extractLessonsFromModules(newModules);
+   this.renderCurriculumPreview();
+   this.saveCurriculumToDatabase(this.currentCurriculum);
+ }
+
+ /**
+  * Handles duration/content volume selection
+  */
+ private handleDurationSelection(durationType: keyof typeof this.durationPresets): void {
+   const preset = this.durationPresets[durationType];
+   const topicsInput = document.getElementById('curriculum-topics') as HTMLInputElement;
+   const objectivesInput = document.getElementById('curriculum-objectives') as HTMLInputElement;
+   const tasksInput = document.getElementById('curriculum-tasks') as HTMLInputElement;
+
+   if (!topicsInput || !objectivesInput || !tasksInput) {
+     return;
+   }
+
+   // Update input values with preset defaults
+   topicsInput.value = preset.defaultTopics.toString();
+   objectivesInput.value = preset.defaultObjectives.toString();
+   tasksInput.value = preset.defaultTasks.toString();
+
+   // Update content load config
+   this.contentLoadConfig = {
+     type: preset.type,
+     duration: this.scheduledLessonDuration || preset.maxDuration,
+     topicsPerLesson: preset.defaultTopics,
+     objectivesPerTopic: preset.defaultObjectives,
+     tasksPerObjective: preset.defaultTasks,
+     isRecommended: this.isRecommendedDuration(durationType, this.scheduledLessonDuration),
+     recommendationText: this.getRecommendationText(durationType, this.scheduledLessonDuration)
+   };
+
+   // Regenerate curriculum with new structure
+   this.regenerateAndSaveCurriculum();
  }
 
  /**
@@ -1765,6 +3425,118 @@ class CurriculumManager {
  return this.currentCurriculum || [];
  }
 
+ /**
+  * Validates that the number of lessons in currentCurriculum matches course_sessions
+  * If there's a mismatch, trims excess lessons and updates the database
+  * Falls back to schedule_settings array length if course_sessions is not set
+  */
+ private async validateAndFixLessonCount(): Promise<void> {
+   try {
+     // Get course_sessions and schedule_settings from database
+     const { data: courseData, error } = await supabase
+       .from('courses')
+       .select('course_sessions, schedule_settings')
+       .eq('id', this.courseId)
+       .single();
+     
+     if (error || !courseData) {
+       console.error('❌ Failed to fetch course data for validation:', error);
+       return;
+     }
+     
+     let expectedLessonCount = courseData.course_sessions;
+     
+     // Fallback: If course_sessions is not set but schedule_settings exists, use its length
+     if ((!expectedLessonCount || expectedLessonCount === 0) && Array.isArray(courseData.schedule_settings)) {
+       expectedLessonCount = courseData.schedule_settings.length;
+       console.log('ℹ️ Using schedule_settings length for validation (course_sessions not set):', expectedLessonCount);
+       
+       // Fix the database by syncing course_sessions with schedule_settings
+       if (expectedLessonCount > 0) {
+         await supabase
+           .from('courses')
+           .update({ course_sessions: expectedLessonCount })
+           .eq('id', this.courseId);
+         console.log('✅ Synced course_sessions with schedule_settings:', expectedLessonCount);
+       }
+     }
+     
+     // Skip validation if no schedule configured
+     if (!expectedLessonCount || expectedLessonCount === 0) {
+       console.log('ℹ️ Skipping lesson count validation - no schedule configured');
+       return;
+     }
+     
+     const actualLessonCount = this.currentCurriculum.length;
+     
+     if (actualLessonCount === expectedLessonCount) {
+       console.log('✅ Lesson count validation passed:', { expected: expectedLessonCount, actual: actualLessonCount });
+       return;
+     }
+     
+     console.warn('⚠️ LESSON COUNT MISMATCH DETECTED:', {
+       expected: expectedLessonCount,
+       actual: actualLessonCount,
+       difference: actualLessonCount - expectedLessonCount
+     });
+     
+     if (actualLessonCount > expectedLessonCount) {
+       // Trim excess lessons
+       console.log(`🔧 Trimming ${actualLessonCount - expectedLessonCount} excess lesson(s)...`);
+       this.currentCurriculum = this.currentCurriculum.slice(0, expectedLessonCount);
+       
+       // Rebuild modules with correct lesson count
+       this.currentModules = this.organizeLessonsIntoModules(this.currentCurriculum);
+       
+       // Save corrected data to database
+       await this.saveCurriculumToDatabase(this.currentCurriculum);
+       
+       console.log('✅ Lesson count corrected and saved to database');
+     } else if (actualLessonCount < expectedLessonCount) {
+       // Need to generate MORE lessons to match schedule
+       console.warn(`⚠️ Curriculum has ${actualLessonCount} lessons but schedule requires ${expectedLessonCount}.`);
+       console.log('🔧 Auto-generating curriculum to match schedule...');
+       
+       // Create curriculum structure matching the schedule
+       const newCurriculum = this.createCurriculumStructure(expectedLessonCount);
+       
+       // Preserve any existing lesson titles
+       newCurriculum.forEach((lesson, index) => {
+         if (this.currentCurriculum[index]?.title) {
+           lesson.title = this.currentCurriculum[index].title;
+           // Also preserve topic/objective/task content if exists
+           lesson.topics.forEach((topic, topicIndex) => {
+             const existingTopic = this.currentCurriculum[index]?.topics[topicIndex];
+             if (existingTopic) {
+               topic.title = existingTopic.title || topic.title;
+               topic.objectives = existingTopic.objectives || topic.objectives;
+               topic.tasks = existingTopic.tasks || topic.tasks;
+             }
+           });
+         }
+       });
+       
+       this.currentCurriculum = newCurriculum;
+       
+       // Rebuild modules
+       this.currentModules = this.organizeLessonsIntoModules(this.currentCurriculum);
+       
+       // Save to database
+       await this.saveCurriculumToDatabase(this.currentCurriculum);
+       
+       console.log('✅ Curriculum auto-generated and saved:', {
+         lessonsCreated: expectedLessonCount,
+         modulesCreated: this.currentModules.length
+       });
+       
+       // Re-render the preview
+       this.renderCurriculumPreview();
+     }
+   } catch (error) {
+     console.error('❌ Error during lesson count validation:', error);
+   }
+ }
+
  private showPreview(): void {
    this.curriculumPreviewSection.style.display = 'flex';
    this.renderCurriculumPreview();
@@ -1772,6 +3544,22 @@ class CurriculumManager {
 
  private hideCurriculumPreview(): void {
    this.curriculumPreviewSection.style.display = 'none';
+ }
+
+ private escapeHtml(value: string): string {
+   if (!value) {
+     return "";
+   }
+
+   const replacements: Record<string, string> = {
+     '&': '&amp;',
+     '<': '&lt;',
+     '>': '&gt;',
+     '"': '&quot;',
+     "'": '&#39;',
+   };
+
+   return value.replace(/[&<>"']/g, (char) => replacements[char] || char);
  }
 }
 

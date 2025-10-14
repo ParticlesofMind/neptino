@@ -359,59 +359,297 @@
 
           <form class="form form--curriculum">
 
-            <!-- Module Organization Selection -->
+            <!-- Module Organization -->
             <div class="curriculum-config__group curriculum-config__group--modules">
-              <label class="form__label">
-                Module Organization
-                <select class="input input--select" id="module-organization">
-                  <option value="linear">Linear (No modules)</option>
-                  <option value="equal">Equal Modules (Auto-distributed)</option>
-                  <option value="tiered">Tiered (Intro → Core → Project)</option>
-                  <option value="custom">Custom (Instructor-defined)</option>
-                </select>
-              </label>
-              <p class="form__help-text" id="module-organization-help">
-                All lessons appear in a single list.
+              <h3 class="curriculum-config__section-title">Module Organization</h3>
+              <p class="form__help-text">
+                Choose how lessons are grouped within your course.
               </p>
+              
+              <div class="module-organization-options">
+                <label class="module-organization-option">
+                  <input type="radio" name="module-organization" value="linear" id="module-org-linear" checked>
+                  <div class="module-organization-option__content">
+                    <span class="module-organization-option__name">No Modules</span>
+                    <span class="module-organization-option__description">Lessons appear in a single list with no module grouping.</span>
+                  </div>
+                </label>
+                
+                <label class="module-organization-option">
+                  <input type="radio" name="module-organization" value="equal" id="module-org-equal">
+                  <div class="module-organization-option__content">
+                    <span class="module-organization-option__name">Equal Modules</span>
+                    <span class="module-organization-option__description">Lessons are evenly distributed across modules of equal size.</span>
+                  </div>
+                </label>
+                
+                <label class="module-organization-option">
+                  <input type="radio" name="module-organization" value="custom" id="module-org-custom">
+                  <div class="module-organization-option__content">
+                    <span class="module-organization-option__name">Custom Modules</span>
+                    <span class="module-organization-option__description">Define your own module boundaries.</span>
+                  </div>
+                </label>
+              </div>
+              
+              <!-- Custom Module Configuration -->
+              <div class="custom-modules-config disabled" id="custom-modules-config">
+                <div class="custom-modules-list" id="custom-modules-list">
+                  <!-- Module rows will be dynamically generated -->
+                </div>
+              </div>
             </div>
 
-            <div class="curriculum-config__group curriculum-config__group--durations">
-              <button class="button button--small button--outline" type="button" data-duration="mini" data-max="30">
-                Mini
-              </button>
-              <button class="button button--small button--outline" type="button" data-duration="single" data-max="60">
-                Single
-              </button>
-              <button class="button button--small button--outline" type="button" data-duration="double" data-max="120">
-                Double
-              </button>
-              <button class="button button--small button--outline" type="button" data-duration="triple" data-max="180">
-                Triple
-              </button>
-              <button class="button button--small button--outline" type="button" data-duration="halfFull"
-                data-max="999">
-                Full day
-              </button>
+            <!-- Content Volume -->
+            <div class="curriculum-config__group curriculum-config__group--content-volume">
+              <h3 class="curriculum-config__section-title">Content Volume</h3>
+              <p class="form__help-text">
+                Define the duration and depth of a standard lesson.
+              </p>
+              
+              <div class="content-volume-options">
+                <label class="content-volume-option">
+                  <input type="radio" name="content-volume" value="mini" data-duration="mini" data-max="30">
+                  <div class="content-volume-option__content">
+                    <span class="content-volume-option__name">Mini</span>
+                    <span class="content-volume-option__duration">≤ 30 min</span>
+                    <span class="content-volume-option__description">Short session with 1–2 topics and light tasks.</span>
+                  </div>
+                </label>
+                
+                <label class="content-volume-option">
+                  <input type="radio" name="content-volume" value="single" data-duration="single" data-max="60" checked>
+                  <div class="content-volume-option__content">
+                    <span class="content-volume-option__name">Standard</span>
+                    <span class="content-volume-option__duration">≤ 60 min</span>
+                    <span class="content-volume-option__description">Normal lesson with balanced topics and tasks.</span>
+                  </div>
+                </label>
+                
+                <label class="content-volume-option">
+                  <input type="radio" name="content-volume" value="double" data-duration="double" data-max="120">
+                  <div class="content-volume-option__content">
+                    <span class="content-volume-option__name">Extended</span>
+                    <span class="content-volume-option__duration">≤ 120 min</span>
+                    <span class="content-volume-option__description">Double-length lesson with more practice and discussion.</span>
+                  </div>
+                </label>
+                
+                <label class="content-volume-option">
+                  <input type="radio" name="content-volume" value="triple" data-duration="triple" data-max="180">
+                  <div class="content-volume-option__content">
+                    <span class="content-volume-option__name">Intensive</span>
+                    <span class="content-volume-option__duration">≤ 180 min</span>
+                    <span class="content-volume-option__description">Long block for deeper coverage or projects.</span>
+                  </div>
+                </label>
+                
+                <label class="content-volume-option">
+                  <input type="radio" name="content-volume" value="halfFull" data-duration="halfFull" data-max="999">
+                  <div class="content-volume-option__content">
+                    <span class="content-volume-option__name">Full Day</span>
+                    <span class="content-volume-option__duration">> 180 min</span>
+                    <span class="content-volume-option__description">Workshop-style session with multiple breaks or modules.</span>
+                  </div>
+                </label>
+              </div>
             </div>
 
+            <!-- Numeric Structure Fields -->
             <div class="curriculum-config__group curriculum-config__group--structure">
+              <h3 class="curriculum-config__section-title">Lesson Structure</h3>
+              <p class="form__help-text">
+                Fine-tune the content density for each lesson.
+              </p>
 
-              <label class="form__label">
-                Topics per lesson
-                <input class="input input--number" type="number" min="1" max="10" value="2" id="curriculum-topics" />
-              </label>
+              <div class="structure-inputs">
+                <label class="form__label">
+                  Topics per lesson
+                  <input class="input input--number" type="number" min="1" max="10" value="2" id="curriculum-topics" />
+                </label>
 
-              <label class="form__label">
-                Objectives per topic
-                <input class="input input--number" type="number" min="1" max="5" value="2" id="curriculum-objectives" />
-              </label>
+                <label class="form__label">
+                  Objectives per topic
+                  <input class="input input--number" type="number" min="1" max="5" value="2" id="curriculum-objectives" />
+                </label>
 
-              <label class="form__label">
-                Tasks per objective
-                <input class="input input--number" type="number" min="1" max="5" value="2" id="curriculum-tasks" />
-              </label>
+                <label class="form__label">
+                  Tasks per objective
+                  <input class="input input--number" type="number" min="1" max="5" value="2" id="curriculum-tasks" />
+                </label>
+              </div>
             </div>
 
+            <!-- Course Type -->
+            <div class="curriculum-config__group curriculum-config__group--course-type">
+              <h3 class="curriculum-config__section-title">Course Type</h3>
+              <p class="form__help-text">
+                Defines which templates are automatically available and applied within the course.
+              </p>
+              
+              <div class="course-type-options">
+                <label class="course-type-option">
+                  <input type="radio" name="course-type" value="minimalist" id="course-type-minimalist">
+                  <div class="course-type-option__content">
+                    <span class="course-type-option__title">Minimalist Course</span>
+                    <span class="course-type-option__description">Core instructional templates only</span>
+                    <ul class="course-type-option__templates">
+                      <li>Lesson</li>
+                      <li>Quiz</li>
+                    </ul>
+                  </div>
+                </label>
+                
+                <label class="course-type-option">
+                  <input type="radio" name="course-type" value="essential" id="course-type-essential" checked>
+                  <div class="course-type-option__content">
+                    <span class="course-type-option__title">Essential Course</span>
+                    <span class="course-type-option__description">All Minimalist templates plus evaluation and certification</span>
+                    <ul class="course-type-option__templates">
+                      <li>Lesson</li>
+                      <li>Quiz</li>
+                      <li>Feedback</li>
+                      <li>Assessment</li>
+                      <li>Certificate</li>
+                    </ul>
+                  </div>
+                </label>
+                
+                <label class="course-type-option">
+                  <input type="radio" name="course-type" value="complete" id="course-type-complete">
+                  <div class="course-type-option__content">
+                    <span class="course-type-option__title">Complete Course</span>
+                    <span class="course-type-option__description">Every available template included</span>
+                    <ul class="course-type-option__templates">
+                      <li>Lesson</li>
+                      <li>Quiz</li>
+                      <li>Feedback</li>
+                      <li>Assessment</li>
+                      <li>Report</li>
+                      <li>Review</li>
+                      <li>Project</li>
+                      <li>Module Orientation</li>
+                      <li>Course Orientation</li>
+                      <li>Certificate</li>
+                    </ul>
+                  </div>
+                </label>
+                
+                <label class="course-type-option">
+                  <input type="radio" name="course-type" value="custom" id="course-type-custom">
+                  <div class="course-type-option__content">
+                    <span class="course-type-option__title">Custom Course</span>
+                    <span class="course-type-option__description">Manually select any combination of templates</span>
+                    <p class="course-type-option__note">Configure template placements below</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Template Placement Section -->
+            <div class="curriculum-config__group curriculum-config__group--templates">
+              <h3 class="curriculum-config__section-title">Template Placement</h3>
+              <p class="form__help-text">
+                Configure where templates (certificates, assessments, etc.) should appear in your course.
+              </p>
+              <div class="template-placement" id="curriculum-template-placement-list">
+                <!-- Template placement cards will be rendered here by JavaScript -->
+              </div>
+            </div>
+
+            <!-- AI Generation Section -->
+            <div class="curriculum-config__group curriculum-config__group--ai-generation">
+              <h3 class="curriculum-config__section-title">AI-Assisted Curriculum Generation</h3>
+              <p class="form__help-text">
+                Use AI to generate curriculum content based on your course context. The AI will use available course information to create relevant content.
+              </p>
+
+              <!-- Context Selection -->
+              <div class="ai-generation__context">
+                <h4 class="ai-generation__subtitle">Context Selection</h4>
+                <p class="form__help-text form__help-text--small">
+                  Select which information the AI should use when generating content.
+                </p>
+                
+                <div class="ai-generation__context-checkboxes">
+                  <!-- Mandatory Context -->
+                  <div class="ai-generation__context-section">
+                    <h5 class="ai-generation__context-heading">Required Context</h5>
+                    <label class="checkbox-label checkbox-label--disabled">
+                      <input type="checkbox" name="ai-context-essentials" checked disabled>
+                      <span>Course Essentials (Name, Description, Teacher, Institution, Language)</span>
+                    </label>
+                    <label class="checkbox-label checkbox-label--disabled">
+                      <input type="checkbox" name="ai-context-classification" checked disabled>
+                      <span>Classification (Subject, Topics, Year Level)</span>
+                    </label>
+                    <label class="checkbox-label checkbox-label--disabled">
+                      <input type="checkbox" name="ai-context-pedagogy" checked disabled>
+                      <span>Pedagogy Approach</span>
+                    </label>
+                  </div>
+
+                  <!-- Optional Context -->
+                  <div class="ai-generation__context-section">
+                    <h5 class="ai-generation__context-heading">Optional Context</h5>
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="ai-context-schedule" checked>
+                      <span>Schedule Settings</span>
+                    </label>
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="ai-context-structure" checked>
+                      <span>Content Structure (Topics, Objectives, Tasks)</span>
+                    </label>
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="ai-context-existing">
+                      <span>Existing Curriculum Content</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Generation Options -->
+              <div class="ai-generation__options">
+                <h4 class="ai-generation__subtitle">What to Generate</h4>
+                <p class="form__help-text form__help-text--small">
+                  Choose what content to generate. The AI will update the curriculum while preserving existing content where possible.
+                </p>
+
+                <div class="ai-generation__buttons">
+                  <button type="button" class="button button--primary" data-ai-generate="all">
+                    Generate All
+                  </button>
+                  <button type="button" class="button button--outline" data-ai-generate="modules">
+                    Generate Module Names
+                  </button>
+                  <button type="button" class="button button--outline" data-ai-generate="lessons">
+                    Generate Lesson Names
+                  </button>
+                  <button type="button" class="button button--outline" data-ai-generate="topics">
+                    Generate Topic Titles
+                  </button>
+                  <button type="button" class="button button--outline" data-ai-generate="objectives">
+                    Generate Objectives
+                  </button>
+                  <button type="button" class="button button--outline" data-ai-generate="tasks">
+                    Generate Tasks
+                  </button>
+                </div>
+
+                <!-- Status Display -->
+                <div class="ai-generation__status" id="ai-generation-status" style="display: none;">
+                  <div class="ai-generation__status-content">
+                    <div class="spinner"></div>
+                    <span class="ai-generation__status-text">Initializing AI model...</span>
+                  </div>
+                  <div class="ai-generation__progress-bar">
+                    <div class="ai-generation__progress-fill" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </form>
         </section>
 
         <section class="article__preview">

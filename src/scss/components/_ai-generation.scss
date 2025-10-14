@@ -1,0 +1,152 @@
+// ==========================================================================
+// AI CURRICULUM GENERATION
+// ==========================================================================
+
+.ai-generation {
+  &__context {
+    margin-bottom: var(--spacing-6);
+  }
+
+  &__subtitle {
+    margin: 0 0 var(--spacing-2);
+    font-size: var(--font-size-medium);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+  }
+
+  &__context-checkboxes {
+    display: grid;
+    gap: var(--spacing-4);
+  }
+
+  &__context-section {
+    padding: var(--spacing-4);
+    background: var(--color-neutral-25);
+    border-radius: var(--border-radius-medium);
+    border: 1px solid var(--color-neutral-200);
+  }
+
+  &__context-heading {
+    margin: 0 0 var(--spacing-3);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+  }
+
+  &__options {
+    margin-top: var(--spacing-6);
+  }
+
+  &__buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-3);
+    margin-top: var(--spacing-4);
+  }
+
+  &__status {
+    margin-top: var(--spacing-4);
+    padding: var(--spacing-4);
+    background: var(--color-neutral-50);
+    border-radius: var(--border-radius-medium);
+    border: 1px solid var(--color-neutral-200);
+  }
+
+  &__status-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    margin-bottom: var(--spacing-3);
+  }
+
+  &__status-text {
+    font-size: var(--font-size-medium);
+    color: var(--color-text-secondary);
+  }
+
+  &__progress-bar {
+    height: 8px;
+    background: var(--color-neutral-200);
+    border-radius: var(--border-radius-small);
+    overflow: hidden;
+  }
+
+  &__progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark));
+    border-radius: var(--border-radius-small);
+    transition: width 0.3s ease;
+  }
+}
+
+// Checkbox styling
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2);
+  cursor: pointer;
+  user-select: none;
+
+  &--disabled {
+    opacity: 0.7;
+    cursor: default;
+  }
+
+  input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+    appearance: auto;
+    -webkit-appearance: checkbox;
+    -moz-appearance: checkbox;
+
+    &:disabled {
+      cursor: default;
+    }
+  }
+
+  span {
+    font-size: var(--font-size-base);
+    color: var(--color-text-primary);
+    line-height: 1.5;
+  }
+
+  &:hover:not(.checkbox-label--disabled) {
+    background: var(--color-neutral-50);
+    border-radius: var(--border-radius-small);
+  }
+}
+
+// AI-specific button styling
+.button--ai {
+  // Remove special styling, just use default button styles
+  font-weight: var(--font-weight-medium);
+}
+
+// Spinner animation
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--color-neutral-300);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Help text variations
+.form__help-text {
+  &--small {
+    font-size: var(--font-size-small);
+    margin-bottom: var(--spacing-2);
+  }
+}

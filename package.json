@@ -57,6 +57,7 @@
   },
   "homepage": "https://github.com/[your-username]/neptino#readme",
   "dependencies": {
+    "@huggingface/transformers": "^3.7.5",
     "@pixi/devtools": "^2.0.1",
     "@pixi/layout": "^3.1.0",
     "@supabase/supabase-js": "^2.54.0",

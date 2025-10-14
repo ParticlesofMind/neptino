@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neptino ML Demo - Phi-3.5 Mini</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 2.5rem;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 1.1rem;
+    }
+
+    .status-card {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 30px;
+      border-left: 4px solid #667eea;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+
+    .status-indicator.loading {
+      background: #ffc107;
+      animation: pulse 1s infinite;
+    }
+
+    .status-indicator.ready {
+      background: #28a745;
+    }
+
+    .status-indicator.error {
+      background: #dc3545;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 15px 25px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+
+    button:hover:not(:disabled) {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .input-section {
+      margin-bottom: 30px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 100px;
+      transition: border-color 0.3s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .output-section {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .output-section h3 {
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .output-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #667eea;
+      transition: width 0.3s ease;
+      border-radius: 4px;
+    }
+
+    .progress-text {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .settings {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .setting-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .setting-group input {
+      padding: 8px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+
+    .setting-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .info-box {
+      background: #e7f3ff;
+      border-left: 4px solid #2196F3;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    .info-box strong {
+      display: block;
+      margin-bottom: 5px;
+      color: #1976D2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧠 Neptino Intelligence</h1>
+    <p class="subtitle">Phi-3.5 Mini (3.8B) - On-device AI powered by Transformers.js</p>
+
+    <div class="status-card">
+      <div>
+        <span class="status-indicator loading" id="statusIndicator"></span>
+        <strong id="statusText">Initializing...</strong>
+      </div>
+      <div class="progress-bar" id="progressBar" style="display: none;">
+        <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+      </div>
+      <div class="progress-text" id="progressText"></div>
+    </div>
+
+    <div class="info-box">
+      <strong>ℹ️ First-time Setup</strong>
+      The model (~2.4GB) will download on first load. Subsequent loads are instant from cache.
+    </div>
+
+    <div class="controls">
+      <button id="loadBtn" onclick="loadModel()">Load Model</button>
+      <button id="generateBtn" onclick="generateText()" disabled>Generate Text</button>
+      <button id="chatBtn" onclick="chatDemo()" disabled>Chat Demo</button>
+      <button id="eduBtn" onclick="eduDemo()" disabled>Educational Demo</button>
+    </div>
+
+    <div class="input-section">
+      <label for="promptInput">Enter your prompt:</label>
+      <textarea id="promptInput" placeholder="e.g., Explain quantum mechanics in simple terms...">Explain the water cycle in a way that a 5th grade student would understand.</textarea>
+    </div>
+
+    <div class="settings">
+      <div class="setting-group">
+        <label for="maxTokens">Max Tokens:</label>
+        <input type="number" id="maxTokens" value="256" min="50" max="2048">
+      </div>
+      <div class="setting-group">
+        <label for="temperature">Temperature:</label>
+        <input type="number" id="temperature" value="0.7" min="0" max="1" step="0.1">
+      </div>
+      <div class="setting-group">
+        <label for="topP">Top P:</label>
+        <input type="number" id="topP" value="0.9" min="0" max="1" step="0.1">
+      </div>
+    </div>
+
+    <div class="output-section">
+      <h3>📝 Output</h3>
+      <div class="output-content" id="output">Click "Load Model" to begin...</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { phi3Model } from '/src/machine-learning/index.ts';
+
+    window.phi3Model = phi3Model;
+    let isModelLoaded = false;
+
+    function updateStatus(text, state = 'loading') {
+      const indicator = document.getElementById('statusIndicator');
+      const statusText = document.getElementById('statusText');
+      
+      indicator.className = `status-indicator ${state}`;
+      statusText.textContent = text;
+    }
+
+    function updateProgress(progress, text = '') {
+      const progressBar = document.getElementById('progressBar');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      
+      if (progress !== undefined) {
+        progressBar.style.display = 'block';
+        progressFill.style.width = `${progress}%`;
+      } else {
+        progressBar.style.display = 'none';
+      }
+      
+      progressText.textContent = text;
+    }
+
+    window.loadModel = async function() {
+      const loadBtn = document.getElementById('loadBtn');
+      const output = document.getElementById('output');
+      
+      loadBtn.disabled = true;
+      output.textContent = 'Loading Phi-3.5 Mini model...\n\n';
+      updateStatus('Loading model...', 'loading');
+      
+      try {
+        await phi3Model.load(undefined, (progress) => {
+          output.textContent += `${progress.status}\n`;
+          if (progress.progress !== undefined) {
+            updateProgress(progress.progress, progress.status);
+          }
+          output.scrollTop = output.scrollHeight;
+        });
+        
+        isModelLoaded = true;
+        updateStatus('Model ready!', 'ready');
+        updateProgress(100, 'Ready for inference');
+        output.textContent += '\n✅ Model loaded successfully!\nReady for inference.';
+        
+        // Enable action buttons
+        document.getElementById('generateBtn').disabled = false;
+        document.getElementById('chatBtn').disabled = false;
+        document.getElementById('eduBtn').disabled = false;
+        
+      } catch (error) {
+        updateStatus('Error loading model', 'error');
+        output.textContent += `\n❌ Error: ${error.message}`;
+        loadBtn.disabled = false;
+      }
+    };
+
+    window.generateText = async function() {
+      if (!isModelLoaded) {
+        alert('Please load the model first');
+        return;
+      }
+      
+      const output = document.getElementById('output');
+      const prompt = document.getElementById('promptInput').value;
+      const maxTokens = parseInt(document.getElementById('maxTokens').value);
+      const temperature = parseFloat(document.getElementById('temperature').value);
+      const topP = parseFloat(document.getElementById('topP').value);
+      
+      output.textContent = `Generating response...\nPrompt: ${prompt}\n\n`;
+      updateStatus('Generating...', 'loading');
+      
+      try {
+        const result = await phi3Model.generate(prompt, {
+          maxNewTokens: maxTokens,
+          temperature: temperature,
+          topP: topP
+        });
+        
+        updateStatus('Model ready!', 'ready');
+        output.textContent = `Prompt: ${prompt}\n\n`;
+        output.textContent += `Response:\n${result.text}\n\n`;
+        output.textContent += `⚡ Generated in ${result.inferenceTime?.toFixed(2)}ms`;
+        
+      } catch (error) {
+        updateStatus('Error generating', 'error');
+        output.textContent += `\n❌ Error: ${error.message}`;
+      }
+    };
+
+    window.chatDemo = async function() {
+      if (!isModelLoaded) {
+        alert('Please load the model first');
+        return;
+      }
+      
+      const output = document.getElementById('output');
+      output.textContent = 'Chat Demo Starting...\n\n';
+      updateStatus('Chatting...', 'loading');
+      
+      try {
+        const messages = [
+          {
+            role: 'system',
+            content: 'You are a helpful educational assistant for Neptino.'
+          },
+          {
+            role: 'user',
+            content: 'How can I create an engaging lesson about fractions?'
+          }
+        ];
+        
+        const result = await phi3Model.chat(messages);
+        
+        updateStatus('Model ready!', 'ready');
+        output.textContent = 'User: How can I create an engaging lesson about fractions?\n\n';
+        output.textContent += `Assistant:\n${result.text}`;
+        
+      } catch (error) {
+        updateStatus('Error in chat', 'error');
+        output.textContent += `\n❌ Error: ${error.message}`;
+      }
+    };
+
+    window.eduDemo = async function() {
+      if (!isModelLoaded) {
+        alert('Please load the model first');
+        return;
+      }
+      
+      const output = document.getElementById('output');
+      output.textContent = 'Educational Content Generation...\n\n';
+      updateStatus('Generating lesson...', 'loading');
+      
+      try {
+        const prompt = `Create a brief lesson plan about photosynthesis for 6th grade students. Include:
+1. Learning objectives
+2. Key concepts
+3. One hands-on activity`;
+        
+        const result = await phi3Model.generate(prompt, {
+          maxNewTokens: 400,
+          temperature: 0.8
+        });
+        
+        updateStatus('Model ready!', 'ready');
+        output.textContent = `Generated Lesson Plan:\n\n${result.text}`;
+        
+      } catch (error) {
+        updateStatus('Error generating', 'error');
+        output.textContent += `\n❌ Error: ${error.message}`;
+      }
+    };
+
+    // Initial status
+    updateStatus('Ready to load model', 'ready');
+  </script>
+</body>
+</html>

@@ -43,7 +43,8 @@ export default defineConfig({
   },
   // Enhanced dependency optimization
   optimizeDeps: {
-    include: ['@supabase/supabase-js', 'pixi.js', '@pixi/devtools'],
+    include: ['@supabase/supabase-js', 'pixi.js', '@pixi/devtools', '@huggingface/transformers'],
+    exclude: ['@huggingface/transformers'], // Exclude to prevent pre-bundling issues
     force: false, // Don't force re-optimization unless needed
   },
   // Better build configuration
@@ -57,9 +58,14 @@ export default defineConfig({
         manualChunks: {
           vendor: ['@supabase/supabase-js'],
           pixi: ['pixi.js', '@pixi/devtools', '@pixi/layout'],
+          ml: ['@huggingface/transformers'],
         },
       },
     },
+  },
+  // Support for WebAssembly (needed for transformers.js ONNX runtime)
+  worker: {
+    format: 'es',
   },
   // Add base URL for proper asset loading
   base: '/',
