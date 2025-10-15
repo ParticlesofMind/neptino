@@ -131,6 +131,8 @@
     gap: var(--spacing-4);
     align-content: start;
     min-width: 0;
+    // Ensure config section is scrollable when content is large
+    max-height: 100%;
 }
 
 .article__preview {
@@ -138,6 +140,8 @@
     flex-direction: column;
     gap: var(--spacing-4);
     justify-content: flex-start;
+    // Ensure preview section is scrollable when content is large
+    max-height: 100%;
 }
 
 .article[data-course-section]>.form {
@@ -164,7 +168,13 @@
     overflow-y: auto;
 }
 
+// Responsive adjustments for split-screen sections
 @media (max-width: 48rem) {
+    .article__config,
+    .article__preview {
+        height: auto;
+        min-height: 300px;
+    }
 
     .article__config,
     .article__preview,

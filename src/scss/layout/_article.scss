@@ -35,7 +35,8 @@
             grid-auto-flow: column;
         }
 
-        @media (max-width: 900px) {
+        // Only stack on very small screens (mobile)
+        @media (max-width: 48rem) {
             grid-template-columns: minmax(0, 1fr);
             grid-template-areas:
                 "header"
@@ -45,16 +46,26 @@
     }
 
     &--templates {
-        @media (max-width: 1100px) {
+        // Templates can use same breakpoint as others
+        @media (max-width: 48rem) {
             grid-template-columns: minmax(0, 1fr);
+            grid-template-areas:
+                "header"
+                "config"
+                "preview";
         }
     }
 
     &--pedagogy {
-        grid-template-columns: minmax(0, 1.4fr) clamp(22rem, 28vw, 30rem);
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr);
 
-        @media (max-width: 900px) {
+        // Only stack on very small screens (mobile)
+        @media (max-width: 48rem) {
             grid-template-columns: minmax(0, 1fr);
+            grid-template-areas:
+                "header"
+                "config"
+                "preview";
         }
     }
 }
