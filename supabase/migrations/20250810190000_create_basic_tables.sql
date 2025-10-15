@@ -49,9 +49,9 @@ GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
 
 -- Create storage bucket for courses
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('courses', 'courses', true)
-ON CONFLICT (id) DO UPDATE SET public = true;
+INSERT INTO storage.buckets (id, name)
+VALUES ('courses', 'courses')
+ON CONFLICT (id) DO NOTHING;
 
 -- Create a simple function to handle user creation
 CREATE OR REPLACE FUNCTION public.handle_new_user()

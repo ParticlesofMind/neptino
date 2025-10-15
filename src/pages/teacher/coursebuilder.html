@@ -362,10 +362,7 @@
             <!-- Module Organization -->
             <div class="curriculum-config__group curriculum-config__group--modules">
               <h3 class="curriculum-config__section-title">Module Organization</h3>
-              <p class="form__help-text">
-                Choose how lessons are grouped within your course.
-              </p>
-              
+            
               <div class="module-organization-options">
                 <label class="module-organization-option">
                   <input type="radio" name="module-organization" value="linear" id="module-org-linear" checked>
@@ -403,10 +400,6 @@
             <!-- Content Volume -->
             <div class="curriculum-config__group curriculum-config__group--content-volume">
               <h3 class="curriculum-config__section-title">Content Volume</h3>
-              <p class="form__help-text">
-                Define the duration and depth of a standard lesson.
-              </p>
-              
               <div class="content-volume-options">
                 <label class="content-volume-option">
                   <input type="radio" name="content-volume" value="mini" data-duration="mini" data-max="30">
@@ -457,7 +450,6 @@
 
             <!-- Numeric Structure Fields -->
             <div class="curriculum-config__group curriculum-config__group--structure">
-              <h3 class="curriculum-config__section-title">Lesson Structure</h3>
               <p class="form__help-text">
                 Fine-tune the content density for each lesson.
               </p>
@@ -483,10 +475,7 @@
             <!-- Course Type -->
             <div class="curriculum-config__group curriculum-config__group--course-type">
               <h3 class="curriculum-config__section-title">Course Type</h3>
-              <p class="form__help-text">
-                Defines which templates are automatically available and applied within the course.
-              </p>
-              
+            
               <div class="course-type-options">
                 <label class="course-type-option">
                   <input type="radio" name="course-type" value="minimalist" id="course-type-minimalist">
@@ -549,9 +538,6 @@
             <!-- Template Placement Section -->
             <div class="curriculum-config__group curriculum-config__group--templates">
               <h3 class="curriculum-config__section-title">Template Placement</h3>
-              <p class="form__help-text">
-                Configure where templates (certificates, assessments, etc.) should appear in your course.
-              </p>
               <div class="template-placement" id="curriculum-template-placement-list">
                 <!-- Template placement cards will be rendered here by JavaScript -->
               </div>
@@ -559,18 +545,8 @@
 
             <!-- AI Generation Section -->
             <div class="curriculum-config__group curriculum-config__group--ai-generation">
-              <h3 class="curriculum-config__section-title">AI-Assisted Curriculum Generation</h3>
-              <p class="form__help-text">
-                Use AI to generate curriculum content based on your course context. The AI will use available course information to create relevant content.
-              </p>
-
-              <!-- Context Selection -->
-              <div class="ai-generation__context">
-                <h4 class="ai-generation__subtitle">Context Selection</h4>
-                <p class="form__help-text form__help-text--small">
-                  Select which information the AI should use when generating content.
-                </p>
-                
+              <h3 class="curriculum-config__section-title">Generate Curriculum</h3>
+              <div class="ai-generation__context">                
                 <div class="ai-generation__context-checkboxes">
                   <!-- Mandatory Context -->
                   <div class="ai-generation__context-section">
@@ -607,13 +583,7 @@
                   </div>
                 </div>
               </div>
-
-              <!-- Generation Options -->
               <div class="ai-generation__options">
-                <h4 class="ai-generation__subtitle">What to Generate</h4>
-                <p class="form__help-text form__help-text--small">
-                  Choose what content to generate. The AI will update the curriculum while preserving existing content where possible.
-                </p>
 
                 <div class="ai-generation__buttons">
                   <button type="button" class="button button--primary" data-ai-generate="all">
@@ -655,8 +625,7 @@
         <section class="article__preview">
           <div class="curriculum__preview">
             <nav class="curriculum__controls" aria-label="Curriculum view modes">
-              <button class="button button--small button--outline" type="button" data-mode="modules"
-                style="display: none;">
+              <button class="button button--small button--outline" type="button" data-mode="modules">
                 Modules
               </button>
               <button class="button button--small button--outline" type="button" data-mode="titles">
@@ -711,11 +680,287 @@
 
       <!-- Students Article -->
       <article id="students" data-course-section class="article article--students">
-        <header class="article__header">
-          <h2 class="article__title">Students</h2>
+        <header class="article__header students__header">
+          <div class="students__heading">
+            <h2 class="article__title">Students</h2>
+            <p class="students__subtitle">
+              Import rosters, personalise profiles for Albert AI, and keep every learner aligned with course templates.
+            </p>
+          </div>
+          <div class="article__actions students__actions">
+            <button class="button button--primary button--medium students__trigger" type="button"
+              data-modal-target="students-upload-modal" id="students-upload-btn">
+              Upload Students
+            </button>
+            <button class="button button--outline button--medium students__trigger" type="button"
+              data-modal-target="students-manual-modal" id="students-manual-btn">
+              Manual Entry
+            </button>
+          </div>
         </header>
 
-        <p class="placeholder">Students content will be added here.</p>
+        <section class="article__config students__config" aria-labelledby="students-roster-title">
+          <header class="students__section-header">
+            <h3 class="students__section-title" id="students-roster-title">Roster overview</h3>
+            <button class="button button--subtle button--small" type="button" id="students-refresh-btn"
+              aria-label="Refresh roster data">
+              Refresh
+            </button>
+          </header>
+
+          <p class="students__description">
+            Upload spreadsheets, documents, or connect Google Sheets to populate your roster automatically. Parsed data
+            is validated and mapped to Supabase. When an import completes, profiles update for adaptive lesson planning
+            and Albert AI tutoring.
+          </p>
+
+          <div class="students__panels" role="list">
+            <article class="students__panel students__panel--status" role="listitem" aria-live="polite">
+              <h4 class="students__panel-title">Current roster</h4>
+              <dl class="students__metrics">
+                <div class="students__metric">
+                  <dt>Total students</dt>
+                  <dd id="students-count-total">0</dd>
+                </div>
+                <div class="students__metric">
+                  <dt>Grade levels covered</dt>
+                  <dd id="students-count-grades">—</dd>
+                </div>
+                <div class="students__metric">
+                  <dt>Profiles synced</dt>
+                  <dd id="students-count-synced">0</dd>
+                </div>
+              </dl>
+              <p class="students__status-text" id="students-status-text">
+                No students imported yet. Upload a roster to get started.
+              </p>
+            </article>
+
+            <article class="students__panel students__panel--activity" role="listitem">
+              <h4 class="students__panel-title">Recent imports</h4>
+              <ul class="students__activity-list" id="students-activity-list">
+                <li class="students__activity-item students__activity-item--empty">
+                  Nothing yet — uploads will appear here with timestamps and status.
+                </li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="students__feedback" id="students-feedback" role="alert" aria-live="assertive" hidden></div>
+        </section>
+
+        <section class="article__preview students__preview" aria-labelledby="students-preview-title">
+          <header class="students__section-header">
+            <h3 class="students__section-title" id="students-preview-title">Roster preview</h3>
+            <div class="students__preview-actions">
+              <button class="button button--subtle button--small" type="button" id="students-export-btn">
+                Export CSV
+              </button>
+              <button class="button button--subtle button--small" type="button" id="students-clear-preview-btn">
+                Clear Preview
+              </button>
+            </div>
+          </header>
+
+          <div class="students__table-wrapper" role="region" aria-live="polite" aria-busy="false"
+            aria-describedby="students-preview-empty">
+            <table class="students__table" id="students-preview-table">
+              <thead>
+                <tr>
+                  <th scope="col">First name</th>
+                  <th scope="col">Last name</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">Student ID</th>
+                  <th scope="col">Grade level</th>
+                  <th scope="col">Learning style</th>
+                  <th scope="col">Initial assessment</th>
+                </tr>
+              </thead>
+              <tbody id="students-preview-body">
+                <tr class="students__preview-empty" id="students-preview-empty">
+                  <td colspan="7">
+                    No roster loaded yet. Upload or enter students to generate a preview.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </article>
+
+      <article class="modal modal--coursebuilder modal--students" id="students-upload-modal" aria-hidden="true"
+        role="dialog" aria-labelledby="students-upload-title" aria-modal="true">
+        <div class="modal__content">
+          <header class="modal__header">
+            <h2 class="modal__title" id="students-upload-title">Upload students</h2>
+            <button class="button button--subtle button--small modal__close" type="button"
+              data-modal-close="students-upload-modal" aria-label="Close upload students modal">
+              &times;
+            </button>
+          </header>
+          <form class="form students-upload__form modal__body" id="students-upload-form" novalidate>
+            <fieldset class="students-upload__fieldset">
+              <legend class="students-upload__legend">Select a roster file</legend>
+              <label class="form__label form__label--stacked" for="students-upload-input">
+                Supported formats: Excel (XLSX), CSV, Google Sheets, PDF, Word (DOCX)
+                <input class="input input--file" type="file" id="students-upload-input" name="rosterFile"
+                  accept=".csv,.tsv,.xls,.xlsx,.ods,.pdf,.docx,.doc,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/csv"
+                  aria-describedby="students-upload-help" />
+              </label>
+              <p class="students-upload__hint" id="students-upload-help">
+                We use SheetJS for spreadsheets, pdf.js for PDFs, and Mammoth for DOCX to extract tables and lists.
+              </p>
+            </fieldset>
+
+            <fieldset class="students-upload__fieldset">
+              <legend class="students-upload__legend">Import from Google Sheets</legend>
+              <label class="form__label" for="students-sheets-url">
+                Paste a shareable URL
+                <input class="input" type="url" id="students-sheets-url" name="sheetsUrl"
+                  placeholder="https://docs.google.com/spreadsheets/d/..." />
+              </label>
+              <div class="students-upload__actions">
+                <button class="button button--outline button--small" type="button" id="students-fetch-sheets-btn">
+                  Fetch Sheet
+                </button>
+                <button class="button button--subtle button--small" type="button" id="students-sheets-help-btn">
+                  How do I share a sheet?
+                </button>
+              </div>
+            </fieldset>
+
+            <section class="students-upload__mapping" id="students-mapping" hidden aria-live="polite">
+              <header class="students-upload__mapping-header">
+                <h3 class="students-upload__mapping-title">Map your columns</h3>
+                <p class="students-upload__mapping-text">
+                  We could not automatically match every column. Map each field below to continue.
+                </p>
+              </header>
+              <div class="students-upload__mapping-grid" id="students-mapping-grid" role="group"
+                aria-describedby="students-mapping-support">
+                <!-- Mapping controls injected by studentsUploadManager.ts -->
+              </div>
+              <p class="students-upload__mapping-support" id="students-mapping-support">
+                Required fields: First name and Last name. Optional fields improve personalised pathways.
+              </p>
+            </section>
+
+            <div class="students-upload__feedback" id="students-upload-feedback" role="alert" hidden></div>
+
+            <footer class="modal__footer">
+              <div class="students-upload__status" aria-live="assertive" id="students-upload-status" hidden>
+                <span class="students-upload__spinner" aria-hidden="true"></span>
+                <span class="students-upload__status-text">Processing roster…</span>
+              </div>
+              <button class="button button--outline" type="button" data-modal-close="students-upload-modal">
+                Cancel
+              </button>
+              <button class="button button--primary" type="submit" id="students-upload-submit-btn" disabled>
+                Import Students
+              </button>
+            </footer>
+          </form>
+        </div>
+      </article>
+
+      <article class="modal modal--coursebuilder modal--students" id="students-manual-modal" aria-hidden="true"
+        role="dialog" aria-labelledby="students-manual-title" aria-modal="true">
+        <div class="modal__content">
+          <header class="modal__header">
+            <h2 class="modal__title" id="students-manual-title">Manual student entry</h2>
+            <button class="button button--subtle button--small modal__close" type="button"
+              data-modal-close="students-manual-modal" aria-label="Close manual entry modal">
+              &times;
+            </button>
+          </header>
+          <form class="form students-manual__form modal__body" id="students-manual-form" novalidate>
+            <fieldset class="students-manual__fieldset">
+              <legend class="students-manual__legend">Single student</legend>
+              <div class="students-manual__grid">
+                <label class="form__label" for="manual-first-name">
+                  First name*
+                  <input class="input" type="text" id="manual-first-name" name="first_name" autocomplete="given-name"
+                    required />
+                </label>
+                <label class="form__label" for="manual-last-name">
+                  Last name*
+                  <input class="input" type="text" id="manual-last-name" name="last_name" autocomplete="family-name"
+                    required />
+                </label>
+                <label class="form__label" for="manual-email">
+                  Email
+                  <input class="input" type="email" id="manual-email" name="email"
+                    placeholder="learner@school.org (optional)" autocomplete="email" />
+                </label>
+                <label class="form__label" for="manual-student-id">
+                  Student ID
+                  <input class="input" type="text" id="manual-student-id" name="student_id"
+                    placeholder="Auto-generated if blank" />
+                </label>
+                <label class="form__label" for="manual-grade-level">
+                  Grade level
+                  <select class="input input--select" id="manual-grade-level" name="grade_level">
+                    <option value="">Select grade level</option>
+                    <option value="Elementary">Elementary</option>
+                    <option value="Middle">Middle</option>
+                    <option value="High School">High School</option>
+                    <option value="Undergraduate">Undergraduate</option>
+                    <option value="Professional">Professional</option>
+                  </select>
+                </label>
+                <label class="form__label" for="manual-enrollment-date">
+                  Enrollment date
+                  <input class="input" type="date" id="manual-enrollment-date" name="enrollment_date" />
+                </label>
+                <label class="form__label form__label--stacked" for="manual-learning-style">
+                  Learning style preferences
+                  <input class="input" type="text" id="manual-learning-style" name="learning_style"
+                    placeholder="e.g., Visual, Collaborative" />
+                </label>
+                <label class="form__label form__label--stacked" for="manual-assessment-score">
+                  Initial assessment score
+                  <input class="input" type="number" step="0.1" id="manual-assessment-score" name="assessment_score"
+                    placeholder="Optional score" />
+                </label>
+                <label class="form__label form__label--stacked" for="manual-notes">
+                  Custom notes
+                  <textarea class="form__textarea" id="manual-notes" name="notes" rows="3"
+                    placeholder="Pedagogy flags like ‘needs extra simulations’"></textarea>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="students-manual__fieldset">
+              <legend class="students-manual__legend">Bulk entry</legend>
+              <p class="students-manual__bulk-hint">
+                Paste CSV-style rows (First name, Last name, Email, Student ID, Grade level, Learning style,
+                Assessment score, Enrollment date, Notes). Missing optional fields will fall back to defaults.
+              </p>
+              <label class="form__label form__label--stacked" for="manual-bulk-input">
+                Bulk students
+                <textarea class="form__textarea students-manual__bulk-input" id="manual-bulk-input"
+                  name="bulk_students" rows="6"
+                  placeholder="Jane,Doe,jane@school.org,12345,High School,Visual,88,2024-08-24,Loves experiments">
+                </textarea>
+              </label>
+            </fieldset>
+
+            <div class="students-manual__feedback" id="students-manual-feedback" role="alert" hidden></div>
+
+            <footer class="modal__footer">
+              <div class="students-manual__status" aria-live="assertive" id="students-manual-status" hidden>
+                <span class="students-manual__spinner" aria-hidden="true"></span>
+                <span class="students-manual__status-text">Saving students…</span>
+              </div>
+              <button class="button button--outline" type="button" data-modal-close="students-manual-modal">
+                Cancel
+              </button>
+              <button class="button button--primary" type="submit" id="students-manual-submit-btn">
+                Save Students
+              </button>
+            </footer>
+          </form>
+        </div>
       </article>
 
       <!-- Pedagogy Article -->

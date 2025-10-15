@@ -35,4 +35,9 @@ COMMENT ON COLUMN public.courses.course_layout IS 'JSONB column containing cours
 -- Create an index on course_layout for better query performance
 CREATE INDEX IF NOT EXISTS idx_courses_course_layout_gin ON public.courses USING gin (course_layout);
 
-RAISE NOTICE 'Successfully renamed course_settings to course_layout and updated structure';
+-- Log success
+DO $$
+BEGIN
+  RAISE NOTICE 'Successfully renamed course_settings to course_layout and updated structure';
+END
+$$;

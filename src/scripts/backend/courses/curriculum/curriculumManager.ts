@@ -202,6 +202,13 @@ class CurriculumManager {
 
  private async initializeCurriculum(): Promise<void> {
  try {
+ console.log('\n╔════════════════════════════════════════════════════════════════╗');
+ console.log('║         📚 LOADING ALL COURSE CONTEXT DATA                    ║');
+ console.log('╚════════════════════════════════════════════════════════════════╝\n');
+ 
+ // Load all course data from database to show comprehensive context
+ await this.logAllCourseData();
+
  // Load schedule data first
  await this.loadScheduleData();
 
@@ -226,6 +233,241 @@ class CurriculumManager {
  } catch (error) {
  console.error("Error initializing curriculum:", error);
  }
+ }
+
+ private async logAllCourseData(): Promise<void> {
+   if (!this.courseId) {
+     console.warn('⚠️ No course ID - skipping comprehensive data logging');
+     return;
+   }
+
+   try {
+     // Query course data first
+     const { data: courseData, error } = await supabase
+       .from("courses")
+       .select("*")
+       .eq("id", this.courseId)
+       .single();
+
+     if (error) throw error;
+     if (!courseData) {
+       console.warn('⚠️ No course data found');
+       return;
+     }
+
+     // Query teacher profile separately if we have a teacher_id
+     let teacherProfile = null;
+     if (courseData.teacher_id) {
+       const { data: profileData } = await supabase
+         .from("profiles")
+         .select("id, email, username, full_name")
+         .eq("id", courseData.teacher_id)
+         .single();
+       teacherProfile = profileData;
+     }
+
+     console.log('\n┌─────────────────────────────────────────────────────────────┐');
+     console.log('│ 📋 1. COURSE ESSENTIALS                                     │');
+     console.log('└─────────────────────────────────────────────────────────────┘');
+     console.log('Course ID:', courseData.id);
+     console.log('Course Title:', courseData.title);
+     console.log('Course Tagline:', courseData.tagline);
+     console.log('Teacher ID:', courseData.teacher_id);
+     console.log('Teacher Profile:', teacherProfile || 'Not loaded');
+     console.log('Created:', courseData.created_at);
+     console.log('Updated:', courseData.updated_at);
+
+     console.log('\n┌─────────────────────────────────────────────────────────────┐');
+     console.log('│ 🏷️  2. CLASSIFICATION                                       │');
+     console.log('└─────────────────────────────────────────────────────────────┘');
+     console.log('Subject:', courseData.subject);
+     console.log('Grade Level:', courseData.grade_level);
+     console.log('Difficulty:', courseData.difficulty);
+     console.log('Tags:', courseData.tags);
+     console.log('Category:', courseData.category);
+
+     console.log('\n┌─────────────────────────────────────────────────────────────┐');
+     console.log('│ 🎯 3. PEDAGOGY APPROACH                                     │');
+     console.log('└─────────────────────────────────────────────────────────────┘');
+     console.log('Learning Plane:', courseData.course_pedagogy?.learningPlane || 'Not set');
+     console.log('Instructional Approach:', courseData.course_pedagogy?.instructionalApproach || 'Not set');
+     console.log('Assessment Strategy:', courseData.course_pedagogy?.assessmentStrategy || 'Not set');
+     console.log('Full Pedagogy Config:', courseData.course_pedagogy);
+
+     console.log('\n┌─────────────────────────────────────────────────────────────┐');
+     console.log('│ 📅 4. SCHEDULE SETTINGS                                     │');
+     console.log('└─────────────────────────────────────────────────────────────┘');
+     console.log('Total Sessions:', courseData.course_sessions);
+     console.log('Start Date:', courseData.start_date);
+     console.log('End Date:', courseData.end_date);
+     console.log('Schedule Settings:', courseData.schedule_settings);
+     
+     if (courseData.schedule_settings && Array.isArray(courseData.schedule_settings) && courseData.schedule_settings.length > 0) {
+       const firstLesson = courseData.schedule_settings[0];
+       console.log('\nFirst Lesson Example:');
+       console.log('  - Date:', firstLesson.date);
+       console.log('  - Day:', firstLesson.day);
+       console.log('  - Start Time:', firstLesson.startTime);
+       console.log('  - End Time:', firstLesson.endTime);
+       console.log('  - Duration:', this.calculateLessonDuration(firstLesson.startTime, firstLesson.endTime), 'minutes');
+     }
+
+     console.log('\n┌─────────────────────────────────────────────────────────────┐');
+     console.log('│ 📚 5. CONTENT STRUCTURE (Curriculum Data)                  │');
+     console.log('└─────────────────────────────────────────────────────────────┘');
+     console.log('Curriculum Data:', courseData.curriculum_data);
+     
+     if (courseData.curriculum_data) {
+       console.log('\nCurriculum Structure:');
+       console.log('  - Module Organization:', courseData.curriculum_data.moduleOrganization);
+       console.log('  - Course Type:', courseData.curriculum_data.courseType);
+       console.log('  - Structure Config:', courseData.curriculum_data.structure);
+       
+       if (courseData.curriculum_data.modules && courseData.curriculum_data.modules.length > 0) {
+         console.log('  - Modules Count:', courseData.curriculum_data.modules.length);
+         console.log('  - Modules:', courseData.curriculum_data.modules.map((m: any) => ({
+           moduleNumber: m.moduleNumber,
+           title: m.title,
+           lessonsCount: m.lessons?.length || 0
+         })));
+       }
+       
+       if (courseData.curriculum_data.lessons && courseData.curriculum_data.lessons.length > 0) {
+         console.log('  - Lessons Count:', courseData.curriculum_data.lessons.length);
+         console.log('  - First Lesson:', courseData.curriculum_data.lessons[0]);
+       }
+       
+       if (courseData.curriculum_data.templatePlacements && courseData.curriculum_data.templatePlacements.length > 0) {
+         console.log('  - Template Placements:', courseData.curriculum_data.templatePlacements);
+       }
+     } else {
+       console.log('❌ No curriculum data yet - will be generated');
+     }
+
+     console.log('\n┌─────────────────────────────────────────────────────────────┐');
+     console.log('│ 📦 6. EXISTING CURRICULUM CONTENT                           │');
+     console.log('└─────────────────────────────────────────────────────────────┘');
+     
+     // Query canvas/lesson content
+     const { data: canvases, error: canvasError } = await supabase
+       .from('canvases')
+       .select('*')
+       .eq('course_id', this.courseId);
+
+     if (!canvasError && canvases && canvases.length > 0) {
+       console.log('Canvas/Lesson Content:');
+       console.log('  - Total Canvases:', canvases.length);
+       canvases.forEach((canvas, index) => {
+         console.log(`\n  Canvas ${index + 1}:`);
+         console.log('    - ID:', canvas.id);
+         console.log('    - Title:', canvas.title);
+         console.log('    - Lesson Number:', canvas.lesson_number);
+         console.log('    - Has Canvas Data:', !!canvas.canvas_data);
+         console.log('    - Created:', canvas.created_at);
+       });
+     } else {
+       console.log('❌ No canvas/lesson content yet');
+     }
+
+     console.log('\n╔════════════════════════════════════════════════════════════════╗');
+     console.log('║         ✅ COURSE CONTEXT DATA LOADED SUCCESSFULLY             ║');
+     console.log('╚════════════════════════════════════════════════════════════════╝\n');
+
+     // 🔥 THE BIG DUMP - Complete JSON of all context
+     console.log('\n\n');
+     console.log('═'.repeat(80));
+     console.log('🔥 COMPLETE CONTEXT JSON DUMP - ALL DATA IN ONE OBJECT 🔥');
+     console.log('═'.repeat(80));
+     console.log('\n');
+     
+     const completeContext = {
+       courseEssentials: {
+         id: courseData.id,
+         title: courseData.title,
+         tagline: courseData.tagline,
+         teacher_id: courseData.teacher_id,
+         teacherProfile: teacherProfile,
+         created_at: courseData.created_at,
+         updated_at: courseData.updated_at,
+         status: courseData.status,
+         is_published: courseData.is_published
+       },
+       classification: {
+         subject: courseData.subject,
+         grade_level: courseData.grade_level,
+         difficulty: courseData.difficulty,
+         tags: courseData.tags,
+         category: courseData.category
+       },
+       pedagogyApproach: courseData.course_pedagogy || {},
+       scheduleSettings: {
+         total_sessions: courseData.course_sessions,
+         start_date: courseData.start_date,
+         end_date: courseData.end_date,
+         schedule_settings: courseData.schedule_settings,
+         first_lesson_example: courseData.schedule_settings && courseData.schedule_settings.length > 0 ? {
+           date: courseData.schedule_settings[0].date,
+           day: courseData.schedule_settings[0].day,
+           startTime: courseData.schedule_settings[0].startTime,
+           endTime: courseData.schedule_settings[0].endTime,
+           calculated_duration_minutes: this.calculateLessonDuration(
+             courseData.schedule_settings[0].startTime, 
+             courseData.schedule_settings[0].endTime
+           )
+         } : null
+       },
+       contentStructure: {
+         curriculum_data: courseData.curriculum_data,
+         has_curriculum: !!courseData.curriculum_data,
+         module_organization: courseData.curriculum_data?.moduleOrganization,
+         course_type: courseData.curriculum_data?.courseType,
+         structure_config: courseData.curriculum_data?.structure,
+         modules: courseData.curriculum_data?.modules || [],
+         modules_count: courseData.curriculum_data?.modules?.length || 0,
+         lessons: courseData.curriculum_data?.lessons || [],
+         lessons_count: courseData.curriculum_data?.lessons?.length || 0,
+         template_placements: courseData.curriculum_data?.templatePlacements || [],
+         template_placements_count: courseData.curriculum_data?.templatePlacements?.length || 0
+       },
+       existingContent: {
+         canvases: canvases || [],
+         canvases_count: canvases?.length || 0,
+         has_lesson_content: canvases && canvases.length > 0
+       },
+       rawCourseData: courseData,
+       metadata: {
+         logged_at: new Date().toISOString(),
+         course_id: this.courseId,
+         total_data_points: Object.keys(courseData).length,
+         has_pedagogy: !!courseData.course_pedagogy,
+         has_schedule: !!(courseData.schedule_settings && courseData.schedule_settings.length > 0),
+         has_curriculum: !!courseData.curriculum_data,
+         has_canvases: !!(canvases && canvases.length > 0)
+       }
+     };
+
+     console.log(JSON.stringify(completeContext, null, 2));
+     
+     console.log('\n');
+     console.log('═'.repeat(80));
+     console.log('📊 CONTEXT SUMMARY STATS');
+     console.log('═'.repeat(80));
+     console.log(`Total Course Fields: ${Object.keys(courseData).length}`);
+     console.log(`Total Lessons: ${completeContext.contentStructure.lessons_count}`);
+     console.log(`Total Modules: ${completeContext.contentStructure.modules_count}`);
+     console.log(`Total Canvases: ${completeContext.existingContent.canvases_count}`);
+     console.log(`Total Schedule Entries: ${courseData.schedule_settings?.length || 0}`);
+     console.log(`Total Template Placements: ${completeContext.contentStructure.template_placements_count}`);
+     console.log(`Has Pedagogy Config: ${completeContext.metadata.has_pedagogy ? '✅' : '❌'}`);
+     console.log(`Has Schedule: ${completeContext.metadata.has_schedule ? '✅' : '❌'}`);
+     console.log(`Has Curriculum: ${completeContext.metadata.has_curriculum ? '✅' : '❌'}`);
+     console.log(`Has Canvas Content: ${completeContext.metadata.has_canvases ? '✅' : '❌'}`);
+     console.log('═'.repeat(80));
+     console.log('\n\n');
+
+   } catch (error) {
+     console.error('❌ Error loading course data for logging:', error);
+   }
  }
 
  private savePreviewMode(mode: PreviewMode): void {
@@ -2518,10 +2760,18 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
  private setModuleOrganization(organization: ModuleOrganizationType): void {
    this.moduleOrganization = organization;
 
-   // Show/hide Modules button
+   // Keep Modules button visible but grey out when "No Modules" (linear)
    const modulesButton = document.querySelector('button[data-mode="modules"]') as HTMLButtonElement;
    if (modulesButton) {
-     modulesButton.style.display = organization === 'linear' ? 'none' : 'inline-block';
+     if (organization === 'linear') {
+       modulesButton.disabled = true;
+       modulesButton.style.opacity = '0.5';
+       modulesButton.style.cursor = 'not-allowed';
+     } else {
+       modulesButton.disabled = false;
+       modulesButton.style.opacity = '1';
+       modulesButton.style.cursor = 'pointer';
+     }
    }
 
    // Show/hide and enable/disable custom module configuration
@@ -2930,11 +3180,21 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
       });
    }
 
-   // Update content with smooth transition
-   setTimeout(() => {
-     previewContainer.innerHTML = html;
-     this.bindEditableEvents();
-   }, 100);
+   // Add loading state before content swap
+   previewContainer.setAttribute('data-loading', 'true');
+   
+   // Use requestAnimationFrame for smoother rendering
+   requestAnimationFrame(() => {
+     setTimeout(() => {
+       previewContainer.innerHTML = html;
+       
+       // Remove loading state after content is inserted
+       requestAnimationFrame(() => {
+         previewContainer.removeAttribute('data-loading');
+         this.bindEditableEvents();
+       });
+     }, 50);
+   });
  }
 
  private bindEditableEvents(): void {
@@ -3214,10 +3474,18 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
      }
    }
 
-   // Show/hide Modules button in preview
+   // Keep Modules button visible but grey out when "No Modules" (linear)
    const modulesButton = document.querySelector('button[data-mode="modules"]') as HTMLButtonElement;
    if (modulesButton) {
-     modulesButton.style.display = this.moduleOrganization === 'linear' ? 'none' : 'inline-block';
+     if (this.moduleOrganization === 'linear') {
+       modulesButton.disabled = true;
+       modulesButton.style.opacity = '0.5';
+       modulesButton.style.cursor = 'not-allowed';
+     } else {
+       modulesButton.disabled = false;
+       modulesButton.style.opacity = '1';
+       modulesButton.style.cursor = 'pointer';
+     }
    }
  }
 

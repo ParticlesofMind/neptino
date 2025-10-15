@@ -37,9 +37,9 @@ GRANT CREATE ON SCHEMA public TO anon;
 GRANT CREATE ON SCHEMA public TO authenticated;
 
 -- Ensure storage bucket permissions
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('courses', 'courses', true)
-ON CONFLICT (id) DO UPDATE SET public = true;
+INSERT INTO storage.buckets (id, name)
+VALUES ('courses', 'courses')
+ON CONFLICT (id) DO NOTHING;
 
 -- Grant storage permissions
 GRANT ALL ON storage.objects TO anon;

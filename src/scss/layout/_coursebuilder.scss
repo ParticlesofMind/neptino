@@ -377,7 +377,12 @@
     align-items: stretch;
     padding: clamp(var(--spacing-4), 2vw, var(--spacing-6));
     flex: 1 1 auto;
-    min-height: inherit;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+    
+    // Prevent scroll jumping
+    scroll-behavior: smooth;
 }
 
 .curriculum-config__group {
@@ -392,6 +397,314 @@
     &:last-child {
         border-bottom: none;
         padding-bottom: 0;
+    }
+}
+
+// Students article
+.article--students {
+    grid-template-rows: auto minmax(0, 1fr);
+    background: white;
+
+    .students__header {
+        width: 100%;
+        align-items: flex-start;
+        gap: clamp(var(--spacing-2), 1vw, var(--spacing-4));
+    }
+
+    .students__heading {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-2);
+        max-width: clamp(22rem, 40vw, 32rem);
+    }
+
+    .students__subtitle {
+        margin: 0;
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-small);
+        line-height: 1.5;
+    }
+
+    .students__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-2);
+        justify-content: flex-end;
+    }
+
+    .students__config,
+    .students__preview {
+        display: grid;
+        gap: var(--spacing-4);
+    }
+
+    .students__section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--spacing-3);
+        flex-wrap: wrap;
+    }
+
+    .students__section-title {
+        margin: 0;
+        font-size: var(--font-size-large);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .students__description {
+        margin: 0;
+        color: var(--color-text-secondary);
+        line-height: 1.6;
+    }
+
+    .students__panels {
+        display: grid;
+        gap: var(--spacing-4);
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    }
+
+    .students__panel {
+        display: grid;
+        gap: var(--spacing-3);
+        padding: clamp(var(--spacing-3), 1.8vw, var(--spacing-4));
+        border: 1px solid var(--color-neutral-200);
+        border-radius: var(--radius-large);
+        background: var(--color-background);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    .students__panel-title {
+        margin: 0;
+        font-size: var(--font-size-medium);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .students__metrics {
+        display: grid;
+        gap: var(--spacing-2);
+        margin: 0;
+    }
+
+    .students__metric {
+        display: grid;
+        gap: var(--spacing-1);
+        dt {
+            font-size: var(--font-size-small);
+            color: var(--color-text-secondary);
+        }
+        dd {
+            margin: 0;
+            font-size: var(--font-size-large);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-primary);
+        }
+    }
+
+    .students__status-text {
+        margin: 0;
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-small);
+    }
+
+    .students__activity-list {
+        display: grid;
+        gap: var(--spacing-2);
+        margin: 0;
+        padding-left: var(--spacing-4);
+        color: var(--color-text-secondary);
+    }
+
+    .students__activity-item {
+        font-size: var(--font-size-small);
+        line-height: 1.5;
+    }
+
+    .students__feedback {
+        padding: var(--spacing-3);
+        border-radius: var(--radius-medium);
+        border: 1px solid transparent;
+        font-size: var(--font-size-small);
+    }
+
+    .students__feedback[data-state='warning'] {
+        background: var(--color-warning-50);
+        border-color: var(--color-warning-200);
+        color: var(--color-warning-800);
+    }
+
+    .students__feedback[data-state='success'] {
+        background: var(--color-success-50);
+        border-color: var(--color-success-200);
+        color: var(--color-success-700);
+    }
+
+    .students__feedback[data-state='error'] {
+        background: var(--color-error-50);
+        border-color: var(--color-error-200);
+        color: var(--color-error-700);
+    }
+
+    .students__preview-actions {
+        display: flex;
+        gap: var(--spacing-2);
+        flex-wrap: wrap;
+    }
+
+    .students__table-wrapper {
+        border: 1px solid var(--color-neutral-200);
+        border-radius: var(--radius-large);
+        background: white;
+        overflow: hidden;
+    }
+
+    .students__table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 40rem;
+    }
+
+    .students__table th,
+    .students__table td {
+        padding: var(--spacing-2) var(--spacing-3);
+        border-bottom: 1px solid var(--color-neutral-100);
+        text-align: left;
+        vertical-align: top;
+        font-size: var(--font-size-small);
+    }
+
+    .students__table th {
+        background: var(--color-neutral-50);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-text-secondary);
+    }
+
+    .students__preview-empty td {
+        text-align: center;
+        color: var(--color-text-tertiary);
+        font-style: italic;
+    }
+}
+
+.modal--students {
+    .modal__content {
+        max-width: 720px;
+    }
+}
+
+.students-upload__form,
+.students-manual__form {
+    display: grid;
+    gap: var(--spacing-4);
+}
+
+.students-upload__fieldset,
+.students-manual__fieldset {
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-large);
+    padding: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+    display: grid;
+    gap: var(--spacing-3);
+    background: var(--color-background);
+}
+
+.students-upload__legend,
+.students-manual__legend {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-medium);
+    margin-bottom: var(--spacing-2);
+}
+
+.students-upload__hint,
+.students-manual__bulk-hint {
+    margin: 0;
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+}
+
+.students-upload__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+}
+
+.students-upload__mapping {
+    border: 1px dashed var(--color-neutral-300);
+    border-radius: var(--radius-large);
+    padding: clamp(var(--spacing-3), 2vw, var(--spacing-4));
+    display: grid;
+    gap: var(--spacing-3);
+    background: var(--color-neutral-50);
+}
+
+.students-upload__mapping-grid {
+    display: grid;
+    gap: var(--spacing-2);
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.students-upload__feedback,
+.students-manual__feedback {
+    padding: var(--spacing-3);
+    border-radius: var(--radius-medium);
+    border: 1px solid transparent;
+    font-size: var(--font-size-small);
+    line-height: 1.5;
+}
+
+.students-upload__feedback[data-state='error'],
+.students-manual__feedback[data-state='error'] {
+    background: var(--color-error-50);
+    border-color: var(--color-error-200);
+    color: var(--color-error-700);
+}
+
+.students-upload__feedback[data-state='success'],
+.students-manual__feedback[data-state='success'] {
+    background: var(--color-success-50);
+    border-color: var(--color-success-200);
+    color: var(--color-success-700);
+}
+
+.students-upload__status,
+.students-manual__status {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+}
+
+.students-upload__spinner,
+.students-manual__spinner {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    border: 2px solid var(--color-neutral-300);
+    border-top-color: var(--color-primary);
+    animation: spin 0.8s linear infinite;
+}
+
+.students-manual__grid {
+    display: grid;
+    gap: var(--spacing-3);
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.students-manual__bulk-input {
+    font-family: var(--font-family-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace);
+}
+
+@media (max-width: 48rem) {
+    .article--students {
+        .students__table {
+            min-width: 0;
+        }
+
+        .students__table-wrapper {
+            overflow-x: auto;
+        }
     }
 }
 
@@ -783,9 +1096,16 @@
 .curriculum__controls .button--outline,
 .article--curriculum__config .article .button--outline {
     background: var(--color-background);
-    color: var(--color-text-secondary);
+    color: var(--color-text-secondary);; 
     border-color: var(--color-neutral-200);
-    transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+    transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.15s ease;
+    
+    &:active {
+        transform: scale(0.98);
+    }
 }
 
 .curriculum__controls .button--outline:hover,
@@ -799,6 +1119,7 @@
 .curriculum__controls .button--active,
 .article--curriculum .article__config .button--primary {
     box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.18);
+    transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .curriculum-config__section-title {
@@ -1305,6 +1626,83 @@
     --template-accent-muted: #64748b;
 }
 
+// Base editable-surface styles
+.editable-surface {
+    position: relative;
+    min-height: 20rem;
+    max-height: 100%;
+    width: 100%;
+    padding: var(--spacing-4);
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    background: var(--color-background);
+    border-radius: var(--radius-large);
+    border: 1px solid var(--color-neutral-200);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    
+    // Prevent layout shift during content changes
+    contain: layout style;
+    
+    // Smooth opacity transitions when content loads
+    opacity: 1;
+    transition: opacity 0.25s ease-in-out;
+    
+    // Add subtle loading state
+    &[data-loading="true"] {
+        opacity: 0.6;
+        pointer-events: none;
+        
+        &::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                var(--color-primary-400) 50%,
+                transparent 100%
+            );
+            animation: loadingBar 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+    }
+    
+    // Reserve space for content to prevent jumping
+    & > * {
+        animation: fadeInContent 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+    
+    // Stagger animation for multiple children
+    & > *:nth-child(1) { animation-delay: 0ms; }
+    & > *:nth-child(2) { animation-delay: 40ms; }
+    & > *:nth-child(3) { animation-delay: 80ms; }
+    & > *:nth-child(4) { animation-delay: 120ms; }
+    & > *:nth-child(5) { animation-delay: 160ms; }
+    & > *:nth-child(n+6) { animation-delay: 200ms; }
+}
+
+@keyframes loadingBar {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(200%);
+    }
+}
+
+@keyframes fadeInContent {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
 .editable-surface::-webkit-scrollbar {
     width: 0.45rem;
@@ -1314,6 +1712,10 @@
     background: transparent;
 }
 
+.editable-surface::-webkit-scrollbar-thumb {
+    background: var(--color-neutral-300);
+    border-radius: var(--radius-small);
+}
 
 .editable-surface::-webkit-scrollbar-thumb:hover {
     background: var(--color-neutral-400);
@@ -1329,6 +1731,7 @@
     place-items: center;
     text-align: center;
     color: var(--color-text-tertiary);
+    min-height: 20rem;
 }
 
 .editable-surface:empty::before {
@@ -1409,6 +1812,11 @@
     border: 1px solid var(--color-neutral-200);
     background: var(--color-neutral-25);
     box-shadow: 0 10px 20px -12px rgba(15, 23, 42, 0.3);
+    
+    // Smooth appearance when content changes with hardware acceleration
+    will-change: opacity, transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 .editable-surface .lesson__meta {
@@ -1424,6 +1832,11 @@
     gap: var(--spacing-3);
     padding-top: var(--spacing-4);
     border-top: 1px solid var(--color-neutral-200);
+    
+    // Smooth appearance with hardware acceleration
+    will-change: opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 .editable-surface .topic:first-of-type {

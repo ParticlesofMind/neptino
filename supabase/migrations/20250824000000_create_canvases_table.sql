@@ -24,30 +24,30 @@ ALTER TABLE canvases ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view canvases for their courses" ON canvases
   FOR SELECT USING (
     course_id IN (
-      SELECT id FROM courses WHERE created_by = auth.uid()
+      SELECT id FROM courses WHERE teacher_id = auth.uid()
       UNION
-      SELECT course_id FROM enrollments WHERE user_id = auth.uid()
+      SELECT course_id FROM enrollments WHERE student_id = auth.uid()
     )
   );
 
 CREATE POLICY "Users can insert canvases for their courses" ON canvases
   FOR INSERT WITH CHECK (
     course_id IN (
-      SELECT id FROM courses WHERE created_by = auth.uid()
+      SELECT id FROM courses WHERE teacher_id = auth.uid()
     )
   );
 
 CREATE POLICY "Users can update canvases for their courses" ON canvases
   FOR UPDATE USING (
     course_id IN (
-      SELECT id FROM courses WHERE created_by = auth.uid()
+      SELECT id FROM courses WHERE teacher_id = auth.uid()
     )
   );
 
 CREATE POLICY "Users can delete canvases for their courses" ON canvases
   FOR DELETE USING (
     course_id IN (
-      SELECT id FROM courses WHERE created_by = auth.uid()
+      SELECT id FROM courses WHERE teacher_id = auth.uid()
     )
   );
 

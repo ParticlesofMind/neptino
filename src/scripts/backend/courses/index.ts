@@ -5,6 +5,7 @@
 import { CourseFormHandler } from "./shared/courseFormHandler.js";
 import { ScheduleCourseManager } from "./schedule/scheduleCourse.js";
 import { CurriculumManager } from "./curriculum/curriculumManager.js";
+import { ensureStudentsManager, StudentsManager } from "./students/studentsManager.js";
 
 // Re-export course creation and classification functions
 export * from "./essentials/createCourse";
@@ -18,6 +19,7 @@ export class CourseBuilder {
  private currentFormHandler: CourseFormHandler | null = null;
  private scheduleManager: ScheduleCourseManager | null = null;
  private curriculumManager: CurriculumManager | null = null;
+ private studentsManager: StudentsManager | null = null;
  private currentSection: string = "essentials";
  private courseId: string | null = null;
 
@@ -87,6 +89,10 @@ export class CourseBuilder {
  
  // Initialize curriculum manager (always ready)
  this.curriculumManager = new CurriculumManager(this.courseId);
+
+ if (this.studentsManager) {
+ this.studentsManager.setCourseId(this.courseId);
+ }
  
  // Initialize page setup handler with course ID
  import('./settings/pageSetupHandler.js').then(({ pageSetupHandler }) => {
@@ -121,6 +127,9 @@ export class CourseBuilder {
  }
  if (this.curriculumManager) {
  this.curriculumManager.setCourseId(courseId);
+ }
+ if (this.studentsManager) {
+ this.studentsManager.setCourseId(courseId);
  }
  }
  
@@ -259,6 +268,9 @@ articles.forEach((article) => {
  }
  // Also initialize form handler for curriculum form data
  this.currentFormHandler = new CourseFormHandler(sectionId, this.courseId || undefined);
+    } else if (sectionId === "students") {
+      this.studentsManager = ensureStudentsManager(this.courseId || null);
+      this.studentsManager.activate();
     } else if (sectionId === "essentials" || sectionId === "settings" || sectionId === "pedagogy") {
       // Initialize generic form handler for form-based sections
       console.log('✅ Creating CourseFormHandler for section:', sectionId);
