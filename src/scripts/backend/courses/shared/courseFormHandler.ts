@@ -335,6 +335,7 @@ export class CourseFormHandler {
 
             console.log('✅ Course data loaded successfully:', courseData);
             this.populateFormFields(courseData);
+            this.showStatus("", "success");
 
             this.lastLoadedCourseId = this.currentCourseId;
 
@@ -573,6 +574,21 @@ export class CourseFormHandler {
             }
         });
 
+        if (this.sectionConfig.section === "essentials") {
+            const descriptionField = this.form.querySelector<HTMLTextAreaElement>(
+                'textarea[name="course_description"]',
+            );
+            descriptionField?.addEventListener(
+                "keydown",
+                (event) => {
+                    if (event.key === " " || event.code === "Space") {
+                        event.stopPropagation();
+                    }
+                },
+                { capture: true },
+            );
+        }
+
         this.form.addEventListener("submit", (e) => this.handleSubmit(e));
 
         // Handle remove image button
@@ -745,6 +761,7 @@ export class CourseFormHandler {
         if (!this.currentCourseId) return;
 
         try {
+            this.showStatus("Saving changes…", "loading");
             // Prevent save if pedagogy column is missing
             const isBlocked = this.form?.dataset.blockSave === 'true';
             if (isBlocked && this.sectionConfig.section === 'pedagogy') {
@@ -840,27 +857,75 @@ export class CourseFormHandler {
     }
 
     private updateUI(): void {
-        const submitBtn = this.form?.querySelector(
-            'button[type="submit"]',
-        ) as HTMLButtonElement;
-
+        const submitBtn = this.getSubmitButton();
         if (submitBtn) {
-            const isValid = this.isFormValid();
-            submitBtn.disabled = !isValid;
-            submitBtn
-            submitBtn
+            submitBtn.disabled = !this.isFormValid();
         }
+    }
+
+    private getSubmitButton(): HTMLButtonElement | null {
+        if (!this.form) return null;
+
+        const insideForm = this.form.querySelector(
+            'button[type="submit"]',
+        ) as HTMLButtonElement | null;
+        if (insideForm) return insideForm;
+
+        if (!this.form.id) return null;
+        return document.querySelector(
+            `button[type="submit"][form="${this.form.id}"]`,
+        ) as HTMLButtonElement | null;
+    }
+
+    private getStatusContainer(): HTMLElement | null {
+        if (!this.form) return null;
+
+        const embeddedStatus = this.form.querySelector('.save-status');
+        if (embeddedStatus instanceof HTMLElement) {
+            return embeddedStatus;
+        }
+
+        const article = this.form.closest('[data-course-section]');
+        return (
+            (article?.querySelector('.save-status') as HTMLElement | null) || null
+        );
+    }
+
+    private buildSavedMessage(): string {
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, "0");
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const day = now.getDate().toString().padStart(2, "0");
+        const month = (now.getMonth() + 1).toString().padStart(2, "0");
+        const year = now.getFullYear();
+        return `This page was last saved at ${hours}:${minutes}, on ${day}.${month}.${year}`;
     }
 
     private showStatus(
         message: string,
         type: "success" | "error" | "loading",
     ): void {
-        const statusDiv = this.form?.querySelector('.save-status__text') as HTMLElement;
-        if (statusDiv) {
-            statusDiv.textContent = message;
-            statusDiv.className = `save-status__text save-status__text--${type}`;
+        const statusContainer = this.getStatusContainer();
+        const statusText = statusContainer?.querySelector(
+            ".save-status__text",
+        ) as HTMLElement | null;
+
+        if (!statusContainer || !statusText) return;
+
+        if (type === "loading") {
+            statusContainer.dataset.status = "saving";
+            statusText.textContent = message || "Saving changes…";
+            return;
         }
+
+        if (type === "success") {
+            statusContainer.dataset.status = "saved";
+            statusText.textContent = this.buildSavedMessage();
+            return;
+        }
+
+        statusContainer.dataset.status = "error";
+        statusText.textContent = message || "Something went wrong";
     }
 
     private showCourseCode(courseId: string): void {
@@ -897,9 +962,13 @@ export class CourseFormHandler {
 
         // Show the course code display
         if (courseCodeDisplay) {
-            courseCodeDisplay.style.display = 'flex';
+            courseCodeDisplay.hidden = false;
         }
 
+        const submitBtn = this.getSubmitButton();
+        if (submitBtn) {
+            submitBtn.textContent = "Save Course Details";
+        }
     }
 
     private enableCourseBuilderFeatures(courseId: string): void {

@@ -2797,11 +2797,18 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
    }
  }
 
- private renderCurriculumPreview(): void {
-   const previewContainer = this.curriculumPreviewSection.querySelector(
-     ".editable-surface",
-   );
-   if (!previewContainer || !Array.isArray(this.currentCurriculum)) return;
+  private renderCurriculumPreview(): void {
+    const previewContainer = this.curriculumPreviewSection.querySelector(
+      ".editable-surface",
+    );
+    if (!previewContainer || !Array.isArray(this.currentCurriculum)) return;
+
+    const placeholder = this.curriculumPreviewSection.querySelector(
+      "#curriculum-preview-placeholder",
+    ) as HTMLElement | null;
+    if (placeholder) {
+      placeholder.hidden = this.currentCurriculum.length > 0;
+    }
    
    // Enhanced debugging for preview rendering
    console.log('🎨 Rendering curriculum preview with data:', {

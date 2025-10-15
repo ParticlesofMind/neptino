@@ -24,6 +24,7 @@ interface UploadManagerOptions {
   onCourseIdMissing: () => void;
   onActivity: (message: string) => void;
   onSuccess: () => void;
+  onStatusChange?: (state: "saving" | "saved" | "error", message?: string) => void;
 }
 
 const REQUIRED_FIELDS: StudentField[] = ["first_name", "last_name"];
@@ -327,12 +328,14 @@ export class StudentsUploadManager {
       return;
     }
 
+    this.options.onStatusChange?.("saving", "Uploading students…");
     this.setBusy(true);
     try {
       const { data, error } = await this.options.repository.upsertStudents(students);
       if (error) {
         console.error("Failed to save students:", error);
         this.showFeedback(error.message ?? "Failed to save students to Supabase.", "error");
+        this.options.onStatusChange?.("error", "Failed to upload students");
         return;
       }
 
@@ -351,6 +354,7 @@ export class StudentsUploadManager {
       this.resetMapping();
       this.currentParse = null;
       this.options.onSuccess();
+      this.options.onStatusChange?.("saved");
     } finally {
       this.setBusy(false);
     }

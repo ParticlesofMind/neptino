@@ -15,6 +15,7 @@ interface ManualManagerOptions {
   onActivity: (message: string) => void;
   onSuccess: () => void;
   onCourseIdMissing: () => void;
+  onStatusChange?: (state: "saving" | "saved" | "error", message?: string) => void;
 }
 
 const BULK_HEADERS = [
@@ -230,12 +231,14 @@ export class StudentsManualManager {
     }
     students.push(...bulkStudents);
 
+    this.options.onStatusChange?.("saving", "Saving students…");
     this.setBusy(true);
     try {
       const { data, error } = await this.options.repository.upsertStudents(students);
       if (error) {
         console.error("Failed to save students:", error);
         this.showFeedback(error.message ?? "Failed to save students to Supabase.", "error");
+        this.options.onStatusChange?.("error", "Failed to save students");
         return;
       }
 
@@ -250,6 +253,7 @@ export class StudentsManualManager {
       this.showFeedback(`Saved ${stored.length} student${stored.length === 1 ? "" : "s"} successfully.`, "success");
       this.resetForm();
       this.options.onSuccess();
+      this.options.onStatusChange?.("saved");
     } finally {
       this.setBusy(false);
     }

@@ -183,41 +183,6 @@
     }
 }
 
-.article--essentials>.form,
-.article--classification>.form {
-    max-width: none;
-    margin: 0;
-}
-
-
-.article--classification .coursebuilder__status {
-    margin-top: var(--spacing-3);
-    color: var(--color-text-secondary);
-    text-align: right;
-}
-
-.article,
-.article--templates,
-.article--students,
-.article__header {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-3);
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--spacing-3);
-    background: white;
-    border-bottom: 1px solid var(--color-neutral-200);
-}
-
-.article--templates .article__actions {
-    flex: 0 1 auto;
-}
-
-.article--templates .article__actions .button {
-    width: max-content;
-}
-
 .article--templates .article__config,
 .article--templates .article__preview {
     min-height: 0;

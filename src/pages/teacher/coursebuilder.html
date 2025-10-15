@@ -131,44 +131,66 @@
           <h2 class="article__title">Course Essentials</h2>
         </header>
 
-        <form class="form form--essentials" id="course-essentials-form">
-          <label class="form__label">
-            Course Name
-            <input class="input" type="text" name="course_name" placeholder="Enter course name" required />
-          </label>
-          <label class="form__label">
-            Course Description
-            <textarea class="form__textarea" name="course_description" rows="4"
-              placeholder="Describe what students will learn" required></textarea>
-          </label>
-          <label class="form__label">
-            Teacher
-            <input class="input" type="text" name="teacher_id" placeholder="Loading..." readonly />
-          </label>
-          <label class="form__label">
-            Institution
-            <input class="input" type="text" name="institution" placeholder="Loading..." readonly />
-          </label>
-          <label class="form__label" for="course-language">
-            Course Language
-            <select class="input input--select" name="course_language" id="course-language" required>
-              <option value="">Select language...</option>
-            </select>
-          </label>
-          <label class="form__label" for="course-image">
-            Course Image
-            <input class="input input--file" type="file" name="course_image" id="course-image" accept="image/*"
-              required />
-            <img class="image image--small" id="preview-img" src="" alt="Course preview" style="display: none" />
-            <button class="button button--small image-upload__remove" type="button" id="remove-image"
-              style="display: none">
-              ×
-            </button>
-          </label>
-          <button class="button button--primary button--medium" type="submit" id="save-essentials-btn">
-            Save Course Details
-          </button>
-        </form>
+        <div class="article__main">
+          <form class="form form--essentials" id="course-essentials-form">
+            <label class="form__label">
+              Course Name
+              <input class="input" type="text" name="course_name" placeholder="Enter course name" required />
+            </label>
+            <label class="form__label">
+              Course Description
+              <textarea class="form__textarea" name="course_description" rows="4"
+                placeholder="Describe what students will learn" required></textarea>
+            </label>
+            <label class="form__label">
+              Teacher
+              <input class="input" type="text" name="teacher_id" placeholder="Loading..." readonly />
+            </label>
+            <label class="form__label">
+              Institution
+              <input class="input" type="text" name="institution" placeholder="Loading..." readonly />
+            </label>
+            <label class="form__label" for="course-language">
+              Course Language
+              <select class="input input--select" name="course_language" id="course-language" required>
+                <option value="">Select language...</option>
+              </select>
+            </label>
+            <label class="form__label" for="course-image">
+              Course Image
+              <input class="input input--file" type="file" name="course_image" id="course-image" accept="image/*"
+                required />
+              <img class="image image--small" id="preview-img" src="" alt="Course preview" style="display: none" />
+              <button class="button button--small image-upload__remove" type="button" id="remove-image"
+                style="display: none">
+                ×
+              </button>
+            </label>
+          </form>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="essentials-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+
+            <div class="article__footer-actions">
+              <div class="course-code" id="course-code-display" hidden>
+                <span class="course-code__label">Course ID</span>
+                <span class="course-code__value" id="course-id-value">—</span>
+                <button class="button button--subtle button--small" type="button" id="course-code-copy-btn">
+                  Copy
+                </button>
+              </div>
+              <button class="button button--primary button--medium" type="submit" form="course-essentials-form"
+                id="save-essentials-btn">
+                Create Course
+              </button>
+            </div>
+          </div>
+        </footer>
       </article>
 
       <!-- Classification Article -->
@@ -177,73 +199,83 @@
           <h2 class="article__title">Course Classification</h2>
         </header>
 
-        <form class="form form--classification" id="course-classification-form">
-          <label class="form__label" for="class-year-select">
-            <span>Class Year</span>
-            <select class="form__select input input--select" name="class_year" id="class-year-select" required>
-              <option value="">Loading...</option>
-            </select>
-          </label>
-          <label class="form__label" for="curricular-framework-select">
-            <span>Curricular Framework</span>
-            <select class="form__select input input--select" name="curricular_framework"
-              id="curricular-framework-select" required>
-              <option value="">Loading...</option>
-            </select>
-          </label>
-          <label class="form__label" for="domain-select">
-            <span>Domain</span>
-            <span class="form__label-hint">Academic field</span>
-            <select class="form__select input input--select" name="domain" id="domain-select" required>
-              <option value="">Loading...</option>
-            </select>
-          </label>
-          <label class="form__label" for="subject-select">
-            <span>Subject</span>
-            <span class="form__label-hint">Specific discipline</span>
-            <select class="form__select input input--select" name="subject" id="subject-select" required disabled>
-              <option value="">Select domain first...</option>
-            </select>
-          </label>
-          <label class="form__label" for="topic-select">
-            <span>Topic</span>
-            <span class="form__label-hint">Area of study</span>
-            <select class="form__select input input--select" name="topic" id="topic-select" required disabled>
-              <option value="">Select subject first...</option>
-            </select>
-          </label>
-          <label class="form__label" for="subtopic-select">
-            <span>Subtopic</span>
-            <span class="form__label-hint">Specific focus</span>
-            <select class="form__select input input--select" name="subtopic" id="subtopic-select" disabled>
-              <option value="">Select topic first...</option>
-            </select>
-          </label>
-          <h3 class="form__title">Course Sequence</h3>
-          <p class="form__description">Define how this course fits into a learning sequence.</p>
-          <label class="form__label" for="previous-course-select">
-            <span>Previous Course</span>
-            <span class="form__label-hint">Course that should come before this one</span>
-            <select class="form__select input input--select" name="previous_course" id="previous-course-select">
-              <option value="">Loading courses...</option>
-            </select>
-          </label>
-          <label class="form__label" for="current-course-select">
-            <span>Current Course</span>
-            <span class="form__label-hint">Other courses at this level</span>
-            <select class="form__select input input--select" name="current_course" id="current-course-select">
-              <option value="">Loading courses...</option>
-            </select>
-          </label>
-          <label class="form__label" for="next-course-select">
-            <span>Next Course</span>
-            <span class="form__label-hint">Course that should come after this one</span>
-            <select class="form__select input input--select" name="next_course" id="next-course-select">
-              <option value="">Loading courses...</option>
-            </select>
-          </label>
-        </form>
-        <p class="coursebuilder__status" id="classification-save-status" aria-live="polite"></p>
+        <div class="article__main">
+          <form class="form form--classification" id="course-classification-form">
+            <label class="form__label" for="class-year-select">
+              <span>Class Year</span>
+              <select class="form__select input input--select" name="class_year" id="class-year-select" required>
+                <option value="">Loading...</option>
+              </select>
+            </label>
+            <label class="form__label" for="curricular-framework-select">
+              <span>Curricular Framework</span>
+              <select class="form__select input input--select" name="curricular_framework"
+                id="curricular-framework-select" required>
+                <option value="">Loading...</option>
+              </select>
+            </label>
+            <label class="form__label" for="domain-select">
+              <span>Domain</span>
+              <span class="form__label-hint">Academic field</span>
+              <select class="form__select input input--select" name="domain" id="domain-select" required>
+                <option value="">Loading...</option>
+              </select>
+            </label>
+            <label class="form__label" for="subject-select">
+              <span>Subject</span>
+              <span class="form__label-hint">Specific discipline</span>
+              <select class="form__select input input--select" name="subject" id="subject-select" required disabled>
+                <option value="">Select domain first...</option>
+              </select>
+            </label>
+            <label class="form__label" for="topic-select">
+              <span>Topic</span>
+              <span class="form__label-hint">Area of study</span>
+              <select class="form__select input input--select" name="topic" id="topic-select" required disabled>
+                <option value="">Select subject first...</option>
+              </select>
+            </label>
+            <label class="form__label" for="subtopic-select">
+              <span>Subtopic</span>
+              <span class="form__label-hint">Specific focus</span>
+              <select class="form__select input input--select" name="subtopic" id="subtopic-select" disabled>
+                <option value="">Select topic first...</option>
+              </select>
+            </label>
+            <h3 class="form__title">Course Sequence</h3>
+            <p class="form__description">Define how this course fits into a learning sequence.</p>
+            <label class="form__label" for="previous-course-select">
+              <span>Previous Course</span>
+              <span class="form__label-hint">Course that should come before this one</span>
+              <select class="form__select input input--select" name="previous_course" id="previous-course-select">
+                <option value="">Loading courses...</option>
+              </select>
+            </label>
+            <label class="form__label" for="current-course-select">
+              <span>Current Course</span>
+              <span class="form__label-hint">Other courses at this level</span>
+              <select class="form__select input input--select" name="current_course" id="current-course-select">
+                <option value="">Loading courses...</option>
+              </select>
+            </label>
+            <label class="form__label" for="next-course-select">
+              <span>Next Course</span>
+              <span class="form__label-hint">Course that should come after this one</span>
+              <select class="form__select input input--select" name="next_course" id="next-course-select">
+                <option value="">Loading courses...</option>
+              </select>
+            </label>
+          </form>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="classification-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
       <!-- Templates Article -->
       <article id="templates" data-course-section class="article article--templates">
@@ -259,17 +291,28 @@
           </div>
         </header>
 
-        <section class="article__config" aria-labelledby="template-config-title">
-          <h3 id="template-config-title" class="coursebuilder__panel-title">Template Configuration</h3>
-          <p id="template-config-content">Select or create a template to configure its settings.</p>
-        </section>
+        <div class="article__main article__main--panels">
+          <section class="article__config" aria-labelledby="template-config-title">
+            <h3 id="template-config-title" class="coursebuilder__panel-title">Template Configuration</h3>
+            <p id="template-config-content">Select or create a template to configure its settings.</p>
+          </section>
 
-        <section class="article__preview" aria-labelledby="template-preview-title">
-          <h3 id="template-preview-title" class="coursebuilder__panel-title">Template Preview</h3>
-          <p id="template-preview-content">Create a new template or select an existing one to see the preview here.</p>
-        </section>
+          <section class="article__preview" aria-labelledby="template-preview-title">
+            <h3 id="template-preview-title" class="coursebuilder__panel-title">Template Preview</h3>
+            <p id="template-preview-content" class="article__preview-placeholder">
+              Create a new template or select an existing one to see the preview here.
+            </p>
+          </section>
+        </div>
 
-
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="template-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
       <!-- Schedule Article -->
       <article id="schedule" data-course-section class="article article--schedule">
@@ -277,77 +320,88 @@
           <h2 class="article__title">Schedule Configuration</h2>
         </header>
 
-        <section class="article__config">
-          <form class="form form--schedule" id="schedule-config">
-            <label class="form__label">
-              Start Date
-              <input class="input input--date" type="date" id="start-date" required />
-            </label>
-            <label class="form__label">
-              End Date
-              <input class="input input--date" type="date" id="end-date" required />
-            </label>
+        <div class="article__main article__main--panels">
+          <section class="article__config">
+            <form class="form form--schedule" id="schedule-config">
+              <label class="form__label">
+                Start Date
+                <input class="input input--date" type="date" id="start-date" required />
+              </label>
+              <label class="form__label">
+                End Date
+                <input class="input input--date" type="date" id="end-date" required />
+              </label>
 
-            <fieldset class="schedule__days" aria-label="Days of the Week">
-              <legend class="form__label">Days of the Week</legend>
-              <button class="button button--outline button--small schedule__days__button" type="button"
-                data-day="monday">
-                Mon
-              </button>
-              <button class="button button--outline button--small schedule__days__button" type="button"
-                data-day="tuesday">
-                Tue
-              </button>
-              <button class="button button--outline button--small schedule__days__button" type="button"
-                data-day="wednesday">
-                Wed
-              </button>
-              <button class="button button--outline button--small schedule__days__button" type="button"
-                data-day="thursday">
-                Thu
-              </button>
-              <button class="button button--outline button--small schedule__days__button" type="button"
-                data-day="friday">
-                Fri
-              </button>
-              <button class="button button--outline button--small schedule__days__button" type="button"
-                data-day="saturday">
-                Sat
-              </button>
-              <button class="button button--outline button--small schedule__days__button" type="button"
-                data-day="sunday">
-                Sun
-              </button>
-            </fieldset>
+              <fieldset class="schedule__days" aria-label="Days of the Week">
+                <legend class="form__label">Days of the Week</legend>
+                <button class="button button--outline button--small schedule__days__button" type="button"
+                  data-day="monday">
+                  Mon
+                </button>
+                <button class="button button--outline button--small schedule__days__button" type="button"
+                  data-day="tuesday">
+                  Tue
+                </button>
+                <button class="button button--outline button--small schedule__days__button" type="button"
+                  data-day="wednesday">
+                  Wed
+                </button>
+                <button class="button button--outline button--small schedule__days__button" type="button"
+                  data-day="thursday">
+                  Thu
+                </button>
+                <button class="button button--outline button--small schedule__days__button" type="button"
+                  data-day="friday">
+                  Fri
+                </button>
+                <button class="button button--outline button--small schedule__days__button" type="button"
+                  data-day="saturday">
+                  Sat
+                </button>
+                <button class="button button--outline button--small schedule__days__button" type="button"
+                  data-day="sunday">
+                  Sun
+                </button>
+              </fieldset>
 
-            <label class="form__label">
-              Start Time
-              <input class="input input--time" type="time" id="start-time" required />
-            </label>
-            <label class="form__label">
-              End Time
-              <input class="input input--time" type="time" id="end-time" required />
-            </label>
+              <label class="form__label">
+                Start Time
+                <input class="input input--time" type="time" id="start-time" required />
+              </label>
+              <label class="form__label">
+                End Time
+                <input class="input input--time" type="time" id="end-time" required />
+              </label>
 
-            <footer class="schedule__actions button-group">
-              <button class="button button--primary" type="button" id="schedule-course-btn" disabled>
-                Schedule Course
-              </button>
-              <button class="button button--delete" type="button" id="delete-schedule-btn" style="display: none;">
-                Delete Schedule
-              </button>
-            </footer>
-          </form>
-        </section>
+              <div class="schedule__actions button-group">
+                <button class="button button--primary" type="button" id="schedule-course-btn" disabled>
+                  Schedule Course
+                </button>
+                <button class="button button--delete" type="button" id="delete-schedule-btn" style="display: none;">
+                  Delete Schedule
+                </button>
+              </div>
+            </form>
+          </section>
 
-        <section class="article__preview">
-          <div class="schedule__preview" id="schedule-preview">
-            <div class="schedule__content">
-              <p class="schedule__placeholder">Click "Schedule Course" to generate your lesson schedule</p>
+          <section class="article__preview">
+            <div class="schedule__preview" id="schedule-preview">
+              <div class="schedule__content">
+                <p class="schedule__placeholder">Click "Schedule Course" to generate your lesson schedule</p>
+              </div>
+              <p class="schedule__total">Total lessons: 0</p>
             </div>
-            <p class="schedule__total">Total lessons: 0</p>
+          </section>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="schedule-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
           </div>
-        </section>
+        </footer>
       </article>
       <!-- Curriculum Article -->
       <article id="curriculum" data-course-section class="article article--curriculum article--templates">
@@ -355,9 +409,9 @@
           <h2 class="article__title">Configure Curriculum</h2>
         </header>
 
-        <section class="article__config">
-
-          <form class="form form--curriculum">
+        <div class="article__main article__main--panels">
+          <section class="article__config">
+            <form class="form form--curriculum">
 
             <!-- Module Organization -->
             <div class="curriculum-config__group curriculum-config__group--modules">
@@ -618,38 +672,52 @@
                 </div>
               </div>
             </div>
+            </form>
+          </section>
 
-          </form>
-        </section>
+          <section class="article__preview">
+            <div class="curriculum__preview" id="curriculum-preview">
+              <p class="article__preview-placeholder" id="curriculum-preview-placeholder">
+                Configure your curriculum on the left to unlock the live preview.
+              </p>
+              <div class="curriculum__preview-content">
+                <nav class="curriculum__controls" aria-label="Curriculum view modes">
+                  <button class="button button--small button--outline" type="button" data-mode="modules">
+                    Modules
+                  </button>
+                  <button class="button button--small button--outline" type="button" data-mode="titles">
+                    Lessons
+                  </button>
+                  <button class="button button--small button--outline" type="button" data-mode="topics">
+                    Topics
+                  </button>
+                  <button class="button button--small button--outline" type="button" data-mode="objectives">
+                    Objectives
+                  </button>
+                  <button class="button button--small button--outline" type="button" data-mode="tasks">
+                    Tasks
+                  </button>
+                  <button class="button button--small button--outline" type="button" data-mode="all">
+                    All
+                  </button>
+                </nav>
 
-        <section class="article__preview">
-          <div class="curriculum__preview">
-            <nav class="curriculum__controls" aria-label="Curriculum view modes">
-              <button class="button button--small button--outline" type="button" data-mode="modules">
-                Modules
-              </button>
-              <button class="button button--small button--outline" type="button" data-mode="titles">
-                Lessons
-              </button>
-              <button class="button button--small button--outline" type="button" data-mode="topics">
-                Topics
-              </button>
-              <button class="button button--small button--outline" type="button" data-mode="objectives">
-                Objectives
-              </button>
-              <button class="button button--small button--outline" type="button" data-mode="tasks">
-                Tasks
-              </button>
-              <button class="button button--small button--outline" type="button" data-mode="all">
-                All
-              </button>
-            </nav>
+                <div class="editable-surface" aria-live="polite">
+                  <!-- Dynamic content -->
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
 
-            <div class="editable-surface">
-              <!-- Dynamic content -->
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="curriculum-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
             </div>
           </div>
-        </section>
+        </footer>
       </article>
       <!-- Settings Article -->
       <article id="settings" data-course-section class="article article--settings">
@@ -657,7 +725,18 @@
           <h2 class="article__title">General Settings</h2>
         </header>
 
-        <p class="placeholder">General settings content will be added here.</p>
+        <div class="article__main">
+          <p class="placeholder">General settings content will be added here.</p>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="general-settings-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
       <!-- Marketplace Article -->
 
@@ -666,7 +745,18 @@
           <h2 class="article__title">Marketplace</h2>
         </header>
 
-        <p class="placeholder">Marketplace integration features will be available here...</p>
+        <div class="article__main">
+          <p class="placeholder">Marketplace integration features will be available here...</p>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="marketplace-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
 
       <!-- Resources Article -->
@@ -675,7 +765,18 @@
           <h2 class="article__title">Resources</h2>
         </header>
 
-        <p class="placeholder">Resources content will be added here.</p>
+        <div class="article__main">
+          <p class="placeholder">Resources content will be added here.</p>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="resources-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
 
       <!-- Students Article -->
@@ -699,7 +800,8 @@
           </div>
         </header>
 
-        <section class="article__config students__config" aria-labelledby="students-roster-title">
+        <div class="article__main article__main--panels">
+          <section class="article__config students__config" aria-labelledby="students-roster-title">
           <header class="students__section-header">
             <h3 class="students__section-title" id="students-roster-title">Roster overview</h3>
             <button class="button button--subtle button--small" type="button" id="students-refresh-btn"
@@ -747,9 +849,9 @@
           </div>
 
           <div class="students__feedback" id="students-feedback" role="alert" aria-live="assertive" hidden></div>
-        </section>
+          </section>
 
-        <section class="article__preview students__preview" aria-labelledby="students-preview-title">
+          <section class="article__preview students__preview" aria-labelledby="students-preview-title">
           <header class="students__section-header">
             <h3 class="students__section-title" id="students-preview-title">Roster preview</h3>
             <div class="students__preview-actions">
@@ -785,7 +887,17 @@
               </tbody>
             </table>
           </div>
-        </section>
+          </section>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="students-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
 
       <article class="modal modal--coursebuilder modal--students" id="students-upload-modal" aria-hidden="true"
@@ -969,8 +1081,9 @@
           <h2 class="article__title">Pedagogy Map</h2>
         </header>
 
-        <section class="article__config">
-          <form class="form" id="course-pedagogy-form">
+        <div class="article__main article__main--panels">
+          <section class="article__config">
+            <form class="form" id="course-pedagogy-form">
             <input type="hidden" name="course_pedagogy" id="course-pedagogy-input" />
 
             <div class="learning-plane" id="pedagogy-ui">
@@ -1000,13 +1113,10 @@
               </menu>
             </div>
 
-            <p class="save-status" id="pedagogy-save-status">
-              <span class="save-status__text">Changes will be saved automatically</span>
-            </p>
-          </form>
-        </section>
+            </form>
+          </section>
 
-        <section class="article__preview">
+          <section class="article__preview">
           <div class="learning-plane__summary">
             <h3 class="learning-plane__summary-title" id="pedagogy-approach-title">Balanced</h3>
             <p class="learning-plane__summary-subtitle" id="pedagogy-approach-subtitle"><em>Essentialist × Behaviorist
@@ -1020,7 +1130,17 @@
               <!-- Dynamic bullets injected by script -->
             </ul>
           </div>
-        </section>
+          </section>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="pedagogy-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
 
       <!-- Course Visibility Article -->
@@ -1029,39 +1149,45 @@
           <h2 class="article__title">Course Visibility</h2>
         </header>
 
-        <form class="form form--course-visibility settings__section" id="course-settings-form">
-          <fieldset class="settings__checkboxes">
-            <label class="form__label">
-              <input class="input input--checkbox" type="checkbox" name="course_visible" />
-              Course visible to students
-            </label>
+        <div class="article__main">
+          <form class="form form--course-visibility settings__section" id="course-settings-form">
+            <fieldset class="settings__checkboxes">
+              <label class="form__label">
+                <input class="input input--checkbox" type="checkbox" name="course_visible" />
+                Course visible to students
+              </label>
 
-            <label class="form__label">
-              <input class="input input--checkbox" type="checkbox" name="allow_enrollment" />
-              Allow new enrollments
-            </label>
+              <label class="form__label">
+                <input class="input input--checkbox" type="checkbox" name="allow_enrollment" />
+                Allow new enrollments
+              </label>
 
-            <label class="form__label">
-              <input class="input input--checkbox" type="checkbox" name="require_approval" />
-              Require enrollment approval
-            </label>
+              <label class="form__label">
+                <input class="input input--checkbox" type="checkbox" name="require_approval" />
+                Require enrollment approval
+              </label>
 
-            <label class="form__label">
-              <input class="input input--checkbox" type="checkbox" name="enable_notifications" />
-              Enable email notifications for new enrollments
-            </label>
+              <label class="form__label">
+                <input class="input input--checkbox" type="checkbox" name="enable_notifications" />
+                Enable email notifications for new enrollments
+              </label>
 
-            <label class="form__label">
-              <input class="input input--checkbox" type="checkbox" name="public_course" />
-              Make course publicly discoverable
-            </label>
-          </fieldset>
-          <p class="settings__status" id="settings-last-saved">
-            <span class="settings__status-text" id="settings-save-status">
-              Changes will be saved automatically
-            </span>
-          </p>
-        </form>
+              <label class="form__label">
+                <input class="input input--checkbox" type="checkbox" name="public_course" />
+                Make course publicly discoverable
+              </label>
+            </fieldset>
+          </form>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="course-visibility-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
 
       <!-- Pricing & Monetization Article -->
@@ -1070,7 +1196,18 @@
           <h2 class="article__title">Pricing & Monetization</h2>
         </header>
 
-        <p class="placeholder">Pricing & Monetization content will be added here.</p>
+        <div class="article__main">
+          <p class="placeholder">Pricing & Monetization content will be added here.</p>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="pricing-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
 
       <!-- External Integrations & APIs Article -->
@@ -1079,7 +1216,18 @@
           <h2 class="article__title">External Integrations & APIs</h2>
         </header>
 
-        <p class="placeholder">External Integrations & APIs content will be added here.</p>
+        <div class="article__main">
+          <p class="placeholder">External Integrations & APIs content will be added here.</p>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="integrations-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
 
       <!-- Communication Article -->
@@ -1088,7 +1236,18 @@
           <h2 class="article__title">Communication</h2>
         </header>
 
-        <p class="placeholder">Communication content will be added here.</p>
+        <div class="article__main">
+          <p class="placeholder">Communication content will be added here.</p>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="communication-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
 
       <!-- Page Setup Article -->
@@ -1097,8 +1256,9 @@
           <h2 class="article__title">Page Configuration</h2>
         </header>
 
-        <section class="article__config">
-          <form class="page-setup__config" id="page-setup-form">
+        <div class="article__main article__main--panels">
+          <section class="article__config">
+            <form class="page-setup__config" id="page-setup-form">
             <fieldset class="page-setup__section page-setup__unit-options">
               <legend class="page-setup__label">Units</legend>
               <label class="page-setup__option">
@@ -1170,11 +1330,14 @@
                 </div>
               </div>
             </fieldset>
-          </form>
-        </section>
+            </form>
+          </section>
 
-        <section class="article__preview">
-          <div class="page-setup__preview">
+          <section class="article__preview">
+            <div class="page-setup__preview">
+              <p class="article__preview-placeholder" id="page-setup-preview-placeholder">
+                Adjust page settings to refresh the live preview instantly.
+              </p>
             <h3 class="header">Page Preview</h3>
             <div class="page-setup__canvas-container">
               <canvas class="page-setup__canvas" id="page-preview-canvas" width="400" height="500"></canvas>
@@ -1183,8 +1346,18 @@
                 <output class="page-setup__margins-info" id="margins-info">Margins: 2.54mm all sides</output>
               </div>
             </div>
+            </div>
+          </section>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="page-setup-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
           </div>
-        </section>
+        </footer>
       </article>
 
       <!-- Interface Article -->
@@ -1193,7 +1366,18 @@
           <h2 class="article__title">Interface</h2>
         </header>
 
-        <p class="placeholder">Interface content will be added here.</p>
+        <div class="article__main">
+          <p class="placeholder">Interface content will be added here.</p>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="interface-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
 
       <!-- Themes Article -->
@@ -1202,7 +1386,18 @@
           <h2 class="article__title">Themes</h2>
         </header>
 
-        <p class="placeholder">Themes content will be added here.</p>
+        <div class="article__main">
+          <p class="placeholder">Themes content will be added here.</p>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="themes-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
 
       <!-- Accessibility & Comfort Article -->
@@ -1211,7 +1406,18 @@
           <h2 class="article__title">Accessibility & Comfort</h2>
         </header>
 
-        <p class="placeholder">Accessibility & Comfort content will be added here.</p>
+        <div class="article__main">
+          <p class="placeholder">Accessibility & Comfort content will be added here.</p>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="accessibility-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
 
       <!-- Notifications & Alerts Article -->
@@ -1220,7 +1426,18 @@
           <h2 class="article__title">Notifications & Alerts</h2>
         </header>
 
-        <p class="placeholder">Notifications & Alerts content will be added here.</p>
+        <div class="article__main">
+          <p class="placeholder">Notifications & Alerts content will be added here.</p>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="notifications-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
 
       <!-- Data Management & Backup Article -->
@@ -1229,7 +1446,18 @@
           <h2 class="article__title">Data Management & Backup</h2>
         </header>
 
-        <p class="placeholder">Data Management & Backup content will be added here.</p>
+        <div class="article__main">
+          <p class="placeholder">Data Management & Backup content will be added here.</p>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="data-management-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
 
       <!-- Advanced Settings Article -->
@@ -1239,17 +1467,28 @@
         </header>
 
         <!-- Danger Zone -->
-        <section class="settings__section settings__section--danger">
-          <h3 class="settings__heading settings__heading--danger">
-            Danger Zone
-          </h3>
-          <p class="settings__description">
-            Once you delete a course, there is no going back. Please be certain.
-          </p>
-          <button class="button button--delete" id="delete-course-btn">
-            Delete Course
-          </button>
-        </section>
+        <div class="article__main">
+          <section class="settings__section settings__section--danger">
+            <h3 class="settings__heading settings__heading--danger">
+              Danger Zone
+            </h3>
+            <p class="settings__description">
+              Once you delete a course, there is no going back. Please be certain.
+            </p>
+            <button class="button button--delete" id="delete-course-btn">
+              Delete Course
+            </button>
+          </section>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="advanced-settings-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
       </article>
     </section>
 

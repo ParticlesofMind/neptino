@@ -81,6 +81,37 @@ function resolveCurrentCourseId(): string | null {
   return null;
 }
 
+function getPedagogyStatusElements(): {
+  container: HTMLElement | null;
+  text: HTMLElement | null;
+} {
+  const container = document.getElementById(
+    'pedagogy-save-status',
+  ) as HTMLElement | null;
+  const text = container?.querySelector(
+    '.save-status__text',
+  ) as HTMLElement | null;
+  return { container, text };
+}
+
+function setPedagogyStatus(
+  state: "empty" | "saving" | "saved" | "error",
+  message: string,
+): void {
+  const { container, text } = getPedagogyStatusElements();
+  if (!container || !text) return;
+  container.dataset.status = state;
+  text.textContent = message;
+}
+
+function resetPedagogyStatusIfError(): void {
+  const { container } = getPedagogyStatusElements();
+  if (!container) return;
+  if (container.dataset.status === "error") {
+    setPedagogyStatus("empty", "No data submitted yet");
+  }
+}
+
 function formatSubtitle(x: number, y: number) {
   const xLabel = x <= -50 ? 'Essentialist' : x >= 50 ? 'Progressive' : 'Balanced';
   const yLabel = y <= -50 ? 'Behaviorist' : y >= 50 ? 'Constructivist' : 'Balanced';
@@ -299,7 +330,6 @@ function attachPedagogyGrid() {
 
 async function verifyPedagogyColumn() {
   const form = document.querySelector('#course-pedagogy-form') as HTMLFormElement | null;
-  const statusDiv = document.querySelector('#pedagogy-save-status .save-status__text') as HTMLElement | null;
   if (!form) return;
 
   try {
@@ -319,10 +349,10 @@ async function verifyPedagogyColumn() {
         // Only show pedagogy column warning if we're actually on the pedagogy section
         if (window.location.hash === '#pedagogy' || document.querySelector('#pedagogy:not([style*="display: none"])')) {
           form.dataset.blockSave = 'true';
-          if (statusDiv) {
-            statusDiv.textContent = 'Pedagogy cannot be saved: missing column course_pedagogy. Ask an admin to run the migration.';
-            statusDiv.className = 'save-status__text save-status__text--error';
-          }
+          setPedagogyStatus(
+            "error",
+            'Pedagogy cannot be saved: missing column course_pedagogy. Ask an admin to run the migration.',
+          );
           console.warn('⚠️ Course pedagogy column missing - saving blocked for pedagogy section');
         } else {
           form.dataset.blockSave = 'true';
@@ -334,13 +364,11 @@ async function verifyPedagogyColumn() {
     }
 
     form.dataset.blockSave = 'false';
-    if (statusDiv) {
-      statusDiv.textContent = 'Changes will be saved automatically';
-      statusDiv.className = 'save-status__text';
-    }
+    resetPedagogyStatusIfError();
   } catch (err) {
     console.warn('Pedagogy column verification encountered an unexpected issue but saving remains enabled:', err);
     form.dataset.blockSave = 'false';
+    resetPedagogyStatusIfError();
   }
 }
 

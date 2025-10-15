@@ -33,6 +33,7 @@ export class StudentsManager {
         this.modalController.close("students-upload-modal");
         void this.refreshRoster();
       },
+      onStatusChange: (state, message) => this.updateStatus(state, message),
     });
 
     this.manualManager = new StudentsManualManager({
@@ -44,6 +45,7 @@ export class StudentsManager {
         void this.refreshRoster();
       },
       onCourseIdMissing: () => this.handleMissingCourseId(),
+      onStatusChange: (state, message) => this.updateStatus(state, message),
     });
   }
 
@@ -101,7 +103,58 @@ export class StudentsManager {
     window.addEventListener("courseIdResolved", updateCourseId);
   }
 
+  private getStatusElements(): {
+    container: HTMLElement | null;
+    text: HTMLElement | null;
+  } {
+    const container = document.getElementById(
+      "students-save-status",
+    ) as HTMLElement | null;
+    const text = container?.querySelector(
+      ".save-status__text",
+    ) as HTMLElement | null;
+    return { container, text };
+  }
+
+  private formatSavedMessage(): string {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const day = now.getDate().toString().padStart(2, "0");
+    const month = (now.getMonth() + 1).toString().padStart(2, "0");
+    const year = now.getFullYear();
+    return `This page was last saved at ${hours}:${minutes}, on ${day}.${month}.${year}`;
+  }
+
+  private updateStatus(
+    state: "empty" | "saving" | "saved" | "error",
+    message?: string,
+  ): void {
+    const { container, text } = this.getStatusElements();
+    if (!container || !text) return;
+
+    container.dataset.status = state;
+
+    if (!message) {
+      if (state === "saved") {
+        text.textContent = this.formatSavedMessage();
+        return;
+      }
+      if (state === "saving") {
+        text.textContent = "Saving changes…";
+        return;
+      }
+      if (state === "empty") {
+        text.textContent = "No data submitted yet";
+        return;
+      }
+    }
+
+    text.textContent = message || "";
+  }
+
   private async refreshRoster(showActivity = false): Promise<void> {
+    this.updateStatus("saving", showActivity ? "Refreshing roster…" : "Loading roster…");
     this.preview.setBusy(true);
     const { data, error } = await this.repository.fetchRoster();
     const { data: summary } = await this.repository.fetchSummary();
@@ -110,6 +163,7 @@ export class StudentsManager {
     if (error) {
       console.error("Unable to load students roster:", error);
       this.preview.showFeedback("We could not load the student roster. Try refreshing the page.", "error");
+      this.updateStatus("error", "Failed to load roster");
       return;
     }
 
@@ -122,6 +176,12 @@ export class StudentsManager {
     const courseId = this.repository.getCourseId();
     if (courseId && this.currentStudents.length) {
       dispatchProfilesIndexed(courseId, this.currentStudents);
+    }
+
+    if (this.currentStudents.length > 0) {
+      this.updateStatus("saved");
+    } else {
+      this.updateStatus("empty");
     }
 
     if (showActivity) {
@@ -185,6 +245,7 @@ export class StudentsManager {
 
   private handleMissingCourseId(): void {
     this.preview.showFeedback("Save the course essentials first so we can link students to this course.", "warning");
+    this.updateStatus("error", "Create the course before managing students.");
     document
       .querySelector<HTMLAnchorElement>(".aside__link[data-section='essentials']")
       ?.focus();

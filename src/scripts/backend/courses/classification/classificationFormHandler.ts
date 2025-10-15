@@ -405,13 +405,13 @@ export class ClassificationFormHandler {
       this.performAutoSave();
     }, 1000);
 
-    this.updateSaveStatus("Saving...");
+    this.updateSaveStatus("Saving changes…", "saving");
   }
 
   private async performAutoSave(): Promise<void> {
     const courseId = this.courseId;
     if (!courseId) {
-      this.updateSaveStatus("Waiting for course creation...");
+      this.updateSaveStatus("Waiting for course creation...", "saving");
       return;
     }
 
@@ -428,18 +428,13 @@ export class ClassificationFormHandler {
 
       if (result.success) {
         this.lastSavedData = currentDataString;
-        const now = new Date();
-        const timeString = now.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        this.updateSaveStatus(`Last saved at ${timeString}`);
+        this.updateSaveStatus(this.formatSavedMessage(), "saved");
       } else {
         throw new Error(result.error || "Failed to save classification");
       }
     } catch (error) {
       console.error("Error in auto-save:", error);
-      this.updateSaveStatus("Save failed - will retry");
+      this.updateSaveStatus("Save failed - will retry", "error");
       
       // Retry after 3 seconds
       setTimeout(() => {
@@ -466,11 +461,32 @@ export class ClassificationFormHandler {
     };
   }
 
-  private updateSaveStatus(message: string): void {
-    const statusElement = document.getElementById("classification-save-status");
-    if (statusElement) {
-      statusElement.textContent = message;
+  private updateSaveStatus(
+    message: string,
+    state: "empty" | "saving" | "saved" | "error" = "saved",
+  ): void {
+    const statusElement = document.getElementById(
+      "classification-save-status",
+    ) as HTMLElement | null;
+    if (!statusElement) return;
+
+    statusElement.dataset.status = state;
+    const textElement = statusElement.querySelector(
+      ".save-status__text",
+    ) as HTMLElement | null;
+    if (textElement) {
+      textElement.textContent = message;
     }
+  }
+
+  private formatSavedMessage(): string {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const day = now.getDate().toString().padStart(2, "0");
+    const month = (now.getMonth() + 1).toString().padStart(2, "0");
+    const year = now.getFullYear();
+    return `This page was last saved at ${hours}:${minutes}, on ${day}.${month}.${year}`;
   }
 
   // ==========================================================================
@@ -483,10 +499,11 @@ export class ClassificationFormHandler {
       if (classification) {
         this.populateFormWithData(classification);
         this.lastSavedData = JSON.stringify(classification);
+        this.updateSaveStatus(this.formatSavedMessage(), "saved");
       }
     } catch (error) {
       console.error("Error loading existing classification:", error);
-      this.updateSaveStatus("Error loading existing data");
+      this.updateSaveStatus("Error loading existing data", "error");
     }
   }
 

@@ -55,6 +55,45 @@ interface FieldRow {
   };
 }
 
+function formatTemplateSavedMessage(): string {
+  const now = new Date();
+  const hours = now.getHours().toString().padStart(2, "0");
+  const minutes = now.getMinutes().toString().padStart(2, "0");
+  const day = now.getDate().toString().padStart(2, "0");
+  const month = (now.getMonth() + 1).toString().padStart(2, "0");
+  const year = now.getFullYear();
+  return `This page was last saved at ${hours}:${minutes}, on ${day}.${month}.${year}`;
+}
+
+function setTemplateStatus(
+  state: "saving" | "saved" | "error",
+  message?: string,
+): void {
+  const statusEl = document.getElementById(
+    "template-save-status",
+  ) as HTMLElement | null;
+  if (!statusEl) return;
+
+  const textEl = statusEl.querySelector(
+    ".save-status__text",
+  ) as HTMLElement | null;
+  if (!textEl) return;
+
+  statusEl.dataset.status = state;
+
+  if (state === "saved" && !message) {
+    textEl.textContent = formatTemplateSavedMessage();
+    return;
+  }
+
+  if (state === "saving" && !message) {
+    textEl.textContent = "Saving changes…";
+    return;
+  }
+
+  textEl.textContent = message || "";
+}
+
 export class TemplateManager {
   private static currentlyLoadedTemplateId: string | null = null;
   private static currentlyLoadedTemplateData: any = null;
@@ -138,11 +177,7 @@ export class TemplateManager {
       }
 
       // Show saving status
-      const statusEl = document.getElementById("template-save-status");
-      if (statusEl) {
-        statusEl.innerHTML =
-          '<span class="save-indicator__text save-indicator__text--saving">Saving...</span>';
-      }
+      setTemplateStatus("saving");
 
       // Get current template data from database
       const { data: currentTemplate, error: fetchError } = await supabase
@@ -179,14 +214,7 @@ export class TemplateManager {
       if (updateError) throw updateError;
 
       // Show success status
-      if (statusEl) {
-        statusEl.innerHTML =
-          '<span class="save-indicator__text save-indicator__text--saved">Saved</span>';
-        setTimeout(() => {
-          statusEl.innerHTML =
-            '<span class="">Changes saved automatically</span>';
-        }, 2000);
-      }
+      setTemplateStatus("saved");
 
       // Update the preview
       this.updateTemplatePreview();
@@ -194,15 +222,7 @@ export class TemplateManager {
       console.error("Failed to update template field:", error);
 
       // Show error status
-      const statusEl = document.getElementById("template-save-status");
-      if (statusEl) {
-        statusEl.innerHTML =
-          '<span class="save-indicator__text save-indicator__text--error">Error saving</span>';
-        setTimeout(() => {
-          statusEl.innerHTML =
-            '<span class="">Changes saved automatically</span>';
-        }, 3000);
-      }
+      setTemplateStatus("error", "Error saving changes");
     }
   }
 
