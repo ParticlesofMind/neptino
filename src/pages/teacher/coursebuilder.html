@@ -153,41 +153,54 @@
                 <option value="">Select language...</option>
               </select>
             </label>
-            <label class="form__label form__label--file" for="course-image">
+            <label class="form__label form__label--file">
               Course Image
-              <div class="image-upload" id="course-image-upload">
-                <input class="image-upload__input input input--file" type="file" name="course_image"
-                  id="course-image" accept="image/*" required />
-                <div class="image-upload__overlay" id="course-image-overlay">
-                  <span class="image-upload__placeholder">Drag &amp; drop or click to upload</span>
-                  <img class="image-upload__preview image image--small" id="preview-img" src="" alt="Course preview"
-                    hidden />
-                </div>
-                <span class="image-upload__filename" id="course-image-filename"></span>
-                <button class="button button--small image-upload__remove" type="button" id="remove-image"
-                  aria-label="Remove course image" hidden>
-                  ×
-                </button>
-              </div>
             </label>
+            <div class="image-upload" id="course-image-upload">
+              <input class="image-upload__input input input--file" type="file" name="course_image"
+                id="course-image" accept="image/*" required aria-label="Upload course image" />
+                <div class="image-upload__content" id="course-image-overlay">
+                  <div class="image-upload__empty" id="course-image-empty">
+                    <span class="image-upload__cta-title">Upload course image</span>
+                    <span class="image-upload__cta-subtitle">Drag &amp; drop or click to upload</span>
+                  </div>
+                  <div class="image-upload__details" id="course-image-details" hidden>
+                    <div class="image-upload__thumbnail">
+                      <img class="image-upload__preview" id="preview-img" src="" alt="Course preview" hidden />
+                      <button class="button button--small image-upload__remove" type="button" id="remove-image"
+                        aria-label="Remove course image" hidden>
+                        <span aria-hidden="true">×</span>
+                      </button>
+                    </div>
+                    <div class="image-upload__meta">
+                      <span class="image-upload__label">Change course image</span>
+                      <span class="image-upload__filename" id="course-image-filename" hidden></span>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+                 <div class="course-code" id="course-code-display" hidden>
+              <span class="course-code__label">Course ID</span>
+              <span class="course-code__value" id="course-id-value">—</span>
+              <button class="button button--subtle button--small" type="button" id="course-code-copy-btn" disabled>
+                Copy
+              </button>
+            </div>
+
           </form>
-        </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
+
+       
+
             <div class="save-status" id="essentials-save-status" aria-live="polite" data-status="empty">
               <span class="save-status__icon" aria-hidden="true"></span>
               <span class="save-status__text">No data submitted yet</span>
             </div>
 
             <div class="article__footer-actions">
-              <div class="course-code" id="course-code-display" hidden>
-                <span class="course-code__label">Course ID</span>
-                <span class="course-code__value" id="course-id-value">—</span>
-                <button class="button button--subtle button--small" type="button" id="course-code-copy-btn">
-                  Copy
-                </button>
-              </div>
               <button class="button button--primary button--medium" type="submit" form="course-essentials-form"
                 id="save-essentials-btn">
                 Create Course
@@ -203,72 +216,99 @@
           <h2 class="article__title">Course Classification</h2>
         </header>
 
-        <div class="article__main">
+        <div class="article__main article__main--classification">
           <form class="form form--classification" id="course-classification-form">
-            <label class="form__label" for="class-year-select">
-              <span>Class Year</span>
-              <select class="form__select input input--select" name="class_year" id="class-year-select" required>
-                <option value="">Loading...</option>
-              </select>
-            </label>
-            <label class="form__label" for="curricular-framework-select">
-              <span>Curricular Framework</span>
-              <select class="form__select input input--select" name="curricular_framework"
-                id="curricular-framework-select" required>
-                <option value="">Loading...</option>
-              </select>
-            </label>
-            <label class="form__label" for="domain-select">
-              <span>Domain</span>
-              <span class="form__label-hint">Academic field</span>
-              <select class="form__select input input--select" name="domain" id="domain-select" required>
-                <option value="">Loading...</option>
-              </select>
-            </label>
-            <label class="form__label" for="subject-select">
-              <span>Subject</span>
-              <span class="form__label-hint">Specific discipline</span>
-              <select class="form__select input input--select" name="subject" id="subject-select" required disabled>
-                <option value="">Select domain first...</option>
-              </select>
-            </label>
-            <label class="form__label" for="topic-select">
-              <span>Topic</span>
-              <span class="form__label-hint">Area of study</span>
-              <select class="form__select input input--select" name="topic" id="topic-select" required disabled>
-                <option value="">Select subject first...</option>
-              </select>
-            </label>
-            <label class="form__label" for="subtopic-select">
-              <span>Subtopic</span>
-              <span class="form__label-hint">Specific focus</span>
-              <select class="form__select input input--select" name="subtopic" id="subtopic-select" disabled>
-                <option value="">Select topic first...</option>
-              </select>
-            </label>
-            <h3 class="form__title">Course Sequence</h3>
-            <p class="form__description">Define how this course fits into a learning sequence.</p>
-            <label class="form__label" for="previous-course-select">
-              <span>Previous Course</span>
-              <span class="form__label-hint">Course that should come before this one</span>
-              <select class="form__select input input--select" name="previous_course" id="previous-course-select">
-                <option value="">Loading courses...</option>
-              </select>
-            </label>
-            <label class="form__label" for="current-course-select">
-              <span>Current Course</span>
-              <span class="form__label-hint">Other courses at this level</span>
-              <select class="form__select input input--select" name="current_course" id="current-course-select">
-                <option value="">Loading courses...</option>
-              </select>
-            </label>
-            <label class="form__label" for="next-course-select">
-              <span>Next Course</span>
-              <span class="form__label-hint">Course that should come after this one</span>
-              <select class="form__select input input--select" name="next_course" id="next-course-select">
-                <option value="">Loading courses...</option>
-              </select>
-            </label>
+            <!-- Row 1: Preliminary -->
+            <div class="classification-section classification-section--preliminary">
+              <div class="classification-section__header">
+                <h3 class="classification-section__title">Preliminary</h3>
+                <p class="classification-section__description">Age group and educational framework</p>
+              </div>
+              <div class="classification-section__content">
+                <label class="form__label" for="class-year-select">
+                  <span>Class Year</span>
+                  <select class="form__select input input--select" name="class_year" id="class-year-select" required>
+                    <option value="">Loading...</option>
+                  </select>
+                </label>
+                <label class="form__label" for="curricular-framework-select">
+                  <span>Curricular Framework</span>
+                  <select class="form__select input input--select" name="curricular_framework"
+                    id="curricular-framework-select" required>
+                    <option value="">Loading...</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <!-- Row 2: Classification -->
+            <div class="classification-section classification-section--classification">
+              <div class="classification-section__header">
+                <h3 class="classification-section__title">Classification</h3>
+                <p class="classification-section__description">Subject matter hierarchy</p>
+              </div>
+              <div class="classification-section__content">
+                <label class="form__label" for="domain-select">
+                  <span>Domain</span>
+                  <span class="form__label-hint">Academic field</span>
+                  <select class="form__select input input--select" name="domain" id="domain-select" required>
+                    <option value="">Loading...</option>
+                  </select>
+                </label>
+                <label class="form__label" for="subject-select">
+                  <span>Subject</span>
+                  <span class="form__label-hint">Specific discipline</span>
+                  <select class="form__select input input--select" name="subject" id="subject-select" required disabled>
+                    <option value="">Select domain first...</option>
+                  </select>
+                </label>
+                <label class="form__label" for="topic-select">
+                  <span>Topic</span>
+                  <span class="form__label-hint">Area of study</span>
+                  <select class="form__select input input--select" name="topic" id="topic-select" required disabled>
+                    <option value="">Select subject first...</option>
+                  </select>
+                </label>
+                <label class="form__label" for="subtopic-select">
+                  <span>Subtopic</span>
+                  <span class="form__label-hint">Specific focus</span>
+                  <select class="form__select input input--select" name="subtopic" id="subtopic-select" disabled>
+                    <option value="">Select topic first...</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <!-- Row 3: Course Sequence -->
+            <div class="classification-section classification-section--sequence">
+              <div class="classification-section__header">
+                <h3 class="classification-section__title">Course Sequence</h3>
+                <p class="classification-section__description">Position within the learning pathway</p>
+              </div>
+              <div class="classification-section__content">
+                <label class="form__label" for="previous-course-select">
+                  <span>Previous Course</span>
+                  <span class="form__label-hint">Course that should come before this one</span>
+                  <select class="form__select input input--select" name="previous_course" id="previous-course-select">
+                    <option value="">Loading courses...</option>
+                  </select>
+                </label>
+                <label class="form__label" for="current-course-select">
+                  <span>Current Course</span>
+                  <span class="form__label-hint">Other courses at this level</span>
+                  <select class="form__select input input--select" name="current_course" id="current-course-select">
+                    <option value="">Loading courses...</option>
+                  </select>
+                </label>
+                <label class="form__label" for="next-course-select">
+                  <span>Next Course</span>
+                  <span class="form__label-hint">Course that should come after this one</span>
+                  <select class="form__select input input--select" name="next_course" id="next-course-select">
+                    <option value="">Loading courses...</option>
+                  </select>
+                </label>
+              </div>
+            </div>
           </form>
         </div>
 
@@ -792,82 +832,54 @@
               Import rosters, personalise profiles for Albert AI, and keep every learner aligned with course templates.
             </p>
           </div>
-          <div class="article__actions students__actions">
-            <button class="button button--primary button--medium students__trigger" type="button"
-              data-modal-target="students-upload-modal" id="students-upload-btn">
-              Upload Students
-            </button>
-            <button class="button button--outline button--medium students__trigger" type="button"
-              data-modal-target="students-manual-modal" id="students-manual-btn">
-              Manual Entry
-            </button>
-          </div>
         </header>
 
         <div class="article__main article__main--panels">
           <section class="article__config students__config" aria-labelledby="students-roster-title">
-          <header class="students__section-header">
-            <h3 class="students__section-title" id="students-roster-title">Roster overview</h3>
-            <button class="button button--subtle button--small" type="button" id="students-refresh-btn"
-              aria-label="Refresh roster data">
-              Refresh
+          <div class="students__actions">
+            <button class="button button--primary button--medium students__trigger" type="button"
+              data-modal-target="students-upload-modal" id="students-upload-btn">
+              Upload Students
             </button>
-          </header>
-
-          <p class="students__description">
-            Upload spreadsheets, documents, or connect Google Sheets to populate your roster automatically. Parsed data
-            is validated and mapped to Supabase. When an import completes, profiles update for adaptive lesson planning
-            and Albert AI tutoring.
-          </p>
-
-          <div class="students__panels" role="list">
-            <article class="students__panel students__panel--status" role="listitem" aria-live="polite">
-              <h4 class="students__panel-title">Current roster</h4>
-              <dl class="students__metrics">
-                <div class="students__metric">
-                  <dt>Total students</dt>
-                  <dd id="students-count-total">0</dd>
-                </div>
-                <div class="students__metric">
-                  <dt>Grade levels covered</dt>
-                  <dd id="students-count-grades">—</dd>
-                </div>
-                <div class="students__metric">
-                  <dt>Profiles synced</dt>
-                  <dd id="students-count-synced">0</dd>
-                </div>
-              </dl>
-              <p class="students__status-text" id="students-status-text">
-                No students imported yet. Upload a roster to get started.
-              </p>
-            </article>
-
-            <article class="students__panel students__panel--activity" role="listitem">
-              <h4 class="students__panel-title">Recent imports</h4>
-              <ul class="students__activity-list" id="students-activity-list">
-                <li class="students__activity-item students__activity-item--empty">
-                  Nothing yet — uploads will appear here with timestamps and status.
-                </li>
-              </ul>
-            </article>
+            <label class="form__label" for="students-manual-toggle" style="display: flex; align-items: center; gap: var(--spacing-2);">
+              <input class="form__checkbox" type="checkbox" id="students-manual-toggle" />
+              Manual Entry
+            </label>
           </div>
+          <article class="students__panel students__panel--status" role="listitem" aria-live="polite">
+            <h4 class="students__panel-title">Current roster</h4>
+            <dl class="students__metrics">
+              <div class="students__metric">
+                <dt>Total students</dt>
+                <dd id="students-count-total">0</dd>
+              </div>
+              <div class="students__metric">
+                <dt>Grade levels covered</dt>
+                <dd id="students-count-grades">—</dd>
+              </div>
+              <div class="students__metric">
+                <dt>Profiles synced</dt>
+                <dd id="students-count-synced">0</dd>
+              </div>
+            </dl>
+            <p class="students__status-text" id="students-status-text">
+              No students imported yet. Upload a roster to get started.
+            </p>
+          </article>
+
+          <article class="students__panel students__panel--activity" role="listitem">
+            <h4 class="students__panel-title">Recent imports</h4>
+            <ul class="students__activity-list" id="students-activity-list">
+              <li class="students__activity-item students__activity-item--empty">
+                Nothing yet — uploads will appear here with timestamps and status.
+              </li>
+            </ul>
+          </article>
 
           <div class="students__feedback" id="students-feedback" role="alert" aria-live="assertive" hidden></div>
           </section>
 
           <section class="article__preview students__preview" aria-labelledby="students-preview-title">
-          <header class="students__section-header">
-            <h3 class="students__section-title" id="students-preview-title">Roster preview</h3>
-            <div class="students__preview-actions">
-              <button class="button button--subtle button--small" type="button" id="students-export-btn">
-                Export CSV
-              </button>
-              <button class="button button--subtle button--small" type="button" id="students-clear-preview-btn">
-                Clear Preview
-              </button>
-            </div>
-          </header>
-
           <div class="students__table-wrapper" role="region" aria-live="polite" aria-busy="false"
             aria-describedby="students-preview-empty">
             <table class="students__table" id="students-preview-table">

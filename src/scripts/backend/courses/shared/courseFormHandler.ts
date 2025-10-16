@@ -8,7 +8,8 @@ import {
     getSectionConfig,
 } from "../settings/courseFormConfig";
 import { validateFormSection, isFormSectionValid } from "../shared/courseFormValidator";
-import { createCourse, updateCourse, getCourse, uploadCourseImage } from "../essentials/createCourse";
+import { createCourse, updateCourse, getCourse } from "../essentials/createCourse";
+import { uploadCourseImage, deleteCourseImage } from "./uploadCourseImage";
 
 // ==========================================================================
 // COURSE FORM HANDLER CLASS
@@ -23,6 +24,9 @@ export class CourseFormHandler {
     private lastLoadedCourseId: string | null = null;
     private courseIdEventHandler?: (event: Event) => void;
     private skipNextAutoLoad = false;
+    private currentCourseImageUrl: string | null = null;
+    private pendingImageRemoval = false;
+    private courseImageUrlPendingDeletion: string | null = null;
 
     constructor(sectionName: string, initialCourseId?: string) {
         const config = getSectionConfig(sectionName);
@@ -377,6 +381,11 @@ export class CourseFormHandler {
 
             if (courseData.course_image) {
                 this.displayExistingImage(courseData.course_image);
+            } else {
+                this.clearImagePreview(true);
+                this.currentCourseImageUrl = null;
+                this.pendingImageRemoval = false;
+                this.courseImageUrlPendingDeletion = null;
             }
         } else if (this.sectionConfig.section === "classification") {
       
@@ -626,37 +635,44 @@ export class CourseFormHandler {
     private handleFileChange(input: HTMLInputElement): void {
         const file = input.files?.[0];
         if (file) {
+            this.pendingImageRemoval = false;
+            this.courseImageUrlPendingDeletion = null;
             this.showFilePreview(file);
         }
         this.validateForm();
+        const autosaveActive = this.sectionConfig.autoSave ||
+            (this.sectionConfig.section === 'essentials' && this.currentCourseId);
+        if (autosaveActive && this.currentCourseId) {
+            this.debouncedSave();
+        }
     }
 
     private handleRemoveImage(): void {
-        const elements = this.getImageUploadElements();
-        const { container, preview, removeButton, input } = elements;
-
-        if (container) {
-            container.classList.remove('has-image');
+        const hadExistingImage = Boolean(this.currentCourseImageUrl);
+        const confirmation = window.confirm("Are you sure you want to delete this image?");
+        if (!confirmation) {
+            return;
         }
 
-        if (preview) {
-            preview.src = '';
-            preview.hidden = true;
-            preview.removeAttribute('src');
-            preview.alt = "Course image preview";
+        const previousImageUrl = this.currentCourseImageUrl;
+        this.clearImagePreview(true);
+        if (hadExistingImage) {
+            this.pendingImageRemoval = true;
+            this.courseImageUrlPendingDeletion = previousImageUrl;
+            this.currentCourseImageUrl = null;
+        } else {
+            this.pendingImageRemoval = false;
+            this.courseImageUrlPendingDeletion = null;
         }
-
-        if (removeButton) {
-            removeButton.hidden = true;
-        }
-
-        if (input) {
-            input.value = '';
-            input.setAttribute('aria-label', 'Upload course image');
-        }
-
-        this.setFilenameLabel(null, elements);
         this.validateForm();
+
+        const shouldAutoSave = hadExistingImage && (
+            this.sectionConfig.autoSave ||
+            (this.sectionConfig.section === 'essentials' && this.currentCourseId)
+        );
+        if (shouldAutoSave && this.currentCourseId) {
+            this.debouncedSave();
+        }
     }
 
     private async handleSubmit(event: Event): Promise<void> {
@@ -779,6 +795,8 @@ export class CourseFormHandler {
     private async updateExistingCourse(): Promise<void> {
         if (!this.currentCourseId) return;
 
+        let uploadedImageUrl: string | null = null;
+
         try {
             this.showStatus("Saving changes…", "loading");
             // Prevent save if pedagogy column is missing
@@ -803,6 +821,9 @@ export class CourseFormHandler {
             if (this.sectionConfig.jsonbField) {
                 // For JSONB fields, only include non-File values
                 for (const [key, value] of Object.entries(formData)) {
+                    if (key === 'course_image') {
+                        continue;
+                    }
                     if (value instanceof File || (typeof value === 'string' && value === '')) {
                         continue;
                     }
@@ -824,6 +845,9 @@ export class CourseFormHandler {
                 );
 
                 for (const [key, value] of Object.entries(formData)) {
+                    if (key === 'course_image') {
+                        continue;
+                    }
                     // Skip display fields (read-only)
                     if (displayOnlyFields.has(key)) {
                         console.log(`⏭️  Skipping display-only field: ${key}`);
@@ -840,28 +864,24 @@ export class CourseFormHandler {
                 }
             }
 
-            // Handle file removal/update
-            if ('course_image' in updateData) {
-                const value = updateData.course_image;
-                const shouldRemove =
-                    value === '' ||
-                    value === null ||
-                    (typeof File !== 'undefined' && value instanceof File);
+            const hasNewUpload = selectedFileCandidate instanceof File && selectedFileCandidate.size > 0;
+            const previousImageUrl = this.pendingImageRemoval
+                ? this.courseImageUrlPendingDeletion
+                : this.currentCourseImageUrl;
 
-                if (shouldRemove) {
-                    delete updateData.course_image;
-                }
-            }
-
-            let uploadedImageUrl: string | null = null;
-            if (selectedFileCandidate instanceof File && selectedFileCandidate.size > 0) {
+            if (hasNewUpload) {
                 console.log('📸 Uploading new course image...');
-                uploadedImageUrl = await uploadCourseImage(selectedFileCandidate, this.currentCourseId);
+                uploadedImageUrl = await uploadCourseImage({
+                    file: selectedFileCandidate as File,
+                    courseId: this.currentCourseId,
+                });
                 if (!uploadedImageUrl) {
                     this.showStatus("Failed to upload course image", "error");
                     return;
                 }
                 updateData.course_image = uploadedImageUrl;
+            } else if (this.pendingImageRemoval) {
+                updateData.course_image = null;
             }
 
             if (this.sectionConfig.section === 'pedagogy' && formData.course_pedagogy) {
@@ -904,15 +924,48 @@ export class CourseFormHandler {
                 this.showStatus("Saved ✓", "success");
                 if (uploadedImageUrl) {
                     this.displayExistingImage(uploadedImageUrl);
+                    if (previousImageUrl && previousImageUrl !== uploadedImageUrl) {
+                        const removed = await deleteCourseImage(previousImageUrl);
+                        if (!removed) {
+                            console.warn('⚠️ Failed to remove previous course image from storage');
+                        }
+                    }
+                } else if (this.pendingImageRemoval) {
+                    if (previousImageUrl) {
+                        const removed = await deleteCourseImage(previousImageUrl);
+                        if (!removed) {
+                            console.warn('⚠️ Failed to remove previous course image from storage');
+                        }
+                    }
+                    this.clearImagePreview(true);
+                    this.currentCourseImageUrl = null;
+                    this.pendingImageRemoval = false;
+                    this.courseImageUrlPendingDeletion = null;
+                    this.validateForm();
                 }
             } else {
                 if (this.sectionConfig.section === 'pedagogy') {
                     console.error('❌ Pedagogy save failed', result.error);
                 }
+                if (uploadedImageUrl) {
+                    await deleteCourseImage(uploadedImageUrl);
+                    uploadedImageUrl = null;
+                }
                 throw new Error(result.error || "Failed to save");
             }
         } catch (error) {
             console.error("❌ Error updating course:", error);
+            if (uploadedImageUrl) {
+                await deleteCourseImage(uploadedImageUrl);
+                uploadedImageUrl = null;
+            }
+            if (this.pendingImageRemoval) {
+                if (this.courseImageUrlPendingDeletion) {
+                    this.displayExistingImage(this.courseImageUrlPendingDeletion);
+                }
+                this.pendingImageRemoval = false;
+                this.courseImageUrlPendingDeletion = null;
+            }
             const errorMsg = error instanceof Error ? error.message : String(error);
             this.showStatus(`Failed to save: ${errorMsg}`, "error");
         }
@@ -924,17 +977,28 @@ export class CourseFormHandler {
 
     private displayExistingImage(imageUrl: string): void {
         const elements = this.getImageUploadElements();
-        const { container, preview, removeButton, input } = elements;
+        const { container, preview, removeButton, input, details, emptyState, filename } = elements;
 
-        if (!container || !preview || !removeButton) {
+        if (!container || !preview || !removeButton || !details) {
             return;
         }
+
+        this.currentCourseImageUrl = imageUrl;
+        this.pendingImageRemoval = false;
+        this.courseImageUrlPendingDeletion = null;
 
         preview.src = imageUrl;
         preview.alt = "Course image preview";
         preview.hidden = false;
         container.classList.add("has-image");
         removeButton.hidden = false;
+        details.hidden = false;
+        if (emptyState) {
+            emptyState.hidden = true;
+        }
+        if (filename) {
+            filename.hidden = false;
+        }
 
         const parsedFileName = this.extractFilenameFromPath(imageUrl);
         const friendlyName = parsedFileName.toLowerCase().startsWith("cover.")
@@ -943,15 +1007,55 @@ export class CourseFormHandler {
         this.setFilenameLabel(friendlyName, elements);
 
         if (input) {
+            input.value = "";
             input.setAttribute("aria-label", `Change course image (${friendlyName})`);
         }
     }
 
+    private clearImagePreview(resetInput: boolean = true): void {
+        const elements = this.getImageUploadElements();
+        const { container, preview, removeButton, input, details, emptyState, filename } = elements;
+
+        if (container) {
+            container.classList.remove("has-image");
+        }
+
+        if (preview) {
+            preview.src = "";
+            preview.removeAttribute("src");
+            preview.alt = "Course image preview";
+            preview.hidden = true;
+        }
+
+        if (removeButton) {
+            removeButton.hidden = true;
+        }
+
+        if (details) {
+            details.hidden = true;
+        }
+
+        if (emptyState) {
+            emptyState.hidden = false;
+        }
+
+        if (filename) {
+            filename.hidden = true;
+        }
+
+        if (resetInput && input) {
+            input.value = "";
+            input.setAttribute("aria-label", "Upload course image");
+        }
+
+        this.setFilenameLabel(null, elements);
+    }
+
     private showFilePreview(file: File): void {
         const elements = this.getImageUploadElements();
-        const { container, preview, removeButton, input } = elements;
+        const { container, preview, removeButton, input, details, emptyState, filename } = elements;
 
-        if (!container || !preview || !removeButton) {
+        if (!container || !preview || !removeButton || !details) {
             return;
         }
 
@@ -962,6 +1066,13 @@ export class CourseFormHandler {
             preview.hidden = false;
             container.classList.add("has-image");
             removeButton.hidden = false;
+            details.hidden = false;
+            if (emptyState) {
+                emptyState.hidden = true;
+            }
+            if (filename) {
+                filename.hidden = false;
+            }
             this.setFilenameLabel(file.name, elements);
 
             if (input) {
@@ -977,6 +1088,8 @@ export class CourseFormHandler {
         preview: HTMLImageElement | null;
         removeButton: HTMLButtonElement | null;
         filename: HTMLElement | null;
+        details: HTMLElement | null;
+        emptyState: HTMLElement | null;
     } {
         return {
             container: document.getElementById("course-image-upload") as HTMLElement | null,
@@ -984,6 +1097,8 @@ export class CourseFormHandler {
             preview: document.getElementById("preview-img") as HTMLImageElement | null,
             removeButton: document.getElementById("remove-image") as HTMLButtonElement | null,
             filename: document.getElementById("course-image-filename") as HTMLElement | null,
+            details: document.getElementById("course-image-details") as HTMLElement | null,
+            emptyState: document.getElementById("course-image-empty") as HTMLElement | null,
         };
     }
 
@@ -999,8 +1114,10 @@ export class CourseFormHandler {
 
         if (content) {
             refs.filename.setAttribute("title", content);
+            refs.filename.hidden = false;
         } else {
             refs.filename.removeAttribute("title");
+            refs.filename.hidden = true;
         }
     }
 
@@ -1044,7 +1161,7 @@ export class CourseFormHandler {
 
         if (isEssentialsSection && this.currentCourseId) {
             // After course creation, button shows status and is disabled since auto-save is active
-            submitBtn.textContent = "✓ Course Created (auto-save active)";
+            submitBtn.textContent = "✓ Course Created";
             submitBtn.disabled = true;
             submitBtn.classList.add("button--disabled");
             submitBtn.setAttribute("aria-disabled", "true");

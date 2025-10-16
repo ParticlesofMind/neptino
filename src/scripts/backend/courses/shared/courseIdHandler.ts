@@ -40,14 +40,15 @@ export class CourseIdHandler {
  codeValueElement.textContent = courseId;
  }
  
- // Store the course ID in the copy button's data attribute
+ // Store the course ID in the copy button's data attribute and enable it
  if (this.courseCopyBtn) {
  this.courseCopyBtn.setAttribute('data-course-id', courseId);
  this.courseCopyBtn.setAttribute('title', `Copy course ID: ${courseId}`);
+ this.courseCopyBtn.disabled = false;
  }
 
  // Show the course code display
- this.courseCodeDisplay.style.display = 'flex';
+ this.courseCodeDisplay.removeAttribute('hidden');
  
  }
 

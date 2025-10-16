@@ -3,6 +3,7 @@
 // ==========================================================================
 
 import { supabase } from "../../supabase";
+import { uploadCourseImage, deleteCourseImage } from "../shared/uploadCourseImage";
 
 // Course creation interface
 export interface CourseCreationData {
@@ -46,44 +47,6 @@ export function validateCourseData(
 
 export function isValidCourse(validation: CourseValidation): boolean {
  return Object.values(validation).every((isValid) => isValid);
-}
-
-// ==========================================================================
-// IMAGE UPLOAD
-// ==========================================================================
-
-export async function uploadCourseImage(
- file: File,
- courseId: string,
-): Promise<string | null> {
- try {
- const fileExt = file.name.split(".").pop();
- const fileName = `${courseId}/cover.${fileExt}`;
- const filePath = `course-images/${fileName}`;
-
- // Upload file to Supabase Storage
- const { error } = await supabase.storage
- .from("courses")
- .upload(filePath, file, {
- cacheControl: "3600",
- upsert: true,
- });
-
- if (error) {
- console.error("Error uploading image:", error);
- return null;
- }
-
- // Get public URL
- const {
- data: { publicUrl },
- } = supabase.storage.from("courses").getPublicUrl(filePath);
-
- return publicUrl;
- } catch (error) {
- console.error("Error in uploadCourseImage:", error);
- return null;
- }
 }
 
 // ==========================================================================
@@ -151,7 +114,10 @@ export async function createCourse(
 
  // Upload image if provided
  if (data.course_image) {
- const imageUrl = await uploadCourseImage(data.course_image, courseId);
+ const imageUrl = await uploadCourseImage({
+ file: data.course_image,
+ courseId,
+ });
  if (imageUrl) {
  // Update course with image URL using course_image field
  const { error: updateError } = await supabase
@@ -161,6 +127,7 @@ export async function createCourse(
 
  if (updateError) {
  console.error("Error updating course with image:", updateError);
+ await deleteCourseImage(imageUrl);
  // Don't fail the entire operation for image update failure
  console.warn("Course created but image update failed");
  }
