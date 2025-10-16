@@ -236,23 +236,47 @@ export async function updateCourse(
  data: Partial<CourseCreationData>,
 ): Promise<{ success: boolean; error?: string }> {
  try {
+ // Filter out File objects and other non-serializable values
+ const cleanData: Record<string, any> = {};
+ for (const [key, value] of Object.entries(data)) {
+ if (value instanceof File) {
+ // Skip file objects - they should be handled separately via uploadCourseImage
+ console.log(`⏭️  Skipping File object for key: ${key}`);
+ continue;
+ }
+ cleanData[key] = value;
+ }
+
+ console.log('📤 Sending update to Supabase:', {
+ courseId,
+ data: cleanData,
+ timestamp: new Date().toISOString()
+ });
+
  const { error } = await supabase
  .from("courses")
  .update({
- ...data,
+ ...cleanData,
  updated_at: new Date().toISOString(),
  })
  .eq("id", courseId);
 
  if (error) {
- console.error("Error updating course:", error);
+ console.error("❌ Error updating course in Supabase:", {
+ courseId,
+ error: error.message,
+ details: error.details,
+ hint: error.hint,
+ code: error.code
+ });
  return { success: false, error: error.message || "Failed to update course" };
  }
 
+ console.log('✅ Course updated successfully in Supabase:', courseId);
  return { success: true };
  } catch (error) {
- console.error("Error in updateCourse:", error);
- return { success: false, error: "Unexpected error occurred" };
+ console.error("❌ Error in updateCourse:", error);
+ return { success: false, error: error instanceof Error ? error.message : "Unexpected error occurred" };
  }
 }
 

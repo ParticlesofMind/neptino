@@ -341,7 +341,14 @@ export class CourseFormHandler {
                 return;
             }
 
-            console.log('✅ Course data loaded successfully:', courseData);
+            console.log('✅ Course data loaded successfully:', {
+                courseId: courseData.id,
+                courseName: courseData.course_name,
+                courseDescription: courseData.course_description,
+                courseLanguage: courseData.course_language,
+                lastUpdated: courseData.updated_at,
+                timestamp: new Date().toISOString()
+            });
             this.populateFormFields(courseData);
             if (!suppressStatus) {
                 this.showStatus("", "success");
@@ -607,7 +614,11 @@ export class CourseFormHandler {
             return;
         }
 
-        if (this.sectionConfig.autoSave && this.currentCourseId) {
+        // Enable auto-save for essentials section after course creation
+        const shouldAutoSave = this.sectionConfig.autoSave || 
+            (this.sectionConfig.section === 'essentials' && this.currentCourseId);
+        
+        if (shouldAutoSave && this.currentCourseId) {
             this.debouncedSave();
         }
     }
@@ -782,12 +793,54 @@ export class CourseFormHandler {
             const formData = this.getFormData();
             const updateData: Record<string, any> = {};
 
+            console.log('🔍 Processing form data for update:', {
+                section: this.sectionConfig.section,
+                formDataKeys: Object.keys(formData),
+                hasFile: selectedFileCandidate instanceof File,
+                courseId: this.currentCourseId
+            });
+
             if (this.sectionConfig.jsonbField) {
-                updateData[this.sectionConfig.jsonbField] = formData;
+                // For JSONB fields, only include non-File values
+                for (const [key, value] of Object.entries(formData)) {
+                    if (value instanceof File || (typeof value === 'string' && value === '')) {
+                        continue;
+                    }
+                    updateData[key] = value;
+                }
+                if (Object.keys(updateData).length > 0) {
+                    updateData[this.sectionConfig.jsonbField] = updateData;
+                    // Remove individual keys since they're now in the JSONB field
+                    this.sectionConfig.fields.forEach((field) => {
+                        delete updateData[field.name];
+                    });
+                }
             } else {
-                Object.assign(updateData, formData);
+                // For top-level columns, only include updatable fields
+                const displayOnlyFields = new Set(
+                    this.sectionConfig.fields
+                        .filter(f => f.type === 'display')
+                        .map(f => f.name)
+                );
+
+                for (const [key, value] of Object.entries(formData)) {
+                    // Skip display fields (read-only)
+                    if (displayOnlyFields.has(key)) {
+                        console.log(`⏭️  Skipping display-only field: ${key}`);
+                        continue;
+                    }
+                    // Skip File objects and empty strings
+                    if (value instanceof File) {
+                        continue;
+                    }
+                    if (typeof value === 'string' && value === '' && key !== 'course_image') {
+                        continue;
+                    }
+                    updateData[key] = value;
+                }
             }
 
+            // Handle file removal/update
             if ('course_image' in updateData) {
                 const value = updateData.course_image;
                 const shouldRemove =
@@ -802,6 +855,7 @@ export class CourseFormHandler {
 
             let uploadedImageUrl: string | null = null;
             if (selectedFileCandidate instanceof File && selectedFileCandidate.size > 0) {
+                console.log('📸 Uploading new course image...');
                 uploadedImageUrl = await uploadCourseImage(selectedFileCandidate, this.currentCourseId);
                 if (!uploadedImageUrl) {
                     this.showStatus("Failed to upload course image", "error");
@@ -823,12 +877,30 @@ export class CourseFormHandler {
                 }
             }
 
+            console.log('📤 Final update payload:', {
+                courseId: this.currentCourseId,
+                section: this.sectionConfig.section,
+                updateData: updateData,
+                timestamp: new Date().toISOString()
+            });
+
+            if (Object.keys(updateData).length === 0) {
+                console.warn('⚠️ No data to update - all fields were empty or invalid');
+                this.showStatus("No changes to save", "success");
+                return;
+            }
+
             const result = await updateCourse(this.currentCourseId, updateData);
 
             if (result.success) {
                 if (this.sectionConfig.section === 'pedagogy') {
                     console.log('✅ Pedagogy save success');
                 }
+                console.log('✅ Course update success:', {
+                    courseId: this.currentCourseId,
+                    section: this.sectionConfig.section,
+                    timestamp: new Date().toISOString()
+                });
                 this.showStatus("Saved ✓", "success");
                 if (uploadedImageUrl) {
                     this.displayExistingImage(uploadedImageUrl);
@@ -840,8 +912,9 @@ export class CourseFormHandler {
                 throw new Error(result.error || "Failed to save");
             }
         } catch (error) {
-            console.error("Error updating course:", error);
-            this.showStatus("Failed to save", "error");
+            console.error("❌ Error updating course:", error);
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            this.showStatus(`Failed to save: ${errorMsg}`, "error");
         }
     }
 
@@ -970,15 +1043,18 @@ export class CourseFormHandler {
         }
 
         if (isEssentialsSection && this.currentCourseId) {
-            submitBtn.textContent = "Created Course";
+            // After course creation, button shows status and is disabled since auto-save is active
+            submitBtn.textContent = "✓ Course Created (auto-save active)";
             submitBtn.disabled = true;
             submitBtn.classList.add("button--disabled");
             submitBtn.setAttribute("aria-disabled", "true");
+            submitBtn.title = "Changes are automatically saved as you type";
             return;
         }
 
         if (isEssentialsSection) {
             submitBtn.textContent = submitBtn.dataset.originalLabel ?? "Create Course";
+            submitBtn.title = "Click to create a new course";
         }
 
         const shouldDisable = !this.isFormValid();
