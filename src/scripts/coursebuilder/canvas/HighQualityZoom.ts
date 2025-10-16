@@ -508,8 +508,19 @@ export class HighQualityZoom {
 
         const keyDownHandler = (event: KeyboardEvent) => {
             if (event.code === 'Space' && !event.repeat) {
-                // Prevent spacebar from scrolling the page
-                event.preventDefault();
+                // Don't prevent spacebar default behavior when typing in form inputs
+                const activeElement = document.activeElement;
+                const isFormInput = activeElement && (
+                    activeElement.tagName === 'INPUT' ||
+                    activeElement.tagName === 'TEXTAREA' ||
+                    activeElement.tagName === 'SELECT' ||
+                    (activeElement as HTMLElement).isContentEditable
+                );
+                
+                if (!isFormInput) {
+                    // Prevent spacebar from scrolling the page when not in form inputs
+                    event.preventDefault();
+                }
                 
                 if (!this.isSpacePressed) {
                     this.isSpacePressed = true;

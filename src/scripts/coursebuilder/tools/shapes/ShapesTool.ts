@@ -137,7 +137,7 @@ export class ShapesTool extends BaseTool {
         // Dimension snapping to match width/height of nearby objects
         try {
             this.applyDimensionSnapping(container);
-        } catch {}
+        } catch { /* empty */ }
 
         // Check if shift key is pressed for proportional drawing
         this.isProportional = event.shiftKey;
@@ -168,6 +168,7 @@ export class ShapesTool extends BaseTool {
 
             // Log the final shape details
             if (this.currentShape.parent) {
+                /* empty */
             } else {
                 console.warn(`🔶 SHAPES: Shape not added to any parent!`);
             }
@@ -307,7 +308,7 @@ export class ShapesTool extends BaseTool {
                 }
                 (this.currentShape as any).__toolType = 'shapes';
                 (this.currentShape as any).__meta = meta;
-            } catch {}
+            } catch { /* empty */ }
         }
         this.isDrawing = false;
         this.currentShape = null;
@@ -519,7 +520,7 @@ export class ShapesTool extends BaseTool {
                     const h = Math.abs(br.y - tl.y);
                     if (w > 0.01 && h > 0.01) out.push(new Rectangle(x, y, w, h));
                 }
-            } catch {}
+            } catch { /* empty */ }
             if (node.children && Array.isArray(node.children)) {
                 for (const child of node.children) visit(child);
             }
@@ -553,6 +554,7 @@ export class ShapesTool extends BaseTool {
 
         // Log shape type changes
         if (settings.shapeType && settings.shapeType !== previousShapeType) {
+            /* empty */
         }
     }
 

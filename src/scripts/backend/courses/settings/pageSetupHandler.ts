@@ -21,7 +21,7 @@ export interface PageLayoutSettings {
 export class PageSetupHandler {
   private courseId: string | null = null;
   private currentSettings: PageLayoutSettings;
-  private saveTimeout: NodeJS.Timeout | null = null;
+  private saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     // Default values (2.54cm = 1 inch)
@@ -104,7 +104,7 @@ export class PageSetupHandler {
     if (fromUnit === toUnit) return;
     
     // First convert from source unit to mm (base unit)
-    let marginsInMm = {
+    const marginsInMm = {
       top: this.currentSettings.margins.top,
       bottom: this.currentSettings.margins.bottom,
       left: this.currentSettings.margins.left,

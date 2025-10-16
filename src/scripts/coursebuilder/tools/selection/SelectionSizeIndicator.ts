@@ -49,7 +49,7 @@ export class SelectionSizeIndicator {
     const dir = new Point(bestEdge.p2.x - bestEdge.p1.x, bestEdge.p2.y - bestEdge.p1.y);
     const len = Math.hypot(dir.x, dir.y) || 1;
     dir.x /= len; dir.y /= len;
-    let normal = new Point(-dir.y, dir.x);
+    const normal = new Point(-dir.y, dir.x);
     if (normal.y < 0) {
       normal.x = -normal.x;
       normal.y = -normal.y;
@@ -63,7 +63,7 @@ export class SelectionSizeIndicator {
   }
 
   public clear(): void {
-    if (this.indicator) { if (this.indicator.container.parent) this.indicator.container.parent.removeChild(this.indicator.container); try { this.indicator.container.destroy({ children: true }); } catch {} this.indicator = null; }
+    if (this.indicator) { if (this.indicator.container.parent) this.indicator.container.parent.removeChild(this.indicator.container); try { this.indicator.container.destroy({ children: true }); } catch { /* empty */ } this.indicator = null; }
   }
 }
 

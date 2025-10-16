@@ -144,7 +144,7 @@ export class TextInputHandler implements ITextInputHandler {
     if (this.isNavigationOrEditKey(event.key)) {
       event.preventDefault();
       event.stopPropagation();
-      try { (event as any).stopImmediatePropagation?.(); } catch {}
+      try { (event as any).stopImmediatePropagation?.(); } catch { /* empty */ }
     }
 
     switch (event.key) {
@@ -189,11 +189,12 @@ export class TextInputHandler implements ITextInputHandler {
         this.insertCharacterInternal(ch);
         event.preventDefault();
         event.stopPropagation();
-        try { (event as any).stopImmediatePropagation?.(); } catch {}
+        try { (event as any).stopImmediatePropagation?.(); } catch { /* empty */ }
       }
     }
   }
 
+  // eslint-disable-next-line no-unused-vars
   private handleKeyPress(_event: KeyboardEvent): void {
     // Intentionally no-op to avoid double-insertion; keydown handles input.
   }
@@ -204,7 +205,7 @@ export class TextInputHandler implements ITextInputHandler {
     if (event.key === ' ' || (event as any).code === 'Space') {
       event.preventDefault();
       event.stopPropagation();
-      try { (event as any).stopImmediatePropagation?.(); } catch {}
+      try { (event as any).stopImmediatePropagation?.(); } catch { /* empty */ }
     }
   }
 
@@ -244,7 +245,7 @@ export class TextInputHandler implements ITextInputHandler {
     }
     
     if (this.onTextChange) {
-      try { this.onTextChange(this.activeTextArea.text); } catch {}
+      try { this.onTextChange(this.activeTextArea.text); } catch { /* empty */ }
     }
     
   }
@@ -336,7 +337,7 @@ export class TextInputHandler implements ITextInputHandler {
     this.cursorPosition--;
     this.updateCursorPosition();
     if (this.onTextChange) {
-      try { this.onTextChange(this.activeTextArea.text); } catch {}
+      try { this.onTextChange(this.activeTextArea.text); } catch { /* empty */ }
     }
   }
 
@@ -358,7 +359,7 @@ export class TextInputHandler implements ITextInputHandler {
       this.activeTextArea.deleteText(this.cursorPosition, 1);
       this.updateCursorPosition();
       if (this.onTextChange) {
-        try { this.onTextChange(this.activeTextArea.text); } catch {}
+        try { this.onTextChange(this.activeTextArea.text); } catch { /* empty */ }
       }
     }
   }

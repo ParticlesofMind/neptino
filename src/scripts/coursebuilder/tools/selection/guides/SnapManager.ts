@@ -303,7 +303,7 @@ class SnapManager {
         if (root) visit(root);
         objects = acc;
       }
-    } catch {}
+    } catch { /* empty */ }
 
     const excludeSet = new Set((options?.exclude || []).map(o => o));
     const rect = options?.rect;
@@ -351,7 +351,7 @@ class SnapManager {
         horizontal.push(centerCandidateY);
 
         centers.push({ x: centerCandidateX.value, y: centerCandidateY.value });
-      } catch {}
+      } catch { /* empty */ }
     }
 
     if (this.prefs.enableMidpoints) {
@@ -500,7 +500,7 @@ class SnapManager {
       if (typeof w === 'number' && typeof h === 'number') {
         return { width: w, height: h };
       }
-    } catch {}
+    } catch { /* empty */ }
     // Fallback to DOM canvas size (may be scaled by resolution) only if Pixi app not available
     const canvas = document.getElementById('pixi-canvas') as HTMLCanvasElement | null;
     if (canvas) {
@@ -517,8 +517,8 @@ class SnapManager {
 
   // ---- State & UI helpers ----
   private saveState(): void {
-    try { localStorage.setItem('snap.activeMode', this.activeMode); } catch {}
-    try { localStorage.setItem('snap.prefs', JSON.stringify(this.prefs)); } catch {}
+    try { localStorage.setItem('snap.activeMode', this.activeMode); } catch { /* empty */ }
+    try { localStorage.setItem('snap.prefs', JSON.stringify(this.prefs)); } catch { /* empty */ }
   }
   private loadState(): void {
     try {
@@ -562,7 +562,7 @@ class SnapManager {
           this.prefs.theme = 'auto';
         }
       }
-    } catch {}
+    } catch { /* empty */ }
   }
   private updateAnchorDisplay(): void {
     const anchor = document.querySelector('[data-snap-anchor]') as HTMLElement | null;

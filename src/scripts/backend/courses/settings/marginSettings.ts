@@ -17,7 +17,7 @@ export interface MarginSettings {
 export class MarginSettingsHandler {
  private courseId: string | null = null;
  private currentSettings: MarginSettings;
- private saveTimeout: NodeJS.Timeout | null = null;
+ private saveTimeout: ReturnType<typeof setTimeout> | null = null;
  private courseBuilder: any = null; // Will be set when course builder is available
 
  constructor() {
@@ -278,6 +278,7 @@ export class MarginSettingsHandler {
  this.currentSettings,
  );
  } else {
+ // eslint-disable-next-line no-empty
  }
 
  // Update UI and canvas

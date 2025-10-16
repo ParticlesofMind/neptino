@@ -21,7 +21,7 @@ initializeGlobalNavigation();
 // Initialize dashboard navigation if present
 const dashboardNav = initializeDashboardNavigation();
 if (dashboardNav) {
-
+  // eslint-disable-next-line no-empty
 }
 
 
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
  
  if (isAuthPage) {
  new AuthFormHandler();
-
+ // eslint-disable-next-line no-empty
  }
 
  // Initialize page setup handler for coursebuilder pages
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
        pageSetupHandler.setCourseId(courseId);
     
      } else {
-    
+       // eslint-disable-next-line no-empty
      }
    }).catch(error => {
      console.error('Failed to initialize page setup handler:', error);

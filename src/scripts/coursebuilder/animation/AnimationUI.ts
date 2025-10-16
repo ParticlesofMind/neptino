@@ -27,7 +27,7 @@ export class AnimationUI {
     this.bindModeListener();
     this.installed = true;
     // Initial overlay draw if applicable
-    try { pathOverlay.refresh(); } catch {}
+    try { pathOverlay.refresh(); } catch { /* empty */ }
   }
 
   private bindModeListener(): void {
@@ -50,13 +50,13 @@ export class AnimationUI {
       const allowed = (allowedByMode[cm] || allowedByMode.build);
       const currentTool = this.toolState.getCurrentTool();
       if (!allowed.has(currentTool)) {
-        try { this.toolState.setTool('selection'); } catch {}
+        try { this.toolState.setTool('selection'); } catch { /* empty */ }
       }
 
       // Hide selection speed panel when not in animate mode
       const selPanel = document.querySelector('.engine__tools .engine__tools-options .engine__tools-item--selection') as HTMLElement | null;
       if (selPanel) selPanel.style.display = (cm === 'animate') ? selPanel.style.display : 'none';
-      try { pathOverlay.refresh(); } catch {}
+      try { pathOverlay.refresh(); } catch { /* empty */ }
     });
   }
 
@@ -70,7 +70,7 @@ export class AnimationUI {
     const allowed = new Set(['selection', 'scene', 'path', 'modify']);
     if (!allowed.has(currentTool)) {
       currentTool = 'selection';
-      try { this.toolState.setTool('selection'); } catch {}
+      try { this.toolState.setTool('selection'); } catch { /* empty */ }
     }
 
     // Update active classes within animate container
@@ -460,33 +460,37 @@ export class AnimationUI {
     const meta = (selectedObject as any).__meta || {};
     
     switch (detail.objectType) {
-      case 'pen':
+      case 'pen': {
         const penSizeInput = panel.querySelector('[data-modify-property="size"]') as HTMLInputElement;
         if (penSizeInput && meta.size) {
           penSizeInput.value = meta.size.toString();
         }
         break;
+      }
       
-      case 'brush':
+      case 'brush': {
         const brushSizeInput = panel.querySelector('[data-modify-property="size"]') as HTMLInputElement;
         if (brushSizeInput && meta.size) {
           brushSizeInput.value = meta.size.toString();
         }
         break;
+      }
         
-      case 'shapes':
+      case 'shapes': {
         const strokeWidthInput = panel.querySelector('[data-modify-property="strokeWidth"]') as HTMLInputElement;
         if (strokeWidthInput && meta.strokeWidth) {
           strokeWidthInput.value = meta.strokeWidth.toString();
         }
         break;
+      }
         
-      case 'text':
+      case 'text': {
         const fontSizeSelect = panel.querySelector('[data-modify-property="fontSize"]') as HTMLSelectElement;
         if (fontSizeSelect && meta.fontSize) {
           fontSizeSelect.value = meta.fontSize.toString();
         }
         break;
+      }
     }
     
     // Update range displays
@@ -531,5 +535,5 @@ export function initializeAnimationUI(toolState: ToolStateManager): void {
     const mode = toolState.getCurrentMode();
     const evt = new CustomEvent('mode:changed', { detail: mode });
     document.dispatchEvent(evt);
-  } catch {}
+  } catch { /* empty */ }
 }

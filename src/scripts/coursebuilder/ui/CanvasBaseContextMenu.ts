@@ -108,13 +108,13 @@ export class CanvasBaseContextMenu {
   private hide(): void { if (this.menuEl) this.menuEl.style.display = 'none'; }
 
   // Actions reuse central APIs to avoid duplicated logic
-  private handleCopy(): void { try { if (copySelection()) this.hasClipboard = true; } catch {} }
-  private handlePaste(): void { try { pasteSelection(); } catch {} }
-  private handleDuplicate(): void { try { duplicateSelection(); } catch {} }
-  private handleGroup(): void { try { groupSelection(); } catch {} }
-  private handleUngroup(): void { try { ungroupSelection(); } catch {} }
-  private handleFlipHorizontal(): void { try { flipSelectionHorizontal(); } catch {} }
-  private handleFlipVertical(): void { try { flipSelectionVertical(); } catch {} }
+  private handleCopy(): void { try { if (copySelection()) this.hasClipboard = true; } catch { /* empty */ } }
+  private handlePaste(): void { try { pasteSelection(); } catch { /* empty */ } }
+  private handleDuplicate(): void { try { duplicateSelection(); } catch { /* empty */ } }
+  private handleGroup(): void { try { groupSelection(); } catch { /* empty */ } }
+  private handleUngroup(): void { try { ungroupSelection(); } catch { /* empty */ } }
+  private handleFlipHorizontal(): void { try { flipSelectionHorizontal(); } catch { /* empty */ } }
+  private handleFlipVertical(): void { try { flipSelectionVertical(); } catch { /* empty */ } }
 }
 
 // Auto-init helper if needed

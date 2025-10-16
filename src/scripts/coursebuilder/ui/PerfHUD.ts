@@ -155,7 +155,7 @@ export class PerfHUD {
 
     // Try to fetch draw calls if available (best-effort)
     let drawCalls: number | null = null;
-    try { drawCalls = renderer?.stats?.drawCalls ?? renderer?.performance?.drawCalls ?? null; } catch {}
+    try { drawCalls = renderer?.stats?.drawCalls ?? renderer?.performance?.drawCalls ?? null; } catch { /* empty */ }
 
     return { dims, resolution, counts, drawCalls };
   }
@@ -242,13 +242,13 @@ export class PerfHUD {
     if (!root || !app) return;
     if (action === 'cache-selected') {
       const selected = this.getSelectedObjects() || [];
-      selected.forEach((obj: any) => { try { (obj as any).cacheAsBitmap = true; } catch {} });
+      selected.forEach((obj: any) => { try { (obj as any).cacheAsBitmap = true; } catch { /* empty */ } });
     } else if (action === 'cache-visible') {
       const targetSet = this.getVisibleTargetSet(root);
-      targetSet.forEach((obj: any) => { try { (obj as any).cacheAsBitmap = true; } catch {} });
+      targetSet.forEach((obj: any) => { try { (obj as any).cacheAsBitmap = true; } catch { /* empty */ } });
     } else if (action === 'uncache-visible') {
       const targetSet = this.getVisibleTargetSet(root);
-      targetSet.forEach((obj: any) => { try { (obj as any).cacheAsBitmap = false; } catch {} });
+      targetSet.forEach((obj: any) => { try { (obj as any).cacheAsBitmap = false; } catch { /* empty */ } });
     } else if (action === 'spriteify-visible') {
       const targetSet = this.getVisibleTargetSet(root);
       this.spriteifyObjects(targetSet, app);
@@ -262,8 +262,8 @@ export class PerfHUD {
         const H = portrait ? CANVAS_HEIGHT : CANVAS_WIDTH;  // 1800 : 1200
         canvasAPI.resize(W, H);
         // Reset and fit view
-        try { pm?.setZoom?.(1.0); pm?.updateCanvasReference?.(); pm?.fitToContainer?.(); } catch {}
-      } catch {}
+        try { pm?.setZoom?.(1.0); pm?.updateCanvasReference?.(); pm?.fitToContainer?.(); } catch { /* empty */ }
+      } catch { /* empty */ }
     }
   }
 
@@ -283,7 +283,7 @@ export class PerfHUD {
           if (!selectionRect || this.rectsIntersect(b, selectionRect)) {
             out.push(node);
           }
-        } catch {}
+        } catch { /* empty */ }
       }
       const ch = node.children;
       if (ch && Array.isArray(ch)) for (const c of ch) visit(c);
@@ -342,8 +342,8 @@ export class PerfHUD {
         (sprite as any).eventMode = 'none';
         parent.addChild(sprite);
         parent.removeChild(obj);
-        try { obj.destroy(); } catch {}
-      } catch {}
+        try { obj.destroy(); } catch { /* empty */ }
+      } catch { /* empty */ }
     });
   }
 }

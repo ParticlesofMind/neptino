@@ -70,7 +70,7 @@ export class TransformController {
       if (isRotation) {
         // For rotation: pivot around each object's own local center
         let lb: Rectangle | null = null;
-        try { lb = obj.getLocalBounds(); } catch {}
+        try { lb = obj.getLocalBounds(); } catch { /* empty */ }
         const localCenter = lb
           ? new Point(lb.x + lb.width * 0.5, lb.y + lb.height * 0.5)
           : new Point((obj.width ?? 0) * 0.5, (obj.height ?? 0) * 0.5);
@@ -106,7 +106,7 @@ export class TransformController {
           const b = ta.bounds;
           state.startTextBounds = { x: b.x, y: b.y, width: b.width, height: b.height };
         }
-      } catch {}
+      } catch { /* empty */ }
 
       return state;
     });
@@ -156,7 +156,7 @@ export class TransformController {
               obj.position.set(posInParent.x, posInParent.y);
             }
           }
-        } catch {}
+        } catch { /* empty */ }
       }
     }
 
@@ -174,7 +174,7 @@ export class TransformController {
           } else {
             console.warn('TransformController.end: object has no parent; skipped position realignment to avoid (0,0) jump');
           }
-        } catch {}
+        } catch { /* empty */ }
       });
     }
     // Fully reset controller state so no further updates are applied after mouseup
@@ -292,7 +292,7 @@ export class TransformController {
 
         // Ensure scale is kept normalized
         if (obj.scale) { obj.scale.set(1, 1); }
-      } catch {}
+      } catch { /* empty */ }
     }
 
     // Apply scale to non-text objects only
@@ -350,7 +350,7 @@ export class TransformController {
           const localCenter = new Point(lb.x + lb.width * 0.5, lb.y + lb.height * 0.5);
           const world = obj.toGlobal(localCenter);
           return this.container!.toLocal(world);
-        } catch {}
+        } catch { /* empty */ }
       }
       const b = this.selectionGroup.bounds;
       a.set(b.x + b.width * 0.5, b.y + b.height * 0.5);

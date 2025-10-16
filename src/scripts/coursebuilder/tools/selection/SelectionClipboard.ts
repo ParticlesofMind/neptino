@@ -63,7 +63,7 @@ export class SelectionClipboard {
     if (typeof globalAny?.structuredClone === 'function') {
       try {
         return globalAny.structuredClone(value);
-      } catch {}
+      } catch { /* empty */ }
     }
     try {
       return JSON.parse(JSON.stringify(value));
@@ -77,7 +77,7 @@ export class SelectionClipboard {
     if (typeof style.toJSON === 'function') {
       try {
         return style.toJSON();
-      } catch {}
+      } catch { /* empty */ }
     }
     if (typeof style === 'object') {
       return this.cloneData(style);
@@ -124,7 +124,7 @@ export class SelectionClipboard {
           obj.parent.removeChild(obj);
           obj.destroy?.();
         }
-      } catch {}
+      } catch { /* empty */ }
     }
     this.setSelected([]);
     this.dispatchClipboardEvent();
@@ -143,12 +143,12 @@ export class SelectionClipboard {
     for (const item of this.items) {
       try {
         // Debug: log item kind
-        try { console.log('📋 PASTE item:', (item as any).kind || (item as any).type || typeof item); } catch {}
+        try { console.log('📋 PASTE item:', (item as any).kind || (item as any).type || typeof item); } catch { /* empty */ }
         const nodes = this.constructNode(item, target, offset);
         if (Array.isArray(nodes)) nodes.forEach(n => created.push(n)); else if (nodes) created.push(nodes);
-        else { try { console.warn('📋 PASTE warn: constructNode returned null for item', item); } catch {} }
+        else { try { console.warn('📋 PASTE warn: constructNode returned null for item', item); } catch { /* empty */ } }
       } catch (e) {
-        try { console.warn('📋 PASTE error:', e); } catch {}
+        try { console.warn('📋 PASTE error:', e); } catch { /* empty */ }
       }
     }
 
@@ -164,7 +164,7 @@ export class SelectionClipboard {
         if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
           created.forEach(obj => moveByContainerDelta(obj, dx, dy, target));
         }
-      } catch {}
+      } catch { /* empty */ }
     }
 
     if (created.length) {
@@ -173,10 +173,10 @@ export class SelectionClipboard {
         const createdInfo = created.map((obj: any) => ({ obj, parent: obj.parent as Container, index: (obj.parent as Container).getChildIndex(obj) }));
         historyManager.push({
           label: 'Paste',
-          undo: () => { createdInfo.forEach(({ obj }) => { try { if (obj.parent) obj.parent.removeChild(obj); } catch {} }); },
-          redo: () => { createdInfo.forEach(({ obj, parent, index }) => { try { if (index >= 0 && index <= parent.children.length) parent.addChildAt(obj, Math.min(index, parent.children.length)); else parent.addChild(obj); } catch {} }); },
+          undo: () => { createdInfo.forEach(({ obj }) => { try { if (obj.parent) obj.parent.removeChild(obj); } catch { /* empty */ } }); },
+          redo: () => { createdInfo.forEach(({ obj, parent, index }) => { try { if (index >= 0 && index <= parent.children.length) parent.addChildAt(obj, Math.min(index, parent.children.length)); else parent.addChild(obj); } catch { /* empty */ } }); },
         });
-      } catch {}
+      } catch { /* empty */ }
       this.setSelected(created);
       this.dispatchClipboardEvent({ pasted: true });
     }
@@ -210,11 +210,11 @@ export class SelectionClipboard {
 
   private extractProps(obj: any): CommonProps {
     const props: CommonProps = {};
-    try { if (obj.alpha !== undefined) props.alpha = obj.alpha; } catch {}
-    try { if (obj.blendMode !== undefined) props.blendMode = obj.blendMode; } catch {}
-    try { if ((obj as any).tint !== undefined) props.tint = (obj as any).tint; } catch {}
-    try { if ((obj as any).roundPixels !== undefined) props.roundPixels = !!(obj as any).roundPixels; } catch {}
-    try { if ((obj as any).filters !== undefined) props.filters = (obj as any).filters?.slice?.() || undefined; } catch {}
+    try { if (obj.alpha !== undefined) props.alpha = obj.alpha; } catch { /* empty */ }
+    try { if (obj.blendMode !== undefined) props.blendMode = obj.blendMode; } catch { /* empty */ }
+    try { if ((obj as any).tint !== undefined) props.tint = (obj as any).tint; } catch { /* empty */ }
+    try { if ((obj as any).roundPixels !== undefined) props.roundPixels = !!(obj as any).roundPixels; } catch { /* empty */ }
+    try { if ((obj as any).filters !== undefined) props.filters = (obj as any).filters?.slice?.() || undefined; } catch { /* empty */ }
     return props;
   }
 
@@ -222,12 +222,12 @@ export class SelectionClipboard {
     const extras: ExtraProps = {};
     try {
       if ((obj as any).__toolType) extras.toolType = String((obj as any).__toolType);
-    } catch {}
+    } catch { /* empty */ }
     try {
       if ((obj as any).__meta && typeof (obj as any).__meta === 'object') {
         extras.meta = this.cloneData((obj as any).__meta);
       }
-    } catch {}
+    } catch { /* empty */ }
     try {
       const metadata = (obj as any).metadata;
       if (metadata && typeof metadata === 'object') {
@@ -236,17 +236,17 @@ export class SelectionClipboard {
           extras.metadata = this.cloneData(metadata);
         }
       }
-    } catch {}
-    try { if (obj.name) extras.name = obj.name; } catch {}
-    try { if (obj.cursor) extras.cursor = obj.cursor; } catch {}
-    try { if (obj.eventMode !== undefined) extras.eventMode = obj.eventMode; } catch {}
-    try { if (typeof obj.interactive === 'boolean') extras.interactive = obj.interactive; } catch {}
-    try { if (typeof obj.interactiveChildren === 'boolean') extras.interactiveChildren = obj.interactiveChildren; } catch {}
-    try { if (typeof obj.sortableChildren === 'boolean') extras.sortableChildren = obj.sortableChildren; } catch {}
-    try { if (typeof obj.buttonMode === 'boolean') extras.buttonMode = obj.buttonMode; } catch {}
-    try { if (typeof obj.visible === 'boolean') extras.visible = obj.visible; } catch {}
-    try { if (typeof obj.zIndex === 'number') extras.zIndex = obj.zIndex; } catch {}
-    try { if (typeof (obj as any).cacheAsBitmap === 'boolean') extras.cacheAsBitmap = (obj as any).cacheAsBitmap; } catch {}
+    } catch { /* empty */ }
+    try { if (obj.name) extras.name = obj.name; } catch { /* empty */ }
+    try { if (obj.cursor) extras.cursor = obj.cursor; } catch { /* empty */ }
+    try { if (obj.eventMode !== undefined) extras.eventMode = obj.eventMode; } catch { /* empty */ }
+    try { if (typeof obj.interactive === 'boolean') extras.interactive = obj.interactive; } catch { /* empty */ }
+    try { if (typeof obj.interactiveChildren === 'boolean') extras.interactiveChildren = obj.interactiveChildren; } catch { /* empty */ }
+    try { if (typeof obj.sortableChildren === 'boolean') extras.sortableChildren = obj.sortableChildren; } catch { /* empty */ }
+    try { if (typeof obj.buttonMode === 'boolean') extras.buttonMode = obj.buttonMode; } catch { /* empty */ }
+    try { if (typeof obj.visible === 'boolean') extras.visible = obj.visible; } catch { /* empty */ }
+    try { if (typeof obj.zIndex === 'number') extras.zIndex = obj.zIndex; } catch { /* empty */ }
+    try { if (typeof (obj as any).cacheAsBitmap === 'boolean') extras.cacheAsBitmap = (obj as any).cacheAsBitmap; } catch { /* empty */ }
     return extras;
   }
 
@@ -363,7 +363,7 @@ export class SelectionClipboard {
             cells.push({ x: cell.bounds.x, y: cell.bounds.y, width: cell.bounds.width, height: cell.bounds.height, text: textValue, style });
           }
         }
-      } catch {}
+      } catch { /* empty */ }
       return { kind: 'table', settings, cells, transform: tr, props, extras };
     }
 
@@ -389,7 +389,7 @@ export class SelectionClipboard {
         const tex = (Texture as any).from ? (Texture as any).from(obj) : null;
         if (tex) return { kind: 'sprite', texture: tex, transform: tr, props, extras } as any;
       }
-    } catch {}
+    } catch { /* empty */ }
 
     return null;
   }
@@ -399,16 +399,16 @@ export class SelectionClipboard {
     if (obj.pivot) obj.pivot.set(tr.pivotX ?? 0, tr.pivotY ?? 0);
     if (obj.scale) obj.scale.set(tr.scaleX ?? 1, tr.scaleY ?? 1);
     if ((obj as any).anchor && (tr.anchorX !== undefined || tr.anchorY !== undefined)) (obj as any).anchor.set(tr.anchorX ?? 0, tr.anchorY ?? 0);
-    try { if ((obj as any).skew && (tr.skewX !== undefined || tr.skewY !== undefined)) (obj as any).skew.set(tr.skewX ?? 0, tr.skewY ?? 0); } catch {}
+    try { if ((obj as any).skew && (tr.skewX !== undefined || tr.skewY !== undefined)) (obj as any).skew.set(tr.skewX ?? 0, tr.skewY ?? 0); } catch { /* empty */ }
   }
 
   private applyProps(obj: any, props?: CommonProps | null): void {
     if (!props) return;
-    try { if (props.alpha !== undefined) obj.alpha = props.alpha; } catch {}
-    try { if (props.blendMode !== undefined) obj.blendMode = props.blendMode; } catch {}
-    try { if (props.tint !== undefined && (obj as any).tint !== undefined) (obj as any).tint = props.tint; } catch {}
-    try { if (props.roundPixels !== undefined && (obj as any).roundPixels !== undefined) (obj as any).roundPixels = props.roundPixels; } catch {}
-    try { if (props.filters !== undefined) (obj as any).filters = props.filters; } catch {}
+    try { if (props.alpha !== undefined) obj.alpha = props.alpha; } catch { /* empty */ }
+    try { if (props.blendMode !== undefined) obj.blendMode = props.blendMode; } catch { /* empty */ }
+    try { if (props.tint !== undefined && (obj as any).tint !== undefined) (obj as any).tint = props.tint; } catch { /* empty */ }
+    try { if (props.roundPixels !== undefined && (obj as any).roundPixels !== undefined) (obj as any).roundPixels = props.roundPixels; } catch { /* empty */ }
+    try { if (props.filters !== undefined) (obj as any).filters = props.filters; } catch { /* empty */ }
   }
 
   private constructNode(desc: NodeDesc, target: Container, offset: number): any | any[] | null {
@@ -525,7 +525,7 @@ export class SelectionClipboard {
     }
 
     if (created.parent && created.parent !== target) {
-      try { created.parent.removeChild(created); } catch {}
+      try { created.parent.removeChild(created); } catch { /* empty */ }
     }
     if (created.parent !== target) {
       target.addChild(created);
@@ -555,7 +555,7 @@ export class SelectionClipboard {
           }
         }
       }
-    } catch {}
+    } catch { /* empty */ }
     return null;
   }
   private detectToolType(obj: any): 'text' | 'shapes' | 'pen' | 'brush' | null {
@@ -574,6 +574,6 @@ export class SelectionClipboard {
     try {
       const evt = new CustomEvent('selection:clipboard', { detail: { hasClipboard: this.items.length > 0, ...(extra || {}) } });
       document.dispatchEvent(evt);
-    } catch {}
+    } catch { /* empty */ }
   }
 }

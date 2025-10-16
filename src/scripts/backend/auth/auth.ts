@@ -154,23 +154,27 @@ export function redirectUser(userRole: string) {
 
   switch (userRole) {
     case "administrator":
-    case "admin":
+    case "admin": {
       const adminUrl = `${origin}/src/pages/admin/home.html`;
       window.location.href = adminUrl;
       break;
- case "teacher":
+    }
+ case "teacher": {
  const teacherUrl = `${origin}/src/pages/teacher/home.html`;
  window.location.href = teacherUrl;
  break;
- case "student":
+ }
+ case "student": {
  const studentUrl = `${origin}/src/pages/student/home.html`;
  window.location.href = studentUrl;
  break;
- default:
+ }
+ default: {
  console.warn("❌ Unknown role, defaulting to student:", userRole);
  const defaultUrl = `${origin}/src/pages/student/home.html`;
  window.location.href = defaultUrl;
  }
+}
 }
 
 // Initialize auth state listener
@@ -220,6 +224,7 @@ export function initAuth() {
  );
  window.location.href = "/src/pages/shared/signin.html";
  } else {
+ // eslint-disable-next-line no-empty
  }
  }
  });

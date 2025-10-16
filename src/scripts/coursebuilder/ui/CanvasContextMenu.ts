@@ -126,8 +126,8 @@ export class CanvasContextMenu {
   private hide(): void { if (this.menuEl) this.menuEl.style.display = 'none'; }
 
   // Actions
-  private handleCopy(): void { try { if (copySelection()) this.hasClipboard = true; } catch {} }
-  private handlePaste(): void { try { pasteSelection(); } catch {} }
-  private handleDuplicate(): void { try { duplicateSelection(); } catch {} }
-  private handleDelete(): void { try { deleteSelectionViaKeyEvent(); } catch {} }
+  private handleCopy(): void { try { if (copySelection()) this.hasClipboard = true; } catch { /* empty */ } }
+  private handlePaste(): void { try { pasteSelection(); } catch { /* empty */ } }
+  private handleDuplicate(): void { try { duplicateSelection(); } catch { /* empty */ } }
+  private handleDelete(): void { try { deleteSelectionViaKeyEvent(); } catch { /* empty */ } }
 }

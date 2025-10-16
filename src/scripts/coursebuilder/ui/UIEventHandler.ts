@@ -27,7 +27,7 @@ export class UIEventHandler {
                 const btn = (e.target as HTMLElement).closest('[data-tool]') as HTMLElement | null;
                 if (btn && toolsContainer.contains(btn)) {
                     // Use event delegation: prevent default and set tool directly
-                    try { (e as any)?.preventDefault?.(); } catch {}
+                    try { (e as any)?.preventDefault?.(); } catch { /* empty */ }
                     const toolName = btn.dataset.tool;
                     if (toolName) {
                         this.toolStateManager.setTool(toolName);

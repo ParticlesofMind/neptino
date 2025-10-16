@@ -170,7 +170,7 @@ export class SceneTool extends BaseTool {
     // Deselect all existing scenes before selecting the new one
     const existingScenes = animationState.getScenes();
     existingScenes.forEach(existingScene => {
-      try { existingScene.setSelected(false); } catch {}
+      try { existingScene.setSelected(false); } catch { /* empty */ }
     });
 
     const bounds = this.normalizeBounds(x, y, constrainedWidth, constrainedHeight);
@@ -178,7 +178,7 @@ export class SceneTool extends BaseTool {
     scene.setLoop(animationState.getLoop());
     scene.setDuration(animationState.getSceneDuration());
     animationState.addScene(scene);
-    try { scene.setSelected(true); } catch {}
+    try { scene.setSelected(true); } catch { /* empty */ }
   }
 
   private normalizeBounds(x: number, y: number, width: number, height: number): SceneBounds {

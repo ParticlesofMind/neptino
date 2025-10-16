@@ -684,7 +684,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (canvasHost) {
     canvasHost.addEventListener('dragover', (e) => { 
       e.preventDefault();
-      try { (e as DragEvent).dataTransfer!.dropEffect = 'copy'; } catch {}
+      try { (e as DragEvent).dataTransfer!.dropEffect = 'copy'; } catch { /* empty */ }
       // Add visual feedback when dragging over canvas
       canvasHost.classList.add('drag-over');
     });

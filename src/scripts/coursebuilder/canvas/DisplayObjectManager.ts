@@ -90,9 +90,9 @@ export class DisplayObjectManager {
     // Legacy compatibility
     this.objects.add(displayObject);
     
-    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('➕ Added display object:', { id, type: displayObject.constructor.name, toolType: (displayObject as any).__toolType, parentChildren: targetParent.children.length }); } catch {}
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('➕ Added display object:', { id, type: displayObject.constructor.name, toolType: (displayObject as any).__toolType, parentChildren: targetParent.children.length }); } catch { /* empty */ }
     // Notify UI layers panel
-    try { document.dispatchEvent(new CustomEvent('displayObject:added', { detail: { id, object: displayObject } })); } catch {}
+    try { document.dispatchEvent(new CustomEvent('displayObject:added', { detail: { id, object: displayObject } })); } catch { /* empty */ }
     
     return id;
   }
@@ -146,8 +146,8 @@ export class DisplayObjectManager {
       }
     }
     
-    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('🗑️ Removed display object:', { id: actualId || 'unknown', type: displayObject.constructor.name }); } catch {}
-    try { document.dispatchEvent(new CustomEvent('displayObject:removed', { detail: { id: actualId, object: displayObject } })); } catch {}
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('🗑️ Removed display object:', { id: actualId || 'unknown', type: displayObject.constructor.name }); } catch { /* empty */ }
+    try { document.dispatchEvent(new CustomEvent('displayObject:removed', { detail: { id: actualId, object: displayObject } })); } catch { /* empty */ }
     
     return true;
   }
@@ -175,7 +175,7 @@ export class DisplayObjectManager {
    * Clear all display objects
    */
   public clear(): void {
-    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('🧹 Clearing all display objects...'); } catch {}
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('🧹 Clearing all display objects...'); } catch { /* empty */ }
     
     // Remove all objects
     for (const [, displayObject] of this.allObjects) {
@@ -189,7 +189,7 @@ export class DisplayObjectManager {
     this.allObjects.clear();
     this.objects.clear();
     
-    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('✅ All display objects cleared'); } catch {}
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('✅ All display objects cleared'); } catch { /* empty */ }
   }
 
   /**
@@ -197,7 +197,7 @@ export class DisplayObjectManager {
    */
   public createGraphics(parent?: Container): { graphics: Graphics; id: string } {
     const graphics = new Graphics();
-    try { (graphics as any).eventMode = 'none'; (graphics as any).interactiveChildren = false; } catch {}
+    try { (graphics as any).eventMode = 'none'; (graphics as any).interactiveChildren = false; } catch { /* empty */ }
     
     // Mark with tool type so layers panel recognizes it as a real object
     (graphics as any).__toolType = 'graphics';
@@ -218,7 +218,7 @@ export class DisplayObjectManager {
     
     const id = this.add(container, parent);
     
-    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('📦 Created container:', { id }); } catch {}
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('📦 Created container:', { id }); } catch { /* empty */ }
     
     return { container, id };
   }
@@ -248,7 +248,7 @@ export class DisplayObjectManager {
     parent.removeChild(displayObject);
     parent.addChild(displayObject);
     
-    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('⬆️ Brought to front:', id); } catch {}
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('⬆️ Brought to front:', id); } catch { /* empty */ }
     return true;
   }
 
@@ -263,7 +263,7 @@ export class DisplayObjectManager {
     parent.removeChild(displayObject);
     parent.addChildAt(displayObject, 0);
     
-    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('⬇️ Sent to back:', id); } catch {}
+    try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('⬇️ Sent to back:', id); } catch { /* empty */ }
     return true;
   }
 
@@ -278,7 +278,7 @@ export class DisplayObjectManager {
     try {
       if (typeof parent.setChildIndex === 'function') parent.setChildIndex(displayObject, newIdx);
       else { parent.removeChild(displayObject); parent.addChildAt(displayObject, newIdx); }
-      try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('⤴️ Brought forward:', { id, from: idx, to: newIdx }); } catch {}
+      try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('⤴️ Brought forward:', { id, from: idx, to: newIdx }); } catch { /* empty */ }
       return true;
     } catch { return false; }
   }
@@ -294,7 +294,7 @@ export class DisplayObjectManager {
     try {
       if (typeof parent.setChildIndex === 'function') parent.setChildIndex(displayObject, newIdx);
       else { parent.removeChild(displayObject); parent.addChildAt(displayObject, newIdx); }
-      try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('⤵️ Sent backward:', { id, from: idx, to: newIdx }); } catch {}
+      try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('⤵️ Sent backward:', { id, from: idx, to: newIdx }); } catch { /* empty */ }
       return true;
     } catch { return false; }
   }

@@ -404,7 +404,7 @@ export function bindSnapMenu(): void {
         if (cbVal) cbVal.textContent = `×${Number(prefs.centerBiasMultiplier).toFixed(2)}`;
       }
       if (sg && typeof prefs?.enableSymmetryGuides === 'boolean') sg.checked = !!prefs.enableSymmetryGuides;
-    } catch {}
+    } catch { /* empty */ }
   } catch (error) {
     console.warn('Failed to initialize snap menu state:', error);
     updateSelectedOption('smart'); // fallback to smart

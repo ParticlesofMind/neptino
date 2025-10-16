@@ -36,10 +36,10 @@
   "devDependencies": {
     "@playwright/test": "^1.56.0",
     "@types/node": "^24.3.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
     "canvas": "^3.2.0",
-    "eslint": "^8.45.0",
+    "eslint": "^8.57.1",
     "prettier": "^3.0.0",
     "rollup-plugin-visualizer": "^6.0.3",
     "sass": "^1.90.0",
@@ -61,12 +61,12 @@
     "@pixi/devtools": "^2.0.1",
     "@pixi/layout": "^3.1.0",
     "@supabase/supabase-js": "^2.54.0",
+    "read-excel-file": "^5.8.0",
     "mammoth": "^1.5.1",
     "pdfjs-dist": "^4.6.82",
     "pixi-viewport": "^6.0.3",
     "pixi.js": "^8.13.0",
     "spectorjs": "^0.9.30",
-    "xlsx": "^0.18.5",
     "yoga-layout": "^3.2.1"
   }
 }

@@ -7,6 +7,7 @@ import { BaseShapeDrawer } from "./BaseShapeDrawer";
 import { ShapeDrawingContext, StrokeStyle, FillStyle } from "./types";
 
 export class LineDrawer extends BaseShapeDrawer {
+    // eslint-disable-next-line no-unused-vars
     draw(context: ShapeDrawingContext, strokeStyle: StrokeStyle, _fillStyle?: FillStyle): void {
         
         this.graphics

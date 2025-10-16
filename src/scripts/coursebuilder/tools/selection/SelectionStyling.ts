@@ -16,7 +16,9 @@ export class SelectionStyling {
           case 'shapes': changed = this.restyleShape(obj as any, meta, settings) || changed; break;
           case 'text': changed = this.restyleText(obj as any, settings) || changed; break;
         }
-      } catch { }
+      } catch {
+        /* empty */
+      }
     }
     return changed;
   }

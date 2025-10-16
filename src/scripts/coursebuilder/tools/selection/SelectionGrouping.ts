@@ -13,7 +13,7 @@ export class SelectionGrouping {
       if (!grpInfo) parent.addChild(group);
       const indices = selected.map(o => parent.children.indexOf(o)).filter(i => i >= 0);
       const insertIdx = indices.length ? Math.max(...indices) : parent.children.length - 1;
-      try { parent.setChildIndex(group, insertIdx + 1); } catch {}
+      try { parent.setChildIndex(group, insertIdx + 1); } catch { /* empty */ }
       const moved: any[] = [];
       selected.forEach((obj) => {
         try {
@@ -23,7 +23,7 @@ export class SelectionGrouping {
           const local = group.toLocal(world);
           (obj as any).position?.set(local.x, local.y);
           moved.push(obj);
-        } catch {}
+        } catch { /* empty */ }
       });
       return { newSelection: [group as any] };
     } catch {
@@ -47,7 +47,7 @@ export class SelectionGrouping {
         }
         if ((dm as any)?.remove) { (dm as any).remove(cont); } else { cont.parent?.removeChild(cont); cont.destroy?.(); }
         changed = true;
-      } catch {}
+      } catch { /* empty */ }
     }
     if (changed) return { newSelection }; return null;
   }

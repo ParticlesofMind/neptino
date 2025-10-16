@@ -39,7 +39,7 @@ export class FreesoundProvider extends BaseProvider {
     }
     if (options.license) {
       // license:"Attribution" or full CC url; accept raw string passthrough
-      filters.push(`license:\"${options.license}\"`);
+      filters.push(`license:"${options.license}"`);
     }
     if (options.minBitrateKbps !== undefined || options.maxBitrateKbps !== undefined) {
       const min = options.minBitrateKbps ?? 0;

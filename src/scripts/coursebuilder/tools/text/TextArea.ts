@@ -244,8 +244,8 @@ export class TextArea implements ITextArea {
   public destroy(): void {
     this.container.parent?.removeChild(this.container);
     this.container.destroy({ children: true });
-    try { this.measureText?.destroy(); } catch {}
-    try { (this.flowManager as any)?.destroy?.(); } catch {}
+    try { this.measureText?.destroy(); } catch { /* empty */ }
+    try { (this.flowManager as any)?.destroy?.(); } catch { /* empty */ }
   }
 
   private calculateLineHeight(): void {
@@ -295,7 +295,7 @@ export class TextArea implements ITextArea {
       const optimal = this.flowManager.calculateOptimalHeight(this._text, contentWidth, this.lineHeight);
       this._bounds.height = Math.max(this.minHeight, optimal);
       this.render();
-    } catch {}
+    } catch { /* empty */ }
   }
 
   private drawBorder(): void {

@@ -1161,7 +1161,7 @@ export class Scene {
         document.dispatchEvent(new CustomEvent('displayObject:added', { 
           detail: { id: (object as any).objectId || (object as any).__id, object: object } 
         }));
-      } catch {}
+      } catch { /* empty */ }
     }
   }
 
@@ -1195,7 +1195,7 @@ export class Scene {
         document.dispatchEvent(new CustomEvent('displayObject:added', { 
           detail: { id: (object as any).objectId || (object as any).__id, object: object } 
         }));
-      } catch {}
+      } catch { /* empty */ }
     } else if (object.parent === this.root) {
       this.root.removeChild(object);
     }
@@ -1238,7 +1238,7 @@ export class Scene {
           document.dispatchEvent(new CustomEvent('displayObject:updated', { 
             detail: { id: objectId, object: targetObject } 
           }));
-        } catch {}
+        } catch { /* empty */ }
       }
       
       // Clear path visual if it exists

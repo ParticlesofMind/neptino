@@ -153,15 +153,22 @@
                 <option value="">Select language...</option>
               </select>
             </label>
-            <label class="form__label" for="course-image">
+            <label class="form__label form__label--file" for="course-image">
               Course Image
-              <input class="input input--file" type="file" name="course_image" id="course-image" accept="image/*"
-                required />
-              <img class="image image--small" id="preview-img" src="" alt="Course preview" style="display: none" />
-              <button class="button button--small image-upload__remove" type="button" id="remove-image"
-                style="display: none">
-                ×
-              </button>
+              <div class="image-upload" id="course-image-upload">
+                <input class="image-upload__input input input--file" type="file" name="course_image"
+                  id="course-image" accept="image/*" required />
+                <div class="image-upload__overlay" id="course-image-overlay">
+                  <span class="image-upload__placeholder">Drag &amp; drop or click to upload</span>
+                  <img class="image-upload__preview image image--small" id="preview-img" src="" alt="Course preview"
+                    hidden />
+                </div>
+                <span class="image-upload__filename" id="course-image-filename"></span>
+                <button class="button button--small image-upload__remove" type="button" id="remove-image"
+                  aria-label="Remove course image" hidden>
+                  ×
+                </button>
+              </div>
             </label>
           </form>
         </div>

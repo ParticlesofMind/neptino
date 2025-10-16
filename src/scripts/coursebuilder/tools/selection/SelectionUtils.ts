@@ -7,7 +7,7 @@ export function computeCombinedBoundsLocal(objects: any[], container: Container)
       const b = obj.getBounds();
       minWX = Math.min(minWX, b.x); minWY = Math.min(minWY, b.y);
       maxWX = Math.max(maxWX, b.x + b.width); maxWY = Math.max(maxWY, b.y + b.height);
-    } catch {}
+    } catch { /* empty */ }
   }
   if (!isFinite(minWX)) return new Rectangle(0, 0, 0, 0);
   const tl = container.toLocal(new Point(minWX, minWY));
@@ -44,7 +44,7 @@ export function moveObjectByContainerDelta(obj: any, dx: number, dy: number, con
     const pBLocal = obj.parent.toLocal(pBWorld);
     obj.position.x += (pBLocal.x - pALocal.x);
     obj.position.y += (pBLocal.y - pALocal.y);
-  } catch {}
+  } catch { /* empty */ }
 }
 
 export function detectToolType(obj: any): string | null {
@@ -78,7 +78,7 @@ export function colorToNumber(c?: any): number | undefined {
       if (s.startsWith('#')) v = parseInt(s.slice(1), 16);
       else if (/^0x/i.test(s)) v = parseInt(s, 16);
       else if (/^\d+$/.test(s)) v = parseInt(s, 10);
-    } catch {}
+    } catch { /* empty */ }
     return Number.isFinite(v) ? v : undefined;
   }
   return undefined;

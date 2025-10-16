@@ -17,7 +17,7 @@ export class StockMediaProvider extends BaseProvider {
     try {
       // Prefer Vite-resolved asset URL (works in build and dev)
       url = new URL('../../../assets/stock_media/manifest.json', import.meta.url).href;
-      let res = await fetch(url);
+      const res = await fetch(url);
       if (!res.ok) throw new Error('primary fetch failed');
       const data = await res.json();
       this.manifestCache = data;

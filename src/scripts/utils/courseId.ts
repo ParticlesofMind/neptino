@@ -14,6 +14,7 @@ export function getCourseId(): string | null {
  const courseId = urlParams.get('courseId') || urlParams.get('id');
  
  if (courseId) {
+   /* empty */
  }
  
  return courseId;

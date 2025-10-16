@@ -84,7 +84,7 @@ export class BoundaryUtils {
         const screen = app?.screen || app?.renderer?.screen;
         if (screen) { canvasWidth = screen.width || canvasWidth; canvasHeight = screen.height || canvasHeight; }
       }
-    } catch {}
+    } catch { /* empty */ }
     return { width: canvasWidth, height: canvasHeight, left: 0, top: 0, right: canvasWidth, bottom: canvasHeight };
   }
 
@@ -139,7 +139,7 @@ export class BoundaryUtils {
       if (typeof window !== 'undefined' && (window as any).__TEST_MODE__) {
         return true;
       }
-    } catch {}
+    } catch { /* empty */ }
     
     // Check if point is within content area (excluding margins)
     return point.x >= bounds.left && 
@@ -167,8 +167,8 @@ export class BoundaryUtils {
     let clampedY = Math.max(bounds.top, Math.min(bounds.bottom - rect.height, rect.y));
     
     // If the rectangle is larger than available space, reduce its size
-    let clampedWidth = Math.min(rect.width, bounds.right - bounds.left);
-    let clampedHeight = Math.min(rect.height, bounds.bottom - bounds.top);
+    const clampedWidth = Math.min(rect.width, bounds.right - bounds.left);
+    const clampedHeight = Math.min(rect.height, bounds.bottom - bounds.top);
     
     // Re-adjust position if size was reduced
     if (clampedWidth < rect.width) {

@@ -1,6 +1,6 @@
 import mammoth from "mammoth";
 import { GlobalWorkerOptions, getDocument } from "pdfjs-dist/build/pdf.mjs";
-import { read, utils } from "xlsx";
+import readXlsxFile from "read-excel-file";
 import type {
   RawStudentRow,
   StudentField,
@@ -60,10 +60,20 @@ function buildParseResult(rows: RawStudentRow[], warnings: string[]): StudentPar
 }
 
 async function parseSpreadsheet(buffer: ArrayBuffer): Promise<StudentParseResult> {
-  const workbook = read(buffer, { type: "array" });
-  const sheetName = workbook.SheetNames[0];
-  const sheet = workbook.Sheets[sheetName];
-  const rows = utils.sheet_to_json<RawStudentRow>(sheet, { defval: "" });
+  const data = await readXlsxFile(new Uint8Array(buffer));
+  if (data.length === 0) {
+    return buildParseResult([], ["No data found in the spreadsheet."]);
+  }
+
+  const headers = data[0].map(cell => cell?.toString() || '');
+  const rows: RawStudentRow[] = data.slice(1).map(row => {
+    const obj: RawStudentRow = {};
+    headers.forEach((header, index) => {
+      obj[header] = row[index]?.toString() || '';
+    });
+    return obj;
+  });
+
   return buildParseResult(rows, []);
 }
 

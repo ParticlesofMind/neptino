@@ -169,6 +169,7 @@ export class AlignmentDetector {
     objects: Rectangle[], 
     targetBounds?: Rectangle, 
     threshold: number = 8,
+    // eslint-disable-next-line no-unused-vars
     _referenceMode: 'canvas' | 'object' | 'grid' = 'canvas'
   ): AlignmentGuide[] {
     const guides: AlignmentGuide[] = [];

@@ -310,7 +310,7 @@ export class TableCellEditor {
         const { rows, columns } = this.settings;
 
         let nextRow = currentCell.row;
-        let nextCol = currentCell.column;
+        const nextCol = currentCell.column;
 
         if (down) {
             nextRow++;

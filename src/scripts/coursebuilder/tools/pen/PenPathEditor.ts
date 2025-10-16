@@ -75,7 +75,7 @@ export class PenPathEditor {
     if (container.sortableChildren !== true) {
       try {
         container.sortableChildren = true;
-      } catch {}
+      } catch { /* empty */ }
     }
 
     this.overlayLayer = new Container();
@@ -329,13 +329,13 @@ export class PenPathEditor {
         try {
           node.handleInGraphics.line.parent?.removeChild(node.handleInGraphics.line);
           node.handleInGraphics.knob.parent?.removeChild(node.handleInGraphics.knob);
-        } catch {}
+        } catch { /* empty */ }
       }
       if (node.handleOutGraphics) {
         try {
           node.handleOutGraphics.line.parent?.removeChild(node.handleOutGraphics.line);
           node.handleOutGraphics.knob.parent?.removeChild(node.handleOutGraphics.knob);
-        } catch {}
+        } catch { /* empty */ }
       }
     });
     this.nodes = [];
@@ -403,7 +403,7 @@ export class PenPathEditor {
       if (fill && fill !== 'transparent' && fill !== '') {
         try {
           path.fill({ color: hexToNumber(fill) });
-        } catch {}
+        } catch { /* empty */ }
       }
     }
 
@@ -511,7 +511,7 @@ export class PenPathEditor {
           try {
             bundle.line.parent?.removeChild(bundle.line);
             bundle.knob.parent?.removeChild(bundle.knob);
-          } catch {}
+          } catch { /* empty */ }
         }
         return null;
       }
@@ -674,13 +674,13 @@ export class PenPathEditor {
       try {
         node.handleInGraphics.line.parent?.removeChild(node.handleInGraphics.line);
         node.handleInGraphics.knob.parent?.removeChild(node.handleInGraphics.knob);
-      } catch {}
+      } catch { /* empty */ }
     }
     if (node.handleOutGraphics) {
       try {
         node.handleOutGraphics.line.parent?.removeChild(node.handleOutGraphics.line);
         node.handleOutGraphics.knob.parent?.removeChild(node.handleOutGraphics.knob);
-      } catch {}
+      } catch { /* empty */ }
     }
 
     this.nodes.splice(index, 1);
@@ -737,7 +737,7 @@ export class PenPathEditor {
       if (meta.fillColor && meta.fillColor !== 'transparent' && meta.fillColor !== '') {
         try {
           shape.fill({ color: hexToNumber(meta.fillColor) });
-        } catch {}
+        } catch { /* empty */ }
       }
     }
 

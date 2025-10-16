@@ -311,7 +311,7 @@ export class ModifyTool extends BaseTool {
       }
     }
 
-    let targetProperties: any = { ...data.originalProperties };
+    const targetProperties: any = { ...data.originalProperties };
 
     if (activeChangePoint) {
       // Apply all properties from the most recent change point
@@ -350,7 +350,7 @@ export class ModifyTool extends BaseTool {
             this.restyleBrush(object, meta, { size: properties.size });
           }
           break;
-        case 'pen':
+        case 'pen': {
           const penChanges: any = {};
           if (properties.strokeColor) penChanges.strokeColor = properties.strokeColor;
           if (properties.fillColor) penChanges.fillColor = properties.fillColor;
@@ -359,7 +359,8 @@ export class ModifyTool extends BaseTool {
             this.restylePen(object, meta, penChanges);
           }
           break;
-        case 'shapes':
+        }
+        case 'shapes': {
           const shapeChanges: any = {};
           if (properties.strokeColor) shapeChanges.strokeColor = properties.strokeColor;
           if (properties.fillColor) shapeChanges.fillColor = properties.fillColor;
@@ -368,6 +369,7 @@ export class ModifyTool extends BaseTool {
             this.restyleShape(object, meta, shapeChanges);
           }
           break;
+        }
         case 'text':
           if (properties.color || properties.fontSize) {
             this.restyleText(object, properties);

@@ -249,12 +249,49 @@
     // Select input
     &--select {
         cursor: pointer;
-        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-        background-repeat: no-repeat;
-        background-position: right 12px center;
-        background-size: 16px;
-        padding-right: 40px;
         appearance: none;
+        padding-right: calc(var(--spacing-6) + 1.5rem);
+        min-height: var(--size-button-base);
+        border: 1px solid var(--color-neutral-200);
+        border-radius: var(--radius-large);
+        background-color: var(--color-neutral-0, #ffffff);
+        background-image:
+            linear-gradient(140deg,
+                rgba(var(--color-primary-50-rgb, 230, 240, 255), 0.45),
+                rgba(var(--color-neutral-0-rgb, 255, 255, 255), 0.95)),
+            url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2326447a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat, no-repeat;
+        background-position: center, right calc(var(--spacing-4)) center;
+        background-size: cover, 0.85rem;
+        box-shadow: 0 10px 26px rgba(17, 45, 109, 0.08);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        line-height: 1.4;
+
+        &:hover {
+            border-color: var(--color-primary-300);
+            box-shadow: 0 14px 32px rgba(17, 45, 109, 0.12);
+            transform: translateY(-1px);
+        }
+
+        &:focus {
+            @include input-focus();
+            transform: translateY(-1px);
+            box-shadow: 0 16px 38px rgba(17, 45, 109, 0.16);
+        }
+
+        &:disabled {
+            background-image:
+                linear-gradient(140deg,
+                    rgba(var(--color-neutral-100-rgb, 240, 241, 245), 0.75),
+                    rgba(var(--color-neutral-0-rgb, 255, 255, 255), 0.9)),
+                url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2399a1b7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            box-shadow: none;
+            transform: none;
+        }
+
+        &::-ms-expand {
+            display: none;
+        }
     }
 
     // Text input for course builder
@@ -306,4 +343,9 @@
             background: var(--color-success-500);
         }
     }
+}
+
+select.input.input--select option {
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-size-sm);
 }

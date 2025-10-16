@@ -73,17 +73,19 @@ export function redrawShapeFromMeta(g: Graphics): boolean {
       case 'rectangle':
         g.rect(0, 0, w, h);
         break;
-      case 'square':
+      case 'square': {
         const size = Math.min(Math.abs(w), Math.abs(h));
         g.rect(0, 0, size, size);
         break;
+      }
       case 'triangle':
         drawTriangle(g, 0, 0, w, h);
         break;
-      case 'circle':
+      case 'circle': {
         const radius = Math.max(Math.abs(w), Math.abs(h)) / 2;
         g.circle(w / 2, h / 2, radius);
         break;
+      }
       case 'ellipse':
         g.ellipse(w / 2, h / 2, Math.abs(w / 2), Math.abs(h / 2));
         break;
@@ -132,11 +134,12 @@ export function redrawShapeFromMeta(g: Graphics): boolean {
       case 'prism':
         drawPrism(g, 0, 0, w, h);
         break;
-      case 'line':
+      case 'line': {
         const x1 = meta.startX ?? 0, y1 = meta.startY ?? 0;
         const x2 = meta.currentX ?? w, y2 = meta.currentY ?? h;
         g.moveTo(x1, y1).lineTo(x2, y2);
         break;
+      }
       case 'arrow':
         drawArrow(g, meta);
         break;

@@ -3,7 +3,7 @@ import { Container, Graphics, Point, Rectangle, Sprite, Texture, Text } from 'pi
 export function unionBoundsLocal(objects: any[], container: Container): Rectangle {
   let minWX = Infinity, minWY = Infinity, maxWX = -Infinity, maxWY = -Infinity;
   for (const obj of objects) {
-    try { const wb = obj.getBounds(); minWX = Math.min(minWX, wb.x); minWY = Math.min(minWY, wb.y); maxWX = Math.max(maxWX, wb.x + wb.width); maxWY = Math.max(maxWY, wb.y + wb.height); } catch {}
+    try { const wb = obj.getBounds(); minWX = Math.min(minWX, wb.x); minWY = Math.min(minWY, wb.y); maxWX = Math.max(maxWX, wb.x + wb.width); maxWY = Math.max(maxWY, wb.y + wb.height); } catch { /* empty */ }
   }
   if (!isFinite(minWX)) return new Rectangle(0, 0, 0, 0);
   const tl = container.toLocal(new Point(minWX, minWY)); const br = container.toLocal(new Point(maxWX, maxWY));
@@ -12,7 +12,7 @@ export function unionBoundsLocal(objects: any[], container: Container): Rectangl
 }
 
 export function moveByContainerDelta(obj: any, dx: number, dy: number, container: Container): void {
-  try { const pAWorld = container.toGlobal(new Point(0, 0)); const pBWorld = container.toGlobal(new Point(dx, dy)); const pALocal = obj.parent.toLocal(pAWorld); const pBLocal = obj.parent.toLocal(pBWorld); obj.position.x += (pBLocal.x - pALocal.x); obj.position.y += (pBLocal.y - pALocal.y); } catch {}
+  try { const pAWorld = container.toGlobal(new Point(0, 0)); const pBWorld = container.toGlobal(new Point(dx, dy)); const pALocal = obj.parent.toLocal(pAWorld); const pBLocal = obj.parent.toLocal(pBWorld); obj.position.x += (pBLocal.x - pALocal.x); obj.position.y += (pBLocal.y - pALocal.y); } catch { /* empty */ }
 }
 
 export function createBrushFromMeta(meta: any, offset: number): Graphics | null {
@@ -22,7 +22,7 @@ export function createBrushFromMeta(meta: any, offset: number): Graphics | null 
   const alpha = typeof meta.opacity === 'number' ? Math.max(0, Math.min(1, meta.opacity)) : 1;
   gfx.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) gfx.lineTo(pts[i].x, pts[i].y);
   gfx.stroke({ width, color, cap: 'round', join: 'round' }); gfx.alpha = alpha;
-  try { meta.points = pts; meta.opacity = alpha; } catch {}
+  try { meta.points = pts; meta.opacity = alpha; } catch { /* empty */ }
   return gfx;
 }
 
@@ -64,7 +64,7 @@ export function createPenFromMeta(meta: any, offset: number): Graphics | null {
     }
   }
   gfx.stroke({ width, color, cap: 'round', join: 'round' });
-  try { meta.nodes = nodes; } catch {}
+  try { meta.nodes = nodes; } catch { /* empty */ }
   return gfx;
 }
 
@@ -100,7 +100,7 @@ export function createShapeFromMeta(meta: any, offset: number): Graphics | null 
   }
   if (fillEnabled && fillColorNum !== undefined) { gfx.fill({ color: fillColorNum }); }
   gfx.stroke({ width: strokeWidth, color: strokeColor, cap: 'round', join: 'round' });
-  try { if (meta.x !== undefined) meta.x = x; if (meta.y !== undefined) meta.y = y; if (meta.startX !== undefined) meta.startX += offset; if (meta.startY !== undefined) meta.startY += offset; if (meta.currentX !== undefined) meta.currentX += offset; if (meta.currentY !== undefined) meta.currentY += offset; } catch {}
+  try { if (meta.x !== undefined) meta.x = x; if (meta.y !== undefined) meta.y = y; if (meta.startX !== undefined) meta.startX += offset; if (meta.startY !== undefined) meta.startY += offset; if (meta.currentX !== undefined) meta.currentX += offset; if (meta.currentY !== undefined) meta.currentY += offset; } catch { /* empty */ }
   return gfx;
 }
 
@@ -115,7 +115,7 @@ export function colorToNumber(c?: any): number | undefined {
       if (s.startsWith('#')) v = parseInt(s.slice(1), 16);
       else if (/^0x/i.test(s)) v = parseInt(s, 16);
       else if (/^\d+$/.test(s)) v = parseInt(s, 10);
-    } catch {}
+    } catch { /* empty */ }
     return Number.isFinite(v) ? v : undefined;
   }
   return undefined;
@@ -160,7 +160,7 @@ export function buildNodeDesc(obj: any): NodeDesc | null {
   if ((obj as any).isTable || (obj as any).__toolType === 'tables') {
     const settings = (obj as any).__meta || {};
     const cells: TableCellDesc[] = [];
-    try { for (const ch of (obj.children || [])) { const cell = (ch as any).tableCell; if (!cell) continue; const textChild = (obj.children || []).find((c: any) => (c as any).tableCell === cell && c.constructor?.name === 'Text'); const text = textChild ? String((textChild as any).text || '') : ''; const style = textChild ? { ...((textChild as any).style || {}) } : {}; cells.push({ x: cell.bounds.x, y: cell.bounds.y, width: cell.bounds.width, height: cell.bounds.height, text, style }); } } catch {}
+    try { for (const ch of (obj.children || [])) { const cell = (ch as any).tableCell; if (!cell) continue; const textChild = (obj.children || []).find((c: any) => (c as any).tableCell === cell && c.constructor?.name === 'Text'); const text = textChild ? String((textChild as any).text || '') : ''; const style = textChild ? { ...((textChild as any).style || {}) } : {}; cells.push({ x: cell.bounds.x, y: cell.bounds.y, width: cell.bounds.width, height: cell.bounds.height, text, style }); } } catch { /* empty */ }
     return { kind: 'table', settings, cells, transform: tr };
   }
   if ((obj as any).texture) { try { return { kind: 'sprite', texture: (obj as Sprite).texture, transform: tr }; } catch { return null; } }
@@ -168,7 +168,7 @@ export function buildNodeDesc(obj: any): NodeDesc | null {
     const children: NodeDesc[] = []; for (const ch of obj.children) { const d = buildNodeDesc(ch); if (d) children.push(d); }
     return { kind: 'container', children, transform: tr };
   }
-  try { if (obj.constructor?.name === 'Graphics') { const tex = (Texture as any).from ? (Texture as any).from(obj) : null; if (tex) return { kind: 'sprite', texture: tex, transform: tr } as any; } } catch {}
+  try { if (obj.constructor?.name === 'Graphics') { const tex = (Texture as any).from ? (Texture as any).from(obj) : null; if (tex) return { kind: 'sprite', texture: tex, transform: tr } as any; } } catch { /* empty */ }
   return null;
 }
 

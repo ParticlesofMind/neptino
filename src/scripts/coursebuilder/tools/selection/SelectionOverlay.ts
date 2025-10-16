@@ -334,10 +334,10 @@ export class SelectionOverlay {
     if (!this.group) return;
     const parent = this.group.selectionBox.parent;
     if (parent) parent.removeChild(this.group.selectionBox);
-    try { this.group.selectionBox.destroy({ children: false }); } catch {}
+    try { this.group.selectionBox.destroy({ children: false }); } catch { /* empty */ }
     this.group.transformHandles.forEach(h => {
       if (h.graphics?.parent) h.graphics.parent.removeChild(h.graphics);
-      try { h.graphics?.destroy({ children: false }); } catch {}
+      try { h.graphics?.destroy({ children: false }); } catch { /* empty */ }
     });
     this.group = null;
     this.frame = null;

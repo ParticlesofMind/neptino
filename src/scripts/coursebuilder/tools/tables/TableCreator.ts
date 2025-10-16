@@ -77,7 +77,7 @@ export class TableCreator {
                 fontSize: this.settings.fontSize,
                 fontColor: this.settings.fontColor
             };
-        } catch {}
+        } catch { /* empty */ }
 
         // Add table container to main container
         container.addChild(tableContainer);
@@ -161,7 +161,7 @@ export class TableCreator {
 
         // Add double-click detection using pointerup events
         let clickCount = 0;
-        let clickTimer: NodeJS.Timeout | null = null;
+        let clickTimer: ReturnType<typeof setTimeout> | null = null;
         let lastClickTime = 0;
 
         cellGraphics.on('pointerup', (event) => {

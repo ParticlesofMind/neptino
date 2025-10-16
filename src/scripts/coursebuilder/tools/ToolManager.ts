@@ -91,7 +91,7 @@ export class ToolManager {
     // Handle tool-specific keyboard events
     // If tool exposes onKeyDown, forward the event (pen, selection, others)
     if (typeof (this.activeTool as any).onKeyDown === 'function') {
-      try { (this.activeTool as any).onKeyDown(event); } catch {}
+      try { (this.activeTool as any).onKeyDown(event); } catch { /* empty */ }
     }
 
     // Global shortcuts: Undo/Redo
@@ -136,7 +136,7 @@ export class ToolManager {
         (tool as any).setToolManager(this);
       }
       if (this.uiLayer && 'setUILayer' in (tool as any)) {
-        try { (tool as any).setUILayer(this.uiLayer); } catch {}
+        try { (tool as any).setUILayer(this.uiLayer); } catch { /* empty */ }
       }
     });
   }
@@ -145,7 +145,7 @@ export class ToolManager {
     this.uiLayer = container;
     this.tools.forEach((tool) => {
       if ('setUILayer' in (tool as any)) {
-        try { (tool as any).setUILayer(container); } catch {}
+        try { (tool as any).setUILayer(container); } catch { /* empty */ }
       }
     });
   }
@@ -313,7 +313,7 @@ export class ToolManager {
   public applySettingsToSelection(toolName: string, settings: any): void {
     const sel = this.tools.get('selection') as any;
     if (sel && typeof sel.applySettingsToSelection === 'function') {
-      try { sel.applySettingsToSelection(toolName, settings); } catch {}
+      try { sel.applySettingsToSelection(toolName, settings); } catch { /* empty */ }
     }
   }
 
@@ -321,7 +321,7 @@ export class ToolManager {
   public copySelection(): boolean {
     const sel = this.tools.get('selection') as any;
     if (sel && typeof sel.copySelection === 'function') {
-      try { return !!sel.copySelection(); } catch {}
+      try { return !!sel.copySelection(); } catch { /* empty */ }
     }
     return false;
   }
@@ -332,7 +332,7 @@ export class ToolManager {
     if (!sel || typeof sel.pasteSelection !== 'function') return false;
     const container = this.currentContainer || this.displayManager?.getRoot();
     if (!container) return false;
-    try { return !!sel.pasteSelection(container); } catch {}
+    try { return !!sel.pasteSelection(container); } catch { /* empty */ }
     return false;
   }
 
@@ -340,7 +340,7 @@ export class ToolManager {
   public groupSelection(): boolean {
     const sel = this.tools.get('selection') as any;
     if (sel && typeof sel.groupSelection === 'function') {
-      try { return !!sel.groupSelection(); } catch {}
+      try { return !!sel.groupSelection(); } catch { /* empty */ }
     }
     return false;
   }
@@ -349,7 +349,7 @@ export class ToolManager {
   public ungroupSelection(): boolean {
     const sel = this.tools.get('selection') as any;
     if (sel && typeof sel.ungroupSelection === 'function') {
-      try { return !!sel.ungroupSelection(); } catch {}
+      try { return !!sel.ungroupSelection(); } catch { /* empty */ }
     }
     return false;
   }
@@ -358,7 +358,7 @@ export class ToolManager {
   public flipSelectionHorizontal(): boolean {
     const sel = this.tools.get('selection') as any;
     if (sel && typeof sel.flipHorizontal === 'function') {
-      try { return !!sel.flipHorizontal(); } catch {}
+      try { return !!sel.flipHorizontal(); } catch { /* empty */ }
     }
     return false;
   }
@@ -367,16 +367,16 @@ export class ToolManager {
   public flipSelectionVertical(): boolean {
     const sel = this.tools.get('selection') as any;
     if (sel && typeof sel.flipVertical === 'function') {
-      try { return !!sel.flipVertical(); } catch {}
+      try { return !!sel.flipVertical(); } catch { /* empty */ }
     }
     return false;
   }
 
   // Layer/lock helpers
-  public bringToFront(): void { const sel = this.tools.get('selection') as any; try { sel?.bringToFront?.(); } catch {} }
-  public sendToBack(): void { const sel = this.tools.get('selection') as any; try { sel?.sendToBack?.(); } catch {} }
-  public bringForward(): void { const sel = this.tools.get('selection') as any; try { sel?.bringForward?.(); } catch {} }
-  public sendBackward(): void { const sel = this.tools.get('selection') as any; try { sel?.sendBackward?.(); } catch {} }
-  public toggleLock(): void { const sel = this.tools.get('selection') as any; try { sel?.toggleLock?.(); } catch {} }
-  public toggleVisibility(show?: boolean): void { const sel = this.tools.get('selection') as any; try { sel?.toggleVisibility?.(show); } catch {} }
+  public bringToFront(): void { const sel = this.tools.get('selection') as any; try { sel?.bringToFront?.(); } catch { /* empty */ } }
+  public sendToBack(): void { const sel = this.tools.get('selection') as any; try { sel?.sendToBack?.(); } catch { /* empty */ } }
+  public bringForward(): void { const sel = this.tools.get('selection') as any; try { sel?.bringForward?.(); } catch { /* empty */ } }
+  public sendBackward(): void { const sel = this.tools.get('selection') as any; try { sel?.sendBackward?.(); } catch { /* empty */ } }
+  public toggleLock(): void { const sel = this.tools.get('selection') as any; try { sel?.toggleLock?.(); } catch { /* empty */ } }
+  public toggleVisibility(show?: boolean): void { const sel = this.tools.get('selection') as any; try { sel?.toggleVisibility?.(show); } catch { /* empty */ } }
 }

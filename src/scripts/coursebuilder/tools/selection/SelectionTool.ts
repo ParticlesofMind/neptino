@@ -159,7 +159,7 @@ export class SelectionTool extends BaseTool {
     if (clickResult.clickedObject) {
       const action = this.click.getSelectionAction(clickResult.clickedObject, this.selected, event.shiftKey); this.selected = this.click.applySelectionAction(action, this.selected); this.overlay.refresh(this.selected, container);
       this.updateObjectSelectionStates();
-      const bounds = this.overlay.getGroup()?.bounds; if (bounds && this.overlay.pointInRect(p, bounds)) { this.isDraggingGroup = true; this.mode = 'drag'; this.cursor = 'grabbing'; this.isDragging = true; this.dragStart.copyFrom(p); try { this.guides.update(container, this.selected, bounds); } catch {} }
+      const bounds = this.overlay.getGroup()?.bounds; if (bounds && this.overlay.pointInRect(p, bounds)) { this.isDraggingGroup = true; this.mode = 'drag'; this.cursor = 'grabbing'; this.isDragging = true; this.dragStart.copyFrom(p); try { this.guides.update(container, this.selected, bounds); } catch { /* empty */ } }
       this.emitSelectionContext();
       return;
     }
@@ -201,7 +201,7 @@ export class SelectionTool extends BaseTool {
             } else {
               this.guides.update(container, this.selected, b); 
             }
-          } catch {} 
+          } catch { /* empty */ } 
         }
       }
       return;
@@ -215,8 +215,8 @@ export class SelectionTool extends BaseTool {
 
         // Enhanced magnetic alignment with dynamic equal-spacing snap
         // Manual snapping disabled - smart guides control all alignment
-      } catch {}
-      this.selected.forEach((obj) => { if (obj.position) { obj.position.x += dx; obj.position.y += dy; } }); this.dragStart.x += dx; this.dragStart.y += dy; this.overlay.refreshBoundsOnly(container); try { const b = this.overlay.getGroup()?.bounds; if (b) this.guides.update(container, this.selected, b); } catch {} return;
+      } catch { /* empty */ }
+      this.selected.forEach((obj) => { if (obj.position) { obj.position.x += dx; obj.position.y += dy; } }); this.dragStart.x += dx; this.dragStart.y += dy; this.overlay.refreshBoundsOnly(container); try { const b = this.overlay.getGroup()?.bounds; if (b) this.guides.update(container, this.selected, b); } catch { /* empty */ } return;
     }
     if (this.marquee.isActive()) { this.marquee.update(p); return; }
     const group = this.overlay.getGroup(); if (group) { const hoverHandle = this.overlay.findHandleAtPoint(p, true); if (hoverHandle) this.cursor = this.cursorForHandle(hoverHandle); else if (this.overlay.pointInRect(p, group.bounds)) this.cursor = 'move'; else this.cursor = 'default'; } else { this.cursor = 'default'; }
@@ -343,7 +343,7 @@ export class SelectionTool extends BaseTool {
             // Fallback to direct removal if DisplayObjectManager unavailable
             obj.parent.removeChild(obj); 
           }
-        } catch {} 
+        } catch { /* empty */ } 
       });
       
       this.selected = []; this.overlay.clear(); this.updateObjectSelectionStates();
@@ -363,7 +363,7 @@ export class SelectionTool extends BaseTool {
                 if (this.displayManager && (this.displayManager as any).add) {
                   (this.displayManager as any).add(obj, parent);
                 }
-              } catch {} 
+              } catch { /* empty */ } 
             }); 
           },
           redo: () => { 
@@ -382,11 +382,11 @@ export class SelectionTool extends BaseTool {
                 } else if (obj.parent) {
                   obj.parent.removeChild(obj); 
                 }
-              } catch {} 
+              } catch { /* empty */ } 
             }); 
           },
         });
-      } catch {}
+      } catch { /* empty */ }
       event.preventDefault(); return; }
     if (key === 'Escape' && this.selected.length > 0) { this.selected = []; this.overlay.clear(); this.updateObjectSelectionStates(); event.preventDefault(); return; }
   }
@@ -405,7 +405,7 @@ export class SelectionTool extends BaseTool {
             delete a.paths[scene.getId()];
           }
         }
-      } catch {}
+      } catch { /* empty */ }
       return;
     }
     // Default behavior for styling
@@ -416,17 +416,17 @@ export class SelectionTool extends BaseTool {
         const dm: any = (this as any).displayManager;
         for (const obj of this.selected) {
           let id: string | null = null;
-          try { id = (obj as any).__id || (obj as any).objectId || (dm?.getIdForObject?.(obj) ?? null); } catch {}
+          try { id = (obj as any).__id || (obj as any).objectId || (dm?.getIdForObject?.(obj) ?? null); } catch { /* empty */ }
           if (!id) {
             // Assign a temporary objectId for event correlation if none exists
             const tmp = `sel_${Date.now()}_${Math.floor(Math.random() * 9999)}`;
-            try { (obj as any).objectId = tmp; } catch {}
+            try { (obj as any).objectId = tmp; } catch { /* empty */ }
             id = tmp;
           }
-          try { document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id, object: obj, action: 'styled' } })); } catch {}
-          try { document.dispatchEvent(new CustomEvent('displayObject:styled', { detail: { id, object: obj } })); } catch {}
+          try { document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id, object: obj, action: 'styled' } })); } catch { /* empty */ }
+          try { document.dispatchEvent(new CustomEvent('displayObject:styled', { detail: { id, object: obj } })); } catch { /* empty */ }
         }
-      } catch {}
+      } catch { /* empty */ }
       if (this.container) { this.overlay.refresh(this.selected, this.container); }
     }
   }
@@ -520,18 +520,18 @@ export class SelectionTool extends BaseTool {
             target.scale.x = state.scale.x;
             target.scale.y = state.scale.y;
           }
-        } catch {}
+        } catch { /* empty */ }
         try {
           const dm: any = (this as any).displayManager;
           let id: string | null = null;
-          try { id = (target as any).__id || (target as any).objectId || (dm?.getIdForObject?.(target) ?? null); } catch {}
+          try { id = (target as any).__id || (target as any).objectId || (dm?.getIdForObject?.(target) ?? null); } catch { /* empty */ }
           if (!id) {
             const tmp = `sel_${Date.now()}_${Math.floor(Math.random() * 9999)}`;
-            try { (target as any).objectId = tmp; } catch {}
+            try { (target as any).objectId = tmp; } catch { /* empty */ }
             id = tmp;
           }
           document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id, object: target, action: 'transform' } }));
-        } catch {}
+        } catch { /* empty */ }
       }
       const activeContainer = this.container || this.displayManager?.getRoot?.();
       if (activeContainer) {
@@ -551,7 +551,7 @@ export class SelectionTool extends BaseTool {
         undo: () => applyStates(originalStates),
         redo: () => applyStates(nextStates),
       });
-    } catch {}
+    } catch { /* empty */ }
 
     return true;
   }
@@ -561,8 +561,8 @@ export class SelectionTool extends BaseTool {
     if (!this.selected.length) return;
     const before = this.selected.map(o => ({ obj: o, locked: !!(o as any).__locked }));
     const nextLocked = !before.every(x => x.locked); // if any unlocked, lock all; else unlock all
-    before.forEach(({ obj }) => { (obj as any).__locked = nextLocked; try { (obj as any).eventMode = nextLocked ? 'none' : 'static'; (obj as any).interactiveChildren = !nextLocked; } catch {} });
-    try { historyManager.push({ label: nextLocked ? 'Lock' : 'Unlock', undo: () => before.forEach(({ obj, locked }) => { (obj as any).__locked = locked; try { (obj as any).eventMode = locked ? 'none' : 'static'; (obj as any).interactiveChildren = !locked; } catch {} }), redo: () => before.forEach(({ obj }) => { (obj as any).__locked = nextLocked; try { (obj as any).eventMode = nextLocked ? 'none' : 'static'; (obj as any).interactiveChildren = !nextLocked; } catch {} }) }); } catch {}
+    before.forEach(({ obj }) => { (obj as any).__locked = nextLocked; try { (obj as any).eventMode = nextLocked ? 'none' : 'static'; (obj as any).interactiveChildren = !nextLocked; } catch { /* empty */ } });
+    try { historyManager.push({ label: nextLocked ? 'Lock' : 'Unlock', undo: () => before.forEach(({ obj, locked }) => { (obj as any).__locked = locked; try { (obj as any).eventMode = locked ? 'none' : 'static'; (obj as any).interactiveChildren = !locked; } catch { /* empty */ } }), redo: () => before.forEach(({ obj }) => { (obj as any).__locked = nextLocked; try { (obj as any).eventMode = nextLocked ? 'none' : 'static'; (obj as any).interactiveChildren = !nextLocked; } catch { /* empty */ } }) }); } catch { /* empty */ }
   }
 
   public toggleVisibility(show?: boolean): void {
@@ -570,7 +570,7 @@ export class SelectionTool extends BaseTool {
     const before = this.selected.map(o => ({ obj: o, visible: (o as any).visible !== false }));
     const target = show === undefined ? !before.every(x => x.visible) : show;
     before.forEach(({ obj }) => { (obj as any).visible = target; });
-    try { historyManager.push({ label: target ? 'Show' : 'Hide', undo: () => before.forEach(({ obj, visible }) => { (obj as any).visible = visible; }), redo: () => before.forEach(({ obj }) => { (obj as any).visible = target; }) }); } catch {}
+    try { historyManager.push({ label: target ? 'Show' : 'Hide', undo: () => before.forEach(({ obj, visible }) => { (obj as any).visible = visible; }), redo: () => before.forEach(({ obj }) => { (obj as any).visible = target; }) }); } catch { /* empty */ }
   }
 
   public bringToFront(): void { this.reorderSelected('front'); }
@@ -589,10 +589,10 @@ export class SelectionTool extends BaseTool {
       if (kind === 'forward') to = Math.min(parent.children.length - 1, from + 1);
       if (kind === 'backward') to = Math.max(0, from - 1);
       if (to === from) continue;
-      try { if (typeof parent.setChildIndex === 'function') parent.setChildIndex(obj, to); else { parent.removeChild(obj); parent.addChildAt(obj, to); } changes.push({ obj, parent, from, to }); } catch {}
+      try { if (typeof parent.setChildIndex === 'function') parent.setChildIndex(obj, to); else { parent.removeChild(obj); parent.addChildAt(obj, to); } changes.push({ obj, parent, from, to }); } catch { /* empty */ }
     }
     if (changes.length) {
-      try { historyManager.push({ label: `Reorder ${kind}`, undo: () => changes.forEach(({ obj, parent, from }) => { try { if (typeof parent.setChildIndex === 'function') parent.setChildIndex(obj, from); else { parent.removeChild(obj); parent.addChildAt(obj, from); } } catch {} }), redo: () => changes.forEach(({ obj, parent, to }) => { try { if (typeof parent.setChildIndex === 'function') parent.setChildIndex(obj, to); else { parent.removeChild(obj); parent.addChildAt(obj, to); } } catch {} }) }); } catch {}
+      try { historyManager.push({ label: `Reorder ${kind}`, undo: () => changes.forEach(({ obj, parent, from }) => { try { if (typeof parent.setChildIndex === 'function') parent.setChildIndex(obj, from); else { parent.removeChild(obj); parent.addChildAt(obj, from); } } catch { /* empty */ } }), redo: () => changes.forEach(({ obj, parent, to }) => { try { if (typeof parent.setChildIndex === 'function') parent.setChildIndex(obj, to); else { parent.removeChild(obj); parent.addChildAt(obj, to); } } catch { /* empty */ } }) }); } catch { /* empty */ }
       if (this.container) this.overlay.refreshBoundsOnly(this.container);
     }
   }
@@ -622,7 +622,7 @@ export class SelectionTool extends BaseTool {
     switch (h.position) { case 'tl': case 'br': return 'nwse-resize'; case 'tr': case 'bl': return 'nesw-resize'; default: return 'move'; }
   }
 
-  private emitSelectionContext(): void { try { const type = determineSelectionType(this.selected); const detail = { type, count: this.selected.length } as any; const evt = new CustomEvent('selection:context', { detail }); document.dispatchEvent(evt); } catch {} }
+  private emitSelectionContext(): void { try { const type = determineSelectionType(this.selected); const detail = { type, count: this.selected.length } as any; const evt = new CustomEvent('selection:context', { detail }); document.dispatchEvent(evt); } catch { /* empty */ } }
 
   private updateObjectSelectionStates(): void {
     // Update selection flags on objects and notify UI
@@ -631,13 +631,13 @@ export class SelectionTool extends BaseTool {
       const dm: any = (this as any).displayManager;
       const all: any[] = dm && dm.getObjects ? dm.getObjects() : [];
       if (all && Array.isArray(all)) {
-        all.forEach((o: any) => { try { o.__selected = false; } catch {} });
+        all.forEach((o: any) => { try { o.__selected = false; } catch { /* empty */ } });
       }
       // Set selection flags
-      this.selected.forEach((o) => { try { (o as any).__selected = true; } catch {} });
+      this.selected.forEach((o) => { try { (o as any).__selected = true; } catch { /* empty */ } });
       // Emit selection change for panels (layers, etc.)
       document.dispatchEvent(new CustomEvent('selection:changed', { detail: { count: this.selected.length } }));
-    } catch {}
+    } catch { /* empty */ }
     // Get all scenes from animation state and update their selection status
     try {
       const scenes = animationState.getScenes();

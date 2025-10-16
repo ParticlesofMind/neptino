@@ -7,6 +7,7 @@ import { BaseShapeDrawer } from "./BaseShapeDrawer";
 import { ShapeDrawingContext, StrokeStyle, FillStyle } from "./types";
 
 export class ArrowDrawer extends BaseShapeDrawer {
+    // eslint-disable-next-line no-unused-vars
     draw(context: ShapeDrawingContext, strokeStyle: StrokeStyle, _fillStyle?: FillStyle): void {
         const dx = context.currentX - context.startX;
         const dy = context.currentY - context.startY;

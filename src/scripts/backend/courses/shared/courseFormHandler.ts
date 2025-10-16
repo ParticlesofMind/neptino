@@ -8,7 +8,7 @@ import {
     getSectionConfig,
 } from "../settings/courseFormConfig";
 import { validateFormSection, isFormSectionValid } from "../shared/courseFormValidator";
-import { createCourse, updateCourse, getCourse } from "../essentials/createCourse";
+import { createCourse, updateCourse, getCourse, uploadCourseImage } from "../essentials/createCourse";
 
 // ==========================================================================
 // COURSE FORM HANDLER CLASS
@@ -19,9 +19,10 @@ export class CourseFormHandler {
     private form: HTMLFormElement | null = null;
     private currentCourseId: string | null = null;
     private validationState: ValidationState = {};
-    private debounceTimer: NodeJS.Timeout | null = null;
+    private debounceTimer: ReturnType<typeof setTimeout> | null = null;
     private lastLoadedCourseId: string | null = null;
     private courseIdEventHandler?: (event: Event) => void;
+    private skipNextAutoLoad = false;
 
     constructor(sectionName: string, initialCourseId?: string) {
         const config = getSectionConfig(sectionName);
@@ -141,8 +142,13 @@ export class CourseFormHandler {
                 if (!this.form) {
                     this.findForm();
                 }
+                if (this.skipNextAutoLoad) {
+                    this.skipNextAutoLoad = false;
+                    return;
+                }
+                const suppressStatus = event.type === 'courseCreated' || detail?.suppressStatus === true;
                 if (this.currentCourseId && this.form && this.currentCourseId !== this.lastLoadedCourseId) {
-                    void this.loadExistingData();
+                    void this.loadExistingData(suppressStatus);
                 }
             }
         };
@@ -191,6 +197,7 @@ export class CourseFormHandler {
                 return;
             }
         } else {
+            // eslint-disable-next-line no-empty
         }
 
         // If still not found, try to find any form in the current section
@@ -202,6 +209,7 @@ export class CourseFormHandler {
         }
 
         if (this.form) {
+            // eslint-disable-next-line no-empty
         } else {
             console.error('❌ No form found for section:', this.sectionConfig.section);
         }
@@ -314,7 +322,7 @@ export class CourseFormHandler {
     // DATA LOADING
     // ==========================================================================
 
-    private async loadExistingData(): Promise<void> {
+    private async loadExistingData(suppressStatus: boolean = false): Promise<void> {
         if (!this.form || !this.currentCourseId) {
             console.log('⚠️ Skipping loadExistingData:', {
                 hasForm: !!this.form,
@@ -335,7 +343,9 @@ export class CourseFormHandler {
 
             console.log('✅ Course data loaded successfully:', courseData);
             this.populateFormFields(courseData);
-            this.showStatus("", "success");
+            if (!suppressStatus) {
+                this.showStatus("", "success");
+            }
 
             this.lastLoadedCourseId = this.currentCourseId;
 
@@ -384,6 +394,7 @@ export class CourseFormHandler {
                 this.setFieldValue("current_course", classificationData.current_course);
                 this.setFieldValue("next_course", classificationData.next_course);
             } else {
+                // eslint-disable-next-line no-empty
             }
         } else if (
             this.sectionConfig.jsonbField &&
@@ -563,31 +574,14 @@ export class CourseFormHandler {
         const inputs = this.form.querySelectorAll("input, textarea, select");
 
         inputs.forEach((input) => {
-            const inputElement = input as HTMLInputElement;
-            if (inputElement.type === "file") {
-                input.addEventListener("change", () =>
-                    this.handleFileChange(inputElement),
-                );
-            } else {
-                input.addEventListener("input", () => this.handleInputChange());
-                input.addEventListener("change", () => this.handleInputChange());
+            if (input instanceof HTMLInputElement && input.type === "file") {
+                input.addEventListener("change", () => this.handleFileChange(input));
+                return;
             }
-        });
 
-        if (this.sectionConfig.section === "essentials") {
-            const descriptionField = this.form.querySelector<HTMLTextAreaElement>(
-                'textarea[name="course_description"]',
-            );
-            descriptionField?.addEventListener(
-                "keydown",
-                (event) => {
-                    if (event.key === " " || event.code === "Space") {
-                        event.stopPropagation();
-                    }
-                },
-                { capture: true },
-            );
-        }
+            input.addEventListener("input", () => this.handleInputChange());
+            input.addEventListener("change", () => this.handleInputChange());
+        });
 
         this.form.addEventListener("submit", (e) => this.handleSubmit(e));
 
@@ -627,20 +621,31 @@ export class CourseFormHandler {
     }
 
     private handleRemoveImage(): void {
-        const previewImg = document.getElementById('preview-img') as HTMLImageElement;
-        const removeBtn = document.getElementById('remove-image') as HTMLButtonElement;
-        const fileInput = document.getElementById('course-image') as HTMLInputElement;
-        const imageLabel = this.form?.querySelector('label[for="course-image"]');
+        const elements = this.getImageUploadElements();
+        const { container, preview, removeButton, input } = elements;
 
-        if (previewImg && removeBtn && fileInput && imageLabel) {
-            previewImg.style.display = 'none';
-            removeBtn.style.display = 'none';
-            fileInput.value = '';
-            previewImg.src = '';
-            imageLabel.classList.remove('has-image');
-            fileInput.style.color = ''; // Reset to default
-            this.validateForm();
+        if (container) {
+            container.classList.remove('has-image');
         }
+
+        if (preview) {
+            preview.src = '';
+            preview.hidden = true;
+            preview.removeAttribute('src');
+            preview.alt = "Course image preview";
+        }
+
+        if (removeButton) {
+            removeButton.hidden = true;
+        }
+
+        if (input) {
+            input.value = '';
+            input.setAttribute('aria-label', 'Upload course image');
+        }
+
+        this.setFilenameLabel(null, elements);
+        this.validateForm();
     }
 
     private async handleSubmit(event: Event): Promise<void> {
@@ -735,10 +740,16 @@ export class CourseFormHandler {
                 url.searchParams.set('courseId', result.courseId);
                 window.history.replaceState({}, '', url.toString());
 
-                // Enable course builder features
-                this.enableCourseBuilderFeatures(result.courseId);
+                // Enable course builder features and refresh persisted state
+                this.skipNextAutoLoad = true;
+                try {
+                    this.enableCourseBuilderFeatures(result.courseId);
+                    await this.loadExistingData(true);
+                } finally {
+                    this.skipNextAutoLoad = false;
+                }
+                this.updateUI();
 
-                
                 // Navigate to next section after successful creation
                 if (this.sectionConfig.section === 'essentials') {
                     this.navigateToNextSection();
@@ -766,13 +777,37 @@ export class CourseFormHandler {
                 return;
             }
 
+            const rawFormData = this.form ? new FormData(this.form) : null;
+            const selectedFileCandidate = rawFormData?.get('course_image');
             const formData = this.getFormData();
-            const updateData: any = {};
+            const updateData: Record<string, any> = {};
 
             if (this.sectionConfig.jsonbField) {
                 updateData[this.sectionConfig.jsonbField] = formData;
             } else {
                 Object.assign(updateData, formData);
+            }
+
+            if ('course_image' in updateData) {
+                const value = updateData.course_image;
+                const shouldRemove =
+                    value === '' ||
+                    value === null ||
+                    (typeof File !== 'undefined' && value instanceof File);
+
+                if (shouldRemove) {
+                    delete updateData.course_image;
+                }
+            }
+
+            let uploadedImageUrl: string | null = null;
+            if (selectedFileCandidate instanceof File && selectedFileCandidate.size > 0) {
+                uploadedImageUrl = await uploadCourseImage(selectedFileCandidate, this.currentCourseId);
+                if (!uploadedImageUrl) {
+                    this.showStatus("Failed to upload course image", "error");
+                    return;
+                }
+                updateData.course_image = uploadedImageUrl;
             }
 
             if (this.sectionConfig.section === 'pedagogy' && formData.course_pedagogy) {
@@ -795,6 +830,9 @@ export class CourseFormHandler {
                     console.log('✅ Pedagogy save success');
                 }
                 this.showStatus("Saved ✓", "success");
+                if (uploadedImageUrl) {
+                    this.displayExistingImage(uploadedImageUrl);
+                }
             } else {
                 if (this.sectionConfig.section === 'pedagogy') {
                     console.error('❌ Pedagogy save failed', result.error);
@@ -812,50 +850,146 @@ export class CourseFormHandler {
     // ==========================================================================
 
     private displayExistingImage(imageUrl: string): void {
-        const previewImg = document.getElementById(
-            "preview-img",
-        ) as HTMLImageElement;
-        const removeBtn = document.getElementById(
-            "remove-image",
-        ) as HTMLButtonElement;
-        const imageLabel = this.form?.querySelector('label[for="course-image"]');
-        const fileInput = document.getElementById('course-image') as HTMLInputElement;
+        const elements = this.getImageUploadElements();
+        const { container, preview, removeButton, input } = elements;
 
-        if (previewImg && removeBtn && imageLabel && fileInput) {
-            previewImg.src = imageUrl;
-            previewImg.style.display = 'block';
-            removeBtn.style.display = 'block';
-            imageLabel.classList.add('has-image');
-            // Hide the default file input text by making it transparent
-            fileInput.style.color = 'transparent';
+        if (!container || !preview || !removeButton) {
+            return;
+        }
+
+        preview.src = imageUrl;
+        preview.alt = "Course image preview";
+        preview.hidden = false;
+        container.classList.add("has-image");
+        removeButton.hidden = false;
+
+        const parsedFileName = this.extractFilenameFromPath(imageUrl);
+        const friendlyName = parsedFileName.toLowerCase().startsWith("cover.")
+            ? "Course cover image"
+            : parsedFileName;
+        this.setFilenameLabel(friendlyName, elements);
+
+        if (input) {
+            input.setAttribute("aria-label", `Change course image (${friendlyName})`);
         }
     }
 
     private showFilePreview(file: File): void {
-        const img = document.getElementById("preview-img") as HTMLImageElement;
-        const removeBtn = document.getElementById(
-            "remove-image",
-        ) as HTMLButtonElement;
-        const imageLabel = this.form?.querySelector('label[for="course-image"]');
-        const fileInput = document.getElementById('course-image') as HTMLInputElement;
+        const elements = this.getImageUploadElements();
+        const { container, preview, removeButton, input } = elements;
 
-        if (img && removeBtn && imageLabel && fileInput) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                img.src = e.target?.result as string;
-                img.style.display = "block";
-                removeBtn.style.display = "block";
-                imageLabel.classList.add('has-image');
-                fileInput.style.color = 'transparent';
-            };
-            reader.readAsDataURL(file);
+        if (!container || !preview || !removeButton) {
+            return;
         }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.src = e.target?.result as string;
+            preview.alt = file.name || "Course image preview";
+            preview.hidden = false;
+            container.classList.add("has-image");
+            removeButton.hidden = false;
+            this.setFilenameLabel(file.name, elements);
+
+            if (input) {
+                input.setAttribute("aria-label", `Change course image (${file.name})`);
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    private getImageUploadElements(): {
+        container: HTMLElement | null;
+        input: HTMLInputElement | null;
+        preview: HTMLImageElement | null;
+        removeButton: HTMLButtonElement | null;
+        filename: HTMLElement | null;
+    } {
+        return {
+            container: document.getElementById("course-image-upload") as HTMLElement | null,
+            input: document.getElementById("course-image") as HTMLInputElement | null,
+            preview: document.getElementById("preview-img") as HTMLImageElement | null,
+            removeButton: document.getElementById("remove-image") as HTMLButtonElement | null,
+            filename: document.getElementById("course-image-filename") as HTMLElement | null,
+        };
+    }
+
+    private setFilenameLabel(
+        text: string | null,
+        elements?: ReturnType<typeof this.getImageUploadElements>,
+    ): void {
+        const refs = elements ?? this.getImageUploadElements();
+        if (!refs.filename) return;
+
+        const content = text ?? "";
+        refs.filename.textContent = content;
+
+        if (content) {
+            refs.filename.setAttribute("title", content);
+        } else {
+            refs.filename.removeAttribute("title");
+        }
+    }
+
+    private extractFilenameFromPath(path: string): string {
+        try {
+            const origin =
+                typeof window !== "undefined" ? window.location.origin : "https://placeholder.local";
+            const potentialUrl = new URL(path, origin);
+            const segments = potentialUrl.pathname.split("/");
+            const lastSegment = segments.pop();
+            if (lastSegment && lastSegment.trim().length > 0) {
+                return decodeURIComponent(lastSegment);
+            }
+        } catch {
+            // Fall through to manual parsing
+        }
+
+        const fallbackSegment = path.split("/").pop();
+        if (fallbackSegment && fallbackSegment.trim().length > 0) {
+            try {
+                return decodeURIComponent(fallbackSegment);
+            } catch {
+                return fallbackSegment;
+            }
+        }
+
+        return "Course image";
     }
 
     private updateUI(): void {
         const submitBtn = this.getSubmitButton();
-        if (submitBtn) {
-            submitBtn.disabled = !this.isFormValid();
+        if (!submitBtn) {
+            return;
+        }
+
+        const isEssentialsSection = this.sectionConfig.section === "essentials";
+
+        if (isEssentialsSection && !submitBtn.dataset.originalLabel) {
+            submitBtn.dataset.originalLabel = this.sectionConfig.submitLabel ?? submitBtn.textContent ?? "Create Course";
+        }
+
+        if (isEssentialsSection && this.currentCourseId) {
+            submitBtn.textContent = "Created Course";
+            submitBtn.disabled = true;
+            submitBtn.classList.add("button--disabled");
+            submitBtn.setAttribute("aria-disabled", "true");
+            return;
+        }
+
+        if (isEssentialsSection) {
+            submitBtn.textContent = submitBtn.dataset.originalLabel ?? "Create Course";
+        }
+
+        const shouldDisable = !this.isFormValid();
+        submitBtn.disabled = shouldDisable;
+
+        if (shouldDisable) {
+            submitBtn.classList.add("button--disabled");
+            submitBtn.setAttribute("aria-disabled", "true");
+        } else {
+            submitBtn.classList.remove("button--disabled");
+            submitBtn.removeAttribute("aria-disabled");
         }
     }
 
@@ -965,6 +1099,8 @@ export class CourseFormHandler {
         if (submitBtn) {
             submitBtn.textContent = "Created Course";
             submitBtn.disabled = true;
+            submitBtn.classList.add("button--disabled");
+            submitBtn.setAttribute("aria-disabled", "true");
         }
     }
 

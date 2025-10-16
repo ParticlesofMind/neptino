@@ -363,6 +363,6 @@ export class TextSelection {
   
   private isPunctuation(char: string): boolean {
     // Common punctuation that should break words
-    return /[.,;:!?'"()\[\]{}<>\/\\|@#$%^&*+=~`-]/.test(char);
+    return /[.,;:!?'"()[\]{}<>/\\|@#$%^&*+=~`-]/.test(char);
   }
 }

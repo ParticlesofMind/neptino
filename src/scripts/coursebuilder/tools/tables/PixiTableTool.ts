@@ -224,6 +224,7 @@ export class PixiTableTool extends BaseTool {
     if (width >= minTableSize && height >= minTableSize) {
       this.createTable(container);
     } else {
+      /* empty */
     }
 
     this.cleanupDragState();

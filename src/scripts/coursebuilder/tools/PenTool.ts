@@ -74,17 +74,17 @@ export class PenTool extends BaseTool {
  graphic.eventMode = 'none';
  (graphic as any).interactive = false;
  (graphic as any).interactiveChildren = false;
- } catch {}
+ } catch { /* empty */ }
  const suffix = label ? `-${label}` : '';
  try {
  graphic.name = `pen-control${suffix}`;
- } catch {}
+ } catch { /* empty */ }
  try {
  (graphic as any).__penControl = true;
  if ((graphic as any).__toolType) {
  delete (graphic as any).__toolType;
  }
- } catch {}
+ } catch { /* empty */ }
  }
 
  onPointerDown(event: FederatedPointerEvent, container: Container): void {
@@ -583,7 +583,7 @@ export class PenTool extends BaseTool {
           try {
             bundle.line.parent?.removeChild(bundle.line);
             bundle.knob.parent?.removeChild(bundle.knob);
-          } catch {}
+          } catch { /* empty */ }
         }
         return null;
       }
@@ -848,7 +848,7 @@ export class PenTool extends BaseTool {
         strokeColor: this.currentPath.settings.strokeColor,
         fillColor: this.currentPath.settings.fillColor,
       };
-    } catch {}
+    } catch { /* empty */ }
     container.addChild(finalShape);
     
     // 🚨 CRITICAL: Register with DisplayObjectManager so it shows in layers panel
@@ -865,19 +865,19 @@ export class PenTool extends BaseTool {
     if (this.originalShapeForEdit) {
       const orig = this.originalShapeForEdit;
       const parent = container;
-      try { orig.parent?.removeChild(orig); } catch {}
+      try { orig.parent?.removeChild(orig); } catch { /* empty */ }
       const finalIndex = parent.getChildIndex(finalShape);
       historyManager.push({
         label: 'Edit Pen Path',
-        undo: () => { try { if (finalShape.parent) finalShape.parent.removeChild(finalShape); } catch {}; try { if (finalIndex >= 0 && finalIndex <= parent.children.length) parent.addChildAt(orig, Math.min(finalIndex, parent.children.length)); else parent.addChild(orig); } catch {}; },
-        redo: () => { try { if (orig.parent) orig.parent.removeChild(orig); } catch {}; try { if (finalIndex >= 0 && finalIndex <= parent.children.length) parent.addChildAt(finalShape, Math.min(finalIndex, parent.children.length)); else parent.addChild(finalShape); } catch {}; },
+        undo: () => { try { if (finalShape.parent) finalShape.parent.removeChild(finalShape); } catch { /* empty */ } try { if (finalIndex >= 0 && finalIndex <= parent.children.length) parent.addChildAt(orig, Math.min(finalIndex, parent.children.length)); else parent.addChild(orig); } catch { /* empty */ } },
+        redo: () => { try { if (orig.parent) orig.parent.removeChild(orig); } catch { /* empty */ } try { if (finalIndex >= 0 && finalIndex <= parent.children.length) parent.addChildAt(finalShape, Math.min(finalIndex, parent.children.length)); else parent.addChild(finalShape); } catch { /* empty */ } },
       });
       this.originalShapeForEdit = null;
       this.isEditingExistingPath = false;
     } else {
       // New shape creation history
       const parent = container; const idx = parent.getChildIndex(finalShape);
-      historyManager.push({ label: 'Create Pen Path', undo: () => { try { if (finalShape.parent) finalShape.parent.removeChild(finalShape); } catch {}; }, redo: () => { try { if (idx >= 0 && idx <= parent.children.length) parent.addChildAt(finalShape, Math.min(idx, parent.children.length)); else parent.addChild(finalShape); } catch {}; } });
+      historyManager.push({ label: 'Create Pen Path', undo: () => { try { if (finalShape.parent) finalShape.parent.removeChild(finalShape); } catch { /* empty */ } }, redo: () => { try { if (idx >= 0 && idx <= parent.children.length) parent.addChildAt(finalShape, Math.min(idx, parent.children.length)); else parent.addChild(finalShape); } catch { /* empty */ } } });
     }
   }
 
@@ -911,7 +911,7 @@ export class PenTool extends BaseTool {
       fillColor: null,
     };
     (this.currentPath.pathGraphics as any).__toolType = 'pen';
-  } catch {}
+  } catch { /* empty */ }
 
   // 🚨 CRITICAL: Register with DisplayObjectManager so it shows in layers panel
   if (this.displayManager && this.currentPath.pathGraphics) {
@@ -937,13 +937,13 @@ export class PenTool extends BaseTool {
    try {
      node.handleInGraphics.line.parent?.removeChild(node.handleInGraphics.line);
      node.handleInGraphics.knob.parent?.removeChild(node.handleInGraphics.knob);
-   } catch {}
+   } catch { /* empty */ }
  }
  if (node.handleOutGraphics) {
    try {
      node.handleOutGraphics.line.parent?.removeChild(node.handleOutGraphics.line);
      node.handleOutGraphics.knob.parent?.removeChild(node.handleOutGraphics.knob);
-   } catch {}
+   } catch { /* empty */ }
  }
  });
 
@@ -1055,13 +1055,13 @@ export class PenTool extends BaseTool {
    try {
      node.handleInGraphics.line.parent?.removeChild(node.handleInGraphics.line);
      node.handleInGraphics.knob.parent?.removeChild(node.handleInGraphics.knob);
-   } catch {}
+   } catch { /* empty */ }
  }
  if (node.handleOutGraphics) {
    try {
      node.handleOutGraphics.line.parent?.removeChild(node.handleOutGraphics.line);
      node.handleOutGraphics.knob.parent?.removeChild(node.handleOutGraphics.knob);
-   } catch {}
+   } catch { /* empty */ }
  }
  });
 
@@ -1077,7 +1077,7 @@ export class PenTool extends BaseTool {
 
  // If editing an existing shape, restore it
  if (this.isEditingExistingPath && this.originalShapeForEdit) {
-   try { this.originalShapeForEdit.visible = true; } catch {}
+   try { this.originalShapeForEdit.visible = true; } catch { /* empty */ }
  }
  this.currentPath = null;
  this.isEditingExistingPath = false;
@@ -1181,7 +1181,7 @@ export class PenTool extends BaseTool {
         if (d < bestDist) { bestDist = d; best = a; }
       }
       if (best && bestDist <= tolerance) return best;
-    } catch {}
+    } catch { /* empty */ }
     return null;
   }
 
@@ -1219,9 +1219,9 @@ export class PenTool extends BaseTool {
               localPoint.y >= b.y && localPoint.y <= b.y + b.height) {
             return child as Graphics;
           }
-        } catch {}
+        } catch { /* empty */ }
       }
-    } catch {}
+    } catch { /* empty */ }
     return null;
   }
 
@@ -1231,7 +1231,7 @@ export class PenTool extends BaseTool {
     this.isEditingExistingPath = true;
     this.editingWasClosed = !!meta.closed;
     this.originalShapeForEdit = shape;
-    try { shape.visible = false; } catch {}
+    try { shape.visible = false; } catch { /* empty */ }
 
     const toContainerPoint = (coords: { x: number; y: number } | null) => {
       if (!coords) {
@@ -1698,7 +1698,7 @@ export class PenTool extends BaseTool {
           return { position: last, path: child as Graphics };
         }
       }
-    } catch {}
+    } catch { /* empty */ }
     return null;
   }
 
@@ -1825,13 +1825,13 @@ export class PenTool extends BaseTool {
       try {
         node.handleInGraphics.line.parent?.removeChild(node.handleInGraphics.line);
         node.handleInGraphics.knob.parent?.removeChild(node.handleInGraphics.knob);
-      } catch {}
+      } catch { /* empty */ }
     }
     if (node.handleOutGraphics) {
       try {
         node.handleOutGraphics.line.parent?.removeChild(node.handleOutGraphics.line);
         node.handleOutGraphics.knob.parent?.removeChild(node.handleOutGraphics.knob);
-      } catch {}
+      } catch { /* empty */ }
     }
     
     // Remove from array

@@ -38,7 +38,7 @@ export class SelectionMarquee {
         const bounds = this.toContainerSpaceBounds(child, container);
         if (!bounds) continue;
         if (this.containsRect(r, bounds)) picked.push(child);
-      } catch {}
+      } catch { /* empty */ }
     }
     if (this.gfx && this.gfx.parent) this.gfx.parent.removeChild(this.gfx);
     this.active = false;

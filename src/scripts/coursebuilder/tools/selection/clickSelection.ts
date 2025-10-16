@@ -80,7 +80,7 @@ const isTextDoubleClick = isDoubleClick && this.isTextObject(clickedObject);
               hits.push(node);
             }
           }
-        } catch {}
+        } catch { /* empty */ }
         return; // Don't traverse scene children - only the scene itself is selectable
       }
       try {
@@ -92,7 +92,7 @@ const isTextDoubleClick = isDoubleClick && this.isTextObject(clickedObject);
             hits.push(node);
           }
         }
-      } catch {}
+      } catch { /* empty */ }
       if (node.children && Array.isArray(node.children)) {
         for (const ch of node.children) visit(ch);
       }

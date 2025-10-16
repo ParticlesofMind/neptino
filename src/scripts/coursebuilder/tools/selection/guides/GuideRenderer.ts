@@ -337,7 +337,7 @@ export class GuideRenderer {
       (this.labelContainer as any).__isGuide = true;
       ui.addChild(this.labelContainer);
     } else {
-      try { this.labelContainer.removeChildren(); } catch {}
+      try { this.labelContainer.removeChildren(); } catch { /* empty */ }
     }
   }
 

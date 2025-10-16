@@ -199,7 +199,7 @@ export class ToolStateManager {
                         e.preventDefault();
                         pm.togglePanMode(btn || undefined);
                     }
-                } catch {}
+                } catch { /* empty */ }
                 return;
             }
             const tool = map[key];
@@ -315,7 +315,7 @@ export class ToolStateManager {
             };
             localStorage.setItem(this.storageKey, JSON.stringify(iconState));
             // Persist tool settings separately to ensure latest values survive UI mismatches
-            try { localStorage.setItem(this.settingsStorageKey, JSON.stringify(this.toolSettings)); } catch {}
+            try { localStorage.setItem(this.settingsStorageKey, JSON.stringify(this.toolSettings)); } catch { /* empty */ }
         } catch (error) {
             console.warn('Error saving coursebuilder states:', error);
         }
@@ -330,7 +330,7 @@ export class ToolStateManager {
             if (saved && typeof saved === 'object') {
                 this.toolSettings = { ...this.toolSettings, ...saved } as any;
             }
-        } catch {}
+        } catch { /* empty */ }
     }
 
     /**
@@ -396,7 +396,7 @@ export class ToolStateManager {
         try {
             const evt = new CustomEvent('mode:changed', { detail: modeName });
             document.dispatchEvent(evt);
-        } catch {}
+        } catch { /* empty */ }
         // Enforce allowed tools per mode
         const allowedByMode: Record<string, Set<string>> = {
             build: new Set(['selection','pen','brush','text','shapes','eraser','tables']),
@@ -527,7 +527,7 @@ export class ToolStateManager {
         try {
             const evt = new CustomEvent('media:selected', { detail: mediaId });
             document.dispatchEvent(evt);
-        } catch {}
+        } catch { /* empty */ }
     }
 
     /**
@@ -542,7 +542,7 @@ export class ToolStateManager {
      */
     setSelectedNavigation(navTitle: string | null): void {
         this.selectedNavigation = navTitle;
-        this.updateNavigationUI(navTitle);
+        this.updateNavigationUI();
         this.saveStates();
     }
 
@@ -621,7 +621,7 @@ export class ToolStateManager {
             if (this.currentTool === 'selection' && this.selectionContextTool === toolName) {
                 const canvasAPI = (window as any).canvasAPI;
                 if (canvasAPI && typeof canvasAPI.applySettingsToSelection === 'function') {
-                    try { canvasAPI.applySettingsToSelection(toolName, settings); } catch {}
+                    try { canvasAPI.applySettingsToSelection(toolName, settings); } catch { /* empty */ }
                 }
             }
             
@@ -656,7 +656,7 @@ export class ToolStateManager {
                 const payload: any = { color };
                 if (t === 'pen') payload.strokeColor = color;
                 if (t === 'shapes') payload.strokeColor = color;
-                try { canvasAPI.applySettingsToSelection(t, payload); } catch {}
+                try { canvasAPI.applySettingsToSelection(t, payload); } catch { /* empty */ }
             }
         }
     }
@@ -835,7 +835,7 @@ export class ToolStateManager {
                 const iBtn = document.querySelector('.text-style-btn[data-text-style="italic"]') as HTMLElement | null;
                 if (bBtn) bBtn.classList.toggle('active', !!isBold);
                 if (iBtn) iBtn.classList.toggle('active', !!isItalic);
-            } catch {}
+            } catch { /* empty */ }
         }, 100);
     }
 
@@ -940,7 +940,7 @@ export class ToolStateManager {
      * Update navigation UI to reflect current selection
      * Note: Layers panel is now a floating overlay, no longer managed through preview content
      */
-    private updateNavigationUI(_navTitle: string | null): void {
+    private updateNavigationUI(): void {
         // Navigation functionality simplified since layers panel is now floating
         // Other preview content management can be added here if needed in the future
     }

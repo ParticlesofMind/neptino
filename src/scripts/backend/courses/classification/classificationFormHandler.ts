@@ -22,7 +22,7 @@ import { getCourseId, isNewCourseMode } from "../../../utils/courseId.js";
 
 export class ClassificationFormHandler {
   // Private state tracking
-  private autoSaveTimeout: NodeJS.Timeout | null = null;
+  private autoSaveTimeout: ReturnType<typeof setTimeout> | null = null;
   private lastSavedData: string = "";
   private selectedDomain: string = "";
   private selectedSubject: string = "";

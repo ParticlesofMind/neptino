@@ -108,7 +108,7 @@ export class PathTool extends BaseTool {
     if (!this.isDragging || !this.activeObject || !this.activeSceneId) return;
 
     const local = container.toLocal(event.global);
-    let constrainedLocal = new Point(local.x, local.y);
+    const constrainedLocal = new Point(local.x, local.y);
     
     // Apply shift key constraints for straight lines
     if (this.isShiftHeld) {
@@ -193,7 +193,7 @@ export class PathTool extends BaseTool {
     
     // Clear live preview after committing
     const sceneFinal = animationState.getScenes().find(s => s.getId() === this.activeSceneId);
-    try { sceneFinal?.clearLivePathPreview(); } catch {}
+    try { sceneFinal?.clearLivePathPreview(); } catch { /* empty */ }
     this.reset();
   }
 
@@ -324,7 +324,7 @@ export class PathTool extends BaseTool {
         if (layersPanel && layersPanel.refresh) {
           setTimeout(() => layersPanel.refresh(), 100);
         }
-      } catch {}
+      } catch { /* empty */ }
       
     } else {
       console.warn(`🎯 PathTool: Scene ${this.activeSceneId} not found`);

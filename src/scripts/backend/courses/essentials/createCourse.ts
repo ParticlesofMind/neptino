@@ -224,6 +224,7 @@ async function ensureUserProfileFallback(user: any): Promise<void> {
  if (error) {
  console.error("Failed to create user profile:", error);
  } else {
+ // eslint-disable-next-line no-empty
  }
  } catch (error) {
  console.error("Error in ensureUserProfileFallback:", error);

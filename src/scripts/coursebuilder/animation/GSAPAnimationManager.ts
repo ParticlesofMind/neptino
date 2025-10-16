@@ -24,7 +24,7 @@ function lerp(a: number, b: number, t: number): number { return a + (b - a) * t;
 
 function applyProps(target: any, props: Record<string, any>) {
   for (const [k, v] of Object.entries(props)) {
-    try { (target as any)[k] = v; } catch {}
+    try { (target as any)[k] = v; } catch { /* empty */ }
   }
 }
 
@@ -70,7 +70,7 @@ export function enhanceSceneWithGSAP(scene: Scene): GSAPLike {
         if (autoRotate) {
           const prev = idx > 0 ? points[idx] : points[0];
           const angle = Math.atan2(y - prev.y, x - prev.x);
-          try { (target as any).rotation = angle; } catch {}
+          try { (target as any).rotation = angle; } catch { /* empty */ }
         }
         if (t < 1) requestAnimationFrame(tick);
       };

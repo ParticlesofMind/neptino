@@ -203,7 +203,7 @@ export class TextTool extends BaseTool {
         }
       });
       (window as any).textTool = api;
-    } catch {}
+    } catch { /* empty */ }
   }
 
   onDeactivate(): void {
@@ -298,15 +298,15 @@ export class TextTool extends BaseTool {
           if (this.settings.fontStyle) (textObj.style as any).fontStyle = this.settings.fontStyle;
           textObj.text = currentText; // force update
         }
-      } catch {}
+      } catch { /* empty */ }
       // Refresh flow/metrics to match new style
-      try { (this.activeTextArea as any).refreshTextMetrics?.(); } catch {}
+      try { (this.activeTextArea as any).refreshTextMetrics?.(); } catch { /* empty */ }
       // Update caret color to ensure contrast and height to line metrics
       try {
         const caretColor = this.computeCaretColor(this.settings.color, (this.activeTextArea as any).settings?.backgroundColor);
         this.textCursor?.setColor(caretColor);
         this.textCursor?.setHeight(Math.max(this.activeTextArea.textLineHeight, this.settings.fontSize + 4));
-      } catch {}
+      } catch { /* empty */ }
     }
   }
 
@@ -347,6 +347,7 @@ export class TextTool extends BaseTool {
   /**
    * Activate a PIXI text object for editing (called from selection tool)
    */
+  // eslint-disable-next-line no-unused-vars
   public activateTextObjectForEditing(pixiTextObject: any, point: Point, _container: Container): void {
     // Find the text area that contains this PIXI text object
     const textArea = this.findTextAreaByPixiObject(pixiTextObject);
@@ -668,7 +669,7 @@ export class TextTool extends BaseTool {
     try {
       const caretColor = this.computeCaretColor(this.settings.color, (textArea as any).settings?.backgroundColor);
       this.textCursor.setColor(caretColor);
-    } catch {}
+    } catch { /* empty */ }
     
     // Set up input handling - ensure inputHandler exists
     const inputHandler = this.ensureInputHandler(textArea.pixiContainer);
@@ -679,7 +680,7 @@ export class TextTool extends BaseTool {
     try {
       this.canvasElement = document.querySelector('#pixi-canvas');
       (this.canvasElement as any)?.focus?.();
-    } catch {}
+    } catch { /* empty */ }
     
     // Position cursor at start (will be overridden by specific placement if needed)
     const startPos = textArea.getCharacterPosition(0);
@@ -802,13 +803,13 @@ export class TextTool extends BaseTool {
       this.inputHandler.setActiveTextArea(this.activeTextArea);
       (this.inputHandler as any).selectAll?.();
       this.textCursor?.setVisible(true);
-    } catch {}
+    } catch { /* empty */ }
   }
 
   /** Test helper: backspace delete n characters */
   public debugBackspace(count: number = 1): void {
     if (!this.activeTextArea) return;
-    let t = this.activeTextArea.text;
+    const t = this.activeTextArea.text;
     if (!t) return;
     const n = Math.max(0, t.length - (count || 1));
     this.activeTextArea.updateText(t.substring(0, n));

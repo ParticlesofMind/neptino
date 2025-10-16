@@ -283,7 +283,7 @@ export class BrushTool extends BaseTool {
           color: this.settings.color,
           opacity: this.currentStrokeOpacity,
         };
-      } catch {}
+      } catch { /* empty */ }
 
       // 🚨 CRITICAL: Register with DisplayObjectManager so it shows in layers panel
       if (this.displayManager) {

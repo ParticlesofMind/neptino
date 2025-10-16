@@ -77,11 +77,11 @@ export class CanvasAPI {
       }
       this.displayManager = new DisplayObjectManager(drawingLayer);
       // Expose for snapping helpers that need read-only access
-      try { (window as any)._displayManager = this.displayManager; } catch {}
+      try { (window as any)._displayManager = this.displayManager; } catch { /* empty */ }
 
       // Step 5: Create tool manager
       this.toolManager = new ToolManager();
-      try { (window as any).toolManager = this.toolManager; } catch {}
+      try { (window as any).toolManager = this.toolManager; } catch { /* empty */ }
 
       // Step 5.1: Connect display manager to tool manager (CRITICAL!)
       this.toolManager.setDisplayManager(this.displayManager);
@@ -308,7 +308,7 @@ export class CanvasAPI {
       const texture = await Assets.load(url);
       const sprite = new Sprite(texture);
       if (this.getPlacementMode('images') === 'center') {
-        try { (sprite as any).anchor?.set?.(0.5); } catch {}
+        try { (sprite as any).anchor?.set?.(0.5); } catch { /* empty */ }
       }
       sprite.x = x;
       sprite.y = y;
@@ -339,7 +339,7 @@ export class CanvasAPI {
     const created = this.displayManager.createText(text, style);
     const id = created.id;
     if (this.getPlacementMode('text') === 'center') {
-      try { (created.text as any).anchor?.set?.(0.5); } catch {}
+      try { (created.text as any).anchor?.set?.(0.5); } catch { /* empty */ }
     }
     try {
       created.text.x = x;
@@ -388,7 +388,7 @@ export class CanvasAPI {
     // Create HTML video element and attach listeners BEFORE setting src
     const video = document.createElement('video');
     // crossOrigin helps when drawing video to WebGL textures from other domains
-    try { video.crossOrigin = 'anonymous'; } catch {}
+    try { video.crossOrigin = 'anonymous'; } catch { /* empty */ }
     video.playsInline = true;
     video.muted = true; // allow autoplay when user clicks without sound issues
     video.loop = true;
@@ -408,7 +408,7 @@ export class CanvasAPI {
       .stroke({ color: 0x059669, width: 2 });
     container.addChild(placeholder);
     if (this.getPlacementMode('videos') === 'center') {
-      try { container.pivot.set(contentW / 2, contentH / 2); } catch {}
+      try { container.pivot.set(contentW / 2, contentH / 2); } catch { /* empty */ }
     }
     
     // Add video icon in center as placeholder - sized appropriately for smaller video
@@ -449,7 +449,7 @@ export class CanvasAPI {
     // Set src after listeners to avoid race conditions with cached resources
     video.src = url;
     // Kick off preload
-    try { video.load(); } catch {}
+    try { video.load(); } catch { /* empty */ }
 
     // Create sprite/texture AFTER first frame is definitely available
     const videoSprite = new Sprite(Texture.WHITE); // temporary placeholder texture
@@ -485,7 +485,7 @@ export class CanvasAPI {
         // Ensure high-quality scaling
         texture.source.scaleMode = 'linear';
         texture.source.antialias = true;
-      } catch {}
+      } catch { /* empty */ }
 
       // Determine natural video dimensions
       const naturalW = Math.max(1, video.videoWidth || texture.width || contentW);
@@ -498,7 +498,7 @@ export class CanvasAPI {
       videoSprite.width = contentW;
       videoSprite.height = contentH;
       if (this.getPlacementMode('videos') === 'center') {
-        try { container.pivot.set(contentW / 2, contentH / 2); } catch {}
+        try { container.pivot.set(contentW / 2, contentH / 2); } catch { /* empty */ }
       }
 
       // Scale down the whole container so short edge is capped (like images)
@@ -507,7 +507,7 @@ export class CanvasAPI {
       const shrinkScale = Math.min(1, cap / shortEdge);
       container.scale.set(shrinkScale);
       // Keep the play button readable regardless of container scaling
-      try { playButton.scale.set(shrinkScale === 0 ? 1 : 1 / shrinkScale); } catch {}
+      try { playButton.scale.set(shrinkScale === 0 ? 1 : 1 / shrinkScale); } catch { /* empty */ }
 
       // Update overlay graphics to match content size before scaling
       try {
@@ -521,14 +521,14 @@ export class CanvasAPI {
         drawPlayButton();
         playButton.position.set(contentW / 2, contentH / 2);
         // Keep only central play button; no controls to layout
-      } catch {}
+      } catch { /* empty */ }
 
       videoSprite.visible = true;
       placeholder.visible = false;
       videoIcon.visible = false;
 
       // Try to reset to first frame for consistent thumbnail
-      try { if (!video.paused) { video.pause(); } video.currentTime = 0; } catch {}
+      try { if (!video.paused) { video.pause(); } video.currentTime = 0; } catch { /* empty */ }
     }).catch((err) => {
       console.warn('⚠️ Video did not become ready in time:', err);
     });
@@ -679,7 +679,7 @@ export class CanvasAPI {
       const width = 220;
       const height = 56;
       if (this.getPlacementMode('audio') === 'center') {
-        try { container.pivot.set(width / 2, height / 2); } catch {}
+        try { container.pivot.set(width / 2, height / 2); } catch { /* empty */ }
       }
 
       // Background panel (white with blue border)
@@ -847,11 +847,11 @@ export class CanvasAPI {
         gfx.alpha = 1 - p;
         if (p >= 1) {
           app.ticker.remove(cb);
-          try { uiLayer.removeChild(gfx); gfx.destroy(); } catch {}
+          try { uiLayer.removeChild(gfx); gfx.destroy(); } catch { /* empty */ }
         }
       };
       app.ticker.add(cb);
-    } catch {}
+    } catch { /* empty */ }
   }
 
   /**

@@ -116,6 +116,7 @@ export class SmartGuides {
   /**
    * Handle Grid Reference mode - snap to grid without guide lines
    */
+  // eslint-disable-next-line no-unused-vars
   private handleGridReference(_container: Container, _draggedBounds: any): void {
     console.log('📐 Grid Reference mode - snap to grid positions');
     
@@ -159,6 +160,7 @@ export class SmartGuides {
   /**
    * Update resize guides (required by SelectionTool)
    */
+  // eslint-disable-next-line no-unused-vars
   public updateResizeGuides(container: Container, selectedObjects: any[], bounds: any, _mode: string): void {
     // For resize operations, treat similar to regular update
     this.update(container, selectedObjects, bounds);

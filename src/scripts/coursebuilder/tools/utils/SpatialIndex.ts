@@ -112,7 +112,7 @@ export class SpatialIndex {
             name === 'selection-size-indicator') {
           return;
         }
-      } catch {}
+      } catch { /* empty */ }
 
       // Add object if it has valid bounds
       try {
@@ -134,7 +134,7 @@ export class SpatialIndex {
             });
           }
         }
-      } catch {}
+      } catch { /* empty */ }
 
       // Recurse to children
       if (node.children && Array.isArray(node.children)) {

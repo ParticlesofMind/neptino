@@ -78,7 +78,7 @@ export class PathOverlay {
 
   destroy(): void {
     if (!this.root) return;
-    try { this.root.destroy({ children: true }); } catch {}
+    try { this.root.destroy({ children: true }); } catch { /* empty */ }
     this.root = null;
     this.installed = false;
   }

@@ -421,18 +421,20 @@ export class AICurriculumGenerator {
       case 'lessons':
         return Array.from({ length: numLessons }, (_, i) => `${courseName} - Lesson ${i + 1}`);
       
-      case 'modules':
+      case 'modules': {
         // Use existing module count, or calculate from lessons
         const moduleCount = numModules > 0 ? numModules : Math.ceil(numLessons / 3);
         return Array.from({ length: moduleCount }, (_, i) => `Module ${i + 1}: ${courseName}`);
+      }
       
-      case 'topics':
+      case 'topics': {
         const topicsPerLesson = context.structure?.topicsPerLesson || 2;
         return Array.from({ length: numLessons }, () => 
           Array.from({ length: topicsPerLesson }, (_, i) => `Topic ${i + 1}`)
         );
+      }
       
-      case 'objectives':
+      case 'objectives': {
         const objPerTopic = context.structure?.objectivesPerTopic || 2;
         const topicsCount = context.structure?.topicsPerLesson || 2;
         return Array.from({ length: numLessons }, () =>
@@ -440,8 +442,9 @@ export class AICurriculumGenerator {
             Array.from({ length: objPerTopic }, (_, i) => `Learning Objective ${i + 1}`)
           )
         );
+      }
       
-      case 'tasks':
+      case 'tasks': {
         const tasksPerObj = context.structure?.tasksPerObjective || 2;
         const objCount = context.structure?.objectivesPerTopic || 2;
         const topCount = context.structure?.topicsPerLesson || 2;
@@ -452,8 +455,9 @@ export class AICurriculumGenerator {
             )
           )
         );
+      }
       
-      case 'all':
+      case 'all': {
         // Generate a simple curriculum structure
         const topics = context.structure?.topicsPerLesson || 2;
         const objectives = context.structure?.objectivesPerTopic || 2;
@@ -472,6 +476,7 @@ export class AICurriculumGenerator {
             ),
           })),
         }));
+      }
       
       default:
         return [];

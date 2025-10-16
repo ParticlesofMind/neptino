@@ -28,7 +28,7 @@ export class LayersPanel {
           return result;
         };
       }
-    } catch {}
+    } catch { /* empty */ }
   }
 
   public refresh(): void {
@@ -111,7 +111,7 @@ export class LayersPanel {
             }
           }
         }
-      } catch {}
+      } catch { /* empty */ }
       // Fallback to the usual refresh path
       this.clearThumbnailCache(); // Clear cache when objects change
       this.debouncedRefresh(8); // Fast refresh for updates
@@ -564,7 +564,7 @@ export class LayersPanel {
           try {
             if (dragged.parent) dragged.parent.removeChild(dragged);
             (dropTarget as any).addChild(dragged);
-            try { (dropTarget as any).sortableChildren = true; } catch {}
+            try { (dropTarget as any).sortableChildren = true; } catch { /* empty */ }
             document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id: dragId, object: dragged, action: 'reparented' } }));
             console.log('✅ Nested object into container (meta/ctrl-drop)');
 
@@ -576,7 +576,7 @@ export class LayersPanel {
                 map[dropId] = true;
                 localStorage.setItem('layersPanel:expansion', JSON.stringify(map));
               }
-            } catch {}
+            } catch { /* empty */ }
 
             // Immediate refresh to show nested item without delay
             this.clearThumbnailCache();
@@ -584,7 +584,7 @@ export class LayersPanel {
           } catch (error) {
             console.error('❌ Failed to reparent, rolling back:', error);
             if (originalParent && originalIndex >= 0) {
-              try { if (dragged.parent) dragged.parent.removeChild(dragged); originalParent.addChildAt(dragged, originalIndex); } catch {}
+              try { if (dragged.parent) dragged.parent.removeChild(dragged); originalParent.addChildAt(dragged, originalIndex); } catch { /* empty */ }
             }
             return;
           }
@@ -598,14 +598,14 @@ export class LayersPanel {
               ? dmLocal.createContainer(parentCont)
               : { container: new (window as any).PIXI.Container(), id: '' };
             const group = created.container;
-            try { (group as any).__toolType = 'container'; } catch {}
-            try { (group as any).name = (group as any).name || 'group'; } catch {}
-            try { (group as any).sortableChildren = true; } catch {}
+            try { (group as any).__toolType = 'container'; } catch { /* empty */ }
+            try { (group as any).name = (group as any).name || 'group'; } catch { /* empty */ }
+            try { (group as any).sortableChildren = true; } catch { /* empty */ }
             if (!(group as any).parent) parentCont.addChild(group);
 
             // Insert group at the position of the drop target
             const targetIndex = parentCont.getChildIndex ? parentCont.getChildIndex(dropTarget) : parentCont.children.indexOf(dropTarget);
-            try { if (typeof parentCont.setChildIndex === 'function') parentCont.setChildIndex(group, targetIndex); } catch {}
+            try { if (typeof parentCont.setChildIndex === 'function') parentCont.setChildIndex(group, targetIndex); } catch { /* empty */ }
 
             // Preserve world positions while regrouping
             const moveInto = (child: any) => {
@@ -615,7 +615,7 @@ export class LayersPanel {
                 (group as any).addChild(child);
                 const local = (group as any).toLocal ? (group as any).toLocal(world) : world;
                 child.position?.set(local.x, local.y);
-              } catch {}
+              } catch { /* empty */ }
             };
             // Move objects into the new group (preserving world positions)
             moveInto(dropTarget);
@@ -633,13 +633,13 @@ export class LayersPanel {
                     child.position?.set(local.x, local.y);
                   } catch (err) {
                     console.warn('⚠️ Fallback reparent (no world transform):', err);
-                    try { child.parent?.removeChild(child); (group as any).addChild(child); } catch {}
+                    try { child.parent?.removeChild(child); (group as any).addChild(child); } catch { /* empty */ }
                   }
                 }
               };
               ensureInGroup(dropTarget);
               ensureInGroup(dragged);
-            } catch {}
+            } catch { /* empty */ }
 
             document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id: dragId, object: dragged, action: 'grouped' } }));
             const dropId = this.getId(dropTarget);
@@ -654,10 +654,10 @@ export class LayersPanel {
                 map[groupId] = true;
                 localStorage.setItem('layersPanel:expansion', JSON.stringify(map));
                 // Mark selection to the new group for consistency with other grouping methods
-                try { (group as any).__selected = true; } catch {}
-                try { document.dispatchEvent(new CustomEvent('selection:changed', { detail: { count: 1 } })); } catch {}
+                try { (group as any).__selected = true; } catch { /* empty */ }
+                try { document.dispatchEvent(new CustomEvent('selection:changed', { detail: { count: 1 } })); } catch { /* empty */ }
               }
-            } catch {}
+            } catch { /* empty */ }
 
             // Force an immediate refresh to avoid a transient empty group render
             this.clearThumbnailCache();
@@ -665,7 +665,7 @@ export class LayersPanel {
           } catch (error) {
             console.error('❌ Failed to auto-group via DnD, rolling back:', error);
             if (originalParent && originalIndex >= 0) {
-              try { if (dragged.parent) dragged.parent.removeChild(dragged); originalParent.addChildAt(dragged, originalIndex); } catch {}
+              try { if (dragged.parent) dragged.parent.removeChild(dragged); originalParent.addChildAt(dragged, originalIndex); } catch { /* empty */ }
             }
             return;
           }
@@ -691,7 +691,7 @@ export class LayersPanel {
           } catch (error) {
             console.error('❌ Failed to reorder, rolling back:', error);
             if (originalParent && originalIndex >= 0) {
-              try { if (dragged.parent) dragged.parent.removeChild(dragged); originalParent.addChildAt(dragged, originalIndex); } catch {}
+              try { if (dragged.parent) dragged.parent.removeChild(dragged); originalParent.addChildAt(dragged, originalIndex); } catch { /* empty */ }
             }
             return;
           }
@@ -989,23 +989,23 @@ export class LayersPanel {
           const created = dmLocal.createContainer ? dmLocal.createContainer(parent) : null;
           clone = created?.container || new (window as any).PIXI.Container();
           if (!created) parent.addChild(clone);
-          try { (clone as any).__meta = JSON.parse(JSON.stringify((obj as any).__meta || {})); } catch {}
-          try { (clone as any).__toolType = (obj as any).__toolType; } catch {}
+          try { (clone as any).__meta = JSON.parse(JSON.stringify((obj as any).__meta || {})); } catch { /* empty */ }
+          try { (clone as any).__toolType = (obj as any).__toolType; } catch { /* empty */ }
         }
         if (clone) {
           parent.addChild(clone);
           const newId = dmLocal?.add ? dmLocal.add(clone, parent) : null;
           document.dispatchEvent(new CustomEvent('displayObject:added', { detail: { id: newId, object: clone } }));
         }
-      } catch {}
+      } catch { /* empty */ }
     });
     addItem('Rename', () => {
       const li = this.listEl?.querySelector(`li[data-layer-id="${id}"]`) as HTMLElement | null;
       const input = li?.querySelector('.layer__name-input') as HTMLInputElement | null;
       if (input) { input.readOnly = false; input.focus(); }
     });
-    addItem('Lock', () => { (obj as any).__locked = true; try { (obj as any).eventMode = 'none'; (obj as any).interactiveChildren = false; } catch {} document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id, object: obj, action: 'lock' } })); }, locked);
-    addItem('Unlock', () => { (obj as any).__locked = false; try { (obj as any).eventMode = 'static'; (obj as any).interactiveChildren = true; } catch {} document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id, object: obj, action: 'unlock' } })); }, !locked);
+    addItem('Lock', () => { (obj as any).__locked = true; try { (obj as any).eventMode = 'none'; (obj as any).interactiveChildren = false; } catch { /* empty */ } document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id, object: obj, action: 'lock' } })); }, locked);
+    addItem('Unlock', () => { (obj as any).__locked = false; try { (obj as any).eventMode = 'static'; (obj as any).interactiveChildren = true; } catch { /* empty */ } document.dispatchEvent(new CustomEvent('displayObject:updated', { detail: { id, object: obj, action: 'unlock' } })); }, !locked);
 
     document.body.appendChild(menu);
     const close = () => menu.remove();

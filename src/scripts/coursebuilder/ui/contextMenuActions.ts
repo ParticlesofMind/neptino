@@ -27,7 +27,7 @@ export function copySelection(): boolean {
     if (ok) {
       try {
         document.dispatchEvent(new CustomEvent('selection:clipboard', { detail: { hasClipboard: true } }));
-      } catch {}
+      } catch { /* empty */ }
     }
     return ok;
   } catch {
@@ -48,7 +48,7 @@ export function duplicateSelection(): boolean {
   // Copy then Paste; report success if paste succeeds
   const copied = copySelection();
   // Small async handoff is caller’s concern; synchronous return best-effort
-  try { setTimeout(() => pasteSelection(), 0); } catch {}
+  try { setTimeout(() => pasteSelection(), 0); } catch { /* empty */ }
   return copied;
 }
 
@@ -93,5 +93,5 @@ export function deleteSelectionViaKeyEvent(): void {
   try {
     const evt = new KeyboardEvent('keydown', { key: 'Delete' });
     document.dispatchEvent(evt);
-  } catch {}
+  } catch { /* empty */ }
 }

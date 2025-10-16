@@ -30,11 +30,11 @@ export class TextFlowManager implements ITextFlowManager {
         (m.style as any).whiteSpace = 'pre';
         (m.style as any).wordWrap = false;
       }
-    } catch {}
+    } catch { /* empty */ }
   }
 
   public destroy(): void {
-    try { this.measureText?.destroy(); } catch {}
+    try { this.measureText?.destroy(); } catch { /* empty */ }
     this.measureText = null;
   }
   
