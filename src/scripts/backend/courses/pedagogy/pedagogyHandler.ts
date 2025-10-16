@@ -262,7 +262,7 @@ function attachPedagogyGrid() {
   let lastSavedSerialized = input.value || '';
   let pendingPayload: XY | null = null;
   let pendingSerialized: string | null = null;
-  let saveTimer: ReturnType<typeof window.setTimeout> | null = null;
+  let saveTimer: number | null = null;
   let inflightSave: Promise<void> | null = null;
   let attemptedRemoteSync = false;
   let missingCourseWarned = false;
@@ -275,6 +275,7 @@ function attachPedagogyGrid() {
   }
 
   function renderMarker() {
+    if (!marker) return;
     const leftPct = ((state.x + 100) / 200) * 100;
     const topPct = (1 - (state.y + 100) / 200) * 100;
     marker.style.left = `${leftPct}%`;
@@ -282,6 +283,8 @@ function attachPedagogyGrid() {
   }
 
   function renderOutputs() {
+    if (!xOut || !yOut || !titleEl || !subtitleEl || !descEl || !listEl) return;
+    
     xOut.textContent = String(round(state.x));
     yOut.textContent = String(round(state.y));
 
@@ -300,7 +303,7 @@ function attachPedagogyGrid() {
 
   async function syncFromDatabase(): Promise<void> {
     const courseId = resolveCurrentCourseId();
-    if (!courseId) return;
+    if (!courseId || !input) return;
 
     try {
       const { data, error } = await supabase
@@ -316,7 +319,14 @@ function attachPedagogyGrid() {
         return;
       }
 
-      const parsed = parseStored((data as { course_pedagogy?: unknown }).course_pedagogy ?? null);
+      const pedagogy = (data as { course_pedagogy?: unknown }).course_pedagogy;
+      const parsed = parseStored(
+        pedagogy === null || pedagogy === undefined
+          ? null
+          : typeof pedagogy === 'string' || (typeof pedagogy === 'object' && pedagogy !== null && 'x' in pedagogy && 'y' in pedagogy)
+          ? (pedagogy as string | XY)
+          : null
+      );
       if (!parsed) return;
 
       state = parsed;
@@ -415,6 +425,8 @@ function attachPedagogyGrid() {
   }
 
   function saveHidden() {
+    if (!input) return;
+    
     const payload = { x: round(state.x), y: round(state.y) };
     const serialized = JSON.stringify(payload);
     suppressPersistedTracking = true;
@@ -437,6 +449,8 @@ function attachPedagogyGrid() {
   }
 
   function setFromEvent(clientX: number, clientY: number) {
+    if (!grid) return;
+    
     const rect = grid.getBoundingClientRect();
     const relX = clamp(clientX - rect.left, 0, rect.width);
     const relY = clamp(clientY - rect.top, 0, rect.height);
