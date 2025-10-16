@@ -125,8 +125,8 @@ export async function createCourse(
 
  // Create course record with your actual schema
  const courseInsertData = {
- course_name: data.course_name.trim(),
- course_description: data.course_description.trim(),
+ course_name: data.course_name,
+ course_description: data.course_description,
  course_language: data.course_language.trim(),
  teacher_id: user.id, // Use teacher_id from your schema
  created_at: new Date().toISOString(),

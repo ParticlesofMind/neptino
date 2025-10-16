@@ -627,21 +627,18 @@ export class CourseFormHandler {
     }
 
     private handleRemoveImage(): void {
-        const previewImg = document.getElementById(
-            "preview-img",
-        ) as HTMLImageElement;
-        const removeBtn = document.getElementById(
-            "remove-image",
-        ) as HTMLButtonElement;
-        const fileInput = document.getElementById(
-            "course-image",
-        ) as HTMLInputElement;
+        const previewImg = document.getElementById('preview-img') as HTMLImageElement;
+        const removeBtn = document.getElementById('remove-image') as HTMLButtonElement;
+        const fileInput = document.getElementById('course-image') as HTMLInputElement;
+        const imageLabel = this.form?.querySelector('label[for="course-image"]');
 
-        if (previewImg && removeBtn && fileInput) {
-            previewImg.style.display = "none";
-            removeBtn.style.display = "none";
-            fileInput.value = "";
-            previewImg.src = "";
+        if (previewImg && removeBtn && fileInput && imageLabel) {
+            previewImg.style.display = 'none';
+            removeBtn.style.display = 'none';
+            fileInput.value = '';
+            previewImg.src = '';
+            imageLabel.classList.remove('has-image');
+            fileInput.style.color = ''; // Reset to default
             this.validateForm();
         }
     }
@@ -821,21 +818,16 @@ export class CourseFormHandler {
         const removeBtn = document.getElementById(
             "remove-image",
         ) as HTMLButtonElement;
-        const fileUploadLabel = this.form?.querySelector(
-            ".file-upload__compact-label",
-        );
+        const imageLabel = this.form?.querySelector('label[for="course-image"]');
+        const fileInput = document.getElementById('course-image') as HTMLInputElement;
 
-        if (previewImg && removeBtn) {
+        if (previewImg && removeBtn && imageLabel && fileInput) {
             previewImg.src = imageUrl;
-            previewImg.style.display = "block";
-            removeBtn.style.display = "block";
-
-            if (fileUploadLabel) {
-                const textElement = fileUploadLabel.querySelector('element');
-                if (textElement) {
-                    textElement.textContent = "Change course image";
-                }
-            }
+            previewImg.style.display = 'block';
+            removeBtn.style.display = 'block';
+            imageLabel.classList.add('has-image');
+            // Hide the default file input text by making it transparent
+            fileInput.style.color = 'transparent';
         }
     }
 
@@ -844,13 +836,17 @@ export class CourseFormHandler {
         const removeBtn = document.getElementById(
             "remove-image",
         ) as HTMLButtonElement;
+        const imageLabel = this.form?.querySelector('label[for="course-image"]');
+        const fileInput = document.getElementById('course-image') as HTMLInputElement;
 
-        if (img && removeBtn) {
+        if (img && removeBtn && imageLabel && fileInput) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 img.src = e.target?.result as string;
                 img.style.display = "block";
                 removeBtn.style.display = "block";
+                imageLabel.classList.add('has-image');
+                fileInput.style.color = 'transparent';
             };
             reader.readAsDataURL(file);
         }
@@ -967,7 +963,8 @@ export class CourseFormHandler {
 
         const submitBtn = this.getSubmitButton();
         if (submitBtn) {
-            submitBtn.textContent = "Save Course Details";
+            submitBtn.textContent = "Created Course";
+            submitBtn.disabled = true;
         }
     }
 
