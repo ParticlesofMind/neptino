@@ -24,32 +24,59 @@ function getInput(): HTMLInputElement | null {
   return getEl<HTMLInputElement>('#course-pedagogy-input');
 }
 
-function parseStored(value: string | null): XY | null {
-  if (!value) return null;
-  try {
-    const parsed = JSON.parse(value);
-    if (typeof parsed?.x === 'number' && typeof parsed?.y === 'number') {
-      return { x: clamp(parsed.x, -100, 100), y: clamp(parsed.y, -100, 100) };
-    }
-  } catch (error) {
-    console.warn('Failed to parse pedagogy value:', error);
-  }
+function parseStored(value: string | XY | null): XY | null {
+  if (value === null || value === undefined) return null;
 
-  if (value && typeof value === 'string') {
-    const presets: Record<string, XY> = {
-      traditional: { x: -75, y: -75 },
-      progressive: { x: 75, y: 75 },
-      'guided discovery': { x: -25, y: 75 },
-      balanced: { x: 0, y: 0 },
-      behaviorism: { x: -75, y: -75 },
-      cognitivism: { x: 0, y: 50 },
-      constructivism: { x: 25, y: 75 },
-      connectivism: { x: 75, y: 50 },
-    };
-    const lower = value.toLowerCase();
-    if (lower in presets) {
-      return presets[lower];
+  const coerce = (candidate: unknown): XY | null => {
+    if (candidate === null || candidate === undefined) return null;
+
+    if (typeof candidate === 'object') {
+      const record = candidate as Record<string, unknown>;
+      const x = Number(record.x);
+      const y = Number(record.y);
+      if (Number.isFinite(x) && Number.isFinite(y)) {
+        return { x: clamp(x, -100, 100), y: clamp(y, -100, 100) };
+      }
+      return null;
     }
+
+    if (typeof candidate === 'string') {
+      const trimmed = candidate.trim();
+      if (!trimmed) {
+        return null;
+      }
+
+      try {
+        const parsed = JSON.parse(trimmed);
+        const coerced = coerce(parsed);
+        if (coerced) {
+          return coerced;
+        }
+      } catch (error) {
+        console.warn('Failed to parse pedagogy value:', error);
+      }
+
+      const presets: Record<string, XY> = {
+        traditional: { x: -75, y: -75 },
+        progressive: { x: 75, y: 75 },
+        'guided discovery': { x: -25, y: 75 },
+        balanced: { x: 0, y: 0 },
+        behaviorism: { x: -75, y: -75 },
+        cognitivism: { x: 0, y: 50 },
+        constructivism: { x: 25, y: 75 },
+        connectivism: { x: 75, y: 50 },
+      };
+      const lower = trimmed.toLowerCase();
+      if (lower in presets) {
+        return presets[lower];
+      }
+    }
+    return null;
+  };
+
+  const result = coerce(value);
+  if (result) {
+    return result;
   }
 
   return null;
@@ -206,6 +233,7 @@ function attachPedagogyGrid() {
   const descEl = getEl<HTMLElement>('#pedagogy-approach-desc');
   const listEl = getEl<HTMLUListElement>('#pedagogy-effects-list');
   const presetButtons = document.querySelectorAll<HTMLButtonElement>('.button--preset');
+  const form = input?.closest('form') as HTMLFormElement | null;
 
   if (!input || !grid || !marker || !xOut || !yOut || !titleEl || !subtitleEl || !descEl || !listEl) {
     console.warn('Pedagogy UI: Missing required elements', {
@@ -217,7 +245,7 @@ function attachPedagogyGrid() {
       titleEl: !!titleEl,
       subtitleEl: !!subtitleEl,
       descEl: !!descEl,
-      listEl: !!listEl
+      listEl: !!listEl,
     });
     return;
   }
@@ -227,36 +255,177 @@ function attachPedagogyGrid() {
   grid.style.touchAction = 'none';
   grid.style.cursor = 'pointer';
 
+  const SAVE_DEBOUNCE_MS = 600;
+
   let state: XY = { x: 0, y: 0 };
+  let latestSerialized = input.value || '';
+  let lastSavedSerialized = input.value || '';
+  let pendingPayload: XY | null = null;
+  let pendingSerialized: string | null = null;
+  let saveTimer: ReturnType<typeof window.setTimeout> | null = null;
+  let inflightSave: Promise<void> | null = null;
+  let attemptedRemoteSync = false;
+  let missingCourseWarned = false;
+  let suppressPersistedTracking = false;
+
+  function formatSavedTimestamp(now: Date): string {
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    return `Saved at ${hours}:${minutes}`;
+  }
 
   function renderMarker() {
     const leftPct = ((state.x + 100) / 200) * 100;
     const topPct = (1 - (state.y + 100) / 200) * 100;
-    marker!.style.left = `${leftPct}%`;
-    marker!.style.top = `${topPct}%`;
+    marker.style.left = `${leftPct}%`;
+    marker.style.top = `${topPct}%`;
   }
 
   function renderOutputs() {
-    xOut!.textContent = String(round(state.x));
-    yOut!.textContent = String(round(state.y));
+    xOut.textContent = String(round(state.x));
+    yOut.textContent = String(round(state.y));
 
     const name = approachName(state.x, state.y);
-    titleEl!.textContent = name;
-    subtitleEl!.textContent = formatSubtitle(state.x, state.y);
-    descEl!.textContent = approachDescription(state.x, state.y);
+    titleEl.textContent = name;
+    subtitleEl.textContent = formatSubtitle(state.x, state.y);
+    descEl.textContent = approachDescription(state.x, state.y);
 
-    listEl!.innerHTML = '';
+    listEl.innerHTML = '';
     for (const item of effectsBullets(state.x, state.y)) {
       const li = document.createElement('li');
       li.textContent = item;
-      listEl!.appendChild(li);
+      listEl.appendChild(li);
     }
   }
 
+  async function syncFromDatabase(): Promise<void> {
+    const courseId = resolveCurrentCourseId();
+    if (!courseId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('course_pedagogy')
+        .eq('id', courseId)
+        .single();
+
+      if (error || !data) {
+        if (error) {
+          console.warn('Unable to load saved pedagogy coordinates:', error);
+        }
+        return;
+      }
+
+      const parsed = parseStored((data as { course_pedagogy?: unknown }).course_pedagogy ?? null);
+      if (!parsed) return;
+
+      state = parsed;
+      renderMarker();
+      renderOutputs();
+
+      const payload = { x: round(state.x), y: round(state.y) };
+      const serialized = JSON.stringify(payload);
+      input.value = serialized;
+      latestSerialized = serialized;
+      lastSavedSerialized = serialized;
+      resetPedagogyStatusIfError();
+    } catch (err) {
+      console.warn('Unexpected error while loading saved pedagogy coordinates:', err);
+    }
+  }
+
+  function persistPedagogy(courseId: string, payload: XY, serialized: string): void {
+    inflightSave = (async () => {
+      try {
+        const { error } = await supabase
+          .from('courses')
+          .update({ course_pedagogy: payload })
+          .eq('id', courseId);
+
+        if (error) {
+          throw error;
+        }
+
+        lastSavedSerialized = serialized;
+        missingCourseWarned = false;
+        setPedagogyStatus('saved', formatSavedTimestamp(new Date()));
+      } catch (error) {
+        console.error('Failed to save pedagogy coordinates:', error);
+        setPedagogyStatus('error', 'Failed to save pedagogy. Try again.');
+      } finally {
+        inflightSave = null;
+      }
+    })();
+  }
+
+  function queuePersist(payload: XY, serialized: string): void {
+    latestSerialized = serialized;
+
+    if (serialized === lastSavedSerialized && !inflightSave) {
+      return;
+    }
+
+    if (form?.dataset.blockSave === 'true') {
+      return;
+    }
+
+    const courseIdHint = resolveCurrentCourseId();
+    if (!courseIdHint) {
+      if (!missingCourseWarned) {
+        setPedagogyStatus('error', 'Create the course before saving pedagogy.');
+        missingCourseWarned = true;
+      }
+      return;
+    }
+
+    pendingPayload = { ...payload };
+    pendingSerialized = serialized;
+
+    if (saveTimer) {
+      window.clearTimeout(saveTimer);
+    }
+
+    setPedagogyStatus('saving', 'Saving pedagogy…');
+    saveTimer = window.setTimeout(() => {
+      saveTimer = null;
+      const courseId = resolveCurrentCourseId();
+      if (!courseId) {
+        if (!missingCourseWarned) {
+          setPedagogyStatus('error', 'Create the course before saving pedagogy.');
+          missingCourseWarned = true;
+        }
+        return;
+      }
+
+      if (form?.dataset.blockSave === 'true') {
+        return;
+      }
+
+      const payloadToSave = pendingPayload;
+      const serializedToSave = pendingSerialized;
+      pendingPayload = null;
+      pendingSerialized = null;
+
+      if (!payloadToSave || !serializedToSave) {
+        return;
+      }
+
+      persistPedagogy(courseId, payloadToSave, serializedToSave);
+    }, SAVE_DEBOUNCE_MS);
+  }
+
   function saveHidden() {
-    input!.value = JSON.stringify({ x: round(state.x), y: round(state.y) });
-    input!.dispatchEvent(new Event('input', { bubbles: true }));
-    input!.dispatchEvent(new Event('change', { bubbles: true }));
+    const payload = { x: round(state.x), y: round(state.y) };
+    const serialized = JSON.stringify(payload);
+    suppressPersistedTracking = true;
+    try {
+      input.value = serialized;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    } finally {
+      suppressPersistedTracking = false;
+    }
+    queuePersist(payload, serialized);
   }
 
   function setFromXY(x: number, y: number) {
@@ -268,26 +437,28 @@ function attachPedagogyGrid() {
   }
 
   function setFromEvent(clientX: number, clientY: number) {
-    const rect = grid!.getBoundingClientRect();
+    const rect = grid.getBoundingClientRect();
     const relX = clamp(clientX - rect.left, 0, rect.width);
     const relY = clamp(clientY - rect.top, 0, rect.height);
-    const x = (relX / rect.width) * 200 - 100; // -100 .. 100
-    const y = (1 - relY / rect.height) * 200 - 100; // -100 .. 100 (top positive)
+    const x = (relX / rect.width) * 200 - 100;
+    const y = (1 - relY / rect.height) * 200 - 100;
     setFromXY(x, y);
   }
 
   // Pointer interactions
   let dragging = false;
   grid.addEventListener('pointerdown', (e) => {
-    (e as PointerEvent).preventDefault();
+    const event = e as PointerEvent;
+    event.preventDefault();
     dragging = true;
-    grid.setPointerCapture?.((e as PointerEvent).pointerId);
-    setFromEvent((e as PointerEvent).clientX, (e as PointerEvent).clientY);
+    grid.setPointerCapture?.(event.pointerId);
+    setFromEvent(event.clientX, event.clientY);
   });
   grid.addEventListener('pointermove', (e) => {
     if (!dragging) return;
-    (e as PointerEvent).preventDefault();
-    setFromEvent((e as PointerEvent).clientX, (e as PointerEvent).clientY);
+    const event = e as PointerEvent;
+    event.preventDefault();
+    setFromEvent(event.clientX, event.clientY);
   });
   const endDrag = (e?: PointerEvent) => {
     dragging = false;
@@ -299,7 +470,7 @@ function attachPedagogyGrid() {
   grid.addEventListener('pointerleave', (e) => endDrag(e as PointerEvent));
 
   // Presets
-  presetButtons.forEach(btn => {
+  presetButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
       const x = Number(btn.getAttribute('data-x'));
       const y = Number(btn.getAttribute('data-y'));
@@ -308,17 +479,35 @@ function attachPedagogyGrid() {
     });
   });
 
-  // Initialize from stored or default
-  const applyInitial = (val: string | null) => {
+  const applyInitial = (val: string | XY | null) => {
     const parsed = parseStored(val);
     if (parsed) {
       state = parsed;
-    } else {
-      state = { x: 0, y: 0 };
+      renderMarker();
+      renderOutputs();
+
+      if (input.value) {
+        latestSerialized = input.value;
+      } else {
+        const canonical = JSON.stringify({ x: round(state.x), y: round(state.y) });
+        input.value = canonical;
+        latestSerialized = canonical;
+      }
+      if (!suppressPersistedTracking) {
+        lastSavedSerialized = latestSerialized;
+      }
+      resetPedagogyStatusIfError();
+      return;
     }
+
+    state = { x: 0, y: 0 };
     renderMarker();
     renderOutputs();
-    // Do not save back immediately if value came from DB (avoid redundant autosave)
+
+    if (!attemptedRemoteSync) {
+      attemptedRemoteSync = true;
+      void syncFromDatabase();
+    }
   };
 
   applyInitial(input.value || null);
