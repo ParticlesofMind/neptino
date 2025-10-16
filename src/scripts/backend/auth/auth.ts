@@ -132,14 +132,45 @@ export async function signIn(email: string, password: string) {
 // Sign out user
 export async function signOut() {
  try {
+ console.log("🔍 Attempting sign out...");
+ 
+ // Get current session to validate
+ const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+ if (sessionError) {
+ console.warn("⚠️ Could not retrieve session:", sessionError.message);
+ }
+ console.log("📊 Current session:", session ? "Active" : "None");
+ 
  const { error } = await supabase.auth.signOut();
+ 
  if (error) {
+ console.error("❌ Supabase signOut error:", {
+ message: error.message,
+ status: (error as any).status,
+ statusText: (error as any).statusText,
+ fullError: error
+ });
+ 
+ // Even if signOut fails, clear local state
+ // This ensures the user can at least be redirected away
+ currentUser = null;
+ console.log("⚠️ Forcing local sign-out due to server error");
  return { success: false, error: error.message };
  }
+ 
+ console.log("✅ Sign out successful");
  currentUser = null;
  return { success: true };
  } catch (error) {
- return { success: false, error: "An unexpected error occurred" };
+ console.error("❌ Sign out exception:", {
+ message: error instanceof Error ? error.message : String(error),
+ error
+ });
+ 
+ // Force local sign-out even on exception
+ currentUser = null;
+ const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+ return { success: false, error: errorMessage };
  }
 }
 

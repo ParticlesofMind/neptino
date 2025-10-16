@@ -1,26 +1,73 @@
 // ==========================================================================
-// HOME PAGE - Dashboard Layout with 3x3 Grid
+// HOME PAGE - Dashboard Layout with Side-by-Side Aside and Articles
 // ==========================================================================
 
-.home {
+.dashboard__layout {
     display: grid;
-    grid-template-columns: auto 1fr; // Narrower sidebar
+    grid-template-columns: clamp(13rem, 15vw, 16rem) minmax(0, 1fr);
+    grid-template-rows: 1fr;
+    height: calc(100vh - 2rem);
+    gap: 1rem;
+    container-type: inline-size;
+    container-name: dashboard-layout;
 }
 
-// Enhance content for dashboard-specific grid layout
-.content {
-    display: grid;
-    height: 100%; // Take full available height
-    padding: var(--spacing-4); // Add internal padding
+.aside {
+    &--main {
+        position: sticky;
+        top: 0;
+        align-self: stretch;
+        max-height: 100%;
+        padding-bottom: var(--spacing-4);
+        box-sizing: border-box;
+        overflow-y: auto;
+    }
+}
 
-    &__article {
-        grid-column: 1 / -1; // Span all columns
-        grid-row: 1 / -1; // Span all rows
+.article {
+    &[data-dashboard-section] {
+        display: none;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        gap: 0;
+        align-content: stretch;
+        align-items: stretch;
+        justify-items: stretch;
+        padding: 0;
+        background: white;
+        min-height: 0;
+        max-height: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
 
-        &--active {
-            display: grid;
-  
-            gap: var(--spacing-4);
-        }
+    &[data-dashboard-section].is-active {
+        display: grid;
+    }
+
+    &__header {
+        padding: clamp(var(--spacing-2), 1.25vw, var(--spacing-3));
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    &__title {
+        margin: 0;
+        font-size: var(--font-size-base);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    &__main {
+        overflow-y: auto;
+        padding: clamp(var(--spacing-2), 1.25vw, var(--spacing-3));
+        display: grid;
+        gap: var(--spacing-3);
+        align-content: start;
+    }
+}
+
+// Responsive: Stack on smaller screens
+@container dashboard-layout (max-width: 58rem) {
+    .dashboard__layout {
+        grid-template-columns: minmax(0, 1fr);
     }
 }

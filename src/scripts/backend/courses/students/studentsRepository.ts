@@ -128,7 +128,7 @@ export class StudentsRepository {
     const { data, error } = await supabase
       .from("students")
       .upsert(payload, {
-        onConflict: "course_id,email",
+        onConflict: "course_id, email",
         ignoreDuplicates: false,
       })
       .select();

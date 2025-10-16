@@ -302,15 +302,42 @@ export class GlobalNavigation {
 
  private async handleSignOut(): Promise<void> {
  try {
+ console.log("👤 Sign out initiated");
  const result = await signOut();
+ 
  if (result.success) {
+ console.log("✅ Sign out completed successfully");
  // Redirect to home page
+ setTimeout(() => {
  window.location.href = '/index.html';
+ }, 300);
  } else {
- console.error('Sign out failed:', result.error);
+ console.error('❌ Sign out failed:', result.error);
+ 
+ // Show error to user with option to force logout
+ const shouldForceLogout = confirm(
+ `Sign out failed: ${result.error}\n\nDo you want to force logout and return to home?`
+ );
+ 
+ if (shouldForceLogout) {
+ console.log("🔄 Forcing logout...");
+ setTimeout(() => {
+ window.location.href = '/index.html';
+ }, 300);
+ }
  }
  } catch (error) {
- console.error('Sign out error:', error);
+ const errorMessage = error instanceof Error ? error.message : String(error);
+ console.error('❌ Sign out error:', errorMessage);
+ 
+ // Even on error, offer option to redirect home
+ const shouldRedirect = confirm(
+ `An error occurred during sign out: ${errorMessage}\n\nReturn to home page?`
+ );
+ 
+ if (shouldRedirect) {
+ window.location.href = '/index.html';
+ }
  }
  }
 

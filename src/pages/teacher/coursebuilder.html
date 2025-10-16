@@ -836,47 +836,26 @@
 
         <div class="article__main article__main--panels">
           <section class="article__config students__config" aria-labelledby="students-roster-title">
-          <div class="students__actions">
-            <button class="button button--primary button--medium students__trigger" type="button"
-              data-modal-target="students-upload-modal" id="students-upload-btn">
-              Upload Students
-            </button>
-            <label class="form__label" for="students-manual-toggle" style="display: flex; align-items: center; gap: var(--spacing-2);">
-              <input class="form__checkbox" type="checkbox" id="students-manual-toggle" />
-              Manual Entry
-            </label>
-          </div>
-          <article class="students__panel students__panel--status" role="listitem" aria-live="polite">
-            <h4 class="students__panel-title">Current roster</h4>
-            <dl class="students__metrics">
-              <div class="students__metric">
-                <dt>Total students</dt>
-                <dd id="students-count-total">0</dd>
-              </div>
-              <div class="students__metric">
-                <dt>Grade levels covered</dt>
-                <dd id="students-count-grades">—</dd>
-              </div>
-              <div class="students__metric">
-                <dt>Profiles synced</dt>
-                <dd id="students-count-synced">0</dd>
-              </div>
-            </dl>
-            <p class="students__status-text" id="students-status-text">
-              No students imported yet. Upload a roster to get started.
-            </p>
-          </article>
+            <div class="students__options">
+              <button class="button button--primary button--medium students__trigger" type="button"
+                data-modal-target="students-upload-modal" id="students-upload-btn">
+                Upload students
+              </button>
 
-          <article class="students__panel students__panel--activity" role="listitem">
-            <h4 class="students__panel-title">Recent imports</h4>
-            <ul class="students__activity-list" id="students-activity-list">
-              <li class="students__activity-item students__activity-item--empty">
-                Nothing yet — uploads will appear here with timestamps and status.
-              </li>
-            </ul>
-          </article>
+              <label class="form__label students__option" for="students-import-contacts-toggle">
+                <input class="form__radio" type="radio" id="students-import-contacts-toggle" name="students-method" value="import-contacts" />
+                <span>Import Contacts</span>
+              </label>
 
-          <div class="students__feedback" id="students-feedback" role="alert" aria-live="assertive" hidden></div>
+              <label class="form__label students__option" for="students-manual-entry-toggle">
+                <input class="form__radio" type="radio" id="students-manual-entry-toggle" name="students-method" value="manual-entry" />
+                <span>Manual Entry</span>
+              </label>
+            </div>
+
+            <form class="form form--students" id="students-form">
+              <div class="students__feedback" id="students-feedback" role="alert" aria-live="assertive" hidden></div>
+            </form>
           </section>
 
           <section class="article__preview students__preview" aria-labelledby="students-preview-title">
@@ -935,9 +914,7 @@
                   accept=".csv,.tsv,.xls,.xlsx,.ods,.pdf,.docx,.doc,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/csv"
                   aria-describedby="students-upload-help" />
               </label>
-              <p class="students-upload__hint" id="students-upload-help">
-                We use SheetJS for spreadsheets, pdf.js for PDFs, and Mammoth for DOCX to extract tables and lists.
-              </p>
+          
             </fieldset>
 
             <fieldset class="students-upload__fieldset">
