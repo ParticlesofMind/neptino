@@ -413,8 +413,6 @@ export class TemplateManager {
     if (templates.length === 0) {
       configArea.innerHTML = `
         <div class="template-config-placeholder">
-          <h3 class="heading heading--tertiary">Create Your First Template</h3>
-          <p class="text">You haven't created any templates yet. Create your first template to get started!</p>
           <div class="template-actions">
             <button class="button button--primary" onclick="TemplateManager.showCreateTemplateModal()">
               Create First Template
