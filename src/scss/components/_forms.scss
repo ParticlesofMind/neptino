@@ -45,6 +45,11 @@
     position: relative; // For icon positioning
   }
 
+  &__group {
+    display: grid;
+    position: relative;
+  }
+
   &__label {
     display: block;
     font-weight: var(--font-weight-medium);
@@ -76,7 +81,7 @@
     font-size: var(--font-size-base);
     transition: var(--transition-fast);
     background: var(--color-background);
-        border-radius: var(--radius-large);
+    border-radius: var(--radius-large);
 
     &:focus {
       @include input-focus;
@@ -114,13 +119,27 @@
 
   &__icon {
     position: absolute;
-    left: 1rem;
+    left: var(--spacing-3);
     top: 50%;
-    transform: translateY(50%);
-    color: var(--color-neutral-400);
+    transform: translateY(-50%);
+    color: #3B82F6 !important;
     pointer-events: none;
     width: 20px;
     height: 20px;
+    flex-shrink: 0;
+    z-index: 10;
+    transition: color var(--transition-fast);
+    
+    path,
+    circle,
+    rect,
+    polyline,
+    line {
+      stroke: #3B82F6 !important;
+      fill: none !important;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
   }
 
   &__actions {
@@ -170,8 +189,16 @@
   // MODIFIER-SPECIFIC ELEMENT STYLING
   // ==========================================================================
   &--auth {
-    .form__field:focus-within .form__icon {
-      color: var(--color-primary-500);
+    .form__group:focus-within .form__icon {
+      color: #2563eb !important;
+      
+      path,
+      circle,
+      rect,
+      polyline,
+      line {
+        stroke: #2563eb !important;
+      }
     }
   }
 

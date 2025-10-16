@@ -52,67 +52,98 @@
         </nav>
     </header>
 
-    <main class="grid__main main">
-        <section class="hero">
-            <h1 class="hero__title heading heading--h1">Neptino changes everything.</h1>
-            <p class="hero__description paragraph paragraph--lead">An innovative educational platform that brings
-                teachers, students, and institutions together in a seamless learning experience designed for the future
-                of education.</p>
-            <a href="/src/pages/shared/signup.html" class="hero__cta-primary button button--primary">Get Started
-                Free</a>
-            <a href="/src/pages/shared/pricing.html" class="hero__cta-secondary button button--outline">View Pricing</a>
-        </section>
+    <main class="grid__main landing">
+        <section class="landing__hero">
+            <div class="landing__text">
+                <h1 class="landing__title">
+                    <span class="landing__title-highlight">Powerful</span>
+                    tutoring and classes.
+                </h1>
+                <p class="landing__subtitle">Set your own rate, we'll connect you with students, you earn money on your schedule.</p>
+                <div class="landing__actions">
+                    <a href="/src/pages/shared/signup.html" class="button button--primary landing__cta-main">Get started today</a>
+                    <a href="/src/pages/shared/pricing.html" class="landing__cta-secondary">See Details</a>
+                </div>
+                <p class="landing__note">14-day free trial. No credit card required.</p>
+            </div>
 
-        <section class="stats">
-            <h2 class="stats__title heading heading--h2">Trusted by Educators Worldwide</h2>
-            <div class="card-grid">
-                <div class="card card--metric">
-                    <span class="metric__number">10,000+</span>
-                    <span class="metric__label label">Active Teachers</span>
-                </div>
-                <div class="card card--metric">
-                    <span class="metric__number">500,000+</span>
-                    <span class="metric__label label">Students Engaged</span>
-                </div>
-                <div class="card card--metric">
-                    <span class="metric__number">500+</span>
-                    <span class="metric__label label">Institutions</span>
-                </div>
-                <div class="card card--metric">
-                    <span class="metric__number">98%</span>
-                    <span class="metric__label label">Satisfaction Rate</span>
-                </div>
+            <div class="landing__visual">
+                <article class="landing-card landing-card--payouts">
+                    <h2 class="landing-card__title">Automated payments and payouts</h2>
+                    <p class="landing-card__subtitle">Accept payments in 45 currencies. Get paid straight after your meeting.</p>
+                    <ul class="landing-card__list">
+                        <li class="landing-card__item">
+                            <span class="landing-card__avatar" aria-hidden="true">AL</span>
+                            <div class="landing-card__details">
+                                <span class="landing-card__name">Ashley Lewis</span>
+                                <span class="landing-card__label">Physics · Completed</span>
+                            </div>
+                            <span class="landing-card__amount">+$480.00</span>
+                        </li>
+                        <li class="landing-card__item">
+                            <span class="landing-card__avatar" aria-hidden="true">AW</span>
+                            <div class="landing-card__details">
+                                <span class="landing-card__name">Andrew Walters</span>
+                                <span class="landing-card__label">Chemistry · Pending</span>
+                            </div>
+                            <span class="landing-card__amount">+$620.00</span>
+                        </li>
+                        <li class="landing-card__item">
+                            <span class="landing-card__avatar" aria-hidden="true">SJ</span>
+                            <div class="landing-card__details">
+                                <span class="landing-card__name">Samantha Jane</span>
+                                <span class="landing-card__label">Algebra · Scheduled</span>
+                            </div>
+                            <span class="landing-card__amount">+$320.00</span>
+                        </li>
+                    </ul>
+                </article>
+
+                <article class="landing-card landing-card--analytics">
+                    <h2 class="landing-card__title">Analytics to help you understand how you're doing.</h2>
+                    <dl class="landing-card__metrics">
+                        <div class="landing-card__metric">
+                            <dt>Total earnings</dt>
+                            <dd>$3,350</dd>
+                        </div>
+                        <div class="landing-card__metric">
+                            <dt>Bookings</dt>
+                            <dd>62</dd>
+                        </div>
+                    </dl>
+                    <div class="landing-card__chart" role="img" aria-label="Bookings vs Earnings trend">
+                        <div class="landing-card__bar landing-card__bar--earnings"></div>
+                        <div class="landing-card__bar landing-card__bar--bookings"></div>
+                        <div class="landing-card__bar landing-card__bar--projected"></div>
+                    </div>
+                    <div class="landing-card__summary">
+                        <div class="landing-card__summary-item">
+                            <span class="landing-card__summary-label">Generating session summary</span>
+                            <strong class="landing-card__summary-value">73.5</strong>
+                            <span class="landing-card__summary-unit">w / min</span>
+                        </div>
+                        <div class="landing-card__summary-item landing-card__summary-item--highlight">
+                            <span class="landing-card__summary-label">Completion rate</span>
+                            <strong class="landing-card__summary-value">61%</strong>
+                            <span class="landing-card__summary-unit">w / min</span>
+                        </div>
+                    </div>
+                </article>
             </div>
         </section>
 
-        <section class="testimonials">
-            <blockquote class="testimonial">
-                <p class="testimonial__quote quote">"Neptino has completely transformed how I teach. My students are
-                    more engaged than ever, and I can see their progress in real-time."</p>
-                <cite class="testimonial__author citation">Dr. Sarah Johnson, Mathematics Professor</cite>
-            </blockquote>
-
-            <blockquote class="testimonial">
-                <p class="testimonial__quote quote">"The analytics and reporting features give us insights we never had
-                    before. We can make data-driven decisions to improve student outcomes."</p>
-                <cite class="testimonial__author citation">Mark Chen, IT Director</cite>
-            </blockquote>
-
-            <blockquote class="testimonial">
-                <p class="testimonial__quote quote">"As a student, I love how interactive and engaging the courses are.
-                    The mobile app lets me learn anywhere, anytime."</p>
-                <cite class="testimonial__author citation">Emma Rodriguez, University Student</cite>
-            </blockquote>
-        </section>
-
-        <section class="cta">
-            <h2 class="cta__title heading heading--h2">Ready to Transform Your Educational Experience?</h2>
-            <p class="cta__description paragraph">Join thousands of educators and students already using Neptino to
-                enhance teaching and learning.</p>
-            <a href="/src/pages/shared/signup.html" class="cta__button-primary button button--primary">Start Your Free
-                Trial</a>
-            <a href="/src/pages/shared/pricing.html" class="cta__button-secondary button button--outline">View All
-                Plans</a>
+        <section class="landing__brands" aria-label="Trusted partners">
+            <div class="landing__brands-label">Used by</div>
+            <ul class="landing__brands-list">
+                <li class="landing__brands-item">Paraswap</li>
+                <li class="landing__brands-item">Superfluid</li>
+                <li class="landing__brands-item">Cobo</li>
+                <li class="landing__brands-item">CowSwap</li>
+                <li class="landing__brands-item">DODO</li>
+                <li class="landing__brands-item">Steelwallet</li>
+                <li class="landing__brands-item">AlphaWallet</li>
+                <li class="landing__brands-item">Frontier</li>
+            </ul>
         </section>
     </main>
 

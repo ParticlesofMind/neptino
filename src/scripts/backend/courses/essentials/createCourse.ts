@@ -41,7 +41,7 @@ export function validateCourseData(
  course_language: Boolean(
  data.course_language && data.course_language.trim(),
  ),
- course_image: Boolean(data.course_image), // Course image is required
+ course_image: true, // Course image is optional for new courses
  };
 }
 
@@ -83,7 +83,11 @@ export async function createCourse(
  // Validate data
  const validation = validateCourseData(data);
  if (!isValidCourse(validation)) {
- return { success: false, error: "Invalid course data" };
+ const missingFields = Object.entries(validation)
+ .filter(([_, isValid]) => !isValid)
+ .map(([field, _]) => field.replace('_', ' '))
+ .join(', ');
+ return { success: false, error: `Missing or invalid: ${missingFields}` };
  }
 
  // Create course record with your actual schema
