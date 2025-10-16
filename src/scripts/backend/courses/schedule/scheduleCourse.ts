@@ -50,6 +50,387 @@ export class ScheduleCourseManager {
     this.validateScheduleForm();
   }
 
+  private getInputElement(id: string): HTMLInputElement | null {
+    return document.getElementById(id) as HTMLInputElement | null;
+  }
+
+  private computeFormattedDateFromDigits(digits: string): string {
+    const cleanDigits = digits.slice(0, 8);
+
+    if (cleanDigits.length <= 2) {
+      return cleanDigits;
+    }
+    if (cleanDigits.length <= 4) {
+      return `${cleanDigits.slice(0, 2)}.${cleanDigits.slice(2)}`;
+    }
+
+    return `${cleanDigits.slice(0, 2)}.${cleanDigits.slice(
+      2,
+      4,
+    )}.${cleanDigits.slice(4)}`;
+  }
+
+  private mapDigitsToFormattedIndex(formatted: string, digitCount: number): number {
+    if (digitCount <= 0) {
+      return 0;
+    }
+
+    let digitsSeen = 0;
+
+    for (let index = 0; index < formatted.length; index++) {
+      if (/\d/.test(formatted[index])) {
+        digitsSeen += 1;
+        if (digitsSeen === digitCount) {
+          return index + 1;
+        }
+      }
+    }
+
+    return formatted.length;
+  }
+
+  private formatDateInputValue(input: HTMLInputElement): void {
+    const initialSelection = input.selectionStart ?? input.value.length;
+    const digitsBeforeCursor = input.value
+      .slice(0, initialSelection)
+      .replace(/\D/g, "").length;
+
+    const digitsOnly = input.value.replace(/\D/g, "");
+    const formattedValue = this.computeFormattedDateFromDigits(digitsOnly);
+
+    if (input.value !== formattedValue) {
+      input.value = formattedValue;
+    }
+
+    if (document.activeElement === input) {
+      const targetPosition = this.mapDigitsToFormattedIndex(
+        formattedValue,
+        digitsBeforeCursor,
+      );
+      const applySelection = () => {
+        input.setSelectionRange(targetPosition, targetPosition);
+      };
+
+      if (typeof requestAnimationFrame === "function") {
+        requestAnimationFrame(applySelection);
+      } else {
+        applySelection();
+      }
+    }
+  }
+
+  private formatIsoDateToDisplay(isoDate: string): string {
+    const [year, month, day] = isoDate.split("-");
+    if (!year || !month || !day) {
+      return isoDate;
+    }
+
+    return `${day.padStart(2, "0")}.${month.padStart(2, "0")}.${year.padStart(
+      4,
+      "0",
+    )}`;
+  }
+
+  private formatScheduleDate(dateIso: string): string {
+    const [yearString, monthString, dayString] = dateIso.split("-");
+    const year = Number.parseInt(yearString ?? "", 10);
+    const month = Number.parseInt(monthString ?? "", 10);
+    const day = Number.parseInt(dayString ?? "", 10);
+
+    if (
+      Number.isNaN(year) ||
+      Number.isNaN(month) ||
+      Number.isNaN(day) ||
+      month < 1 ||
+      month > 12 ||
+      day < 1 ||
+      day > 31
+    ) {
+      return dateIso;
+    }
+
+    const previewDate = new Date(Date.UTC(year, month - 1, day));
+    try {
+      return previewDate.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch {
+      return dateIso;
+    }
+  }
+
+  private isValidDateComponents(
+    year: number,
+    month: number,
+    day: number,
+  ): boolean {
+    if (
+      Number.isNaN(year) ||
+      Number.isNaN(month) ||
+      Number.isNaN(day) ||
+      year < 1000 ||
+      month < 1 ||
+      month > 12 ||
+      day < 1 ||
+      day > 31
+    ) {
+      return false;
+    }
+
+    const candidate = new Date(year, month - 1, day);
+
+    return (
+      candidate.getFullYear() === year &&
+      candidate.getMonth() === month - 1 &&
+      candidate.getDate() === day
+    );
+  }
+
+  private parseDateInput(value: string): string | null {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    if (/^\d{8}$/.test(trimmed)) {
+      const isoYear = Number.parseInt(trimmed.slice(0, 4), 10);
+      const isoMonth = Number.parseInt(trimmed.slice(4, 6), 10);
+      const isoDay = Number.parseInt(trimmed.slice(6, 8), 10);
+
+      if (this.isValidDateComponents(isoYear, isoMonth, isoDay)) {
+        return `${isoYear.toString().padStart(4, "0")}-${isoMonth
+          .toString()
+          .padStart(2, "0")}-${isoDay.toString().padStart(2, "0")}`;
+      }
+
+      const compactDay = Number.parseInt(trimmed.slice(0, 2), 10);
+      const compactMonth = Number.parseInt(trimmed.slice(2, 4), 10);
+      const compactYear = Number.parseInt(trimmed.slice(4), 10);
+
+      if (this.isValidDateComponents(compactYear, compactMonth, compactDay)) {
+        return `${compactYear.toString().padStart(4, "0")}-${compactMonth
+          .toString()
+          .padStart(2, "0")}-${compactDay.toString().padStart(2, "0")}`;
+      }
+    }
+
+    const isoDelimitedMatch = trimmed.match(
+      /^(\d{4})[.\-/\\](\d{1,2})[.\-/\\](\d{1,2})$/,
+    );
+    if (isoDelimitedMatch) {
+      const year = Number.parseInt(isoDelimitedMatch[1], 10);
+      const month = Number.parseInt(isoDelimitedMatch[2], 10);
+      const day = Number.parseInt(isoDelimitedMatch[3], 10);
+      if (this.isValidDateComponents(year, month, day)) {
+        return `${year.toString().padStart(4, "0")}-${month
+          .toString()
+          .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+      }
+    }
+
+    const delimitedMatch = trimmed.match(
+      /^(\d{1,2})[.\-/\\](\d{1,2})[.\-/\\](\d{4})$/,
+    );
+    if (delimitedMatch) {
+      let day = Number.parseInt(delimitedMatch[1], 10);
+      let month = Number.parseInt(delimitedMatch[2], 10);
+      const year = Number.parseInt(delimitedMatch[3], 10);
+      const usesDotSeparator = trimmed.includes(".");
+
+      if (!usesDotSeparator) {
+        const alternativeDay = Number.parseInt(delimitedMatch[2], 10);
+        const alternativeMonth = Number.parseInt(delimitedMatch[1], 10);
+
+        if (alternativeDay > 12 && alternativeMonth <= 12) {
+          day = alternativeDay;
+          month = alternativeMonth;
+        }
+      }
+
+      if (this.isValidDateComponents(year, month, day)) {
+        return `${year.toString().padStart(4, "0")}-${month
+          .toString()
+          .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+      }
+    }
+
+    const isoCompactMatch = trimmed.match(/^(\d{4})(\d{2})(\d{2})$/);
+    if (isoCompactMatch) {
+      const year = Number.parseInt(isoCompactMatch[1], 10);
+      const month = Number.parseInt(isoCompactMatch[2], 10);
+      const day = Number.parseInt(isoCompactMatch[3], 10);
+
+      if (this.isValidDateComponents(year, month, day)) {
+        return `${year.toString().padStart(4, "0")}-${month
+          .toString()
+          .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+      }
+    }
+
+    const dmyCompactMatch = trimmed.match(/^(\d{2})(\d{2})(\d{4})$/);
+    if (dmyCompactMatch) {
+      const day = Number.parseInt(dmyCompactMatch[1], 10);
+      const month = Number.parseInt(dmyCompactMatch[2], 10);
+      const year = Number.parseInt(dmyCompactMatch[3], 10);
+
+      if (this.isValidDateComponents(year, month, day)) {
+        return `${year.toString().padStart(4, "0")}-${month
+          .toString()
+          .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+      }
+    }
+
+    return null;
+  }
+
+  private parseTimeInput(value: string): string | null {
+    const trimmed = value.trim().toLowerCase();
+    if (!trimmed) {
+      return null;
+    }
+
+    const compactMatch = trimmed.match(/^(\d{1,2})(\d{2})$/);
+    const colonMatch = trimmed.match(/^(\d{1,2}):(\d{2})(?:\s*(am|pm))?$/);
+    const meridiemMatch = trimmed.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/);
+
+    let hours: number | null = null;
+    let minutes: number | null = null;
+
+    if (colonMatch) {
+      hours = Number.parseInt(colonMatch[1], 10);
+      minutes = Number.parseInt(colonMatch[2], 10);
+      const meridiem = colonMatch[3];
+      if (meridiem) {
+        ({ hours, minutes } = this.applyMeridiem(hours, minutes, meridiem));
+      }
+    } else if (meridiemMatch) {
+      hours = Number.parseInt(meridiemMatch[1], 10);
+      minutes = Number.parseInt(meridiemMatch[2] ?? "0", 10);
+      ({ hours, minutes } = this.applyMeridiem(
+        hours,
+        minutes,
+        meridiemMatch[3],
+      ));
+    } else if (compactMatch) {
+      hours = Number.parseInt(compactMatch[1], 10);
+      minutes = Number.parseInt(compactMatch[2], 10);
+    }
+
+    if (
+      hours === null ||
+      minutes === null ||
+      Number.isNaN(hours) ||
+      Number.isNaN(minutes) ||
+      hours < 0 ||
+      hours > 23 ||
+      minutes < 0 ||
+      minutes > 59
+    ) {
+      return null;
+    }
+
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}`;
+  }
+
+  private applyMeridiem(
+    hours: number,
+    minutes: number,
+    meridiem: string,
+  ): { hours: number; minutes: number } {
+    const normalizedMeridiem = meridiem.toLowerCase();
+
+    if (normalizedMeridiem === "am") {
+      hours = hours % 12;
+    } else if (normalizedMeridiem === "pm") {
+      hours = hours % 12 + 12;
+    }
+
+    return { hours, minutes };
+  }
+
+  private updateInputFeedback(
+    input: HTMLInputElement | null,
+    rawValue: string,
+    isValid: boolean,
+    message?: string,
+  ): void {
+    if (!input) {
+      return;
+    }
+
+    const hasValue = rawValue.trim().length > 0;
+
+    if (hasValue && !isValid) {
+      input.classList.add("input--error");
+      input.setAttribute("aria-invalid", "true");
+      input.setCustomValidity(message || "Enter a valid value.");
+      if (message) {
+        input.title = message;
+      }
+    } else {
+      input.classList.remove("input--error");
+      input.removeAttribute("aria-invalid");
+      input.setCustomValidity("");
+      if (hasValue) {
+        input.title = "";
+      } else {
+        input.removeAttribute("title");
+      }
+    }
+  }
+
+  private compareTimes(timeA: string, timeB: string): number {
+    const [hoursA, minutesA] = timeA.split(":").map((part) => Number(part));
+    const [hoursB, minutesB] = timeB.split(":").map((part) => Number(part));
+    return hoursA * 60 + minutesA - (hoursB * 60 + minutesB);
+  }
+
+  private tryGetNormalizedScheduleConfig(): ScheduleConfig | null {
+    const startDateInput = this.getInputElement("start-date");
+    const endDateInput = this.getInputElement("end-date");
+    const startTimeInput = this.getInputElement("start-time");
+    const endTimeInput = this.getInputElement("end-time");
+
+    const startDateRaw = startDateInput?.value ?? "";
+    const endDateRaw = endDateInput?.value ?? "";
+    const startTimeRaw = startTimeInput?.value ?? "";
+    const endTimeRaw = endTimeInput?.value ?? "";
+
+    const startDate = this.parseDateInput(startDateRaw);
+    const endDate = this.parseDateInput(endDateRaw);
+    const startTime = this.parseTimeInput(startTimeRaw);
+    const endTime = this.parseTimeInput(endTimeRaw);
+    const selectedDays = this.getSelectedDays();
+
+    if (!startDate || !endDate || !startTime || !endTime) {
+      return null;
+    }
+
+    if (new Date(startDate) > new Date(endDate)) {
+      return null;
+    }
+
+    if (this.compareTimes(startTime, endTime) >= 0) {
+      return null;
+    }
+
+    if (selectedDays.length === 0) {
+      return null;
+    }
+
+    return {
+      startDate,
+      endDate,
+      startTime,
+      endTime,
+      selectedDays,
+    };
+  }
+
   private getCourseId(): string {
     // First try to get course ID from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -131,6 +512,35 @@ export class ScheduleCourseManager {
       );
     });
 
+    ["start-date", "end-date"].forEach((id) => {
+      const input = this.getInputElement(id);
+      if (!input) {
+        return;
+      }
+
+      input.addEventListener("input", () => this.formatDateInputValue(input));
+      input.addEventListener("blur", () => {
+        const normalized = this.parseDateInput(input.value);
+        if (normalized) {
+          input.value = this.formatIsoDateToDisplay(normalized);
+        }
+        this.validateScheduleForm();
+      });
+
+      this.formatDateInputValue(input);
+    });
+
+    ["start-time", "end-time"].forEach((id) => {
+      const input = this.getInputElement(id);
+      input?.addEventListener("blur", () => {
+        const normalized = this.parseTimeInput(input.value);
+        if (normalized) {
+          input.value = normalized;
+        }
+        this.validateScheduleForm();
+      });
+    });
+
     // Schedule generation
     this.scheduleButton.addEventListener("click", (e) => {
       console.log("Button clicked!", {
@@ -151,20 +561,55 @@ export class ScheduleCourseManager {
   }
 
   private validateScheduleForm(): void {
-    const startDate = (
-      document.getElementById("start-date") as HTMLInputElement
-    )?.value;
-    const endDate = (document.getElementById("end-date") as HTMLInputElement)
-      ?.value;
-    const startTime = (
-      document.getElementById("start-time") as HTMLInputElement
-    )?.value;
-    const endTime = (document.getElementById("end-time") as HTMLInputElement)
-      ?.value;
+    const startDateInput = this.getInputElement("start-date");
+    const endDateInput = this.getInputElement("end-date");
+    const startTimeInput = this.getInputElement("start-time");
+    const endTimeInput = this.getInputElement("end-time");
+
+    const startDateRaw = startDateInput?.value ?? "";
+    const endDateRaw = endDateInput?.value ?? "";
+    const startTimeRaw = startTimeInput?.value ?? "";
+    const endTimeRaw = endTimeInput?.value ?? "";
+
+    const startDate = this.parseDateInput(startDateRaw);
+    const endDate = this.parseDateInput(endDateRaw);
+    const startTime = this.parseTimeInput(startTimeRaw);
+    const endTime = this.parseTimeInput(endTimeRaw);
     const selectedDays = this.getSelectedDays();
 
+    const datesOrderValid =
+      startDate && endDate ? new Date(startDate) <= new Date(endDate) : true;
+    const timesOrderValid =
+      startTime && endTime ? this.compareTimes(startTime, endTime) < 0 : true;
+    const hasSelectedDays = selectedDays.length > 0;
+
+    this.updateInputFeedback(startDateInput, startDateRaw, !!startDate);
+    this.updateInputFeedback(
+      endDateInput,
+      endDateRaw,
+      !!endDate && datesOrderValid,
+      startDate && endDate && !datesOrderValid
+        ? "End date must be on or after start date."
+        : undefined,
+    );
+    this.updateInputFeedback(startTimeInput, startTimeRaw, !!startTime);
+    this.updateInputFeedback(
+      endTimeInput,
+      endTimeRaw,
+      !!endTime && timesOrderValid,
+      startTime && endTime && !timesOrderValid
+        ? "End time must be after start time."
+        : undefined,
+    );
+
     const isValid =
-      startDate && endDate && startTime && endTime && selectedDays.length > 0;
+      !!startDate &&
+      !!endDate &&
+      !!startTime &&
+      !!endTime &&
+      datesOrderValid &&
+      timesOrderValid &&
+      hasSelectedDays;
 
     console.log("Form validation:", {
       startDate,
@@ -249,21 +694,16 @@ export class ScheduleCourseManager {
     );
   }
 
-  private getScheduleConfig(): ScheduleConfig {
-    return {
-      startDate: (document.getElementById("start-date") as HTMLInputElement)
-        .value,
-      endDate: (document.getElementById("end-date") as HTMLInputElement).value,
-      selectedDays: this.getSelectedDays(),
-      startTime: (document.getElementById("start-time") as HTMLInputElement)
-        .value,
-      endTime: (document.getElementById("end-time") as HTMLInputElement).value,
-    };
-  }
-
   private async generateSchedule(): Promise<void> {
 
-    const config = this.getScheduleConfig();
+    const config = this.tryGetNormalizedScheduleConfig();
+    if (!config) {
+      alert(
+        "Please provide valid dates, times, and at least one teaching day before scheduling.",
+      );
+      this.validateScheduleForm();
+      return;
+    }
 
     const sessions = this.calculateScheduleSessions(config);
 
@@ -351,8 +791,13 @@ export class ScheduleCourseManager {
       return;
     }
 
+    const hasSchedule = this.currentSchedule.length > 0;
+
+    previewContainer.classList.toggle('schedule__content--empty', !hasSchedule);
+    this.schedulePreviewSection.classList.toggle('schedule__preview--empty', !hasSchedule);
+
     // Show schedule rows or placeholder
-    if (this.currentSchedule.length > 0) {
+    if (hasSchedule) {
       this.currentSchedule.forEach((session, index) => {
         const row = this.createScheduleRow(session, index);
         previewContainer.appendChild(row);
@@ -381,32 +826,46 @@ export class ScheduleCourseManager {
     const row = document.createElement("div");
     row.className = 'schedule__row';
     row.innerHTML = `
- <span class="lesson-number">${session.lessonNumber}</span>
- <span class="lesson-day">${this.formatDay(session.day)}</span>
- <input type="time" class="lesson-start-time" value="${session.startTime}" data-index="${index}">
- <input type="time" class="lesson-end-time" value="${session.endTime}" data-index="${index}">
- <button class="button button--extra-small button--cross" data-index="${index}"></button>
+  <div class="schedule__cell schedule__cell--number">
+    <span class="schedule__badge">#${session.lessonNumber}</span>
+  </div>
+  <div class="schedule__cell schedule__cell--day">
+    <span class="schedule__field-label">Day</span>
+    <span class="schedule__day">${this.formatDay(session.day)}</span>
+    <span class="schedule__date">${this.formatScheduleDate(session.date)}</span>
+  </div>
+  <label class="schedule__cell schedule__cell--time schedule__cell--start">
+    <span class="schedule__field-label">Start</span>
+    <input type="text" class="input input--time schedule__input schedule__input--start" value="${session.startTime}" placeholder="HH:MM" autocomplete="off" inputmode="numeric" data-index="${index}">
+  </label>
+  <label class="schedule__cell schedule__cell--time schedule__cell--end">
+    <span class="schedule__field-label">End</span>
+    <input type="text" class="input input--time schedule__input schedule__input--end" value="${session.endTime}" placeholder="HH:MM" autocomplete="off" inputmode="numeric" data-index="${index}">
+  </label>
+  <div class="schedule__cell schedule__cell--actions">
+    <button class="button button--extra-small button--cross schedule__delete" type="button" aria-label="Remove lesson ${session.lessonNumber}" data-index="${index}"></button>
+  </div>
  `;
 
     // Bind events for time editing
     const startTimeInput = row.querySelector(
-      ".lesson-start-time",
+      ".schedule__input--start",
     ) as HTMLInputElement;
     const endTimeInput = row.querySelector(
-      ".lesson-end-time",
+      ".schedule__input--end",
     ) as HTMLInputElement;
     const deleteButton = row.querySelector(
-      ".button--cross",
+      ".schedule__delete",
     ) as HTMLButtonElement;
 
-    startTimeInput.addEventListener("change", (e) =>
+    startTimeInput.addEventListener("blur", (e) =>
       this.updateLessonTime(
         index,
         "startTime",
         (e.target as HTMLInputElement).value,
       ),
     );
-    endTimeInput.addEventListener("change", (e) =>
+    endTimeInput.addEventListener("blur", (e) =>
       this.updateLessonTime(
         index,
         "endTime",
@@ -423,7 +882,45 @@ export class ScheduleCourseManager {
     timeType: "startTime" | "endTime",
     newTime: string,
   ): Promise<void> {
-    this.currentSchedule[index][timeType] = newTime;
+    const normalizedTime = this.parseTimeInput(newTime);
+    const inputSelector =
+      timeType === "startTime"
+        ? ".schedule__input--start"
+        : ".schedule__input--end";
+    const input = this.schedulePreviewSection.querySelector(
+      `${inputSelector}[data-index="${index}"]`,
+    ) as HTMLInputElement | null;
+
+    if (!normalizedTime) {
+      alert("Please enter a valid time (e.g., 09:30 or 2:15 PM).");
+      if (input) {
+        input.value = this.currentSchedule[index][timeType];
+      }
+      return;
+    }
+
+    const otherTime =
+      timeType === "startTime"
+        ? this.currentSchedule[index].endTime
+        : this.currentSchedule[index].startTime;
+
+    const isOrderValid =
+      timeType === "startTime"
+        ? this.compareTimes(normalizedTime, otherTime) < 0
+        : this.compareTimes(otherTime, normalizedTime) < 0;
+
+    if (!isOrderValid) {
+      alert("End time must be after the start time for each lesson.");
+      if (input) {
+        input.value = this.currentSchedule[index][timeType];
+      }
+      return;
+    }
+
+    this.currentSchedule[index][timeType] = normalizedTime;
+    if (input) {
+      input.value = normalizedTime;
+    }
 
     this.setStatus("saving", "Updating schedule…");
 

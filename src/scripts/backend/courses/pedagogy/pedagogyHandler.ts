@@ -145,51 +145,51 @@ function approachDescription(x: number, y: number) {
   return `Blended approach combining ${xPart} with ${yPart}.`;
 }
 
-function impactBullets(x: number, y: number): string[] {
+function effectsBullets(x: number, y: number): string[] {
   const bullets: string[] = [];
   const ax = Math.abs(x);
   const ay = Math.abs(y);
   const left = x < 0;
   const bottom = y < 0;
 
-  // Control dimension (X)
+  // Instructional approach (X axis - Control)
   if (left) {
-    bullets.push('Direct instruction with clear modeling');
-    bullets.push(ax > 50 ? 'Individual practice emphasized' : 'Structured group work with roles');
+    bullets.push('Teacher provides direct instruction with clear modeling and examples');
+    bullets.push(ax > 50 ? 'Students complete individual practice to master skills' : 'Structured group work with defined roles and tasks');
   } else {
-    bullets.push('Student-led collaboration and peer teaching');
-    bullets.push(ax > 50 ? 'Open-ended tasks and choice' : 'Guided collaboration with checkpoints');
+    bullets.push('Students lead collaboration and engage in peer teaching');
+    bullets.push(ax > 50 ? 'Open-ended tasks allow student choice and autonomy' : 'Guided collaboration with teacher checkpoints');
   }
 
-  // Knowledge dimension (Y)
+  // Knowledge construction (Y axis - Epistemology)
   if (bottom) {
-    bullets.push(ay > 50 ? 'Retrieval practice and spaced rehearsal' : 'Guided practice with feedback');
-    bullets.push('Worked examples and stepwise skill-building');
+    bullets.push(ay > 50 ? 'Emphasis on retrieval practice and spaced rehearsal' : 'Students practice skills with immediate feedback');
+    bullets.push('Learning progresses through worked examples and step-by-step skill building');
   } else {
-    bullets.push(ay > 50 ? 'Inquiry, experimentation, and project work' : 'Applied exploration with scaffolds');
-    bullets.push('Reflection and metacognitive prompts');
+    bullets.push(ay > 50 ? 'Students learn through inquiry, experimentation, and projects' : 'Applied exploration supported by teacher scaffolds');
+    bullets.push('Regular reflection and metacognitive prompts deepen understanding');
   }
 
-  // Assessment focus
+  // Assessment approach
   if (bottom && left) {
-    bullets.push('Criterion-referenced rubrics, mastery checks');
+    bullets.push('Assessment uses criterion-referenced rubrics and mastery checks');
   } else if (!bottom && !left) {
-    bullets.push('Rubrics valuing process, creativity, and collaboration');
+    bullets.push('Rubrics emphasize process, creativity, and collaborative skills');
   } else if (bottom && !left) {
-    bullets.push('Performance tasks with coaching and iteration');
+    bullets.push('Performance-based tasks with coaching and opportunities for iteration');
   } else {
-    bullets.push('Conceptual understanding with targeted scaffolds');
+    bullets.push('Assessment targets conceptual understanding with scaffolded support');
   }
 
-  // Delivery pattern
+  // Lesson structure
   if (left && bottom) {
-    bullets.push('Short teacher-led segments → independent practice');
+    bullets.push('Lessons follow: mini-lecture, demonstration, independent practice pattern');
   } else if (!left && !bottom) {
-    bullets.push('Launch → group inquiry → synthesize and share');
+    bullets.push('Lessons follow: launch problem, group inquiry, synthesize and share pattern');
   } else if (left && !bottom) {
-    bullets.push('Mini-lesson → guided discovery → debrief');
+    bullets.push('Lessons follow: mini-lesson, guided discovery, group debrief pattern');
   } else {
-    bullets.push('Workshop model with conferencing');
+    bullets.push('Lessons follow workshop model with individual conferencing');
   }
 
   return bullets.slice(0, 6);
@@ -204,10 +204,25 @@ function attachPedagogyGrid() {
   const titleEl = getEl<HTMLElement>('#pedagogy-approach-title');
   const subtitleEl = getEl<HTMLElement>('#pedagogy-approach-subtitle');
   const descEl = getEl<HTMLElement>('#pedagogy-approach-desc');
-  const listEl = getEl<HTMLUListElement>('#pedagogy-impact-list');
+  const listEl = getEl<HTMLUListElement>('#pedagogy-effects-list');
   const presetButtons = document.querySelectorAll<HTMLButtonElement>('.button--preset');
 
-  if (!input || !grid || !marker || !xOut || !yOut || !titleEl || !subtitleEl || !descEl || !listEl) return;
+  if (!input || !grid || !marker || !xOut || !yOut || !titleEl || !subtitleEl || !descEl || !listEl) {
+    console.warn('Pedagogy UI: Missing required elements', {
+      input: !!input,
+      grid: !!grid,
+      marker: !!marker,
+      xOut: !!xOut,
+      yOut: !!yOut,
+      titleEl: !!titleEl,
+      subtitleEl: !!subtitleEl,
+      descEl: !!descEl,
+      listEl: !!listEl
+    });
+    return;
+  }
+
+  console.log('✅ Pedagogy UI initialized successfully');
 
   grid.style.touchAction = 'none';
   grid.style.cursor = 'pointer';
@@ -231,7 +246,7 @@ function attachPedagogyGrid() {
     descEl!.textContent = approachDescription(state.x, state.y);
 
     listEl!.innerHTML = '';
-    for (const item of impactBullets(state.x, state.y)) {
+    for (const item of effectsBullets(state.x, state.y)) {
       const li = document.createElement('li');
       li.textContent = item;
       listEl!.appendChild(li);

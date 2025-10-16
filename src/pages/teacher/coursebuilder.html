@@ -325,11 +325,11 @@
             <form class="form form--schedule" id="schedule-config">
               <label class="form__label">
                 Start Date
-                <input class="input input--date" type="date" id="start-date" required />
+                <input class="input input--date" type="text" id="start-date" placeholder="DD.MM.YYYY" inputmode="numeric" autocomplete="off" required />
               </label>
               <label class="form__label">
                 End Date
-                <input class="input input--date" type="date" id="end-date" required />
+                <input class="input input--date" type="text" id="end-date" placeholder="DD.MM.YYYY" inputmode="numeric" autocomplete="off" required />
               </label>
 
               <fieldset class="schedule__days" aria-label="Days of the Week">
@@ -366,11 +366,11 @@
 
               <label class="form__label">
                 Start Time
-                <input class="input input--time" type="time" id="start-time" required />
+                <input class="input input--time" type="text" id="start-time" placeholder="HH:MM" inputmode="numeric" autocomplete="off" required />
               </label>
               <label class="form__label">
                 End Time
-                <input class="input input--time" type="time" id="end-time" required />
+                <input class="input input--time" type="text" id="end-time" placeholder="HH:MM" inputmode="numeric" autocomplete="off" required />
               </label>
 
               <div class="schedule__actions button-group">
@@ -1096,14 +1096,16 @@
                 <span class="learning-plane__marker" id="pedagogy-marker" aria-hidden="true"></span>
               </figure>
 
-              <p class="learning-plane__coord">
-                <span class="learning-plane__coord-label">X</span>
-                <output class="learning-plane__coord-value" id="pedagogy-x">0</output>
-              </p>
-              <p class="learning-plane__coord">
-                <span class="learning-plane__coord-label">Y</span>
-                <output class="learning-plane__coord-value" id="pedagogy-y">0</output>
-              </p>
+              <div class="learning-plane__coords-container">
+                <p class="learning-plane__coord">
+                  <span class="learning-plane__coord-label">X</span>
+                  <output class="learning-plane__coord-value" id="pedagogy-x">0</output>
+                </p>
+                <p class="learning-plane__coord">
+                  <span class="learning-plane__coord-label">Y</span>
+                  <output class="learning-plane__coord-value" id="pedagogy-y">0</output>
+                </p>
+              </div>
 
               <menu class="learning-plane__presets button-group" aria-label="Preset positions">
                 <button type="button" class="button button--preset" data-x="-75" data-y="-75">Traditional</button>
@@ -1117,19 +1119,22 @@
           </section>
 
           <section class="article__preview">
-          <div class="learning-plane__summary">
-            <h3 class="learning-plane__summary-title" id="pedagogy-approach-title">Balanced</h3>
-            <p class="learning-plane__summary-subtitle" id="pedagogy-approach-subtitle"><em>Essentialist × Behaviorist
-                ↔ Progressive × Constructivist</em></p>
-            <p class="learning-plane__summary-description" id="pedagogy-approach-desc">
-              A balanced blend of teacher guidance, student agency, and mixed knowledge construction.
-            </p>
+            <div class="learning-plane__summary">
+              <h3 class="learning-plane__summary-title" id="pedagogy-approach-title">Balanced</h3>
+              <p class="learning-plane__summary-subtitle" id="pedagogy-approach-subtitle">
+                <em>Essentialist × Behaviorist ↔ Progressive × Constructivist</em>
+              </p>
+              <p class="learning-plane__summary-description" id="pedagogy-approach-desc">
+                A balanced blend of teacher guidance, student agency, and mixed knowledge construction.
+              </p>
 
-            <h4 class="learning-plane__impact-title">Implementation Impact</h4>
-            <ul class="learning-plane__impact-list" id="pedagogy-impact-list">
-              <!-- Dynamic bullets injected by script -->
-            </ul>
-          </div>
+              <div class="learning-plane__effects-section">
+                <h4 class="learning-plane__effects-title">Effects</h4>
+                <ul class="learning-plane__effects-list" id="pedagogy-effects-list">
+                  <!-- Dynamic bullets injected by script -->
+                </ul>
+              </div>
+            </div>
           </section>
         </div>
 
