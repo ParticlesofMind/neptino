@@ -17,7 +17,6 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data_local:/var/lib/postgresql/data
-      - ./supabase/migrations:/docker-entrypoint-initdb.d
     networks:
       - neptino-network
     healthcheck:
