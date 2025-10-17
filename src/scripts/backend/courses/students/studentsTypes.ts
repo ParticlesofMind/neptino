@@ -36,6 +36,7 @@ export interface RawStudentRow {
 }
 
 export interface StudentRecord {
+  id?: string; // UUID from database
   first_name: string;
   last_name: string;
   email?: string | null;

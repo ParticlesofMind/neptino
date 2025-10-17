@@ -45,7 +45,9 @@
   &__main--panels {
     display: grid;
     gap: var(--spacing-4);
-    align-items: start;
+    align-items: stretch;
+    height: auto;
+    min-height: 60vh;
 
     >.article__config,
     >.article__preview {
@@ -54,10 +56,12 @@
       border-radius: var(--radius-medium);
       padding: var(--spacing-4);
       min-height: 0;
+      display: flex;
+      flex-direction: column;
     }
 
     @media (min-width: 64rem) {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
     }
   }
 

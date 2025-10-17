@@ -136,6 +136,48 @@ export class StudentsRepository {
     return { data: data ?? [], error };
   }
 
+  public async updateStudent(studentId: string, updates: Partial<StudentRecord>): Promise<RepositoryResult<StudentRecord>> {
+    if (!this.courseId || !studentId) {
+      return { data: null, error: { message: "Course ID and Student ID are required" } as unknown as any };
+    }
+
+    const payload: Partial<StudentRecord> = { ...updates };
+
+    if (payload.learning_style !== undefined) {
+      payload.learning_style = normalizeLearningStyle(payload.learning_style ?? null);
+    }
+    if (payload.enrollment_date !== undefined) {
+      payload.enrollment_date = normalizeDate(payload.enrollment_date ?? null);
+    }
+    if (!payload.grade_level && updates.grade_level === "") {
+      payload.grade_level = DEFAULT_GRADE_LEVEL;
+    }
+
+    const { data, error } = await supabase
+      .from("students")
+      .update(payload)
+      .eq("id", studentId)
+      .eq("course_id", this.courseId)
+      .select()
+      .single();
+
+    return { data, error };
+  }
+
+  public async deleteStudent(studentId: string): Promise<RepositoryResult<null>> {
+    if (!this.courseId || !studentId) {
+      return { data: null, error: { message: "Course ID and Student ID are required" } as unknown as any };
+    }
+
+    const { error } = await supabase
+      .from("students")
+      .delete()
+      .eq("id", studentId)
+      .eq("course_id", this.courseId);
+
+    return { data: null, error };
+  }
+
   private async resolveCurrentUserId(): Promise<string | null> {
     try {
       const {

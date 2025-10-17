@@ -37,15 +37,6 @@ export class CourseBuilder {
  // ==========================================================================
 
  private initialize(): void {
- 
- // Clear any existing course data from sessionStorage to ensure fresh start if no courseId in URL
- const urlParams = new URLSearchParams(window.location.search);
- const hasUrlCourseId = urlParams.get('courseId') || urlParams.get('id');
- 
- if (!hasUrlCourseId) {
- sessionStorage.removeItem("currentCourseId");
- }
- 
  this.getCourseId();
  this.initializeCurrentSection();
  this.setupSectionNavigation();
@@ -59,22 +50,67 @@ export class CourseBuilder {
  }
 
  private getCourseId(): void {
- // First try to get course ID from URL parameters
- const urlParams = new URLSearchParams(window.location.search);
- const courseIdFromUrl = urlParams.get('courseId') || urlParams.get('id');
+ const resolvedCourseId = this.resolveInitialCourseId();
 
- if (courseIdFromUrl && courseIdFromUrl !== 'undefined') {
- this.courseId = courseIdFromUrl;
- this.persistCourseId(courseIdFromUrl);
+ if (resolvedCourseId) {
+ this.courseId = resolvedCourseId;
+ this.persistCourseId(resolvedCourseId);
  return;
  }
 
- // If no URL parameter, check if we're in "create new course" mode
-
- // Clear any existing course data from sessionStorage to ensure fresh start
- sessionStorage.removeItem("currentCourseId");
-
  this.courseId = null;
+ this.clearPersistedCourseId();
+ }
+
+ private resolveInitialCourseId(): string | null {
+ // Prefer explicit URL parameters so shared links stay authoritative.
+ const urlParams = new URLSearchParams(window.location.search);
+ const courseIdFromUrl = urlParams.get('courseId') || urlParams.get('id');
+ if (this.isValidCourseId(courseIdFromUrl)) {
+ return courseIdFromUrl!;
+ }
+
+ // Fall back to session storage when refreshing the page mid-build.
+ const courseIdFromSession = this.getCourseIdFromSession();
+ if (courseIdFromSession) {
+ return courseIdFromSession;
+ }
+
+ // Finally, check any global window state that other modules may have set.
+ if (typeof window !== 'undefined') {
+ const globalCandidate = (window as any).currentCourseId;
+ if (this.isValidCourseId(globalCandidate)) {
+ return globalCandidate;
+ }
+ }
+
+ return null;
+ }
+
+ private isValidCourseId(candidate: unknown): candidate is string {
+ return typeof candidate === 'string' && candidate.trim() !== '' && candidate !== 'undefined';
+ }
+
+ private getCourseIdFromSession(): string | null {
+ try {
+ const candidate = sessionStorage.getItem("currentCourseId");
+ return this.isValidCourseId(candidate) ? candidate : null;
+ } catch (error) {
+ console.warn('⚠️ Unable to read course ID from sessionStorage:', error);
+ return null;
+ }
+ }
+
+ private clearPersistedCourseId(): void {
+ if (typeof window !== 'undefined') {
+ delete (window as any).currentCourseId;
+ }
+
+ try {
+ sessionStorage.removeItem("currentCourseId");
+ } catch (error) {
+ console.warn('⚠️ Unable to clear course ID from sessionStorage:', error);
+ }
  }
 
  private initializeAllManagers(): void {

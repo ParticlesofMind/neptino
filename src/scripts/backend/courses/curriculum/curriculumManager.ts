@@ -2607,10 +2607,11 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
      // DISTRIBUTE REMAINDER EVENLY: Last 'remainder' modules get an extra lesson
      // This avoids front-loading and keeps modules more balanced visually
      const moduleSize = baseSize + (i >= (numModules - remainder) ? 1 : 0);
-    const moduleLessons = lessons.slice(lessonIndex, lessonIndex + moduleSize);
-    moduleLessons.forEach((lesson) => {
-      lesson.moduleNumber = i + 1;
-    });
+     // Create deep copies of lessons to avoid circular references
+     const moduleLessons = lessons.slice(lessonIndex, lessonIndex + moduleSize).map(lesson => ({
+       ...lesson,
+       moduleNumber: i + 1
+     }));
      
      console.log(`📦 Module ${i + 1}: ${moduleSize} lessons (${moduleLessons.map(l => l.lessonNumber).join(', ')})`);
      
@@ -2703,6 +2704,10 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
      } : null
    });
 
+   // Create deep copies to avoid circular references
+   const curriculumCopy = JSON.parse(JSON.stringify(curriculum));
+   const modulesCopy = JSON.parse(JSON.stringify(modules));
+
    const payload: CurriculumDataPayload = {
      structure: this.buildStructurePayload(),
      moduleOrganization: this.moduleOrganization,
@@ -2711,19 +2716,27 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
    };
 
    // Save either as modules or legacy lessons format
-   if (modules.length) {
-     payload.modules = modules;
+   if (modulesCopy.length) {
+     payload.modules = modulesCopy;
    }
 
    if (this.moduleOrganization === "linear") {
      // Legacy format for backward compatibility
-     payload.lessons = curriculum;
+     payload.lessons = curriculumCopy;
    } else if (!payload.modules) {
      // Ensure module-based format persists modules when available
-     payload.modules = modules;
+     payload.modules = modulesCopy;
    }
 
    this.currentModules = modules;
+
+   // Final safety check: ensure no circular references in payload
+   try {
+     JSON.stringify(payload);
+   } catch (circularRefError) {
+     console.error('❌ Circular reference detected in payload before save:', circularRefError);
+     throw new Error('Failed to serialize curriculum data: ' + (circularRefError instanceof Error ? circularRefError.message : 'Circular reference detected'));
+   }
 
    const { error } = await supabase
      .from("courses")

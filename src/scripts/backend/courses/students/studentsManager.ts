@@ -58,6 +58,8 @@ export class StudentsManager {
     this.manualManager.init();
     this.registerUiEvents();
     this.registerCourseIdListeners();
+    this.preview.setOnDeleteRow((index) => this.handleDeleteStudent(index));
+    this.preview.setOnUpdateRow((index, updates) => this.handleUpdateStudent(index, updates));
     void this.refreshRoster();
   }
 
@@ -71,6 +73,7 @@ export class StudentsManager {
 
   public activate(): void {
     this.init();
+    void this.refreshRoster();
   }
 
   private registerUiEvents(): void {
@@ -249,6 +252,53 @@ export class StudentsManager {
     document
       .querySelector<HTMLAnchorElement>(".aside__link[data-section='essentials']")
       ?.focus();
+  }
+
+  private async handleUpdateStudent(index: number, updates: Partial<StudentRecord>): Promise<void> {
+    const student = this.currentStudents[index];
+    if (!student || !student.id) {
+      this.preview.showFeedback("Could not identify student to update.", "error");
+      return;
+    }
+
+    this.updateStatus("saving", "Updating student…");
+    const { error } = await this.repository.updateStudent(student.id, updates);
+
+    if (error) {
+      console.error("Failed to update student:", error);
+      this.preview.showFeedback("Could not update student. Please try again.", "error");
+      this.updateStatus("error", "Update failed");
+      return;
+    }
+
+    this.currentStudents[index] = { ...student, ...updates };
+    this.preview.showFeedback("Student updated successfully.", "success");
+    this.updateStatus("saved");
+    void this.refreshRoster();
+  }
+
+  private async handleDeleteStudent(index: number): Promise<void> {
+    const student = this.currentStudents[index];
+    if (!student || !student.id) {
+      this.preview.showFeedback("Could not identify student to delete.", "error");
+      return;
+    }
+
+    this.updateStatus("saving", "Deleting student…");
+    const { error } = await this.repository.deleteStudent(student.id);
+
+    if (error) {
+      console.error("Failed to delete student:", error);
+      this.preview.showFeedback("Could not delete student. Please try again.", "error");
+      this.updateStatus("error", "Deletion failed");
+      return;
+    }
+
+    this.currentStudents.splice(index, 1);
+    this.preview.showFeedback("Student deleted successfully.", "success");
+    this.preview.appendActivity("Student deleted.");
+    this.updateStatus("saved");
+    void this.refreshRoster();
   }
 }
 

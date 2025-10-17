@@ -413,11 +413,7 @@ export class TemplateManager {
     if (templates.length === 0) {
       configArea.innerHTML = `
         <div class="template-config-placeholder">
-          <div class="template-actions">
-            <button class="button button--primary" onclick="TemplateManager.showCreateTemplateModal()">
-              Create First Template
-            </button>
-          </div>
+          <p>No templates created yet. Use the buttons below to create or load a template.</p>
         </div>
       `;
       return;
@@ -1083,27 +1079,62 @@ export class TemplateManager {
     }
 
     const rows: Array<{ id: string; indentLevel: number; separator?: boolean; fields: BlockFieldConfig[] }> = [];
-    const rowIndex = new Map<string, number>();
+    let currentRow: BlockFieldConfig[] = [];
+    let currentIndent = 0;
 
     fields.forEach((field) => {
       if (field.separator) {
+        // Flush current row if it has items
+        if (currentRow.length > 0) {
+          rows.push({
+            id: `row-${rows.length}`,
+            indentLevel: currentIndent,
+            fields: currentRow,
+          });
+          currentRow = [];
+        }
+        // Add separator
         rows.push({ id: `separator-${rows.length}`, indentLevel: 0, separator: true, fields: [] });
         return;
       }
 
-      const groupId = field.inlineGroup || field.name;
-      if (!rowIndex.has(groupId)) {
-        rowIndex.set(groupId, rows.length);
-        rows.push({
-          id: groupId,
-          indentLevel: field.indentLevel ?? 0,
-          fields: [],
-        });
+      // Track indent level from first field in row
+      if (currentRow.length === 0) {
+        currentIndent = field.indentLevel ?? 0;
       }
 
-      const row = rows[rowIndex.get(groupId)!];
-      row.fields.push(field);
+      currentRow.push(field);
+
+      // Flush row when it reaches 3 items or if indent changes
+      if (currentRow.length === 3 || (field.indentLevel ?? 0) !== currentIndent) {
+        if (currentRow.length === 3) {
+          rows.push({
+            id: `row-${rows.length}`,
+            indentLevel: currentIndent,
+            fields: currentRow,
+          });
+          currentRow = [];
+        } else {
+          // Start new row with this field if indent changed
+          rows.push({
+            id: `row-${rows.length}`,
+            indentLevel: currentIndent,
+            fields: currentRow.slice(0, -1),
+          });
+          currentRow = [field];
+          currentIndent = field.indentLevel ?? 0;
+        }
+      }
     });
+
+    // Flush any remaining fields
+    if (currentRow.length > 0) {
+      rows.push({
+        id: `row-${rows.length}`,
+        indentLevel: currentIndent,
+        fields: currentRow,
+      });
+    }
 
     return rows
       .map((row) => {
@@ -1246,10 +1277,23 @@ export class TemplateManager {
       (a: TemplateBlock, b: TemplateBlock) => a.order - b.order,
     );
 
-    const blocksHtml = sortedBlocks
+    // Separate header, footer, and content blocks
+    const headerBlock = sortedBlocks.find((b: TemplateBlock) => b.type === 'header');
+    const footerBlock = sortedBlocks.find((b: TemplateBlock) => b.type === 'footer');
+    const contentBlocks = sortedBlocks.filter((b: TemplateBlock) => b.type !== 'header' && b.type !== 'footer');
+
+    // Render header
+    const headerHtml = headerBlock
+      ? `<div class="preview-block preview-block--${headerBlock.type}">
+          <h4 class="preview-block__title">${headerBlock.type.charAt(0).toUpperCase() + headerBlock.type.slice(1)}</h4>
+          ${this.renderBlockContent(headerBlock, this.getCheckedFields(headerBlock))}
+        </div>`
+      : '';
+
+    // Render content blocks (scrollable middle section)
+    const contentHtml = contentBlocks
       .map((block: TemplateBlock) => {
         const checkedFields = this.getCheckedFields(block);
-
         return `
  <div class="preview-block preview-block--${block.type}">
  <h4 class="preview-block__title">${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</h4>
@@ -1259,11 +1303,24 @@ export class TemplateManager {
       })
       .join("");
 
-    previewContainer.innerHTML = `
+    // Render footer
+    const footerHtml = footerBlock
+      ? `<div class="preview-block preview-block--${footerBlock.type}">
+          <h4 class="preview-block__title">${footerBlock.type.charAt(0).toUpperCase() + footerBlock.type.slice(1)}</h4>
+          ${this.renderBlockContent(footerBlock, this.getCheckedFields(footerBlock))}
+        </div>`
+      : '';
 
- ${blocksHtml}
- 
- `;
+    // Build canvas-style layout
+    previewContainer.innerHTML = `
+      <div class="template-canvas-sheet">
+        ${headerHtml}
+        <div class="template-canvas-content">
+          ${contentHtml}
+        </div>
+        ${footerHtml}
+      </div>
+    `;
   }
 
   /**

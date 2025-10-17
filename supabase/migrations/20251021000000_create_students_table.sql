@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS public.students (
     course_id uuid NOT NULL REFERENCES public.courses(id) ON DELETE CASCADE,
     first_name text NOT NULL,
     last_name text NOT NULL,
-    email text UNIQUE,
+    email text,
     student_id text,
     grade_level text,
     learning_style jsonb DEFAULT '[]'::jsonb,

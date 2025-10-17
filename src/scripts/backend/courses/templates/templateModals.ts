@@ -72,12 +72,8 @@ const loadTemplateModal = `
             <span class="template-browser__empty-icon">📄</span>
             <h3 class="template-browser__empty-title">No Templates Found</h3>
             <p class="template-browser__empty-text">
-              You haven't created any templates yet. Create your first template to get started!
+              You haven't created any templates yet. Use the buttons in the Template Configuration section to create one.
             </p>
-            <button class="button button--primary template-browser__empty-action" type="button"
-              onclick="TemplateManager.hideLoadTemplateModal(); TemplateManager.showCreateTemplateModal();">
-              Create First Template
-            </button>
           </div>
         </div>
       </div>

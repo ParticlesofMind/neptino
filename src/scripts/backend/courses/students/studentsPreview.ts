@@ -20,6 +20,8 @@ export class StudentsPreview {
   private readonly syncedEl: HTMLElement | null;
   private readonly statusEl: HTMLElement | null;
   private readonly activityList: HTMLElement | null;
+  private onDeleteRow: ((index: number) => Promise<void>) | null = null;
+  private onUpdateRow: ((index: number, updates: Partial<StudentRecord>) => Promise<void>) | null = null;
 
   constructor() {
     this.previewTable = document.getElementById("students-preview-body") as HTMLTableSectionElement | null;
@@ -31,6 +33,14 @@ export class StudentsPreview {
     this.syncedEl = document.getElementById("students-count-synced");
     this.statusEl = document.getElementById("students-status-text");
     this.activityList = document.getElementById("students-activity-list");
+  }
+
+  public setOnDeleteRow(callback: (index: number) => Promise<void>): void {
+    this.onDeleteRow = callback;
+  }
+
+  public setOnUpdateRow(callback: (index: number, updates: Partial<StudentRecord>) => Promise<void>): void {
+    this.onUpdateRow = callback;
   }
 
   public render(students: StudentRecord[]): void {
@@ -48,17 +58,35 @@ export class StudentsPreview {
       return;
     }
 
-    students.forEach((student) => {
+    students.forEach((student, index) => {
       const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${student.first_name ?? "—"}</td>
-        <td>${student.last_name ?? "—"}</td>
-        <td>${student.email ?? "—"}</td>
-        <td>${student.student_id ?? "—"}</td>
-        <td>${student.grade_level ?? "—"}</td>
-        <td>${formatLearningStyle(student.learning_style)}</td>
-        <td>${formatAssessment(student.assessment_score)}</td>
-      `;
+      row.className = "students__preview-row";
+      row.dataset.studentIndex = String(index);
+
+      const cells = [
+        this.createEditableCell(student.first_name ?? "", "first_name", index),
+        this.createEditableCell(student.last_name ?? "", "last_name", index),
+        this.createEditableCell(student.email ?? "", "email", index),
+        this.createEditableCell(student.student_id ?? "", "student_id", index),
+        this.createEditableCell(student.grade_level ?? "", "grade_level", index),
+        this.createReadOnlyCell(formatLearningStyle(student.learning_style)),
+        this.createReadOnlyCell(formatAssessment(student.assessment_score)),
+      ];
+
+      cells.forEach((cell) => row.appendChild(cell));
+
+      // Add delete button cell
+      const deleteCell = document.createElement("td");
+      deleteCell.className = "students__preview-delete";
+      const deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
+      deleteBtn.className = "students__preview-delete-btn";
+      deleteBtn.textContent = "×";
+      deleteBtn.title = "Delete this student";
+      deleteBtn.addEventListener("click", () => this.handleDelete(index));
+      deleteCell.appendChild(deleteBtn);
+      row.appendChild(deleteCell);
+
       this.previewTable?.appendChild(row);
     });
 
@@ -67,6 +95,58 @@ export class StudentsPreview {
     }
 
     this.setBusy(false);
+  }
+
+  private createEditableCell(value: string, field: keyof StudentRecord, index: number): HTMLTableCellElement {
+    const td = document.createElement("td");
+    td.className = "students__preview-cell students__preview-cell--editable";
+    
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "students__preview-input";
+    input.value = value;
+    input.dataset.field = String(field);
+    input.dataset.studentIndex = String(index);
+
+    input.addEventListener("blur", () => this.handleFieldUpdate(index, field, input.value));
+    input.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        this.handleFieldUpdate(index, field, input.value);
+      }
+    });
+
+    td.appendChild(input);
+    return td;
+  }
+
+  private createReadOnlyCell(value: string): HTMLTableCellElement {
+    const td = document.createElement("td");
+    td.className = "students__preview-cell students__preview-cell--readonly";
+    td.textContent = value;
+    return td;
+  }
+
+  private async handleFieldUpdate(index: number, field: keyof StudentRecord, value: string): Promise<void> {
+    if (!this.onUpdateRow) return;
+    try {
+      await this.onUpdateRow(index, { [field]: value });
+    } catch (error) {
+      console.error(`Failed to update ${String(field)}:`, error);
+      this.showFeedback(`Could not update student ${String(field)}.`, "error");
+    }
+  }
+
+  private async handleDelete(index: number): Promise<void> {
+    const confirmed = window.confirm("Are you sure you want to delete this student?");
+    if (!confirmed) return;
+
+    if (!this.onDeleteRow) return;
+    try {
+      await this.onDeleteRow(index);
+    } catch (error) {
+      console.error("Failed to delete student:", error);
+      this.showFeedback("Could not delete student.", "error");
+    }
   }
 
   public showFeedback(message: string, tone: "success" | "error" | "warning" = "success"): void {

@@ -40,14 +40,13 @@
   }
 
   &__fields {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-2);
+    display: grid;
+    gap: var(--spacing-3);
   }
 
   &__row {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--spacing-2) var(--spacing-4);
     align-items: center;
   }
@@ -196,6 +195,105 @@
 
   &--footer {
     border-left: 4px solid var(--color-neutral-400);
+  }
+}
+
+// Canvas-style Template Preview Container
+.curriculum__preview,
+.template-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--color-neutral-100);
+  border-radius: var(--radius-large);
+  padding: var(--spacing-6);
+  min-height: 60vh;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05);
+  position: relative;
+
+  // Paper/Canvas style
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      repeating-linear-gradient(
+        to right,
+        transparent,
+        transparent calc(var(--spacing-4) * 10 - 1px),
+        var(--color-neutral-200) calc(var(--spacing-4) * 10 - 1px),
+        var(--color-neutral-200) calc(var(--spacing-4) * 10)
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent calc(var(--spacing-4) * 5 - 1px),
+        var(--color-neutral-200) calc(var(--spacing-4) * 5 - 1px),
+        var(--color-neutral-200) calc(var(--spacing-4) * 5)
+      );
+    pointer-events: none;
+    border-radius: var(--radius-large);
+    opacity: 0.3;
+    z-index: 0;
+  }
+}
+
+// Template Canvas Container - acts as a paper sheet
+.template-canvas-sheet {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-medium);
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.15);
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  min-height: 400px;
+
+  // Header section - pinned at top
+  .preview-block--header {
+    border-radius: 0;
+    border-left: none;
+    border-bottom: 2px solid var(--color-primary-200);
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08);
+    flex-shrink: 0;
+  }
+
+  // Content scrolls in the middle
+  .template-canvas-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+    padding: var(--spacing-4);
+    overflow-y: auto;
+    flex-grow: 1;
+    background: white;
+
+    .preview-block {
+      border: 1px solid var(--color-neutral-150);
+      border-radius: var(--radius-small);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      margin: 0;
+
+      &--header,
+      &--footer {
+        display: none;
+      }
+    }
+  }
+
+  // Footer section - pinned at bottom
+  .preview-block--footer {
+    border-radius: 0;
+    border-left: none;
+    border-top: 2px solid var(--color-neutral-200);
+    box-shadow: 0 -2px 4px rgba(15, 23, 42, 0.08);
+    flex-shrink: 0;
   }
 }
 
