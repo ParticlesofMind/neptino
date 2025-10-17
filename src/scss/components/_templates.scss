@@ -94,6 +94,26 @@
     user-select: none;
   }
 
+  // Glossary item styling
+  .glossary-item {
+    opacity: 1;
+    transition: opacity var(--transition-fast);
+
+    &--disabled {
+      opacity: 0.5;
+      pointer-events: none;
+      cursor: not-allowed;
+
+      input[type="checkbox"] {
+        cursor: not-allowed;
+      }
+
+      .block-config__label {
+        color: var(--color-text-tertiary);
+      }
+    }
+  }
+
   // Support for existing createTemplate.ts structure
   // Container for template fields (from createTemplate.ts)
   > div > div[data-block] {

@@ -166,11 +166,8 @@ export class TemplateManager {
             (b: any) => b.type === blockType,
           );
         if (block) {
-          if (isChecked) {
-            block.config[fieldName] = true;
-          } else {
-            delete block.config[fieldName];
-          }
+          // Always set the value (true or false) instead of deleting
+          block.config[fieldName] = isChecked;
         }
 
         // Data is automatically persisted to database via auto-save
@@ -195,11 +192,8 @@ export class TemplateManager {
       );
 
       if (blockToUpdate) {
-        if (isChecked) {
-          blockToUpdate.config[fieldName] = true;
-        } else {
-          delete blockToUpdate.config[fieldName];
-        }
+        // Always set the value (true or false) instead of deleting
+        blockToUpdate.config[fieldName] = isChecked;
       }
 
       // Save to database
@@ -224,6 +218,22 @@ export class TemplateManager {
       // Show error status
       setTemplateStatus("error", "Error saving changes");
     }
+  }
+
+  /**
+   * Toggle enabled state of glossary items based on the "include_glossary" checkbox
+   */
+  static toggleGlossaryItems(glossaryEnabled: boolean): void {
+    const glossaryItems = document.querySelectorAll(".glossary-item input");
+    glossaryItems.forEach((item) => {
+      if (glossaryEnabled) {
+        (item as HTMLInputElement).disabled = false;
+        (item.parentElement as HTMLElement).classList.remove("glossary-item--disabled");
+      } else {
+        (item as HTMLInputElement).disabled = true;
+        (item.parentElement as HTMLElement).classList.add("glossary-item--disabled");
+      }
+    });
   }
 
   /**
@@ -723,8 +733,8 @@ export class TemplateManager {
         },
         {
           name: "competence_time",
-          label: "Time",
-          mandatory: true,
+          label: "Display time",
+          mandatory: false,
           inlineGroup: "competence",
           role: "time",
         },
@@ -732,14 +742,13 @@ export class TemplateManager {
           name: "topic",
           label: "Topic",
           mandatory: true,
-          indentLevel: 1,
           inlineGroup: "topic",
           role: "primary",
         },
         {
           name: "topic_time",
-          label: "Time",
-          mandatory: true,
+          label: "Display time",
+          mandatory: false,
           inlineGroup: "topic",
           role: "time",
         },
@@ -747,14 +756,13 @@ export class TemplateManager {
           name: "objective",
           label: "Objective",
           mandatory: true,
-          indentLevel: 2,
           inlineGroup: "objective",
           role: "primary",
         },
         {
           name: "objective_time",
-          label: "Time",
-          mandatory: true,
+          label: "Display time",
+          mandatory: false,
           inlineGroup: "objective",
           role: "time",
         },
@@ -762,14 +770,13 @@ export class TemplateManager {
           name: "task",
           label: "Task",
           mandatory: true,
-          indentLevel: 3,
           inlineGroup: "task",
           role: "primary",
         },
         {
           name: "task_time",
-          label: "Time",
-          mandatory: true,
+          label: "Display time",
+          mandatory: false,
           inlineGroup: "task",
           role: "time",
         },
@@ -777,7 +784,6 @@ export class TemplateManager {
           name: "instruction_area",
           label: "Instruction Area",
           mandatory: true,
-          indentLevel: 4,
           inlineGroup: "instruction",
           role: "primary",
         },
@@ -799,7 +805,6 @@ export class TemplateManager {
           name: "student_area",
           label: "Student Area",
           mandatory: true,
-          indentLevel: 4,
           inlineGroup: "student",
           role: "primary",
         },
@@ -821,7 +826,6 @@ export class TemplateManager {
           name: "teacher_area",
           label: "Teacher Area",
           mandatory: true,
-          indentLevel: 4,
           inlineGroup: "teacher",
           role: "primary",
         },
@@ -855,8 +859,8 @@ export class TemplateManager {
         },
         {
           name: "competence_time",
-          label: "Time",
-          mandatory: true,
+          label: "Display time",
+          mandatory: false,
           inlineGroup: "competence",
           role: "time",
         },
@@ -864,14 +868,13 @@ export class TemplateManager {
           name: "topic",
           label: "Topic",
           mandatory: true,
-          indentLevel: 1,
           inlineGroup: "topic",
           role: "primary",
         },
         {
           name: "topic_time",
-          label: "Time",
-          mandatory: true,
+          label: "Display time",
+          mandatory: false,
           inlineGroup: "topic",
           role: "time",
         },
@@ -879,14 +882,13 @@ export class TemplateManager {
           name: "objective",
           label: "Objective",
           mandatory: true,
-          indentLevel: 2,
           inlineGroup: "objective",
           role: "primary",
         },
         {
           name: "objective_time",
-          label: "Time",
-          mandatory: true,
+          label: "Display time",
+          mandatory: false,
           inlineGroup: "objective",
           role: "time",
         },
@@ -894,14 +896,13 @@ export class TemplateManager {
           name: "task",
           label: "Task",
           mandatory: true,
-          indentLevel: 3,
           inlineGroup: "task",
           role: "primary",
         },
         {
           name: "task_time",
-          label: "Time",
-          mandatory: true,
+          label: "Display time",
+          mandatory: false,
           inlineGroup: "task",
           role: "time",
         },
@@ -909,7 +910,6 @@ export class TemplateManager {
           name: "instruction_area",
           label: "Instruction Area",
           mandatory: true,
-          indentLevel: 4,
           inlineGroup: "instruction",
           role: "primary",
         },
@@ -931,7 +931,6 @@ export class TemplateManager {
           name: "student_area",
           label: "Student Area",
           mandatory: true,
-          indentLevel: 4,
           inlineGroup: "student",
           role: "primary",
         },
@@ -953,7 +952,6 @@ export class TemplateManager {
           name: "teacher_area",
           label: "Teacher Area",
           mandatory: true,
-          indentLevel: 4,
           inlineGroup: "teacher",
           role: "primary",
         },
@@ -1052,17 +1050,38 @@ export class TemplateManager {
     const templateUuid = templateId ?? this.currentlyLoadedTemplateId ?? "";
     const isChecked = field.mandatory ? true : Boolean(block.config?.[field.name]);
     const disabledAttr = field.mandatory ? " checked disabled" : isChecked ? " checked" : "";
-    const updateHandler = !field.mandatory && templateUuid
-      ? ` onchange="TemplateManager.updateTemplateField('${templateUuid}', '${block.type}', '${field.name}', this.checked)"`
-      : "";
+    
+    // Check if this is a glossary item
+    const glossaryItems = ["historical_figures", "terminology", "concepts"];
+    const isGlossaryItem = glossaryItems.includes(field.name);
+    const glossaryEnabled = Boolean(block.config?.["include_glossary"]);
+    
+    // Only call toggleGlossaryItems for the "include_glossary" field itself
+    let updateHandler = "";
+    if (!field.mandatory && templateUuid) {
+      if (field.name === "include_glossary") {
+        // Special handler for include_glossary: update field AND toggle glossary items
+        updateHandler = ` onchange="TemplateManager.updateTemplateField('${templateUuid}', '${block.type}', '${field.name}', this.checked); TemplateManager.toggleGlossaryItems(this.checked);"`;
+      } else {
+        // Regular handler for all other fields: just update the field
+        updateHandler = ` onchange="TemplateManager.updateTemplateField('${templateUuid}', '${block.type}', '${field.name}', this.checked);"`;
+      }
+    } else if (field.name === "include_glossary") {
+      // Handle include_glossary when no templateUuid (shouldn't happen, but safety check)
+      updateHandler = ` onchange="TemplateManager.toggleGlossaryItems(this.checked)"`;
+    }
+    
+    // Glossary items are always visible but disabled if glossary is not enabled
+    const glossaryDisabled = isGlossaryItem && !glossaryEnabled ? " disabled" : "";
+    const combinedDisabled = disabledAttr || glossaryDisabled;
 
     return `
-      <label class="block-config__field">
+      <label class="block-config__field${isGlossaryItem ? ' glossary-item' : ''}${glossaryDisabled ? ' glossary-item--disabled' : ''}">
         <input
           type="checkbox"
           name="${field.name}"
           data-block="${block.type}"
-          class="input input--checkbox"${disabledAttr}${updateHandler}
+          class="input input--checkbox"${combinedDisabled}${updateHandler}
         />
         <span class="block-config__label">${field.label}</span>
       </label>
@@ -1078,6 +1097,13 @@ export class TemplateManager {
       return '<p class="block-config__empty">No configurable fields</p>';
     }
 
+    // Special handling for Content and Assignment blocks with inline groups
+    const hasInlineGroups = fields.some(f => f.inlineGroup);
+    if (hasInlineGroups && (block.type === 'content' || block.type === 'assignment')) {
+      return this.renderInlineGroupRows(templateId, block, fields);
+    }
+
+    // Default rendering for other blocks (3-per-row layout)
     const rows: Array<{ id: string; indentLevel: number; separator?: boolean; fields: BlockFieldConfig[] }> = [];
     let currentRow: BlockFieldConfig[] = [];
     let currentIndent = 0;
@@ -1093,8 +1119,12 @@ export class TemplateManager {
           });
           currentRow = [];
         }
-        // Add separator
-        rows.push({ id: `separator-${rows.length}`, indentLevel: 0, separator: true, fields: [] });
+        // Add the separator field itself as a row (it will render as a checkbox)
+        rows.push({
+          id: `row-${rows.length}`,
+          indentLevel: 0,
+          fields: [field],
+        });
         return;
       }
 
@@ -1138,10 +1168,6 @@ export class TemplateManager {
 
     return rows
       .map((row) => {
-        if (row.separator) {
-          return '<div class="template-field-separator"></div>';
-        }
-
         const indentClass = row.indentLevel
           ? ` block-config__row--indent-${row.indentLevel}`
           : "";
@@ -1153,6 +1179,58 @@ export class TemplateManager {
         return `<div class="block-config__row${indentClass}">${rowFields}</div>`;
       })
       .join("");
+  }
+
+  /**
+   * Renders rows for Content/Assignment blocks with inline groups
+   * Groups fields by inlineGroup and displays them in a flat layout
+   */
+  private static renderInlineGroupRows(
+    templateId: string | null,
+    block: TemplateBlock,
+    fields: BlockFieldConfig[],
+  ): string {
+    const groups = new Map<string, BlockFieldConfig[]>();
+    const standaloneFields: BlockFieldConfig[] = [];
+
+    // Group fields by inlineGroup
+    fields.forEach((field) => {
+      if (field.inlineGroup) {
+        if (!groups.has(field.inlineGroup)) {
+          groups.set(field.inlineGroup, []);
+        }
+        groups.get(field.inlineGroup)!.push(field);
+      } else {
+        standaloneFields.push(field);
+      }
+    });
+
+    const rows: string[] = [];
+
+    // Process groups in order they appear in fields array
+    const processedGroups = new Set<string>();
+    
+    fields.forEach((field) => {
+      if (field.inlineGroup && !processedGroups.has(field.inlineGroup)) {
+        processedGroups.add(field.inlineGroup);
+        const groupFields = groups.get(field.inlineGroup)!;
+
+        // Render the group as a single row (no indentation)
+        const groupHtml = groupFields
+          .map((f) => this.renderFieldCheckbox(templateId, block, f))
+          .join("");
+
+        rows.push(`<div class="block-config__row block-config__row--inline-group">${groupHtml}</div>`);
+      }
+    });
+
+    // Add standalone fields (like include_project)
+    standaloneFields.forEach((field) => {
+      const fieldHtml = this.renderFieldCheckbox(templateId, block, field);
+      rows.push(`<div class="block-config__row">${fieldHtml}</div>`);
+    });
+
+    return rows.join("");
   }
 
   static displayTemplateBlocks(templateData: any): void {
@@ -1192,6 +1270,13 @@ export class TemplateManager {
     `;
 
     configArea.innerHTML = blocksHtml;
+
+    // Initialize glossary item state for resources block
+    const resourcesBlock = blocks.find((b: TemplateBlock) => b.type === "resources");
+    if (resourcesBlock) {
+      const glossaryEnabled = Boolean(resourcesBlock.config?.["include_glossary"]);
+      this.toggleGlossaryItems(glossaryEnabled);
+    }
 
     // Update template preview after displaying blocks
     this.updateTemplatePreview(templateData);
@@ -1357,7 +1442,7 @@ export class TemplateManager {
     checkedFields: BlockFieldConfig[],
   ): string {
     if (block.type === "resources") {
-      return this.renderResourcesBlockContent(checkedFields);
+      return this.renderResourcesBlockContent(checkedFields, block);
     }
 
     if (block.type === "program") {
@@ -1581,6 +1666,7 @@ export class TemplateManager {
   */
   static renderResourcesBlockContent(
     checkedFields: BlockFieldConfig[],
+    block?: TemplateBlock,
   ): string {
     // Get main resource fields (excluding glossary items)
     const mainFields = checkedFields.filter(
@@ -1593,12 +1679,11 @@ export class TemplateManager {
         ].includes(field.name),
     );
 
-    // Check if glossary is included
-    const includeGlossary = checkedFields.some(
-      (field) => field.name === "include_glossary",
-    );
+    // Check if glossary is included from the block config
+    // This ensures we check the actual config value, not just if it's in checkedFields
+    const includeGlossary = block?.config?.["include_glossary"] === true;
 
-    // Get glossary items that are selected
+    // Get glossary items that are selected (checked)
     const glossaryItems = checkedFields.filter((field) =>
       ["historical_figures", "terminology", "concepts"].includes(field.name),
     );
@@ -1624,21 +1709,22 @@ export class TemplateManager {
  `;
     }
 
-    // Glossary table - single row with values only
+    // Glossary section - each selected item gets its own row
     if (includeGlossary && glossaryItems.length > 0) {
       html += `
  <h5 class="preview-block__subtitle">Glossary</h5>
  <table class="lesson-plan-table">
  <tbody>
- <tr>
  ${glossaryItems
           .map(
             (item) => `
- <td>[${item.label} - URL]</td>
+ <tr>
+ <td>${item.label}</td>
+ <td>[URL]</td>
+ </tr>
  `,
           )
           .join("")}
- </tr>
  </tbody>
  </table>
  `;
