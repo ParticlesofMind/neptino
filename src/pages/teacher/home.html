@@ -42,16 +42,10 @@
               <a href="#home" class="aside__link" data-section="home">Home</a>
             </li>
             <li class="aside__item">
-              <a href="#courses" class="aside__link" data-section="courses">Courses</a>
+              <a href="#classes" class="aside__link" data-section="classes">Classes</a>
             </li>
             <li class="aside__item">
               <a href="#messages" class="aside__link" data-section="messages">Messages</a>
-            </li>
-            <li class="aside__item">
-              <a href="#contacts" class="aside__link" data-section="contacts">Contacts</a>
-            </li>
-            <li class="aside__item">
-              <a href="#students" class="aside__link" data-section="students">Students</a>
             </li>
             <li class="aside__item">
               <a href="#settings" class="aside__link" data-section="settings">Settings</a>
@@ -103,10 +97,10 @@
         </div>
       </article>
 
-      <!-- Courses Article -->
-      <article id="courses" data-dashboard-section class="article article--courses">
+      <!-- Classes Article -->
+      <article id="classes" data-dashboard-section class="article article--classes">
         <header class="article__header">
-          <h2 class="article__title">My Courses</h2>
+          <h2 class="article__title">Classes</h2>
         </header>
 
         <div class="article__main">
@@ -134,74 +128,14 @@
         </header>
 
         <div class="article__main">
-          <div class="card">
-            <h3 class="card__title">Inbox</h3>
-            <p class="card__description">
-              <data value="8">8</data> new messages
-            </p>
-          </div>
-
-          <div class="card">
-            <h3 class="card__title">Sent</h3>
-            <a href="#sent" class="card__link link">View sent messages</a>
-          </div>
-
-          <div class="card">
-            <h3 class="card__title">Compose</h3>
-            <button class="card__action button">Write a new message</button>
+          <div id="rocketchat-container" class="messaging__container">
+            <div class="messaging__loading">
+              <p>Loading messaging interface...</p>
+            </div>
           </div>
         </div>
       </article>
 
-      <!-- Contacts Article -->
-      <article id="contacts" data-dashboard-section class="article article--contacts">
-        <header class="article__header">
-          <h2 class="article__title">Contacts</h2>
-        </header>
-
-        <div class="article__main">
-          <div class="card">
-            <h3 class="card__title">All Contacts</h3>
-            <a href="#all-contacts" class="card__link link">View all contacts</a>
-          </div>
-
-          <div class="card">
-            <h3 class="card__title">Teachers</h3>
-            <p class="card__description">Fellow educators</p>
-          </div>
-
-          <div class="card">
-            <h3 class="card__title">Add Contact</h3>
-            <button class="card__action button">Add new contact</button>
-          </div>
-        </div>
-      </article>
-
-      <!-- Students Article -->
-      <article id="students" data-dashboard-section class="article article--students">
-        <header class="article__header">
-          <h2 class="article__title">Students</h2>
-        </header>
-
-        <div class="article__main">
-          <div class="card">
-            <h3 class="card__title">All Students</h3>
-            <p class="card__description">
-              <data value="127">127</data> total students
-            </p>
-          </div>
-
-          <div class="card">
-            <h3 class="card__title">Performance</h3>
-            <a href="#performance" class="card__link link">View student progress</a>
-          </div>
-
-          <div class="card">
-            <h3 class="card__title">Announcements</h3>
-            <button class="card__action button">Send class updates</button>
-          </div>
-        </div>
-      </article>
 
       <!-- Settings Article -->
       <article id="settings" data-dashboard-section class="article article--settings">
@@ -250,6 +184,7 @@
 
   <script type="module" src="/src/scripts/app.ts"></script>
   <script type="module" src="/src/scripts/navigation/index.ts"></script>
+  <script type="module" src="/src/scripts/backend/rocketchat/MessagingInterface.ts"></script>
 </body>
 
 </html>

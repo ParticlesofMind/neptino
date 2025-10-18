@@ -24,8 +24,21 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
 
-  /* Configure projects for Chrome only (as requested) */
+  /* Configure projects for Arc browser */
   projects: [
+    {
+      name: 'arc',
+      use: { 
+        ...devices['Desktop Chrome'],
+        // Arc browser configuration
+        channel: 'chrome', // Arc is Chromium-based
+        viewport: { width: 1920, height: 1080 },
+        screenshot: 'only-on-failure',
+        video: 'retain-on-failure',
+        // Arc-specific executable path
+        executablePath: '/Applications/Arc.app/Contents/MacOS/Arc',
+      },
+    },
     {
       name: 'chrome',
       use: { 

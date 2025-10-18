@@ -1,0 +1,230 @@
+// ==========================================================================
+// MESSAGING COMPONENT - Rocket.Chat Integration
+// ==========================================================================
+
+.messaging-interface {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-background);
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+
+  .messaging-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-3);
+    background: var(--color-background-secondary);
+    border-bottom: 1px solid var(--color-neutral-200);
+    gap: var(--spacing-3);
+
+    h3 {
+      margin: 0;
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text);
+    }
+
+    .user-search {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      flex: 1;
+      max-width: 400px;
+
+      .search-input {
+        flex: 1;
+        padding: var(--spacing-2);
+        border: 1px solid var(--color-neutral-300);
+        border-radius: var(--radius-small);
+        font-size: var(--font-size-small);
+        
+        &:focus {
+          outline: none;
+          border-color: var(--color-primary-500);
+          box-shadow: 0 0 0 2px var(--color-primary-100);
+        }
+      }
+
+      .button {
+        white-space: nowrap;
+        padding: var(--spacing-2) var(--spacing-3);
+        font-size: var(--font-size-small);
+      }
+    }
+  }
+
+  .messaging-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+
+    .search-results {
+      background: var(--color-background-secondary);
+      border-bottom: 1px solid var(--color-neutral-200);
+      padding: var(--spacing-3);
+      max-height: 200px;
+      overflow-y: auto;
+
+      h4 {
+        margin: 0 0 var(--spacing-2) 0;
+        font-size: var(--font-size-small);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-text-secondary);
+      }
+
+      .user-result {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--spacing-2);
+        border-radius: var(--radius-small);
+        margin-bottom: var(--spacing-2);
+        background: var(--color-background);
+        border: 1px solid var(--color-neutral-200);
+        transition: var(--transition-fast);
+
+        &:hover {
+          background: var(--color-neutral-50);
+          border-color: var(--color-primary-300);
+        }
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .user-info {
+          display: flex;
+          flex-direction: column;
+          gap: var(--spacing-1);
+
+          strong {
+            font-size: var(--font-size-small);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text);
+          }
+
+          .user-email {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+          }
+
+          .user-role {
+            font-size: var(--font-size-xs);
+            color: var(--color-primary-600);
+            background: var(--color-primary-100);
+            padding: 2px var(--spacing-1);
+            border-radius: var(--radius-xs);
+            display: inline-block;
+          }
+        }
+
+        .button--small {
+          padding: var(--spacing-1) var(--spacing-2);
+          font-size: var(--font-size-xs);
+        }
+      }
+
+      .error {
+        color: var(--color-error-600);
+        font-size: var(--font-size-small);
+        margin: 0;
+        padding: var(--spacing-2);
+        background: var(--color-error-50);
+        border-radius: var(--radius-small);
+        border: 1px solid var(--color-error-200);
+      }
+    }
+
+    .rocketchat-iframe-container {
+      flex: 1;
+      min-height: 400px;
+      position: relative;
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        border-radius: 0;
+      }
+    }
+  }
+}
+
+.messaging-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-6);
+  text-align: center;
+  background: var(--color-background);
+  border-radius: var(--radius-medium);
+  border: 1px solid var(--color-neutral-200);
+
+  h3 {
+    margin: 0 0 var(--spacing-2) 0;
+    color: var(--color-text);
+    font-size: var(--font-size-large);
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-base);
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .messaging-interface {
+    .messaging-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--spacing-2);
+
+      .user-search {
+        max-width: none;
+      }
+    }
+
+    .messaging-content {
+      .search-results {
+        max-height: 150px;
+      }
+
+      .rocketchat-iframe-container {
+        min-height: 300px;
+      }
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .messaging-interface {
+    .messaging-header {
+      background: var(--color-background-secondary-dark, #1a1a1a);
+      border-bottom-color: var(--color-neutral-700, #333);
+    }
+
+    .messaging-content {
+      .search-results {
+        background: var(--color-background-secondary-dark, #1a1a1a);
+        border-bottom-color: var(--color-neutral-700, #333);
+
+        .user-result {
+          background: var(--color-background-dark, #2a2a2a);
+          border-color: var(--color-neutral-700, #333);
+
+          &:hover {
+            background: var(--color-neutral-800, #333);
+            border-color: var(--color-primary-400, #4a9eff);
+          }
+        }
+      }
+    }
+  }
+}

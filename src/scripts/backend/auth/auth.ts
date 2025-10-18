@@ -4,6 +4,7 @@
  */
 
 import { supabase } from "../supabase";
+import { rocketChatService } from "../rocketchat/RocketChatService";
 
 let currentUser: any = null;
 
@@ -32,6 +33,25 @@ export async function signUp(
 
  // The database trigger will automatically create the user profile
  // No need to manually insert into users table anymore!
+
+ // Create Rocket.Chat user account
+ try {
+   const rocketChatUser = await rocketChatService.createUser(
+     email,
+     password,
+     fullName,
+     email.split('@')[0]
+   );
+   
+   if (rocketChatUser) {
+     console.log('✅ Rocket.Chat user created successfully');
+   } else {
+     console.warn('⚠️ Failed to create Rocket.Chat user, but signup succeeded');
+   }
+ } catch (error) {
+   console.error('❌ Error creating Rocket.Chat user:', error);
+   // Don't fail the signup if Rocket.Chat creation fails
+ }
 
  return { success: true };
  } catch (error) {

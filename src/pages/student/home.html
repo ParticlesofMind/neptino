@@ -27,99 +27,131 @@
     </nav>
   </header>
   
-  <main class="grid__main home">
-    <aside class="aside aside--left">
-      <nav class="ul ul--sidebar">
-        <ul class="ul ul--main">
-          <li class="ul__item">
-            <a href="#dashboard" class="link link--main link--active" data-section="dashboard">Dashboard</a>
-          </li>
-          <li class="ul__item">
-            <a href="#courses" class="link link--main" data-section="courses">Courses</a>
-          </li>
-          <li class="ul__item">
-            <a href="#progress" class="link link--main" data-section="progress">Progress</a>
-          </li>
-          <li class="ul__item">
-            <a href="#settings" class="link link--main" data-section="settings">Settings</a>
-          </li>
-        </ul>
-      </nav>
-    </aside>
+  <main class="grid__main main">
+    <section class="dashboard__layout">
+      <aside class="aside aside--main">
+        <nav>
+          <ul class="aside__list">
+            <li class="aside__item">
+              <a href="#home" class="aside__link" data-section="home">Home</a>
+            </li>
+            <li class="aside__item">
+              <a href="#classes" class="aside__link" data-section="classes">Classes</a>
+            </li>
+            <li class="aside__item">
+              <a href="#messages" class="aside__link" data-section="messages">Messages</a>
+            </li>
+            <li class="aside__item">
+              <a href="#settings" class="aside__link" data-section="settings">Settings</a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
 
-    <div class="content">
-      <article id="dashboard" class="content__article content__article--active">
-        <div class="card card--metric">
-          <h3>Enrolled Courses</h3>
-          <span class="card__metric-value">0</span>
-        </div>
-        <div class="card card--metric">
-          <h3>Progress</h3>
-          <span class="card__metric-value">0%</span>
-        </div>
-        <div class="card card--metric">
-          <h3>Assignments Due</h3>
-          <span class="card__metric-value">0</span>
-        </div>
-        <div class="card">
-          <h3>Browse Courses</h3>
-          <p>Discover new courses</p>
-        </div>
-        <div class="card">
-          <h3>Recent Activity</h3>
-          <p>No recent activity</p>
-        </div>
-        <div class="card">
-          <h3>Achievements</h3>
-          <p>Unlock your first achievement</p>
+      <!-- Home Article -->
+      <article id="home" data-dashboard-section class="article article--home is-active">
+        <header class="article__header">
+          <h2 class="article__title">Dashboard</h2>
+        </header>
+
+        <div class="article__main">
+          <div class="dashboard__metrics">
+            <figure class="metric">
+              <figcaption class="metric__label">Enrolled Courses</figcaption>
+              <data class="metric__value" value="0">0</data>
+            </figure>
+
+            <figure class="metric">
+              <figcaption class="metric__label">Progress</figcaption>
+              <data class="metric__value" value="0">0%</data>
+            </figure>
+
+            <figure class="metric">
+              <figcaption class="metric__label">Assignments Due</figcaption>
+              <data class="metric__value" value="0">0</data>
+            </figure>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Browse Courses</h3>
+            <p class="card__description">Discover new courses</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Recent Activity</h3>
+            <p class="card__description">No recent activity</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Achievements</h3>
+            <p class="card__description">Unlock your first achievement</p>
+          </div>
         </div>
       </article>
 
-      <article id="courses" class="content__article">
-        <div class="card">
-          <h3>My Courses</h3>
-          <p>View enrolled courses</p>
-        </div>
-        <div class="card">
-          <h3>Browse Marketplace</h3>
-          <p>Find new courses</p>
-        </div>
-        <div class="card">
-          <h3>Wishlist</h3>
-          <p>Saved courses</p>
+      <!-- Classes Article -->
+      <article id="classes" data-dashboard-section class="article article--classes">
+        <header class="article__header">
+          <h2 class="article__title">Classes</h2>
+        </header>
+
+        <div class="article__main">
+          <div class="card">
+            <h3 class="card__title">My Courses</h3>
+            <p class="card__description">View enrolled courses</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Browse Marketplace</h3>
+            <p class="card__description">Find new courses</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Wishlist</h3>
+            <p class="card__description">Saved courses</p>
+          </div>
         </div>
       </article>
 
-      <article id="progress" class="content__article">
-        <div class="card">
-          <h3>Learning Progress</h3>
-          <p>Track your achievements</p>
-        </div>
-        <div class="card">
-          <h3>Certificates</h3>
-          <p>View earned certificates</p>
-        </div>
-        <div class="card">
-          <h3>Study Hours</h3>
-          <p>Time spent learning</p>
+      <!-- Messages Article -->
+      <article id="messages" data-dashboard-section class="article article--messages">
+        <header class="article__header">
+          <h2 class="article__title">Messages</h2>
+        </header>
+
+        <div class="article__main">
+          <div id="rocketchat-container" class="messaging__container">
+            <div class="messaging__loading">
+              <p>Loading messaging interface...</p>
+            </div>
+          </div>
         </div>
       </article>
 
-      <article id="settings" class="content__article">
-        <div class="card">
-          <h3>Profile Settings</h3>
-          <p>Update your profile</p>
-        </div>
-        <div class="card">
-          <h3>Notifications</h3>
-          <p>Manage notifications</p>
-        </div>
-        <div class="card">
-          <h3>Privacy & Security</h3>
-          <p>Account security settings</p>
+      <!-- Settings Article -->
+      <article id="settings" data-dashboard-section class="article article--settings">
+        <header class="article__header">
+          <h2 class="article__title">Settings</h2>
+        </header>
+
+        <div class="article__main">
+          <div class="card">
+            <h3 class="card__title">Profile Settings</h3>
+            <p class="card__description">Update your profile</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Notifications</h3>
+            <p class="card__description">Manage notifications</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Privacy & Security</h3>
+            <p class="card__description">Account security settings</p>
+          </div>
         </div>
       </article>
-    </div>
+    </section>
   </main>
   
   <footer class="grid__footer footer">
@@ -139,6 +171,7 @@
   
   <script type="module" src="/src/scripts/app.ts"></script>
   <script type="module" src="/src/scripts/navigation/index.ts"></script>
+  <script type="module" src="/src/scripts/backend/rocketchat/MessagingInterface.ts"></script>
 </body>
 
 </html>

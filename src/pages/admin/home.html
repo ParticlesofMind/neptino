@@ -27,111 +27,146 @@
     </nav>
   </header>
 
-  <main class="grid__main main home">
-    <aside class="aside aside--navigation">
-      <nav class="ul ul--sidebar">
-        <ul class="ul ul--main">
-          <li class="ul__item">
-            <a href="#dashboard" class="link link--main link--active" data-section="dashboard">Dashboard</a>
-          </li>
-          <li class="ul__item">
-            <a href="#users" class="link link--main" data-section="users">Users</a>
-          </li>
-          <li class="ul__item">
-            <a href="#analytics" class="link link--main" data-section="analytics">Analytics</a>
-          </li>
-          <li class="ul__item">
-            <a href="#settings" class="link link--main" data-section="settings">Settings</a>
-          </li>
-        </ul>
-      </nav>
-    </aside>
+  <main class="grid__main main">
+    <section class="dashboard__layout">
+      <aside class="aside aside--main">
+        <nav>
+          <ul class="aside__list">
+            <li class="aside__item">
+              <a href="#home" class="aside__link" data-section="home">Home</a>
+            </li>
+            <li class="aside__item">
+              <a href="#classes" class="aside__link" data-section="classes">Classes</a>
+            </li>
+            <li class="aside__item">
+              <a href="#messages" class="aside__link" data-section="messages">Messages</a>
+            </li>
+            <li class="aside__item">
+              <a href="#settings" class="aside__link" data-section="settings">Settings</a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
 
-    <div class="content">
-      <article id="dashboard" class="content__article content__article--active">
-        <div class="card card--metric">
-          <h3>Active Teachers</h3>
-          <span class="card__metric-value">24</span>
-        </div>
-        <div class="card card--metric">
-          <h3>Active Students</h3>
-          <span class="card__metric-value">486</span>
-        </div>
-        <div class="card card--metric">
-          <h3>Total Courses</h3>
-          <span class="card__metric-value">127</span>
-        </div>
-        <div class="card">
-          <h3>System Health</h3>
-          <p>All systems operational</p>
-        </div>
-        <div class="card">
-          <h3>Recent Activity</h3>
-          <p>View latest admin actions</p>
-        </div>
-        <div class="card">
-          <h3>Quick Actions</h3>
-          <p>Admin tools and settings</p>
+      <!-- Home Article -->
+      <article id="home" data-dashboard-section class="article article--home is-active">
+        <header class="article__header">
+          <h2 class="article__title">Dashboard</h2>
+        </header>
+
+        <div class="article__main">
+          <div class="dashboard__metrics">
+            <figure class="metric">
+              <figcaption class="metric__label">Active Teachers</figcaption>
+              <data class="metric__value" value="24">24</data>
+            </figure>
+
+            <figure class="metric">
+              <figcaption class="metric__label">Active Students</figcaption>
+              <data class="metric__value" value="486">486</data>
+            </figure>
+
+            <figure class="metric">
+              <figcaption class="metric__label">Total Courses</figcaption>
+              <data class="metric__value" value="127">127</data>
+            </figure>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">System Health</h3>
+            <p class="card__description">All systems operational</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Recent Activity</h3>
+            <p class="card__description">View latest admin actions</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Quick Actions</h3>
+            <p class="card__description">Admin tools and settings</p>
+          </div>
         </div>
       </article>
 
-      <article id="users" class="content__article">
-        <div class="card">
-          <h3>All Users</h3>
-          <p>Manage all users</p>
-        </div>
-        <div class="card">
-          <h3>Teachers</h3>
-          <p>24 active teachers</p>
-        </div>
-        <div class="card">
-          <h3>Students</h3>
-          <p>486 active students</p>
-        </div>
-        <div class="card">
-          <h3>Add User</h3>
-          <p>Create new account</p>
-        </div>
-        <div class="card">
-          <h3>Bulk Actions</h3>
-          <p>Manage multiple users</p>
-        </div>
-        <div class="card">
-          <h3>User Reports</h3>
-          <p>Export user data</p>
+      <!-- Classes Article -->
+      <article id="classes" data-dashboard-section class="article article--classes">
+        <header class="article__header">
+          <h2 class="article__title">Classes</h2>
+        </header>
+
+        <div class="article__main">
+          <div class="card">
+            <h3 class="card__title">All Users</h3>
+            <p class="card__description">Manage all users</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Teachers</h3>
+            <p class="card__description">24 active teachers</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Students</h3>
+            <p class="card__description">486 active students</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Add User</h3>
+            <p class="card__description">Create new account</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Bulk Actions</h3>
+            <p class="card__description">Manage multiple users</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">User Reports</h3>
+            <p class="card__description">Export user data</p>
+          </div>
         </div>
       </article>
 
-      <article id="analytics" class="content__article">
-        <div class="card">
-          <h3>Usage Analytics</h3>
-          <p>Platform usage metrics</p>
-        </div>
-        <div class="card">
-          <h3>Course Performance</h3>
-          <p>Course completion rates</p>
-        </div>
-        <div class="card">
-          <h3>Financial Reports</h3>
-          <p>Revenue and costs</p>
+      <!-- Messages Article -->
+      <article id="messages" data-dashboard-section class="article article--messages">
+        <header class="article__header">
+          <h2 class="article__title">Messages</h2>
+        </header>
+
+        <div class="article__main">
+          <div id="rocketchat-container" class="messaging__container">
+            <div class="messaging__loading">
+              <p>Loading messaging interface...</p>
+            </div>
+          </div>
         </div>
       </article>
 
-      <article id="settings" class="content__article">
-        <div class="card">
-          <h3>Institution Settings</h3>
-          <p>Configure institution details</p>
-        </div>
-        <div class="card">
-          <h3>System Settings</h3>
-          <p>Platform configuration</p>
-        </div>
-        <div class="card">
-          <h3>Maintenance</h3>
-          <p>System maintenance tools</p>
+      <!-- Settings Article -->
+      <article id="settings" data-dashboard-section class="article article--settings">
+        <header class="article__header">
+          <h2 class="article__title">Settings</h2>
+        </header>
+
+        <div class="article__main">
+          <div class="card">
+            <h3 class="card__title">Institution Settings</h3>
+            <p class="card__description">Configure institution details</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">System Settings</h3>
+            <p class="card__description">Platform configuration</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Maintenance</h3>
+            <p class="card__description">System maintenance tools</p>
+          </div>
         </div>
       </article>
-    </div>
+    </section>
   </main>
 
   <footer class="grid__footer footer">
@@ -151,6 +186,7 @@
 
   <script type="module" src="/src/scripts/app.ts"></script>
   <script type="module" src="/src/scripts/navigation/index.ts"></script>
+  <script type="module" src="/src/scripts/backend/rocketchat/MessagingInterface.ts"></script>
 </body>
 
 </html>
