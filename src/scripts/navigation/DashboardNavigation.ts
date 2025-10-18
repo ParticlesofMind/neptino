@@ -9,8 +9,8 @@ export class DashboardNavigation {
   private articles: NodeListOf<HTMLElement>;
 
   constructor() {
-    this.navLinks = document.querySelectorAll('.sidebar .link--main[data-section]');
-    this.articles = document.querySelectorAll('.content__article');
+    this.navLinks = document.querySelectorAll('.aside__link[data-section]');
+    this.articles = document.querySelectorAll('[data-dashboard-section]');
     
     // Only initialize if we actually have dashboard elements
     if (this.articles.length === 0) {
@@ -20,6 +20,7 @@ export class DashboardNavigation {
     this.init();
   }
 
+  
   private init(): void {
     this.setupEventListeners();
     this.initializeFromHash();
@@ -41,7 +42,7 @@ export class DashboardNavigation {
     document.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
       const actionLink = target.closest('[data-section]') as HTMLAnchorElement;
-      if (actionLink && !actionLink.matches('.sidebar .link--main')) {
+      if (actionLink && !actionLink.matches('.aside__link')) {
         e.preventDefault();
         const section = actionLink.getAttribute('data-section');
         if (section && this.isValidSection(section)) {
@@ -78,13 +79,13 @@ export class DashboardNavigation {
 
     // Hide all articles
     this.articles.forEach(article => {
-      article.classList.remove('content__article--active');
+      article.classList.remove('is-active');
     });
 
     // Show target article
     const targetArticle = document.getElementById(section);
     if (targetArticle) {
-      targetArticle.classList.add('content__article--active');
+      targetArticle.classList.add('is-active');
     }
 
     // Update navigation link states
@@ -93,11 +94,11 @@ export class DashboardNavigation {
 
   private updateNavLinkStates(activeSection: string): void {
     this.navLinks.forEach(link => {
-      link.classList.remove('link--main--active');
+      link.classList.remove('aside__link--active');
       
       const linkSection = link.getAttribute('data-section');
       if (linkSection === activeSection) {
-        link.classList.add('link--main--active');
+        link.classList.add('aside__link--active');
       }
     });
   }
@@ -110,8 +111,8 @@ export class DashboardNavigation {
 // Auto-initialize dashboard navigation if elements are present
 export function initializeDashboardNavigation(): DashboardNavigation | null {
   // Only initialize if we have actual dashboard content elements
-  const contentArticles = document.querySelectorAll('.content__article');
-  const dashboardNav = document.querySelector('.ul--sidebar');
+  const contentArticles = document.querySelectorAll('[data-dashboard-section]');
+  const dashboardNav = document.querySelector('.aside--main');
   
   if (dashboardNav && contentArticles.length > 0) {
     return new DashboardNavigation();

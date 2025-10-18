@@ -3,89 +3,152 @@
  * Handles user search, iframe embedding, and Rocket.Chat integration
  */
 
-import { rocketChatService } from './RocketChatService';
-import { supabase } from '../supabase';
+import type { User } from "@supabase/supabase-js";
+import {
+  rocketChatService,
+  type RocketChatCredentials,
+  type RocketChatUser,
+} from "./RocketChatService";
+import { supabase } from "../supabase";
 
-interface UserSearchResult {
+interface PlatformUserRow {
   id: string;
   email: string;
+  first_name?: string;
+  last_name?: string;
+  role?: string;
+}
+
+interface MessagingUserResult {
+  email: string;
   name: string;
-  role: string;
+  role?: string;
+  username?: string;
+  rocketChatId?: string;
+  source: "rocket" | "platform";
 }
 
 export class MessagingInterface {
   private container: HTMLElement;
-  private currentUser: any;
-  private rocketChatAuth: any = null;
+  private currentUser: User | null = null;
+  private rocketChatSession: RocketChatCredentials | null = null;
+  private iframeMessageHandler: ((event: MessageEvent) => void) | null = null;
 
   constructor(containerId: string) {
-    this.container = document.getElementById(containerId);
-    if (!this.container) {
-      console.error(`MessagingInterface: Container with id "${containerId}" not found`);
+    const containerElement = document.getElementById(containerId);
+    if (!containerElement) {
+      console.error(
+        `MessagingInterface: Container with id "${containerId}" not found`,
+      );
       return;
     }
 
+    this.container = containerElement;
     this.init();
   }
 
+  private async fetchRocketChatSession(): Promise<RocketChatCredentials | null> {
+    if (!this.currentUser?.id) {
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("users")
+        .select(
+          "rocketchat_user_id, rocketchat_auth_token, rocketchat_username",
+        )
+        .eq("id", this.currentUser.id)
+        .single();
+
+      if (!error && data?.rocketchat_user_id && data?.rocketchat_auth_token) {
+        return {
+          userId: data.rocketchat_user_id,
+          authToken: data.rocketchat_auth_token,
+          username:
+            data.rocketchat_username ||
+            this.currentUser.user_metadata?.full_name ||
+            this.currentUser.email.split("@")[0],
+        };
+      }
+
+      // Attempt to provision credentials automatically as a fallback
+      const provisioned = await rocketChatService.ensureUserCredentials(
+        this.currentUser.email,
+        this.getProvisioningPassword(),
+        this.currentUser.user_metadata?.full_name || this.currentUser.email,
+      );
+
+      if (provisioned) {
+        await this.persistRocketChatCredentials(provisioned);
+        return provisioned;
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Failed to fetch Rocket.Chat credentials:", error);
+      return null;
+    }
+  }
+
   private async init(): Promise<void> {
-    // Get current user from Supabase
-    const { data: { user } } = await supabase.auth.getUser();
-    this.currentUser = user;
+    try {
+      const { data, error } = await supabase.auth.getUser();
 
-    if (!this.currentUser) {
-      this.showError('Please log in to access messaging');
-      return;
+      if (error) {
+        console.error("Failed to retrieve user session:", error);
+        this.showError(
+          "Unable to reach the authentication service. Please refresh the page once your connection is restored.",
+        );
+        return;
+      }
+
+      this.currentUser = data.user;
+
+      if (!this.currentUser) {
+        this.showError("Please log in to access messaging");
+        return;
+      }
+
+      const isAvailable = await rocketChatService.isServiceAvailable();
+      if (!isAvailable) {
+        this.showError(
+          "Messaging service is currently unavailable. Please try again later.",
+        );
+        return;
+      }
+
+      await this.initializeMessaging();
+    } catch (error) {
+      console.error("Unexpected error during messaging init:", error);
+      this.showError(
+        "We could not connect to the messaging service. Check your network connection and try again.",
+      );
     }
-
-    // Check if Rocket.Chat service is available
-    const isAvailable = await rocketChatService.isServiceAvailable();
-    if (!isAvailable) {
-      this.showError('Messaging service is currently unavailable. Please try again later.');
-      return;
-    }
-
-    // Initialize the messaging interface
-    await this.initializeMessaging();
   }
 
   private async initializeMessaging(): Promise<void> {
     try {
-      // Authenticate with Rocket.Chat
-      this.rocketChatAuth = await rocketChatService.authenticateUser(
-        this.currentUser.email,
-        'temp_password' // This should be handled securely
-      );
+      const credentials = await this.fetchRocketChatSession();
 
-      if (!this.rocketChatAuth) {
-        // If authentication fails, try to create the user
-        const createResult = await rocketChatService.createUser(
-          this.currentUser.email,
-          'temp_password',
-          this.currentUser.user_metadata?.full_name || this.currentUser.email
+      if (!credentials) {
+        this.showError(
+          "Messaging access is not ready yet. Please sign out and sign back in to refresh your messaging permissions.",
         );
-
-        if (createResult.success) {
-          // Try authentication again
-          this.rocketChatAuth = await rocketChatService.authenticateUser(
-            this.currentUser.email,
-            'temp_password'
-          );
-        }
+        return;
       }
 
-      if (this.rocketChatAuth) {
-        this.renderMessagingInterface();
-      } else {
-        this.showError('Unable to connect to messaging service');
-      }
+      this.rocketChatSession = credentials;
+      this.renderMessagingInterface();
     } catch (error) {
-      console.error('MessagingInterface initialization error:', error);
-      this.showError('Failed to initialize messaging interface');
+      console.error("MessagingInterface initialization error:", error);
+      this.showError("Failed to initialize messaging interface");
     }
   }
 
   private renderMessagingInterface(): void {
+    const embedUrl = this.getRocketChatEmbedUrl();
+
     this.container.innerHTML = `
       <div class="messaging-interface">
         <div class="messaging-header">
@@ -104,13 +167,14 @@ export class MessagingInterface {
         <div class="messaging-content">
           <div class="search-results" id="search-results" style="display: none;">
             <h4>Search Results</h4>
+            <div id="search-results-message" class="search-results__message"></div>
             <div id="search-results-list"></div>
           </div>
           
           <div class="rocketchat-iframe-container">
             <iframe 
               id="rocketchat-iframe"
-              src="${this.getRocketChatEmbedUrl()}"
+              src="${embedUrl}"
               frameborder="0"
               allowfullscreen
             ></iframe>
@@ -120,164 +184,459 @@ export class MessagingInterface {
     `;
 
     this.setupEventListeners();
+    this.setupIframeMessaging();
   }
 
   private getRocketChatEmbedUrl(): string {
-    if (!this.rocketChatAuth) {
-      return '';
+    if (!this.rocketChatSession) {
+      return "";
     }
 
-    return rocketChatService.getEmbedUrl(
-      this.rocketChatAuth.data.authToken,
-      this.rocketChatAuth.data.userId
+    return rocketChatService.getChannelEmbedUrl(
+      this.rocketChatSession.authToken,
+      this.rocketChatSession.userId,
     );
   }
 
   private setupEventListeners(): void {
-    const searchInput = document.getElementById('user-search-input') as HTMLInputElement;
-    const searchBtn = document.getElementById('search-user-btn');
-    const searchResults = document.getElementById('search-results');
+    const searchInput = document.getElementById(
+      "user-search-input",
+    ) as HTMLInputElement | null;
+    const searchBtn = document.getElementById("search-user-btn");
 
     if (searchBtn) {
-      searchBtn.addEventListener('click', () => this.handleUserSearch());
+      searchBtn.addEventListener("click", () => this.handleUserSearch());
     }
 
     if (searchInput) {
-      searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
+      searchInput.addEventListener("keypress", (event) => {
+        if (event.key === "Enter") {
           this.handleUserSearch();
         }
       });
+      searchInput.addEventListener("input", () => {
+        this.clearSearchMessage();
+      });
     }
+  }
+
+  private setupIframeMessaging(): void {
+    const iframe = document.getElementById(
+      "rocketchat-iframe",
+    ) as HTMLIFrameElement | null;
+
+    if (!iframe || !this.rocketChatSession) {
+      return;
+    }
+
+    if (this.iframeMessageHandler) {
+      window.removeEventListener("message", this.iframeMessageHandler);
+    }
+
+    const loginWithToken = () => {
+      this.sendIframeLogin(iframe);
+    };
+
+    this.iframeMessageHandler = (event: MessageEvent) => {
+      if (!this.isTrustedRocketChatOrigin(event.origin)) {
+        return;
+      }
+
+      const payload = event.data;
+      if (!payload) {
+        return;
+      }
+
+      const eventName = payload.eventName || payload.event;
+
+      if (eventName === "ready") {
+        loginWithToken();
+      } else if (eventName === "error") {
+        console.error("Rocket.Chat iframe error event:", payload);
+        this.showSearchError("Messaging iframe reported an authentication issue.");
+      }
+    };
+
+    window.addEventListener("message", this.iframeMessageHandler);
+
+    iframe.addEventListener("load", () => {
+      window.setTimeout(loginWithToken, 250);
+    });
+  }
+
+  private sendIframeLogin(iframe: HTMLIFrameElement): void {
+    if (!this.rocketChatSession) {
+      return;
+    }
+
+    const origin = this.getRocketChatOrigin();
+    if (!origin) {
+      return;
+    }
+
+    try {
+      iframe.contentWindow?.postMessage(
+        {
+          event: "login-with-token",
+          loginToken: this.rocketChatSession.authToken,
+        },
+        origin,
+      );
+    } catch (error) {
+      console.error("Failed to send login token to Rocket.Chat iframe:", error);
+    }
+  }
+
+  private isTrustedRocketChatOrigin(origin: string): boolean {
+    const expectedOrigin = this.getRocketChatOrigin();
+    if (!expectedOrigin) {
+      return false;
+    }
+
+    return origin === expectedOrigin;
+  }
+
+  private getRocketChatOrigin(): string | null {
+    try {
+      return new URL(rocketChatService.getBaseUrl()).origin;
+    } catch (error) {
+      console.error("Invalid Rocket.Chat base URL:", error);
+      return null;
+    }
+  }
+
+  private clearSearchMessage(): void {
+    this.showSearchMessage("");
   }
 
   private async handleUserSearch(): Promise<void> {
-    const searchInput = document.getElementById('user-search-input') as HTMLInputElement;
+    const searchInput = document.getElementById(
+      "user-search-input",
+    ) as HTMLInputElement | null;
+
+    if (!searchInput) {
+      return;
+    }
+
     const email = searchInput.value.trim();
 
     if (!email) {
-      this.showSearchError('Please enter an email address');
+      this.showSearchError("Please enter an email address");
       return;
     }
 
-    if (!this.rocketChatAuth) {
-      this.showSearchError('Not authenticated with messaging service');
+    if (!this.rocketChatSession) {
+      this.showSearchError("Messaging session is not active");
       return;
+    }
+
+    this.showSearchMessage("Searching…");
+
+    const searchResultsContainer = document.getElementById("search-results");
+    if (searchResultsContainer) {
+      searchResultsContainer.style.display = "block";
     }
 
     try {
-      // Search for users in Rocket.Chat
-      const rocketChatUsers = await rocketChatService.searchUsersByEmail(
-        email,
-        this.rocketChatAuth.data.authToken,
-        this.rocketChatAuth.data.userId
+      const [rocketChatUsers, platformResponse] = await Promise.all([
+        rocketChatService.searchUsersByEmail(
+          email,
+          this.rocketChatSession.authToken,
+          this.rocketChatSession.userId,
+        ),
+        supabase
+          .from("users")
+          .select("id, email, first_name, last_name, role")
+          .ilike("email", `%${email}%`),
+      ]);
+
+      if (platformResponse.error) {
+        console.error(
+          "Platform user search error:",
+          platformResponse.error.message,
+        );
+      }
+
+      const platformUsers = (platformResponse.data ||
+        []) as PlatformUserRow[];
+      const mergedResults = this.mergeUserResults(
+        rocketChatUsers,
+        platformUsers,
       );
 
-      // Also search in our platform database
-      const { data: platformUsers } = await supabase
-        .from('users')
-        .select('id, email, first_name, last_name, role')
-        .ilike('email', `%${email}%`);
+      this.displaySearchResults(mergedResults);
 
-      this.displaySearchResults(rocketChatUsers, platformUsers || []);
+      if (mergedResults.length === 0) {
+        this.showSearchMessage("No users found.");
+      } else {
+        this.showSearchMessage("");
+      }
     } catch (error) {
-      console.error('User search error:', error);
-      this.showSearchError('Failed to search for users');
+      console.error("User search error:", error);
+      this.showSearchError("Failed to search for users");
     }
   }
 
-  private displaySearchResults(rocketChatUsers: any[], platformUsers: any[]): void {
-    const searchResultsList = document.getElementById('search-results-list');
-    const searchResults = document.getElementById('search-results');
+  private mergeUserResults(
+    rocketChatUsers: RocketChatUser[],
+    platformUsers: PlatformUserRow[],
+  ): MessagingUserResult[] {
+    const results = new Map<string, MessagingUserResult>();
 
-    if (!searchResultsList || !searchResults) return;
+    rocketChatUsers.forEach((user) => {
+      const email = this.extractRocketChatEmail(user);
+      if (!email) {
+        return;
+      }
 
-    // Combine and deduplicate results
-    const allUsers = [...rocketChatUsers, ...platformUsers];
-    const uniqueUsers = allUsers.filter((user, index, self) => 
-      index === self.findIndex(u => u.email === user.email)
+      const key = email.toLowerCase();
+      if (!results.has(key)) {
+        results.set(key, {
+          email,
+          name: user.name || user.username || email,
+          username: user.username,
+          rocketChatId: user._id,
+          source: "rocket",
+        });
+      }
+    });
+
+    platformUsers.forEach((user) => {
+      if (!user.email) {
+        return;
+      }
+
+      const key = user.email.toLowerCase();
+      const existing = results.get(key);
+      const displayName = this.composePlatformUserName(user) || user.email;
+
+      if (existing) {
+        existing.role = user.role || existing.role;
+        if (!existing.name && displayName) {
+          existing.name = displayName;
+        }
+        return;
+      }
+
+      results.set(key, {
+        email: user.email,
+        name: displayName,
+        role: user.role || undefined,
+        source: "platform",
+      });
+    });
+
+    return Array.from(results.values()).sort((a, b) =>
+      a.name.localeCompare(b.name),
     );
+  }
 
-    if (uniqueUsers.length === 0) {
-      searchResultsList.innerHTML = '<p>No users found</p>';
-    } else {
-      searchResultsList.innerHTML = uniqueUsers.map(user => `
-        <div class="user-result" data-email="${user.email}">
-          <div class="user-info">
-            <strong>${user.name || user.first_name || user.email}</strong>
-            <span class="user-email">${user.email}</span>
-            ${user.role ? `<span class="user-role">${user.role}</span>` : ''}
-          </div>
-          <button class="button button--small start-conversation" data-email="${user.email}">
-            Start Conversation
-          </button>
-        </div>
-      `).join('');
+  private displaySearchResults(results: MessagingUserResult[]): void {
+    const listElement = document.getElementById("search-results-list");
+    if (!listElement) {
+      return;
+    }
 
-      // Add event listeners to start conversation buttons
-      searchResultsList.querySelectorAll('.start-conversation').forEach(button => {
-        button.addEventListener('click', (e) => {
-          const target = e.target as HTMLElement;
-          const email = target.getAttribute('data-email');
+    if (results.length === 0) {
+      listElement.innerHTML = "";
+      return;
+    }
+
+    listElement.innerHTML = results
+      .map((user) => this.renderSearchResult(user))
+      .join("");
+
+    listElement
+      .querySelectorAll<HTMLButtonElement>(".start-conversation")
+      .forEach((button) => {
+        button.addEventListener("click", (event) => {
+          const target = event.currentTarget as HTMLButtonElement;
+          const email = target.getAttribute("data-email");
+          const username = target.getAttribute("data-username") || undefined;
+
           if (email) {
-            this.startConversation(email);
+            this.startConversation(email, username);
           }
         });
       });
-    }
-
-    searchResults.style.display = 'block';
   }
 
-  private async startConversation(email: string): Promise<void> {
-    if (!this.rocketChatAuth) {
-      this.showSearchError('Not authenticated with messaging service');
+  private renderSearchResult(user: MessagingUserResult): string {
+    const safeEmail = this.escapeHtml(user.email);
+    const safeName = this.escapeHtml(user.name);
+    const safeRole = user.role ? this.escapeHtml(user.role) : "";
+    const safeUsername = user.username
+      ? this.escapeHtml(user.username)
+      : null;
+
+    const sourceLabel =
+      user.source === "rocket" ? "Messaging Enabled" : "Platform User";
+    const sourceClass =
+      user.source === "rocket"
+        ? "user-source user-source--rocket"
+        : "user-source user-source--platform";
+
+    const buttonAttributes = [
+      'class="button button--small start-conversation"',
+      `data-email="${safeEmail}"`,
+    ];
+
+    if (safeUsername) {
+      buttonAttributes.push(`data-username="${safeUsername}"`);
+    } else {
+      buttonAttributes.push("disabled");
+    }
+
+    const buttonLabel = safeUsername
+      ? "Start Conversation"
+      : "Messaging Unavailable";
+
+    const roleMarkup = safeRole
+      ? `<span class="user-role">${safeRole}</span>`
+      : "";
+
+    return `
+      <div class="user-result" data-email="${safeEmail}">
+        <div class="user-info">
+          <strong>${safeName}</strong>
+          <span class="user-email">${safeEmail}</span>
+          ${roleMarkup}
+          <span class="${sourceClass}">${sourceLabel}</span>
+        </div>
+        <button ${buttonAttributes.join(" ")}>
+          ${buttonLabel}
+        </button>
+      </div>
+    `;
+  }
+
+  private composePlatformUserName(user: PlatformUserRow): string | null {
+    const parts = [user.first_name, user.last_name].filter(
+      (value): value is string => Boolean(value),
+    );
+
+    if (parts.length === 0) {
+      return null;
+    }
+
+    return parts.join(" ");
+  }
+
+  private extractRocketChatEmail(user: RocketChatUser): string | null {
+    if (Array.isArray(user.emails) && user.emails.length > 0) {
+      const address = user.emails[0]?.address;
+      if (address) {
+        return address;
+      }
+    }
+
+    const fallback = (user as unknown as { email?: string }).email;
+    return fallback || null;
+  }
+
+  private async startConversation(
+    email: string,
+    username?: string,
+  ): Promise<void> {
+    if (!this.rocketChatSession) {
+      this.showSearchError("Not authenticated with messaging service");
+      return;
+    }
+
+    let targetUsername = username;
+
+    try {
+      if (!targetUsername) {
+        const users = await rocketChatService.searchUsersByEmail(
+          email,
+          this.rocketChatSession.authToken,
+          this.rocketChatSession.userId,
+        );
+
+        if (users.length > 0) {
+          targetUsername = users[0].username || undefined;
+        }
+      }
+
+      if (!targetUsername) {
+        this.showSearchError("User not found in messaging system");
+        return;
+      }
+
+      const directRoom = await rocketChatService.createDirectMessage(
+        targetUsername,
+        this.rocketChatSession.authToken,
+        this.rocketChatSession.userId,
+      );
+
+      if (!directRoom) {
+        this.showSearchError("Failed to start conversation");
+        return;
+      }
+
+      const iframe = document.getElementById(
+        "rocketchat-iframe",
+      ) as HTMLIFrameElement | null;
+
+      if (iframe) {
+        iframe.src = rocketChatService.getDirectMessageUrl(
+          this.rocketChatSession.authToken,
+          this.rocketChatSession.userId,
+          targetUsername,
+        );
+
+        iframe.addEventListener(
+          "load",
+          () => {
+            this.sendIframeLogin(iframe);
+          },
+          { once: true },
+        );
+      }
+
+      const searchResults = document.getElementById("search-results");
+      if (searchResults) {
+        searchResults.style.display = "none";
+      }
+    } catch (error) {
+      console.error("Start conversation error:", error);
+      this.showSearchError("Failed to start conversation");
+    }
+  }
+
+  private async persistRocketChatCredentials(
+    credentials: RocketChatCredentials,
+  ): Promise<void> {
+    if (!this.currentUser?.id) {
       return;
     }
 
     try {
-      // Find the user in Rocket.Chat
-      const users = await rocketChatService.searchUsersByEmail(
-        email,
-        this.rocketChatAuth.data.authToken,
-        this.rocketChatAuth.data.userId
-      );
-
-      if (users.length > 0) {
-        // Create or get direct message channel
-        const channelId = await rocketChatService.createDirectMessage(
-          this.rocketChatAuth.data.userId,
-          users[0]._id,
-          this.rocketChatAuth.data.authToken,
-          this.rocketChatAuth.data.userId
-        );
-
-        if (channelId) {
-          // Update iframe to show the direct message
-          const iframe = document.getElementById('rocketchat-iframe') as HTMLIFrameElement;
-          if (iframe) {
-            iframe.src = rocketChatService.getEmbedUrl(
-              this.rocketChatAuth.data.authToken,
-              this.rocketChatAuth.data.userId,
-              channelId
-            );
-          }
-
-          // Hide search results
-          const searchResults = document.getElementById('search-results');
-          if (searchResults) {
-            searchResults.style.display = 'none';
-          }
-        } else {
-          this.showSearchError('Failed to start conversation');
-        }
-      } else {
-        this.showSearchError('User not found in messaging system');
-      }
+      await supabase
+        .from("users")
+        .update({
+          rocketchat_user_id: credentials.userId,
+          rocketchat_auth_token: credentials.authToken,
+          rocketchat_username: credentials.username,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", this.currentUser.id);
     } catch (error) {
-      console.error('Start conversation error:', error);
-      this.showSearchError('Failed to start conversation');
+      console.error("Failed to persist Rocket.Chat credentials:", error);
     }
+  }
+
+  private getProvisioningPassword(): string {
+    return `rc_${this.currentUser?.id || "user"}`;
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 
   private showError(message: string): void {
@@ -289,18 +648,33 @@ export class MessagingInterface {
     `;
   }
 
-  private showSearchError(message: string): void {
-    const searchResults = document.getElementById('search-results-list');
-    if (searchResults) {
-      searchResults.innerHTML = `<p class="error">${message}</p>`;
+  private showSearchMessage(
+    message: string,
+    type: "default" | "error" = "default",
+  ): void {
+    const messageElement = document.getElementById("search-results-message");
+    if (!messageElement) {
+      return;
     }
+
+    messageElement.textContent = message;
+
+    if (type === "error") {
+      messageElement.classList.add("search-results__message--error");
+    } else {
+      messageElement.classList.remove("search-results__message--error");
+    }
+  }
+
+  private showSearchError(message: string): void {
+    this.showSearchMessage(message, "error");
   }
 }
 
 // Auto-initialize messaging interface when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  const container = document.getElementById('rocketchat-container');
+document.addEventListener("DOMContentLoaded", () => {
+  const container = document.getElementById("rocketchat-container");
   if (container) {
-    new MessagingInterface('rocketchat-container');
+    new MessagingInterface("rocketchat-container");
   }
 });

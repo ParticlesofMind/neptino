@@ -54,29 +54,29 @@ services:
       - -varz
       - "http://nats:8222"
   mongodb:
-    image: docker.io/bitnamilegacy/mongodb:${MONGODB_VERSION:-6.0}
+    image: docker.io/mongo:${MONGODB_VERSION:-7.0}
     restart: always
+    command: mongod --replSet ${MONGODB_REPLICA_SET_NAME:-rs0} --oplogSize 128
     volumes:
-      - ${MONGODB_HOST_PATH:-mongodb_data}:/bitnami/mongodb:rw
+      - ${MONGODB_HOST_PATH:-mongodb_data}:/data/db:rw
     environment:
-      MONGODB_REPLICA_SET_MODE: ${MONGODB_REPLICA_SET_MODE:-primary}
-      MONGODB_REPLICA_SET_NAME: ${MONGODB_REPLICA_SET_NAME:-rs0}
-      MONGODB_PORT_NUMBER: ${MONGODB_PORT_NUMBER:-27017}
-      MONGODB_INITIAL_PRIMARY_HOST: ${MONGODB_INITIAL_PRIMARY_HOST:-mongodb}
-      MONGODB_INITIAL_PRIMARY_PORT_NUMBER: ${MONGODB_INITIAL_PRIMARY_PORT_NUMBER:-27017}
-      MONGODB_ADVERTISED_HOSTNAME: ${MONGODB_ADVERTISED_HOSTNAME:-mongodb}
-      MONGODB_ENABLE_JOURNAL: ${MONGODB_ENABLE_JOURNAL:-true}
-      ALLOW_EMPTY_PASSWORD: ${ALLOW_EMPTY_PASSWORD:-yes}
-    # healthcheck:
-    #   test: ["CMD", "mongosh", "--host", "mongodb", "--port", "${MONGODB_PORT_NUMBER:-27017}", "--eval", "db.adminCommand('ping')"]
-    #   interval: 30s
-    #   timeout: 30s
-    #   retries: 10
-    #   start_period: 30s
+      MONGO_INITDB_DATABASE: rocketchat
     expose:
       - ${MONGODB_PORT_NUMBER:-27017}
     ports:
       - "${MONGODB_BIND_IP:-127.0.0.1}:${MONGODB_PORT_NUMBER:-27017}:${MONGODB_PORT_NUMBER:-27017}"
+  
+  mongodb-init:
+    image: docker.io/mongo:${MONGODB_VERSION:-7.0}
+    command: >
+      mongosh --host mongodb:27017 --eval "
+      rs.initiate({
+        _id: 'rs0',
+        members: [ { _id: 0, host: 'mongodb:27017' } ]
+      })"
+    depends_on:
+      - mongodb
+    restart: "no"
   mongodb-exporter:
     image: docker.io/percona/mongodb_exporter:${MONGODB_EXPORTER_VERSION:-0.44.0}
     depends_on:

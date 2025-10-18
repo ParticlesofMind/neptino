@@ -75,6 +75,16 @@
         color: var(--color-text-secondary);
       }
 
+      .search-results__message {
+        font-size: var(--font-size-xs);
+        color: var(--color-text-secondary);
+        margin-bottom: var(--spacing-2);
+
+        &--error {
+          color: var(--color-error-600);
+        }
+      }
+
       .user-result {
         display: flex;
         align-items: center;
@@ -118,6 +128,23 @@
             padding: 2px var(--spacing-1);
             border-radius: var(--radius-xs);
             display: inline-block;
+          }
+
+          .user-source {
+            font-size: var(--font-size-xs);
+            padding: 2px var(--spacing-1);
+            border-radius: var(--radius-xs);
+            display: inline-block;
+
+            &--rocket {
+              color: var(--color-success-700);
+              background: var(--color-success-100);
+            }
+
+            &--platform {
+              color: var(--color-neutral-600);
+              background: var(--color-neutral-100);
+            }
           }
         }
 

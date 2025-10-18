@@ -3,10 +3,58 @@
  * Handles user sign up, sign in, sign out, role-based redirects, and form handling
  */
 
+import type { User } from "@supabase/supabase-js";
 import { supabase } from "../supabase";
 import { rocketChatService } from "../rocketchat/RocketChatService";
 
-let currentUser: any = null;
+let currentUser: User | null = null;
+
+async function syncRocketChatAccount(
+  user: User,
+  password: string,
+  fullName?: string,
+): Promise<void> {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      console.warn(
+        "Skipping Rocket.Chat sync because no active Supabase session is available yet.",
+      );
+      return;
+    }
+
+    const displayName =
+      fullName ||
+      (user.user_metadata?.full_name as string | undefined) ||
+      user.email.split("@")[0];
+
+    const credentials = await rocketChatService.ensureUserCredentials(
+      user.email,
+      password,
+      displayName,
+    );
+
+    if (!credentials) {
+      console.warn(
+        "Unable to obtain Rocket.Chat credentials for user:",
+        user.email,
+      );
+      return;
+    }
+
+    await supabase
+      .from("users")
+      .update({
+        rocketchat_user_id: credentials.userId,
+        rocketchat_auth_token: credentials.authToken,
+        rocketchat_username: credentials.username,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", user.id);
+  } catch (error) {
+    console.error("Failed to sync Rocket.Chat account:", error);
+  }
+}
 
 // Sign up new user
 export async function signUp(
@@ -16,7 +64,7 @@ export async function signUp(
  userRole: string,
 ) {
  try {
- const { error } = await supabase.auth.signUp({
+ const { data, error } = await supabase.auth.signUp({
  email,
  password,
  options: {
@@ -31,26 +79,20 @@ export async function signUp(
  return { success: false, error: error.message };
  }
 
- // The database trigger will automatically create the user profile
- // No need to manually insert into users table anymore!
+ const createdUser = data?.user;
 
- // Create Rocket.Chat user account
- try {
-   const rocketChatUser = await rocketChatService.createUser(
-     email,
-     password,
-     fullName,
-     email.split('@')[0]
-   );
-   
-   if (rocketChatUser) {
-     console.log('✅ Rocket.Chat user created successfully');
-   } else {
-     console.warn('⚠️ Failed to create Rocket.Chat user, but signup succeeded');
+ if (createdUser) {
+   await syncRocketChatAccount(createdUser as User, password, fullName);
+ } else {
+   // Provision a Rocket.Chat account even if the Supabase session is pending verification
+   try {
+     await rocketChatService.ensureUserCredentials(email, password, fullName);
+   } catch (syncError) {
+     console.error(
+       "Failed to provision Rocket.Chat user during signup:",
+       syncError,
+     );
    }
- } catch (error) {
-   console.error('❌ Error creating Rocket.Chat user:', error);
-   // Don't fail the signup if Rocket.Chat creation fails
  }
 
  return { success: true };
@@ -63,6 +105,8 @@ export async function signUp(
 // Sign in existing user
 export async function signIn(email: string, password: string) {
   try {
+    let signedInUser: User | null = null;
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -71,61 +115,73 @@ export async function signIn(email: string, password: string) {
     if (error) {
       console.error("Sign in error:", error);
 
-      // Development convenience: auto-create account on first sign-in attempt
-      // Only enable in development to avoid accidental account creation in prod
-      const isDev = import.meta.env?.VITE_APP_ENV === 'development';
+      const isDev = import.meta.env?.VITE_APP_ENV === "development";
       const isInvalidCreds =
-        error && 
-        typeof error.message === 'string' &&
-        error.message.toLowerCase().includes('invalid login credentials');
+        typeof error.message === "string" &&
+        error.message.toLowerCase().includes("invalid login credentials");
 
       if (isDev && isInvalidCreds) {
         try {
-          // Heuristic: guess a sensible default role from current path
-          const path = typeof window !== 'undefined' ? window.location.pathname : '';
-          const inferredRole = path.includes('/teacher/')
-            ? 'teacher'
-            : path.includes('/admin/')
-              ? 'admin'
-              : 'student';
+          const path =
+            typeof window !== "undefined" ? window.location.pathname : "";
+          const inferredRole = path.includes("/teacher/")
+            ? "teacher"
+            : path.includes("/admin/")
+              ? "admin"
+              : "student";
 
           const signupResult = await supabase.auth.signUp({
             email,
             password,
             options: {
               data: {
-                full_name: email.split('@')[0],
+                full_name: email.split("@")[0],
                 user_role: inferredRole,
               },
             },
           });
 
           if (signupResult.error) {
-            // If user already exists, it's truly a bad password
-            const msg = signupResult.error.message || 'Sign up failed';
-            console.warn('Auto sign-up skipped:', msg);
-            return { success: false, error: 'Incorrect password or user already exists.' };
+            const msg = signupResult.error.message || "Sign up failed";
+            console.warn("Auto sign-up skipped:", msg);
+            return {
+              success: false,
+              error: "Incorrect password or user already exists.",
+            };
           }
 
-          // In local dev with confirmations disabled, we usually get a session immediately
           if (signupResult.data.user) {
-            currentUser = signupResult.data.user;
-            return { success: true, info: 'Account created and signed in (dev).' };
+            signedInUser = signupResult.data.user as User;
+            currentUser = signedInUser;
+            await syncRocketChatAccount(signedInUser, password);
+            return {
+              success: true,
+              info: "Account created and signed in (dev).",
+            };
           }
 
-          // Fallback: attempt a fresh sign-in now that the account exists
-          const retry = await supabase.auth.signInWithPassword({ email, password });
+          const retry = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
           if (retry.error) {
-            console.error('Retry sign-in after auto sign-up failed:', retry.error);
+            console.error(
+              "Retry sign-in after auto sign-up failed:",
+              retry.error,
+            );
             return { success: false, error: retry.error.message };
           }
           if (retry.data.user) {
-            currentUser = retry.data.user;
-            return { success: true, info: 'Account created and signed in (dev).' };
+            signedInUser = retry.data.user as User;
+            currentUser = signedInUser;
+            await syncRocketChatAccount(signedInUser, password);
+            return {
+              success: true,
+              info: "Account created and signed in (dev).",
+            };
           }
         } catch (autoErr) {
-          console.error('Auto sign-up flow error:', autoErr);
-          // Fall through to the original error handling below
+          console.error("Auto sign-up flow error:", autoErr);
         }
       }
 
@@ -133,14 +189,17 @@ export async function signIn(email: string, password: string) {
     }
 
     if (data.user) {
+      signedInUser = data.user as User;
       currentUser = data.user;
 
- // Don't redirect immediately - let the auth state listener handle it
- // This prevents the "connection refused" issue
- console.log(
- "✅ Sign in successful - auth state listener will handle redirect",
- );
- }
+      console.log(
+        "✅ Sign in successful - auth state listener will handle redirect",
+      );
+    }
+
+    if (signedInUser) {
+      await syncRocketChatAccount(signedInUser, password);
+    }
 
     return { success: true };
   } catch (error) {
