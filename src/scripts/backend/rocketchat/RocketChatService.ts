@@ -47,17 +47,28 @@ export interface RocketChatCredentials {
 
 export class RocketChatService {
   private baseUrl: string;
+  private embedBaseUrl: string;
   private adminToken: string;
   private adminUserId: string;
+  private embedTheme: string;
 
   constructor() {
     const configuredUrl =
       import.meta.env.VITE_ROCKETCHAT_URL || "http://localhost:3000";
 
     // Normalize to avoid trailing slash issues
-    this.baseUrl = configuredUrl.replace(/\/+$/, "");
+    this.baseUrl = this.normalizeAbsoluteUrl(configuredUrl);
     this.adminToken = import.meta.env.VITE_ROCKETCHAT_ADMIN_TOKEN || "";
     this.adminUserId = import.meta.env.VITE_ROCKETCHAT_ADMIN_USER_ID || "";
+
+    const configuredEmbedUrl = import.meta.env.VITE_ROCKETCHAT_EMBED_URL;
+    this.embedBaseUrl = this.resolveEmbedBaseUrl(
+      configuredEmbedUrl,
+      this.baseUrl,
+    );
+    this.embedTheme =
+      (import.meta.env.VITE_ROCKETCHAT_EMBED_THEME as string | undefined) ||
+      "light";
   }
 
   /**
@@ -65,6 +76,35 @@ export class RocketChatService {
    */
   getBaseUrl(): string {
     return this.baseUrl;
+  }
+
+  /**
+   * Expose iframe base URL for embedding (may be proxied)
+   */
+  getEmbedBaseUrl(): string {
+    return this.embedBaseUrl;
+  }
+
+  /**
+   * Derive the expected origin for iframe messaging events
+   */
+  getEmbedOrigin(): string | null {
+    const base = this.embedBaseUrl;
+
+    if (this.isAbsoluteUrl(base)) {
+      try {
+        return new URL(base).origin;
+      } catch (error) {
+        console.error("Rocket.Chat embed URL invalid:", error);
+        return null;
+      }
+    }
+
+    if (typeof window !== "undefined" && window.location) {
+      return window.location.origin;
+    }
+
+    return null;
   }
 
   /**
@@ -248,13 +288,11 @@ export class RocketChatService {
   ): Promise<RocketChatUser[]> {
     try {
       const query = encodeURIComponent(
-        JSON.stringify({
-          "emails.address": email,
-        }),
+        JSON.stringify(this.buildEmailQuery(email, false)),
       );
 
       const response = await fetch(
-        `${this.baseUrl}/api/v1/users.list?query=${query}`,
+        `${this.baseUrl}/api/v1/users.list?query=${query}&count=50`,
         {
           method: "GET",
           headers: {
@@ -264,16 +302,42 @@ export class RocketChatService {
         },
       );
 
-      const data = await response.json();
+      let data: any = null;
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
 
-      if (data.success) {
-        return data.users || [];
+      const success =
+        response.ok && data && (data.success === undefined || data.success);
+
+      if (success && Array.isArray(data?.users)) {
+        return data.users as RocketChatUser[];
+      }
+
+      const unauthorized =
+        response.status === 401 ||
+        response.status === 403 ||
+        data?.error === "Not authorized" ||
+        data?.errorType === "error-not-authorized";
+
+      if (unauthorized && this.hasAdminCredentials()) {
+        return this.adminSearchUsersByEmail(email);
       }
 
       console.error("Rocket.Chat user search failed:", data);
+
+      if (this.hasAdminCredentials()) {
+        return this.adminSearchUsersByEmail(email);
+      }
+
       return [];
     } catch (error) {
       console.error("Rocket.Chat user search error:", error);
+      if (this.hasAdminCredentials()) {
+        return this.adminSearchUsersByEmail(email);
+      }
       return [];
     }
   }
@@ -333,7 +397,10 @@ export class RocketChatService {
     channelSlug = "general",
   ): string {
     const params = this.buildEmbedParams(authToken, userId);
-    return `${this.baseUrl}/channel/${encodeURIComponent(channelSlug)}?${params.toString()}`;
+    return this.buildEmbedUrl(
+      `channel/${encodeURIComponent(channelSlug)}`,
+      params,
+    );
   }
 
   /**
@@ -345,7 +412,17 @@ export class RocketChatService {
     username: string,
   ): string {
     const params = this.buildEmbedParams(authToken, userId);
-    return `${this.baseUrl}/direct/${encodeURIComponent(username)}?${params.toString()}`;
+    return this.buildEmbedUrl(
+      `direct/${encodeURIComponent(username)}`,
+      params,
+    );
+  }
+
+  /**
+   * Fallback embed URL for unauthenticated iframe rendering
+   */
+  getEmbedHomeUrl(): string {
+    return this.buildEmbedUrl("home");
   }
 
   /**
@@ -353,9 +430,17 @@ export class RocketChatService {
    */
   async isServiceAvailable(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/v1/info`, {
+      // Try /api/info first (works without setup), fallback to /api/v1/info
+      let response = await fetch(`${this.baseUrl}/api/info`, {
         method: "GET",
       });
+      
+      if (!response.ok) {
+        response = await fetch(`${this.baseUrl}/api/v1/info`, {
+          method: "GET",
+        });
+      }
+      
       return response.ok;
     } catch (error) {
       console.error("Rocket.Chat service unavailable:", error);
@@ -375,9 +460,7 @@ export class RocketChatService {
 
     try {
       const query = encodeURIComponent(
-        JSON.stringify({
-          "emails.address": email,
-        }),
+        JSON.stringify(this.buildEmailQuery(email, true)),
       );
 
       const response = await fetch(
@@ -401,6 +484,42 @@ export class RocketChatService {
     } catch (error) {
       console.error("Rocket.Chat adminFetchUserByEmail error:", error);
       return null;
+    }
+  }
+
+  private async adminSearchUsersByEmail(
+    email: string,
+  ): Promise<RocketChatUser[]> {
+    if (!this.hasAdminCredentials()) {
+      return [];
+    }
+
+    try {
+      const query = encodeURIComponent(
+        JSON.stringify(this.buildEmailQuery(email, false)),
+      );
+
+      const response = await fetch(
+        `${this.baseUrl}/api/v1/users.list?query=${query}&count=50`,
+        {
+          method: "GET",
+          headers: {
+            "X-Auth-Token": this.adminToken,
+            "X-User-Id": this.adminUserId,
+          },
+        },
+      );
+
+      const data = await response.json();
+
+      if (data.success && Array.isArray(data.users)) {
+        return data.users as RocketChatUser[];
+      }
+
+      return [];
+    } catch (error) {
+      console.error("Rocket.Chat admin search error:", error);
+      return [];
     }
   }
 
@@ -444,6 +563,27 @@ export class RocketChatService {
     }
   }
 
+  private buildEmbedUrl(
+    path: string,
+    params?: URLSearchParams,
+  ): string {
+    const sanitizedPath = path.replace(/^\//, "");
+    const queryString = params?.toString();
+    const query = queryString ? `?${queryString}` : "";
+
+    if (this.isAbsoluteUrl(this.embedBaseUrl)) {
+      return `${this.embedBaseUrl}/${sanitizedPath}${query}`;
+    }
+
+    const normalizedBase = this.ensureLeadingSlash(this.embedBaseUrl);
+    const prefix = normalizedBase || "";
+    if (!prefix) {
+      return `/${sanitizedPath}${query}`;
+    }
+
+    return `${prefix}/${sanitizedPath}${query}`;
+  }
+
   /**
    * Build shared embed parameters for iframe URLs
    */
@@ -457,7 +597,79 @@ export class RocketChatService {
       userId,
     });
 
+    if (this.embedTheme) {
+      params.set("theme", this.embedTheme);
+    }
+
     return params;
+  }
+
+  private normalizeAbsoluteUrl(url: string): string {
+    return url.replace(/\/+$/, "");
+  }
+
+  private resolveEmbedBaseUrl(
+    configured: string | undefined,
+    fallback: string,
+  ): string {
+    const normalizedFallback = this.normalizeAbsoluteUrl(fallback);
+
+    if (configured && configured.trim().length > 0) {
+      const trimmed = configured.trim();
+      if (this.isAbsoluteUrl(trimmed)) {
+        return this.normalizeAbsoluteUrl(trimmed);
+      }
+
+      const withoutTrailingSlash = trimmed.replace(/\/+$/, "");
+      if (!withoutTrailingSlash) {
+        return "";
+      }
+
+      return withoutTrailingSlash.startsWith("/")
+        ? withoutTrailingSlash
+        : `/${withoutTrailingSlash}`;
+    }
+
+    return normalizedFallback;
+  }
+
+  private ensureLeadingSlash(value: string): string {
+    if (!value) {
+      return "";
+    }
+
+    const trimmed = value.replace(/\/+$/, "");
+    if (!trimmed) {
+      return "";
+    }
+
+    return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  }
+
+  private isAbsoluteUrl(url: string): boolean {
+    return /^https?:\/\//i.test(url);
+  }
+
+  private buildEmailQuery(email: string, exact = false): Record<string, any> {
+    if (exact) {
+      return {
+        "emails.address": email,
+      };
+    }
+
+    const safe = email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regexQuery = {
+      $regex: safe,
+      $options: "i",
+    };
+
+    return {
+      $or: [
+        { "emails.address": regexQuery },
+        { username: regexQuery },
+        { name: regexQuery },
+      ],
+    };
   }
 
   /**

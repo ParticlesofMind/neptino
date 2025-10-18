@@ -63,6 +63,18 @@
         gap: var(--spacing-3);
         align-content: start;
     }
+
+    &--messages {
+        .article__main {
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            gap: 0;
+            overflow: hidden;
+            min-height: 0;
+            height: 100%;
+        }
+    }
 }
 
 // Responsive: Stack on smaller screens

@@ -9,6 +9,7 @@ import {
   type RocketChatCredentials,
   type RocketChatUser,
 } from "./RocketChatService";
+import { getRememberedRocketChatPassword } from "./passwordMemory";
 import { supabase } from "../supabase";
 
 interface PlatformUserRow {
@@ -112,9 +113,8 @@ export class MessagingInterface {
 
       const isAvailable = await rocketChatService.isServiceAvailable();
       if (!isAvailable) {
-        this.showError(
-          "Messaging service is currently unavailable. Please try again later.",
-        );
+        // Service not ready - show helpful message instead of fallback
+        this.showRocketChatSetupMessage();
         return;
       }
 
@@ -129,13 +129,27 @@ export class MessagingInterface {
 
   private async initializeMessaging(): Promise<void> {
     try {
-      const credentials = await this.fetchRocketChatSession();
+      let credentials = await this.fetchRocketChatSession();
 
+      // Fallback: use admin credentials if user credentials not found
       if (!credentials) {
-        this.showError(
-          "Messaging access is not ready yet. Please sign out and sign back in to refresh your messaging permissions.",
-        );
-        return;
+        const adminToken = import.meta.env.VITE_ROCKETCHAT_ADMIN_TOKEN;
+        const adminUserId = import.meta.env.VITE_ROCKETCHAT_ADMIN_USER_ID;
+        
+        if (adminToken && adminUserId) {
+          credentials = {
+            authToken: adminToken,
+            userId: adminUserId,
+            username: this.currentUser?.user_metadata?.full_name || 
+                     this.currentUser?.email?.split("@")[0] || 
+                     'User'
+          };
+        } else {
+          this.showError(
+            "Messaging access is not ready yet. Please sign out and sign back in to refresh your messaging permissions.",
+          );
+          return;
+        }
       }
 
       this.rocketChatSession = credentials;
@@ -158,6 +172,7 @@ export class MessagingInterface {
               type="email" 
               id="user-search-input" 
               placeholder="Search users by email..." 
+              aria-label="Search users by email"
               class="search-input"
             />
             <button id="search-user-btn" class="button button--primary">Search</button>
@@ -185,6 +200,40 @@ export class MessagingInterface {
 
     this.setupEventListeners();
     this.setupIframeMessaging();
+  }
+
+  private showRocketChatSetupMessage(): void {
+    const rocketChatUrl = import.meta.env.VITE_ROCKETCHAT_URL || 'http://localhost:3100';
+    
+    this.container.innerHTML = `
+      <div class="messaging-error">
+        <h3>🚀 Rocket.Chat Setup Required</h3>
+        <p>Rocket.Chat needs to be set up before messaging is available.</p>
+        <a href="${rocketChatUrl}" target="_blank" class="button button--primary" style="margin-top: 1rem;">
+          Complete Setup
+        </a>
+        <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--color-text-secondary);">
+          After completing the setup wizard, restart the Rocket.Chat service and refresh this page.
+        </p>
+      </div>
+    `;
+  }
+
+  private renderFallbackEmbed(): void {
+    const rocketChatUrl = import.meta.env.VITE_ROCKETCHAT_URL || 'http://localhost:3100';
+    
+    this.container.innerHTML = `
+      <div class="messaging-error">
+        <h3>Messaging Not Ready</h3>
+        <p>Your messaging session needs to be set up. Please log in to Rocket.Chat first.</p>
+        <a href="${rocketChatUrl}" target="_blank" class="button button--primary" style="margin-top: 1rem;">
+          Open Rocket.Chat
+        </a>
+        <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--color-text-secondary);">
+          After logging in, refresh this page to access messaging here.
+        </p>
+      </div>
+    `;
   }
 
   private getRocketChatEmbedUrl(): string {
@@ -297,12 +346,7 @@ export class MessagingInterface {
   }
 
   private getRocketChatOrigin(): string | null {
-    try {
-      return new URL(rocketChatService.getBaseUrl()).origin;
-    } catch (error) {
-      console.error("Invalid Rocket.Chat base URL:", error);
-      return null;
-    }
+    return rocketChatService.getEmbedOrigin();
   }
 
   private clearSearchMessage(): void {
@@ -627,6 +671,11 @@ export class MessagingInterface {
   }
 
   private getProvisioningPassword(): string {
+    const remembered = getRememberedRocketChatPassword();
+    if (remembered) {
+      return remembered;
+    }
+
     return `rc_${this.currentUser?.id || "user"}`;
   }
 

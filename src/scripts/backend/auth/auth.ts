@@ -6,6 +6,10 @@
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../supabase";
 import { rocketChatService } from "../rocketchat/RocketChatService";
+import {
+  clearRememberedRocketChatPassword,
+  rememberRocketChatPassword,
+} from "../rocketchat/passwordMemory";
 
 let currentUser: User | null = null;
 
@@ -64,6 +68,8 @@ export async function signUp(
  userRole: string,
 ) {
  try {
+ rememberRocketChatPassword(password);
+
  const { data, error } = await supabase.auth.signUp({
  email,
  password,
@@ -153,6 +159,7 @@ export async function signIn(email: string, password: string) {
           if (signupResult.data.user) {
             signedInUser = signupResult.data.user as User;
             currentUser = signedInUser;
+            rememberRocketChatPassword(password);
             await syncRocketChatAccount(signedInUser, password);
             return {
               success: true,
@@ -174,6 +181,7 @@ export async function signIn(email: string, password: string) {
           if (retry.data.user) {
             signedInUser = retry.data.user as User;
             currentUser = signedInUser;
+            rememberRocketChatPassword(password);
             await syncRocketChatAccount(signedInUser, password);
             return {
               success: true,
@@ -192,6 +200,7 @@ export async function signIn(email: string, password: string) {
       signedInUser = data.user as User;
       currentUser = data.user;
 
+      rememberRocketChatPassword(password);
       console.log(
         "✅ Sign in successful - auth state listener will handle redirect",
       );
@@ -233,12 +242,14 @@ export async function signOut() {
  // Even if signOut fails, clear local state
  // This ensures the user can at least be redirected away
  currentUser = null;
+ clearRememberedRocketChatPassword();
  console.log("⚠️ Forcing local sign-out due to server error");
  return { success: false, error: error.message };
  }
  
  console.log("✅ Sign out successful");
  currentUser = null;
+ clearRememberedRocketChatPassword();
  return { success: true };
  } catch (error) {
  console.error("❌ Sign out exception:", {
@@ -248,6 +259,7 @@ export async function signOut() {
  
  // Force local sign-out even on exception
  currentUser = null;
+ clearRememberedRocketChatPassword();
  const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
  return { success: false, error: errorMessage };
  }
