@@ -27,11 +27,33 @@
     </nav>
   </header>
 
-  <main class="grid__main main courses">
-    <section>
-      <h1>Course Management</h1>
-      <p>Oversee and manage all courses within your institution.</p>
-    </section>
+  <main class="grid__main main">
+    <article class="article article--courses">
+      <header class="article__header">
+        <h1 class="article__title">Course Management</h1>
+        <p class="article__description">Oversee and manage all courses within your institution.</p>
+      </header>
+      
+      <section class="article__content">
+        <div class="card">
+          <h3 class="card__title">All Courses</h3>
+          <p class="card__description">View and manage all courses in the system</p>
+          <button class="card__action button button--primary">View All Courses</button>
+        </div>
+        
+        <div class="card">
+          <h3 class="card__title">Course Analytics</h3>
+          <p class="card__description">Review course performance and engagement metrics</p>
+          <button class="card__action button button--secondary">View Analytics</button>
+        </div>
+        
+        <div class="card">
+          <h3 class="card__title">Course Moderation</h3>
+          <p class="card__description">Review and approve course submissions</p>
+          <button class="card__action button button--secondary">Moderate Courses</button>
+        </div>
+      </section>
+    </article>
   </main>
 
   <footer class="grid__footer footer">

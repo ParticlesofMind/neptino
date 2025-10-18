@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -8,64 +8,60 @@
   <link rel="stylesheet" href="/src/scss/main.scss" />
 </head>
 
-<body>
-  <header>
-    <nav>
-      <a href="/src/pages/student/home.html">
-        <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
-      </a>
-      <ul>
-        <li>
-          <a href="/src/pages/student/home.html">Dashboard</a>
+<body class="grid body">
+  <header class="grid__header header header--home">
+    <nav class="header__nav">
+      <ul class="ul ul--header">
+        <li class="ul__item ul__item--brand">
+          <a href="/src/pages/student/home.html" class="brand">
+            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
+          </a>
         </li>
-        <li>
-          <a href="/src/pages/student/courses.html">My Courses</a>
-        </li>
-        <li>
-          <a href="/src/pages/student/progress.html">Progress</a>
+        <li class="ul__item"><a href="/src/pages/student/home.html" class="link link--header">Dashboard</a></li>
+        <li class="ul__item"><a href="/src/pages/student/courses.html" class="link link--header">My Courses</a></li>
+        <li class="ul__item"><a href="/src/pages/student/progress.html" class="link link--header">Progress</a></li>
+        <li class="ul__item ul__item--cta">
+          <button id="logout-btn" class="cta button button--outline">Logout</button>
         </li>
       </ul>
-      <button id="logout-btn">
-        Logout
-      </button>
     </nav>
   </header>
-  <main>
-    <section>
-      <h1>My Courses</h1>
-      <p>
-        Manage your enrolled courses and continue learning.
-      </p>
-    </section>
-    <section>
-      <div>
-        <h3>No Courses Yet</h3>
-        <p>
-          You haven't enrolled in any courses yet. Start exploring our
-          course catalog to begin your learning journey!
-        </p>
-        <a href="#">Browse Course Catalog</a>
-      </div>
-    </section>
+  
+  <main class="grid__main main">
+    <article class="article article--courses">
+      <header class="article__header">
+        <h1 class="article__title">My Courses</h1>
+        <p class="article__description">Manage your enrolled courses and continue learning.</p>
+      </header>
+      
+      <section class="article__content">
+        <div class="card">
+          <h3 class="card__title">No Courses Yet</h3>
+          <p class="card__description">
+            You haven't enrolled in any courses yet. Start exploring our
+            course catalog to begin your learning journey!
+          </p>
+          <a href="#" class="card__action button button--primary">Browse Course Catalog</a>
+        </div>
+      </section>
+    </article>
   </main>
-  <footer>
-    <nav>
-      <a href="/src/pages/student/home.html">
-        <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" />
-      </a>
-      <ul>
-        <li>
-          <a href="#">Help Center</a>
+  
+  <footer class="grid__footer footer">
+    <nav class="footer__nav">
+      <ul class="ul ul--footer">
+        <li class="ul__item ul__item--brand">
+          <a href="/src/pages/student/home.html" class="brand">
+            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
+          </a>
         </li>
-        <li>
-          <a href="#">Support</a>
-        </li>
-        <li>
-          <a href="#">Contact</a>
-        </li>
+        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Help Center</a></li>
+        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Support</a></li>
+        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Contact</a></li>
       </ul>
     </nav>
   </footer>
+  
   <script type="module" src="/src/scripts/app.ts"></script>
 </body>
 
