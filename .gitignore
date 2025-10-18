@@ -2464,3 +2464,15 @@ mongodb_data/journal/WiredTigerLog.0000000001
 mongodb_data/journal/WiredTigerPreplog.0000000002
 mongodb_data/journal/WiredTigerPreplog.0000000001
 mongodb_data/WiredTigerHS.wt
+mongodb_data/collection-603--7480359084635416677.wt
+mongodb_data/collection-605--7480359084635416677.wt
+mongodb_data/collection-606--7480359084635416677.wt
+mongodb_data/collection-607--7480359084635416677.wt
+mongodb_data/index-604--7480359084635416677.wt
+mongodb_data/index-608--7480359084635416677.wt
+mongodb_data/index-609--7480359084635416677.wt
+mongodb_data/index-610--7480359084635416677.wt
+mongodb_data/index-611--7480359084635416677.wt
+mongodb_data/index-612--7480359084635416677.wt
+mongodb_data/index-613--7480359084635416677.wt
+mongodb_data/index-614--7480359084635416677.wt
