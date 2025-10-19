@@ -307,13 +307,7 @@
     }
     
     .card__actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr;
-      gap: var(--spacing-1);
-      margin: 0;
-      padding: 0;
-      border: none;
-      
+   
       &--stacked {
         grid-template-columns: 1fr 1fr 1fr 1fr;
         gap: var(--spacing-1);
@@ -321,19 +315,7 @@
     }
     
     .card__action {
-      padding: var(--spacing-1) var(--spacing-2);
-      font-size: var(--font-size-extra-small);
-      font-weight: var(--font-weight-medium);
-      border-radius: var(--radius-small);
-      border: 1px solid var(--color-neutral-300);
-      background: var(--color-background);
-      color: var(--color-text-primary);
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+  
       
       &:hover {
         background: var(--color-neutral-50);

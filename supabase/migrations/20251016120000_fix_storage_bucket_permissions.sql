@@ -7,8 +7,8 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('courses', 'courses', true)
 ON CONFLICT (id) DO UPDATE SET public = true;
 
--- Make sure row level security stays enabled
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- Note: Row level security is already enabled by default on storage.objects
+-- No need to explicitly enable it here
 
 -- Reset policies so the file can be rerun safely
 DROP POLICY IF EXISTS "Authenticated users manage course images" ON storage.objects;

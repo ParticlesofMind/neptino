@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Features - Neptino</title>
+  <link rel="stylesheet" href="/src/scss/main.scss">
+</head>
+
+<body class="grid body">
+  <header class="grid__header header header--features">
+    <nav class="header__nav">
+      <ul class="ul ul--header">
+        <li class="ul__item ul__item--brand">
+          <a href="/" class="brand">
+            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
+          </a>
+        </li>
+        <li class="ul__item"><a href="/src/pages/shared/features.html" class="link link--header link--active">Features</a></li>
+        <li class="ul__item"><a href="/src/pages/shared/about.html" class="link link--header">About</a></li>
+        <li class="ul__item ul__item--dropdown">
+          <div class="dropdown dropdown--right">
+            <button class="dropdown__toggle" id="language-toggle" aria-expanded="false" aria-haspopup="true">
+              <span class="dropdown__text">EN</span>
+              <svg class="dropdown__icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7 10l5 5 5-5z" />
+              </svg>
+            </button>
+            <ul class="dropdown__menu" id="language-menu">
+              <li class="dropdown__item">
+                <button class="dropdown__link" data-lang="en">English</button>
+              </li>
+              <li class="dropdown__item">
+                <button class="dropdown__link" data-lang="es">Español</button>
+              </li>
+              <li class="dropdown__item">
+                <button class="dropdown__link" data-lang="fr">Français</button>
+              </li>
+              <li class="dropdown__item">
+                <button class="dropdown__link" data-lang="de">Deutsch</button>
+              </li>
+            </ul>
+          </div>
+        </li>
+        <li class="ul__item ul__item--cta">
+          <a href="/src/pages/shared/signin.html" class="cta button button--outline">Sign In</a>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="grid__main main main--features">
+    <section class="features-hero">
+      <div class="features-hero__content">
+        <h1 class="features-hero__title heading heading--h1">Powerful Features for Modern Education</h1>
+        <p class="features-hero__subtitle paragraph paragraph--lead">Discover the tools and capabilities that make Neptino the leading platform for educators and students worldwide.</p>
+        <div class="features-hero__actions">
+          <a href="/src/pages/shared/signup.html" class="button button--primary">Get Started Free</a>
+          <a href="/src/pages/shared/pricing.html" class="button button--outline">View Pricing</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="features-grid">
+      <div class="features-grid__container">
+        <article class="feature-card">
+          <div class="feature-card__icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#3B82F6" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M2 17L12 22L22 17" stroke="#3B82F6" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M2 12L12 17L22 12" stroke="#3B82F6" stroke-width="2" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3 class="feature-card__title heading heading--h3">Course Builder</h3>
+          <p class="feature-card__description paragraph">Create engaging courses with our intuitive drag-and-drop interface. Add multimedia content, quizzes, and interactive elements effortlessly.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-card__icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 20V10" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 20V4" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6 20V14" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3 class="feature-card__title heading heading--h3">Analytics Dashboard</h3>
+          <p class="feature-card__description paragraph">Track student progress with detailed analytics. Identify learning gaps and provide personalized feedback to improve outcomes.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-card__icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 12L11 14L15 10" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#3B82F6" stroke-width="2"/>
+            </svg>
+          </div>
+          <h3 class="feature-card__title heading heading--h3">Automated Assessment</h3>
+          <p class="feature-card__description paragraph">Create and grade assignments automatically. Support for multiple question types, rubrics, and instant feedback systems.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-card__icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89317 18.7122 8.75608 18.1676 9.45768C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3 class="feature-card__title heading heading--h3">Collaboration Tools</h3>
+          <p class="feature-card__description paragraph">Foster classroom discussions, group projects, and peer-to-peer learning with integrated communication tools.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-card__icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" stroke="#3B82F6" stroke-width="2"/>
+              <line x1="8" y1="21" x2="16" y2="21" stroke="#3B82F6" stroke-width="2"/>
+              <line x1="12" y1="17" x2="12" y2="21" stroke="#3B82F6" stroke-width="2"/>
+            </svg>
+          </div>
+          <h3 class="feature-card__title heading heading--h3">Mobile Ready</h3>
+          <p class="feature-card__description paragraph">Access your courses anywhere with our responsive design. Full functionality on tablets and mobile devices for ultimate flexibility.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-card__icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="#3B82F6"/>
+            </svg>
+          </div>
+          <h3 class="feature-card__title heading heading--h3">24/7 Support</h3>
+          <p class="feature-card__description paragraph">Get help when you need it with our comprehensive support system, documentation, and community resources.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="features-cta">
+      <div class="features-cta__content">
+        <h2 class="features-cta__title heading heading--h2">Ready to Experience These Features?</h2>
+        <p class="features-cta__subtitle paragraph">Join thousands of educators and students who are already using Neptino to transform their learning experience.</p>
+        <div class="features-cta__actions">
+          <a href="/src/pages/shared/signup.html" class="button button--primary">Start Free Trial</a>
+          <a href="/src/pages/shared/pricing.html" class="button button--outline">View Pricing Plans</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="grid__footer footer">
+    <nav class="footer__nav">
+      <ul class="ul ul--footer">
+        <li class="ul__item ul__item--brand">
+          <a href="/" class="brand">
+            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
+          </a>
+        </li>
+        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Privacy Policy</a></li>
+        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Terms of Service</a></li>
+        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Contact</a></li>
+      </ul>
+    </nav>
+  </footer>
+
+  <script type="module" src="/src/scripts/app.ts"></script>
+</body>
+
+</html>

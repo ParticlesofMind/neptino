@@ -16,9 +16,7 @@
         display: grid;
         grid-template-columns: clamp(13rem, 15vw, 16rem) minmax(0, 1fr);
         grid-template-rows: 1fr;
-  
-        height: calc(100vh - 2rem);
-        gap: 1rem;
+        gap: 2rem;
 
         container-type: inline-size;
         container-name: coursebuilder-setup;

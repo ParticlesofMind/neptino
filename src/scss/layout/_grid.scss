@@ -5,9 +5,7 @@
 // Main page grid container
 .grid {
     display: grid;
-    height: 100vh; // Fixed viewport height
-    max-height: 100vh; // Prevent overflow
-    overflow: hidden; // Prevent scrollbar
+    min-height: 100vh; // Minimum viewport height, but can grow
     grid-template-rows: auto minmax(0, 1fr) auto; // header auto, main flexible but can shrink, footer auto
     grid-template-areas:
         'header'
@@ -22,12 +20,23 @@
         grid-area: main;
         display: grid;
         min-height: 0; // Allow grid to shrink if needed
-        height: 100%; // Ensure it takes full available height from parent grid
 
         // Auth page modifier - center content without stretching
         &--auth {
             place-items: center;
             align-content: center;
+            height: calc(100vh - var(--header-height, 60px) - var(--footer-height, 60px));
+        }
+
+        // Shared pages modifier - allow scrolling
+        &--features,
+        &--about,
+        &--pricing,
+        &--students,
+        &--teachers,
+        &--institutions {
+            display: block; // Override grid display to allow natural flow
+            min-height: auto; // Allow natural height
         }
     }
 
@@ -38,5 +47,12 @@
     &--small {
         grid-template-columns: repeat(3, 1fr);
         grid-template-rows: repeat(3, 1fr);
+    }
+
+    // Dashboard and other fixed-height layouts
+    &--dashboard {
+        height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
     }
 }

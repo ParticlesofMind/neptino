@@ -2477,3 +2477,7 @@ mongodb_data/index-612--7480359084635416677.wt
 mongodb_data/index-613--7480359084635416677.wt
 mongodb_data/index-614--7480359084635416677.wt
 rocketchat.env
+mongodb_data/diagnostic.data/metrics.2025-10-18T15-11-07Z-00000
+mongodb_data/diagnostic.data/metrics.2025-10-18T19-32-26Z-00000
+mongodb_data/journal/WiredTigerLog.0000000002
+mongodb_data/journal/WiredTigerLog.0000000003

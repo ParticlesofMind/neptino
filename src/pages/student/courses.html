@@ -27,21 +27,31 @@
     </nav>
   </header>
   
-  <main class="grid__main main">
+  <main class="grid__main main main--courses">
     <article class="article article--courses">
-      <header class="article__header">
-        <h1 class="article__title">My Courses</h1>
-        <p class="article__description">Manage your enrolled courses and continue learning.</p>
+      <header class="article__summary">
+        <h1 class="heading heading--h2">My Courses</h1>
+        <p class="paragraph paragraph--lead">Manage your enrolled courses and continue learning.</p>
       </header>
       
       <section class="article__content">
-        <div class="card">
-          <h3 class="card__title">No Courses Yet</h3>
-          <p class="card__description">
-            You haven't enrolled in any courses yet. Start exploring our
-            course catalog to begin your learning journey!
-          </p>
-          <a href="#" class="card__action button button--primary">Browse Course Catalog</a>
+        <div class="card card--course">
+          <div class="card__media">
+            <div class="card__media-placeholder">📚</div>
+          </div>
+          <div class="card__header">
+            <h3 class="card__title">No Courses Yet</h3>
+            <p class="card__description">
+              You haven't enrolled in any courses yet. Start exploring our
+              course catalog to begin your learning journey!
+            </p>
+          </div>
+          <div class="card__body">
+            <div class="card__actions">
+              <a href="#" class="card__action button button--primary">Browse Course Catalog</a>
+              <a href="#" class="card__action button button--outline">View Marketplace</a>
+            </div>
+          </div>
         </div>
       </section>
     </article>
