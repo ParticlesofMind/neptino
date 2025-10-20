@@ -117,6 +117,16 @@
                 <span class="aside__text">Curriculum</span>
               </a>
             </li>
+            <li class="aside__item">
+              <a class="aside__link" href="#generation" data-section="generation">
+                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="4" width="16" height="16" rx="2"/>
+                  <rect x="9" y="9" width="6" height="6"/>
+                  <path d="M15 2v4M15 18v4M2 15h4M18 15h4M18.364 5.636l-2.828 2.828M8.464 15.536l-2.828 2.828M5.636 5.636l2.828 2.828M15.536 15.536l2.828 2.828"/>
+                </svg>
+                <span class="aside__text">Generation</span>
+              </a>
+            </li>
           </ul>
           
           <h3 class="aside__heading">PUBLISHING</h3>
@@ -766,9 +776,58 @@
               </div>
             </div>
 
+            </form>
+          </section>
+
+          <section class="article__preview">
+            <div class="curriculum__preview" id="curriculum-preview">
+              <p class="article__preview-placeholder" id="curriculum-preview-placeholder">
+                Configure your curriculum on the left to unlock the live preview.
+              </p>
+              <div class="curriculum__preview-content">
+                <nav class="curriculum__controls" aria-label="Curriculum view modes">
+                  <button class="button button--small button--outline" type="button" data-mode="modules">
+                    Modules
+                  </button>
+                  <button class="button button--small button--outline" type="button" data-mode="titles">
+                    Lessons
+                  </button>
+                  <button class="button button--small button--outline" type="button" data-mode="all">
+                    All
+                  </button>
+                </nav>
+
+                <div class="editable-surface" aria-live="polite">
+                  <!-- Dynamic content -->
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="save-status" id="curriculum-save-status" aria-live="polite" data-status="empty">
+              <span class="save-status__icon" aria-hidden="true"></span>
+              <span class="save-status__text">No data submitted yet</span>
+            </div>
+          </div>
+        </footer>
+      </article>
+
+      <!-- Generation Article -->
+      <article id="generation" data-course-section class="article article--generation article--templates">
+        <header class="article__header">
+          <h2 class="article__title">AI Content Generation</h2>
+        </header>
+
+        <div class="article__main article__main--panels">
+          <section class="article__config">
+            <form class="form form--generation">
+
             <!-- AI Generation Section -->
             <div class="curriculum-config__group curriculum-config__group--ai-generation">
-              <h3 class="curriculum-config__section-title">Generate Curriculum</h3>
+              <h3 class="curriculum-config__section-title">Generate Curriculum Content</h3>
               <div class="ai-generation__context">                
                 <div class="ai-generation__context-checkboxes">
                   <!-- Mandatory Context -->
@@ -845,12 +904,12 @@
           </section>
 
           <section class="article__preview">
-            <div class="curriculum__preview" id="curriculum-preview">
-              <p class="article__preview-placeholder" id="curriculum-preview-placeholder">
-                Configure your curriculum on the left to unlock the live preview.
+            <div class="curriculum__preview" id="generation-preview">
+              <p class="article__preview-placeholder" id="generation-preview-placeholder">
+                Generate content on the left to preview your curriculum structure.
               </p>
               <div class="curriculum__preview-content">
-                <nav class="curriculum__controls" aria-label="Curriculum view modes">
+                <nav class="curriculum__controls" aria-label="Generation view modes">
                   <button class="button button--small button--outline" type="button" data-mode="modules">
                     Modules
                   </button>
@@ -881,13 +940,14 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="curriculum-save-status" aria-live="polite" data-status="empty">
+            <div class="save-status" id="generation-save-status" aria-live="polite" data-status="empty">
               <span class="save-status__icon" aria-hidden="true"></span>
               <span class="save-status__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
       </article>
+
       <!-- Settings Article -->
       <article id="settings" data-course-section class="article article--settings">
         <header class="article__header">

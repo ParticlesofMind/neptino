@@ -39,7 +39,14 @@ type TemplatePlacementChoice =
   | "end-of-each-module"
   | "specific-modules"
   | "specific-lessons"
-  | "end-of-course";
+  | "end-of-course"
+  | "all-lessons"
+  | "lesson-ranges";
+
+interface LessonRange {
+  start: number;
+  end: number;
+}
 
 interface TemplatePlacementConfig {
   templateId: string;
@@ -48,6 +55,7 @@ interface TemplatePlacementConfig {
   placementType: Exclude<TemplatePlacementChoice, "none">;
   moduleNumbers?: number[];
   lessonNumbers?: number[];
+  lessonRanges?: LessonRange[];
 }
 
 interface TemplateSummary {
@@ -479,9 +487,19 @@ class CurriculumManager {
     this.curriculumConfigSection = document.querySelector(
       "#curriculum .article__config",
     ) as HTMLElement;
-    this.curriculumPreviewSection = document.querySelector(
-      ".curriculum__preview",
+    
+    // Initialize both curriculum and generation previews
+    // They will show the same data but with different view mode controls
+    const curriculumPreview = document.querySelector(
+      "#curriculum .curriculum__preview",
     ) as HTMLElement;
+    const generationPreview = document.querySelector(
+      "#generation .curriculum__preview",
+    ) as HTMLElement;
+    
+    // Use whichever is visible/available
+    this.curriculumPreviewSection = curriculumPreview || generationPreview;
+    
     this.templatePlacementList = document.getElementById(
       "curriculum-template-placement-list",
     );
@@ -502,6 +520,27 @@ class CurriculumManager {
     
     // Set initial active button for preview mode
     this.setInitialActiveButton();
+    
+    // Initialize event listeners for both preview sections if they exist
+    if (curriculumPreview && generationPreview) {
+      this.initializePreviewControls(curriculumPreview);
+      this.initializePreviewControls(generationPreview);
+    }
+  }
+  
+  private initializePreviewControls(previewSection: HTMLElement): void {
+    // Add event listeners for view mode buttons in this specific preview section
+    const modeButtons = previewSection.querySelectorAll<HTMLButtonElement>('button[data-mode]');
+    modeButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const mode = button.dataset.mode as PreviewMode;
+        if (mode) {
+          this.setPreviewMode(mode);
+          // Update both previews
+          this.renderCurriculumPreview();
+        }
+      });
+    });
   }
   private setInitialActiveButton(): void {
     // Use setTimeout to ensure DOM is fully ready
@@ -627,6 +666,35 @@ class CurriculumManager {
           return;
         }
 
+        // Handle add range button
+        const addRangeButton = target.closest<HTMLButtonElement>('[data-range-add]');
+        if (addRangeButton) {
+          event.preventDefault();
+          const card = addRangeButton.closest<HTMLElement>('[data-template-card]');
+          if (card) {
+            const templateId = card.dataset.templateId;
+            if (templateId) {
+              this.addLessonRange(templateId);
+            }
+          }
+          return;
+        }
+
+        // Handle remove range button
+        const removeRangeButton = target.closest<HTMLButtonElement>('[data-range-remove]');
+        if (removeRangeButton) {
+          event.preventDefault();
+          const rangeIndex = Number(removeRangeButton.dataset.rangeRemove);
+          const card = removeRangeButton.closest<HTMLElement>('[data-template-card]');
+          if (card && !Number.isNaN(rangeIndex)) {
+            const templateId = card.dataset.templateId;
+            if (templateId) {
+              this.removeLessonRange(templateId, rangeIndex);
+            }
+          }
+          return;
+        }
+
         const input = target.closest<HTMLInputElement>(
           "input[type='radio'], input[type='checkbox']",
         );
@@ -650,6 +718,20 @@ class CurriculumManager {
       this.templatePlacementList.addEventListener("change", (event) => {
         const input = event.target as HTMLInputElement | null;
         if (!input) {
+          return;
+        }
+
+        // Handle lesson range inputs
+        if (input.hasAttribute('data-range-start') || input.hasAttribute('data-range-end')) {
+          const card = input.closest<HTMLElement>('[data-template-card]');
+          if (card) {
+            const templateId = card.dataset.templateId;
+            const rangeIndex = Number(input.dataset.rangeIndex);
+            if (templateId && !Number.isNaN(rangeIndex)) {
+              const isStart = input.hasAttribute('data-range-start');
+              this.updateLessonRange(templateId, rangeIndex, isStart, Number(input.value));
+            }
+          }
           return;
         }
 
@@ -1165,8 +1247,11 @@ class CurriculumManager {
          : "none";
        const moduleNumbers = placement?.moduleNumbers ?? [];
       const lessonNumbers = placement?.lessonNumbers ?? [];
+      const lessonRanges = placement?.lessonRanges ?? [];
       const showModules = choice === "specific-modules";
       const showLessons = choice === "specific-lessons";
+      const showLessonRanges = choice === "lesson-ranges";
+      const isLessonTemplate = template.type === "lesson";
        const accentClass = template.isMissing
          ? ""
          : this.resolveTemplateAccentClass(template.id || template.templateId);
@@ -1259,9 +1344,10 @@ class CurriculumManager {
         )}">
            <header class="template-placement-card__header">
              <div class="template-placement-card__header-content">
-               <h4 class="template-placement-card__title">${this.escapeHtml(
-                 template.name,
-               )}</h4>
+               <h4 class="template-placement-card__title">
+                 ${this.escapeHtml(template.name)}
+                 ${choice === "all-lessons" && isLessonTemplate ? '<span class="template-placement-card__main-tag">(main)</span>' : ''}
+               </h4>
                <p class="template-placement-card__meta">${this.escapeHtml(
                  typeLabel ?? "",
                )}</p>
@@ -1293,6 +1379,26 @@ class CurriculumManager {
                }>
                <span>No automatic placement</span>
              </label>
+             ${isLessonTemplate ? `
+             <label class="${optionClass("all-lessons")}">
+               <input type="radio" name="placement-${template.id}" value="all-lessons"${
+                 choice === "all-lessons" ? " checked" : ""
+               } ${lessonCount > 0 ? "" : "disabled"}>
+               <span>Apply to all lessons</span>
+             </label>
+             <label class="${optionClass("lesson-ranges")}">
+               <input type="radio" name="placement-${template.id}" value="lesson-ranges"${
+                 choice === "lesson-ranges" ? " checked" : ""
+               } ${lessonCount > 0 ? "" : "disabled"}>
+               <span>Apply to specific lesson ranges</span>
+             </label>
+             <div class="template-placement-card__lesson-ranges"${
+               showLessonRanges ? "" : " hidden"
+             }>
+               ${this.renderLessonRanges(template.id, lessonRanges, lessonCount)}
+             </div>
+             ` : ""}
+             ${!isLessonTemplate ? `
              <label class="${optionClass("end-of-each-module")}">
                <input type="radio" name="placement-${template.id}" value="end-of-each-module"${
                  choice === "end-of-each-module" ? " checked" : ""
@@ -1329,6 +1435,7 @@ class CurriculumManager {
                }>
                <span>End of course</span>
              </label>
+             ` : ""}
            </div>
          </article>
        `;
@@ -1336,6 +1443,71 @@ class CurriculumManager {
      .join("");
 
    this.templatePlacementList.innerHTML = html;
+ }
+
+ private renderLessonRanges(
+   templateId: string,
+   ranges: LessonRange[],
+   maxLesson: number,
+ ): string {
+   if (!ranges.length) {
+     ranges = [{ start: 1, end: maxLesson || 1 }];
+   }
+
+   const rangesHTML = ranges
+     .map(
+       (range, index) => `
+     <div class="template-placement-card__lesson-range" data-range-index="${index}">
+       <div class="template-placement-card__lesson-range-inputs">
+         <div class="template-placement-card__lesson-range-input">
+           <label for="range-start-${templateId}-${index}">Start lesson</label>
+           <input 
+             type="number" 
+             id="range-start-${templateId}-${index}"
+             min="1" 
+             max="${maxLesson}"
+             value="${range.start}"
+             data-range-start
+             data-range-index="${index}"
+           >
+         </div>
+         <div class="template-placement-card__lesson-range-input">
+           <label for="range-end-${templateId}-${index}">End lesson</label>
+           <input 
+             type="number" 
+             id="range-end-${templateId}-${index}"
+             min="1" 
+             max="${maxLesson}"
+             value="${range.end}"
+             data-range-end
+             data-range-index="${index}"
+           >
+         </div>
+       </div>
+       ${
+         ranges.length > 1
+           ? `<button type="button" class="template-placement-card__lesson-range-remove" data-range-remove="${index}" aria-label="Remove range">
+           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+             <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+           </svg>
+         </button>`
+           : ""
+       }
+     </div>
+   `,
+     )
+     .join("");
+
+   return `
+     ${rangesHTML}
+     <button type="button" class="template-placement-card__lesson-range-add" data-range-add>
+       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+       </svg>
+       <span>Add another range</span>
+     </button>
+     ${!ranges.length || ranges.length === 0 ? '<p class="template-placement-card__lesson-ranges-hint">Add at least one lesson range.</p>' : ""}
+   `;
  }
 
  private getModulesForPlacement(): CurriculumModule[] {
@@ -1374,6 +1546,10 @@ private handleTemplatePlacementInputChange(input: HTMLInputElement): void {
   if (input.type === "radio") {
     const choice = input.value as TemplatePlacementChoice;
     this.updateTemplatePlacementChoice(templateId, choice);
+    
+    // Apply template placements immediately for lesson templates
+    this.applyTemplatePlacementsToLessons();
+    
     this.renderTemplatePlacementUI();
     this.renderCurriculumPreview();
     this.persistTemplatePlacements();
@@ -1461,6 +1637,7 @@ private handleLessonTemplateChange(select: HTMLSelectElement): void {
      placementType,
      moduleNumbers: placementType === "specific-modules" ? [...(existing?.moduleNumbers ?? [])] : undefined,
     lessonNumbers: placementType === "specific-lessons" ? [...(existing?.lessonNumbers ?? [])] : undefined,
+    lessonRanges: placementType === "lesson-ranges" ? [...(existing?.lessonRanges ?? [{ start: 1, end: this.currentCurriculum.length || 1 }])] : undefined,
    };
 
    if (existing) {
@@ -1550,6 +1727,104 @@ private handleLessonTemplateChange(select: HTMLSelectElement): void {
     this.templatePlacements = this.templatePlacements.map((entry) =>
       entry.templateId === templateId ? placement! : entry,
     );
+  }
+
+  private addLessonRange(templateId: string): void {
+    let placement = this.getTemplatePlacement(templateId);
+
+    if (!placement) {
+      this.updateTemplatePlacementChoice(templateId, "lesson-ranges");
+      placement = this.getTemplatePlacement(templateId);
+    }
+
+    if (!placement) {
+      return;
+    }
+
+    const lessonRanges = Array.isArray(placement.lessonRanges)
+      ? [...placement.lessonRanges]
+      : [];
+
+    const lessonCount = this.currentCurriculum.length;
+    lessonRanges.push({ start: 1, end: lessonCount || 1 });
+
+    placement.lessonRanges = lessonRanges;
+
+    this.templatePlacements = this.templatePlacements.map((entry) =>
+      entry.templateId === templateId ? placement! : entry,
+    );
+
+    // Apply template placements immediately for lesson templates
+    this.applyTemplatePlacementsToLessons();
+
+    this.renderTemplatePlacementUI();
+    this.renderCurriculumPreview();
+    this.persistTemplatePlacements();
+  }
+
+  private removeLessonRange(templateId: string, rangeIndex: number): void {
+    const placement = this.getTemplatePlacement(templateId);
+    if (!placement) {
+      return;
+    }
+
+    const lessonRanges = Array.isArray(placement.lessonRanges)
+      ? [...placement.lessonRanges]
+      : [];
+
+    lessonRanges.splice(rangeIndex, 1);
+
+    placement.lessonRanges = lessonRanges;
+
+    this.templatePlacements = this.templatePlacements.map((entry) =>
+      entry.templateId === templateId ? placement! : entry,
+    );
+
+    // Apply template placements immediately for lesson templates
+    this.applyTemplatePlacementsToLessons();
+
+    this.renderTemplatePlacementUI();
+    this.renderCurriculumPreview();
+    this.persistTemplatePlacements();
+  }
+
+  private updateLessonRange(
+    templateId: string,
+    rangeIndex: number,
+    isStart: boolean,
+    value: number,
+  ): void {
+    const placement = this.getTemplatePlacement(templateId);
+    if (!placement) {
+      return;
+    }
+
+    const lessonRanges = Array.isArray(placement.lessonRanges)
+      ? [...placement.lessonRanges]
+      : [];
+
+    if (rangeIndex >= lessonRanges.length) {
+      return;
+    }
+
+    const range = lessonRanges[rangeIndex];
+    if (isStart) {
+      range.start = Math.max(1, Math.min(value, range.end));
+    } else {
+      range.end = Math.max(range.start, value);
+    }
+
+    placement.lessonRanges = lessonRanges;
+
+    this.templatePlacements = this.templatePlacements.map((entry) =>
+      entry.templateId === templateId ? placement! : entry,
+    );
+
+    // Apply template placements immediately for lesson templates
+    this.applyTemplatePlacementsToLessons();
+
+    this.renderCurriculumPreview();
+    this.persistTemplatePlacements();
   }
 
  private getTemplatePlacement(
@@ -1671,6 +1946,62 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
        lessonNumbers: filtered,
      };
    });
+   
+   // Apply template placements to lessons
+   this.applyTemplatePlacementsToLessons();
+ }
+
+ /**
+  * Apply template placements (all-lessons, lesson-ranges) directly to lesson.templateId
+  * This ensures that templates are actually assigned to the lessons
+  */
+ private applyTemplatePlacementsToLessons(): void {
+   const lessons = Array.isArray(this.currentCurriculum)
+     ? this.currentCurriculum
+     : [];
+
+   if (!lessons.length) {
+     return;
+   }
+
+   // Find lesson template placements
+   const lessonTemplatePlacements = this.templatePlacements.filter(
+     (placement) => {
+       const summary = this.lookupTemplateSummary(placement.templateId);
+       return summary?.type === "lesson";
+     }
+   );
+
+   // Apply templates to lessons
+   lessons.forEach((lesson) => {
+     const lessonNumber = lesson.lessonNumber;
+     
+     // Check if this lesson should have a template applied
+     const applicablePlacement = lessonTemplatePlacements.find((placement) => {
+       // All lessons placement
+       if (placement.placementType === "all-lessons") {
+         return true;
+       }
+       
+       // Lesson ranges placement
+       if (
+         placement.placementType === "lesson-ranges" &&
+         Array.isArray(placement.lessonRanges)
+       ) {
+         return placement.lessonRanges.some(
+           (range) => lessonNumber >= range.start && lessonNumber <= range.end
+         );
+       }
+       
+       return false;
+     });
+
+     // Apply the template if found
+     if (applicablePlacement) {
+       lesson.templateId = applicablePlacement.templateId;
+       console.log(`📄 Auto-applied template "${applicablePlacement.templateName}" to Lesson ${lessonNumber}`);
+     }
+   });
  }
 
  private getTemplatePlacementsForModule(
@@ -1685,16 +2016,6 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
      }
      return false;
    });
- }
-
- private getTemplatePlacementsForLesson(
-   lessonNumber: number,
- ): TemplatePlacementConfig[] {
-   return this.templatePlacements.filter(
-     (placement) =>
-       placement.placementType === "specific-lessons" &&
-       (placement.lessonNumbers ?? []).includes(lessonNumber),
-   );
  }
 
  private getTemplatePlacementsForCourseEnd(): TemplatePlacementConfig[] {
@@ -1837,7 +2158,9 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
      placementType !== "end-of-each-module" &&
      placementType !== "specific-modules" &&
     placementType !== "specific-lessons" &&
-     placementType !== "end-of-course"
+     placementType !== "end-of-course" &&
+     placementType !== "all-lessons" &&
+     placementType !== "lesson-ranges"
    ) {
      return null;
    }
@@ -1854,6 +2177,20 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
         .filter((value: number) => !Number.isNaN(value))
     : undefined;
 
+   const lessonRanges = Array.isArray(raw.lessonRanges)
+     ? raw.lessonRanges
+         .filter((range: any) => 
+           typeof range === "object" && 
+           range !== null &&
+           typeof range.start === "number" &&
+           typeof range.end === "number"
+         )
+         .map((range: any) => ({
+           start: Number(range.start),
+           end: Number(range.end),
+         }))
+     : undefined;
+
    return {
      templateId: rawTemplateId,
      templateSlug:
@@ -1867,6 +2204,7 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
      placementType,
      moduleNumbers,
     lessonNumbers,
+    lessonRanges,
    };
  }
 
@@ -2811,17 +3149,46 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
  }
 
   private renderCurriculumPreview(): void {
-    const previewContainer = this.curriculumPreviewSection.querySelector(
-      ".editable-surface",
-    );
-    if (!previewContainer || !Array.isArray(this.currentCurriculum)) return;
+    // Render into both preview sections if they exist
+    const curriculumPreview = document.querySelector(
+      "#curriculum .curriculum__preview",
+    ) as HTMLElement;
+    const generationPreview = document.querySelector(
+      "#generation .curriculum__preview",
+    ) as HTMLElement;
+    
+    const previewSections = [curriculumPreview, generationPreview].filter(Boolean);
+    
+    if (previewSections.length === 0 || !Array.isArray(this.currentCurriculum)) return;
+    
+    // Process each preview section
+    previewSections.forEach((previewSection) => {
+      const previewContainer = previewSection.querySelector(
+        ".editable-surface",
+      );
+      if (!previewContainer) return;
 
-    const placeholder = this.curriculumPreviewSection.querySelector(
-      "#curriculum-preview-placeholder",
-    ) as HTMLElement | null;
-    if (placeholder) {
-      placeholder.hidden = this.currentCurriculum.length > 0;
-    }
+      const placeholder = previewSection.querySelector(
+        "#curriculum-preview-placeholder",
+      ) as HTMLElement | null;
+      if (placeholder) {
+        placeholder.hidden = this.currentCurriculum.length > 0;
+      }
+      
+      // Store the current preview container for this render pass
+      const originalSection = this.curriculumPreviewSection;
+      this.curriculumPreviewSection = previewSection;
+      
+      // Render content (will be done after this block)
+      this.renderPreviewContent(previewContainer);
+      
+      // Restore original section reference
+      this.curriculumPreviewSection = originalSection;
+    });
+  }
+  
+  private renderPreviewContent(previewContainer: Element): void {
+    if (!Array.isArray(this.currentCurriculum)) return;
    
    // Enhanced debugging for preview rendering
    console.log('🎨 Rendering curriculum preview with data:', {
@@ -2915,11 +3282,6 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
                  </h3>
                  ${this.renderLessonTemplateSelector(lesson)}
                </div>`;
-
-           const lessonPlacements = this.getTemplatePlacementsForLesson(lesson.lessonNumber);
-           lessonPlacements.forEach((placement) => {
-             html += this.renderTemplateBlock(placement, "lesson", module, lesson);
-           });
          });
 
          html += `
@@ -3164,23 +3526,8 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
          html += `</div>`;
        }
 
-        const lessonPlacements = this.getTemplatePlacementsForLesson(lesson.lessonNumber);
-        if (lessonPlacements.length) {
-          const moduleNumberForLesson = lessonToModuleNumber.get(lesson.lessonNumber);
-          const moduleContextForLesson =
-            typeof moduleNumberForLesson === "number"
-              ? moduleByNumber.get(moduleNumberForLesson)
-              : undefined;
-
-          lessonPlacements.forEach((placement) => {
-            html += this.renderTemplateBlock(
-              placement,
-              "lesson",
-              moduleContextForLesson,
-              lesson,
-            );
-          });
-        }
+        // Lesson templates are now applied via lesson.templateId and shown in the dropdown
+        // No need to render template blocks after lessons anymore
 
         const moduleNumber = lessonToModuleNumber.get(lesson.lessonNumber);
         if (
