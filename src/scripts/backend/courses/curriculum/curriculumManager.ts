@@ -2127,21 +2127,67 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
      : '';
 
    const badgeHtml = currentTemplate
-     ? `<span class="lesson__template-badge ${accentClass}">${this.escapeHtml(currentTemplate.type || 'Template')}</span>`
-     : '';
+     ? `<span class="lesson__template-badge ${accentClass}">${this.escapeHtml(currentTemplate.type || "Template")}</span>`
+     : "";
+
+   const selectId = `lesson-template-${lesson.lessonNumber}`;
 
    return `
      <div class="lesson__template-selector">
-       <label class="lesson__template-label">
-         <span class="lesson__template-label-text">Template:</span>
-         <select class="lesson__template-dropdown input input--select" data-lesson-number="${lesson.lessonNumber}">
+       <label class="lesson__template-label" for="${selectId}">
+         <span class="lesson__template-label-text">Template</span>
+       </label>
+       <div class="lesson__template-controls">
+         <select
+           id="${selectId}"
+           class="lesson__template-dropdown input input--select"
+           data-lesson-number="${lesson.lessonNumber}">
            ${optionsHtml}
          </select>
-       </label>
-       ${badgeHtml}
+         ${badgeHtml}
+       </div>
      </div>
    `;
  }
+
+  private renderLessonHeader(
+    lesson: CurriculumLesson,
+    options: {
+      titleEditable: boolean;
+      placeholder?: string;
+      showTemplateSelector?: boolean;
+    },
+  ): string {
+    const { titleEditable, placeholder, showTemplateSelector = true } = options;
+    const lessonNumber = lesson.lessonNumber ?? 0;
+    const lessonTitle = lesson.title ? lesson.title.trim() : "";
+    const rawTitle = lessonTitle.length
+      ? this.escapeHtml(lessonTitle)
+      : `Lesson ${lessonNumber}`;
+    const placeholderText = placeholder || "Click to add lesson title...";
+    const placeholderAttr = titleEditable
+      ? ` data-placeholder="${this.escapeHtml(placeholderText)}"`
+      : "";
+    const templateControls = showTemplateSelector
+      ? this.renderLessonTemplateSelector(lesson)
+      : "";
+
+    return `
+      <div class="lesson__header">
+        <div class="lesson__title-block">
+          <span class="lesson__chip" aria-hidden="true">Lesson ${lessonNumber}</span>
+          <h3
+            class="lesson__title"
+            contenteditable="${titleEditable ? "true" : "false"}"
+            data-lesson="${lessonNumber}"
+            data-field="title"${placeholderAttr}>
+            ${rawTitle}
+          </h3>
+        </div>
+        ${templateControls}
+      </div>
+    `;
+  }
 
  private normalizeTemplatePlacement(raw: any): TemplatePlacementConfig | null {
    if (!raw) {
@@ -3261,43 +3307,62 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
        // Render modules with their lessons
       modulesForPreview.forEach((module) => {
         const moduleNumber = typeof module.moduleNumber === "number" ? module.moduleNumber : 1;
-         html += `
-           <div class="module">
-             <h2 class="module__title heading heading--xlarge text--primary" contenteditable="true"
-                data-module="${moduleNumber}" data-field="title"
-                 data-placeholder="Click to add module title...">
-               ${module.title || `Module ${moduleNumber}`}
-             </h2>
-             <div class="module__meta">
-               <span class="badge badge--info">${module.lessons.length} lessons</span>
-             </div>
-             <div class="module__lessons">`;
-         
-         module.lessons.forEach((lesson) => {
-           html += `
-               <div class="lesson lesson--in-module">
-                 <h3 class="lesson__title heading heading--medium text--secondary" contenteditable="false"
-                     data-lesson="${lesson.lessonNumber}" data-field="title">
-                   ${lesson.title || `Lesson ${lesson.lessonNumber}`}
-                 </h3>
-                 ${this.renderLessonTemplateSelector(lesson)}
-               </div>`;
-         });
+        const moduleTitleSource = module.title ? module.title.trim() : "";
+        const moduleTitle = moduleTitleSource.length
+          ? this.escapeHtml(moduleTitleSource)
+          : `Module ${moduleNumber}`;
 
-         html += `
-             </div>`;
+        html += `
+          <div class="module">
+            <div class="module__header">
+              <div class="module__title-block">
+                <span class="module__chip" aria-hidden="true">Module ${moduleNumber}</span>
+                <h2
+                  class="module__title"
+                  contenteditable="true"
+                  data-module="${moduleNumber}"
+                  data-field="title"
+                  data-placeholder="Click to add module title...">
+                  ${moduleTitle}
+                </h2>
+              </div>
+              <div class="module__meta">
+                <span class="module__meta-item">${module.lessons.length} lessons</span>
+              </div>
+            </div>
+            <div class="module__body">
+              <div class="module__lessons">`;
 
-         const modulePlacements = this.getTemplatePlacementsForModule(moduleNumber);
-         modulePlacements.forEach((placement) => {
-           html += this.renderTemplateBlock(placement, "module", {
-             ...module,
-             moduleNumber,
-           });
-         });
+        module.lessons.forEach((lesson) => {
+          const lessonHeader = this.renderLessonHeader(lesson, {
+            titleEditable: false,
+          });
 
-         html += `
-           </div>`;
-       });
+          html += `
+                <div class="lesson lesson--in-module">
+                  ${lessonHeader}
+                </div>`;
+        });
+
+        html += `
+              </div>`;
+
+        const modulePlacements = this.getTemplatePlacementsForModule(moduleNumber);
+        if (modulePlacements.length) {
+          html += `<div class="module__templates">`;
+          modulePlacements.forEach((placement) => {
+            html += this.renderTemplateBlock(placement, "module", {
+              ...module,
+              moduleNumber,
+            });
+          });
+          html += `</div>`;
+        }
+
+        html += `
+            </div>
+          </div>`;
+      });
 
        courseEndPlacements.forEach((placement) => {
          html += this.renderTemplateBlock(placement, "course");
@@ -3305,26 +3370,36 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
      }
    } else {
      this.currentCurriculum.forEach((lesson) => {
+       const lessonHeader = this.renderLessonHeader(lesson, {
+         titleEditable:
+           this.currentPreviewMode === "all" || this.currentPreviewMode === "titles",
+         placeholder: "Click to add lesson title...",
+       });
+
        if (this.currentPreviewMode === "all") {
          // Complete lesson template structure - ALL elements editable
+         const metaItems: string[] = [];
+         if (this.scheduledLessonDuration) {
+           metaItems.push(
+             `<span class="lesson__meta-item lesson__meta-item--duration">${this.scheduledLessonDuration} minutes</span>`,
+           );
+         }
+         metaItems.push(
+           `<span class="lesson__meta-item lesson__meta-item--topics">${lesson.topics.length} topics</span>`,
+         );
+         const metaHtml = metaItems.length
+           ? `<div class="lesson__meta">${metaItems.join("")}</div>`
+           : "";
+
          html += `
            <div class="lesson">
-             <h3 class="lesson__title heading heading--large text--primary" contenteditable="true" 
-                  data-lesson="${lesson.lessonNumber}" data-field="title" placeholder="Enter lesson title...">
-               ${lesson.title || `Lesson ${lesson.lessonNumber}`}
-             </h3>
-             
-             ${this.renderLessonTemplateSelector(lesson)}
-             
-             <div class="lesson__meta">
-               <span class="badge badge--secondary">${this.scheduledLessonDuration} minutes</span>
-               <span class="badge badge--info">${lesson.topics.length} topics</span>
-             </div>`;
-         
+             ${lessonHeader}
+             ${metaHtml}`;
+
          lesson.topics.forEach((topic, topicIndex) => {
            html += `
              <div class="topic">
-               <h4 class="topic__title heading heading--medium text--secondary" contenteditable="true" 
+               <h4 class="topic__title" contenteditable="true" 
                     data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title"
                     data-placeholder="Click to add topic title...">
                  ${topic.title || `Topic ${topicIndex + 1}`}
@@ -3336,7 +3411,7 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
              html += `
                  <div class="objective-group">
                    <div class="objective-title">
-                     <span class="objective-text text--secondary" contenteditable="true" 
+                     <span class="objective-text" contenteditable="true" 
                            data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}"
                            data-placeholder="Click to add learning objective...">
                        ${objective || `Objective ${objIndex + 1}`}
@@ -3358,7 +3433,7 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
                  for (let taskIdx = startTaskIndex; taskIdx < endTaskIndex; taskIdx++) {
                    if (topic.tasks[taskIdx] !== undefined) {
                      html += `
-                         <li class="text--tertiary" contenteditable="true" 
+                         <li class="task-item task-item--editable" contenteditable="true" 
                              data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-task="${taskIdx}"
                              data-placeholder="Click to add task...">
                            ${topic.tasks[taskIdx] || `Task ${(taskIdx % tasksPerObjective) + 1}`}
@@ -3387,28 +3462,19 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
          // Just lesson titles - ONLY editable lesson titles
          html += `
            <div class="lesson lesson--simple">
-             <h3 class="lesson__title heading heading--large text--primary" contenteditable="true" 
-                  data-lesson="${lesson.lessonNumber}" data-field="title"
-                  data-placeholder="Click to add lesson title...">
-               ${lesson.title || `Lesson ${lesson.lessonNumber}`}
-             </h3>
-             ${this.renderLessonTemplateSelector(lesson)}
+             ${lessonHeader}
            </div>`;
            
        } else if (this.currentPreviewMode === "topics") {
          // Lessons with topics - lesson titles NOT editable, only topic titles
          html += `
            <div class="lesson lesson--medium">
-             <h3 class="lesson__title heading heading--large text--primary" contenteditable="false" 
-                  data-lesson="${lesson.lessonNumber}" data-field="title">
-               ${lesson.title || `Lesson ${lesson.lessonNumber}`}
-             </h3>
-             ${this.renderLessonTemplateSelector(lesson)}`;
+             ${lessonHeader}`;
              
          lesson.topics.forEach((topic, topicIndex) => {
            html += `
              <div class="topic topic--simple">
-               <h4 class="topic__title heading heading--medium text--secondary" contenteditable="true" 
+               <h4 class="topic__title" contenteditable="true" 
                     data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title"
                     data-placeholder="Click to add topic title...">
                  ${topic.title || `Topic ${topicIndex + 1}`}
@@ -3422,16 +3488,12 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
          // Lessons with topics and objectives - ONLY objectives editable
          html += `
            <div class="lesson lesson--detailed">
-             <h3 class="lesson__title heading heading--large text--primary" contenteditable="false" 
-                  data-lesson="${lesson.lessonNumber}" data-field="title">
-               ${lesson.title || `Lesson ${lesson.lessonNumber}`}
-             </h3>
-             ${this.renderLessonTemplateSelector(lesson)}`;
+             ${lessonHeader}`;
              
          lesson.topics.forEach((topic, topicIndex) => {
            html += `
              <div class="topic">
-               <h4 class="topic__title heading heading--medium text--secondary" contenteditable="false" 
+               <h4 class="topic__title" contenteditable="false" 
                     data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title">
                  ${topic.title || `Topic ${topicIndex + 1}`}
                </h4>
@@ -3442,7 +3504,7 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
              html += `
                  <div class="objective-group">
                    <div class="objective-title">
-                     <span class="objective-text text--secondary" contenteditable="true" 
+                     <span class="objective-text" contenteditable="true" 
                            data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}"
                            data-placeholder="Click to add learning objective...">
                        ${objective || `Objective ${objIndex + 1}`}
@@ -3462,16 +3524,12 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
          // Lessons with topics, objectives, and tasks - ONLY tasks editable
          html += `
            <div class="lesson lesson--full">
-             <h3 class="lesson__title heading heading--large text--primary" contenteditable="false" 
-                  data-lesson="${lesson.lessonNumber}" data-field="title">
-               ${lesson.title || `Lesson ${lesson.lessonNumber}`}
-             </h3>
-             ${this.renderLessonTemplateSelector(lesson)}`;
+             ${lessonHeader}`;
              
          lesson.topics.forEach((topic, topicIndex) => {
            html += `
              <div class="topic">
-               <h4 class="topic__title heading heading--medium text--secondary" contenteditable="false" 
+               <h4 class="topic__title" contenteditable="false" 
                     data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title">
                  ${topic.title || `Topic ${topicIndex + 1}`}
                </h4>
@@ -3482,7 +3540,7 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
              html += `
                  <div class="objective-group">
                    <div class="objective-title">
-                     <span class="objective-text text--secondary" contenteditable="false" 
+                     <span class="objective-text" contenteditable="false" 
                            data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}">
                        ${objective || `Objective ${objIndex + 1}`}
                      </span>
@@ -3501,7 +3559,7 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
                for (let taskIdx = startTaskIndex; taskIdx < endTaskIndex; taskIdx++) {
                  if (topic.tasks[taskIdx] !== undefined) {
                    html += `
-                         <li class="task-item text--tertiary" contenteditable="true" 
+                         <li class="task-item task-item--editable" contenteditable="true" 
                              data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-task="${taskIdx}"
                              data-placeholder="Click to add task...">
                            ${topic.tasks[taskIdx] || `Task ${(taskIdx % tasksPerObjective) + 1}`}
