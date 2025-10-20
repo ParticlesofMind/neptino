@@ -24,6 +24,7 @@ import { canvasDimensionManager } from './utils/CanvasDimensionManager';
 import { canvasMarginManager } from './canvas/CanvasMarginManager';
 import { FloatingElementsManager } from './ui/FloatingElementsManager';
 import { initCanvasBaseContextMenu } from './ui/CanvasBaseContextMenu';
+import { initializeCurriculumNavigationPanel } from './ui/CurriculumNavigationPanel';
 
 
 // Global canvas instance
@@ -184,6 +185,15 @@ export async function initializeCanvas(): Promise<void> {
         // Initialize Panel Manager (handles tabbed panel switching)
         const panelManager = new PanelManager();
         (window as any).panelManager = panelManager;
+
+        try {
+            const navPanel = initializeCurriculumNavigationPanel();
+            if (navPanel) {
+                (window as any).curriculumNavigationPanel = navPanel;
+            }
+        } catch (error) {
+            console.warn('Failed to initialize curriculum navigation panel:', error);
+        }
 
         // Clean architecture: All UI events are handled through ToolStateManager
         // No callbacks needed - ToolStateManager directly manages canvas state

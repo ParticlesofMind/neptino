@@ -228,4 +228,34 @@
             background: var(--color-primary-100);
         }
     }
+
+    &__module {
+        display: grid;
+        gap: var(--spacing-2);
+    }
+
+    &__item--module {
+        background: var(--color-neutral-100);
+        border-color: var(--color-neutral-300);
+    }
+
+    &__item--lesson {
+        margin-left: var(--spacing-3);
+        background: var(--color-neutral-0, #ffffff);
+        border-color: var(--color-neutral-200);
+    }
+
+    &__item--lesson strong {
+        display: block;
+    }
+
+    &__item--lesson p {
+        font-size: 0.75rem;
+        color: var(--color-neutral-500);
+    }
+
+    &__meta {
+        color: var(--color-neutral-500);
+        font-size: 0.75rem;
+    }
 }

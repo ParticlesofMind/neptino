@@ -278,7 +278,8 @@ class CurriculumManager {
      console.log('│ 📋 1. COURSE ESSENTIALS                                     │');
      console.log('└─────────────────────────────────────────────────────────────┘');
      console.log('Course ID:', courseData.id);
-     console.log('Course Title:', courseData.title);
+    const courseName = courseData.course_name || courseData.title || 'Untitled Course';
+    console.log('Course Title:', courseName);
      console.log('Course Tagline:', courseData.tagline);
      console.log('Teacher ID:', courseData.teacher_id);
      console.log('Teacher Profile:', teacherProfile || 'Not loaded');
@@ -323,7 +324,12 @@ class CurriculumManager {
      console.log('\n┌─────────────────────────────────────────────────────────────┐');
      console.log('│ 📚 5. CONTENT STRUCTURE (Curriculum Data)                  │');
      console.log('└─────────────────────────────────────────────────────────────┘');
-     console.log('Curriculum Data:', courseData.curriculum_data);
+    console.log('Curriculum Data Summary:', {
+      hasData: !!courseData.curriculum_data,
+      modulesCount: courseData.curriculum_data?.modules?.length || 0,
+      lessonsCount: courseData.curriculum_data?.lessons?.length || 0,
+      templatePlacements: courseData.curriculum_data?.templatePlacements?.length || 0,
+    });
      
      if (courseData.curriculum_data) {
        console.log('\nCurriculum Structure:');
@@ -391,7 +397,7 @@ class CurriculumManager {
      const completeContext = {
        courseEssentials: {
          id: courseData.id,
-         title: courseData.title,
+         course_name: courseName,
          tagline: courseData.tagline,
          teacher_id: courseData.teacher_id,
          teacherProfile: teacherProfile,
@@ -454,7 +460,12 @@ class CurriculumManager {
        }
      };
 
-     console.log(JSON.stringify(completeContext, null, 2));
+    const serializedContext = JSON.stringify(completeContext, null, 2);
+    if (serializedContext.length > 10240) {
+      console.log(serializedContext.slice(0, 10240) + '\n... [truncated]');
+    } else {
+      console.log(serializedContext);
+    }
      
      console.log('\n');
      console.log('═'.repeat(80));
@@ -3135,10 +3146,90 @@ private resolveTemplateAccentClass(templateId: string | null | undefined): strin
    }
 
    this.syncTemplatePlacementsWithModules();
-  this.syncTemplatePlacementsWithLessons();
+   this.syncTemplatePlacementsWithLessons();
    this.renderTemplatePlacementUI();
 
- } private setPreviewMode(mode: PreviewMode): void {
+   await this.ensureLessonCanvases(curriculum);
+
+   document.dispatchEvent(
+     new CustomEvent('curriculumDataUpdated', {
+       detail: { courseId: this.courseId },
+     }),
+   );
+  }
+
+  private async ensureLessonCanvases(curriculum: CurriculumLesson[]): Promise<void> {
+    if (!this.courseId || !Array.isArray(curriculum) || curriculum.length === 0) {
+      return;
+    }
+
+    try {
+      const { data: existingCanvases, error } = await supabase
+        .from('canvases')
+        .select('lesson_number, canvas_index')
+        .eq('course_id', this.courseId);
+
+      if (error) {
+        console.warn('⚠️ Failed to load existing canvases for sync:', error);
+        return;
+      }
+
+      const lessonsWithCanvas = new Set<number>();
+      existingCanvases?.forEach((canvas) => {
+        if (typeof canvas.lesson_number === 'number') {
+          lessonsWithCanvas.add(canvas.lesson_number);
+        }
+      });
+
+      const inserts = curriculum
+        .map((lesson, index) => {
+          const lessonNumber = typeof lesson.lessonNumber === 'number' ? lesson.lessonNumber : index + 1;
+          if (lessonsWithCanvas.has(lessonNumber)) {
+            return null;
+          }
+          return {
+            course_id: this.courseId,
+            lesson_number: lessonNumber,
+            canvas_index: 1,
+            canvas_metadata: {
+              title: lesson.title || `Lesson ${lessonNumber}`,
+              lessonNumber,
+              generated_at: new Date().toISOString(),
+              source: 'curriculum-sync',
+            },
+          };
+        })
+        .filter((record): record is {
+          course_id: string;
+          lesson_number: number;
+          canvas_index: number;
+          canvas_metadata: {
+            title: string;
+            lessonNumber: number;
+            generated_at: string;
+            source: string;
+          };
+        } => record !== null);
+
+      if (inserts.length === 0) {
+        return;
+      }
+
+      const { error: insertError } = await supabase
+        .from('canvases')
+        .insert(inserts);
+
+      if (insertError) {
+        console.error('❌ Failed to create placeholder canvases:', insertError);
+      } else {
+        console.log(`🖼️ Ensured ${inserts.length} lesson canvas${inserts.length === 1 ? '' : 'es'} exist for curriculum.`);
+      }
+    } catch (err) {
+      console.error('❌ Unexpected error while ensuring lesson canvases:', err);
+    }
+  }
+
+  private setPreviewMode(mode: PreviewMode): void {
    this.currentPreviewMode = mode;
    
    // Save to localStorage
