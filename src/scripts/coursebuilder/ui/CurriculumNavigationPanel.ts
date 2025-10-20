@@ -38,7 +38,6 @@ interface CurriculumResponse {
   course_sessions: number | null;
   schedule_settings: unknown[] | null;
   course_name?: string | null;
-  title?: string | null;
   updated_at: string | null;
 }
 
@@ -233,7 +232,7 @@ export class CurriculumNavigationPanel {
     const { data, error } = await supabase
       .from("courses")
       .select(
-        "curriculum_data, course_sessions, schedule_settings, course_name, title, updated_at",
+        "curriculum_data, course_sessions, schedule_settings, course_name, updated_at",
       )
       .eq("id", courseId)
       .maybeSingle<CurriculumResponse>();
@@ -277,8 +276,7 @@ export class CurriculumNavigationPanel {
       structure: payload.structure,
       updatedAt: data?.updated_at,
       courseTitle:
-        data?.course_name ??
-        (data?.title ?? null),
+        data?.course_name ?? null,
       scheduledSessions,
       estimatedCanvases,
     };
@@ -386,15 +384,6 @@ export class CurriculumNavigationPanel {
     heading.textContent = "Course Structure";
     this.content.appendChild(heading);
 
-    const descriptor = document.createElement("p");
-    descriptor.textContent = this.buildSummaryDescriptor(summary);
-    this.content.appendChild(descriptor);
-
-    const meta = document.createElement("p");
-    meta.className = "navigation-content__meta";
-    meta.textContent = this.buildMetaDescriptor(summary);
-    this.content.appendChild(meta);
-
     const lessons = this.toArray<CurriculumLesson>(summary.lessons);
     const normalizedModules = this.sanitizeModules(summary.modules);
     const modules = normalizedModules.length
@@ -405,79 +394,6 @@ export class CurriculumNavigationPanel {
       const moduleBlock = this.createModuleBlock(module, moduleIndex);
       this.content!.appendChild(moduleBlock);
     });
-  }
-
-  private buildSummaryDescriptor(summary: CurriculumSummary): string {
-    const modules = this.sanitizeModules(summary.modules);
-    const lessons = this.toArray<CurriculumLesson>(summary.lessons);
-    const moduleCount = modules.length
-      ? modules.length
-      : lessons.length > 0
-      ? 1
-      : 0;
-    const lessonCount = this.countLessons(modules, lessons);
-    const topicCount = this.countTopics(modules, lessons);
-    const title = summary.courseTitle
-      ? `${summary.courseTitle}`
-      : "Course curriculum";
-    const canvasCount = summary.estimatedCanvases;
-
-    const parts = [`${title}: ${lessonCount} lesson${lessonCount === 1 ? "" : "s"}`];
-    if (moduleCount) {
-      parts.push(`${moduleCount} module${moduleCount === 1 ? "" : "s"}`);
-    }
-    if (topicCount) {
-      parts.push(`${topicCount} topic${topicCount === 1 ? "" : "s"}`);
-    }
-    if (canvasCount) {
-      parts.push(`${canvasCount} planned canvas${canvasCount === 1 ? "" : "es"}`);
-    }
-    return parts.join(" · ");
-  }
-
-  private buildMetaDescriptor(summary: CurriculumSummary): string {
-    const scheduled = summary.scheduledSessions;
-    const modules = this.sanitizeModules(summary.modules);
-    const lessons = this.toArray<CurriculumLesson>(summary.lessons);
-    const lastUpdated = summary.updatedAt
-      ? this.formatRelativeTime(summary.updatedAt)
-      : "unknown";
-    const structureHint = summary.structure
-      ? this.describeStructure(summary.structure)
-      : "no structure settings saved";
-    const canvases = summary.estimatedCanvases;
-
-    const scheduledText = scheduled
-      ? `${scheduled} scheduled session${scheduled === 1 ? "" : "s"}`
-      : "schedule not configured";
-
-    const lessonCount = this.countLessons(modules, lessons);
-    const lessonText = lessonCount
-      ? `${lessonCount} lesson${lessonCount === 1 ? "" : "s"}`
-      : "no lessons yet";
-    const canvasText = canvases
-      ? `${canvases} canvas${canvases === 1 ? "" : "es"} currently planned`
-      : "planned canvases not set";
-
-    return `Last synced ${lastUpdated} · ${scheduledText} · ${lessonText} · ${canvasText} · ${structureHint}`;
-  }
-
-  private describeStructure(structure: CurriculumStructure): string {
-    const { topicsPerLesson, objectivesPerTopic, tasksPerObjective } =
-      structure;
-    const parts: string[] = [];
-
-    if (typeof topicsPerLesson === "number") {
-      parts.push(`${topicsPerLesson} topic${topicsPerLesson === 1 ? "" : "s"} per lesson`);
-    }
-    if (typeof objectivesPerTopic === "number") {
-      parts.push(`${objectivesPerTopic} objective${objectivesPerTopic === 1 ? "" : "s"} per topic`);
-    }
-    if (typeof tasksPerObjective === "number") {
-      parts.push(`${tasksPerObjective} task${tasksPerObjective === 1 ? "" : "s"} per objective`);
-    }
-
-    return parts.length ? parts.join(" · ") : "structure defaults not set";
   }
 
   private wrapLessons(lessons: CurriculumLesson[]): CurriculumModule[] {
@@ -621,46 +537,6 @@ export class CurriculumNavigationPanel {
     return Array.isArray(value) ? (value as T[]) : [];
   }
 
-  private formatRelativeTime(timestamp: string): string {
-    const updated = new Date(timestamp);
-    if (Number.isNaN(updated.getTime())) {
-      return "recently";
-    }
-
-    const diffMs = Date.now() - updated.getTime();
-    const diffMinutes = Math.round(diffMs / 60000);
-
-    if (diffMinutes < 1) {
-      return "just now";
-    }
-    if (diffMinutes === 1) {
-      return "1 minute ago";
-    }
-    if (diffMinutes < 60) {
-      return `${diffMinutes} minutes ago`;
-    }
-
-    const diffHours = Math.round(diffMinutes / 60);
-    if (diffHours === 1) {
-      return "1 hour ago";
-    }
-    if (diffHours < 24) {
-      return `${diffHours} hours ago`;
-    }
-
-    const diffDays = Math.round(diffHours / 24);
-    if (diffDays === 1) {
-      return "1 day ago";
-    }
-    if (diffDays < 7) {
-      return `${diffDays} days ago`;
-    }
-
-    return updated.toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-    });
-  }
 }
 
 export function initializeCurriculumNavigationPanel(): CurriculumNavigationPanel | null {
