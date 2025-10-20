@@ -1,4 +1,5 @@
 import { supabase } from "../../supabase.js";
+import { TEMPLATE_TYPE_LABELS } from "../templates/templateOptions.js";
 
 // Module organization types
 export type ModuleOrganizationType = "linear" | "equal" | "tiered" | "custom";
@@ -65,6 +66,31 @@ interface TemplateSummary {
   type: string;
   description?: string | null;
   isMissing?: boolean;
+  scope?: "course" | "global";
+  definition?: TemplateDefinition;
+}
+
+interface TemplateDefinitionBlock {
+  id: string;
+  type: string;
+  order: number;
+  config: Record<string, unknown>;
+  content: string;
+}
+
+interface TemplateDefinition {
+  name?: string | null;
+  blocks: TemplateDefinitionBlock[];
+  settings: Record<string, unknown>;
+}
+
+interface TemplateRecord {
+  id: string;
+  template_id: string;
+  template_type: string;
+  template_description?: string | null;
+  template_data?: TemplateDefinition | null;
+  course_id?: string | null;
 }
 interface CurriculumStructureConfig {
   durationType?: "mini" | "single" | "double" | "triple" | "halfFull";
@@ -117,7 +143,31 @@ class CurriculumManager {
     "template-accent--teal",
     "template-accent--rose",
     "template-accent--slate",
+    "template-accent--cobalt",
+    "template-accent--mint",
+    "template-accent--sunset",
+    "template-accent--gold",
   ];
+  private readonly templateAccentByType: Record<string, string> = {
+    lesson: "template-accent--sky",
+    quiz: "template-accent--violet",
+    feedback: "template-accent--amber",
+    assessment: "template-accent--teal",
+    report: "template-accent--rose",
+    review: "template-accent--slate",
+    project: "template-accent--cobalt",
+    module_orientation: "template-accent--mint",
+    course_orientation: "template-accent--sunset",
+    certificate: "template-accent--gold",
+  };
+  private readonly defaultCanvasDimensions = { width: 1200, height: 1800 };
+  private readonly defaultCanvasMargins = {
+    top: 96,
+    right: 96,
+    bottom: 96,
+    left: 96,
+    unit: "px" as const,
+  };
 
   // Duration presets with default values and rationale
   private readonly durationPresets: Record<string, DurationPreset> = {
@@ -225,6 +275,9 @@ class CurriculumManager {
 
       // Load template placement data once curriculum context is ready
       await this.loadTemplatePlacementData();
+
+      // Ensure lesson canvases exist for the current curriculum and schedule.
+      await this.ensureLessonCanvases(this.currentCurriculum);
 
       // Sync course type UI (in case no curriculum was loaded)
       this.syncCourseTypeUI();
@@ -1144,9 +1197,9 @@ class CurriculumManager {
     const { data, error } = await supabase
       .from("templates")
       .select(
-        "id, template_id, template_description, template_type, template_data",
+        "id, template_id, template_description, template_type, template_data, course_id",
       )
-      .eq("course_id", this.courseId);
+      .or(`course_id.eq.${this.courseId},course_id.is.null`);
 
     if (error) {
       throw error;
@@ -1163,15 +1216,28 @@ class CurriculumManager {
           typeof templateData.name === "string" && templateData.name.trim().length
             ? templateData.name.trim()
             : template.template_id;
+        const rawType =
+          typeof template.template_type === "string" && template.template_type.trim().length
+            ? template.template_type.trim()
+            : "lesson";
+        const scope: "course" | "global" = template.course_id ? "course" : "global";
+        const definition = this.normalizeTemplateDefinition(template.template_data);
         return {
           id: template.id,
           templateId: template.template_id,
           name,
-          type: template.template_type,
+          type: rawType,
           description: template.template_description,
+          scope,
+          definition,
         } as TemplateSummary;
       })
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => {
+        if (a.scope !== b.scope) {
+          return a.scope === "course" ? -1 : 1;
+        }
+        return a.name.localeCompare(b.name);
+      });
   }
 
   private syncTemplatePlacementsWithTemplates(): void {
@@ -1265,7 +1331,10 @@ class CurriculumManager {
         const isLessonTemplate = template.type === "lesson";
         const accentClass = template.isMissing
           ? ""
-          : this.resolveTemplateAccentClass(template.id || template.templateId);
+          : this.resolveTemplateAccentClass(
+            template.type,
+            template.id || template.templateId,
+          );
         const cardClassName = [
           "template-placement-card",
           accentClass,
@@ -1275,7 +1344,14 @@ class CurriculumManager {
           .join(" ");
         const typeLabel = template.type === "missing"
           ? "Missing template"
-          : template.type;
+          : this.formatTemplateType(template.type);
+        const scopeLabel =
+          template.isMissing || !template.scope
+            ? null
+            : template.scope === "global"
+            ? "Global template"
+            : "Course template";
+        const metaLabel = [typeLabel, scopeLabel].filter(Boolean).join(" · ");
 
         const optionClass = (value: TemplatePlacementChoice): string =>
           [
@@ -1358,7 +1434,7 @@ class CurriculumManager {
                  ${choice === "all-lessons" && isLessonTemplate ? '<span class="template-placement-card__main-tag">(main)</span>' : ''}
                </h4>
                <p class="template-placement-card__meta">${this.escapeHtml(
-          typeLabel ?? "",
+          metaLabel || typeLabel || "",
         )}</p>
              </div>
              <button type="button" class="template-placement-card__toggle" aria-label="Toggle template details" aria-expanded="false" data-template-toggle>
@@ -1839,22 +1915,586 @@ class CurriculumManager {
     return this.availableTemplates.find((template) => template.id === templateId);
   }
 
-  private resolveTemplateAccentClass(templateId: string | null | undefined): string {
+  private normalizeTemplateDefinition(raw: unknown): TemplateDefinition {
+    if (!raw || typeof raw !== "object") {
+      return {
+        name: null,
+        blocks: [],
+        settings: {},
+      };
+    }
+
+    const payload = raw as Record<string, unknown>;
+    const name =
+      typeof payload.name === "string" && payload.name.trim().length
+        ? payload.name.trim()
+        : null;
+    const settings =
+      payload.settings && typeof payload.settings === "object" && !Array.isArray(payload.settings)
+        ? (payload.settings as Record<string, unknown>)
+        : {};
+
+    const rawBlocks = Array.isArray(payload.blocks) ? payload.blocks : [];
+    const blocks = rawBlocks
+      .map((block, index) => this.normalizeTemplateBlock(block, index))
+      .filter((block): block is TemplateDefinitionBlock => block !== null)
+      .sort((a, b) => a.order - b.order);
+
+    return {
+      name,
+      blocks,
+      settings,
+    };
+  }
+
+  private normalizeTemplateBlock(raw: unknown, fallbackIndex = 0): TemplateDefinitionBlock | null {
+    if (!raw || typeof raw !== "object") {
+      return null;
+    }
+
+    const block = raw as Record<string, unknown>;
+    const type =
+      typeof block.type === "string" && block.type.trim().length
+        ? block.type.trim()
+        : "content";
+    const id =
+      typeof block.id === "string" && block.id.trim().length
+        ? block.id.trim()
+        : `${type}-${fallbackIndex + 1}`;
+    const order =
+      typeof block.order === "number" && Number.isFinite(block.order)
+        ? block.order
+        : fallbackIndex;
+    const config =
+      block.config && typeof block.config === "object" && !Array.isArray(block.config)
+        ? (block.config as Record<string, unknown>)
+        : {};
+    const content = typeof block.content === "string" ? block.content : "";
+
+    return {
+      id,
+      type,
+      order,
+      config,
+      content,
+    };
+  }
+
+  private createFallbackBlock(
+    blockType: "header" | "footer",
+    lessonNumber: number,
+    lessonTitle: string,
+  ): TemplateDefinitionBlock {
+    if (blockType === "header") {
+      return {
+        id: `fallback-header-${lessonNumber}`,
+        type: "header",
+        order: -100,
+        config: {
+          showTitle: true,
+          showSubtitle: true,
+        },
+        content: lessonTitle,
+      };
+    }
+
+    return {
+      id: `fallback-footer-${lessonNumber}`,
+      type: "footer",
+      order: 1000,
+      config: {
+        showSignature: false,
+      },
+      content: "Reflection & next steps",
+    };
+  }
+
+  private resolveLessonTemplateId(
+    lesson: CurriculumLesson | null | undefined,
+  ): string | null {
+    if (!lesson) {
+      return null;
+    }
+
+    const templateId =
+      typeof lesson.templateId === "string" && lesson.templateId.trim().length
+        ? lesson.templateId.trim()
+        : null;
+
+    return templateId;
+  }
+
+  private getCanvasDimensions(): { width: number; height: number } {
+    try {
+      const dimensionManager = (window as any)?.canvasSystem?.dimensionManager;
+      if (
+        dimensionManager &&
+        typeof dimensionManager.getCurrentDimensions === "function"
+      ) {
+        const dims = dimensionManager.getCurrentDimensions();
+        if (
+          this.isValidPositiveNumber(dims?.width) &&
+          this.isValidPositiveNumber(dims?.height)
+        ) {
+          return { width: dims.width, height: dims.height };
+        }
+      }
+    } catch {
+      /* empty */
+    }
+
+    try {
+      const api = (window as any)?.canvasAPI;
+      if (api && typeof api.getDimensions === "function") {
+        const dims = api.getDimensions();
+        if (
+          this.isValidPositiveNumber(dims?.width) &&
+          this.isValidPositiveNumber(dims?.height)
+        ) {
+          return { width: dims.width, height: dims.height };
+        }
+      }
+    } catch {
+      /* empty */
+    }
+
+    return { ...this.defaultCanvasDimensions };
+  }
+
+  private resolveCanvasMargins(): {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+    unit: string;
+  } {
+    const fallback = { ...this.defaultCanvasMargins };
+
+    try {
+      const marginManager =
+        (window as any)?.canvasSystem?.marginManager ??
+        (window as any)?.canvasMarginManager;
+
+      if (marginManager && typeof marginManager.getMargins === "function") {
+        const margins = marginManager.getMargins();
+        if (
+          margins &&
+          this.isValidPositiveNumber(margins.top) &&
+          this.isValidPositiveNumber(margins.right) &&
+          this.isValidPositiveNumber(margins.bottom) &&
+          this.isValidPositiveNumber(margins.left)
+        ) {
+          return {
+            top: margins.top,
+            right: margins.right,
+            bottom: margins.bottom,
+            left: margins.left,
+            unit: typeof margins.unit === "string" ? margins.unit : "px",
+          };
+        }
+      }
+    } catch (error) {
+      console.warn(
+        "Unable to resolve canvas margins, using defaults instead:",
+        error,
+      );
+    }
+
+    return fallback;
+  }
+
+  private buildLessonCanvasPayload(
+    lesson: CurriculumLesson,
+    template: TemplateRecord | null | undefined,
+    lessonNumberFallback: number,
+  ): {
+    canvasData: Record<string, unknown>;
+    canvasMetadata: Record<string, unknown>;
+  } {
+    const lessonNumber =
+      typeof lesson.lessonNumber === "number" && lesson.lessonNumber > 0
+        ? lesson.lessonNumber
+        : lessonNumberFallback;
+    const lessonTitle =
+      typeof lesson.title === "string" && lesson.title.trim().length
+        ? lesson.title.trim()
+        : `Lesson ${lessonNumber}`;
+    const moduleNumber =
+      typeof lesson.moduleNumber === "number" && lesson.moduleNumber > 0
+        ? lesson.moduleNumber
+        : null;
+
+    const dimensions = this.getCanvasDimensions();
+    const margins = this.resolveCanvasMargins();
+
+    const definition =
+      template?.template_data && Array.isArray(template.template_data.blocks)
+        ? template.template_data
+        : this.normalizeTemplateDefinition(template?.template_data ?? null);
+
+    const headerBlock =
+      definition.blocks.find((block) => block.type === "header") ??
+      this.createFallbackBlock("header", lessonNumber, lessonTitle);
+    const footerBlock =
+      definition.blocks.find((block) => block.type === "footer") ??
+      this.createFallbackBlock("footer", lessonNumber, lessonTitle);
+    const bodyBlocks = definition.blocks.filter(
+      (block) => block.type !== "header" && block.type !== "footer",
+    );
+
+    const templateInfo = template
+      ? {
+          id: template.id,
+          slug: template.template_id,
+          type: template.template_type,
+          name: definition.name || template.template_id,
+          scope: template.course_id ? "course" : "global",
+          description: template.template_description ?? null,
+        }
+      : null;
+
+    const layout = this.buildYogaLayoutTree({
+      dimensions,
+      margins,
+      headerBlock,
+      footerBlock,
+      bodyBlocks,
+      lesson,
+    });
+
+    const structureSummary = this.summarizeLessonStructure(lesson);
+
+    const canvasData = {
+      version: "2025.03.01",
+      engine: "pixi-yoga",
+      dimensions,
+      margins,
+      template: templateInfo,
+      lesson: {
+        number: lessonNumber,
+        title: lessonTitle,
+        moduleNumber,
+      },
+      layout,
+    };
+
+    const canvasMetadata = {
+      title: lessonTitle,
+      lessonNumber,
+      moduleNumber,
+      generatedAt: new Date().toISOString(),
+      template: templateInfo,
+      layoutEngine: "pixi-yoga",
+      dimensions,
+      margins,
+      structure: structureSummary,
+      header: {
+        blockId: headerBlock.id,
+        type: headerBlock.type,
+      },
+      footer: {
+        blockId: footerBlock.id,
+        type: footerBlock.type,
+      },
+    };
+
+    return { canvasData, canvasMetadata };
+  }
+
+  private buildYogaLayoutTree(params: {
+    dimensions: { width: number; height: number };
+    margins: { top: number; right: number; bottom: number; left: number; unit: string };
+    headerBlock: TemplateDefinitionBlock;
+    footerBlock: TemplateDefinitionBlock;
+    bodyBlocks: TemplateDefinitionBlock[];
+    lesson: CurriculumLesson;
+  }): Record<string, unknown> {
+    const { dimensions, margins, headerBlock, footerBlock, bodyBlocks, lesson } =
+      params;
+
+    const headerNode = {
+      id: "lesson-header",
+      role: "header",
+      type: "template-block",
+      templateBlock: this.serializeTemplateBlock(headerBlock),
+      yoga: {
+        flexDirection: "column",
+        width: { unit: "percent", value: 100 },
+        height: { unit: margins.unit, value: margins.top },
+        flexGrow: 0,
+        flexShrink: 0,
+        justifyContent: "flex-end",
+        alignItems: "stretch",
+        padding: {
+          left: margins.left,
+          right: margins.right,
+          top: 0,
+          bottom: 0,
+        },
+      },
+    };
+
+    const footerNode = {
+      id: "lesson-footer",
+      role: "footer",
+      type: "template-block",
+      templateBlock: this.serializeTemplateBlock(footerBlock),
+      yoga: {
+        flexDirection: "column",
+        width: { unit: "percent", value: 100 },
+        height: { unit: margins.unit, value: margins.bottom },
+        flexGrow: 0,
+        flexShrink: 0,
+        justifyContent: "flex-start",
+        alignItems: "stretch",
+        padding: {
+          left: margins.left,
+          right: margins.right,
+          top: 0,
+          bottom: 0,
+        },
+      },
+    };
+
+    const bodyNode = {
+      id: "lesson-body",
+      role: "body",
+      type: "container",
+      yoga: {
+        flexDirection: "column",
+        width: { unit: "percent", value: 100 },
+        flexGrow: 1,
+        flexShrink: 1,
+        padding: {
+          top: 24,
+          bottom: 24,
+          left: margins.left,
+          right: margins.right,
+        },
+        gap: 24,
+      },
+      children: this.buildBodyNodes(bodyBlocks, lesson),
+    };
+
+    return {
+      id: "canvas-root",
+      type: "container",
+      yoga: {
+        flexDirection: "column",
+        width: { unit: "px", value: dimensions.width },
+        height: { unit: "px", value: dimensions.height },
+      },
+      children: [headerNode, bodyNode, footerNode],
+    };
+  }
+
+  private buildBodyNodes(
+    blocks: TemplateDefinitionBlock[],
+    lesson: CurriculumLesson,
+  ): Record<string, unknown>[] {
+    if (!blocks.length) {
+      return [
+        {
+          id: "body-placeholder",
+          role: "placeholder",
+          type: "placeholder",
+          yoga: {
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            width: { unit: "percent", value: 100 },
+            minHeight: { unit: "percent", value: 100 },
+          },
+          data: {
+            message: "No template blocks defined. Configure the template to populate content.",
+          },
+        },
+      ];
+    }
+
+    return blocks.map((block, index) => {
+      const node: Record<string, unknown> = {
+        id: `template-block-${block.id}`,
+        role: "template-block",
+        type: block.type,
+        order: index,
+        templateBlock: this.serializeTemplateBlock(block),
+        yoga: {
+          flexDirection: "column",
+          width: { unit: "percent", value: 100 },
+          flexGrow: block.type === "content" ? 1 : 0,
+          flexShrink: block.type === "content" ? 1 : 0,
+          gap: 12,
+          padding: {
+            top: 12,
+            bottom: 12,
+          },
+        },
+      };
+
+      if (block.type === "content") {
+        node.children = this.buildTopicNodes(lesson);
+      }
+
+      if (block.type === "program") {
+        node.data = {
+          structure: this.summarizeLessonStructure(lesson),
+        };
+      }
+
+      return node;
+    });
+  }
+
+  private buildTopicNodes(
+    lesson: CurriculumLesson,
+  ): Record<string, unknown>[] {
+    const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
+
+    if (!topics.length) {
+      return [
+        {
+          id: "topic-placeholder",
+          role: "topic-placeholder",
+          type: "placeholder",
+          yoga: {
+            flexDirection: "column",
+            width: { unit: "percent", value: 100 },
+          },
+          data: {
+            message: "No topics defined for this lesson.",
+          },
+        },
+      ];
+    }
+
+    return topics.map((topic, topicIndex) => {
+      const objectives = Array.isArray(topic.objectives)
+        ? topic.objectives
+        : [];
+      const tasks = Array.isArray(topic.tasks) ? topic.tasks : [];
+
+      return {
+        id: `lesson-topic-${topicIndex + 1}`,
+        role: "lesson-topic",
+        type: "topic",
+        yoga: {
+          flexDirection: "column",
+          gap: 8,
+          width: { unit: "percent", value: 100 },
+        },
+        data: {
+          index: topicIndex + 1,
+          title:
+            typeof topic.title === "string" && topic.title.trim().length
+              ? topic.title.trim()
+              : `Topic ${topicIndex + 1}`,
+          objectives,
+          tasks,
+        },
+      };
+    });
+  }
+
+  private serializeTemplateBlock(
+    block: TemplateDefinitionBlock,
+  ): Record<string, unknown> {
+    return {
+      id: block.id,
+      type: block.type,
+      order: block.order,
+      config: block.config,
+      content: block.content,
+    };
+  }
+
+  private summarizeLessonStructure(
+    lesson: CurriculumLesson | null | undefined,
+  ): { topics: number; objectives: number; tasks: number } {
+    if (!lesson) {
+      return { topics: 0, objectives: 0, tasks: 0 };
+    }
+
+    const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
+
+    let objectives = 0;
+    let tasks = 0;
+
+    topics.forEach((topic) => {
+      objectives += Array.isArray(topic.objectives)
+        ? topic.objectives.length
+        : 0;
+      tasks += Array.isArray(topic.tasks) ? topic.tasks.length : 0;
+    });
+
+    return {
+      topics: topics.length,
+      objectives,
+      tasks,
+    };
+  }
+
+  private isValidPositiveNumber(value: unknown): value is number {
+    return typeof value === "number" && Number.isFinite(value) && value > 0;
+  }
+
+  private resolveTemplateAccentClass(
+    templateType: string | null | undefined,
+    templateIdentifier?: string | null | undefined,
+  ): string {
     if (!this.templateAccentPalette.length) {
       return "";
     }
 
-    if (!templateId) {
+    if (typeof templateType === "string" && templateType.trim().length > 0) {
+      const normalizedType = templateType.trim().toLowerCase();
+      const mappedClass = this.templateAccentByType[normalizedType];
+      if (mappedClass) {
+        return mappedClass;
+      }
+    }
+
+    const fallbackKey =
+      (typeof templateIdentifier === "string" && templateIdentifier.trim().length > 0
+        ? templateIdentifier.trim()
+        : templateType && templateType.trim().length > 0
+        ? templateType.trim()
+        : "") || "";
+
+    if (!fallbackKey) {
       return this.templateAccentPalette[0];
     }
 
     let hash = 0;
 
-    for (const char of templateId) {
+    for (const char of fallbackKey) {
       hash = (hash + char.charCodeAt(0)) % this.templateAccentPalette.length;
     }
 
     return this.templateAccentPalette[hash];
+  }
+
+  private formatTemplateType(type: string | null | undefined): string {
+    if (!type || typeof type !== "string") {
+      return "Template";
+    }
+
+    const normalized = type.trim().toLowerCase();
+    if (!normalized.length) {
+      return "Template";
+    }
+
+    if (Object.prototype.hasOwnProperty.call(TEMPLATE_TYPE_LABELS, normalized)) {
+      return TEMPLATE_TYPE_LABELS[
+        normalized as keyof typeof TEMPLATE_TYPE_LABELS
+      ];
+    }
+
+    const humanized = normalized
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+
+    return humanized || "Template";
   }
 
   private persistTemplatePlacements(): void {
@@ -2031,6 +2671,7 @@ class CurriculumManager {
     const accentClass = isMissing
       ? ""
       : this.resolveTemplateAccentClass(
+        summary?.type,
         summary?.id || placement.templateId || placement.templateSlug,
       );
 
@@ -2065,7 +2706,9 @@ class CurriculumManager {
     ]
       .filter(Boolean)
       .join(" ");
-    const typeLabel = summary?.type || (isMissing ? "Missing template" : "");
+    const typeLabel = isMissing
+      ? "Missing template"
+      : this.formatTemplateType(summary?.type);
 
     return `
     <div class="${classNames}" data-template-block="${placement.templateId}" data-template-type="${this.escapeHtml(
@@ -2106,7 +2749,7 @@ class CurriculumManager {
     let optionsHtml = '<option value="">No Template</option>';
 
     templatesByType.forEach((templates, type) => {
-      const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+      const typeLabel = this.formatTemplateType(type);
       optionsHtml += `<optgroup label="${this.escapeHtml(typeLabel)}">`;
 
       templates.forEach(template => {
@@ -2119,11 +2762,13 @@ class CurriculumManager {
 
     // Generate accent class for visual indicator
     const accentClass = currentTemplate
-      ? this.resolveTemplateAccentClass(currentTemplate.id)
+      ? this.resolveTemplateAccentClass(currentTemplate.type, currentTemplate.id)
       : '';
 
     const badgeHtml = currentTemplate
-      ? `<span class="lesson__template-badge ${accentClass}">${this.escapeHtml(currentTemplate.type || "Template")}</span>`
+      ? `<span class="lesson__template-badge ${accentClass}">${this.escapeHtml(
+        this.formatTemplateType(currentTemplate.type),
+      )}</span>`
       : "";
 
     const selectId = `lesson-template-${lesson.lessonNumber}`;
@@ -3145,13 +3790,16 @@ class CurriculumManager {
 
   private async ensureLessonCanvases(curriculum: CurriculumLesson[]): Promise<void> {
     if (!this.courseId || !Array.isArray(curriculum) || curriculum.length === 0) {
-      return;
+      // Even with empty curriculum we may still need to provision canvases based on schedule.
+      if (!this.courseId) {
+        return;
+      }
     }
 
     try {
       const { data: existingCanvases, error } = await supabase
         .from('canvases')
-        .select('lesson_number, canvas_index')
+        .select('id, lesson_number, canvas_index')
         .eq('course_id', this.courseId);
 
       if (error) {
@@ -3159,55 +3807,180 @@ class CurriculumManager {
         return;
       }
 
-      const lessonsWithCanvas = new Set<number>();
+      const { data: courseSchedule } = await supabase
+        .from('courses')
+        .select('course_sessions, schedule_settings')
+        .eq('id', this.courseId)
+        .single();
+
+      const scheduledFromCourse =
+        typeof courseSchedule?.course_sessions === 'number' && courseSchedule.course_sessions > 0
+          ? courseSchedule.course_sessions
+          : 0;
+      const scheduledFromSchedule =
+        Array.isArray(courseSchedule?.schedule_settings) && courseSchedule!.schedule_settings.length > 0
+          ? courseSchedule!.schedule_settings.length
+          : 0;
+
+      const existingMap = new Map<number, { id: string | null; canvas_index: number }>();
       existingCanvases?.forEach((canvas) => {
-        if (typeof canvas.lesson_number === 'number') {
-          lessonsWithCanvas.add(canvas.lesson_number);
+        if (
+          typeof canvas.lesson_number === 'number' &&
+          canvas.canvas_index === 1
+        ) {
+          existingMap.set(canvas.lesson_number, {
+            id: typeof canvas.id === 'string' ? canvas.id : null,
+            canvas_index: canvas.canvas_index,
+          });
         }
       });
 
-      const inserts = curriculum
-        .map((lesson, index) => {
-          const lessonNumber = typeof lesson.lessonNumber === 'number' ? lesson.lessonNumber : index + 1;
-          if (lessonsWithCanvas.has(lessonNumber)) {
-            return null;
-          }
-          return {
-            course_id: this.courseId,
-            lesson_number: lessonNumber,
-            canvas_index: 1,
-            canvas_metadata: {
-              title: lesson.title || `Lesson ${lessonNumber}`,
-              lessonNumber,
-              generated_at: new Date().toISOString(),
-              source: 'curriculum-sync',
-            },
-          };
-        })
-        .filter((record): record is {
-          course_id: string;
-          lesson_number: number;
-          canvas_index: number;
-          canvas_metadata: {
-            title: string;
-            lessonNumber: number;
-            generated_at: string;
-            source: string;
-          };
-        } => record !== null);
+      const lessonsByNumber = new Map<number, CurriculumLesson>();
+      curriculum.forEach((lesson, index) => {
+        const lessonNumber =
+          typeof lesson.lessonNumber === 'number' && lesson.lessonNumber > 0
+            ? lesson.lessonNumber
+            : index + 1;
+        lessonsByNumber.set(lessonNumber, { ...lesson, lessonNumber });
+      });
 
-      if (inserts.length === 0) {
+      const highestCurriculumLesson = lessonsByNumber.size
+        ? Math.max(...lessonsByNumber.keys())
+        : curriculum.length;
+      const highestExistingLesson = existingMap.size ? Math.max(...existingMap.keys()) : 0;
+      const scheduledLessonTarget = Math.max(scheduledFromCourse, scheduledFromSchedule);
+      const desiredLessonCount = Math.max(
+        scheduledLessonTarget,
+        highestCurriculumLesson,
+        highestExistingLesson,
+      );
+
+      if (desiredLessonCount === 0) {
         return;
       }
 
-      const { error: insertError } = await supabase
-        .from('canvases')
-        .insert(inserts);
+      const templateIds = new Set<string>();
+      for (const lesson of lessonsByNumber.values()) {
+        const templateId = this.resolveLessonTemplateId(lesson);
+        if (templateId) {
+          templateIds.add(templateId);
+        }
+      }
 
-      if (insertError) {
-        console.error('❌ Failed to create placeholder canvases:', insertError);
-      } else {
-        console.log(`🖼️ Ensured ${inserts.length} lesson canvas${inserts.length === 1 ? '' : 'es'} exist for curriculum.`);
+      const templateMap = new Map<string, TemplateRecord>();
+      if (templateIds.size > 0) {
+        const { data: templates, error: templateError } = await supabase
+          .from('templates')
+          .select('id, template_id, template_type, template_description, template_data, course_id')
+          .in('id', Array.from(templateIds));
+
+        if (templateError) {
+          console.error('⚠️ Failed to load templates for canvas generation:', templateError);
+        } else if (Array.isArray(templates)) {
+          templates.forEach((row: any) => {
+            if (typeof row?.id === 'string') {
+              templateMap.set(row.id, {
+                id: row.id,
+                template_id: row.template_id,
+                template_type: row.template_type,
+                template_description: row.template_description ?? null,
+                template_data: this.normalizeTemplateDefinition(row.template_data),
+                course_id: row.course_id ?? null,
+              });
+            }
+          });
+        }
+      }
+
+      const inserts: Array<Record<string, unknown>> = [];
+      const updates: Array<{
+        lessonNumber: number;
+        canvas_data: Record<string, unknown>;
+        canvas_metadata: Record<string, unknown>;
+      }> = [];
+
+      for (let lessonNumber = 1; lessonNumber <= desiredLessonCount; lessonNumber += 1) {
+        const lesson =
+          lessonsByNumber.get(lessonNumber) ??
+          ({
+            lessonNumber,
+            title: `Lesson ${lessonNumber}`,
+            topics: [],
+          } as CurriculumLesson);
+
+        const templateId = this.resolveLessonTemplateId(lesson);
+        const templateRecord = templateId ? templateMap.get(templateId) : undefined;
+
+        if (templateId && !templateRecord) {
+          console.warn(`⚠️ Template ${templateId} not found for lesson ${lessonNumber}. Using fallback layout.`);
+        }
+
+        const payload = this.buildLessonCanvasPayload(
+          lesson,
+          templateRecord,
+          lessonNumber,
+        );
+
+        const recordBase = {
+          canvas_data: payload.canvasData,
+          canvas_metadata: payload.canvasMetadata,
+          canvas_index: 1,
+        };
+
+        if (existingMap.has(lessonNumber)) {
+          updates.push({
+            lessonNumber,
+            canvas_data: recordBase.canvas_data as Record<string, unknown>,
+            canvas_metadata: recordBase.canvas_metadata as Record<string, unknown>,
+          });
+        } else {
+          inserts.push({
+            course_id: this.courseId,
+            lesson_number: lessonNumber,
+            ...recordBase,
+          });
+        }
+      }
+
+      if (inserts.length > 0) {
+        const { error: insertError } = await supabase
+          .from('canvases')
+          .insert(inserts);
+
+        if (insertError) {
+          console.error('❌ Failed to create lesson canvases:', insertError);
+        } else {
+          console.log(
+            `🖼️ Created ${inserts.length} lesson canvas${inserts.length === 1 ? '' : 'es'} with Yoga layout.`,
+          );
+        }
+      }
+
+      if (updates.length > 0) {
+        await Promise.all(
+          updates.map(async (record) => {
+            const { error: updateError } = await supabase
+              .from('canvases')
+              .update({
+                canvas_data: record.canvas_data,
+                canvas_metadata: record.canvas_metadata,
+              })
+              .eq('course_id', this.courseId)
+              .eq('lesson_number', record.lessonNumber)
+              .eq('canvas_index', 1);
+
+            if (updateError) {
+              console.error(
+                `❌ Failed to update canvas for lesson ${record.lessonNumber}:`,
+                updateError,
+              );
+            }
+          }),
+        );
+
+        console.log(
+          `🛠️ Updated ${updates.length} lesson canvas${updates.length === 1 ? '' : 'es'} with Yoga layout.`,
+        );
       }
     } catch (err) {
       console.error('❌ Unexpected error while ensuring lesson canvases:', err);

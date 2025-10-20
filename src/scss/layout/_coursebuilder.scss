@@ -1596,6 +1596,34 @@
     --template-accent-muted: #64748b;
 }
 
+.template-placement-card.template-accent--cobalt {
+    --template-accent-surface: #eef2ff;
+    --template-accent-border: #6366f1;
+    --template-accent-strong: #312e81;
+    --template-accent-muted: #4f46e5;
+}
+
+.template-placement-card.template-accent--mint {
+    --template-accent-surface: #ecfdf5;
+    --template-accent-border: #34d399;
+    --template-accent-strong: #047857;
+    --template-accent-muted: #10b981;
+}
+
+.template-placement-card.template-accent--sunset {
+    --template-accent-surface: #fff7ed;
+    --template-accent-border: #fb923c;
+    --template-accent-strong: #9a3412;
+    --template-accent-muted: #f97316;
+}
+
+.template-placement-card.template-accent--gold {
+    --template-accent-surface: #fef9c3;
+    --template-accent-border: #facc15;
+    --template-accent-strong: #854d0e;
+    --template-accent-muted: #eab308;
+}
+
 .template-placement-card__header {
     display: grid;
     grid-template-columns: 1fr auto;
@@ -2120,6 +2148,34 @@
     --template-accent-border: #94a3b8;
     --template-accent-strong: #334155;
     --template-accent-muted: #64748b;
+}
+
+.template-accent--cobalt {
+    --template-accent-surface: #e0e7ff;
+    --template-accent-border: #6366f1;
+    --template-accent-strong: #312e81;
+    --template-accent-muted: #4f46e5;
+}
+
+.template-accent--mint {
+    --template-accent-surface: #d1fae5;
+    --template-accent-border: #34d399;
+    --template-accent-strong: #047857;
+    --template-accent-muted: #10b981;
+}
+
+.template-accent--sunset {
+    --template-accent-surface: #ffedd5;
+    --template-accent-border: #fb923c;
+    --template-accent-strong: #9a3412;
+    --template-accent-muted: #f97316;
+}
+
+.template-accent--gold {
+    --template-accent-surface: #fef9c3;
+    --template-accent-border: #facc15;
+    --template-accent-strong: #854d0e;
+    --template-accent-muted: #eab308;
 }
 
 // Base editable-surface styles
