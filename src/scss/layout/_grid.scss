@@ -6,11 +6,13 @@
 .grid {
     display: grid;
     min-height: 100vh; // Minimum viewport height, but can grow
+    max-height: 100vh; // Don't exceed viewport height
     grid-template-rows: auto minmax(0, 1fr) auto; // header auto, main flexible but can shrink, footer auto
     grid-template-areas:
         'header'
         'main'
         'footer';
+    overflow: hidden; // Prevent page-level overflow
 
     &__header {
         grid-area: header;
@@ -20,6 +22,7 @@
         grid-area: main;
         display: grid;
         min-height: 0; // Allow grid to shrink if needed
+        overflow: hidden; // Prevent overflow from main
 
         // Auth page modifier - center content without stretching
         &--auth {
