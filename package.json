@@ -5,7 +5,7 @@
   "type": "module",
   "main": "index.html",
   "scripts": {
-    "dev": "vite --port 3000 --host 0.0.0.0",
+    "dev": "BROWSER=none vite --port 3000 --host 0.0.0.0 & sleep 2 && open -a 'Arc' 'http://localhost:3000'",
     "dev:strict": "vite --host localhost --port 3000 --strictPort",
     "dev:monitor": "node scripts/dev-monitor.js",
     "dev:oauth": "tsx src/scripts/backend/oauth/start-server.ts",
