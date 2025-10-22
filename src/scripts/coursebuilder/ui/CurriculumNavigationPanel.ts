@@ -460,6 +460,13 @@ export class CurriculumNavigationPanel {
     lessonCard.className =
       "navigation-content__item navigation-content__item--lesson";
 
+    // Add click handler to scroll to canvas
+    lessonCard.style.cursor = 'pointer';
+    lessonCard.addEventListener('click', () => {
+      const lessonNumber = lesson.lessonNumber ?? lessonIndex + 1;
+      this.scrollToCanvas(lessonNumber);
+    });
+
     const title = document.createElement("strong");
     const number = lesson.lessonNumber ?? lessonIndex + 1;
     title.textContent = `Lesson ${number}: ${lesson.title ?? "Untitled lesson"}`;
@@ -531,6 +538,24 @@ export class CurriculumNavigationPanel {
       ...module,
       lessons: this.toArray<CurriculumLesson>(module?.lessons),
     }));
+  }
+
+  private scrollToCanvas(lessonNumber: number): void {
+    // Check if canvas API is available
+    const canvasAPI = (window as any).canvasAPI;
+    if (!canvasAPI) {
+      console.warn('⚠️ Canvas API not available for navigation');
+      return;
+    }
+
+    // Use the multi-canvas manager to scroll to the lesson
+    const multiCanvasManager = canvasAPI.multiCanvasManager;
+    if (multiCanvasManager) {
+      multiCanvasManager.navigateToLesson(lessonNumber);
+      console.log(`📚 Scrolled to lesson ${lessonNumber}`);
+    } else {
+      console.warn('⚠️ Multi-canvas manager not available');
+    }
   }
 
   private toArray<T>(value: unknown): T[] {

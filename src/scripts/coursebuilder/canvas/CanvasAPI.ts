@@ -18,6 +18,9 @@ import { CanvasEvents } from './CanvasEvents';
 import { DisplayObjectManager } from './DisplayObjectManager';
 import { ToolManager } from '../tools/ToolManager';
 import { canvasMarginManager } from './CanvasMarginManager';
+import { TemplateLayoutManager } from './TemplateLayoutManager';
+import { MultiCanvasManager } from './MultiCanvasManager';
+import { CanvasDataManager } from './CanvasDataManager';
 
 export class CanvasAPI {
   private pixiApp: PixiApp;
@@ -25,6 +28,9 @@ export class CanvasAPI {
   private events: CanvasEvents | null = null;
   private displayManager: DisplayObjectManager | null = null;
   private toolManager: ToolManager | null = null;
+  private templateLayoutManager: TemplateLayoutManager | null = null;
+  private multiCanvasManager: MultiCanvasManager | null = null;
+  private canvasDataManager: CanvasDataManager | null = null;
   private initialized: boolean = false;
   // Placement configuration per media type
   private placementMode: Record<string, 'center' | 'topleft'> = {
@@ -81,7 +87,8 @@ export class CanvasAPI {
 
       // Step 5: Create tool manager
       this.toolManager = new ToolManager();
-      try { (window as any).toolManager = this.toolManager; } catch { /* empty */ }
+      // Don't expose tools globally here - let multi-canvas system handle it
+      // try { (window as any).toolManager = this.toolManager; } catch { /* empty */ }
 
       // Step 5.1: Connect display manager to tool manager (CRITICAL!)
       this.toolManager.setDisplayManager(this.displayManager);
@@ -101,6 +108,15 @@ export class CanvasAPI {
       if (backgroundLayer) {
         canvasMarginManager.setContainer(backgroundLayer);
       }
+
+      // Step 8: Initialize multi-canvas system
+      this.multiCanvasManager = new MultiCanvasManager();
+      this.multiCanvasManager.initialize();
+
+      // Step 9: Subscribe to margin changes for template layout updates
+      canvasMarginManager.onMarginChange(() => {
+        this.updateTemplateLayout();
+      });
 
       this.initialized = true;
 
@@ -149,6 +165,140 @@ export class CanvasAPI {
    */
   public getDrawingLayer(): Container | null {
     return this.getLayer('drawing');
+  }
+
+  /**
+   * Get template layout blocks
+   */
+  public getTemplateBlocks(): { header: Container | null; body: Container | null; footer: Container | null } {
+    if (!this.templateLayoutManager) {
+      return { header: null, body: null, footer: null };
+    }
+    return this.templateLayoutManager.getAllBlocks();
+  }
+
+  /**
+   * Get Header template block
+   */
+  public getHeaderBlock(): Container | null {
+    return this.templateLayoutManager?.getHeaderBlock() || null;
+  }
+
+  /**
+   * Get Body template block
+   */
+  public getBodyBlock(): Container | null {
+    return this.templateLayoutManager?.getBodyBlock() || null;
+  }
+
+  /**
+   * Get Footer template block
+   */
+  public getFooterBlock(): Container | null {
+    return this.templateLayoutManager?.getFooterBlock() || null;
+  }
+
+  /**
+   * Update template layout blocks (call when margins change)
+   */
+  public updateTemplateLayout(): void {
+    if (this.templateLayoutManager) {
+      this.templateLayoutManager.updateBlockSizes();
+    }
+  }
+
+  /**
+   * Get template layout debug information
+   */
+  public getTemplateLayoutDebugInfo(): any {
+    return this.templateLayoutManager?.getDebugInfo() || null;
+  }
+
+  // ============== MULTI-CANVAS METHODS ==============
+
+  /**
+   * Load all canvases for a course
+   */
+  public async loadCourseCanvases(courseId: string): Promise<void> {
+    if (!this.multiCanvasManager || !this.canvasDataManager) {
+      // Try to initialize if not already done
+      if (!this.multiCanvasManager) {
+        console.log('🔄 Initializing multi-canvas manager...');
+        this.multiCanvasManager = new MultiCanvasManager();
+        this.multiCanvasManager.initialize();
+      }
+      
+      if (!this.canvasDataManager) {
+        console.log('🔄 Initializing canvas data manager...');
+        this.canvasDataManager = new CanvasDataManager();
+      }
+    }
+
+    this.canvasDataManager.setCourseId(courseId);
+    await this.multiCanvasManager.loadCourseCanvases(courseId);
+  }
+
+  /**
+   * Navigate to next canvas
+   */
+  public navigateToNextCanvas(): boolean {
+    return this.multiCanvasManager?.navigateToNext() || false;
+  }
+
+  /**
+   * Navigate to previous canvas
+   */
+  public navigateToPreviousCanvas(): boolean {
+    return this.multiCanvasManager?.navigateToPrevious() || false;
+  }
+
+  /**
+   * Show specific canvas by ID
+   */
+  public showCanvas(canvasId: string): void {
+    this.multiCanvasManager?.showCanvas(canvasId);
+  }
+
+  /**
+   * Get current canvas information
+   */
+  public getCurrentCanvas(): any {
+    return this.multiCanvasManager?.getCurrentCanvas() || null;
+  }
+
+  /**
+   * Get all canvases
+   */
+  public getAllCanvases(): any[] {
+    return this.multiCanvasManager?.getAllCanvases() || [];
+  }
+
+  /**
+   * Get canvas count
+   */
+  public getCanvasCount(): number {
+    return this.multiCanvasManager?.getCanvasCount() || 0;
+  }
+
+  /**
+   * Get current canvas index (1-based)
+   */
+  public getCurrentCanvasIndex(): number {
+    return this.multiCanvasManager?.getCurrentCanvasIndex() || 0;
+  }
+
+  /**
+   * Subscribe to canvas navigation changes
+   */
+  public onCanvasNavigationChange(callback: (canvasId: string) => void): void {
+    this.multiCanvasManager?.onNavigationChange(callback);
+  }
+
+  /**
+   * Get multi-canvas debug information
+   */
+  public getMultiCanvasDebugInfo(): any {
+    return this.multiCanvasManager?.getDebugInfo() || null;
   }
 
   /**
@@ -1021,6 +1171,15 @@ export class CanvasAPI {
       }
     }
 
+    // Update template layout blocks
+    if (this.templateLayoutManager) {
+      try {
+        this.templateLayoutManager.handleCanvasResize();
+      } catch (e) {
+        console.warn('⚠️ Failed to update template layout:', e);
+      }
+    }
+
     this.pendingResizeOperation = null;
   }
 
@@ -1079,18 +1238,116 @@ export class CanvasAPI {
     }
   }
 
+
   /**
-   * Get current zoom level (basic implementation)
+   * Get current zoom level
+   */
+  /**
+   * Get zoom level from unified zoom manager
    */
   public getZoomLevel(): number {
-    return 1.0; // Default 100% zoom level (1:1 pixel ratio)
+    const unifiedZoomManager = (window as any).unifiedZoomManager;
+    if (unifiedZoomManager) {
+      return unifiedZoomManager.getZoomLevel();
+    }
+    
+    // Fallback to active canvas scale
+    const activeCanvas = this.multiCanvasManager?.getActiveCanvas();
+    if (activeCanvas && activeCanvas.app) {
+      return activeCanvas.app.stage.scale.x;
+    }
+    return 1.0;
   }
 
   /**
-   * Set zoom level (basic implementation - no-op for now)
+   * Set zoom level using unified zoom manager
    */
-  public setZoomLevel(_zoom: number, _smooth: boolean = true): void {
-    console.warn('⚠️ Basic zoom not implemented yet');
+  public setZoomLevel(zoom: number, smooth: boolean = true): void {
+    const unifiedZoomManager = (window as any).unifiedZoomManager;
+    if (unifiedZoomManager) {
+      // Use unified zoom manager for consistent zoom across all canvases
+      unifiedZoomManager.setZoom(zoom);
+      console.log(`🔍 Unified zoom set to ${(zoom * 100).toFixed(1)}%`);
+      return;
+    }
+    
+    // Fallback to single canvas zoom (legacy behavior)
+    const activeCanvas = this.multiCanvasManager?.getActiveCanvas();
+    if (activeCanvas && activeCanvas.app) {
+      if (smooth) {
+        // Smooth zoom animation
+        const currentZoom = activeCanvas.app.stage.scale.x;
+        const targetZoom = Math.max(0.1, Math.min(3.0, zoom)); // Clamp between 10% and 300%
+        
+        // Simple linear interpolation for smooth zoom
+        const duration = 300; // 300ms
+        const startTime = performance.now();
+        
+        const animateZoom = (currentTime: number) => {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          
+          const currentScale = currentZoom + (targetZoom - currentZoom) * progress;
+          activeCanvas.app!.stage.scale.set(currentScale);
+          
+          if (progress < 1) {
+            requestAnimationFrame(animateZoom);
+          }
+        };
+        
+        requestAnimationFrame(animateZoom);
+      } else {
+        // Instant zoom
+        const clampedZoom = Math.max(0.1, Math.min(3.0, zoom));
+        activeCanvas.app.stage.scale.set(clampedZoom);
+      }
+      
+      console.log(`🔍 Fallback zoom set to ${(zoom * 100).toFixed(1)}%`);
+    } else {
+      console.warn('⚠️ No active canvas available for zoom');
+    }
+  }
+
+  /**
+   * Fit canvas to viewport using unified zoom manager
+   */
+  public fitToViewport(): void {
+    const unifiedZoomManager = (window as any).unifiedZoomManager;
+    if (unifiedZoomManager) {
+      // Use unified zoom manager's reset zoom functionality
+      unifiedZoomManager.resetZoom();
+      console.log(`🔍 Unified fit-to-viewport applied`);
+      return;
+    }
+    
+    // Fallback to single canvas fit-to-viewport (legacy behavior)
+    const activeCanvas = this.multiCanvasManager?.getActiveCanvas();
+    if (activeCanvas && activeCanvas.app && activeCanvas.canvas) {
+      const containerRect = activeCanvas.canvas.getBoundingClientRect();
+      const containerWidth = containerRect.width;
+      const containerHeight = containerRect.height;
+      
+      // Calculate zoom to fit entire canvas in viewport
+      const padding = 40;
+      const availableWidth = containerWidth - (padding * 2);
+      const availableHeight = containerHeight - (padding * 2);
+      
+      const scaleX = availableWidth / 1200; // CANVAS_WIDTH
+      const scaleY = availableHeight / 1800; // CANVAS_HEIGHT
+      const fitScale = Math.min(scaleX, scaleY);
+      
+      activeCanvas.app.stage.scale.set(fitScale);
+      
+      // Center the canvas
+      const scaledWidth = 1200 * fitScale;
+      const scaledHeight = 1800 * fitScale;
+      activeCanvas.app.stage.x = (containerWidth - scaledWidth) / 2;
+      activeCanvas.app.stage.y = (containerHeight - scaledHeight) / 2;
+      
+      console.log(`🔍 Fallback fit-to-viewport applied: ${(fitScale * 100).toFixed(1)}%`);
+    } else {
+      console.warn('⚠️ No active canvas available for fit-to-viewport');
+    }
   }
 
   /**
@@ -1146,6 +1403,21 @@ export class CanvasAPI {
     if (this.toolManager) {
       this.toolManager.destroy();
       this.toolManager = null;
+    }
+
+    if (this.templateLayoutManager) {
+      this.templateLayoutManager.destroy();
+      this.templateLayoutManager = null;
+    }
+
+    if (this.multiCanvasManager) {
+      this.multiCanvasManager.destroy();
+      this.multiCanvasManager = null;
+    }
+
+    if (this.canvasDataManager) {
+      // CanvasDataManager doesn't need destroy, just clear reference
+      this.canvasDataManager = null;
     }
 
     if (this.layers) {

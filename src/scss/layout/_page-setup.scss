@@ -119,7 +119,7 @@
   &__canvas-container {
     display: grid;
     place-items: center;
-    padding: var(--spacing-3);
+    padding: 0; /* Remove padding to eliminate unwanted white space */
     gap: var(--spacing-3);
   }
 

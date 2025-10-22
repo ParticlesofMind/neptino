@@ -15,6 +15,7 @@ export class CanvasMarginManager {
   private currentMargins: MarginSettings;
   private marginGraphics: Graphics | null = null;
   private container: any = null; // Will be set when canvas is available
+  private marginChangeCallbacks: (() => void)[] = [];
   
   private constructor() {
     // Default margins in pixels (96 DPI, 2.54cm = 1 inch)
@@ -54,6 +55,9 @@ export class CanvasMarginManager {
     
     // Update visual margins if canvas is available
     this.updateMarginVisuals();
+    
+    // Notify subscribers of margin changes
+    this.notifyMarginChange();
   }
 
   /**
@@ -69,6 +73,36 @@ export class CanvasMarginManager {
   public setContainer(container: any): void {
     this.container = container;
     this.updateMarginVisuals();
+  }
+
+  /**
+   * Subscribe to margin change events
+   */
+  public onMarginChange(callback: () => void): void {
+    this.marginChangeCallbacks.push(callback);
+  }
+
+  /**
+   * Unsubscribe from margin change events
+   */
+  public offMarginChange(callback: () => void): void {
+    const index = this.marginChangeCallbacks.indexOf(callback);
+    if (index > -1) {
+      this.marginChangeCallbacks.splice(index, 1);
+    }
+  }
+
+  /**
+   * Notify all subscribers of margin changes
+   */
+  private notifyMarginChange(): void {
+    this.marginChangeCallbacks.forEach(callback => {
+      try {
+        callback();
+      } catch (error) {
+        console.warn('⚠️ Error in margin change callback:', error);
+      }
+    });
   }
 
    /**

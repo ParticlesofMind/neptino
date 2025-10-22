@@ -18,7 +18,7 @@
         grid-auto-rows: min-content;
         gap: var(--spacing-2);
         width: 260px;
-        z-index: 1000;
+        z-index: 1; /* Lower z-index to not interfere with canvas content */
 
         &--open {
             display: grid;

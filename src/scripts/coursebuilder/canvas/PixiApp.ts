@@ -54,7 +54,7 @@ export class PixiApp {
     const defaultConfig: PixiAppConfig = {
       width: canvasDims.width,   // Canvas width
       height: canvasDims.height, // Canvas height
-      backgroundColor: 0xffffff, // White background
+      backgroundColor: 0xffffff, // White background restored
       antialias: true,      // Enable antialiasing for smooth edges
       resolution: optimizedResolution, // Capped resolution for performance
       autoDensity: true     // Ensure CSS size matches logical width/height

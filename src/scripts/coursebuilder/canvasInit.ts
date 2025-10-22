@@ -40,6 +40,9 @@ let floatingElementsManager: FloatingElementsManager | null = null;
 // Global flag to prevent multiple initializations
 let isInitializing = false;
 
+// Queue for canvas loading requests that come before canvas is ready
+let pendingCanvasLoads: Array<{ courseId: string; canvasCount: number }> = [];
+
 /**
  * Initialize canvas when coursebuilder page loads
  */
@@ -85,6 +88,26 @@ export async function initializeCanvas(): Promise<void> {
 
         // Expose canvas API early so dependent UI components can bind immediately
         (window as any).canvasAPI = canvasAPI;
+
+        // Listen for curriculum completion to load canvases
+        document.addEventListener('curriculum-canvases-ready', async (event: CustomEvent) => {
+          const { courseId, canvasCount } = event.detail;
+          console.log(`📚 Curriculum canvases ready! Loading ${canvasCount} canvases for course: ${courseId}`);
+          
+          // Ensure canvas API is ready before loading canvases
+          if (!canvasAPI || !canvasAPI.isReady()) {
+            console.log('⏳ Canvas API not ready, queuing canvas load request...');
+            pendingCanvasLoads.push({ courseId, canvasCount });
+            return;
+          }
+          
+          try {
+            await canvasAPI.loadCourseCanvases(courseId);
+            console.log('✅ All canvases loaded successfully');
+          } catch (error) {
+            console.error('❌ Failed to load canvases:', error);
+          }
+        });
 
         // Make canvas dimensions available to global functions
         (window as any).currentCanvasWidth = canvasWidth;
@@ -359,6 +382,20 @@ export async function initializeCanvas(): Promise<void> {
         // PerfHUD disabled by default to keep UI clean and avoid layout overlays in production.
         // To enable for debugging, call window.installPerfHUD?.()
 
+        // Process any queued canvas loads
+        if (pendingCanvasLoads.length > 0) {
+            console.log(`🔄 Processing ${pendingCanvasLoads.length} queued canvas load requests...`);
+            for (const loadRequest of pendingCanvasLoads) {
+                try {
+                    await canvasAPI.loadCourseCanvases(loadRequest.courseId);
+                    console.log(`✅ Loaded canvases for course: ${loadRequest.courseId}`);
+                } catch (error) {
+                    console.error(`❌ Failed to load canvases for course ${loadRequest.courseId}:`, error);
+                }
+            }
+            pendingCanvasLoads = []; // Clear the queue
+        }
+
         isInitializing = false;
     } catch (error) {
         console.error('❌ Canvas initialization failed:', error);
@@ -377,6 +414,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Small delay to ensure coursebuilder page is fully loaded
     setTimeout(initializeCanvas, 100);
 });
+
+/**
+ * Manual function to load canvases for a course (for testing)
+ */
+(window as any).loadCourseCanvases = async (courseId: string) => {
+    if (!canvasAPI || !canvasAPI.isReady()) {
+        console.error('❌ Canvas API not ready');
+        return;
+    }
+    
+    try {
+        await canvasAPI.loadCourseCanvases(courseId);
+        console.log(`✅ Successfully loaded canvases for course: ${courseId}`);
+    } catch (error) {
+        console.error(`❌ Failed to load canvases for course ${courseId}:`, error);
+    }
+};
 
 // Also try immediate initialization in case DOM is already loaded
 if (document.readyState === 'loading') {

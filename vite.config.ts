@@ -44,7 +44,7 @@ export default defineConfig({
   // Enhanced dependency optimization
   optimizeDeps: {
     include: ['@supabase/supabase-js', 'pixi.js', '@pixi/devtools', '@huggingface/transformers'],
-    exclude: ['@huggingface/transformers'], // Exclude to prevent pre-bundling issues
+    exclude: ['@huggingface/transformers', 'yoga-layout'], // Exclude to prevent pre-bundling issues
     force: false, // Don't force re-optimization unless needed
   },
   // Better build configuration

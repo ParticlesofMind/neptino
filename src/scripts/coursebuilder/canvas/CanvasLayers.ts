@@ -15,6 +15,7 @@ import { canvasDimensionManager } from '../utils/CanvasDimensionManager';
 
 export interface LayerSystem {
   background: Container;
+  layout: Container;
   drawing: Container;
   ui: Container;
 }
@@ -30,23 +31,26 @@ export class CanvasLayers {
   }
 
   /**
-   * Create the three-layer system
+   * Create the four-layer system
    */
   private createLayers(): LayerSystem {
     // Create containers
     const background = new Container();
+    const layout = new Container();
     const drawing = new Container();
     const ui = new Container();
 
     // Set labels for debugging
     background.label = 'background-layer';
+    layout.label = 'layout-layer';
     drawing.label = 'drawing-layer';
     ui.label = 'ui-layer';
 
     // Set z-index for proper ordering
     background.zIndex = 0;
-    drawing.zIndex = 1;
-    ui.zIndex = 2;
+    layout.zIndex = 1;
+    drawing.zIndex = 2;
+    ui.zIndex = 3;
 
     // Enable z-index sorting within the UI layer so helper overlays (guides, cursors)
     // can reliably render above other UI elements
@@ -54,6 +58,7 @@ export class CanvasLayers {
 
     // Add to stage
     this.app.stage.addChild(background);
+    this.app.stage.addChild(layout);
     this.app.stage.addChild(drawing);
     this.app.stage.addChild(ui);
 
@@ -61,7 +66,7 @@ export class CanvasLayers {
     this.app.stage.sortableChildren = true;
 
 
-    return { background, drawing, ui };
+    return { background, layout, drawing, ui };
   }
 
   /**
@@ -167,6 +172,11 @@ export class CanvasLayers {
         children: this.layers.background.children.length,
         visible: this.layers.background.visible,
         zIndex: this.layers.background.zIndex
+      },
+      layout: {
+        children: this.layers.layout.children.length,
+        visible: this.layers.layout.visible,
+        zIndex: this.layers.layout.zIndex
       },
       drawing: {
         children: this.layers.drawing.children.length,

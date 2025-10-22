@@ -3982,6 +3982,20 @@ class CurriculumManager {
           `🛠️ Updated ${updates.length} lesson canvas${updates.length === 1 ? '' : 'es'} with Yoga layout.`,
         );
       }
+
+      // Dispatch event to notify that canvases are ready for loading
+      const totalCanvases = inserts.length + updates.length;
+      if (totalCanvases > 0) {
+        console.log(`📢 Dispatching curriculum-canvases-ready event for ${totalCanvases} canvases`);
+        document.dispatchEvent(new CustomEvent('curriculum-canvases-ready', {
+          detail: {
+            courseId: this.courseId,
+            canvasCount: totalCanvases,
+            inserts: inserts.length,
+            updates: updates.length
+          }
+        }));
+      }
     } catch (err) {
       console.error('❌ Unexpected error while ensuring lesson canvases:', err);
     }
