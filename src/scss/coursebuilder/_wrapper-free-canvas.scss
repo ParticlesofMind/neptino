@@ -2,7 +2,7 @@
 
 .canvas-grid-container {
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0; /* Remove padding to eliminate unwanted white space around canvases */
@@ -12,7 +12,8 @@
   display: grid;
   grid-template-columns: 1fr;
   grid-auto-rows: min-content;
-  /* gap is set dynamically by JavaScript to maintain constant 40px spacing */
+  justify-items: center;
+  align-content: flex-start;
   
   /* Performance optimizations */
   contain: layout style;
@@ -21,9 +22,10 @@
 
 /* Direct canvas elements (no wrappers) */
 .canvas-direct {
-  width: 1200px;
-  height: 1800px;
-  margin: 0 auto; /* Center horizontally */
+  margin: 0 auto;
+  display: block;
+  position: relative;
+  max-width: 100%;
   
   /* Performance optimizations */
   contain: layout style paint;
@@ -60,28 +62,6 @@
   overflow: hidden;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1400px) {
-  .canvas-direct {
-    width: 1000px;
-    height: 1500px;
-  }
-}
-
-@media (max-width: 1200px) {
-  .canvas-direct {
-    width: 800px;
-    height: 1200px;
-  }
-}
-
-@media (max-width: 1000px) {
-  .canvas-direct {
-    width: 600px;
-    height: 900px;
-  }
-}
-
 /* Intersection observer optimizations */
 .canvas-direct[data-canvas-id] {
   contain: layout style paint;
@@ -103,6 +83,19 @@
   .canvas-direct.active {
     outline: 3px solid #000;
   }
+}
+
+/* Placeholder styling matches canvas footprint while unloaded */
+.canvas-placeholder-invisible {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #6c757d;
+  font-family: Arial, sans-serif;
+  width: auto;
+  max-width: 100%;
 }
 
 /* Reduced motion support */

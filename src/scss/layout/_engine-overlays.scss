@@ -19,6 +19,7 @@
         backdrop-filter: blur(8px);
         z-index: 1; /* Lower z-index to not interfere with canvas content */
         width: 60px;
+        pointer-events: none; /* allow canvas interaction around the control */
     }
 
     // Zoom display within perspective
@@ -36,6 +37,7 @@
         display: grid;
         place-items: center;
         width: 100%;
+        pointer-events: auto;
     }
 
     // Perspective items
@@ -52,6 +54,7 @@
         cursor: pointer;
         transition: all 0.2s ease;
         width: 100%;
+        pointer-events: auto;
 
         &:hover {
             background: var(--color-primary-50);

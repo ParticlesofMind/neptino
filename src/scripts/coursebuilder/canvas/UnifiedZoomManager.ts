@@ -32,7 +32,7 @@ export class UnifiedZoomManager {
   private keyHandler: ((event: KeyboardEvent) => void) | null = null;
   
   // Callback for zoom changes
-  private onZoomChangeCallback: (() => void) | null = null;
+  private onZoomChangeCallback: ((zoom: number) => void) | null = null;
 
   constructor(config: Partial<UnifiedZoomConfig> = {}) {
     this.config = {
@@ -61,7 +61,7 @@ export class UnifiedZoomManager {
   /**
    * Register a canvas with its zoom manager
    */
-  public registerCanvas(canvasId: string, app: Application, zoomManager: HighQualityZoom): void {
+  public registerCanvas(canvasId: string, _app: Application, zoomManager: HighQualityZoom): void {
     this.canvasZoomManagers.set(canvasId, zoomManager);
     
     // Set initial zoom level
@@ -88,7 +88,7 @@ export class UnifiedZoomManager {
   /**
    * Set callback for zoom changes
    */
-  public setOnZoomChange(callback: () => void): void {
+  public setOnZoomChange(callback: (zoom: number) => void): void {
     this.onZoomChangeCallback = callback;
   }
 
@@ -113,7 +113,7 @@ export class UnifiedZoomManager {
     
     // Notify about zoom change for spacing updates
     if (this.onZoomChangeCallback) {
-      this.onZoomChangeCallback();
+      this.onZoomChangeCallback(this.zoomLevel);
     }
     
     console.log(`🎯 Unified zoom set to ${(clampedZoom * 100).toFixed(1)}% across ${this.canvasZoomManagers.size} canvases`);
@@ -154,7 +154,7 @@ export class UnifiedZoomManager {
   /**
    * Calculate fit-to-view zoom level
    */
-  private calculateFitToViewZoom(zoomManager: HighQualityZoom): number {
+  private calculateFitToViewZoom(_zoomManager: HighQualityZoom): number {
     // This would need to be implemented based on the HighQualityZoom's fit-to-view logic
     // For now, return a reasonable default
     return 0.5; // 50% zoom to fit
@@ -274,4 +274,3 @@ export class UnifiedZoomManager {
     console.log('🎯 UnifiedZoomManager destroyed');
   }
 }
-

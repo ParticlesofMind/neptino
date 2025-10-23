@@ -21,10 +21,12 @@ import { DisplayObjectManager } from './DisplayObjectManager';
 import { ToolManager } from '../tools/ToolManager';
 import { canvasMarginManager } from './CanvasMarginManager';
 import { UnifiedZoomManager } from './UnifiedZoomManager';
+import type { HighQualityZoom } from './HighQualityZoom';
 
 export interface CanvasApplication {
   app: Application | null; // null until lazy-loaded
   canvas: HTMLCanvasElement | null; // Direct canvas reference (wrapper-free)
+  placeholder: HTMLDivElement | null;
   templateLayoutManager: TemplateLayoutManager | null; // null until lazy-loaded
   canvasRow: CanvasRow;
   isActive: boolean;
@@ -48,9 +50,10 @@ export class VerticalCanvasContainer {
   // Canvas dimensions
   private readonly CANVAS_WIDTH = 1200;
   private readonly CANVAS_HEIGHT = 1800;
+  private currentZoomLevel = 1;
   // Performance optimization settings
   private readonly LAZY_LOAD_BUFFER = 2; // Load canvases 2 viewports ahead/behind
-  private readonly MAX_LOADED_CANVASES = 3; // Reduced to prevent WebGL context exhaustion
+  private readonly MAX_LOADED_CANVASES = 2; // Further reduced to prevent WebGL context exhaustion
 
   /**
    * Initialize the vertical canvas container system
@@ -78,10 +81,12 @@ export class VerticalCanvasContainer {
     
     this.unifiedZoomManager.initialize();
     
-    // Set up callback to update spacing when zoom changes
-    this.unifiedZoomManager.setOnZoomChange(() => {
+    // Set up callback to update spacing and element scaling when zoom changes
+    this.unifiedZoomManager.setOnZoomChange((zoom: number) => {
       this.updateCanvasSpacing();
+      this.updateCanvasScale(zoom);
     });
+    this.updateCanvasScale(this.unifiedZoomManager.getZoomLevel());
     
     // Expose globally for external access
     (window as any).unifiedZoomManager = this.unifiedZoomManager;
@@ -276,6 +281,36 @@ export class VerticalCanvasContainer {
   /**
    * Create a canvas placeholder and add it directly to the grid (viewport-based lazy loading)
    */
+  private createPlaceholderElement(canvasId: string, canvasRow: CanvasRow, subtitleText: string): HTMLDivElement {
+    const placeholder = document.createElement('div');
+    placeholder.id = `canvas-placeholder-${canvasId}`;
+    placeholder.className = 'canvas-placeholder-invisible';
+    placeholder.setAttribute('data-canvas-id', canvasId);
+    placeholder.setAttribute('data-lesson-number', canvasRow.lesson_number.toString());
+    placeholder.setAttribute('data-canvas-index', canvasRow.canvas_index.toString());
+
+    this.applyZoomToPlaceholder(placeholder, this.currentZoomLevel);
+
+    const title = document.createElement('div');
+    title.style.fontSize = '18px';
+    title.style.fontWeight = 'bold';
+    title.style.marginBottom = '8px';
+    title.textContent = `Lesson ${canvasRow.lesson_number} - Page ${canvasRow.canvas_index}`;
+
+    const subtitle = document.createElement('div');
+    subtitle.style.fontSize = '14px';
+    subtitle.style.opacity = '0.7';
+    subtitle.textContent = subtitleText;
+
+    placeholder.appendChild(title);
+    placeholder.appendChild(subtitle);
+
+    return placeholder;
+  }
+
+  /**
+   * Create a canvas placeholder and add it directly to the grid (viewport-based lazy loading)
+   */
   public async createCanvasApplication(canvasRow: CanvasRow): Promise<void> {
     if (!this.scrollContainer) {
       throw new Error('Scroll container not initialized');
@@ -284,50 +319,13 @@ export class VerticalCanvasContainer {
     console.log(`🎨 Creating viewport-triggered canvas for: ${canvasRow.id}`);
 
     // Create invisible placeholder div (not canvas) for intersection observer
-    const placeholder = document.createElement('div');
-    placeholder.id = `canvas-placeholder-${canvasRow.id}`;
-    placeholder.className = 'canvas-placeholder-invisible';
-    placeholder.setAttribute('data-canvas-id', canvasRow.id);
-    placeholder.setAttribute('data-lesson-number', canvasRow.lesson_number.toString());
-    placeholder.setAttribute('data-canvas-index', canvasRow.canvas_index.toString());
-    
-    // Set placeholder dimensions to match canvas size
-    placeholder.style.cssText = `
-      width: ${this.CANVAS_WIDTH}px;
-      height: ${this.CANVAS_HEIGHT}px;
-      margin: 0 auto 40px auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #6c757d;
-      font-family: Arial, sans-serif;
-      position: relative;
-    `;
-    
-    // Add placeholder content
-    const title = document.createElement('div');
-    title.style.cssText = `
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 8px;
-    `;
-    title.textContent = `Lesson ${canvasRow.lesson_number} - Page ${canvasRow.canvas_index}`;
-
-    const subtitle = document.createElement('div');
-    subtitle.style.cssText = `
-      font-size: 14px;
-      opacity: 0.7;
-    `;
-    subtitle.textContent = 'Scroll to load canvas';
-
-    placeholder.appendChild(title);
-    placeholder.appendChild(subtitle);
+    const placeholder = this.createPlaceholderElement(canvasRow.id, canvasRow, 'Scroll to load canvas');
 
     // Store canvas application (without actual canvas yet - viewport-based loading)
     const canvasApp: CanvasApplication = {
       app: null,
       canvas: null, // No canvas element yet
+      placeholder,
       templateLayoutManager: null,
       canvasRow,
       isActive: false,
@@ -363,6 +361,7 @@ export class VerticalCanvasContainer {
     console.log(`🔄 Viewport-triggered lazy loading: ${canvasId}`);
 
     try {
+      await this.ensureCapacityForNewCanvas(canvasId);
       // Find the placeholder element
       const placeholder = document.getElementById(`canvas-placeholder-${canvasId}`);
       if (!placeholder) {
@@ -406,16 +405,17 @@ export class VerticalCanvasContainer {
       
       // Update canvas reference
       canvasApp.canvas = pixiCanvas;
+      canvasApp.placeholder = null;
 
       // Create layer system first (needed for zoom setup)
       const layers = new CanvasLayers(app);
       layers.initialize();
 
       // Set up zoom controls BEFORE applying any zoom
-      this.setupCanvasZoomControls(app, pixiCanvas);
+      const zoomManager = await this.setupCanvasZoomControls(app, pixiCanvas);
 
       // Apply unified zoom (or fit-to-viewport if no user zoom yet)
-      this.setupCanvasZoom(app, pixiCanvas);
+      this.setupCanvasZoom(app, pixiCanvas, zoomManager);
 
       // Create display object manager using drawing layer
       const drawingLayer = layers.getLayer('drawing');
@@ -485,6 +485,60 @@ export class VerticalCanvasContainer {
   }
 
   /**
+   * Ensure there is WebGL capacity before initializing another canvas instance
+   */
+  private async ensureCapacityForNewCanvas(targetCanvasId: string): Promise<void> {
+    const loadedCanvases = Array.from(this.canvasApplications.values()).filter(app => app.isLoaded);
+
+    if (loadedCanvases.length < this.MAX_LOADED_CANVASES) {
+      return;
+    }
+
+    const targetCanvas = this.canvasApplications.get(targetCanvasId);
+    const targetIndex = targetCanvas?.canvasRow?.canvas_index ?? null;
+
+    const candidates = loadedCanvases.filter(app => app.canvasRow.id !== this.activeCanvasId);
+
+    const distanceScore = (app: CanvasApplication) => {
+      if (targetIndex === null) {
+        return Math.abs(app.canvasRow.canvas_index);
+      }
+      return Math.abs(app.canvasRow.canvas_index - targetIndex);
+    };
+
+    candidates.sort((a, b) => distanceScore(b) - distanceScore(a));
+
+    while (candidates.length && loadedCanvases.length >= this.MAX_LOADED_CANVASES) {
+      const toUnload = candidates.shift();
+      if (!toUnload) {
+        break;
+      }
+
+      try {
+        await this.lazyUnloadCanvas(toUnload.canvasRow.id);
+        const index = loadedCanvases.indexOf(toUnload);
+        if (index > -1) {
+          loadedCanvases.splice(index, 1);
+        }
+      } catch (error) {
+        console.warn(`⚠️ Failed to unload canvas ${toUnload.canvasRow.id} before loading ${targetCanvasId}:`, error);
+        break;
+      }
+    }
+
+    if (loadedCanvases.length >= this.MAX_LOADED_CANVASES) {
+      const activeCanvas = this.activeCanvasId ? this.canvasApplications.get(this.activeCanvasId) : null;
+      if (activeCanvas && activeCanvas.isLoaded) {
+        try {
+          await this.lazyUnloadCanvas(activeCanvas.canvasRow.id);
+        } catch (error) {
+          console.warn(`⚠️ Failed to unload active canvas ${activeCanvas.canvasRow.id} before loading ${targetCanvasId}:`, error);
+        }
+      }
+    }
+  }
+
+  /**
    * Force cleanup of all canvases to prevent WebGL context exhaustion
    */
   private async forceCleanupAllCanvases(): Promise<void> {
@@ -527,6 +581,21 @@ export class VerticalCanvasContainer {
    */
   private async safeDestroyCanvas(canvasId: string, canvasApp: any): Promise<void> {
     try {
+      const appInstance = canvasApp.app;
+
+      if (!appInstance) {
+        canvasApp.isLoaded = false;
+        canvasApp.canvas = null;
+        return;
+      }
+
+      if (appInstance.renderer?.destroyed) {
+        canvasApp.app = null;
+        canvasApp.canvas = null;
+        canvasApp.isLoaded = false;
+        return;
+      }
+
       // Unregister from UnifiedZoomManager first
       if (this.unifiedZoomManager) {
         this.unifiedZoomManager.unregisterCanvas(canvasId);
@@ -545,28 +614,28 @@ export class VerticalCanvasContainer {
       }
 
       // Remove from DOM first to stop rendering
-      if (canvasApp.app?.canvas?.parentNode) {
-        canvasApp.app.canvas.parentNode.removeChild(canvasApp.app.canvas);
+      if (appInstance.canvas?.parentNode) {
+        appInstance.canvas.parentNode.removeChild(appInstance.canvas);
       }
 
       // Wait a bit more to ensure DOM removal is processed
       await new Promise(resolve => setTimeout(resolve, 16));
 
       // Clear stage children safely
-      if (canvasApp.app?.stage) {
+      if (appInstance.stage) {
         try {
-          canvasApp.app.stage.destroy({ children: true });
+          appInstance.stage.destroy({ children: true });
         } catch (stageError) {
           console.warn(`⚠️ Stage destroy error (non-critical):`, stageError);
         }
       }
 
       // Destroy app with additional safety checks
-      if (canvasApp.app) {
+      if (appInstance) {
         try {
           // Check if renderer is still valid before destroying
-          if (canvasApp.app.renderer && !canvasApp.app.renderer.destroyed) {
-            canvasApp.app.destroy(true, true);
+          if (appInstance.renderer && !appInstance.renderer.destroyed) {
+            appInstance.destroy(true, true);
           } else {
             console.warn(`⚠️ Renderer already destroyed for canvas ${canvasId}`);
           }
@@ -577,11 +646,13 @@ export class VerticalCanvasContainer {
 
       // Clear references
       canvasApp.app = null;
+      canvasApp.canvas = null;
       canvasApp.templateLayoutManager = null;
       canvasApp.toolManager = null;
       canvasApp.events = null;
       canvasApp.layers = null;
       canvasApp.displayManager = null;
+      canvasApp.placeholder = null;
       canvasApp.isLoaded = false;
 
     } catch (error) {
@@ -651,58 +722,31 @@ export class VerticalCanvasContainer {
     console.log(`🗑️ Viewport-triggered lazy unloading: ${canvasId}`);
 
     try {
+      if (this.activeCanvasId === canvasId) {
+        this.activeCanvasId = null;
+      }
+      const currentCanvas = canvasApp.canvas;
+      let placeholder: HTMLDivElement | null = null;
+
+      if (currentCanvas) {
+        // Clean up zoom controls prior to destruction
+        this.cleanupCanvasZoomControls(currentCanvas);
+
+        placeholder = this.createPlaceholderElement(canvasId, canvasApp.canvasRow, 'Scroll to reload');
+
+        if (currentCanvas.parentNode) {
+          currentCanvas.parentNode.replaceChild(placeholder, currentCanvas);
+        } else if ((currentCanvas as any).replaceWith) {
+          (currentCanvas as any).replaceWith(placeholder);
+        }
+      }
+
       // Use the safer destruction method (handles all cleanup)
       await this.safeDestroyCanvas(canvasId, canvasApp);
 
-      // Replace canvas with placeholder again
-      const currentCanvas = canvasApp.canvas;
-      if (currentCanvas) {
-        // Clean up zoom controls
-        this.cleanupCanvasZoomControls(currentCanvas);
-        
-        const placeholder = document.createElement('div');
-        placeholder.id = `canvas-placeholder-${canvasId}`;
-        placeholder.className = 'canvas-placeholder-invisible';
-        placeholder.setAttribute('data-canvas-id', canvasId);
-        placeholder.setAttribute('data-lesson-number', canvasApp.canvasRow.lesson_number.toString());
-        placeholder.setAttribute('data-canvas-index', canvasApp.canvasRow.canvas_index.toString());
-        
-        // Set placeholder dimensions to match canvas size
-        placeholder.style.cssText = `
-          width: ${this.CANVAS_WIDTH}px;
-          height: ${this.CANVAS_HEIGHT}px;
-          margin: 0 auto 40px auto;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          color: #6c757d;
-          font-family: Arial, sans-serif;
-          position: relative;
-        `;
-        
-        // Add placeholder content
-        const title = document.createElement('div');
-        title.style.cssText = `
-          font-size: 18px;
-          font-weight: bold;
-          margin-bottom: 8px;
-        `;
-        title.textContent = `Lesson ${canvasApp.canvasRow.lesson_number} - Page ${canvasApp.canvasRow.canvas_index}`;
-
-        const subtitle = document.createElement('div');
-        subtitle.style.cssText = `
-          font-size: 14px;
-          opacity: 0.7;
-        `;
-        subtitle.textContent = 'Scroll to reload';
-
-        placeholder.appendChild(title);
-        placeholder.appendChild(subtitle);
-        
-        // Replace in DOM
-        currentCanvas.parentNode?.replaceChild(placeholder, currentCanvas);
+      if (placeholder) {
         canvasApp.canvas = null;
+        canvasApp.placeholder = placeholder;
         
         // Re-observe placeholder for future intersection
         this.intersectionObserver?.observe(placeholder);
@@ -920,51 +964,18 @@ export class VerticalCanvasContainer {
   /**
    * Setup canvas zoom - either use unified zoom or calculate fit-to-viewport
    */
-  private setupCanvasZoom(app: Application, canvas: HTMLCanvasElement): void {
+  private setupCanvasZoom(_app: Application, canvas: HTMLCanvasElement, zoomManager: HighQualityZoom | null): void {
     // Wait for container to be properly sized
     setTimeout(() => {
-      const containerRect = canvas.getBoundingClientRect();
-      const containerWidth = containerRect.width;
-      const containerHeight = containerRect.height;
-      
-      console.log(`📏 Container dimensions: ${containerWidth}x${containerHeight}`);
-      console.log(`📐 Canvas dimensions: ${this.CANVAS_WIDTH}x${this.CANVAS_HEIGHT}`);
-      
-      // Check if unified zoom manager has a non-default zoom level
-      const currentUnifiedZoom = this.unifiedZoomManager?.getZoomLevel() || 1.0;
-      
-      if (currentUnifiedZoom !== 1.0) {
-        // User has already zoomed - apply the unified zoom level
-        console.log(`🎯 Applying unified zoom: ${(currentUnifiedZoom * 100).toFixed(1)}%`);
-        
-        // Apply the unified zoom through the unified zoom manager
-        if (this.unifiedZoomManager) {
-          this.unifiedZoomManager.setZoom(currentUnifiedZoom);
-        }
-      } else {
-        // Default initial zoom to 100% (1.0) for a document-like experience
-        console.log('🎯 Setting initial unified zoom to 100%');
-        if (this.unifiedZoomManager) {
-          this.unifiedZoomManager.setZoom(1.0);
-        }
+      const currentUnifiedZoom = this.unifiedZoomManager?.getZoomLevel() || zoomManager?.getZoom() || this.currentZoomLevel || 1.0;
+      this.applyZoomToCanvasElement(canvas, currentUnifiedZoom);
+      this.updateCanvasSpacing();
+      this.currentZoomLevel = currentUnifiedZoom;
+      if (zoomManager && typeof zoomManager.centerCanvas === 'function') {
+        zoomManager.centerCanvas();
       }
       
-      // Update spacing (keep constant regardless of zoom level)
-      this.updateCanvasSpacing();
-      
-      // Center the canvas in the container (this needs to be done regardless of zoom level)
-      const currentZoom = this.unifiedZoomManager?.getZoomLevel() || 1.0;
-      const scaledWidth = this.CANVAS_WIDTH * currentZoom;
-      const scaledHeight = this.CANVAS_HEIGHT * currentZoom;
-      app.stage.x = (containerWidth - scaledWidth) / 2;
-      app.stage.y = (containerHeight - scaledHeight) / 2;
-      
-      // Scale the canvas element itself to match the zoom level
-      canvas.style.width = `${scaledWidth}px`;
-      canvas.style.height = `${scaledHeight}px`;
-      
-      console.log(`📍 Canvas positioned at (${app.stage.x.toFixed(1)}, ${app.stage.y.toFixed(1)})`);
-      console.log(`📦 Scaled canvas size: ${scaledWidth.toFixed(1)}x${scaledHeight.toFixed(1)}`);
+      console.log(`📦 Canvas element scaled to ${(currentUnifiedZoom * 100).toFixed(1)}%`);
       console.log(`👁️ Canvas zoom synchronized with unified zoom manager`);
     }, 100);
   }
@@ -985,11 +996,57 @@ export class VerticalCanvasContainer {
   }
 
   /**
+   * Apply zoomed dimensions to a loaded canvas element
+   */
+  private applyZoomToCanvasElement(canvas: HTMLCanvasElement, zoom: number): void {
+    const scaledWidth = this.CANVAS_WIDTH * zoom;
+    const scaledHeight = this.CANVAS_HEIGHT * zoom;
+
+    canvas.style.width = `${scaledWidth}px`;
+    canvas.style.height = `${scaledHeight}px`;
+    canvas.style.maxWidth = '100%';
+  }
+
+  /**
+   * Apply zoomed dimensions to a placeholder element
+   */
+  private applyZoomToPlaceholder(placeholder: HTMLElement, zoom: number): void {
+    const scaledWidth = this.CANVAS_WIDTH * zoom;
+    const scaledHeight = this.CANVAS_HEIGHT * zoom;
+
+    placeholder.style.width = `${scaledWidth}px`;
+    placeholder.style.height = `${scaledHeight}px`;
+  }
+
+  /**
+   * Update all canvas elements (loaded and placeholders) to match current zoom
+   */
+  private updateCanvasScale(zoom: number): void {
+    this.currentZoomLevel = zoom;
+
+    this.canvasApplications.forEach(canvasApp => {
+      if (canvasApp.canvas) {
+        this.applyZoomToCanvasElement(canvasApp.canvas, zoom);
+      }
+
+      if (canvasApp.placeholder) {
+        this.applyZoomToPlaceholder(canvasApp.placeholder, zoom);
+      } else if (!canvasApp.canvas) {
+        const placeholder = document.getElementById(`canvas-placeholder-${canvasApp.canvasRow.id}`) as HTMLDivElement | null;
+        if (placeholder) {
+          this.applyZoomToPlaceholder(placeholder, zoom);
+          canvasApp.placeholder = placeholder;
+        }
+      }
+    });
+  }
+
+  /**
    * Setup zoom controls for a specific canvas using unified zoom manager
    */
-  private setupCanvasZoomControls(app: Application, canvas: HTMLCanvasElement): void {
-    // Import and create HighQualityZoom instance for this canvas
-    import('./HighQualityZoom').then(({ HighQualityZoom }) => {
+  private async setupCanvasZoomControls(app: Application, canvas: HTMLCanvasElement): Promise<HighQualityZoom | null> {
+    try {
+      const { HighQualityZoom } = await import('./HighQualityZoom');
       const zoomManager = new HighQualityZoom(app, {
         minZoom: 0.1,  // 10% minimum zoom
         maxZoom: 5.0,  // 500% maximum zoom
@@ -997,29 +1054,55 @@ export class VerticalCanvasContainer {
         smoothZoom: true
       });
 
-      // Register with unified zoom manager
       const canvasId = canvas.getAttribute('data-canvas-id');
       if (canvasId && this.unifiedZoomManager) {
         this.unifiedZoomManager.registerCanvas(canvasId, app, zoomManager);
+
+        if (zoomManager.setZoomCommandHandler) {
+          zoomManager.setZoomCommandHandler((command: 'zoom-in' | 'zoom-out' | 'reset') => {
+            if (!this.unifiedZoomManager) return;
+            switch (command) {
+              case 'zoom-in':
+                this.unifiedZoomManager.zoomIn();
+                break;
+              case 'zoom-out':
+                this.unifiedZoomManager.zoomOut();
+                break;
+              case 'reset':
+                this.unifiedZoomManager.resetZoom();
+                break;
+            }
+          });
+        }
       }
 
-      // Set up wheel event handling for unified zoom
       const wheelHandler = (event: WheelEvent) => {
-        if (this.unifiedZoomManager && this.unifiedZoomManager.handleWheel(event, event.clientX, event.clientY)) {
+        let handled = false;
+
+        if (this.unifiedZoomManager) {
+          handled = this.unifiedZoomManager.handleWheel(event, event.clientX, event.clientY);
+        }
+
+        if (!handled && zoomManager.handleWheel) {
+          handled = zoomManager.handleWheel(event, event.clientX, event.clientY);
+        }
+
+        if (handled) {
           event.preventDefault();
         }
       };
-      
+
       canvas.addEventListener('wheel', wheelHandler, { passive: false });
-      
-      // Store wheel handler reference for cleanup
+
       (canvas as any).wheelHandler = wheelHandler;
       (canvas as any).zoomManager = zoomManager;
 
       console.log('🎯 Unified zoom controls enabled for canvas');
-    }).catch(error => {
+      return zoomManager;
+    } catch (error) {
       console.error('❌ Failed to load zoom controls:', error);
-    });
+      return null;
+    }
   }
 
   /**
@@ -1033,7 +1116,10 @@ export class VerticalCanvasContainer {
     }
     
     // Remove wheel event listener
-    canvas.removeEventListener('wheel', (canvas as any).wheelHandler);
+    const wheelHandler = (canvas as any).wheelHandler;
+    if (wheelHandler) {
+      canvas.removeEventListener('wheel', wheelHandler);
+    }
     
     // Clean up zoom manager
     const zoomManager = (canvas as any).zoomManager;

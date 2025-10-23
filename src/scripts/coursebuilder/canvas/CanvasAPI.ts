@@ -19,8 +19,6 @@ import { DisplayObjectManager } from './DisplayObjectManager';
 import { ToolManager } from '../tools/ToolManager';
 import { canvasMarginManager } from './CanvasMarginManager';
 import { TemplateLayoutManager } from './TemplateLayoutManager';
-import { MultiCanvasManager } from './MultiCanvasManager';
-import { CanvasDataManager } from './CanvasDataManager';
 
 export class CanvasAPI {
   private pixiApp: PixiApp;
@@ -29,8 +27,6 @@ export class CanvasAPI {
   private displayManager: DisplayObjectManager | null = null;
   private toolManager: ToolManager | null = null;
   private templateLayoutManager: TemplateLayoutManager | null = null;
-  private multiCanvasManager: MultiCanvasManager | null = null;
-  private canvasDataManager: CanvasDataManager | null = null;
   private initialized: boolean = false;
   // Placement configuration per media type
   private placementMode: Record<string, 'center' | 'topleft'> = {
@@ -109,9 +105,10 @@ export class CanvasAPI {
         canvasMarginManager.setContainer(backgroundLayer);
       }
 
-      // Step 8: Initialize multi-canvas system
-      this.multiCanvasManager = new MultiCanvasManager();
-      this.multiCanvasManager.initialize();
+      // Step 8: Initialize template layout manager
+      this.templateLayoutManager = new TemplateLayoutManager();
+      await this.templateLayoutManager.initialize(drawingLayer);
+      console.log('✅ Template layout manager initialized with header, body, footer blocks');
 
       // Step 9: Subscribe to margin changes for template layout updates
       canvasMarginManager.onMarginChange(() => {
@@ -212,93 +209,6 @@ export class CanvasAPI {
    */
   public getTemplateLayoutDebugInfo(): any {
     return this.templateLayoutManager?.getDebugInfo() || null;
-  }
-
-  // ============== MULTI-CANVAS METHODS ==============
-
-  /**
-   * Load all canvases for a course
-   */
-  public async loadCourseCanvases(courseId: string): Promise<void> {
-    if (!this.multiCanvasManager || !this.canvasDataManager) {
-      // Try to initialize if not already done
-      if (!this.multiCanvasManager) {
-        console.log('🔄 Initializing multi-canvas manager...');
-        this.multiCanvasManager = new MultiCanvasManager();
-        this.multiCanvasManager.initialize();
-      }
-      
-      if (!this.canvasDataManager) {
-        console.log('🔄 Initializing canvas data manager...');
-        this.canvasDataManager = new CanvasDataManager();
-      }
-    }
-
-    this.canvasDataManager.setCourseId(courseId);
-    await this.multiCanvasManager.loadCourseCanvases(courseId);
-  }
-
-  /**
-   * Navigate to next canvas
-   */
-  public navigateToNextCanvas(): boolean {
-    return this.multiCanvasManager?.navigateToNext() || false;
-  }
-
-  /**
-   * Navigate to previous canvas
-   */
-  public navigateToPreviousCanvas(): boolean {
-    return this.multiCanvasManager?.navigateToPrevious() || false;
-  }
-
-  /**
-   * Show specific canvas by ID
-   */
-  public showCanvas(canvasId: string): void {
-    this.multiCanvasManager?.showCanvas(canvasId);
-  }
-
-  /**
-   * Get current canvas information
-   */
-  public getCurrentCanvas(): any {
-    return this.multiCanvasManager?.getCurrentCanvas() || null;
-  }
-
-  /**
-   * Get all canvases
-   */
-  public getAllCanvases(): any[] {
-    return this.multiCanvasManager?.getAllCanvases() || [];
-  }
-
-  /**
-   * Get canvas count
-   */
-  public getCanvasCount(): number {
-    return this.multiCanvasManager?.getCanvasCount() || 0;
-  }
-
-  /**
-   * Get current canvas index (1-based)
-   */
-  public getCurrentCanvasIndex(): number {
-    return this.multiCanvasManager?.getCurrentCanvasIndex() || 0;
-  }
-
-  /**
-   * Subscribe to canvas navigation changes
-   */
-  public onCanvasNavigationChange(callback: (canvasId: string) => void): void {
-    this.multiCanvasManager?.onNavigationChange(callback);
-  }
-
-  /**
-   * Get multi-canvas debug information
-   */
-  public getMultiCanvasDebugInfo(): any {
-    return this.multiCanvasManager?.getDebugInfo() || null;
   }
 
   /**
@@ -1251,10 +1161,10 @@ export class CanvasAPI {
       return unifiedZoomManager.getZoomLevel();
     }
     
-    // Fallback to active canvas scale
-    const activeCanvas = this.multiCanvasManager?.getActiveCanvas();
-    if (activeCanvas && activeCanvas.app) {
-      return activeCanvas.app.stage.scale.x;
+    // Fallback to app stage scale
+    const app = this.getApp();
+    if (app) {
+      return app.stage.scale.x;
     }
     return 1.0;
   }
@@ -1265,18 +1175,18 @@ export class CanvasAPI {
   public setZoomLevel(zoom: number, smooth: boolean = true): void {
     const unifiedZoomManager = (window as any).unifiedZoomManager;
     if (unifiedZoomManager) {
-      // Use unified zoom manager for consistent zoom across all canvases
+      // Use unified zoom manager for consistent zoom
       unifiedZoomManager.setZoom(zoom);
       console.log(`🔍 Unified zoom set to ${(zoom * 100).toFixed(1)}%`);
       return;
     }
     
     // Fallback to single canvas zoom (legacy behavior)
-    const activeCanvas = this.multiCanvasManager?.getActiveCanvas();
-    if (activeCanvas && activeCanvas.app) {
+    const app = this.getApp();
+    if (app) {
       if (smooth) {
         // Smooth zoom animation
-        const currentZoom = activeCanvas.app.stage.scale.x;
+        const currentZoom = app.stage.scale.x;
         const targetZoom = Math.max(0.1, Math.min(3.0, zoom)); // Clamp between 10% and 300%
         
         // Simple linear interpolation for smooth zoom
@@ -1288,7 +1198,7 @@ export class CanvasAPI {
           const progress = Math.min(elapsed / duration, 1);
           
           const currentScale = currentZoom + (targetZoom - currentZoom) * progress;
-          activeCanvas.app!.stage.scale.set(currentScale);
+          app.stage.scale.set(currentScale);
           
           if (progress < 1) {
             requestAnimationFrame(animateZoom);
@@ -1299,12 +1209,12 @@ export class CanvasAPI {
       } else {
         // Instant zoom
         const clampedZoom = Math.max(0.1, Math.min(3.0, zoom));
-        activeCanvas.app.stage.scale.set(clampedZoom);
+        app.stage.scale.set(clampedZoom);
       }
       
       console.log(`🔍 Fallback zoom set to ${(zoom * 100).toFixed(1)}%`);
     } else {
-      console.warn('⚠️ No active canvas available for zoom');
+      console.warn('⚠️ No app available for zoom');
     }
   }
 
@@ -1321,9 +1231,10 @@ export class CanvasAPI {
     }
     
     // Fallback to single canvas fit-to-viewport (legacy behavior)
-    const activeCanvas = this.multiCanvasManager?.getActiveCanvas();
-    if (activeCanvas && activeCanvas.app && activeCanvas.canvas) {
-      const containerRect = activeCanvas.canvas.getBoundingClientRect();
+    const app = this.getApp();
+    const canvas = app?.canvas;
+    if (app && canvas) {
+      const containerRect = canvas.getBoundingClientRect();
       const containerWidth = containerRect.width;
       const containerHeight = containerRect.height;
       
@@ -1336,17 +1247,17 @@ export class CanvasAPI {
       const scaleY = availableHeight / 1800; // CANVAS_HEIGHT
       const fitScale = Math.min(scaleX, scaleY);
       
-      activeCanvas.app.stage.scale.set(fitScale);
+      app.stage.scale.set(fitScale);
       
       // Center the canvas
       const scaledWidth = 1200 * fitScale;
       const scaledHeight = 1800 * fitScale;
-      activeCanvas.app.stage.x = (containerWidth - scaledWidth) / 2;
-      activeCanvas.app.stage.y = (containerHeight - scaledHeight) / 2;
+      app.stage.x = (containerWidth - scaledWidth) / 2;
+      app.stage.y = (containerHeight - scaledHeight) / 2;
       
       console.log(`🔍 Fallback fit-to-viewport applied: ${(fitScale * 100).toFixed(1)}%`);
     } else {
-      console.warn('⚠️ No active canvas available for fit-to-viewport');
+      console.warn('⚠️ No canvas available for fit-to-viewport');
     }
   }
 
@@ -1408,16 +1319,6 @@ export class CanvasAPI {
     if (this.templateLayoutManager) {
       this.templateLayoutManager.destroy();
       this.templateLayoutManager = null;
-    }
-
-    if (this.multiCanvasManager) {
-      this.multiCanvasManager.destroy();
-      this.multiCanvasManager = null;
-    }
-
-    if (this.canvasDataManager) {
-      // CanvasDataManager doesn't need destroy, just clear reference
-      this.canvasDataManager = null;
     }
 
     if (this.layers) {

@@ -18,6 +18,19 @@ export class HighQualityZoom {
     private stage: Container;
     private zoomLevel: number; // Will be set to fit-to-view zoom in constructor
     private config: ZoomConfig;
+    private canvasElement: HTMLCanvasElement | null = null;
+    private perspectiveButtons: HTMLElement[] = [];
+    private perspectiveHandlers: Array<{ element: HTMLElement; handler: (event: Event) => void }> = [];
+    private canvasWheelHandler: ((event: WheelEvent) => void) | null = null;
+    private spacebarHandlers: {
+        keyDown: (event: KeyboardEvent) => void;
+        keyUp: (event: KeyboardEvent) => void;
+        mouseDown: (event: MouseEvent) => void;
+        mouseMove: (event: MouseEvent) => void;
+        mouseUp: (event: MouseEvent) => void;
+    } | null = null;
+    private spacebarCursorBackup: string = '';
+    private zoomCommandHandler: ((command: 'zoom-in' | 'zoom-out' | 'reset') => void) | null = null;
     
     // Pan offset for the zoomed view
     private panOffset: { x: number; y: number } = { x: 0, y: 0 };
@@ -368,6 +381,7 @@ export class HighQualityZoom {
      */
     private isGrabToolActive: boolean = false;
     private grabKeyHandler: ((event: KeyboardEvent) => void) | null = null;
+    private grabKeyUpHandler: ((event: KeyboardEvent) => void) | null = null;
     private grabMouseHandler: ((event: MouseEvent) => void) | null = null;
 
     /**
@@ -409,6 +423,7 @@ export class HighQualityZoom {
                 }
             }
         };
+        this.grabKeyUpHandler = keyUpHandler;
         
         document.addEventListener('keydown', this.grabKeyHandler);
         document.addEventListener('keyup', keyUpHandler);
@@ -428,6 +443,11 @@ export class HighQualityZoom {
         if (this.grabKeyHandler) {
             document.removeEventListener('keydown', this.grabKeyHandler);
             this.grabKeyHandler = null;
+        }
+
+        if (this.grabKeyUpHandler) {
+            document.removeEventListener('keyup', this.grabKeyUpHandler);
+            this.grabKeyUpHandler = null;
         }
         
         if (this.grabMouseHandler) {
@@ -449,22 +469,34 @@ export class HighQualityZoom {
      * Bind perspective tool button events
      */
     private bindPerspectiveEvents(): void {
-        // Handle perspective tool button clicks
-        document.querySelectorAll('[data-perspective]:not([data-snap-anchor])').forEach(button => {
-            button.addEventListener('click', (event: Event) => {
+        const buttons = Array.from(document.querySelectorAll('[data-perspective]:not([data-snap-anchor])')) as HTMLElement[];
+        buttons.forEach(button => {
+            const handler = (event: Event) => {
                 event.preventDefault();
                 const target = event.currentTarget as HTMLElement;
                 const action = target.getAttribute('data-perspective');
 
                 switch (action) {
                     case 'zoom-in':
-                        this.zoomIn();
+                        if (this.zoomCommandHandler) {
+                            this.zoomCommandHandler('zoom-in');
+                        } else {
+                            this.zoomIn();
+                        }
                         break;
                     case 'zoom-out':
-                        this.zoomOut();
+                        if (this.zoomCommandHandler) {
+                            this.zoomCommandHandler('zoom-out');
+                        } else {
+                            this.zoomOut();
+                        }
                         break;
                     case 'reset':
-                        this.resetView();
+                        if (this.zoomCommandHandler) {
+                            this.zoomCommandHandler('reset');
+                        } else {
+                            this.resetView();
+                        }
                         break;
                     case 'grab':
                         this.toggleGrabTool(target);
@@ -472,31 +504,24 @@ export class HighQualityZoom {
                     default:
                         console.warn('Unknown perspective action:', action);
                 }
-            });
+            };
+
+            button.addEventListener('click', handler);
+            this.perspectiveButtons.push(button);
+            this.perspectiveHandlers.push({ element: button, handler });
         });
 
-        // Handle wheel zoom on canvas
-        const canvas = this.app.view as HTMLCanvasElement;
-        if (canvas) {
-            canvas.addEventListener('wheel', (event: WheelEvent) => {
-                if (event.ctrlKey || event.metaKey) {
-                    event.preventDefault();
-                    
-                    const rect = canvas.getBoundingClientRect();
-                    const centerX = event.clientX - rect.left;
-                    const centerY = event.clientY - rect.top;
-                    
-                    if (event.deltaY < 0) {
-                        this.zoomIn(centerX, centerY);
-                    } else {
-                        this.zoomOut(centerX, centerY);
-                    }
-                }
-            }, { passive: false });
-        }
+        this.canvasElement = this.app.view as HTMLCanvasElement;
 
         // Handle global spacebar + mouse drag panning
         this.bindSpacebarPanning();
+    }
+
+    /**
+     * Allow external controllers to handle zoom commands (e.g., unified zoom manager)
+     */
+    public setZoomCommandHandler(handler: ((command: 'zoom-in' | 'zoom-out' | 'reset') => void) | null): void {
+        this.zoomCommandHandler = handler;
     }
 
     /**
@@ -504,7 +529,7 @@ export class HighQualityZoom {
      */
     private bindSpacebarPanning(): void {
         let panStart = { x: 0, y: 0 };
-        let originalCursor = '';
+        this.spacebarCursorBackup = '';
 
         const keyDownHandler = (event: KeyboardEvent) => {
             if (event.code === 'Space' && !event.repeat) {
@@ -525,7 +550,7 @@ export class HighQualityZoom {
                 if (!this.isSpacePressed) {
                     this.isSpacePressed = true;
                     // Store original cursor and change to grab
-                    originalCursor = document.body.style.cursor;
+                    this.spacebarCursorBackup = document.body.style.cursor;
                     document.body.style.cursor = 'grab';
                 }
             }
@@ -536,7 +561,7 @@ export class HighQualityZoom {
                 this.isSpacePressed = false;
                 this.isSpacePanning = false;
                 // Restore original cursor
-                document.body.style.cursor = originalCursor;
+                document.body.style.cursor = this.spacebarCursorBackup;
             }
         };
 
@@ -568,7 +593,7 @@ export class HighQualityZoom {
         const mouseUpHandler = () => {
             if (this.isSpacePanning) {
                 this.isSpacePanning = false;
-                document.body.style.cursor = this.isSpacePressed ? 'grab' : originalCursor;
+                document.body.style.cursor = this.isSpacePressed ? 'grab' : this.spacebarCursorBackup;
             }
         };
 
@@ -578,6 +603,14 @@ export class HighQualityZoom {
         document.addEventListener('mousedown', mouseDownHandler, { capture: true });
         document.addEventListener('mousemove', mouseMoveHandler, { capture: true });
         document.addEventListener('mouseup', mouseUpHandler, { capture: true });
+
+        this.spacebarHandlers = {
+            keyDown: keyDownHandler,
+            keyUp: keyUpHandler,
+            mouseDown: mouseDownHandler,
+            mouseMove: mouseMoveHandler,
+            mouseUp: mouseUpHandler
+        };
 
         console.log('🎯 Spacebar + mouse drag panning enabled');
     }
@@ -612,5 +645,69 @@ export class HighQualityZoom {
             this.activateGrabTool();
             button.classList.add('engine__perspective-item--active');
         }
+    }
+
+    /**
+     * Clean up all listeners and state for this zoom manager instance
+     */
+    public destroy(): void {
+        // Remove perspective button handlers
+        this.perspectiveHandlers.forEach(({ element, handler }) => {
+            element.removeEventListener('click', handler);
+        });
+        this.perspectiveButtons.forEach(button => {
+            if (button.getAttribute('data-perspective') === 'grab') {
+                button.classList.remove('engine__perspective-item--active');
+            }
+        });
+        this.perspectiveHandlers = [];
+        this.perspectiveButtons = [];
+
+        // Remove canvas wheel handler
+        if (this.canvasElement && this.canvasWheelHandler) {
+            this.canvasElement.removeEventListener('wheel', this.canvasWheelHandler);
+        }
+        this.canvasWheelHandler = null;
+        this.canvasElement = null;
+
+        // Remove spacebar-based handlers
+        if (this.spacebarHandlers) {
+            document.removeEventListener('keydown', this.spacebarHandlers.keyDown, true);
+            document.removeEventListener('keyup', this.spacebarHandlers.keyUp, true);
+            document.removeEventListener('mousedown', this.spacebarHandlers.mouseDown, true);
+            document.removeEventListener('mousemove', this.spacebarHandlers.mouseMove, true);
+            document.removeEventListener('mouseup', this.spacebarHandlers.mouseUp, true);
+            this.spacebarHandlers = null;
+        }
+
+        // Reset cursor state if we were mid-pan
+        if (this.isSpacePressed || this.isSpacePanning) {
+            document.body.style.cursor = this.spacebarCursorBackup || '';
+        }
+
+        this.isSpacePressed = false;
+        this.isSpacePanning = false;
+
+        // Ensure grab tool listeners are removed
+        if (this.isGrabToolActive) {
+            this.deactivateGrabTool();
+        } else {
+            if (this.grabKeyHandler) {
+                document.removeEventListener('keydown', this.grabKeyHandler);
+                this.grabKeyHandler = null;
+            }
+            if (this.grabKeyUpHandler) {
+                document.removeEventListener('keyup', this.grabKeyUpHandler);
+                this.grabKeyUpHandler = null;
+            }
+            if (this.grabMouseHandler) {
+                document.removeEventListener('mousemove', this.grabMouseHandler);
+                this.grabMouseHandler = null;
+            }
+        }
+
+        // Restore cursor if grab was active
+        document.body.style.cursor = this.spacebarCursorBackup || '';
+        this.zoomCommandHandler = null;
     }
 }
