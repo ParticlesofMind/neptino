@@ -1,563 +1,924 @@
 /**
- * TemplateLayoutManager - Yoga Layout Integration for Template Blocks
- * 
- * Responsibilities:
- * - Create and manage Header, Body, Footer template blocks
- * - Integrate with @pixi/layout (Yoga) for flexible positioning
- * - Handle dynamic sizing based on canvas dimensions and margins
- * - Provide visual debugging with color-coded blocks
- * - Connect to CanvasMarginManager for margin updates
- * 
- * Target: ~200 lines
+ * TemplateLayoutManager
+ *
+ * Renders header/body/footer template regions on the PIXI canvas using the
+ * persisted layout data generated in the backend (Yoga configuration).
+ *
+ * The manager keeps a minimal opinionated view layer: each section receives a
+ * neutral background and the relevant text content derived from template
+ * blocks, lesson data, and course metadata.
  */
 
-import { Container, Graphics, Text } from 'pixi.js';
-import { canvasMarginManager } from './CanvasMarginManager';
-import { canvasDimensionManager } from '../utils/CanvasDimensionManager';
+import "@pixi/layout";
+import { Container, Graphics, Text, type TextStyleOptions } from "pixi.js";
+import type { Layout } from "@pixi/layout";
+import { canvasMarginManager } from "./CanvasMarginManager";
+import { canvasDimensionManager } from "../utils/CanvasDimensionManager";
 
-export interface TemplateBlock {
+type YogaUnit = "px" | "percent";
+
+interface YogaDimension {
+  unit: YogaUnit;
+  value: number;
+}
+
+interface YogaPadding {
+  top?: number;
+  right?: number;
+  bottom?: number;
+  left?: number;
+}
+
+interface YogaNodeConfig {
+  flexDirection?: string;
+  justifyContent?: string;
+  alignItems?: string;
+  width?: YogaDimension;
+  height?: YogaDimension;
+  flexGrow?: number;
+  flexShrink?: number;
+  padding?: YogaPadding;
+  gap?: number;
+}
+
+interface TemplateBlockPayload {
+  id: string;
+  type: string;
+  order: number;
+  config: Record<string, unknown>;
+  content: string;
+}
+
+interface LayoutNode {
+  id: string;
+  role?: "header" | "body" | "footer" | "template-block" | "placeholder";
+  type: string;
+  order?: number;
+  yoga?: YogaNodeConfig;
+  templateBlock?: TemplateBlockPayload;
+  children?: LayoutNode[];
+  data?: Record<string, unknown>;
+}
+
+interface CanvasLessonSummary {
+  number: number;
+  title: string;
+  moduleNumber?: number | null;
+}
+
+interface CanvasDataPayload {
+  version?: string;
+  engine?: string;
+  template?: {
+    id: string;
+    slug: string;
+    name: string;
+    type: string;
+    scope: string;
+    description: string | null;
+  } | null;
+  lesson: CanvasLessonSummary;
+  margins: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+    unit?: string;
+  };
+  dimensions: {
+    width: number;
+    height: number;
+  };
+  layout: LayoutNode;
+}
+
+interface RenderContext {
+  teacherName?: string | null;
+  courseTitle?: string | null;
+  courseCode?: string | null;
+  pageNumber?: number;
+  generatedAt?: string;
+}
+
+interface SectionReferences {
   container: Container;
-  graphics: Graphics;
-  height: number;
+  background: Graphics;
+  content: Container;
+}
+
+interface TableColumn {
+  key: string;
+  label: string;
+}
+
+interface TableRow {
+  cells: Record<string, string>;
+  depth?: number;
+}
+
+interface TableData {
+  columns: TableColumn[];
+  rows: TableRow[];
+  emptyMessage?: string;
 }
 
 export class TemplateLayoutManager {
-  private layoutContainer: Container | null = null;
-  private Yoga: any = null;
-  private yogaRoot: any = null;
-  private yogaNodes: {
-    header: any;
-    body: any;
-    footer: any;
-  } = {
-    header: null,
-    body: null,
-    footer: null
+  private rootContainer: Container | null = null;
+  private sections: Record<"header" | "body" | "footer", SectionReferences> | null =
+    null;
+  private layoutBounds = {
+    width: 1200,
+    height: 1800,
   };
-  private blocks: {
-    header: TemplateBlock | null;
-    body: TemplateBlock | null;
-    footer: TemplateBlock | null;
-  } = {
-    header: null,
-    body: null,
-    footer: null
+  private margins = {
+    top: 96,
+    right: 96,
+    bottom: 96,
+    left: 96,
   };
-
-  // Color scheme for visual debugging
-  private readonly COLORS = {
-    header: 0xCC6666,  // Desaturated red
-    body: 0x66CC66,    // Desaturated green
-    footer: 0x6666CC   // Desaturated blue
-  };
-  private readonly ALPHA = 0.3;
 
   /**
-   * Initialize the template layout manager with a container
+   * Initialize the layout manager on the provided PIXI container.
    */
   public async initialize(container: Container): Promise<void> {
-    this.layoutContainer = container;
-    
-    // Add white background to the layout container to span the full canvas
-    this.addWhiteBackground();
-    
-    // Load yoga-layout asynchronously
-    try {
-      const yogaModule = await import('yoga-layout');
-      this.Yoga = yogaModule.default || yogaModule;
-    } catch (error) {
-      console.error('❌ Failed to load yoga-layout:', error);
-      throw new Error('Could not load yoga-layout package');
-    }
-    
-    this.setupYogaLayout();
-    this.createLayoutBlocks();
-    this.subscribeToMarginUpdates();
-  }
+    this.layoutBounds = canvasDimensionManager.getCurrentDimensions();
+    this.margins = canvasMarginManager.getMargins();
 
-  /**
-   * Add white background to span the full canvas
-   */
-  private addWhiteBackground(): void {
-    if (!this.layoutContainer) return;
-    
-    const background = new Graphics();
-    background.label = 'canvas-background';
-    
-    // Create white background that spans the full canvas (1200x1800)
-    background.rect(0, 0, 1200, 1800)
-      .fill({ color: 0xffffff }); // White background
-    
-    // Add background as the first child (behind everything)
-    this.layoutContainer.addChildAt(background, 0);
-    
-    console.log('✅ Added white background spanning full canvas (1200x1800)');
-  }
-
-  /**
-   * Set up Yoga layout root with canvas dimensions
-   */
-  private setupYogaLayout(): void {
-    if (!this.layoutContainer || !this.Yoga) {
-      throw new Error('Layout container or Yoga not set');
-    }
-
-    // Use full canvas dimensions (1200x1800) instead of container dimensions
-    const canvasWidth = 1200;
-    const canvasHeight = 1800;
-    
-    // Create Yoga layout root
-    this.yogaRoot = this.Yoga.Node.create();
-    this.yogaRoot.setWidth(canvasWidth);
-    this.yogaRoot.setHeight(canvasHeight);
-    this.yogaRoot.setFlexDirection(this.Yoga.FLEX_DIRECTION_COLUMN);
-    this.yogaRoot.setJustifyContent(this.Yoga.JUSTIFY_FLEX_START);
-    this.yogaRoot.setAlignItems(this.Yoga.ALIGN_STRETCH);
-
-    // Create child nodes
-    this.yogaNodes.header = this.Yoga.Node.create();
-    this.yogaNodes.body = this.Yoga.Node.create();
-    this.yogaNodes.footer = this.Yoga.Node.create();
-
-    // Add children to root
-    this.yogaRoot.insertChild(this.yogaNodes.header, 0);
-    this.yogaRoot.insertChild(this.yogaNodes.body, 1);
-    this.yogaRoot.insertChild(this.yogaNodes.footer, 2);
-  }
-
-  /**
-   * Create the three template blocks with Yoga layout
-   */
-  public createLayoutBlocks(): void {
-    if (!this.layoutContainer || !this.yogaRoot) {
-      throw new Error('Layout not initialized');
-    }
-
-    const margins = canvasMarginManager.getMargins();
-    // Use full canvas dimensions (1200x1800)
-    const canvasWidth = 1200;
-    const canvasHeight = 1800;
-
-    // Create Header Block
-    this.blocks.header = this.createBlock('header', {
-      width: canvasWidth,
-      height: margins.top,
-      backgroundColor: this.COLORS.header,
-      alpha: this.ALPHA
+    this.rootContainer = new Container({
+      layout: {
+        width: this.layoutBounds.width,
+        height: this.layoutBounds.height,
+        flexDirection: "column",
+        justifyContent: "flex-start",
+        alignItems: "stretch",
+      },
     });
+    this.lockDisplayObject(this.rootContainer);
+    this.rootContainer.sortableChildren = false;
 
-    // Create Body Block
-    this.blocks.body = this.createBlock('body', {
-      width: canvasWidth,
-      height: canvasHeight - margins.top - margins.bottom,
-      backgroundColor: this.COLORS.body,
-      alpha: this.ALPHA
-    });
-
-    // Create Footer Block
-    this.blocks.footer = this.createBlock('footer', {
-      width: canvasWidth,
-      height: margins.bottom,
-      backgroundColor: this.COLORS.footer,
-      alpha: this.ALPHA
-    });
-
-    // Configure Yoga layout properties
-    this.configureYogaLayout();
-    
-    // Add blocks to layout container
-    this.layoutContainer.addChild(this.blocks.header.container);
-    this.layoutContainer.addChild(this.blocks.body.container);
-    this.layoutContainer.addChild(this.blocks.footer.container);
-  }
-
-  /**
-   * Create a template block with visual graphics
-   */
-  private createBlock(
-    type: 'header' | 'body' | 'footer',
-    config: { width: number; height: number; backgroundColor: number; alpha: number }
-  ): TemplateBlock {
-    const container = new Container();
-    container.label = `template-${type}`;
-
-    // Create visual graphics overlay that spans the full canvas width
-    const graphics = new Graphics();
-    graphics.label = `${type}-visual`;
-    
-    // Ensure the graphics span the full canvas width (1200px)
-    const canvasWidth = 1200; // Full canvas width
-    graphics.rect(0, 0, canvasWidth, config.height)
-      .fill({ color: config.backgroundColor, alpha: config.alpha });
-
-    container.addChild(graphics);
-
-    return {
-      container,
-      graphics,
-      height: config.height
+    container.addChild(this.rootContainer);
+    this.sections = {
+      header: this.createSectionContainer("header"),
+      body: this.createSectionContainer("body"),
+      footer: this.createSectionContainer("footer"),
     };
+
+    this.rootContainer.addChild(
+      this.sections.header.container,
+      this.sections.body.container,
+      this.sections.footer.container,
+    );
+
+    this.updateSectionMetrics();
   }
 
   /**
-   * Configure Yoga layout properties for each block
+   * Render a complete canvas layout using persisted canvas data and runtime context.
    */
-  private configureYogaLayout(): void {
-    if (!this.yogaRoot || !this.blocks.header || !this.blocks.body || !this.blocks.footer) {
-      return;
-    }
+  public renderCanvas(canvasData: CanvasDataPayload, context: RenderContext): void {
+    if (!this.sections) return;
 
-    // Use full canvas dimensions (1200x1800)
-    const canvasWidth = 1200;
-    const canvasHeight = 1800;
+    this.applyCanvasDimensions(canvasData);
+    this.applyMargins(canvasData.margins);
+    this.updateSectionMetrics();
 
-    // Configure Header: fixed height
-    this.yogaNodes.header.setWidth(canvasWidth);
-    this.yogaNodes.header.setHeight(this.blocks.header.height);
-    this.yogaNodes.header.setFlexGrow(0);
-    this.yogaNodes.header.setFlexShrink(0);
+    const headerNode = this.findSectionNode(canvasData.layout, "header");
+    const bodyNode = this.findSectionNode(canvasData.layout, "body");
+    const footerNode = this.findSectionNode(canvasData.layout, "footer");
 
-    // Configure Body: flexible height
-    this.yogaNodes.body.setWidth(canvasWidth);
-    this.yogaNodes.body.setFlexGrow(1);
-    this.yogaNodes.body.setFlexShrink(1);
-
-    // Configure Footer: fixed height
-    this.yogaNodes.footer.setWidth(canvasWidth);
-    this.yogaNodes.footer.setHeight(this.blocks.footer.height);
-    this.yogaNodes.footer.setFlexGrow(0);
-    this.yogaNodes.footer.setFlexShrink(0);
-
-    // Calculate layout
-    this.yogaRoot.calculateLayout();
-
-    // Apply computed positions to containers
-    this.applyLayoutPositions();
+    this.renderHeader(headerNode, canvasData, context);
+    this.renderBody(bodyNode, canvasData);
+    this.renderFooter(footerNode, canvasData, context);
   }
 
   /**
-   * Apply computed Yoga layout positions to containers
-   */
-  private applyLayoutPositions(): void {
-    if (!this.blocks.header || !this.blocks.body || !this.blocks.footer) {
-      return;
-    }
-
-    // Position Header
-    this.blocks.header.container.x = this.yogaNodes.header.getComputedLeft();
-    this.blocks.header.container.y = this.yogaNodes.header.getComputedTop();
-    this.blocks.header.container.width = this.yogaNodes.header.getComputedWidth();
-    this.blocks.header.container.height = this.yogaNodes.header.getComputedHeight();
-
-    // Position Body
-    this.blocks.body.container.x = this.yogaNodes.body.getComputedLeft();
-    this.blocks.body.container.y = this.yogaNodes.body.getComputedTop();
-    this.blocks.body.container.width = this.yogaNodes.body.getComputedWidth();
-    this.blocks.body.container.height = this.yogaNodes.body.getComputedHeight();
-
-    // Position Footer
-    this.blocks.footer.container.x = this.yogaNodes.footer.getComputedLeft();
-    this.blocks.footer.container.y = this.yogaNodes.footer.getComputedTop();
-    this.blocks.footer.container.width = this.yogaNodes.footer.getComputedWidth();
-    this.blocks.footer.container.height = this.yogaNodes.footer.getComputedHeight();
-  }
-
-  /**
-   * Update block sizes when margins change
+   * Update section sizing when margins or canvas dimensions change.
    */
   public updateBlockSizes(): void {
-    if (!this.blocks.header || !this.blocks.body || !this.blocks.footer) {
-      return;
-    }
-
-    const margins = canvasMarginManager.getMargins();
-    // Use full canvas dimensions (1200x1800)
-    const canvasWidth = 1200;
-    const canvasHeight = 1800;
-
-    // Update Header height
-    this.blocks.header.height = margins.top;
-    this.blocks.header.graphics.clear();
-    this.blocks.header.graphics.rect(0, 0, canvasWidth, margins.top)
-      .fill({ color: this.COLORS.header, alpha: this.ALPHA });
-
-    // Update Body height
-    const bodyHeight = canvasHeight - margins.top - margins.bottom;
-    this.blocks.body.height = bodyHeight;
-    this.blocks.body.graphics.clear();
-    this.blocks.body.graphics.rect(0, 0, canvasWidth, bodyHeight)
-      .fill({ color: this.COLORS.body, alpha: this.ALPHA });
-
-    // Update Footer height
-    this.blocks.footer.height = margins.bottom;
-    this.blocks.footer.graphics.clear();
-    this.blocks.footer.graphics.rect(0, 0, canvasWidth, margins.bottom)
-      .fill({ color: this.COLORS.footer, alpha: this.ALPHA });
-
-    // Update Yoga layout properties
-    this.configureYogaLayout();
+    this.updateSectionMetrics();
   }
 
   /**
-   * Subscribe to margin updates from CanvasMarginManager
-   */
-  private subscribeToMarginUpdates(): void {
-    // Note: CanvasMarginManager doesn't currently have event system
-    // For now, we'll update manually when needed
-    // TODO: Add event system to CanvasMarginManager for automatic updates
-  }
-
-  /**
-   * Handle canvas resize events
+   * Handle canvas resize events (recompute bounds & redraw backgrounds).
    */
   public handleCanvasResize(): void {
-    if (!this.yogaRoot) {
+    this.layoutBounds = canvasDimensionManager.getCurrentDimensions();
+    this.updateSectionMetrics();
+  }
+
+  /**
+   * Expose section containers for debugging or external access.
+   */
+  public getAllBlocks(): {
+    header: Container | null;
+    body: Container | null;
+    footer: Container | null;
+  } {
+    return {
+      header: this.sections?.header.container ?? null,
+      body: this.sections?.body.container ?? null,
+      footer: this.sections?.footer.container ?? null,
+    };
+  }
+
+  /**
+   * Provide structured debug information for diagnostics.
+   */
+  public getDebugInfo(): Record<string, unknown> {
+    return {
+      initialized: !!this.sections,
+      dimensions: this.layoutBounds,
+      margins: this.margins,
+      sections: {
+        header: this.describeSection("header"),
+        body: this.describeSection("body"),
+        footer: this.describeSection("footer"),
+      },
+    };
+  }
+
+  /**
+   * Destroy all PIXI resources.
+   */
+  public destroy(): void {
+    if (!this.sections) return;
+
+    Object.values(this.sections).forEach((section) => {
+      section.container.off("layout");
+      section.container.destroy({ children: true });
+    });
+
+    this.rootContainer?.destroy({ children: true });
+    this.rootContainer = null;
+    this.sections = null;
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // Section creation & metrics
+  // ────────────────────────────────────────────────────────────────────────────
+
+  private createSectionContainer(section: "header" | "body" | "footer"): SectionReferences {
+    const container = new Container({
+      layout: {
+        width: "100%",
+        flexDirection: "column",
+        justifyContent: section === "body" ? "flex-start" : "center",
+        alignItems: "stretch",
+      },
+    });
+    this.lockDisplayObject(container);
+    container.sortableChildren = false;
+
+    const background = new Graphics();
+    background.label = `${section}-background`;
+    this.lockDisplayObject(background);
+
+    const content = new Container();
+    content.label = `${section}-content`;
+    this.lockDisplayObject(content);
+
+    container.addChild(background, content);
+
+    container.on("layout", (layout: Layout) => {
+      this.redrawSectionBackground(section, layout.computedLayout.width, layout.computedLayout.height);
+      this.positionContent(section, layout.computedLayout.width, layout.computedLayout.height);
+    });
+
+    return { container, background, content };
+  }
+
+  private updateSectionMetrics(): void {
+    if (!this.sections) return;
+
+    const { width, height } = this.layoutBounds;
+    const headerHeight = this.margins.top;
+    const footerHeight = this.margins.bottom;
+    const bodyHeight = Math.max(height - headerHeight - footerHeight, 0);
+
+    this.sections.header.container.layout = {
+      width,
+      height: headerHeight,
+      flexGrow: 0,
+      flexShrink: 0,
+    };
+
+    this.sections.body.container.layout = {
+      width,
+      height: bodyHeight,
+      flexGrow: 1,
+      flexShrink: 1,
+    };
+
+    this.sections.footer.container.layout = {
+      width,
+      height: footerHeight,
+      flexGrow: 0,
+      flexShrink: 0,
+    };
+  }
+
+  private redrawSectionBackground(section: "header" | "body" | "footer", width: number, height: number): void {
+    if (!this.sections) return;
+    const ref = this.sections[section];
+    ref.background.clear();
+    ref.background.rect(0, 0, Math.max(width, 0), Math.max(height, 0)).fill({
+      color: 0xffffff,
+      alpha: 1,
+    });
+    ref.background.stroke({ color: 0xe5e7eb, alpha: section === "body" ? 0.6 : 0.4, width: section === "body" ? 2 : 1 });
+  }
+
+  private positionContent(section: "header" | "body" | "footer", width: number, height: number): void {
+    if (!this.sections) return;
+    const ref = this.sections[section];
+    const horizontal = this.margins.left;
+    ref.content.position.set(horizontal, 0);
+  }
+
+  private describeSection(section: "header" | "body" | "footer"): Record<string, unknown> {
+    if (!this.sections) {
+      return { exists: false };
+    }
+
+    const ref = this.sections[section];
+    const bounds = ref.background.getBounds();
+    return {
+      exists: true,
+      childCount: ref.content.children.length,
+      bounds: {
+        width: bounds.width,
+        height: bounds.height,
+      },
+    };
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // Rendering helpers
+  // ────────────────────────────────────────────────────────────────────────────
+
+  private renderHeader(
+    headerNode: LayoutNode | null,
+    canvasData: CanvasDataPayload,
+    context: RenderContext,
+  ): void {
+    if (!this.sections) return;
+
+    const section = this.sections.header;
+    this.clearContent(section.content);
+
+    const width = this.getSectionContentWidth();
+    const entries: Array<{ label: string; value: string }> = [];
+
+    const lessonTitle =
+      canvasData.lesson?.title ||
+      (canvasData.lesson?.number
+        ? `Lesson ${canvasData.lesson.number}`
+        : "Lesson");
+
+    entries.push({ label: "Lesson", value: lessonTitle });
+
+    if (canvasData.lesson?.moduleNumber !== undefined && canvasData.lesson?.moduleNumber !== null) {
+      entries.push({
+        label: "Module",
+        value: `Module ${canvasData.lesson.moduleNumber}`,
+      });
+    }
+
+    entries.push({
+      label: "Template",
+      value:
+        canvasData.template?.name ||
+        canvasData.template?.slug ||
+        (canvasData.template?.type
+          ? canvasData.template.type
+          : "Lesson Template"),
+    });
+
+    entries.push({
+      label: "Teacher",
+      value: context.teacherName || "—",
+    });
+
+    entries.push({
+      label: "Course",
+      value: context.courseTitle || "—",
+    });
+
+    entries.push({
+      label: "Page",
+      value:
+        context.pageNumber !== undefined
+          ? String(context.pageNumber)
+          : "—",
+    });
+
+    if (headerNode?.templateBlock?.content) {
+      entries.push({
+        label: "Notes",
+        value: String(headerNode.templateBlock.content),
+      });
+    }
+
+    const tableContainer = new Container();
+    tableContainer.y = 8;
+    this.lockDisplayObject(tableContainer);
+    section.content.addChild(tableContainer);
+    this.renderKeyValueTable(tableContainer, entries, width);
+  }
+
+  private renderBody(bodyNode: LayoutNode | null, canvasData: CanvasDataPayload): void {
+    if (!this.sections) return;
+
+    const section = this.sections.body;
+    this.clearContent(section.content);
+
+    if (!bodyNode || !Array.isArray(bodyNode.children) || !bodyNode.children.length) {
+      const empty = this.createText(
+        "No body blocks configured for this template yet.",
+        this.createTextStyle(16, 0x6b7280, false, true),
+        20,
+        { wordWrapWidth: this.getSectionContentWidth() },
+      );
+      section.content.addChild(empty);
       return;
     }
 
-    // Use full canvas dimensions (1200x1800)
-    const canvasWidth = 1200;
-    const canvasHeight = 1800;
-    
-    // Update Yoga layout dimensions
-    this.yogaRoot.setWidth(canvasWidth);
-    this.yogaRoot.setHeight(canvasHeight);
+    const bodyWidth = this.getSectionContentWidth();
+    let cursorY = 12;
 
-    // Update block sizes
-    this.updateBlockSizes();
+    bodyNode.children.forEach((child, index) => {
+      const blockContainer = new Container();
+      blockContainer.position.set(0, cursorY);
+      this.lockDisplayObject(blockContainer);
+
+      const blockHeight = this.renderBodyBlock(blockContainer, child, canvasData, bodyWidth);
+      section.content.addChild(blockContainer);
+
+      cursorY += blockHeight + 24;
+    });
   }
 
-  /**
-   * Get Header block container
-   */
-  public getHeaderBlock(): Container | null {
-    return this.blocks.header?.container || null;
-  }
+  private renderFooter(
+    footerNode: LayoutNode | null,
+    canvasData: CanvasDataPayload,
+    context: RenderContext,
+  ): void {
+    if (!this.sections) return;
 
-  /**
-   * Get Body block container
-   */
-  public getBodyBlock(): Container | null {
-    return this.blocks.body?.container || null;
-  }
+    const section = this.sections.footer;
+    this.clearContent(section.content);
 
-  /**
-   * Get Footer block container
-   */
-  public getFooterBlock(): Container | null {
-    return this.blocks.footer?.container || null;
-  }
+    const width = this.getSectionContentWidth();
+    const entries: Array<{ label: string; value: string }> = [];
 
-  /**
-   * Get all template blocks
-   */
-  public getAllBlocks(): { header: Container | null; body: Container | null; footer: Container | null } {
-    return {
-      header: this.getHeaderBlock(),
-      body: this.getBodyBlock(),
-      footer: this.getFooterBlock()
-    };
-  }
-
-  /**
-   * Get debug information about template blocks
-   */
-  public getDebugInfo(): any {
-    return {
-      initialized: !!this.layoutContainer && !!this.yogaRoot,
-      blocks: {
-        header: {
-          exists: !!this.blocks.header,
-          height: this.blocks.header?.height || 0,
-          children: this.blocks.header?.container.children.length || 0
-        },
-        body: {
-          exists: !!this.blocks.body,
-          height: this.blocks.body?.height || 0,
-          children: this.blocks.body?.container.children.length || 0
-        },
-        footer: {
-          exists: !!this.blocks.footer,
-          height: this.blocks.footer?.height || 0,
-          children: this.blocks.footer?.container.children.length || 0
-        }
-      },
-      yogaLayout: {
-        exists: !!this.yogaRoot,
-        width: this.yogaRoot?.getComputedWidth() || 0,
-        height: this.yogaRoot?.getComputedHeight() || 0
-      }
-    };
-  }
-
-  /**
-   * Populate header with dynamic content
-   */
-  public populateHeaderContent(content: {
-    pageNumber?: number;
-    lessonNumber?: number;
-    courseTitle?: string;
-  }): void {
-    if (!this.blocks.header) return;
-
-    // Clear existing text content
-    this.clearTextContent(this.blocks.header.container);
-
-    const headerBlock = this.blocks.header.container;
-    const margins = canvasMarginManager.getMargins();
-    // Use full canvas dimensions (1200x1800)
-    const canvasWidth = 1200;
-
-    // Create page number text
-    if (content.pageNumber !== undefined) {
-      const pageText = new Text({
-        text: `Page ${content.pageNumber}`,
-        style: {
-          fontFamily: 'Arial',
-          fontSize: 14,
-          fill: 0x333333,
-          fontWeight: 'bold'
-        }
-      });
-      pageText.x = 20;
-      pageText.y = margins.top / 2 - pageText.height / 2;
-      headerBlock.addChild(pageText);
-    }
-
-    // Create lesson number text
-    if (content.lessonNumber !== undefined) {
-      const lessonText = new Text({
-        text: `Lesson ${content.lessonNumber}`,
-        style: {
-          fontFamily: 'Arial',
-          fontSize: 12,
-          fill: 0x666666
-        }
-      });
-      lessonText.x = 20;
-      lessonText.y = margins.top / 2 + lessonText.height / 2;
-      headerBlock.addChild(lessonText);
-    }
-
-    // Create course title text (right-aligned)
-    if (content.courseTitle) {
-      const titleText = new Text({
-        text: content.courseTitle,
-        style: {
-          fontFamily: 'Arial',
-          fontSize: 16,
-          fill: 0x333333,
-          fontWeight: 'bold'
-        }
-      });
-      titleText.x = canvasWidth - titleText.width - 20;
-      titleText.y = margins.top / 2 - titleText.height / 2;
-      headerBlock.addChild(titleText);
-    }
-  }
-
-  /**
-   * Populate footer with dynamic content
-   */
-  public populateFooterContent(content: {
-    teacherName?: string;
-    creationDate?: string;
-    courseCode?: string;
-  }): void {
-    if (!this.blocks.footer) return;
-
-    // Clear existing text content
-    this.clearTextContent(this.blocks.footer.container);
-
-    const footerBlock = this.blocks.footer.container;
-    const margins = canvasMarginManager.getMargins();
-    // Use full canvas dimensions (1200x1800)
-    const canvasWidth = 1200;
-
-    // Create teacher name text
-    if (content.teacherName) {
-      const teacherText = new Text({
-        text: content.teacherName,
-        style: {
-          fontFamily: 'Arial',
-          fontSize: 12,
-          fill: 0x333333
-        }
-      });
-      teacherText.x = 20;
-      teacherText.y = margins.bottom / 2 - teacherText.height / 2;
-      footerBlock.addChild(teacherText);
-    }
-
-    // Create creation date text
-    if (content.creationDate) {
-      const dateText = new Text({
-        text: content.creationDate,
-        style: {
-          fontFamily: 'Arial',
-          fontSize: 10,
-          fill: 0x666666
-        }
-      });
-      dateText.x = 20;
-      dateText.y = margins.bottom / 2 + dateText.height / 2;
-      footerBlock.addChild(dateText);
-    }
-
-    // Create course code text (right-aligned)
-    if (content.courseCode) {
-      const codeText = new Text({
-        text: content.courseCode,
-        style: {
-          fontFamily: 'Arial',
-          fontSize: 12,
-          fill: 0x666666
-        }
-      });
-      codeText.x = canvasWidth - codeText.width - 20;
-      codeText.y = margins.bottom / 2 - codeText.height / 2;
-      footerBlock.addChild(codeText);
-    }
-  }
-
-  /**
-   * Clear text content from a container
-   */
-  private clearTextContent(container: Container): void {
-    // Remove all text objects (keep graphics)
-    const textObjects = container.children.filter(child => child instanceof Text);
-    textObjects.forEach(text => container.removeChild(text));
-  }
-
-  /**
-   * Destroy the template layout manager
-   */
-  public destroy(): void {
-    // Clean up blocks
-    Object.values(this.blocks).forEach(block => {
-      if (block) {
-        block.container.destroy({ children: true });
-      }
+    entries.push({
+      label: "Teacher",
+      value: context.teacherName || "—",
     });
 
-    // Clean up Yoga nodes
-    if (this.yogaNodes.header) {
-      this.yogaNodes.header.free();
-    }
-    if (this.yogaNodes.body) {
-      this.yogaNodes.body.free();
-    }
-    if (this.yogaNodes.footer) {
-      this.yogaNodes.footer.free();
-    }
-    if (this.yogaRoot) {
-      this.yogaRoot.free();
+    entries.push({
+      label: "Course Code",
+      value: context.courseCode || "—",
+    });
+
+    entries.push({
+      label: "Generated",
+      value: context.generatedAt || "—",
+    });
+
+    if (canvasData.template?.scope) {
+      entries.push({
+        label: "Template Scope",
+        value:
+          canvasData.template.scope === "course"
+            ? "Course-specific"
+            : "Global",
+      });
     }
 
-    // Reset state
-    this.layoutContainer = null;
-    this.yogaRoot = null;
-    this.yogaNodes = { header: null, body: null, footer: null };
-    this.blocks = { header: null, body: null, footer: null };
+    if (canvasData.template?.name) {
+      entries.push({
+        label: "Template",
+        value: canvasData.template.name,
+      });
+    }
+
+    if (footerNode?.templateBlock?.content) {
+      entries.push({
+        label: "Footer Notes",
+        value: String(footerNode.templateBlock.content),
+      });
+    }
+
+    const tableContainer = new Container();
+    tableContainer.y = 8;
+    this.lockDisplayObject(tableContainer);
+    section.content.addChild(tableContainer);
+    this.renderKeyValueTable(tableContainer, entries, width);
+  }
+
+  private renderBodyBlock(
+    container: Container,
+    node: LayoutNode,
+    canvasData: CanvasDataPayload,
+    bodyWidth: number,
+  ): number {
+    this.lockDisplayObject(container);
+    const titleStyle = this.createTextStyle(18, 0x1f2937, true);
+    const textStyle = this.createTextStyle(14, 0x4b5563);
+    let cursorY = 0;
+
+    const blockTitle = this.createText(
+      this.resolveBlockTitle(node.templateBlock?.type ?? node.type),
+      titleStyle,
+      cursorY,
+      { wordWrapWidth: bodyWidth },
+    );
+    container.addChild(blockTitle);
+    cursorY += blockTitle.height + 12;
+
+    if (node.templateBlock?.type === "program") {
+      const structure = (node.data as Record<string, unknown> | undefined)?.structure as
+        | { topics?: number; objectives?: number; tasks?: number }
+        | undefined;
+      if (structure) {
+        const summary = this.createText(
+          `${structure.topics ?? 0} topics • ${structure.objectives ?? 0} objectives • ${structure.tasks ?? 0} tasks`,
+          this.createTextStyle(12, 0x4b5563),
+          cursorY,
+          { wordWrapWidth: bodyWidth },
+        );
+        container.addChild(summary);
+        cursorY += summary.height + 8;
+      }
+    }
+
+    const tableData = this.extractTableData(node);
+    if (tableData) {
+      const tableContainer = new Container();
+      this.lockDisplayObject(tableContainer);
+      tableContainer.y = cursorY;
+      container.addChild(tableContainer);
+
+      const tableHeight = this.renderTableBlock(tableContainer, tableData, bodyWidth, {
+        indent: true,
+        zebra: true,
+      });
+      cursorY += tableHeight;
+      return cursorY;
+    }
+
+    const content = node.templateBlock?.content?.trim();
+    const fallbackText = this.createText(
+      content || "Content coming soon.",
+      textStyle,
+      cursorY,
+      { wordWrapWidth: bodyWidth },
+    );
+    container.addChild(fallbackText);
+    cursorY += fallbackText.height;
+
+    return cursorY;
+  }
+
+  private extractTableData(node: LayoutNode | null): TableData | null {
+    if (!node || typeof node !== "object") {
+      return null;
+    }
+
+    const candidate = (node as Record<string, unknown>).data as
+      | Record<string, unknown>
+      | undefined;
+    if (!candidate || typeof candidate !== "object") {
+      return null;
+    }
+
+    const table = candidate.table as TableData | undefined;
+    if (!table || !Array.isArray(table.columns) || !table.columns.length) {
+      return null;
+    }
+    return table;
+  }
+
+  private renderTableBlock(
+    container: Container,
+    table: TableData,
+    width: number,
+    options: { zebra?: boolean; indent?: boolean; compact?: boolean } = {},
+  ): number {
+    const columns = Array.isArray(table.columns) ? table.columns : [];
+    if (!columns.length) {
+      const placeholder = this.createText(
+        table.emptyMessage || "No data available.",
+        this.createTextStyle(13, 0x6b7280),
+        0,
+        { wordWrapWidth: width - 16 },
+      );
+      container.addChild(placeholder);
+      return placeholder.height + 12;
+    }
+
+    const columnWidths = this.calculateColumnWidths(width, columns.length);
+    const headerStyle = this.createTextStyle(12, 0x1f2937, true);
+    const cellStyle = this.createTextStyle(12, 0x374151);
+
+    const rows = Array.isArray(table.rows) ? [...table.rows] : [];
+    if (!rows.length) {
+      rows.push({
+        cells: columns.reduce<Record<string, string>>((acc, col, index) => {
+          acc[col.key] =
+            index === 0 ? table.emptyMessage || "No data available." : "";
+          return acc;
+        }, {}),
+      });
+    }
+
+    let currentY = 0;
+    currentY += this.drawTableRow(
+      container,
+      columns,
+      columnWidths,
+      headerStyle,
+      columns.reduce<Record<string, string>>((acc, column) => {
+        acc[column.key] = column.label;
+        return acc;
+      }, {}),
+      currentY,
+      true,
+      {
+        indent: false,
+        zebra: false,
+        compact: options.compact ?? false,
+      },
+    );
+
+    rows.forEach((row, rowIndex) => {
+      currentY += this.drawTableRow(
+        container,
+        columns,
+        columnWidths,
+        cellStyle,
+        row.cells ?? {},
+        currentY,
+        false,
+        {
+          depth: row.depth ?? 0,
+          indent: options.indent ?? false,
+          zebra: options.zebra !== false && rowIndex % 2 === 1,
+          compact: options.compact ?? false,
+        },
+      );
+    });
+
+    return currentY;
+  }
+
+  private renderKeyValueTable(
+    target: Container,
+    rows: Array<{ label: string; value: string }>,
+    width: number,
+  ): void {
+    this.lockDisplayObject(target);
+    const table: TableData = {
+      columns: [
+        { key: "label", label: "Field" },
+        { key: "value", label: "Value" },
+      ],
+      rows: rows.map((row) => ({
+        cells: {
+          label: row.label,
+          value: row.value || "—",
+        },
+      })),
+      emptyMessage: "No data provided.",
+    };
+
+    this.renderTableBlock(target, table, width, {
+      zebra: false,
+      indent: false,
+      compact: true,
+    });
+  }
+
+  private calculateColumnWidths(totalWidth: number, count: number): number[] {
+    if (count <= 0) {
+      return [totalWidth];
+    }
+
+    const widths = new Array(count).fill(Math.max(totalWidth / count, 1));
+    const consumed = widths.reduce((sum, val) => sum + val, 0);
+    const remainder = totalWidth - consumed;
+    widths[count - 1] += remainder;
+    return widths;
+  }
+
+  private drawTableRow(
+    container: Container,
+    columns: TableColumn[],
+    columnWidths: number[],
+    baseStyle: TextStyleOptions,
+    cells: Record<string, string>,
+    startY: number,
+    isHeader: boolean,
+    options: { depth?: number; indent?: boolean; zebra?: boolean; compact?: boolean },
+  ): number {
+    const totalWidth = columnWidths.reduce((sum, value) => sum + value, 0);
+    const baseRowHeight = isHeader ? 38 : options.compact ? 30 : 34;
+
+    const texts = columns.map((column, index) => {
+      const value = isHeader ? column.label : (cells[column.key] ?? "");
+      return this.createText(value, baseStyle, 0, {
+        wordWrapWidth: Math.max(columnWidths[index] - 24, 32),
+      });
+    });
+
+    let rowHeight = baseRowHeight;
+    texts.forEach((text) => {
+      rowHeight = Math.max(rowHeight, text.height + 18);
+    });
+
+    const background = new Graphics();
+    background.rect(0, startY, totalWidth, rowHeight).fill({
+      color: isHeader
+        ? 0xf3f4f6
+        : options.zebra
+        ? 0xf9fafb
+        : 0xffffff,
+      alpha: 1,
+    });
+    background.stroke({ color: 0xd1d5db, width: 1 });
+    this.lockDisplayObject(background);
+    container.addChild(background);
+
+    let currentX = 0;
+    columns.forEach((column, index) => {
+      if (index > 0) {
+        const divider = new Graphics();
+        divider.moveTo(currentX, startY);
+        divider.lineTo(currentX, startY + rowHeight);
+        divider.stroke({ color: 0xd1d5db, width: 1 });
+        this.lockDisplayObject(divider);
+        container.addChild(divider);
+      }
+
+      const text = texts[index];
+      const indentOffset =
+        index === 0 && options.indent
+          ? Math.max(0, (options.depth ?? 0)) * 18
+          : 0;
+
+      text.x = currentX + 12 + indentOffset;
+      text.y = startY + (rowHeight - text.height) / 2;
+      container.addChild(text);
+
+      currentX += columnWidths[index];
+    });
+
+    return rowHeight;
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // Data helpers
+  // ────────────────────────────────────────────────────────────────────────────
+
+  private findSectionNode(layout: LayoutNode, role: "header" | "body" | "footer"): LayoutNode | null {
+    if (layout.role === role) {
+      return layout;
+    }
+    if (!layout.children) {
+      return null;
+    }
+    for (const child of layout.children) {
+      const found = this.findSectionNode(child, role);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  private applyCanvasDimensions(canvasData: CanvasDataPayload): void {
+    if (!canvasData?.dimensions) {
+      return;
+    }
+    const { width, height } = canvasData.dimensions;
+    if (this.layoutBounds.width !== width || this.layoutBounds.height !== height) {
+      this.layoutBounds = { width, height };
+    }
+  }
+
+  private applyMargins(margins: CanvasDataPayload["margins"]): void {
+    if (!margins) return;
+    const resolvedUnit = margins.unit ?? "px";
+    const toPixels = (value: number): number =>
+      resolvedUnit === "percent" ? (value / 100) * this.layoutBounds.height : value;
+
+    this.margins = {
+      top: toPixels(margins.top ?? this.margins.top),
+      right: toPixels(margins.right ?? this.margins.right),
+      bottom: toPixels(margins.bottom ?? this.margins.bottom),
+      left: toPixels(margins.left ?? this.margins.left),
+    };
+  }
+
+  private resolveBlockTitle(type: string): string {
+    switch (type) {
+      case "program":
+        return "Lesson Program";
+      case "resources":
+        return "Resources & Materials";
+      case "content":
+        return "Lesson Content";
+      case "assignment":
+        return "Assignments";
+      case "scoring":
+        return "Scoring";
+      default:
+        return type.charAt(0).toUpperCase() + type.slice(1);
+    }
+  }
+
+  private getSectionContentWidth(): number {
+    return Math.max(this.layoutBounds.width - this.margins.left - this.margins.right, 0);
+  }
+
+  private createTextStyle(
+    fontSize: number,
+    color: number,
+    bold = false,
+    italic = false,
+  ): TextStyleOptions {
+    return {
+      fontFamily: "Inter, Arial, sans-serif",
+      fontSize,
+      fill: color,
+      fontWeight: bold ? "600" : "400",
+      fontStyle: italic ? "italic" : "normal",
+    };
+  }
+
+  private createText(
+    content: string,
+    style: TextStyleOptions,
+    y: number,
+    options?: { x?: number; wordWrapWidth?: number; align?: "left" | "center" | "right" },
+  ): Text {
+    const textStyle: TextStyleOptions = { ...style };
+    if (options?.wordWrapWidth !== undefined) {
+      textStyle.wordWrap = true;
+      textStyle.wordWrapWidth = Math.max(options.wordWrapWidth, 24);
+      textStyle.breakWords = true;
+    }
+    if (options?.align) {
+      textStyle.align = options.align;
+    }
+
+    const text = new Text({
+      text: content,
+      style: textStyle,
+    });
+    text.y = y;
+    if (options?.x !== undefined) {
+      text.x = options.x;
+    }
+    this.lockDisplayObject(text);
+    return text;
+  }
+
+  private lockDisplayObject(
+    object: Container | Graphics | Text,
+    options: { lockChildren?: boolean } = {},
+  ): void {
+    const target = object as any;
+    target.__locked = true;
+    if ("eventMode" in target) {
+      target.eventMode = "none";
+    }
+    if ("interactive" in target) {
+      target.interactive = false;
+    }
+    if ("interactiveChildren" in target) {
+      if (options.lockChildren !== false) {
+        target.interactiveChildren = false;
+      }
+    }
+    try {
+      target.cursor = "default";
+    } catch {
+      /* ignore */
+    }
+  }
+
+  private clearContent(container: Container): void {
+    const removed = container.removeChildren();
+    removed.forEach((child) => {
+      if (child && typeof (child as any).destroy === "function") {
+        try {
+          (child as any).destroy({ children: true });
+        } catch {
+          (child as any).destroy?.();
+        }
+      }
+    });
   }
 }
+
+export type { CanvasDataPayload, RenderContext as TemplateRenderContext };

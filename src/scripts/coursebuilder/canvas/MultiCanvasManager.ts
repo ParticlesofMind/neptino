@@ -13,23 +13,21 @@
 
 import { supabase } from '../../backend/supabase';
 import { VerticalCanvasContainer, CanvasApplication } from './VerticalCanvasContainer';
+import type { CanvasDataPayload } from './TemplateLayoutManager';
 
 export interface CanvasRow {
   id: string;
   course_id: string;
   lesson_number: number;
   canvas_index: number;
-  canvas_data: {
-    layout?: any;
-    content?: any[];
-    metadata?: any;
-  };
+  canvas_data?: CanvasDataPayload | null;
   canvas_metadata: {
-    title: string;
-    template: string;
-    dimensions: { width: number; height: number };
-    created_at: string;
-    updated_at: string;
+    title?: string;
+    template?: string;
+    dimensions?: { width: number; height: number };
+    created_at?: string;
+    updated_at?: string;
+    generatedAt?: string;
   };
 }
 
@@ -41,7 +39,6 @@ export class MultiCanvasManager {
   private totalCanvases = 0;
   private canvasMetadata: CanvasRow[] = []; // Store metadata for lazy loading
   private readonly BATCH_SIZE = 3; // Reduced batch size for better performance
-  private readonly INITIAL_LOAD_SIZE = 2; // Load only 2 canvases initially
 
   /**
    * Initialize the multi-canvas manager
@@ -98,10 +95,7 @@ export class MultiCanvasManager {
         await this.verticalContainer.createCanvasApplication(canvasRow);
       }
 
-      // Load only the first canvas initially (viewport-based loading)
-      await this.loadFirstCanvas();
-
-      console.log('✅ Viewport-based lazy loading initialized - placeholders created, first canvas loaded');
+      console.log('✅ Viewport-based lazy loading initialized - placeholders created');
 
     } catch (error) {
       console.error('❌ Failed to load course canvases:', error);
@@ -143,26 +137,6 @@ export class MultiCanvasManager {
     } catch (error) {
       console.error('❌ Failed to load canvas batch:', error);
     }
-  }
-
-  /**
-   * Load only the first canvas initially (viewport-based loading)
-   */
-  private async loadFirstCanvas(): Promise<void> {
-    if (!this.verticalContainer || this.canvasMetadata.length === 0) {
-      return;
-    }
-
-    console.log(`🎨 Loading first canvas for viewport-based lazy loading`);
-
-    // Load only the first canvas (the one that will be visible in the viewport)
-    const firstCanvas = this.canvasMetadata[0];
-    await this.verticalContainer.lazyLoadCanvas(firstCanvas.id);
-    this.loadedCanvases.add(firstCanvas.id);
-
-    console.log(`✅ Loaded first canvas: ${firstCanvas.id}`);
-    console.log(`📊 Total canvases loaded: ${this.loadedCanvases.size}`);
-    console.log(`📊 Total placeholders created: ${this.canvasMetadata.length}`);
   }
 
   /**
@@ -267,11 +241,7 @@ export class MultiCanvasManager {
       course_id: courseId,
       lesson_number: 1,
       canvas_index: 1,
-      canvas_data: {
-        layout: null,
-        content: [],
-        metadata: {}
-      },
+      canvas_data: null,
       canvas_metadata: {
         title: 'Lesson 1 - Page 1',
         template: 'default',

@@ -5,6 +5,22 @@ import {
   TemplateDefinition,
 } from "./curriculumManager.js";
 
+interface TableColumn {
+  key: string;
+  label: string;
+}
+
+interface TableRow {
+  cells: Record<string, string>;
+  depth?: number;
+}
+
+interface TableData {
+  columns: TableColumn[];
+  rows: TableRow[];
+  emptyMessage?: string;
+}
+
 export class CanvasBuilder {
   private readonly defaultCanvasDimensions = { width: 1200, height: 1800 };
   private readonly defaultCanvasMargins = {
@@ -74,6 +90,7 @@ export class CanvasBuilder {
       footerBlock,
       bodyBlocks,
       lesson,
+      templateType: template?.template_type ?? "lesson",
     });
 
     const structureSummary = this.summarizeLessonStructure(lesson);
@@ -122,8 +139,17 @@ export class CanvasBuilder {
     footerBlock: TemplateDefinitionBlock;
     bodyBlocks: TemplateDefinitionBlock[];
     lesson: CurriculumLesson;
+    templateType?: string;
   }): Record<string, unknown> {
-    const { dimensions, margins, headerBlock, footerBlock, bodyBlocks, lesson } =
+    const {
+      dimensions,
+      margins,
+      headerBlock,
+      footerBlock,
+      bodyBlocks,
+      lesson,
+      templateType,
+    } =
       params;
 
     const headerNode = {
@@ -187,7 +213,7 @@ export class CanvasBuilder {
         },
         gap: 24,
       },
-      children: this.buildBodyNodes(bodyBlocks, lesson),
+      children: this.buildBodyNodes(bodyBlocks, lesson, templateType ?? "lesson"),
     };
 
     return {
@@ -205,6 +231,7 @@ export class CanvasBuilder {
   private buildBodyNodes(
     blocks: TemplateDefinitionBlock[],
     lesson: CurriculumLesson,
+    templateType: string,
   ): Record<string, unknown>[] {
     if (!blocks.length) {
       return [
@@ -220,7 +247,8 @@ export class CanvasBuilder {
             minHeight: { unit: "percent", value: 100 },
           },
           data: {
-            message: "No template blocks defined. Configure the template to populate content.",
+            message:
+              "No template blocks defined. Configure the template to populate content.",
           },
         },
       ];
@@ -246,14 +274,36 @@ export class CanvasBuilder {
         },
       };
 
+      const existingData =
+        (node.data as Record<string, unknown> | undefined) ?? undefined;
+
+      const tableData =
+        templateType === "lesson" &&
+        (block.type === "program" ||
+          block.type === "resources" ||
+          block.type === "content" ||
+          block.type === "assignment")
+          ? this.buildLessonTableData(block, lesson)
+          : null;
+
       if (block.type === "content") {
         node.children = this.buildTopicNodes(lesson);
       }
 
-      if (block.type === "program") {
-        node.data = {
-          structure: this.summarizeLessonStructure(lesson),
-        };
+      const mergedData: Record<string, unknown> = {
+        ...(existingData ?? {}),
+      };
+
+      if (block.type === "program" && templateType === "lesson") {
+        mergedData.structure = this.summarizeLessonStructure(lesson);
+      }
+
+      if (tableData) {
+        mergedData.table = tableData;
+      }
+
+      if (Object.keys(mergedData).length > 0) {
+        node.data = mergedData;
       }
 
       return node;
@@ -308,6 +358,350 @@ export class CanvasBuilder {
         },
       };
     });
+  }
+
+  private buildLessonTableData(
+    block: TemplateDefinitionBlock,
+    lesson: CurriculumLesson,
+  ): TableData | null {
+    switch (block.type) {
+      case "program":
+        return this.buildLessonProgramTable(block, lesson);
+      case "resources":
+        return this.buildLessonResourcesTable(block);
+      case "content":
+        return this.buildLessonContentTable(lesson);
+      case "assignment":
+        return this.buildLessonAssignmentTable(lesson);
+      default:
+        return null;
+    }
+  }
+
+  private buildLessonProgramTable(
+    block: TemplateDefinitionBlock,
+    lesson: CurriculumLesson,
+  ): TableData {
+    const columnDefs = [
+      { key: "competency", label: "Competency", configKey: "competence" },
+      { key: "topic", label: "Topic", configKey: "topic" },
+      { key: "objective", label: "Objective", configKey: "objective" },
+      { key: "task", label: "Task", configKey: "task" },
+      { key: "method", label: "Method", configKey: "program_method" },
+      { key: "social", label: "Social Form", configKey: "program_social_form" },
+      { key: "time", label: "Time", configKey: "program_time" },
+    ] as const;
+
+    const config = (block.config ?? {}) as Record<string, unknown>;
+    const activeColumns = columnDefs.filter((column) => config[column.configKey] !== false);
+    const columns =
+      activeColumns.length > 0
+        ? activeColumns
+        : columnDefs.slice(0, 4);
+
+    const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
+    const rows: TableRow[] = [];
+
+    topics.forEach((topic, topicIndex) => {
+      const competencyLabel = `Competency ${topicIndex + 1}`;
+      const topicTitle =
+        typeof topic.title === "string" && topic.title.trim().length
+          ? topic.title.trim()
+          : `Topic ${topicIndex + 1}`;
+
+      rows.push({
+        depth: 0,
+        cells: {
+          competency: competencyLabel,
+          topic: "",
+          objective: "",
+          task: "",
+          method: "",
+          social: "",
+          time: "",
+        },
+      });
+
+      rows.push({
+        depth: 1,
+        cells: {
+          competency: "",
+          topic: topicTitle,
+          objective: "",
+          task: "",
+          method: "",
+          social: "",
+          time: "",
+        },
+      });
+
+      const objectives = Array.isArray(topic.objectives)
+        ? topic.objectives
+        : [];
+      objectives.forEach((objective, objectiveIndex) => {
+        const objectiveText =
+          typeof objective === "string" && objective.trim().length
+            ? objective.trim()
+            : `Objective ${objectiveIndex + 1}`;
+        rows.push({
+          depth: 2,
+          cells: {
+            competency: "",
+            topic: "",
+            objective: objectiveText,
+            task: "",
+            method: "",
+            social: "",
+            time: "",
+          },
+        });
+      });
+
+      const tasks = Array.isArray(topic.tasks) ? topic.tasks : [];
+      tasks.forEach((task, taskIndex) => {
+        const taskText =
+          typeof task === "string" && task.trim().length
+            ? task.trim()
+            : `Task ${taskIndex + 1}`;
+        rows.push({
+          depth: 3,
+          cells: {
+            competency: "",
+            topic: "",
+            objective: "",
+            task: taskText,
+            method: "",
+            social: "",
+            time: "",
+          },
+        });
+      });
+    });
+
+    if (!rows.length) {
+      rows.push({
+        depth: 0,
+        cells: {
+          competency: "No lesson structure defined yet.",
+          topic: "",
+          objective: "",
+          task: "",
+          method: "",
+          social: "",
+          time: "",
+        },
+      });
+    }
+
+    return {
+      columns: columns.map(({ key, label }) => ({ key, label })),
+      rows: rows.map((row) => ({
+        depth: row.depth,
+        cells: this.pickTableCells(row.cells, columns.map((c) => c.key)),
+      })),
+      emptyMessage: "Program structure has not been configured.",
+    };
+  }
+
+  private buildLessonResourcesTable(block: TemplateDefinitionBlock): TableData {
+    const config = (block.config ?? {}) as Record<string, unknown>;
+
+    const rows: TableRow[] = [
+      {
+        cells: {
+          resource: "Files",
+          type: "Upload",
+          notes: config.allowFiles === false ? "Disabled" : "Enabled",
+        },
+      },
+      {
+        cells: {
+          resource: "Links",
+          type: "External",
+          notes: config.allowLinks === false ? "Disabled" : "Enabled",
+        },
+      },
+      {
+        cells: {
+          resource: "Videos",
+          type: "Embed",
+          notes: config.allowVideos === false ? "Disabled" : "Enabled",
+        },
+      },
+    ];
+
+    const maxFiles =
+      typeof config.maxFiles === "number" && Number.isFinite(config.maxFiles)
+        ? config.maxFiles
+        : null;
+
+    if (maxFiles !== null) {
+      rows.push({
+        cells: {
+          resource: "Upload Limit",
+          type: "Files",
+          notes: `${maxFiles} max`,
+        },
+      });
+    }
+
+    return {
+      columns: [
+        { key: "resource", label: "Resource" },
+        { key: "type", label: "Type" },
+        { key: "notes", label: "Notes" },
+      ],
+      rows,
+      emptyMessage: "No resources configured.",
+    };
+  }
+
+  private buildLessonContentTable(lesson: CurriculumLesson): TableData {
+    const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
+    const rows: TableRow[] = [];
+
+    topics.forEach((topic, topicIndex) => {
+      const topicTitle =
+        typeof topic.title === "string" && topic.title.trim().length
+          ? topic.title.trim()
+          : `Topic ${topicIndex + 1}`;
+
+      rows.push({
+        depth: 0,
+        cells: {
+          topic: topicTitle,
+          objective: "",
+          task: "",
+        },
+      });
+
+      const objectives = Array.isArray(topic.objectives)
+        ? topic.objectives
+        : [];
+      objectives.forEach((objective, objectiveIndex) => {
+        const objectiveText =
+          typeof objective === "string" && objective.trim().length
+            ? objective.trim()
+            : `Objective ${objectiveIndex + 1}`;
+        rows.push({
+          depth: 1,
+          cells: {
+            topic: "",
+            objective: objectiveText,
+            task: "",
+          },
+        });
+      });
+
+      const tasks = Array.isArray(topic.tasks) ? topic.tasks : [];
+      tasks.forEach((task, taskIndex) => {
+        const taskText =
+          typeof task === "string" && task.trim().length
+            ? task.trim()
+            : `Task ${taskIndex + 1}`;
+        rows.push({
+          depth: 2,
+          cells: {
+            topic: "",
+            objective: "",
+            task: taskText,
+          },
+        });
+      });
+    });
+
+    if (!rows.length) {
+      rows.push({
+        cells: {
+          topic: "No content defined for this lesson.",
+          objective: "",
+          task: "",
+        },
+      });
+    }
+
+    return {
+      columns: [
+        { key: "topic", label: "Topic" },
+        { key: "objective", label: "Objective" },
+        { key: "task", label: "Task" },
+      ],
+      rows,
+      emptyMessage: "No content items yet.",
+    };
+  }
+
+  private buildLessonAssignmentTable(lesson: CurriculumLesson): TableData {
+    const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
+    const rows: TableRow[] = [];
+
+    topics.forEach((topic, topicIndex) => {
+      const topicTitle =
+        typeof topic.title === "string" && topic.title.trim().length
+          ? topic.title.trim()
+          : `Topic ${topicIndex + 1}`;
+
+      const tasks = Array.isArray(topic.tasks) ? topic.tasks : [];
+      if (!tasks.length) {
+        rows.push({
+          cells: {
+            assignment: `No assignments for ${topicTitle}`,
+            details: "",
+          },
+        });
+        return;
+      }
+
+      tasks.forEach((task, taskIndex) => {
+        const taskText =
+          typeof task === "string" && task.trim().length
+            ? task.trim()
+            : `Task ${taskIndex + 1}`;
+        rows.push({
+          depth: 0,
+          cells: {
+            assignment: taskText,
+            details: topicTitle,
+          },
+        });
+      });
+    });
+
+    if (!rows.length) {
+      rows.push({
+        cells: {
+          assignment: "No assignments defined yet.",
+          details: "",
+        },
+      });
+    }
+
+    return {
+      columns: [
+        { key: "assignment", label: "Assignment" },
+        { key: "details", label: "Details" },
+      ],
+      rows,
+      emptyMessage: "No assignments have been configured.",
+    };
+  }
+
+  private pickTableCells(
+    cells: Record<string, string>,
+    keys: string[],
+  ): Record<string, string> {
+    const result: Record<string, string> = {};
+    keys.forEach((key) => {
+      const value = cells[key];
+      if (typeof value === "string") {
+        result[key] = value;
+      } else if (value === null || value === undefined) {
+        result[key] = "";
+      } else {
+        result[key] = String(value);
+      }
+    });
+    return result;
   }
 
   private serializeTemplateBlock(

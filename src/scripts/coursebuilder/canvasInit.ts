@@ -25,6 +25,8 @@ import { canvasMarginManager } from './canvas/CanvasMarginManager';
 import { FloatingElementsManager } from './ui/FloatingElementsManager';
 import { initCanvasBaseContextMenu } from './ui/CanvasBaseContextMenu';
 import { initializeCurriculumNavigationPanel } from './ui/CurriculumNavigationPanel';
+import { MultiCanvasManager } from './canvas/MultiCanvasManager';
+import { getCourseId as getCourseIdFromUrl } from '../utils/courseId.js';
 
 function patchWebGLStringReturns(): void {
     const patchPrototype = (proto: any) => {
@@ -59,6 +61,86 @@ function patchWebGLStringReturns(): void {
     patchPrototype((window as any).WebGL2RenderingContext?.prototype);
 }
 
+function resolveActiveCourseId(): string | null {
+    const fromUrl = getCourseIdFromUrl();
+    if (typeof fromUrl === 'string' && fromUrl.trim().length > 0) {
+        return fromUrl;
+    }
+
+    try {
+        const fromSession = sessionStorage.getItem('currentCourseId');
+        if (typeof fromSession === 'string' && fromSession.trim().length > 0) {
+            return fromSession;
+        }
+    } catch {
+        /* ignore */
+    }
+
+    const fromWindow = (window as any).currentCourseId;
+    if (typeof fromWindow === 'string' && fromWindow.trim().length > 0) {
+        return fromWindow;
+    }
+
+    return null;
+}
+
+async function loadCanvasesForCourse(courseId: string): Promise<void> {
+    if (!multiCanvasManager) {
+        return;
+    }
+    const trimmedId = typeof courseId === 'string' ? courseId.trim() : '';
+    if (!trimmedId.length) {
+        return;
+    }
+    if (loadedCourseId === trimmedId) {
+        return;
+    }
+    if (canvasLoadPromise) {
+        try {
+            await canvasLoadPromise;
+        } catch {
+            /* ignore previous failure */
+        }
+        if (loadedCourseId === trimmedId) {
+            return;
+        }
+    }
+
+    canvasLoadPromise = multiCanvasManager
+        .loadCourseCanvases(trimmedId)
+        .then(() => {
+            loadedCourseId = trimmedId;
+            console.log(`🖼️ Multi-canvas: loaded canvases for course ${trimmedId}`);
+        })
+        .catch((error) => {
+            console.error(`❌ Failed to load canvases for course ${trimmedId}:`, error);
+        })
+        .finally(() => {
+            canvasLoadPromise = null;
+        });
+
+    await canvasLoadPromise;
+}
+
+function attachCourseIdListeners(): void {
+    if (courseIdListenersAttached) {
+        return;
+    }
+    courseIdListenersAttached = true;
+
+    const handler = (event: Event) => {
+        const detail = (event as CustomEvent<{ courseId?: string }>).detail;
+        const candidate = detail?.courseId;
+        if (typeof candidate === 'string' && candidate.trim().length > 0) {
+            void loadCanvasesForCourse(candidate.trim());
+        }
+    };
+
+    document.addEventListener('courseIdResolved', handler as EventListener);
+    document.addEventListener('courseIdUpdated', handler as EventListener);
+    document.addEventListener('curriculumDataUpdated', handler as EventListener);
+}
+
 patchWebGLStringReturns();
 
 // Global canvas instance
@@ -70,6 +152,10 @@ let layoutManager: CanvasLayoutManager | null = null;
 let toolCoordinator: ToolCoordinator | null = null;
 let layersPanel: LayersPanel | null = null;
 let floatingElementsManager: FloatingElementsManager | null = null;
+let multiCanvasManager: MultiCanvasManager | null = null;
+let loadedCourseId: string | null = null;
+let courseIdListenersAttached = false;
+let canvasLoadPromise: Promise<void> | null = null;
 
 // Global flag to prevent multiple initializations
 let isInitializing = false;
@@ -99,6 +185,12 @@ export async function initializeCanvas(): Promise<void> {
         }
 
         isInitializing = true;
+
+        if (!multiCanvasManager) {
+            multiCanvasManager = new MultiCanvasManager();
+            multiCanvasManager.initialize();
+            (window as any).multiCanvasManager = multiCanvasManager;
+        }
 
 
         // Create canvas API
@@ -241,6 +333,9 @@ export async function initializeCanvas(): Promise<void> {
         (window as any).layoutManager = layoutManager;
         (window as any).toolCoordinator = toolCoordinator;
         (window as any).canvasMarginManager = canvasMarginManager;
+        if (multiCanvasManager) {
+            (canvasAPI as any).multiCanvasManager = multiCanvasManager;
+        }
         
         // Expose TextTool for font debugging
         (window as any).TextTool = TextTool;
@@ -392,6 +487,16 @@ export async function initializeCanvas(): Promise<void> {
 
         // PerfHUD disabled by default to keep UI clean and avoid layout overlays in production.
         // To enable for debugging, call window.installPerfHUD?.()
+
+        if (multiCanvasManager) {
+            attachCourseIdListeners();
+            const initialCourseId = resolveActiveCourseId();
+            if (initialCourseId) {
+                await loadCanvasesForCourse(initialCourseId);
+            } else {
+                console.warn('⚠️ No course ID available yet for multi-canvas loading; waiting for updates');
+            }
+        }
 
         isInitializing = false;
     } catch (error) {

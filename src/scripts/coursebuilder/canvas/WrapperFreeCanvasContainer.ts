@@ -14,7 +14,7 @@
  */
 
 import { Application } from 'pixi.js';
-import { TemplateLayoutManager } from './TemplateLayoutManager';
+import { TemplateLayoutManager, type CanvasDataPayload, type TemplateRenderContext } from './TemplateLayoutManager';
 import { CanvasRow } from './MultiCanvasManager';
 import { multiCanvasPerformanceMonitor } from './CanvasPerformanceMonitor';
 import { CanvasLayers } from './CanvasLayers';
@@ -419,8 +419,8 @@ export class WrapperFreeCanvasContainer {
       canvasApp.toolManager = toolManager;
       canvasApp.isLoaded = true;
 
-      // Populate header/footer with metadata
-      await this.populateCanvasMetadata(canvasApp);
+      // Render full template layout
+      await this.renderTemplateLayout(canvasApp);
 
       // Expose tools globally for the active canvas
       this.exposeToolsForActiveCanvas(canvasApp);
@@ -772,30 +772,88 @@ export class WrapperFreeCanvasContainer {
   }
 
   /**
-   * Populate header and footer with canvas-specific metadata
+   * Render the stored template layout using the persisted canvas data.
    */
-  private async populateCanvasMetadata(canvasApp: DirectCanvasApplication): Promise<void> {
+  private async renderTemplateLayout(canvasApp: DirectCanvasApplication): Promise<void> {
     if (!canvasApp.templateLayoutManager) return;
 
-    const { templateLayoutManager, canvasRow } = canvasApp;
+    const resolvedRow = await this.ensureCanvasData(canvasApp);
+    if (!resolvedRow?.canvas_data) {
+      console.warn(`⚠️ Canvas data missing for ${canvasApp.canvasRow.id} - skipping layout render`);
+      return;
+    }
 
-    // Fetch course metadata
-    const courseMetadata = await this.fetchCourseMetadata(canvasRow.course_id);
-    const teacherMetadata = await this.fetchTeacherMetadata();
+    const context = await this.buildRenderContext(resolvedRow);
+    canvasApp.templateLayoutManager.renderCanvas(resolvedRow.canvas_data, context);
+  }
 
-    // Populate header
-    templateLayoutManager.populateHeaderContent({
+  private async ensureCanvasData(canvasApp: DirectCanvasApplication): Promise<CanvasRow | null> {
+    if (canvasApp.canvasRow.canvas_data) {
+      return canvasApp.canvasRow;
+    }
+
+    try {
+      const { supabase } = await import('../../backend/supabase');
+      const { data, error } = await supabase
+        .from('canvases')
+        .select('canvas_data, canvas_metadata')
+        .eq('id', canvasApp.canvasRow.id)
+        .single();
+
+      if (error) {
+        console.warn(`⚠️ Failed to load canvas_data for ${canvasApp.canvasRow.id}:`, error);
+        return canvasApp.canvasRow;
+      }
+
+      if (data?.canvas_data) {
+        canvasApp.canvasRow.canvas_data = data.canvas_data as CanvasDataPayload;
+      }
+
+      if (data?.canvas_metadata) {
+        canvasApp.canvasRow.canvas_metadata = {
+          ...canvasApp.canvasRow.canvas_metadata,
+          ...data.canvas_metadata,
+        };
+      }
+
+      return canvasApp.canvasRow;
+    } catch (error) {
+      console.warn(`⚠️ Unexpected error loading canvas_data for ${canvasApp.canvasRow.id}:`, error);
+      return canvasApp.canvasRow;
+    }
+  }
+
+  private async buildRenderContext(canvasRow: CanvasRow): Promise<TemplateRenderContext> {
+    const [courseMetadata, teacherMetadata] = await Promise.all([
+      this.fetchCourseMetadata(canvasRow.course_id),
+      this.fetchTeacherMetadata(),
+    ]);
+
+    const timestamp =
+      this.formatTimestamp(
+        (canvasRow.canvas_metadata as any)?.generatedAt ??
+        canvasRow.canvas_metadata?.updated_at ??
+        canvasRow.canvas_metadata?.created_at,
+      ) || undefined;
+
+    return {
+      teacherName: teacherMetadata.name || null,
+      courseTitle: courseMetadata.title || null,
+      courseCode: courseMetadata.code || null,
       pageNumber: canvasRow.canvas_index,
-      lessonNumber: canvasRow.lesson_number,
-      courseTitle: courseMetadata.title || 'Course Title'
-    });
+      generatedAt: timestamp,
+    };
+  }
 
-    // Populate footer
-    templateLayoutManager.populateFooterContent({
-      teacherName: teacherMetadata.name || 'Teacher Name',
-      creationDate: new Date(canvasRow.canvas_metadata.created_at).toLocaleDateString(),
-      courseCode: courseMetadata.code || 'COURSE-001'
-    });
+  private formatTimestamp(raw?: string | null): string | null {
+    if (!raw) return null;
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) {
+      return null;
+    }
+    const datePart = date.toLocaleDateString();
+    const timePart = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `${datePart} ${timePart}`;
   }
 
   /**

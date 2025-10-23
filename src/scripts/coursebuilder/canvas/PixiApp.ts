@@ -111,8 +111,14 @@ export class PixiApp {
       // Check if container has grid layout class
       const hasGridLayout = this.container.classList.contains('canvas--grid') || 
                             this.container.classList.contains('engine__canvas--grid');
+      const multiCanvasGrid = this.container.querySelector('#canvas-grid-container');
       
       if (hasGridLayout) {
+        if (multiCanvasGrid) {
+          console.log('🧩 Multi-canvas grid detected - skipping legacy canvas mount');
+          this.mounted = true;
+          return;
+        }
         // For grid layout, preserve existing content and insert canvas in proper grid position
         // Remove any existing canvas first
         const existingCanvas = this.container.querySelector('canvas');
