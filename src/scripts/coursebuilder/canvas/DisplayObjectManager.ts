@@ -177,12 +177,18 @@ export class DisplayObjectManager {
   public clear(): void {
     try { if ((window as any).__NEPTINO_DEBUG_LOGS) console.log('🧹 Clearing all display objects...'); } catch { /* empty */ }
     
-    // Remove all objects
+    // Remove all objects safely
     for (const [, displayObject] of this.allObjects) {
-      if (displayObject.parent) {
-        displayObject.parent.removeChild(displayObject);
+      try {
+        if (displayObject && !displayObject.destroyed) {
+          if (displayObject.parent) {
+            displayObject.parent.removeChild(displayObject);
+          }
+          displayObject.destroy();
+        }
+      } catch (error) {
+        console.warn('⚠️ Error destroying display object:', error);
       }
-      displayObject.destroy();
     }
     
     // Clear the map and legacy set

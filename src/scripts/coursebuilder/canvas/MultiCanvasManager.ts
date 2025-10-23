@@ -46,7 +46,7 @@ export class MultiCanvasManager {
    * Initialize the multi-canvas manager
    */
   public initialize(): void {
-    this.lifecycleManager = CanvasLifecycleManager.getInstance(2);
+    this.lifecycleManager = CanvasLifecycleManager.getInstance(5); // Allow 5 concurrent canvases for better stability
     this.verticalContainer = new VerticalCanvasContainer();
     this.verticalContainer.initialize();
     

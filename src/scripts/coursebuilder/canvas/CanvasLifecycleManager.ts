@@ -51,8 +51,13 @@ export class CanvasLifecycleManager {
     evictFn: () => Promise<boolean>,
   ): Promise<T> {
     return this.enqueue(async () => {
-      if (this.activeCanvases.has(canvasId) || this.releasing.has(canvasId)) {
+      if (this.activeCanvases.has(canvasId)) {
         return loadFn();
+      }
+      
+      if (this.releasing.has(canvasId)) {
+        // Wait for release to complete before loading
+        await new Promise<void>((resolve) => this.waiters.push(resolve));
       }
 
       while (this.activeCanvases.size >= this.maxActive) {

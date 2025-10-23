@@ -55,6 +55,16 @@ class ObjectPool<T> {
    * Clear the entire pool
    */
   clear(): void {
+    // Safely destroy any remaining objects in the pool
+    for (const obj of this.pool) {
+      try {
+        if (obj && typeof obj.destroy === 'function') {
+          obj.destroy();
+        }
+      } catch (error) {
+        console.warn('⚠️ Error destroying pooled object:', error);
+      }
+    }
     this.pool.length = 0;
   }
 }
@@ -122,23 +132,29 @@ export class GraphicsPool {
    * Reset a Graphics object to clean state
    */
   private resetGraphics(graphics: Graphics): void {
-    graphics.clear();
-    graphics.position.set(0, 0);
-    graphics.scale.set(1, 1);
-    graphics.rotation = 0;
-    graphics.alpha = 1;
-    graphics.visible = true;
-    graphics.eventMode = 'auto';
-    graphics.removeAllListeners();
-    
-    // Remove from parent if attached
-    if (graphics.parent) {
-      graphics.parent.removeChild(graphics);
+    try {
+      if (graphics && !graphics.destroyed) {
+        graphics.clear();
+        graphics.position.set(0, 0);
+        graphics.scale.set(1, 1);
+        graphics.rotation = 0;
+        graphics.alpha = 1;
+        graphics.visible = true;
+        graphics.eventMode = 'auto';
+        graphics.removeAllListeners();
+        
+        // Remove from parent if attached
+        if (graphics.parent) {
+          graphics.parent.removeChild(graphics);
+        }
+        
+        // Clear any custom metadata
+        delete (graphics as any).__meta;
+        delete (graphics as any).__toolType;
+      }
+    } catch (error) {
+      console.warn('⚠️ Error resetting graphics object:', error);
     }
-    
-    // Clear any custom metadata
-    delete (graphics as any).__meta;
-    delete (graphics as any).__toolType;
   }
 
   /**
@@ -224,10 +240,14 @@ export class GraphicsPool {
    * Clear all pools (use sparingly)
    */
   clearAll(): void {
-    this.basicGraphicsPool.clear();
-    this.strokeGraphicsPool.clear();
-    this.anchorGraphicsPool.clear();
-    this.previewGraphicsPool.clear();
+    try {
+      this.basicGraphicsPool.clear();
+      this.strokeGraphicsPool.clear();
+      this.anchorGraphicsPool.clear();
+      this.previewGraphicsPool.clear();
+    } catch (error) {
+      console.warn('⚠️ Error clearing graphics pools:', error);
+    }
   }
 }
 
@@ -348,16 +368,22 @@ export class ContainerPool {
       () => new Container(),
       (container) => {
         // Reset container to clean state
-        container.removeChildren();
-        container.position.set(0, 0);
-        container.scale.set(1, 1);
-        container.rotation = 0;
-        container.alpha = 1;
-        container.visible = true;
-        container.removeAllListeners();
-        
-        if (container.parent) {
-          container.parent.removeChild(container);
+        try {
+          if (container && !container.destroyed) {
+            container.removeChildren();
+            container.position.set(0, 0);
+            container.scale.set(1, 1);
+            container.rotation = 0;
+            container.alpha = 1;
+            container.visible = true;
+            container.removeAllListeners();
+            
+            if (container.parent) {
+              container.parent.removeChild(container);
+            }
+          }
+        } catch (error) {
+          console.warn('⚠️ Error resetting container:', error);
         }
       },
       10 // Keep up to 10 containers

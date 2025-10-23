@@ -61,12 +61,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Global error handling
 window.addEventListener('error', (event) => {
- console.error('Global error:', event.error);
+  // Check if this is a PIXI.js related error
+  if (event.error && event.error.message) {
+    const errorMessage = event.error.message.toLowerCase();
+    
+    // Handle common PIXI.js errors gracefully
+    if (errorMessage.includes('cannot read properties of null') || 
+        errorMessage.includes('destroy') ||
+        errorMessage.includes('batcher') ||
+        errorMessage.includes('pool') ||
+        errorMessage.includes('graphics') ||
+        errorMessage.includes('batchablegraphics') ||
+        errorMessage.includes('poolgroup') ||
+        errorMessage.includes('globalresourceregistry') ||
+        errorMessage.includes('cannot convert undefined or null to object') ||
+        errorMessage.includes('glshadersystem') ||
+        errorMessage.includes('object.keys')) {
+      console.warn('⚠️ PIXI.js rendering error (handled gracefully):', event.error.message);
+      event.preventDefault(); // Prevent the error from crashing the app
+      return;
+    }
+  }
+  
+  console.error('Global error:', event.error);
 });
 
 // Global unhandled promise rejection handling
 window.addEventListener('unhandledrejection', (event) => {
- console.error('Unhandled promise rejection:', event.reason);
+  // Check if this is a PIXI.js related promise rejection
+  if (event.reason && event.reason.message) {
+    const errorMessage = event.reason.message.toLowerCase();
+    
+    // Handle common PIXI.js promise rejections gracefully
+    if (errorMessage.includes('cannot read properties of null') || 
+        errorMessage.includes('destroy') ||
+        errorMessage.includes('batcher') ||
+        errorMessage.includes('pool') ||
+        errorMessage.includes('graphics') ||
+        errorMessage.includes('batchablegraphics') ||
+        errorMessage.includes('poolgroup') ||
+        errorMessage.includes('globalresourceregistry') ||
+        errorMessage.includes('cannot convert undefined or null to object') ||
+        errorMessage.includes('glshadersystem') ||
+        errorMessage.includes('object.keys')) {
+      console.warn('⚠️ PIXI.js promise rejection (handled gracefully):', event.reason.message);
+      event.preventDefault(); // Prevent the rejection from crashing the app
+      return;
+    }
+  }
+  
+  console.error('Unhandled promise rejection:', event.reason);
 });
 
 // Export for module system

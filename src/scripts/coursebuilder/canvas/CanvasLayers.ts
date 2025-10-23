@@ -195,9 +195,15 @@ export class CanvasLayers {
    * Destroy all layers
    */
   public destroy(): void {
-    Object.values(this.layers).forEach(layer => {
-      layer.destroy({ children: true });
-    });
+    try {
+      Object.values(this.layers).forEach(layer => {
+        if (layer && !layer.destroyed) {
+          layer.destroy({ children: true });
+        }
+      });
+    } catch (error) {
+      console.warn('⚠️ Error destroying canvas layers:', error);
+    }
 
     this.backgroundGraphics = null;
   }

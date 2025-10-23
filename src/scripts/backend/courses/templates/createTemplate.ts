@@ -212,11 +212,146 @@ export class TemplateManager {
 
       // Update the preview
       this.updateTemplatePreview();
+
+      // Trigger canvas regeneration for all lessons using this template
+      await this.regenerateCanvasesForTemplate(templateId);
     } catch (error) {
       console.error("Failed to update template field:", error);
 
       // Show error status
       setTemplateStatus("error", "Error saving changes");
+    }
+  }
+
+  /**
+   * Regenerate canvas data for all lessons using the specified template
+   */
+  static async regenerateCanvasesForTemplate(templateId: string): Promise<void> {
+    try {
+      console.log(`🔄 Regenerating canvases for template: ${templateId}`);
+      
+      // Get current course ID
+      const courseId = sessionStorage.getItem("currentCourseId");
+      if (!courseId) {
+        console.warn("⚠️ No course ID found, skipping canvas regeneration");
+        return;
+      }
+
+      // Import CurriculumManager dynamically to avoid circular dependencies
+      const { CurriculumManager } = await import('../curriculum/curriculumManager.js');
+      
+      // Get curriculum data
+      const { data: courseData, error: courseError } = await supabase
+        .from('courses')
+        .select('curriculum_data')
+        .eq('id', courseId)
+        .single();
+
+      if (courseError) {
+        console.error('❌ Failed to fetch curriculum data:', courseError);
+        return;
+      }
+
+      // Check for both legacy lessons format and new modules format
+      const curriculumData = courseData?.curriculum_data;
+      let lessons: any[] = [];
+      
+      if (curriculumData?.lessons) {
+        // Legacy format: lessons directly in curriculum_data
+        lessons = curriculumData.lessons;
+      } else if (curriculumData?.modules) {
+        // New format: lessons organized into modules
+        lessons = curriculumData.modules.flatMap((module: any) => module.lessons || []);
+      }
+      
+      if (!lessons.length) {
+        console.warn('⚠️ No curriculum lessons found, skipping canvas regeneration');
+        return;
+      }
+
+      console.log(`📚 Found ${lessons.length} lessons for canvas regeneration`);
+
+      // Get updated template data
+      const { data: templateData, error: templateError } = await supabase
+        .from('templates')
+        .select('*')
+        .eq('id', templateId)
+        .single();
+
+      if (templateError) {
+        console.error('❌ Failed to fetch updated template data:', templateError);
+        return;
+      }
+
+      // Create curriculum manager instance
+      const curriculumManager = new CurriculumManager(courseId);
+      const templateMap = new Map();
+      templateMap.set(templateId, {
+        id: templateData.id,
+        template_id: templateData.template_id,
+        template_type: templateData.template_type,
+        template_description: templateData.template_description,
+        template_data: templateData.template_data,
+        course_id: templateData.course_id,
+      });
+
+      // Update canvas data for lessons using this template
+      const updates: Array<{
+        lessonNumber: number;
+        canvas_data: Record<string, unknown>;
+        canvas_metadata: Record<string, unknown>;
+      }> = [];
+
+      for (const lesson of lessons) {
+        if (lesson.templateId === templateId) {
+          const { CanvasBuilder } = await import('../curriculum/canvasBuilder.js');
+          const canvasBuilder = new CanvasBuilder();
+          const templateRecord = templateMap.get(templateId);
+          
+          const payload = canvasBuilder.buildLessonCanvasPayload(
+            lesson,
+            templateRecord,
+            lesson.lessonNumber
+          );
+
+          updates.push({
+            lessonNumber: lesson.lessonNumber,
+            canvas_data: payload.canvasData as Record<string, unknown>,
+            canvas_metadata: payload.canvasMetadata as Record<string, unknown>,
+          });
+        }
+      }
+
+      // Update canvas data in database
+      if (updates.length > 0) {
+        for (const update of updates) {
+          const { error: updateError } = await supabase
+            .from('canvases')
+            .update({
+              canvas_data: update.canvas_data,
+              canvas_metadata: update.canvas_metadata,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('course_id', courseId)
+            .eq('lesson_number', update.lessonNumber);
+
+          if (updateError) {
+            console.error(`❌ Failed to update canvas for lesson ${update.lessonNumber}:`, updateError);
+          }
+        }
+
+        console.log(`✅ Regenerated ${updates.length} canvas(es) for template ${templateId}`);
+        
+        // Dispatch event to notify canvas system of updates
+        document.dispatchEvent(new CustomEvent('canvasDataUpdated', {
+          detail: { courseId, templateId, updatedLessons: updates.length }
+        }));
+      } else {
+        console.log(`ℹ️ No lessons found using template ${templateId}`);
+      }
+
+    } catch (error) {
+      console.error('❌ Failed to regenerate canvases for template:', error);
     }
   }
 
