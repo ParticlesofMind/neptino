@@ -9,6 +9,7 @@ export class CanvasLifecycleManager {
 
   private readonly maxActive: number;
   private readonly activeCanvases = new Set<string>();
+  private readonly releasing = new Set<string>();
   private queue: Promise<unknown> = Promise.resolve();
 
   private waiters: Array<() => void> = [];
@@ -50,7 +51,7 @@ export class CanvasLifecycleManager {
     evictFn: () => Promise<boolean>,
   ): Promise<T> {
     return this.enqueue(async () => {
-      if (this.activeCanvases.has(canvasId)) {
+      if (this.activeCanvases.has(canvasId) || this.releasing.has(canvasId)) {
         return loadFn();
       }
 
@@ -77,9 +78,22 @@ export class CanvasLifecycleManager {
   }
 
   /**
+   * Marks a canvas as about to be released. This prevents a race condition
+   * where a canvas is chosen for eviction, but not yet fully destroyed,
+   * while another canvas load is requested.
+   */
+  public preRelease(canvasId: string): void {
+    if (this.activeCanvases.has(canvasId)) {
+      this.releasing.add(canvasId);
+      this.activeCanvases.delete(canvasId);
+    }
+  }
+
+  /**
    * Marks a canvas as no longer active (usually after unload completes).
    */
   public release(canvasId: string): void {
+    this.releasing.delete(canvasId);
     this.activeCanvases.delete(canvasId);
     this.resolveNextWaiter();
   }

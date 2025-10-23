@@ -14,6 +14,7 @@
 import { supabase } from '../../backend/supabase';
 import { VerticalCanvasContainer, CanvasApplication } from './VerticalCanvasContainer';
 import type { CanvasDataPayload } from './TemplateLayoutManager';
+import { CanvasLifecycleManager } from './CanvasLifecycleManager';
 
 export interface CanvasRow {
   id: string;
@@ -39,11 +40,13 @@ export class MultiCanvasManager {
   private totalCanvases = 0;
   private canvasMetadata: CanvasRow[] = []; // Store metadata for lazy loading
   private readonly BATCH_SIZE = 3; // Reduced batch size for better performance
+  private lifecycleManager: CanvasLifecycleManager;
 
   /**
    * Initialize the multi-canvas manager
    */
   public initialize(): void {
+    this.lifecycleManager = CanvasLifecycleManager.getInstance(2);
     this.verticalContainer = new VerticalCanvasContainer();
     this.verticalContainer.initialize();
     
@@ -147,20 +150,30 @@ export class MultiCanvasManager {
       return; // Already exists or not initialized
     }
 
-    // Find the canvas metadata
     const canvasRow = this.canvasMetadata.find(row => row.id === canvasId);
     if (!canvasRow) {
       console.warn(`⚠️ Canvas metadata not found for: ${canvasId}`);
       return;
     }
 
-    console.log(`🔄 Creating canvas on-demand: ${canvasId}`);
-    
-    // Create the canvas
-    await this.verticalContainer.createCanvasApplication(canvasRow);
-    this.loadedCanvases.add(canvasId);
-
-    console.log(`✅ Canvas created on-demand: ${canvasId}`);
+    await this.lifecycleManager.withLoad(
+      canvasId,
+      async () => {
+        if (this.verticalContainer) {
+          await this.verticalContainer.createCanvasApplication(canvasRow);
+          this.loadedCanvases.add(canvasId);
+          console.log(`✅ Canvas created on-demand: ${canvasId}`);
+        }
+      },
+      async () => {
+        // Eviction logic
+        if (this.verticalContainer) {
+          const success = await this.verticalContainer.ensureCapacityForNewCanvas(canvasId);
+          return success;
+        }
+        return false;
+      }
+    );
   }
 
   /**
@@ -173,12 +186,9 @@ export class MultiCanvasManager {
 
     console.log(`🗑️ Destroying canvas: ${canvasId}`);
     
-    // Remove from loaded set
     this.loadedCanvases.delete(canvasId);
+    this.lifecycleManager.release(canvasId);
     
-    // The VerticalCanvasContainer will handle the actual destruction
-    // through its lazyUnloadCanvas method
-
     console.log(`✅ Canvas destroyed: ${canvasId}`);
   }
 

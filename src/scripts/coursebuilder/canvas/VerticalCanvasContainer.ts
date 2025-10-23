@@ -356,10 +356,7 @@ export class VerticalCanvasContainer {
    */
   public async lazyLoadCanvas(canvasId: string): Promise<void> {
     const canvasApp = this.canvasApplications.get(canvasId);
-    if (!canvasApp || canvasApp.isLoaded) {
-      return; // Already loaded or doesn't exist
-    }
-    if (this.loadingCanvases.has(canvasId)) {
+    if (!canvasApp || canvasApp.isLoaded || this.loadingCanvases.has(canvasId)) {
       return;
     }
     this.loadingCanvases.add(canvasId);
@@ -369,17 +366,12 @@ export class VerticalCanvasContainer {
     try {
       await this.lifecycleManager.withLoad(
         canvasId,
-        async () => {
-          try {
-            await this.performCanvasLoad(canvasId, canvasApp);
-          } finally {
-            this.loadingCanvases.delete(canvasId);
-          }
-        },
-        async () => this.ensureCapacityForNewCanvas(canvasId),
+        () => this.performCanvasLoad(canvasId, canvasApp),
+        () => this.ensureCapacityForNewCanvas(canvasId),
       );
     } catch (error) {
       console.error(`❌ Failed to lazy load canvas ${canvasId}:`, error);
+    } finally {
       this.loadingCanvases.delete(canvasId);
     }
   }
@@ -387,34 +379,27 @@ export class VerticalCanvasContainer {
   private async performCanvasLoad(canvasId: string, canvasApp: CanvasApplication): Promise<boolean> {
     const startTime = performance.now();
 
-    // Locate placeholder
     const placeholder = document.getElementById(`canvas-placeholder-${canvasId}`);
     if (!placeholder) {
       console.error(`❌ Placeholder not found for canvas: ${canvasId}`);
       return false;
     }
 
-    // Create Pixi application
     const app = new Application();
-    try {
-      await app.init({
-        width: this.CANVAS_WIDTH,
-        height: this.CANVAS_HEIGHT,
-        backgroundColor: 0xffffff,
-        antialias: true,
-        resolution: window.devicePixelRatio || 1,
-        autoDensity: true,
-      });
-    } catch (initError) {
-      console.error(`❌ Failed to initialize PixiJS app for canvas ${canvasId}:`, initError);
-      if (initError instanceof Error && initError.message.includes('WebGL')) {
-        console.warn('⚠️ WebGL context issue detected - forcing cleanup');
-        await this.forceCleanupAllCanvases();
-      }
-      throw initError;
+    await app.init({
+      width: this.CANVAS_WIDTH,
+      height: this.CANVAS_HEIGHT,
+      backgroundColor: 0xffffff,
+      antialias: true,
+      resolution: window.devicePixelRatio || 1,
+      autoDensity: true,
+    });
+
+    if (!this.loadingCanvases.has(canvasId)) {
+      await app.destroy(true);
+      return false;
     }
 
-    // Swap placeholder with real canvas
     const pixiCanvas = app.canvas;
     pixiCanvas.id = `canvas-${canvasId}`;
     pixiCanvas.className = 'canvas-direct canvas-direct--loaded';
@@ -426,44 +411,27 @@ export class VerticalCanvasContainer {
     canvasApp.canvas = pixiCanvas;
     canvasApp.placeholder = null;
 
-    // Build layer system
     const layers = new CanvasLayers(app);
     layers.initialize();
 
-    // Zoom controls
     const zoomManager = await this.setupCanvasZoomControls(app, pixiCanvas);
     this.setupCanvasZoom(app, pixiCanvas, zoomManager);
 
-    // Managers and events
-    const drawingLayer = layers.getLayer('drawing');
-    if (!drawingLayer) {
-      throw new Error('Drawing layer not available after layer initialization');
-    }
+    const drawingLayer = layers.getLayer('drawing')!;
     const displayManager = new DisplayObjectManager(drawingLayer);
 
     const toolManager = new ToolManager();
     toolManager.setDisplayManager(displayManager);
-
-    const uiLayer = layers.getLayer('ui');
-    if (uiLayer) {
-      toolManager.setUILayer(uiLayer);
-    }
+    toolManager.setUILayer(layers.getLayer('ui')!);
 
     const events = new CanvasEvents(app, drawingLayer, toolManager);
     events.initialize();
 
-    const backgroundLayer = layers.getLayer('background');
-    if (backgroundLayer) {
-      canvasMarginManager.setContainer(backgroundLayer);
-    }
+    canvasMarginManager.setContainer(layers.getLayer('background')!);
 
     const templateLayoutManager = new TemplateLayoutManager();
-    const layoutLayer = layers.getLayer('layout');
-    if (layoutLayer) {
-      await templateLayoutManager.initialize(layoutLayer);
-    }
+    await templateLayoutManager.initialize(layers.getLayer('layout')!);
 
-    // Persist references
     canvasApp.app = app;
     canvasApp.templateLayoutManager = templateLayoutManager;
     canvasApp.layers = layers;
@@ -472,7 +440,6 @@ export class VerticalCanvasContainer {
     canvasApp.toolManager = toolManager;
     canvasApp.isLoaded = true;
 
-    // Populate layout
     await this.renderTemplateLayout(canvasApp);
 
     this.exposeToolsForActiveCanvas(canvasApp);
@@ -490,7 +457,7 @@ export class VerticalCanvasContainer {
   /**
    * Ensure there is WebGL capacity before initializing another canvas instance
    */
-  private async ensureCapacityForNewCanvas(targetCanvasId: string): Promise<boolean> {
+  public async ensureCapacityForNewCanvas(targetCanvasId: string): Promise<boolean> {
     const maxActive = this.lifecycleManager.getMaxActive();
     const activeCount = this.lifecycleManager.getActiveCount();
     if (activeCount < maxActive) {
@@ -507,24 +474,24 @@ export class VerticalCanvasContainer {
     const targetCanvas = this.canvasApplications.get(targetCanvasId);
     const targetIndex = targetCanvas?.canvasRow?.canvas_index ?? null;
 
-    const distanceScore = (app: CanvasApplication) => {
-      if (targetIndex === null) {
-        return Math.abs(app.canvasRow.canvas_index);
-      }
-      return Math.abs(app.canvasRow.canvas_index - targetIndex);
-    };
+    loadedCanvases.sort((a, b) => {
+      const distanceA = targetIndex !== null ? Math.abs(a.canvasRow.canvas_index - targetIndex) : a.canvasRow.canvas_index;
+      const distanceB = targetIndex !== null ? Math.abs(b.canvasRow.canvas_index - targetIndex) : b.canvasRow.canvas_index;
+      return distanceB - distanceA;
+    });
 
-    loadedCanvases.sort((a, b) => distanceScore(b) - distanceScore(a));
     const candidate = loadedCanvases[0];
     if (!candidate) {
       return false;
     }
 
     try {
+      this.lifecycleManager.preRelease(candidate.canvasRow.id);
       await this.lazyUnloadCanvas(candidate.canvasRow.id);
       return true;
     } catch (error) {
       console.warn(`⚠️ Failed to unload canvas ${candidate.canvasRow.id} before loading ${targetCanvasId}:`, error);
+      this.lifecycleManager.release(candidate.canvasRow.id);
       return false;
     }
   }
@@ -573,104 +540,41 @@ export class VerticalCanvasContainer {
   /**
    * Safely destroy a canvas application with minimal error propagation
    */
-  private async safeDestroyCanvas(canvasId: string, canvasApp: any): Promise<void> {
-    try {
-      const appInstance = canvasApp.app;
+  private async safeDestroyCanvas(canvasId: string, canvasApp: CanvasApplication): Promise<void> {
+    if (!canvasApp.isLoaded || !canvasApp.app) {
+      return;
+    }
 
-      if (!appInstance) {
-        canvasApp.isLoaded = false;
-        canvasApp.canvas = null;
-        return;
-      }
+    const app = canvasApp.app;
+    canvasApp.isLoaded = false;
 
-      if (appInstance.renderer?.destroyed) {
-        canvasApp.app = null;
-        canvasApp.canvas = null;
-        canvasApp.isLoaded = false;
-        return;
-      }
+    if (this.unifiedZoomManager) {
+      this.unifiedZoomManager.unregisterCanvas(canvasId);
+    }
 
-      try {
-        canvasApp.templateLayoutManager?.destroy();
-      } catch (layoutError) {
-        console.warn(`⚠️ Template layout destroy error (non-critical):`, layoutError);
-      }
-      canvasApp.templateLayoutManager = null;
+    if (app.ticker && !app.ticker.destroyed) {
+      app.ticker.stop();
+    }
 
-      // Unregister from UnifiedZoomManager first
-      if (this.unifiedZoomManager) {
-        this.unifiedZoomManager.unregisterCanvas(canvasId);
-      }
+    if (app.canvas.parentNode) {
+      app.canvas.parentNode.removeChild(app.canvas);
+    }
 
-      // Check if canvas is currently rendering
-      const isRendering = this.isCanvasRendering(canvasApp);
-      
-      // Stop ticker and wait for current frame to complete
-      if (canvasApp.app?.ticker) {
-        canvasApp.app.ticker.stop();
-        
-        // If it was rendering, wait longer for the render cycle to complete
-        const waitTime = isRendering ? 32 : 16; // 2 frames if rendering, 1 frame if not
-        await new Promise(resolve => setTimeout(resolve, waitTime));
-      }
+    canvasApp.templateLayoutManager?.destroy();
+    canvasApp.events?.destroy();
+    canvasApp.layers?.destroy();
+    canvasApp.toolManager?.destroy();
 
-      // Remove from DOM first to stop rendering
-      if (appInstance.canvas?.parentNode) {
-        appInstance.canvas.parentNode.removeChild(appInstance.canvas);
-      }
+    canvasApp.app = null;
+    canvasApp.canvas = null;
+    canvasApp.templateLayoutManager = null;
+    canvasApp.toolManager = null;
+    canvasApp.events = null;
+    canvasApp.layers = null;
+    canvasApp.displayManager = null;
 
-      // Wait a bit more to ensure DOM removal is processed
-      await new Promise(resolve => setTimeout(resolve, 16));
-
-      // Destroy app with additional safety checks
-      if (appInstance) {
-        try {
-          if (appInstance.ticker && !appInstance.ticker.destroyed) {
-            appInstance.ticker.stop();
-            try {
-              appInstance.ticker.destroy();
-            } catch (tickerError) {
-              console.warn(`⚠️ Ticker destroy error (non-critical):`, tickerError);
-            }
-          }
-
-          const renderer = appInstance.renderer as any;
-          if (renderer && !renderer.destroyed) {
-            // Remove canvas view already detached above
-            appInstance.destroy(false);
-
-            try {
-              const gl = renderer.gl;
-              if (gl && typeof gl.getExtension === 'function') {
-                const loseCtx = gl.getExtension('WEBGL_lose_context');
-                loseCtx?.loseContext();
-              }
-            } catch (glError) {
-              console.warn(`⚠️ Unable to request WebGL context loss:`, glError);
-            }
-          } else {
-            console.warn(`⚠️ Renderer already destroyed for canvas ${canvasId}`);
-          }
-        } catch (destroyError) {
-          console.warn(`⚠️ App destroy error (non-critical):`, destroyError);
-        }
-      }
-
-      // Clear references
-      canvasApp.app = null;
-      canvasApp.canvas = null;
-      canvasApp.templateLayoutManager = null;
-      canvasApp.toolManager = null;
-      canvasApp.events = null;
-      canvasApp.layers = null;
-      canvasApp.displayManager = null;
-      canvasApp.placeholder = null;
-      canvasApp.isLoaded = false;
-
-    } catch (error) {
-      console.warn(`⚠️ Safe destroy error for canvas ${canvasId} (non-critical):`, error);
-      // Mark as unloaded regardless of errors
-      canvasApp.isLoaded = false;
+    if (!app.renderer.destroyed) {
+      app.destroy(true);
     }
   }
 
@@ -729,50 +633,37 @@ export class VerticalCanvasContainer {
   private async lazyUnloadCanvas(canvasId: string): Promise<void> {
     const canvasApp = this.canvasApplications.get(canvasId);
     if (!canvasApp || !canvasApp.isLoaded) {
-      return; // Not loaded or doesn't exist
+      return;
     }
 
     console.log(`🗑️ Viewport-triggered lazy unloading: ${canvasId}`);
 
+    if (this.activeCanvasId === canvasId) {
+      this.activeCanvasId = null;
+    }
+
+    const currentCanvas = canvasApp.canvas;
+    let placeholder: HTMLDivElement | null = null;
+
+    if (currentCanvas) {
+      this.cleanupCanvasZoomControls(currentCanvas);
+      placeholder = this.createPlaceholderElement(canvasId, canvasApp.canvasRow, 'Scroll to reload');
+      currentCanvas.parentNode?.replaceChild(placeholder, currentCanvas);
+    }
+
     try {
-      if (this.activeCanvasId === canvasId) {
-        this.activeCanvasId = null;
-      }
-      const currentCanvas = canvasApp.canvas;
-      let placeholder: HTMLDivElement | null = null;
-
-      if (currentCanvas) {
-        // Clean up zoom controls prior to destruction
-        this.cleanupCanvasZoomControls(currentCanvas);
-
-        placeholder = this.createPlaceholderElement(canvasId, canvasApp.canvasRow, 'Scroll to reload');
-
-        if (currentCanvas.parentNode) {
-          currentCanvas.parentNode.replaceChild(placeholder, currentCanvas);
-        } else if ((currentCanvas as any).replaceWith) {
-          (currentCanvas as any).replaceWith(placeholder);
-        }
-      }
-
-      // Use the safer destruction method (handles all cleanup)
       await this.safeDestroyCanvas(canvasId, canvasApp);
-
-      if (placeholder) {
-        canvasApp.canvas = null;
-        canvasApp.placeholder = placeholder;
-        
-        // Re-observe placeholder for future intersection
-        this.intersectionObserver?.observe(placeholder);
-      }
-
-      canvasApp.isLoaded = false;
-      this.loadingCanvases.delete(canvasId);
-      console.log(`✅ Viewport-triggered canvas unloaded: ${canvasId}`);
-    } catch (error) {
-      console.error(`❌ Failed to lazy unload canvas ${canvasId}:`, error);
     } finally {
       this.lifecycleManager.release(canvasId);
     }
+
+    if (placeholder) {
+      canvasApp.placeholder = placeholder;
+      this.intersectionObserver?.observe(placeholder);
+    }
+
+    this.loadingCanvases.delete(canvasId);
+    console.log(`✅ Viewport-triggered canvas unloaded: ${canvasId}`);
   }
 
   /**
