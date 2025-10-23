@@ -270,3 +270,4 @@ window.debugCanvasRendering = debugCanvasRendering;
 window.createPixiJSInspector = createPixiJSInspector;
 
 
+
