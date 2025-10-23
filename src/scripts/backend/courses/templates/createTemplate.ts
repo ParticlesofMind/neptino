@@ -679,6 +679,20 @@ export class TemplateManager {
         },
         { name: "teacher_name", label: "Teacher name", mandatory: false },
       ],
+      body: [
+        // Body is a container - its configuration is derived from template type
+        { name: "body_content", label: "Body content", mandatory: true },
+      ],
+      footer: [
+        { name: "copyright", label: "Copyright", mandatory: true },
+        { name: "teacher_name", label: "Teacher name", mandatory: false },
+        {
+          name: "institution_name",
+          label: "Institution name",
+          mandatory: false,
+        },
+        { name: "page_number", label: "Page number (#)", mandatory: true },
+      ],
       program: [
         { name: "competence", label: "Competence", mandatory: true },
         { name: "topic", label: "Topic", mandatory: true },
@@ -982,16 +996,6 @@ export class TemplateManager {
         { name: "feedback_guidelines", label: "Feedback guidelines", mandatory: false },
         { name: "rubric_link", label: "Rubric link", mandatory: false },
       ],
-      footer: [
-        { name: "copyright", label: "Copyright", mandatory: true },
-        { name: "teacher_name", label: "Teacher name", mandatory: false },
-        {
-          name: "institution_name",
-          label: "Institution name",
-          mandatory: false,
-        },
-        { name: "page_number", label: "Page number (#)", mandatory: true },
-      ],
     };
   }
 
@@ -1288,12 +1292,13 @@ export class TemplateManager {
   static getBlockDescription(blockType: TemplateBlockType): string {
     const descriptions: Record<TemplateBlockType, string> = {
       header: "Title and introduction section",
+      body: "Main template content container",
+      footer: "Credits and additional information",
       program: "Learning objectives and outcomes",
       resources: "Files, links, and materials",
       content: "Main lesson content and materials",
       assignment: "Tasks and submissions",
       scoring: "Evaluation criteria and grading guidance",
-      footer: "Credits and additional information",
     };
     return descriptions[blockType] || "Block configuration";
   }
@@ -1757,12 +1762,13 @@ export class TemplateManager {
   static getDefaultBlockContent(blockType: TemplateBlockType): string {
     const defaultContent: Record<TemplateBlockType, string> = {
       header: "Course title and introduction will appear here",
+      body: "Main body content container - contains all nested blocks",
+      footer: "Credits and additional information will appear here",
       program: "Learning objectives and outcomes will be displayed here",
       resources: "Files, links, and materials will be listed here",
       content: "Main lesson content and materials will appear here",
       assignment: "Tasks and submission instructions will be shown here",
       scoring: "Evaluation criteria and scoring details will appear here",
-      footer: "Credits and additional information will appear here",
     };
     return defaultContent[blockType] || "Block content will appear here";
   } /**
