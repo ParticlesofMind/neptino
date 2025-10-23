@@ -201,7 +201,7 @@ export class CourseFormHandler {
                 return;
             }
         } else {
-            // eslint-disable-next-line no-empty
+             
         }
 
         // If still not found, try to find any form in the current section
@@ -213,7 +213,7 @@ export class CourseFormHandler {
         }
 
         if (this.form) {
-            // eslint-disable-next-line no-empty
+             
         } else {
             console.error('❌ No form found for section:', this.sectionConfig.section);
         }
@@ -410,7 +410,7 @@ export class CourseFormHandler {
                 this.setFieldValue("current_course", classificationData.current_course);
                 this.setFieldValue("next_course", classificationData.next_course);
             } else {
-                // eslint-disable-next-line no-empty
+                 
             }
         } else if (
             this.sectionConfig.jsonbField &&

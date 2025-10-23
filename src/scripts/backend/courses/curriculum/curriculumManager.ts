@@ -1,5 +1,4 @@
 import { supabase } from "../../supabase.js";
-import { TEMPLATE_TYPE_LABELS } from "../templates/templateOptions.js";
 import { CurriculumRenderer } from "./curriculumRenderer.js";
 import { CanvasBuilder } from "./canvasBuilder.js";
 
@@ -51,7 +50,7 @@ interface LessonRange {
   end: number;
 }
 
-interface TemplatePlacementConfig {
+export interface TemplatePlacementConfig {
   templateId: string;
   templateSlug: string;
   templateName: string;
@@ -61,7 +60,7 @@ interface TemplatePlacementConfig {
   lessonRanges?: LessonRange[];
 }
 
-interface TemplateSummary {
+export interface TemplateSummary {
   id: string;
   templateId: string;
   name: string;
@@ -72,7 +71,7 @@ interface TemplateSummary {
   definition?: TemplateDefinition;
 }
 
-interface TemplateDefinitionBlock {
+export interface TemplateDefinitionBlock {
   id: string;
   type: string;
   order: number;
@@ -80,13 +79,13 @@ interface TemplateDefinitionBlock {
   content: string;
 }
 
-interface TemplateDefinition {
+export interface TemplateDefinition {
   name?: string | null;
   blocks: TemplateDefinitionBlock[];
   settings: Record<string, unknown>;
 }
 
-interface TemplateRecord {
+export interface TemplateRecord {
   id: string;
   template_id: string;
   template_type: string;
@@ -212,13 +211,10 @@ class CurriculumManager {
 
   // Specific template types to accent colors mapping
   private readonly templateAccentByType: Record<string, string> = {
-    quiz: "template-accent--peach",
     assessment: "template-accent--rose",
-    feedback: "template-accent--sky",
-    report: "template-accent--mint",
-    project: "template-accent--lavender",
-    module_orientation: "template-accent--sand",
-    course_orientation: "template-accent--sand",
+    quiz: "template-accent--peach",
+    exam: "template-accent--lavender",
+    lesson: "template-accent--sky",
     certificate: "template-accent--rose",
   };
 
@@ -1283,12 +1279,7 @@ class CurriculumManager {
   }
 
   private renderTemplatePlacementUI(): void {
-    this.renderer.renderTemplatePlacementUI(
-      this.getFilteredTemplatesForCourseType(),
-      this.templatePlacements,
-      this.currentModules,
-      this.currentCurriculum
-    );
+    this.renderer.renderTemplatePlacementUI();
   }
 
   private handleTemplatePlacementInputChange(input: HTMLInputElement): void {
@@ -2153,13 +2144,13 @@ class CurriculumManager {
   }
 
   private syncTemplatePlacementsWithModules(): void {
-    const modules = this.getModulesForPlacement();
+    const modules = this.currentModules;
     if (!modules.length) {
       return;
     }
 
     const validModuleNumbers = new Set(
-      modules.map((module) => module.moduleNumber ?? 1),
+      modules.map((module: CurriculumModule) => module.moduleNumber ?? 1),
     );
 
     this.templatePlacements = this.templatePlacements.map((placement) => {
@@ -2288,6 +2279,7 @@ class CurriculumManager {
     );
   }
 
+  private async loadScheduleData(): Promise<void> {
     try {
       const { data, error } = await supabase
         .from("courses")
@@ -3669,8 +3661,7 @@ class CurriculumManager {
 
         if (Array.isArray(payload.templatePlacements)) {
           this.templatePlacements = payload.templatePlacements
-            .map((placement) => this.normalizeTemplatePlacement(placement))
-            .filter((placement): placement is TemplatePlacementConfig => placement !== null);
+            .filter((placement): placement is TemplatePlacementConfig => placement !== null && typeof placement === 'object');
         } else {
           this.templatePlacements = [];
         }

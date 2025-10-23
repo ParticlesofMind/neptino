@@ -346,7 +346,7 @@ export function initAuth() {
  );
  window.location.href = "/src/pages/shared/signin.html";
  } else {
- // eslint-disable-next-line no-empty
+  
  }
  }
  });

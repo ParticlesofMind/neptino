@@ -99,7 +99,7 @@ export class VerticalCanvasContainer {
    */
   private createScrollContainer(): void {
     // Find or create the canvas container
-    let canvasContainer = document.getElementById('canvas-container');
+    const canvasContainer = document.getElementById('canvas-container');
     if (!canvasContainer) {
       console.error('❌ Canvas container not found');
       return;

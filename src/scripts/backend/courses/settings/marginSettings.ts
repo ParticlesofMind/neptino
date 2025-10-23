@@ -278,7 +278,7 @@ export class MarginSettingsHandler {
  this.currentSettings,
  );
  } else {
- // eslint-disable-next-line no-empty
+  
  }
 
  // Update UI and canvas

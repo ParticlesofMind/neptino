@@ -1,28 +1,18 @@
 export const TEMPLATE_TYPES = [
-  "lesson",
-  "quiz",
-  "feedback",
   "assessment",
-  "report",
-  "review",
-  "project",
-  "module_orientation",
-  "course_orientation",
+  "quiz",
+  "exam",
+  "lesson",
   "certificate",
 ] as const;
 
 export type TemplateType = (typeof TEMPLATE_TYPES)[number];
 
 export const TEMPLATE_TYPE_LABELS: Record<TemplateType, string> = {
-  lesson: "Lesson",
-  quiz: "Quiz",
-  feedback: "Feedback",
   assessment: "Assessment",
-  report: "Report",
-  review: "Review",
-  project: "Project",
-  module_orientation: "Module Orientation",
-  course_orientation: "Course Orientation",
+  quiz: "Quiz",
+  exam: "Exam",
+  lesson: "Lesson",
   certificate: "Certificate",
 };
 
@@ -48,29 +38,19 @@ export type TemplateBlockType = (typeof TEMPLATE_BLOCK_TYPES)[number];
 // All templates now follow header-body-footer structure
 // Body contains nested sub-blocks specific to each template type
 export const TEMPLATE_BLOCK_SEQUENCES: Record<TemplateType, TemplateBlockType[]> = {
-  lesson: ["header", "body", "footer"],
-  quiz: ["header", "body", "footer"],
-  feedback: ["header", "body", "footer"],
   assessment: ["header", "body", "footer"],
-  report: ["header", "body", "footer"],
-  review: ["header", "body", "footer"],
-  project: ["header", "body", "footer"],
-  module_orientation: ["header", "body", "footer"],
-  course_orientation: ["header", "body", "footer"],
+  quiz: ["header", "body", "footer"],
+  exam: ["header", "body", "footer"],
+  lesson: ["header", "body", "footer"],
   certificate: ["header", "body", "footer"],
 };
 
 // Define what goes inside the body for each template type
 export const TEMPLATE_BODY_BLOCKS: Record<TemplateType, TemplateBlockType[]> = {
-  lesson: ["program", "resources", "content", "assignment"],
-  quiz: ["program", "resources", "content", "scoring"],
-  feedback: ["program", "resources", "content", "scoring"],
   assessment: ["program", "resources", "content", "scoring"],
-  report: ["program", "resources", "content", "scoring"],
-  review: ["program", "resources", "content", "assignment"],
-  project: ["program", "resources", "content", "assignment"],
-  module_orientation: ["program", "resources"],
-  course_orientation: ["program", "resources"],
+  quiz: ["program", "resources", "content", "scoring"],
+  exam: ["program", "resources", "content", "scoring"],
+  lesson: ["program", "resources", "content", "assignment"],
   certificate: ["content"],
 };
 

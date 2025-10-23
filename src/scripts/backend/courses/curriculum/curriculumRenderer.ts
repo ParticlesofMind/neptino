@@ -33,15 +33,10 @@ export class CurriculumRenderer {
     "template-accent--gold",
   ];
   private readonly templateAccentByType: Record<string, string> = {
-    lesson: "template-accent--sky",
-    quiz: "template-accent--violet",
-    feedback: "template-accent--amber",
     assessment: "template-accent--teal",
-    report: "template-accent--rose",
-    review: "template-accent--slate",
-    project: "template-accent--cobalt",
-    module_orientation: "template-accent--mint",
-    course_orientation: "template-accent--sunset",
+    quiz: "template-accent--violet",
+    exam: "template-accent--rose",
+    lesson: "template-accent--sky",
     certificate: "template-accent--gold",
   };
 

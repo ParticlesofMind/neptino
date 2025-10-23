@@ -36,7 +36,7 @@
   "author": "Benjamin Jack Laubacher",
   "license": "MIT",
   "devDependencies": {
-    "@playwright/test": "^1.56.0",
+    "@playwright/test": "^1.56.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/express-session": "^1.18.2",
