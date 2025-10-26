@@ -20,6 +20,15 @@ interface CurriculumModule {
   lessons?: CurriculumLesson[];
 }
 
+interface CanvasNavMetadata {
+  id: string;
+  lesson_number: number;
+  canvas_index: number;
+  canvas_metadata?: {
+    title?: string | null;
+  } | null;
+}
+
 interface CurriculumStructure {
   topicsPerLesson?: number;
   objectivesPerTopic?: number;
@@ -51,6 +60,7 @@ interface CurriculumSummary {
   scheduledSessions: number;
   missingCourse?: boolean;
   estimatedCanvases: number;
+  canvases: CanvasNavMetadata[];
 }
 
 const REFRESH_INTERVAL_MS = 10_000;
@@ -61,6 +71,7 @@ export class CurriculumNavigationPanel {
   private courseId: string | null = null;
   private isLoading = false;
   private lastLoadedAt: number | null = null;
+  private lessonCanvasMap: Map<number, CanvasNavMetadata[]> = new Map();
 
   constructor() {
     this.container = document.querySelector(".engine__navigation");
@@ -252,12 +263,31 @@ export class CurriculumNavigationPanel {
         scheduledSessions: 0,
         missingCourse: true,
         estimatedCanvases: 0,
+        canvases: [],
       };
     }
 
     const payload = data?.curriculum_data ?? {};
     const modules = this.sanitizeModules(payload.modules);
     const lessons = this.toArray<CurriculumLesson>(payload.lessons);
+
+    let canvases: CanvasNavMetadata[] = [];
+    try {
+      const { data: canvasRows, error: canvasError } = await supabase
+        .from("canvases")
+        .select("id, lesson_number, canvas_index, canvas_metadata")
+        .eq("course_id", courseId)
+        .order("lesson_number", { ascending: true })
+        .order("canvas_index", { ascending: true });
+
+      if (canvasError) {
+        console.warn("⚠️ Failed to fetch canvas metadata for navigation:", canvasError);
+      } else if (Array.isArray(canvasRows)) {
+        canvases = canvasRows as CanvasNavMetadata[];
+      }
+    } catch (canvasError) {
+      console.warn("⚠️ Unexpected error loading canvas metadata:", canvasError);
+    }
 
     const scheduledSessions = this.resolveScheduledSessions(
       data?.course_sessions,
@@ -279,6 +309,7 @@ export class CurriculumNavigationPanel {
         data?.course_name ?? null,
       scheduledSessions,
       estimatedCanvases,
+      canvases,
     };
   }
 
@@ -384,6 +415,8 @@ export class CurriculumNavigationPanel {
     heading.textContent = "Course Structure";
     this.content.appendChild(heading);
 
+    this.lessonCanvasMap = this.groupCanvasesByLesson(summary.canvases);
+
     const lessons = this.toArray<CurriculumLesson>(summary.lessons);
     const normalizedModules = this.sanitizeModules(summary.modules);
     const modules = normalizedModules.length
@@ -408,6 +441,32 @@ export class CurriculumNavigationPanel {
         lessons: normalizedLessons,
       },
     ];
+  }
+
+  private groupCanvasesByLesson(canvases: CanvasNavMetadata[]): Map<number, CanvasNavMetadata[]> {
+    const map = new Map<number, CanvasNavMetadata[]>();
+
+    canvases.forEach((canvas) => {
+      const lessonNumber = typeof canvas.lesson_number === "number" ? canvas.lesson_number : null;
+      if (!lessonNumber) {
+        return;
+      }
+
+      const existing = map.get(lessonNumber) ?? [];
+      existing.push(canvas);
+      map.set(lessonNumber, existing);
+    });
+
+    map.forEach((list, lessonNumber) => {
+      map.set(
+        lessonNumber,
+        list
+          .slice()
+          .sort((a, b) => (a.canvas_index ?? 0) - (b.canvas_index ?? 0)),
+      );
+    });
+
+    return map;
   }
 
   private createModuleBlock(
@@ -456,6 +515,9 @@ export class CurriculumNavigationPanel {
     lessonIndex: number,
     totalLessons: number,
   ): HTMLElement {
+    const lessonGroup = document.createElement("div");
+    lessonGroup.className = "navigation-content__lesson-group";
+
     const lessonCard = document.createElement("div");
     lessonCard.className =
       "navigation-content__item navigation-content__item--lesson";
@@ -491,7 +553,50 @@ export class CurriculumNavigationPanel {
       .join(" · ");
     lessonCard.appendChild(lessonMeta);
 
-    return lessonCard;
+    lessonGroup.appendChild(lessonCard);
+
+    const canvases = this.lessonCanvasMap.get(number) ?? [];
+    canvases.forEach((canvasMeta) => {
+      const pageItem = this.createCanvasNavigationItem(number, canvasMeta);
+      lessonGroup.appendChild(pageItem);
+    });
+
+    return lessonGroup;
+  }
+
+  private createCanvasNavigationItem(
+    lessonNumber: number,
+    canvasMeta: CanvasNavMetadata,
+  ): HTMLElement {
+    const pageItem = document.createElement("div");
+    pageItem.className = "navigation-content__item navigation-content__item--page";
+    pageItem.setAttribute("data-canvas-id", canvasMeta.id);
+    pageItem.setAttribute("data-lesson-number", lessonNumber.toString());
+    pageItem.setAttribute("data-canvas-index", (canvasMeta.canvas_index ?? 0).toString());
+    pageItem.style.cursor = "pointer";
+
+    const rawPageNumber = canvasMeta.canvas_index ?? 0;
+    const pageNumber = rawPageNumber > 0 ? rawPageNumber : 1;
+    const pageTitle =
+      typeof canvasMeta.canvas_metadata?.title === "string"
+        ? canvasMeta.canvas_metadata.title.trim()
+        : "";
+
+    const label = document.createElement("strong");
+    label.textContent = pageTitle
+      ? `Page ${pageNumber}: ${pageTitle}`
+      : `Page ${pageNumber}`;
+    pageItem.appendChild(label);
+
+    const meta = document.createElement("p");
+    meta.textContent = `Lesson ${lessonNumber} · Canvas ${pageNumber}`;
+    pageItem.appendChild(meta);
+
+    pageItem.addEventListener("click", () => {
+      this.scrollToCanvasId(canvasMeta.id);
+    });
+
+    return pageItem;
   }
 
   private countLessons(
@@ -541,21 +646,42 @@ export class CurriculumNavigationPanel {
   }
 
   private scrollToCanvas(lessonNumber: number): void {
-    // Check if canvas API is available
-    const canvasAPI = (window as any).canvasAPI;
-    if (!canvasAPI) {
+    const multiCanvasManager = this.resolveMultiCanvasManager();
+    if (!multiCanvasManager) {
       console.warn('⚠️ Canvas API not available for navigation');
       return;
     }
 
-    // Use the multi-canvas manager to scroll to the lesson
-    const multiCanvasManager = canvasAPI.multiCanvasManager;
-    if (multiCanvasManager) {
-      multiCanvasManager.navigateToLesson(lessonNumber);
-      console.log(`📚 Scrolled to lesson ${lessonNumber}`);
-    } else {
-      console.warn('⚠️ Multi-canvas manager not available');
+    multiCanvasManager.navigateToLesson(lessonNumber);
+    console.log(`📚 Scrolled to lesson ${lessonNumber}`);
+  }
+
+  private scrollToCanvasId(canvasId: string): void {
+    if (!canvasId) {
+      return;
     }
+
+    const multiCanvasManager = this.resolveMultiCanvasManager();
+    if (!multiCanvasManager) {
+      console.warn('⚠️ Multi-canvas manager not available for direct canvas navigation');
+      return;
+    }
+
+    multiCanvasManager.showCanvas(canvasId);
+    console.log(`🖼️ Navigated to canvas ${canvasId}`);
+  }
+
+  private resolveMultiCanvasManager(): any | null {
+    const canvasAPI = (window as any).canvasAPI;
+    if (canvasAPI?.multiCanvasManager) {
+      return canvasAPI.multiCanvasManager;
+    }
+
+    if ((window as any).multiCanvasManager) {
+      return (window as any).multiCanvasManager;
+    }
+
+    return null;
   }
 
   private toArray<T>(value: unknown): T[] {

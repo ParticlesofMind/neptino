@@ -864,13 +864,13 @@ export class WrapperFreeCanvasContainer {
       const { supabase } = await import('../../backend/supabase');
       const { data } = await supabase
         .from('courses')
-        .select('course_name, course_code')
+        .select('course_name')
         .eq('id', courseId)
         .single();
 
       return {
         title: data?.course_name,
-        code: data?.course_code
+        code: null
       };
     } catch (error) {
       console.warn('⚠️ Failed to fetch course metadata:', error);

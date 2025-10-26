@@ -194,7 +194,12 @@ export class CanvasLayers {
   /**
    * Destroy all layers
    */
-  public destroy(): void {
+  public destroy(options?: { preserveContainers?: boolean }): void {
+    if (options?.preserveContainers) {
+      this.backgroundGraphics = null;
+      return;
+    }
+
     try {
       Object.values(this.layers).forEach(layer => {
         if (layer && !layer.destroyed) {

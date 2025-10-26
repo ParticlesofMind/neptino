@@ -102,6 +102,11 @@
 }
 
 /* Navigation panel lesson item hover states */
+.navigation-content__lesson-group {
+  display: grid;
+  gap: 0.25rem;
+}
+
 .navigation-content__item--lesson {
   transition: background-color 0.2s ease, transform 0.2s ease;
 }
@@ -123,6 +128,35 @@
 }
 
 .navigation-content__item--lesson:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+.navigation-content__item--page {
+  font-size: 0.9rem;
+  padding-left: 1.5rem;
+  border-left: 3px solid transparent;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.navigation-content__item--page strong {
+  font-weight: 600;
+  display: block;
+}
+
+.navigation-content__item--page p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.navigation-content__item--page:hover {
+  background-color: #f1f3f5;
+  border-color: #c0d3ff;
+  transform: translateX(2px);
+}
+
+.navigation-content__item--page:focus {
   outline: 2px solid #007bff;
   outline-offset: 2px;
 }

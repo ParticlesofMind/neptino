@@ -12,6 +12,13 @@
 
 import { Application } from 'pixi.js';
 import { HighQualityZoom } from './HighQualityZoom';
+import {
+  getMaxZoom,
+  getMinZoom,
+  getNextZoomLevel,
+  getPreviousZoomLevel,
+  snapToStandardZoom,
+} from './zoomLevels';
 
 export interface UnifiedZoomConfig {
   minZoom: number;
@@ -26,6 +33,7 @@ export class UnifiedZoomManager {
   private canvasZoomManagers: Map<string, HighQualityZoom> = new Map();
   private activeCanvasId: string | null = null;
   private isInitialized: boolean = false;
+  private hasCustomZoom: boolean = false;
   
   // Event handlers for cleanup
   private wheelHandler: ((event: WheelEvent) => void) | null = null;
@@ -36,9 +44,9 @@ export class UnifiedZoomManager {
 
   constructor(config: Partial<UnifiedZoomConfig> = {}) {
     this.config = {
-      minZoom: 0.1,  // 10% minimum zoom
-      maxZoom: 5.0,  // 500% maximum zoom
-      zoomStep: 0.2,
+      minZoom: getMinZoom(),
+      maxZoom: getMaxZoom(),
+      zoomStep: 0.25,
       smoothZoom: true,
       ...config
     };
@@ -63,6 +71,10 @@ export class UnifiedZoomManager {
    */
   public registerCanvas(canvasId: string, _app: Application, zoomManager: HighQualityZoom): void {
     this.canvasZoomManagers.set(canvasId, zoomManager);
+    
+    if (!this.hasCustomZoom) {
+      this.zoomLevel = snapToStandardZoom(zoomManager.getZoom());
+    }
     
     // Set initial zoom level
     zoomManager.setZoom(this.zoomLevel);
@@ -97,15 +109,17 @@ export class UnifiedZoomManager {
    */
   public setZoom(zoom: number, centerX?: number, centerY?: number): void {
     const clampedZoom = Math.max(this.config.minZoom, Math.min(this.config.maxZoom, zoom));
+    const snappedZoom = snapToStandardZoom(clampedZoom);
     
-    if (clampedZoom === this.zoomLevel) return;
+    if (Math.abs(snappedZoom - this.zoomLevel) < 0.0001) return;
     
-    this.zoomLevel = clampedZoom;
+    this.zoomLevel = snappedZoom;
+    this.hasCustomZoom = true;
     
     // Apply zoom to all registered canvases
     this.canvasZoomManagers.forEach((zoomManager, canvasId) => {
       try {
-        zoomManager.setZoom(clampedZoom, centerX, centerY);
+        zoomManager.setZoom(snappedZoom, centerX, centerY);
       } catch (error) {
         console.warn(`⚠️ Failed to set zoom for canvas ${canvasId}:`, error);
       }
@@ -116,23 +130,23 @@ export class UnifiedZoomManager {
       this.onZoomChangeCallback(this.zoomLevel);
     }
     
-    console.log(`🎯 Unified zoom set to ${(clampedZoom * 100).toFixed(1)}% across ${this.canvasZoomManagers.size} canvases`);
+    console.log(`🎯 Unified zoom set to ${(snappedZoom * 100).toFixed(0)}% across ${this.canvasZoomManagers.size} canvases`);
   }
 
   /**
    * Zoom in by one step
    */
   public zoomIn(centerX?: number, centerY?: number): void {
-    const newZoom = this.zoomLevel + this.config.zoomStep;
-    this.setZoom(newZoom, centerX, centerY);
+    const nextZoom = getNextZoomLevel(this.zoomLevel);
+    this.setZoom(nextZoom, centerX, centerY);
   }
 
   /**
    * Zoom out by one step
    */
   public zoomOut(centerX?: number, centerY?: number): void {
-    const newZoom = this.zoomLevel - this.config.zoomStep;
-    this.setZoom(newZoom, centerX, centerY);
+    const previousZoom = getPreviousZoomLevel(this.zoomLevel);
+    this.setZoom(previousZoom, centerX, centerY);
   }
 
   /**
@@ -155,9 +169,7 @@ export class UnifiedZoomManager {
    * Calculate fit-to-view zoom level
    */
   private calculateFitToViewZoom(_zoomManager: HighQualityZoom): number {
-    // This would need to be implemented based on the HighQualityZoom's fit-to-view logic
-    // For now, return a reasonable default
-    return 0.5; // 50% zoom to fit
+    return snapToStandardZoom(_zoomManager.getFitToViewZoom());
   }
 
   /**
@@ -183,9 +195,11 @@ export class UnifiedZoomManager {
       if (event.ctrlKey || event.metaKey) {
         event.preventDefault();
         
-        const delta = event.deltaY > 0 ? -this.config.zoomStep : this.config.zoomStep;
-        const newZoom = this.zoomLevel + delta;
-        this.setZoom(newZoom, event.clientX, event.clientY);
+        const targetZoom =
+          event.deltaY > 0
+            ? getPreviousZoomLevel(this.zoomLevel)
+            : getNextZoomLevel(this.zoomLevel);
+        this.setZoom(targetZoom, event.clientX, event.clientY);
       }
     };
 
@@ -225,9 +239,11 @@ export class UnifiedZoomManager {
     if (event.ctrlKey || event.metaKey) {
       event.preventDefault();
       
-      const delta = event.deltaY > 0 ? -this.config.zoomStep : this.config.zoomStep;
-      const newZoom = this.zoomLevel + delta;
-      this.setZoom(newZoom, clientX, clientY);
+      const targetZoom =
+        event.deltaY > 0
+          ? getPreviousZoomLevel(this.zoomLevel)
+          : getNextZoomLevel(this.zoomLevel);
+      this.setZoom(targetZoom, clientX, clientY);
       
       return true; // Event handled
     }

@@ -5,6 +5,12 @@
 
 import { Application, Container } from 'pixi.js';
 import { calculateFitZoom } from '../utils/canvasSizing';
+import {
+    getNextZoomLevel,
+    getPreviousZoomLevel,
+    snapFitZoomLevel,
+    snapToStandardZoom,
+} from './zoomLevels';
 
 export interface ZoomConfig {
     minZoom: number;
@@ -18,9 +24,11 @@ export class HighQualityZoom {
     private stage: Container;
     private zoomLevel: number; // Will be set to fit-to-view zoom in constructor
     private config: ZoomConfig;
+    private fitToViewZoom: number = 1.0;
     private canvasElement: HTMLCanvasElement | null = null;
     private perspectiveButtons: HTMLElement[] = [];
     private perspectiveHandlers: Array<{ element: HTMLElement; handler: (event: Event) => void }> = [];
+    private grabButton: HTMLElement | null = null;
     private canvasWheelHandler: ((event: WheelEvent) => void) | null = null;
     private spacebarHandlers: {
         keyDown: (event: KeyboardEvent) => void;
@@ -46,13 +54,16 @@ export class HighQualityZoom {
         this.config = {
             minZoom: 0.25, // 25% minimum zoom
             maxZoom: 5.0,  // 500% maximum zoom
-            zoomStep: 0.2,
+            zoomStep: 0.25,
             smoothZoom: true,
             ...config
         };
         
-        // Calculate initial zoom to fit canvas with borders visible (this becomes our "100%" zoom)
-        this.zoomLevel = this.calculateFitToViewZoom();
+        // Calculate initial zoom to fit canvas with borders visible and snap to supported increments
+        this.fitToViewZoom = this.calculateFitToViewZoom();
+        this.zoomLevel = this.fitToViewZoom;
+        this.panOffset = this.calculateCenteredPanOffset();
+        this.applyTransform();
         
         // Bind perspective tool events
         this.bindPerspectiveEvents();
@@ -73,10 +84,13 @@ export class HighQualityZoom {
         // Zoom out a moderate amount by reducing the fit zoom by 35%
         // This creates good padding around the canvas without being too far
         const zoomedOutFitZoom = baseFitZoom * 0.65;
+
+        const snappedFitZoom = snapFitZoomLevel(zoomedOutFitZoom);
+        this.fitToViewZoom = snappedFitZoom;
         
-        console.log(`🎯 Calculated fit-to-view zoom: ${baseFitZoom.toFixed(3)} -> zoomed out: ${zoomedOutFitZoom.toFixed(3)} for container ${containerWidth}x${containerHeight}`);
+        console.log(`🎯 Calculated fit-to-view zoom: ${baseFitZoom.toFixed(3)} -> zoomed out: ${zoomedOutFitZoom.toFixed(3)} -> snapped: ${snappedFitZoom.toFixed(2)} for container ${containerWidth}x${containerHeight}`);
         
-        return zoomedOutFitZoom;
+        return snappedFitZoom;
     }
     
     /**
@@ -84,37 +98,41 @@ export class HighQualityZoom {
      */
     public setZoom(newZoom: number, centerX?: number, centerY?: number): void {
         const clampedZoom = Math.max(this.config.minZoom, Math.min(this.config.maxZoom, newZoom));
+        const snappedZoom = snapToStandardZoom(clampedZoom);
         
-        if (clampedZoom === this.zoomLevel) return;
+        if (Math.abs(snappedZoom - this.zoomLevel) < 0.0001) {
+            return;
+        }
         
         // Calculate zoom center point (default to canvas center)
         const zoomCenterX = centerX ?? this.app.screen.width / 2;
         const zoomCenterY = centerY ?? this.app.screen.height / 2;
         
         // Calculate position adjustment to zoom around the center point
-        const zoomDelta = clampedZoom / this.zoomLevel;
+        const previousZoom = this.zoomLevel;
+        const zoomDelta = previousZoom === 0 ? 1 : snappedZoom / previousZoom;
         const newPanX = zoomCenterX - (zoomCenterX - this.panOffset.x) * zoomDelta;
         const newPanY = zoomCenterY - (zoomCenterY - this.panOffset.y) * zoomDelta;
         
         // Update zoom and pan
-        this.zoomLevel = clampedZoom;
+        this.zoomLevel = snappedZoom;
         this.panOffset.x = newPanX;
         this.panOffset.y = newPanY;
-        
+
+        this.constrainPan();
         this.applyTransform();
-        
+
     }
     
     /**
      * Zoom in by one step
      */
     public zoomIn(centerX?: number, centerY?: number): void {
+        const nextZoom = getNextZoomLevel(this.zoomLevel);
         if (centerX !== undefined && centerY !== undefined) {
-            // Zoom around specific point (mouse position)
-            this.setZoom(this.zoomLevel + this.config.zoomStep, centerX, centerY);
+            this.setZoom(nextZoom, centerX, centerY);
         } else {
-            // Zoom and re-center (for toolbar button clicks)
-            this.setZoom(this.zoomLevel + this.config.zoomStep);
+            this.setZoom(nextZoom);
             this.recenterCanvas();
         }
     }
@@ -123,12 +141,11 @@ export class HighQualityZoom {
      * Zoom out by one step
      */
     public zoomOut(centerX?: number, centerY?: number): void {
+        const previousZoom = getPreviousZoomLevel(this.zoomLevel);
         if (centerX !== undefined && centerY !== undefined) {
-            // Zoom around specific point (mouse position)
-            this.setZoom(this.zoomLevel - this.config.zoomStep, centerX, centerY);
+            this.setZoom(previousZoom, centerX, centerY);
         } else {
-            // Zoom and re-center (for toolbar button clicks)
-            this.setZoom(this.zoomLevel - this.config.zoomStep);
+            this.setZoom(previousZoom);
             this.recenterCanvas();
         }
     }
@@ -137,7 +154,8 @@ export class HighQualityZoom {
      * Reset zoom to 100% (fit-to-view) and center the view
      */
     public resetZoom(): void {
-        this.zoomLevel = this.calculateFitToViewZoom(); // 100% = fit-to-view zoom
+        this.fitToViewZoom = this.calculateFitToViewZoom();
+        this.zoomLevel = this.fitToViewZoom;
         this.panOffset = this.calculateCenteredPanOffset();
         this.applyTransform();
     }
@@ -184,8 +202,12 @@ export class HighQualityZoom {
      * Pan the view by the specified offset
      */
     public pan(deltaX: number, deltaY: number): void {
-        this.panOffset.x += deltaX;
-        this.panOffset.y += deltaY;
+        if (!this.canPan()) {
+            return;
+        }
+
+        this.panOffset.x -= deltaX;
+        this.panOffset.y -= deltaY;
         this.constrainPan();
         this.applyTransform();
     }
@@ -211,12 +233,20 @@ export class HighQualityZoom {
         
         // Update zoom display in UI
         this.updateZoomDisplay();
+        this.updatePanAvailability();
         
         console.log(`🎯 Applied transform: zoom=${this.zoomLevel.toFixed(3)}, pan=(${this.panOffset.x.toFixed(1)}, ${this.panOffset.y.toFixed(1)})`);
     }    /**
      * Constrain panning to reasonable bounds
      */
     private constrainPan(): void {
+        if (!this.canPan()) {
+            const centered = this.calculateCenteredPanOffset();
+            this.panOffset.x = centered.x;
+            this.panOffset.y = centered.y;
+            return;
+        }
+
         const containerWidth = this.app.screen.width;
         const containerHeight = this.app.screen.height;
         
@@ -255,17 +285,42 @@ export class HighQualityZoom {
         const zoomDisplay = document.querySelector('.engine__perspective-zoom') as HTMLElement;
         
         if (zoomDisplay) {
-            // Convert internal zoom level to display percentage
-            // Fit-to-view zoom = 100% display, proportional scaling for other levels
-            const fitToViewZoom = this.calculateFitToViewZoom();
-            const displayPercent = Math.round((this.zoomLevel / fitToViewZoom) * 100);
+            const displayPercent = Math.round(this.zoomLevel * 100);
             zoomDisplay.textContent = `${displayPercent}%`;
             
-            // Update title with helpful information
-            if (this.zoomLevel > fitToViewZoom) {
-                zoomDisplay.title = `Zoomed to ${displayPercent}% - Mouse wheel scrolls around canvas, Ctrl/Cmd+wheel zooms`;
+            if (this.canPan()) {
+                zoomDisplay.title = `Zoomed to ${displayPercent}% - drag with grab tool or spacebar to pan`;
             } else {
-                zoomDisplay.title = `${displayPercent}% zoom - Ctrl/Cmd+wheel to zoom in`;
+                zoomDisplay.title = `${displayPercent}% zoom - zoom in to enable grab tool`;
+            }
+        }
+    }
+
+    private canPan(): boolean {
+        return this.zoomLevel >= 1.0 - 0.0001;
+    }
+
+    private updatePanAvailability(): void {
+        const panEnabled = this.canPan();
+
+        if (!panEnabled && this.isGrabToolActive) {
+            this.deactivateGrabTool();
+        }
+
+        if (this.grabButton) {
+            if (this.grabButton instanceof HTMLButtonElement) {
+                this.grabButton.disabled = !panEnabled;
+            } else if (!panEnabled) {
+                this.grabButton.setAttribute('aria-disabled', 'true');
+            } else {
+                this.grabButton.removeAttribute('aria-disabled');
+            }
+
+            if (!panEnabled) {
+                this.grabButton.classList.remove('engine__perspective-item--active');
+                this.grabButton.classList.add('engine__perspective-item--disabled');
+            } else {
+                this.grabButton.classList.remove('engine__perspective-item--disabled');
             }
         }
     }
@@ -290,6 +345,13 @@ export class HighQualityZoom {
      */
     public getZoom(): number {
         return this.zoomLevel;
+    }
+
+    /**
+     * Get the snapped fit-to-view zoom level used for reset operations.
+     */
+    public getFitToViewZoom(): number {
+        return this.fitToViewZoom;
     }
     
     /**
@@ -323,10 +385,9 @@ export class HighQualityZoom {
         }
         
         // Handle pan when zoomed above fit-to-view level (above "100%")
-        const fitToViewZoom = this.calculateFitToViewZoom();
-        if (this.zoomLevel > fitToViewZoom) {
+        if (this.canPan()) {
             event.preventDefault();
-            this.pan(-event.deltaX / this.zoomLevel, -event.deltaY / this.zoomLevel);
+            this.pan(event.deltaX / this.zoomLevel, event.deltaY / this.zoomLevel);
             return true;
         }
         
@@ -388,7 +449,7 @@ export class HighQualityZoom {
      * Compatibility: Activate grab tool (spacebar + drag)
      */
     public activateGrabTool(): void {
-        if (this.isGrabToolActive) return;
+        if (this.isGrabToolActive || !this.canPan()) return;
         
         this.isGrabToolActive = true;
         document.body.style.cursor = 'grab';
@@ -404,9 +465,8 @@ export class HighQualityZoom {
                 
                 // Add mouse move handler for dragging
                 this.grabMouseHandler = (moveEvent: MouseEvent) => {
-                    if (isSpacePressed && moveEvent.buttons === 1) { // Left mouse button pressed while space is held
-                        // Pan the drawing layer content
-                        this.pan(moveEvent.movementX, moveEvent.movementY);
+                    if (isSpacePressed && moveEvent.buttons === 1 && this.canPan()) { // Left mouse button pressed while space is held
+                        this.pan(moveEvent.movementX / this.zoomLevel, moveEvent.movementY / this.zoomLevel);
                     }
                 };
                 document.addEventListener('mousemove', this.grabMouseHandler);
@@ -471,12 +531,17 @@ export class HighQualityZoom {
     private bindPerspectiveEvents(): void {
         const buttons = Array.from(document.querySelectorAll('[data-perspective]:not([data-snap-anchor])')) as HTMLElement[];
         buttons.forEach(button => {
+            const action = button.getAttribute('data-perspective');
+            if (action === 'grab') {
+                this.grabButton = button;
+            }
+
             const handler = (event: Event) => {
                 event.preventDefault();
                 const target = event.currentTarget as HTMLElement;
-                const action = target.getAttribute('data-perspective');
+                const buttonAction = target.getAttribute('data-perspective');
 
-                switch (action) {
+                switch (buttonAction) {
                     case 'zoom-in':
                         if (this.zoomCommandHandler) {
                             this.zoomCommandHandler('zoom-in');
@@ -515,6 +580,8 @@ export class HighQualityZoom {
 
         // Handle global spacebar + mouse drag panning
         this.bindSpacebarPanning();
+
+        this.updatePanAvailability();
     }
 
     /**
@@ -547,11 +614,13 @@ export class HighQualityZoom {
                     event.preventDefault();
                 }
                 
-                if (!this.isSpacePressed) {
+                if (!this.isSpacePressed && this.canPan()) {
                     this.isSpacePressed = true;
                     // Store original cursor and change to grab
                     this.spacebarCursorBackup = document.body.style.cursor;
                     document.body.style.cursor = 'grab';
+                } else if (!this.canPan()) {
+                    this.isSpacePressed = false;
                 }
             }
         };
@@ -566,7 +635,7 @@ export class HighQualityZoom {
         };
 
         const mouseDownHandler = (event: MouseEvent) => {
-            if (this.isSpacePressed && event.button === 0) { // Left mouse button
+            if (this.isSpacePressed && this.canPan() && event.button === 0) { // Left mouse button
                 event.preventDefault();
                 this.isSpacePanning = true;
                 panStart = { x: event.clientX, y: event.clientY };
@@ -581,10 +650,7 @@ export class HighQualityZoom {
                 const deltaX = (event.clientX - panStart.x) / this.zoomLevel;
                 const deltaY = (event.clientY - panStart.y) / this.zoomLevel;
                 
-                this.panOffset.x += deltaX;
-                this.panOffset.y += deltaY;
-                
-                this.applyTransform();
+                this.pan(deltaX, deltaY);
                 
                 panStart = { x: event.clientX, y: event.clientY };
             }
@@ -621,10 +687,8 @@ export class HighQualityZoom {
      * Reset zoom and pan to defaults
      */
     private resetView(): void {
-        this.zoomLevel = this.calculateFitToViewZoom(); // 100% = fit-to-view zoom
-        this.panOffset = this.calculateCenteredPanOffset();
-        this.applyTransform();
-        console.log('🔍 View reset to 100% (fit-to-view zoom)');
+        this.resetZoom();
+        console.log('🔍 View reset to fit-to-view zoom');
     }
 
     /**
@@ -638,6 +702,11 @@ export class HighQualityZoom {
      * Toggle grab tool on/off
      */
     private toggleGrabTool(button: HTMLElement): void {
+        if (!this.canPan()) {
+            this.updatePanAvailability();
+            return;
+        }
+
         if (this.isGrabToolActive) {
             this.deactivateGrabTool();
             button.classList.remove('engine__perspective-item--active');

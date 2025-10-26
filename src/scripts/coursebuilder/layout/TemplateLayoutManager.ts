@@ -149,15 +149,21 @@ export class TemplateLayoutManager {
     };
   }
 
-  public destroy(): void {
+  public destroy(options?: { preserveContainers?: boolean }): void {
     if (!this.sections) return;
 
     Object.values(this.sections).forEach((section) => {
       section.container.off("layout");
-      section.container.destroy({ children: true });
+
+      if (!options?.preserveContainers && !section.container.destroyed) {
+        section.container.destroy({ children: true });
+      }
     });
 
-    this.rootContainer?.destroy({ children: true });
+    if (!options?.preserveContainers && this.rootContainer && !this.rootContainer.destroyed) {
+      this.rootContainer.destroy({ children: true });
+    }
+
     this.rootContainer = null;
     this.sections = null;
   }
