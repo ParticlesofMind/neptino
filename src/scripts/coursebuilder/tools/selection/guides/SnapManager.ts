@@ -8,7 +8,7 @@
  */
 
 import { Point, Container, Rectangle } from 'pixi.js';
-import { canvasDimensionManager } from '../../../utils/CanvasDimensionManager';
+import { canvasDimensionManager } from '../../../layout/CanvasDimensionManager';
 import { SNAP_STRENGTH_TOLERANCE } from './config';
 import { AxisCandidate, SnapStrength } from './types';
 

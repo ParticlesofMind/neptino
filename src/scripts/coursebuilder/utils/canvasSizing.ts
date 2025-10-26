@@ -6,7 +6,7 @@
  * This file is maintained for backward compatibility only
  */
 
-import { canvasDimensionManager } from './CanvasDimensionManager';
+import { canvasDimensionManager } from '../layout/CanvasDimensionManager';
 
 export interface CanvasDimensions {
   width: number;

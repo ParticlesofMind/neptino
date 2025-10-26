@@ -11,7 +11,7 @@
  */
 
 import { Application, Container, Graphics } from 'pixi.js';
-import { canvasDimensionManager } from '../utils/CanvasDimensionManager';
+import { canvasDimensionManager } from './CanvasDimensionManager';
 
 export interface LayerSystem {
   background: Container;

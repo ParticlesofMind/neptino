@@ -1,0 +1,96 @@
+// =============================================================================
+// Layout - Canvas Template Styling (PIXI.js Integration)
+// =============================================================================
+
+// This file contains CSS variables and utility classes that can be used
+// for HTML elements that interact with the PIXI.js canvas layout system.
+
+:root {
+  // Canvas dimensions (matches PIXI.js canvas)
+  --canvas-width: 1200px;
+  --canvas-height: 1800px;
+  
+  // Margins (matches PIXI.js margins)
+  --canvas-margin-top: 96px;
+  --canvas-margin-right: 96px;
+  --canvas-margin-bottom: 96px;
+  --canvas-margin-left: 96px;
+  
+  // Typography (matches PIXI.js text styling)
+  --layout-font-family: 'Inter', Arial, sans-serif;
+  --layout-font-size-header: 14px;
+  --layout-font-size-footer: 12px;
+  --layout-font-size-block-title: 18px;
+  --layout-font-size-content: 14px;
+  
+  // Colors (matches PIXI.js color values)
+  --layout-text-color-primary: #1f2937;
+  --layout-text-color-secondary: #4b5563;
+  --layout-text-color-light: #6b7280;
+  --layout-text-color-white: #ffffff;
+  
+  // Background colors
+  --layout-bg-white: #ffffff;
+  --layout-bg-light: #f9fafb;
+  --layout-bg-border: #e5e7eb;
+  
+  // Block underline
+  --layout-block-underline-color: #000000;
+  --layout-block-underline-height: 2px;
+}
+
+// Utility classes for HTML elements that interact with canvas
+.layout-canvas-wrapper {
+  font-family: var(--layout-font-family);
+  
+  // Canvas container styling
+  &__container {
+    width: var(--canvas-width);
+    height: var(--canvas-height);
+    background: var(--layout-bg-white);
+    border: 1px solid var(--layout-bg-border);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  // Canvas controls styling
+  &__controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    
+    button {
+      padding: 8px 16px;
+      border: 1px solid var(--layout-bg-border);
+      border-radius: 4px;
+      background: var(--layout-bg-white);
+      color: var(--layout-text-color-primary);
+      font-family: var(--layout-font-family);
+      font-size: 14px;
+      cursor: pointer;
+      
+      &:hover {
+        background: var(--layout-bg-light);
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 1400px) {
+  :root {
+    --canvas-width: 1000px;
+    --canvas-height: 1500px;
+    --canvas-margin-left: 80px;
+    --canvas-margin-right: 80px;
+  }
+}
+
+@media (max-width: 1200px) {
+  :root {
+    --canvas-width: 800px;
+    --canvas-height: 1200px;
+    --canvas-margin-left: 60px;
+    --canvas-margin-right: 60px;
+  }
+}

@@ -7,7 +7,7 @@
 import { PageLayoutSettings } from '../../backend/courses/settings/pageSetupHandler';
 import { MarginSettings } from '../types/canvas';
 import { Graphics } from 'pixi.js';
-import { canvasDimensionManager } from '../utils/CanvasDimensionManager';
+import { canvasDimensionManager } from './CanvasDimensionManager';
 import { UnitConverter } from '../utils/UnitConverter';
 
 export class CanvasMarginManager {

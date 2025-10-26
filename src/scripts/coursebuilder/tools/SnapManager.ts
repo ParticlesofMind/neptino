@@ -8,7 +8,7 @@
  */
 
 import { Point, Container, Rectangle } from 'pixi.js';
-import { canvasDimensionManager } from '../utils/CanvasDimensionManager';
+import { canvasDimensionManager } from '../layout/CanvasDimensionManager';
 
 type SnapMode = 'smart' | 'none';
 

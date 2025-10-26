@@ -12,14 +12,14 @@
  */
 
 import { Application } from 'pixi.js';
-import { TemplateLayoutManager, type CanvasDataPayload, type TemplateRenderContext } from './TemplateLayoutManager';
+import { TemplateLayoutManager, type CanvasDataPayload, type TemplateRenderContext } from '../layout/TemplateLayoutManager';
 import { CanvasRow } from './MultiCanvasManager';
 import { multiCanvasPerformanceMonitor } from './CanvasPerformanceMonitor';
-import { CanvasLayers } from './CanvasLayers';
+import { CanvasLayers } from '../layout/CanvasLayers';
 import { CanvasEvents } from './CanvasEvents';
 import { DisplayObjectManager } from './DisplayObjectManager';
 import { ToolManager } from '../tools/ToolManager';
-import { canvasMarginManager } from './CanvasMarginManager';
+import { canvasMarginManager } from '../layout/CanvasMarginManager';
 import { UnifiedZoomManager } from './UnifiedZoomManager';
 import type { HighQualityZoom } from './HighQualityZoom';
 import { CanvasLifecycleManager } from './CanvasLifecycleManager';

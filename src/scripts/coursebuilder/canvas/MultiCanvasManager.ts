@@ -13,7 +13,7 @@
 
 import { supabase } from '../../backend/supabase';
 import { VerticalCanvasContainer, CanvasApplication } from './VerticalCanvasContainer';
-import type { CanvasDataPayload } from './TemplateLayoutManager';
+import type { CanvasDataPayload } from '../layout/TemplateLayoutManager';
 import { CanvasLifecycleManager } from './CanvasLifecycleManager';
 
 export interface CanvasRow {

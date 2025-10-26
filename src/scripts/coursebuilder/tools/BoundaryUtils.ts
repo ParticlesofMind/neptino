@@ -4,8 +4,8 @@
  */
 
 import { Point, Rectangle, Container } from "pixi.js";
-import { canvasMarginManager } from '../canvas/CanvasMarginManager';
-import { canvasDimensionManager } from '../utils/CanvasDimensionManager';
+import { canvasMarginManager } from '../layout/CanvasMarginManager';
+import { canvasDimensionManager } from '../layout/CanvasDimensionManager';
 import { CanvasBounds, MarginSettings } from '../types/canvas';
 
 // Re-export types for other modules

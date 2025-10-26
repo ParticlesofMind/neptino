@@ -11,7 +11,7 @@
  */
 
 import { Application } from 'pixi.js';
-import { canvasDimensionManager } from '../utils/CanvasDimensionManager';
+import { canvasDimensionManager } from '../layout/CanvasDimensionManager';
 
 export interface PixiAppConfig {
   width: number;

@@ -3,8 +3,8 @@
  * Sets up the consolidated canvas architecture
  */
 
-import { canvasDimensionManager } from './CanvasDimensionManager';
-import { canvasMarginManager } from '../canvas/CanvasMarginManager';
+import { canvasDimensionManager } from '../layout/CanvasDimensionManager';
+import { canvasMarginManager } from '../layout/CanvasMarginManager';
 import { UnitConverter } from './UnitConverter';
 
 /**

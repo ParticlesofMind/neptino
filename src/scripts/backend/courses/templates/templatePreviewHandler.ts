@@ -132,6 +132,33 @@ export class TemplatePreviewHandler {
  <td>[Social form]</td>
  <td>[Time]</td>
  </tr>
+ <tr>
+ <td></td>
+ <td>[Topic]</td>
+ <td>[Objective]</td>
+ <td>[Task]</td>
+ <td>[Method]</td>
+ <td>[Social form]</td>
+ <td>[Time]</td>
+ </tr>
+ <tr>
+ <td></td>
+ <td></td>
+ <td>[Objective]</td>
+ <td>[Task]</td>
+ <td>[Method]</td>
+ <td>[Social form]</td>
+ <td>[Time]</td>
+ </tr>
+ <tr>
+ <td></td>
+ <td></td>
+ <td></td>
+ <td>[Task]</td>
+ <td>[Method]</td>
+ <td>[Social form]</td>
+ <td>[Time]</td>
+ </tr>
  </tbody>
  </table>
  ${config?.include_project ? this.renderProjectSection("Project") : ""}

@@ -31,6 +31,7 @@
 @use 'layout/footer';             // Site footer
 @use 'layout/engine';
 @use 'layout/canvas';             // Canvas layout system (BEM methodology)
+@use 'layout/layout-canvas';       // Canvas template layout styling
 @use 'layout/settings';
 @use 'layout/page-setup';  
 @use 'layout/layout-lesson';      // Page setup component

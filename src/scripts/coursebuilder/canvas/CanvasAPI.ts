@@ -13,12 +13,12 @@
 import { Application, Container, Assets, Sprite, Graphics, Text, Texture } from 'pixi.js';
 import { VideoSource } from 'pixi.js';
 import { PixiApp, PixiAppConfig } from './PixiApp';
-import { CanvasLayers, LayerSystem } from './CanvasLayers';
+import { CanvasLayers, LayerSystem } from '../layout/CanvasLayers';
 import { CanvasEvents } from './CanvasEvents';
 import { DisplayObjectManager } from './DisplayObjectManager';
 import { ToolManager } from '../tools/ToolManager';
-import { canvasMarginManager } from './CanvasMarginManager';
-import { TemplateLayoutManager } from './TemplateLayoutManager';
+import { canvasMarginManager } from '../layout/CanvasMarginManager';
+import { TemplateLayoutManager } from '../layout/TemplateLayoutManager';
 
 export class CanvasAPI {
   private pixiApp: PixiApp;

@@ -4,7 +4,7 @@
  */
 
 import { supabase } from "../../supabase";
-import { canvasMarginManager } from "../../../coursebuilder/canvas/CanvasMarginManager";
+import { canvasMarginManager } from "../../../coursebuilder/layout/CanvasMarginManager";
 
 export interface PageLayoutSettings {
   margins: {
