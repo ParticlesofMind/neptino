@@ -73,7 +73,7 @@ export class TemplateConfigHandler {
   /**
    * Updates field configuration when checkbox changes
    */
-  private updateFieldConfig(blockType: string, fieldName: string, value: boolean): void {
+  private async updateFieldConfig(blockType: string, fieldName: string, value: boolean): Promise<void> {
     // Find or create block in current template
     let block = this.currentTemplate.blocks.find((b: any) => b.type === blockType);
     if (!block) {
@@ -91,6 +91,13 @@ export class TemplateConfigHandler {
     // Update the active blocks list to include this block
     if (!this.activeBlocks.includes(blockType)) {
       this.activeBlocks.push(blockType);
+    }
+
+    // Save to database via TemplateManager
+    const { TemplateManager } = await import('./TemplateManager.js');
+    const templateId = TemplateManager.getCurrentTemplateId();
+    if (templateId) {
+      await TemplateManager.updateTemplateField(templateId, blockType, fieldName, value);
     }
 
     // Update preview

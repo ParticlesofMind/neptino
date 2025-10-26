@@ -284,6 +284,8 @@ export class CanvasBuilder {
 
       if (block.type === "program" && templateType === "lesson") {
         mergedData.structure = LessonStructure.summarize(lesson);
+        // Add transformed program data for ProgramRenderer
+        mergedData.program = this.buildProgramData(lesson);
       }
 
       if (tableData) {
@@ -303,5 +305,60 @@ export class CanvasBuilder {
     lesson: CurriculumLesson,
   ): TableData | null {
     return TableDataBuilder.build(block, lesson);
+  }
+
+  /**
+   * Transform flat curriculum structure into nested ProgramData format
+   */
+  private buildProgramData(lesson: CurriculumLesson): any {
+    const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
+    
+    if (!topics.length) {
+      return { competencies: [] };
+    }
+
+    // Transform each topic into a competency with nested structure
+    const competencies = topics.map((topic, topicIndex) => {
+      const objectives = Array.isArray(topic.objectives) ? topic.objectives : [];
+      const allTasks = Array.isArray(topic.tasks) ? topic.tasks : [];
+      
+      // Determine tasks per objective (from curriculum structure)
+      const tasksPerObjective = objectives.length > 0 
+        ? Math.ceil(allTasks.length / objectives.length)
+        : allTasks.length;
+      
+      // Build nested objectives with their tasks
+      const nestedObjectives = objectives.map((objective, objIndex) => {
+        // Get tasks for this objective
+        const startTaskIndex = objIndex * tasksPerObjective;
+        const endTaskIndex = Math.min(startTaskIndex + tasksPerObjective, allTasks.length);
+        const objectiveTasks = allTasks.slice(startTaskIndex, endTaskIndex);
+        
+        return {
+          name: typeof objective === "string" && objective.trim().length
+            ? objective.trim()
+            : `Objective ${objIndex + 1}`,
+          tasks: objectiveTasks.map((task, taskIndex) => ({
+            name: typeof task === "string" && task.trim().length
+              ? task.trim()
+              : `Task ${taskIndex + 1}`,
+          })),
+        };
+      });
+      
+      return {
+        name: `Competency ${topicIndex + 1}`,
+        topics: [
+          {
+            name: typeof topic.title === "string" && topic.title.trim().length
+              ? topic.title.trim()
+              : `Topic ${topicIndex + 1}`,
+            objectives: nestedObjectives,
+          },
+        ],
+      };
+    });
+
+    return { competencies };
   }
 }

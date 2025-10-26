@@ -4,7 +4,6 @@ import { TemplateConfigManager } from "./TemplateConfigManager.js";
 import { TemplateBlockRenderer } from "./TemplateBlockRenderer.js";
 import { TemplateManagerState } from "./types.js";
 import { loadTemplatesModal } from "./modals/loadTemplates.js";
-import { ensureTemplateModals } from "./templateModals.js";
 import { ModalHandler } from "../../../navigation/CourseBuilderNavigation.js";
 
 export class TemplateManager {
@@ -17,6 +16,7 @@ export class TemplateManager {
     const modal = document.getElementById('create-template-modal');
     if (modal) {
       modal.classList.add('modal--active');
+      modal.setAttribute('aria-hidden', 'false');
       document.body.classList.add('modal-open');
     }
   }
@@ -25,29 +25,27 @@ export class TemplateManager {
     const modal = document.getElementById('create-template-modal');
     if (modal) {
       modal.classList.remove('modal--active');
+      modal.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('modal-open');
     }
   }
 
   static async showLoadTemplateModal(): Promise<void> {
     try {
-      await loadTemplatesModal();
-      const modal = document.getElementById('load-template-modal');
-      if (modal) {
-        modal.classList.add('modal--active');
-        document.body.classList.add('modal-open');
-      }
+      // Set the callback for when a template is selected
+      loadTemplatesModal.setOnTemplateSelected((templateId: string) => {
+        this.loadTemplate(templateId);
+      });
+      
+      // Show the modal
+      await loadTemplatesModal.show();
     } catch (error) {
       console.error('Failed to show load template modal:', error);
     }
   }
 
   static hideLoadTemplateModal(): void {
-    const modal = document.getElementById('load-template-modal');
-    if (modal) {
-      modal.classList.remove('modal--active');
-      document.body.classList.remove('modal-open');
-    }
+    loadTemplatesModal.hide();
   }
 
   static async updateTemplateField(templateId: string, blockType: string, fieldName: string, value: boolean): Promise<void> {
@@ -172,6 +170,9 @@ export class TemplateManager {
         this.state.currentlyLoadedTemplateId = templateData.id;
         this.state.currentlyLoadedTemplateData = templateData;
         
+        // Persist to sessionStorage
+        sessionStorage.setItem('lastLoadedTemplateId', templateData.id);
+        
         TemplateRenderer.displayTemplateBlocks(templateData);
         TemplateRenderer.updateTemplatePreview(templateData);
       }
@@ -182,27 +183,69 @@ export class TemplateManager {
 
   static initializeBasicInterface(): void {
     // Initialize basic template interface
-    console.log("Initializing basic template interface");
+    console.log("🔧 Initializing basic template interface");
     
     // Set up event listeners for template actions
     const createBtn = document.getElementById('create-template-btn');
     if (createBtn) {
-      createBtn.addEventListener('click', () => this.showCreateTemplateModal());
+      console.log("✅ Found create-template-btn, attaching listener");
+      createBtn.addEventListener('click', () => {
+        console.log("🎯 Create template button clicked");
+        this.showCreateTemplateModal();
+      });
+    } else {
+      console.warn("⚠️ create-template-btn not found in DOM");
     }
 
     const loadBtn = document.getElementById('load-template-btn');
     if (loadBtn) {
-      loadBtn.addEventListener('click', () => this.showLoadTemplateModal());
+      console.log("✅ Found load-template-btn, attaching listener");
+      loadBtn.addEventListener('click', () => {
+        console.log("🎯 Load template button clicked");
+        this.showLoadTemplateModal();
+      });
+    } else {
+      console.warn("⚠️ load-template-btn not found in DOM");
     }
 
-    // Load existing templates
-    this.loadExistingTemplates();
+    // Try to restore previously loaded template from sessionStorage
+    this.restoreLastLoadedTemplate();
   }
 
   static clearTemplateState(): void {
     this.state.currentlyLoadedTemplateId = null;
     this.state.currentlyLoadedTemplateData = null;
     TemplateRenderer.clearTemplateState();
+    
+    // Clear from sessionStorage as well
+    sessionStorage.removeItem('lastLoadedTemplateId');
+  }
+
+  static getCurrentTemplateId(): string | null {
+    return this.state.currentlyLoadedTemplateId;
+  }
+
+  static getCurrentTemplateData(): any {
+    return this.state.currentlyLoadedTemplateData;
+  }
+
+  static async restoreLastLoadedTemplate(): Promise<void> {
+    try {
+      // Check if there's a template ID in sessionStorage
+      const lastTemplateId = sessionStorage.getItem('lastLoadedTemplateId');
+      
+      if (lastTemplateId) {
+        console.log('🔄 Restoring last loaded template:', lastTemplateId);
+        await this.loadTemplate(lastTemplateId);
+      } else {
+        console.log('📋 No previous template to restore, showing template list');
+        this.loadExistingTemplates();
+      }
+    } catch (error) {
+      console.error('Failed to restore last loaded template:', error);
+      // Fallback to showing template list
+      this.loadExistingTemplates();
+    }
   }
 
   static async loadTemplate(templateId: string): Promise<void> {
@@ -211,6 +254,9 @@ export class TemplateManager {
       if (templateData) {
         this.state.currentlyLoadedTemplateId = templateData.id;
         this.state.currentlyLoadedTemplateData = templateData;
+        
+        // Persist to sessionStorage so it survives page reloads
+        sessionStorage.setItem('lastLoadedTemplateId', templateData.id);
         
         TemplateRenderer.displayTemplateBlocks(templateData);
         TemplateRenderer.updateTemplatePreview(templateData);
@@ -226,6 +272,9 @@ export class TemplateManager {
       if (templateData) {
         this.state.currentlyLoadedTemplateId = templateData.id;
         this.state.currentlyLoadedTemplateData = templateData;
+        
+        // Persist to sessionStorage
+        sessionStorage.setItem('lastLoadedTemplateId', templateData.id);
         
         TemplateRenderer.displayTemplateBlocks(templateData);
         TemplateRenderer.updateTemplatePreview(templateData);

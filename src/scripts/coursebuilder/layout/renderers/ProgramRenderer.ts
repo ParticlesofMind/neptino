@@ -61,32 +61,23 @@ export class ProgramRenderer {
     let currentY = 0;
     currentY += this.drawHeader(container, columns, width, headerStyle, currentY);
 
-    competencies.forEach((competency, competencyIndex) => {
+    let rowIndex = 0;
+    
+    competencies.forEach((competency) => {
       const topics = competency.topics || [];
       
       if (topics.length === 0) return;
       
-      const firstTopic = topics[0];
-      const firstObjective = firstTopic.objectives && firstTopic.objectives.length > 0 ? firstTopic.objectives[0] : null;
-      const firstTask = firstObjective && firstObjective.tasks && firstObjective.tasks.length > 0 ? firstObjective.tasks[0] : null;
+      // Track if this is the first row for this competency
+      let isFirstRowInCompetency = true;
       
-      const firstRowData: Record<string, string> = {
-        competency: competency.name || "",
-        topic: firstTopic.name || "",
-        objective: firstObjective ? firstObjective.name || "" : "",
-        task: firstTask ? firstTask.name || "" : "",
-        method: firstTask ? (firstTask.method || firstObjective?.method || "") : (firstObjective?.method || ""),
-        social_form: firstTask ? (firstTask.social_form || firstObjective?.social_form || "") : (firstObjective?.social_form || ""),
-        time: firstTask ? (firstTask.time || firstObjective?.time || "") : (firstObjective?.time || ""),
-      };
-      
-      currentY += this.drawRow(container, columns, width, cellStyle, firstRowData, currentY, competencyIndex % 2 === 1);
-      
-      // Additional rows for additional topics
-      if (topics.length > 1) {
-        topics.slice(1).forEach((topic, topicIndex) => {
-          const additionalRowData: Record<string, string> = {
-            competency: "",
+      topics.forEach((topic) => {
+        const objectives = topic.objectives || [];
+        
+        // If no objectives, create a row with just competency and topic
+        if (objectives.length === 0) {
+          const rowData: Record<string, string> = {
+            competency: isFirstRowInCompetency ? competency.name || "" : "",
             topic: topic.name || "",
             objective: "",
             task: "",
@@ -95,9 +86,56 @@ export class ProgramRenderer {
             time: "",
           };
           
-          currentY += this.drawRow(container, columns, width, cellStyle, additionalRowData, currentY, (competencyIndex + topicIndex + 1) % 2 === 1);
+          currentY += this.drawRow(container, columns, width, cellStyle, rowData, currentY, rowIndex % 2 === 1);
+          rowIndex++;
+          isFirstRowInCompetency = false;
+          return;
+        }
+        
+        // Track if this is the first row for this topic
+        let isFirstRowInTopic = true;
+        
+        objectives.forEach((objective) => {
+          const tasks = objective.tasks || [];
+          
+          // If no tasks, create a row with competency, topic, and objective
+          if (tasks.length === 0) {
+            const rowData: Record<string, string> = {
+              competency: isFirstRowInCompetency ? competency.name || "" : "",
+              topic: isFirstRowInTopic ? topic.name || "" : "",
+              objective: objective.name || "",
+              task: "",
+              method: objective.method || "",
+              social_form: objective.social_form || "",
+              time: objective.time || "",
+            };
+            
+            currentY += this.drawRow(container, columns, width, cellStyle, rowData, currentY, rowIndex % 2 === 1);
+            rowIndex++;
+            isFirstRowInCompetency = false;
+            isFirstRowInTopic = false;
+            return;
+          }
+          
+          // Create a row for each task
+          tasks.forEach((task, taskIndex) => {
+            const rowData: Record<string, string> = {
+              competency: isFirstRowInCompetency ? competency.name || "" : "",
+              topic: isFirstRowInTopic ? topic.name || "" : "",
+              objective: taskIndex === 0 ? objective.name || "" : "",
+              task: task.name || "",
+              method: task.method || objective.method || "",
+              social_form: task.social_form || objective.social_form || "",
+              time: task.time || objective.time || "",
+            };
+            
+            currentY += this.drawRow(container, columns, width, cellStyle, rowData, currentY, rowIndex % 2 === 1);
+            rowIndex++;
+            isFirstRowInCompetency = false;
+            isFirstRowInTopic = false;
+          });
         });
-      }
+      });
     });
 
     return currentY;
@@ -113,8 +151,6 @@ export class ProgramRenderer {
     style: any,
     startY: number,
   ): number {
-    const columnWidth = Math.max(width / columns.length, 80);
-    
     return this.drawRow(
       container,
       columns,
@@ -167,7 +203,7 @@ export class ProgramRenderer {
 
     // Column dividers and text
     let currentX = 0;
-    columns.forEach((column, index) => {
+    columns.forEach((_column, index) => {
       if (index > 0) {
         const divider = new Graphics();
         divider.moveTo(currentX, startY);

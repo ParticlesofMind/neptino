@@ -42,6 +42,9 @@ export class TemplateRenderer {
 
     configArea.innerHTML = blocksHtml;
 
+    // Attach event listeners to all checkboxes for saving changes
+    this.attachCheckboxListeners(templateId);
+
     // Initialize glossary item state for resources block
     const resourcesBlock = blocks.find((b: TemplateBlock) => b.type === "resources");
     if (resourcesBlock) {
@@ -51,6 +54,35 @@ export class TemplateRenderer {
 
     // Update template preview after displaying blocks
     this.updateTemplatePreview(templateData);
+  }
+
+  private static attachCheckboxListeners(templateId: string): void {
+    const configArea = document.getElementById('template-config-content');
+    if (!configArea) return;
+
+    // Find all checkboxes in block config areas
+    const checkboxes = configArea.querySelectorAll('.block-config input[type="checkbox"]');
+    
+    checkboxes.forEach((checkbox) => {
+      checkbox.addEventListener('change', async (e) => {
+        const input = e.target as HTMLInputElement;
+        const fieldRow = input.closest('.field-row');
+        const blockConfig = input.closest('.block-config');
+        
+        if (!fieldRow || !blockConfig) return;
+        
+        const fieldName = fieldRow.getAttribute('data-field');
+        const blockType = blockConfig.getAttribute('data-block');
+        
+        if (!fieldName || !blockType) return;
+        
+        // Import dynamically to avoid circular dependency
+        const { TemplateManager } = await import('./TemplateManager.js');
+        await TemplateManager.updateTemplateField(templateId, blockType, fieldName, input.checked);
+        
+        console.log(`✅ Saved ${blockType}.${fieldName} = ${input.checked}`);
+      });
+    });
   }
 
   static updateTemplatePreview(templateData?: any): void {
