@@ -28,6 +28,229 @@ interface TableData {
 export class CanvasBuilder {
   constructor() {}
 
+  /**
+   * Build multiple canvas payloads for a lesson based on template type
+   * For lesson templates: creates 3 canvases (Program/Resources, Content, Assignment)
+   * For other templates: creates 1 canvas with all blocks
+   */
+  public buildLessonCanvasPayloads(
+    lesson: CurriculumLesson,
+    template: TemplateRecord | null | undefined,
+    lessonNumberFallback: number,
+  ): Array<{
+    canvasIndex: number;
+    canvasData: Record<string, unknown>;
+    canvasMetadata: Record<string, unknown>;
+  }> {
+    const templateType = template?.template_type ?? "lesson";
+    
+    // For lesson templates, create separate canvases
+    if (templateType === "lesson") {
+      return this.buildMultiCanvasLesson(lesson, template, lessonNumberFallback);
+    }
+    
+    // For other templates, use single canvas
+    const singleCanvas = this.buildLessonCanvasPayload(lesson, template, lessonNumberFallback);
+    return [{
+      canvasIndex: 1,
+      canvasData: singleCanvas.canvasData,
+      canvasMetadata: singleCanvas.canvasMetadata,
+    }];
+  }
+
+  /**
+   * Build multiple canvases for a lesson template
+   */
+  private buildMultiCanvasLesson(
+    lesson: CurriculumLesson,
+    template: TemplateRecord | null | undefined,
+    lessonNumberFallback: number,
+  ): Array<{
+    canvasIndex: number;
+    canvasData: Record<string, unknown>;
+    canvasMetadata: Record<string, unknown>;
+  }> {
+    const lessonNumber =
+      typeof lesson.lessonNumber === "number" && lesson.lessonNumber > 0
+        ? lesson.lessonNumber
+        : lessonNumberFallback;
+    const lessonTitle =
+      typeof lesson.title === "string" && lesson.title.trim().length
+        ? lesson.title.trim()
+        : `Lesson ${lessonNumber}`;
+    const moduleNumber =
+      typeof lesson.moduleNumber === "number" && lesson.moduleNumber > 0
+        ? lesson.moduleNumber
+        : null;
+
+    const dimensions = CanvasDimensions.getCanvasDimensions();
+    const margins = CanvasDimensions.resolveCanvasMargins();
+
+    const definition =
+      template?.template_data && Array.isArray(template.template_data.blocks)
+        ? template.template_data
+        : TemplateDataBuilder.normalizeTemplateDefinition(template?.template_data ?? null);
+
+    const headerBlock =
+      definition.blocks.find((block) => block.type === "header") ??
+      TemplateDataBuilder.createFallbackBlock("header", lessonNumber, lessonTitle);
+    const footerBlock =
+      definition.blocks.find((block) => block.type === "footer") ??
+      TemplateDataBuilder.createFallbackBlock("footer", lessonNumber, lessonTitle);
+    
+    const allBodyBlocks = definition.blocks.filter(
+      (block) => block.type !== "header" && block.type !== "footer",
+    );
+
+    const templateInfo = TemplateDataBuilder.buildTemplateInfo(template, definition);
+    const structureSummary = LessonStructure.summarize(lesson);
+
+    const canvases = [];
+
+    // Canvas 1: Program + Resources
+    const programResourcesBlocks = allBodyBlocks.filter(
+      (block) => block.type === "program" || block.type === "resources",
+    );
+    if (programResourcesBlocks.length > 0) {
+      const layout1 = this.buildYogaLayoutTree({
+        dimensions,
+        margins,
+        headerBlock,
+        footerBlock,
+        bodyBlocks: programResourcesBlocks,
+        lesson,
+        templateType: "lesson",
+      });
+
+      canvases.push({
+        canvasIndex: 1,
+        canvasData: {
+          version: "2025.03.01",
+          engine: "pixi-yoga",
+          dimensions,
+          margins,
+          template: templateInfo,
+          lesson: {
+            number: lessonNumber,
+            title: lessonTitle,
+            moduleNumber,
+          },
+          layout: layout1,
+        },
+        canvasMetadata: {
+          title: `${lessonTitle} - Program & Resources`,
+          lessonNumber,
+          moduleNumber,
+          canvasType: "program-resources",
+          generatedAt: new Date().toISOString(),
+          template: templateInfo,
+          layoutEngine: "pixi-yoga",
+          dimensions,
+          margins,
+          structure: structureSummary,
+        },
+      });
+    }
+
+    // Canvas 2: Content
+    const contentBlocks = allBodyBlocks.filter((block) => block.type === "content");
+    if (contentBlocks.length > 0) {
+      const layout2 = this.buildYogaLayoutTree({
+        dimensions,
+        margins,
+        headerBlock,
+        footerBlock,
+        bodyBlocks: contentBlocks,
+        lesson,
+        templateType: "lesson",
+      });
+
+      canvases.push({
+        canvasIndex: 2,
+        canvasData: {
+          version: "2025.03.01",
+          engine: "pixi-yoga",
+          dimensions,
+          margins,
+          template: templateInfo,
+          lesson: {
+            number: lessonNumber,
+            title: lessonTitle,
+            moduleNumber,
+          },
+          layout: layout2,
+        },
+        canvasMetadata: {
+          title: `${lessonTitle} - Content`,
+          lessonNumber,
+          moduleNumber,
+          canvasType: "content",
+          generatedAt: new Date().toISOString(),
+          template: templateInfo,
+          layoutEngine: "pixi-yoga",
+          dimensions,
+          margins,
+          structure: structureSummary,
+        },
+      });
+    }
+
+    // Canvas 3: Assignment
+    const assignmentBlocks = allBodyBlocks.filter((block) => block.type === "assignment");
+    if (assignmentBlocks.length > 0) {
+      const layout3 = this.buildYogaLayoutTree({
+        dimensions,
+        margins,
+        headerBlock,
+        footerBlock,
+        bodyBlocks: assignmentBlocks,
+        lesson,
+        templateType: "lesson",
+      });
+
+      canvases.push({
+        canvasIndex: 3,
+        canvasData: {
+          version: "2025.03.01",
+          engine: "pixi-yoga",
+          dimensions,
+          margins,
+          template: templateInfo,
+          lesson: {
+            number: lessonNumber,
+            title: lessonTitle,
+            moduleNumber,
+          },
+          layout: layout3,
+        },
+        canvasMetadata: {
+          title: `${lessonTitle} - Assignment`,
+          lessonNumber,
+          moduleNumber,
+          canvasType: "assignment",
+          generatedAt: new Date().toISOString(),
+          template: templateInfo,
+          layoutEngine: "pixi-yoga",
+          dimensions,
+          margins,
+          structure: structureSummary,
+        },
+      });
+    }
+
+    // Fallback: if no canvases were created, create one with all blocks
+    if (canvases.length === 0) {
+      const fallbackCanvas = this.buildLessonCanvasPayload(lesson, template, lessonNumberFallback);
+      return [{
+        canvasIndex: 1,
+        canvasData: fallbackCanvas.canvasData,
+        canvasMetadata: fallbackCanvas.canvasMetadata,
+      }];
+    }
+
+    return canvases;
+  }
+
   public buildLessonCanvasPayload(
     lesson: CurriculumLesson,
     template: TemplateRecord | null | undefined,

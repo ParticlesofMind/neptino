@@ -1,5 +1,5 @@
 import { CurriculumLesson, TemplateDefinitionBlock } from "../curriculumManager.js";
-import type { TableColumn, TableRow, TableData } from "../../../coursebuilder/layout/utils/TableRenderer.js";
+import type { TableRow, TableData } from "../../../coursebuilder/layout/utils/TableRenderer.js";
 
 interface ColumnDef {
   key: string;
@@ -175,53 +175,255 @@ export class TableDataBuilder {
    * Build content table data
    */
   private static buildContentTable(block: TemplateDefinitionBlock): TableData {
-    const fieldDefs: FieldDef[] = [
-      { key: "topic", label: "Topic", configKey: "topic", mandatory: true },
-      { key: "objective", label: "Objective", configKey: "objective", mandatory: true },
-      { key: "task", label: "Task", configKey: "task", mandatory: true },
-      { key: "instruction_area", label: "Instruction Area", configKey: "instruction_area", mandatory: true },
-      { key: "student_area", label: "Student Area", configKey: "student_area", mandatory: true },
-      { key: "teacher_area", label: "Teacher Area", configKey: "teacher_area", mandatory: true },
+    const columnDefs: ColumnDef[] = [
+      { key: "content", label: "Content", configKey: "competence" },
+      { key: "time", label: "Time", configKey: "competence_time" },
+      { key: "method", label: "Method", configKey: "instruction_method" },
+      { key: "social", label: "Social Form", configKey: "instruction_social_form" },
     ];
 
-    const activeFields = TableDataBuilder.filterFields(fieldDefs, block);
-    const rows: TableRow[] = activeFields.map((field, index) => ({
-      cells: {
-        content: field.label,
-      },
-      depth: index < 3 ? index : 2,
-    }));
+    const columns = TableDataBuilder.filterContentColumns(columnDefs, block);
+    const config = (block.config ?? {}) as Record<string, unknown>;
+    const rows: TableRow[] = [];
+
+    // Competency (depth 0)
+    if (config.competence !== false) {
+      rows.push({
+        depth: 0,
+        cells: TableDataBuilder.fillCells(columnDefs, { content: "[Competency]" }),
+      });
+    }
+
+    // Topic (depth 1)
+    if (config.topic !== false) {
+      rows.push({
+        depth: 1,
+        cells: TableDataBuilder.fillCells(columnDefs, { content: "[Topic]" }),
+      });
+    }
+
+    // Objective (depth 2)
+    if (config.objective !== false) {
+      rows.push({
+        depth: 2,
+        cells: TableDataBuilder.fillCells(columnDefs, { content: "[Objective]" }),
+      });
+    }
+
+    // Task (depth 3)
+    if (config.task !== false) {
+      rows.push({
+        depth: 3,
+        cells: TableDataBuilder.fillCells(columnDefs, { content: "[Task]" }),
+      });
+    }
+
+    // Inside Task: 6 rows at depth 4
+    // Row 1: Instruction Area
+    if (config.instruction_area !== false) {
+      rows.push({
+        depth: 4,
+        cells: TableDataBuilder.fillCells(columnDefs, { 
+          content: "[Instruction Area]",
+          method: config.instruction_method !== false ? "[Method]" : "",
+          social: config.instruction_social_form !== false ? "[Social Form]" : "",
+        }),
+      });
+    }
+
+    // Row 2: Space for Instruction Area
+    rows.push({
+      depth: 4,
+      cells: TableDataBuilder.fillCells(columnDefs, { content: "" }),
+    });
+
+    // Row 3: Student Area
+    if (config.student_area !== false) {
+      rows.push({
+        depth: 4,
+        cells: TableDataBuilder.fillCells(columnDefs, { 
+          content: "[Student Area]",
+          method: config.student_method !== false ? "[Method]" : "",
+          social: config.student_social_form !== false ? "[Social Form]" : "",
+        }),
+      });
+    }
+
+    // Row 4: Space for Student Area
+    rows.push({
+      depth: 4,
+      cells: TableDataBuilder.fillCells(columnDefs, { content: "" }),
+    });
+
+    // Row 5: Teacher Area
+    if (config.teacher_area !== false) {
+      rows.push({
+        depth: 4,
+        cells: TableDataBuilder.fillCells(columnDefs, { 
+          content: "[Teacher Area]",
+          method: config.teacher_method !== false ? "[Method]" : "",
+          social: config.teacher_social_form !== false ? "[Social Form]" : "",
+        }),
+      });
+    }
+
+    // Row 6: Space for Teacher Area
+    rows.push({
+      depth: 4,
+      cells: TableDataBuilder.fillCells(columnDefs, { content: "" }),
+    });
+
+    if (!rows.length) {
+      rows.push({
+        depth: 0,
+        cells: TableDataBuilder.fillCells(columnDefs, {
+          content: "No content structure defined yet.",
+        }),
+      });
+    }
 
     return {
-      columns: [{ key: "content", label: "Content Structure" }],
-      rows,
+      columns: columns.map(({ key, label }) => ({ key, label })),
+      rows: rows.map((row) => ({
+        depth: row.depth,
+        cells: TableDataBuilder.pickCells(row.cells, columns.map((c) => c.key)),
+      })),
       emptyMessage: "No content configured.",
     };
+  }
+
+  /**
+   * Filter columns for content blocks
+   */
+  private static filterContentColumns(columnDefs: ColumnDef[], block: TemplateDefinitionBlock): ColumnDef[] {
+    const config = (block.config ?? {}) as Record<string, unknown>;
+    
+    return columnDefs.filter((column) => {
+      // Content column is always shown
+      if (column.key === "content") return true;
+      
+      // Other columns are shown based on configuration
+      return config[column.configKey] === true;
+    });
   }
 
   /**
    * Build assignment table data
    */
   private static buildAssignmentTable(block: TemplateDefinitionBlock): TableData {
-    const fieldDefs: FieldDef[] = [
-      { key: "assignment", label: "Assignment", configKey: "task", mandatory: true },
-      { key: "details", label: "Details", configKey: "assignment_details", mandatory: false },
-      { key: "time", label: "Time", configKey: "assignment_time", mandatory: false },
-      { key: "method", label: "Method", configKey: "assignment_method", mandatory: false },
-      { key: "social", label: "Social Form", configKey: "assignment_social_form", mandatory: false },
+    const columnDefs: ColumnDef[] = [
+      { key: "content", label: "Assignment", configKey: "competence" },
+      { key: "time", label: "Time", configKey: "competence_time" },
+      { key: "method", label: "Method", configKey: "instruction_method" },
+      { key: "social", label: "Social Form", configKey: "instruction_social_form" },
     ];
 
-    const activeFields = TableDataBuilder.filterFields(fieldDefs, block);
-    const rows: TableRow[] = activeFields.map((field) => ({
-      cells: {
-        assignment: field.label,
-      },
-      depth: 2,
-    }));
+    const columns = TableDataBuilder.filterContentColumns(columnDefs, block);
+    const config = (block.config ?? {}) as Record<string, unknown>;
+    const rows: TableRow[] = [];
+
+    // Competency (depth 0)
+    if (config.competence !== false) {
+      rows.push({
+        depth: 0,
+        cells: TableDataBuilder.fillCells(columnDefs, { content: "[Competency]" }),
+      });
+    }
+
+    // Topic (depth 1)
+    if (config.topic !== false) {
+      rows.push({
+        depth: 1,
+        cells: TableDataBuilder.fillCells(columnDefs, { content: "[Topic]" }),
+      });
+    }
+
+    // Objective (depth 2)
+    if (config.objective !== false) {
+      rows.push({
+        depth: 2,
+        cells: TableDataBuilder.fillCells(columnDefs, { content: "[Objective]" }),
+      });
+    }
+
+    // Task (depth 3)
+    if (config.task !== false) {
+      rows.push({
+        depth: 3,
+        cells: TableDataBuilder.fillCells(columnDefs, { content: "[Task]" }),
+      });
+    }
+
+    // Inside Task: 6 rows at depth 4
+    // Row 1: Instruction Area
+    if (config.instruction_area !== false) {
+      rows.push({
+        depth: 4,
+        cells: TableDataBuilder.fillCells(columnDefs, { 
+          content: "[Instruction Area]",
+          method: config.instruction_method !== false ? "[Method]" : "",
+          social: config.instruction_social_form !== false ? "[Social Form]" : "",
+        }),
+      });
+    }
+
+    // Row 2: Space for Instruction Area
+    rows.push({
+      depth: 4,
+      cells: TableDataBuilder.fillCells(columnDefs, { content: "" }),
+    });
+
+    // Row 3: Student Area
+    if (config.student_area !== false) {
+      rows.push({
+        depth: 4,
+        cells: TableDataBuilder.fillCells(columnDefs, { 
+          content: "[Student Area]",
+          method: config.student_method !== false ? "[Method]" : "",
+          social: config.student_social_form !== false ? "[Social Form]" : "",
+        }),
+      });
+    }
+
+    // Row 4: Space for Student Area
+    rows.push({
+      depth: 4,
+      cells: TableDataBuilder.fillCells(columnDefs, { content: "" }),
+    });
+
+    // Row 5: Teacher Area
+    if (config.teacher_area !== false) {
+      rows.push({
+        depth: 4,
+        cells: TableDataBuilder.fillCells(columnDefs, { 
+          content: "[Teacher Area]",
+          method: config.teacher_method !== false ? "[Method]" : "",
+          social: config.teacher_social_form !== false ? "[Social Form]" : "",
+        }),
+      });
+    }
+
+    // Row 6: Space for Teacher Area
+    rows.push({
+      depth: 4,
+      cells: TableDataBuilder.fillCells(columnDefs, { content: "" }),
+    });
+
+    if (!rows.length) {
+      rows.push({
+        depth: 0,
+        cells: TableDataBuilder.fillCells(columnDefs, {
+          content: "No assignment structure defined yet.",
+        }),
+      });
+    }
 
     return {
-      columns: [{ key: "assignment", label: "Assignment Structure" }],
-      rows,
+      columns: columns.map(({ key, label }) => ({ key, label })),
+      rows: rows.map((row) => ({
+        depth: row.depth,
+        cells: TableDataBuilder.pickCells(row.cells, columns.map((c) => c.key)),
+      })),
       emptyMessage: "No assignment configured.",
     };
   }

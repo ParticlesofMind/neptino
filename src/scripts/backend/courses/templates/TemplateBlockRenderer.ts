@@ -55,6 +55,11 @@ ${checkedFields
         return;
       }
 
+      // Skip space rows - they'll be added separately
+      if (field.name.endsWith('_space')) {
+        return;
+      }
+
       const groupId = field.inlineGroup || field.name;
       if (!rowIndex.has(groupId)) {
         rowIndex.set(groupId, rows.length);
@@ -83,7 +88,22 @@ ${checkedFields
       }
     });
 
-    return rows;
+    // Add space rows after instruction, student, and teacher areas
+    const finalRows: FieldRow[] = [];
+    rows.forEach((row) => {
+      finalRows.push(row);
+      
+      // Add space row after instruction, student, and teacher areas
+      if (row.groupId === 'instruction' || row.groupId === 'student' || row.groupId === 'teacher') {
+        finalRows.push({
+          groupId: `${row.groupId}_space`,
+          indentLevel: row.indentLevel,
+          placeholders: { primary: "" },
+        });
+      }
+    });
+
+    return finalRows;
   }
 
   private static renderRowsTable(rows: FieldRow[]): string {

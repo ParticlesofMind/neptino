@@ -2702,9 +2702,21 @@ class CurriculumManager {
       const inserts: Array<Record<string, unknown>> = [];
       const updates: Array<{
         lessonNumber: number;
+        canvasIndex: number;
         canvas_data: Record<string, unknown>;
         canvas_metadata: Record<string, unknown>;
       }> = [];
+
+      // Track existing canvases per lesson for proper update logic
+      const existingCanvasesPerLesson = new Map<number, Set<number>>();
+      existingCanvases?.forEach((canvas) => {
+        if (typeof canvas.lesson_number === 'number' && typeof canvas.canvas_index === 'number') {
+          if (!existingCanvasesPerLesson.has(canvas.lesson_number)) {
+            existingCanvasesPerLesson.set(canvas.lesson_number, new Set());
+          }
+          existingCanvasesPerLesson.get(canvas.lesson_number)!.add(canvas.canvas_index);
+        }
+      });
 
       for (let lessonNumber = 1; lessonNumber <= desiredLessonCount; lessonNumber += 1) {
         const lesson =
@@ -2722,31 +2734,38 @@ class CurriculumManager {
           console.warn(`⚠️ Template ${templateId} not found for lesson ${lessonNumber}. Using fallback layout.`);
         }
 
-        const payload = this.canvasBuilder.buildLessonCanvasPayload(
+        // Build multiple canvas payloads (for lesson templates: 3 canvases)
+        const canvasPayloads = this.canvasBuilder.buildLessonCanvasPayloads(
           lesson,
           templateRecord,
           lessonNumber,
         );
 
-        const recordBase = {
-          canvas_data: payload.canvasData,
-          canvas_metadata: payload.canvasMetadata,
-          canvas_index: 1,
-        };
+        const existingCanvasIndices = existingCanvasesPerLesson.get(lessonNumber) || new Set();
 
-        if (existingMap.has(lessonNumber)) {
-          updates.push({
-            lessonNumber,
-            canvas_data: recordBase.canvas_data as Record<string, unknown>,
-            canvas_metadata: recordBase.canvas_metadata as Record<string, unknown>,
-          });
-        } else {
-          inserts.push({
-            course_id: this.courseId,
-            lesson_number: lessonNumber,
-            ...recordBase,
-          });
-        }
+        // Process each canvas payload
+        canvasPayloads.forEach((payload) => {
+          const recordBase = {
+            canvas_data: payload.canvasData,
+            canvas_metadata: payload.canvasMetadata,
+            canvas_index: payload.canvasIndex,
+          };
+
+          if (existingCanvasIndices.has(payload.canvasIndex)) {
+            updates.push({
+              lessonNumber,
+              canvasIndex: payload.canvasIndex,
+              canvas_data: recordBase.canvas_data as Record<string, unknown>,
+              canvas_metadata: recordBase.canvas_metadata as Record<string, unknown>,
+            });
+          } else {
+            inserts.push({
+              course_id: this.courseId,
+              lesson_number: lessonNumber,
+              ...recordBase,
+            });
+          }
+        });
       }
 
       if (inserts.length > 0) {
@@ -2774,11 +2793,11 @@ class CurriculumManager {
               })
               .eq('course_id', this.courseId)
               .eq('lesson_number', record.lessonNumber)
-              .eq('canvas_index', 1);
+              .eq('canvas_index', record.canvasIndex);
 
             if (updateError) {
               console.error(
-                `❌ Failed to update canvas for lesson ${record.lessonNumber}:`,
+                `❌ Failed to update canvas for lesson ${record.lessonNumber}, canvas ${record.canvasIndex}:`,
                 updateError,
               );
             }
@@ -2786,7 +2805,7 @@ class CurriculumManager {
         );
 
         console.log(
-          `🛠️ Updated ${updates.length} lesson canvas${updates.length === 1 ? '' : 'es'} with Yoga layout.`,
+          `🛠️ Updated ${updates.length} canvas${updates.length === 1 ? '' : 'es'} with Yoga layout.`,
         );
       }
 
