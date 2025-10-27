@@ -7,6 +7,7 @@
   overflow-x: hidden;
   padding: 0; /* Remove padding to eliminate unwanted white space around canvases */
   box-sizing: border-box;
+  position: relative;
   
   /* CSS Grid for direct canvas layout */
   display: grid;
@@ -96,8 +97,50 @@
   font-family: Arial, sans-serif;
   width: auto;
   max-width: 100%;
+  border: 1px dashed rgba(108, 117, 125, 0.4);
+  border-radius: 8px;
+  background: rgba(248, 249, 250, 0.5);
+  transition: width 0.2s ease, height 0.2s ease, transform 0.2s ease;
 }
 
+.canvas-placeholder__title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #343a40;
+}
+
+.canvas-placeholder__subtitle {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.canvas-placeholder-invisible.active {
+  border-color: #4c6ef5;
+  background: rgba(76, 110, 245, 0.08);
+}
+
+.canvas-placeholder-invisible.canvas-placeholder--loaded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.canvas-placeholder-invisible.canvas-placeholder--loaded .canvas-placeholder__title,
+.canvas-placeholder-invisible.canvas-placeholder--loaded .canvas-placeholder__subtitle {
+  color: transparent;
+}
+
+/* Shared canvas overlay */
+.single-canvas-mode .canvas-grid-container > canvas {
+  pointer-events: auto;
+}
+
+@media (max-width: 1440px) {
+  .canvas-placeholder-invisible {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   .canvas-direct {

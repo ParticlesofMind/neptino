@@ -14,7 +14,6 @@
 import { supabase } from '../../backend/supabase';
 import { VerticalCanvasContainer, CanvasApplication } from './VerticalCanvasContainer';
 import type { CanvasDataPayload } from '../layout/TemplateLayoutManager';
-import { CanvasLifecycleManager } from './CanvasLifecycleManager';
 
 export interface CanvasRow {
   id: string;
@@ -40,13 +39,11 @@ export class MultiCanvasManager {
   private totalCanvases = 0;
   private canvasMetadata: CanvasRow[] = []; // Store metadata for lazy loading
   private readonly BATCH_SIZE = 3; // Reduced batch size for better performance
-  private lifecycleManager: CanvasLifecycleManager;
 
   /**
    * Initialize the multi-canvas manager
    */
   public initialize(): void {
-    this.lifecycleManager = CanvasLifecycleManager.getInstance(5); // Allow 5 concurrent canvases for better stability
     this.verticalContainer = new VerticalCanvasContainer();
     this.verticalContainer.initialize();
     
@@ -72,7 +69,7 @@ export class MultiCanvasManager {
       // First, fetch only metadata to create placeholders quickly
       const { data: canvasRows, error } = await supabase
         .from('canvases')
-        .select('id, canvas_metadata, lesson_number, canvas_index, course_id')
+        .select('id, canvas_metadata, canvas_data, lesson_number, canvas_index, course_id')
         .eq('course_id', courseId)
         .order('lesson_number', { ascending: true })
         .order('canvas_index', { ascending: true });
@@ -156,24 +153,11 @@ export class MultiCanvasManager {
       return;
     }
 
-    await this.lifecycleManager.withLoad(
-      canvasId,
-      async () => {
-        if (this.verticalContainer) {
-          await this.verticalContainer.createCanvasApplication(canvasRow);
-          this.loadedCanvases.add(canvasId);
-          console.log(`✅ Canvas created on-demand: ${canvasId}`);
-        }
-      },
-      async () => {
-        // Eviction logic
-        if (this.verticalContainer) {
-          const success = await this.verticalContainer.ensureCapacityForNewCanvas(canvasId);
-          return success;
-        }
-        return false;
-      }
-    );
+    if (this.verticalContainer) {
+      await this.verticalContainer.createCanvasApplication(canvasRow);
+      this.loadedCanvases.add(canvasId);
+      console.log(`✅ Canvas created on-demand: ${canvasId}`);
+    }
   }
 
   /**
@@ -187,7 +171,6 @@ export class MultiCanvasManager {
     console.log(`🗑️ Destroying canvas: ${canvasId}`);
     
     this.loadedCanvases.delete(canvasId);
-    this.lifecycleManager.release(canvasId);
     
     console.log(`✅ Canvas destroyed: ${canvasId}`);
   }

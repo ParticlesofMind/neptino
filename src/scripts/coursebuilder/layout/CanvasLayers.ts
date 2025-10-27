@@ -24,9 +24,11 @@ export class CanvasLayers {
   private app: Application;
   private layers: LayerSystem;
   private backgroundGraphics: Graphics | null = null;
+  private parent: Container;
 
-  constructor(app: Application) {
+  constructor(app: Application, options: { parent?: Container } = {}) {
     this.app = app;
+    this.parent = options.parent ?? this.app.stage;
     this.layers = this.createLayers();
   }
 
@@ -57,13 +59,13 @@ export class CanvasLayers {
     ui.sortableChildren = true;
 
     // Add to stage
-    this.app.stage.addChild(background);
-    this.app.stage.addChild(layout);
-    this.app.stage.addChild(drawing);
-    this.app.stage.addChild(ui);
+    this.parent.addChild(background);
+    this.parent.addChild(layout);
+    this.parent.addChild(drawing);
+    this.parent.addChild(ui);
 
     // Enable z-index sorting
-    this.app.stage.sortableChildren = true;
+    this.parent.sortableChildren = true;
 
 
     return { background, layout, drawing, ui };

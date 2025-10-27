@@ -39,6 +39,17 @@ export class CanvasEvents {
   }
 
   /**
+   * Update the drawing layer and tool manager references (used for shared canvas).
+   */
+  public updateContext(drawingLayer: Container, toolManager: ToolManager): void {
+    this.drawingLayer = drawingLayer;
+    this.toolManager = toolManager;
+    this.drawingLayer.eventMode = 'static';
+    this.drawingLayer.interactiveChildren = true;
+    this.updateCursor();
+  }
+
+  /**
    * Check if spacebar panning is currently active (prevents tool events)
    */
   private isSpacebarPanningActive(): boolean {
