@@ -60,6 +60,8 @@ export class VerticalCanvasContainer {
   private lastLoadTime: number = 0;
   private readonly LOAD_THROTTLE_MS = 300; // Minimum gap between sequential canvas loads
   private pendingLoadTimeouts: Map<string, NodeJS.Timeout> = new Map();
+  private canvasLoadTimestamps: Map<string, number> = new Map(); // Track when each canvas was loaded
+  private readonly MIN_LOADED_DURATION_MS = 2000; // Keep canvas loaded for at least 2 seconds
   // Performance optimization settings
   private lifecycleManager = CanvasLifecycleManager.getInstance(5); // Allow 5 concurrent canvases for better stability
 
@@ -367,13 +369,26 @@ export class VerticalCanvasContainer {
         if (canvasApp && canvasApp.isLoaded && canvasApp.canvas && entry.target !== canvasApp.canvas) {
           return;
         }
-        if (canvasApp && canvasApp.isLoaded && !this.loadingCanvases.has(canvasId)) {
-          // Only unload if it's not the active canvas and not recently loaded
-          if (canvasId !== this.activeCanvasId) {
-            this.lazyUnloadCanvas(canvasId).catch(error => {
-              console.warn(`⚠️ Failed to unload canvas ${canvasId}:`, error);
-            });
+        
+        // Never unload the active canvas
+        if (canvasId === this.activeCanvasId) {
+          return;
+        }
+        
+        // Don't unload canvases that were recently loaded (within MIN_LOADED_DURATION_MS)
+        const loadTimestamp = this.canvasLoadTimestamps.get(canvasId);
+        if (loadTimestamp) {
+          const timeSinceLoad = performance.now() - loadTimestamp;
+          if (timeSinceLoad < this.MIN_LOADED_DURATION_MS) {
+            console.log(`🕐 Skipping unload of ${canvasId} (loaded ${Math.round(timeSinceLoad)}ms ago, min ${this.MIN_LOADED_DURATION_MS}ms)`);
+            return;
           }
+        }
+        
+        if (canvasApp && canvasApp.isLoaded && !this.loadingCanvases.has(canvasId)) {
+          this.lazyUnloadCanvas(canvasId).catch(error => {
+            console.warn(`⚠️ Failed to unload canvas ${canvasId}:`, error);
+          });
         }
       }
     });
@@ -563,7 +578,6 @@ export class VerticalCanvasContainer {
       pixiCanvas.setAttribute('data-canvas-id', canvasId);
       pixiCanvas.setAttribute('data-lesson-number', canvasApp.canvasRow.lesson_number.toString());
       pixiCanvas.setAttribute('data-canvas-index', canvasApp.canvasRow.canvas_index.toString());
-      const parentNode = placeholder.parentNode;
       placeholder.parentNode?.replaceChild(pixiCanvas, placeholder);
 
       if (this.intersectionObserver) {
@@ -607,6 +621,9 @@ export class VerticalCanvasContainer {
       canvasApp.displayManager = displayManager;
       canvasApp.toolManager = toolManager;
       canvasApp.isLoaded = true;
+      
+      // Record timestamp when canvas was loaded to prevent immediate unloading
+      this.canvasLoadTimestamps.set(canvasId, performance.now());
 
       await this.renderTemplateLayout(canvasApp);
 
@@ -1070,6 +1087,8 @@ export class VerticalCanvasContainer {
     } finally {
       this.lifecycleManager.release(canvasId);
       this.destructionQueue.delete(canvasId);
+      // Clean up timestamp when canvas is unloaded
+      this.canvasLoadTimestamps.delete(canvasId);
     }
 
     if (placeholder) {
@@ -1201,8 +1220,7 @@ export class VerticalCanvasContainer {
         .single();
 
       return {
-        title: data?.course_name,
-        code: null
+        title: data?.course_name
       };
     } catch (error) {
       console.warn('⚠️ Failed to fetch course metadata:', error);
