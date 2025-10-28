@@ -81,14 +81,12 @@ export class HighQualityZoom {
         // This will show the artboard (canvas content area) with borders visible
         const baseFitZoom = calculateFitZoom(containerWidth, containerHeight, 40); // 40px padding for better visibility
         
-        // Zoom out a moderate amount by reducing the fit zoom by 35%
-        // This creates good padding around the canvas without being too far
-        const zoomedOutFitZoom = baseFitZoom * 0.65;
-
-        const snappedFitZoom = snapFitZoomLevel(zoomedOutFitZoom);
+        // Use the baseFitZoom as the default "100%" zoom
+        // This ensures the canvas fits the viewport with appropriate padding
+        const snappedFitZoom = snapFitZoomLevel(baseFitZoom);
         this.fitToViewZoom = snappedFitZoom;
         
-        console.log(`🎯 Calculated fit-to-view zoom: ${baseFitZoom.toFixed(3)} -> zoomed out: ${zoomedOutFitZoom.toFixed(3)} -> snapped: ${snappedFitZoom.toFixed(2)} for container ${containerWidth}x${containerHeight}`);
+        console.log(`🎯 Calculated fit-to-view zoom: ${baseFitZoom.toFixed(3)} -> snapped: ${snappedFitZoom.toFixed(2)} for container ${containerWidth}x${containerHeight}`);
         
         return snappedFitZoom;
     }

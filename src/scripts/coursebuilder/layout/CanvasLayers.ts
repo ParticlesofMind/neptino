@@ -90,7 +90,7 @@ export class CanvasLayers {
     // Simple white background for the canvas
     this.backgroundGraphics
       .rect(0, 0, canvasDims.width, canvasDims.height)
-      .fill({ color: 0xffffff, alpha: 1 });
+      .fill({ color: 0xffffff, alpha: 0 }); // Transparent background
 
     this.backgroundGraphics.label = 'background-fill';
     this.layers.background.addChild(this.backgroundGraphics);

@@ -1,9 +1,7 @@
 import { Container, Graphics } from "pixi.js";
 import type { TextStyleOptions } from "pixi.js";
 import { TextRenderer } from "../utils/TextRenderer.js";
-import type { TemplateTableColumn } from "../utils/TemplateFieldTypes.js";
-
-type TableColumn = TemplateTableColumn;
+import type { TableColumn } from "../utils/TableRenderer.js";
 
 export interface ProgramData {
   competencies: Array<{
@@ -225,3 +223,4 @@ export class ProgramRenderer {
     return rowHeight;
   }
 }
+

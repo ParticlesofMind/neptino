@@ -6,7 +6,7 @@
   margin: 0 auto 40px auto;
   border: 2px solid #e9ecef;
   border-radius: 8px;
-  background: white;
+  background: transparent; /* Transparent background to show canvas behind */
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   position: relative;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;

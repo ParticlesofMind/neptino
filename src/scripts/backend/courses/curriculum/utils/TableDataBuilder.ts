@@ -1,69 +1,15 @@
 import { CurriculumLesson, TemplateDefinitionBlock } from "../curriculumManager.js";
-type FieldSpan = "full" | "half" | "third";
+import type { TableRow, TableData } from "../../../coursebuilder/layout/utils/TableRenderer.js";
 
-interface FieldValidationRule {
-  type: "required" | "maxLength" | "allowedValues" | "pattern";
-  value?: number | string | Array<string | number>;
-  message?: string;
-}
-
-interface FieldVisibilityRule {
-  fieldId: string;
-  equals?: string | number | boolean;
-  notEquals?: string | number | boolean;
-  includes?: Array<string | number | boolean>;
-  excludes?: Array<string | number | boolean>;
-}
-
-interface TemplateTableColumn {
+interface ColumnDef {
   key: string;
   label: string;
-  span?: FieldSpan;
-  helpText?: string;
-  placeholder?: string;
-  validations?: FieldValidationRule[];
-  visibility?: FieldVisibilityRule[];
-  sectionId?: string;
-  meta?: Record<string, unknown>;
-}
-
-interface TemplateTableRow {
-  cells: Record<string, string>;
-  depth?: number;
-  sectionId?: string;
-}
-
-interface TemplateTableData {
-  columns: TemplateTableColumn[];
-  rows: TemplateTableRow[];
-  emptyMessage?: string;
-  sections?: Array<{ id: string; title: string; helpText?: string }>;
-  meta?: Record<string, unknown>;
-}
-
-type TableRow = TemplateTableRow;
-type TableData = TemplateTableData;
-
-const FORM_WIDTH = 1240;
-const FORM_HEIGHT = 1754;
-
-interface BaseFieldConfig {
-  key: string;
-  label: string;
-  span?: FieldSpan;
-  helpText?: string;
-  placeholder?: string;
-  validations?: FieldValidationRule[];
-  visibility?: FieldVisibilityRule[];
-  sectionId?: string;
-  meta?: Record<string, unknown>;
-}
-
-interface ColumnDef extends BaseFieldConfig {
   configKey: string;
 }
 
-interface FieldDef extends BaseFieldConfig {
+interface FieldDef {
+  key: string;
+  label: string;
   configKey: string;
   mandatory: boolean;
 }
@@ -98,102 +44,13 @@ export class TableDataBuilder {
     lesson: CurriculumLesson,
   ): TableData {
     const columnDefs: ColumnDef[] = [
-      {
-        key: "competency",
-        label: "Competency",
-        configKey: "competence",
-        span: "full",
-        helpText: "High-level competency guiding this lesson program.",
-        placeholder: "[Describe the competency focus]",
-        validations: [
-          { type: "required", message: "Competency is required." },
-          { type: "maxLength", value: 200 },
-        ],
-        sectionId: "depth-0",
-      },
-      {
-        key: "topic",
-        label: "Topic",
-        configKey: "topic",
-        span: "half",
-        helpText: "Specific topic that supports the competency.",
-        placeholder: "[Topic title]",
-        validations: [
-          { type: "required", message: "Topic is required." },
-          { type: "maxLength", value: 160 },
-        ],
-        sectionId: "depth-1",
-      },
-      {
-        key: "objective",
-        label: "Objective",
-        configKey: "objective",
-        span: "half",
-        helpText: "What students should achieve for this topic.",
-        placeholder: "[Objective details]",
-        validations: [
-          { type: "required", message: "Objective is required." },
-          { type: "maxLength", value: 200 },
-        ],
-        sectionId: "depth-2",
-      },
-      {
-        key: "task",
-        label: "Task",
-        configKey: "task",
-        span: "half",
-        helpText: "Observable task or activity for the objective.",
-        placeholder: "[Task description]",
-        validations: [
-          { type: "required", message: "Task is required." },
-          { type: "maxLength", value: 200 },
-        ],
-        sectionId: "depth-3",
-      },
-      {
-        key: "method",
-        label: "Method",
-        configKey: "program_method",
-        span: "third",
-        helpText: "Instructional method paired with the task.",
-        placeholder: "[Method]",
-        validations: [
-          {
-            type: "allowedValues",
-            value: ["Lecture", "Discussion", "Workshop", "Experiment", "Debate"],
-            message: "Choose an instructional method.",
-          },
-        ],
-        sectionId: "depth-3",
-        meta: { sectionTitle: "Instructional Methods" },
-      },
-      {
-        key: "social",
-        label: "Social Form",
-        configKey: "program_social_form",
-        span: "third",
-        helpText: "Grouping or collaboration model.",
-        placeholder: "[Social form]",
-        validations: [
-          {
-            type: "allowedValues",
-            value: ["Individual", "Pairs", "Small Group", "Whole Class"],
-          },
-        ],
-        sectionId: "depth-3",
-      },
-      {
-        key: "time",
-        label: "Time",
-        configKey: "program_time",
-        span: "third",
-        helpText: "Estimated time (minutes).",
-        placeholder: "45",
-        validations: [
-          { type: "pattern", value: "^\\d{1,3}$", message: "Use minutes (e.g., 45)." },
-        ],
-        sectionId: "depth-3",
-      },
+      { key: "competency", label: "Competency", configKey: "competence" },
+      { key: "topic", label: "Topic", configKey: "topic" },
+      { key: "objective", label: "Objective", configKey: "objective" },
+      { key: "task", label: "Task", configKey: "task" },
+      { key: "method", label: "Method", configKey: "program_method" },
+      { key: "social", label: "Social Form", configKey: "program_social_form" },
+      { key: "time", label: "Time", configKey: "program_time" },
     ];
 
     const columns = TableDataBuilder.filterColumns(columnDefs, block);
@@ -250,40 +107,12 @@ export class TableDataBuilder {
     }
 
     return {
-      columns: columns.map((column) => TableDataBuilder.mapColumn(column)),
+      columns: columns.map(({ key, label }) => ({ key, label })),
       rows: rows.map((row) => ({
         depth: row.depth,
         cells: TableDataBuilder.pickCells(row.cells, columns.map((c) => c.key)),
       })),
       emptyMessage: "Program structure has not been configured.",
-      sections: [
-        {
-          id: "depth-0",
-          title: "Competencies",
-          helpText: "Define the overarching competencies that guide this lesson.",
-        },
-        {
-          id: "depth-1",
-          title: "Topics",
-          helpText: "Outline the topics that support each competency.",
-        },
-        {
-          id: "depth-2",
-          title: "Objectives",
-          helpText: "Describe measurable objectives for each topic.",
-        },
-        {
-          id: "depth-3",
-          title: "Tasks & Methods",
-          helpText: "Break down tasks, instructional methods, and timing.",
-        },
-      ],
-      meta: {
-        width: FORM_WIDTH,
-        height: FORM_HEIGHT,
-        padding: 32,
-        gap: 24,
-      },
     };
   }
 
@@ -292,89 +121,11 @@ export class TableDataBuilder {
    */
   private static buildResourcesTable(block: TemplateDefinitionBlock): TableData {
     const fieldDefs: FieldDef[] = [
-      {
-        key: "task",
-        label: "Task",
-        configKey: "task",
-        mandatory: true,
-        span: "half",
-        helpText: "Task or learning activity the resource supports.",
-        placeholder: "[Task name]",
-        validations: [{ type: "required", message: "Task is required." }],
-        sectionId: "resource-core",
-      },
-      {
-        key: "type",
-        label: "Type",
-        configKey: "type",
-        mandatory: true,
-        span: "third",
-        helpText: "Resource format or medium.",
-        placeholder: "Video / Article / Worksheet",
-        validations: [
-          {
-            type: "allowedValues",
-            value: ["Video", "Article", "Worksheet", "Interactive", "Audio", "Other"],
-            message: "Select the closest resource type.",
-          },
-        ],
-        sectionId: "resource-core",
-      },
-      {
-        key: "origin",
-        label: "Origin",
-        configKey: "origin",
-        mandatory: true,
-        span: "half",
-        helpText: "Where learners can access the resource.",
-        placeholder: "https://",
-        validations: [
-          { type: "required", message: "Origin or URL is required." },
-          {
-            type: "maxLength",
-            value: 250,
-          },
-        ],
-        sectionId: "resource-core",
-      },
-      {
-        key: "state",
-        label: "State",
-        configKey: "state",
-        mandatory: true,
-        span: "third",
-        helpText: "Current availability state.",
-        placeholder: "Draft / Review / Published",
-        validations: [
-          {
-            type: "allowedValues",
-            value: ["Draft", "Review", "Published", "Archived"],
-          },
-        ],
-        sectionId: "resource-quality",
-      },
-      {
-        key: "quality",
-        label: "Quality",
-        configKey: "quality",
-        mandatory: true,
-        span: "third",
-        helpText: "Quality rating once reviewed.",
-        placeholder: "⭐️⭐️⭐️⭐️⭐️",
-        validations: [
-          {
-            type: "allowedValues",
-            value: ["Pending", "Needs Updates", "Acceptable", "Excellent"],
-          },
-        ],
-        visibility: [
-          {
-            fieldId: "state",
-            excludes: ["Draft", "Archived"],
-          },
-        ],
-        sectionId: "resource-quality",
-      },
+      { key: "task", label: "Task", configKey: "task", mandatory: true },
+      { key: "type", label: "Type", configKey: "type", mandatory: true },
+      { key: "origin", label: "Origin", configKey: "origin", mandatory: true },
+      { key: "state", label: "State", configKey: "state", mandatory: true },
+      { key: "quality", label: "Quality", configKey: "quality", mandatory: true },
     ];
 
     const activeFields = TableDataBuilder.filterFields(fieldDefs, block);
@@ -414,27 +165,9 @@ export class TableDataBuilder {
     }
 
     return {
-      columns: activeFields.map((field) => TableDataBuilder.mapField(field)),
+      columns: activeFields.map((field) => ({ key: field.key, label: field.label })),
       rows,
       emptyMessage: "No resources configured.",
-      sections: [
-        {
-          id: "resource-core",
-          title: "Resource Details",
-          helpText: "Describe how the resource supports the learning experience.",
-        },
-        {
-          id: "resource-quality",
-          title: "Availability & Quality",
-          helpText: "Track status and review quality for this resource.",
-        },
-      ],
-      meta: {
-        width: FORM_WIDTH,
-        height: FORM_HEIGHT,
-        padding: 32,
-        gap: 20,
-      },
     };
   }
 
@@ -442,7 +175,13 @@ export class TableDataBuilder {
    * Build content table data
    */
   private static buildContentTable(block: TemplateDefinitionBlock): TableData {
-    const columnDefs = TableDataBuilder.createInstructionColumnDefs();
+    const columnDefs: ColumnDef[] = [
+      { key: "content", label: "Content", configKey: "competence" },
+      { key: "time", label: "Time", configKey: "competence_time" },
+      { key: "method", label: "Method", configKey: "instruction_method" },
+      { key: "social", label: "Social Form", configKey: "instruction_social_form" },
+    ];
+
     const columns = TableDataBuilder.filterContentColumns(columnDefs, block);
     const config = (block.config ?? {}) as Record<string, unknown>;
     const rows: TableRow[] = [];
@@ -544,33 +283,12 @@ export class TableDataBuilder {
     }
 
     return {
-      columns: columns.map((column) => TableDataBuilder.mapColumn(column)),
+      columns: columns.map(({ key, label }) => ({ key, label })),
       rows: rows.map((row) => ({
         depth: row.depth,
         cells: TableDataBuilder.pickCells(row.cells, columns.map((c) => c.key)),
       })),
       emptyMessage: "No content configured.",
-      sections: [
-        {
-          id: "depth-0",
-          title: "Content Overview",
-          helpText: "Describe the content and timing for each lesson component.",
-        },
-        { id: "depth-1", title: "Topics" },
-        { id: "depth-2", title: "Objectives" },
-        { id: "depth-3", title: "Tasks" },
-        {
-          id: "depth-4",
-          title: "Activity Areas",
-          helpText: "Differentiate instruction, student, and teacher activities.",
-        },
-      ],
-      meta: {
-        width: FORM_WIDTH,
-        height: FORM_HEIGHT,
-        padding: 32,
-        gap: 24,
-      },
     };
   }
 
@@ -593,16 +311,12 @@ export class TableDataBuilder {
    * Build assignment table data
    */
   private static buildAssignmentTable(block: TemplateDefinitionBlock): TableData {
-    const columnDefs = TableDataBuilder.createInstructionColumnDefs().map((column) =>
-      column.key === "content"
-        ? {
-            ...column,
-            label: "Assignment",
-            helpText: "Describe the assignment scaffolding for learners.",
-            placeholder: "[Assignment details]",
-          }
-        : column,
-    );
+    const columnDefs: ColumnDef[] = [
+      { key: "content", label: "Assignment", configKey: "competence" },
+      { key: "time", label: "Time", configKey: "competence_time" },
+      { key: "method", label: "Method", configKey: "instruction_method" },
+      { key: "social", label: "Social Form", configKey: "instruction_social_form" },
+    ];
 
     const columns = TableDataBuilder.filterContentColumns(columnDefs, block);
     const config = (block.config ?? {}) as Record<string, unknown>;
@@ -705,33 +419,12 @@ export class TableDataBuilder {
     }
 
     return {
-      columns: columns.map((column) => TableDataBuilder.mapColumn(column)),
+      columns: columns.map(({ key, label }) => ({ key, label })),
       rows: rows.map((row) => ({
         depth: row.depth,
         cells: TableDataBuilder.pickCells(row.cells, columns.map((c) => c.key)),
       })),
       emptyMessage: "No assignment configured.",
-      sections: [
-        {
-          id: "depth-0",
-          title: "Assignment Overview",
-          helpText: "Capture the competency and core expectations for the assignment.",
-        },
-        { id: "depth-1", title: "Topics" },
-        { id: "depth-2", title: "Objectives" },
-        { id: "depth-3", title: "Tasks" },
-        {
-          id: "depth-4",
-          title: "Activity Areas",
-          helpText: "Detail what students and teachers do during the assignment.",
-        },
-      ],
-      meta: {
-        width: FORM_WIDTH,
-        height: FORM_HEIGHT,
-        padding: 32,
-        gap: 24,
-      },
     };
   }
 
@@ -812,93 +505,5 @@ export class TableDataBuilder {
     
     return result;
   }
-
-  private static mapColumn(column: BaseFieldConfig): TemplateTableColumn {
-    return {
-      key: column.key,
-      label: column.label,
-      span: column.span,
-      helpText: column.helpText,
-      placeholder: column.placeholder,
-      validations: column.validations
-        ? column.validations.map((rule) => ({ ...rule }))
-        : undefined,
-      visibility: column.visibility
-        ? column.visibility.map((rule) => ({
-            fieldId: rule.fieldId,
-            equals: rule.equals,
-            notEquals: rule.notEquals,
-            includes: rule.includes ? [...rule.includes] : undefined,
-            excludes: rule.excludes ? [...rule.excludes] : undefined,
-          }))
-        : undefined,
-      sectionId: column.sectionId,
-      meta: column.meta ? { ...column.meta } : undefined,
-    };
-  }
-
-  private static mapField(field: FieldDef): TemplateTableColumn {
-    return TableDataBuilder.mapColumn(field);
-  }
-
-  private static createInstructionColumnDefs(): ColumnDef[] {
-    return [
-      {
-        key: "content",
-        label: "Content",
-        configKey: "competence",
-        span: "full",
-        helpText: "Primary instructional content or activity description.",
-        placeholder: "[Content details]",
-        validations: [
-          { type: "required", message: "Content is required." },
-          { type: "maxLength", value: 280 },
-        ],
-        sectionId: "depth-0",
-      },
-      {
-        key: "time",
-        label: "Time",
-        configKey: "competence_time",
-        span: "third",
-        helpText: "Estimated duration for this slice of the lesson (minutes).",
-        placeholder: "45",
-        validations: [
-          { type: "pattern", value: "^\\d{1,3}$", message: "Use minutes (e.g., 45)." },
-        ],
-        sectionId: "depth-0",
-      },
-      {
-        key: "method",
-        label: "Method",
-        configKey: "instruction_method",
-        span: "third",
-        helpText: "Instructional method that best supports the learning.",
-        placeholder: "[Method]",
-        validations: [
-          {
-            type: "allowedValues",
-            value: ["Lecture", "Discussion", "Workshop", "Experiment", "Project"],
-          },
-        ],
-        sectionId: "depth-4",
-      },
-      {
-        key: "social",
-        label: "Social Form",
-        configKey: "instruction_social_form",
-        span: "third",
-        helpText: "Grouping strategy for learners.",
-        placeholder: "[Social form]",
-        validations: [
-          {
-            type: "allowedValues",
-            value: ["Individual", "Pairs", "Small Group", "Whole Class"],
-          },
-        ],
-        sectionId: "depth-4",
-      },
-    ];
-  }
-
 }
+

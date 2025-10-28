@@ -1,6 +1,5 @@
 import { Container, Graphics } from "pixi.js";
 import type { Layout } from "@pixi/layout";
-import { TextRenderer } from "../utils/TextRenderer.js";
 
 export interface SectionReferences {
   container: Container;
@@ -90,22 +89,16 @@ export class SectionManager {
   ): void {
     ref.background.clear();
     
-    // White background
-    ref.background.rect(0, 0, Math.max(width, 0), Math.max(height, 0)).fill({
-      color: 0xffffff,
-      alpha: 1,
-    });
+    // Transparent background - no white fill
+    // The sections should be transparent to show the canvas behind
     
-    // Add subtle borders for better visual separation
+    // Add subtle borders for better visual separation (optional, can be removed if not needed)
     if (section === "header") {
       // Bottom border for header
-      ref.background.rect(0, height - 1, width, 1).fill({ color: 0xe5e7eb, alpha: 0.8 });
+      ref.background.rect(0, height - 1, width, 1).fill({ color: 0xe5e7eb, alpha: 0.3 });
     } else if (section === "footer") {
       // Top border for footer
-      ref.background.rect(0, 0, width, 1).fill({ color: 0xe5e7eb, alpha: 0.8 });
-    } else if (section === "body") {
-      // Subtle border around body
-      ref.background.stroke({ color: 0xf3f4f6, alpha: 0.5, width: 1 });
+      ref.background.rect(0, 0, width, 1).fill({ color: 0xe5e7eb, alpha: 0.3 });
     }
   }
 

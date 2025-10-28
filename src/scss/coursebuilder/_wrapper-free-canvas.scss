@@ -99,7 +99,7 @@
   max-width: 100%;
   border: 1px dashed rgba(108, 117, 125, 0.4);
   border-radius: 8px;
-  background: rgba(248, 249, 250, 0.5);
+  background: transparent; /* Transparent background instead of white/gray */
   transition: width 0.2s ease, height 0.2s ease, transform 0.2s ease;
 }
 
@@ -117,7 +117,7 @@
 
 .canvas-placeholder-invisible.active {
   border-color: #4c6ef5;
-  background: rgba(76, 110, 245, 0.08);
+  background: transparent; /* Keep transparent even when active */
 }
 
 .canvas-placeholder-invisible.canvas-placeholder--loaded {

@@ -14,9 +14,7 @@ import { SectionManager, type SectionReferences } from "./renderers/SectionManag
 import { HeaderRenderer } from "./renderers/HeaderRenderer.js";
 import { FooterRenderer } from "./renderers/FooterRenderer.js";
 import { ProgramRenderer, type ProgramData } from "./renderers/ProgramRenderer.js";
-import { FormGridRenderer } from "./utils/FormGridRenderer.js";
-import { FormGridBuilder } from "./utils/FormGridBuilder.js";
-import type { FormGridData, TemplateTableData } from "./utils/TemplateFieldTypes.js";
+import { TableRenderer, type TableData } from "./utils/TableRenderer.js";
 import { TextRenderer } from "./utils/TextRenderer.js";
 
 interface LayoutNode {
@@ -294,12 +292,6 @@ export class TemplateLayoutManager {
     }
 
     const bodyWidth = this.getSectionContentWidth();
-    console.log(`🎨 TemplateLayoutManager: Body width calculated`, {
-      layoutBounds: this.layoutBounds,
-      margins: this.margins,
-      bodyWidth,
-      calculation: `${this.layoutBounds.width} - ${this.margins.left} - ${this.margins.right} = ${bodyWidth}`
-    });
     let cursorY = 12;
 
     bodyNode.children.forEach((child) => {
@@ -385,30 +377,26 @@ export class TemplateLayoutManager {
         tableContainer.y = cursorY;
         container.addChild(tableContainer);
 
-        // Use bodyWidth directly to respect canvas margins
-        const tableHeight = ProgramRenderer.render(tableContainer, programData, bodyWidth);
+        const tableWidth = Math.max(bodyWidth, 1000);
+        const tableHeight = ProgramRenderer.render(tableContainer, programData, tableWidth);
         cursorY += tableHeight;
         return cursorY;
       }
     }
 
-    const formData = this.extractFormGridData(node);
-    if (formData && blockConfig?.showTable !== false) {
-      const formContainer = new Container({
-        layout: {
-          width: bodyWidth,
-          flexDirection: "row",
-          justifyContent: "flex-start",
-        },
-      });
-      this.lockDisplayObject(formContainer);
-      formContainer.y = cursorY;
-      container.addChild(formContainer);
+    const tableData = this.extractTableData(node);
+    if (tableData && blockConfig?.showTable !== false) {
+      const tableContainer = new Container();
+      this.lockDisplayObject(tableContainer);
+      tableContainer.y = cursorY;
+      container.addChild(tableContainer);
 
-      const formHeight = FormGridRenderer.render(formContainer, formData, {
-        availableWidth: bodyWidth,
+      const tableWidth = Math.max(bodyWidth, 1000);
+      const tableHeight = TableRenderer.renderTable(tableContainer, tableData, tableWidth, {
+        indent: true,
+        zebra: true,
       });
-      cursorY += formHeight;
+      cursorY += tableHeight;
       return cursorY;
     }
 
@@ -452,22 +440,13 @@ export class TemplateLayoutManager {
     return program;
   }
 
-  private extractFormGridData(node: LayoutNode | null): FormGridData | null {
+  private extractTableData(node: LayoutNode | null): TableData | null {
     if (!node || typeof node !== "object") return null;
     const candidate = (node as any).data as Record<string, unknown> | undefined;
     if (!candidate || typeof candidate !== "object") return null;
-
-    const form = candidate.form as FormGridData | undefined;
-    if (form && Array.isArray(form.sections) && form.sections.length) {
-      return form;
-    }
-
-    const table = candidate.table as TemplateTableData | undefined;
-    if (table) {
-      return FormGridBuilder.fromTableData(table) ?? null;
-    }
-
-    return null;
+    const table = candidate.table as TableData | undefined;
+    if (!table || !Array.isArray(table.columns) || !table.columns.length) return null;
+    return table;
   }
 
   private findSectionNode(layout: LayoutNode, role: "header" | "body" | "footer"): LayoutNode | null {
