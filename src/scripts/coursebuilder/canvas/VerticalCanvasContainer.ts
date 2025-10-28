@@ -576,6 +576,7 @@ export class VerticalCanvasContainer {
    */
   private async renderTemplateLayout(application: CanvasApplication): Promise<void> {
     if (!application.templateLayoutManager) {
+      console.warn(`⚠️ No templateLayoutManager for canvas ${application.canvasRow.id}`);
       return;
     }
 
@@ -586,8 +587,16 @@ export class VerticalCanvasContainer {
         return;
       }
 
+      console.log(`🎨 Rendering template for canvas "${application.canvasRow.id}"`, {
+        lesson: resolvedRow.lesson_number,
+        canvasIndex: resolvedRow.canvas_index,
+        hasLayout: !!resolvedRow.canvas_data.layout
+      });
+
       const renderContext = await this.buildRenderContext(resolvedRow);
       application.templateLayoutManager.renderCanvas(resolvedRow.canvas_data, renderContext);
+
+      console.log(`✅ Template rendered for canvas "${application.canvasRow.id}"`);
     } catch (error) {
       console.warn(`⚠️ Error rendering template layout for ${application.canvasRow.id}:`, error);
     }

@@ -1,13 +1,8 @@
 
-@use 'engine-grid';      // Core grid layout system@use 'engine-grid';      // Core grid layout system
-
-@use 'engine-panels';    // Media, search, canvas, panel components@use 'engine-panels';    // Media, search, canvas, panel components
-
-@use 'engine-tools';     // Tools, modes, and control systems@use 'engine-tools';     // Tools, modes, and control systems
-
-@use 'engine-snap';      // Snap menu functionality  @use 'engine-snap';      // Snap menu functionality  
-
-@use 'engine-overlays';  // Perspective and canvas overlays@use 'engine-overlays';  // Perspective and canvas overlays
+@use 'engine-panels';    // Media, search, canvas, panel components
+@use 'engine-tools';     // Tools, modes, and control systems
+@use 'engine-snap';      // Snap menu functionality
+@use 'engine-overlays';  // Perspective and canvas overlays
 
 /* Root-level custom properties for engine UI */
 :root {

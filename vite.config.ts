@@ -18,7 +18,7 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true, // Allow external connections for better Docker compatibility
-    open: true,
+    open: false, // NEVER auto-open browser - user will open manually
     strictPort: false, // Allow fallback to other ports if 3000 is busy
     cors: true,
     // Enhanced watch options for stability
@@ -43,7 +43,7 @@ export default defineConfig({
   },
   // Enhanced dependency optimization
   optimizeDeps: {
-    include: ['@supabase/supabase-js', 'pixi.js', '@pixi/devtools', '@huggingface/transformers'],
+    include: ['@supabase/supabase-js', 'pixi.js', '@pixi/devtools'],
     exclude: ['@huggingface/transformers', 'yoga-layout'], // Exclude to prevent pre-bundling issues
     force: false, // Don't force re-optimization unless needed
   },

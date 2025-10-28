@@ -84,13 +84,16 @@ export class SharedCanvasEngine {
       return this.virtualCanvases.get(id)!;
     }
 
+    console.log(`🎨 SharedCanvasEngine: Registering canvas "${id}"`);
+
     const root = new Container();
     root.label = `virtual-canvas-${id}`;
     root.visible = false;
 
     const mask = new Graphics();
     mask.label = `virtual-canvas-mask-${id}`;
-    mask.visible = false;
+    // CRITICAL: Mask must be visible for proper clipping in PixiJS
+    mask.visible = true;
     mask.rect(0, 0, this.baseWidth, this.baseHeight).fill({ color: 0xffffff, alpha: 1 });
 
     root.mask = mask;
@@ -100,6 +103,8 @@ export class SharedCanvasEngine {
 
     const layers = new CanvasLayers(this.app, { parent: root });
     layers.initialize();
+
+    console.log(`✅ SharedCanvasEngine: Canvas "${id}" registered with layers`, layers.getLayerInfo());
 
     const context: VirtualCanvasContext = {
       id,
@@ -220,7 +225,7 @@ export class SharedCanvasEngine {
       return;
     }
 
-    const { placeholder, root, mask } = context;
+    const { placeholder, root } = context;
     if (!placeholder.isConnected) {
       root.visible = false;
       context.isVisible = false;
@@ -246,8 +251,19 @@ export class SharedCanvasEngine {
       return;
     }
 
+    // Canvas is now in viewport - make it visible
+    const wasInvisible = !context.isVisible;
     context.isVisible = true;
     root.visible = true;
+
+    if (wasInvisible) {
+      console.log(`👁️ SharedCanvasEngine: Canvas "${context.id}" is now visible`, {
+        rootVisible: root.visible,
+        maskVisible: context.mask.visible,
+        childrenCount: root.children.length,
+        layerInfo: context.layers.getLayerInfo()
+      });
+    }
 
     const scaleX = rect.width / this.baseWidth;
     const scaleY = rect.height / this.baseHeight;

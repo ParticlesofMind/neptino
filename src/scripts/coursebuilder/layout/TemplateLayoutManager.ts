@@ -99,6 +99,12 @@ export class TemplateLayoutManager {
   public renderCanvas(canvasData: CanvasDataPayload, context: RenderContext): void {
     if (!this.sections) return;
 
+    console.log('🎨 TemplateLayoutManager: Starting render', {
+      lesson: canvasData.lesson.number,
+      hasLayout: !!canvasData.layout,
+      margins: canvasData.margins
+    });
+
     this.applyCanvasDimensions(canvasData);
     this.applyMargins(canvasData.margins);
     SectionManager.updateMetrics(this.sections, this.layoutBounds, this.margins);
@@ -110,6 +116,12 @@ export class TemplateLayoutManager {
     this.renderHeader(headerNode, canvasData, context);
     this.renderBody(bodyNode, canvasData);
     this.renderFooter(footerNode, canvasData, context);
+
+    console.log('✅ TemplateLayoutManager: Render complete', {
+      headerChildren: this.sections.header.content.children.length,
+      bodyChildren: this.sections.body.content.children.length,
+      footerChildren: this.sections.footer.content.children.length
+    });
   }
 
   public updateBlockSizes(): void {

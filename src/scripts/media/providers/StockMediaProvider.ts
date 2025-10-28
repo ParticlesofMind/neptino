@@ -32,13 +32,10 @@ export class StockMediaProvider extends BaseProvider {
         this.manifestCache = data2;
         return data2;
       } catch {
-        // Final fallback: minimal inline stock entries using resolved icon
-        const icon = new URL('../../../assets/logo/octopus-logo.png', import.meta.url).href;
+        // Final fallback: return empty manifest to avoid showing placeholder images
+        console.warn('⚠️ StockMediaProvider: Could not load manifest from any source. Returning empty results.');
         const data3: StockManifest = {
-          items: [
-            { id: 'img-fallback', type: 'images', title: 'Fallback Image', thumbnailUrl: icon, previewUrl: icon, contentUrl: icon, author: 'Stock' },
-            { id: 'txt-fallback', type: 'text', title: 'Sample text item', author: 'Stock' }
-          ]
+          items: []
         };
         this.manifestCache = data3;
         return data3;

@@ -13,9 +13,10 @@ export interface CanvasDimensions {
   height: number;
 }
 
-// Canvas dimensions for large testing canvas (maintains 2:3 ratio)
-export const CANVAS_WIDTH = 4000;
-export const CANVAS_HEIGHT = 6000;
+// Canvas dimensions (maintains 2:3 ratio)
+// Use zoom system for scaling, not oversized canvas
+export const CANVAS_WIDTH = 1200;
+export const CANVAS_HEIGHT = 1800;
 
 // Artboard dimensions for final output (student view area)
 export const ARTBOARD_WIDTH = 1200;
