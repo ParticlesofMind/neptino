@@ -242,8 +242,15 @@ export class VerticalCanvasContainer {
    */
   public scrollToCanvas(canvasId: string): void {
     const application = this.canvasApplications.get(canvasId);
-    if (application?.placeholder) {
-      application.placeholder.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (application?.placeholder && this.scrollContainer) {
+      const containerRect = this.scrollContainer.getBoundingClientRect();
+      const placeholderRect = application.placeholder.getBoundingClientRect();
+      const scrollOffset = placeholderRect.top - containerRect.top + this.scrollContainer.scrollTop;
+      
+      this.scrollContainer.scrollTo({
+        top: scrollOffset,
+        behavior: 'smooth'
+      });
     }
   }
 
@@ -458,7 +465,7 @@ export class VerticalCanvasContainer {
     this.intersectionObserver = new IntersectionObserver(
       (entries) => this.handleIntersectionEntries(entries),
       {
-        root: null,
+        root: this.scrollContainer,
         rootMargin: '200px 0px',
         threshold: [0.1, 0.5, 0.9],
       },

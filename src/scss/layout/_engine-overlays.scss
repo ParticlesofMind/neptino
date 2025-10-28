@@ -6,17 +6,10 @@
     &__perspective {
         display: grid;
         grid-auto-flow: row;
-        grid-auto-rows: max-content;
         align-items: center;
         gap: var(--spacing-2);
-        background: rgba(255, 255, 255, 0.95);
-        padding: var(--spacing-2);
-        border-radius: var(--radius-medium);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        backdrop-filter: blur(8px);
-        z-index: 1; /* Lower z-index to not interfere with canvas content */
-        width: 60px;
-        pointer-events: none; /* allow canvas interaction around the control */
+        width: 60px; 
+  
     }
 
     // Zoom display within perspective

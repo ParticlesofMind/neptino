@@ -905,9 +905,14 @@ export class WrapperFreeCanvasContainer {
     // Lazy load the canvas if not already loaded
     this.lazyLoadCanvas(canvasId);
 
-    canvasApp.canvas.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center'
+    // Calculate scroll position relative to the scroll container
+    const containerRect = this.scrollContainer.getBoundingClientRect();
+    const canvasRect = canvasApp.canvas.getBoundingClientRect();
+    const scrollOffset = canvasRect.top - containerRect.top + this.scrollContainer.scrollTop;
+    
+    this.scrollContainer.scrollTo({
+      top: scrollOffset,
+      behavior: 'smooth'
     });
 
     // Set as active immediately
