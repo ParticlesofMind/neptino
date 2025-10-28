@@ -58,6 +58,8 @@ export class TemplateLayoutManager {
   private layoutBounds = { width: 1200, height: 1800 };
   private margins = { top: 96, right: 96, bottom: 96, left: 96 };
 
+  private static SECTION_ORDER: Array<"header" | "body" | "footer"> = ["header", "body", "footer"];
+
   public async initialize(container: Container): Promise<void> {
     this.layoutBounds = canvasDimensionManager.getCurrentDimensions();
     this.margins = canvasMarginManager.getMargins();
@@ -75,25 +77,7 @@ export class TemplateLayoutManager {
     this.rootContainer.sortableChildren = false;
 
     container.addChild(this.rootContainer);
-    
-    const createSection = (section: "header" | "body" | "footer") =>
-      SectionManager.create(section, (layout, width, height) => {
-        this.onSectionLayout(section, layout, width, height);
-      });
-
-    this.sections = {
-      header: createSection("header"),
-      body: createSection("body"),
-      footer: createSection("footer"),
-    };
-
-    this.rootContainer.addChild(
-      this.sections.header.container,
-      this.sections.body.container,
-      this.sections.footer.container,
-    );
-
-    SectionManager.updateMetrics(this.sections, this.layoutBounds, this.margins);
+    this.createSections();
   }
 
   public renderCanvas(canvasData: CanvasDataPayload, context: RenderContext): void {
@@ -105,6 +89,7 @@ export class TemplateLayoutManager {
       margins: canvasData.margins
     });
 
+    this.ensureSectionsIntegrity();
     this.applyCanvasDimensions(canvasData);
     this.applyMargins(canvasData.margins);
     SectionManager.updateMetrics(this.sections, this.layoutBounds, this.margins);
@@ -165,6 +150,7 @@ export class TemplateLayoutManager {
     if (!this.sections) return;
 
     Object.values(this.sections).forEach((section) => {
+      this.detachLayout(section.container);
       section.container.off("layout");
 
       if (!options?.preserveContainers && !section.container.destroyed) {
@@ -176,8 +162,82 @@ export class TemplateLayoutManager {
       this.rootContainer.destroy({ children: true });
     }
 
+    if (this.rootContainer) {
+      this.detachLayout(this.rootContainer);
+    }
+
     this.rootContainer = null;
     this.sections = null;
+  }
+
+  private createSections(): void {
+    if (!this.rootContainer) {
+      return;
+    }
+
+    const createSection = (section: "header" | "body" | "footer") =>
+      SectionManager.create(section, (layout, width, height) => {
+        this.onSectionLayout(section, layout, width, height);
+      });
+
+    this.sections = {
+      header: createSection("header"),
+      body: createSection("body"),
+      footer: createSection("footer"),
+    };
+
+    this.rootContainer.addChild(
+      this.sections.header.container,
+      this.sections.body.container,
+      this.sections.footer.container,
+    );
+
+    SectionManager.updateMetrics(this.sections, this.layoutBounds, this.margins);
+  }
+
+  private ensureSectionsIntegrity(): void {
+    if (!this.rootContainer) {
+      return;
+    }
+
+    if (!this.sections) {
+      this.createSections();
+      return;
+    }
+
+    const sections = this.sections;
+    const needsRebuild = TemplateLayoutManager.SECTION_ORDER.some((key) => {
+      const ref = sections[key];
+      if (!ref) return true;
+      if (ref.container.destroyed) return true;
+      const layout = (ref.container as any).layout as { destroyed?: boolean } | undefined;
+      return !layout || layout.destroyed === true;
+    });
+
+    if (needsRebuild) {
+      this.rebuildSections();
+    }
+  }
+
+  private rebuildSections(): void {
+    if (!this.sections || !this.rootContainer) {
+      return;
+    }
+
+    Object.values(this.sections).forEach((section) => {
+      try {
+        this.detachLayout(section.container);
+        section.container.removeAllListeners?.();
+      } catch {
+        /* ignore */
+      }
+      if (!section.container.destroyed) {
+        section.container.destroy({ children: true });
+      }
+    });
+
+    this.sections = null;
+    this.createSections();
   }
 
   private onSectionLayout(
@@ -455,6 +515,19 @@ export class TemplateLayoutManager {
     try {
       object.cursor = "default";
     } catch { /* ignore */ }
+  }
+
+  private detachLayout(container: Container): void {
+    const anyContainer = container as any;
+    const layout = anyContainer?.layout;
+    if (layout && typeof layout.destroy === "function" && !layout.destroyed) {
+      layout.destroy();
+    }
+    try {
+      anyContainer.layout = null;
+    } catch {
+      /* ignore */
+    }
   }
 }
 

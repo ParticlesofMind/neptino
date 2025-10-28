@@ -14,6 +14,7 @@
 import { supabase } from '../../backend/supabase';
 import { VerticalCanvasContainer, CanvasApplication } from './VerticalCanvasContainer';
 import type { CanvasDataPayload } from '../layout/TemplateLayoutManager';
+import type { CanvasAPI } from './CanvasAPI';
 
 export interface CanvasRow {
   id: string;
@@ -51,6 +52,13 @@ export class MultiCanvasManager {
     this.verticalContainer.onScrollChange((canvasId: string) => {
       this.notifyNavigationCallbacks(canvasId);
     });
+  }
+
+  public connectCanvasAPI(canvasAPI: CanvasAPI): void {
+    if (!this.verticalContainer) {
+      throw new Error('MultiCanvasManager not initialized');
+    }
+    this.verticalContainer.bindCanvasAPI(canvasAPI);
   }
 
   /**

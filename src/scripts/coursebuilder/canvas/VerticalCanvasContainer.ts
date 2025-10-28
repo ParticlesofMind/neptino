@@ -5,6 +5,7 @@ import { DisplayObjectManager } from './DisplayObjectManager';
 import { ToolManager } from '../tools/ToolManager';
 import { canvasMarginManager } from '../layout/CanvasMarginManager';
 import { SharedCanvasEngine, type VirtualCanvasContext } from './SharedCanvasEngine';
+import type { CanvasAPI } from './CanvasAPI';
 import {
   getMaxZoom,
   getMinZoom,
@@ -41,10 +42,12 @@ export class VerticalCanvasContainer {
   private engineReady: Promise<void> | null = null;
   private sharedEvents: CanvasEvents | null = null;
   private readonly currentZoom: ZoomState = { level: 1 };
+  private canvasAPI: CanvasAPI | null = null;
 
   private readonly CANVAS_WIDTH = 1200;
   private readonly CANVAS_HEIGHT = 1800;
   private readonly CANVAS_SPACING = 40;
+  private readonly MAX_ACTIVE_CONTEXTS = 5;
 
   /**
    * Initialize DOM structure, shared Pixi application, and observers.
@@ -62,6 +65,17 @@ export class VerticalCanvasContainer {
     this.setupUnifiedZoomBridge();
 
     document.addEventListener('canvasDataUpdated', this.handleCanvasDataUpdate as EventListener);
+  }
+
+  public bindCanvasAPI(canvasAPI: CanvasAPI): void {
+    this.canvasAPI = canvasAPI;
+    const readyPromise = this.engineReady ?? this.sharedEngine.waitUntilReady();
+    canvasAPI.attachSharedEngine(this.sharedEngine, readyPromise);
+
+    if (this.activeCanvasId) {
+      const active = this.canvasApplications.get(this.activeCanvasId) ?? null;
+      canvasAPI.setActiveApplication(active ?? null);
+    }
   }
 
   /**
@@ -156,6 +170,8 @@ export class VerticalCanvasContainer {
 
     await this.renderTemplateLayout(application);
 
+    this.enforceCanvasLimit(canvasId);
+
     if (!this.activeCanvasId) {
       this.setActiveCanvas(canvasId);
     }
@@ -233,6 +249,8 @@ export class VerticalCanvasContainer {
     if (backgroundLayer) {
       canvasMarginManager.setContainer(backgroundLayer);
     }
+
+    this.canvasAPI?.setActiveApplication(next);
 
     this.notifyScrollCallbacks(canvasId);
   }
@@ -326,6 +344,8 @@ export class VerticalCanvasContainer {
     this.intersectionObserver?.disconnect();
     this.intersectionObserver = null;
     this.scrollCallbacks = [];
+    this.canvasAPI?.setActiveApplication(null);
+    this.canvasAPI = null;
     this.canvasApplications.clear();
     this.activeCanvasId = null;
   }
@@ -399,6 +419,80 @@ export class VerticalCanvasContainer {
         app.placeholder.style.marginBottom = `${this.CANVAS_SPACING}px`;
       }
     });
+  }
+
+  private enforceCanvasLimit(recentlyLoadedId: string): void {
+    const loaded = Array.from(this.canvasApplications.values()).filter((app) => app.isLoaded);
+    if (loaded.length <= this.MAX_ACTIVE_CONTEXTS) {
+      return;
+    }
+
+    const reference =
+      (this.activeCanvasId && this.canvasApplications.get(this.activeCanvasId)) ||
+      this.canvasApplications.get(recentlyLoadedId) ||
+      null;
+    const referenceOrder = reference ? this.getOrderingValue(reference) : 0;
+
+    const excess = loaded.length - this.MAX_ACTIVE_CONTEXTS;
+    const candidates = loaded.filter(
+      (app) => app.canvasRow.id !== this.activeCanvasId && app.canvasRow.id !== recentlyLoadedId,
+    );
+
+    if (!candidates.length) {
+      return;
+    }
+
+    const sorted = candidates.sort(
+      (a, b) => Math.abs(this.getOrderingValue(b) - referenceOrder) - Math.abs(this.getOrderingValue(a) - referenceOrder),
+    );
+
+    for (let index = 0; index < excess && index < sorted.length; index += 1) {
+      this.evictCanvas(sorted[index]);
+    }
+  }
+
+  private getOrderingValue(application: CanvasApplication): number {
+    const lessonFactor = application.canvasRow.lesson_number ?? 0;
+    const canvasIndex = application.canvasRow.canvas_index ?? 0;
+    return lessonFactor * 1000 + canvasIndex;
+  }
+
+  private evictCanvas(application: CanvasApplication): void {
+    if (application.canvasRow.id === this.activeCanvasId) {
+      return;
+    }
+
+    console.log(`🧹 Evicting canvas "${application.canvasRow.id}" to maintain memory budget`);
+
+    if (application.virtualContext) {
+      this.sharedEngine.unregisterCanvas(application.canvasRow.id);
+      application.virtualContext = null;
+    }
+
+    application.layers?.destroy();
+    application.layers = null;
+
+    application.displayManager?.destroy();
+    application.displayManager = null;
+
+    application.toolManager?.destroy();
+    application.toolManager = null;
+
+    application.templateLayoutManager?.destroy();
+    application.templateLayoutManager = null;
+
+    application.events = this.sharedEvents;
+    application.isLoaded = false;
+    application.isActive = false;
+
+    if (application.placeholder) {
+      application.placeholder.classList.remove('canvas-placeholder--loaded', 'active');
+      if (!application.placeholder.classList.contains('canvas-placeholder-invisible')) {
+        application.placeholder.classList.add('canvas-placeholder-invisible');
+      }
+      application.placeholder.style.background = '';
+      application.placeholder.style.borderColor = '';
+    }
   }
 
   /**

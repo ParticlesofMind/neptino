@@ -1,4 +1,4 @@
-import { Application, Container, Graphics } from 'pixi.js';
+import { Application, Container, Graphics, Rectangle } from 'pixi.js';
 import { canvasDimensionManager } from '../layout/CanvasDimensionManager';
 import { CanvasLayers, type LayerSystem } from '../layout/CanvasLayers';
 
@@ -11,6 +11,8 @@ export interface VirtualCanvasContext {
   isVisible: boolean;
   lastRect: DOMRect | null;
   scale: number;
+  filterArea: Rectangle | null;
+  viewport: { x: number; y: number; width: number; height: number } | null;
 }
 
 export interface SharedCanvasEngineConfig {
@@ -30,6 +32,7 @@ export class SharedCanvasEngine {
   private virtualCanvases: Map<string, VirtualCanvasContext> = new Map();
   private resizeObserver: ResizeObserver | null = null;
   private isInitialized = false;
+  private initializationPromise: Promise<void> | null = null;
   private viewportWidth = 0;
   private viewportHeight = 0;
   private baseWidth = 1200;
@@ -45,11 +48,19 @@ export class SharedCanvasEngine {
 
     this.config = config;
 
+    if (!this.initializationPromise) {
+      this.initializationPromise = this.initializeInternal();
+    }
+
+    await this.initializationPromise;
+  }
+
+  private async initializeInternal(): Promise<void> {
     const dimensions = canvasDimensionManager.getCurrentDimensions();
     this.baseWidth = dimensions.width;
     this.baseHeight = dimensions.height;
 
-    this.viewportWidth = config.container.clientWidth || window.innerWidth;
+    this.viewportWidth = this.config?.container.clientWidth || window.innerWidth;
     this.viewportHeight = window.innerHeight;
 
     this.app = new Application();
@@ -115,6 +126,8 @@ export class SharedCanvasEngine {
       isVisible: false,
       lastRect: null,
       scale: 1,
+      filterArea: null,
+      viewport: null,
     };
 
     this.virtualCanvases.set(id, context);
@@ -148,6 +161,21 @@ export class SharedCanvasEngine {
 
   public getApplication(): Application | null {
     return this.app;
+  }
+
+  public async waitUntilReady(): Promise<void> {
+    if (this.isInitialized) {
+      return;
+    }
+    if (this.initializationPromise) {
+      await this.initializationPromise;
+    }
+  }
+
+  public resizeViewport(width: number, height: number): void {
+    this.viewportWidth = width;
+    this.viewportHeight = height;
+    this.resizeRenderer();
   }
 
   private mountCanvas(): void {
@@ -275,6 +303,34 @@ export class SharedCanvasEngine {
 
     root.position.set(relativeX, relativeY);
     root.scale.set(scale);
+
+    // Update filter/scissor region to clip rendering precisely to placeholder bounds.
+    const filterArea = context.filterArea ?? new Rectangle();
+    filterArea.x = relativeX;
+    filterArea.y = relativeY;
+    filterArea.width = rect.width;
+    filterArea.height = rect.height;
+    context.filterArea = filterArea;
+    root.filterArea = filterArea;
+    (root as any).cullArea = filterArea;
+
+    // Track viewport data (in renderer pixel space) for debugging and optional GPU viewport usage.
+    const renderer = this.app.renderer;
+    const resolution = renderer.resolution || 1;
+    const canvasElement = this.app.canvas ?? (renderer as any).canvas ?? (renderer as any).view ?? null;
+    const canvasRect = canvasElement && typeof canvasElement.getBoundingClientRect === 'function'
+      ? canvasElement.getBoundingClientRect()
+      : { left: 0, top: 0, right: this.viewportWidth, bottom: this.viewportHeight };
+    const pixelViewportX = Math.max(0, (rect.left - canvasRect.left) * resolution);
+    const pixelViewportY = Math.max(0, (canvasRect.bottom - rect.bottom) * resolution);
+    const pixelViewportWidth = Math.max(0, rect.width * resolution);
+    const pixelViewportHeight = Math.max(0, rect.height * resolution);
+    context.viewport = {
+      x: pixelViewportX,
+      y: pixelViewportY,
+      width: pixelViewportWidth,
+      height: pixelViewportHeight,
+    };
 
     context.lastRect = rect;
   }

@@ -195,6 +195,9 @@ export async function initializeCanvas(): Promise<void> {
 
         // Create canvas API
         canvasAPI = new CanvasAPI('#canvas-container');
+        if (multiCanvasManager) {
+            multiCanvasManager.connectCanvasAPI(canvasAPI);
+        }
 
         // Log canvas dimensions info
         // Get consistent canvas dimensions from CanvasDimensionManager

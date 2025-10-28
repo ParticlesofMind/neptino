@@ -3,7 +3,7 @@
  * 
  * Responsibilities:
  * - Provide simple public methods for other systems to use
- * - Coordinate between PixiApp, CanvasLayers, Events, and Tools
+ * - Coordinate between SharedCanvasEngine, CanvasLayers, Events, and Tools
  * - Handle initialization sequence with complete system
  * - Provide clean API for common operations and tool management
  * 
@@ -12,16 +12,26 @@
 
 import { Application, Container, Assets, Sprite, Graphics, Text, Texture } from 'pixi.js';
 import { VideoSource } from 'pixi.js';
-import { PixiApp, PixiAppConfig } from './PixiApp';
 import { CanvasLayers, LayerSystem } from '../layout/CanvasLayers';
 import { CanvasEvents } from './CanvasEvents';
 import { DisplayObjectManager } from './DisplayObjectManager';
 import { ToolManager } from '../tools/ToolManager';
 import { canvasMarginManager } from '../layout/CanvasMarginManager';
 import { TemplateLayoutManager } from '../layout/TemplateLayoutManager';
+import { SharedCanvasEngine } from './SharedCanvasEngine';
+import type { CanvasApplication } from './VerticalCanvasContainer';
+
+export interface CanvasAPIInitOptions {
+  width?: number;
+  height?: number;
+  backgroundColor?: number;
+}
 
 export class CanvasAPI {
-  private pixiApp: PixiApp;
+  private readonly containerSelector: string;
+  private sharedEngine: SharedCanvasEngine | null = null;
+  private engineReady: Promise<void> | null = null;
+  private activeApplication: CanvasApplication | null = null;
   private layers: CanvasLayers | null = null;
   private events: CanvasEvents | null = null;
   private displayManager: DisplayObjectManager | null = null;
@@ -42,99 +52,102 @@ export class CanvasAPI {
   // Performance: Debounce canvas resize operations
   private resizeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingResizeOperation: { width: number; height: number } | null = null;
-  
+  private pendingToolName: string | null = null;
+  private pendingToolSettings: Array<{ tool: string; settings: any; applyToSelection: boolean }> = [];
+  private pendingToolColor: string | null = null;
+  private pendingDrawingEnabled: boolean | null = null;
+
   // Performance monitoring
   private resizeCount = 0;
   private lastResizeTime = 0;
 
   constructor(containerSelector: string) {
-    this.pixiApp = new PixiApp(containerSelector);
+    this.containerSelector = containerSelector;
+  }
+
+  /**
+   * Connect the shared engine used by the multi-canvas system.
+   * Must be invoked before calling init().
+   */
+  public attachSharedEngine(engine: SharedCanvasEngine, engineReady?: Promise<void>): void {
+    this.sharedEngine = engine;
+    if (engineReady) {
+      this.engineReady = engineReady;
+    }
+  }
+
+  /**
+   * Update the active canvas application context used by public API helpers.
+   */
+  public setActiveApplication(application: CanvasApplication | null): void {
+    this.activeApplication = application;
+    this.layers = application?.layers ?? null;
+    this.displayManager = application?.displayManager ?? null;
+    this.toolManager = application?.toolManager ?? null;
+    this.events = application?.events ?? null;
+    this.templateLayoutManager = application?.templateLayoutManager ?? null;
+
+    try { (window as any)._displayManager = this.displayManager; } catch { /* ignore */ }
+
+    // Keep PIXI zoom system in sync with the currently active drawing layer
+    try {
+      const perspectiveManager = (window as any).perspectiveManager;
+      if (perspectiveManager && typeof perspectiveManager.setDrawingLayer === 'function' && this.layers) {
+        const drawingLayer = this.layers.getLayer('drawing');
+        if (drawingLayer) {
+          perspectiveManager.setDrawingLayer(drawingLayer);
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+
+    if (application) {
+      this.flushPendingOperations();
+    }
   }
 
   /**
    * Initialize the complete canvas system with tools
    */
-  public async init(config?: Partial<PixiAppConfig>): Promise<void> {
+  public async init(_config?: Partial<CanvasAPIInitOptions>): Promise<void> {
     if (this.initialized) {
       console.warn('⚠️ Canvas already initialized');
       return;
     }
 
-    try {
-
-      // Step 1: Create PIXI app
-      const app = await this.pixiApp.create(config);
-      
-      // Step 2: Mount to DOM
-      this.pixiApp.mount();
-
-      // Step 3: Create layer system
-      this.layers = new CanvasLayers(app);
-      this.layers.initialize();
-
-      // Step 4: Create display object manager using drawing layer
-      const drawingLayer = this.layers.getLayer('drawing');
-      if (!drawingLayer) {
-        throw new Error('Drawing layer not available after layer initialization');
-      }
-      this.displayManager = new DisplayObjectManager(drawingLayer);
-      // Expose for snapping helpers that need read-only access
-      try { (window as any)._displayManager = this.displayManager; } catch { /* empty */ }
-
-      // Step 5: Create tool manager
-      this.toolManager = new ToolManager();
-      // Don't expose tools globally here - let multi-canvas system handle it
-      // try { (window as any).toolManager = this.toolManager; } catch { /* empty */ }
-
-      // Step 5.1: Connect display manager to tool manager (CRITICAL!)
-      this.toolManager.setDisplayManager(this.displayManager);
-
-      // Step 5.2: Provide UI layer to tools so helper visuals stay separate from drawing content
-      const uiLayer = this.layers.getLayer('ui');
-      if (uiLayer && this.toolManager) {
-        this.toolManager.setUILayer(uiLayer);
-      }
-
-      // Step 6: Set up event handling
-      this.events = new CanvasEvents(app, drawingLayer, this.toolManager);
-      this.events.initialize();
-
-      // Step 7: Initialize margin manager with background layer
-      const backgroundLayer = this.layers.getLayer('background');
-      if (backgroundLayer) {
-        canvasMarginManager.setContainer(backgroundLayer);
-      }
-
-      // Step 8: Initialize template layout manager
-      this.templateLayoutManager = new TemplateLayoutManager();
-      await this.templateLayoutManager.initialize(drawingLayer);
-      console.log('✅ Template layout manager initialized with header, body, footer blocks');
-
-      // Step 9: Subscribe to margin changes for template layout updates
-      canvasMarginManager.onMarginChange(() => {
-        this.updateTemplateLayout();
-      });
-
-      this.initialized = true;
-
-    } catch (error) {
-      console.error('❌ Failed to initialize canvas system:', error);
-      throw error;
+    if (!this.sharedEngine) {
+      throw new Error('CanvasAPI requires SharedCanvasEngine before initialization');
     }
+
+    if (this.engineReady) {
+      await this.engineReady;
+    } else {
+      await this.sharedEngine.waitUntilReady();
+    }
+
+    // Ensure template layout responds to margin changes, even if active context swaps later.
+    canvasMarginManager.onMarginChange(() => {
+      this.updateTemplateLayout();
+    });
+
+    try { (window as any)._displayManager = this.displayManager; } catch { /* empty */ }
+
+    this.initialized = true;
   }
 
   /**
    * Check if canvas is ready for use
    */
   public isReady(): boolean {
-    return this.initialized && this.pixiApp.isReady();
+    return this.initialized;
   }
 
   /**
    * Get the PIXI application instance
    */
   public getApp(): Application | null {
-    return this.pixiApp.getApp();
+    return this.sharedEngine?.getApplication() ?? null;
   }
 
   /** Configure placement mode for a media type */
@@ -150,11 +163,7 @@ export class CanvasAPI {
    * Get a specific layer container
    */
   public getLayer(layerName: keyof LayerSystem): Container | null {
-    if (!this.layers) {
-      console.warn('⚠️ Canvas not initialized - cannot get layer');
-      return null;
-    }
-    return this.layers.getLayer(layerName);
+    return this.layers?.getLayer(layerName) ?? null;
   }
 
   /**
@@ -233,10 +242,14 @@ export class CanvasAPI {
    */
   public setTool(toolName: string): boolean {
     if (!this.events) {
-      console.warn('⚠️ Canvas not initialized - cannot set tool');
+      this.pendingToolName = toolName;
       return false;
     }
-    return this.events.setActiveTool(toolName);
+    const success = this.events.setActiveTool(toolName);
+    if (success) {
+      this.pendingToolName = null;
+    }
+    return success;
   }
 
   /**
@@ -252,10 +265,11 @@ export class CanvasAPI {
    */
   public setToolColor(color: string): void {
     if (!this.events) {
-      console.warn('⚠️ Canvas not initialized - cannot set color');
+      this.pendingToolColor = color;
       return;
     }
     this.events.updateToolColor(color);
+    this.pendingToolColor = null;
   }
 
   /**
@@ -263,7 +277,13 @@ export class CanvasAPI {
    */
   public setToolSettings(toolName: string, settings: any): void {
     if (!this.events) {
-      console.warn('⚠️ Canvas not initialized - cannot set tool settings');
+      const existing = this.pendingToolSettings.find((entry) => entry.tool === toolName);
+      if (existing) {
+        existing.settings = settings;
+        existing.applyToSelection = existing.applyToSelection || false;
+      } else {
+        this.pendingToolSettings.push({ tool: toolName, settings, applyToSelection: false });
+      }
       return;
     }
     this.events.updateToolSettings(toolName, settings);
@@ -274,7 +294,13 @@ export class CanvasAPI {
    */
   public applySettingsToSelection(toolName: string, settings: any): void {
     if (!this.events) {
-      console.warn('⚠️ Canvas not initialized - cannot apply selection settings');
+      const existing = this.pendingToolSettings.find((entry) => entry.tool === toolName);
+      if (existing) {
+        existing.settings = settings;
+        existing.applyToSelection = true;
+      } else {
+        this.pendingToolSettings.push({ tool: toolName, settings, applyToSelection: true });
+      }
       return;
     }
     this.events.applySettingsToSelection(toolName, settings);
@@ -329,10 +355,11 @@ export class CanvasAPI {
    */
   public enableDrawingEvents(): void {
     if (!this.events) {
-      console.warn('⚠️ Canvas not initialized - cannot enable drawing events');
+      this.pendingDrawingEnabled = true;
       return;
     }
     this.events.enableDrawingEvents();
+    this.pendingDrawingEnabled = null;
   }
 
   /**
@@ -340,18 +367,21 @@ export class CanvasAPI {
    */
   public disableDrawingEvents(): void {
     if (!this.events) {
-      console.warn('⚠️ Canvas not initialized - cannot disable drawing events');
+      this.pendingDrawingEnabled = false;
       return;
     }
     this.events.disableDrawingEvents();
+    this.pendingDrawingEnabled = null;
   }
 
   /**
    * Check if drawing events are enabled
    */
   public areDrawingEventsEnabled(): boolean {
-    if (!this.events) return false;
-    return this.events.areDrawingEventsEnabled();
+    if (this.events) {
+      return this.events.areDrawingEventsEnabled();
+    }
+    return this.pendingDrawingEnabled ?? false;
   }
 
   // ============== SIMPLE CONTENT HELPERS ==============
@@ -1053,6 +1083,11 @@ export class CanvasAPI {
     if (!this.pendingResizeOperation) return;
     
     const { width, height } = this.pendingResizeOperation;
+    if (!this.sharedEngine) {
+      console.warn('⚠️ Cannot resize - shared engine unavailable');
+      return;
+    }
+
     const app = this.getApp();
     if (!app) {
       console.warn('⚠️ Cannot resize - app not ready');
@@ -1066,8 +1101,8 @@ export class CanvasAPI {
       return;
     }
 
-    // Perform the actual resize
-    app.renderer.resize(width, height);
+    // Perform the actual resize via the shared engine
+    this.sharedEngine.resizeViewport(width, height);
     
     // Only update background margins without clearing the entire layer
     if (this.layers) {
@@ -1297,37 +1332,55 @@ export class CanvasAPI {
 
   }
 
+  private flushPendingOperations(): void {
+    if (!this.events) {
+      return;
+    }
+
+    if (this.pendingToolColor !== null) {
+      this.events.updateToolColor(this.pendingToolColor);
+      this.pendingToolColor = null;
+    }
+
+    if (this.pendingToolName) {
+      const success = this.events.setActiveTool(this.pendingToolName);
+      if (success) {
+        this.pendingToolName = null;
+      }
+    }
+
+    if (this.pendingToolSettings.length) {
+      for (const entry of this.pendingToolSettings) {
+        this.events.updateToolSettings(entry.tool, entry.settings);
+        if (entry.applyToSelection) {
+          this.events.applySettingsToSelection(entry.tool, entry.settings);
+        }
+      }
+      this.pendingToolSettings = [];
+    }
+
+    if (this.pendingDrawingEnabled !== null) {
+      if (this.pendingDrawingEnabled) {
+        this.events.enableDrawingEvents();
+      } else {
+        this.events.disableDrawingEvents();
+      }
+      this.pendingDrawingEnabled = null;
+    }
+  }
+
   /**
    * Destroy the entire canvas system
    */
   public destroy(): void {
-    if (this.events) {
-      this.events.destroy();
-      this.events = null;
-    }
-
-    if (this.displayManager) {
-      this.displayManager.destroy();
-      this.displayManager = null;
-    }
-
-    if (this.toolManager) {
-      this.toolManager.destroy();
-      this.toolManager = null;
-    }
-
-    if (this.templateLayoutManager) {
-      this.templateLayoutManager.destroy();
-      this.templateLayoutManager = null;
-    }
-
-    if (this.layers) {
-      this.layers.destroy();
-      this.layers = null;
-    }
-
-    this.pixiApp.destroy();
+    this.events = null;
+    this.displayManager = null;
+    this.toolManager = null;
+    this.templateLayoutManager = null;
+    this.layers = null;
+    this.activeApplication = null;
+    this.sharedEngine = null;
+    this.engineReady = null;
     this.initialized = false;
-    
   }
 }
