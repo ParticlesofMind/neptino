@@ -1,20 +1,9 @@
 import { Container, Graphics, Text, type TextStyleOptions } from "pixi.js";
-
-export interface TableColumn {
-  key: string;
-  label: string;
-}
-
-export interface TableRow {
-  cells: Record<string, string>;
-  depth?: number;
-}
-
-export interface TableData {
-  columns: TableColumn[];
-  rows: TableRow[];
-  emptyMessage?: string;
-}
+import type {
+  TemplateTableColumn as TableColumn,
+  TemplateTableRow as TableRow,
+  TemplateTableData as TableData,
+} from "./TemplateFieldTypes.js";
 
 interface RenderOptions {
   indent?: boolean;
@@ -321,4 +310,3 @@ export class TableRenderer {
     }
   }
 }
-

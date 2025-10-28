@@ -8,21 +8,48 @@ import { CanvasDimensions } from "./utils/CanvasDimensions.js";
 import { LessonStructure } from "./utils/LessonStructure.js";
 import { TemplateDataBuilder } from "./utils/TemplateDataBuilder.js";
 import { SectionDataBuilder } from "./utils/SectionDataBuilder.js";
+import { FormGridBuilder } from "../../../coursebuilder/layout/utils/FormGridBuilder.js";
+
+type FieldSpan = "full" | "half" | "third";
+
+interface FieldValidationRule {
+  type: "required" | "maxLength" | "allowedValues" | "pattern";
+  value?: number | string | Array<string | number>;
+  message?: string;
+}
+
+interface FieldVisibilityRule {
+  fieldId: string;
+  equals?: string | number | boolean;
+  notEquals?: string | number | boolean;
+  includes?: Array<string | number | boolean>;
+  excludes?: Array<string | number | boolean>;
+}
 
 interface TableColumn {
   key: string;
   label: string;
+  span?: FieldSpan;
+  helpText?: string;
+  placeholder?: string;
+  validations?: FieldValidationRule[];
+  visibility?: FieldVisibilityRule[];
+  sectionId?: string;
+  meta?: Record<string, unknown>;
 }
 
 interface TableRow {
   cells: Record<string, string>;
   depth?: number;
+  sectionId?: string;
 }
 
 interface TableData {
   columns: TableColumn[];
   rows: TableRow[];
   emptyMessage?: string;
+  sections?: Array<{ id: string; title: string; helpText?: string }>;
+  meta?: Record<string, unknown>;
 }
 
 export class CanvasBuilder {
@@ -513,6 +540,10 @@ export class CanvasBuilder {
 
       if (tableData) {
         mergedData.table = tableData;
+        const formData = FormGridBuilder.fromTableData(tableData);
+        if (formData) {
+          mergedData.form = formData;
+        }
       }
 
       if (Object.keys(mergedData).length > 0) {
