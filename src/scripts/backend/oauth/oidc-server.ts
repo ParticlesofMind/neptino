@@ -7,7 +7,7 @@ import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
 import jwt from 'jsonwebtoken';
-import { SignJWT, jwtVerify } from 'jose';
+import { SignJWT } from 'jose';
 import NodeCache from 'node-cache';
 // Import Supabase client with Node.js environment variables
 import { createClient } from '@supabase/supabase-js';
@@ -136,7 +136,7 @@ app.get('/.well-known/openid-configuration', (req, res) => {
 });
 
 // JWKS Endpoint (simplified for development)
-app.get('/oauth/jwks', (req, res) => {
+app.get('/oauth/jwks', (_req, res) => {
   // In production, you'd generate proper RSA keys
   // For now, we'll use HMAC which doesn't need JWKS
   res.json({
@@ -156,7 +156,7 @@ app.get('/oauth/authorize', async (req, res) => {
   } = req.query;
 
   // Validate client
-  const client = OAUTH_CLIENTS[client_id as string];
+  const client = (OAUTH_CLIENTS as any)[client_id as string];
   if (!client) {
     return res.status(400).json({ error: 'invalid_client' });
   }
@@ -218,7 +218,7 @@ app.post('/oauth/token', async (req, res) => {
   }
 
   // Validate client
-  const client = OAUTH_CLIENTS[client_id];
+  const client = (OAUTH_CLIENTS as any)[client_id];
   if (!client || client.clientSecret !== client_secret) {
     return res.status(400).json({ error: 'invalid_client' });
   }
@@ -230,19 +230,19 @@ app.post('/oauth/token', async (req, res) => {
   }
 
   // Validate redirect URI
-  if (authData.redirectUri !== redirect_uri) {
+  if ((authData as any).redirectUri !== redirect_uri) {
     return res.status(400).json({ error: 'invalid_grant' });
   }
 
   // Get user role
-  const userRole = await getUserRole(authData.userId);
+  const userRole = await getUserRole((authData as any).userId);
 
   // Generate access token (simplified)
   const accessToken = jwt.sign(
     { 
-      sub: authData.userId,
-      email: authData.email,
-      name: authData.name,
+      sub: (authData as any).userId,
+      email: (authData as any).email,
+      name: (authData as any).name,
       roles: [userRole],
       client_id: client_id
     },
@@ -251,15 +251,16 @@ app.post('/oauth/token', async (req, res) => {
   );
 
   // Generate ID token
+  const now = Math.floor(Date.now() / 1000);
   const idToken = await new SignJWT({
     iss: JWT_ISSUER,
-    sub: authData.userId,
+    sub: (authData as any).userId,
     aud: client_id,
-    email: authData.email,
+    email: (authData as any).email,
     email_verified: true,
-    name: authData.name,
-    roles: [userRole],
-    nonce: authData.nonce
+    name: (authData as any).name,
+    iat: now,
+    nonce: (authData as any).nonce
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -274,7 +275,7 @@ app.post('/oauth/token', async (req, res) => {
     token_type: 'Bearer',
     expires_in: 3600,
     id_token: idToken,
-    scope: authData.scope
+    scope: (authData as any).scope
   });
 });
 
@@ -304,7 +305,7 @@ app.get('/oauth/userinfo', async (req, res) => {
 });
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'neptino-oauth-server' });
 });
 

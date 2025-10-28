@@ -17,7 +17,7 @@ interface MessagingUserResult {
 }
 
 export class OAuthMessagingInterface {
-  private container: HTMLElement;
+  private container!: HTMLElement;
   private currentUser: User | null = null;
   private oauthTokens: { accessToken?: string; idToken?: string } | null = null;
 
@@ -69,7 +69,7 @@ export class OAuthMessagingInterface {
       
       if (callback.code) {
         console.log("OAuth callback received, exchanging code for tokens...");
-        await this.handleOAuthCallback(callback);
+        await this.handleOAuthCallback(callback as any);
         return;
       }
 

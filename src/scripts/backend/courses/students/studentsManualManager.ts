@@ -164,7 +164,7 @@ export class StudentsManualManager {
 
       const record: Partial<StudentRecord> = {};
       BULK_HEADERS.forEach((header, headerIndex) => {
-        record[header] = values[headerIndex] ?? "";
+        (record as any)[header] = values[headerIndex] ?? "";
       });
 
       const firstName = sanitiseValue(record.first_name);

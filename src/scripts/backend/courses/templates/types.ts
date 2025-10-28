@@ -1,7 +1,7 @@
 import { TemplateBlockType, TemplateType } from "./templateOptions.js";
 
 // Re-export types for easier importing
-export { TemplateBlockType, TemplateType };
+export type { TemplateBlockType, TemplateType };
 
 export interface TemplateData {
   template_id: string;

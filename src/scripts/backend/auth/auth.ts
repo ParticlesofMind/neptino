@@ -16,7 +16,7 @@ let currentUser: User | null = null;
 async function syncRocketChatAccount(
   user: User,
   password: string,
-  fullName?: string,
+  _fullName?: string,
 ): Promise<void> {
   try {
     const { data: sessionData } = await supabase.auth.getSession();
@@ -28,12 +28,12 @@ async function syncRocketChatAccount(
     }
 
     const displayName =
-      fullName ||
-      (user.user_metadata?.full_name as string | undefined) ||
-      user.email.split("@")[0];
+      user.user_metadata?.display_name ||
+      user.user_metadata?.full_name ||
+      user.email?.split("@")[0] || 'Unknown';
 
     const credentials = await rocketChatService.ensureUserCredentials(
-      user.email,
+      user.email || '',
       password,
       displayName,
     );

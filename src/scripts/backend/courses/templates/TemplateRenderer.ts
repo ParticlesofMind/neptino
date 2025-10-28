@@ -235,16 +235,16 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields)}
     });
   }
 
-  private static renderBlockConfigRows(templateId: string, block: TemplateBlock, fields: BlockFieldConfig[]): string {
+  private static renderBlockConfigRows(_templateId: string, block: TemplateBlock, _fields: BlockFieldConfig[]): string {
     const fieldConfig = TemplateConfigManager.getBlockFieldConfiguration();
     const blockFields = fieldConfig[block.type] || [];
     
     return blockFields
-      .map((field) => this.renderFieldCheckbox(templateId, block, field))
+      .map((field) => this.renderFieldCheckbox(_templateId, block, field))
       .join('');
   }
 
-  private static renderFieldCheckbox(templateId: string, block: TemplateBlock, field: BlockFieldConfig): string {
+  private static renderFieldCheckbox(_templateId: string, block: TemplateBlock, field: BlockFieldConfig): string {
     const isChecked = field.mandatory ? true : Boolean(block.config?.[field.name]);
     const disabledAttr = field.mandatory ? " checked disabled" : isChecked ? " checked" : "";
     

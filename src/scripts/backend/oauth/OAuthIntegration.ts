@@ -35,6 +35,7 @@ export class OAuthIntegration {
    * Check if user is authenticated and redirect to OAuth if needed
    */
   static async checkAuthAndRedirect(config: OAuthConfig): Promise<boolean> {
+    const { supabase } = await import('../supabase.js');
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {

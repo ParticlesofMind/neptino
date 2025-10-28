@@ -6,7 +6,7 @@
 import { test, expect } from '@playwright/test';
 import { AuthHelpers } from './utils/auth-helpers';
 import { RocketChatHelpers } from './utils/rocketchat-helpers';
-import { testUsers, getTestUser } from './utils/test-users';
+// import { testUsers, getTestUser } from './utils/test-users';
 
 test.describe('Multi-Role Authentication', () => {
   test('Student login redirects to student home', async ({ page }) => {

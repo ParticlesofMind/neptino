@@ -1,4 +1,5 @@
 import { CurriculumLesson, TemplateDefinitionBlock } from "../curriculumManager.js";
+// @ts-ignore - Path resolution issue with bundler mode
 import type { TableRow, TableData } from "../../../coursebuilder/layout/utils/TableRenderer.js";
 
 interface ColumnDef {

@@ -4,7 +4,6 @@ import { TemplateConfigManager } from "./TemplateConfigManager.js";
 import { TemplateBlockRenderer } from "./TemplateBlockRenderer.js";
 import { TemplateManagerState } from "./types.js";
 import { loadTemplatesModal } from "./modals/loadTemplates.js";
-import { ModalHandler } from "../../../navigation/CourseBuilderNavigation.js";
 
 export class TemplateManager {
   private static state: TemplateManagerState = {
@@ -108,7 +107,7 @@ export class TemplateManager {
     description?: string;
   }): Promise<string | null> {
     try {
-      const templateId = await TemplateDataHandler.createTemplate(formData);
+      const templateId = await TemplateDataHandler.createTemplate(formData as any);
       if (templateId) {
         console.log('Template created successfully:', templateId);
         this.hideCreateTemplateModal();

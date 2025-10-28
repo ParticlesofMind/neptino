@@ -9,7 +9,6 @@ import {
   type RocketChatCredentials,
   type RocketChatUser,
 } from "./RocketChatService";
-import { getRememberedRocketChatPassword } from "./passwordMemory";
 import { supabase } from "../supabase";
 
 interface PlatformUserRow {
@@ -30,7 +29,7 @@ interface MessagingUserResult {
 }
 
 export class MessagingInterface {
-  private container: HTMLElement;
+  private container!: HTMLElement;
   private currentUser: User | null = null;
   private rocketChatSession: RocketChatCredentials | null = null;
   private iframeMessageHandler: ((event: MessageEvent) => void) | null = null;
@@ -69,7 +68,7 @@ export class MessagingInterface {
           username:
             data.rocketchat_username ||
             this.currentUser.user_metadata?.full_name ||
-            this.currentUser.email.split("@")[0],
+            this.currentUser.email?.split("@")[0] || 'user',
         };
       }
 
@@ -194,7 +193,7 @@ export class MessagingInterface {
   }
 
   private showRocketChatSetupMessage(): void {
-    const rocketChatUrl = import.meta.env.VITE_ROCKETCHAT_URL || 'http://localhost:3100';
+    const rocketChatUrl = import.meta.env.VITE_ROCKETCHAT_URL || 'http://localhost:3000';
     
     this.container.innerHTML = `
       <div class="messaging-error">
@@ -205,23 +204,6 @@ export class MessagingInterface {
         </a>
         <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--color-text-secondary);">
           After completing the setup wizard, restart the Rocket.Chat service and refresh this page.
-        </p>
-      </div>
-    `;
-  }
-
-  private renderFallbackEmbed(): void {
-    const rocketChatUrl = import.meta.env.VITE_ROCKETCHAT_URL || 'http://localhost:3100';
-    
-    this.container.innerHTML = `
-      <div class="messaging-error">
-        <h3>Messaging Not Ready</h3>
-        <p>Your messaging session needs to be set up. Please log in to Rocket.Chat first.</p>
-        <a href="${rocketChatUrl}" target="_blank" class="button button--primary" style="margin-top: 1rem;">
-          Open Rocket.Chat
-        </a>
-        <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--color-text-secondary);">
-          After logging in, refresh this page to access messaging here.
         </p>
       </div>
     `;
@@ -637,37 +619,6 @@ export class MessagingInterface {
       console.error("Start conversation error:", error);
       this.showSearchError("Failed to start conversation");
     }
-  }
-
-  private async persistRocketChatCredentials(
-    credentials: RocketChatCredentials,
-  ): Promise<void> {
-    if (!this.currentUser?.id) {
-      return;
-    }
-
-    try {
-      await supabase
-        .from("users")
-        .update({
-          rocketchat_user_id: credentials.userId,
-          rocketchat_auth_token: credentials.authToken,
-          rocketchat_username: credentials.username,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", this.currentUser.id);
-    } catch (error) {
-      console.error("Failed to persist Rocket.Chat credentials:", error);
-    }
-  }
-
-  private getProvisioningPassword(): string {
-    const remembered = getRememberedRocketChatPassword();
-    if (remembered) {
-      return remembered;
-    }
-
-    return `rc_${this.currentUser?.id || "user"}`;
   }
 
   private escapeHtml(value: string): string {

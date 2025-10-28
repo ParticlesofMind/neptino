@@ -1,4 +1,5 @@
 import mammoth from "mammoth";
+// @ts-ignore - pdfjs-dist types are not fully compatible
 import { GlobalWorkerOptions, getDocument } from "pdfjs-dist/build/pdf.mjs";
 import readXlsxFile from "read-excel-file";
 import type {
@@ -60,15 +61,15 @@ function buildParseResult(rows: RawStudentRow[], warnings: string[]): StudentPar
 }
 
 async function parseSpreadsheet(buffer: ArrayBuffer): Promise<StudentParseResult> {
-  const data = await readXlsxFile(new Uint8Array(buffer));
-  if (data.length === 0) {
+  const data = await readXlsxFile(buffer) as any[][];
+  if (!data || data.length === 0) {
     return buildParseResult([], ["No data found in the spreadsheet."]);
   }
 
-  const headers = data[0].map(cell => cell?.toString() || '');
-  const rows: RawStudentRow[] = data.slice(1).map(row => {
+  const headers = data[0].map((cell: any) => cell?.toString() || '');
+  const rows: RawStudentRow[] = data.slice(1).map((row: any[]) => {
     const obj: RawStudentRow = {};
-    headers.forEach((header, index) => {
+    headers.forEach((header: string, index: number) => {
       obj[header] = row[index]?.toString() || '';
     });
     return obj;
@@ -112,7 +113,7 @@ async function parsePdf(arrayBuffer: ArrayBuffer): Promise<StudentParseResult> {
     const page = await pdf.getPage(pageNumber);
     const content = await page.getTextContent();
     const pageText = content.items
-      .map((item) => ("str" in item ? item.str : ""))
+      .map((item: any) => ("str" in item ? item.str : ""))
       .join(" ");
     text += `${pageText}\n`;
   }
