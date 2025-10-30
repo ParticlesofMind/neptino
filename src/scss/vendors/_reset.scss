@@ -18,6 +18,12 @@ footer, header, nav, section, main{
   display: block;
 }
 
+html,
+body{
+  height: 100%;
+  overflow-x: hidden;
+}
+
 body{
   line-height: 1;
 }

@@ -59,14 +59,13 @@
 @use 'components/shape-selector'; // Custom shape selector component
 @use 'components/alerts';         // Alert/notification components
 @use 'components/notifications';  // Toast/notification components
-@use 'components/cards';          // Card component system
+@use 'components/cards';          // Card component system + media search & info overlays
 @use 'components/layers-panel';   // Layers panel component
 @use 'components/pedagogy';       // Pedagogy coordinate UI
 @use 'components/forms';          // Form components
 @use 'components/modals';         // Modal/overlay components
 @use 'components/tables';
 @use 'components/cursors';        // Custom cursors for tools
-@use 'components/media';          // Media cards
 @use 'components/context-menu';   // Context menu component
 @use 'components/templates';      // Template configuration & preview
 @use 'components/ai-generation';  // AI curriculum generation UI

@@ -97,23 +97,6 @@
         }
     }
 
-    // Header link modifier
-    &--header {
-        padding: var(--spacing-3) var(--spacing-4);
-        border-radius: var(--radius-small);
-        
-        &:hover {
-            background-color: var(--color-neutral-100);
-            color: var(--color-primary-500);
-        }
-        
-        &.is-active,
-        &--active {
-            background-color: var(--color-primary-100);
-            color: var(--color-primary-700);
-            font-weight: var(--font-weight-medium);
-        }
-    }
 
     // Footer link modifier
     &--footer {

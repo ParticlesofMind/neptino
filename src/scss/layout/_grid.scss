@@ -6,7 +6,7 @@
 .grid {
     display: grid;
     min-height: 100vh; // Minimum viewport height, but can grow
-    max-height: 100vh; // Don't exceed viewport height
+    height: 100%; // Take full height of body
     grid-template-rows: auto minmax(0, 1fr) auto; // header auto, main flexible but can shrink, footer auto
     grid-template-areas:
         'header'
