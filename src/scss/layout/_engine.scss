@@ -15,10 +15,14 @@
         grid-template-columns: minmax(clamp(2.5rem, 3.5rem, 5.5rem), max-content) minmax(0, 1fr);
         overflow: hidden;
         width: 100%;
-        padding: 0.25rem;
+        padding: var(--spacing-3);
         height: 100%;
         min-height: 0;
         gap: var(--spacing-3);
+        background: var(--color-background);
+        border-radius: var(--radius-large);
+        border: 1px solid var(--color-neutral-200);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
     }
 
     // Media Sidebar
@@ -39,9 +43,9 @@
         height: 60px;
         place-items: center;
         padding: var(--spacing-2);
-        border-radius: 4px;
+        border-radius: var(--radius-medium);
         background: rgba(255, 255, 255, 0.9);
-        border: 1px solid var(--color-neutral-300);
+        border: 1px solid var(--color-neutral-200);
         cursor: pointer;
         transition: all 0.2s ease;
 
@@ -61,10 +65,9 @@
     // Canvas
     &__canvas {
         background: var(--color-background);
-        overflow: auto;
+        overflow: auto; // Scroll on the container
         padding: 0;
-        display: grid;
-        place-content: start center;
+        display: block; // Change to block to allow normal flow
         position: relative;
         scrollbar-width: none;
         min-width: 0;
@@ -74,9 +77,10 @@
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
         outline: none;
         &::-webkit-scrollbar { display: none; }
+        
         canvas {
-            justify-self: center;
-            align-self: start;
+            display: block;
+            margin: 0 auto; // Center horizontally
         }
     }
 
@@ -97,10 +101,13 @@
         grid-template-rows: auto minmax(0, 1fr);
         gap: var(--spacing-1);
         overflow: hidden;
-        min-width: 0;
-        width: 100%;
+        width: 220px;
         container-type: inline-size;
         container-name: engine-panel;
+        background: var(--color-background);
+        border-radius: var(--radius-large);
+        border: 1px solid var(--color-neutral-200);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
     }
 
     &__panel-header {
@@ -108,16 +115,16 @@
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
         gap: var(--spacing-2);
-        background: var(--color-neutral-100);
+        background: transparent;
         border-bottom: 1px solid var(--color-neutral-200);
         border-radius: var(--radius-large) var(--radius-large) 0 0;
-        padding: var(--spacing-1) var(--spacing-2);
+        padding: var(--spacing-2) var(--spacing-3);
     }
 
     &__panel-select {
         position: relative;
         display: grid;
-        inline-size: clamp(160px, 20vw, 220px);
+        width: 100%;
         margin-left: auto;
     }
 
@@ -184,21 +191,28 @@
         border-radius: var(--radius-medium);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         backdrop-filter: blur(8px);
+        pointer-events: auto; // Re-enable pointer events for child containers
     }
 
     &__controls {
+        position: fixed;
+        bottom: var(--spacing-3);
+        left: 50%;
+        transform: translateX(-50%);
         gap: var(--spacing-4);
         background: none;
         padding: 0;
         box-shadow: none;
         backdrop-filter: none;
+        z-index: 100;
+        pointer-events: none; // Allow clicks to pass through the container
     }
 
     &__modes-item, &__tools-item {
         display: grid;
         place-items: center;
-        width: 50px;
-        height: 50px;
+        width: 60px;
+        height: 60px;
         padding: var(--spacing-1);
         border: 1px solid var(--color-neutral-200);
         border-radius: var(--radius-medium);
@@ -207,6 +221,7 @@
         cursor: pointer;
         transition: all 0.2s ease;
         user-select: none;
+        pointer-events: auto; // Re-enable pointer events for interactive elements
         &:hover {
             transform: translateY(-1px);
             background: var(--color-neutral-50);
@@ -237,7 +252,7 @@
         grid-auto-flow: column;
         place-items: center;
         min-width: 120px;
-        height: 50px;
+        height: 60px;
         padding: var(--spacing-2);
         border-radius: var(--radius-medium);
         background: var(--color-background);
@@ -516,11 +531,17 @@
 
     // Perspective Controls
     &__perspective {
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
         display: grid;
         grid-auto-flow: row;
         align-items: center;
         gap: var(--spacing-2);
-        width: 60px; 
+        width: 60px;
+        padding: 1rem; 
+        z-index: 100;
+        pointer-events: none; // Allow clicks to pass through the container
     }
 
     &__perspective-zoom {
@@ -547,12 +568,13 @@
         place-items: center;
         gap: 0.1rem;
         padding: 0.25rem;
-        border-radius: 4px;
+        border-radius: var(--radius-medium);
         background: rgba(255, 255, 255, 0.9);
-        border: 1px solid var(--color-neutral-300);
+        border: 1px solid var(--color-neutral-200);
         cursor: pointer;
         transition: all 0.2s ease;
-        width: 100%;
+        width: 60px;
+        height: 60px;
         pointer-events: auto;
         &:hover {
             background: var(--color-primary-50);
@@ -581,7 +603,7 @@
     grid-auto-rows: min-content;
     gap: var(--spacing-2);
     width: 100%;
-    max-width: var(--search-card-width, 260px);
+    max-width: 260px;
     margin: 0 auto;
 
     &__panel {

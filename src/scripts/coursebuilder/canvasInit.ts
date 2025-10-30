@@ -19,15 +19,8 @@ class SimpleCanvas {
   private objects = new Map<string, SimpleCanvasObject>();
   private resizeHandler: (() => void) | null = null;
   private idCounter = 0;
-  private leftDock: HTMLElement | null = null;
-  private rightDock: HTMLElement | null = null;
   private perspectiveElement: HTMLElement | null = null;
   private canvasScroll: HTMLElement | null = null;
-  private perspectiveSide: "left" | "right" = "left";
-  private dragTarget: "left" | "right" = "left";
-  private isDraggingPerspective = false;
-  private perspectivePointerId: number | null = null;
-  private perspectiveDragInitialized = false;
 
   constructor(private readonly selector: string) {}
 
@@ -85,209 +78,19 @@ class SimpleCanvas {
   private ensureDomStructure(): void {
     if (!this.container) return;
 
-    const controls = this.container.querySelector<HTMLElement>(".engine__controls");
-
-    let inner = this.container.querySelector<HTMLElement>(".engine__canvas-inner");
-    if (!inner) {
-      inner = document.createElement("div");
-      inner.className = "engine__canvas-inner";
-    }
-
-    let main = inner.querySelector<HTMLElement>(".engine__canvas-main");
-    if (!main) {
-      main = document.createElement("div");
-      main.className = "engine__canvas-main";
-    }
-
-    let dockLeft = inner.querySelector<HTMLElement>(".engine__canvas-dock--left");
-    if (!dockLeft) {
-      dockLeft = document.createElement("div");
-      dockLeft.className = "engine__canvas-dock engine__canvas-dock--left";
-    }
-
-    let dockRight = inner.querySelector<HTMLElement>(".engine__canvas-dock--right");
-    if (!dockRight) {
-      dockRight = document.createElement("div");
-      dockRight.className = "engine__canvas-dock engine__canvas-dock--right";
-    }
-
-    let scroll = main.querySelector<HTMLElement>(".engine__canvas-scroll");
-    if (!scroll) {
-      scroll = document.createElement("div");
-      scroll.className = "engine__canvas-scroll";
-      main.insertBefore(scroll, main.firstChild);
-    }
-
-    if (!inner.parentElement) {
-      if (controls) {
-        this.container.insertBefore(inner, controls);
-      } else {
-        this.container.appendChild(inner);
-      }
-    }
-
-    if (dockLeft.parentElement !== inner) {
-      inner.insertBefore(dockLeft, inner.firstChild);
-    }
-    if (main.parentElement !== inner) {
-      if (dockLeft.nextSibling) {
-        inner.insertBefore(main, dockLeft.nextSibling);
-      } else {
-        inner.appendChild(main);
-      }
-    }
-    if (dockRight.parentElement !== inner) {
-      inner.appendChild(dockRight);
-    }
-
     const perspective = this.container.querySelector<HTMLElement>(".engine__perspective");
-    if (perspective) {
-      if (this.perspectiveSide === "right") {
-        dockRight.appendChild(perspective);
-      } else {
-        dockLeft.appendChild(perspective);
-        this.perspectiveSide = "left";
-        this.dragTarget = "left";
-      }
-    }
-
-    this.leftDock = dockLeft;
-    this.rightDock = dockRight;
-
     this.perspectiveElement = perspective ?? null;
-    const movableChildren = Array.from(this.container.children).filter((child) => {
-      if (child === inner || child === controls) return false;
-      return true;
-    });
 
-    movableChildren.forEach((child) => {
-      main.appendChild(child);
-    });
-
-    this.canvasScroll = scroll;
+    // Canvas scroll is just the container itself
+    this.canvasScroll = this.container;
 
     if (this.perspectiveElement) {
       this.setupPerspectiveDrag();
     }
-
-    this.updateDockStates();
   }
 
   private setupPerspectiveDrag(): void {
-    if (this.perspectiveDragInitialized) return;
-    if (!this.perspectiveElement) return;
-
-    this.perspectiveDragInitialized = true;
-    this.perspectiveElement.style.touchAction = "none";
-    this.perspectiveElement.addEventListener("pointerdown", this.handlePerspectivePointerDown);
-  }
-
-  private handlePerspectivePointerDown = (event: PointerEvent): void => {
-    if (!this.perspectiveElement || !this.container) return;
-    if (event.button !== undefined && event.button !== 0 && event.pointerType !== "touch") {
-      return;
-    }
-
-    event.preventDefault();
-    this.isDraggingPerspective = true;
-    this.perspectivePointerId = event.pointerId;
-    this.perspectiveElement.classList.add("engine__perspective--dragging");
-
-    try {
-      this.perspectiveElement.setPointerCapture(event.pointerId);
-    } catch {
-      /* ignore */
-    }
-
-    this.updateDragTarget(event.clientX);
-
-    window.addEventListener("pointermove", this.handlePerspectivePointerMove, { passive: true });
-    window.addEventListener("pointerup", this.handlePerspectivePointerUp, { passive: true });
-  };
-
-  private handlePerspectivePointerMove = (event: PointerEvent): void => {
-    if (!this.isDraggingPerspective) return;
-    this.updateDragTarget(event.clientX);
-  };
-
-  private handlePerspectivePointerUp = (event: PointerEvent): void => {
-    if (!this.isDraggingPerspective) return;
-    this.isDraggingPerspective = false;
-
-    if (this.perspectiveElement && this.perspectivePointerId !== null) {
-      try {
-        this.perspectiveElement.releasePointerCapture(this.perspectivePointerId);
-      } catch {
-        /* ignore */
-      }
-    }
-
-    this.perspectivePointerId = null;
-    this.perspectiveElement?.classList.remove("engine__perspective--dragging");
-    if (this.perspectiveElement) {
-      this.perspectiveElement.style.transform = "";
-    }
-
-    window.removeEventListener("pointermove", this.handlePerspectivePointerMove);
-    window.removeEventListener("pointerup", this.handlePerspectivePointerUp);
-
-    this.setPerspectiveDock(this.dragTarget);
-    this.clearDockTargetState();
-  };
-
-  private updateDragTarget(clientX: number): void {
-    if (!this.container) return;
-
-    const rect = this.container.getBoundingClientRect();
-    const midpoint = rect.left + rect.width / 2;
-    const target: "left" | "right" = clientX < midpoint ? "left" : "right";
-
-    this.dragTarget = target;
-
-    if (!this.isDraggingPerspective) {
-      return;
-    }
-
-    this.leftDock?.classList.toggle("engine__canvas-dock--target", target === "left");
-    this.rightDock?.classList.toggle("engine__canvas-dock--target", target === "right");
-  }
-
-  private clearDockTargetState(): void {
-    this.leftDock?.classList.remove("engine__canvas-dock--target");
-    this.rightDock?.classList.remove("engine__canvas-dock--target");
-  }
-
-  private setPerspectiveDock(side: "left" | "right"): void {
-    if (!this.container) {
-      return;
-    }
-
-    this.perspectiveSide = side;
-    this.dragTarget = side;
-
-    const targetDock = side === "left" ? this.leftDock : this.rightDock;
-
-    if (this.perspectiveElement && targetDock) {
-      if (this.perspectiveElement.parentElement !== targetDock) {
-        targetDock.appendChild(this.perspectiveElement);
-      }
-    }
-
-    if (this.perspectiveElement) {
-      this.perspectiveElement.style.transform = "";
-    }
-
-    this.clearDockTargetState();
-    this.updateDockStates();
-  }
-
-  private updateDockStates(): void {
-    const leftActive = this.perspectiveSide === "left";
-    this.leftDock?.classList.toggle("engine__canvas-dock--active", leftActive);
-    this.rightDock?.classList.toggle("engine__canvas-dock--active", !leftActive);
-    if (this.container) {
-      this.container.classList.toggle("engine__canvas--perspective-right", !leftActive);
-    }
+    // Perspective drag functionality removed - no longer needed without docks
   }
 
   private createLayers(): void {
