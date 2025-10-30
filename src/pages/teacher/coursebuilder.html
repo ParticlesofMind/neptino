@@ -1772,6 +1772,50 @@
             </div>
           </div>
 
+          <!-- Right Side: Canvas Scroll Navigation -->
+          <div class="engine__scroll">
+            <!-- Go to top -->
+            <div class="engine__scroll-item" data-scroll="first" title="Go to first canvas">
+              <svg class="icon icon--base" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 15l-6-6-6 6"/>
+                <path d="M18 9l-6-6-6 6"/>
+              </svg>
+              <span class="icon-label">First</span>
+            </div>
+
+            <!-- Go back one -->
+            <div class="engine__scroll-item" data-scroll="prev" title="Previous canvas">
+              <svg class="icon icon--base" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 15l-6-6-6 6"/>
+              </svg>
+              <span class="icon-label">Prev</span>
+            </div>
+
+            <!-- Current position / total -->
+            <div class="engine__scroll-display">
+              <input type="number" class="engine__scroll-input" value="1" min="1" title="Current canvas number">
+              <span class="engine__scroll-divider">/</span>
+              <span class="engine__scroll-total" title="Total canvases">225</span>
+            </div>
+
+            <!-- Go forward one -->
+            <div class="engine__scroll-item" data-scroll="next" title="Next canvas">
+              <svg class="icon icon--base" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+              <span class="icon-label">Next</span>
+            </div>
+
+            <!-- Go to bottom -->
+            <div class="engine__scroll-item" data-scroll="last" title="Go to last canvas">
+              <svg class="icon icon--base" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6"/>
+                <path d="M6 15l6 6 6-6"/>
+              </svg>
+              <span class="icon-label">Last</span>
+            </div>
+          </div>
+
           <!-- Bottom: Modes and Tools Container -->
           <div class="engine__controls">
 
@@ -2101,6 +2145,8 @@
   <script type="module" src="/src/scripts/backend/courses/settings/languageLoader.ts"></script>
   <!-- Navigation system (handles all coursebuilder navigation) -->
   <script type="module" src="/src/scripts/navigation/CourseBuilderNavigation.ts"></script>
+  <!-- Canvas scroll navigation -->
+  <script type="module" src="/src/scripts/navigation/CanvasScrollNav.ts"></script>
   <!-- Backend services -->
   <script type="module" src="/src/scripts/backend/courses/index.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/classification/classificationFormHandler.ts"></script>

@@ -14,3 +14,6 @@ export { DashboardNavigation, initializeDashboardNavigation } from './DashboardN
 
 // Canvas navigation for coursebuilder multi-canvas support
 export { CanvasNavigator } from './CanvasNavigator';
+
+// Canvas scroll navigation controls
+export { CanvasScrollNav } from './CanvasScrollNav';

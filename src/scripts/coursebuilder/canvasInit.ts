@@ -73,6 +73,21 @@ class SimpleCanvas {
     // Apply the current margins immediately and listen for future updates.
     this.updateMargins(canvasMarginManager.getMargins());
     canvasMarginManager.onChange((margins) => this.updateMargins(margins));
+
+    // Fix for initial sizing issue: Force a resize after a brief delay
+    // This ensures the container has fully calculated its dimensions
+    // before PIXI measures and scales the canvas
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        this.updateStageTransform();
+        if (this.app?.renderer) {
+          this.app.renderer.resize(
+            this.app.renderer.screen.width,
+            this.app.renderer.screen.height
+          );
+        }
+      });
+    });
   }
 
   private ensureDomStructure(): void {

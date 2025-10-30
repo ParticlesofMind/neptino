@@ -16,7 +16,8 @@
     '__snap-menu': var(--spacing-2),
     '__snap-section': var(--spacing-2),
     '__snap-item--small': var(--spacing-1),
-    '__perspective': var(--spacing-2)) {
+    '__perspective': var(--spacing-2),
+    '__scroll': var(--spacing-2)) {
     &#{$selector} {
       @include helpers.engine-stack($gap);
     }
@@ -50,15 +51,21 @@
     }
   }
 
-  &__canvas {
-    position: relative;
-    isolation: isolate;
-  }
-
-  @each $selector in ('__media-item', '__modes-item', '__tools-item', '__perspective-item') {
+  @each $selector in ('__media-item', '__modes-item', '__tools-item', '__perspective-item', '__scroll-item') {
     &#{$selector} {
       @include helpers.engine-pressable();
     }
+  }
+
+  &__canvas {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   &__content {
@@ -164,8 +171,8 @@
 
   &__controls,
   &__modes,
-  &__tools-selection,
-  &__perspective, 
+  &__perspective,
+  &__scroll,
   &__tools-options,
   &__tools-group {
     background: rgba(255, 255, 255, 0.95);
@@ -177,24 +184,28 @@
   }
 
   &__controls {
-    position: fixed;
+    position: absolute;
     bottom: var(--spacing-3);
     left: 50%;
     transform: translateX(-50%);
-    gap: var(--spacing-4);
-    background: none;
-    padding: 0;
     box-shadow: none;
     backdrop-filter: none;
     z-index: 100;
     pointer-events: none;
   }
 
+  &__tools {
+    pointer-events: auto;
+  }
+
   &__tools-options {
     position: absolute;
     bottom: 100%;
     z-index: 10;
+    border: none;
   }
+
+
 
   &__tools-option {
     @include helpers.engine-pressable(120px, var(--spacing-2));
@@ -418,10 +429,10 @@
     top: 50%;
     left: var(--spacing-3);
     transform: translateY(-50%);
-    width: 5rem;
     padding: 1rem 0.625rem;
     align-items: center;
     justify-items: center;
+    z-index: 50;
   }
 
   &__perspective-zoom {
@@ -450,6 +461,86 @@
     &--active {
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
+  }
+
+  &__scroll {
+    position: absolute;
+    top: 50%;
+    right: var(--spacing-3);
+    transform: translateY(-50%);
+    padding: 1rem 0.625rem;
+    align-items: center;
+    justify-items: center;
+    z-index: 50;
+  }
+
+  &__scroll-item {
+    grid-auto-flow: row;
+    grid-auto-rows: max-content;
+    gap: 0.1rem;
+    justify-self: center;
+
+    &--active {
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    svg {
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  &__scroll-display {
+    display: grid;
+    grid-template-rows: auto auto auto;
+    align-items: center;
+    justify-items: center;
+    gap: 0.25rem;
+    padding: var(--spacing-2) var(--spacing-1);
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    border-radius: var(--radius-small);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-primary-700);
+    pointer-events: auto;
+  }
+
+  &__scroll-input {
+    width: 40px;
+    padding: 0.25rem 0.25rem;
+    border: 1px solid var(--color-primary-300);
+    border-radius: 3px;
+    background: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-primary-700);
+    text-align: center;
+    appearance: textfield;
+    
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+      appearance: none;
+      margin: 0;
+    }
+
+    &:focus {
+      outline: 2px solid var(--color-primary-400);
+      outline-offset: 1px;
+      border-color: var(--color-primary-500);
+    }
+  }
+
+  &__scroll-divider {
+    color: var(--color-primary-600);
+    font-weight: 700;
+    font-size: 0.7rem;
+  }
+
+  &__scroll-total {
+    color: var(--color-primary-600);
+    min-width: 24px;
+    text-align: center;
   }
 }
 

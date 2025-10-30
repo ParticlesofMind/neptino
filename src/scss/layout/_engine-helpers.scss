@@ -59,7 +59,9 @@
         box-shadow: 0 2px 8px rgba(179, 215, 255, 0.45);
         color: var(--color-neutral-900);
 
-        .icon-label { color: var(--color-neutral-900); }
+        .icon-label {
+             color: var(--color-neutral-900); 
+            }
 
         &:hover {
             background: #A5CFFF;
