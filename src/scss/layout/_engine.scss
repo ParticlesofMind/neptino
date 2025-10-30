@@ -50,6 +50,11 @@
     }
   }
 
+  &__canvas {
+    position: relative;
+    isolation: isolate;
+  }
+
   @each $selector in ('__media-item', '__modes-item', '__tools-item', '__perspective-item') {
     &#{$selector} {
       @include helpers.engine-pressable();
@@ -87,21 +92,7 @@
     }
   }
 
-  &__canvas {
-    display: block;
-    position: relative;
-    overflow: auto;
-    padding: 0;
-    min-width: 0;
-    width: 100%;
-    outline: none;
-    @include helpers.engine-hide-scrollbar;
 
-    canvas {
-      display: block;
-      margin: 0 auto;
-    }
-  }
 
   &__search {
     grid-template-rows: auto minmax(0, 1fr);
@@ -112,7 +103,7 @@
   }
 
   &__panel {
-    grid-template-rows: auto minmax(0, 1fr);
+
     overflow: hidden;
     container-type: inline-size;
     container-name: engine-panel;
@@ -423,12 +414,14 @@
   }
 
   &__perspective {
-    position: fixed;
+    position: absolute;
     top: 50%;
+    left: var(--spacing-3);
     transform: translateY(-50%);
     width: 5rem;
-    padding: 1rem;
+    padding: 1rem 0.625rem;
     align-items: center;
+    justify-items: center;
   }
 
   &__perspective-zoom {
@@ -452,6 +445,7 @@
     grid-auto-flow: row;
     grid-auto-rows: max-content;
     gap: 0.1rem;
+    justify-self: center;
 
     &--active {
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
