@@ -167,10 +167,20 @@ p {
 }
 
 // Label Component
+// Label Component
 .label {
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-secondary);
   display: block;
   margin-bottom: var(--spacing-2);
+
+  &--small {
+    font-size: 0.625rem;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    text-align: center;
+    line-height: 1.2;
+    margin-bottom: 0;
+  }
 }

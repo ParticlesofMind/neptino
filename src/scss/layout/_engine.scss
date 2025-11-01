@@ -51,12 +51,6 @@
     }
   }
 
-  @each $selector in ('__media-item', '__modes-item', '__tools-item', '__perspective-item', '__scroll-item') {
-    &#{$selector} {
-      @include helpers.engine-pressable();
-    }
-  }
-
   &__canvas {
     position: relative;
     width: 100%;
@@ -85,22 +79,6 @@
     @include helpers.engine-hide-scrollbar;
   }
 
-  &__media-item {
-    grid-auto-flow: row;
-    grid-auto-rows: min-content;
-    gap: var(--spacing-1);
-
-    &--active {
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    &[data-media="interactive"] .icon-label {
-      font-size: 0.65rem;
-    }
-  }
-
-
-
   &__search {
     grid-template-rows: auto minmax(0, 1fr);
     height: 100%;
@@ -121,25 +99,6 @@
     display: grid;
     width: 100%;
     margin-left: auto;
-  }
-
-  &__panel-select-input {
-    width: 100%;
-    appearance: none;
-    padding: var(--spacing-2) var(--spacing-5) var(--spacing-2) var(--spacing-3);
-    border-radius: var(--radius-large);
-    border: 1px solid var(--color-neutral-200);
-    background: var(--color-background);
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--color-neutral-700);
-    cursor: pointer;
-
-    &:focus {
-      outline: 2px solid var(--color-primary-300);
-      outline-offset: 2px;
-      border-color: var(--color-primary-400);
-    }
   }
 
   &__panel-select-icon {
@@ -429,7 +388,7 @@
     top: 50%;
     left: var(--spacing-3);
     transform: translateY(-50%);
-    padding: 1rem 0.625rem;
+    padding: var(--spacing-2);
     align-items: center;
     justify-items: center;
     z-index: 50;
@@ -468,7 +427,7 @@
     top: 50%;
     right: var(--spacing-3);
     transform: translateY(-50%);
-    padding: 1rem 0.625rem;
+    padding: var(--spacing-2);
     align-items: center;
     justify-items: center;
     z-index: 50;
