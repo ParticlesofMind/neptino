@@ -326,6 +326,11 @@
     user-select: none;
     pointer-events: auto;
     min-height: 52px;
+    font-weight: var(--font-weight-bold);
+
+    .label {
+      font-weight: var(--font-weight-bold);
+    }
 
     &:hover {
       transform: translateY(-1px);
@@ -349,10 +354,20 @@
     background: #B3D7FF;
     border-color: #9AC8FF;
     box-shadow: 0 2px 8px rgba(179, 215, 255, 0.45);
-    color: var(--color-neutral-900);
+    color: white;
 
     .label {
-      color: var(--color-neutral-900);
+      color: white;
+    }
+
+    // Make icons white in active state
+    .icon {
+      filter: brightness(0) invert(1);
+    }
+
+    // For SVG icons with stroke
+    svg {
+      stroke: white;
     }
 
     &:hover {

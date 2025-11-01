@@ -1,10 +1,13 @@
 @use './engine-helpers' as helpers;
 
 .engine {
+  --engine-content-width: 320px;
+  --engine-panel-width: 260px;
+  --engine-resizer-width: 12px;
   display: grid;
-  grid-template-columns: minmax(min-content, max-content) minmax(0, 1fr) minmax(min-content, 220px);
+  grid-template-columns: minmax(0, var(--engine-content-width)) var(--engine-resizer-width) minmax(0, 1fr) var(--engine-resizer-width) minmax(0, var(--engine-panel-width));
   grid-template-rows: minmax(0, 1fr);
-  gap: var(--spacing-3);
+  gap: var(--spacing-3) 0;
   padding: var(--spacing-3);
   background: var(--color-background);
 
@@ -48,6 +51,9 @@
   @each $selector in ('__content', '__canvas', '__panel') {
     &#{$selector} {
       @include helpers.engine-surface();
+      box-shadow: 
+        0 1px 3px rgba(0, 0, 0, 0.06),
+        0 1px 2px rgba(0, 0, 0, 0.08);
     }
   }
 
@@ -70,6 +76,7 @@
     height: 100%;
     width: 100%;
     min-height: 0;
+    min-width: 0;
     overflow: hidden;
   }
 
@@ -88,10 +95,10 @@
   }
 
   &__panel {
-
     overflow: hidden;
     container-type: inline-size;
     container-name: engine-panel;
+    min-width: 0;
   }
 
   &__panel-select {
@@ -125,6 +132,47 @@
 
     &--active {
       display: grid;
+    }
+  }
+
+  &__resizer {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: col-resize;
+    position: relative;
+    touch-action: none;
+    isolation: isolate;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: calc(50% - 20px) calc(50% - 1px);
+      width: 2px;
+      height: 40px;
+      background: var(--color-neutral-200);
+      border-radius: 999px;
+      transition: background 0.2s ease, height 0.2s ease;
+    }
+
+    &:hover::after,
+    &:focus-visible::after,
+    &.engine__resizer--active::after {
+      background: var(--color-primary-500);
+      height: 52px;
+    }
+
+    &:focus {
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary-300);
+      outline-offset: 2px;
     }
   }
 

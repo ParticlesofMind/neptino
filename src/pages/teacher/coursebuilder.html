@@ -1733,6 +1733,8 @@
           </div>
         </div>
 
+        <button class="engine__resizer" type="button" aria-label="Resize media and search panel" data-engine-resizer="content"></button>
+
         <!-- Canvas Area -->
         <div class="engine__canvas canvas canvas--grid" id="canvas-container">
           <!-- Canvas will be inserted here by JavaScript -->
@@ -2096,6 +2098,8 @@
           </div>
         </div>
 
+        <button class="engine__resizer" type="button" aria-label="Resize inspector panel" data-engine-resizer="panel"></button>
+
         <!-- Layers Panel - Now floating overlay on the right -->
         <div class="engine__panel">
           <div class="engine__panel-header">
@@ -2151,6 +2155,8 @@
   <script type="module" src="/src/scripts/app.ts"></script>
   <!-- Custom selector initialization -->
   <script type="module" src="/src/scripts/coursebuilder/tools/CustomSelectorInit.ts"></script>
+  <!-- Engine layout resizer -->
+  <script type="module" src="/src/scripts/coursebuilder/tools/EngineResizer.ts"></script>
   <!-- Language loader for course languages -->
   <script type="module" src="/src/scripts/backend/courses/settings/languageLoader.ts"></script>
   <!-- Navigation system (handles all coursebuilder navigation) -->
