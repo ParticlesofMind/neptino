@@ -15,8 +15,8 @@
     gap: var(--spacing-3);
     padding: var(--spacing-4);
     background: linear-gradient(135deg,
-        rgba(0, 102, 204, 0.08),
-        rgba(0, 102, 204, 0.04));
+        rgba(154, 200, 255, 0.16),
+        rgba(154, 200, 255, 0.08));
     border-bottom: 1px solid var(--color-neutral-200);
   }
 
@@ -261,7 +261,7 @@
       width: 1rem;
       height: 1rem;
       border-radius: 50%;
-      border: 2px solid var(--color-primary-300);
+      border: 2px solid var(--color-primary-200);
       border-top-color: transparent;
       animation: spin 0.8s linear infinite;
     }

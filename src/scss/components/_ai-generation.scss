@@ -73,7 +73,7 @@
 
   &__progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark));
+    background: linear-gradient(90deg, var(--color-primary-100), var(--color-primary-200));
     border-radius: var(--border-radius-small);
     transition: width 0.3s ease;
   }
@@ -99,7 +99,7 @@
     height: 18px;
     margin: 0;
     cursor: pointer;
-    accent-color: var(--color-primary);
+    accent-color: var(--color-primary-200);
     appearance: auto;
     -webkit-appearance: checkbox;
     -moz-appearance: checkbox;
@@ -132,7 +132,7 @@
   width: 20px;
   height: 20px;
   border: 3px solid var(--color-neutral-300);
-  border-top-color: var(--color-primary);
+  border-top-color: var(--color-primary-200);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

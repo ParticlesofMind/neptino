@@ -140,7 +140,7 @@
             background-color: var(--color-primary-50);
             color: var(--color-primary-700);
             font-weight: var(--font-weight-medium);
-            border-left: 3px solid var(--color-primary-500);
+            border-left: 3px solid var(--color-primary-200);
         }
     }
 }
@@ -202,12 +202,12 @@
         transition: all 0.2s ease;
 
         &:hover {
-            border-color: var(--color-primary-300);
+            border-color: var(--color-primary-200);
             background: var(--color-primary-50);
         }
 
         &--active {
-            border-color: var(--color-primary-500);
+            border-color: var(--color-primary-200);
             background: var(--color-primary-100);
         }
     }

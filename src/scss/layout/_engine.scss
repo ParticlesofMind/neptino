@@ -342,8 +342,8 @@
 
     &:focus {
       outline: none;
-      border-color: var(--color-primary-600);
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+      border-color: var(--color-primary-200);
+      box-shadow: 0 0 0 2px rgba(154, 200, 255, 0.18);
     }
   }
 
@@ -358,8 +358,8 @@
 
       &:focus {
         outline: none;
-        border-color: var(--color-primary-600);
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        border-color: var(--color-primary-200);
+        box-shadow: 0 0 0 2px rgba(154, 200, 255, 0.18);
       }
     }
 
@@ -374,7 +374,7 @@
     width: 16px;
     height: 16px;
     cursor: pointer;
-    accent-color: var(--color-primary-600);
+    accent-color: var(--color-primary-200);
     appearance: checkbox;
     margin: 0;
   }
@@ -468,7 +468,7 @@
   &__scroll-input {
     width: 40px;
     padding: 0.25rem 0.25rem;
-    border: 1px solid var(--color-primary-300);
+    border: 1px solid var(--color-primary-200);
     border-radius: 3px;
     background: white;
     font-size: 0.75rem;
@@ -484,9 +484,9 @@
     }
 
     &:focus {
-      outline: 2px solid var(--color-primary-400);
+      outline: 2px solid var(--color-primary-200);
       outline-offset: 1px;
-      border-color: var(--color-primary-500);
+      border-color: var(--color-primary-200);
     }
   }
 

@@ -197,8 +197,8 @@
   // ==========================================================================
   &--card-selected {
     .template-browser__card {
-      border-color: var(--color-primary);
-      background-color: var(--color-primary-light);
+      border-color: var(--color-primary-200);
+      background-color: var(--color-primary-100);
     }
   }
 
@@ -206,7 +206,7 @@
   // STATES & INTERACTIONS
   // ==========================================================================
   &__card:hover {
-    border-color: var(--color-primary);
+    border-color: var(--color-primary-200);
     box-shadow: var(--shadow-small);
   }
 }

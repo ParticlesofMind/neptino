@@ -515,7 +515,7 @@
     margin: 0;
     padding: var(--spacing-2) var(--spacing-3);
     background: var(--color-neutral-50);
-    border-left: 3px solid var(--color-primary-400);
+    border-left: 3px solid var(--color-primary-200);
     border-radius: var(--radius-small);
     color: var(--color-text-secondary);
     font-style: italic;
@@ -589,7 +589,7 @@
 
 .article--pedagogy .learning-plane__effects-list li:hover {
     background: var(--color-primary-50);
-    border-left-color: var(--color-primary-400);
+    border-left-color: var(--color-primary-200);
     transform: translateX(4px);
 }
 
@@ -897,8 +897,8 @@
         &:focus {
             outline: none;
             background: var(--color-white);
-            border-color: var(--color-primary-400);
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+            border-color: var(--color-primary-200);
+            box-shadow: 0 0 0 2px rgba(154, 200, 255, 0.18);
         }
 
         &:hover:not(:focus) {
@@ -1045,7 +1045,7 @@
     height: 1.25rem;
     border-radius: 50%;
     border: 2px solid var(--color-neutral-300);
-    border-top-color: var(--color-primary);
+    border-top-color: var(--color-primary-200);
     animation: spin 0.8s linear infinite;
 }
 
@@ -1165,7 +1165,7 @@
     transition: all 0.2s ease;
     
     &:hover {
-        border-color: var(--color-primary-300);
+        border-color: var(--color-primary-200);
         background: var(--color-primary-25);
     }
     
@@ -1178,9 +1178,9 @@
     }
     
     &:has(input[type="radio"]:checked) {
-        border-color: var(--color-primary-500);
+        border-color: var(--color-primary-200);
         background: var(--color-primary-50);
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.08);
+        box-shadow: 0 0 0 2px rgba(154, 200, 255, 0.16);
         
         .module-organization-option__name {
             color: var(--color-primary-700);
@@ -1238,7 +1238,7 @@
     transition: all 0.2s ease;
     
     &:hover {
-        border-color: var(--color-primary-300);
+        border-color: var(--color-primary-200);
         background: var(--color-primary-25);
     }
     
@@ -1251,9 +1251,9 @@
     }
     
     &:has(input[type="radio"]:checked) {
-        border-color: var(--color-primary-500);
+        border-color: var(--color-primary-200);
         background: var(--color-primary-50);
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.08);
+        box-shadow: 0 0 0 2px rgba(154, 200, 255, 0.16);
         
         .content-volume-option__name {
             color: var(--color-primary-700);
@@ -1315,7 +1315,7 @@
     transition: all 0.2s ease;
     
     &:hover {
-        border-color: var(--color-primary-300);
+        border-color: var(--color-primary-200);
         background: var(--color-primary-25);
     }
     
@@ -1334,9 +1334,9 @@
     }
     
     &:has(input[type="radio"]:checked) {
-        border-color: var(--color-primary-500);
+        border-color: var(--color-primary-200);
         background: var(--color-primary-50);
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.08);
+        box-shadow: 0 0 0 2px rgba(154, 200, 255, 0.16);
     }
 }
 
@@ -1474,14 +1474,14 @@
 .curriculum__controls .button--outline:hover,
 .article__config .button--outline:hover {
     background: var(--color-primary-50);
-    border-color: var(--color-primary-300);
+    border-color: var(--color-primary-200);
     color: var(--color-primary-600);
 }
 
 .curriculum__controls .button--primary,
 .curriculum__controls .button--active,
 .article--curriculum .article__config .button--primary {
-    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.18);
+    box-shadow: 0 0 0 2px rgba(154, 200, 255, 0.28);
     transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -1665,7 +1665,7 @@
     }
 
     &:focus {
-        outline: 2px solid var(--color-primary-300);
+        outline: 2px solid var(--color-primary-200);
         outline-offset: 2px;
     }
 }
@@ -1739,7 +1739,7 @@
 .template-placement-card__option input {
     margin: 0;
     pointer-events: none;
-    accent-color: var(--color-primary-500);
+    accent-color: var(--color-primary-200);
 }
 
 .template-placement-card__option span {
@@ -1749,7 +1749,7 @@
 .template-placement-card__option--active {
     background: var(--color-primary-50);
     color: var(--color-primary-700);
-    box-shadow: inset 0 0 0 1px var(--color-primary-200), 0 0 0 2px rgba(0, 102, 204, 0.12);
+    box-shadow: inset 0 0 0 1px var(--color-primary-200), 0 0 0 2px rgba(154, 200, 255, 0.2);
     font-weight: var(--font-weight-medium);
 }
 
@@ -1802,7 +1802,7 @@
 .template-placement-card__module input {
     margin: 0;
     pointer-events: none;
-    accent-color: var(--color-primary-500);
+    accent-color: var(--color-primary-200);
 }
 
 .template-placement-card__lessons {
@@ -1849,7 +1849,7 @@
 .template-placement-card__lesson input {
     margin: 0;
     pointer-events: none;
-    accent-color: var(--color-primary-500);
+    accent-color: var(--color-primary-200);
 }
 
 .template-placement-card__lesson-content {
@@ -1934,8 +1934,8 @@
 
         &:focus {
             outline: none;
-            border-color: var(--color-primary-500);
-            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+            border-color: var(--color-primary-200);
+            box-shadow: 0 0 0 3px rgba(154, 200, 255, 0.18);
         }
 
         &:hover {
@@ -1984,8 +1984,8 @@
     justify-content: center;
     gap: var(--spacing-2);
     padding: var(--spacing-2) var(--spacing-3);
-    background: rgba(0, 102, 204, 0.08);
-    border: 1px dashed var(--color-primary-300);
+    background: rgba(154, 200, 255, 0.12);
+    border: 1px dashed var(--color-primary-200);
     border-radius: var(--radius-medium);
     color: var(--color-primary-700);
     font-size: var(--font-size-small);
@@ -2000,12 +2000,12 @@
     }
 
     &:hover {
-        background: rgba(0, 102, 204, 0.12);
-        border-color: var(--color-primary-400);
+        background: rgba(154, 200, 255, 0.18);
+        border-color: var(--color-primary-200);
     }
 
     &:focus {
-        outline: 2px solid var(--color-primary-500);
+        outline: 2px solid var(--color-primary-200);
         outline-offset: 2px;
     }
 }
@@ -2283,8 +2283,8 @@
 }
 
 .editable-surface:focus-within {
-    border-color: var(--color-primary-300);
-    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.12), var(--shadow-medium);
+    border-color: var(--color-primary-200);
+    box-shadow: 0 0 0 3px rgba(154, 200, 255, 0.2), var(--shadow-medium);
 }
 
 .editable-surface:empty {
@@ -2346,13 +2346,13 @@
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
     &:hover {
-        border-color: var(--color-primary-400);
+        border-color: var(--color-primary-200);
     }
 
     &:focus {
         outline: none;
-        border-color: var(--color-primary-500);
-        box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.08);
+        border-color: var(--color-primary-200);
+        box-shadow: 0 0 0 3px rgba(154, 200, 255, 0.14);
     }
 }
 
@@ -2503,7 +2503,7 @@
     gap: var(--spacing-1);
     padding: var(--spacing-1) var(--spacing-4);
     border-radius: var(--radius-full);
-    background: var(--color-primary-500);
+    background: var(--color-primary-100);
     color: #fff;
     font-size: 0.8rem;
     font-weight: var(--font-weight-semibold);
@@ -2679,8 +2679,8 @@
 
 .editable-surface [contenteditable="true"]:focus {
     background: var(--color-background);
-    border-color: var(--color-primary-300);
-    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.12);
+    border-color: var(--color-primary-200);
+    box-shadow: 0 0 0 2px rgba(154, 200, 255, 0.2);
 }
 
 .editable-surface .lesson__title[contenteditable="true"],

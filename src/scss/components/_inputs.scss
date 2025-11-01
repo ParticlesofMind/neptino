@@ -3,7 +3,7 @@
 // ==========================================================================
 
 // Base mixins
-@mixin input-focus($border: var(--color-primary-500), $shadow: var(--color-primary-100)) {
+@mixin input-focus($border: var(--color-primary-200), $shadow: var(--color-primary-100)) {
     outline: none;
     border-color: $border;
     box-shadow: 0 0 0 3px $shadow;
@@ -42,13 +42,13 @@
     }
 
     &:hover:not(:disabled):not(:checked) {
-        border-color: var(--color-primary-400);
+        border-color: var(--color-primary-200);
         background: var(--color-primary-50);
     }
 
     &:checked {
-        background: var(--color-primary-500);
-        border-color: var(--color-primary-500);
+        background: var(--color-primary-100);
+        border-color: var(--color-primary-200);
     }
 
     &:disabled {
@@ -115,7 +115,7 @@
         }
 
         &:focus {
-            border-color: var(--color-primary-300);
+            border-color: var(--color-primary-200);
         }
 
         &:hover:not(:focus) {
@@ -145,7 +145,7 @@
             top: 2px;
             width: 5px;
             height: 10px;
-            border: 2px solid white;
+            border: 2px solid var(--color-text-primary);
             border-left: 0;
             border-top: 0;
             transform: rotate(45deg);
@@ -175,7 +175,7 @@
     &--file {
         cursor: pointer;
         background: var(--color-primary-50);
-        border: 2px dashed var(--color-primary-300);
+        border: 2px dashed var(--color-primary-200);
         padding: var(--spacing-4);
         text-align: center;
         min-height: 50px;
@@ -194,7 +194,7 @@
         }
 
         &:hover {
-            border-color: var(--color-primary-400);
+            border-color: var(--color-primary-200);
             background: var(--color-primary-100);
         }
 
@@ -234,14 +234,14 @@
         }
 
         &:hover {
-            border-color: var(--color-primary-400);
+            border-color: var(--color-primary-200);
             transform: translateY(-1px);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         &:focus {
             outline: none;
-            border-color: var(--color-primary-500);
+            border-color: var(--color-primary-200);
             box-shadow: 0 0 0 3px var(--color-primary-100);
         }
     }
@@ -268,7 +268,7 @@
         line-height: 1.4;
 
         &:hover {
-            border-color: var(--color-primary-300);
+            border-color: var(--color-primary-200);
             box-shadow: 0 14px 32px rgba(17, 45, 109, 0.12);
             transform: translateY(-1px);
         }
@@ -298,7 +298,7 @@
     &--text {
         resize: both;
         background: transparent;
-        border: 1px solid var(--color-primary-300);
+        border: 1px solid var(--color-primary-200);
         border-radius: var(--border-radius-small);
         padding: var(--spacing-2) var(--spacing-3);
         font-size: var(--font-size-base);
@@ -312,13 +312,13 @@
 
         &:focus {
             outline: none;
-            border-color: var(--color-primary-500);
+            border-color: var(--color-primary-200);
             box-shadow: 0 0 0 2px var(--color-primary-100);
             background: rgba(255, 255, 255, 0.9);
         }
 
         &:hover:not(:focus) {
-            border-color: var(--color-primary-400);
+            border-color: var(--color-primary-200);
             background: rgba(255, 255, 255, 0.5);
         }
     }
@@ -337,9 +337,9 @@
         cursor: pointer;
 
         &:focus {
-            outline: 2px solid var(--color-primary-300);
+            outline: 2px solid var(--color-primary-200);
             outline-offset: 2px;
-            border-color: var(--color-primary-400);
+            border-color: var(--color-primary-200);
         }
     }
 

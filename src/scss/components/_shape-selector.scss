@@ -111,7 +111,7 @@
   // ==========================================================================
   &--active {
     .shape-selector__trigger {
-      border-color: var(--color-primary-500);
+      border-color: var(--color-primary-200);
       box-shadow: 0 0 0 3px var(--color-primary-100);
     }
   }
@@ -128,7 +128,7 @@
   // STATES & INTERACTIONS
   // ==========================================================================
   &__trigger:hover {
-    border-color: var(--color-primary-400);
+    border-color: var(--color-primary-200);
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     .shape-selector__trigger-icon {
@@ -145,7 +145,7 @@
 
     &[aria-selected="true"] {
       background: var(--color-primary-100);
-      border-color: var(--color-primary-500);
+      border-color: var(--color-primary-200);
       box-shadow: 0 0 0 2px var(--color-primary-100);
 
       .shape-selector__shape-icon {

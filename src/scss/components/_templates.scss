@@ -22,14 +22,14 @@
   cursor: pointer;
 
   &:hover {
-    border-color: var(--color-primary-300);
+    border-color: var(--color-primary-200);
     box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
   }
 
   &--selected {
-    border-color: var(--color-primary-400);
+    border-color: var(--color-primary-200);
     background: var(--color-primary-25);
-    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.12);
+    box-shadow: 0 0 0 2px rgba(154, 200, 255, 0.2);
   }
 
   &__title {
@@ -194,7 +194,7 @@
 
   // Type-specific colors
   &--header {
-    border-left: 4px solid var(--color-primary-500);
+    border-left: 4px solid var(--color-primary-200);
   }
 
   &--program {

@@ -26,13 +26,13 @@
     position: relative;
 
     &:hover {
-      border-color: var(--color-primary-400);
+      border-color: var(--color-primary-200);
       transform: translateY(-1px);
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     &--active {
-      border-color: var(--color-primary-500);
+      border-color: var(--color-primary-200);
       box-shadow: 0 0 0 3px var(--color-primary-100);
     }
   }
@@ -140,7 +140,7 @@
     }
 
     &--selected {
-      border-color: var(--color-primary-500);
+      border-color: var(--color-primary-200);
       box-shadow: 0 0 0 2px var(--color-primary-100);
       transform: scale(1.05);
 
@@ -194,7 +194,7 @@
   // ==========================================================================
   &--active {
     .color-selector__trigger {
-      border-color: var(--color-primary-500);
+      border-color: var(--color-primary-200);
       box-shadow: 0 0 0 3px var(--color-primary-100);
     }
   }
@@ -232,7 +232,7 @@
   &--color-selected,
   &--color-transparent {
     .color-selector__color {
-      border-color: var(--color-primary-500);
+      border-color: var(--color-primary-200);
       box-shadow: 0 0 0 2px var(--color-primary-100);
       transform: scale(1.05);
 

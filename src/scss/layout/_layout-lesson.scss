@@ -275,8 +275,8 @@
       }
       
       &:focus {
-        border-color: #0066cc;
-        box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+        border-color: var(--color-primary-200);
+        box-shadow: 0 0 0 2px rgba(154, 200, 255, 0.28);
         outline: none;
       }
     }

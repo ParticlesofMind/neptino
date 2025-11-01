@@ -100,7 +100,7 @@
   &__select {
     cursor: pointer;
     &:not(:disabled):hover {
-      border-color: var(--color-primary-400);
+      border-color: var(--color-primary-200);
     }
   }
 
@@ -190,14 +190,14 @@
   // ==========================================================================
   &--auth {
     .form__group:focus-within .form__icon {
-      color: #2563eb !important;
-      
+      color: var(--color-primary-500) !important;
+
       path,
       circle,
       rect,
       polyline,
       line {
-        stroke: #2563eb !important;
+        stroke: var(--color-primary-500) !important;
       }
     }
   }
@@ -253,17 +253,17 @@
   position: relative;
   width: min(100%, 28rem);
   padding: var(--spacing-4);
-  border: 2px dashed #3b82f6;
+  border: 2px dashed var(--color-primary-200);
   border-radius: var(--radius-medium);
-  background: rgba(59, 130, 246, 0.08);
+  background: rgba(154, 200, 255, 0.12);
   display: flex;
   justify-content: center;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 
   &:hover {
-    border-color: #2563eb;
-    background: rgba(59, 130, 246, 0.12);
-    box-shadow: 0 12px 28px rgba(59, 130, 246, 0.12);
+    border-color: var(--color-primary-200);
+    background: rgba(154, 200, 255, 0.18);
+    box-shadow: 0 12px 28px rgba(154, 200, 255, 0.18);
   }
 
   &__input {
@@ -309,7 +309,7 @@
     gap: var(--spacing-2);
     padding: var(--spacing-2) var(--spacing-4);
     border-radius: var(--radius-pill, 999px);
-    background: rgba(var(--color-primary-100-rgb, 219, 234, 254), 0.8);
+    background: rgba(var(--color-primary-100-rgb, 179, 215, 255), 0.8);
     border: 1px solid var(--color-primary-200);
     font-weight: 600;
     font-size: var(--font-size-base);
@@ -323,11 +323,11 @@
       width: 1.75rem;
       height: 1.75rem;
       border-radius: 50%;
-      background: var(--color-primary-500);
-      color: var(--color-neutral-0);
+      background: var(--color-primary-100);
+      color: var(--color-text-primary);
       font-size: var(--font-size-sm);
       font-weight: 700;
-      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+      box-shadow: 0 4px 10px rgba(154, 200, 255, 0.2);
     }
   }
 
@@ -399,8 +399,8 @@
 
   &.has-image {
     border-style: dashed;
-    border-color: #3b82f6;
-    background: rgba(59, 130, 246, 0.08);
+    border-color: var(--color-primary-200);
+    background: rgba(154, 200, 255, 0.12);
 
     .image-upload__empty {
       display: none;

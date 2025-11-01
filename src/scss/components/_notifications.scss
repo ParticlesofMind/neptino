@@ -29,7 +29,7 @@
     background: var(--color-background);
     border-radius: var(--radius-medium);
     box-shadow: var(--shadow-large);
-    border-left: 4px solid var(--color-primary-500);
+    border-left: 4px solid var(--color-primary-200);
   }
 
   &__message {
@@ -88,7 +88,7 @@
 
   &--info {
     .notification__content {
-      border-left-color: var(--color-primary-500);
+      border-left-color: var(--color-primary-200);
       background: var(--color-primary-50);
     }
     .notification__message {

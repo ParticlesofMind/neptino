@@ -6,17 +6,17 @@
   // BRAND COLORS
   // ==========================================================================
   // Primary Brand Colors (Ocean/Nautical theme inspired by Neptino/Neptune)
-  --color-primary-25: #f0f8ff; // Even lighter than 50 for subtle highlights
-  --color-primary-50: #e6f3ff;
-  --color-primary-100: #b3d9ff;
-  --color-primary-200: #80bfff;
-  --color-primary-300: #4da6ff;
-  --color-primary-400: #1a8cff;
-  --color-primary-500: #0066cc; // Main brand blue
-  --color-primary-600: #0052a3;
-  --color-primary-700: #003d7a;
-  --color-primary-800: #002952;
-  --color-primary-900: #001429;
+  --color-primary-25: #f5f9ff; // Even lighter than 50 for subtle highlights
+  --color-primary-50: #e6f2ff;
+  --color-primary-100: #b3d7ff;
+  --color-primary-200: #9ac8ff;
+  --color-primary-300: #7fb6ff;
+  --color-primary-400: #65a5ff;
+  --color-primary-500: #4a94ff; // Main brand blue
+  --color-primary-600: #2f7de0;
+  --color-primary-700: #1f5fb3;
+  --color-primary-800: #134080;
+  --color-primary-900: #0a234d;
 
   // Secondary Colors (Complementary teal/green for education/growth)
   --color-secondary-50: #e6fffe;
@@ -103,14 +103,14 @@
   --color-link-visited: var(--color-primary-700);
 
   // Button Colors
-  --color-button-primary: var(--color-primary-500);
-  --color-button-primary-hover: var(--color-primary-600);
+  --color-button-primary: var(--color-primary-100);
+  --color-button-primary-hover: var(--color-primary-200);
   --color-button-secondary: var(--color-secondary-500);
   --color-button-secondary-hover: var(--color-secondary-600);
 
   // Form Colors
   --color-input-border: var(--color-neutral-300);
-  --color-input-border-focus: var(--color-primary-500);
+  --color-input-border-focus: var(--color-primary-200);
   --color-input-background: var(--color-background);
 
   // STATUS COLORS (Generic - can be used for courses, tasks, etc.)
