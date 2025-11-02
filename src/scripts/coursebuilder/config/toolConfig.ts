@@ -3,11 +3,23 @@
  * Defines tools and their settings for each mode (build, animate)
  */
 
+const COLOR_SWATCHES = ["#4A7FB8", "#C35C5C", "#5E9E6B", "#2E2E2E", "#A0A0A0"];
+
+export type ToolOptionType =
+  | "slider"
+  | "dropdown"
+  | "swatches"
+  | "toggle"
+  | "toggle-group"
+  | "number"
+  | "text"
+  | "button";
+
 export interface ToolOption {
   id: string;
-  type: 'number' | 'select' | 'color' | 'shape' | 'text-style';
+  type: ToolOptionType;
   label: string;
-  settings?: Record<string, any>;
+  settings: Record<string, any>;
 }
 
 export interface Tool {
@@ -26,147 +38,276 @@ export interface ModeConfig {
 
 export const toolConfigs: Record<string, ModeConfig> = {
   build: {
-    id: 'build',
-    name: 'Build',
-    icon: '/src/assets/icons/coursebuilder/modes/mode-build.svg',
+    id: "build",
+    name: "Build",
+    icon: "/src/assets/icons/coursebuilder/modes/mode-build.svg",
     tools: [
       {
-        id: 'selection',
-        name: 'Select',
-        icon: '/src/assets/icons/coursebuilder/tools/tool-select.svg',
-      },
-      {
-        id: 'pen',
-        name: 'Pen',
-        icon: '/src/assets/icons/coursebuilder/tools/tool-pen.svg',
-        options: [
-          { id: 'size', type: 'number', label: 'Pen Size', settings: { min: 1, max: 15, value: 2 } },
-          { id: 'stroke', type: 'color', label: 'Stroke Color', settings: { value: '#282a29' } },
-          { id: 'fill', type: 'color', label: 'Fill Color', settings: { value: '#fef6eb', allowTransparent: true } },
-        ],
-      },
-      {
-        id: 'brush',
-        name: 'Brush',
-        icon: '/src/assets/icons/coursebuilder/tools/tool-brush.svg',
-        options: [
-          { id: 'size', type: 'number', label: 'Brush Size', settings: { min: 10, max: 50, value: 20 } },
-          { id: 'color', type: 'color', label: 'Brush Color', settings: { value: '#2b8059' } },
-        ],
-      },
-      {
-        id: 'text',
-        name: 'Text',
-        icon: '/src/assets/icons/coursebuilder/tools/tool-write.svg',
+        id: "selection",
+        name: "Select",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-select.svg",
         options: [
           {
-            id: 'fontSize',
-            type: 'select',
-            label: 'Text Size',
+            id: "mode",
+            type: "toggle-group",
+            label: "Selection",
             settings: {
+              value: "contain",
               options: [
-                { value: '12', label: 'Normal Text (12 pt)' },
-                { value: '26', label: 'Title (26 pt)' },
-                { value: '20', label: 'Header 1 (20 pt)' },
-                { value: '16', label: 'Header 2 (16 pt)' },
-                { value: '14', label: 'Header 3 (14 pt)' },
+                { value: "contain", label: "Contain" },
+                { value: "intersect", label: "Intersect" },
               ],
-              value: '16',
-            },
-          },
-          { id: 'textStyle', type: 'text-style', label: 'Text Style' },
-          {
-            id: 'fontFamily',
-            type: 'select',
-            label: 'Font Family',
-            settings: {
-              options: [
-                { value: 'Arial', label: 'Arial' },
-                { value: 'Times New Roman', label: 'Times New Roman' },
-                { value: 'Georgia', label: 'Georgia' },
-                { value: 'Verdana', label: 'Verdana' },
-                { value: 'Tahoma', label: 'Tahoma' },
-              ],
-              value: 'Arial',
-            },
-          },
-          { id: 'color', type: 'color', label: 'Text Color', settings: { value: '#282a29' } },
-        ],
-      },
-      {
-        id: 'shapes',
-        name: 'Shapes',
-        icon: '/src/assets/icons/coursebuilder/tools/tool-shapes.svg',
-        options: [
-          { id: 'shape', type: 'shape', label: 'Shape Type', settings: { value: 'rectangle' } },
-          { id: 'strokeWidth', type: 'number', label: 'Thickness', settings: { min: 1, max: 20, value: 2 } },
-          { id: 'stroke', type: 'color', label: 'Stroke', settings: { value: '#282a29' } },
-          { id: 'fill', type: 'color', label: 'Fill', settings: { value: 'transparent', allowTransparent: true } },
-        ],
-      },
-      {
-        id: 'tables',
-        name: 'Tables',
-        icon: '/src/assets/icons/coursebuilder/media/media-table.svg',
-        options: [
-          { id: 'size', type: 'number', label: 'Table Size', settings: { min: 1, max: 20, value: 3 } },
-          {
-            id: 'tableType',
-            type: 'select',
-            label: 'Table Type',
-            settings: {
-              options: [
-                { value: 'basic', label: 'Basic' },
-                { value: 'bordered', label: 'Bordered' },
-                { value: 'striped', label: 'Striped' },
-              ],
-              value: 'basic',
             },
           },
         ],
       },
       {
-        id: 'generate',
-        name: 'Generate',
-        icon: '/src/assets/icons/bot-icon.svg',
+        id: "pen",
+        name: "Pen",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-pen.svg",
         options: [
-          // AI generation options can be added here
+          {
+            id: "strokeSize",
+            type: "slider",
+            label: "Stroke",
+            settings: { min: 1, max: 16, snaps: [1, 2, 4, 8, 16], value: 2 },
+          },
+          {
+            id: "strokeColor",
+            type: "swatches",
+            label: "Stroke Color",
+            settings: { options: COLOR_SWATCHES, value: "#4A7FB8" },
+          },
+          {
+            id: "fillColor",
+            type: "swatches",
+            label: "Fill Color",
+            settings: { options: [...COLOR_SWATCHES, "transparent"], value: "transparent" },
+          },
         ],
       },
       {
-        id: 'eraser',
-        name: 'Eraser',
-        icon: '/src/assets/icons/coursebuilder/tools/tool-eraser.svg',
+        id: "brush",
+        name: "Brush",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-brush.svg",
         options: [
-          { id: 'size', type: 'number', label: 'Eraser Size', settings: { min: 5, max: 50, value: 20 } },
+          {
+            id: "size",
+            type: "slider",
+            label: "Brush Size",
+            settings: { min: 1, max: 16, snaps: [1, 2, 4, 8, 16], value: 6 },
+          },
+          {
+            id: "color",
+            type: "swatches",
+            label: "Brush Color",
+            settings: { options: COLOR_SWATCHES, value: "#2E2E2E" },
+          },
+          {
+            id: "smoothing",
+            type: "slider",
+            label: "Smoothing",
+            settings: { min: 0.05, max: 0.95, step: 0.05, value: 0.35 },
+          },
+        ],
+      },
+      {
+        id: "text",
+        name: "Text",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-write.svg",
+        options: [
+          {
+            id: "fontSize",
+            type: "slider",
+            label: "Font Size",
+            settings: { min: 1, max: 16, snaps: [1, 2, 4, 8, 16], value: 8 },
+          },
+          {
+            id: "fontFamily",
+            type: "dropdown",
+            label: "Font",
+            settings: {
+              value: "Helvetica",
+              options: [
+                { value: "Helvetica", label: "Helvetica / Arial" },
+                { value: "Times New Roman", label: "Times New Roman" },
+                { value: "Roboto", label: "Roboto" },
+                { value: "Open Sans", label: "Open Sans" },
+                { value: "Montserrat", label: "Montserrat" },
+              ],
+            },
+          },
+          {
+            id: "fontColor",
+            type: "swatches",
+            label: "Font Color",
+            settings: { options: COLOR_SWATCHES, value: "#2E2E2E" },
+          },
+          { id: "bold", type: "toggle", label: "Bold", settings: { value: false } },
+          { id: "italic", type: "toggle", label: "Italic", settings: { value: false } },
+          { id: "underline", type: "toggle", label: "Underline", settings: { value: false } },
+        ],
+      },
+      {
+        id: "shapes",
+        name: "Shapes",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-shapes.svg",
+        options: [
+          {
+            id: "shapeType",
+            type: "dropdown",
+            label: "Shape",
+            settings: {
+              value: "rectangle",
+              options: [
+                { value: "rectangle", label: "Rectangle" },
+                { value: "square", label: "Square" },
+                { value: "circle", label: "Circle" },
+                { value: "triangle", label: "Triangle" },
+                { value: "star", label: "Star" },
+              ],
+            },
+          },
+          {
+            id: "strokeWidth",
+            type: "slider",
+            label: "Stroke Width",
+            settings: { min: 1, max: 20, step: 1, value: 2 },
+          },
+          {
+            id: "strokeColor",
+            type: "swatches",
+            label: "Stroke Color",
+            settings: { options: COLOR_SWATCHES, value: "#2E2E2E" },
+          },
+          {
+            id: "fillColor",
+            type: "swatches",
+            label: "Fill",
+            settings: { options: [...COLOR_SWATCHES, "transparent"], value: "#A0A0A0" },
+          },
+        ],
+      },
+      {
+        id: "tables",
+        name: "Tables",
+        icon: "/src/assets/icons/coursebuilder/media/media-table.svg",
+        options: [
+          { id: "rows", type: "number", label: "Rows", settings: { min: 1, max: 10, step: 1, value: 3 } },
+          { id: "columns", type: "number", label: "Columns", settings: { min: 1, max: 10, step: 1, value: 3 } },
+          {
+            id: "strokeWidth",
+            type: "slider",
+            label: "Stroke Width",
+            settings: { min: 1, max: 4, snaps: [1, 2, 4], value: 2 },
+          },
+        ],
+      },
+      {
+        id: "generate",
+        name: "Generate",
+        icon: "/src/assets/icons/bot-icon.svg",
+        options: [
+          {
+            id: "contentType",
+            type: "dropdown",
+            label: "Content Type",
+            settings: {
+              value: "text",
+              options: [
+                { value: "text", label: "Text" },
+                { value: "image", label: "Image" },
+              ],
+            },
+          },
+          {
+            id: "prompt",
+            type: "text",
+            label: "Prompt",
+            settings: { value: "", placeholder: "Describe what to generate…" },
+          },
+          { id: "send", type: "button", label: "Send", settings: {} },
+        ],
+      },
+      {
+        id: "eraser",
+        name: "Eraser",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-eraser.svg",
+        options: [
+          { id: "size", type: "slider", label: "Eraser Size", settings: { min: 1, max: 16, snaps: [1, 2, 4, 8, 16], value: 4 } },
         ],
       },
     ],
   },
   animate: {
-    id: 'animate',
-    name: 'Animate',
-    icon: '/src/assets/icons/coursebuilder/modes/mode-animate.svg',
+    id: "animate",
+    name: "Animate",
+    icon: "/src/assets/icons/coursebuilder/modes/mode-animate.svg",
     tools: [
       {
-        id: 'selection',
-        name: 'Select',
-        icon: '/src/assets/icons/coursebuilder/tools/tool-select.svg',
+        id: "selection",
+        name: "Select",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-select.svg",
+        options: [
+          {
+            id: "mode",
+            type: "toggle-group",
+            label: "Selection",
+            settings: {
+              value: "contain",
+              options: [
+                { value: "contain", label: "Contain" },
+                { value: "intersect", label: "Intersect" },
+              ],
+            },
+          },
+        ],
       },
       {
-        id: 'scene',
-        name: 'Scene',
-        icon: '/src/assets/icons/coursebuilder/modes/mode-animate.svg',
+        id: "scene",
+        name: "Scene",
+        icon: "/src/assets/icons/coursebuilder/modes/mode-animate.svg",
+        options: [
+          {
+            id: "aspectRatio",
+            type: "dropdown",
+            label: "Aspect Ratio",
+            settings: {
+              value: "16:9",
+              options: [
+                { value: "16:9", label: "16:9" },
+                { value: "4:3", label: "4:3" },
+                { value: "3:2", label: "3:2" },
+                { value: "1:1", label: "1:1" },
+                { value: "9:16", label: "9:16" },
+              ],
+            },
+          },
+          {
+            id: "duration",
+            type: "slider",
+            label: "Duration (s)",
+            settings: { min: 3, max: 30, snaps: [3, 5, 10, 30], value: 5 },
+          },
+        ],
       },
       {
-        id: 'path',
-        name: 'Path',
-        icon: '/src/assets/icons/coursebuilder/tools/tool-pen.svg',
+        id: "path",
+        name: "Path",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-pen.svg",
+        options: [
+          { id: "simplify", type: "button", label: "Simplify Path", settings: {} },
+          { id: "adherence", type: "slider", label: "Adherence", settings: { min: 0, max: 1, step: 0.05, value: 0.5 } },
+        ],
       },
       {
-        id: 'modify',
-        name: 'Modify',
-        icon: '/src/assets/icons/coursebuilder/tools/tool-shapes.svg',
+        id: "modify",
+        name: "Modify",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-shapes.svg",
+        options: [
+          { id: "time", type: "slider", label: "Timeline (s)", settings: { min: 0, max: 120, step: 0.5, value: 0 } },
+          { id: "keyframe", type: "button", label: "Set Keyframe", settings: {} },
+        ],
       },
     ],
   },

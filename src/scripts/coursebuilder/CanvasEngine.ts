@@ -9,7 +9,7 @@ const MAX_ZOOM = 10;
 const DEFAULT_ZOOM_STEP = 0.15;
 const SCALE_EPSILON = 0.0001;
 
-type LayerName = "background" | "drawing" | "ui";
+export type LayerName = "background" | "drawing" | "ui";
 
 interface CanvasObject {
   id: string;
@@ -167,6 +167,18 @@ export class CanvasEngine {
 
   public getViewport(): Viewport | null {
     return this.viewport;
+  }
+
+  public getLayers(): Record<LayerName, Container> | null {
+    return this.layers;
+  }
+
+  public getCanvasElement(): HTMLCanvasElement | null {
+    return this.app?.canvas ?? null;
+  }
+
+  public getRootElement(): HTMLElement | null {
+    return this.container;
   }
 
   public getCurrentZoom(): number {
@@ -696,6 +708,40 @@ export class CanvasEngine {
       console.warn("Failed to load sprite:", error);
       return null;
     }
+  }
+
+  public addDisplayObject(displayObject: DisplayObject, layerName: LayerName = "drawing"): string | null {
+    if (!this.layers) {
+      return null;
+    }
+
+    return this.registerDisplayObject(displayObject, layerName);
+  }
+
+  public removeObject(id: string): boolean {
+    const entry = this.objects.get(id);
+    if (!entry) {
+      return false;
+    }
+
+    const parent = entry.displayObject.parent;
+    if (parent) {
+      parent.removeChild(entry.displayObject);
+    }
+
+    this.objects.delete(id);
+    return true;
+  }
+
+  public getObjectById(id: string): DisplayObject | null {
+    return this.objects.get(id)?.displayObject ?? null;
+  }
+
+  public getObjectsSnapshot(): Array<{ id: string; displayObject: DisplayObject }> {
+    return Array.from(this.objects.values()).map(({ id, displayObject }) => ({
+      id,
+      displayObject,
+    }));
   }
 
   private registerDisplayObject(displayObject: DisplayObject, layerName: LayerName): string {

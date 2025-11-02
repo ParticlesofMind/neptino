@@ -1837,19 +1837,17 @@
                 <!-- Pen Settings -->
                 <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--pen"
                   style="display: none;">
-                  <input type="number" min="1" max="15" value="2" class="input input--number" title="Pen Size"
-                    data-setting="size">
+                  <input type="number" min="1" max="15" value="2" class="input input--number" data-setting="size">
 
-                  <div class="color-selector" data-color-selector="pen-stroke" data-initial-color="#282a29"
-                    title="Stroke Color"></div>
-                  <div class="color-selector" data-color-selector="pen-fill" data-initial-color="#fef6eb"
-                    data-allow-transparent="true" title="Fill Color"></div>
+                  <div class="input input--color-picker color-selector" data-color-selector="pen-stroke" data-initial-color="#282a29"></div>
+                  <div class="input input--color-picker color-selector" data-color-selector="pen-fill" data-initial-color="#fef6eb"
+                    data-allow-transparent="true"></div>
                 </div>
 
                 <!-- Text Settings -->
                 <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--text"
                   style="display: none;">
-                  <select id="text-size-select" class="input input--select" title="Text Size" data-setting="fontSize">
+                  <select id="text-size-select" class="input input--select" data-setting="fontSize">
                     <option value="12" data-label="Normal">Normal Text (12 pt)</option>
                     <option value="26" data-label="Title">Title (26 pt)</option>
                     <option value="20" data-label="Header1">Header 1 (20 pt)</option>
@@ -1857,15 +1855,12 @@
                     <option value="14" data-label="Header3">Header 3 (14 pt)</option>
                   </select>
 
-                  <div class="text-style-controls" aria-label="Text Style">
-                    <button type="button" class="tools__button text-style-btn icon icon--base" data-text-style="bold"
-                      title="Bold">B</button>
-                    <button type="button" class="tools__button text-style-btn icon icon--base" data-text-style="italic"
-                      title="Italic">I</button>
+                  <div class="engine__text-style-controls" aria-label="Text Style">
+                    <button type="button" class="engine__text-style-btn" data-text-style="bold">B</button>
+                    <button type="button" class="engine__text-style-btn" data-text-style="italic">I</button>
                   </div>
 
-                  <select id="font-family-select" class="input input--select" title="Font Family"
-                    data-setting="fontFamily">
+                  <select id="font-family-select" class="input input--select" data-setting="fontFamily">
                     <option value="Arial" data-font-family="Arial">Arial</option>
                     <option value="Times New Roman" data-font-family="Times New Roman">Times New Roman</option>
                     <option value="Georgia" data-font-family="Georgia">Georgia</option>
@@ -1873,49 +1868,41 @@
                     <option value="Tahoma" data-font-family="Tahoma">Tahoma</option>
                   </select>
 
-                  <div class="color-selector" data-color-selector="text" data-initial-color="#282a29"
-                    title="Text Color"></div>
+                  <div class="input input--color-picker color-selector" data-color-selector="text" data-initial-color="#282a29"></div>
                 </div>
 
                 <!-- Brush Settings -->
                 <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--brush"
                   style="display: none;">
-                  <input type="number" min="10" max="50" value="20" class="input input--number" title="Brush Size"
-                    data-setting="size">
+                  <input type="number" min="10" max="50" value="20" class="input input--number" data-setting="size">
 
-                  <div class="color-selector" data-color-selector="brush" data-initial-color="#2b8059"
-                    title="Brush Color"></div>
+                  <div class="input input--color-picker color-selector" data-color-selector="brush" data-initial-color="#2b8059"></div>
                 </div>
 
                 <!-- Shapes Settings -->
                 <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--shapes"
                   style="display: none;">
-                  <div class="shape-selector" data-shape-selector="shapes" data-initial-shape="rectangle"
-                    title="Shape Type"></div>
+                  <div class="input input--shape-picker shape-selector" data-shape-selector="shapes" data-initial-shape="rectangle"></div>
 
-                  <input type="number" min="1" max="20" value="2" class="input input--number" title="Shape Thickness"
-                    data-setting="strokeWidth">
+                  <input type="number" min="1" max="20" value="2" class="input input--number" data-setting="strokeWidth">
 
-                  <div class="color-selector" data-color-selector="shapes-stroke" data-initial-color="#282a29"
-                    title="Shape Stroke"></div>
-                  <div class="color-selector" data-color-selector="shapes-fill" data-initial-color="transparent"
-                    data-allow-transparent="true" title="Shape Fill"></div>
+                  <div class="input input--color-picker color-selector" data-color-selector="shapes-stroke" data-initial-color="#282a29"></div>
+                  <div class="input input--color-picker color-selector" data-color-selector="shapes-fill" data-initial-color="transparent"
+                    data-allow-transparent="true"></div>
                 </div>
 
                 <!-- Eraser Settings -->
                 <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--eraser"
                   style="display: none;">
-                  <input type="number" min="5" max="50" value="20" class="input input--number" title="Eraser Size"
-                    data-setting="size">
+                  <input type="number" min="5" max="50" value="20" class="input input--number" data-setting="size">
                 </div>
 
                 <!-- Table Settings -->
                 <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--tables"
                   style="display: none;">
-                  <input type="number" min="1" max="20" value="3" class="input input--number" title="Table Size"
-                    data-setting="size">
+                  <input type="number" min="1" max="20" value="3" class="input input--number" data-setting="size">
 
-                  <select class="input input--select" title="Table Type" data-setting="tableType">
+                  <select class="input input--select" data-setting="tableType">
                     <option value="basic">Basic</option>
                     <option value="bordered">Bordered</option>
                     <option value="striped">Striped</option>

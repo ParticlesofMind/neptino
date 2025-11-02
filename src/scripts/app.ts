@@ -10,6 +10,7 @@ import './coursebuilder/canvasInit'; // Initialize canvas system
 import './coursebuilder/PanelToggle'; // Initialize panel toggle
 import './coursebuilder/ViewportControls'; // Perspective zoom/drag controls
 import './coursebuilder/EngineController'; // Initialize engine controller
+import './coursebuilder/tools/ToolSystem'; // Initialize tool system
 // import PageTransitions from './navigation/PageTransitions'; // DISABLED
 
 

@@ -5,13 +5,17 @@
 
 import { toolConfigs, type ModeConfig } from './config/toolConfig';
 
+const MODE_CHANGED_EVENT = 'engine:mode-change';
+const TOOL_CHANGED_EVENT = 'engine:tool-change';
+const TOOL_SETTING_EVENT = 'engine:tool-setting';
+
 type EngineMode = 'build' | 'animate';
 
 interface EngineState {
   currentMode: EngineMode;
   currentTool: string;
   currentMedia: string | null;
-  toolSettings: Record<string, any>;
+  toolSettings: Record<string, Record<string, unknown>>;
 }
 
 const STORAGE_KEY = 'neptino_engine_state';
@@ -42,7 +46,14 @@ export class EngineController {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved) as Partial<EngineState>;
+        const settings = parsed.toolSettings && typeof parsed.toolSettings === 'object' ? parsed.toolSettings : {};
+        return {
+          currentMode: parsed.currentMode === 'animate' ? 'animate' : 'build',
+          currentTool: typeof parsed.currentTool === 'string' ? parsed.currentTool : 'selection',
+          currentMedia: typeof parsed.currentMedia === 'string' ? parsed.currentMedia : null,
+          toolSettings: settings as Record<string, Record<string, unknown>>,
+        };
       }
     } catch (error) {
       console.warn('Failed to load engine state from localStorage:', error);
@@ -63,6 +74,40 @@ export class EngineController {
     } catch (error) {
       console.warn('Failed to save engine state to localStorage:', error);
     }
+  }
+
+  private dispatchModeChange(mode: EngineMode): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    window.dispatchEvent(new CustomEvent(MODE_CHANGED_EVENT, { detail: { mode } }));
+  }
+
+  private dispatchToolChange(toolId: string): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const detail = { mode: this.state.currentMode, toolId };
+    window.dispatchEvent(new CustomEvent(TOOL_CHANGED_EVENT, { detail }));
+  }
+
+  private dispatchToolSetting(toolId: string, setting: string, value: unknown): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const detail = { toolId, setting, value, mode: this.state.currentMode };
+    window.dispatchEvent(new CustomEvent(TOOL_SETTING_EVENT, { detail }));
+  }
+
+  private updateToolSetting(toolId: string, setting: string, value: unknown, persist = true): void {
+    if (!this.state.toolSettings[toolId]) {
+      this.state.toolSettings[toolId] = {};
+    }
+    this.state.toolSettings[toolId][setting] = value;
+    if (persist) {
+      this.saveState();
+    }
+    this.dispatchToolSetting(toolId, setting, value);
   }
 
   private setupEventListeners(): void {
@@ -148,6 +193,7 @@ export class EngineController {
   private selectMode(mode: EngineMode): void {
     this.state.currentMode = mode;
     this.saveState();
+    this.dispatchModeChange(mode);
     
     // Remove active class from all mode buttons
     const modeButtons = document.querySelectorAll<HTMLButtonElement>('.engine__modes [data-mode]');
@@ -203,6 +249,7 @@ export class EngineController {
     
     // Show options for current tool
     this.showToolOptions(this.state.currentTool);
+    this.dispatchToolChange(this.state.currentTool);
   }
 
   private renderToolOptions(config: ModeConfig): void {
@@ -222,7 +269,7 @@ export class EngineController {
 
       // Render each option based on type
       tool.options.forEach(option => {
-        const optionElement = this.createOptionElement(option);
+        const optionElement = this.createOptionElement(tool.id, option);
         if (optionElement) {
           optionsDiv.appendChild(optionElement);
         }
@@ -232,89 +279,303 @@ export class EngineController {
     });
   }
 
-  private createOptionElement(option: any): HTMLElement | null {
+  private createOptionElement(toolId: string, option: any): HTMLElement | null {
     switch (option.type) {
+      case 'slider':
+        return this.createSliderControl(toolId, option);
+      case 'dropdown':
+        return this.createDropdownControl(toolId, option);
+      case 'swatches':
+        return this.createSwatchControl(toolId, option);
+      case 'toggle':
+        return this.createToggleControl(toolId, option);
+      case 'toggle-group':
+        return this.createToggleGroupControl(toolId, option);
       case 'number':
-        return this.createNumberInput(option);
-      case 'select':
-        return this.createSelectInput(option);
-      case 'color':
-        return this.createColorSelector(option);
-      case 'shape':
-        return this.createShapeSelector(option);
-      case 'text-style':
-        return this.createTextStyleControls();
+        return this.createNumberControl(toolId, option);
+      case 'text':
+        return this.createTextControl(toolId, option);
+      case 'button':
+        return this.createButtonControl(toolId, option);
       default:
         return null;
     }
   }
 
-  private createNumberInput(option: any): HTMLElement {
+  private createSliderControl(toolId: string, option: any): HTMLElement {
+    const wrapper = document.createElement('label');
+    wrapper.className = 'tools__control tools__control--slider';
+    wrapper.title = option.label;
+
+    const label = document.createElement('span');
+    label.className = 'tools__label';
+    label.textContent = option.label;
+
+    const input = document.createElement('input');
+    input.type = 'range';
+    input.className = 'tools__slider-input';
+    input.min = option.settings.min?.toString() ?? '0';
+    input.max = option.settings.max?.toString() ?? '100';
+    input.step = option.settings.step?.toString() ?? '0.1';
+
+    const currentValue = Number(this.getInitialValue(toolId, option));
+    input.value = Number.isFinite(currentValue) ? currentValue.toString() : option.settings.value?.toString() ?? input.min;
+
+    const valueDisplay = document.createElement('span');
+    valueDisplay.className = 'tools__value';
+    valueDisplay.textContent = input.value;
+
+    const snaps: number[] | undefined = option.settings.snaps;
+
+    input.addEventListener('input', () => {
+      let numeric = Number.parseFloat(input.value);
+      if (Array.isArray(snaps) && snaps.length) {
+        numeric = this.snapToNearest(numeric, snaps);
+        input.value = numeric.toString();
+      }
+      valueDisplay.textContent = this.formatSliderValue(numeric);
+      this.updateToolSetting(toolId, option.id, numeric);
+    });
+
+    wrapper.appendChild(label);
+    wrapper.appendChild(input);
+    wrapper.appendChild(valueDisplay);
+    this.updateToolSetting(toolId, option.id, Number(input.value), false);
+    return wrapper;
+  }
+
+  private createDropdownControl(toolId: string, option: any): HTMLElement {
+    const wrapper = document.createElement('label');
+    wrapper.className = 'tools__control tools__control--dropdown';
+    wrapper.title = option.label;
+
+    const label = document.createElement('span');
+    label.className = 'tools__label';
+    label.textContent = option.label;
+
+    const select = document.createElement('select');
+    select.className = 'input input--select';
+
+    const initialValue = this.getInitialValue(toolId, option) ?? option.settings.value;
+
+    option.settings.options.forEach((opt: any) => {
+      const optionElement = document.createElement('option');
+      optionElement.value = opt.value;
+      optionElement.textContent = opt.label;
+      if (opt.value === initialValue) {
+        optionElement.selected = true;
+      }
+      select.appendChild(optionElement);
+    });
+
+    select.addEventListener('change', () => {
+      this.updateToolSetting(toolId, option.id, select.value);
+    });
+
+    wrapper.appendChild(label);
+    wrapper.appendChild(select);
+    this.updateToolSetting(toolId, option.id, select.value, false);
+    return wrapper;
+  }
+
+  private createSwatchControl(toolId: string, option: any): HTMLElement {
+    const container = document.createElement('div');
+    container.className = 'tools__control tools__control--swatches';
+    container.title = option.label;
+
+    const label = document.createElement('span');
+    label.className = 'tools__label';
+    label.textContent = option.label;
+    container.appendChild(label);
+
+    const swatchGrid = document.createElement('div');
+    swatchGrid.className = 'tools__swatches';
+    container.appendChild(swatchGrid);
+
+    const initialValue = (this.getInitialValue(toolId, option) ?? option.settings.value) as string;
+
+    option.settings.options.forEach((color: string) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'tools__swatch';
+      button.dataset.value = color;
+      button.title = color === 'transparent' ? 'No Fill' : color;
+      if (color === initialValue) {
+        button.classList.add('is-active');
+      }
+      if (color === 'transparent') {
+        button.classList.add('tools__swatch--transparent');
+      } else {
+        button.style.setProperty('--swatch-color', color);
+        button.style.backgroundColor = color;
+      }
+      button.addEventListener('click', () => {
+        swatchGrid.querySelectorAll('.tools__swatch').forEach((el) => el.classList.remove('is-active'));
+        button.classList.add('is-active');
+        this.updateToolSetting(toolId, option.id, color);
+      });
+      swatchGrid.appendChild(button);
+    });
+
+    this.updateToolSetting(toolId, option.id, initialValue, false);
+    return container;
+  }
+
+  private createToggleControl(toolId: string, option: any): HTMLElement {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'tools__control tools__control--toggle';
+    button.textContent = option.label;
+    let active = Boolean(this.getInitialValue(toolId, option) ?? option.settings.value ?? false);
+    if (active) {
+      button.classList.add('is-active');
+    }
+
+    button.addEventListener('click', () => {
+      active = !active;
+      button.classList.toggle('is-active', active);
+      this.updateToolSetting(toolId, option.id, active);
+    });
+
+    this.updateToolSetting(toolId, option.id, active, false);
+    return button;
+  }
+
+  private createToggleGroupControl(toolId: string, option: any): HTMLElement {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'tools__control tools__control--group';
+    wrapper.title = option.label;
+
+    const label = document.createElement('span');
+    label.className = 'tools__label';
+    label.textContent = option.label;
+    wrapper.appendChild(label);
+
+    const group = document.createElement('div');
+    group.className = 'tools__segment';
+    wrapper.appendChild(group);
+
+    let currentValue = (this.getInitialValue(toolId, option) ?? option.settings.value) as string;
+
+    option.settings.options.forEach((entry: any) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'tools__segment-button';
+      button.textContent = entry.label;
+      if (entry.value === currentValue) {
+        button.classList.add('is-active');
+      }
+      button.addEventListener('click', () => {
+        currentValue = entry.value;
+        group.querySelectorAll('.tools__segment-button').forEach((el) => el.classList.remove('is-active'));
+        button.classList.add('is-active');
+        this.updateToolSetting(toolId, option.id, currentValue);
+      });
+      group.appendChild(button);
+    });
+
+    this.updateToolSetting(toolId, option.id, currentValue, false);
+    return wrapper;
+  }
+
+  private createNumberControl(toolId: string, option: any): HTMLElement {
+    const wrapper = document.createElement('label');
+    wrapper.className = 'tools__control tools__control--number';
+    wrapper.title = option.label;
+
+    const label = document.createElement('span');
+    label.className = 'tools__label';
+    label.textContent = option.label;
+
     const input = document.createElement('input');
     input.type = 'number';
     input.className = 'input input--number';
-    input.title = option.label;
-    input.min = option.settings.min?.toString() || '1';
-    input.max = option.settings.max?.toString() || '100';
-    input.value = option.settings.value?.toString() || '1';
-    input.dataset.setting = option.id;
-    return input;
-  }
+    if (option.settings.min !== undefined) input.min = option.settings.min.toString();
+    if (option.settings.max !== undefined) input.max = option.settings.max.toString();
+    if (option.settings.step !== undefined) input.step = option.settings.step.toString();
 
-  private createSelectInput(option: any): HTMLElement {
-    const select = document.createElement('select');
-    select.className = 'input input--select';
-    select.title = option.label;
-    select.dataset.setting = option.id;
+    const initialValue = Number(this.getInitialValue(toolId, option) ?? option.settings.value ?? 0);
+    input.value = initialValue.toString();
 
-    option.settings.options.forEach((opt: any) => {
-      const optElement = document.createElement('option');
-      optElement.value = opt.value;
-      optElement.textContent = opt.label;
-      if (opt.value === option.settings.value) {
-        optElement.selected = true;
-      }
-      select.appendChild(optElement);
+    input.addEventListener('change', () => {
+      const numeric = Number.parseFloat(input.value);
+      this.updateToolSetting(toolId, option.id, numeric);
     });
 
-    return select;
+    wrapper.appendChild(label);
+    wrapper.appendChild(input);
+    this.updateToolSetting(toolId, option.id, initialValue, false);
+    return wrapper;
   }
 
-  private createColorSelector(option: any): HTMLElement {
-    const div = document.createElement('div');
-    div.className = 'color-selector';
-    div.dataset.colorSelector = option.id;
-    div.dataset.initialColor = option.settings.value;
-    div.title = option.label;
-    if (option.settings.allowTransparent) {
-      div.dataset.allowTransparent = 'true';
+  private createTextControl(toolId: string, option: any): HTMLElement {
+    const wrapper = document.createElement('label');
+    wrapper.className = 'tools__control tools__control--text';
+    wrapper.title = option.label;
+
+    const label = document.createElement('span');
+    label.className = 'tools__label';
+    label.textContent = option.label;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'input input--text';
+    if (option.settings.placeholder) {
+      input.placeholder = option.settings.placeholder;
     }
-    return div;
+    const initialValue = (this.getInitialValue(toolId, option) ?? option.settings.value ?? '').toString();
+    input.value = initialValue;
+
+    input.addEventListener('input', () => {
+      this.updateToolSetting(toolId, option.id, input.value);
+    });
+
+    wrapper.appendChild(label);
+    wrapper.appendChild(input);
+    this.updateToolSetting(toolId, option.id, initialValue, false);
+    return wrapper;
   }
 
-  private createShapeSelector(option: any): HTMLElement {
-    const div = document.createElement('div');
-    div.className = 'shape-selector';
-    div.dataset.shapeSelector = option.id;
-    div.dataset.initialShape = option.settings.value;
-    div.title = option.label;
-    return div;
+  private createButtonControl(toolId: string, option: any): HTMLElement {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'tools__control tools__control--button';
+    button.textContent = option.label;
+    button.addEventListener('click', () => {
+      this.updateToolSetting(toolId, option.id, Date.now());
+    });
+    return button;
   }
 
-  private createTextStyleControls(): HTMLElement {
-    const div = document.createElement('div');
-    div.className = 'text-style-controls';
-    div.setAttribute('aria-label', 'Text Style');
-    div.innerHTML = `
-      <button type="button" class="tools__button text-style-btn icon icon--base" data-text-style="bold" title="Bold">B</button>
-      <button type="button" class="tools__button text-style-btn icon icon--base" data-text-style="italic" title="Italic">I</button>
-    `;
-    return div;
+  private getInitialValue(toolId: string, option: any): unknown {
+    const stored = this.state.toolSettings[toolId]?.[option.id];
+    if (stored !== undefined) {
+      return stored;
+    }
+    return option.settings?.value;
+  }
+
+  private snapToNearest(value: number, snaps: number[]): number {
+    let closest = snaps[0];
+    let minDiff = Math.abs(value - snaps[0]);
+    for (let i = 1; i < snaps.length; i += 1) {
+      const diff = Math.abs(value - snaps[i]);
+      if (diff < minDiff) {
+        closest = snaps[i];
+        minDiff = diff;
+      }
+    }
+    return closest;
+  }
+
+  private formatSliderValue(value: number): string {
+    return Number.isInteger(value) ? value.toString() : value.toFixed(2);
   }
 
   private selectTool(tool: string): void {
     this.state.currentTool = tool;
     this.saveState();
+    this.dispatchToolChange(tool);
     
     // Remove active class from all tool buttons
     const toolButtons = this.toolsContainer?.querySelectorAll<HTMLButtonElement>('[data-tool]');
