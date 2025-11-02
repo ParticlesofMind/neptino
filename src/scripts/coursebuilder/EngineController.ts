@@ -176,8 +176,12 @@ export class EngineController {
     if (!layer) {
       layer = document.createElement('div');
       layer.className = 'engine__color-layer';
-      const selection = tools.querySelector('.engine__tools-selection');
-      tools.insertBefore(layer, selection ?? null);
+      const options = tools.querySelector('.engine__tools-options');
+      if (options) {
+        tools.insertBefore(layer, options);
+      } else {
+        tools.appendChild(layer);
+      }
     }
 
     this.colorLayer = layer;
@@ -540,10 +544,43 @@ export class EngineController {
     editorHeader.textContent = 'Color';
     editor.appendChild(editorHeader);
 
-    const colorWheel = document.createElement('input');
-    colorWheel.type = 'color';
-    colorWheel.className = 'tools__color-wheel';
-    editor.appendChild(colorWheel);
+    // Curated color palette grid for coursebuilding
+    const colorGrid = document.createElement('div');
+    colorGrid.className = 'tools__color-grid';
+    
+    const curatedColors = [
+      // Row 1: Reds to Purples
+      '#E74C3C', '#C0392B', '#EC407A', '#E91E63', '#9C27B0', '#7B1FA2',
+      // Row 2: Oranges to Pinks
+      '#FF5722', '#E64A19', '#FF7043', '#F06292', '#BA68C8', '#9575CD',
+      // Row 3: Yellows to Light Blues
+      '#FFC107', '#FFA000', '#FFD54F', '#4FC3F7', '#29B6F6', '#039BE5',
+      // Row 4: Greens to Cyans
+      '#66BB6A', '#43A047', '#26A69A', '#00897B', '#0097A7', '#00ACC1',
+      // Row 5: Blues
+      '#42A5F5', '#1E88E5', '#1976D2', '#1565C0', '#0D47A1', '#0277BD',
+      // Row 6: Grays
+      '#757575', '#616161', '#424242', '#212121', '#9E9E9E', '#BDBDBD'
+    ];
+
+    curatedColors.forEach((color) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'tools__color-grid-option';
+      button.style.background = color;
+      button.dataset.value = color;
+      button.title = color;
+      button.setAttribute('aria-label', color);
+      button.addEventListener('click', () => {
+        workingColor = color;
+        hexInput.value = color;
+        hexInput.classList.remove('is-invalid');
+        updatePreview(color);
+      });
+      colorGrid.appendChild(button);
+    });
+
+    editor.appendChild(colorGrid);
 
     const hexInput = document.createElement('input');
     hexInput.type = 'text';
@@ -590,13 +627,11 @@ export class EngineController {
 
     const setInputsForColor = (color: string): void => {
       if (color === 'transparent') {
-        colorWheel.value = '#000000';
-        colorWheel.disabled = true;
         hexInput.value = '';
+        hexInput.disabled = true;
       } else {
-        colorWheel.disabled = false;
+        hexInput.disabled = false;
         const normalized = this.normalizeColorValue(color);
-        colorWheel.value = normalized === 'transparent' ? '#000000' : normalized;
         hexInput.value = normalized;
       }
       hexInput.classList.remove('is-invalid');
@@ -746,19 +781,6 @@ export class EngineController {
       const normalized = this.tryNormalizeHex(hexInput.value);
       if (normalized) {
         workingColor = normalized;
-        colorWheel.disabled = false;
-        colorWheel.value = normalized;
-        highlightSelection(normalized);
-        updatePreview(normalized);
-      }
-    });
-
-    colorWheel.addEventListener('input', () => {
-      const normalized = this.tryNormalizeHex(colorWheel.value);
-      if (normalized) {
-        workingColor = normalized;
-        hexInput.value = normalized;
-        hexInput.classList.remove('is-invalid');
         highlightSelection(normalized);
         updatePreview(normalized);
       }
