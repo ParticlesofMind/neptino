@@ -399,6 +399,27 @@ export class EngineController {
 
     const snaps: number[] | undefined = option.settings.snaps;
 
+    // Add snap indicators if defined
+    if (Array.isArray(snaps) && snaps.length > 0) {
+      const snapContainer = document.createElement('div');
+      snapContainer.className = 'tools__slider-snaps';
+      
+      const min = Number(input.min);
+      const max = Number(input.max);
+      const range = max - min;
+      
+      snaps.forEach((snapValue) => {
+        const indicator = document.createElement('span');
+        indicator.className = 'tools__slider-snap';
+        // Calculate percentage position
+        const position = ((snapValue - min) / range) * 100;
+        indicator.style.left = `${position}%`;
+        snapContainer.appendChild(indicator);
+      });
+      
+      wrapper.appendChild(snapContainer);
+    }
+
     input.addEventListener('input', () => {
       let numeric = Number.parseFloat(input.value);
       if (Array.isArray(snaps) && snaps.length) {
@@ -760,8 +781,22 @@ export class EngineController {
     button.className = 'tools__control tools__control--toggle';
     button.title = option.label;
     button.setAttribute('aria-label', option.label);
-    button.textContent = '';
     button.classList.add('button', 'button--engine');
+    
+    // Add specific styling classes and text content for text formatting toggles
+    if (option.id === 'bold') {
+      button.classList.add('tools__control--bold');
+      button.textContent = 'B';
+    } else if (option.id === 'italic') {
+      button.classList.add('tools__control--italic');
+      button.textContent = 'I';
+    } else if (option.id === 'underline') {
+      button.classList.add('tools__control--underline');
+      button.textContent = 'U';
+    } else {
+      button.textContent = '';
+    }
+    
     let active = Boolean(this.getInitialValue(toolId, option) ?? option.settings.value ?? false);
     if (active) {
       button.classList.add('is-active');

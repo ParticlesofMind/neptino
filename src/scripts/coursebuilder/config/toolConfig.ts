@@ -103,12 +103,6 @@ export const toolConfigs: Record<string, ModeConfig> = {
             label: "Brush Color",
             settings: { options: COLOR_SWATCHES, value: "#2E2E2E" },
           },
-          {
-            id: "smoothing",
-            type: "slider",
-            label: "Smoothing",
-            settings: { min: 0.05, max: 0.95, step: 0.05, value: 0.35 },
-          },
         ],
       },
       {
