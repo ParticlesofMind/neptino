@@ -1856,8 +1856,8 @@
                   </select>
 
                   <div class="engine__text-style-controls" aria-label="Text Style">
-                    <button type="button" class="engine__text-style-btn" data-text-style="bold">B</button>
-                    <button type="button" class="engine__text-style-btn" data-text-style="italic">I</button>
+                    <button type="button" class="button button--engine engine__text-style-btn" data-text-style="bold">B</button>
+                    <button type="button" class="button button--engine engine__text-style-btn" data-text-style="italic">I</button>
                   </div>
 
                   <select id="font-family-select" class="input input--select" data-setting="fontFamily">
@@ -1913,67 +1913,55 @@
 
               <div class="engine__tools-selection">
                 <!-- Build Mode Tools -->
-                <button class="button button--engine button--active" data-tool="selection" data-mode="build">
+                <button class="button button--engine button--active" data-tool="selection" data-mode="build" aria-label="Select">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
                     class="icon icon--base">
-                  <span class="label label--small">Select</span>
                 </button>
-                <button class="button button--engine" data-tool="pen" data-mode="build">
+                <button class="button button--engine" data-tool="pen" data-mode="build" aria-label="Pen">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Pen Tool"
                     class="icon icon--base">
-                  <span class="label label--small">Pen</span>
                 </button>
-                <button class="button button--engine" data-tool="brush" data-mode="build">
+                <button class="button button--engine" data-tool="brush" data-mode="build" aria-label="Brush">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" alt="Brush Tool"
                     class="icon icon--base">
-                  <span class="label label--small">Brush</span>
                 </button>
-                <button class="button button--engine" data-tool="text" data-mode="build">
+                <button class="button button--engine" data-tool="text" data-mode="build" aria-label="Text">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" alt="Text Tool"
                     class="icon icon--base">
-                  <span class="label label--small">Text</span>
                 </button>
-                <button class="button button--engine" data-tool="shapes" data-mode="build">
+                <button class="button button--engine" data-tool="shapes" data-mode="build" aria-label="Shapes">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" alt="Shapes Tool"
                     class="icon icon--base">
-                  <span class="label label--small">Shapes</span>
                 </button>
-                <button class="button button--engine" data-tool="tables" data-mode="build">
+                <button class="button button--engine" data-tool="tables" data-mode="build" aria-label="Tables">
                   <img src="/src/assets/icons/coursebuilder/media/media-table.svg" alt="Table Tool"
                     class="icon icon--base">
-                  <span class="label label--small">Tables</span>
                 </button>
-                <button class="button button--engine" data-tool="generate" data-mode="build">
+                <button class="button button--engine" data-tool="generate" data-mode="build" aria-label="Generate">
                   <img src="/src/assets/icons/bot-icon.svg" alt="Generate Tool"
                     class="icon icon--base">
-                  <span class="label label--small">Generate</span>
                 </button>
-                <button class="button button--engine" data-tool="eraser" data-mode="build">
+                <button class="button button--engine" data-tool="eraser" data-mode="build" aria-label="Eraser">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" alt="Eraser Tool"
                     class="icon icon--base">
-                  <span class="label label--small">Eraser</span>
                 </button>
 
                 <!-- Animate Mode Tools -->
-                <button class="button button--engine" data-tool="selection" data-mode="animate" style="display: none;">
+                <button class="button button--engine" data-tool="selection" data-mode="animate" aria-label="Select" style="display: none;">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
                     class="icon icon--base">
-                  <span class="label label--small">Select</span>
                 </button>
-                <button class="button button--engine" data-tool="scene" data-mode="animate" style="display: none;">
+                <button class="button button--engine" data-tool="scene" data-mode="animate" aria-label="Scene" style="display: none;">
                   <img src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" alt="Scene Tool"
                     class="icon icon--base">
-                  <span class="label label--small">Scene</span>
                 </button>
-                <button class="button button--engine" data-tool="path" data-mode="animate" style="display: none;">
+                <button class="button button--engine" data-tool="path" data-mode="animate" aria-label="Path" style="display: none;">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Path Tool"
                     class="icon icon--base">
-                  <span class="label label--small">Path</span>
                 </button>
-                <button class="button button--engine" data-tool="modify" data-mode="animate" style="display: none;">
+                <button class="button button--engine" data-tool="modify" data-mode="animate" aria-label="Modify" style="display: none;">
                   <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" alt="Modify Tool"
                     class="icon icon--base">
-                  <span class="label label--small">Modify</span>
                 </button>
               </div>
             </div>
