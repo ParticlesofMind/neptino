@@ -15,7 +15,7 @@
     <nav class="nav">
       <ul class="ul ul--header">
         <li class="ul__item">
-          <button class="button button--outline button--small" id="previous-btn" title="Previous Step">
+          <button class="button button--nav" id="previous-btn" title="Previous Step">
             Previous
           </button>
         </li>
@@ -27,7 +27,7 @@
         </li>
 
         <li class="ul__item">
-          <button class="button button--outline button--small" id="next-btn" title="Next Step">
+          <button class="button button--nav" id="next-btn" title="Next Step">
             Next
           </button>
         </li>
@@ -1714,10 +1714,6 @@
               <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-link.svg" alt="">
               <span class="label label--small">Links</span>
             </button>
-            <button class="button button--engine" data-media="interactive">
-              <img class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-interactive.svg" alt="">
-              <span class="label label--small">Interactive</span>
-            </button>
             <button class="button button--engine" data-media="games">
               <img class="icon icon--base" src="/src/assets/icons/joystick-icon.svg" alt="">
               <span class="label label--small">Games</span>
@@ -1733,10 +1729,10 @@
           </div>
         </div>
 
-        <button class="engine__resizer" type="button" aria-label="Resize media and search panel" data-engine-resizer="content"></button>
+        <button class="engine__resizer" type="button" aria-label="Resize search column" data-engine-resizer="search"></button>
 
         <!-- Canvas Area -->
-        <div class="engine__canvas canvas canvas--grid" id="canvas-container">
+        <div class="engine__canvas canvas" id="canvas-container">
           <!-- Canvas will be inserted here by JavaScript -->
 
           <!-- Left Side: Perspective + Mode (inside canvas) -->
@@ -1828,19 +1824,9 @@
                 <span class="label label--small">Build</span>
               </button>
 
-              <button class="button button--engine button--compact" data-mode="generate">
-                <img class="icon icon--base" src="/src/assets/icons/bot-icon.svg" alt="">
-                <span class="label label--small">Generate</span>
-              </button>
-
               <button class="button button--engine button--compact" data-mode="animate">
                 <img class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" alt="">
                 <span class="label label--small">Animate</span>
-              </button>
-
-              <button class="button button--engine button--compact" data-mode="flow">
-                <img class="icon icon--base" src="/src/assets/icons/workflow-icon.svg" alt="">
-                <span class="label label--small">Flow</span>
               </button>
             </div>
 
@@ -1940,68 +1926,68 @@
 
               <div class="engine__tools-selection">
                 <!-- Build Mode Tools -->
-                <div class="engine__tools-group engine__tools-group--build" data-mode-tools="build">
-                  <button class="button button--engine button--active" data-tool="selection">
-                    <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
-                      class="icon icon--base">
-                    <span class="label label--small">Select</span>
-                  </button>
-                  <button class="button button--engine" data-tool="pen">
-                    <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Pen Tool"
-                      class="icon icon--base">
-                    <span class="label label--small">Pen</span>
-                  </button>
-                  <button class="button button--engine" data-tool="brush">
-                    <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" alt="Brush Tool"
-                      class="icon icon--base">
-                    <span class="label label--small">Brush</span>
-                  </button>
-                  <button class="button button--engine" data-tool="text">
-                    <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" alt="Text Tool"
-                      class="icon icon--base">
-                    <span class="label label--small">Text</span>
-                  </button>
-                  <button class="button button--engine" data-tool="shapes">
-                    <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" alt="Shapes Tool"
-                      class="icon icon--base">
-                    <span class="label label--small">Shapes</span>
-                  </button>
-                  <button class="button button--engine" data-tool="tables">
-                    <img src="/src/assets/icons/coursebuilder/media/media-table.svg" alt="Table Tool"
-                      class="icon icon--base">
-                    <span class="label label--small">Tables</span>
-                  </button>
-                  <button class="button button--engine" data-tool="eraser">
-                    <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" alt="Eraser Tool"
-                      class="icon icon--base">
-                    <span class="label label--small">Eraser</span>
-                  </button>
-                </div>
+                <button class="button button--engine button--active" data-tool="selection" data-mode="build">
+                  <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
+                    class="icon icon--base">
+                  <span class="label label--small">Select</span>
+                </button>
+                <button class="button button--engine" data-tool="pen" data-mode="build">
+                  <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Pen Tool"
+                    class="icon icon--base">
+                  <span class="label label--small">Pen</span>
+                </button>
+                <button class="button button--engine" data-tool="brush" data-mode="build">
+                  <img src="/src/assets/icons/coursebuilder/tools/tool-brush.svg" alt="Brush Tool"
+                    class="icon icon--base">
+                  <span class="label label--small">Brush</span>
+                </button>
+                <button class="button button--engine" data-tool="text" data-mode="build">
+                  <img src="/src/assets/icons/coursebuilder/tools/tool-write.svg" alt="Text Tool"
+                    class="icon icon--base">
+                  <span class="label label--small">Text</span>
+                </button>
+                <button class="button button--engine" data-tool="shapes" data-mode="build">
+                  <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" alt="Shapes Tool"
+                    class="icon icon--base">
+                  <span class="label label--small">Shapes</span>
+                </button>
+                <button class="button button--engine" data-tool="tables" data-mode="build">
+                  <img src="/src/assets/icons/coursebuilder/media/media-table.svg" alt="Table Tool"
+                    class="icon icon--base">
+                  <span class="label label--small">Tables</span>
+                </button>
+                <button class="button button--engine" data-tool="generate" data-mode="build">
+                  <img src="/src/assets/icons/bot-icon.svg" alt="Generate Tool"
+                    class="icon icon--base">
+                  <span class="label label--small">Generate</span>
+                </button>
+                <button class="button button--engine" data-tool="eraser" data-mode="build">
+                  <img src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg" alt="Eraser Tool"
+                    class="icon icon--base">
+                  <span class="label label--small">Eraser</span>
+                </button>
 
                 <!-- Animate Mode Tools -->
-                <div class="engine__tools-group engine__tools-group--animate" data-mode-tools="animate"
-                  style="display: none;">
-                  <button class="button button--engine button--active" data-tool="selection">
-                    <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
-                      class="icon icon--base">
-                    <span class="label label--small">Select</span>
-                  </button>
-                  <button class="button button--engine" data-tool="scene">
-                    <img src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" alt="Scene Tool"
-                      class="icon icon--base">
-                    <span class="label label--small">Scene</span>
-                  </button>
-                  <button class="button button--engine" data-tool="path">
-                    <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Path Tool"
-                      class="icon icon--base">
-                    <span class="label label--small">Path</span>
-                  </button>
-                  <button class="button button--engine" data-tool="modify">
-                    <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" alt="Modify Tool"
-                      class="icon icon--base">
-                    <span class="label label--small">Modify</span>
-                  </button>
-                </div>
+                <button class="button button--engine" data-tool="selection" data-mode="animate" style="display: none;">
+                  <img src="/src/assets/icons/coursebuilder/tools/tool-select.svg" alt="Selection Tool"
+                    class="icon icon--base">
+                  <span class="label label--small">Select</span>
+                </button>
+                <button class="button button--engine" data-tool="scene" data-mode="animate" style="display: none;">
+                  <img src="/src/assets/icons/coursebuilder/modes/mode-animate.svg" alt="Scene Tool"
+                    class="icon icon--base">
+                  <span class="label label--small">Scene</span>
+                </button>
+                <button class="button button--engine" data-tool="path" data-mode="animate" style="display: none;">
+                  <img src="/src/assets/icons/coursebuilder/tools/tool-pen.svg" alt="Path Tool"
+                    class="icon icon--base">
+                  <span class="label label--small">Path</span>
+                </button>
+                <button class="button button--engine" data-tool="modify" data-mode="animate" style="display: none;">
+                  <img src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg" alt="Modify Tool"
+                    class="icon icon--base">
+                  <span class="label label--small">Modify</span>
+                </button>
               </div>
             </div>
 
@@ -2103,12 +2089,14 @@
         <!-- Layers Panel - Now floating overlay on the right -->
         <div class="engine__panel">
           <div class="engine__panel-header">
-            <div class="engine__panel-select">
-              <select class="input input--dropdown" data-panel-select aria-label="Panel view">
-                <option value="layers" selected>Layers</option>
-                <option value="navigation">Navigation</option>
-              </select>
-              <span class="engine__panel-select-icon" aria-hidden="true"></span>
+            <div class="engine__panel-toggle">
+              <button class="engine__panel-toggle-btn engine__panel-toggle-btn--active" data-panel-view="layers" aria-label="Show Layers panel" aria-pressed="true">
+                Layers
+              </button>
+              <span class="engine__panel-toggle-divider">|</span>
+              <button class="engine__panel-toggle-btn" data-panel-view="navigation" aria-label="Show Navigation panel" aria-pressed="false">
+                Navigation
+              </button>
             </div>
           </div>
           <div class="engine__panel-content">

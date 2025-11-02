@@ -54,28 +54,28 @@
     }
 
     &--active {
-        background: #B3D7FF;
-        border-color: #9AC8FF;
-        box-shadow: 0 2px 8px rgba(179, 215, 255, 0.45);
-        color: white;
+        background: #B3D7FF !important; /* Light blue background */
+        border-color: #9AC8FF !important;
+        box-shadow: 0 2px 8px rgba(179, 215, 255, 0.45) !important;
+        color: white !important;
 
         .label {
-            color: white;
+            color: white !important;
         }
 
         // Make icons white in active state
         .icon {
-            filter: brightness(0) invert(1);
+            filter: brightness(0) invert(1) !important;
         }
 
         // For SVG icons with stroke
         svg {
-            stroke: white;
+            stroke: white !important;
         }
 
         &:hover {
-            background: #A5CFFF;
-            border-color: #8BBEFF;
+            background: #A5CFFF !important; /* Slightly darker on hover */
+            border-color: #8BBEFF !important;
         }
     }
 

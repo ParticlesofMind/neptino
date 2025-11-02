@@ -7,6 +7,9 @@ import { initializeGlobalNavigation, initializeDashboardNavigation } from './nav
 import { initAuth, AuthFormHandler } from './backend/auth/auth';
 import './backend/courses/settings/pageSetupHandler';
 import './coursebuilder/canvasInit'; // Initialize canvas system
+import './coursebuilder/PanelToggle'; // Initialize panel toggle
+import './coursebuilder/ViewportControls'; // Perspective zoom/drag controls
+import './coursebuilder/EngineController'; // Initialize engine controller
 // import PageTransitions from './navigation/PageTransitions'; // DISABLED
 
 

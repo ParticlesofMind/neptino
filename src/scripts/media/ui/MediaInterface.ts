@@ -66,6 +66,7 @@ class MediaInterface {
     this.container.appendChild(this.filtersEl);
     this.container.appendChild(this.resultsEl);
     host.appendChild(this.container);
+    host.classList.add('engine__search--ready');
 
     // Listen media tab clicks
     document.querySelectorAll('[data-media]').forEach(el => {

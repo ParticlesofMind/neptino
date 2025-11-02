@@ -1,15 +1,59 @@
 const ENGINE_SELECTOR = '.engine';
 const RESIZER_ATTRIBUTE = 'engine-resizer';
 const RESIZER_DATA_KEY = 'engineResizer';
-const WIDTH_PROPERTIES = {
-  content: '--engine-content-width',
-  panel: '--engine-panel-width',
-} as const;
 
-type ResizableRegion = keyof typeof WIDTH_PROPERTIES;
+type ResizerConfig = {
+  property: string;
+  defaultWidth: number;
+  min: number;
+  max: number;
+  visibleMin: number;
+  collapseThreshold: number;
+  invertDelta?: boolean;
+};
+
+const RESIZER_CONFIG = {
+  search: {
+    property: '--engine-search-width',
+    defaultWidth: 320,
+    min: 0,
+    max: 420,
+    visibleMin: 240,
+    collapseThreshold: 200,
+  },
+  panel: {
+    property: '--engine-panel-width',
+    defaultWidth: 260,
+    min: 0,
+    max: 420,
+    visibleMin: 220,
+    collapseThreshold: 180,
+    invertDelta: true,
+  },
+} as const satisfies Record<string, ResizerConfig>;
+
+type ResizableRegion = keyof typeof RESIZER_CONFIG;
 
 const KEYBOARD_STEP = 24;
-const SNAP_THRESHOLD = 24;
+const REGION_TARGETS = {
+  search: '.engine__search',
+  panel: '.engine__panel',
+} as const;
+
+const REGION_COLLAPSED_CLASSES = {
+  search: 'engine__search--collapsed',
+  panel: 'engine__panel--collapsed',
+} as const;
+
+const toggleRegionCollapsed = (engine: HTMLElement, region: ResizableRegion, collapsed: boolean): void => {
+  const selector = REGION_TARGETS[region];
+  const target = selector ? engine.querySelector<HTMLElement>(selector) : null;
+  if (!target) {
+    return;
+  }
+
+  target.classList.toggle(REGION_COLLAPSED_CLASSES[region], collapsed);
+};
 
 const getNumericProperty = (element: HTMLElement, property: string, fallback: number): number => {
   const raw = getComputedStyle(element).getPropertyValue(property);
@@ -17,10 +61,14 @@ const getNumericProperty = (element: HTMLElement, property: string, fallback: nu
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
-const setRegionWidth = (engine: HTMLElement, property: string, value: number): void => {
-  const width = Math.max(0, value);
-  const snapped = width < SNAP_THRESHOLD ? 0 : width;
-  engine.style.setProperty(property, `${Math.round(snapped)}px`);
+const setRegionWidth = (engine: HTMLElement, region: ResizableRegion, rawValue: number): void => {
+  const config = RESIZER_CONFIG[region];
+  const clamped = Math.min(config.max, Math.max(config.min, rawValue));
+  const collapsed = clamped <= config.collapseThreshold;
+  const width = collapsed ? config.min : Math.max(config.visibleMin, clamped);
+  const finalWidth = collapsed ? config.min : Math.round(width);
+  engine.style.setProperty(config.property, `${finalWidth}px`);
+  toggleRegionCollapsed(engine, region, collapsed);
 };
 
 const handlePointerResize = (
@@ -29,8 +77,8 @@ const handlePointerResize = (
   region: ResizableRegion,
   downEvent: PointerEvent,
 ): void => {
-  const property = WIDTH_PROPERTIES[region];
-  const startWidth = getNumericProperty(engine, property, region === 'content' ? 320 : 260);
+  const config = RESIZER_CONFIG[region];
+  const startWidth = getNumericProperty(engine, config.property, config.defaultWidth);
   const startX = downEvent.clientX;
   const pointerId = downEvent.pointerId;
 
@@ -45,8 +93,8 @@ const handlePointerResize = (
 
   const onPointerMove = (event: PointerEvent): void => {
     const delta = event.clientX - startX;
-    const width = region === 'content' ? startWidth + delta : startWidth - delta;
-    setRegionWidth(engine, property, width);
+    const width = config.invertDelta ? startWidth - delta : startWidth + delta;
+    setRegionWidth(engine, region, width);
   };
 
   const teardown = (): void => {
@@ -75,37 +123,46 @@ const handlePointerResize = (
 };
 
 const handleKeyboardResize = (engine: HTMLElement, handle: HTMLButtonElement, region: ResizableRegion, event: KeyboardEvent): void => {
-  const property = WIDTH_PROPERTIES[region];
-  const currentWidth = getNumericProperty(engine, property, region === 'content' ? 320 : 260);
+  const config = RESIZER_CONFIG[region];
+  const currentWidth = getNumericProperty(engine, config.property, config.defaultWidth);
   const step = event.shiftKey ? KEYBOARD_STEP * 2 : KEYBOARD_STEP;
 
   let nextWidth = currentWidth;
 
   switch (event.key) {
     case 'ArrowLeft':
-      nextWidth = region === 'content' ? currentWidth - step : currentWidth + step;
+      nextWidth = config.invertDelta ? currentWidth + step : currentWidth - step;
       break;
     case 'ArrowRight':
-      nextWidth = region === 'content' ? currentWidth + step : currentWidth - step;
+      nextWidth = config.invertDelta ? currentWidth - step : currentWidth + step;
       break;
     case 'Home':
-      nextWidth = 0;
+      nextWidth = config.min;
+      break;
+    case 'End':
+      nextWidth = config.max;
       break;
     default:
       return;
   }
 
   event.preventDefault();
-  setRegionWidth(engine, property, nextWidth);
+  setRegionWidth(engine, region, nextWidth);
 };
 
 const initEngineResizer = (engine: HTMLElement): void => {
+  (Object.keys(RESIZER_CONFIG) as ResizableRegion[]).forEach((region) => {
+    const config = RESIZER_CONFIG[region];
+    const currentWidth = getNumericProperty(engine, config.property, config.defaultWidth);
+    setRegionWidth(engine, region, currentWidth);
+  });
+
   const handles = engine.querySelectorAll<HTMLButtonElement>(`[data-${RESIZER_ATTRIBUTE}]`);
 
   handles.forEach((handle) => {
     const region = handle.dataset[RESIZER_DATA_KEY] as ResizableRegion | undefined;
 
-    if (!region || !(region in WIDTH_PROPERTIES)) {
+    if (!region || !(region in RESIZER_CONFIG)) {
       return;
     }
 
@@ -119,7 +176,7 @@ const initEngineResizer = (engine: HTMLElement): void => {
     });
 
     handle.addEventListener('keydown', (event: KeyboardEvent) => {
-      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight' || event.key === 'Home') {
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight' || event.key === 'Home' || event.key === 'End') {
         handleKeyboardResize(engine, handle, region, event);
       }
     });

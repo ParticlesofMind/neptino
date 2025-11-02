@@ -325,7 +325,6 @@
     transition: all 0.2s ease;
     user-select: none;
     pointer-events: auto;
-    min-height: 52px;
     font-weight: var(--font-weight-bold);
 
     .label {
@@ -351,28 +350,28 @@
 
   // Active state for engine buttons
   &--active {
-    background: #B3D7FF;
-    border-color: #9AC8FF;
-    box-shadow: 0 2px 8px rgba(179, 215, 255, 0.45);
-    color: white;
+    background: #B3D7FF !important; /* Light blue background */
+    border-color: #9AC8FF !important;
+    box-shadow: 0 2px 8px rgba(179, 215, 255, 0.45) !important;
+    color: white !important;
 
     .label {
-      color: white;
+      color: white !important;
     }
 
     // Make icons white in active state
     .icon {
-      filter: brightness(0) invert(1);
+      filter: brightness(0) invert(1) !important;
     }
 
     // For SVG icons with stroke
     svg {
-      stroke: white;
+      stroke: white !important;
     }
 
     &:hover {
-      background: #A5CFFF;
-      border-color: #8BBEFF;
+      background: #A5CFFF !important; /* Slightly darker on hover */
+      border-color: #8BBEFF !important;
     }
   }
 
@@ -381,6 +380,39 @@
     width: auto;
     min-width: 52px;
     padding: var(--spacing-2);
+  }
+
+  // Navigation variant - engine styling with small size for previous/next buttons
+  &--nav {
+    padding: var(--spacing-2) var(--spacing-4);
+    font-size: var(--font-size-small);
+    min-height: var(--size-button-small);
+    width: 6.5rem;
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-medium);
+    background: var(--color-background);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 1px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    pointer-events: auto;
+    font-weight: var(--font-weight-bold);
+
+    &:hover {
+      transform: translateY(-1px);
+      background: var(--color-neutral-50);
+      border-color: var(--color-neutral-300);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.12);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    &:focus {
+      outline: 2px solid var(--color-primary-200);
+      outline-offset: 2px;
+    }
   }
 }
 

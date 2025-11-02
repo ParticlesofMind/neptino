@@ -3,7 +3,7 @@
 // ==========================================================================
 
 .header {
-  padding: clamp(var(--spacing-2), 2vw, var(--spacing-3)) clamp(var(--spacing-4), 3vw, var(--spacing-5));
+  padding: 0.55rem; 
   background: rgba(var(--color-background-rgb), 0.85);
   backdrop-filter: blur(clamp(10px, 5vw, 12px)) saturate(1.1);
   border-bottom: 1px solid rgba(var(--color-background-rgb), 0.2);
