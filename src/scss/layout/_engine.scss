@@ -342,7 +342,7 @@
 
   &__tools-options {
     position: relative;
-    z-index: 10;
+
     padding: var(--spacing-2);
     background: rgba(255, 255, 255, 0.95);
     border-radius: var(--radius-medium);
@@ -695,6 +695,73 @@
       align-items: center;
     }
 
+    .tools__icon-options {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-1);
+    }
+
+    .tools__icon-option {
+      width: var(--engine-control-size);
+      height: var(--engine-control-size);
+      padding: var(--spacing-1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--color-neutral-200);
+      border-radius: var(--radius-medium);
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease,
+        background-color 0.2s ease;
+      position: relative;
+    }
+
+    .tools__icon-option:hover,
+    .tools__icon-option:focus-visible {
+      transform: translateY(-1px);
+      border-color: var(--color-neutral-300);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      outline: none;
+    }
+
+    .tools__icon-option.is-active {
+      border-color: var(--color-primary-400);
+      background: rgba(59, 130, 246, 0.12);
+      box-shadow: 0 6px 18px rgba(59, 130, 246, 0.28);
+    }
+
+    .tools__icon-option-image {
+      width: 70%;
+      height: 70%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    .tools__icon-option-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .tools__dropdown-native {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
     .tools__control--slider {
       flex-direction: row;
       align-items: center;
@@ -750,6 +817,15 @@
       width: var(--engine-control-size);
       height: var(--engine-control-size);
       padding: 0;
+    }
+
+    .tools__segment-button.button--engine {
+      &.is-active {
+        background: #B3D7FF !important;
+        color: white !important;
+        border-color: #9AC8FF !important;
+        box-shadow: 0 2px 8px rgba(179, 215, 255, 0.45) !important;
+      }
     }
 
     .tools__control--toggle.button--engine {

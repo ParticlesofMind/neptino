@@ -19,6 +19,7 @@ export interface ToolOption {
   id: string;
   type: ToolOptionType;
   label: string;
+  icon?: string;
   settings: Record<string, any>;
 }
 
@@ -54,8 +55,8 @@ export const toolConfigs: Record<string, ModeConfig> = {
             settings: {
               value: "contain",
               options: [
-                { value: "contain", label: "Contain" },
-                { value: "intersect", label: "Intersect" },
+                { value: "contain", label: "Contain", icon: "/src/assets/icons/square-mouse-pointer-icon.svg" },
+                { value: "intersect", label: "Intersect", icon: "/src/assets/icons/square-dashed-mouse-pointer-icon.svg" },
               ],
             },
           },
@@ -209,8 +210,16 @@ export const toolConfigs: Record<string, ModeConfig> = {
             settings: {
               value: "text",
               options: [
-                { value: "text", label: "Text" },
-                { value: "image", label: "Image" },
+                {
+                  value: "text",
+                  label: "Text",
+                  icon: "/src/assets/icons/coursebuilder/media/media-text.svg"
+                },
+                {
+                  value: "image",
+                  label: "Image",
+                  icon: "/src/assets/icons/coursebuilder/media/media-image.svg"
+                },
               ],
             },
           },
@@ -220,7 +229,7 @@ export const toolConfigs: Record<string, ModeConfig> = {
             label: "Prompt",
             settings: { value: "", placeholder: "Describe what to generate…" },
           },
-          { id: "send", type: "button", label: "Send", settings: {} },
+          { id: "send", type: "button", label: "Send", icon: "/src/assets/icons/send-icon.svg", settings: {} },
         ],
       },
       {

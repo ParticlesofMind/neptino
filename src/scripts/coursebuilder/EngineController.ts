@@ -4,6 +4,7 @@
  */
 
 import { toolConfigs, type ModeConfig } from './config/toolConfig';
+import { initializeContentTypeSelect, isContentTypeSelect } from './utils/contentTypeSelect';
 
 const MODE_CHANGED_EVENT = 'engine:mode-change';
 const TOOL_CHANGED_EVENT = 'engine:tool-change';
@@ -456,6 +457,9 @@ export class EngineController {
       const optionElement = document.createElement('option');
       optionElement.value = opt.value;
       optionElement.textContent = opt.label;
+      if (opt.icon) {
+        optionElement.dataset.icon = opt.icon;
+      }
       if (opt.value === initialValue) {
         optionElement.selected = true;
       }
@@ -468,6 +472,19 @@ export class EngineController {
 
     wrapper.appendChild(select);
     this.updateToolSetting(toolId, option.id, select.value, false);
+
+    // Initialize Select2 for content type dropdowns after element is in DOM
+    if (isContentTypeSelect(select)) {
+      console.log('🎯 Content type dropdown detected, enabling icon options');
+      requestAnimationFrame(() => {
+        try {
+          initializeContentTypeSelect(select);
+        } catch (error) {
+          console.error('Failed to initialize content type select:', error);
+        }
+      });
+    }
+
     return wrapper;
   }
 
@@ -852,8 +869,20 @@ export class EngineController {
       button.className = 'tools__segment-button';
       button.title = entry.label;
       button.setAttribute('aria-label', entry.label);
-      button.textContent = '';
       button.classList.add('button', 'button--engine');
+      
+      // Add icon if provided, otherwise use text label
+      if (entry.icon) {
+        const img = document.createElement('img');
+        img.src = entry.icon;
+        img.alt = entry.label;
+        img.className = 'icon icon--base';
+        button.appendChild(img);
+      } else {
+        // Use the full label text
+        button.textContent = entry.label;
+      }
+      
       if (entry.value === currentValue) {
         button.classList.add('is-active');
       }
@@ -928,8 +957,18 @@ export class EngineController {
     button.className = 'tools__control tools__control--button';
     button.title = option.label;
     button.setAttribute('aria-label', option.label);
-    button.textContent = '';
     button.classList.add('button', 'button--engine');
+    
+    if (option.icon) {
+      const img = document.createElement('img');
+      img.src = option.icon;
+      img.alt = option.label;
+      img.className = 'icon icon--base';
+      button.appendChild(img);
+    } else {
+      button.textContent = '';
+    }
+    
     button.addEventListener('click', () => {
       this.updateToolSetting(toolId, option.id, Date.now());
     });
