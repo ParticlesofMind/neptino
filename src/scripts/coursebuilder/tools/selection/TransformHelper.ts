@@ -137,23 +137,49 @@ export class TransformHelper {
     const bounds = this.target.getBounds(true);
     const scale = Math.max(this.canvas.getCurrentZoom(), 0.0001);
     const handleRadius = HANDLE_SIZE / scale / 2;
-    const centerX = bounds.x + bounds.width / 2;
-    const centerY = bounds.y + bounds.height / 2;
+    const cornerPoints = [
+      this.toOverlayPoint(bounds.x, bounds.y),
+      this.toOverlayPoint(bounds.x + bounds.width, bounds.y),
+      this.toOverlayPoint(bounds.x, bounds.y + bounds.height),
+      this.toOverlayPoint(bounds.x + bounds.width, bounds.y + bounds.height),
+    ];
+    const xs = cornerPoints.map((point) => point.x);
+    const ys = cornerPoints.map((point) => point.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const width = maxX - minX;
+    const height = maxY - minY;
+    const center = new Point((minX + maxX) / 2, (minY + maxY) / 2);
 
     this.frame.clear();
-    this.frame.rect(bounds.x, bounds.y, bounds.width, bounds.height).stroke({
+    this.frame.rect(minX, minY, width, height).fill({ color: 0xffffff, alpha: 0.001 });
+    this.frame.rect(minX, minY, width, height).stroke({
       color: 0x4a7fb8,
       width: 2 / scale,
       alignment: 0.5,
     });
 
+    const handlePositions: Record<HandleId, Point> = {
+      "top-left": new Point(minX, minY),
+      "top-right": new Point(maxX, minY),
+      "bottom-left": new Point(minX, maxY),
+      "bottom-right": new Point(maxX, maxY),
+      top: new Point(center.x, minY),
+      bottom: new Point(center.x, maxY),
+      left: new Point(minX, center.y),
+      right: new Point(maxX, center.y),
+    };
+
     this.handles.forEach(({ config, graphic }) => {
-      const position = this.resolveHandlePosition(config.id, bounds, centerX, centerY);
+      const position = handlePositions[config.id];
       this.drawHandle(graphic, position.x, position.y, handleRadius);
       graphic.visible = true;
     });
 
-    this.drawRotateHandle(centerX, bounds.y - ROTATE_OFFSET / scale, handleRadius * 0.9);
+    const rotateLocal = this.toOverlayPoint(bounds.x + bounds.width / 2, bounds.y - ROTATE_OFFSET / scale);
+    this.drawRotateHandle(rotateLocal.x, rotateLocal.y, handleRadius * 0.9);
   }
 
   private drawHandle(graphic: Graphics, x: number, y: number, radius: number): void {
@@ -171,28 +197,8 @@ export class TransformHelper {
     });
     this.rotateHandle.lineStyle({ width: radius * 0.4, color: 0x4a7fb8 }).moveTo(x, y + radius).lineTo(x, y + radius * 3);
   }
-
-  private resolveHandlePosition(id: HandleId, bounds: { x: number; y: number; width: number; height: number }, cx: number, cy: number): Point {
-    switch (id) {
-      case "top-left":
-        return new Point(bounds.x, bounds.y);
-      case "top-right":
-        return new Point(bounds.x + bounds.width, bounds.y);
-      case "bottom-left":
-        return new Point(bounds.x, bounds.y + bounds.height);
-      case "bottom-right":
-        return new Point(bounds.x + bounds.width, bounds.y + bounds.height);
-      case "top":
-        return new Point(cx, bounds.y);
-      case "bottom":
-        return new Point(cx, bounds.y + bounds.height);
-      case "left":
-        return new Point(bounds.x, cy);
-      case "right":
-        return new Point(bounds.x + bounds.width, cy);
-      default:
-        return new Point(cx, cy);
-    }
+  private toOverlayPoint(x: number, y: number): Point {
+    return this.overlayLayer.toLocal(new Point(x, y));
   }
 
   private beginMove(event: FederatedPointerEvent): void {
@@ -217,6 +223,7 @@ export class TransformHelper {
     };
     this.bindPointerEvents();
     native.preventDefault();
+    event.stopPropagation();
   }
 
   private beginRotate(event: FederatedPointerEvent): void {
@@ -241,6 +248,7 @@ export class TransformHelper {
     };
     this.bindPointerEvents();
     native.preventDefault();
+    event.stopPropagation();
   }
 
   private beginScale(config: HandleConfig, event: FederatedPointerEvent): void {

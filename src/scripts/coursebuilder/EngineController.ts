@@ -52,9 +52,11 @@ export class EngineController {
       if (saved) {
         const parsed = JSON.parse(saved) as Partial<EngineState>;
         const settings = parsed.toolSettings && typeof parsed.toolSettings === 'object' ? parsed.toolSettings : {};
+        const savedTool = typeof parsed.currentTool === 'string' ? parsed.currentTool : 'pen';
+        const normalizedTool = savedTool === 'node' ? 'pen' : savedTool;
         return {
           currentMode: parsed.currentMode === 'animate' ? 'animate' : 'build',
-          currentTool: typeof parsed.currentTool === 'string' ? parsed.currentTool : 'selection',
+          currentTool: normalizedTool,
           currentMedia: typeof parsed.currentMedia === 'string' ? parsed.currentMedia : null,
           toolSettings: settings as Record<string, Record<string, unknown>>,
         };
@@ -66,7 +68,7 @@ export class EngineController {
     // Return default state
     return {
       currentMode: 'build',
-      currentTool: 'selection',
+      currentTool: 'pen',
       currentMedia: null,
       toolSettings: {},
     };
@@ -383,61 +385,118 @@ export class EngineController {
 
   private createSliderControl(toolId: string, option: any): HTMLElement {
     const wrapper = document.createElement('div');
-    wrapper.className = 'tools__control tools__control--slider';
+    wrapper.className = 'tools__control tools__control--number-stepper';
     wrapper.title = option.label;
     wrapper.setAttribute('aria-label', option.label);
 
-    const input = document.createElement('input');
-    input.type = 'range';
-    input.className = 'input input--slider';
-    input.min = option.settings.min?.toString() ?? '0';
-    input.max = option.settings.max?.toString() ?? '100';
-    input.step = option.settings.step?.toString() ?? '0.1';
-    input.setAttribute('aria-label', option.label);
-
-    const currentValue = Number(this.getInitialValue(toolId, option));
-    input.value = Number.isFinite(currentValue) ? currentValue.toString() : option.settings.value?.toString() ?? input.min;
-
-    const valueDisplay = document.createElement('span');
-    valueDisplay.className = 'tools__value';
-    valueDisplay.textContent = input.value;
-
+    const min = Number(option.settings.min ?? 0);
+    const max = Number(option.settings.max ?? 100);
+    const step = Number(option.settings.step ?? 1);
     const snaps: number[] | undefined = option.settings.snaps;
 
-    // Add snap indicators if defined
-    if (Array.isArray(snaps) && snaps.length > 0) {
-      const snapContainer = document.createElement('div');
-      snapContainer.className = 'tools__slider-snaps';
-      
-      const min = Number(input.min);
-      const max = Number(input.max);
-      const range = max - min;
-      
-      snaps.forEach((snapValue) => {
-        const indicator = document.createElement('span');
-        indicator.className = 'tools__slider-snap';
-        // Calculate percentage position
-        const position = ((snapValue - min) / range) * 100;
-        indicator.style.left = `${position}%`;
-        snapContainer.appendChild(indicator);
-      });
-      
-      wrapper.appendChild(snapContainer);
-    }
+    const currentValue = Number(this.getInitialValue(toolId, option));
+    const initialValue = Number.isFinite(currentValue) ? currentValue : Number(option.settings.value ?? min);
 
-    input.addEventListener('input', () => {
-      let numeric = Number.parseFloat(input.value);
-      if (Array.isArray(snaps) && snaps.length) {
-        numeric = this.snapToNearest(numeric, snaps);
-        input.value = numeric.toString();
+    // Container for the stepper (minus button + input + plus button)
+    const stepperContainer = document.createElement('div');
+    stepperContainer.className = 'tools__number-stepper';
+
+    // Minus button
+    const minusButton = document.createElement('button');
+    minusButton.type = 'button';
+    minusButton.className = 'button button--stepper button--stepper-minus';
+    minusButton.setAttribute('aria-label', 'Decrease');
+    minusButton.textContent = '−';
+
+    // Number input
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.className = 'input input--number-stepper';
+    input.min = min.toString();
+    input.max = max.toString();
+    input.step = step.toString();
+    input.value = initialValue.toString();
+    input.setAttribute('aria-label', option.label);
+
+    // Plus button
+    const plusButton = document.createElement('button');
+    plusButton.type = 'button';
+    plusButton.className = 'button button--stepper button--stepper-plus';
+    plusButton.setAttribute('aria-label', 'Increase');
+    plusButton.textContent = '+';
+
+    // Helper function to snap to nearest value if snaps are defined
+    const snapToNearest = (value: number): number => {
+      if (!Array.isArray(snaps) || snaps.length === 0) {
+        return value;
       }
-      valueDisplay.textContent = this.formatSliderValue(numeric);
-      this.updateToolSetting(toolId, option.id, numeric);
+      return snaps.reduce((prev, curr) => 
+        Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
+      );
+    };
+
+    // Helper function to update value
+    const updateValue = (newValue: number) => {
+      const clampedValue = Math.max(min, Math.min(max, newValue));
+      const snappedValue = snapToNearest(clampedValue);
+      input.value = snappedValue.toString();
+      this.updateToolSetting(toolId, option.id, snappedValue);
+    };
+
+    // Minus button handler
+    minusButton.addEventListener('click', () => {
+      const currentVal = Number.parseFloat(input.value) || initialValue;
+      if (Array.isArray(snaps) && snaps.length > 0) {
+        // Find next lower snap value
+        const lowerSnaps = snaps.filter(s => s < currentVal);
+        const nextValue = lowerSnaps.length > 0 ? Math.max(...lowerSnaps) : currentVal - step;
+        updateValue(nextValue);
+      } else {
+        updateValue(currentVal - step);
+      }
     });
 
-    wrapper.appendChild(input);
-    wrapper.appendChild(valueDisplay);
-    this.updateToolSetting(toolId, option.id, Number(input.value), false);
+    // Plus button handler
+    plusButton.addEventListener('click', () => {
+      const currentVal = Number.parseFloat(input.value) || initialValue;
+      if (Array.isArray(snaps) && snaps.length > 0) {
+        // Find next higher snap value
+        const higherSnaps = snaps.filter(s => s > currentVal);
+        const nextValue = higherSnaps.length > 0 ? Math.min(...higherSnaps) : currentVal + step;
+        updateValue(nextValue);
+      } else {
+        updateValue(currentVal + step);
+      }
+    });
+
+    // Input change handler
+    input.addEventListener('change', () => {
+      const numeric = Number.parseFloat(input.value);
+      if (Number.isFinite(numeric)) {
+        updateValue(numeric);
+      } else {
+        input.value = initialValue.toString();
+      }
+    });
+
+    // Input blur handler to ensure valid value
+    input.addEventListener('blur', () => {
+      const numeric = Number.parseFloat(input.value);
+      if (!Number.isFinite(numeric) || numeric < min || numeric > max) {
+        input.value = initialValue.toString();
+      }
+    });
+
+    // Assemble the stepper
+    stepperContainer.appendChild(minusButton);
+    stepperContainer.appendChild(input);
+    stepperContainer.appendChild(plusButton);
+    
+    wrapper.appendChild(stepperContainer);
+    
+    // Initialize the setting
+    this.updateToolSetting(toolId, option.id, initialValue, false);
+    
     return wrapper;
   }
 
@@ -822,18 +881,36 @@ export class EngineController {
     button.setAttribute('aria-label', option.label);
     button.classList.add('button', 'button--engine');
     
+    let contentSet = false;
+
     // Add specific styling classes and text content for text formatting toggles
     if (option.id === 'bold') {
       button.classList.add('tools__control--bold');
       button.textContent = 'B';
+      contentSet = true;
     } else if (option.id === 'italic') {
       button.classList.add('tools__control--italic');
       button.textContent = 'I';
+      contentSet = true;
     } else if (option.id === 'underline') {
       button.classList.add('tools__control--underline');
       button.textContent = 'U';
-    } else {
-      button.textContent = '';
+      contentSet = true;
+    }
+
+    if (!contentSet && option.icon) {
+      const img = document.createElement('img');
+      img.src = option.icon;
+      img.alt = option.label;
+      img.className = 'icon icon--base';
+      button.appendChild(img);
+      button.classList.add('button--icon-only');
+      contentSet = true;
+    }
+
+    if (!contentSet) {
+      button.textContent = typeof option.label === 'string' ? option.label : '';
+      contentSet = true;
     }
     
     let active = Boolean(this.getInitialValue(toolId, option) ?? option.settings.value ?? false);
@@ -981,23 +1058,6 @@ export class EngineController {
       return stored;
     }
     return option.settings?.value;
-  }
-
-  private snapToNearest(value: number, snaps: number[]): number {
-    let closest = snaps[0];
-    let minDiff = Math.abs(value - snaps[0]);
-    for (let i = 1; i < snaps.length; i += 1) {
-      const diff = Math.abs(value - snaps[i]);
-      if (diff < minDiff) {
-        closest = snaps[i];
-        minDiff = diff;
-      }
-    }
-    return closest;
-  }
-
-  private formatSliderValue(value: number): string {
-    return Number.isInteger(value) ? value.toString() : value.toFixed(2);
   }
 
   private selectTool(tool: string): void {

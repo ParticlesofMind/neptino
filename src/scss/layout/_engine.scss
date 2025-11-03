@@ -659,7 +659,9 @@
     }
 
     .input--select {
-      min-width: calc(var(--engine-control-size) * 2);
+      min-width: var(--engine-control-size);
+      max-width: calc(var(--engine-control-size) * 1.5);
+      width: auto;
     }
 
     .input--shape-picker,
@@ -687,12 +689,101 @@
     }
 
     .tools__control--slider,
+    .tools__control--number-stepper,
     .tools__control--dropdown,
     .tools__control--number,
     .tools__control--text,
     .tools__control--color {
       flex-direction: column;
       align-items: center;
+    }
+
+    // Number Stepper Component (minus + input + plus)
+    .tools__number-stepper {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      height: var(--engine-control-size);
+      border-radius: var(--radius-medium);
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .button--stepper {
+      width: calc(var(--engine-control-size) * 0.68);
+      height: 100%;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--color-neutral-200);
+      background: rgba(255, 255, 255, 0.95);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--color-neutral-600);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+
+      &:hover {
+        background: rgba(255, 255, 255, 1);
+        color: var(--color-primary-500);
+        border-color: var(--color-primary-300);
+      }
+
+      &:active {
+        background: rgba(59, 130, 246, 0.1);
+        transform: scale(0.95);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--color-primary-400);
+        outline-offset: -2px;
+        z-index: 1;
+      }
+    }
+
+    .button--stepper-minus {
+      border-radius: var(--radius-medium) 0 0 var(--radius-medium);
+      border-right: none;
+    }
+
+    .button--stepper-plus {
+      border-radius: 0 var(--radius-medium) var(--radius-medium) 0;
+      border-left: none;
+    }
+
+    .input--number-stepper {
+      width: calc(var(--engine-control-size) * 0.95);
+      height: 100%;
+      padding: 0 var(--spacing-1);
+      border: 1px solid var(--color-neutral-200);
+      border-left: none;
+      border-right: none;
+      background: rgba(255, 255, 255, 0.95);
+      text-align: center;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-neutral-800);
+      appearance: textfield; // Remove spinner
+      -moz-appearance: textfield; // Remove spinner in Firefox
+      
+      &::-webkit-inner-spin-button,
+      &::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 1);
+      }
+
+      &:focus {
+        outline: none;
+        background: white;
+        box-shadow: inset 0 0 0 2px var(--color-primary-400);
+        z-index: 1;
+      }
     }
 
     .tools__icon-options {
@@ -867,8 +958,8 @@
     }
 
     .tools__color-preview {
-      width: 32px;
-      height: 32px;
+      width: 100%;
+      height: 100%;
       border-radius: var(--radius-medium);
       border: 1px solid var(--color-neutral-200);
       background: var(--color-background);

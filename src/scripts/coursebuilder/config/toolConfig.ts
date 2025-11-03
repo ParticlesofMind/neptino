@@ -68,10 +68,17 @@ export const toolConfigs: Record<string, ModeConfig> = {
         icon: "/src/assets/icons/coursebuilder/tools/tool-pen.svg",
         options: [
           {
+            id: "vectorMode",
+            type: "toggle",
+            label: "Node Paths",
+            icon: "/src/assets/icons/coursebuilder/tools/tool-node.svg",
+            settings: { value: true },
+          },
+          {
             id: "strokeSize",
             type: "slider",
             label: "Stroke",
-            settings: { min: 1, max: 16, snaps: [1, 2, 4, 8, 16], value: 2 },
+            settings: { min: 1, max: 24, snaps: [1, 2, 4, 8, 12, 16, 24], value: 2 },
           },
           {
             id: "strokeColor",
