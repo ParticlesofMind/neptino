@@ -48,6 +48,7 @@ interface InteractionState {
   startPointerVector: Point;
   handle?: HandleConfig;
   snapshots: SelectionSnapshotEntry[];
+  anchor?: Point;
 }
 
 const HANDLE_CONFIGS: HandleConfig[] = [
@@ -74,7 +75,6 @@ export class TransformHelper {
   private selection: SelectionTarget[] = [];
   private viewport: Viewport | null = null;
   private interaction: InteractionState | null = null;
-  private readonly canvasElement: HTMLCanvasElement | null;
 
   constructor(private readonly overlayLayer: Container, private readonly canvas: CanvasEngine, selectionMutated?: () => void) {
     this.frame.eventMode = "static";
@@ -88,7 +88,6 @@ export class TransformHelper {
     this.rotateHandle.on("pointerdown", (event: FederatedPointerEvent) => this.beginRotate(event));
 
     overlayLayer.addChild(this.frame, this.rotateHandle);
-    this.canvasElement = canvas.getCanvasElement();
     this.selectionMutated = selectionMutated;
   }
 
@@ -125,14 +124,16 @@ export class TransformHelper {
 
     this.selection.forEach(({ object }) => {
       const parent = object.parent ?? null;
-      const worldPosition = parent ? parent.toGlobal(object.position) : new Point(object.position.x, object.position.y);
+      const globalPosition = parent ? parent.toGlobal(object.position) : new Point(object.position.x, object.position.y);
+      const worldPosition = this.screenToWorldPoint(globalPosition);
       worldPosition.x += deltaX;
       worldPosition.y += deltaY;
+      const screenPosition = this.worldToScreenPoint(worldPosition);
       if (parent) {
-        const nextLocal = parent.toLocal(worldPosition);
+        const nextLocal = parent.toLocal(screenPosition);
         object.position.set(nextLocal.x, nextLocal.y);
       } else {
-        object.position.set(worldPosition.x, worldPosition.y);
+        object.position.set(screenPosition.x, screenPosition.y);
       }
     });
 
@@ -255,18 +256,22 @@ export class TransformHelper {
   }
 
   private toOverlayPoint(x: number, y: number): Point {
-    return this.overlayLayer.toLocal(new Point(x, y));
+    const screenPoint = this.worldToScreenPoint(new Point(x, y));
+    return this.overlayLayer.toLocal(screenPoint);
   }
 
   private getPixelSize(): number {
     const matrix = this.overlayLayer.worldTransform;
     const scaleX = Math.hypot(matrix.a, matrix.b);
     const scaleY = Math.hypot(matrix.c, matrix.d);
-    const scale = (scaleX + scaleY) / 2;
-    if (!isFinite(scale) || scale <= 1e-6) {
+    const overlayScale = (scaleX + scaleY) / 2;
+    const resolution = this.canvas.getRendererResolution();
+    const resolutionScale = isFinite(resolution) && resolution > 0 ? resolution : 1;
+    const totalScale = overlayScale * resolutionScale;
+    if (!isFinite(totalScale) || totalScale <= 1e-6) {
       return 1;
     }
-    return 1 / scale;
+    return 1 / totalScale;
   }
 
   private beginMove(event: FederatedPointerEvent): void {
@@ -274,7 +279,7 @@ export class TransformHelper {
     if (!native) {
       return;
     }
-    const world = this.pointerToWorld(native);
+    const world = this.pointerToWorld(event);
     if (!world) {
       return;
     }
@@ -305,7 +310,7 @@ export class TransformHelper {
     if (!native) {
       return;
     }
-    const world = this.pointerToWorld(native);
+    const world = this.pointerToWorld(event);
     if (!world) {
       return;
     }
@@ -336,7 +341,7 @@ export class TransformHelper {
     if (!native) {
       return;
     }
-    const world = this.pointerToWorld(native);
+    const world = this.pointerToWorld(event);
     if (!world) {
       return;
     }
@@ -345,6 +350,7 @@ export class TransformHelper {
       return;
     }
     const center = new Point(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+    const anchor = this.computeAnchor(bounds, config, center);
     const snapshots = this.captureSnapshots(center);
     if (!snapshots.length) {
       return;
@@ -355,35 +361,45 @@ export class TransformHelper {
       handle: config,
       startWorld: world,
       startCenter: center,
-      startPointerVector: new Point(world.x - center.x, world.y - center.y),
+      startPointerVector: new Point(world.x - anchor.x, world.y - anchor.y),
       snapshots,
+      anchor,
     };
     this.bindPointerEvents();
     native.preventDefault();
     event.stopPropagation();
   }
 
-  private pointerToWorld(event: PointerEvent): Point | null {
+  private pointerToWorld(event: PointerEvent | FederatedPointerEvent): Point | null {
     if (!this.viewport) {
       return null;
     }
 
     const screenPoint = new Point();
-    const eventSystem = this.viewport.options?.events;
-    const mapper = eventSystem?.mapPositionToPoint;
-    if (typeof mapper === "function") {
-      mapper.call(eventSystem, screenPoint, event.clientX, event.clientY);
-    } else if (this.canvasElement) {
-      const rect = this.canvasElement.getBoundingClientRect();
-      const resolution = this.canvas.getRendererResolution();
-      screenPoint.x = (event.clientX - rect.left) * resolution;
-      screenPoint.y = (event.clientY - rect.top) * resolution;
+    const federated = event as FederatedPointerEvent;
+    if (federated?.global) {
+      screenPoint.copyFrom(federated.global);
     } else {
-      screenPoint.set(event.clientX, event.clientY);
+      const eventSystem = this.viewport.options?.events;
+      const mapper = eventSystem?.mapPositionToPoint;
+      if (typeof mapper === "function") {
+        mapper.call(eventSystem, screenPoint, event.clientX, event.clientY);
+      } else {
+        const canvasElement = this.canvas.getCanvasElement();
+        if (!canvasElement) {
+          return null;
+        }
+        const rect = canvasElement.getBoundingClientRect();
+        const width = rect.width || 1;
+        const height = rect.height || 1;
+        const scaleX = canvasElement.width / width;
+        const scaleY = canvasElement.height / height;
+        screenPoint.x = (event.clientX - rect.left) * scaleX;
+        screenPoint.y = (event.clientY - rect.top) * scaleY;
+      }
     }
 
-    const world = this.viewport.toWorld(screenPoint);
-    return new Point(world.x, world.y);
+    return this.screenToWorldPoint(screenPoint);
   }
 
   private bindPointerEvents(): void {
@@ -450,40 +466,47 @@ export class TransformHelper {
     if (!this.interaction || this.interaction.kind !== "scale" || !this.interaction.handle) {
       return;
     }
-    const { handle, startCenter, startPointerVector } = this.interaction;
-    const delta = new Point(world.x - startCenter.x, world.y - startCenter.y);
+    const { handle, anchor, startPointerVector } = this.interaction;
+    const pivot = anchor ?? this.interaction.startCenter;
+    const pointerVector = new Point(world.x - pivot.x, world.y - pivot.y);
     const reference = startPointerVector;
 
     const safeDiv = (numerator: number, denominator: number): number => {
       return Math.abs(denominator) > 1e-4 ? numerator / denominator : Math.sign(numerator) || 1;
     };
 
-    let factorX = 1;
-    let factorY = 1;
+    const resolveFactor = (axis: -1 | 0 | 1, value: number, baseline: number): number => {
+      if (axis === 0) {
+        return 1;
+      }
+      const result = safeDiv(value, baseline);
+      return Number.isFinite(result) ? result : 1;
+    };
 
-    if (handle.axisX !== 0) {
-      factorX = safeDiv(delta.x, reference.x) * handle.axisX;
-    }
-    if (handle.axisY !== 0) {
-      factorY = safeDiv(delta.y, reference.y) * handle.axisY;
-    }
+    let factorX = resolveFactor(handle.axisX, pointerVector.x, reference.x);
+    let factorY = resolveFactor(handle.axisY, pointerVector.y, reference.y);
 
     if (uniform && handle.kind === "corner") {
       const magnitude = Math.max(Math.abs(factorX), Math.abs(factorY));
-      const baseX = handle.axisX !== 0 ? handle.axisX : Math.sign(factorX) || 1;
-      const baseY = handle.axisY !== 0 ? handle.axisY : Math.sign(factorY) || 1;
-      factorX = magnitude * (Math.sign(factorX) || baseX);
-      factorY = magnitude * (Math.sign(factorY) || baseY);
+      if (handle.axisX !== 0) {
+        factorX = magnitude * (Math.sign(factorX) || Math.sign(reference.x) || handle.axisX);
+      }
+      if (handle.axisY !== 0) {
+        factorY = magnitude * (Math.sign(factorY) || Math.sign(reference.y) || handle.axisY);
+      }
     }
 
     this.interaction.snapshots.forEach((entry) => {
-      const nextScaleX = this.clampScale(entry.startScale.x * factorX);
-      const nextScaleY = this.clampScale(entry.startScale.y * factorY);
+      const nextScaleX =
+        handle.axisX === 0 ? entry.startScale.x : this.clampScale(entry.startScale.x * factorX);
+      const nextScaleY =
+        handle.axisY === 0 ? entry.startScale.y : this.clampScale(entry.startScale.y * factorY);
       entry.object.scale.set(nextScaleX, nextScaleY);
 
-      const offsetX = entry.offsetFromCenter.x * factorX;
-      const offsetY = entry.offsetFromCenter.y * factorY;
-      const nextWorld = new Point(startCenter.x + offsetX, startCenter.y + offsetY);
+      const offsetFromPivot = new Point(entry.startWorldPosition.x - pivot.x, entry.startWorldPosition.y - pivot.y);
+      const nextOffsetX = offsetFromPivot.x * factorX;
+      const nextOffsetY = offsetFromPivot.y * factorY;
+      const nextWorld = new Point(pivot.x + nextOffsetX, pivot.y + nextOffsetY);
       this.applyPosition(entry, nextWorld);
     });
     this.selectionMutated?.();
@@ -519,12 +542,13 @@ export class TransformHelper {
 
   private applyPosition(entry: SelectionSnapshotEntry, world: Point): void {
     const parent = entry.parent;
+    const screenPoint = this.worldToScreenPoint(world);
     if (parent) {
-      const local = parent.toLocal(world);
+      const local = parent.toLocal(screenPoint);
       entry.object.position.set(local.x, local.y);
       return;
     }
-    entry.object.position.set(world.x, world.y);
+    entry.object.position.set(screenPoint.x, screenPoint.y);
   }
 
   private rotateVector(vector: Point, angle: number): Point {
@@ -539,7 +563,8 @@ export class TransformHelper {
       .filter((object): object is DisplayObject => Boolean(object))
       .map((object) => {
         const parent = object.parent ?? null;
-        const worldPosition = parent ? parent.toGlobal(object.position) : new Point(object.position.x, object.position.y);
+        const globalPosition = parent ? parent.toGlobal(object.position) : new Point(object.position.x, object.position.y);
+        const worldPosition = this.screenToWorldPoint(globalPosition);
         const offsetFromCenter = new Point(worldPosition.x - center.x, worldPosition.y - center.y);
         const startScale = new Point(object.scale?.x ?? 1, object.scale?.y ?? 1);
         const startRotation = object.rotation ?? 0;
@@ -561,20 +586,57 @@ export class TransformHelper {
     let result: Rectangle | null = null;
     this.selection.forEach(({ object }) => {
       const bounds = object.getBounds(true);
+      const topLeftWorld = this.screenToWorldPoint(new Point(bounds.x, bounds.y));
+      const bottomRightWorld = this.screenToWorldPoint(
+        new Point(bounds.x + bounds.width, bounds.y + bounds.height),
+      );
       if (!result) {
-        result = new Rectangle(bounds.x, bounds.y, bounds.width, bounds.height);
+        result = new Rectangle(
+          topLeftWorld.x,
+          topLeftWorld.y,
+          bottomRightWorld.x - topLeftWorld.x,
+          bottomRightWorld.y - topLeftWorld.y,
+        );
         return;
       }
-      const minX = Math.min(result.x, bounds.x);
-      const minY = Math.min(result.y, bounds.y);
-      const maxX = Math.max(result.x + result.width, bounds.x + bounds.width);
-      const maxY = Math.max(result.y + result.height, bounds.y + bounds.height);
+      const minX = Math.min(result.x, topLeftWorld.x);
+      const minY = Math.min(result.y, topLeftWorld.y);
+      const maxX = Math.max(result.x + result.width, bottomRightWorld.x);
+      const maxY = Math.max(result.y + result.height, bottomRightWorld.y);
       result.x = minX;
       result.y = minY;
       result.width = maxX - minX;
       result.height = maxY - minY;
     });
     return result;
+  }
+
+  private computeAnchor(bounds: Rectangle, handle: HandleConfig, center: Point): Point {
+    const minX = bounds.x;
+    const minY = bounds.y;
+    const maxX = bounds.x + bounds.width;
+    const maxY = bounds.y + bounds.height;
+
+    const anchorX = handle.axisX === 0 ? center.x : handle.axisX === -1 ? maxX : minX;
+    const anchorY = handle.axisY === 0 ? center.y : handle.axisY === -1 ? maxY : minY;
+
+    return new Point(anchorX, anchorY);
+  }
+
+  private screenToWorldPoint(point: Point): Point {
+    if (!this.viewport) {
+      return new Point(point.x, point.y);
+    }
+    const converted = this.viewport.toWorld(point.x, point.y);
+    return new Point(converted.x, converted.y);
+  }
+
+  private worldToScreenPoint(point: Point): Point {
+    if (!this.viewport) {
+      return new Point(point.x, point.y);
+    }
+    const converted = this.viewport.toScreen(point.x, point.y);
+    return new Point(converted.x, converted.y);
   }
 
   private cancelInteraction(): void {

@@ -1,6 +1,7 @@
 const ENGINE_SELECTOR = '.engine';
 const RESIZER_ATTRIBUTE = 'engine-resizer';
 const RESIZER_DATA_KEY = 'engineResizer';
+const STORAGE_KEY = 'neptino-engine-resizer-widths';
 
 type ResizerConfig = {
   property: string;
@@ -45,7 +46,30 @@ const REGION_COLLAPSED_CLASSES = {
   panel: 'engine__panel--collapsed',
 } as const;
 
-const toggleRegionCollapsed = (engine: HTMLElement, region: ResizableRegion, collapsed: boolean): void => {
+const loadSavedWidths = (): Partial<Record<ResizableRegion, number>> => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) {
+      return {};
+    }
+    const parsed = JSON.parse(stored);
+    return typeof parsed === 'object' && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+const saveWidth = (region: ResizableRegion, width: number) => {
+  try {
+    const current = loadSavedWidths();
+    current[region] = width;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+  } catch {
+    // Silently fail if localStorage is not available
+  }
+};
+
+const toggleRegionCollapsed = (engine: HTMLElement, region: ResizableRegion, collapsed: boolean) => {
   const selector = REGION_TARGETS[region];
   const target = selector ? engine.querySelector<HTMLElement>(selector) : null;
   if (!target) {
@@ -61,7 +85,7 @@ const getNumericProperty = (element: HTMLElement, property: string, fallback: nu
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
-const setRegionWidth = (engine: HTMLElement, region: ResizableRegion, rawValue: number): void => {
+const setRegionWidth = (engine: HTMLElement, region: ResizableRegion, rawValue: number) => {
   const config = RESIZER_CONFIG[region];
   const clamped = Math.min(config.max, Math.max(config.min, rawValue));
   const collapsed = clamped <= config.collapseThreshold;
@@ -69,6 +93,9 @@ const setRegionWidth = (engine: HTMLElement, region: ResizableRegion, rawValue: 
   const finalWidth = collapsed ? config.min : Math.round(width);
   engine.style.setProperty(config.property, `${finalWidth}px`);
   toggleRegionCollapsed(engine, region, collapsed);
+  
+  // Save the width to localStorage
+  saveWidth(region, finalWidth);
 };
 
 const handlePointerResize = (
@@ -76,7 +103,7 @@ const handlePointerResize = (
   handle: HTMLButtonElement,
   region: ResizableRegion,
   downEvent: PointerEvent,
-): void => {
+) => {
   const config = RESIZER_CONFIG[region];
   const startWidth = getNumericProperty(engine, config.property, config.defaultWidth);
   const startX = downEvent.clientX;
@@ -91,13 +118,13 @@ const handlePointerResize = (
   document.body.style.cursor = 'col-resize';
   document.body.style.userSelect = 'none';
 
-  const onPointerMove = (event: PointerEvent): void => {
+  const onPointerMove = (event: PointerEvent) => {
     const delta = event.clientX - startX;
     const width = config.invertDelta ? startWidth - delta : startWidth + delta;
     setRegionWidth(engine, region, width);
   };
 
-  const teardown = (): void => {
+  const teardown = () => {
     if (handle.hasPointerCapture(pointerId)) {
       handle.releasePointerCapture(pointerId);
     }
@@ -111,7 +138,7 @@ const handlePointerResize = (
     window.removeEventListener('pointercancel', onPointerUp);
   };
 
-  const onPointerUp = (event: PointerEvent): void => {
+  const onPointerUp = (event: PointerEvent) => {
     if (event.pointerId === pointerId) {
       teardown();
     }
@@ -122,7 +149,7 @@ const handlePointerResize = (
   window.addEventListener('pointercancel', onPointerUp);
 };
 
-const handleKeyboardResize = (engine: HTMLElement, handle: HTMLButtonElement, region: ResizableRegion, event: KeyboardEvent): void => {
+const handleKeyboardResize = (engine: HTMLElement, handle: HTMLButtonElement, region: ResizableRegion, event: KeyboardEvent) => {
   const config = RESIZER_CONFIG[region];
   const currentWidth = getNumericProperty(engine, config.property, config.defaultWidth);
   const step = event.shiftKey ? KEYBOARD_STEP * 2 : KEYBOARD_STEP;
@@ -150,11 +177,16 @@ const handleKeyboardResize = (engine: HTMLElement, handle: HTMLButtonElement, re
   setRegionWidth(engine, region, nextWidth);
 };
 
-const initEngineResizer = (engine: HTMLElement): void => {
+const initEngineResizer = (engine: HTMLElement) => {
+  const savedWidths = loadSavedWidths();
+  
   (Object.keys(RESIZER_CONFIG) as ResizableRegion[]).forEach((region) => {
     const config = RESIZER_CONFIG[region];
+    // Use saved width if available, otherwise use current or default
+    const savedWidth = savedWidths[region];
     const currentWidth = getNumericProperty(engine, config.property, config.defaultWidth);
-    setRegionWidth(engine, region, currentWidth);
+    const initialWidth = savedWidth ?? currentWidth;
+    setRegionWidth(engine, region, initialWidth);
   });
 
   const handles = engine.querySelectorAll<HTMLButtonElement>(`[data-${RESIZER_ATTRIBUTE}]`);
@@ -183,7 +215,7 @@ const initEngineResizer = (engine: HTMLElement): void => {
   });
 };
 
-const bootstrapResizers = (): void => {
+const bootstrapResizers = () => {
   const engines = document.querySelectorAll<HTMLElement>(ENGINE_SELECTOR);
 
   if (!engines.length) {
