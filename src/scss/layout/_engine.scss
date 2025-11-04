@@ -927,8 +927,10 @@
       transition: background-color 0.2s ease, color 0.2s ease;
 
       &.is-active {
-        background: var(--color-primary-600);
-        color: #ffffff;
+        background: #B3D7FF !important;
+        color: white !important;
+        border-color: #9AC8FF !important;
+        box-shadow: 0 2px 8px rgba(179, 215, 255, 0.45) !important;
       }
     }
 

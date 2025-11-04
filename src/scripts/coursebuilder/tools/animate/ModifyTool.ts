@@ -61,7 +61,7 @@ export class ModifyTool implements CanvasTool {
       if (x >= bounds.x && x <= bounds.x + bounds.width && y >= bounds.y && y <= bounds.y + bounds.height) {
         this.selected = { id, object: displayObject };
         this.context.selection.setSelection([{ id, object: displayObject }]);
-        this.context.transformHelper.attach(displayObject);
+        this.context.transformHelper.attach(this.context.selection.getSelection());
         return;
       }
     }

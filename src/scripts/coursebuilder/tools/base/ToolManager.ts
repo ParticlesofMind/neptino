@@ -11,6 +11,17 @@ const MODE_CHANGED_EVENT = "engine:mode-change";
 const TOOL_CHANGED_EVENT = "engine:tool-change";
 const TOOL_SETTING_EVENT = "engine:tool-setting";
 
+const TOOL_CURSOR_CLASSES: Record<string, string> = {
+  selection: "cursor-default",
+  pen: "cursor-pen",
+  brush: "cursor-brush",
+  text: "cursor-text",
+  eraser: "cursor-eraser",
+  path: "cursor-pen",
+  modify: "cursor-default",
+  scene: "cursor-default",
+};
+
 interface ModeChangeDetail {
   mode: ToolMode;
 }
@@ -38,6 +49,8 @@ export class ToolManager {
   private selectionManager: SelectionManager | null = null;
   private transformHelper: TransformHelper | null = null;
   private pointerBindingsActive = false;
+  private cursorTargets: HTMLElement[] = [];
+  private activeCursorClass: string | null = null;
 
   constructor(private readonly canvas: CanvasEngine) {
     this.bootstrap();
@@ -90,6 +103,7 @@ export class ToolManager {
       this.viewport = viewport;
       this.ensureOverlayLayer(layers.ui);
       this.ensurePointerBindings(viewport);
+      this.updateCursorTargets();
     });
   }
 
@@ -102,8 +116,9 @@ export class ToolManager {
     overlay.eventMode = "passive";
     uiLayer.addChild(overlay);
     this.overlayLayer = overlay;
-    this.selectionManager = new SelectionManager(overlay);
-    this.transformHelper = new TransformHelper(overlay, this.canvas);
+    const selectionManager = new SelectionManager(overlay);
+    this.selectionManager = selectionManager;
+    this.transformHelper = new TransformHelper(overlay, this.canvas, () => selectionManager.refresh());
   }
 
   private ensurePointerBindings(viewport: Viewport): void {
@@ -196,6 +211,7 @@ export class ToolManager {
     try {
       tool.activate(context);
       this.activeTool = tool;
+      this.applyCursorForTool(tool.id);
     } catch (error) {
       console.error(`Failed to activate tool "${tool.id}"`, error);
     }
@@ -212,6 +228,7 @@ export class ToolManager {
     }
     this.selectionManager?.clear();
     this.transformHelper?.detach();
+    this.applyCursorForTool(null);
     this.activeTool = null;
   }
 
@@ -292,5 +309,37 @@ export class ToolManager {
       ctrlKey: event.ctrlKey ?? false,
       metaKey: event.metaKey ?? false,
     };
+  }
+
+  private updateCursorTargets(): void {
+    const targets: HTMLElement[] = [];
+    const root = this.canvas.getRootElement();
+    if (root) {
+      targets.push(root);
+    }
+    const canvasElement = this.canvas.getCanvasElement();
+    if (canvasElement) {
+      targets.push(canvasElement);
+    }
+    this.cursorTargets = targets;
+    if (this.activeCursorClass) {
+      this.cursorTargets.forEach((element) => element.classList.add(this.activeCursorClass!));
+    }
+  }
+
+  private applyCursorForTool(toolId: string | null): void {
+    const nextClass = toolId ? TOOL_CURSOR_CLASSES[toolId] ?? null : null;
+    if (nextClass === this.activeCursorClass) {
+      return;
+    }
+    this.cursorTargets.forEach((element) => {
+      if (this.activeCursorClass) {
+        element.classList.remove(this.activeCursorClass);
+      }
+      if (nextClass) {
+        element.classList.add(nextClass);
+      }
+    });
+    this.activeCursorClass = nextClass;
   }
 }

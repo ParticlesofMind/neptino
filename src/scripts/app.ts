@@ -11,6 +11,7 @@ import './coursebuilder/PanelToggle'; // Initialize panel toggle
 import './coursebuilder/ViewportControls'; // Perspective zoom/drag controls
 import './coursebuilder/EngineController'; // Initialize engine controller
 import './coursebuilder/tools/ToolSystem'; // Initialize tool system
+import './coursebuilder/KeyboardShortcuts'; // Keyboard shortcuts for tools
 // import PageTransitions from './navigation/PageTransitions'; // DISABLED
 
 

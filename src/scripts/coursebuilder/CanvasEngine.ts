@@ -189,6 +189,13 @@ export class CanvasEngine {
     return this.defaultZoom;
   }
 
+  public getRendererResolution(): number {
+    if (this.app?.renderer) {
+      return this.app.renderer.resolution ?? 1;
+    }
+    return window.devicePixelRatio ?? 1;
+  }
+
   public zoomTo(scale: number, options?: { keepCentered?: boolean; markInteraction?: boolean }): void {
     if (!this.viewport) return;
 
@@ -366,7 +373,7 @@ export class CanvasEngine {
     this.layers.background.addChild(gfx);
 
     const watermark = new Text({
-      text: "Pixi Canvas Ready",
+      text: "",
       style: {
         fontSize: 36,
         fill: 0x4c6ef5,

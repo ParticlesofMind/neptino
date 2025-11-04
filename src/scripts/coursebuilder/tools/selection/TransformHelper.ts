@@ -1,7 +1,8 @@
-import { Container, Graphics, Point, type DisplayObject } from "pixi.js";
+import { Container, Graphics, Point, Rectangle, type DisplayObject } from "pixi.js";
 import type { FederatedPointerEvent } from "pixi.js";
 import type { Viewport } from "pixi-viewport";
 import type { CanvasEngine } from "../../CanvasEngine";
+import type { SelectionTarget } from "./SelectionManager";
 
 type HandleId =
   | "top-left"
@@ -30,15 +31,23 @@ interface TransformHandle {
 
 type InteractionKind = "move" | "scale" | "rotate";
 
+interface SelectionSnapshotEntry {
+  object: DisplayObject;
+  parent: Container | null;
+  startWorldPosition: Point;
+  offsetFromCenter: Point;
+  startScale: Point;
+  startRotation: number;
+}
+
 interface InteractionState {
   kind: InteractionKind;
   pointerId: number;
   startWorld: Point;
   startCenter: Point;
-  startScale: Point;
-  startVector: Point;
-  startRotation: number;
+  startPointerVector: Point;
   handle?: HandleConfig;
+  snapshots: SelectionSnapshotEntry[];
 }
 
 const HANDLE_CONFIGS: HandleConfig[] = [
@@ -61,12 +70,13 @@ export class TransformHelper {
   private readonly frame = new Graphics();
   private readonly handles: TransformHandle[] = [];
   private readonly rotateHandle: Graphics;
-  private target: DisplayObject | null = null;
+  private readonly selectionMutated?: () => void;
+  private selection: SelectionTarget[] = [];
   private viewport: Viewport | null = null;
   private interaction: InteractionState | null = null;
   private readonly canvasElement: HTMLCanvasElement | null;
 
-  constructor(private readonly overlayLayer: Container, private readonly canvas: CanvasEngine) {
+  constructor(private readonly overlayLayer: Container, private readonly canvas: CanvasEngine, selectionMutated?: () => void) {
     this.frame.eventMode = "static";
     this.frame.cursor = "move";
     this.frame.alpha = 0.9;
@@ -79,15 +89,25 @@ export class TransformHelper {
 
     overlayLayer.addChild(this.frame, this.rotateHandle);
     this.canvasElement = canvas.getCanvasElement();
+    this.selectionMutated = selectionMutated;
   }
 
-  public attach(target: DisplayObject): void {
-    if (this.target === target) {
-      this.render();
+  public attach(selection: SelectionTarget[]): void {
+    const normalized = this.normalizeSelection(selection);
+    if (!normalized.length) {
+      this.detach();
       return;
     }
 
-    this.target = target;
+    if (this.isSameSelection(normalized)) {
+      this.selection = normalized;
+      this.render();
+      this.frame.visible = true;
+      this.rotateHandle.visible = true;
+      return;
+    }
+
+    this.selection = normalized;
     this.viewport = this.canvas.getViewport();
     this.ensureHandles();
     this.render();
@@ -95,10 +115,36 @@ export class TransformHelper {
     this.rotateHandle.visible = true;
   }
 
+  public translate(deltaX: number, deltaY: number): void {
+    if (!this.selection.length) {
+      return;
+    }
+    if (Math.abs(deltaX) < 1e-4 && Math.abs(deltaY) < 1e-4) {
+      return;
+    }
+
+    this.selection.forEach(({ object }) => {
+      const parent = object.parent ?? null;
+      const worldPosition = parent ? parent.toGlobal(object.position) : new Point(object.position.x, object.position.y);
+      worldPosition.x += deltaX;
+      worldPosition.y += deltaY;
+      if (parent) {
+        const nextLocal = parent.toLocal(worldPosition);
+        object.position.set(nextLocal.x, nextLocal.y);
+      } else {
+        object.position.set(worldPosition.x, worldPosition.y);
+      }
+    });
+
+    this.render();
+    this.selectionMutated?.();
+  }
+
   public detach(): void {
-    this.target = null;
+    this.selection = [];
     this.frame.clear();
     this.frame.visible = false;
+    this.rotateHandle.clear();
     this.rotateHandle.visible = false;
     this.handles.forEach(({ graphic }) => {
       graphic.clear();
@@ -130,13 +176,14 @@ export class TransformHelper {
   }
 
   private render(): void {
-    if (!this.target) {
+    const bounds = this.computeSelectionBounds();
+    if (!bounds) {
+      this.frame.visible = false;
+      this.rotateHandle.visible = false;
+      this.handles.forEach(({ graphic }) => (graphic.visible = false));
       return;
     }
 
-    const bounds = this.target.getBounds(true);
-    const scale = Math.max(this.canvas.getCurrentZoom(), 0.0001);
-    const handleRadius = HANDLE_SIZE / scale / 2;
     const cornerPoints = [
       this.toOverlayPoint(bounds.x, bounds.y),
       this.toOverlayPoint(bounds.x + bounds.width, bounds.y),
@@ -153,11 +200,16 @@ export class TransformHelper {
     const height = maxY - minY;
     const center = new Point((minX + maxX) / 2, (minY + maxY) / 2);
 
+    const pixelSize = this.getPixelSize();
+    const strokeWidth = 2 * pixelSize;
+    const handleRadius = (HANDLE_SIZE / 2) * pixelSize;
+    const rotateOffset = ROTATE_OFFSET * pixelSize;
+
     this.frame.clear();
     this.frame.rect(minX, minY, width, height).fill({ color: 0xffffff, alpha: 0.001 });
     this.frame.rect(minX, minY, width, height).stroke({
       color: 0x4a7fb8,
-      width: 2 / scale,
+      width: strokeWidth,
       alignment: 0.5,
     });
 
@@ -178,8 +230,9 @@ export class TransformHelper {
       graphic.visible = true;
     });
 
-    const rotateLocal = this.toOverlayPoint(bounds.x + bounds.width / 2, bounds.y - ROTATE_OFFSET / scale);
+    const rotateLocal = this.toOverlayPoint(bounds.x + bounds.width / 2, bounds.y - rotateOffset);
     this.drawRotateHandle(rotateLocal.x, rotateLocal.y, handleRadius * 0.9);
+    this.rotateHandle.visible = true;
   }
 
   private drawHandle(graphic: Graphics, x: number, y: number, radius: number): void {
@@ -195,31 +248,52 @@ export class TransformHelper {
       color: 0x4a7fb8,
       width: radius * 0.3,
     });
-    this.rotateHandle.lineStyle({ width: radius * 0.4, color: 0x4a7fb8 }).moveTo(x, y + radius).lineTo(x, y + radius * 3);
+    this.rotateHandle
+      .lineStyle({ width: radius * 0.4, color: 0x4a7fb8 })
+      .moveTo(x, y + radius)
+      .lineTo(x, y + radius * 3);
   }
+
   private toOverlayPoint(x: number, y: number): Point {
     return this.overlayLayer.toLocal(new Point(x, y));
   }
 
+  private getPixelSize(): number {
+    const matrix = this.overlayLayer.worldTransform;
+    const scaleX = Math.hypot(matrix.a, matrix.b);
+    const scaleY = Math.hypot(matrix.c, matrix.d);
+    const scale = (scaleX + scaleY) / 2;
+    if (!isFinite(scale) || scale <= 1e-6) {
+      return 1;
+    }
+    return 1 / scale;
+  }
+
   private beginMove(event: FederatedPointerEvent): void {
     const native = event.nativeEvent as PointerEvent | undefined;
-    if (!native || !this.target) {
+    if (!native) {
       return;
     }
     const world = this.pointerToWorld(native);
     if (!world) {
       return;
     }
-    const bounds = this.target.getBounds(true);
+    const bounds = this.computeSelectionBounds();
+    if (!bounds) {
+      return;
+    }
     const center = new Point(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+    const snapshots = this.captureSnapshots(center);
+    if (!snapshots.length) {
+      return;
+    }
     this.interaction = {
       kind: "move",
       pointerId: native.pointerId,
       startWorld: world,
       startCenter: center,
-      startScale: new Point(this.target.scale.x, this.target.scale.y),
-      startVector: new Point(1, 1),
-      startRotation: this.target.rotation,
+      startPointerVector: new Point(1, 1),
+      snapshots,
     };
     this.bindPointerEvents();
     native.preventDefault();
@@ -228,23 +302,29 @@ export class TransformHelper {
 
   private beginRotate(event: FederatedPointerEvent): void {
     const native = event.nativeEvent as PointerEvent | undefined;
-    if (!native || !this.target) {
+    if (!native) {
       return;
     }
     const world = this.pointerToWorld(native);
     if (!world) {
       return;
     }
-    const bounds = this.target.getBounds(true);
+    const bounds = this.computeSelectionBounds();
+    if (!bounds) {
+      return;
+    }
     const center = new Point(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+    const snapshots = this.captureSnapshots(center);
+    if (!snapshots.length) {
+      return;
+    }
     this.interaction = {
       kind: "rotate",
       pointerId: native.pointerId,
       startWorld: world,
       startCenter: center,
-      startScale: new Point(this.target.scale.x, this.target.scale.y),
-      startVector: new Point(world.x - center.x, world.y - center.y),
-      startRotation: this.target.rotation,
+      startPointerVector: new Point(world.x - center.x, world.y - center.y),
+      snapshots,
     };
     this.bindPointerEvents();
     native.preventDefault();
@@ -253,24 +333,30 @@ export class TransformHelper {
 
   private beginScale(config: HandleConfig, event: FederatedPointerEvent): void {
     const native = event.nativeEvent as PointerEvent | undefined;
-    if (!native || !this.target) {
+    if (!native) {
       return;
     }
     const world = this.pointerToWorld(native);
     if (!world) {
       return;
     }
-    const bounds = this.target.getBounds(true);
+    const bounds = this.computeSelectionBounds();
+    if (!bounds) {
+      return;
+    }
     const center = new Point(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+    const snapshots = this.captureSnapshots(center);
+    if (!snapshots.length) {
+      return;
+    }
     this.interaction = {
       kind: "scale",
       pointerId: native.pointerId,
       handle: config,
       startWorld: world,
       startCenter: center,
-      startScale: new Point(this.target.scale.x, this.target.scale.y),
-      startVector: new Point(world.x - center.x, world.y - center.y),
-      startRotation: this.target.rotation,
+      startPointerVector: new Point(world.x - center.x, world.y - center.y),
+      snapshots,
     };
     this.bindPointerEvents();
     native.preventDefault();
@@ -278,14 +364,26 @@ export class TransformHelper {
   }
 
   private pointerToWorld(event: PointerEvent): Point | null {
-    if (!this.viewport || !this.canvasElement) {
+    if (!this.viewport) {
       return null;
     }
-    const rect = this.canvasElement.getBoundingClientRect();
-    const localX = event.clientX - rect.left;
-    const localY = event.clientY - rect.top;
-    const converted = this.viewport.toWorld(localX, localY);
-    return new Point(converted.x, converted.y);
+
+    const screenPoint = new Point();
+    const eventSystem = this.viewport.options?.events;
+    const mapper = eventSystem?.mapPositionToPoint;
+    if (typeof mapper === "function") {
+      mapper.call(eventSystem, screenPoint, event.clientX, event.clientY);
+    } else if (this.canvasElement) {
+      const rect = this.canvasElement.getBoundingClientRect();
+      const resolution = this.canvas.getRendererResolution();
+      screenPoint.x = (event.clientX - rect.left) * resolution;
+      screenPoint.y = (event.clientY - rect.top) * resolution;
+    } else {
+      screenPoint.set(event.clientX, event.clientY);
+    }
+
+    const world = this.viewport.toWorld(screenPoint);
+    return new Point(world.x, world.y);
   }
 
   private bindPointerEvents(): void {
@@ -305,7 +403,7 @@ export class TransformHelper {
       return;
     }
     const world = this.pointerToWorld(event);
-    if (!world || !this.target) {
+    if (!world) {
       return;
     }
 
@@ -335,63 +433,83 @@ export class TransformHelper {
   };
 
   private applyMove(world: Point): void {
-    if (!this.interaction || !this.target) {
+    if (!this.interaction) {
       return;
     }
     const deltaX = world.x - this.interaction.startWorld.x;
     const deltaY = world.y - this.interaction.startWorld.y;
-    const parent = this.target.parent;
-    if (!parent) {
-      return;
-    }
-    const nextCenter = new Point(this.interaction.startCenter.x + deltaX, this.interaction.startCenter.y + deltaY);
-    const local = parent.toLocal(nextCenter);
-    this.target.position.set(local.x, local.y);
+
+    this.interaction.snapshots.forEach((entry) => {
+      const nextWorld = new Point(entry.startWorldPosition.x + deltaX, entry.startWorldPosition.y + deltaY);
+      this.applyPosition(entry, nextWorld);
+    });
+    this.selectionMutated?.();
   }
 
   private applyScale(world: Point, uniform: boolean): void {
-    if (!this.interaction || !this.target || !this.interaction.handle) {
+    if (!this.interaction || this.interaction.kind !== "scale" || !this.interaction.handle) {
       return;
     }
-    const { handle } = this.interaction;
-    const delta = new Point(world.x - this.interaction.startCenter.x, world.y - this.interaction.startCenter.y);
-    const startVec = this.interaction.startVector;
-    const scale = this.interaction.startScale.clone();
+    const { handle, startCenter, startPointerVector } = this.interaction;
+    const delta = new Point(world.x - startCenter.x, world.y - startCenter.y);
+    const reference = startPointerVector;
 
-    if (handle.axisX !== 0 && Math.abs(startVec.x) > 1e-4) {
-      const ratioX = delta.x / startVec.x;
-      scale.x = this.clampScale(this.interaction.startScale.x * ratioX * handle.axisX);
+    const safeDiv = (numerator: number, denominator: number): number => {
+      return Math.abs(denominator) > 1e-4 ? numerator / denominator : Math.sign(numerator) || 1;
+    };
+
+    let factorX = 1;
+    let factorY = 1;
+
+    if (handle.axisX !== 0) {
+      factorX = safeDiv(delta.x, reference.x) * handle.axisX;
     }
-    if (handle.axisY !== 0 && Math.abs(startVec.y) > 1e-4) {
-      const ratioY = delta.y / startVec.y;
-      scale.y = this.clampScale(this.interaction.startScale.y * ratioY * handle.axisY);
+    if (handle.axisY !== 0) {
+      factorY = safeDiv(delta.y, reference.y) * handle.axisY;
     }
 
     if (uniform && handle.kind === "corner") {
-      const magnitude = Math.max(Math.abs(scale.x), Math.abs(scale.y));
-      const signX = Math.sign(scale.x) || 1;
-      const signY = Math.sign(scale.y) || 1;
-      scale.x = magnitude * signX;
-      scale.y = magnitude * signY;
+      const magnitude = Math.max(Math.abs(factorX), Math.abs(factorY));
+      const baseX = handle.axisX !== 0 ? handle.axisX : Math.sign(factorX) || 1;
+      const baseY = handle.axisY !== 0 ? handle.axisY : Math.sign(factorY) || 1;
+      factorX = magnitude * (Math.sign(factorX) || baseX);
+      factorY = magnitude * (Math.sign(factorY) || baseY);
     }
 
-    this.target.scale.set(scale.x, scale.y);
+    this.interaction.snapshots.forEach((entry) => {
+      const nextScaleX = this.clampScale(entry.startScale.x * factorX);
+      const nextScaleY = this.clampScale(entry.startScale.y * factorY);
+      entry.object.scale.set(nextScaleX, nextScaleY);
+
+      const offsetX = entry.offsetFromCenter.x * factorX;
+      const offsetY = entry.offsetFromCenter.y * factorY;
+      const nextWorld = new Point(startCenter.x + offsetX, startCenter.y + offsetY);
+      this.applyPosition(entry, nextWorld);
+    });
+    this.selectionMutated?.();
   }
 
   private applyRotate(world: Point, snap: boolean): void {
-    if (!this.interaction || !this.target) {
+    if (!this.interaction || this.interaction.kind !== "rotate") {
       return;
     }
-    const deltaX = world.x - this.interaction.startCenter.x;
-    const deltaY = world.y - this.interaction.startCenter.y;
+    const { startCenter, startPointerVector } = this.interaction;
+    const deltaX = world.x - startCenter.x;
+    const deltaY = world.y - startCenter.y;
     const angle = Math.atan2(deltaY, deltaX);
-    const initialVec = this.interaction.startVector;
-    const initialAngle = Math.atan2(initialVec.y, initialVec.x);
-    let rotation = this.interaction.startRotation + (angle - initialAngle);
+    const initialAngle = Math.atan2(startPointerVector.y, startPointerVector.x);
+    let deltaAngle = angle - initialAngle;
     if (snap) {
-      rotation = Math.round(rotation / SNAP_ANGLE) * SNAP_ANGLE;
+      deltaAngle = Math.round(deltaAngle / SNAP_ANGLE) * SNAP_ANGLE;
     }
-    this.target.rotation = rotation;
+
+    this.interaction.snapshots.forEach((entry) => {
+      const rotated = this.rotateVector(entry.offsetFromCenter, deltaAngle);
+      const nextWorld = new Point(startCenter.x + rotated.x, startCenter.y + rotated.y);
+      this.applyPosition(entry, nextWorld);
+      entry.object.rotation = entry.startRotation + deltaAngle;
+    });
+    this.selectionMutated?.();
   }
 
   private clampScale(value: number): number {
@@ -399,8 +517,90 @@ export class TransformHelper {
     return sign * Math.max(MIN_SCALE, Math.abs(value));
   }
 
+  private applyPosition(entry: SelectionSnapshotEntry, world: Point): void {
+    const parent = entry.parent;
+    if (parent) {
+      const local = parent.toLocal(world);
+      entry.object.position.set(local.x, local.y);
+      return;
+    }
+    entry.object.position.set(world.x, world.y);
+  }
+
+  private rotateVector(vector: Point, angle: number): Point {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    return new Point(vector.x * cos - vector.y * sin, vector.x * sin + vector.y * cos);
+  }
+
+  private captureSnapshots(center: Point): SelectionSnapshotEntry[] {
+    return this.selection
+      .map(({ object }) => object)
+      .filter((object): object is DisplayObject => Boolean(object))
+      .map((object) => {
+        const parent = object.parent ?? null;
+        const worldPosition = parent ? parent.toGlobal(object.position) : new Point(object.position.x, object.position.y);
+        const offsetFromCenter = new Point(worldPosition.x - center.x, worldPosition.y - center.y);
+        const startScale = new Point(object.scale?.x ?? 1, object.scale?.y ?? 1);
+        const startRotation = object.rotation ?? 0;
+        return {
+          object,
+          parent,
+          startWorldPosition: worldPosition,
+          offsetFromCenter,
+          startScale,
+          startRotation,
+        };
+      });
+  }
+
+  private computeSelectionBounds(): Rectangle | null {
+    if (!this.selection.length) {
+      return null;
+    }
+    let result: Rectangle | null = null;
+    this.selection.forEach(({ object }) => {
+      const bounds = object.getBounds(true);
+      if (!result) {
+        result = new Rectangle(bounds.x, bounds.y, bounds.width, bounds.height);
+        return;
+      }
+      const minX = Math.min(result.x, bounds.x);
+      const minY = Math.min(result.y, bounds.y);
+      const maxX = Math.max(result.x + result.width, bounds.x + bounds.width);
+      const maxY = Math.max(result.y + result.height, bounds.y + bounds.height);
+      result.x = minX;
+      result.y = minY;
+      result.width = maxX - minX;
+      result.height = maxY - minY;
+    });
+    return result;
+  }
+
   private cancelInteraction(): void {
     this.interaction = null;
     this.unbindPointerEvents();
+  }
+
+  private normalizeSelection(selection: SelectionTarget[]): SelectionTarget[] {
+    const map = new Map<string, SelectionTarget>();
+    selection.forEach((target) => {
+      if (target?.id && target.object) {
+        map.set(target.id, target);
+      }
+    });
+    return Array.from(map.values());
+  }
+
+  private isSameSelection(next: SelectionTarget[]): boolean {
+    if (this.selection.length !== next.length) {
+      return false;
+    }
+    for (let i = 0; i < next.length; i += 1) {
+      if (this.selection[i].id !== next[i].id) {
+        return false;
+      }
+    }
+    return true;
   }
 }

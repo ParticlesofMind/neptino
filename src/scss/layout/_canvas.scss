@@ -24,7 +24,7 @@
   }
   
   &--tool-eraser {
-    cursor: none; // Custom eraser cursor handled by JavaScript
+    cursor: url('/src/assets/cursors/eraser-cursor.svg') 12 12, crosshair;
   }
   
   &--tool-text {
@@ -108,7 +108,7 @@
 .cursor-eraser,
 .canvas.cursor-eraser,
 #pixi-canvas.cursor-eraser {
-  cursor: none; // Custom eraser cursor handled by JavaScript
+  cursor: url('/src/assets/cursors/eraser-cursor.svg') 12 12, crosshair;
 }
 
 .cursor-text,
@@ -134,7 +134,7 @@
     }
 
     &.cursor-eraser {
-      cursor: none;
+      cursor: url('/src/assets/cursors/eraser-cursor.svg') 12 12, crosshair;
     }
 
     &.cursor-text {

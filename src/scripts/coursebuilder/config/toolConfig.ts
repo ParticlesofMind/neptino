@@ -111,6 +111,31 @@ export const toolConfigs: Record<string, ModeConfig> = {
             label: "Brush Color",
             settings: { options: COLOR_SWATCHES, value: "#2E2E2E" },
           },
+          {
+            id: "opacity",
+            type: "slider",
+            label: "Opacity",
+            settings: { min: 0, max: 1, step: 0.01, value: 1 },
+          },
+          {
+            id: "style",
+            type: "dropdown",
+            label: "Brush Style",
+            settings: {
+              value: "solid-round",
+              options: [
+                { value: "calligraphic", label: "Calligraphic" },
+                { value: "scatter", label: "Scatter" },
+                { value: "art", label: "Art" },
+                { value: "bristle", label: "Bristle" },
+                { value: "pattern", label: "Pattern" },
+                { value: "textured", label: "Textured" },
+                { value: "solid-round", label: "Solid Round" },
+                { value: "flat", label: "Flat" },
+                { value: "spray", label: "Spray" },
+              ],
+            },
+          },
         ],
       },
       {
