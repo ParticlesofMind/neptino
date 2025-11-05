@@ -24,6 +24,8 @@ interface PageManagerConfig {
     left: number;
   };
   showDebugBorders?: boolean;
+  onPageChange?: (index: number) => void;
+  onTotalHeightChange?: (totalHeight: number) => void;
 }
 
 interface LoadedPage {
@@ -43,6 +45,8 @@ export class PageManager {
     left: number;
   };
   private showDebugBorders: boolean;
+  private onPageChangeCallback?: (index: number) => void;
+  private onTotalHeightChangeCallback?: (totalHeight: number) => void;
 
   // Page management
   private loadedPages = new Map<number, LoadedPage>();
@@ -52,6 +56,7 @@ export class PageManager {
   // Current state
   private currentPageIndex = 0;
   private animating = false;
+  private lastNotifiedPageIndex = -1;
 
   // Background
   private backgroundContainer: Container;
@@ -61,10 +66,13 @@ export class PageManager {
     this.pageData = config.pageData;
     this.margins = config.margins;
     this.showDebugBorders = config.showDebugBorders ?? false;
+    this.onPageChangeCallback = config.onPageChange;
+    this.onTotalHeightChangeCallback = config.onTotalHeightChange;
 
     // Create scroll container
     this.scrollContainer = new Container();
     this.scrollContainer.label = "scroll-container";
+    this.scrollContainer.zIndex = 10;
     this.viewport.addChild(this.scrollContainer);
 
     // Create background container (for visual guides)
@@ -100,7 +108,8 @@ export class PageManager {
       currentY += BASE_HEIGHT + PAGE_GAP;
     }
 
-    this.totalHeight = currentY - PAGE_GAP; // Remove last gap
+    this.totalHeight = this.pageData.length > 0 ? currentY - PAGE_GAP : 0; // Remove last gap
+    this.onTotalHeightChangeCallback?.(this.totalHeight);
     console.log(`📐 Page positions calculated for ${this.pageData.length} pages, total height: ${this.totalHeight}px`);
   }
 
@@ -315,6 +324,7 @@ export class PageManager {
 
     if (closestIndex !== this.currentPageIndex) {
       this.currentPageIndex = closestIndex;
+      this.notifyPageChange();
       console.log(`📄 Current page: ${this.currentPageIndex + 1}`);
     }
   }
@@ -332,6 +342,7 @@ export class PageManager {
     const targetX = BASE_WIDTH / 2;
 
     this.currentPageIndex = index;
+    this.notifyPageChange();
 
     if (animated && !this.animating) {
       this.animating = true;
@@ -350,6 +361,18 @@ export class PageManager {
     }
 
     console.log(`🎯 Navigating to page ${index + 1}`);
+  }
+
+  /**
+   * Notify listeners that the current page has changed
+   */
+  private notifyPageChange(): void {
+    if (this.currentPageIndex === this.lastNotifiedPageIndex) {
+      return;
+    }
+
+    this.lastNotifiedPageIndex = this.currentPageIndex;
+    this.onPageChangeCallback?.(this.currentPageIndex);
   }
 
   /**

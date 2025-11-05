@@ -25,8 +25,80 @@ interface TableData {
   emptyMessage?: string;
 }
 
+type LessonStructureSummary = { topics: number; objectives: number; tasks: number };
+
+interface CourseContext {
+  courseId?: string;
+  courseTitle?: string | null;
+  courseCode?: string | null;
+  institutionName?: string | null;
+  teacherName?: string | null;
+  moduleTitles: Map<number, string>;
+}
+
 export class CanvasBuilder {
+  private courseContext: CourseContext = {
+    moduleTitles: new Map(),
+  };
+  private lessonStructures: Map<number, LessonStructureSummary> = new Map();
+
   constructor() {}
+
+  public setCourseContext(context: {
+    courseId?: string | null;
+    courseTitle?: string | null;
+    courseCode?: string | null;
+    institutionName?: string | null;
+    teacherName?: string | null;
+    moduleTitles?: Map<number, string> | Record<number, string> | Array<[number, string]>;
+    lessonStructures?: Map<number, LessonStructureSummary> | Record<number, LessonStructureSummary> | Array<[number, LessonStructureSummary]>;
+  }): void {
+    if (context.courseId !== undefined) {
+      this.courseContext.courseId = context.courseId ?? undefined;
+    }
+    if (context.courseTitle !== undefined) {
+      this.courseContext.courseTitle = context.courseTitle ?? null;
+    }
+    if (context.courseCode !== undefined) {
+      this.courseContext.courseCode = context.courseCode ?? null;
+    }
+    if (context.institutionName !== undefined) {
+      this.courseContext.institutionName = context.institutionName ?? null;
+    }
+    if (context.teacherName !== undefined) {
+      this.courseContext.teacherName = context.teacherName ?? null;
+    }
+
+    if (context.moduleTitles) {
+      if (context.moduleTitles instanceof Map) {
+        this.courseContext.moduleTitles = new Map(context.moduleTitles);
+      } else if (Array.isArray(context.moduleTitles)) {
+        this.courseContext.moduleTitles = new Map(context.moduleTitles);
+      } else {
+        const entries = Object.entries(context.moduleTitles).map(([key, value]) => [Number(key), value]);
+        this.courseContext.moduleTitles = new Map(entries);
+      }
+    }
+
+    if (context.lessonStructures) {
+      if (context.lessonStructures instanceof Map) {
+        this.lessonStructures = new Map(context.lessonStructures);
+      } else if (Array.isArray(context.lessonStructures)) {
+        this.lessonStructures = new Map(context.lessonStructures);
+      } else {
+        const entries = Object.entries(context.lessonStructures).map(([key, value]) => [Number(key), value as LessonStructureSummary]);
+        this.lessonStructures = new Map(entries);
+      }
+    }
+  }
+
+  public updateModuleTitles(modules: Map<number, string>): void {
+    this.courseContext.moduleTitles = new Map(modules);
+  }
+  public setLessonStructures(structures: Map<number, LessonStructureSummary>): void {
+    this.lessonStructures = new Map(structures);
+  }
+
 
   /**
    * Build multiple canvas payloads for a lesson based on template type
@@ -41,6 +113,7 @@ export class CanvasBuilder {
     canvasIndex: number;
     canvasData: Record<string, unknown>;
     canvasMetadata: Record<string, unknown>;
+    lessonData: Record<string, unknown>;
   }> {
     const templateType = template?.template_type ?? "lesson";
     
@@ -55,6 +128,7 @@ export class CanvasBuilder {
       canvasIndex: 1,
       canvasData: singleCanvas.canvasData,
       canvasMetadata: singleCanvas.canvasMetadata,
+      lessonData: singleCanvas.lessonData,
     }];
   }
 
@@ -82,6 +156,7 @@ export class CanvasBuilder {
       typeof lesson.moduleNumber === "number" && lesson.moduleNumber > 0
         ? lesson.moduleNumber
         : null;
+    const moduleTitle = this.resolveModuleTitle(moduleNumber);
 
     const dimensions = CanvasDimensions.getCanvasDimensions();
     const margins = CanvasDimensions.resolveCanvasMargins();
@@ -103,9 +178,22 @@ export class CanvasBuilder {
     );
 
     const templateInfo = TemplateDataBuilder.buildTemplateInfo(template, definition);
-    const structureSummary = LessonStructure.summarize(lesson);
+    const structureSummary = this.getLessonStructureSummary(lessonNumber, lesson);
+    const baseLessonData = this.createLessonData({
+      lessonNumber,
+      lessonTitle,
+      moduleNumber,
+      moduleTitle,
+      templateInfo,
+      structure: structureSummary,
+    });
 
-    const canvases = [];
+    const canvases: Array<{
+      canvasIndex: number;
+      canvasData: Record<string, unknown>;
+      canvasMetadata: Record<string, unknown>;
+      lessonData: Record<string, unknown>;
+    }> = [];
 
     // Canvas 1: Program + Resources
     const programResourcesBlocks = allBodyBlocks.filter(
@@ -134,6 +222,11 @@ export class CanvasBuilder {
             number: lessonNumber,
             title: lessonTitle,
             moduleNumber,
+            moduleTitle,
+            courseTitle: baseLessonData.courseTitle,
+            courseCode: baseLessonData.courseCode,
+            institutionName: baseLessonData.institutionName,
+            teacherName: baseLessonData.teacherName,
           },
           layout: layout1,
         },
@@ -149,6 +242,7 @@ export class CanvasBuilder {
           margins,
           structure: structureSummary,
         },
+        lessonData: { ...baseLessonData, canvasType: "program-resources" },
       });
     }
 
@@ -177,6 +271,11 @@ export class CanvasBuilder {
             number: lessonNumber,
             title: lessonTitle,
             moduleNumber,
+            moduleTitle,
+            courseTitle: baseLessonData.courseTitle,
+            courseCode: baseLessonData.courseCode,
+            institutionName: baseLessonData.institutionName,
+            teacherName: baseLessonData.teacherName,
           },
           layout: layout2,
         },
@@ -192,6 +291,7 @@ export class CanvasBuilder {
           margins,
           structure: structureSummary,
         },
+        lessonData: { ...baseLessonData, canvasType: "content" },
       });
     }
 
@@ -220,6 +320,11 @@ export class CanvasBuilder {
             number: lessonNumber,
             title: lessonTitle,
             moduleNumber,
+            moduleTitle,
+            courseTitle: baseLessonData.courseTitle,
+            courseCode: baseLessonData.courseCode,
+            institutionName: baseLessonData.institutionName,
+            teacherName: baseLessonData.teacherName,
           },
           layout: layout3,
         },
@@ -235,6 +340,7 @@ export class CanvasBuilder {
           margins,
           structure: structureSummary,
         },
+        lessonData: { ...baseLessonData, canvasType: "assignment" },
       });
     }
 
@@ -245,6 +351,7 @@ export class CanvasBuilder {
         canvasIndex: 1,
         canvasData: fallbackCanvas.canvasData,
         canvasMetadata: fallbackCanvas.canvasMetadata,
+        lessonData: fallbackCanvas.lessonData,
       }];
     }
 
@@ -258,6 +365,7 @@ export class CanvasBuilder {
   ): {
     canvasData: Record<string, unknown>;
     canvasMetadata: Record<string, unknown>;
+    lessonData: Record<string, unknown>;
   } {
     const lessonNumber =
       typeof lesson.lessonNumber === "number" && lesson.lessonNumber > 0
@@ -271,6 +379,7 @@ export class CanvasBuilder {
       typeof lesson.moduleNumber === "number" && lesson.moduleNumber > 0
         ? lesson.moduleNumber
         : null;
+    const moduleTitle = this.resolveModuleTitle(moduleNumber);
 
     const dimensions = CanvasDimensions.getCanvasDimensions();
     const margins = CanvasDimensions.resolveCanvasMargins();
@@ -291,7 +400,6 @@ export class CanvasBuilder {
     );
 
     const templateInfo = TemplateDataBuilder.buildTemplateInfo(template, definition);
-
     const layout = this.buildYogaLayoutTree({
       dimensions,
       margins,
@@ -302,7 +410,15 @@ export class CanvasBuilder {
       templateType: template?.template_type ?? "lesson",
     });
 
-    const structureSummary = LessonStructure.summarize(lesson);
+    const structureSummary = this.getLessonStructureSummary(lessonNumber, lesson);
+    const lessonData = this.createLessonData({
+      lessonNumber,
+      lessonTitle,
+      moduleNumber,
+      moduleTitle,
+      templateInfo,
+      structure: structureSummary,
+    });
 
     const canvasData = {
       version: "2025.03.01",
@@ -314,6 +430,11 @@ export class CanvasBuilder {
         number: lessonNumber,
         title: lessonTitle,
         moduleNumber,
+        moduleTitle,
+        courseTitle: lessonData.courseTitle,
+        courseCode: lessonData.courseCode,
+        institutionName: lessonData.institutionName,
+        teacherName: lessonData.teacherName,
       },
       layout,
     };
@@ -328,17 +449,65 @@ export class CanvasBuilder {
       dimensions,
       margins,
       structure: structureSummary,
-      header: {
-        blockId: headerBlock.id,
-        type: headerBlock.type,
-      },
-      footer: {
-        blockId: footerBlock.id,
-        type: footerBlock.type,
-      },
+    };
+    const lessonDataWithType = {
+      ...lessonData,
+      canvasType: templateInfo?.type ?? template?.template_type ?? null,
     };
 
-    return { canvasData, canvasMetadata };
+    return { canvasData, canvasMetadata, lessonData: lessonDataWithType };
+  }
+
+  private getLessonStructureSummary(lessonNumber: number | null | undefined, lesson: CurriculumLesson): LessonStructureSummary {
+    if (lessonNumber && this.lessonStructures.has(lessonNumber)) {
+      return this.lessonStructures.get(lessonNumber)!;
+    }
+
+    const summary = LessonStructure.summarize(lesson);
+    if (lessonNumber) {
+      this.lessonStructures.set(lessonNumber, summary);
+    }
+    return summary;
+  }
+
+  private resolveModuleTitle(moduleNumber: number | null): string | null {
+    if (!moduleNumber || moduleNumber <= 0) {
+      return null;
+    }
+
+    const title = this.courseContext.moduleTitles.get(moduleNumber);
+    if (typeof title === "string" && title.trim().length > 0) {
+      return title.trim();
+    }
+
+    return `Module ${moduleNumber}`;
+  }
+
+  private createLessonData(params: {
+    lessonNumber: number;
+    lessonTitle: string;
+    moduleNumber: number | null;
+    moduleTitle: string | null;
+    templateInfo: ReturnType<typeof TemplateDataBuilder.buildTemplateInfo>;
+    structure: LessonStructureSummary;
+  }): Record<string, unknown> {
+    const { lessonNumber, lessonTitle, moduleNumber, moduleTitle, templateInfo, structure } = params;
+
+    return {
+      courseId: this.courseContext.courseId ?? null,
+      courseTitle: this.courseContext.courseTitle ?? null,
+      courseCode: this.courseContext.courseCode ?? null,
+      institutionName: this.courseContext.institutionName ?? null,
+      teacherName: this.courseContext.teacherName ?? null,
+      lessonNumber,
+      lessonTitle,
+      moduleNumber,
+      moduleTitle,
+      templateId: templateInfo?.id ?? null,
+      templateName: templateInfo?.name ?? null,
+      templateType: templateInfo?.type ?? null,
+      structure,
+    };
   }
 
   private buildYogaLayoutTree(params: {
@@ -366,7 +535,7 @@ export class CanvasBuilder {
       role: "header",
       type: "template-block",
       templateBlock: TemplateDataBuilder.serializeTemplateBlock(headerBlock),
-      data: SectionDataBuilder.buildHeaderData(headerBlock, lesson),
+      data: SectionDataBuilder.buildHeaderData(headerBlock, lesson, this.courseContext),
       yoga: {
         flexDirection: "column",
         width: { unit: "percent", value: 100 },
@@ -389,7 +558,7 @@ export class CanvasBuilder {
       role: "footer",
       type: "template-block",
       templateBlock: TemplateDataBuilder.serializeTemplateBlock(footerBlock),
-      data: SectionDataBuilder.buildFooterData(footerBlock, lesson),
+      data: SectionDataBuilder.buildFooterData(footerBlock, lesson, this.courseContext),
       yoga: {
         flexDirection: "column",
         width: { unit: "percent", value: 100 },
@@ -465,6 +634,8 @@ export class CanvasBuilder {
       ];
     }
 
+    const structureSummary = this.getLessonStructureSummary(lesson.lessonNumber ?? null, lesson);
+
     return blocks.map((block, index) => {
       const node: Record<string, unknown> = {
         id: `template-block-${block.id}`,
@@ -506,9 +677,9 @@ export class CanvasBuilder {
       };
 
       if (block.type === "program" && templateType === "lesson") {
-        mergedData.structure = LessonStructure.summarize(lesson);
+        mergedData.structure = structureSummary;
         // Add transformed program data for ProgramRenderer
-        mergedData.program = this.buildProgramData(lesson);
+        mergedData.program = this.buildProgramData(lesson, structureSummary);
       }
 
       if (tableData) {
@@ -533,30 +704,62 @@ export class CanvasBuilder {
   /**
    * Transform flat curriculum structure into nested ProgramData format
    */
-  private buildProgramData(lesson: CurriculumLesson): any {
+  private buildProgramData(lesson: CurriculumLesson, structureSummary?: LessonStructureSummary): any {
     const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
-    
+    const effectiveSummary = structureSummary || this.getLessonStructureSummary(lesson.lessonNumber ?? null, lesson);
+
     if (!topics.length) {
-      return { competencies: [] };
+      const topicsCount = effectiveSummary.topics || 0;
+      if (!topicsCount) {
+        return { competencies: [] };
+      }
+
+      const objectivesTotal = effectiveSummary.objectives || 0;
+      const tasksTotal = effectiveSummary.tasks || 0;
+
+      const objectivesPerTopic = topicsCount > 0 && objectivesTotal > 0
+        ? Math.max(1, Math.round(objectivesTotal / topicsCount))
+        : 0;
+      const totalObjectives = objectivesPerTopic * topicsCount;
+      const tasksPerObjective = totalObjectives > 0 && tasksTotal > 0
+        ? Math.max(1, Math.round(tasksTotal / totalObjectives))
+        : 0;
+
+      const competencies = Array.from({ length: topicsCount }, (_, topicIndex) => ({
+        name: `Competency ${topicIndex + 1}`,
+        topics: [
+          {
+            name: `Topic ${topicIndex + 1}`,
+            objectives: objectivesPerTopic
+              ? Array.from({ length: objectivesPerTopic }, (_, objIndex) => ({
+                  name: `Objective ${objIndex + 1}`,
+                  tasks: tasksPerObjective
+                    ? Array.from({ length: tasksPerObjective }, (_, taskIndex) => ({
+                        name: `Task ${taskIndex + 1}`,
+                      }))
+                    : [],
+                }))
+              : [],
+          },
+        ],
+      }));
+
+      return { competencies };
     }
 
-    // Transform each topic into a competency with nested structure
     const competencies = topics.map((topic, topicIndex) => {
       const objectives = Array.isArray(topic.objectives) ? topic.objectives : [];
       const allTasks = Array.isArray(topic.tasks) ? topic.tasks : [];
-      
-      // Determine tasks per objective (from curriculum structure)
-      const tasksPerObjective = objectives.length > 0 
+
+      const tasksPerObjective = objectives.length > 0
         ? Math.ceil(allTasks.length / objectives.length)
         : allTasks.length;
-      
-      // Build nested objectives with their tasks
+
       const nestedObjectives = objectives.map((objective, objIndex) => {
-        // Get tasks for this objective
         const startTaskIndex = objIndex * tasksPerObjective;
         const endTaskIndex = Math.min(startTaskIndex + tasksPerObjective, allTasks.length);
         const objectiveTasks = allTasks.slice(startTaskIndex, endTaskIndex);
-        
+
         return {
           name: typeof objective === "string" && objective.trim().length
             ? objective.trim()
@@ -568,7 +771,7 @@ export class CanvasBuilder {
           })),
         };
       });
-      
+
       return {
         name: `Competency ${topicIndex + 1}`,
         topics: [
@@ -582,6 +785,8 @@ export class CanvasBuilder {
       };
     });
 
-    return { competencies };
+    return {
+      competencies,
+    };
   }
 }

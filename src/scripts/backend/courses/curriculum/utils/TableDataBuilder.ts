@@ -57,46 +57,89 @@ export class TableDataBuilder {
     const columns = TableDataBuilder.filterColumns(columnDefs, block);
     const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
     const rows: TableRow[] = [];
+    const structureSummary = (lesson as unknown as {
+      structureSummary?: { topics: number; objectives: number; tasks: number };
+    }).structureSummary;
 
-    topics.forEach((topic, topicIndex) => {
-      const competencyLabel = `Competency ${topicIndex + 1}`;
-      const topicTitle =
-        typeof topic.title === "string" && topic.title.trim().length
-          ? topic.title.trim()
-          : `Topic ${topicIndex + 1}`;
+    const pushRow = (cells: Record<string, string>) => {
+      rows.push({ depth: 0, cells });
+    };
 
-      rows.push({
-        depth: 0,
-        cells: TableDataBuilder.fillCells(columnDefs, { competency: competencyLabel }),
+    if (topics.length) {
+      topics.forEach((topic, topicIndex) => {
+        const competencyLabel = `Competency ${topicIndex + 1}`;
+        const topicTitle =
+          typeof topic.title === "string" && topic.title.trim().length
+            ? topic.title.trim()
+            : `Topic ${topicIndex + 1}`;
+
+        const objectives = Array.isArray(topic.objectives) ? topic.objectives : [];
+        const tasks = Array.isArray(topic.tasks) ? topic.tasks : [];
+        const rowCount = Math.max(1, Math.max(objectives.length, tasks.length));
+
+        for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
+          const objectiveText = objectives[rowIndex] ?? "";
+          const taskText = tasks[rowIndex] ?? "";
+
+          const rowCells = TableDataBuilder.fillCells(columnDefs, {
+            competency: rowIndex === 0 ? competencyLabel : "",
+            topic: rowIndex === 0 ? topicTitle : "",
+            objective:
+              typeof objectiveText === "string" && objectiveText.trim().length
+                ? objectiveText.trim()
+                : "",
+            task:
+              typeof taskText === "string" && taskText.trim().length
+                ? taskText.trim()
+                : "",
+            method: "",
+            social: "",
+            time: "",
+          });
+
+          pushRow(rowCells);
+        }
       });
+    } else if (structureSummary && structureSummary.topics > 0) {
+      const topicsCount = structureSummary.topics;
+      const objectivesTotal = structureSummary.objectives || 0;
+      const tasksTotal = structureSummary.tasks || 0;
 
-      rows.push({
-        depth: 1,
-        cells: TableDataBuilder.fillCells(columnDefs, { topic: topicTitle }),
-      });
+      const objectivesPerTopic = topicsCount > 0 && objectivesTotal > 0
+        ? Math.max(1, Math.round(objectivesTotal / topicsCount))
+        : 0;
+      const totalObjectives = objectivesPerTopic * topicsCount;
+      const tasksPerObjective = totalObjectives > 0 && tasksTotal > 0
+        ? Math.max(1, Math.round(tasksTotal / totalObjectives))
+        : 0;
 
-      const objectives = Array.isArray(topic.objectives) ? topic.objectives : [];
-      objectives.forEach((objective, objectiveIndex) => {
-        const objectiveText =
-          typeof objective === "string" && objective.trim().length
-            ? objective.trim()
-            : `Objective ${objectiveIndex + 1}`;
-        rows.push({
-          depth: 2,
-          cells: TableDataBuilder.fillCells(columnDefs, { objective: objectiveText }),
-        });
-      });
+      for (let topicIndex = 0; topicIndex < topicsCount; topicIndex += 1) {
+        const competencyLabel = `Competency ${topicIndex + 1}`;
+        const topicTitle = `Topic ${topicIndex + 1}`;
 
-      const tasks = Array.isArray(topic.tasks) ? topic.tasks : [];
-      tasks.forEach((task, taskIndex) => {
-        const taskText =
-          typeof task === "string" && task.trim().length ? task.trim() : `Task ${taskIndex + 1}`;
-        rows.push({
-          depth: 3,
-          cells: TableDataBuilder.fillCells(columnDefs, { task: taskText }),
-        });
-      });
-    });
+        const objectiveCount = objectivesPerTopic || 0;
+        const taskCount = tasksPerObjective || 0;
+
+        const rowCount = Math.max(1, Math.max(objectiveCount, taskCount));
+
+        for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
+          const objectiveText = rowIndex < objectiveCount ? `Objective ${rowIndex + 1}` : "";
+          const taskText = rowIndex < taskCount ? `Task ${rowIndex + 1}` : "";
+
+          const rowCells = TableDataBuilder.fillCells(columnDefs, {
+            competency: rowIndex === 0 ? competencyLabel : "",
+            topic: rowIndex === 0 ? topicTitle : "",
+            objective: objectiveText,
+            task: taskText,
+            method: "",
+            social: "",
+            time: "",
+          });
+
+          pushRow(rowCells);
+        }
+      }
+    }
 
     if (!rows.length) {
       rows.push({
@@ -507,4 +550,3 @@ export class TableDataBuilder {
     return result;
   }
 }
-

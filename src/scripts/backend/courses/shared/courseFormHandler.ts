@@ -819,7 +819,9 @@ export class CourseFormHandler {
             });
 
             if (this.sectionConfig.jsonbField) {
-                // For JSONB fields, only include non-File values
+                // For JSONB fields, collect values into a dedicated payload object
+                const sectionPayload: Record<string, unknown> = {};
+
                 for (const [key, value] of Object.entries(formData)) {
                     if (key === 'course_image') {
                         continue;
@@ -827,14 +829,11 @@ export class CourseFormHandler {
                     if (value instanceof File || (typeof value === 'string' && value === '')) {
                         continue;
                     }
-                    updateData[key] = value;
+                    sectionPayload[key] = value;
                 }
-                if (Object.keys(updateData).length > 0) {
-                    updateData[this.sectionConfig.jsonbField] = updateData;
-                    // Remove individual keys since they're now in the JSONB field
-                    this.sectionConfig.fields.forEach((field) => {
-                        delete updateData[field.name];
-                    });
+
+                if (Object.keys(sectionPayload).length > 0) {
+                    updateData[this.sectionConfig.jsonbField] = sectionPayload;
                 }
             } else {
                 // For top-level columns, only include updatable fields

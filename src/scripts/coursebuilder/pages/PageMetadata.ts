@@ -6,22 +6,59 @@
 export type MethodType = "Lecture" | "Discussion" | "Activity" | "Assessment" | "Lab" | "Workshop" | "Seminar";
 export type SocialFormType = "Individual" | "Pairs" | "Small Group" | "Whole Class" | "Online" | "Hybrid";
 
+export interface TemplateSummary {
+  id?: string;
+  slug?: string;
+  type?: string;
+  name?: string;
+  scope?: string;
+  description?: string | null;
+}
+
+export interface LayoutNode {
+  id: string;
+  type: string;
+  role?: string;
+  order?: number;
+  templateBlock?: {
+    id: string;
+    type: string;
+    order: number;
+    content?: string;
+    config?: Record<string, unknown>;
+  };
+  data?: Record<string, unknown>;
+  children?: LayoutNode[];
+}
+
 export interface PageMetadata {
   // Page identification
   pageNumber: number;
   totalPages: number;
   lessonNumber: number;
   lessonTitle: string;
+  canvasId?: string;
+  canvasIndex?: number;
+  canvasType?: string | null;
 
   // Course information
   courseName: string;
   courseCode: string;
+  moduleNumber?: number | null;
+  moduleTitle?: string | null;
+  institutionName?: string | null;
+  teacherName?: string | null;
 
   // Template data
   date: string; // ISO date string or formatted date
   method: MethodType;
   socialForm: SocialFormType;
   duration: number; // in minutes
+  structure?: {
+    topics: number;
+    objectives: number;
+    tasks: number;
+  } | null;
   
   // Optional metadata
   instructor?: string;
@@ -29,6 +66,8 @@ export interface PageMetadata {
   objectives?: string[];
   materials?: string[];
   notes?: string;
+  templateInfo?: TemplateSummary | null;
+  layout?: LayoutNode | null;
 }
 
 /**
@@ -47,6 +86,15 @@ export const createDefaultMetadata = (pageNumber: number, totalPages: number): P
   duration: 50,
   instructor: "Dr. Smith",
   topic: `Topic ${pageNumber}`,
+  moduleNumber: Math.ceil(pageNumber / 3),
+  canvasIndex: pageNumber,
+  canvasType: "default",
+  templateInfo: null,
+  layout: null,
+  moduleTitle: null,
+  institutionName: null,
+  teacherName: "Dr. Smith",
+  structure: null,
 });
 
 /**
@@ -144,6 +192,15 @@ export const createSampleCourseData = (): PageMetadata[] => {
         duration: 50,
         instructor: "Prof. Johnson",
         topic: `${lesson.lessonTitle} - Part ${i + 1}`,
+        moduleNumber: lesson.lessonNumber,
+        canvasIndex: currentPage,
+        canvasType: "default",
+        templateInfo: null,
+        layout: null,
+        moduleTitle: null,
+        institutionName: "University",
+        teacherName: "Prof. Johnson",
+        structure: null,
       });
       currentPage++;
     }
@@ -162,7 +219,21 @@ export const createSampleCourseData = (): PageMetadata[] => {
  * Format date for display
  */
 export const formatDate = (isoDate: string): string => {
-  const date = new Date(isoDate);
+  if (!isoDate) {
+    return "";
+  }
+
+  let date: Date;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) {
+    date = new Date(`${isoDate}T12:00:00Z`);
+  } else {
+    date = new Date(isoDate);
+  }
+
+  if (Number.isNaN(date.getTime())) {
+    return isoDate;
+  }
+
   return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",

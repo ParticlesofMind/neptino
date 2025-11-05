@@ -1,6 +1,7 @@
 import { supabase } from "../../supabase.js";
 import { CurriculumRenderer } from "./curriculumRenderer.js";
 import { CanvasBuilder } from "./canvasBuilder.js";
+import { LessonStructure } from "./utils/LessonStructure.js";
 
 // Module organization types
 export type ModuleOrganizationType = "linear" | "equal" | "tiered" | "custom";
@@ -139,6 +140,12 @@ class CurriculumManager {
   private availableTemplates: TemplateSummary[] = [];
   private templatePlacementSaveTimeout: number | null = null;
   private courseType: "minimalist" | "essential" | "complete" | "custom" = "essential";
+  private courseTitle: string | null = null;
+  private courseCode: string | null = null;
+  private institutionName: string | null = null;
+  private teacherName: string | null = null;
+  private lessonStructureCounts: Map<number, { topics: number; objectives: number; tasks: number }> = new Map();
+  private curriculumStructureDefaults: CurriculumStructureConfig | null = null;
 
   // Duration presets with default values and rationale
   private readonly durationPresets: Record<string, DurationPreset> = {
@@ -212,6 +219,41 @@ class CurriculumManager {
     }, 100);
   }
 
+  private syncCanvasBuilderContext(): void {
+    if (!this.canvasBuilder) {
+      return;
+    }
+
+    if (this.currentCurriculum.length) {
+      this.updateLessonStructureCountsFromLessons(this.currentCurriculum);
+    } else {
+      this.lessonStructureCounts.clear();
+    }
+
+    const moduleTitleMap = new Map<number, string>(this.initialModuleTitles);
+
+    this.currentModules.forEach((module) => {
+      if (!module || typeof module.moduleNumber !== "number") {
+        return;
+      }
+      const moduleNumber = module.moduleNumber;
+      const rawTitle = typeof module.title === "string" ? module.title.trim() : "";
+      const title = rawTitle.length ? rawTitle : `Module ${moduleNumber}`;
+      moduleTitleMap.set(moduleNumber, title);
+    });
+
+    this.canvasBuilder.setCourseContext({
+      courseId: this.courseId,
+      courseTitle: this.courseTitle,
+      courseCode: this.courseCode,
+      institutionName: this.institutionName,
+      teacherName: this.teacherName,
+      moduleTitles: moduleTitleMap,
+      lessonStructures: this.lessonStructureCounts,
+    });
+    this.canvasBuilder.setLessonStructures(new Map(this.lessonStructureCounts));
+  }
+
   private getCourseId(): string {
     // First try to get course ID from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -244,6 +286,9 @@ class CurriculumManager {
 
       // Load existing curriculum
       await this.loadExistingCurriculum();
+
+      // Sync canvas builder context with newly loaded modules and course info
+      this.syncCanvasBuilderContext();
 
       // Load template placement data once curriculum context is ready
       await this.loadTemplatePlacementData();
@@ -305,9 +350,20 @@ class CurriculumManager {
       console.log('Course ID:', courseData.id);
       const courseName = courseData.course_name || courseData.title || 'Untitled Course';
       console.log('Course Title:', courseName);
+      this.courseTitle = courseName;
+      this.courseCode = courseData.course_code ?? courseData.id ?? null;
+      this.institutionName = courseData.institution ?? null;
+      this.curriculumStructureDefaults = courseData.curriculum_data?.structure ?? this.curriculumStructureDefaults;
       console.log('Course Tagline:', courseData.tagline);
       console.log('Teacher ID:', courseData.teacher_id);
       console.log('Teacher Profile:', teacherProfile || 'Not loaded');
+      const teacherNameCandidate =
+        (teacherProfile?.full_name && teacherProfile.full_name.trim().length
+          ? teacherProfile.full_name.trim()
+          : teacherProfile?.username) ??
+        courseData.teacher_name ??
+        null;
+      this.teacherName = teacherNameCandidate;
       console.log('Created:', courseData.created_at);
       console.log('Updated:', courseData.updated_at);
 
@@ -377,11 +433,30 @@ class CurriculumManager {
         }
 
         if (courseData.curriculum_data.templatePlacements && courseData.curriculum_data.templatePlacements.length > 0) {
-          console.log('  - Template Placements:', courseData.curriculum_data.templatePlacements);
+        console.log('  - Template Placements:', courseData.curriculum_data.templatePlacements);
         }
       } else {
         console.log('❌ No curriculum data yet - will be generated');
       }
+
+      this.initialModuleTitles = new Map();
+      const modulesFromCourse = Array.isArray(courseData.curriculum_data?.modules)
+        ? courseData.curriculum_data.modules
+        : [];
+      modulesFromCourse.forEach((module: any) => {
+        if (!module || typeof module !== 'object') {
+          return;
+        }
+        const moduleNumber = typeof module.moduleNumber === 'number' ? module.moduleNumber : null;
+        if (!moduleNumber) {
+          return;
+        }
+        const rawTitle = typeof module.title === 'string' ? module.title.trim() : '';
+        const title = rawTitle.length ? rawTitle : `Module ${moduleNumber}`;
+        this.initialModuleTitles.set(moduleNumber, title);
+      });
+
+      this.syncCanvasBuilderContext();
 
       console.log('\n┌─────────────────────────────────────────────────────────────┐');
       console.log('│ 📦 6. EXISTING CURRICULUM CONTENT                           │');
@@ -2359,7 +2434,92 @@ class CurriculumManager {
       lessonNumbers: lessons.map(l => l.lessonNumber)
     });
 
+    this.updateLessonStructureCountsFromLessons(lessons);
+
     return lessons;
+  }
+
+  private extractStructureNumber(source: Record<string, unknown> | null | undefined, keys: string[]): number | null {
+    if (!source) {
+      return null;
+    }
+
+    for (const key of keys) {
+      const value = (source as Record<string, unknown>)[key];
+      if (typeof value === "number" && Number.isFinite(value)) {
+        return value;
+      }
+    }
+
+    return null;
+  }
+
+  private computeLessonStructureSummary(lesson: CurriculumLesson): { topics: number; objectives: number; tasks: number } {
+    const baseSummary = LessonStructure.summarize(lesson);
+    let topics = baseSummary.topics;
+    let objectives = baseSummary.objectives;
+    let tasks = baseSummary.tasks;
+
+    const lessonStructure = (lesson as unknown as { structure?: Record<string, unknown> }).structure;
+
+    const extract = (keys: string[]): number | null =>
+      this.extractStructureNumber(
+        lessonStructure && typeof lessonStructure === "object" ? lessonStructure : null,
+        keys,
+      );
+
+    if (!topics) {
+      topics = extract(["topics", "topicsCount", "topicsPerLesson"]) ?? this.curriculumStructureDefaults?.topicsPerLesson ?? 0;
+    }
+
+    if (!objectives) {
+      const explicitObjectives = extract(["objectives", "objectivesCount"]);
+      if (explicitObjectives !== null) {
+        objectives = explicitObjectives;
+      } else {
+        const perTopic = extract(["objectivesPerTopic"]) ?? this.curriculumStructureDefaults?.objectivesPerTopic;
+        if (perTopic && topics) {
+          objectives = topics * perTopic;
+        }
+      }
+    }
+
+    if (!tasks) {
+      const explicitTasks = extract(["tasks", "tasksCount"]);
+      if (explicitTasks !== null) {
+        tasks = explicitTasks;
+      } else {
+        const perObjective = extract(["tasksPerObjective"]) ?? this.curriculumStructureDefaults?.tasksPerObjective;
+        if (perObjective && objectives) {
+          tasks = objectives * perObjective;
+        }
+      }
+    }
+
+    const summary = {
+      topics,
+      objectives,
+      tasks,
+    };
+
+    Object.defineProperty(lesson, 'structureSummary', {
+      value: summary,
+      writable: true,
+      configurable: true,
+      enumerable: false,
+    });
+
+    return summary;
+  }
+
+  private updateLessonStructureCountsFromLessons(lessons: CurriculumLesson[]): void {
+    this.lessonStructureCounts.clear();
+
+    lessons.forEach((lesson, index) => {
+      const lessonNumber = typeof lesson.lessonNumber === "number" && lesson.lessonNumber > 0 ? lesson.lessonNumber : index + 1;
+      const summary = this.computeLessonStructureSummary(lesson);
+      this.lessonStructureCounts.set(lessonNumber, summary);
+    });
   }
 
   /**
@@ -2521,6 +2681,8 @@ class CurriculumManager {
       throw new Error('No course ID available for saving curriculum');
     }
 
+    this.updateLessonStructureCountsFromLessons(curriculum);
+
     // Organize lessons into modules based on organization type
     const modules = this.organizeLessonsIntoModules(curriculum);
 
@@ -2604,6 +2766,8 @@ class CurriculumManager {
     }
 
     try {
+      this.syncCanvasBuilderContext();
+
       const { data: existingCanvases, error } = await supabase
         .from('canvases')
         .select('id, lesson_number, canvas_index')
@@ -2745,9 +2909,15 @@ class CurriculumManager {
 
         // Process each canvas payload
         canvasPayloads.forEach((payload) => {
+          // Merge lessonData into canvas_metadata
+          const mergedMetadata = {
+            ...payload.canvasMetadata,
+            ...payload.lessonData,
+          };
+
           const recordBase = {
             canvas_data: payload.canvasData,
-            canvas_metadata: payload.canvasMetadata,
+            canvas_metadata: mergedMetadata,
             canvas_index: payload.canvasIndex,
           };
 
@@ -3050,6 +3220,7 @@ class CurriculumManager {
           } : null
 
         });
+        this.updateLessonStructureCountsFromLessons(this.currentCurriculum);
         this.renderCurriculumPreview();
 
         // Update inputs to match loaded curriculum structure
@@ -3060,6 +3231,7 @@ class CurriculumManager {
       ) {
         const payload = rawCurriculum as CurriculumDataPayload;
 
+        this.curriculumStructureDefaults = payload.structure ?? null;
         // Extract module organization and lessons
         this.moduleOrganization = payload.moduleOrganization || "linear";
 
@@ -3097,6 +3269,7 @@ class CurriculumManager {
           this.currentCurriculum.forEach((lesson) => {
             lesson.moduleNumber = lesson.moduleNumber ?? 1;
           });
+          this.updateLessonStructureCountsFromLessons(this.currentCurriculum);
 
           console.log('📚 Loaded from LESSONS:', {
             lessonsCount: lessonData.length,
@@ -3105,6 +3278,7 @@ class CurriculumManager {
         } else {
           this.currentCurriculum = [];
           this.currentModules = [];
+          this.lessonStructureCounts.clear();
         }
 
         if (Array.isArray(payload.templatePlacements)) {

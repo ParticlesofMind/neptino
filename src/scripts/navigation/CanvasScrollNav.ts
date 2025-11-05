@@ -170,5 +170,8 @@ if (typeof document !== 'undefined') {
   document.addEventListener('DOMContentLoaded', () => {
     const scrollNav = new CanvasScrollNav();
     (window as any).canvasScrollNav = scrollNav;
+    window.dispatchEvent(
+      new CustomEvent('canvas-scroll-nav-ready', { detail: { instance: scrollNav } })
+    );
   });
 }

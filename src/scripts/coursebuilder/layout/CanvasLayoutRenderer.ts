@@ -95,6 +95,8 @@ export class CanvasLayoutRenderer {
   private createHeaderBlock(canvasWidth: number, margins: CanvasMarginState): Container {
     const header = new Container();
     header.label = "layout-header";
+    header.eventMode = "none";
+    header.interactiveChildren = false;
 
     // Header occupies the top margin area
     header.x = margins.left;
@@ -132,6 +134,8 @@ export class CanvasLayoutRenderer {
   ): Container {
     const body = new Container();
     body.label = "layout-body";
+    body.eventMode = "none";
+    body.interactiveChildren = false;
 
     // Body occupies the space between header and footer
     body.x = margins.left;
@@ -170,6 +174,8 @@ export class CanvasLayoutRenderer {
   ): Container {
     const footer = new Container();
     footer.label = "layout-footer";
+    footer.eventMode = "none";
+    footer.interactiveChildren = false;
 
     // Footer occupies the bottom margin area
     footer.x = margins.left;

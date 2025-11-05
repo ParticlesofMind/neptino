@@ -1,4 +1,4 @@
-import { Application, Assets, Container, Graphics, Sprite, Text, type DisplayObject } from "pixi.js";
+import { Application, Assets, Container, Graphics, Sprite, Text, Rectangle, FederatedPointerEvent, type DisplayObject } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { canvasMarginManager } from "./layout/CanvasMarginManager";
 import { CanvasLayoutRenderer } from "./layout/CanvasLayoutRenderer";
@@ -31,8 +31,10 @@ export class CanvasEngine {
   private viewport: Viewport | null = null;
   private layers: Record<LayerName, Container> | null = null;
   private marginOverlay: Graphics | null = null;
+  private marginOverlayVisible = true;
   private layoutRenderer: CanvasLayoutRenderer | null = null;
   private layoutBlocks: LayoutBlocks | null = null;
+  private interactionOverlay: Graphics | null = null;
   private objects = new Map<string, CanvasObject>();
   private resizeObserver: ResizeObserver | null = null;
   private resizeFrame: number | null = null;
@@ -48,6 +50,8 @@ export class CanvasEngine {
   private zoomListeners = new Set<(scale: number) => void>();
   private zoomStep = DEFAULT_ZOOM_STEP;
   private idCounter = 0;
+  private worldSize = { width: BASE_WIDTH, height: BASE_HEIGHT };
+  private interactionLocked = false;
 
   constructor(private readonly selector: string) {}
 
@@ -127,6 +131,13 @@ export class CanvasEngine {
     }
     this.layoutBlocks = null;
 
+    if (this.interactionOverlay) {
+      this.interactionOverlay.destroy();
+      this.interactionOverlay = null;
+    }
+    this.interactionLocked = false;
+    this.worldSize = { width: BASE_WIDTH, height: BASE_HEIGHT };
+
     if (this.viewport) {
       this.viewport.destroy();
       this.viewport = null;
@@ -139,6 +150,7 @@ export class CanvasEngine {
 
     this.layers = null;
     this.marginOverlay = null;
+    this.marginOverlayVisible = true;
     this.objects.clear();
     this.userHasInteracted = false;
     this.grabModeActive = false;
@@ -196,6 +208,23 @@ export class CanvasEngine {
     return this.layoutBlocks;
   }
 
+  public setLayoutVisibility(visible: boolean): void {
+    if (!this.layoutBlocks) {
+      return;
+    }
+
+    this.layoutBlocks.header.visible = visible;
+    this.layoutBlocks.body.visible = visible;
+    this.layoutBlocks.footer.visible = visible;
+  }
+
+  public setMarginOverlayVisibility(visible: boolean): void {
+    this.marginOverlayVisible = visible;
+    if (this.marginOverlay) {
+      this.marginOverlay.visible = visible;
+    }
+  }
+
   public getCurrentZoom(): number {
     return this.viewport?.scale.x ?? this.defaultZoom;
   }
@@ -211,25 +240,128 @@ export class CanvasEngine {
     return window.devicePixelRatio ?? 1;
   }
 
-  public zoomTo(scale: number, options?: { keepCentered?: boolean; markInteraction?: boolean }): void {
+  public setWorldSize(size: { width?: number; height?: number }): void {
+    const nextWidth = size.width ?? this.worldSize.width;
+    const nextHeight = size.height ?? this.worldSize.height;
+
+    if (nextWidth === this.worldSize.width && nextHeight === this.worldSize.height) {
+      return;
+    }
+
+    const clampedWidth = Math.max(nextWidth, BASE_WIDTH);
+    const clampedHeight = Math.max(nextHeight, BASE_HEIGHT);
+    this.worldSize = { width: clampedWidth, height: clampedHeight };
+
+    if (this.viewport) {
+      this.viewport.resize(
+        this.viewport.screenWidth,
+        this.viewport.screenHeight,
+        this.worldSize.width,
+        this.worldSize.height
+      );
+      this.viewport.clamp({ direction: "all", underflow: "center" });
+      this.centerViewportIfUnderflow({ allowUnderflow: true });
+    }
+
+    this.updateInteractionOverlay();
+  }
+
+  public resetWorldSize(): void {
+    this.setWorldSize({ width: BASE_WIDTH, height: BASE_HEIGHT });
+  }
+
+  public setInteractionLocked(locked: boolean): void {
+    if (this.interactionLocked === locked) {
+      return;
+    }
+    this.interactionLocked = locked;
+    this.updateInteractionOverlay();
+  }
+
+  private updateInteractionOverlay(): void {
+    if (!this.layers) {
+      return;
+    }
+
+    if (!this.interactionOverlay) {
+      const overlay = new Graphics();
+      overlay.label = "interaction-overlay";
+      overlay.alpha = 0;
+      overlay.eventMode = "none";
+      overlay.cursor = "default";
+
+      const stopPropagation = (event: FederatedPointerEvent): void => {
+        event.stopPropagation();
+      };
+
+      overlay.on("pointerdown", stopPropagation);
+      overlay.on("pointermove", stopPropagation);
+      overlay.on("pointerup", stopPropagation);
+      overlay.on("pointerupoutside", stopPropagation);
+      overlay.on("pointercancel", stopPropagation);
+      overlay.on("pointertap", stopPropagation);
+
+      overlay.zIndex = 1000;
+      this.interactionOverlay = overlay;
+      this.layers.ui.addChild(overlay);
+    }
+
+    const overlay = this.interactionOverlay;
+    const width = this.worldSize.width;
+    const height = this.worldSize.height;
+
+    overlay.clear();
+    overlay.rect(0, 0, width, height);
+    overlay.fill({ color: 0x0f172a, alpha: this.interactionLocked ? 0.04 : 0 });
+    overlay.hitArea = new Rectangle(0, 0, width, height);
+    overlay.eventMode = this.interactionLocked ? "static" : "none";
+    overlay.interactive = this.interactionLocked;
+    overlay.cursor = this.interactionLocked ? "not-allowed" : "default";
+    overlay.visible = this.interactionLocked;
+  }
+
+  public zoomTo(
+    scale: number,
+    options?: {
+      keepCentered?: boolean;
+      markInteraction?: boolean;
+      targetCenter?: { x: number; y: number };
+    },
+  ): void {
     if (!this.viewport) return;
 
-    const { keepCentered = true, markInteraction = true } = options ?? {};
+    const { keepCentered = true, markInteraction = true, targetCenter } = options ?? {};
     const clampedScale = this.clampScale(scale);
     const currentScale = this.getCurrentZoom();
     const scaleChanged = !this.approximatelyEqual(currentScale, clampedScale, SCALE_EPSILON);
     const previousSuppress = this.suppressInteractionFlag;
+    const currentCenter = this.viewport.center;
+    const preservedCenter = {
+      x: currentCenter.x,
+      y: currentCenter.y,
+    };
 
     if (!markInteraction) {
       this.suppressInteractionFlag = true;
     }
 
     if (scaleChanged) {
-      this.viewport.setZoom(clampedScale, true);
+      if (targetCenter) {
+        this.viewport.setZoom(clampedScale, targetCenter);
+      } else if (keepCentered) {
+        this.viewport.setZoom(clampedScale, preservedCenter);
+      } else {
+        this.viewport.setZoom(clampedScale, true);
+      }
     }
 
     if (keepCentered) {
-      this.moveCenterIfNecessary(BASE_WIDTH / 2, BASE_HEIGHT / 2);
+      this.moveCenterIfNecessary(
+        targetCenter?.x ?? preservedCenter.x,
+        targetCenter?.y ?? preservedCenter.y,
+      );
+    } else if (targetCenter) {
+      this.moveCenterIfNecessary(targetCenter.x, targetCenter.y);
     }
 
     this.centerViewportIfUnderflow();
@@ -266,7 +398,14 @@ export class CanvasEngine {
 
   public resetZoom(): void {
     this.userHasInteracted = false;
-    this.zoomTo(this.defaultZoom, { keepCentered: true, markInteraction: false });
+    this.zoomTo(this.defaultZoom, {
+      keepCentered: true,
+      markInteraction: false,
+      targetCenter: {
+        x: this.worldSize.width / 2,
+        y: this.worldSize.height / 2,
+      },
+    });
   }
 
   public enableGrabMode(): void {
@@ -313,11 +452,12 @@ export class CanvasEngine {
     const viewport = new Viewport({
       screenWidth: Math.max(1, renderer.width),
       screenHeight: Math.max(1, renderer.height),
-      worldWidth: BASE_WIDTH,
-      worldHeight: BASE_HEIGHT,
+      worldWidth: this.worldSize.width,
+      worldHeight: this.worldSize.height,
       events: renderer.events,
       ticker: this.app.ticker,
     });
+    viewport.sortableChildren = true;
 
     const markUserInteracted = (): void => {
       if (this.suppressInteractionFlag) {
@@ -355,7 +495,7 @@ export class CanvasEngine {
     });
     viewport.on("moved", markUserInteracted);
 
-    viewport.moveCenter(BASE_WIDTH / 2, BASE_HEIGHT / 2);
+    viewport.moveCenter(this.worldSize.width / 2, this.worldSize.height / 2);
 
     this.viewport = viewport;
     this.app.stage.addChild(viewport);
@@ -367,17 +507,24 @@ export class CanvasEngine {
 
     const background = new Container();
     background.label = "background-layer";
+    background.zIndex = 0;
 
     const drawing = new Container();
     drawing.label = "drawing-layer";
+    drawing.sortableChildren = true;
+    drawing.zIndex = 30;
 
     const ui = new Container();
     ui.label = "ui-layer";
+    ui.sortableChildren = true;
+    ui.zIndex = 60;
 
     this.layers = { background, drawing, ui };
 
     const target = this.viewport ?? this.app.stage;
     target.addChild(background, drawing, ui);
+
+    this.updateInteractionOverlay();
   }
 
   private drawBackground(): void {
@@ -406,6 +553,7 @@ export class CanvasEngine {
     this.marginOverlay = new Graphics();
     this.marginOverlay.alpha = 0.45;
     this.layers.ui.addChild(this.marginOverlay);
+    this.marginOverlay.visible = this.marginOverlayVisible;
   }
 
   private initializeLayout(): void {
@@ -422,7 +570,13 @@ export class CanvasEngine {
     // Create the layout blocks
     this.layoutBlocks = this.layoutRenderer.createLayout();
 
-    // Add the layout blocks to the drawing layer (below UI layer)
+    // Add the layout blocks to the drawing layer (below user content)
+    this.layoutBlocks.header.zIndex = -1000;
+    this.layoutBlocks.body.zIndex = -1000;
+    this.layoutBlocks.footer.zIndex = -1000;
+    this.layoutBlocks.header.eventMode = "none";
+    this.layoutBlocks.body.eventMode = "none";
+    this.layoutBlocks.footer.eventMode = "none";
     this.layers.drawing.addChild(this.layoutBlocks.header);
     this.layers.drawing.addChild(this.layoutBlocks.body);
     this.layers.drawing.addChild(this.layoutBlocks.footer);
@@ -487,6 +641,7 @@ export class CanvasEngine {
       this.viewport.moveCenter(center.x, targetY);
       this.centerViewportIfUnderflow({ allowUnderflow: true });
       this.userHasInteracted = true;
+      this.viewport.emit("moved", { viewport: this.viewport, type: "wheel-scroll" });
     };
 
     const target = this.container;
@@ -526,7 +681,7 @@ export class CanvasEngine {
     if (Math.round(screen.width) !== width || Math.round(screen.height) !== height) {
       this.app.renderer.resize(width, height);
     }
-    this.viewport?.resize(width, height, BASE_WIDTH, BASE_HEIGHT);
+    this.viewport?.resize(width, height, this.worldSize.width, this.worldSize.height);
 
     if (!this.viewport) {
       this.markReady();
@@ -537,7 +692,14 @@ export class CanvasEngine {
     this.defaultZoom = fitScale;
 
     if (!this.userHasInteracted) {
-      this.zoomTo(fitScale, { keepCentered: true, markInteraction: false });
+      this.zoomTo(fitScale, {
+        keepCentered: true,
+        markInteraction: false,
+        targetCenter: {
+          x: this.worldSize.width / 2,
+          y: this.worldSize.height / 2,
+        },
+      });
     } else {
       this.centerViewportIfUnderflow();
       this.notifyZoomChange();
@@ -549,7 +711,14 @@ export class CanvasEngine {
   private applyFitToContainer(width: number, height: number): void {
     const fitScale = this.computeFitScale(width, height);
     this.defaultZoom = fitScale;
-    this.zoomTo(fitScale, { keepCentered: true, markInteraction: false });
+    this.zoomTo(fitScale, {
+      keepCentered: true,
+      markInteraction: false,
+      targetCenter: {
+        x: this.worldSize.width / 2,
+        y: this.worldSize.height / 2,
+      },
+    });
   }
 
   private computeFitScale(width: number, height: number): number {
@@ -573,7 +742,7 @@ export class CanvasEngine {
     const { allowUnderflow = false } = options ?? {};
 
     if (!allowUnderflow && (worldScreenWidth <= this.viewport.screenWidth || worldScreenHeight <= this.viewport.screenHeight)) {
-      this.moveCenterIfNecessary(BASE_WIDTH / 2, BASE_HEIGHT / 2);
+      this.moveCenterIfNecessary(this.worldSize.width / 2, this.worldSize.height / 2);
     }
   }
 
@@ -649,6 +818,8 @@ export class CanvasEngine {
       this.layoutRenderer.updateMargins({ ...margins, unit: "px" });
       console.log("📐 Layout blocks updated with new margins:", margins);
     }
+
+    this.marginOverlay.visible = this.marginOverlayVisible;
   }
 
   private registerCanvasAPI(): void {
