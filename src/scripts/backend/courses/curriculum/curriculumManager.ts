@@ -126,7 +126,9 @@ class CurriculumManager {
   private courseId: string;
   private curriculumConfigSection!: HTMLElement;
   private curriculumPreviewSection!: HTMLElement;
+  private generationPreviewSection!: HTMLElement | null;
   private renderer!: CurriculumRenderer;
+  private generationRenderer!: CurriculumRenderer | null;
   private canvasBuilder!: CanvasBuilder;
   private currentCurriculum: CurriculumLesson[] = []; // Flat list for internal processing
   private currentModules: CurriculumModule[] = []; // Hierarchical module structure
@@ -146,6 +148,7 @@ class CurriculumManager {
   private teacherName: string | null = null;
   private lessonStructureCounts: Map<number, { topics: number; objectives: number; tasks: number }> = new Map();
   private curriculumStructureDefaults: CurriculumStructureConfig | null = null;
+  private initialModuleTitles: Map<number, string> = new Map();
 
   // Duration presets with default values and rationale
   private readonly durationPresets: Record<string, DurationPreset> = {
@@ -608,8 +611,9 @@ class CurriculumManager {
       "#generation .curriculum__preview",
     ) as HTMLElement;
 
-    // Use whichever is visible/available
-    this.curriculumPreviewSection = curriculumPreview || generationPreview;
+    // Store both preview sections for dual rendering
+    this.curriculumPreviewSection = curriculumPreview;
+    this.generationPreviewSection = generationPreview;
 
     this.templatePlacementList = document.getElementById(
       "curriculum-template-placement-list",
@@ -642,6 +646,14 @@ class CurriculumManager {
       this.curriculumPreviewSection,
       this.templatePlacementList,
     );
+
+    // Initialize generation renderer if generation preview exists
+    if (this.generationPreviewSection) {
+      this.generationRenderer = new CurriculumRenderer(
+        this.generationPreviewSection,
+        null, // No template placement list for generation section
+      );
+    }
   }
 
   private initializePreviewControls(previewSection: HTMLElement): void {
@@ -667,6 +679,10 @@ class CurriculumManager {
 
   private highlightPreviewModeButton(mode: PreviewMode): void {
     this.renderer.highlightPreviewModeButton(mode);
+    // Also update generation preview buttons if it exists
+    if (this.generationRenderer) {
+      this.generationRenderer.highlightPreviewModeButton(mode);
+    }
   }
   private bindEvents(): void {
     if (!this.curriculumConfigSection) {
@@ -3048,6 +3064,7 @@ class CurriculumManager {
   }
 
   private renderCurriculumPreview(): void {
+    // Update and render curriculum preview
     this.renderer.updateData({
       currentCurriculum: this.currentCurriculum,
       currentModules: this.currentModules,
@@ -3060,10 +3077,33 @@ class CurriculumManager {
     });
     this.renderer.renderCurriculumPreview();
     this.bindEditableEvents();
+
+    // Update and render generation preview if it exists
+    if (this.generationRenderer) {
+      this.generationRenderer.updateData({
+        currentCurriculum: this.currentCurriculum,
+        currentModules: this.currentModules,
+        currentPreviewMode: this.currentPreviewMode,
+        scheduledLessonDuration: this.scheduledLessonDuration,
+        availableTemplates: this.availableTemplates,
+        templatePlacements: this.templatePlacements,
+        courseType: this.courseType,
+        moduleOrganization: this.moduleOrganization,
+      });
+      this.generationRenderer.renderCurriculumPreview();
+      // Also bind editable events for generation preview
+      if (this.generationPreviewSection) {
+        this.bindEditableEventsForSection(this.generationPreviewSection);
+      }
+    }
   }
 
   private bindEditableEvents(): void {
-    const editableElements = this.curriculumPreviewSection.querySelectorAll(
+    this.bindEditableEventsForSection(this.curriculumPreviewSection);
+  }
+
+  private bindEditableEventsForSection(section: HTMLElement): void {
+    const editableElements = section.querySelectorAll(
       '[contenteditable="true"]',
     );
     editableElements.forEach((element) => {
