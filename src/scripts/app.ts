@@ -12,6 +12,7 @@ import './coursebuilder/ViewportControls'; // Perspective zoom/drag controls
 import './coursebuilder/EngineController'; // Initialize engine controller
 import './coursebuilder/tools/ToolSystem'; // Initialize tool system
 import './coursebuilder/KeyboardShortcuts'; // Keyboard shortcuts for tools
+import './integration/CurriculumPageBridge'; // Bridge curriculum data to page system
 // import PageTransitions from './navigation/PageTransitions'; // DISABLED
 
 

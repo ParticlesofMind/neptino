@@ -1,6 +1,8 @@
 import { Application, Assets, Container, Graphics, Sprite, Text, type DisplayObject } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { canvasMarginManager } from "./layout/CanvasMarginManager";
+import { CanvasLayoutRenderer } from "./layout/CanvasLayoutRenderer";
+import type { LayoutBlocks } from "./layout/CanvasLayoutRenderer";
 
 const BASE_WIDTH = 1200;
 const BASE_HEIGHT = 1800;
@@ -29,6 +31,8 @@ export class CanvasEngine {
   private viewport: Viewport | null = null;
   private layers: Record<LayerName, Container> | null = null;
   private marginOverlay: Graphics | null = null;
+  private layoutRenderer: CanvasLayoutRenderer | null = null;
+  private layoutBlocks: LayoutBlocks | null = null;
   private objects = new Map<string, CanvasObject>();
   private resizeObserver: ResizeObserver | null = null;
   private resizeFrame: number | null = null;
@@ -87,6 +91,7 @@ export class CanvasEngine {
     this.createLayers();
     this.drawBackground();
     this.setupMarginOverlay();
+    this.initializeLayout();
     this.setupResizeHandling();
     this.attachWheelHandler();
 
@@ -115,6 +120,12 @@ export class CanvasEngine {
 
     this.marginUnsubscribe?.();
     this.marginUnsubscribe = null;
+
+    if (this.layoutRenderer) {
+      this.layoutRenderer.destroy();
+      this.layoutRenderer = null;
+    }
+    this.layoutBlocks = null;
 
     if (this.viewport) {
       this.viewport.destroy();
@@ -179,6 +190,10 @@ export class CanvasEngine {
 
   public getRootElement(): HTMLElement | null {
     return this.container;
+  }
+
+  public getLayoutBlocks(): LayoutBlocks | null {
+    return this.layoutBlocks;
   }
 
   public getCurrentZoom(): number {
@@ -391,6 +406,28 @@ export class CanvasEngine {
     this.marginOverlay = new Graphics();
     this.marginOverlay.alpha = 0.45;
     this.layers.ui.addChild(this.marginOverlay);
+  }
+
+  private initializeLayout(): void {
+    if (!this.layers) return;
+
+    // Initialize the layout renderer with current margins
+    const margins = canvasMarginManager.getMargins();
+    this.layoutRenderer = new CanvasLayoutRenderer({
+      width: BASE_WIDTH,
+      height: BASE_HEIGHT,
+      margins,
+    });
+
+    // Create the layout blocks
+    this.layoutBlocks = this.layoutRenderer.createLayout();
+
+    // Add the layout blocks to the drawing layer (below UI layer)
+    this.layers.drawing.addChild(this.layoutBlocks.header);
+    this.layers.drawing.addChild(this.layoutBlocks.body);
+    this.layers.drawing.addChild(this.layoutBlocks.footer);
+
+    console.log("✅ Canvas layout initialized with Header, Body, and Footer blocks");
   }
 
   private setupResizeHandling(): void {
@@ -606,6 +643,12 @@ export class CanvasEngine {
     this.marginOverlay
       .rect(margins.left, margins.top, safeWidth, safeHeight)
       .fill({ color: 0x4c6ef5, alpha: 0.04 });
+
+    // Update layout blocks with new margins
+    if (this.layoutRenderer) {
+      this.layoutRenderer.updateMargins({ ...margins, unit: "px" });
+      console.log("📐 Layout blocks updated with new margins:", margins);
+    }
   }
 
   private registerCanvasAPI(): void {
@@ -615,6 +658,7 @@ export class CanvasEngine {
       getApp: () => this.app,
       getViewport: () => this.viewport,
       getLayer: (name: LayerName) => this.layers?.[name] ?? null,
+      getLayoutBlocks: () => this.getLayoutBlocks(),
       getDimensions: () => ({ width: BASE_WIDTH, height: BASE_HEIGHT }),
       getCurrentZoom: () => this.getCurrentZoom(),
       getDefaultZoom: () => this.getDefaultZoom(),
@@ -648,6 +692,7 @@ export class CanvasEngine {
       (window as any).canvasSystem = {
         app: this.app,
         viewport: this.viewport,
+        layoutBlocks: this.layoutBlocks,
         marginManager: canvasMarginManager,
         dimensionManager: {
           getCurrentDimensions: () => ({ width: BASE_WIDTH, height: BASE_HEIGHT }),
