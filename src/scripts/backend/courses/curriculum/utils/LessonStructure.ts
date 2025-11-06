@@ -1,4 +1,4 @@
-import { CurriculumLesson } from "../curriculumManager.js";
+import { CurriculumLesson, CurriculumTopic } from "../curriculumManager.js";
 
 export class LessonStructure {
   /**
@@ -11,7 +11,7 @@ export class LessonStructure {
       return { topics: 0, objectives: 0, tasks: 0 };
     }
 
-    const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
+    const topics = LessonStructure.extractTopics(lesson);
 
     let objectives = 0;
     let tasks = 0;
@@ -34,7 +34,7 @@ export class LessonStructure {
    * Build topic nodes for layout
    */
   static buildTopicNodes(lesson: CurriculumLesson): Record<string, unknown>[] {
-    const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
+    const topics = LessonStructure.extractTopics(lesson);
 
     if (!topics.length) {
       return [
@@ -80,5 +80,25 @@ export class LessonStructure {
       };
     });
   }
-}
 
+  private static extractTopics(lesson: CurriculumLesson): CurriculumTopic[] {
+    const competencySource = (lesson as unknown as { competencies?: Array<{ topics?: CurriculumTopic[] }> }).competencies;
+    if (Array.isArray(competencySource) && competencySource.length) {
+      const flattened: CurriculumTopic[] = [];
+      competencySource.forEach((competency) => {
+        if (Array.isArray(competency.topics)) {
+          competency.topics.forEach((topic) => {
+            if (topic) {
+              flattened.push(topic);
+            }
+          });
+        }
+      });
+      if (flattened.length) {
+        return flattened;
+      }
+    }
+
+    return Array.isArray(lesson.topics) ? lesson.topics : [];
+  }
+}

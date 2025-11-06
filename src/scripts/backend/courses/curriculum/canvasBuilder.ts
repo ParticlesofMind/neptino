@@ -1,5 +1,6 @@
 import {
   CurriculumLesson,
+  CurriculumTopic,
   TemplateRecord,
   TemplateDefinitionBlock,
 } from "./curriculumManager.js";
@@ -722,8 +723,19 @@ export class CanvasBuilder {
    * Transform flat curriculum structure into nested ProgramData format
    */
   private buildProgramData(lesson: CurriculumLesson, structureSummary?: LessonStructureSummary): any {
-    const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
+    const lessonCompetencies = this.extractLessonCompetencies(lesson);
     const effectiveSummary = structureSummary || this.getLessonStructureSummary(lesson.lessonNumber ?? null, lesson);
+
+    if (lessonCompetencies.length) {
+      const competencies = lessonCompetencies.map((competency, competencyIndex) => ({
+        name: this.resolveCompetencyTitle(competency.title, competencyIndex),
+        topics: competency.topics.map((topic, topicIndex) => this.buildProgramTopicNode(topic, topicIndex)),
+      }));
+
+      return { competencies };
+    }
+
+    const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
 
     if (!topics.length) {
       const topicsCount = effectiveSummary.topics || 0;
@@ -764,46 +776,103 @@ export class CanvasBuilder {
       return { competencies };
     }
 
-    const competencies = topics.map((topic, topicIndex) => {
-      const objectives = Array.isArray(topic.objectives) ? topic.objectives : [];
-      const allTasks = Array.isArray(topic.tasks) ? topic.tasks : [];
-
-      const tasksPerObjective = objectives.length > 0
-        ? Math.ceil(allTasks.length / objectives.length)
-        : allTasks.length;
-
-      const nestedObjectives = objectives.map((objective, objIndex) => {
-        const startTaskIndex = objIndex * tasksPerObjective;
-        const endTaskIndex = Math.min(startTaskIndex + tasksPerObjective, allTasks.length);
-        const objectiveTasks = allTasks.slice(startTaskIndex, endTaskIndex);
-
-        return {
-          name: typeof objective === "string" && objective.trim().length
-            ? objective.trim()
-            : `Objective ${objIndex + 1}`,
-          tasks: objectiveTasks.map((task, taskIndex) => ({
-            name: typeof task === "string" && task.trim().length
-              ? task.trim()
-              : `Task ${taskIndex + 1}`,
-          })),
-        };
-      });
-
-      return {
-        name: `Competency ${topicIndex + 1}`,
-        topics: [
-          {
-            name: typeof topic.title === "string" && topic.title.trim().length
-              ? topic.title.trim()
-              : `Topic ${topicIndex + 1}`,
-            objectives: nestedObjectives,
-          },
-        ],
-      };
-    });
+    const fallbackCompetencies = topics.map((topic, topicIndex) => ({
+      name: `Competency ${topicIndex + 1}`,
+      topics: [this.buildProgramTopicNode(topic, topicIndex)],
+    }));
 
     return {
-      competencies,
+      competencies: fallbackCompetencies,
     };
+  }
+
+  private resolveCompetencyTitle(rawTitle: unknown, competencyIndex: number): string {
+    if (typeof rawTitle === "string" && rawTitle.trim().length) {
+      return rawTitle.trim();
+    }
+    return `Competency ${competencyIndex + 1}`;
+  }
+
+  private resolveTopicTitle(rawTitle: unknown, topicIndex: number): string {
+    if (typeof rawTitle === "string" && rawTitle.trim().length) {
+      return rawTitle.trim();
+    }
+    return `Topic ${topicIndex + 1}`;
+  }
+
+  private buildProgramTopicNode(topic: CurriculumTopic, topicIndex: number): {
+    name: string;
+    objectives: Array<{ name: string; tasks: Array<{ name: string }> }>;
+  } {
+    const objectives = Array.isArray(topic.objectives) ? topic.objectives : [];
+    const allTasks = Array.isArray(topic.tasks) ? topic.tasks : [];
+    const tasksPerObjective = objectives.length > 0 ? Math.ceil(allTasks.length / objectives.length) : allTasks.length;
+
+    const nestedObjectives =
+      objectives.length > 0
+        ? objectives.map((objective, objIndex) => {
+            const startTaskIndex = objIndex * tasksPerObjective;
+            const endTaskIndex = Math.min(startTaskIndex + tasksPerObjective, allTasks.length);
+            const objectiveTasks = allTasks.slice(startTaskIndex, endTaskIndex);
+            return {
+              name:
+                typeof objective === "string" && objective.trim().length
+                  ? objective.trim()
+                  : `Objective ${objIndex + 1}`,
+              tasks: objectiveTasks.map((task, taskIndex) => ({
+                name:
+                  typeof task === "string" && task.trim().length
+                    ? task.trim()
+                    : `Task ${taskIndex + 1 + startTaskIndex}`,
+              })),
+            };
+          })
+        : allTasks.length
+        ? [
+            {
+              name: "Objective 1",
+              tasks: allTasks.map((task, taskIndex) => ({
+                name: typeof task === "string" && task.trim().length ? task.trim() : `Task ${taskIndex + 1}`,
+              })),
+            },
+          ]
+        : [];
+
+    return {
+      name: this.resolveTopicTitle(topic.title, topicIndex),
+      objectives: nestedObjectives,
+    };
+  }
+
+  private extractLessonCompetencies(lesson: CurriculumLesson): Array<{ title: string; topics: CurriculumTopic[] }> {
+    const competencySource = (lesson as unknown as { competencies?: Array<{ title?: string; topics?: CurriculumTopic[] }> }).competencies;
+    if (Array.isArray(competencySource) && competencySource.length) {
+      const sanitized = competencySource
+        .map((competency, index) => {
+          const topics = Array.isArray(competency.topics) ? competency.topics.filter(Boolean) : [];
+          if (!topics.length) {
+            return null;
+          }
+          const title =
+            typeof competency.title === "string" && competency.title.trim().length
+              ? competency.title.trim()
+              : `Competency ${index + 1}`;
+          return { title, topics };
+        })
+        .filter((entry): entry is { title: string; topics: CurriculumTopic[] } => entry !== null);
+      if (sanitized.length) {
+        return sanitized;
+      }
+    }
+
+    const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
+    if (!topics.length) {
+      return [];
+    }
+
+    return topics.map((topic, index) => ({
+      title: `Competency ${index + 1}`,
+      topics: [topic],
+    }));
   }
 }

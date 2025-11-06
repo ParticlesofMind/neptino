@@ -9,7 +9,23 @@
 --                  {
 --                    "moduleNumber": 1,
 --                    "title": "Module Title",
---                    "lessons": [...]
+--                    "lessons": [
+--                      {
+--                        "lessonNumber": 1,
+--                        "competencies": [
+--                          {
+--                            "title": "Competency 1",
+--                            "topics": [
+--                              {
+--                                "title": "Topic 1",
+--                                "objectives": [],
+--                                "tasks": []
+--                              }
+--                            ]
+--                          }
+--                        ]
+--                      }
+--                    ]
 --                  }
 --                ]
 --              }
@@ -17,11 +33,11 @@
 --              For backward compatibility, courses without moduleOrganization
 --              will default to "linear" mode with a single implicit module.
 --
---              New hierarchy: course > module > lesson > topic > objective > task
+--              New hierarchy: course > module > lesson > competency > topic > objective > task
 
 -- No schema changes needed - curriculum_data is already JSONB
 -- This migration serves as documentation for the new structure
 
 COMMENT ON COLUMN public.courses.curriculum_data IS 
-'JSONB structure containing curriculum organization. Supports hierarchical structure: course > module > lesson > topic > objective > task. 
+'JSONB structure containing curriculum organization. Supports hierarchical structure: course > module > lesson > competency > topic > objective > task. 
 Module organization modes: linear (single list), equal (auto-distributed), tiered (intro/core/project), custom (user-defined).';

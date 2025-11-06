@@ -18,6 +18,7 @@ export interface CurriculumLesson {
   topics: CurriculumTopic[];
   moduleNumber?: number;
   templateId?: string; // Template assigned to this lesson/session
+  competencies?: CurriculumCompetency[];
 }
 
 export interface CurriculumTopic {
@@ -26,10 +27,17 @@ export interface CurriculumTopic {
   tasks: string[];
 }
 
+export interface CurriculumCompetency {
+  title: string;
+  competencyNumber?: number;
+  topics: CurriculumTopic[];
+}
+
 interface ContentLoadConfig {
   type: "mini" | "single" | "double" | "triple" | "halfFull";
   duration: number; // in minutes
   topicsPerLesson: number;
+  competenciesPerLesson: number;
   objectivesPerTopic: number;
   tasksPerObjective: number;
   isRecommended: boolean;
@@ -98,6 +106,7 @@ interface CurriculumStructureConfig {
   durationType?: "mini" | "single" | "double" | "triple" | "halfFull";
   scheduledLessonDuration?: number;
   topicsPerLesson?: number;
+  competenciesPerLesson?: number;
   objectivesPerTopic?: number;
   tasksPerObjective?: number;
 }
@@ -1871,6 +1880,7 @@ class CurriculumManager {
       type: selectedPreset.type,
       duration,
       topicsPerLesson: selectedPreset.defaultTopics,
+      competenciesPerLesson: this.computeCompetenciesPerLesson(selectedPreset.defaultTopics),
       objectivesPerTopic: selectedPreset.defaultObjectives,
       tasksPerObjective: selectedPreset.defaultTasks,
       isRecommended,
@@ -2025,6 +2035,7 @@ class CurriculumManager {
       type: durationType as "mini" | "single" | "double" | "triple" | "halfFull",
       duration: baseDuration || this.scheduledLessonDuration,
       topicsPerLesson: counts.topics,
+      competenciesPerLesson: this.computeCompetenciesPerLesson(counts.topics),
       objectivesPerTopic: counts.objectives,
       tasksPerObjective: counts.tasksPerObjective,
       isRecommended,
@@ -2175,6 +2186,7 @@ class CurriculumManager {
         type: preset.type,
         duration: this.scheduledLessonDuration,
         topicsPerLesson: preset.defaultTopics,
+        competenciesPerLesson: this.computeCompetenciesPerLesson(preset.defaultTopics),
         objectivesPerTopic: preset.defaultObjectives,
         tasksPerObjective: preset.defaultTasks,
         isRecommended: this.isRecommendedDuration(recommendedType, this.scheduledLessonDuration),
@@ -2358,6 +2370,133 @@ class CurriculumManager {
     }
   }
 
+  private computeCompetenciesPerLesson(topicsPerLesson: number): number {
+    if (!topicsPerLesson || topicsPerLesson <= 1) {
+      return 1;
+    }
+    return Math.min(topicsPerLesson, Math.max(1, Math.ceil(topicsPerLesson / 2)));
+  }
+
+  private resolveCompetencyCountForTopics(topicsCount: number): number {
+    if (topicsCount <= 1) {
+      return 1;
+    }
+    const configured =
+      this.contentLoadConfig?.competenciesPerLesson && this.contentLoadConfig.competenciesPerLesson > 0
+        ? this.contentLoadConfig.competenciesPerLesson
+        : null;
+    if (configured) {
+      return Math.min(Math.max(1, configured), topicsCount);
+    }
+    return Math.min(this.computeCompetenciesPerLesson(topicsCount), topicsCount);
+  }
+
+  private normalizeTopicStructure(topic: CurriculumTopic, fallbackIndex: number): CurriculumTopic {
+    const title =
+      typeof topic?.title === "string" && topic.title.trim().length
+        ? topic.title.trim()
+        : `Topic ${fallbackIndex + 1}`;
+    const objectives = Array.isArray(topic?.objectives)
+      ? topic.objectives.map((objective) =>
+          typeof objective === "string" ? objective.trim() : "",
+        )
+      : [];
+    const tasks = Array.isArray(topic?.tasks)
+      ? topic.tasks.map((task) =>
+          typeof task === "string" ? task.trim() : "",
+        )
+      : [];
+
+    return {
+      title,
+      objectives,
+      tasks,
+    };
+  }
+
+  private generateCompetenciesFromTopics(topics: CurriculumTopic[]): CurriculumCompetency[] {
+    if (!topics.length) {
+      return [];
+    }
+
+    const competencyCount = this.resolveCompetencyCountForTopics(topics.length);
+    const topicsPerCompetency = Math.max(1, Math.ceil(topics.length / competencyCount));
+    const competencies: CurriculumCompetency[] = [];
+
+    for (let i = 0; i < competencyCount; i += 1) {
+      const startIndex = i * topicsPerCompetency;
+      const topicSlice = topics.slice(startIndex, startIndex + topicsPerCompetency);
+      if (!topicSlice.length) {
+        continue;
+      }
+
+      competencies.push({
+        title: `Competency ${i + 1}`,
+        competencyNumber: i + 1,
+        topics: topicSlice,
+      });
+    }
+
+    return competencies;
+  }
+
+  private normalizeLessonCompetenciesForPersistence(lesson: CurriculumLesson): void {
+    const rawTopics = Array.isArray(lesson.topics) ? lesson.topics : [];
+    const normalizedTopics = rawTopics.map((topic, index) => this.normalizeTopicStructure(topic, index));
+
+    lesson.topics = normalizedTopics;
+
+    const existingCompetencies = (lesson as unknown as { competencies?: CurriculumCompetency[] }).competencies;
+
+    if (Array.isArray(existingCompetencies) && existingCompetencies.length) {
+      const sanitized = existingCompetencies
+        .map((competency, index) => {
+          const topics = Array.isArray(competency?.topics) ? competency.topics : [];
+          const normalized = topics.length ? topics.map((topic, topicIndex) => this.normalizeTopicStructure(topic, topicIndex)) : [];
+          return normalized.length
+            ? {
+                title:
+                  typeof competency.title === "string" && competency.title.trim().length
+                    ? competency.title.trim()
+                    : `Competency ${index + 1}`,
+                competencyNumber: competency.competencyNumber ?? index + 1,
+                topics: normalized,
+              }
+            : null;
+        })
+        .filter((competency): competency is CurriculumCompetency => competency !== null);
+
+      lesson.competencies = sanitized.length ? sanitized : this.generateCompetenciesFromTopics(normalizedTopics);
+      lesson.topics = lesson.competencies.flatMap((competency) => competency.topics);
+      return;
+    }
+
+    lesson.competencies = this.generateCompetenciesFromTopics(normalizedTopics);
+  }
+
+  private attachCompetenciesToLessons(lessons: CurriculumLesson[]): CurriculumLesson[] {
+    return lessons.map((lesson) => {
+      this.normalizeLessonCompetenciesForPersistence(lesson);
+      return lesson;
+    });
+  }
+
+  private hydrateLessonFromCompetencies(lesson: CurriculumLesson): void {
+    const competencyList = (lesson as unknown as { competencies?: CurriculumCompetency[] }).competencies;
+    if (Array.isArray(competencyList) && competencyList.length) {
+      const flattenedTopics = competencyList
+        .flatMap((competency) => (Array.isArray(competency.topics) ? competency.topics : []))
+        .map((topic, index) => this.normalizeTopicStructure(topic, index));
+      if (flattenedTopics.length) {
+        lesson.topics = flattenedTopics;
+      }
+    }
+  }
+
+  private hydrateLessonsFromCompetencies(lessons: CurriculumLesson[]): void {
+    lessons.forEach((lesson) => this.hydrateLessonFromCompetencies(lesson));
+  }
+
   private createCurriculumStructure(numLessons: number): CurriculumLesson[] {
     if (!this.contentLoadConfig) return [];
 
@@ -2392,13 +2531,14 @@ class CurriculumManager {
 
         // Add tasks - now creating tasksPerObjective for each objective
         const totalTasksForTopic = this.contentLoadConfig.objectivesPerTopic * this.contentLoadConfig.tasksPerObjective;
-        for (let l = 1; l <= totalTasksForTopic; l++) {
-          topic.tasks.push("");
-        }
-
-        lesson.topics.push(topic);
+      for (let l = 1; l <= totalTasksForTopic; l++) {
+        topic.tasks.push("");
       }
 
+      lesson.topics.push(topic);
+    }
+
+      lesson.competencies = this.generateCompetenciesFromTopics(lesson.topics);
       curriculum.push(lesson);
     }
 
@@ -2424,6 +2564,7 @@ class CurriculumManager {
       durationType: this.contentLoadConfig.type,
       scheduledLessonDuration: this.contentLoadConfig.duration,
       topicsPerLesson: this.contentLoadConfig.topicsPerLesson,
+      competenciesPerLesson: this.contentLoadConfig.competenciesPerLesson,
       objectivesPerTopic: this.contentLoadConfig.objectivesPerTopic,
       tasksPerObjective: this.contentLoadConfig.tasksPerObjective,
     };
@@ -2447,6 +2588,7 @@ class CurriculumManager {
 
     for (const module of modules) {
       for (const lesson of module.lessons) {
+        this.hydrateLessonFromCompetencies(lesson);
         // Re-number lessons sequentially across all modules
         lessons.push({
           ...lesson,
@@ -2779,8 +2921,13 @@ class CurriculumManager {
     });
 
     // Create deep copies to avoid circular references
-    const curriculumCopy = JSON.parse(JSON.stringify(curriculum));
-    const modulesCopy = JSON.parse(JSON.stringify(modules));
+    const curriculumCopy = JSON.parse(JSON.stringify(curriculum)) as CurriculumLesson[];
+    const modulesCopy = JSON.parse(JSON.stringify(modules)) as CurriculumModule[];
+
+    const normalizedLessons = this.attachCompetenciesToLessons(curriculumCopy);
+    modulesCopy.forEach((module) => {
+      module.lessons = this.attachCompetenciesToLessons(Array.isArray(module.lessons) ? module.lessons : []);
+    });
 
     const payload: CurriculumDataPayload = {
       structure: this.buildStructurePayload(),
@@ -2796,7 +2943,7 @@ class CurriculumManager {
 
     if (this.moduleOrganization === "linear") {
       // Legacy format for backward compatibility
-      payload.lessons = curriculumCopy;
+      payload.lessons = normalizedLessons;
     } else if (!payload.modules) {
       // Ensure module-based format persists modules when available
       payload.modules = modulesCopy;
@@ -3452,21 +3599,30 @@ class CurriculumManager {
 
     const fallbackPreset = this.durationPresets[durationType];
 
+    const resolvedTopicsPerLesson =
+      structure.topicsPerLesson ??
+      this.contentLoadConfig?.topicsPerLesson ??
+      fallbackPreset.defaultTopics;
+    const resolvedCompetenciesPerLesson =
+      structure.competenciesPerLesson ??
+      this.contentLoadConfig?.competenciesPerLesson ??
+      this.computeCompetenciesPerLesson(resolvedTopicsPerLesson);
+    const resolvedObjectivesPerTopic =
+      structure.objectivesPerTopic ??
+      this.contentLoadConfig?.objectivesPerTopic ??
+      fallbackPreset.defaultObjectives;
+    const resolvedTasksPerObjective =
+      structure.tasksPerObjective ??
+      this.contentLoadConfig?.tasksPerObjective ??
+      fallbackPreset.defaultTasks;
+
     this.contentLoadConfig = {
       type: durationType as "mini" | "single" | "double" | "triple" | "halfFull",
       duration: resolvedDuration,
-      topicsPerLesson:
-        structure.topicsPerLesson ??
-        this.contentLoadConfig?.topicsPerLesson ??
-        fallbackPreset.defaultTopics,
-      objectivesPerTopic:
-        structure.objectivesPerTopic ??
-        this.contentLoadConfig?.objectivesPerTopic ??
-        fallbackPreset.defaultObjectives,
-      tasksPerObjective:
-        structure.tasksPerObjective ??
-        this.contentLoadConfig?.tasksPerObjective ??
-        fallbackPreset.defaultTasks,
+      topicsPerLesson: resolvedTopicsPerLesson,
+      competenciesPerLesson: resolvedCompetenciesPerLesson,
+      objectivesPerTopic: resolvedObjectivesPerTopic,
+      tasksPerObjective: resolvedTasksPerObjective,
       isRecommended: this.isRecommendedDuration(durationType, resolvedDuration),
       recommendationText: this.getRecommendationText(durationType, resolvedDuration),
     };
@@ -3499,6 +3655,7 @@ class CurriculumManager {
       if (Array.isArray(rawCurriculum)) {
         // Legacy format: curriculum_data stored as an array of lessons
         this.currentCurriculum = rawCurriculum;
+        this.hydrateLessonsFromCompetencies(this.currentCurriculum);
         this.templatePlacements = [];
         console.log('✅ Loaded existing curriculum:', {
           lessonsCount: this.currentCurriculum.length,
@@ -3536,6 +3693,7 @@ class CurriculumManager {
         const lessonData = Array.isArray(payload.lessons) ? payload.lessons : undefined;
 
         if (moduleData && moduleData.length > 0) {
+          moduleData.forEach((module) => this.hydrateLessonsFromCompetencies(Array.isArray(module.lessons) ? module.lessons : []));
           this.currentModules = this.assignModuleNumbers(moduleData);
           // Flatten modules into lessons for internal processing
           this.currentCurriculum = this.extractLessonsFromModules(moduleData);
@@ -3555,6 +3713,7 @@ class CurriculumManager {
         } else if (lessonData && lessonData.length > 0) {
           // Legacy format: lessons at top level
           this.currentCurriculum = lessonData;
+          this.hydrateLessonsFromCompetencies(this.currentCurriculum);
           this.currentModules = [];
           this.currentCurriculum.forEach((lesson) => {
             lesson.moduleNumber = lesson.moduleNumber ?? 1;
@@ -3810,6 +3969,7 @@ class CurriculumManager {
       type: preset.type,
       duration: this.scheduledLessonDuration || preset.maxDuration,
       topicsPerLesson: preset.defaultTopics,
+      competenciesPerLesson: this.computeCompetenciesPerLesson(preset.defaultTopics),
       objectivesPerTopic: preset.defaultObjectives,
       tasksPerObjective: preset.defaultTasks,
       isRecommended: this.isRecommendedDuration(durationType, this.scheduledLessonDuration),

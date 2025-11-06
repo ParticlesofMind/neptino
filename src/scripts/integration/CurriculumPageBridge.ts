@@ -115,7 +115,6 @@ export class CurriculumPageBridge {
     schedule_settings?: unknown;
     institution?: string | null;
     teacher_id?: string | null;
-    template_settings?: Record<string, unknown> | null;
     teacherName?: string | null;
   } | null = null;
   private lessonSchedule = new Map<number, LessonScheduleEntry>();
@@ -151,7 +150,7 @@ export class CurriculumPageBridge {
       
       const { data: course, error } = await supabase
         .from('courses')
-        .select('id, course_name, course_description, course_language, schedule_settings, institution, teacher_id, template_settings')
+        .select('id, course_name, course_description, course_language, schedule_settings, institution, teacher_id')
         .eq('id', courseId)
         .single();
 
@@ -170,14 +169,10 @@ export class CurriculumPageBridge {
           schedule_settings: course.schedule_settings,
           institution: course.institution ?? null,
           teacher_id: course.teacher_id ?? null,
-          template_settings: course.template_settings ?? null,
           teacherName,
         };
         this.lessonSchedule = this.buildLessonSchedule(course.schedule_settings);
         console.log('[CurriculumPageBridge] Course info loaded:', course);
-        if (!course.template_settings || (typeof course.template_settings === 'object' && Object.keys(course.template_settings).length === 0)) {
-          console.warn('[CurriculumPageBridge] template_settings is empty for course', courseId);
-        }
       }
     } catch (err) {
       console.error('[CurriculumPageBridge] Exception loading course:', err);
@@ -364,6 +359,20 @@ export class CurriculumPageBridge {
         ? `Module ${moduleNumber} - ${combinedTopicBase}`
         : combinedTopicBase;
 
+      const explicitCopyright = this.resolveString(
+        this.extractString(canvasMeta, "copyright"),
+        this.extractString(canvasMeta?.template, "copyright"),
+        this.extractString(canvasData, "copyright"),
+        this.extractString(canvasData?.lesson, "copyright"),
+        this.extractString(canvasData?.template, "copyright"),
+      );
+      const copyrightValue = this.generateCopyrightValue(
+        explicitCopyright,
+        teacherName,
+        institutionName,
+        courseTitle,
+      );
+
       // Build page metadata
       const metadata: PageMetadata = {
         pageNumber: index + 1,
@@ -382,6 +391,7 @@ export class CurriculumPageBridge {
         topic: topicValue,
         canvasIndex,
         canvasType: canvasType ?? null,
+        copyright: copyrightValue,
         templateInfo,
         layout,
         moduleTitle: moduleTitle ?? null,
@@ -544,6 +554,40 @@ export class CurriculumPageBridge {
       }
     }
     return null;
+  }
+
+  private extractString(source: unknown, key: string): string | null {
+    if (!source || typeof source !== "object") {
+      return null;
+    }
+    const record = source as Record<string, unknown>;
+    const value = record[key];
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      return trimmed.length ? trimmed : null;
+    }
+    return null;
+  }
+
+  private generateCopyrightValue(
+    explicit: string | null,
+    teacherName: string | null,
+    institutionName: string | null,
+    courseTitle: string | null,
+  ): string {
+    if (explicit) {
+      return explicit;
+    }
+    const owner =
+      this.resolveString(
+        teacherName,
+        institutionName,
+        courseTitle,
+        this.courseInfo?.course_name,
+        "Neptino",
+      ) ?? "Neptino";
+    const year = new Date().getFullYear();
+    return `© ${year} ${owner}`;
   }
 
   private normalizeMethod(method: string | undefined): MethodType {

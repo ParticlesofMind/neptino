@@ -87,6 +87,10 @@ export class SectionDataBuilder {
 
     return {
       fields: headerData,
+      activeFields: activeFields.map((field) => ({
+        key: field.key,
+        label: field.label,
+      })),
     };
   }
 
@@ -140,6 +144,10 @@ export class SectionDataBuilder {
 
     return {
       fields: footerData,
+      activeFields: activeFields.map((field) => ({
+        key: field.key,
+        label: field.label,
+      })),
     };
   }
 }

@@ -6,7 +6,7 @@
 import { Container, Graphics, Text, TextStyle } from "pixi.js";
 import type { PageMetadata, LayoutNode } from "./PageMetadata";
 import type { TableData } from "../layout/utils/TableRenderer";
-import { formatDate, formatDuration } from "./PageMetadata";
+import { formatDate } from "./PageMetadata";
 
 type PlaceholderKind =
   | "generic"
@@ -37,6 +37,12 @@ interface PageContainerConfig {
   showDebugBorders?: boolean;
 }
 
+interface TemplateSectionFieldConfig {
+  values: Record<string, unknown>;
+  order: string[];
+  labels: Map<string, string>;
+}
+
 export class PageContainer extends Container {
   private config: PageContainerConfig;
   private metadata: PageMetadata;
@@ -54,6 +60,31 @@ export class PageContainer extends Container {
   private static readonly LINE_SPACING = 6;
   private static readonly BULLET_INDENT = 24;
   private static readonly NESTED_INDENT = 48;
+  private static readonly HEADER_FIELD_ORDER = [
+    "lesson_number",
+    "date",
+    "lesson_title",
+    "module_title",
+    "course_title",
+    "institution_name",
+    "teacher_name",
+  ];
+  private static readonly HEADER_FIELD_LABELS: Record<string, string> = {
+    lesson_number: "Lesson Number",
+    date: "Lesson Date",
+    lesson_title: "Lesson Title",
+    module_title: "Module Title",
+    course_title: "Course Title",
+    institution_name: "Institution",
+    teacher_name: "Teacher",
+  };
+  private static readonly FOOTER_FIELD_ORDER = ["copyright", "teacher_name", "institution_name", "page_number"];
+  private static readonly FOOTER_FIELD_LABELS: Record<string, string> = {
+    copyright: "Copyright",
+    teacher_name: "Teacher",
+    institution_name: "Institution",
+    page_number: "Page",
+  };
 
   constructor(metadata: PageMetadata, config: PageContainerConfig) {
     super();
@@ -284,36 +315,27 @@ export class PageContainer extends Container {
     const headerHeight = margins.top;
     const topPadding = 14;
 
-    const moduleNumber = typeof this.metadata.moduleNumber === "number" ? this.metadata.moduleNumber : null;
-    const lessonTitleValue = this.normalizeString(this.metadata.lessonTitle, "topic") || "";
-    const moduleTitleValue = this.normalizeString(
-      typeof this.metadata.moduleTitle === "string" ? this.metadata.moduleTitle : null,
-      "module",
-    ) || "";
-    const courseTitleValue = this.normalizeString(this.metadata.courseName, "course") || "";
-    const institutionValue = this.normalizeString(this.metadata.institutionName, "institution") || "";
-    const teacherValue =
-      this.normalizeString(this.metadata.teacherName, "teacher") ||
-      this.normalizeString(this.metadata.instructor, "teacher") ||
-      "";
-    const lessonNumberValue = `#${String(this.metadata.lessonNumber).padStart(2, "0")}`;
+    const headerTemplate = this.extractTemplateSectionConfig("header");
+    const headerOrder =
+      headerTemplate && headerTemplate.order.length
+        ? headerTemplate.order
+        : [...PageContainer.HEADER_FIELD_ORDER];
 
     const headerItems: Array<{ label: string; value: string }> = [];
-    headerItems.push({ label: "Lesson Number", value: lessonNumberValue });
-    if (lessonTitleValue) {
-      headerItems.push({ label: "Lesson Title", value: lessonTitleValue });
-    }
-    if (moduleTitleValue && moduleNumber) {
-      headerItems.push({ label: "Module Title", value: moduleTitleValue });
-    }
-    if (courseTitleValue) {
-      headerItems.push({ label: "Course Title", value: courseTitleValue });
-    }
-    if (institutionValue) {
-      headerItems.push({ label: "Institution", value: institutionValue });
-    }
-    if (teacherValue) {
-      headerItems.push({ label: "Teacher", value: teacherValue });
+    headerOrder.forEach((key) => {
+      const templateValue = headerTemplate ? headerTemplate.values[key] : undefined;
+      const value = this.formatHeaderFieldValue(key, templateValue);
+      if (value) {
+        const label = headerTemplate?.labels.get(key) ?? this.getHeaderFieldLabel(key);
+        headerItems.push({ label, value });
+      }
+    });
+
+    if (!headerItems.length) {
+      headerItems.push({
+        label: this.getHeaderFieldLabel("lesson_number"),
+        value: this.formatHeaderFieldValue("lesson_number"),
+      });
     }
 
     const visibleItems = headerItems.filter((item) => item.value && item.value.trim().length);
@@ -347,55 +369,7 @@ export class PageContainer extends Container {
 
     currentY += rowMaxHeight + 10;
 
-    const metaParts: string[] = [];
-    const formattedDate = this.metadata.date ? formatDate(this.metadata.date) : null;
-    if (formattedDate) {
-      metaParts.push(formattedDate);
-    }
-    if (this.metadata.method) {
-      metaParts.push(this.metadata.method);
-    }
-    if (this.metadata.socialForm) {
-      metaParts.push(this.metadata.socialForm);
-    }
-
-    const metaTextValue = metaParts.join(" · ");
-    if (metaTextValue.length) {
-      const metaText = new Text({
-        text: metaTextValue,
-        style: this.createHeaderMetaStyle(Math.max(1, headerWidth - 40)),
-      });
-      metaText.x = 20;
-      metaText.y = Math.min(currentY, headerHeight - metaText.height - 10);
-      this.headerContainer.addChild(metaText);
-    }
-
-    // Duration badge (top right corner)
-    const badgePadding = 8;
-    const durationText = new Text({
-      text: formatDuration(this.metadata.duration),
-      style: new TextStyle({
-        fontSize: 10,
-        fontWeight: "600",
-        fill: 0xffffff,
-      }),
-    });
-
-    const badgeWidth = durationText.width + badgePadding * 2;
-    const badgeHeight = durationText.height + badgePadding;
-
-    const badge = new Graphics();
-    badge.roundRect(-badgeWidth, 0, badgeWidth, badgeHeight, 4);
-    badge.fill({ color: 0x3b82f6, alpha: 1 });
-    badge.x = headerWidth - 20;
-    badge.y = topPadding;
-
-    durationText.anchor.set(0.5);
-    durationText.x = -badgeWidth / 2;
-    durationText.y = badgeHeight / 2;
-    badge.addChild(durationText);
-
-    this.headerContainer.addChild(badge);
+    // No additional metadata row or duration badge per latest design
   }
 
   /**
@@ -403,75 +377,57 @@ export class PageContainer extends Container {
    */
   private populateFooter(): void {
     const { width = BASE_WIDTH, margins } = this.config;
-    const footerWidth = width - margins.left - margins.right;
+    const footerWidth = width;
     const footerHeight = margins.bottom;
+    const topPadding = 10;
 
-    // Page number (center)
-    const pageStyle = new TextStyle({
-      fontSize: 14,
-      fontWeight: "700",
-      fill: 0x1e293b,
-    });
-    
-    const pageText = new Text({
-      text: `${this.metadata.pageNumber}`,
-      style: pageStyle,
-    });
-    pageText.anchor.set(0.5);
-    pageText.x = footerWidth / 2;
-    pageText.y = footerHeight / 2;
-    this.footerContainer.addChild(pageText);
+    const footerTemplate = this.extractTemplateSectionConfig("footer");
+    const footerOrder =
+      footerTemplate && footerTemplate.order.length
+        ? footerTemplate.order
+        : [...PageContainer.FOOTER_FIELD_ORDER];
 
-    // Total pages indicator (below page number)
-    const totalStyle = new TextStyle({
-      fontSize: 10,
-      fontWeight: "500",
-      fill: 0x94a3b8,
+    const footerItems: Array<{ label: string; value: string }> = [];
+    footerOrder.forEach((key) => {
+      const templateValue = footerTemplate ? footerTemplate.values[key] : undefined;
+      const value = this.formatFooterFieldValue(key, templateValue);
+      if (value) {
+        const label = footerTemplate?.labels.get(key) ?? this.getFooterFieldLabel(key);
+        footerItems.push({ label, value });
+      }
     });
-    
-    const totalText = new Text({
-      text: `of ${this.metadata.totalPages}`,
-      style: totalStyle,
-    });
-    totalText.anchor.set(0.5, 0);
-    totalText.x = footerWidth / 2;
-    totalText.y = footerHeight / 2 + 14;
-    this.footerContainer.addChild(totalText);
 
-    // Instructor name (left side)
-    if (this.metadata.instructor) {
-      const instructorStyle = new TextStyle({
-        fontSize: 11,
-        fontWeight: "500",
-        fill: 0x64748b,
+    if (!footerItems.length) {
+      footerItems.push({
+        label: this.getFooterFieldLabel("page_number"),
+        value: this.formatFooterFieldValue("page_number"),
       });
-      
-      const instructorText = new Text({
-        text: this.metadata.instructor,
-        style: instructorStyle,
-      });
-      instructorText.x = 20;
-      instructorText.y = footerHeight / 2 - 6;
-      this.footerContainer.addChild(instructorText);
     }
 
-    // Topic (right side)
-    if (this.metadata.topic) {
-      const topicStyle = new TextStyle({
-        fontSize: 11,
-        fontWeight: "500",
-        fill: 0x64748b,
+    const visibleFooterItems = footerItems.filter((item) => item.value && item.value.trim().length);
+    const footerCount = visibleFooterItems.length || 1;
+    const footerCellWidth = footerWidth / footerCount;
+
+    visibleFooterItems.forEach((item, index) => {
+      const centerX = index * footerCellWidth + footerCellWidth / 2;
+      const label = new Text({
+        text: item.label.toUpperCase(),
+        style: this.createHeaderLabelStyle(),
       });
-      
-      const topicText = new Text({
-        text: this.metadata.topic,
-        style: topicStyle,
+      label.anchor.set(0.5, 0);
+      label.x = centerX;
+      label.y = topPadding;
+      this.footerContainer.addChild(label);
+
+      const value = new Text({
+        text: item.value,
+        style: this.createHeaderValueStyle(Math.max(1, footerCellWidth - 32)),
       });
-      topicText.anchor.set(1, 0);
-      topicText.x = footerWidth - 20;
-      topicText.y = footerHeight / 2 - 6;
-      this.footerContainer.addChild(topicText);
-    }
+      value.anchor.set(0.5, 0);
+      value.x = centerX;
+      value.y = topPadding + label.height + 4;
+      this.footerContainer.addChild(value);
+    });
 
     // Separator line at top of footer
     const separator = new Graphics();
@@ -520,6 +476,60 @@ export class PageContainer extends Container {
     placeholder.x = bodyWidth / 2;
     placeholder.y = bodyHeight / 2;
     this.bodyContainer.addChild(placeholder);
+  }
+
+  private extractTemplateSectionConfig(role: "header" | "footer"): TemplateSectionFieldConfig | null {
+    const node = this.findSectionNode(role);
+    if (!node || !node.data || typeof node.data !== "object") {
+      return null;
+    }
+
+    const data = node.data as {
+      fields?: Record<string, unknown>;
+      activeFields?: Array<{ key?: string; label?: string }>;
+    };
+
+    const activeFields = Array.isArray(data.activeFields)
+      ? data.activeFields.filter(
+          (field): field is { key: string; label?: string } => Boolean(field && typeof field.key === "string"),
+        )
+      : [];
+
+    const order = activeFields.map((field) => field.key);
+    const labels = new Map<string, string>();
+    activeFields.forEach((field) => {
+      if (field.key && typeof field.label === "string") {
+        labels.set(field.key, field.label);
+      }
+    });
+
+    return {
+      values: (data.fields ?? {}) as Record<string, unknown>,
+      order,
+      labels,
+    };
+  }
+
+  private findSectionNode(role: "header" | "footer", node?: LayoutNode | null): LayoutNode | null {
+    const current = typeof node === "undefined" ? this.metadata.layout : node;
+    if (!current) {
+      return null;
+    }
+
+    if (current.role === role) {
+      return current;
+    }
+
+    if (Array.isArray(current.children)) {
+      for (const child of current.children as LayoutNode[]) {
+        const result = this.findSectionNode(role, child);
+        if (result) {
+          return result;
+        }
+      }
+    }
+
+    return null;
   }
 
   private findBodyNode(node: LayoutNode | null | undefined): LayoutNode | null {
@@ -954,6 +964,147 @@ export class PageContainer extends Container {
     return cursorY;
   }
 
+  private getHeaderFieldLabel(key: string): string {
+    return PageContainer.HEADER_FIELD_LABELS[key] ?? this.formatFieldLabel(key);
+  }
+
+  private getFooterFieldLabel(key: string): string {
+    return PageContainer.FOOTER_FIELD_LABELS[key] ?? this.formatFieldLabel(key);
+  }
+
+  private formatFieldLabel(key: string): string {
+    if (!key || typeof key !== "string") {
+      return "";
+    }
+    return key
+      .split(/[_-]/)
+      .filter((part) => part.length)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  }
+
+  private formatHeaderFieldValue(key: string, templateValue?: unknown): string {
+    switch (key) {
+      case "lesson_number":
+        return (
+          this.formatLessonNumberValue(templateValue) || this.formatLessonNumberValue(this.metadata.lessonNumber)
+        );
+      case "date": {
+        const templateDate = this.toDisplayString(templateValue, "generic");
+        if (templateDate) {
+          return templateDate;
+        }
+        return this.metadata.date ? formatDate(this.metadata.date) : "";
+      }
+      case "lesson_title":
+        return (
+          this.toDisplayString(templateValue, "topic") ||
+          this.normalizeString(this.metadata.lessonTitle, "topic") ||
+          ""
+        );
+      case "module_title": {
+        const templateModule = this.toDisplayString(templateValue, "module");
+        if (templateModule) {
+          return templateModule;
+        }
+        const metadataModule =
+          (typeof this.metadata.moduleTitle === "string"
+            ? this.normalizeString(this.metadata.moduleTitle, "module")
+            : "") ||
+          (typeof this.metadata.moduleNumber === "number" && this.metadata.moduleNumber > 0
+            ? `Module ${this.metadata.moduleNumber}`
+            : "");
+        return metadataModule;
+      }
+      case "course_title":
+        return this.toDisplayString(templateValue, "course") || this.normalizeString(this.metadata.courseName, "course");
+      case "institution_name":
+        const metadataInstitution =
+          typeof this.metadata.institutionName === "string"
+            ? this.normalizeString(this.metadata.institutionName, "institution")
+            : "";
+        return this.toDisplayString(templateValue, "institution") || metadataInstitution || "";
+      case "teacher_name":
+        return this.toDisplayString(templateValue, "teacher") || this.getTeacherMetadataValue();
+      default:
+        return this.toDisplayString(templateValue, "generic");
+    }
+  }
+
+  private formatFooterFieldValue(key: string, templateValue?: unknown): string {
+    switch (key) {
+      case "copyright":
+        return this.resolveFooterCopyright(templateValue);
+      case "teacher_name":
+        return this.toDisplayString(templateValue, "teacher") || this.getTeacherMetadataValue();
+      case "institution_name":
+        const metadataInstitution =
+          typeof this.metadata.institutionName === "string"
+            ? this.normalizeString(this.metadata.institutionName, "institution")
+            : "";
+        return this.toDisplayString(templateValue, "institution") || metadataInstitution || "";
+      case "page_number":
+        return this.formatPageIndicator();
+      default:
+        return this.toDisplayString(templateValue, "generic");
+    }
+  }
+
+  private formatLessonNumberValue(value: unknown): string {
+    const numericValue =
+      typeof value === "number"
+        ? value
+        : typeof value === "string"
+        ? Number(value.replace(/[^\d.-]/g, ""))
+        : null;
+    const source = Number.isFinite(numericValue) ? Number(numericValue) : Number(this.metadata.lessonNumber);
+    if (!Number.isFinite(source)) {
+      return "";
+    }
+    const padded = String(Math.max(0, Math.trunc(source))).padStart(2, "0");
+    return `#${padded}`;
+  }
+
+  private getTeacherMetadataValue(): string {
+    return (
+      (typeof this.metadata.teacherName === "string"
+        ? this.normalizeString(this.metadata.teacherName, "teacher")
+        : "") ||
+      (typeof this.metadata.instructor === "string"
+        ? this.normalizeString(this.metadata.instructor, "teacher")
+        : "") ||
+      ""
+    );
+  }
+
+  private resolveFooterCopyright(templateValue?: unknown): string {
+    const provided =
+      (typeof this.metadata.copyright === "string" ? this.normalizeString(this.metadata.copyright, "generic") : "") ||
+      this.toDisplayString(templateValue, "generic");
+    if (provided) {
+      return provided;
+    }
+
+    const teacherValue = this.getTeacherMetadataValue();
+    const institutionValue =
+      typeof this.metadata.institutionName === "string"
+        ? this.normalizeString(this.metadata.institutionName, "institution")
+        : "";
+    const courseValue = this.normalizeString(this.metadata.courseName, "course");
+    const owner = teacherValue || institutionValue || courseValue || "Neptino";
+    const year = new Date().getFullYear();
+    return `© ${year} ${owner}`;
+  }
+
+  private formatPageIndicator(): string {
+    const currentPage = Math.max(1, Number(this.metadata.pageNumber) || 1);
+    const totalPages = Number(this.metadata.totalPages);
+    if (Number.isFinite(totalPages) && totalPages > 0) {
+      return `${currentPage} / ${totalPages}`;
+    }
+    return `${currentPage}`;
+  }
+
   private createHeadingStyle(wordWrapWidth: number): TextStyle {
     return new TextStyle({
       fontSize: 22,
@@ -994,17 +1145,6 @@ export class PageContainer extends Container {
       wordWrapWidth,
       lineHeight: 22,
       align: "center",
-    });
-  }
-
-  private createHeaderMetaStyle(wordWrapWidth: number): TextStyle {
-    return new TextStyle({
-      fontSize: 11,
-      fontWeight: "500",
-      fill: 0x64748b,
-      wordWrap: true,
-      wordWrapWidth,
-      lineHeight: 18,
     });
   }
 

@@ -1,4 +1,4 @@
-import { CurriculumLesson, TemplateDefinitionBlock } from "../curriculumManager.js";
+import { CurriculumLesson, CurriculumTopic, TemplateDefinitionBlock } from "../curriculumManager.js";
 // @ts-ignore - Path resolution issue with bundler mode
 import type { TableRow, TableData } from "../../../coursebuilder/layout/utils/TableRenderer.js";
 
@@ -55,7 +55,7 @@ export class TableDataBuilder {
     ];
 
     const columns = TableDataBuilder.filterColumns(columnDefs, block);
-    const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
+    const competencies = TableDataBuilder.extractCompetencies(lesson);
     const rows: TableRow[] = [];
     const structureSummary = (lesson as unknown as {
       structureSummary?: { topics: number; objectives: number; tasks: number };
@@ -65,40 +65,45 @@ export class TableDataBuilder {
       rows.push({ depth: 0, cells });
     };
 
-    if (topics.length) {
-      topics.forEach((topic, topicIndex) => {
-        const competencyLabel = `Competency ${topicIndex + 1}`;
-        const topicTitle =
-          typeof topic.title === "string" && topic.title.trim().length
-            ? topic.title.trim()
-            : `Topic ${topicIndex + 1}`;
+    if (competencies.length) {
+      competencies.forEach((competency, competencyIndex) => {
+        const competencyLabel =
+          typeof competency.title === "string" && competency.title.trim().length
+            ? competency.title.trim()
+            : `Competency ${competencyIndex + 1}`;
+        competency.topics.forEach((topic, topicIndex) => {
+          const topicTitle =
+            typeof topic.title === "string" && topic.title.trim().length
+              ? topic.title.trim()
+              : `Topic ${topicIndex + 1}`;
 
-        const objectives = Array.isArray(topic.objectives) ? topic.objectives : [];
-        const tasks = Array.isArray(topic.tasks) ? topic.tasks : [];
-        const rowCount = Math.max(1, Math.max(objectives.length, tasks.length));
+          const objectives = Array.isArray(topic.objectives) ? topic.objectives : [];
+          const tasks = Array.isArray(topic.tasks) ? topic.tasks : [];
+          const rowCount = Math.max(1, Math.max(objectives.length, tasks.length));
 
-        for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
-          const objectiveText = objectives[rowIndex] ?? "";
-          const taskText = tasks[rowIndex] ?? "";
+          for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
+            const objectiveText = objectives[rowIndex] ?? "";
+            const taskText = tasks[rowIndex] ?? "";
 
-          const rowCells = TableDataBuilder.fillCells(columnDefs, {
-            competency: rowIndex === 0 ? competencyLabel : "",
-            topic: rowIndex === 0 ? topicTitle : "",
-            objective:
-              typeof objectiveText === "string" && objectiveText.trim().length
-                ? objectiveText.trim()
-                : "",
-            task:
-              typeof taskText === "string" && taskText.trim().length
-                ? taskText.trim()
-                : "",
-            method: "",
-            social: "",
-            time: "",
-          });
+            const rowCells = TableDataBuilder.fillCells(columnDefs, {
+              competency: rowIndex === 0 ? competencyLabel : "",
+              topic: rowIndex === 0 ? topicTitle : "",
+              objective:
+                typeof objectiveText === "string" && objectiveText.trim().length
+                  ? objectiveText.trim()
+                  : "",
+              task:
+                typeof taskText === "string" && taskText.trim().length
+                  ? taskText.trim()
+                  : "",
+              method: "",
+              social: "",
+              time: "",
+            });
 
-          pushRow(rowCells);
-        }
+            pushRow(rowCells);
+          }
+        });
       });
     } else if (structureSummary && structureSummary.topics > 0) {
       const topicsCount = structureSummary.topics;
@@ -548,5 +553,38 @@ export class TableDataBuilder {
     });
     
     return result;
+  }
+
+  private static extractCompetencies(lesson: CurriculumLesson): Array<{ title: string; topics: CurriculumTopic[] }> {
+    const competencySource = (lesson as unknown as { competencies?: Array<{ title?: string; topics?: CurriculumTopic[] }> }).competencies;
+    if (Array.isArray(competencySource) && competencySource.length) {
+      const sanitized = competencySource
+        .map((competency, index) => {
+          const topics = Array.isArray(competency.topics) ? competency.topics.filter(Boolean) : [];
+          if (!topics.length) {
+            return null;
+          }
+          const title =
+            typeof competency.title === "string" && competency.title.trim().length
+              ? competency.title.trim()
+              : `Competency ${index + 1}`;
+          return { title, topics };
+        })
+        .filter((entry): entry is { title: string; topics: CurriculumTopic[] } => entry !== null);
+      if (sanitized.length) {
+        return sanitized;
+      }
+    }
+
+    const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
+    if (!topics.length) {
+      return [];
+    }
+    return [
+      {
+        title: "Competency 1",
+        topics,
+      },
+    ];
   }
 }

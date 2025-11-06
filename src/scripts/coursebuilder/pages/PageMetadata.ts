@@ -59,6 +59,7 @@ export interface PageMetadata {
     objectives: number;
     tasks: number;
   } | null;
+  copyright?: string | null;
   
   // Optional metadata
   instructor?: string;
@@ -89,6 +90,7 @@ export const createDefaultMetadata = (pageNumber: number, totalPages: number): P
   moduleNumber: Math.ceil(pageNumber / 3),
   canvasIndex: pageNumber,
   canvasType: "default",
+  copyright: `© ${new Date().getFullYear()} Neptino`,
   templateInfo: null,
   layout: null,
   moduleTitle: null,
@@ -201,6 +203,7 @@ export const createSampleCourseData = (): PageMetadata[] => {
         institutionName: "University",
         teacherName: "Prof. Johnson",
         structure: null,
+        copyright: `© ${new Date().getFullYear()} Prof. Johnson`,
       });
       currentPage++;
     }
