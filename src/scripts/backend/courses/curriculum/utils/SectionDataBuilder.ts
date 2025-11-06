@@ -40,22 +40,24 @@ export class SectionDataBuilder {
       );
     })();
 
-    const activeFields = headerFields.filter((field) => {
-      if (field.mandatory) {
-        return config[field.configKey] !== false;
-      }
-      return config[field.configKey] === true;
-    });
+    const resolvedFields = headerFields.map((field) => ({
+      ...field,
+      selection: SectionDataBuilder.resolveFieldConfig(config[field.configKey], field.mandatory),
+    }));
+    const activeFields = resolvedFields.filter((field) => field.selection.enabled);
 
     const headerData: Record<string, unknown> = {};
 
     activeFields.forEach((field) => {
+      const presetValue = field.selection.presetValue;
+      let resolvedValue: unknown = null;
+
       switch (field.key) {
         case "lesson_number":
-          headerData[field.key] = lesson.lessonNumber || 1;
+          resolvedValue = lesson.lessonNumber || 1;
           break;
         case "lesson_title":
-          headerData[field.key] =
+          resolvedValue =
             lesson.title && lesson.title.trim().length
               ? lesson.title
               : `Lesson ${lesson.lessonNumber || 1}`;
@@ -65,24 +67,28 @@ export class SectionDataBuilder {
           const moduleTitle = moduleNumber
             ? moduleTitlesLookup.get(moduleNumber) || `Module ${moduleNumber}`
             : null;
-          headerData[field.key] = moduleTitle;
+          resolvedValue = moduleTitle;
           break;
         }
         case "course_title":
-          headerData[field.key] = courseContext?.courseTitle ?? null;
+          resolvedValue = courseContext?.courseTitle ?? null;
           break;
         case "institution_name":
-          headerData[field.key] = courseContext?.institutionName ?? null;
+          resolvedValue = courseContext?.institutionName ?? null;
           break;
         case "teacher_name":
-          headerData[field.key] = courseContext?.teacherName ?? null;
+          resolvedValue = courseContext?.teacherName ?? null;
           break;
         case "date":
-          headerData[field.key] = courseContext?.lessonDate ? formatDate(courseContext.lessonDate) : null;
+          resolvedValue = courseContext?.lessonDate ? formatDate(courseContext.lessonDate) : null;
           break;
         default:
-          headerData[field.key] = null;
+          resolvedValue = null;
       }
+
+      headerData[field.key] = SectionDataBuilder.hasPresetValue(presetValue)
+        ? presetValue
+        : resolvedValue ?? null;
     });
 
     return {
@@ -114,32 +120,38 @@ export class SectionDataBuilder {
       { key: "page_number", label: "Page number", configKey: "page_number", mandatory: true },
     ];
 
-    const activeFields = footerFields.filter((field) => {
-      if (field.mandatory) {
-        return config[field.configKey] !== false;
-      }
-      return config[field.configKey] === true;
-    });
+    const resolvedFields = footerFields.map((field) => ({
+      ...field,
+      selection: SectionDataBuilder.resolveFieldConfig(config[field.configKey], field.mandatory),
+    }));
+    const activeFields = resolvedFields.filter((field) => field.selection.enabled);
 
     const footerData: Record<string, unknown> = {};
 
     activeFields.forEach((field) => {
+      const presetValue = field.selection.presetValue;
+      let resolvedValue: unknown = null;
+
       switch (field.key) {
         case "copyright":
-          footerData[field.key] = "© 2024 Neptino";
+          resolvedValue = "© 2024 Neptino";
           break;
         case "teacher_name":
-          footerData[field.key] = courseContext?.teacherName ?? null;
+          resolvedValue = courseContext?.teacherName ?? null;
           break;
         case "institution_name":
-          footerData[field.key] = courseContext?.institutionName ?? null;
+          resolvedValue = courseContext?.institutionName ?? null;
           break;
         case "page_number":
-          footerData[field.key] = "1";
+          resolvedValue = "1";
           break;
         default:
-          footerData[field.key] = null;
+          resolvedValue = null;
       }
+
+      footerData[field.key] = SectionDataBuilder.hasPresetValue(presetValue)
+        ? presetValue
+        : resolvedValue ?? null;
     });
 
     return {
@@ -149,5 +161,82 @@ export class SectionDataBuilder {
         label: field.label,
       })),
     };
+  }
+
+  private static resolveFieldConfig(
+    rawValue: unknown,
+    mandatory: boolean,
+  ): { enabled: boolean; presetValue?: unknown } {
+    if (rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)) {
+      const record = rawValue as Record<string, unknown>;
+      const displayFlag = record.display ?? record.show ?? record.enabled;
+      const presetValue = record.value ?? record.text ?? record.default ?? record.label;
+      const normalizedDisplay = this.normalizeBooleanFlag(displayFlag);
+
+      if (typeof normalizedDisplay === "boolean") {
+        return { enabled: normalizedDisplay, presetValue };
+      }
+
+      if (this.hasPresetValue(presetValue)) {
+        return { enabled: true, presetValue };
+      }
+
+      return { enabled: mandatory, presetValue };
+    }
+
+    if (this.hasPresetValue(rawValue)) {
+      return { enabled: true, presetValue: rawValue };
+    }
+
+    const normalized = this.normalizeBooleanFlag(rawValue);
+    if (typeof normalized === "boolean") {
+      return { enabled: normalized, presetValue: undefined };
+    }
+
+    return { enabled: mandatory, presetValue: undefined };
+  }
+
+  private static normalizeBooleanFlag(value: unknown): boolean | undefined {
+    if (typeof value === "boolean") {
+      return value;
+    }
+    if (typeof value === "number") {
+      if (value === 0) return false;
+      if (value === 1) return true;
+    }
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (["true", "1", "yes", "on"].includes(normalized)) {
+        return true;
+      }
+      if (["false", "0", "no", "off"].includes(normalized)) {
+        return false;
+      }
+    }
+    return undefined;
+  }
+
+  private static hasPresetValue(value: unknown): boolean {
+    if (value === null || typeof value === "undefined") {
+      return false;
+    }
+
+    if (typeof value === "boolean") {
+      return false;
+    }
+
+    if (typeof value === "string") {
+      return value.trim().length > 0;
+    }
+
+    if (typeof value === "number") {
+      return Number.isFinite(value);
+    }
+
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    }
+
+    return typeof value === "object";
   }
 }

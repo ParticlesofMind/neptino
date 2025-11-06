@@ -24,6 +24,8 @@ type PlaceholderKind =
 
 const BASE_WIDTH = 1200;
 const BASE_HEIGHT = 1800;
+const HEADER_FOOTER_BG_COLOR = 0xdbeafe;
+const HEADER_FOOTER_BG_ALPHA = 0.35;
 
 interface PageContainerConfig {
   width?: number;
@@ -281,7 +283,7 @@ export class PageContainer extends Container {
     const headerHeight = margins.top;
     this.headerBg.clear();
     this.headerBg.rect(0, 0, headerWidth, headerHeight);
-    this.headerBg.fill({ color: 0xffffff, alpha: this.config.showDebugBorders ? 0.05 : 0 });
+    this.headerBg.fill({ color: HEADER_FOOTER_BG_COLOR, alpha: HEADER_FOOTER_BG_ALPHA });
     if (this.config.showDebugBorders) {
       this.headerBg.stroke({ color: 0xe2e8f0, width: 1 });
     }
@@ -295,7 +297,7 @@ export class PageContainer extends Container {
 
     this.footerBg.clear();
     this.footerBg.rect(0, 0, footerWidth, footerHeight);
-    this.footerBg.fill({ color: 0xffffff, alpha: this.config.showDebugBorders ? 0.05 : 0 });
+    this.footerBg.fill({ color: HEADER_FOOTER_BG_COLOR, alpha: HEADER_FOOTER_BG_ALPHA });
     if (this.config.showDebugBorders) {
       this.footerBg.stroke({ color: 0xe2e8f0, width: 1 });
     }
@@ -312,8 +314,8 @@ export class PageContainer extends Container {
   private populateHeader(): void {
     const { width = BASE_WIDTH, margins } = this.config;
     const headerWidth = width;
-    const headerHeight = margins.top;
-    const topPadding = 14;
+    const headerHeight = Math.max(1, margins.top);
+    const labelValueSpacing = 4;
 
     const headerTemplate = this.extractTemplateSectionConfig("header");
     const headerOrder =
@@ -341,8 +343,6 @@ export class PageContainer extends Container {
     const visibleItems = headerItems.filter((item) => item.value && item.value.trim().length);
     const itemCount = visibleItems.length || 1;
     const cellWidth = headerWidth / itemCount;
-    let currentY = topPadding;
-    let rowMaxHeight = 0;
 
     visibleItems.forEach((item, index) => {
       const centerX = index * cellWidth + cellWidth / 2;
@@ -352,24 +352,20 @@ export class PageContainer extends Container {
       });
       label.anchor.set(0.5, 0);
       label.x = centerX;
-      label.y = currentY;
-      this.headerContainer.addChild(label);
-
       const value = new Text({
         text: item.value,
         style: this.createHeaderValueStyle(Math.max(1, cellWidth - 32)),
       });
+      const blockHeight = label.height + labelValueSpacing + value.height;
+      const startY = Math.max(0, (headerHeight - blockHeight) / 2);
+      label.y = startY;
+      this.headerContainer.addChild(label);
+
       value.anchor.set(0.5, 0);
       value.x = centerX;
-      value.y = currentY + label.height + 4;
+      value.y = startY + label.height + labelValueSpacing;
       this.headerContainer.addChild(value);
-
-      rowMaxHeight = Math.max(rowMaxHeight, label.height + 4 + value.height);
     });
-
-    currentY += rowMaxHeight + 10;
-
-    // No additional metadata row or duration badge per latest design
   }
 
   /**
@@ -378,8 +374,9 @@ export class PageContainer extends Container {
   private populateFooter(): void {
     const { width = BASE_WIDTH, margins } = this.config;
     const footerWidth = width;
-    const footerHeight = margins.bottom;
-    const topPadding = 10;
+    const footerHeight = Math.max(1, margins.bottom);
+    const separatorPadding = 8;
+    const labelValueSpacing = 4;
 
     const footerTemplate = this.extractTemplateSectionConfig("footer");
     const footerOrder =
@@ -416,16 +413,21 @@ export class PageContainer extends Container {
       });
       label.anchor.set(0.5, 0);
       label.x = centerX;
-      label.y = topPadding;
-      this.footerContainer.addChild(label);
-
       const value = new Text({
         text: item.value,
         style: this.createHeaderValueStyle(Math.max(1, footerCellWidth - 32)),
       });
+      const blockHeight = label.height + labelValueSpacing + value.height;
+      const availableHeight = Math.max(0, footerHeight - separatorPadding);
+      const desiredStart = separatorPadding + Math.max(0, (availableHeight - blockHeight) / 2);
+      const maxStart = Math.max(0, footerHeight - blockHeight);
+      const startY = Math.min(desiredStart, maxStart);
+      label.y = Math.max(0, startY);
+      this.footerContainer.addChild(label);
+
       value.anchor.set(0.5, 0);
       value.x = centerX;
-      value.y = topPadding + label.height + 4;
+      value.y = startY + label.height + labelValueSpacing;
       this.footerContainer.addChild(value);
     });
 
@@ -1062,7 +1064,7 @@ export class PageContainer extends Container {
       return "";
     }
     const padded = String(Math.max(0, Math.trunc(source))).padStart(2, "0");
-    return `#${padded}`;
+    return padded;
   }
 
   private getTeacherMetadataValue(): string {
@@ -1098,10 +1100,6 @@ export class PageContainer extends Container {
 
   private formatPageIndicator(): string {
     const currentPage = Math.max(1, Number(this.metadata.pageNumber) || 1);
-    const totalPages = Number(this.metadata.totalPages);
-    if (Number.isFinite(totalPages) && totalPages > 0) {
-      return `${currentPage} / ${totalPages}`;
-    }
     return `${currentPage}`;
   }
 

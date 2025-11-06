@@ -476,8 +476,7 @@ export class CanvasEngine {
       })
       .pinch()
       .wheel({
-        wheelZoom: true,
-        keyToPress: ["ControlLeft", "ControlRight", "MetaLeft", "MetaRight"],
+        wheelZoom: false,
         trackpadPinch: true,
       })
       .decelerate()
@@ -611,24 +610,21 @@ export class CanvasEngine {
     const handleWheel = (event: WheelEvent): void => {
       if (!this.viewport) return;
 
+      const baseDelta = this.normalizeWheelDelta(event);
+
       if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
+        this.handleModifierZoom(event, baseDelta);
+        return;
+      }
+
+      if (!baseDelta) {
         return;
       }
 
       event.preventDefault();
 
       const scaleY = this.viewport.scale.y || 1;
-      let baseDelta: number;
-      switch (event.deltaMode) {
-        case 1: // DOM_DELTA_LINE
-          baseDelta = event.deltaY * 16;
-          break;
-        case 2: // DOM_DELTA_PAGE
-          baseDelta = event.deltaY * (this.viewport.screenHeight || 1);
-          break;
-        default:
-          baseDelta = event.deltaY;
-      }
       const deltaY = baseDelta / scaleY;
 
       if (!deltaY) {
@@ -647,6 +643,51 @@ export class CanvasEngine {
     const target = this.container;
     target.addEventListener("wheel", handleWheel, { passive: false });
     this.cleanupCallbacks.push(() => target.removeEventListener("wheel", handleWheel));
+  }
+
+  private normalizeWheelDelta(event: WheelEvent): number {
+    if (!event) {
+      return 0;
+    }
+
+    switch (event.deltaMode) {
+      case 1: // DOM_DELTA_LINE
+        return event.deltaY * 16;
+      case 2: // DOM_DELTA_PAGE
+        return event.deltaY * (this.viewport?.screenHeight || 1);
+      default:
+        return event.deltaY;
+    }
+  }
+
+  private handleModifierZoom(event: WheelEvent, baseDelta: number): void {
+    if (!this.viewport || !baseDelta) {
+      return;
+    }
+
+    const clampedDelta = Math.max(-800, Math.min(800, baseDelta));
+    const intensity = 0.0012;
+    const scaleFactor = Math.exp(-clampedDelta * intensity);
+    const currentScale = this.getCurrentZoom();
+    const targetScale = this.clampScale(currentScale * scaleFactor);
+
+    let targetCenter = this.viewport.center;
+    const rect = this.container?.getBoundingClientRect();
+    if (rect) {
+      const pointerX = event.clientX - rect.left;
+      const pointerY = event.clientY - rect.top;
+      const worldPoint = this.viewport.toWorld(pointerX, pointerY);
+      if (worldPoint) {
+        targetCenter = worldPoint;
+      }
+    }
+
+    this.zoomTo(targetScale, {
+      keepCentered: false,
+      targetCenter,
+    });
+
+    this.viewport.emit("wheel-scroll", { viewport: this.viewport, type: "wheel-zoom" });
   }
 
   private queueResize(): void {

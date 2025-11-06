@@ -11,6 +11,7 @@ import type { PageMetadata } from "./PageMetadata";
 const BASE_WIDTH = 1200;
 const BASE_HEIGHT = 1800;
 const PAGE_GAP = 40; // Gap between pages
+const PAGE_BOUNDARY_PADDING = 24; // Space before first and after last page
 const VIEWPORT_BUFFER = 200; // Pre-load buffer in pixels
 const MAX_LOADED_PAGES = 5; // Maximum number of pages to keep loaded
 
@@ -101,14 +102,18 @@ export class PageManager {
    */
   private calculatePagePositions(): void {
     this.pagePositions = [];
-    let currentY = 0;
+    let currentY = PAGE_BOUNDARY_PADDING;
 
     for (let i = 0; i < this.pageData.length; i++) {
       this.pagePositions.push(currentY);
       currentY += BASE_HEIGHT + PAGE_GAP;
     }
 
-    this.totalHeight = this.pageData.length > 0 ? currentY - PAGE_GAP : 0; // Remove last gap
+    if (this.pageData.length > 0) {
+      this.totalHeight = currentY - PAGE_GAP + PAGE_BOUNDARY_PADDING;
+    } else {
+      this.totalHeight = PAGE_BOUNDARY_PADDING * 2;
+    }
     this.onTotalHeightChangeCallback?.(this.totalHeight);
     console.log(`📐 Page positions calculated for ${this.pageData.length} pages, total height: ${this.totalHeight}px`);
   }
