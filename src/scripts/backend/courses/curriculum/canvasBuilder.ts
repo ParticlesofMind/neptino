@@ -34,11 +34,13 @@ interface CourseContext {
   institutionName?: string | null;
   teacherName?: string | null;
   moduleTitles: Map<number, string>;
+  lessonDates?: Map<number, string>;
 }
 
 export class CanvasBuilder {
   private courseContext: CourseContext = {
     moduleTitles: new Map(),
+    lessonDates: new Map(),
   };
   private lessonStructures: Map<number, LessonStructureSummary> = new Map();
 
@@ -52,6 +54,7 @@ export class CanvasBuilder {
     teacherName?: string | null;
     moduleTitles?: Map<number, string> | Record<number, string> | Array<[number, string]>;
     lessonStructures?: Map<number, LessonStructureSummary> | Record<number, LessonStructureSummary> | Array<[number, LessonStructureSummary]>;
+    lessonDates?: Map<number, string> | Record<number, string> | Array<[number, string]>;
   }): void {
     if (context.courseId !== undefined) {
       this.courseContext.courseId = context.courseId ?? undefined;
@@ -88,6 +91,17 @@ export class CanvasBuilder {
       } else {
         const entries = Object.entries(context.lessonStructures).map(([key, value]) => [Number(key), value as LessonStructureSummary]);
         this.lessonStructures = new Map(entries);
+      }
+    }
+
+    if (context.lessonDates) {
+      if (context.lessonDates instanceof Map) {
+        this.courseContext.lessonDates = new Map(context.lessonDates);
+      } else if (Array.isArray(context.lessonDates)) {
+        this.courseContext.lessonDates = new Map(context.lessonDates);
+      } else {
+        const entries: [number, string][] = Object.entries(context.lessonDates).map(([key, value]) => [Number(key), value as string]);
+        this.courseContext.lessonDates = new Map(entries);
       }
     }
   }
@@ -535,7 +549,10 @@ export class CanvasBuilder {
       role: "header",
       type: "template-block",
       templateBlock: TemplateDataBuilder.serializeTemplateBlock(headerBlock),
-      data: SectionDataBuilder.buildHeaderData(headerBlock, lesson, this.courseContext),
+      data: SectionDataBuilder.buildHeaderData(headerBlock, lesson, {
+        ...this.courseContext,
+        lessonDate: this.courseContext.lessonDates?.get(lesson.lessonNumber || 1) ?? null,
+      }),
       yoga: {
         flexDirection: "column",
         width: { unit: "percent", value: 100 },

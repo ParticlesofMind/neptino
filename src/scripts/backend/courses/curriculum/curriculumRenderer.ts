@@ -73,11 +73,14 @@ export class CurriculumRenderer {
     this.renderTemplatePlacementUI();
   }
 
-  public renderCurriculumPreview(): void {
+  public renderCurriculumPreview(onRenderComplete?: () => void): void {
     const previewContainer = this.curriculumPreviewSection.querySelector(
       ".editable-surface",
     );
-    if (!previewContainer) return;
+    if (!previewContainer) {
+      onRenderComplete?.();
+      return;
+    }
 
     const placeholder = this.curriculumPreviewSection.querySelector(
       "#curriculum-preview-placeholder",
@@ -86,11 +89,14 @@ export class CurriculumRenderer {
       placeholder.hidden = this.currentCurriculum.length > 0;
     }
 
-    this.renderPreviewContent(previewContainer);
+    this.renderPreviewContent(previewContainer, onRenderComplete);
   }
 
-  private renderPreviewContent(previewContainer: Element): void {
-    if (!Array.isArray(this.currentCurriculum)) return;
+  private renderPreviewContent(previewContainer: Element, onRenderComplete?: () => void): void {
+    if (!Array.isArray(this.currentCurriculum)) {
+      onRenderComplete?.();
+      return;
+    }
 
     const modulesForPreview = this.currentModules.length
       ? this.currentModules
@@ -169,7 +175,8 @@ export class CurriculumRenderer {
 
           module.lessons.forEach((lesson) => {
             const lessonHeader = this.renderLessonHeader(lesson, {
-              titleEditable: false,
+              titleEditable: true,
+              placeholder: "Click to add lesson title...",
             });
 
             html += `
@@ -434,6 +441,7 @@ export class CurriculumRenderer {
       setTimeout(() => {
         previewContainer.innerHTML = html;
         previewContainer.removeAttribute('data-loading');
+        onRenderComplete?.();
       }, 50);
     });
   }

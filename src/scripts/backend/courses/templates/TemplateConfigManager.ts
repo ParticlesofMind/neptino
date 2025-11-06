@@ -20,6 +20,7 @@ export class TemplateConfigManager {
         { name: "course_title", label: "Course title", mandatory: true },
         { name: "institution_name", label: "Institution name", mandatory: true },
         { name: "teacher_name", label: "Teacher name", mandatory: false },
+        { name: "date", label: "Date", mandatory: true },
       ],
       body: [
         { name: "body_content", label: "Body content", mandatory: true },

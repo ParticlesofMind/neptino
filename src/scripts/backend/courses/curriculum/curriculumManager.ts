@@ -137,6 +137,7 @@ class CurriculumManager {
   private currentPreviewMode: PreviewMode = "all";
   private scheduledLessonDuration: number = 0; // Store the actual scheduled duration
   private saveTimeout: number | null = null; // For debouncing saves
+  private editableUpdateTimers: Map<string, number> = new Map();
   private templatePlacementList: HTMLElement | null = null;
   private templatePlacements: TemplatePlacementConfig[] = [];
   private availableTemplates: TemplateSummary[] = [];
@@ -149,6 +150,7 @@ class CurriculumManager {
   private lessonStructureCounts: Map<number, { topics: number; objectives: number; tasks: number }> = new Map();
   private curriculumStructureDefaults: CurriculumStructureConfig | null = null;
   private initialModuleTitles: Map<number, string> = new Map();
+  private lessonDates: Map<number, string> = new Map();
 
   // Duration presets with default values and rationale
   private readonly durationPresets: Record<string, DurationPreset> = {
@@ -253,6 +255,7 @@ class CurriculumManager {
       teacherName: this.teacherName,
       moduleTitles: moduleTitleMap,
       lessonStructures: this.lessonStructureCounts,
+      lessonDates: this.lessonDates,
     });
     this.canvasBuilder.setLessonStructures(new Map(this.lessonStructureCounts));
   }
@@ -456,7 +459,7 @@ class CurriculumManager {
         }
         const rawTitle = typeof module.title === 'string' ? module.title.trim() : '';
         const title = rawTitle.length ? rawTitle : `Module ${moduleNumber}`;
-        this.initialModuleTitles.set(moduleNumber, title);
+        this.storeModuleTitle(moduleNumber, title);
       });
 
       this.syncCanvasBuilderContext();
@@ -1814,6 +1817,14 @@ class CurriculumManager {
         Array.isArray(data.schedule_settings) &&
         data.schedule_settings.length > 0
       ) {
+        // Store lesson dates from schedule
+        this.lessonDates.clear();
+        data.schedule_settings.forEach((session: any, index: number) => {
+          if (session.date) {
+            this.lessonDates.set(index + 1, session.date);
+          }
+        });
+
         // Get the first lesson to determine duration
         const firstLesson = data.schedule_settings[0];
         const duration = this.calculateLessonDuration(
@@ -2528,6 +2539,56 @@ class CurriculumManager {
     return summary;
   }
 
+  private normalizeModuleTitle(moduleNumber: number, title: string | null | undefined): string {
+    const raw = typeof title === "string" ? title.trim() : "";
+    if (raw.length > 0) {
+      return raw;
+    }
+    return `Module ${moduleNumber}`;
+  }
+
+  private resolveModuleTitle(moduleNumber: number, fallback: string | null | undefined): string {
+    const stored = this.initialModuleTitles.get(moduleNumber);
+    if (typeof stored === "string") {
+      const normalizedStored = stored.trim();
+      if (normalizedStored.length > 0) {
+        return normalizedStored;
+      }
+    }
+    return this.normalizeModuleTitle(moduleNumber, fallback);
+  }
+
+  private storeModuleTitle(moduleNumber: number, title: string | null | undefined): void {
+    const normalized = this.normalizeModuleTitle(moduleNumber, title);
+    this.initialModuleTitles.set(moduleNumber, normalized);
+  }
+
+  private applyStoredModuleTitles(modules: CurriculumModule[]): void {
+    modules.forEach((module) => {
+      if (typeof module.moduleNumber !== "number") {
+        return;
+      }
+      module.title = this.resolveModuleTitle(module.moduleNumber, module.title);
+    });
+  }
+
+  private refreshModuleTitleRegistry(modules: CurriculumModule[]): void {
+    const seen = new Set<number>();
+    modules.forEach((module) => {
+      if (typeof module.moduleNumber !== "number") {
+        return;
+      }
+      seen.add(module.moduleNumber);
+      this.storeModuleTitle(module.moduleNumber, module.title);
+    });
+
+    Array.from(this.initialModuleTitles.keys()).forEach((moduleNumber) => {
+      if (!seen.has(moduleNumber)) {
+        this.initialModuleTitles.delete(moduleNumber);
+      }
+    });
+  }
+
   private updateLessonStructureCountsFromLessons(lessons: CurriculumLesson[]): void {
     this.lessonStructureCounts.clear();
 
@@ -2542,6 +2603,8 @@ class CurriculumManager {
    * Organizes a flat list of lessons into modules based on organization type
    */
   private organizeLessonsIntoModules(lessons: CurriculumLesson[]): CurriculumModule[] {
+    let modules: CurriculumModule[] = [];
+
     if (this.moduleOrganization === "linear") {
       if (!lessons.length) {
         return [];
@@ -2551,38 +2614,39 @@ class CurriculumManager {
         lesson.moduleNumber = 1;
       });
 
-      return [
+      modules = [
         {
           moduleNumber: 1,
-          title: "Module 1",
-          lessons: lessons,
+          title: this.resolveModuleTitle(1, "Module 1"),
+          lessons,
         },
       ];
-    }
-
-    if (this.moduleOrganization === "equal") {
-      return this.assignModuleNumbers(this.distributeEqualModules(lessons));
-    }
-
-    if (this.moduleOrganization === "tiered") {
-      return this.assignModuleNumbers(this.createTieredModules(lessons));
-    }
-
-    if (this.moduleOrganization === "custom") {
+    } else if (this.moduleOrganization === "equal") {
+      modules = this.assignModuleNumbers(this.distributeEqualModules(lessons));
+    } else if (this.moduleOrganization === "tiered") {
+      modules = this.assignModuleNumbers(this.createTieredModules(lessons));
+    } else if (this.moduleOrganization === "custom") {
       // Custom organization - use existing module structure if available
       // Otherwise create a default single module
       if (this.currentModules.length > 0) {
-        return this.assignModuleNumbers(this.currentModules);
+        modules = this.assignModuleNumbers(this.currentModules);
+      } else {
+        const fallbackModules = [
+          {
+            moduleNumber: 1,
+            title: "Module 1",
+            lessons,
+          },
+        ];
+        modules = this.assignModuleNumbers(fallbackModules);
       }
-      const fallbackModules = [{
-        moduleNumber: 1,
-        title: "Module 1",
-        lessons: lessons
-      }];
-      return this.assignModuleNumbers(fallbackModules);
     }
 
-    return [];
+    if (modules.length > 0) {
+      this.applyStoredModuleTitles(modules);
+    }
+
+    return modules;
   }
 
   /**
@@ -2739,6 +2803,7 @@ class CurriculumManager {
     }
 
     this.currentModules = modules;
+    this.refreshModuleTitleRegistry(modules);
 
     // Final safety check: ensure no circular references in payload
     try {
@@ -3075,8 +3140,9 @@ class CurriculumManager {
       courseType: this.courseType,
       moduleOrganization: this.moduleOrganization,
     });
-    this.renderer.renderCurriculumPreview();
-    this.bindEditableEvents();
+    this.renderer.renderCurriculumPreview(() => {
+      this.bindEditableEvents();
+    });
 
     // Update and render generation preview if it exists
     if (this.generationRenderer) {
@@ -3107,65 +3173,249 @@ class CurriculumManager {
       '[contenteditable="true"]',
     );
     editableElements.forEach((element) => {
-      element.addEventListener("blur", (e) =>
-        this.updateCurriculumData(e.target as HTMLElement),
-      );
+      const editableElement = element as HTMLElement;
+
+      editableElement.addEventListener("input", () => {
+        this.handleEditableInput(editableElement);
+      });
+
+      editableElement.addEventListener("keydown", (event: KeyboardEvent) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          editableElement.blur();
+        }
+      });
+
+      editableElement.addEventListener("blur", () => {
+        this.updateCurriculumData(editableElement);
+      });
     });
   }
 
   private updateCurriculumData(element: HTMLElement): void {
-    const moduleNum = element.dataset.module ? parseInt(element.dataset.module) : null;
-    const lessonNum = parseInt(element.dataset.lesson || "0");
-    const topicIndex = element.dataset.topic
-      ? parseInt(element.dataset.topic)
-      : null;
-    const objectiveIndex = element.dataset.objective
-      ? parseInt(element.dataset.objective)
-      : null;
-    const taskIndex = element.dataset.task
-      ? parseInt(element.dataset.task)
-      : null;
-    const field = element.dataset.field;
+    const context = this.extractEditableContext(element);
+    console.log('📝 updateCurriculumData called with context:', context, 'element:', element);
+    const key = this.getEditableContextKey(context);
+    if (key && this.editableUpdateTimers.has(key)) {
+      clearTimeout(this.editableUpdateTimers.get(key)!);
+      this.editableUpdateTimers.delete(key);
+    }
 
-    // Clean the value by removing excessive whitespace and normalizing
     const rawValue = element.textContent || "";
-    const newValue = rawValue.replace(/\s+/g, ' ').trim();
+    const newValue = this.normalizeEditableValue(rawValue);
+    console.log('📝 Calling applyEditableContext with newValue:', newValue);
+    this.applyEditableContext(context, newValue);
+  }
 
-    // Handle module title edits
-    if (moduleNum !== null && field === "title") {
-      const module = this.currentModules.find(m => m.moduleNumber === moduleNum);
-      if (module) {
-        module.title = newValue;
-        console.log(`📦 Updated module ${moduleNum} title to: ${newValue}`);
-      }
-      // Save updated modules
-      this.saveCurriculumToDatabase(this.currentCurriculum);
+  private handleEditableInput(element: HTMLElement): void {
+    const context = this.extractEditableContext(element);
+    const key = this.getEditableContextKey(context);
+    if (!key) {
       return;
     }
 
-    const lesson = this.currentCurriculum.find(
-      (l) => l.lessonNumber === lessonNum,
-    );
-    if (!lesson) return;
+    if (this.editableUpdateTimers.has(key)) {
+      clearTimeout(this.editableUpdateTimers.get(key)!);
+    }
 
-    if (field === "title" && topicIndex === null) {
-      // Lesson title
-      lesson.title = newValue;
-    } else if (topicIndex !== null && lesson.topics[topicIndex]) {
-      if (field === "title") {
-        // Topic title
-        lesson.topics[topicIndex].title = newValue;
-      } else if (objectiveIndex !== null) {
-        // Objective
-        lesson.topics[topicIndex].objectives[objectiveIndex] = newValue;
-      } else if (taskIndex !== null) {
-        // Task
-        lesson.topics[topicIndex].tasks[taskIndex] = newValue;
+    const rawValue = element.textContent || "";
+    const newValue = this.normalizeEditableValue(rawValue);
+
+    const timerId = window.setTimeout(() => {
+      this.editableUpdateTimers.delete(key);
+      this.applyEditableContext(context, newValue);
+    }, 600);
+
+    this.editableUpdateTimers.set(key, timerId);
+  }
+
+  private normalizeEditableValue(value: string): string {
+    return value.replace(/\s+/g, " ").trim();
+  }
+
+  private extractEditableContext(element: HTMLElement): {
+    moduleNum: number | null;
+    lessonNum: number | null;
+    topicIndex: number | null;
+    objectiveIndex: number | null;
+    taskIndex: number | null;
+    field: string | null;
+  } {
+    const parseDatasetNumber = (value: string | undefined): number | null => {
+      if (typeof value !== "string" || value.trim().length === 0) {
+        return null;
+      }
+      const parsed = parseInt(value, 10);
+      return Number.isNaN(parsed) ? null : parsed;
+    };
+
+    return {
+      moduleNum: parseDatasetNumber(element.dataset.module),
+      lessonNum: parseDatasetNumber(element.dataset.lesson),
+      topicIndex: parseDatasetNumber(element.dataset.topic),
+      objectiveIndex: parseDatasetNumber(element.dataset.objective),
+      taskIndex: parseDatasetNumber(element.dataset.task),
+      field: element.dataset.field ?? null,
+    };
+  }
+
+  private getEditableContextKey(context: {
+    moduleNum: number | null;
+    lessonNum: number | null;
+    topicIndex: number | null;
+    objectiveIndex: number | null;
+    taskIndex: number | null;
+    field: string | null;
+  }): string | null {
+    if (!context.field) {
+      return null;
+    }
+
+    const parts = [
+      context.field,
+      context.moduleNum !== null ? `m${context.moduleNum}` : "",
+      context.lessonNum !== null ? `l${context.lessonNum}` : "",
+      context.topicIndex !== null ? `t${context.topicIndex}` : "",
+      context.objectiveIndex !== null ? `o${context.objectiveIndex}` : "",
+      context.taskIndex !== null ? `k${context.taskIndex}` : "",
+    ].filter(Boolean);
+
+    if (!parts.length) {
+      return null;
+    }
+
+    return parts.join("-");
+  }
+
+  private updateLessonInModules(
+    lessonNumber: number,
+    updater: (lesson: CurriculumLesson) => void,
+  ): void {
+    this.currentModules.forEach((module) => {
+      module.lessons.forEach((moduleLesson) => {
+        if (moduleLesson.lessonNumber === lessonNumber) {
+          updater(moduleLesson);
+        }
+      });
+    });
+  }
+
+  private applyEditableContext(
+    context: {
+      moduleNum: number | null;
+      lessonNum: number | null;
+      topicIndex: number | null;
+      objectiveIndex: number | null;
+      taskIndex: number | null;
+      field: string | null;
+    },
+    newValue: string,
+  ): void {
+    console.log('🎯 applyEditableContext called:', { context, newValue, currentCurriculumLength: this.currentCurriculum.length });
+    const { moduleNum, lessonNum, topicIndex, objectiveIndex, taskIndex, field } = context;
+
+    if (!field) {
+      console.warn('❌ No field in context, returning');
+      return;
+    }
+
+    let didChange = false;
+
+    if (field === "title" && moduleNum !== null && lessonNum === null) {
+      const updatedTitle = this.normalizeModuleTitle(moduleNum, newValue);
+      const module = this.currentModules.find(m => m.moduleNumber === moduleNum);
+      const existingTitle = module?.title ? module.title.trim() : this.initialModuleTitles.get(moduleNum) ?? "";
+
+      if (existingTitle !== updatedTitle) {
+        if (module) {
+          module.title = updatedTitle;
+        }
+        console.log(`📦 Updated module ${moduleNum} title to: ${updatedTitle}`);
+        this.storeModuleTitle(moduleNum, updatedTitle);
+        didChange = true;
+      }
+    } else if (lessonNum !== null && lessonNum > 0) {
+      console.log(`🔍 Looking for lesson ${lessonNum} in currentCurriculum (length: ${this.currentCurriculum.length})`);
+      const lesson = this.currentCurriculum.find((l) => l.lessonNumber === lessonNum);
+      if (!lesson) {
+        console.error(`❌ Lesson ${lessonNum} not found in currentCurriculum!`);
+        return;
+      }
+      console.log(`✅ Found lesson ${lessonNum}:`, lesson);
+
+      if (field === "title" && topicIndex === null) {
+        console.log(`📝 Updating lesson ${lessonNum} title from "${lesson.title}" to "${newValue}"`);
+        if (lesson.title !== newValue) {
+          lesson.title = newValue;
+          this.updateLessonInModules(lessonNum, (moduleLesson) => {
+            moduleLesson.title = newValue;
+          });
+          didChange = true;
+          console.log(`✅ Lesson title updated successfully`);
+        } else {
+          console.log(`⚠️ Lesson title unchanged (same value)`);
+        }
+      } else if (topicIndex !== null && lesson.topics[topicIndex]) {
+        const topic = lesson.topics[topicIndex];
+
+        if (field === "title") {
+          if (topic.title !== newValue) {
+            topic.title = newValue;
+            this.updateLessonInModules(lessonNum, (moduleLesson) => {
+              if (moduleLesson.topics && moduleLesson.topics[topicIndex]) {
+                moduleLesson.topics[topicIndex].title = newValue;
+              }
+            });
+            didChange = true;
+          }
+        } else if (objectiveIndex !== null) {
+          if (
+            topic.objectives &&
+            topic.objectives[objectiveIndex] !== undefined &&
+            topic.objectives[objectiveIndex] !== newValue
+          ) {
+            topic.objectives[objectiveIndex] = newValue;
+            this.updateLessonInModules(lessonNum, (moduleLesson) => {
+              if (
+                moduleLesson.topics &&
+                moduleLesson.topics[topicIndex] &&
+                moduleLesson.topics[topicIndex].objectives &&
+                moduleLesson.topics[topicIndex].objectives[objectiveIndex] !== undefined
+              ) {
+                moduleLesson.topics[topicIndex].objectives[objectiveIndex] = newValue;
+              }
+            });
+            didChange = true;
+          }
+        } else if (taskIndex !== null) {
+          if (
+            topic.tasks &&
+            topic.tasks[taskIndex] !== undefined &&
+            topic.tasks[taskIndex] !== newValue
+          ) {
+            topic.tasks[taskIndex] = newValue;
+            this.updateLessonInModules(lessonNum, (moduleLesson) => {
+              if (
+                moduleLesson.topics &&
+                moduleLesson.topics[topicIndex] &&
+                moduleLesson.topics[topicIndex].tasks &&
+                moduleLesson.topics[topicIndex].tasks[taskIndex] !== undefined
+              ) {
+                moduleLesson.topics[topicIndex].tasks[taskIndex] = newValue;
+              }
+            });
+            didChange = true;
+          }
+        }
       }
     }
 
-    // Auto-save to database
-    this.saveCurriculumToDatabase(this.currentCurriculum);
+    if (didChange) {
+      console.log('💾 Changes detected, calling saveCurriculumToDatabase');
+      this.saveCurriculumToDatabase(this.currentCurriculum);
+    } else {
+      console.log('⏭️ No changes detected, skipping save');
+    }
   }
 
   private applyStructureConfig(structure?: CurriculumStructureConfig): void {
@@ -3530,6 +3780,7 @@ class CurriculumManager {
       startLesson = endLesson + 1;
     });
 
+    this.applyStoredModuleTitles(newModules);
     this.currentModules = newModules;
     this.currentCurriculum = this.extractLessonsFromModules(newModules);
     this.renderCurriculumPreview();

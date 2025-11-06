@@ -1,4 +1,5 @@
 import { TemplateDefinitionBlock, CurriculumLesson } from "../curriculumManager.js";
+import { formatDate } from "../../../../coursebuilder/pages/PageMetadata.js";
 
 export class SectionDataBuilder {
   /**
@@ -12,6 +13,7 @@ export class SectionDataBuilder {
       institutionName?: string | null;
       teacherName?: string | null;
       moduleTitles?: Map<number, string> | Record<number, string>;
+      lessonDate?: string | null;
     },
   ): Record<string, unknown> {
     const config = (block.config ?? {}) as Record<string, unknown>;
@@ -23,6 +25,7 @@ export class SectionDataBuilder {
       { key: "course_title", label: "Course title", configKey: "course_title", mandatory: true },
       { key: "institution_name", label: "Institution name", configKey: "institution_name", mandatory: true },
       { key: "teacher_name", label: "Teacher name", configKey: "teacher_name", mandatory: false },
+      { key: "date", label: "Date", configKey: "date", mandatory: true },
     ];
 
     const moduleTitlesLookup = (() => {
@@ -73,6 +76,9 @@ export class SectionDataBuilder {
           break;
         case "teacher_name":
           headerData[field.key] = courseContext?.teacherName ?? null;
+          break;
+        case "date":
+          headerData[field.key] = courseContext?.lessonDate ? formatDate(courseContext.lessonDate) : null;
           break;
         default:
           headerData[field.key] = null;
