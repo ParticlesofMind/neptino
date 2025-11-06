@@ -224,17 +224,13 @@ export class CurriculumPageBridge {
 
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('full_name, first_name, last_name, username')
+        .from('users')
+        .select('first_name, last_name, email')
         .eq('id', teacherId)
         .single();
 
       if (error || !data) {
         return null;
-      }
-
-      if (data.full_name && typeof data.full_name === 'string' && data.full_name.trim().length) {
-        return data.full_name.trim();
       }
 
       const combined = [data.first_name, data.last_name]
@@ -246,8 +242,8 @@ export class CurriculumPageBridge {
         return combined;
       }
 
-      if (data.username && typeof data.username === 'string' && data.username.trim().length) {
-        return data.username.trim();
+      if (typeof data.email === 'string' && data.email.includes('@')) {
+        return data.email.split('@')[0];
       }
 
       return null;

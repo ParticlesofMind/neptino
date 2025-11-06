@@ -62,13 +62,22 @@ async function syncRocketChatAccount(
 
 // Sign up new user
 export async function signUp(
- email: string,
- password: string,
- fullName: string,
- userRole: string,
+  email: string,
+  password: string,
+  firstName: string,
+  lastName: string | null,
+  userRole: string,
 ) {
  try {
  rememberRocketChatPassword(password);
+
+ const normalizedFirstName =
+   typeof firstName === "string" && firstName.trim().length
+     ? firstName.trim()
+     : email.split("@")[0];
+ const normalizedLastName =
+   typeof lastName === "string" && lastName.trim().length ? lastName.trim() : "";
+ const fullName = [normalizedFirstName, normalizedLastName].filter(Boolean).join(" ") || normalizedFirstName;
 
  const { data, error } = await supabase.auth.signUp({
  email,
@@ -76,6 +85,8 @@ export async function signUp(
  options: {
  data: {
  full_name: fullName,
+ first_name: normalizedFirstName,
+ last_name: normalizedLastName,
  user_role: userRole,
  },
  },
@@ -136,12 +147,15 @@ export async function signIn(email: string, password: string) {
               ? "admin"
               : "student";
 
+          const inferredName = email.split("@")[0];
           const signupResult = await supabase.auth.signUp({
             email,
             password,
             options: {
               data: {
-                full_name: email.split("@")[0],
+                full_name: inferredName,
+                first_name: inferredName,
+                last_name: "",
                 user_role: inferredRole,
               },
             },
@@ -465,9 +479,6 @@ export class AuthFormHandler {
  return;
  }
 
- // Create full name
- const fullName = lastName ? `${firstName} ${lastName}` : firstName;
-
  // Show loading state
  const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement;
  const originalText = submitButton.textContent;
@@ -476,7 +487,7 @@ export class AuthFormHandler {
 
  try {
  
- const result = await signUp(email, password, fullName, role);
+ const result = await signUp(email, password, firstName, lastName || null, role);
 
  if (result.success) {
  this.showMessage('Account created successfully! Please check your email to verify your account.', 'success');

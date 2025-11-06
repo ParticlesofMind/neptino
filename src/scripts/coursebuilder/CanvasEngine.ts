@@ -611,13 +611,11 @@ export class CanvasEngine {
     const handleWheel = (event: WheelEvent): void => {
       if (!this.viewport) return;
 
-      // Always prevent default browser behavior
-      event.preventDefault();
-
-      // If Cmd/Ctrl is pressed, let the viewport wheel plugin handle zooming
       if (event.ctrlKey || event.metaKey) {
         return;
       }
+
+      event.preventDefault();
 
       const scaleY = this.viewport.scale.y || 1;
       let baseDelta: number;
