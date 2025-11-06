@@ -782,21 +782,14 @@
           <section class="article__preview">
             <div class="curriculum__preview" id="curriculum-preview">
               <p class="article__preview-placeholder" id="curriculum-preview-placeholder">
-                Configure your curriculum on the left to unlock the live preview.
+                Configure your module structure on the left to unlock the live modules preview.
               </p>
               <div class="curriculum__preview-content">
-                <nav class="curriculum__controls" aria-label="Curriculum view modes">
-                  <button class="button button--small button--outline" type="button" data-mode="modules">
-                    Modules
-                  </button>
-                  <button class="button button--small button--outline" type="button" data-mode="titles">
-                    Lessons
-                  </button>
-                  <button class="button button--small button--outline" type="button" data-mode="all">
-                    All
-                  </button>
-                </nav>
-
+                <div class="curriculum__preview-note" role="status">
+                  <strong>Modules only.</strong> Arrange lessons into modules here.
+                  Use AI Content Generation to name lessons, competencies, topics,
+                  objectives, and tasks.
+                </div>
                 <div class="editable-surface" aria-live="polite">
                   <!-- Dynamic content -->
                 </div>
@@ -835,11 +828,11 @@
                     <h5 class="ai-generation__context-heading">Required Context</h5>
                     <label class="checkbox-label checkbox-label--disabled">
                       <input type="checkbox" name="ai-context-essentials" checked disabled>
-                      <span>Course Essentials (Name, Description, Teacher, Institution, Language)</span>
+                      <span>Course Essentials</span>
                     </label>
                     <label class="checkbox-label checkbox-label--disabled">
                       <input type="checkbox" name="ai-context-classification" checked disabled>
-                      <span>Classification (Subject, Topics, Year Level)</span>
+                      <span>Classification</span>
                     </label>
                     <label class="checkbox-label checkbox-label--disabled">
                       <input type="checkbox" name="ai-context-pedagogy" checked disabled>
@@ -856,7 +849,7 @@
                     </label>
                     <label class="checkbox-label">
                       <input type="checkbox" name="ai-context-structure" checked>
-                      <span>Content Structure (Topics, Objectives, Tasks)</span>
+                      <span>Content Structure</span>
                     </label>
                     <label class="checkbox-label">
                       <input type="checkbox" name="ai-context-existing">
@@ -915,6 +908,9 @@
                   </button>
                   <button class="button button--small button--outline" type="button" data-mode="titles">
                     Lessons
+                  </button>
+                  <button class="button button--small button--outline" type="button" data-mode="competencies">
+                    Competencies
                   </button>
                   <button class="button button--small button--outline" type="button" data-mode="topics">
                     Topics

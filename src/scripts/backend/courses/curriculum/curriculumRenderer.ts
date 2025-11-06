@@ -4,10 +4,11 @@ import {
   TemplatePlacementConfig,
   TemplateSummary,
   ModuleOrganizationType,
+  CurriculumTopic,
 } from "./curriculumManager.js";
 import { TEMPLATE_TYPE_LABELS } from "../templates/templateOptions.js";
 
-type PreviewMode = "modules" | "titles" | "topics" | "objectives" | "tasks" | "all";
+type PreviewMode = "modules" | "titles" | "competencies" | "topics" | "objectives" | "tasks" | "all";
 
 export class CurriculumRenderer {
   private curriculumPreviewSection!: HTMLElement;
@@ -83,7 +84,7 @@ export class CurriculumRenderer {
     }
 
     const placeholder = this.curriculumPreviewSection.querySelector(
-      "#curriculum-preview-placeholder",
+      ".article__preview-placeholder",
     ) as HTMLElement | null;
     if (placeholder) {
       placeholder.hidden = this.currentCurriculum.length > 0;
@@ -302,6 +303,65 @@ export class CurriculumRenderer {
              ${lessonHeader}
            </div>`;
 
+        } else if (this.currentPreviewMode === "competencies") {
+          const competencies = this.getLessonCompetenciesForPreview(lesson);
+          let topicCounter = 0;
+          html += `
+           <div class="lesson lesson--medium">
+             ${lessonHeader}`;
+
+          if (!competencies.length) {
+            html += `
+             <p class="text--tertiary">No competencies defined yet. Add topics to build your competency structure.</p>`;
+          }
+
+          competencies.forEach((competency, competencyIndex) => {
+            const competencyTitle =
+              competency.title && competency.title.trim().length
+                ? competency.title.trim()
+                : `Competency ${competencyIndex + 1}`;
+
+            html += `
+             <div class="topic topic--competency">
+               <h4 class="topic__title competency__title" contenteditable="true"
+                    data-lesson="${lesson.lessonNumber}" data-competency="${competencyIndex}"
+                    data-field="competency-title"
+                    data-placeholder="Click to add competency title...">
+                 ${this.escapeHtml(competencyTitle)}
+               </h4>`;
+
+            if (competency.topics.length) {
+              html += `<ul class="competency__topics">`;
+              competency.topics.forEach((topic) => {
+                const topicTitle =
+                  topic.title && topic.title.trim().length
+                    ? topic.title.trim()
+                    : `Topic ${topicCounter + 1}`;
+
+                html += `
+                 <li class="competency__topic">
+                   <span class="topic__title" contenteditable="true"
+                         data-lesson="${lesson.lessonNumber}"
+                         data-competency="${competencyIndex}"
+                         data-topic="${topicCounter}"
+                         data-field="title"
+                         data-placeholder="Click to add topic title...">
+                     ${this.escapeHtml(topicTitle)}
+                   </span>
+                 </li>`;
+
+                topicCounter += 1;
+              });
+              html += `</ul>`;
+            } else {
+              html += `<p class="text--tertiary competency__topics-empty">No topics assigned yet.</p>`;
+            }
+
+            html += `</div>`;
+          });
+
+          html += `</div>`;
+
         } else if (this.currentPreviewMode === "topics") {
           html += `
            <div class="lesson lesson--medium">
@@ -483,6 +543,37 @@ export class CurriculumRenderer {
         ${templateControls}
       </div>
     `;
+  }
+
+  private getLessonCompetenciesForPreview(
+    lesson: CurriculumLesson,
+  ): Array<{ title: string; topics: CurriculumTopic[] }> {
+    const competencySource = (lesson as unknown as { competencies?: Array<{ title?: string; topics?: CurriculumTopic[] }> })
+      .competencies;
+
+    if (Array.isArray(competencySource) && competencySource.length) {
+      return competencySource.map((competency, index) => {
+        const title =
+          typeof competency.title === "string" && competency.title.trim().length
+            ? competency.title.trim()
+            : `Competency ${competency.competencyNumber ?? index + 1}`;
+        const topics = Array.isArray(competency.topics) ? competency.topics : [];
+        return {
+          title,
+          topics,
+        };
+      });
+    }
+
+    const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
+    if (!topics.length) {
+      return [];
+    }
+
+    return topics.map((topic, index) => ({
+      title: `Competency ${index + 1}`,
+      topics: [topic],
+    }));
   }
 
   private renderLessonTemplateSelector(lesson: CurriculumLesson): string {

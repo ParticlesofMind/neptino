@@ -120,6 +120,16 @@ interface CurriculumDataPayload {
   courseType?: "minimalist" | "essential" | "complete" | "custom";
 }
 
+type EditableContext = {
+  moduleNum: number | null;
+  lessonNum: number | null;
+  topicIndex: number | null;
+  competencyIndex: number | null;
+  objectiveIndex: number | null;
+  taskIndex: number | null;
+  field: string | null;
+};
+
 interface DurationPreset {
   type: "mini" | "single" | "double" | "triple" | "halfFull";
   maxDuration: number;
@@ -129,7 +139,7 @@ interface DurationPreset {
   rationale: string;
 }
 
-type PreviewMode = "modules" | "titles" | "topics" | "objectives" | "tasks" | "all";
+type PreviewMode = "modules" | "titles" | "competencies" | "topics" | "objectives" | "tasks" | "all";
 
 class CurriculumManager {
   private courseId: string;
@@ -2440,6 +2450,14 @@ class CurriculumManager {
     return competencies;
   }
 
+  private ensureLessonCompetenciesRef(lesson: CurriculumLesson): CurriculumCompetency[] {
+    if (!Array.isArray(lesson.competencies) || !lesson.competencies.length) {
+      const topics = Array.isArray(lesson.topics) ? lesson.topics : [];
+      lesson.competencies = this.generateCompetenciesFromTopics(topics);
+    }
+    return lesson.competencies as CurriculumCompetency[];
+  }
+
   private normalizeLessonCompetenciesForPersistence(lesson: CurriculumLesson): void {
     const rawTopics = Array.isArray(lesson.topics) ? lesson.topics : [];
     const normalizedTopics = rawTopics.map((topic, index) => this.normalizeTopicStructure(topic, index));
@@ -2450,24 +2468,29 @@ class CurriculumManager {
 
     if (Array.isArray(existingCompetencies) && existingCompetencies.length) {
       const sanitized = existingCompetencies
-        .map((competency, index) => {
+        .map<CurriculumCompetency | null>((competency, index) => {
           const topics = Array.isArray(competency?.topics) ? competency.topics : [];
           const normalized = topics.length ? topics.map((topic, topicIndex) => this.normalizeTopicStructure(topic, topicIndex)) : [];
-          return normalized.length
-            ? {
-                title:
-                  typeof competency.title === "string" && competency.title.trim().length
-                    ? competency.title.trim()
-                    : `Competency ${index + 1}`,
-                competencyNumber: competency.competencyNumber ?? index + 1,
-                topics: normalized,
-              }
-            : null;
+          if (!normalized.length) {
+            return null;
+          }
+
+          const normalizedCompetency: CurriculumCompetency = {
+            title:
+              typeof competency.title === "string" && competency.title.trim().length
+                ? competency.title.trim()
+                : `Competency ${index + 1}`,
+            competencyNumber: competency.competencyNumber ?? index + 1,
+            topics: normalized,
+          };
+
+          return normalizedCompetency;
         })
         .filter((competency): competency is CurriculumCompetency => competency !== null);
 
-      lesson.competencies = sanitized.length ? sanitized : this.generateCompetenciesFromTopics(normalizedTopics);
-      lesson.topics = lesson.competencies.flatMap((competency) => competency.topics);
+      const competencies = sanitized.length ? sanitized : this.generateCompetenciesFromTopics(normalizedTopics);
+      lesson.competencies = competencies;
+      lesson.topics = competencies.flatMap((competency) => competency.topics);
       return;
     }
 
@@ -2484,12 +2507,35 @@ class CurriculumManager {
   private hydrateLessonFromCompetencies(lesson: CurriculumLesson): void {
     const competencyList = (lesson as unknown as { competencies?: CurriculumCompetency[] }).competencies;
     if (Array.isArray(competencyList) && competencyList.length) {
-      const flattenedTopics = competencyList
-        .flatMap((competency) => (Array.isArray(competency.topics) ? competency.topics : []))
-        .map((topic, index) => this.normalizeTopicStructure(topic, index));
-      if (flattenedTopics.length) {
-        lesson.topics = flattenedTopics;
-      }
+      const normalizedCompetencies: CurriculumCompetency[] = [];
+      let topicCounter = 0;
+
+      competencyList.forEach((competency, index) => {
+        const topics = Array.isArray(competency.topics) ? competency.topics : [];
+        const normalizedTopics = topics.map((topic) => {
+          const normalized = this.normalizeTopicStructure(topic, topicCounter);
+          topicCounter += 1;
+          return normalized;
+        });
+
+        normalizedCompetencies.push({
+          title:
+            typeof competency.title === "string" && competency.title.trim().length
+              ? competency.title.trim()
+              : `Competency ${competency.competencyNumber ?? index + 1}`,
+          competencyNumber: competency.competencyNumber ?? index + 1,
+          topics: normalizedTopics,
+        });
+      });
+
+      const flattenedTopics = normalizedCompetencies.flatMap((competency) => competency.topics);
+      lesson.topics = flattenedTopics;
+      lesson.competencies = normalizedCompetencies;
+      return;
+    }
+
+    if (!lesson.competencies || !lesson.competencies.length) {
+      lesson.competencies = this.generateCompetenciesFromTopics(Array.isArray(lesson.topics) ? lesson.topics : []);
     }
   }
 
@@ -3228,7 +3274,7 @@ class CurriculumManager {
   private setPreviewMode(mode: PreviewMode): void {
     this.currentPreviewMode = mode;
     this.savePreviewMode(mode);
-    this.renderer.highlightPreviewModeButton(mode);
+    this.highlightPreviewModeButton(mode);
     this.renderCurriculumPreview();
   }
 
@@ -3276,20 +3322,20 @@ class CurriculumManager {
   }
 
   private renderCurriculumPreview(): void {
+    const curriculumPreviewMode: PreviewMode = "modules";
+
     // Update and render curriculum preview
     this.renderer.updateData({
       currentCurriculum: this.currentCurriculum,
       currentModules: this.currentModules,
-      currentPreviewMode: this.currentPreviewMode,
+      currentPreviewMode: curriculumPreviewMode,
       scheduledLessonDuration: this.scheduledLessonDuration,
       availableTemplates: this.availableTemplates,
       templatePlacements: this.templatePlacements,
       courseType: this.courseType,
       moduleOrganization: this.moduleOrganization,
     });
-    this.renderer.renderCurriculumPreview(() => {
-      this.bindEditableEvents();
-    });
+    this.renderer.renderCurriculumPreview();
 
     // Update and render generation preview if it exists
     if (this.generationRenderer) {
@@ -3304,18 +3350,21 @@ class CurriculumManager {
         moduleOrganization: this.moduleOrganization,
       });
       this.generationRenderer.renderCurriculumPreview();
-      // Also bind editable events for generation preview
-      if (this.generationPreviewSection) {
-        this.bindEditableEventsForSection(this.generationPreviewSection);
-      }
     }
+
+    this.bindEditableEvents();
   }
 
   private bindEditableEvents(): void {
     this.bindEditableEventsForSection(this.curriculumPreviewSection);
+    this.bindEditableEventsForSection(this.generationPreviewSection);
   }
 
-  private bindEditableEventsForSection(section: HTMLElement): void {
+  private bindEditableEventsForSection(section: HTMLElement | null): void {
+    if (!section) {
+      return;
+    }
+
     const editableElements = section.querySelectorAll(
       '[contenteditable="true"]',
     );
@@ -3380,14 +3429,7 @@ class CurriculumManager {
     return value.replace(/\s+/g, " ").trim();
   }
 
-  private extractEditableContext(element: HTMLElement): {
-    moduleNum: number | null;
-    lessonNum: number | null;
-    topicIndex: number | null;
-    objectiveIndex: number | null;
-    taskIndex: number | null;
-    field: string | null;
-  } {
+  private extractEditableContext(element: HTMLElement): EditableContext {
     const parseDatasetNumber = (value: string | undefined): number | null => {
       if (typeof value !== "string" || value.trim().length === 0) {
         return null;
@@ -3400,20 +3442,14 @@ class CurriculumManager {
       moduleNum: parseDatasetNumber(element.dataset.module),
       lessonNum: parseDatasetNumber(element.dataset.lesson),
       topicIndex: parseDatasetNumber(element.dataset.topic),
+      competencyIndex: parseDatasetNumber(element.dataset.competency),
       objectiveIndex: parseDatasetNumber(element.dataset.objective),
       taskIndex: parseDatasetNumber(element.dataset.task),
       field: element.dataset.field ?? null,
     };
   }
 
-  private getEditableContextKey(context: {
-    moduleNum: number | null;
-    lessonNum: number | null;
-    topicIndex: number | null;
-    objectiveIndex: number | null;
-    taskIndex: number | null;
-    field: string | null;
-  }): string | null {
+  private getEditableContextKey(context: EditableContext): string | null {
     if (!context.field) {
       return null;
     }
@@ -3423,6 +3459,7 @@ class CurriculumManager {
       context.moduleNum !== null ? `m${context.moduleNum}` : "",
       context.lessonNum !== null ? `l${context.lessonNum}` : "",
       context.topicIndex !== null ? `t${context.topicIndex}` : "",
+      context.competencyIndex !== null ? `c${context.competencyIndex}` : "",
       context.objectiveIndex !== null ? `o${context.objectiveIndex}` : "",
       context.taskIndex !== null ? `k${context.taskIndex}` : "",
     ].filter(Boolean);
@@ -3441,25 +3478,16 @@ class CurriculumManager {
     this.currentModules.forEach((module) => {
       module.lessons.forEach((moduleLesson) => {
         if (moduleLesson.lessonNumber === lessonNumber) {
+          this.ensureLessonCompetenciesRef(moduleLesson);
           updater(moduleLesson);
         }
       });
     });
   }
 
-  private applyEditableContext(
-    context: {
-      moduleNum: number | null;
-      lessonNum: number | null;
-      topicIndex: number | null;
-      objectiveIndex: number | null;
-      taskIndex: number | null;
-      field: string | null;
-    },
-    newValue: string,
-  ): void {
+  private applyEditableContext(context: EditableContext, newValue: string): void {
     console.log('🎯 applyEditableContext called:', { context, newValue, currentCurriculumLength: this.currentCurriculum.length });
-    const { moduleNum, lessonNum, topicIndex, objectiveIndex, taskIndex, field } = context;
+    const { moduleNum, lessonNum, topicIndex, competencyIndex, objectiveIndex, taskIndex, field } = context;
 
     if (!field) {
       console.warn('❌ No field in context, returning');
@@ -3490,7 +3518,23 @@ class CurriculumManager {
       }
       console.log(`✅ Found lesson ${lessonNum}:`, lesson);
 
-      if (field === "title" && topicIndex === null) {
+      if (field === "competency-title" && competencyIndex !== null) {
+        const competencies = this.ensureLessonCompetenciesRef(lesson);
+        const competency = competencies[competencyIndex];
+        if (competency) {
+          const nextTitle = newValue || `Competency ${competency.competencyNumber ?? competencyIndex + 1}`;
+          if (competency.title !== nextTitle) {
+            competency.title = nextTitle;
+            this.updateLessonInModules(lessonNum, (moduleLesson) => {
+              const moduleCompetencies = this.ensureLessonCompetenciesRef(moduleLesson);
+              if (moduleCompetencies[competencyIndex]) {
+                moduleCompetencies[competencyIndex].title = nextTitle;
+              }
+            });
+            didChange = true;
+          }
+        }
+      } else if (field === "title" && topicIndex === null) {
         console.log(`📝 Updating lesson ${lessonNum} title from "${lesson.title}" to "${newValue}"`);
         if (lesson.title !== newValue) {
           lesson.title = newValue;

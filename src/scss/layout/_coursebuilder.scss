@@ -632,6 +632,22 @@
     }
 }
 
+.curriculum__preview-note {
+    padding: var(--spacing-4);
+    border-radius: var(--radius-medium);
+    border: 1px dashed var(--color-neutral-200);
+    background: var(--color-neutral-50);
+    font-size: var(--font-size-small);
+    line-height: 1.4;
+    color: var(--color-text-secondary);
+
+    strong {
+        display: block;
+        margin-bottom: var(--spacing-1);
+        color: var(--color-text-primary);
+    }
+}
+
 .curriculum-config__group {
     display: grid;
     gap: var(--spacing-2);
