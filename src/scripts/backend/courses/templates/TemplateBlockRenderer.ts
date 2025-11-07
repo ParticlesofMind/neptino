@@ -226,8 +226,8 @@ ${this.renderRowsTable(projectRows)}
 <table class="lesson-plan-table lesson-plan-table--program">
 <tbody>
 <tr>
-<td>${getPlaceholder("competence")}</td>
 <td>${getPlaceholder("topic")}</td>
+<td>${getPlaceholder("competence")}</td>
 <td>${getPlaceholder("objective")}</td>
 <td>${getPlaceholder("task")}</td>
 <td>${getPlaceholder("program_method")}</td>

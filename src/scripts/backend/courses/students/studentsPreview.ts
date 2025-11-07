@@ -20,6 +20,11 @@ export class StudentsPreview {
   private readonly syncedEl: HTMLElement | null;
   private readonly statusEl: HTMLElement | null;
   private readonly activityList: HTMLElement | null;
+  private readonly feedbackModifiers = [
+    "students__feedback--success",
+    "students__feedback--error",
+    "students__feedback--warning",
+  ];
   private onDeleteRow: ((index: number) => Promise<void>) | null = null;
   private onUpdateRow: ((index: number, updates: Partial<StudentRecord>) => Promise<void>) | null = null;
 
@@ -153,14 +158,14 @@ export class StudentsPreview {
     if (!this.feedback) return;
     this.feedback.textContent = message;
     this.feedback.hidden = false;
-    this.feedback.dataset.state = tone;
+    this.setFeedbackTone(tone);
   }
 
   public clearFeedback(): void {
     if (!this.feedback) return;
     this.feedback.hidden = true;
     this.feedback.textContent = "";
-    delete this.feedback.dataset.state;
+    this.setFeedbackTone(null);
   }
 
   public updateSummary(summary: RosterSummary | null): void {
@@ -180,6 +185,14 @@ export class StudentsPreview {
       this.statusEl.textContent = summary.total
         ? "Roster is ready for Albert AI personalisation."
         : "No students imported yet. Upload a roster to get started.";
+    }
+  }
+
+  private setFeedbackTone(tone: "success" | "error" | "warning" | null): void {
+    if (!this.feedback) return;
+    this.feedback.classList.remove(...this.feedbackModifiers);
+    if (tone) {
+      this.feedback.classList.add(`students__feedback--${tone}`);
     }
   }
 

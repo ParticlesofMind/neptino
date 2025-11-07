@@ -267,7 +267,7 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields)}
   }
 
   private static renderCompactRows(templateId: string | null, block: TemplateBlock, fields: BlockFieldConfig[]): string {
-    const simpleFields = fields.filter((field) => !field.separator);
+    const simpleFields = fields.filter((field) => !field.separator && !field.mandatory);
     if (!simpleFields.length) {
       return "";
     }
@@ -288,7 +288,7 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields)}
   private static renderHierarchicalRowsCompact(templateId: string | null, block: TemplateBlock, fields: BlockFieldConfig[]): string {
     // Separate "Include Project" field to render it separately at the bottom
     const includeProjectField = fields.find(f => f.name === "include_project");
-    const regularFields = fields.filter(f => f.name !== "include_project" && !f.separator);
+    const regularFields = fields.filter(f => f.name !== "include_project" && !f.separator && !f.mandatory);
     
     // Group regular fields by indent level
     const fieldsByIndent = new Map<number, BlockFieldConfig[]>();
@@ -344,6 +344,9 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields)}
   private static renderResourceRows(templateId: string | null, block: TemplateBlock, fields: BlockFieldConfig[]): string {
     const byGroup = new Map<string, BlockFieldConfig[]>();
     fields.forEach((field) => {
+      // Skip mandatory fields
+      if (field.mandatory) return;
+      
       const key = field.rowGroup ?? "resources-default";
       if (!byGroup.has(key)) {
         byGroup.set(key, []);
@@ -366,7 +369,18 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields)}
     };
 
     renderGroup("resources-main", "field-row--resource-main");
-    renderGroup("resources-glossary-toggle", "field-row--resource-toggle");
+    
+    // Render glossary toggle in its own row with separator styling (like Include Project)
+    const glossaryToggleFields = byGroup.get("resources-glossary-toggle");
+    if (glossaryToggleFields && glossaryToggleFields.length) {
+      rows.push(`
+        <div class="field-row field-row--full">
+          ${glossaryToggleFields.map((field) => this.renderFieldCheckbox(templateId, block, field)).join("")}
+        </div>
+      `);
+      byGroup.delete("resources-glossary-toggle");
+    }
+    
     renderGroup("resources-glossary-items", "field-row--resource-glossary");
 
     if (byGroup.size) {
