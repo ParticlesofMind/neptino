@@ -31,6 +31,7 @@ export interface BlockFieldConfig {
   indentLevel?: number;
   inlineGroup?: string;
   role?: "primary" | "time" | "method" | "social";
+  rowGroup?: string;
 }
 
 export interface FieldRow {

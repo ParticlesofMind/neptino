@@ -7,6 +7,7 @@ export interface BlockFieldConfig {
   separator?: boolean;
   indentLevel?: number;
   inlineGroup?: string;
+  rowGroup?: string;
   role?: "primary" | "time" | "method" | "social";
 }
 
@@ -14,7 +15,7 @@ export class TemplateConfigManager {
   static getBlockFieldConfiguration(): Record<TemplateBlockType, BlockFieldConfig[]> {
     return {
       header: [
-        { name: "lesson_number", label: "Lesson number (#)", mandatory: true },
+        { name: "lesson_number", label: "Lesson number", mandatory: true },
         { name: "lesson_title", label: "Lesson title", mandatory: true },
         { name: "module_title", label: "Module title", mandatory: true },
         { name: "course_title", label: "Course title", mandatory: true },
@@ -29,7 +30,7 @@ export class TemplateConfigManager {
         { name: "copyright", label: "Copyright", mandatory: true },
         { name: "teacher_name", label: "Teacher name", mandatory: false },
         { name: "institution_name", label: "Institution name", mandatory: false },
-        { name: "page_number", label: "Page number (#)", mandatory: true },
+        { name: "page_number", label: "Page number", mandatory: true },
       ],
       program: [
         { name: "competence", label: "Competence", mandatory: true },
@@ -41,21 +42,21 @@ export class TemplateConfigManager {
         { name: "program_time", label: "Time", mandatory: true, role: "time" },
       ],
       resources: [
-        { name: "task", label: "Task", mandatory: true },
-        { name: "type", label: "Type", mandatory: true },
-        { name: "origin", label: "Origin", mandatory: true },
-        { name: "state", label: "State", mandatory: false },
-        { name: "quality", label: "Quality", mandatory: false },
-        { name: "include_glossary", label: "Include Glossary", mandatory: false, separator: true },
-        { name: "historical_figures", label: "Historical figures", mandatory: false },
-        { name: "terminology", label: "Terminology", mandatory: false },
-        { name: "concepts", label: "Concepts", mandatory: false },
+        { name: "task", label: "Task", mandatory: true, rowGroup: "resources-main" },
+        { name: "type", label: "Type", mandatory: true, rowGroup: "resources-main" },
+        { name: "origin", label: "Origin", mandatory: true, rowGroup: "resources-main" },
+        { name: "state", label: "State", mandatory: false, rowGroup: "resources-main" },
+        { name: "quality", label: "Quality", mandatory: false, rowGroup: "resources-main" },
+        { name: "include_glossary", label: "Include Glossary", mandatory: false, separator: true, rowGroup: "resources-glossary-toggle" },
+        { name: "historical_figures", label: "Historical figures", mandatory: false, rowGroup: "resources-glossary-items" },
+        { name: "terminology", label: "Terminology", mandatory: false, rowGroup: "resources-glossary-items" },
+        { name: "concepts", label: "Concepts", mandatory: false, rowGroup: "resources-glossary-items" },
       ],
       content: [
-        { name: "competence", label: "Competency", mandatory: true, indentLevel: 0, inlineGroup: "competence", role: "primary" },
-        { name: "competence_time", label: "Display time", mandatory: false, indentLevel: 0, inlineGroup: "competence", role: "time" },
-        { name: "topic", label: "Topic", mandatory: true, indentLevel: 1, inlineGroup: "topic", role: "primary" },
-        { name: "topic_time", label: "Display time", mandatory: false, indentLevel: 1, inlineGroup: "topic", role: "time" },
+        { name: "topic", label: "Topic", mandatory: true, indentLevel: 0, inlineGroup: "topic", role: "primary" },
+        { name: "topic_time", label: "Display time", mandatory: false, indentLevel: 0, inlineGroup: "topic", role: "time" },
+        { name: "competence", label: "Competency", mandatory: true, indentLevel: 1, inlineGroup: "competence", role: "primary" },
+        { name: "competence_time", label: "Display time", mandatory: false, indentLevel: 1, inlineGroup: "competence", role: "time" },
         { name: "objective", label: "Objective", mandatory: true, indentLevel: 2, inlineGroup: "objective", role: "primary" },
         { name: "objective_time", label: "Display time", mandatory: false, indentLevel: 2, inlineGroup: "objective", role: "time" },
         { name: "task", label: "Task", mandatory: true, indentLevel: 3, inlineGroup: "task", role: "primary" },
@@ -63,15 +64,12 @@ export class TemplateConfigManager {
         { name: "instruction_area", label: "Instruction Area", mandatory: true, indentLevel: 4, inlineGroup: "instruction", role: "primary" },
         { name: "instruction_method", label: "Method", mandatory: true, indentLevel: 4, inlineGroup: "instruction", role: "method" },
         { name: "instruction_social_form", label: "Social form", mandatory: true, indentLevel: 4, inlineGroup: "instruction", role: "social" },
-        { name: "instruction_space", label: "", mandatory: false, indentLevel: 4, inlineGroup: "instruction_space", role: "primary" },
         { name: "student_area", label: "Student Area", mandatory: true, indentLevel: 4, inlineGroup: "student", role: "primary" },
         { name: "student_method", label: "Method", mandatory: true, indentLevel: 4, inlineGroup: "student", role: "method" },
         { name: "student_social_form", label: "Social form", mandatory: true, indentLevel: 4, inlineGroup: "student", role: "social" },
-        { name: "student_space", label: "", mandatory: false, indentLevel: 4, inlineGroup: "student_space", role: "primary" },
         { name: "teacher_area", label: "Teacher Area", mandatory: true, indentLevel: 4, inlineGroup: "teacher", role: "primary" },
         { name: "teacher_method", label: "Method", mandatory: true, indentLevel: 4, inlineGroup: "teacher", role: "method" },
         { name: "teacher_social_form", label: "Social form", mandatory: true, indentLevel: 4, inlineGroup: "teacher", role: "social" },
-        { name: "teacher_space", label: "", mandatory: false, indentLevel: 4, inlineGroup: "teacher_space", role: "primary" },
         { name: "include_project", label: "Include Project", mandatory: false },
       ],
       assignment: [
@@ -86,15 +84,12 @@ export class TemplateConfigManager {
         { name: "instruction_area", label: "Instruction Area", mandatory: true, indentLevel: 4, inlineGroup: "instruction", role: "primary" },
         { name: "instruction_method", label: "Method", mandatory: true, indentLevel: 4, inlineGroup: "instruction", role: "method" },
         { name: "instruction_social_form", label: "Social form", mandatory: true, indentLevel: 4, inlineGroup: "instruction", role: "social" },
-        { name: "instruction_space", label: "", mandatory: false, indentLevel: 4, inlineGroup: "instruction_space", role: "primary" },
         { name: "student_area", label: "Student Area", mandatory: true, indentLevel: 4, inlineGroup: "student", role: "primary" },
         { name: "student_method", label: "Method", mandatory: true, indentLevel: 4, inlineGroup: "student", role: "method" },
         { name: "student_social_form", label: "Social form", mandatory: true, indentLevel: 4, inlineGroup: "student", role: "social" },
-        { name: "student_space", label: "", mandatory: false, indentLevel: 4, inlineGroup: "student_space", role: "primary" },
         { name: "teacher_area", label: "Teacher Area", mandatory: true, indentLevel: 4, inlineGroup: "teacher", role: "primary" },
         { name: "teacher_method", label: "Method", mandatory: true, indentLevel: 4, inlineGroup: "teacher", role: "method" },
         { name: "teacher_social_form", label: "Social form", mandatory: true, indentLevel: 4, inlineGroup: "teacher", role: "social" },
-        { name: "teacher_space", label: "", mandatory: false, indentLevel: 4, inlineGroup: "teacher_space", role: "primary" },
         { name: "include_project", label: "Include Project", mandatory: false },
       ],
       scoring: [

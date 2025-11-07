@@ -998,7 +998,10 @@ export class CurriculumRenderer {
         return true;
       }
 
-      const normalizedType = template.type?.toLowerCase().replace(/\s+/g, "_") || "";
+      const normalizedType = this.normalizeTemplateTypeName(template.type);
+      if (!normalizedType) {
+        return true;
+      }
       return allowedTypes.includes(normalizedType);
     });
   }
@@ -1022,6 +1025,18 @@ export class CurriculumRenderer {
     });
 
     return displayTemplates;
+  }
+
+  private normalizeTemplateTypeName(type: string | null | undefined): string | null {
+    if (!type || typeof type !== "string") {
+      return null;
+    }
+    const normalized = type.trim().toLowerCase().replace(/[\s-]+/g, "_");
+    if (!normalized) {
+      return null;
+    }
+    const simplified = normalized.replace(/_(template|plan|layout)$/, "");
+    return simplified || normalized;
   }
 
   private lookupTemplateSummary(

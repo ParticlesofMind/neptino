@@ -5,7 +5,8 @@ export class TemplateDataBuilder {
    * Normalize raw template data
    */
   static normalizeTemplateDefinition(raw: unknown): TemplateDefinition {
-    if (!raw || typeof raw !== "object") {
+    const payload = this.normalizeDefinitionPayload(raw);
+    if (!payload) {
       return {
         name: null,
         blocks: [],
@@ -13,7 +14,6 @@ export class TemplateDataBuilder {
       };
     }
 
-    const payload = raw as Record<string, unknown>;
     const name =
       typeof payload.name === "string" && payload.name.trim().length
         ? payload.name.trim()
@@ -73,6 +73,30 @@ export class TemplateDataBuilder {
       config,
       content,
     };
+  }
+
+  private static normalizeDefinitionPayload(raw: unknown): Record<string, unknown> | null {
+    if (!raw) {
+      return null;
+    }
+
+    if (typeof raw === "string") {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          return parsed as Record<string, unknown>;
+        }
+      } catch (error) {
+        console.warn("TemplateDataBuilder: failed to parse template definition JSON", error);
+        return null;
+      }
+    }
+
+    if (typeof raw === "object" && !Array.isArray(raw)) {
+      return raw as Record<string, unknown>;
+    }
+
+    return null;
   }
 
   /**
@@ -141,11 +165,22 @@ export class TemplateDataBuilder {
     return {
       id: template.id,
       slug: template.template_id,
-      type: template.template_type,
+      type: this.canonicalizeTemplateType(template.template_type) ?? template.template_type ?? "lesson",
       name: definition.name || template.template_id,
       scope: template.course_id ? "course" : "global",
       description: template.template_description ?? null,
     };
   }
-}
 
+  static canonicalizeTemplateType(rawType: string | null | undefined): string | null {
+    if (!rawType || typeof rawType !== "string") {
+      return null;
+    }
+    const normalized = rawType.trim().toLowerCase().replace(/[\s-]+/g, "_");
+    if (!normalized) {
+      return null;
+    }
+    const simplified = normalized.replace(/_(template|plan|layout)$/, "");
+    return simplified || normalized;
+  }
+}

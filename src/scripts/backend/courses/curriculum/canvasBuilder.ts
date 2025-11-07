@@ -130,7 +130,8 @@ export class CanvasBuilder {
     canvasMetadata: Record<string, unknown>;
     lessonData: Record<string, unknown>;
   }> {
-    const templateType = template?.template_type ?? "lesson";
+    const templateType =
+      TemplateDataBuilder.canonicalizeTemplateType(template?.template_type) ?? "lesson";
     
     // For lesson templates, create separate canvases
     if (templateType === "lesson") {
@@ -422,7 +423,7 @@ export class CanvasBuilder {
       footerBlock,
       bodyBlocks,
       lesson,
-      templateType: template?.template_type ?? "lesson",
+      templateType: TemplateDataBuilder.canonicalizeTemplateType(template?.template_type) ?? "lesson",
     });
 
     const structureSummary = this.getLessonStructureSummary(lessonNumber, lesson);
@@ -467,7 +468,10 @@ export class CanvasBuilder {
     };
     const lessonDataWithType = {
       ...lessonData,
-      canvasType: templateInfo?.type ?? template?.template_type ?? null,
+      canvasType:
+        templateInfo?.type ??
+        TemplateDataBuilder.canonicalizeTemplateType(template?.template_type) ??
+        null,
     };
 
     return { canvasData, canvasMetadata, lessonData: lessonDataWithType };

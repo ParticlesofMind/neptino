@@ -107,6 +107,7 @@ type LessonScheduleEntry = {
 export class CurriculumPageBridge {
   private pageManager: PageManager | null = null;
   private isInitialized = false;
+  private currentCourseId: string | null = null;
   private courseInfo: {
     id: string;
     course_name: string;
@@ -120,9 +121,12 @@ export class CurriculumPageBridge {
   private lessonSchedule = new Map<number, LessonScheduleEntry>();
   private canvasScrollNav: CanvasScrollNavInstance | null = null;
   private canvasScrollNavReadyListener: ((event: Event) => void) | null = null;
+  private handleCurriculumResetListener: EventListener;
 
   constructor() {
     this.init();
+    this.handleCurriculumResetListener = this.handleCurriculumResetEvent.bind(this);
+    document.addEventListener('curriculum-reset', this.handleCurriculumResetListener);
   }
 
   private init(): void {
@@ -258,6 +262,7 @@ export class CurriculumPageBridge {
    */
   private async handleCanvasesReady(courseId: string): Promise<void> {
     console.log(`🎨 Fetching canvas data for course ${courseId}...`);
+    this.currentCourseId = courseId;
 
     try {
       // Load course info first
@@ -793,14 +798,33 @@ export class CurriculumPageBridge {
   }
 
   public destroy(): void {
+    this.resetCanvasDisplay("bridge-destroyed");
+    document.removeEventListener('curriculum-reset', this.handleCurriculumResetListener);
+    console.log('🧹 CurriculumPageBridge destroyed');
+  }
+  
+  private handleCurriculumResetEvent(event: Event): void {
+    const detail = (event as CustomEvent<{ courseId?: string; reason?: string }>).detail;
+    if (this.currentCourseId && detail?.courseId && detail.courseId !== this.currentCourseId) {
+      return;
+    }
+    if (!this.currentCourseId && detail?.courseId) {
+      this.currentCourseId = detail.courseId;
+    }
+    this.resetCanvasDisplay(detail?.reason);
+  }
+
+  private resetCanvasDisplay(reason?: string): void {
+    if (this.pageManager) {
+      this.pageManager.destroy();
+      this.pageManager = null;
+    }
     this.teardownScrollNavigation();
-    this.pageManager?.destroy();
-    this.pageManager = null;
     this.isInitialized = false;
     canvasEngine.resetWorldSize();
     canvasEngine.setLayoutVisibility(true);
     canvasEngine.setMarginOverlayVisibility(true);
-    console.log('🧹 CurriculumPageBridge destroyed');
+    console.log(`🧼 Canvas cleared${reason ? ` due to ${reason}` : ""}.`);
   }
 }
 

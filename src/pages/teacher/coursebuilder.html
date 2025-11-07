@@ -471,16 +471,16 @@
         </header>
 
         <div class="article__main article__main--panels">
-          <section class="article__config" aria-labelledby="template-config-title">
-            <h3 id="template-config-title" class="coursebuilder__panel-title">Template Configuration</h3>
-            <p id="template-config-content">Select or create a template to configure its settings.</p>
+          <section class="article__config">
+            <div id="template-config-content" class="template-config__content">
+              <p class="template-config__placeholder">Select or create a template to configure its settings.</p>
+            </div>
           </section>
 
-          <section class="article__preview" aria-labelledby="template-preview-title">
-            <h3 id="template-preview-title" class="coursebuilder__panel-title">Template Preview</h3>
-            <p id="template-preview-content" class="article__preview-placeholder">
+          <section class="article__preview">
+            <div id="template-preview-content" class="article__preview-placeholder">
               Create a new template or select an existing one to see the preview here.
-            </p>
+            </div>
           </section>
         </div>
 
@@ -1787,7 +1787,15 @@
 
             <!-- Current position / total -->
             <div class="engine__scroll-display">
-              <input type="number" class="engine__scroll-input" value="1" min="1" title="Current canvas number">
+              <input
+                type="number"
+                class="engine__scroll-input"
+                id="engine-scroll-input"
+                name="engine-scroll-input"
+                value="1"
+                min="1"
+                title="Current canvas number"
+                aria-label="Current canvas number">
               <span class="engine__scroll-divider">/</span>
               <span class="engine__scroll-total" title="Total canvases">225</span>
             </div>
@@ -1833,7 +1841,8 @@
                 <!-- Pen Settings -->
                 <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--pen"
                   style="display: none;">
-                  <input type="number" min="1" max="15" value="2" class="input input--number" data-setting="size">
+                  <input type="number" min="1" max="15" value="2" class="input input--number"
+                    data-setting="size" id="pen-size-input" name="pen-size" aria-label="Pen size">
 
                   <div class="input input--color-picker color-selector" data-color-selector="pen-stroke" data-initial-color="#282a29"></div>
                   <div class="input input--color-picker color-selector" data-color-selector="pen-fill" data-initial-color="#fef6eb"
@@ -1870,7 +1879,8 @@
                 <!-- Brush Settings -->
                 <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--brush"
                   style="display: none;">
-                  <input type="number" min="10" max="50" value="20" class="input input--number" data-setting="size">
+                  <input type="number" min="10" max="50" value="20" class="input input--number"
+                    data-setting="size" id="brush-size-input" name="brush-size" aria-label="Brush size">
 
                   <div class="input input--color-picker color-selector" data-color-selector="brush" data-initial-color="#2b8059"></div>
                 </div>
@@ -1880,7 +1890,9 @@
                   style="display: none;">
                   <div class="input input--shape-picker shape-selector" data-shape-selector="shapes" data-initial-shape="rectangle"></div>
 
-                  <input type="number" min="1" max="20" value="2" class="input input--number" data-setting="strokeWidth">
+                  <input type="number" min="1" max="20" value="2" class="input input--number"
+                    data-setting="strokeWidth" id="shape-stroke-width-input" name="shape-stroke-width"
+                    aria-label="Shape stroke width">
 
                   <div class="input input--color-picker color-selector" data-color-selector="shapes-stroke" data-initial-color="#282a29"></div>
                   <div class="input input--color-picker color-selector" data-color-selector="shapes-fill" data-initial-color="transparent"
@@ -1890,15 +1902,18 @@
                 <!-- Eraser Settings -->
                 <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--eraser"
                   style="display: none;">
-                  <input type="number" min="5" max="50" value="20" class="input input--number" data-setting="size">
+                  <input type="number" min="5" max="50" value="20" class="input input--number"
+                    data-setting="size" id="eraser-size-input" name="eraser-size" aria-label="Eraser size">
                 </div>
 
                 <!-- Table Settings -->
                 <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--tables"
                   style="display: none;">
-                  <input type="number" min="1" max="20" value="3" class="input input--number" data-setting="size">
+                  <input type="number" min="1" max="20" value="3" class="input input--number"
+                    data-setting="size" id="table-size-input" name="table-size" aria-label="Table size">
 
-                  <select class="input input--select" data-setting="tableType">
+                  <select class="input input--select" data-setting="tableType" id="table-type-select"
+                    name="table-type" aria-label="Table type">
                     <option value="basic">Basic</option>
                     <option value="bordered">Bordered</option>
                     <option value="striped">Striped</option>

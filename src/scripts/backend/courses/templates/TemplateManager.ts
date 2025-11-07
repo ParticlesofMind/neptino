@@ -63,12 +63,12 @@ export class TemplateManager {
           block.config = {};
         }
         block.config[fieldName] = value;
-        
-        // Save changes to database
-        await TemplateDataHandler.saveTemplateChanges(templateId, actualData);
-        
-        // Update preview
+
+        // Update preview immediately for instant feedback
         TemplateRenderer.updateTemplatePreview(templateData);
+        
+        // Persist changes
+        await TemplateDataHandler.saveTemplateChanges(templateId, actualData);
       }
     } catch (error) {
       console.error('Failed to update template field:', error);

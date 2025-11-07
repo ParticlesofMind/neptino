@@ -965,23 +965,68 @@ export class ScheduleCourseManager {
     this.setStatus("saving", "Deleting schedule…");
 
     try {
-      await supabase
-        .from("courses")
-        .update({
-          schedule_settings: null,
-          course_sessions: null,
-        })
-        .eq("id", this.courseId);
+      await this.clearScheduleRecords();
+      await this.deleteCourseCanvases();
 
       this.currentSchedule = [];
       this.unlockScheduleConfig();
       this.hideSchedulePreview();
       this.hideDeleteScheduleButton();
       this.setStatus("empty");
+      this.notifyCurriculumReset("schedule-deleted");
     } catch (error) {
       console.error("Error deleting schedule:", error);
       this.setStatus("error", "Failed to delete schedule");
     }
+  }
+
+  private async clearScheduleRecords(): Promise<void> {
+    if (!this.courseId) {
+      throw new Error('No course ID available for clearing schedule');
+    }
+
+    const { error } = await supabase
+      .from("courses")
+      .update({
+        schedule_settings: null,
+        course_sessions: null,
+        curriculum_data: null,
+      })
+      .eq("id", this.courseId);
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  private async deleteCourseCanvases(): Promise<void> {
+    if (!this.courseId) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from("canvases")
+      .delete()
+      .eq("course_id", this.courseId);
+
+    if (error) {
+      console.warn("Error deleting course canvases during schedule reset:", error);
+    }
+  }
+
+  private notifyCurriculumReset(reason: "schedule-deleted" | "schedule-updated"): void {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    document.dispatchEvent(
+      new CustomEvent("curriculum-reset", {
+        detail: {
+          courseId: this.courseId,
+          reason,
+        },
+      }),
+    );
   }
 
   private async loadExistingSchedule(): Promise<void> {

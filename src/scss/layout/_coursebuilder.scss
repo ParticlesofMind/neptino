@@ -123,18 +123,12 @@
 .article__config,
 .article__preview {
     background: white;
-    border-right: 1px solid var(--color-neutral-200);
     height: 100%;
-    padding: var(--spacing-4);
     align-self: stretch;
     width: 100%;
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-}
-
-.article__preview {
-    border-right: none;
 }
 
 .article__config {

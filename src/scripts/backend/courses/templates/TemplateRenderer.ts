@@ -12,7 +12,9 @@ export class TemplateRenderer {
     }
 
     // Handle both full template object and just template_data
-    const actualData = templateData.template_data || templateData;
+    const actualData =
+      this.ensureTemplateDataObject(templateData.template_data || templateData) ??
+      { blocks: [], settings: {} };
     TemplateConfigManager.normalizeTemplateData(actualData);
 
     const blocks = actualData.blocks || [];
@@ -24,7 +26,7 @@ export class TemplateRenderer {
         ${blocks
           .map((block: TemplateBlock) => {
             const fields = fieldConfig[block.type] || [];
-            const rowsHtml = this.renderBlockConfigRows(templateId, block, fields);
+            const rowsHtml = this.renderBlockConfigRows(templateId ?? null, block, fields);
             const title = block.type.charAt(0).toUpperCase() + block.type.slice(1);
 
             return `
@@ -66,12 +68,12 @@ export class TemplateRenderer {
     checkboxes.forEach((checkbox) => {
       checkbox.addEventListener('change', async (e) => {
         const input = e.target as HTMLInputElement;
-        const fieldRow = input.closest('.field-row');
+        const fieldLabel = input.closest('.field-label');
         const blockConfig = input.closest('.block-config');
         
-        if (!fieldRow || !blockConfig) return;
+        if (!fieldLabel || !blockConfig) return;
         
-        const fieldName = fieldRow.getAttribute('data-field');
+        const fieldName = fieldLabel.getAttribute('data-field');
         const blockType = blockConfig.getAttribute('data-block');
         
         if (!fieldName || !blockType) return;
@@ -225,53 +227,209 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields)}
   }
 
   static toggleGlossaryItems(glossaryEnabled: boolean): void {
-    const glossaryItems = document.querySelectorAll('[data-field="historical_figures"], [data-field="terminology"], [data-field="concepts"]');
+    const glossarySelectors = [
+      '.field-label[data-field="historical_figures"]',
+      '.field-label[data-field="terminology"]',
+      '.field-label[data-field="concepts"]',
+    ];
+    const glossaryItems = document.querySelectorAll(glossarySelectors.join(','));
     glossaryItems.forEach((item) => {
-      const checkbox = item as HTMLInputElement;
+      const label = item as HTMLElement;
+      const checkbox = label.querySelector('input[type="checkbox"]') as HTMLInputElement | null;
+      if (!checkbox) {
+        return;
+      }
       checkbox.disabled = !glossaryEnabled;
       if (!glossaryEnabled) {
         checkbox.checked = false;
       }
+      label.classList.toggle('field-label--disabled', !glossaryEnabled);
     });
   }
 
-  private static renderBlockConfigRows(_templateId: string, block: TemplateBlock, _fields: BlockFieldConfig[]): string {
+  private static renderBlockConfigRows(templateId: string | null, block: TemplateBlock, overrideFields?: BlockFieldConfig[]): string {
     const fieldConfig = TemplateConfigManager.getBlockFieldConfiguration();
-    const blockFields = fieldConfig[block.type] || [];
-    
-    return blockFields
-      .map((field) => this.renderFieldCheckbox(_templateId, block, field))
-      .join('');
+    const blockFields = (overrideFields ?? fieldConfig[block.type]) || [];
+    if (!blockFields.length) {
+      return "";
+    }
+
+    if (block.type === "resources") {
+      return this.renderResourceRows(templateId, block, blockFields);
+    }
+
+    const hasHierarchy = blockFields.some((field) => typeof field.indentLevel === "number" && field.indentLevel > 0);
+    if (hasHierarchy) {
+      return this.renderHierarchicalRowsCompact(templateId, block, blockFields);
+    }
+
+    return this.renderCompactRows(templateId, block, blockFields);
   }
 
-  private static renderFieldCheckbox(_templateId: string, block: TemplateBlock, field: BlockFieldConfig): string {
-    const isChecked = field.mandatory ? true : Boolean(block.config?.[field.name]);
-    const disabledAttr = field.mandatory ? " checked disabled" : isChecked ? " checked" : "";
+  private static renderCompactRows(templateId: string | null, block: TemplateBlock, fields: BlockFieldConfig[]): string {
+    const simpleFields = fields.filter((field) => !field.separator);
+    if (!simpleFields.length) {
+      return "";
+    }
+
+    const rows: string[] = [];
+    for (let i = 0; i < simpleFields.length; i += 3) {
+      const rowFields = simpleFields.slice(i, i + 3);
+      rows.push(`
+        <div class="field-row field-row--compact">
+          ${rowFields.map((field) => this.renderFieldCheckbox(templateId, block, field)).join("")}
+        </div>
+      `);
+    }
+
+    return rows.join("");
+  }
+
+  private static renderHierarchicalRowsCompact(templateId: string | null, block: TemplateBlock, fields: BlockFieldConfig[]): string {
+    // Separate "Include Project" field to render it separately at the bottom
+    const includeProjectField = fields.find(f => f.name === "include_project");
+    const regularFields = fields.filter(f => f.name !== "include_project" && !f.separator);
     
-    // Check if this is a glossary item
+    // Group regular fields by indent level
+    const fieldsByIndent = new Map<number, BlockFieldConfig[]>();
+    regularFields.forEach((field) => {
+      const indent = field.indentLevel ?? 0;
+      if (!fieldsByIndent.has(indent)) {
+        fieldsByIndent.set(indent, []);
+      }
+      fieldsByIndent.get(indent)!.push(field);
+    });
+
+    // Render each indent level group with 3 items per row
+    const rows: string[] = [];
+    const sortedIndents = Array.from(fieldsByIndent.keys()).sort((a, b) => a - b);
+    
+    sortedIndents.forEach((indentLevel) => {
+      const indentFields = fieldsByIndent.get(indentLevel)!;
+      const indentClass = indentLevel ? ` field-row--indent-${indentLevel}` : "";
+      
+      for (let i = 0; i < indentFields.length; i += 3) {
+        const rowFields = indentFields.slice(i, i + 3);
+        rows.push(`
+          <div class="field-row field-row--compact${indentClass}">
+            ${rowFields.map((field) => this.renderFieldCheckbox(templateId, block, field)).join("")}
+          </div>
+        `);
+      }
+    });
+
+    // Add "Include Project" in its own row at the bottom
+    if (includeProjectField) {
+      rows.push(`
+        <div class="field-row field-row--full">
+          ${this.renderFieldCheckbox(templateId, block, includeProjectField)}
+        </div>
+      `);
+    }
+
+    return rows.join("");
+  }
+
+  private static renderHierarchicalRow(templateId: string | null, block: TemplateBlock, field: BlockFieldConfig): string {
+    const indentLevel = field.indentLevel ?? 0;
+    const indentClass = indentLevel ? ` field-row--indent-${indentLevel}` : "";
+
+    return `
+      <div class="field-row field-row--hierarchy${indentClass}">
+        ${this.renderFieldCheckbox(templateId, block, field)}
+      </div>
+    `;
+  }
+
+  private static renderResourceRows(templateId: string | null, block: TemplateBlock, fields: BlockFieldConfig[]): string {
+    const byGroup = new Map<string, BlockFieldConfig[]>();
+    fields.forEach((field) => {
+      const key = field.rowGroup ?? "resources-default";
+      if (!byGroup.has(key)) {
+        byGroup.set(key, []);
+      }
+      byGroup.get(key)!.push(field);
+    });
+
+    const rows: string[] = [];
+    const renderGroup = (groupKey: string, className: string) => {
+      const groupFields = byGroup.get(groupKey);
+      if (!groupFields || !groupFields.length) {
+        return;
+      }
+      rows.push(`
+        <div class="field-row field-row--resource ${className}">
+          ${groupFields.map((field) => this.renderFieldCheckbox(templateId, block, field)).join("")}
+        </div>
+      `);
+      byGroup.delete(groupKey);
+    };
+
+    renderGroup("resources-main", "field-row--resource-main");
+    renderGroup("resources-glossary-toggle", "field-row--resource-toggle");
+    renderGroup("resources-glossary-items", "field-row--resource-glossary");
+
+    if (byGroup.size) {
+      const remainingFields = Array.from(byGroup.values()).flat();
+      rows.push(this.renderCompactRows(templateId, block, remainingFields));
+    }
+
+    return rows.join("");
+  }
+
+  private static renderFieldCheckbox(templateId: string | null, block: TemplateBlock, field: BlockFieldConfig): string {
     const glossaryItems = ["historical_figures", "terminology", "concepts"];
     const isGlossaryItem = glossaryItems.includes(field.name);
     const glossaryEnabled = Boolean(block.config?.["include_glossary"]);
-    
-    // Only call toggleGlossaryItems for the "include_glossary" field itself
+
+    const shouldCheck = field.mandatory
+      ? true
+      : isGlossaryItem && !glossaryEnabled
+      ? false
+      : Boolean(block.config?.[field.name]);
+
+    const shouldDisable = field.mandatory || (isGlossaryItem && !glossaryEnabled);
+
     let updateHandler = "";
     if (field.name === "include_glossary") {
       updateHandler = `onchange="TemplateRenderer.toggleGlossaryItems(this.checked)"`;
     }
 
+    const labelClasses = ["field-label"];
+    if (field.mandatory) {
+      labelClasses.push("field-label--locked");
+    }
+    if (isGlossaryItem && !glossaryEnabled) {
+      labelClasses.push("field-label--disabled");
+    }
+
+    const fieldId = this.buildFieldId(templateId, block, field);
+
     return `
-      <div class="field-row" data-field="${field.name}">
-        <label class="field-label">
-          <input type="checkbox" 
-                 name="${field.name}" 
-                 ${disabledAttr}
-                 ${updateHandler}
-                 ${isGlossaryItem && !glossaryEnabled ? 'disabled' : ''}>
-          <span class="field-label__text">${field.label}</span>
-          ${field.mandatory ? '<span class="field-label__required">*</span>' : ''}
-        </label>
-      </div>
+      <label class="${labelClasses.join(" ")}" data-field="${field.name}">
+        <input type="checkbox"
+               id="${fieldId}"
+               name="${field.name}"
+               ${shouldCheck ? "checked" : ""}
+               ${shouldDisable ? "disabled" : ""}
+               ${updateHandler}>
+        <span class="field-label__text">${field.label}</span>
+      </label>
     `;
+  }
+
+  private static sanitizeForId(value: string | null | undefined): string {
+    if (!value) {
+      return "na";
+    }
+    return String(value).trim().replace(/[^a-zA-Z0-9_-]+/g, "-") || "na";
+  }
+
+  private static buildFieldId(templateId: string | null, block: TemplateBlock, field: BlockFieldConfig): string {
+    const templatePart = this.sanitizeForId(templateId);
+    const blockPart = this.sanitizeForId(block.id ?? block.type);
+    const fieldPart = this.sanitizeForId(field.name);
+    return `field-${templatePart}-${blockPart}-${fieldPart}`;
   }
 
   private static createDefaultBlock(blockType: TemplateBlockType, order: number): TemplateBlock {
@@ -293,5 +451,29 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields)}
       acc[field.name] = field.mandatory ? true : false;
       return acc;
     }, {});
+  }
+
+  private static ensureTemplateDataObject(raw: unknown): Record<string, unknown> | null {
+    if (!raw) {
+      return null;
+    }
+
+    if (typeof raw === "string") {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          return parsed as Record<string, unknown>;
+        }
+      } catch (error) {
+        console.warn("TemplateRenderer: failed to parse template data JSON", error);
+        return null;
+      }
+    }
+
+    if (typeof raw === "object" && !Array.isArray(raw)) {
+      return raw as Record<string, unknown>;
+    }
+
+    return null;
   }
 }

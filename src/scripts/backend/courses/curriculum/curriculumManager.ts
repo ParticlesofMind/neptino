@@ -170,6 +170,16 @@ class CurriculumManager {
   private curriculumStructureDefaults: CurriculumStructureConfig | null = null;
   private initialModuleTitles: Map<number, string> = new Map();
   private lessonDates: Map<number, string> = new Map();
+  private globalEventsBound = false;
+  private pendingExternalReset: { reason?: string } | null = null;
+  private readonly onCurriculumReset = (event: Event): void => {
+    const customEvent = event as CustomEvent<{ courseId?: string; reason?: string }>;
+    const targetCourseId = customEvent.detail?.courseId;
+    if (targetCourseId && targetCourseId !== this.courseId) {
+      return;
+    }
+    this.resetCurriculumState(customEvent.detail?.reason);
+  };
 
   // Duration presets with default values and rationale
   private readonly durationPresets: Record<string, DurationPreset> = {
@@ -224,6 +234,7 @@ class CurriculumManager {
     this.currentPreviewMode = "all"; // Force to show full structure by default
     this.savePreviewMode(this.currentPreviewMode); // Save the default
 
+    this.registerGlobalEventListeners();
 
     if (!this.courseId) {
       console.warn("⚠️ No course ID available for curriculum management - some features may be limited");
@@ -458,7 +469,7 @@ class CurriculumManager {
         }
 
         if (courseData.curriculum_data.templatePlacements && courseData.curriculum_data.templatePlacements.length > 0) {
-        console.log('  - Template Placements:', courseData.curriculum_data.templatePlacements);
+          console.log('  - Template Placements:', courseData.curriculum_data.templatePlacements);
         }
       } else {
         console.log('❌ No curriculum data yet - will be generated');
@@ -676,6 +687,45 @@ class CurriculumManager {
         null, // No template placement list for generation section
       );
     }
+
+    if (this.pendingExternalReset) {
+      const reason = this.pendingExternalReset.reason;
+      this.pendingExternalReset = null;
+      this.resetCurriculumState(reason);
+    }
+  }
+
+  private resetCurriculumState(reason?: string): void {
+    if (!this.renderer) {
+      this.pendingExternalReset = { reason };
+      return;
+    }
+
+    if (reason) {
+      console.info(`♻️ Curriculum state reset (${reason}).`);
+    } else {
+      console.info("♻️ Curriculum state reset.");
+    }
+
+    this.currentCurriculum = [];
+    this.currentModules = [];
+    this.templatePlacements = [];
+    this.lessonStructureCounts.clear();
+    this.lessonDates.clear();
+    this.contentLoadConfig = null;
+    this.scheduledLessonDuration = 0;
+
+    this.renderCurriculumPreview();
+    this.renderTemplatePlacementUI();
+  }
+
+  private registerGlobalEventListeners(): void {
+    if (this.globalEventsBound || typeof document === "undefined") {
+      return;
+    }
+
+    document.addEventListener("curriculum-reset", this.onCurriculumReset);
+    this.globalEventsBound = true;
   }
 
   private initializePreviewControls(previewSection: HTMLElement): void {
@@ -1241,13 +1291,14 @@ class CurriculumManager {
           typeof template.template_type === "string" && template.template_type.trim().length
             ? template.template_type.trim()
             : "lesson";
+        const normalizedType = this.normalizeTemplateTypeName(rawType);
         const scope: "course" | "global" = template.course_id ? "course" : "global";
         const definition = this.normalizeTemplateDefinition(template.template_data);
         return {
           id: template.id,
           templateId: template.template_id,
           name,
-          type: rawType,
+          type: normalizedType ?? rawType,
           description: template.template_description,
           scope,
           definition,
@@ -1599,7 +1650,8 @@ class CurriculumManager {
   }
 
   private normalizeTemplateDefinition(raw: unknown): TemplateDefinition {
-    if (!raw || typeof raw !== "object") {
+    const payload = this.parseTemplateDefinition(raw);
+    if (!payload) {
       return {
         name: null,
         blocks: [],
@@ -1607,7 +1659,6 @@ class CurriculumManager {
       };
     }
 
-    const payload = raw as Record<string, unknown>;
     const name =
       typeof payload.name === "string" && payload.name.trim().length
         ? payload.name.trim()
@@ -1628,6 +1679,42 @@ class CurriculumManager {
       blocks,
       settings,
     };
+  }
+
+  private parseTemplateDefinition(raw: unknown): Record<string, unknown> | null {
+    if (!raw) {
+      return null;
+    }
+
+    if (typeof raw === "string") {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          return parsed as Record<string, unknown>;
+        }
+      } catch (error) {
+        console.warn("CurriculumManager: failed to parse template definition JSON", error);
+        return null;
+      }
+    }
+
+    if (typeof raw === "object" && !Array.isArray(raw)) {
+      return raw as Record<string, unknown>;
+    }
+
+    return null;
+  }
+
+  private normalizeTemplateTypeName(type: string | null | undefined): string | null {
+    if (!type || typeof type !== "string") {
+      return null;
+    }
+    const normalized = type.trim().toLowerCase().replace(/[\s-]+/g, "_");
+    if (!normalized) {
+      return null;
+    }
+    const simplified = normalized.replace(/_(template|plan|layout)$/, "");
+    return simplified || normalized;
   }
 
   private normalizeTemplateBlock(raw: unknown, fallbackIndex = 0): TemplateDefinitionBlock | null {
@@ -2408,13 +2495,13 @@ class CurriculumManager {
         : `Topic ${fallbackIndex + 1}`;
     const objectives = Array.isArray(topic?.objectives)
       ? topic.objectives.map((objective) =>
-          typeof objective === "string" ? objective.trim() : "",
-        )
+        typeof objective === "string" ? objective.trim() : "",
+      )
       : [];
     const tasks = Array.isArray(topic?.tasks)
       ? topic.tasks.map((task) =>
-          typeof task === "string" ? task.trim() : "",
-        )
+        typeof task === "string" ? task.trim() : "",
+      )
       : [];
 
     return {
@@ -2577,12 +2664,12 @@ class CurriculumManager {
 
         // Add tasks - now creating tasksPerObjective for each objective
         const totalTasksForTopic = this.contentLoadConfig.objectivesPerTopic * this.contentLoadConfig.tasksPerObjective;
-      for (let l = 1; l <= totalTasksForTopic; l++) {
-        topic.tasks.push("");
-      }
+        for (let l = 1; l <= totalTasksForTopic; l++) {
+          topic.tasks.push("");
+        }
 
-      lesson.topics.push(topic);
-    }
+        lesson.topics.push(topic);
+      }
 
       lesson.competencies = this.generateCompetenciesFromTopics(lesson.topics);
       curriculum.push(lesson);

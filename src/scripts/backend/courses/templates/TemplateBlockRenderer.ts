@@ -1,6 +1,10 @@
 import { TemplateBlock, TemplateBlockType, BlockFieldConfig, FieldRow } from "./types.js";
 
 export class TemplateBlockRenderer {
+  private static formatPlaceholder(label: string): string {
+    return `<span class="template-placeholder">${label}</span>`;
+  }
+
   static renderBlockContent(block: TemplateBlock, checkedFields: BlockFieldConfig[]): string {
     if (block.type === "resources") {
       return this.renderResourcesBlockContent(checkedFields, block);
@@ -21,7 +25,7 @@ export class TemplateBlockRenderer {
 <tr>
 ${checkedFields
   .map((field) => `
-<td>[${field.label}]</td>
+<td>${this.formatPlaceholder(field.label)}</td>
 `)
   .join("")}
 </tr>
@@ -71,7 +75,7 @@ ${checkedFields
       }
 
       const row = rows[rowIndex.get(groupId)!];
-      const placeholder = `[${field.label}]`;
+      const placeholder = this.formatPlaceholder(field.label);
 
       switch (field.role) {
         case "time":
@@ -143,59 +147,59 @@ ${body}
         groupId: "project_competence",
         indentLevel: 0,
         placeholders: {
-          primary: "[Project Competence]",
-          time: "[Time]",
+          primary: this.formatPlaceholder("Project Competence"),
+          time: this.formatPlaceholder("Time"),
         },
       },
       {
         groupId: "project_topic",
         indentLevel: 1,
         placeholders: {
-          primary: "[Project Topic]",
-          time: "[Time]",
+          primary: this.formatPlaceholder("Project Topic"),
+          time: this.formatPlaceholder("Time"),
         },
       },
       {
         groupId: "project_objective",
         indentLevel: 2,
         placeholders: {
-          primary: "[Project Objective]",
-          time: "[Time]",
+          primary: this.formatPlaceholder("Project Objective"),
+          time: this.formatPlaceholder("Time"),
         },
       },
       {
         groupId: "project_task",
         indentLevel: 3,
         placeholders: {
-          primary: "[Project Task]",
-          time: "[Time]",
+          primary: this.formatPlaceholder("Project Task"),
+          time: this.formatPlaceholder("Time"),
         },
       },
       {
         groupId: "project_instruction",
         indentLevel: 4,
         placeholders: {
-          primary: "[Project Instruction Area]",
-          method: "[Method]",
-          social: "[Social form]",
+          primary: this.formatPlaceholder("Project Instruction Area"),
+          method: this.formatPlaceholder("Method"),
+          social: this.formatPlaceholder("Social form"),
         },
       },
       {
         groupId: "project_student",
         indentLevel: 4,
         placeholders: {
-          primary: "[Project Student Area]",
-          method: "[Method]",
-          social: "[Social form]",
+          primary: this.formatPlaceholder("Project Student Area"),
+          method: this.formatPlaceholder("Method"),
+          social: this.formatPlaceholder("Social form"),
         },
       },
       {
         groupId: "project_teacher",
         indentLevel: 4,
         placeholders: {
-          primary: "[Project Teacher Area]",
-          method: "[Method]",
-          social: "[Social form]",
+          primary: this.formatPlaceholder("Project Teacher Area"),
+          method: this.formatPlaceholder("Method"),
+          social: this.formatPlaceholder("Social form"),
         },
       },
     ];
@@ -214,7 +218,7 @@ ${this.renderRowsTable(projectRows)}
 
     const getPlaceholder = (name: string): string => {
       const field = lookup.get(name);
-      return field ? `[${field.label}]` : "";
+      return field ? this.formatPlaceholder(field.label) : "";
     };
 
     // Create single row with all fields on the same row
@@ -266,7 +270,7 @@ ${this.renderRowsTable(projectRows)}
 ${mainFields
   .map(
     (field) => `
-<td>[${field.label}]</td>
+<td>${this.formatPlaceholder(field.label)}</td>
 `,
   )
   .join("")}
@@ -287,7 +291,7 @@ ${glossaryItems
     (item) => `
 <tr>
 <td>${item.label}</td>
-<td>[URL]</td>
+<td>${this.formatPlaceholder("URL")}</td>
 </tr>
 `,
   )
