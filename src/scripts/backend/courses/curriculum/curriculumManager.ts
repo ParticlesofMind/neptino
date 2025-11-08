@@ -188,41 +188,49 @@ class CurriculumManager {
       maxDuration: 30,
       defaultTopics: 1,
       defaultObjectives: 1,
-      defaultTasks: 1,
-      rationale: "Mini lessons stay laser-focused: one topic, one objective, and one task keeps the work manageable."
+      defaultTasks: 2,
+      rationale: "One tight focus with two quick practice reps.",
     },
     single: {
       type: "single",
       maxDuration: 60,
       defaultTopics: 2,
       defaultObjectives: 1,
-      defaultTasks: 1,
-      rationale: "Standard lessons should introduce a couple of topics without overloading practice—one objective and task per topic keeps pacing steady."
+      defaultTasks: 2,
+      rationale: "Two short topics; one objective each; two reps to lock in.",
     },
     double: {
       type: "double",
       maxDuration: 120,
-      defaultTopics: 3,
-      defaultObjectives: 1,
-      defaultTasks: 1,
-      rationale: "Extended durations can cover more ground by adding an extra topic, but keep objectives and tasks lean for focus."
+      defaultTopics: 2,
+      defaultObjectives: 2,
+      defaultTasks: 2,
+      rationale: "Balanced two-hour block: 2×2×2 for eight solid tasks.",
     },
     triple: {
       type: "triple",
       maxDuration: 180,
       defaultTopics: 3,
       defaultObjectives: 2,
-      defaultTasks: 1,
-      rationale: "Very long sessions benefit from more objectives per topic, but only one well-targeted task keeps workload realistic."
+      defaultTasks: 2,
+      rationale: "Broader scope; keep per-objective load steady.",
     },
     halfFull: {
       type: "halfFull",
-      maxDuration: 999,
+      maxDuration: 240,
+      defaultTopics: 3,
+      defaultObjectives: 3,
+      defaultTasks: 2,
+      rationale: "Half-day: three topics with three objectives; two tasks each.",
+    },
+    fullDay: {
+      type: "fullDay",
+      maxDuration: 480,
       defaultTopics: 4,
-      defaultObjectives: 2,
-      defaultTasks: 1,
-      rationale: "Half-day sessions can handle four topics with paired objectives, but each objective still drives a single meaningful task."
-    }
+      defaultObjectives: 3,
+      defaultTasks: 2,
+      rationale: "Full day pacing without fatigue; steady 4–5 tasks/hour.",
+    },
   };
 
   constructor(courseId?: string) {
@@ -1969,8 +1977,10 @@ class CurriculumManager {
       selectedPreset = this.durationPresets.double;
     } else if (duration <= 180) {
       selectedPreset = this.durationPresets.triple;
-    } else {
+    } else if (duration <= 240) {
       selectedPreset = this.durationPresets.halfFull;
+    } else {
+      selectedPreset = this.durationPresets.fullDay;
     }
 
     return {
