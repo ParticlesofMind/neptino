@@ -2493,22 +2493,23 @@ class CurriculumManager {
       typeof topic?.title === "string" && topic.title.trim().length
         ? topic.title.trim()
         : `Topic ${fallbackIndex + 1}`;
-    const objectives = Array.isArray(topic?.objectives)
-      ? topic.objectives.map((objective) =>
-        typeof objective === "string" ? objective.trim() : "",
-      )
-      : [];
-    const tasks = Array.isArray(topic?.tasks)
-      ? topic.tasks.map((task) =>
-        typeof task === "string" ? task.trim() : "",
-      )
-      : [];
 
     return {
       title,
-      objectives,
-      tasks,
+      objectives: this.normalizeStringArray(topic?.objectives),
+      tasks: this.normalizeStringArray(topic?.tasks),
     };
+  }
+
+  private normalizeStringArray(values: unknown): string[] {
+    if (!Array.isArray(values)) {
+      return [];
+    }
+
+    return values
+      .map((value) => (typeof value === "string" ? value.trim() : ""))
+      .map((value) => (value.length ? value : null))
+      .filter((value): value is string => value !== null);
   }
 
   private generateCompetenciesFromTopics(topics: CurriculumTopic[]): CurriculumCompetency[] {
