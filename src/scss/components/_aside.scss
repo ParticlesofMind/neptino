@@ -85,14 +85,16 @@
     &--active {
       background-color: var(--color-primary-100);
       border: 1px solid var(--color-primary-200);
-      color: var(--color-text-primary);
+      color: white;
+      font-weight: var(--font-weight-semibold);
 
       .aside__icon {
-        color: var(--color-text-primary);
+        color: white;
       }
 
       .aside__text {
-        color: var(--color-text-primary);
+        color: white;
+        font-weight: var(--font-weight-semibold);
       }
     }
   }
@@ -148,14 +150,16 @@
   &__link[aria-current="page"] {
     background-color: var(--color-primary-100);
     border: 1px solid var(--color-primary-200);
-    color: var(--color-text-primary);
+    color: white;
+    font-weight: var(--font-weight-semibold);
 
     .aside__icon {
-      color: var(--color-text-primary);
+      color: white;
     }
 
     .aside__text {
-      color: var(--color-text-primary);
+      color: white;
+      font-weight: var(--font-weight-semibold);
     }
   }
 }
