@@ -146,15 +146,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 6rem;
-  padding: var(--spacing-1) var(--spacing-2);
+
   border-radius: var(--radius-small);
   background: var(--color-neutral-50);
   color: var(--color-text-secondary);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 // Template Field (used by createTemplate.ts)
