@@ -118,23 +118,14 @@ export class TemplatePreviewHandler {
     * Renders program block preview
     */
      private renderProgramBlock(config: any): string {
-        return `
+    return `
  <div class="preview-block preview-block--program">
  <h4 class="preview-block__title">Program</h4>
  <table class="lesson-plan-table lesson-plan-table--program">
  <tbody>
  <tr>
+ <td>[Topic]</td>
  <td>[Competence]</td>
- <td>[Topic]</td>
- <td>[Objective]</td>
- <td>[Task]</td>
- <td>[Method]</td>
- <td>[Social form]</td>
- <td>[Time]</td>
- </tr>
- <tr>
- <td></td>
- <td>[Topic]</td>
  <td>[Objective]</td>
  <td>[Task]</td>
  <td>[Method]</td>
@@ -155,6 +146,15 @@ export class TemplatePreviewHandler {
  <td></td>
  <td></td>
  <td>[Task]</td>
+ <td>[Method]</td>
+ <td>[Social form]</td>
+ <td>[Time]</td>
+ </tr>
+ <tr>
+ <td></td>
+ <td></td>
+ <td></td>
+ <td></td>
  <td>[Method]</td>
  <td>[Social form]</td>
  <td>[Time]</td>

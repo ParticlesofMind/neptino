@@ -188,40 +188,40 @@ class CurriculumManager {
       maxDuration: 30,
       defaultTopics: 1,
       defaultObjectives: 1,
-      defaultTasks: 2,
-      rationale: "Mini lessons need tight focus. One clear learning objective with just enough practice to check understanding."
+      defaultTasks: 1,
+      rationale: "Mini lessons stay laser-focused: one topic, one objective, and one task keeps the work manageable."
     },
     single: {
       type: "single",
       maxDuration: 60,
       defaultTopics: 2,
-      defaultObjectives: 2,
-      defaultTasks: 2,
-      rationale: "Standard lesson length allows for two related concepts, each with paired objectives and sufficient practice."
+      defaultObjectives: 1,
+      defaultTasks: 1,
+      rationale: "Standard lessons should introduce a couple of topics without overloading practice—one objective and task per topic keeps pacing steady."
     },
     double: {
       type: "double",
       maxDuration: 120,
       defaultTopics: 3,
-      defaultObjectives: 2,
-      defaultTasks: 3,
-      rationale: "Extended time allows deeper exploration but requires consolidation breaks. Three topics prevent cognitive overload while allowing meaningful depth."
+      defaultObjectives: 1,
+      defaultTasks: 1,
+      rationale: "Extended durations can cover more ground by adding an extra topic, but keep objectives and tasks lean for focus."
     },
     triple: {
       type: "triple",
       maxDuration: 180,
-      defaultTopics: 4,
+      defaultTopics: 3,
       defaultObjectives: 2,
-      defaultTasks: 3,
-      rationale: "Very long sessions need structured variety. Four topics with regular consolidation activities maintain engagement and retention."
+      defaultTasks: 1,
+      rationale: "Very long sessions benefit from more objectives per topic, but only one well-targeted task keeps workload realistic."
     },
     halfFull: {
       type: "halfFull",
       maxDuration: 999,
-      defaultTopics: 5,
-      defaultObjectives: 3,
-      defaultTasks: 4,
-      rationale: "Extended sessions can cover more ground but must include multiple consolidation periods, breaks, and varied activities to maintain effectiveness."
+      defaultTopics: 4,
+      defaultObjectives: 2,
+      defaultTasks: 1,
+      rationale: "Half-day sessions can handle four topics with paired objectives, but each objective still drives a single meaningful task."
     }
   };
 
