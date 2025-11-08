@@ -1031,12 +1031,22 @@ export class CurriculumRenderer {
     if (!type || typeof type !== "string") {
       return null;
     }
-    const normalized = type.trim().toLowerCase().replace(/[\s-]+/g, "_");
+
+    const normalized = type
+      .trim()
+      .toLowerCase()
+      .replace(/[\s-]+/g, "_");
+
     if (!normalized) {
       return null;
     }
-    const simplified = normalized.replace(/_(template|plan|layout)$/, "");
-    return simplified || normalized;
+
+    const simplified = normalized.replace(/(?:_)?(template|plan|layout)$/, "");
+    const cleaned = simplified
+      .replace(/__+/g, "_")
+      .replace(/^_+|_+$/g, "");
+
+    return cleaned || normalized;
   }
 
   private lookupTemplateSummary(
