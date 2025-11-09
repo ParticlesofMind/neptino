@@ -1,7 +1,7 @@
 import { supabase } from "../../supabase.js";
 import { TemplateData, TemplateBlock, TemplateBlockType, TemplateType } from "./types.js";
 import { TemplateConfigManager } from "./TemplateConfigManager.js";
-import { BLOCK_CONTENT_TEMPLATES, TEMPLATE_BLOCK_SEQUENCES } from "./templateOptions.js";
+import { BLOCK_CONTENT_TEMPLATES, TEMPLATE_BLOCK_SEQUENCES, TEMPLATE_BODY_BLOCKS } from "./templateOptions.js";
 
 export class TemplateDataHandler {
   static async loadExistingTemplates(): Promise<any[]> {
@@ -44,18 +44,29 @@ export class TemplateDataHandler {
         throw error;
       }
 
+      // Normalize template data if needed (this modifies the data object in place)
       const normalized = TemplateConfigManager.normalizeTemplateData(data);
       if (normalized) {
         try {
-          await supabase
-            .from("templates")
-            .update({
-              template_data: data.template_data,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", data.id);
+          // Use the potentially modified template_data from the data object
+          const templateDataToUpdate = data.template_data || data.templateData;
+          if (templateDataToUpdate) {
+            const { error: updateError } = await supabase
+              .from("templates")
+              .update({
+                template_data: templateDataToUpdate,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", data.id);
+            
+            if (updateError) {
+              console.error("Failed to update normalized template structure:", updateError);
+              // Don't throw - this is a non-critical update
+            }
+          }
         } catch (normalizationError) {
           console.error("Failed to normalize template structure:", normalizationError);
+          // Don't throw - normalization is optional
         }
       }
 
@@ -75,6 +86,17 @@ export class TemplateDataHandler {
       return data;
     } catch (error) {
       console.error("Failed to load template:", error);
+      // Log more details about the error
+      if (error instanceof Error) {
+        console.error("Error message:", error.message);
+        console.error("Error stack:", error.stack);
+      } else if (error && typeof error === 'object') {
+        console.error("Error details:", JSON.stringify(error, null, 2));
+        if ('code' in error) console.error("Error code:", (error as any).code);
+        if ('message' in error) console.error("Error message:", (error as any).message);
+        if ('details' in error) console.error("Error details:", (error as any).details);
+        if ('hint' in error) console.error("Error hint:", (error as any).hint);
+      }
       return null;
     }
   }
@@ -142,9 +164,25 @@ export class TemplateDataHandler {
       const templateId = `template_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
       const blockSequence = TEMPLATE_BLOCK_SEQUENCES[formData.type] ?? TEMPLATE_BLOCK_SEQUENCES.lesson;
-      const defaultBlocks: TemplateBlock[] = blockSequence.map((blockType, index) =>
-        this.createDefaultBlock(blockType, index + 1),
-      );
+      const defaultBlocks: TemplateBlock[] = [];
+      let order = 1;
+
+      // Create main blocks (header, body, footer)
+      blockSequence.forEach((blockType) => {
+        const block = this.createDefaultBlock(blockType, order);
+        defaultBlocks.push(block);
+        order++;
+
+        // If this is the body block, add body sub-blocks for this template type
+        if (blockType === "body") {
+          const bodyBlocks = TEMPLATE_BODY_BLOCKS[formData.type] ?? [];
+          bodyBlocks.forEach((subBlockType) => {
+            const subBlock = this.createDefaultBlock(subBlockType, order);
+            defaultBlocks.push(subBlock);
+            order++;
+          });
+        }
+      });
 
       const templateData: TemplateData = {
         template_id: templateId,

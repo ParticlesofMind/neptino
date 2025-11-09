@@ -312,6 +312,13 @@ export class AsideNavigation {
     e.preventDefault();
 
     const target = e.currentTarget as HTMLAnchorElement;
+    
+    // Prevent navigation if link is disabled
+    if (target.classList.contains('aside__link--disabled') || 
+        target.getAttribute('aria-disabled') === 'true') {
+      return;
+    }
+    
     const targetSection = target.getAttribute('data-section');
 
     if (!targetSection) {

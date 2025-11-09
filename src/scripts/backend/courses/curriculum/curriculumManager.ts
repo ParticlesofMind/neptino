@@ -443,7 +443,7 @@ class CurriculumManager {
         console.log('  - Day:', firstLesson.day);
         console.log('  - Start Time:', firstLesson.startTime);
         console.log('  - End Time:', firstLesson.endTime);
-        console.log('  - Duration:', this.calculateLessonDuration(firstLesson.startTime, firstLesson.endTime), 'minutes');
+        console.log('  - Duration:', this.calculateLessonDuration(firstLesson.startTime, firstLesson.endTime, firstLesson.breakTimes), 'minutes');
       }
 
       console.log('\n┌─────────────────────────────────────────────────────────────┐');
@@ -570,7 +570,8 @@ class CurriculumManager {
             endTime: courseData.schedule_settings[0].endTime,
             calculated_duration_minutes: this.calculateLessonDuration(
               courseData.schedule_settings[0].startTime,
-              courseData.schedule_settings[0].endTime
+              courseData.schedule_settings[0].endTime,
+              courseData.schedule_settings[0].breakTimes
             )
           } : null
         },
@@ -1944,6 +1945,7 @@ class CurriculumManager {
         const duration = this.calculateLessonDuration(
           firstLesson.startTime,
           firstLesson.endTime,
+          firstLesson.breakTimes,
         );
         this.contentLoadConfig = this.determineContentLoad(duration);
         this.displayContentLoad();
@@ -1956,10 +1958,22 @@ class CurriculumManager {
     }
   }
 
-  private calculateLessonDuration(startTime: string, endTime: string): number {
+  private calculateLessonDuration(startTime: string, endTime: string, breakTimes?: Array<{ startTime: string; endTime: string }>): number {
     const start = new Date(`2000-01-01T${startTime}`);
     const end = new Date(`2000-01-01T${endTime}`);
-    return Math.abs(end.getTime() - start.getTime()) / (1000 * 60); // Convert to minutes
+    let totalMinutes = Math.abs(end.getTime() - start.getTime()) / (1000 * 60); // Convert to minutes
+
+    // Subtract break times if they exist
+    if (breakTimes && breakTimes.length > 0) {
+      breakTimes.forEach((breakTime) => {
+        const breakStart = new Date(`2000-01-01T${breakTime.startTime}`);
+        const breakEnd = new Date(`2000-01-01T${breakTime.endTime}`);
+        const breakDuration = Math.abs(breakEnd.getTime() - breakStart.getTime()) / (1000 * 60);
+        totalMinutes -= breakDuration;
+      });
+    }
+
+    return Math.max(0, totalMinutes);
   }
 
   private determineContentLoad(duration: number): ContentLoadConfig {
@@ -3140,10 +3154,23 @@ class CurriculumManager {
     try {
       this.syncCanvasBuilderContext();
 
-      const { data: existingCanvases, error } = await supabase
+      // Query canvases - handle both old schema (lesson_number only) and new schema (lesson_id + lesson_number)
+      let { data: existingCanvases, error } = await supabase
         .from('canvases')
         .select('id, lesson_number, canvas_index')
         .eq('course_id', this.courseId);
+
+      // Try to also get lesson_id if it exists (new schema)
+      if (!error) {
+        const { data: canvasesWithLessonId } = await supabase
+          .from('canvases')
+          .select('id, lesson_id, lesson_number, canvas_index')
+          .eq('course_id', this.courseId);
+        
+        if (canvasesWithLessonId) {
+          existingCanvases = canvasesWithLessonId;
+        }
+      }
 
       if (error) {
         console.warn('⚠️ Failed to load existing canvases for sync:', error);
@@ -3165,8 +3192,33 @@ class CurriculumManager {
           ? courseSchedule!.schedule_settings.length
           : 0;
 
-      const existingMap = new Map<number, { id: string | null; canvas_index: number }>();
-      existingCanvases?.forEach((canvas) => {
+      // Load existing lessons for this course (if lessons table exists)
+      let existingLessons: any[] | null = null;
+      try {
+        const { data: lessons, error: lessonsError } = await supabase
+          .from('lessons')
+          .select('id, lesson_number')
+          .eq('course_id', this.courseId);
+        
+        if (!lessonsError) {
+          existingLessons = lessons;
+        }
+      } catch (err) {
+        // Lessons table might not exist yet if migrations haven't run
+        console.log('Lessons table not available yet, will use lesson_number only');
+      }
+
+      const lessonIdMap = new Map<number, string>();
+      existingLessons?.forEach((lesson: any) => {
+        if (typeof lesson.lesson_number === 'number' && lesson.id) {
+          lessonIdMap.set(lesson.lesson_number, lesson.id);
+        }
+      });
+      
+      const hasLessonsTable = existingLessons !== null;
+
+      const existingMap = new Map<number, { id: string | null; canvas_index: number; lesson_id: string | null }>();
+      existingCanvases?.forEach((canvas: any) => {
         if (
           typeof canvas.lesson_number === 'number' &&
           canvas.canvas_index === 1
@@ -3174,6 +3226,7 @@ class CurriculumManager {
           existingMap.set(canvas.lesson_number, {
             id: typeof canvas.id === 'string' ? canvas.id : null,
             canvas_index: canvas.canvas_index,
+            lesson_id: typeof canvas.lesson_id === 'string' ? canvas.lesson_id : null,
           });
         }
       });
@@ -3254,7 +3307,49 @@ class CurriculumManager {
         }
       });
 
+      // First, ensure all lessons exist in the lessons table (if it exists)
+      if (hasLessonsTable) {
+        for (let lessonNumber = 1; lessonNumber <= desiredLessonCount; lessonNumber += 1) {
+          if (!lessonIdMap.has(lessonNumber)) {
+            const lesson =
+              lessonsByNumber.get(lessonNumber) ??
+              ({
+                lessonNumber,
+                title: `Lesson ${lessonNumber}`,
+                topics: [],
+              } as CurriculumLesson);
+
+            // Create lesson in lessons table
+            const { data: newLesson, error: lessonError } = await supabase
+              .from('lessons')
+              .insert({
+                course_id: this.courseId,
+                lesson_number: lessonNumber,
+                title: lesson.title || `Lesson ${lessonNumber}`,
+                payload: {},
+              })
+              .select('id, lesson_number')
+              .single();
+
+            if (lessonError || !newLesson) {
+              console.error(`Failed to create lesson ${lessonNumber}:`, lessonError);
+              continue;
+            }
+
+            lessonIdMap.set(lessonNumber, newLesson.id);
+          }
+        }
+      }
+
       for (let lessonNumber = 1; lessonNumber <= desiredLessonCount; lessonNumber += 1) {
+        const lessonId = hasLessonsTable ? lessonIdMap.get(lessonNumber) : null;
+        
+        // If lessons table exists but no lesson_id found, skip
+        if (hasLessonsTable && !lessonId) {
+          console.warn(`⚠️ No lesson_id found for lesson ${lessonNumber}, skipping canvas creation`);
+          continue;
+        }
+
         const lesson =
           lessonsByNumber.get(lessonNumber) ??
           ({
@@ -3301,11 +3396,18 @@ class CurriculumManager {
               canvas_metadata: recordBase.canvas_metadata as Record<string, unknown>,
             });
           } else {
-            inserts.push({
+            // Build insert record - include lesson_id only if available
+            const insertRecord: any = {
               course_id: this.courseId,
               lesson_number: lessonNumber,
               ...recordBase,
-            });
+            };
+            
+            if (lessonId) {
+              insertRecord.lesson_id = lessonId;
+            }
+            
+            inserts.push(insertRecord);
           }
         });
       }
@@ -3327,15 +3429,25 @@ class CurriculumManager {
       if (updates.length > 0) {
         await Promise.all(
           updates.map(async (record) => {
-            const { error: updateError } = await supabase
+            const lessonId = hasLessonsTable ? lessonIdMap.get(record.lessonNumber) : null;
+            
+            // Build update query - use lesson_id if available, otherwise use lesson_number
+            let updateQuery = supabase
               .from('canvases')
               .update({
                 canvas_data: record.canvas_data,
                 canvas_metadata: record.canvas_metadata,
               })
               .eq('course_id', this.courseId)
-              .eq('lesson_number', record.lessonNumber)
               .eq('canvas_index', record.canvasIndex);
+            
+            if (lessonId) {
+              updateQuery = updateQuery.eq('lesson_id', lessonId);
+            } else {
+              updateQuery = updateQuery.eq('lesson_number', record.lessonNumber);
+            }
+
+            const { error: updateError } = await updateQuery;
 
             if (updateError) {
               console.error(

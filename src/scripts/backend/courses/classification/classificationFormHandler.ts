@@ -472,7 +472,7 @@ export class ClassificationFormHandler {
 
     statusElement.dataset.status = state;
     const textElement = statusElement.querySelector(
-      ".save-status__text",
+      ".card__text",
     ) as HTMLElement | null;
     if (textElement) {
       textElement.textContent = message;

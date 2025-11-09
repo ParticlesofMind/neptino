@@ -10,6 +10,7 @@ export interface CourseCreationData {
  course_name: string;
  course_description: string;
  course_language: string;
+ course_type: string;
  course_image?: File | null;
  course_pedagogy?: { x: number; y: number } | null;
  // teacher_id will be auto-filled from auth
@@ -21,6 +22,7 @@ export interface CourseValidation {
  course_name: boolean;
  course_description: boolean;
  course_language: boolean;
+ course_type: boolean;
  course_image: boolean;
 }
 
@@ -40,6 +42,11 @@ export function validateCourseData(
  ),
  course_language: Boolean(
  data.course_language && data.course_language.trim(),
+ ),
+ course_type: Boolean(
+ data.course_type && 
+ data.course_type.trim() && 
+ ['In-person', 'Online', 'Hybrid'].includes(data.course_type.trim())
  ),
  course_image: true, // Course image is optional for new courses
  };
@@ -95,6 +102,7 @@ export async function createCourse(
  course_name: data.course_name,
  course_description: data.course_description,
  course_language: data.course_language.trim(),
+ course_type: data.course_type.trim(),
  teacher_id: user.id, // Use teacher_id from your schema
  created_at: new Date().toISOString(),
  updated_at: new Date().toISOString(),
@@ -304,7 +312,17 @@ export async function getUserCourses(userId?: string) {
  data: { user },
  error: authError,
  } = await supabase.auth.getUser();
- if (authError || !user) return [];
+ 
+ if (authError) {
+ console.error("❌ Auth error in getUserCourses:", authError);
+ return [];
+ }
+ 
+ if (!user) {
+ console.warn("⚠️ No authenticated user found in getUserCourses");
+ return [];
+ }
+ 
  query = query.eq("teacher_id", user.id); // Fixed: using teacher_id instead of user_id
  }
 
@@ -313,13 +331,24 @@ export async function getUserCourses(userId?: string) {
  });
 
  if (error) {
- console.error("Error fetching courses:", error);
+ console.error("❌ Error fetching courses:", error);
+ console.error("   Error code:", error.code);
+ console.error("   Error message:", error.message);
+ console.error("   Error details:", error.details);
+ console.error("   Error hint:", error.hint);
+ 
+ // Check if it's an RLS/permission error
+ if (error.code === '42501' || error.message?.includes('permission') || error.message?.includes('policy')) {
+   console.error("   ⚠️ This looks like an RLS (Row Level Security) policy issue");
+   console.error("   Make sure you're authenticated and have the correct permissions");
+ }
+ 
  return [];
  }
 
  return data || [];
  } catch (error) {
- console.error("Error in getUserCourses:", error);
+ console.error("❌ Exception in getUserCourses:", error);
  return [];
  }
 }

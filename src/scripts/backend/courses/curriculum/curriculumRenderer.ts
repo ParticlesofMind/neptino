@@ -683,7 +683,9 @@ export class CurriculumRenderer {
         const showModules = choice === "specific-modules";
         const showLessons = choice === "specific-lessons";
         const showLessonRanges = choice === "lesson-ranges";
-        const isLessonTemplate = template.type === "lesson";
+        // Use normalized type for comparison to handle variations like "lesson", "Lesson", "lesson_template", etc.
+        const normalizedTemplateType = this.normalizeTemplateTypeName(template.type);
+        const isLessonTemplate = normalizedTemplateType === "lesson";
         const accentClass = template.isMissing
           ? ""
           : this.resolveTemplateAccentClass(
@@ -962,7 +964,15 @@ export class CurriculumRenderer {
   private getTemplatePlacement(
     templateId: string,
   ): TemplatePlacementConfig | undefined {
-    return this.templatePlacements.find((placement) => placement.templateId === templateId);
+    // Try exact match first (by database ID)
+    let placement = this.templatePlacements.find((placement) => placement.templateId === templateId);
+    
+    // If not found, try matching by template slug (for backwards compatibility)
+    if (!placement) {
+      placement = this.templatePlacements.find((placement) => placement.templateSlug === templateId);
+    }
+    
+    return placement;
   }
 
   private getFilteredTemplatesForCourseType(): TemplateSummary[] {
@@ -998,20 +1008,40 @@ export class CurriculumRenderer {
         return true;
       }
 
+      // Normalize the template type
       const normalizedType = this.normalizeTemplateTypeName(template.type);
-      if (!normalizedType) {
+      
+      // If normalization succeeds, check if it matches allowed types
+      if (normalizedType && allowedTypes.includes(normalizedType)) {
         return true;
       }
-      return allowedTypes.includes(normalizedType);
+      
+      // Fallback: if normalization fails or doesn't match, try raw type (case-insensitive)
+      // This handles edge cases where normalization might not work as expected
+      if (typeof template.type === "string") {
+        const rawTypeLower = template.type.trim().toLowerCase();
+        if (rawTypeLower && allowedTypes.includes(rawTypeLower)) {
+          return true;
+        }
+      }
+      
+      return false;
     });
   }
 
   private getTemplatesForPlacementUI(): TemplateSummary[] {
     const displayTemplates = [...this.availableTemplates];
+    // Create sets for both database ID and template slug matching
     const existingIds = new Set(displayTemplates.map((template) => template.id));
+    const existingTemplateIds = new Set(displayTemplates.map((template) => template.templateId));
 
     this.templatePlacements.forEach((placement) => {
-      if (!existingIds.has(placement.templateId)) {
+      // Check if template exists by database ID or by template slug
+      const existsById = existingIds.has(placement.templateId);
+      const existsBySlug = existingTemplateIds.has(placement.templateSlug);
+      
+      if (!existsById && !existsBySlug) {
+        // Only mark as missing if it truly doesn't exist
         displayTemplates.push({
           id: placement.templateId,
           templateId: placement.templateSlug,
@@ -1269,3 +1299,4 @@ export class CurriculumRenderer {
     return [];
   }
 }
+

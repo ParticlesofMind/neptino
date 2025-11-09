@@ -378,6 +378,7 @@ export class CourseFormHandler {
             this.setFieldValue("course_name", courseData.course_name);
             this.setFieldValue("course_description", courseData.course_description);
             this.setFieldValue("course_language", courseData.course_language);
+            this.setFieldValue("course_type", courseData.course_type);
 
             if (courseData.course_image) {
                 this.displayExistingImage(courseData.course_image);
@@ -746,6 +747,7 @@ export class CourseFormHandler {
                 course_name: formData.course_name,
                 course_description: formData.course_description,
                 course_language: formData.course_language,
+                course_type: formData.course_type,
                 course_image: formData.course_image,
             };
 
@@ -1202,14 +1204,14 @@ export class CourseFormHandler {
     private getStatusContainer(): HTMLElement | null {
         if (!this.form) return null;
 
-        const embeddedStatus = this.form.querySelector('.save-status');
+        const embeddedStatus = this.form.querySelector('.card--save-status');
         if (embeddedStatus instanceof HTMLElement) {
             return embeddedStatus;
         }
 
         const article = this.form.closest('[data-course-section]');
         return (
-            (article?.querySelector('.save-status') as HTMLElement | null) || null
+            (article?.querySelector('.card--save-status') as HTMLElement | null) || null
         );
     }
 
@@ -1229,7 +1231,7 @@ export class CourseFormHandler {
     ): void {
         const statusContainer = this.getStatusContainer();
         const statusText = statusContainer?.querySelector(
-            ".save-status__text",
+            ".card__text",
         ) as HTMLElement | null;
 
         if (!statusContainer || !statusText) return;
@@ -1263,19 +1265,24 @@ export class CourseFormHandler {
         if (courseCopyBtn) {
             courseCopyBtn.setAttribute('data-course-id', courseId);
             courseCopyBtn.setAttribute('title', `Copy course ID: ${courseId}`);
+            
+            // Enable the copy button after course is created
+            courseCopyBtn.disabled = false;
+            courseCopyBtn.removeAttribute('disabled');
 
             // Only add copy functionality if not already added
             if (!courseCopyBtn.hasAttribute('data-copy-listener')) {
                 courseCopyBtn.setAttribute('data-copy-listener', 'true');
 
                 courseCopyBtn.addEventListener('click', async () => {
+                    const courseIdToCopy = courseCopyBtn.getAttribute('data-course-id') || courseId;
                     try {
-                        await navigator.clipboard.writeText(courseId);
+                        await navigator.clipboard.writeText(courseIdToCopy);
                         this.showCopyFeedback(courseCopyBtn);
                     } catch (err) {
                         console.error('Failed to copy course ID:', err);
                         // Fallback for older browsers
-                        this.fallbackCopy(courseId);
+                        this.fallbackCopy(courseIdToCopy);
                         this.showCopyFeedback(courseCopyBtn);
                     }
                 });
@@ -1309,6 +1316,11 @@ export class CourseFormHandler {
 
         // Store course ID globally for other components
         (window as any).currentCourseId = courseId;
+
+        // Enable all navigation tabs after course creation
+        if (typeof window !== 'undefined' && (window as any).courseBuilderInstance) {
+            (window as any).courseBuilderInstance.setCourseId(courseId);
+        }
 
         // Dispatch custom event for other components to listen
         window.dispatchEvent(new CustomEvent('courseCreated', {

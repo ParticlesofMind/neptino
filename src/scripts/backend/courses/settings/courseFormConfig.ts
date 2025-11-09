@@ -94,6 +94,7 @@ export const SECTION_CONFIGS: { [key: string]: SectionConfig } = {
  "teacher_id",
  "institution",
  "course_language",
+ "course_type",
  "course_image",
  ],
  fields: [
@@ -121,6 +122,12 @@ export const SECTION_CONFIGS: { [key: string]: SectionConfig } = {
  type: "select",
  required: true,
  loadDynamically: true, // Signal that this should be loaded dynamically
+ },
+ {
+ name: "course_type",
+ type: "select",
+ required: true,
+ options: ["In-person", "Online", "Hybrid"],
  },
  { name: "course_image", type: "file", required: true, accept: "image/*" },
  ],

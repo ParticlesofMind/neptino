@@ -6,11 +6,13 @@ import { CourseFormHandler } from "./shared/courseFormHandler.js";
 import { ScheduleCourseManager } from "./schedule/scheduleCourse.js";
 import { CurriculumManager } from "./curriculum/curriculumManager.js";
 import { ensureStudentsManager, StudentsManager } from "./students/studentsManager.js";
+import { DeleteCourseManager } from "./settings/deleteCourse.js";
 
 // Re-export course creation and classification functions
 export * from "./essentials/createCourse";
 export * from "./classification/classifyCourse";
 
+const ASIDE_SECTION_STORAGE_KEY = "coursebuilder_active_section";
 // ==========================================================================
 // COURSE BUILDER CLASS
 // ==========================================================================
@@ -20,6 +22,7 @@ export class CourseBuilder {
  private scheduleManager: ScheduleCourseManager | null = null;
  private curriculumManager: CurriculumManager | null = null;
  private studentsManager: StudentsManager | null = null;
+ private deleteCourseManager: DeleteCourseManager | null = null;
  private currentSection: string = "essentials";
  private courseId: string | null = null;
 
@@ -40,6 +43,9 @@ export class CourseBuilder {
  this.getCourseId();
  this.initializeCurrentSection();
  this.setupSectionNavigation();
+ 
+ // Manage navigation tabs based on course existence
+ this.updateNavigationTabsState();
  
  // Only initialize managers if we have a course ID (existing course mode)
  if (this.courseId) {
@@ -131,11 +137,14 @@ export class CourseBuilder {
  this.studentsManager.setCourseId(this.courseId);
  }
  
+ // Initialize delete course manager
+ this.deleteCourseManager = new DeleteCourseManager(this.courseId);
+ 
  // Initialize page setup handler with course ID
  import('./settings/pageSetupHandler.js').then(({ pageSetupHandler }) => {
  pageSetupHandler.setCourseId(this.courseId!);
  });
-
+ 
  // Initialize coursebuilder with course ID if available
  if (typeof window !== 'undefined' && (window as any).courseBuilder) {
  (window as any).courseBuilder.setCourseId(this.courseId);
@@ -152,6 +161,11 @@ export class CourseBuilder {
  public setCourseId(courseId: string): void {
  this.courseId = courseId;
  
+ // Update delete course manager if it exists
+ if (this.deleteCourseManager) {
+ this.deleteCourseManager.setCourseId(courseId);
+ }
+ 
  // Store in session storage for consistency
  this.persistCourseId(courseId);
  
@@ -165,6 +179,10 @@ export class CourseBuilder {
  }
  if (this.curriculumManager) {
  this.curriculumManager.setCourseId(courseId);
+ }
+ // Initialize delete manager if it doesn't exist
+ if (!this.deleteCourseManager) {
+ this.deleteCourseManager = new DeleteCourseManager(courseId);
  }
  if (this.studentsManager) {
  this.studentsManager.setCourseId(courseId);
@@ -188,6 +206,9 @@ export class CourseBuilder {
 
  // Update URL to include course ID (so refresh works properly)
  this.updateUrlWithCourseId(courseId);
+ 
+ // Enable all navigation tabs after course is created
+ this.updateNavigationTabsState();
  }
 
  /**
@@ -219,22 +240,44 @@ export class CourseBuilder {
  }
  }
 
- private initializeCurrentSection(): void {
- console.log('🔍 CourseBuilder - Initializing current section...');
- // Initialize the currently active section
-const activeSection = document.querySelector('[data-course-section].is-active');
- if (activeSection) {
- const sectionId = activeSection.id;
- console.log('✅ Found active section:', sectionId);
- this.loadSection(sectionId);
- } else {
- console.warn('⚠️ No active section found, defaulting to essentials');
- // Default to essentials if no active section
- this.loadSection('essentials');
- }
- }
+private initializeCurrentSection(): void {
+console.log('🔍 CourseBuilder - Initializing current section...');
 
- private setupSectionNavigation(): void {
+const persistedSection = this.getPersistedSetupSection();
+if (persistedSection && document.getElementById(persistedSection)) {
+  console.log('✅ Restoring saved section from localStorage:', persistedSection);
+  this.loadSection(persistedSection);
+  return;
+}
+
+const activeSection = document.querySelector('[data-course-section].is-active');
+if (activeSection) {
+  const sectionId = activeSection.id;
+  console.log('✅ Found active section:', sectionId);
+  this.loadSection(sectionId);
+  return;
+}
+
+console.warn('⚠️ No active section found, defaulting to essentials');
+// Default to essentials if no active section
+this.loadSection('essentials');
+}
+
+private getPersistedSetupSection(): string | null {
+if (typeof window === "undefined" || !window.localStorage) {
+  return null;
+}
+
+const saved = localStorage.getItem(ASIDE_SECTION_STORAGE_KEY);
+if (!saved) {
+  return null;
+}
+
+const normalized = saved.trim();
+return normalized.length ? normalized : null;
+}
+
+private setupSectionNavigation(): void {
  // Listen for aside navigation clicks
  const asideLinks = document.querySelectorAll('.aside__link[data-section]');
  asideLinks.forEach((link) => {
@@ -310,7 +353,13 @@ articles.forEach((article) => {
  this.currentFormHandler = new CourseFormHandler(sectionId, this.courseId || undefined);
     } else if (sectionId === "students") {
       this.studentsManager = ensureStudentsManager(this.courseId || null);
+      // Always activate and refresh when entering students view
       this.studentsManager.activate();
+      // Ensure courseId is set and refresh if we have one
+      if (this.courseId) {
+        this.studentsManager.setCourseId(this.courseId);
+        void this.studentsManager.refreshRoster();
+      }
     } else if (sectionId === "essentials" || sectionId === "settings" || sectionId === "pedagogy") {
       // Initialize generic form handler for form-based sections
       console.log('✅ Creating CourseFormHandler for section:', sectionId);
@@ -342,6 +391,42 @@ articles.forEach((article) => {
  // activeLink
  // }
  // }
+
+ // ==========================================================================
+ // NAVIGATION TABS MANAGEMENT
+ // ==========================================================================
+
+ /**
+  * Enable or disable navigation tabs based on whether a course exists
+  * Only "essentials" and "advanced-settings" are always enabled
+  */
+ private updateNavigationTabsState(): void {
+   const hasCourse = !!this.courseId;
+   const allNavLinks = document.querySelectorAll<HTMLAnchorElement>('.aside__link[data-section]');
+   
+   // Sections that should always be enabled
+   const alwaysEnabledSections = ['essentials', 'advanced-settings'];
+   
+   allNavLinks.forEach((link) => {
+     const section = link.getAttribute('data-section');
+     if (!section) return;
+     
+     if (alwaysEnabledSections.includes(section)) {
+       // Always enable essentials and advanced-settings
+       link.classList.remove('aside__link--disabled');
+       link.removeAttribute('aria-disabled');
+     } else {
+       // Enable/disable other sections based on course existence
+       if (hasCourse) {
+         link.classList.remove('aside__link--disabled');
+         link.removeAttribute('aria-disabled');
+       } else {
+         link.classList.add('aside__link--disabled');
+         link.setAttribute('aria-disabled', 'true');
+       }
+     }
+   });
+ }
 
  // ==========================================================================
  // PUBLIC METHODS

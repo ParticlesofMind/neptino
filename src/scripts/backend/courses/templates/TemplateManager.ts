@@ -207,6 +207,46 @@ export class TemplateManager {
       console.warn("⚠️ load-template-btn not found in DOM");
     }
 
+    // Set up form submission handler for create template form
+    const createForm = document.getElementById('create-template-form') as HTMLFormElement | null;
+    if (createForm) {
+      console.log("✅ Found create-template-form, attaching submit handler");
+      createForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        console.log("🎯 Create template form submitted");
+        
+        const formData = new FormData(createForm);
+        const name = formData.get('template-name') as string;
+        const type = formData.get('template-type') as string;
+        const description = formData.get('template-description') as string | null;
+        
+        if (!name || !type) {
+          console.error("Template name and type are required");
+          return;
+        }
+        
+        try {
+          const templateId = await this.createTemplate({
+            name: name.trim(),
+            type: type as any,
+            description: description ? description.trim() : undefined,
+          });
+          
+          if (templateId) {
+            // Load the newly created template
+            await this.loadTemplate(templateId);
+            console.log("✅ Template created and loaded successfully");
+          } else {
+            console.error("Failed to create template");
+          }
+        } catch (error) {
+          console.error("Error creating template:", error);
+        }
+      });
+    } else {
+      console.warn("⚠️ create-template-form not found in DOM");
+    }
+
     // Try to restore previously loaded template from sessionStorage
     this.restoreLastLoadedTemplate();
   }

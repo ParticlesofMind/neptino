@@ -22,9 +22,9 @@
 
     &__setup {
         display: grid;
-        grid-template-columns: clamp(13rem, 15vw, 16rem) minmax(0, 1fr);
+        grid-template-columns: clamp(13rem, 12vw, 15rem) minmax(0, 1fr);
         grid-template-rows: minmax(0, 1fr);
-        gap: 2rem;
+        gap: 0;
         height: 100%;
         max-height: 100%;
         overflow: hidden;
@@ -39,6 +39,7 @@
         align-self: start;
         height: 100vh;
         max-height: 100vh;
+        max-width: 15rem;
         padding-bottom: var(--spacing-4);
         box-sizing: border-box;
         overflow-y: auto;
@@ -47,22 +48,18 @@
 
     &__setup article[data-course-section] {
         display: none;
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: auto minmax(0, 1fr) auto;
-        gap: 0;
-        align-content: stretch;
-        align-items: stretch;
-        justify-items: stretch;
+        flex-direction: column;
         padding: 0;
         background: white;
         min-height: 0;
         height: 100%;
+        max-height: 100%;
         overflow: hidden;
         box-sizing: border-box;
     }
 
     &__setup article[data-course-section].is-active {
-        display: grid;
+        display: flex;
     }
 
     &__setup article[data-course-section] .form {
@@ -72,7 +69,7 @@
         box-shadow: none;
         background: transparent;
         display: grid;
-        gap: var(--spacing-3);
+        gap: var(--spacing-5);
         align-content: start;
     }
 
@@ -106,9 +103,36 @@
     }
 }
 
+// Responsive: Stack layout on smaller screens
 @container coursebuilder-setup (max-width: 58rem) {
     .coursebuilder__setup {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .coursebuilder__aside {
+        display: none;
+    }
+}
+
+// Responsive: Keep aside proportionate on larger screens
+@media (min-width: 90rem) {
+    .coursebuilder__setup {
+        grid-template-columns: 15rem minmax(0, 1fr);
+    }
+
+    .coursebuilder__aside {
+        max-width: 15rem;
+    }
+}
+
+// Responsive: Medium screens - balanced sizing
+@media (min-width: 64rem) and (max-width: 89.9375rem) {
+    .coursebuilder__setup {
+        grid-template-columns: clamp(13rem, 10vw, 14rem) minmax(0, 1fr);
+    }
+
+    .coursebuilder__aside {
+        max-width: 14rem;
     }
 }
 
@@ -123,12 +147,8 @@
 .article__config,
 .article__preview {
     background: white;
-    height: 100%;
-    align-self: stretch;
     width: 100%;
     min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
 }
 
 .article__config {
@@ -136,8 +156,10 @@
     gap: var(--spacing-4);
     align-content: start;
     min-width: 0;
-    // Ensure config section is scrollable when content is large
-    max-height: 100%;
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .article__preview {
@@ -145,8 +167,11 @@
     flex-direction: column;
     gap: var(--spacing-4);
     justify-content: flex-start;
-    // Ensure preview section is scrollable when content is large
-    max-height: 100%;
+    min-width: 0;
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .article[data-course-section]>.form {
@@ -177,14 +202,14 @@
 @media (max-width: 48rem) {
     .article__config,
     .article__preview {
-        height: auto;
+        height: 100%;
         min-height: 300px;
     }
 
     .article__config,
     .article__preview,
     .article[data-course-section]>.form {
-        min-height: auto;
+        min-height: 0;
     }
 }
 
@@ -243,8 +268,17 @@
 }
 
 .article--schedule .form--schedule>.schedule__days,
-.article--schedule .form--schedule>.schedule__actions {
+.article--schedule .form--schedule>.schedule__actions,
+.article--schedule .form--schedule>.form__row--dates,
+.article--schedule .form--schedule>.form__row--times {
     grid-column: 1 / -1;
+}
+
+.article--schedule .form--schedule>.form__row--dates,
+.article--schedule .form--schedule>.form__row--times {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-3);
 }
 
 .article--schedule .form--schedule>.form__label {
@@ -318,7 +352,9 @@
 
 .article--schedule .schedule__row {
     display: grid;
-    grid-template-areas: "number day start end actions";
+    grid-template-areas: 
+        "number day start end actions"
+        "number day breaks breaks breaks";
     grid-template-columns: minmax(3rem, auto) minmax(8rem, 1.2fr) minmax(8rem, 1fr) minmax(8rem, 1fr) auto;
     gap: var(--spacing-3);
     padding: var(--spacing-3);
@@ -367,6 +403,35 @@
     align-items: center;
 }
 
+.article--schedule .schedule__breaks-preview {
+    grid-area: breaks;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    padding-top: var(--spacing-2);
+    border-top: 1px solid var(--color-neutral-200);
+}
+
+.article--schedule .schedule__breaks-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+}
+
+.article--schedule .schedule__break-preview-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: var(--spacing-2);
+    align-items: end;
+    padding: var(--spacing-2);
+    background: var(--color-neutral-100);
+    border-radius: var(--radius-small);
+}
+
+.article--schedule .schedule__break-input {
+    width: 100%;
+}
+
 .article--schedule .schedule__cell--time {
     gap: var(--spacing-2);
 }
@@ -413,21 +478,60 @@
     min-height: 2.25rem;
 }
 
+// Break times form section
+.article--schedule .schedule__breaks {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3);
+    background: var(--color-neutral-50);
+    border-radius: var(--radius-medium);
+    border: 1px solid var(--color-neutral-200);
+}
+
+.article--schedule .schedule__breaks__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+}
+
+.article--schedule .schedule__break-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: var(--spacing-2);
+    align-items: end;
+    padding: var(--spacing-2);
+    background: var(--color-white);
+    border-radius: var(--radius-small);
+    border: 1px solid var(--color-neutral-200);
+}
+
+.article--schedule .schedule__break-label {
+    margin: 0;
+}
+
 @media (max-width: 70rem) {
     .article--schedule .schedule__row {
         grid-template-areas:
             "number day start actions"
-            "number day end actions";
+            "number day end actions"
+            "number day breaks breaks";
         grid-template-columns: minmax(3rem, auto) minmax(10rem, 1fr) minmax(8rem, 1fr) auto;
     }
 }
 
 @media (max-width: 50rem) {
+    .article--schedule .form--schedule>.form__row--dates,
+    .article--schedule .form--schedule>.form__row--times {
+        grid-template-columns: 1fr;
+    }
+
     .article--schedule .schedule__row {
         grid-template-areas:
             "number day"
             "start start"
             "end end"
+            "breaks breaks"
             "actions actions";
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -438,6 +542,16 @@
 
     .article--schedule .schedule__cell--actions {
         justify-content: flex-start;
+    }
+
+    .article--schedule .schedule__break-item {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-2);
+    }
+
+    .article--schedule .schedule__break-preview-item {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-2);
     }
 }
 
@@ -656,14 +770,6 @@
     }
 }
 
-.curriculum-config__section-title {
-    margin: 0;
-    font-size: var(--font-size-small);
-    font-weight: 600;
-    color: var(--color-text-secondary);
-    letter-spacing: 0.025em;
-    margin-bottom: var(--spacing-1);
-}
 
 // Setting #1: Module Organization
 .custom-modules-config {
@@ -725,11 +831,7 @@
 
 // Setting #2: Content Volume
 .curriculum-config__group--content-volume {
-    .form__help-text {
-        margin-bottom: var(--spacing-2);
-        font-size: var(--font-size-small);
-        color: var(--color-text-tertiary);
-    }
+    // Styling handled by typography classes
 }
 
 // Module Organization Options
@@ -737,59 +839,6 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--spacing-2);
-}
-
-.module-organization-option {
-    display: flex;
-    gap: var(--spacing-2);
-    padding: var(--spacing-2);
-    border: 1px solid var(--color-neutral-200);
-    border-radius: var(--radius-small);
-    background: var(--color-background);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    
-    &:hover {
-        border-color: var(--color-primary-200);
-        background: var(--color-primary-25);
-    }
-    
-    input[type="radio"] {
-        margin-top: 0.125rem;
-        cursor: pointer;
-        flex-shrink: 0;
-        width: 1rem;
-        height: 1rem;
-    }
-    
-    &:has(input[type="radio"]:checked) {
-        border-color: var(--color-primary-200);
-        background: var(--color-primary-50);
-        box-shadow: 0 0 0 2px rgba(154, 200, 255, 0.16);
-        
-        .module-organization-option__name {
-            color: var(--color-primary-700);
-            font-weight: 600;
-        }
-    }
-}
-
-.module-organization-option__content {
-    display: grid;
-    gap: var(--spacing-1);
-    flex: 1;
-}
-
-.module-organization-option__name {
-    font-weight: 500;
-    font-size: var(--font-size-small);
-    color: var(--color-text-primary);
-}
-
-.module-organization-option__description {
-    font-size: var(--font-size-tiny);
-    color: var(--color-text-secondary);
-    line-height: 1.4;
 }
 
 // Custom Modules Configuration
@@ -812,65 +861,6 @@
     gap: var(--spacing-2);
 }
 
-.content-volume-option {
-    display: flex;
-    gap: var(--spacing-2);
-    padding: var(--spacing-2);
-    border: 1px solid var(--color-neutral-200);
-    border-radius: var(--radius-small);
-    background: var(--color-background);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    
-    &:hover {
-        border-color: var(--color-primary-200);
-        background: var(--color-primary-25);
-    }
-    
-    input[type="radio"] {
-        margin-top: 0.125rem;
-        cursor: pointer;
-        flex-shrink: 0;
-        width: 1rem;
-        height: 1rem;
-    }
-    
-    &:has(input[type="radio"]:checked) {
-        border-color: var(--color-primary-200);
-        background: var(--color-primary-50);
-        box-shadow: 0 0 0 2px rgba(154, 200, 255, 0.16);
-        
-        .content-volume-option__name {
-            color: var(--color-primary-700);
-            font-weight: 600;
-        }
-    }
-}
-
-.content-volume-option__content {
-    display: grid;
-    gap: var(--spacing-1);
-    flex: 1;
-}
-
-.content-volume-option__name {
-    font-weight: 500;
-    font-size: var(--font-size-small);
-    color: var(--color-text-primary);
-}
-
-.content-volume-option__duration {
-    font-family: var(--font-mono, 'Courier New', monospace);
-    font-size: var(--font-size-tiny);
-    color: var(--color-text-tertiary);
-}
-
-.content-volume-option__description {
-    font-size: var(--font-size-tiny);
-    color: var(--color-text-secondary);
-    line-height: 1.4;
-}
-
 // Lesson Structure Inputs
 .structure-inputs {
     display: grid;
@@ -887,87 +877,6 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-2);
-}
-
-.course-type-option {
-    display: flex;
-    gap: var(--spacing-2);
-    padding: var(--spacing-2);
-    border: 1px solid var(--color-neutral-200);
-    border-radius: var(--radius-small);
-    background: var(--color-background);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    
-    &:hover {
-        border-color: var(--color-primary-200);
-        background: var(--color-primary-25);
-    }
-    
-    input[type="radio"] {
-        margin-top: 0.125rem;
-        cursor: pointer;
-        flex-shrink: 0;
-        width: 1rem;
-        height: 1rem;
-    }
-    
-    input[type="radio"]:checked ~ .course-type-option__content {
-        .course-type-option__title {
-            color: var(--color-primary-700);
-        }
-    }
-    
-    &:has(input[type="radio"]:checked) {
-        border-color: var(--color-primary-200);
-        background: var(--color-primary-50);
-        box-shadow: 0 0 0 2px rgba(154, 200, 255, 0.16);
-    }
-}
-
-.course-type-option__content {
-    display: grid;
-    gap: var(--spacing-1);
-    flex: 1;
-}
-
-.course-type-option__title {
-    font-weight: 600;
-    font-size: var(--font-size-small);
-    color: var(--color-text-primary);
-}
-
-.course-type-option__description {
-    font-size: var(--font-size-tiny);
-    color: var(--color-text-tertiary);
-    line-height: 1.4;
-}
-
-.course-type-option__templates {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-1);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    margin-top: var(--spacing-1);
-    
-    li {
-        padding: 0.125rem 0.375rem;
-        background: var(--color-neutral-100);
-        border-radius: var(--radius-small);
-        font-size: 0.65rem;
-        color: var(--color-text-tertiary);
-        font-weight: 500;
-        line-height: 1.4;
-    }
-}
-
-.course-type-option__note {
-    margin: 0;
-    font-size: var(--font-size-tiny);
-    font-style: italic;
-    color: var(--color-text-tertiary);
 }
 
 .curriculum-config__group--structure {
@@ -1023,12 +932,7 @@
 }
 
 @media (max-width: 32rem) {
-    .content-volume-option__duration,
-    .content-volume-option__description {
-        display: none;
-    }
-    
-    .course-type-option__templates {
+    .card--option .card__meta:is(ul) {
         display: none;
     }
 }
@@ -1070,12 +974,6 @@
     transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.curriculum-config__section-title {
-    margin: 0 0 var(--spacing-2);
-    font-size: var(--font-size-large);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-primary);
-}
 
 .curriculum-config__group--templates {
     margin-top: var(--spacing-6);

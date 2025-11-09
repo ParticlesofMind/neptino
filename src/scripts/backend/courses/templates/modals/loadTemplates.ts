@@ -24,6 +24,7 @@ export class LoadTemplatesModal {
   private onTemplateSelected: ((templateId: string) => void) | null = null;
   private currentFilterType: TemplateType | "" = "";
   private filterInitialized = false;
+  private selectedTemplateId: string | null = null;
 
   constructor() {
     // No initialization needed for DOM-based approach
@@ -41,9 +42,14 @@ export class LoadTemplatesModal {
       return;
     }
 
+    // Reset selection when modal opens
+    this.selectedTemplateId = null;
+    this.updateLoadButtonState();
+
     ModalHandler.getInstance().showModal('load-template-modal');
 
     this.initializeFilterControl();
+    this.initializeLoadButton();
 
     await this.loadTemplates();
   }
@@ -121,8 +127,8 @@ export class LoadTemplatesModal {
       contentEl.innerHTML = `
         <div class="template-browser__empty template-browser__empty--inline">
           <span class="template-browser__empty-icon">🔍</span>
-          <h3 class="template-browser__empty-title">No Templates Match</h3>
-          <p class="template-browser__empty-text">Try selecting a different template type.</p>
+          <h3 class="heading heading--h3">No Templates Match</h3>
+          <p class="text text--description">Try selecting a different template type.</p>
         </div>
       `;
       return;
@@ -135,19 +141,20 @@ export class LoadTemplatesModal {
         const description = template.template_description || "No description provided";
         const typeLabel = TEMPLATE_TYPE_LABELS[template.template_type];
 
+        const isSelected = this.selectedTemplateId === template.id;
         return `
-          <div class="template-card" data-template-id="${template.id}" onclick="loadTemplatesModal.selectTemplate('${template.id}')">
-            <div class="template-card__header">
-              <h4 class="template-card__title">${templateName}</h4>
-              <span class="template-card__type">${typeLabel}</span>
+          <div class="card card--template ${isSelected ? 'card--selected' : ''}" data-template-id="${template.id}" onclick="loadTemplatesModal.selectTemplateCard('${template.id}')">
+            <div class="card__header">
+              <h4 class="card__title">${templateName}</h4>
+              <span class="card__type">${typeLabel}</span>
             </div>
-            <div class="template-card__description">
+            <div class="card__description">
               ${description}
             </div>
-            <div class="template-card__meta">
-              <span class="template-card__date">Created: ${createdDate}</span>
+            <div class="card__meta">
+              <span class="card__date">Created: ${createdDate}</span>
             </div>
-            <div class="template-card__actions">
+            <div class="card__actions">
               <button class="button button--outline button--small" onclick="event.stopPropagation(); loadTemplatesModal.previewTemplate('${template.id}')">
                 Preview
               </button>
@@ -161,16 +168,75 @@ export class LoadTemplatesModal {
       .join("");
 
     contentEl.innerHTML = templatesHtml;
+    
+    // Update selection state after rendering
+    if (this.selectedTemplateId) {
+      this.updateCardSelection();
+    }
   }
 
   /**
-   * Selects a template and loads it
+   * Selects a template card (does not load it)
    */
-  public selectTemplate(templateId: string): void {
+  public selectTemplateCard(templateId: string): void {
+    this.selectedTemplateId = templateId;
+    this.updateCardSelection();
+    this.updateLoadButtonState();
+  }
+
+  /**
+   * Loads the currently selected template
+   */
+  public loadSelectedTemplate(): void {
+    if (!this.selectedTemplateId) {
+      return;
+    }
+
     if (this.onTemplateSelected) {
-      this.onTemplateSelected(templateId);
+      this.onTemplateSelected(this.selectedTemplateId);
     }
     this.hide();
+  }
+
+  /**
+   * Updates the visual selection state of cards
+   */
+  private updateCardSelection(): void {
+    const cards = document.querySelectorAll('.card--template');
+    cards.forEach((card) => {
+      const templateId = card.getAttribute('data-template-id');
+      if (templateId === this.selectedTemplateId) {
+        card.classList.add('card--selected');
+      } else {
+        card.classList.remove('card--selected');
+      }
+    });
+  }
+
+  /**
+   * Updates the Load Template button state
+   */
+  private updateLoadButtonState(): void {
+    const loadButton = document.getElementById('load-selected-template') as HTMLButtonElement | null;
+    if (loadButton) {
+      loadButton.disabled = !this.selectedTemplateId;
+    }
+  }
+
+  /**
+   * Initializes the Load Template button handler
+   */
+  private initializeLoadButton(): void {
+    const loadButton = document.getElementById('load-selected-template');
+    if (loadButton) {
+      // Remove any existing listeners by cloning and replacing
+      const newButton = loadButton.cloneNode(true) as HTMLButtonElement;
+      loadButton.parentNode?.replaceChild(newButton, loadButton);
+      
+      newButton.addEventListener('click', () => {
+        this.loadSelectedTemplate();
+      });
+    }
   }
 
   /**
@@ -197,8 +263,10 @@ export class LoadTemplatesModal {
 
       if (error) throw error;
 
-      // Reload templates
+      // Reload templates and reset selection
+      this.selectedTemplateId = null;
       await this.loadTemplates();
+      this.updateLoadButtonState();
       
     } catch (error) {
       console.error('Failed to delete template:', error);
@@ -218,8 +286,8 @@ export class LoadTemplatesModal {
     if (noTemplatesEl) {
       noTemplatesEl.innerHTML = `
         <div class="template-browser__empty-icon">⚠️</div>
-        <h3 class="template-browser__empty-title">Error Loading Templates</h3>
-        <p class="template-browser__empty-text">${message}</p>
+        <h3 class="heading heading--h3">Error Loading Templates</h3>
+        <p class="text text--description">${message}</p>
         <button class="button button--secondary" onclick="loadTemplatesModal.reloadTemplates()">
           Retry
         </button>

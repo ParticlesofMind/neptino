@@ -1,7 +1,7 @@
 import { TemplateBlock, TemplateBlockType, BlockFieldConfig } from "./types.js";
 import { TemplateConfigManager } from "./TemplateConfigManager.js";
 import { TemplateBlockRenderer } from "./TemplateBlockRenderer.js";
-import { TEMPLATE_BLOCK_SEQUENCES } from "./templateOptions.js";
+import { TEMPLATE_BLOCK_SEQUENCES, TEMPLATE_BODY_BLOCKS } from "./templateOptions.js";
 
 export class TemplateRenderer {
   static displayTemplateBlocks(templateData: any): void {
@@ -113,10 +113,15 @@ export class TemplateRenderer {
       (a: TemplateBlock, b: TemplateBlock) => a.order - b.order,
     );
 
-    // Separate header, footer, and content blocks
+    // Separate header, footer, body, and body sub-blocks
     const headerBlock = sortedBlocks.find((b: TemplateBlock) => b.type === 'header');
     const footerBlock = sortedBlocks.find((b: TemplateBlock) => b.type === 'footer');
-    const contentBlocks = sortedBlocks.filter((b: TemplateBlock) => b.type !== 'header' && b.type !== 'footer');
+    const bodyBlock = sortedBlocks.find((b: TemplateBlock) => b.type === 'body');
+    // Content blocks are body sub-blocks (program, resources, content, assignment, scoring)
+    // The body block itself is not rendered as a visible block, only its sub-blocks
+    const contentBlocks = sortedBlocks.filter((b: TemplateBlock) => 
+      b.type !== 'header' && b.type !== 'footer' && b.type !== 'body'
+    );
 
     // Render header
     const headerHtml = headerBlock
@@ -199,13 +204,29 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields)}
       (form as HTMLFormElement).reset();
     });
 
-    // Create a basic template structure to display
+    // Create a basic template structure to display with body sub-blocks
+    const blockSequence = TEMPLATE_BLOCK_SEQUENCES.lesson;
+    const defaultBlocks: TemplateBlock[] = [];
+    let order = 1;
+
+    blockSequence.forEach((blockType) => {
+      defaultBlocks.push(this.createDefaultBlock(blockType, order));
+      order++;
+      
+      // Add body sub-blocks after body block
+      if (blockType === "body") {
+        const bodyBlocks = TEMPLATE_BODY_BLOCKS.lesson ?? [];
+        bodyBlocks.forEach((subBlockType) => {
+          defaultBlocks.push(this.createDefaultBlock(subBlockType, order));
+          order++;
+        });
+      }
+    });
+
     const basicTemplate = {
       template_data: {
         name: "New Template",
-        blocks: TEMPLATE_BLOCK_SEQUENCES.lesson.map((blockType, index) =>
-          this.createDefaultBlock(blockType, index + 1),
-        ),
+        blocks: defaultBlocks,
       },
     };
 

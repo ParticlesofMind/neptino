@@ -45,8 +45,8 @@ export class TableDataBuilder {
     lesson: CurriculumLesson,
   ): TableData {
     const columnDefs: ColumnDef[] = [
-      { key: "competency", label: "Competency", configKey: "competence" },
       { key: "topic", label: "Topic", configKey: "topic" },
+      { key: "competency", label: "Competency", configKey: "competence" },
       { key: "objective", label: "Objective", configKey: "objective" },
       { key: "task", label: "Task", configKey: "task" },
       { key: "method", label: "Method", configKey: "program_method" },

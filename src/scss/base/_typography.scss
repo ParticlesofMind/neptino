@@ -167,7 +167,6 @@ p {
 }
 
 // Label Component
-// Label Component
 .label {
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
@@ -182,5 +181,48 @@ p {
     text-align: center;
     line-height: 1.2;
     margin-bottom: 0;
+  }
+}
+
+// Heading Component (for section titles)
+.heading {
+  font-family: var(--font-family-heading);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+  margin: 0;
+
+  &--h3 {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &--h5 {
+    font-size: var(--font-size-extra-small);
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+// Text Component (for help text, descriptions, etc.)
+.text {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  margin: 0;
+
+  &--help {
+    font-size: var(--font-size-small);
+    color: var(--color-text-tertiary);
+  }
+
+  &--description {
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+    line-height: var(--line-height-normal);
+  }
+
+  &--secondary {
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
   }
 }

@@ -165,21 +165,30 @@ async function parseDocx(arrayBuffer: ArrayBuffer): Promise<StudentParseResult> 
 
 export async function parseRosterFile(file: File): Promise<StudentParseResult> {
   const ext = file.name.split(".").pop()?.toLowerCase();
-  const buffer = await file.arrayBuffer();
 
   if (!ext) {
     return buildParseResult([], ["File type not recognised."]);
   }
 
-  if (["xlsx", "xls", "csv", "tsv", "ods"].includes(ext)) {
+  // CSV and TSV files should be parsed as text, not as Excel files
+  if (ext === "csv" || ext === "tsv") {
+    const text = await file.text();
+    return parseDelimText(text);
+  }
+
+  // Excel files (xlsx, xls, ods) need to be parsed as binary spreadsheets
+  if (["xlsx", "xls", "ods"].includes(ext)) {
+    const buffer = await file.arrayBuffer();
     return parseSpreadsheet(buffer);
   }
 
   if (ext === "pdf") {
+    const buffer = await file.arrayBuffer();
     return parsePdf(buffer);
   }
 
   if (ext === "docx" || ext === "doc") {
+    const buffer = await file.arrayBuffer();
     return parseDocx(buffer);
   }
 

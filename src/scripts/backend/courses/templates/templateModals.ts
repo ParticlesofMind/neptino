@@ -70,8 +70,8 @@ const loadTemplateModal = `
           </div>
           <div class="template-browser__empty" id="no-templates-message" style="display: none">
             <span class="template-browser__empty-icon">📄</span>
-            <h3 class="template-browser__empty-title">No Templates Found</h3>
-            <p class="template-browser__empty-text">
+            <h3 class="heading heading--h3">No Templates Found</h3>
+            <p class="text text--description">
               You haven't created any templates yet. Use the buttons in the Template Configuration section to create one.
             </p>
           </div>

@@ -53,12 +53,13 @@ export class MessagingInterface {
     }
 
     try {
+      // Query private.user_integrations table
       const { data, error } = await supabase
-        .from("users")
+        .from("user_integrations")
         .select(
           "rocketchat_user_id, rocketchat_auth_token, rocketchat_username",
         )
-        .eq("id", this.currentUser.id)
+        .eq("user_id", this.currentUser.id)
         .single();
 
       if (!error && data?.rocketchat_user_id && data?.rocketchat_auth_token) {

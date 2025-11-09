@@ -259,15 +259,11 @@
 
       <!-- Essentials Article -->
       <article id="essentials" data-course-section class="article article--essentials is-active">
-        <header class="article__header">
-          <h2 class="article__title">Course Essentials</h2>
-        </header>
-
         <div class="article__main">
           <form class="form form--essentials" id="course-essentials-form">
             <label class="form__label">
               Course Name
-              <input class="input" type="text" name="course_name" placeholder="Enter course name" required />
+              <input class="input input--text" type="text" name="course_name" placeholder="Enter course name" required />
             </label>
             <label class="form__label">
               Course Description
@@ -276,16 +272,25 @@
             </label>
             <label class="form__label">
               Teacher
-              <input class="input" type="text" name="teacher_id" placeholder="Loading..." readonly />
+              <input class="input input--text" type="text" name="teacher_id" placeholder="Loading..." readonly />
             </label>
             <label class="form__label">
               Institution
-              <input class="input" type="text" name="institution" placeholder="Loading..." readonly />
+              <input class="input input--text" type="text" name="institution" placeholder="Loading..." readonly />
             </label>
             <label class="form__label" for="course-language">
               Course Language
               <select class="input input--select" name="course_language" id="course-language" required>
                 <option value="">Select language...</option>
+              </select>
+            </label>
+            <label class="form__label" for="course-type">
+              Course Type
+              <select class="input input--select" name="course_type" id="course-type" required>
+                <option value="">Select course type...</option>
+                <option value="In-person">In-person</option>
+                <option value="Online">Online</option>
+                <option value="Hybrid">Hybrid</option>
               </select>
             </label>
             <label class="form__label form__label--file">
@@ -297,7 +302,6 @@
                 <div class="image-upload__content" id="course-image-overlay">
                   <div class="image-upload__empty" id="course-image-empty">
                     <span class="image-upload__cta-title">Upload course image</span>
-                    <span class="image-upload__cta-subtitle">Drag &amp; drop or click to upload</span>
                   </div>
                   <div class="image-upload__details" id="course-image-details" hidden>
                     <div class="image-upload__thumbnail">
@@ -315,24 +319,22 @@
                 </div>
             </div>
 
-                 <div class="course-code" id="course-code-display" hidden>
+          </form>
+        </div>
+
+        <footer class="article__footer">
+          <div class="article__footer-content">
+            <div class="card card--card card--save-status" id="essentials-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card__icon" aria-hidden="true"></span>
+              <span class="card__text">No data submitted yet</span>
+            </div>
+
+            <div class="course-code" id="course-code-display" hidden>
               <span class="course-code__label">Course ID</span>
               <span class="course-code__value" id="course-id-value">—</span>
               <button class="button button--subtle button--small" type="button" id="course-code-copy-btn" disabled>
                 Copy
               </button>
-            </div>
-
-          </form>
-
-        <footer class="article__footer">
-          <div class="article__footer-content">
-
-       
-
-            <div class="save-status" id="essentials-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
             </div>
 
             <div class="article__footer-actions">
@@ -347,28 +349,24 @@
 
       <!-- Classification Article -->
       <article id="classification" data-course-section class="article article--classification">
-        <header class="article__header">
-          <h2 class="article__title">Course Classification</h2>
-        </header>
-
         <div class="article__main article__main--classification">
           <form class="form form--classification" id="course-classification-form">
             <!-- Row 1: Preliminary -->
             <div class="classification-section classification-section--preliminary">
               <div class="classification-section__header">
-                <h3 class="classification-section__title">Preliminary</h3>
-                <p class="classification-section__description">Age group and educational framework</p>
+                <h3 class="heading heading--h3">Preliminary</h3>
+                <p class="text text--description">Age group and educational framework</p>
               </div>
               <div class="classification-section__content">
                 <label class="form__label" for="class-year-select">
                   <span>Class Year</span>
-                  <select class="form__select input input--select" name="class_year" id="class-year-select" required>
+                  <select class="input input--select" name="class_year" id="class-year-select" required>
                     <option value="">Loading...</option>
                   </select>
                 </label>
                 <label class="form__label" for="curricular-framework-select">
                   <span>Curricular Framework</span>
-                  <select class="form__select input input--select" name="curricular_framework"
+                  <select class="input input--select" name="curricular_framework"
                     id="curricular-framework-select" required>
                     <option value="">Loading...</option>
                   </select>
@@ -379,35 +377,35 @@
             <!-- Row 2: Classification -->
             <div class="classification-section classification-section--classification">
               <div class="classification-section__header">
-                <h3 class="classification-section__title">Classification</h3>
-                <p class="classification-section__description">Subject matter hierarchy</p>
+                <h3 class="heading heading--h3">Classification</h3>
+                <p class="text text--description">Subject matter hierarchy</p>
               </div>
               <div class="classification-section__content">
                 <label class="form__label" for="domain-select">
                   <span>Domain</span>
                   <span class="form__label-hint">Academic field</span>
-                  <select class="form__select input input--select" name="domain" id="domain-select" required>
+                  <select class="input input--select" name="domain" id="domain-select" required>
                     <option value="">Loading...</option>
                   </select>
                 </label>
                 <label class="form__label" for="subject-select">
                   <span>Subject</span>
                   <span class="form__label-hint">Specific discipline</span>
-                  <select class="form__select input input--select" name="subject" id="subject-select" required disabled>
+                  <select class="input input--select" name="subject" id="subject-select" required disabled>
                     <option value="">Select domain first...</option>
                   </select>
                 </label>
                 <label class="form__label" for="topic-select">
                   <span>Topic</span>
                   <span class="form__label-hint">Area of study</span>
-                  <select class="form__select input input--select" name="topic" id="topic-select" required disabled>
+                  <select class="input input--select" name="topic" id="topic-select" required disabled>
                     <option value="">Select subject first...</option>
                   </select>
                 </label>
                 <label class="form__label" for="subtopic-select">
                   <span>Subtopic</span>
                   <span class="form__label-hint">Specific focus</span>
-                  <select class="form__select input input--select" name="subtopic" id="subtopic-select" disabled>
+                  <select class="input input--select" name="subtopic" id="subtopic-select" disabled>
                     <option value="">Select topic first...</option>
                   </select>
                 </label>
@@ -417,28 +415,28 @@
             <!-- Row 3: Course Sequence -->
             <div class="classification-section classification-section--sequence">
               <div class="classification-section__header">
-                <h3 class="classification-section__title">Course Sequence</h3>
-                <p class="classification-section__description">Position within the learning pathway</p>
+                <h3 class="heading heading--h3">Course Sequence</h3>
+                <p class="text text--description">Position within the learning pathway</p>
               </div>
               <div class="classification-section__content">
                 <label class="form__label" for="previous-course-select">
                   <span>Previous Course</span>
                   <span class="form__label-hint">Course that should come before this one</span>
-                  <select class="form__select input input--select" name="previous_course" id="previous-course-select">
+                  <select class="input input--select" name="previous_course" id="previous-course-select">
                     <option value="">Loading courses...</option>
                   </select>
                 </label>
                 <label class="form__label" for="current-course-select">
                   <span>Current Course</span>
                   <span class="form__label-hint">Other courses at this level</span>
-                  <select class="form__select input input--select" name="current_course" id="current-course-select">
+                  <select class="input input--select" name="current_course" id="current-course-select">
                     <option value="">Loading courses...</option>
                   </select>
                 </label>
                 <label class="form__label" for="next-course-select">
                   <span>Next Course</span>
                   <span class="form__label-hint">Course that should come after this one</span>
-                  <select class="form__select input input--select" name="next_course" id="next-course-select">
+                  <select class="input input--select" name="next_course" id="next-course-select">
                     <option value="">Loading courses...</option>
                   </select>
                 </label>
@@ -449,67 +447,61 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="classification-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="classification-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
       </article>
       <!-- Templates Article -->
       <article id="templates" data-course-section class="article article--templates">
-        <header class="article__header">
-          <h2 class="article__title">Template Library</h2>
-          <div class="article__actions button-group button-group--right">
-            <button class="button button--primary" id="create-template-btn" type="button">
-              + Create New Template
-            </button>
-            <button class="button button--outline" id="load-template-btn" type="button">
-              ↗ Load Template
-            </button>
-          </div>
-        </header>
-
         <div class="article__main article__main--panels">
           <section class="article__config">
+            <div class="template-config__actions">
+              <button type="button" class="button button--primary" id="create-template-btn">
+                Create Template
+              </button>
+              <button type="button" class="button button--outline" id="load-template-btn">
+                Load Template
+              </button>
+            </div>
             <div id="template-config-content" class="template-config__content">
-              <p class="template-config__placeholder">Select or create a template to configure its settings.</p>
+              <p class="placeholder">Select or create a template to configure its settings.</p>
             </div>
           </section>
 
           <section class="article__preview">
-            <div id="template-preview-content" class="article__preview-placeholder">
-              Create a new template or select an existing one to see the preview here.
+            <div id="template-preview-content">
+              <p class="placeholder">Create a new template or select an existing one to see the preview here.</p>
             </div>
           </section>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="template-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="template-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
       </article>
       <!-- Schedule Article -->
       <article id="schedule" data-course-section class="article article--schedule">
-        <header class="article__header">
-          <h2 class="article__title">Schedule Configuration</h2>
-        </header>
-
         <div class="article__main article__main--panels">
           <section class="article__config">
             <form class="form form--schedule" id="schedule-config">
-              <label class="form__label">
-                Start Date
-                <input class="input input--date" type="text" id="start-date" placeholder="DD.MM.YYYY" inputmode="numeric" autocomplete="off" required />
-              </label>
-              <label class="form__label">
-                End Date
-                <input class="input input--date" type="text" id="end-date" placeholder="DD.MM.YYYY" inputmode="numeric" autocomplete="off" required />
-              </label>
+              <div class="form__row form__row--dates">
+                <label class="form__label">
+                  Start Date
+                  <input class="input input--date" type="text" id="start-date" placeholder="DD.MM.YYYY" inputmode="numeric" autocomplete="off" required />
+                </label>
+                <label class="form__label">
+                  End Date
+                  <input class="input input--date" type="text" id="end-date" placeholder="DD.MM.YYYY" inputmode="numeric" autocomplete="off" required />
+                </label>
+              </div>
 
               <fieldset class="schedule__days" aria-label="Days of the Week">
                 <legend class="form__label">Days of the Week</legend>
@@ -543,14 +535,26 @@
                 </button>
               </fieldset>
 
-              <label class="form__label">
-                Start Time
-                <input class="input input--time" type="text" id="start-time" placeholder="HH:MM" inputmode="numeric" autocomplete="off" required />
-              </label>
-              <label class="form__label">
-                End Time
-                <input class="input input--time" type="text" id="end-time" placeholder="HH:MM" inputmode="numeric" autocomplete="off" required />
-              </label>
+              <div class="form__row form__row--times">
+                <label class="form__label">
+                  Start Time
+                  <input class="input input--time" type="text" id="start-time" placeholder="HH:MM" inputmode="numeric" autocomplete="off" required />
+                </label>
+                <label class="form__label">
+                  End Time
+                  <input class="input input--time" type="text" id="end-time" placeholder="HH:MM" inputmode="numeric" autocomplete="off" required />
+                </label>
+              </div>
+
+              <div class="schedule__breaks">
+                <div class="form__label">Break Times</div>
+                <div class="schedule__breaks__list" id="break-times-list">
+                  <!-- Break time inputs will be dynamically added here -->
+                </div>
+                <button class="button button--outline button--small" type="button" id="add-break-time-btn">
+                  + Add Break Time
+                </button>
+              </div>
 
               <div class="schedule__actions button-group">
                 <button class="button button--primary" type="button" id="schedule-course-btn" disabled>
@@ -566,7 +570,7 @@
           <section class="article__preview">
             <div class="schedule__preview" id="schedule-preview">
               <div class="schedule__content">
-                <p class="schedule__placeholder">Click "Schedule Course" to generate your lesson schedule</p>
+                <p class="placeholder">Click "Schedule Course" to generate your lesson schedule</p>
               </div>
               <p class="schedule__total">Total lessons: 0</p>
             </div>
@@ -575,49 +579,45 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="schedule-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="schedule-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
       </article>
       <!-- Curriculum Article -->
       <article id="curriculum" data-course-section class="article article--curriculum article--templates">
-        <header class="article__header">
-          <h2 class="article__title">Configure Curriculum</h2>
-        </header>
-
         <div class="article__main article__main--panels">
           <section class="article__config">
             <form class="form form--curriculum">
 
             <!-- Module Organization -->
             <div class="curriculum-config__group curriculum-config__group--modules">
-              <h3 class="curriculum-config__section-title">Module Organization</h3>
+              <h3 class="heading heading--h3">Module Organization</h3>
             
               <div class="module-organization-options">
-                <label class="module-organization-option">
-                  <input type="radio" name="module-organization" value="linear" id="module-org-linear" checked>
-                  <div class="module-organization-option__content">
-                    <span class="module-organization-option__name">No Modules</span>
-                    <span class="module-organization-option__description">Lessons appear in a single list with no module grouping.</span>
+                <label class="card card--option">
+                  <input class="input input--radio" type="radio" name="module-organization" value="linear" id="module-org-linear" checked>
+                  <div class="card__content">
+                    <span class="card__title">No Modules</span>
+                    <span class="card__description">Lessons appear in a single list with no module grouping.</span>
                   </div>
                 </label>
                 
-                <label class="module-organization-option">
-                  <input type="radio" name="module-organization" value="equal" id="module-org-equal">
-                  <div class="module-organization-option__content">
-                    <span class="module-organization-option__name">Equal Modules</span>
-                    <span class="module-organization-option__description">Lessons are evenly distributed across modules of equal size.</span>
+                <label class="card card--option">
+                  <input class="input input--radio" type="radio" name="module-organization" value="equal" id="module-org-equal">
+                  <div class="card__content">
+                    <span class="card__title">Equal Modules</span>
+                    <span class="card__description">Lessons are evenly distributed across modules of equal size.</span>
                   </div>
                 </label>
                 
-                <label class="module-organization-option">
-                  <input type="radio" name="module-organization" value="custom" id="module-org-custom">
-                  <div class="module-organization-option__content">
-                    <span class="module-organization-option__name">Custom Modules</span>
-                    <span class="module-organization-option__description">Define your own module boundaries.</span>
+                <label class="card card--option">
+                  <input class="input input--radio" type="radio" name="module-organization" value="custom" id="module-org-custom">
+                  <div class="card__content">
+                    <span class="card__title">Custom Modules</span>
+                    <span class="card__description">Define your own module boundaries.</span>
                   </div>
                 </label>
               </div>
@@ -632,50 +632,50 @@
 
             <!-- Content Volume -->
             <div class="curriculum-config__group curriculum-config__group--content-volume">
-              <h3 class="curriculum-config__section-title">Content Volume</h3>
+              <h3 class="heading heading--h3">Content Volume</h3>
               <div class="content-volume-options">
-                <label class="content-volume-option">
-                  <input type="radio" name="content-volume" value="mini" data-duration="mini" data-max="30">
-                  <div class="content-volume-option__content">
-                    <span class="content-volume-option__name">Mini</span>
-                    <span class="content-volume-option__duration">≤ 30 min</span>
-                    <span class="content-volume-option__description">Short session with 1–2 topics and light tasks.</span>
+                <label class="card card--option">
+                  <input class="input input--radio" type="radio" name="content-volume" value="mini" data-duration="mini" data-max="30">
+                  <div class="card__content">
+                    <span class="card__title">Mini</span>
+                    <span class="card__meta">≤ 30 min</span>
+                    <span class="card__description">Short session with 1–2 topics and light tasks.</span>
                   </div>
                 </label>
                 
-                <label class="content-volume-option">
-                  <input type="radio" name="content-volume" value="single" data-duration="single" data-max="60" checked>
-                  <div class="content-volume-option__content">
-                    <span class="content-volume-option__name">Standard</span>
-                    <span class="content-volume-option__duration">≤ 60 min</span>
-                    <span class="content-volume-option__description">Normal lesson with balanced topics and tasks.</span>
+                <label class="card card--option">
+                  <input class="input input--radio" type="radio" name="content-volume" value="single" data-duration="single" data-max="60" checked>
+                  <div class="card__content">
+                    <span class="card__title">Standard</span>
+                    <span class="card__meta">≤ 60 min</span>
+                    <span class="card__description">Normal lesson with balanced topics and tasks.</span>
                   </div>
                 </label>
                 
-                <label class="content-volume-option">
-                  <input type="radio" name="content-volume" value="double" data-duration="double" data-max="120">
-                  <div class="content-volume-option__content">
-                    <span class="content-volume-option__name">Extended</span>
-                    <span class="content-volume-option__duration">≤ 120 min</span>
-                    <span class="content-volume-option__description">Double-length lesson with more practice and discussion.</span>
+                <label class="card card--option">
+                  <input class="input input--radio" type="radio" name="content-volume" value="double" data-duration="double" data-max="120">
+                  <div class="card__content">
+                    <span class="card__title">Extended</span>
+                    <span class="card__meta">≤ 120 min</span>
+                    <span class="card__description">Double-length lesson with more practice and discussion.</span>
                   </div>
                 </label>
                 
-                <label class="content-volume-option">
-                  <input type="radio" name="content-volume" value="triple" data-duration="triple" data-max="180">
-                  <div class="content-volume-option__content">
-                    <span class="content-volume-option__name">Intensive</span>
-                    <span class="content-volume-option__duration">≤ 180 min</span>
-                    <span class="content-volume-option__description">Long block for deeper coverage or projects.</span>
+                <label class="card card--option">
+                  <input class="input input--radio" type="radio" name="content-volume" value="triple" data-duration="triple" data-max="180">
+                  <div class="card__content">
+                    <span class="card__title">Intensive</span>
+                    <span class="card__meta">≤ 180 min</span>
+                    <span class="card__description">Long block for deeper coverage or projects.</span>
                   </div>
                 </label>
                 
-                <label class="content-volume-option">
-                  <input type="radio" name="content-volume" value="halfFull" data-duration="halfFull" data-max="999">
-                  <div class="content-volume-option__content">
-                    <span class="content-volume-option__name">Full Day</span>
-                    <span class="content-volume-option__duration">> 180 min</span>
-                    <span class="content-volume-option__description">Workshop-style session with multiple breaks or modules.</span>
+                <label class="card card--option">
+                  <input class="input input--radio" type="radio" name="content-volume" value="halfFull" data-duration="halfFull" data-max="999">
+                  <div class="card__content">
+                    <span class="card__title">Full Day</span>
+                    <span class="card__meta">> 180 min</span>
+                    <span class="card__description">Workshop-style session with multiple breaks or modules.</span>
                   </div>
                 </label>
               </div>
@@ -683,7 +683,7 @@
 
             <!-- Numeric Structure Fields -->
             <div class="curriculum-config__group curriculum-config__group--structure">
-              <p class="form__help-text">
+              <p class="text text--help">
                 Fine-tune the content density for each lesson.
               </p>
 
@@ -707,27 +707,27 @@
 
             <!-- Course Type -->
             <div class="curriculum-config__group curriculum-config__group--course-type">
-              <h3 class="curriculum-config__section-title">Course Type</h3>
+              <h3 class="heading heading--h3">Course Type</h3>
             
               <div class="course-type-options">
-                <label class="course-type-option">
-                  <input type="radio" name="course-type" value="minimalist" id="course-type-minimalist">
-                  <div class="course-type-option__content">
-                    <span class="course-type-option__title">Minimalist Course</span>
-                    <span class="course-type-option__description">Core instructional templates only</span>
-                    <ul class="course-type-option__templates">
+                <label class="card card--option">
+                  <input class="input input--radio" type="radio" name="course-type" value="minimalist" id="course-type-minimalist">
+                  <div class="card__content">
+                    <span class="card__title">Minimalist Course</span>
+                    <span class="card__description">Core instructional templates only</span>
+                    <ul class="card__meta">
                       <li>Lesson</li>
                       <li>Quiz</li>
                     </ul>
                   </div>
                 </label>
                 
-                <label class="course-type-option">
-                  <input type="radio" name="course-type" value="essential" id="course-type-essential" checked>
-                  <div class="course-type-option__content">
-                    <span class="course-type-option__title">Essential Course</span>
-                    <span class="course-type-option__description">All Minimalist templates plus evaluation and certification</span>
-                    <ul class="course-type-option__templates">
+                <label class="card card--option">
+                  <input class="input input--radio" type="radio" name="course-type" value="essential" id="course-type-essential" checked>
+                  <div class="card__content">
+                    <span class="card__title">Essential Course</span>
+                    <span class="card__description">All Minimalist templates plus evaluation and certification</span>
+                    <ul class="card__meta">
                       <li>Lesson</li>
                       <li>Quiz</li>
                       <li>Feedback</li>
@@ -737,12 +737,12 @@
                   </div>
                 </label>
                 
-                <label class="course-type-option">
-                  <input type="radio" name="course-type" value="complete" id="course-type-complete">
-                  <div class="course-type-option__content">
-                    <span class="course-type-option__title">Complete Course</span>
-                    <span class="course-type-option__description">Every available template included</span>
-                    <ul class="course-type-option__templates">
+                <label class="card card--option">
+                  <input class="input input--radio" type="radio" name="course-type" value="complete" id="course-type-complete">
+                  <div class="card__content">
+                    <span class="card__title">Complete Course</span>
+                    <span class="card__description">Every available template included</span>
+                    <ul class="card__meta">
                       <li>Lesson</li>
                       <li>Quiz</li>
                       <li>Feedback</li>
@@ -757,12 +757,12 @@
                   </div>
                 </label>
                 
-                <label class="course-type-option">
-                  <input type="radio" name="course-type" value="custom" id="course-type-custom">
-                  <div class="course-type-option__content">
-                    <span class="course-type-option__title">Custom Course</span>
-                    <span class="course-type-option__description">Manually select any combination of templates</span>
-                    <p class="course-type-option__note">Configure template placements below</p>
+                <label class="card card--option">
+                  <input class="input input--radio" type="radio" name="course-type" value="custom" id="course-type-custom">
+                  <div class="card__content">
+                    <span class="card__title">Custom Course</span>
+                    <span class="card__description">Manually select any combination of templates</span>
+                    <p class="card__description">Configure template placements below</p>
                   </div>
                 </label>
               </div>
@@ -770,7 +770,7 @@
 
             <!-- Template Placement Section -->
             <div class="curriculum-config__group curriculum-config__group--templates">
-              <h3 class="curriculum-config__section-title">Template Placement</h3>
+              <h3 class="heading heading--h3">Template Placement</h3>
               <div class="template-placement" id="curriculum-template-placement-list">
                 <!-- Template placement cards will be rendered here by JavaScript -->
               </div>
@@ -781,7 +781,7 @@
 
           <section class="article__preview">
             <div class="curriculum__preview" id="curriculum-preview">
-              <p class="article__preview-placeholder" id="curriculum-preview-placeholder">
+              <p class="placeholder" id="curriculum-preview-placeholder">
                 Configure your module structure on the left to unlock the live modules preview.
               </p>
               <div class="curriculum__preview-content">
@@ -796,9 +796,9 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="curriculum-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="curriculum-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -806,22 +806,18 @@
 
       <!-- Generation Article -->
       <article id="generation" data-course-section class="article article--generation article--templates">
-        <header class="article__header">
-          <h2 class="article__title">AI Content Generation</h2>
-        </header>
-
         <div class="article__main article__main--panels">
           <section class="article__config">
             <form class="form form--generation">
 
             <!-- AI Generation Section -->
             <div class="curriculum-config__group curriculum-config__group--ai-generation">
-              <h3 class="curriculum-config__section-title">Generate Curriculum Content</h3>
+              <h3 class="heading heading--h3">Generate Curriculum Content</h3>
               <div class="ai-generation__context">                
                 <div class="ai-generation__context-checkboxes">
                   <!-- Mandatory Context -->
                   <div class="ai-generation__context-section">
-                    <h5 class="ai-generation__context-heading">Required Context</h5>
+                    <h5 class="heading heading--h5">Required Context</h5>
                     <label class="checkbox-label checkbox-label--disabled">
                       <input type="checkbox" name="ai-context-essentials" checked disabled>
                       <span>Course Essentials</span>
@@ -838,7 +834,7 @@
 
                   <!-- Optional Context -->
                   <div class="ai-generation__context-section">
-                    <h5 class="ai-generation__context-heading">Optional Context</h5>
+                    <h5 class="heading heading--h5">Optional Context</h5>
                     <label class="checkbox-label">
                       <input type="checkbox" name="ai-context-schedule" checked>
                       <span>Schedule Settings</span>
@@ -894,9 +890,7 @@
 
           <section class="article__preview">
             <div class="curriculum__preview" id="generation-preview">
-              <p class="article__preview-placeholder" id="generation-preview-placeholder">
-                Generate content on the left to preview your curriculum structure.
-              </p>
+        
               <div class="curriculum__preview-content">
                 <nav class="curriculum__controls" aria-label="Generation view modes">
                   <button class="button button--small button--outline" type="button" data-mode="modules">
@@ -932,9 +926,9 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="generation-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="generation-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -942,19 +936,15 @@
 
       <!-- Settings Article -->
       <article id="settings" data-course-section class="article article--settings">
-        <header class="article__header">
-          <h2 class="article__title">General Settings</h2>
-        </header>
-
         <div class="article__main">
           <p class="placeholder">General settings content will be added here.</p>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="general-settings-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="general-settings-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -962,19 +952,15 @@
       <!-- Marketplace Article -->
 
       <article id="marketplace" data-course-section class="article article--marketplace">
-        <header class="article__header">
-          <h2 class="article__title">Marketplace</h2>
-        </header>
-
         <div class="article__main">
           <p class="placeholder">Marketplace integration features will be available here...</p>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="marketplace-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="marketplace-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -982,19 +968,15 @@
 
       <!-- Resources Article -->
       <article id="resources" data-course-section class="article article--resources">
-        <header class="article__header">
-          <h2 class="article__title">Resources</h2>
-        </header>
-
         <div class="article__main">
           <p class="placeholder">Resources content will be added here.</p>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="resources-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="resources-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -1002,15 +984,6 @@
 
       <!-- Students Article -->
       <article id="students" data-course-section class="article article--students">
-        <header class="article__header students__header">
-          <div class="students__heading">
-            <h2 class="article__title">Students</h2>
-            <p class="students__subtitle">
-              Import rosters, personalise profiles for Albert AI, and keep every learner aligned with course templates.
-            </p>
-          </div>
-        </header>
-
         <div class="article__main article__main--panels">
           <section class="article__config students__config" aria-labelledby="students-roster-title">
             <div class="students__options">
@@ -1020,17 +993,17 @@
               </button>
 
               <label class="form__label students__option" for="students-import-contacts-toggle">
-                <input class="form__radio" type="radio" id="students-import-contacts-toggle" name="students-method" value="import-contacts" />
+                <input class="input input--radio" type="radio" id="students-import-contacts-toggle" name="students-method" value="import-contacts" />
                 <span>Import Contacts</span>
               </label>
 
               <label class="form__label students__option" for="students-manual-entry-toggle">
-                <input class="form__radio" type="radio" id="students-manual-entry-toggle" name="students-method" value="manual-entry" />
+                <input class="input input--radio" type="radio" id="students-manual-entry-toggle" name="students-method" value="manual-entry" />
                 <span>Manual Entry</span>
               </label>
             </div>
 
-            <form class="form article__form students__form" id="students-form">
+            <form class="form form--students" id="students-form">
               <div class="students__feedback" id="students-feedback" role="alert" aria-live="assertive" hidden></div>
             </form>
           </section>
@@ -1065,9 +1038,9 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="students-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="students-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -1083,7 +1056,7 @@
               &times;
             </button>
           </header>
-          <form class="form students-upload__form modal__body" id="students-upload-form" novalidate>
+          <form class="form form--students-upload modal__body" id="students-upload-form" novalidate>
             <fieldset class="students-upload__fieldset">
               <legend class="students-upload__legend">Select a roster file</legend>
               <label class="form__label form__label--stacked" for="students-upload-input">
@@ -1099,7 +1072,7 @@
               <legend class="students-upload__legend">Import from Google Sheets</legend>
               <label class="form__label" for="students-sheets-url">
                 Paste a shareable URL
-                <input class="input" type="url" id="students-sheets-url" name="sheetsUrl"
+                <input class="input input--url" type="url" id="students-sheets-url" name="sheetsUrl"
                   placeholder="https://docs.google.com/spreadsheets/d/..." />
               </label>
               <div class="students-upload__actions">
@@ -1156,28 +1129,28 @@
               &times;
             </button>
           </header>
-          <form class="form students-manual__form modal__body" id="students-manual-form" novalidate>
+          <form class="form form--students-manual modal__body" id="students-manual-form" novalidate>
             <fieldset class="students-manual__fieldset">
               <legend class="students-manual__legend">Single student</legend>
               <div class="students-manual__grid">
                 <label class="form__label" for="manual-first-name">
                   First name*
-                  <input class="input" type="text" id="manual-first-name" name="first_name" autocomplete="given-name"
+                  <input class="input input--text" type="text" id="manual-first-name" name="first_name" autocomplete="given-name"
                     required />
                 </label>
                 <label class="form__label" for="manual-last-name">
                   Last name*
-                  <input class="input" type="text" id="manual-last-name" name="last_name" autocomplete="family-name"
+                  <input class="input input--text" type="text" id="manual-last-name" name="last_name" autocomplete="family-name"
                     required />
                 </label>
                 <label class="form__label" for="manual-email">
                   Email
-                  <input class="input" type="email" id="manual-email" name="email"
+                  <input class="input input--email" type="email" id="manual-email" name="email"
                     placeholder="learner@school.org (optional)" autocomplete="email" />
                 </label>
                 <label class="form__label" for="manual-student-id">
                   Student ID
-                  <input class="input" type="text" id="manual-student-id" name="student_id"
+                  <input class="input input--text" type="text" id="manual-student-id" name="student_id"
                     placeholder="Auto-generated if blank" />
                 </label>
                 <label class="form__label" for="manual-grade-level">
@@ -1193,16 +1166,16 @@
                 </label>
                 <label class="form__label" for="manual-enrollment-date">
                   Enrollment date
-                  <input class="input" type="date" id="manual-enrollment-date" name="enrollment_date" />
+                  <input class="input input--date" type="date" id="manual-enrollment-date" name="enrollment_date" />
                 </label>
                 <label class="form__label form__label--stacked" for="manual-learning-style">
                   Learning style preferences
-                  <input class="input" type="text" id="manual-learning-style" name="learning_style"
+                  <input class="input input--text" type="text" id="manual-learning-style" name="learning_style"
                     placeholder="e.g., Visual, Collaborative" />
                 </label>
                 <label class="form__label form__label--stacked" for="manual-assessment-score">
                   Initial assessment score
-                  <input class="input" type="number" step="0.1" id="manual-assessment-score" name="assessment_score"
+                  <input class="input input--number" type="number" step="0.1" id="manual-assessment-score" name="assessment_score"
                     placeholder="Optional score" />
                 </label>
                 <label class="form__label form__label--stacked" for="manual-notes">
@@ -1221,7 +1194,7 @@
               </p>
               <label class="form__label form__label--stacked" for="manual-bulk-input">
                 Bulk students
-                <textarea class="form__textarea students-manual__bulk-input" id="manual-bulk-input"
+                <textarea class="form__textarea" id="manual-bulk-input"
                   name="bulk_students" rows="6"
                   placeholder="Jane,Doe,jane@school.org,12345,High School,Visual,88,2024-08-24,Loves experiments">
                 </textarea>
@@ -1248,13 +1221,9 @@
 
       <!-- Pedagogy Article -->
       <article id="pedagogy" data-course-section class="article article--pedagogy article--templates">
-        <header class="article__header">
-          <h2 class="article__title">Pedagogy Map</h2>
-        </header>
-
         <div class="article__main article__main--panels">
           <section class="article__config">
-            <form class="form" id="course-pedagogy-form">
+            <form class="form form--pedagogy" id="course-pedagogy-form">
             <input type="hidden" name="course_pedagogy" id="course-pedagogy-input" />
 
             <div class="learning-plane" id="pedagogy-ui">
@@ -1311,9 +1280,9 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="pedagogy-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="pedagogy-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -1321,10 +1290,6 @@
 
       <!-- Course Visibility Article -->
       <article id="course-visibility" data-course-section class="article article--course-visibility">
-        <header class="article__header">
-          <h2 class="article__title">Course Visibility</h2>
-        </header>
-
         <div class="article__main">
           <form class="form form--course-visibility settings__section" id="course-settings-form">
             <fieldset class="settings__checkboxes">
@@ -1358,9 +1323,9 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="course-visibility-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="course-visibility-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -1368,19 +1333,15 @@
 
       <!-- Pricing & Monetization Article -->
       <article id="pricing-monetization" data-course-section class="article article--pricing-monetization">
-        <header class="article__header">
-          <h2 class="article__title">Pricing & Monetization</h2>
-        </header>
-
         <div class="article__main">
           <p class="placeholder">Pricing & Monetization content will be added here.</p>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="pricing-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="pricing-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -1388,19 +1349,15 @@
 
       <!-- External Integrations & APIs Article -->
       <article id="external-integrations" data-course-section class="article article--external-integrations">
-        <header class="article__header">
-          <h2 class="article__title">External Integrations & APIs</h2>
-        </header>
-
         <div class="article__main">
           <p class="placeholder">External Integrations & APIs content will be added here.</p>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="integrations-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="integrations-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -1408,19 +1365,15 @@
 
       <!-- Communication Article -->
       <article id="communication" data-course-section class="article article--communication">
-        <header class="article__header">
-          <h2 class="article__title">Communication</h2>
-        </header>
-
         <div class="article__main">
           <p class="placeholder">Communication content will be added here.</p>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="communication-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="communication-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -1428,13 +1381,9 @@
 
       <!-- Page Setup Article -->
       <article id="page-setup" data-course-section class="article article--page-setup article--page-setup">
-        <header class="article__header">
-          <h2 class="article__title">Page Configuration</h2>
-        </header>
-
         <div class="article__main article__main--panels">
           <section class="article__config">
-            <form class="page-setup__config" id="page-setup-form">
+            <form class="form form--page-setup" id="page-setup-form">
             <fieldset class="page-setup__section page-setup__unit-options">
               <legend class="page-setup__label">Units</legend>
               <label class="page-setup__option">
@@ -1511,7 +1460,7 @@
 
           <section class="article__preview">
             <div class="page-setup__preview">
-              <p class="article__preview-placeholder" id="page-setup-preview-placeholder">
+              <p class="placeholder" id="page-setup-preview-placeholder">
                 Adjust page settings to refresh the live preview instantly.
               </p>
             <h3 class="header">Page Preview</h3>
@@ -1528,9 +1477,9 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="page-setup-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="page-setup-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -1538,19 +1487,15 @@
 
       <!-- Interface Article -->
       <article id="interface" data-course-section class="article article--interface">
-        <header class="article__header">
-          <h2 class="article__title">Interface</h2>
-        </header>
-
         <div class="article__main">
           <p class="placeholder">Interface content will be added here.</p>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="interface-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="interface-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -1558,19 +1503,15 @@
 
       <!-- Themes Article -->
       <article id="themes" data-course-section class="article article--themes">
-        <header class="article__header">
-          <h2 class="article__title">Themes</h2>
-        </header>
-
         <div class="article__main">
           <p class="placeholder">Themes content will be added here.</p>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="themes-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="themes-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -1578,19 +1519,15 @@
 
       <!-- Accessibility & Comfort Article -->
       <article id="accessibility-comfort" data-course-section class="article article--accessibility-comfort">
-        <header class="article__header">
-          <h2 class="article__title">Accessibility & Comfort</h2>
-        </header>
-
         <div class="article__main">
           <p class="placeholder">Accessibility & Comfort content will be added here.</p>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="accessibility-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="accessibility-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -1598,19 +1535,15 @@
 
       <!-- Notifications & Alerts Article -->
       <article id="notifications-alerts" data-course-section class="article article--notifications-alerts">
-        <header class="article__header">
-          <h2 class="article__title">Notifications & Alerts</h2>
-        </header>
-
         <div class="article__main">
           <p class="placeholder">Notifications & Alerts content will be added here.</p>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="notifications-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="notifications-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -1618,19 +1551,15 @@
 
       <!-- Data Management & Backup Article -->
       <article id="data-management" data-course-section class="article article--data-management">
-        <header class="article__header">
-          <h2 class="article__title">Data Management & Backup</h2>
-        </header>
-
         <div class="article__main">
           <p class="placeholder">Data Management & Backup content will be added here.</p>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="data-management-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="data-management-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>
@@ -1638,10 +1567,6 @@
 
       <!-- Advanced Settings Article -->
       <article id="advanced-settings" data-course-section class="article article--advanced-settings">
-        <header class="article__header">
-          <h2 class="article__title">Advanced Settings</h2>
-        </header>
-
         <!-- Danger Zone -->
         <div class="article__main">
           <section class="settings__section settings__section--danger">
@@ -1659,9 +1584,9 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="save-status" id="advanced-settings-save-status" aria-live="polite" data-status="empty">
-              <span class="save-status__icon" aria-hidden="true"></span>
-              <span class="save-status__text">No data submitted yet</span>
+            <div class="card card--save-status" id="advanced-settings-card card--save-status" aria-live="polite" data-status="empty">
+              <span class="card card--card__icon" aria-hidden="true"></span>
+              <span class="card card--card__text">No data submitted yet</span>
             </div>
           </div>
         </footer>

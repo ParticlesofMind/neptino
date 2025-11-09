@@ -39,6 +39,8 @@ export function setTemplateStatus(message: string, isError = false): void {
 
 // Initialize template system
 let templateInterfaceInitialized = false;
+let retryCount = 0;
+const MAX_RETRIES = 50; // Max 5 seconds (50 * 100ms)
 
 function initializeTemplateInterface() {
   if (templateInterfaceInitialized) {
@@ -53,15 +55,20 @@ function initializeTemplateInterface() {
   const loadBtn = document.getElementById('load-template-btn');
   
   if (!createBtn || !loadBtn) {
-    console.warn('⚠️ Template buttons not found yet, retrying in 100ms...');
+    retryCount++;
+    if (retryCount >= MAX_RETRIES) {
+      console.error('❌ Template buttons not found after maximum retries. Buttons may not exist in the current view.');
+      return;
+    }
+    console.warn(`⚠️ Template buttons not found yet, retrying in 100ms... (${retryCount}/${MAX_RETRIES})`);
     setTimeout(() => {
-      templateInterfaceInitialized = false; // Reset flag to allow retry
       initializeTemplateInterface();
     }, 100);
     return;
   }
   
   console.log('✅ Template buttons found in DOM');
+  retryCount = 0; // Reset retry count on success
   
   // Ensure template modals are available
   try {

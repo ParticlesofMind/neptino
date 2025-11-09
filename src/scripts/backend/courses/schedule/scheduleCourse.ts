@@ -1,11 +1,17 @@
 import { supabase } from "../../supabase.js";
 
+interface BreakTime {
+  startTime: string;
+  endTime: string;
+}
+
 interface ScheduleSession {
   lessonNumber: number;
   day: string;
   date: string;
   startTime: string;
   endTime: string;
+  breakTimes?: BreakTime[];
 }
 
 interface ScheduleConfig {
@@ -14,6 +20,7 @@ interface ScheduleConfig {
   selectedDays: string[];
   startTime: string;
   endTime: string;
+  breakTimes?: BreakTime[];
 }
 
 export class ScheduleCourseManager {
@@ -405,6 +412,7 @@ export class ScheduleCourseManager {
     const startTime = this.parseTimeInput(startTimeRaw);
     const endTime = this.parseTimeInput(endTimeRaw);
     const selectedDays = this.getSelectedDays();
+    const breakTimes = this.getBreakTimes();
 
     if (!startDate || !endDate || !startTime || !endTime) {
       return null;
@@ -422,12 +430,30 @@ export class ScheduleCourseManager {
       return null;
     }
 
+    // Validate break times
+    if (breakTimes.length > 0) {
+      for (const breakTime of breakTimes) {
+        if (!breakTime.startTime || !breakTime.endTime) {
+          return null;
+        }
+        if (this.compareTimes(breakTime.startTime, breakTime.endTime) >= 0) {
+          return null;
+        }
+        // Ensure break time is within lesson time
+        if (this.compareTimes(breakTime.startTime, startTime) < 0 || 
+            this.compareTimes(breakTime.endTime, endTime) > 0) {
+          return null;
+        }
+      }
+    }
+
     return {
       startDate,
       endDate,
       startTime,
       endTime,
       selectedDays,
+      breakTimes: breakTimes.length > 0 ? breakTimes : undefined,
     };
   }
 
@@ -558,6 +584,14 @@ export class ScheduleCourseManager {
       });
       this.deleteSchedule();
     });
+
+    // Add break time button
+    const addBreakTimeButton = document.getElementById("add-break-time-btn");
+    if (addBreakTimeButton) {
+      addBreakTimeButton.addEventListener("click", () => {
+        this.addBreakTimeInput();
+      });
+    }
   }
 
   private validateScheduleForm(): void {
@@ -643,7 +677,7 @@ export class ScheduleCourseManager {
       "schedule-save-status",
     ) as HTMLElement | null;
     const text = container?.querySelector(
-      ".save-status__text",
+      ".card__text",
     ) as HTMLElement | null;
     return { container, text };
   }
@@ -692,6 +726,113 @@ export class ScheduleCourseManager {
     return Array.from(selectedButtons).map(
       (btn) => (btn as HTMLElement).dataset.day || "",
     );
+  }
+
+  private getBreakTimes(): BreakTime[] {
+    const breakTimesList = document.getElementById("break-times-list");
+    if (!breakTimesList) {
+      return [];
+    }
+
+    const breakTimeItems = breakTimesList.querySelectorAll(".schedule__break-item");
+    const breakTimes: BreakTime[] = [];
+
+    breakTimeItems.forEach((item) => {
+      const startInput = item.querySelector(
+        ".schedule__break-start",
+      ) as HTMLInputElement;
+      const endInput = item.querySelector(
+        ".schedule__break-end",
+      ) as HTMLInputElement;
+
+      if (startInput && endInput) {
+        const startTime = this.parseTimeInput(startInput.value);
+        const endTime = this.parseTimeInput(endInput.value);
+
+        if (startTime && endTime) {
+          breakTimes.push({ startTime, endTime });
+        }
+      }
+    });
+
+    return breakTimes;
+  }
+
+  private createBreakTimeInput(index: number, breakTime?: BreakTime): HTMLElement {
+    const item = document.createElement("div");
+    item.className = "schedule__break-item";
+    item.innerHTML = `
+      <label class="form__label schedule__break-label">
+        Break Start
+        <input class="input input--time schedule__break-start" type="text" 
+               placeholder="HH:MM" inputmode="numeric" autocomplete="off" 
+               value="${breakTime?.startTime || ""}" />
+      </label>
+      <label class="form__label schedule__break-label">
+        Break End
+        <input class="input input--time schedule__break-end" type="text" 
+               placeholder="HH:MM" inputmode="numeric" autocomplete="off" 
+               value="${breakTime?.endTime || ""}" />
+      </label>
+      <button class="button button--extra-small button--cross schedule__break-remove" 
+              type="button" aria-label="Remove break time" data-index="${index}"></button>
+    `;
+
+    const removeButton = item.querySelector(
+      ".schedule__break-remove",
+    ) as HTMLButtonElement;
+    removeButton.addEventListener("click", () => {
+      item.remove();
+      this.validateScheduleForm();
+    });
+
+    const startInput = item.querySelector(
+      ".schedule__break-start",
+    ) as HTMLInputElement;
+    const endInput = item.querySelector(
+      ".schedule__break-end",
+    ) as HTMLInputElement;
+
+    [startInput, endInput].forEach((input) => {
+      input.addEventListener("blur", () => {
+        const normalized = this.parseTimeInput(input.value);
+        if (normalized) {
+          input.value = normalized;
+        }
+        this.validateScheduleForm();
+      });
+    });
+
+    return item;
+  }
+
+  private addBreakTimeInput(breakTime?: BreakTime): void {
+    const breakTimesList = document.getElementById("break-times-list");
+    if (!breakTimesList) {
+      return;
+    }
+
+    const index = breakTimesList.children.length;
+    const breakTimeItem = this.createBreakTimeInput(index, breakTime);
+    breakTimesList.appendChild(breakTimeItem);
+    this.validateScheduleForm();
+  }
+
+  private loadBreakTimesIntoForm(breakTimes?: BreakTime[]): void {
+    const breakTimesList = document.getElementById("break-times-list");
+    if (!breakTimesList) {
+      return;
+    }
+
+    // Clear existing break times
+    breakTimesList.innerHTML = "";
+
+    // Add break times if they exist
+    if (breakTimes && breakTimes.length > 0) {
+      breakTimes.forEach((breakTime) => {
+        this.addBreakTimeInput(breakTime);
+      });
+    }
   }
 
   private async generateSchedule(): Promise<void> {
@@ -743,6 +884,7 @@ export class ScheduleCourseManager {
           date: currentDate.toISOString().split("T")[0],
           startTime: config.startTime,
           endTime: config.endTime,
+          breakTimes: config.breakTimes ? [...config.breakTimes] : undefined,
         });
       }
 
@@ -825,6 +967,51 @@ export class ScheduleCourseManager {
   ): HTMLElement {
     const row = document.createElement("div");
     row.className = 'schedule__row';
+
+    // Build break times HTML with inline inputs
+    let breakTimesHTML = "";
+    if (session.breakTimes && session.breakTimes.length > 0) {
+      breakTimesHTML = `
+        <div class="schedule__breaks-preview">
+          <span class="schedule__field-label">Breaks</span>
+          <div class="schedule__breaks-list">
+            ${session.breakTimes
+              .map(
+                (bt, btIndex) => `
+              <div class="schedule__break-preview-item">
+                <label class="schedule__cell schedule__cell--time">
+                  <span class="schedule__field-label">Break Start</span>
+                  <input type="text" class="input input--time schedule__break-input schedule__break-input--start" 
+                         value="${bt.startTime}" placeholder="HH:MM" autocomplete="off" inputmode="numeric" 
+                         data-index="${index}" data-break-index="${btIndex}">
+                </label>
+                <label class="schedule__cell schedule__cell--time">
+                  <span class="schedule__field-label">Break End</span>
+                  <input type="text" class="input input--time schedule__break-input schedule__break-input--end" 
+                         value="${bt.endTime}" placeholder="HH:MM" autocomplete="off" inputmode="numeric" 
+                         data-index="${index}" data-break-index="${btIndex}">
+                </label>
+                <button class="button button--extra-small button--cross schedule__break-delete" 
+                        type="button" aria-label="Remove break" 
+                        data-index="${index}" data-break-index="${btIndex}"></button>
+              </div>
+            `,
+              )
+              .join("")}
+          </div>
+          <button class="button button--extra-small button--outline schedule__break-add" 
+                  type="button" data-index="${index}">+ Add Break</button>
+        </div>
+      `;
+    } else {
+      breakTimesHTML = `
+        <div class="schedule__breaks-preview">
+          <button class="button button--extra-small button--outline schedule__break-add" 
+                  type="button" data-index="${index}">+ Add Break</button>
+        </div>
+      `;
+    }
+
     row.innerHTML = `
   <div class="schedule__cell schedule__cell--number">
     <span class="schedule__badge">#${session.lessonNumber}</span>
@@ -842,6 +1029,7 @@ export class ScheduleCourseManager {
     <span class="schedule__field-label">End</span>
     <input type="text" class="input input--time schedule__input schedule__input--end" value="${session.endTime}" placeholder="HH:MM" autocomplete="off" inputmode="numeric" data-index="${index}">
   </label>
+  ${breakTimesHTML}
   <div class="schedule__cell schedule__cell--actions">
     <button class="button button--extra-small button--cross schedule__delete" type="button" aria-label="Remove lesson ${session.lessonNumber}" data-index="${index}"></button>
   </div>
@@ -874,7 +1062,242 @@ export class ScheduleCourseManager {
     );
     deleteButton.addEventListener("click", () => this.deleteLessonRow(index));
 
+    // Bind break time events
+    const addBreakButton = row.querySelector(
+      ".schedule__break-add",
+    ) as HTMLButtonElement;
+    if (addBreakButton) {
+      addBreakButton.addEventListener("click", () => {
+        this.addBreakTimeToLessonInline(index);
+      });
+    }
+
+    const breakDeleteButtons = row.querySelectorAll(
+      ".schedule__break-delete",
+    );
+    breakDeleteButtons.forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const breakIndex = Number.parseInt(
+          (e.target as HTMLElement).dataset.breakIndex || "0",
+          10,
+        );
+        this.removeBreakTime(index, breakIndex);
+      });
+    });
+
+    // Bind break time input events
+    const breakStartInputs = row.querySelectorAll(
+      ".schedule__break-input--start",
+    );
+    breakStartInputs.forEach((input) => {
+      input.addEventListener("blur", (e) => {
+        const breakIndex = Number.parseInt(
+          (e.target as HTMLElement).dataset.breakIndex || "0",
+          10,
+        );
+        this.updateBreakTime(
+          index,
+          breakIndex,
+          "startTime",
+          (e.target as HTMLInputElement).value,
+        );
+      });
+    });
+
+    const breakEndInputs = row.querySelectorAll(
+      ".schedule__break-input--end",
+    );
+    breakEndInputs.forEach((input) => {
+      input.addEventListener("blur", (e) => {
+        const breakIndex = Number.parseInt(
+          (e.target as HTMLElement).dataset.breakIndex || "0",
+          10,
+        );
+        this.updateBreakTime(
+          index,
+          breakIndex,
+          "endTime",
+          (e.target as HTMLInputElement).value,
+        );
+      });
+    });
+
     return row;
+  }
+
+  private calculateLessonDuration(
+    startTime: string,
+    endTime: string,
+    breakTimes?: BreakTime[],
+  ): number {
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end = new Date(`2000-01-01T${endTime}`);
+    let totalMinutes = Math.abs(end.getTime() - start.getTime()) / (1000 * 60);
+
+    // Subtract break times
+    if (breakTimes && breakTimes.length > 0) {
+      breakTimes.forEach((breakTime) => {
+        const breakStart = new Date(`2000-01-01T${breakTime.startTime}`);
+        const breakEnd = new Date(`2000-01-01T${breakTime.endTime}`);
+        const breakDuration =
+          Math.abs(breakEnd.getTime() - breakStart.getTime()) / (1000 * 60);
+        totalMinutes -= breakDuration;
+      });
+    }
+
+    return Math.max(0, totalMinutes);
+  }
+
+  private formatDuration(minutes: number): string {
+    if (minutes < 60) {
+      return `${Math.round(minutes)} min`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+  }
+
+  private addBreakTimeToLessonInline(lessonIndex: number): void {
+    if (!this.currentSchedule[lessonIndex]) {
+      return;
+    }
+
+    if (!this.currentSchedule[lessonIndex].breakTimes) {
+      this.currentSchedule[lessonIndex].breakTimes = [];
+    }
+
+    // Add empty break time
+    this.currentSchedule[lessonIndex].breakTimes!.push({
+      startTime: "",
+      endTime: "",
+    });
+
+    // Re-render to show the new input fields
+    this.renderSchedulePreview();
+  }
+
+  private async updateBreakTime(
+    lessonIndex: number,
+    breakIndex: number,
+    timeType: "startTime" | "endTime",
+    newTime: string,
+  ): Promise<void> {
+    if (
+      !this.currentSchedule[lessonIndex] ||
+      !this.currentSchedule[lessonIndex].breakTimes ||
+      !this.currentSchedule[lessonIndex].breakTimes![breakIndex]
+    ) {
+      return;
+    }
+
+    const normalizedTime = this.parseTimeInput(newTime);
+    const inputSelector =
+      timeType === "startTime"
+        ? ".schedule__break-input--start"
+        : ".schedule__break-input--end";
+    const input = this.schedulePreviewSection.querySelector(
+      `${inputSelector}[data-index="${lessonIndex}"][data-break-index="${breakIndex}"]`,
+    ) as HTMLInputElement | null;
+
+    if (!normalizedTime) {
+      // If time is empty, allow it (for new break times)
+      if (newTime.trim() === "") {
+        this.currentSchedule[lessonIndex].breakTimes![breakIndex][timeType] = "";
+        return;
+      }
+      alert("Please enter a valid time (e.g., 09:30 or 2:15 PM).");
+      if (input) {
+        input.value = this.currentSchedule[lessonIndex].breakTimes![breakIndex][timeType] || "";
+      }
+      return;
+    }
+
+    const session = this.currentSchedule[lessonIndex];
+    const breakTime = session.breakTimes![breakIndex];
+
+    // Validate break time order
+    const otherTime =
+      timeType === "startTime"
+        ? breakTime.endTime
+        : breakTime.startTime;
+
+    if (otherTime) {
+      const isOrderValid =
+        timeType === "startTime"
+          ? this.compareTimes(normalizedTime, otherTime) < 0
+          : this.compareTimes(otherTime, normalizedTime) < 0;
+
+      if (!isOrderValid) {
+        alert("Break end time must be after break start time.");
+        if (input) {
+          input.value = breakTime[timeType] || "";
+        }
+        return;
+      }
+    }
+
+    // Validate break is within lesson time
+    if (
+      this.compareTimes(normalizedTime, session.startTime) < 0 ||
+      this.compareTimes(normalizedTime, session.endTime) > 0
+    ) {
+      alert("Break time must be within the lesson time.");
+      if (input) {
+        input.value = breakTime[timeType] || "";
+      }
+      return;
+    }
+
+    this.currentSchedule[lessonIndex].breakTimes![breakIndex][timeType] = normalizedTime;
+    if (input) {
+      input.value = normalizedTime;
+    }
+
+    // Auto-save when both times are filled
+    if (
+      this.currentSchedule[lessonIndex].breakTimes![breakIndex].startTime &&
+      this.currentSchedule[lessonIndex].breakTimes![breakIndex].endTime
+    ) {
+      this.setStatus("saving", "Updating schedule…");
+
+      try {
+        await this.saveScheduleToDatabase(this.currentSchedule);
+        this.setStatus("saved");
+      } catch (error) {
+        console.error("Error updating break time:", error);
+        this.setStatus("error", "Failed to update schedule");
+      }
+    }
+  }
+
+
+  private async removeBreakTime(
+    lessonIndex: number,
+    breakIndex: number,
+  ): Promise<void> {
+    if (
+      !this.currentSchedule[lessonIndex] ||
+      !this.currentSchedule[lessonIndex].breakTimes
+    ) {
+      return;
+    }
+
+    this.currentSchedule[lessonIndex].breakTimes!.splice(breakIndex, 1);
+
+    if (this.currentSchedule[lessonIndex].breakTimes!.length === 0) {
+      delete this.currentSchedule[lessonIndex].breakTimes;
+    }
+
+    this.setStatus("saving", "Updating schedule…");
+
+    try {
+      await this.saveScheduleToDatabase(this.currentSchedule);
+      this.renderSchedulePreview();
+      this.setStatus("saved");
+    } catch (error) {
+      console.error("Error removing break time:", error);
+      this.setStatus("error", "Failed to update schedule");
+    }
   }
 
   private async updateLessonTime(
@@ -917,6 +1340,26 @@ export class ScheduleCourseManager {
       return;
     }
 
+    // Validate break times are still within lesson time
+    const session = this.currentSchedule[index];
+    if (session.breakTimes && session.breakTimes.length > 0) {
+      const newStartTime = timeType === "startTime" ? normalizedTime : session.startTime;
+      const newEndTime = timeType === "endTime" ? normalizedTime : session.endTime;
+      
+      for (const breakTime of session.breakTimes) {
+        if (
+          this.compareTimes(breakTime.startTime, newStartTime) < 0 ||
+          this.compareTimes(breakTime.endTime, newEndTime) > 0
+        ) {
+          alert("One or more break times are outside the new lesson time. Please adjust break times first.");
+          if (input) {
+            input.value = this.currentSchedule[index][timeType];
+          }
+          return;
+        }
+      }
+    }
+
     this.currentSchedule[index][timeType] = normalizedTime;
     if (input) {
       input.value = normalizedTime;
@@ -926,6 +1369,7 @@ export class ScheduleCourseManager {
 
     try {
       await this.saveScheduleToDatabase(this.currentSchedule);
+      this.renderSchedulePreview();
       this.setStatus("saved");
     } catch (error) {
       console.error("Error updating lesson time:", error);
@@ -1103,6 +1547,8 @@ export class ScheduleCourseManager {
       (input as HTMLInputElement | HTMLButtonElement).disabled = false;
     });
     this.scheduleConfigSection.classList.remove('form--locked');
+    // Clear break times form when unlocking
+    this.loadBreakTimesIntoForm();
     this.validateScheduleForm();
   }
 

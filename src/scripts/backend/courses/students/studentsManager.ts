@@ -60,20 +60,40 @@ export class StudentsManager {
     this.registerCourseIdListeners();
     this.preview.setOnDeleteRow((index) => this.handleDeleteStudent(index));
     this.preview.setOnUpdateRow((index, updates) => this.handleUpdateStudent(index, updates));
-    void this.refreshRoster();
+    // Only refresh if we have a courseId - otherwise wait for setCourseId or activate
+    const courseId = this.repository.getCourseId();
+    if (courseId) {
+      void this.refreshRoster();
+    }
   }
 
   public setCourseId(courseId: string | null): void {
     if (!courseId) return;
     const current = this.repository.getCourseId();
-    if (current === courseId) return;
     this.repository.setCourseId(courseId);
-    void this.refreshRoster();
+    // Always refresh if courseId changed
+    // Note: If courseId is the same, we rely on activate() or explicit refreshRoster() calls
+    if (current !== courseId) {
+      void this.refreshRoster();
+    }
   }
 
   public activate(): void {
     this.init();
-    void this.refreshRoster();
+    // Always refresh on activate to ensure roster is loaded when entering students view
+    const courseId = this.repository.getCourseId();
+    if (courseId) {
+      void this.refreshRoster();
+    } else {
+      // If no courseId yet, wait for it via event listeners
+      // But also check if courseId becomes available shortly
+      setTimeout(() => {
+        const delayedCourseId = this.repository.getCourseId();
+        if (delayedCourseId) {
+          void this.refreshRoster();
+        }
+      }, 100);
+    }
   }
 
   private registerUiEvents(): void {
@@ -97,6 +117,7 @@ export class StudentsManager {
       const detail = (event as CustomEvent).detail;
       const courseId = detail?.courseId ?? detail?.id;
       if (typeof courseId === "string" && courseId) {
+        // setCourseId() already handles refresh logic when courseId changes
         this.setCourseId(courseId);
       }
     };
@@ -114,7 +135,7 @@ export class StudentsManager {
       "students-save-status",
     ) as HTMLElement | null;
     const text = container?.querySelector(
-      ".save-status__text",
+      ".card__text",
     ) as HTMLElement | null;
     return { container, text };
   }
@@ -156,27 +177,51 @@ export class StudentsManager {
     text.textContent = message || "";
   }
 
-  private async refreshRoster(showActivity = false): Promise<void> {
+  public async refreshRoster(showActivity = false): Promise<void> {
+    const courseId = this.repository.getCourseId();
+    if (!courseId) {
+      this.updateStatus("empty", "No course selected");
+      this.preview.render([]);
+      return;
+    }
+
     this.updateStatus("saving", showActivity ? "Refreshing roster…" : "Loading roster…");
     this.preview.setBusy(true);
+    
     const { data, error } = await this.repository.fetchRoster();
     const { data: summary } = await this.repository.fetchSummary();
+    
     this.preview.setBusy(false);
 
     if (error) {
       console.error("Unable to load students roster:", error);
-      this.preview.showFeedback("We could not load the student roster. Try refreshing the page.", "error");
-      this.updateStatus("error", "Failed to load roster");
+      
+      // Check if it's a schema migration error
+      const errorMessage = error.message || String(error);
+      if (errorMessage.includes("metadata") || errorMessage.includes("schema not up to date")) {
+        this.preview.showFeedback(
+          "Database migrations need to be run. Please run the migrations to enable the students feature.",
+          "error"
+        );
+        this.updateStatus("error", "Migrations required");
+      } else {
+        this.preview.showFeedback(
+          `We could not load the student roster: ${errorMessage}`,
+          "error"
+        );
+        this.updateStatus("error", "Failed to load roster");
+      }
+      this.preview.render([]);
       return;
     }
 
     this.currentStudents = data ?? [];
     this.preview.render(this.currentStudents);
+    
     if (summary) {
       this.preview.updateSummary(summary);
     }
 
-    const courseId = this.repository.getCourseId();
     if (courseId && this.currentStudents.length) {
       dispatchProfilesIndexed(courseId, this.currentStudents);
     }
@@ -310,7 +355,13 @@ export function ensureStudentsManager(courseId?: string | null): StudentsManager
   }
   studentsManager.init();
   if (courseId) {
+    const hadCourseId = studentsManager.repository.getCourseId() === courseId;
     studentsManager.setCourseId(courseId);
+    // If courseId was already set (e.g., on page reload), ensure we refresh
+    // setCourseId only refreshes if courseId changed or not initialized
+    if (hadCourseId && studentsManager.initialized) {
+      void studentsManager.refreshRoster();
+    }
   }
   return studentsManager;
 }

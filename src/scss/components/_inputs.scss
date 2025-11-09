@@ -26,16 +26,10 @@
 
 @mixin control-base {
     appearance: none;
-    width: 20px;
-    height: 20px;
-    border-width: 2px;
-    border-style: solid;
+    width: 0.1rem;
+    height: 0.1rem;
     border-color: var(--color-neutral-300);
-    background: var(--color-input-background);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-block;
-    margin-right: var(--spacing-3);
+
 
     &:focus {
         @include input-focus();
@@ -157,14 +151,16 @@
         @include control-base;
         border-radius: 50%;
         position: relative;
+     
+
 
         &:checked::after {
             content: '';
             position: absolute;
             left: 50%;
             top: 50%;
-            width: 8px;
-            height: 8px;
+            width: 2.5px;
+            height: 2.5px;
             border-radius: 50%;
             background: white;
             transform: translate(-50%, -50%);
@@ -351,7 +347,7 @@
     &--select {
         cursor: pointer;
         appearance: none;
-        padding-right: calc(var(--spacing-6) + 1.5rem);
+        padding-right: calc(var(--spacing-4) + 1.25rem);
         min-height: var(--size-button-base);
         border: 1px solid var(--color-neutral-200);
         border-radius: var(--radius-large);
@@ -362,8 +358,8 @@
                 rgba(var(--color-neutral-0-rgb, 255, 255, 255), 0.95)),
             url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2326447a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
         background-repeat: no-repeat, no-repeat;
-        background-position: center, right calc(var(--spacing-4)) center;
-        background-size: cover, 0.85rem;
+        background-position: center, right var(--spacing-3) center;
+        background-size: cover, 0.25rem 0.25rem;
         box-shadow: 0 10px 26px rgba(17, 45, 109, 0.08);
         transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
         line-height: 1.4;
@@ -386,6 +382,7 @@
                     rgba(var(--color-neutral-100-rgb, 240, 241, 245), 0.75),
                     rgba(var(--color-neutral-0-rgb, 255, 255, 255), 0.9)),
                 url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2399a1b7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-size: cover, 0.25rem 0.25rem;
             box-shadow: none;
             transform: none;
         }
@@ -395,8 +392,23 @@
         }
     }
 
-    // Text input for course builder
+    // Text input
     &--text {
+        // Standard text input styling - inherits base .input styles
+    }
+
+    // Email input
+    &--email {
+        // Standard email input styling - inherits base .input styles
+    }
+
+    // URL input
+    &--url {
+        // Standard URL input styling - inherits base .input styles
+    }
+
+    // Text input for course builder (specific variant)
+    &--text-coursebuilder {
         resize: both;
         background: transparent;
         border: 1px solid var(--color-primary-200);

@@ -46,15 +46,18 @@ async function syncRocketChatAccount(
       return;
     }
 
+    // Upsert Rocket.Chat credentials in private.user_integrations
     await supabase
-      .from("users")
-      .update({
+      .from("user_integrations")
+      .upsert({
+        user_id: user.id,
         rocketchat_user_id: credentials.userId,
         rocketchat_auth_token: credentials.authToken,
         rocketchat_username: credentials.username,
         updated_at: new Date().toISOString(),
-      })
-      .eq("id", user.id);
+      }, {
+        onConflict: "user_id",
+      });
   } catch (error) {
     console.error("Failed to sync Rocket.Chat account:", error);
   }

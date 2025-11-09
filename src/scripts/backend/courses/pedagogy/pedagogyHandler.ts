@@ -116,7 +116,7 @@ function getPedagogyStatusElements(): {
     'pedagogy-save-status',
   ) as HTMLElement | null;
   const text = container?.querySelector(
-    '.save-status__text',
+    '.card__text',
   ) as HTMLElement | null;
   return { container, text };
 }

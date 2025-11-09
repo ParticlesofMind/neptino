@@ -56,35 +56,18 @@ export class DeleteCourseManager {
           </div>
           <div class="modal__body">
             <p class="modal__text">
-              Are you absolutely sure you want to delete this course?
+              Are you sure you want to delete this course?
             </p>
             <p class="modal__warning">
-              <strong>This action cannot be undone.</strong> All course data, including:
+              <strong>This action cannot be undone.</strong> All course data will be permanently removed.
             </p>
-            <ul class="modal__list">
-              <li>Course content and materials</li>
-              <li>Student enrollments and progress</li>
-              <li>Templates and configurations</li>
-              <li>Schedule and curriculum data</li>
-            </ul>
-            <p class="modal__text">will be permanently removed.</p>
-            
-            <div class="modal__confirmation">
-              <label class="form__label">
-                <input type="text" 
-                       class="input" 
-                       id="delete-confirmation-input" 
-                       placeholder="Type 'DELETE' to confirm">
-                Type <strong>DELETE</strong> to confirm deletion
-              </label>
-            </div>
           </div>
           <div class="modal__footer">
             <button class="button button--outline" type="button" id="cancel-delete-btn">
-              Cancel
+              No
             </button>
-            <button class="button button--delete" type="button" id="confirm-delete-btn" disabled>
-              Delete Course Forever
+            <button class="button button--delete" type="button" id="confirm-delete-btn">
+              Yes
             </button>
           </div>
         </div>
@@ -96,24 +79,9 @@ export class DeleteCourseManager {
 
     // Get modal elements
     this.confirmationModal = document.getElementById('delete-course-modal');
-    const confirmationInput = document.getElementById('delete-confirmation-input') as HTMLInputElement;
     const confirmButton = document.getElementById('confirm-delete-btn') as HTMLButtonElement;
     const cancelButton = document.getElementById('cancel-delete-btn') as HTMLButtonElement;
     const closeButton = this.confirmationModal?.querySelector('.modal__close') as HTMLButtonElement;
-
-    // Setup confirmation input validation
-    if (confirmationInput && confirmButton) {
-      confirmationInput.addEventListener('input', () => {
-        const isValid = confirmationInput.value.trim().toUpperCase() === 'DELETE';
-        confirmButton.disabled = !isValid;
-        
-        if (isValid) {
-          confirmButton.classList.remove('button--disabled');
-        } else {
-          confirmButton.classList.add('button--disabled');
-        }
-      });
-    }
 
     // Setup event listeners
     confirmButton?.addEventListener('click', () => this.confirmDelete());
@@ -128,22 +96,19 @@ export class DeleteCourseManager {
     });
 
     // Close on Escape key
-    document.addEventListener('keydown', (e) => {
+    const escapeHandler = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && this.confirmationModal) {
         this.hideDeleteConfirmation();
+        document.removeEventListener('keydown', escapeHandler);
       }
-    });
+    };
+    document.addEventListener('keydown', escapeHandler);
 
     // Show modal
     if (this.confirmationModal) {
       this.confirmationModal.classList.add('modal--active');
       document.body.style.overflow = 'hidden';
     }
-
-    // Focus on the confirmation input
-    setTimeout(() => {
-      confirmationInput?.focus();
-    }, 100);
   }
 
   private hideDeleteConfirmation(): void {
@@ -163,7 +128,7 @@ export class DeleteCourseManager {
     // Update button state
     const confirmButton = document.getElementById('confirm-delete-btn') as HTMLButtonElement;
     if (confirmButton) {
-      confirmButton.innerHTML = 'Deleting...';
+      confirmButton.textContent = 'Deleting...';
       confirmButton.disabled = true;
     }
 
@@ -196,7 +161,7 @@ export class DeleteCourseManager {
       
       // Reset button state
       if (confirmButton) {
-        confirmButton.innerHTML = 'Delete Course Forever';
+        confirmButton.textContent = 'Yes';
         confirmButton.disabled = false;
       }
     }
@@ -205,6 +170,7 @@ export class DeleteCourseManager {
   private async deleteCourseFromDatabase(courseId: string): Promise<CourseDeleteResult> {
     try {
       // Delete related data first (foreign key constraints)
+      // Note: Some tables have ON DELETE CASCADE, but we'll delete explicitly for clarity
 
       // Delete course sessions/schedules
       const { error: sessionsError } = await supabase
@@ -213,30 +179,60 @@ export class DeleteCourseManager {
         .eq('course_id', courseId);
 
       if (sessionsError) {
-        throw new Error(`Failed to delete course sessions: ${sessionsError.message}`);
+        console.warn('⚠️ Error deleting course sessions:', sessionsError.message);
       }
 
-      // Delete course templates (if they exist)
+      // Delete lessons (has CASCADE but delete explicitly)
+      const { error: lessonsError } = await supabase
+        .from('lessons')
+        .delete()
+        .eq('course_id', courseId);
+
+      if (lessonsError) {
+        console.warn('⚠️ Error deleting lessons:', lessonsError.message);
+      }
+
+      // Delete canvases (has CASCADE but delete explicitly)
+      const { error: canvasesError } = await supabase
+        .from('canvases')
+        .delete()
+        .eq('course_id', courseId);
+
+      if (canvasesError) {
+        console.warn('⚠️ Error deleting canvases:', canvasesError.message);
+      }
+
+      // Delete course templates (has CASCADE but delete explicitly)
       const { error: templatesError } = await supabase
         .from('templates')
         .delete()
         .eq('course_id', courseId);
 
       if (templatesError) {
-        console.warn('⚠️ Error deleting templates (may not exist):', templatesError.message);
+        console.warn('⚠️ Error deleting templates:', templatesError.message);
       }
 
-      // Delete enrollments
+      // Delete students (has CASCADE but delete explicitly)
+      const { error: studentsError } = await supabase
+        .from('students')
+        .delete()
+        .eq('course_id', courseId);
+
+      if (studentsError) {
+        console.warn('⚠️ Error deleting students:', studentsError.message);
+      }
+
+      // Delete enrollments (no CASCADE, must delete manually)
       const { error: enrollmentsError } = await supabase
         .from('enrollments')
         .delete()
         .eq('course_id', courseId);
 
       if (enrollmentsError) {
-        console.warn('⚠️ Error deleting enrollments (may not exist):', enrollmentsError.message);
+        console.warn('⚠️ Error deleting enrollments:', enrollmentsError.message);
       }
 
-      // Delete the main course record
+      // Delete the main course record (this will cascade to tables with CASCADE)
       const { error: courseError } = await supabase
         .from('courses')
         .delete()
