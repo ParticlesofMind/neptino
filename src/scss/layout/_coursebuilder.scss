@@ -73,6 +73,35 @@
         align-content: start;
     }
 
+    // Reduce max-width of all inputs in coursebuilder setup
+    &__setup article[data-course-section] .form .input {
+        max-width: 40rem;
+    }
+
+    &__setup article[data-course-section] .form .form__label {
+        max-width: 40rem;
+    }
+
+    // Course Name and Course Description span full width
+    &__setup article[data-course-section] .form--essentials > .form__label:first-of-type,
+    &__setup article[data-course-section] .form--essentials > .form__label:nth-of-type(2) {
+        max-width: 100% !important;
+        
+        .input,
+        .form__textarea {
+            max-width: 100% !important;
+            width: 100%;
+        }
+    }
+
+    // Fixed height for course description textarea (prevent elongation)
+    &__setup article[data-course-section] .form--essentials textarea[name="course_description"] {
+        height: 12rem;
+        max-height: 12rem;
+        resize: none;
+        overflow-y: auto;
+    }
+
     &__setup .article__actions {
         display: grid;
         grid-auto-flow: column;
@@ -188,6 +217,51 @@
 
 .article[data-course-section]>.form .form__label {
     gap: var(--spacing-2);
+}
+
+// Essentials form specific styles
+.form--essentials {
+
+    .form__row--essentials {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--spacing-3);
+        align-items: end;
+        max-width: 100%;
+        
+        // All fields in the row have the same width
+        .form__label {
+            max-width: 100%;
+            
+            .input {
+                max-width: 100%;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 64rem) {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        @media (max-width: 48rem) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    // Make dropdowns in essentials view use full width of their container
+    .input--select--essentials {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    // Reduce max-width of other inputs in essentials form (but not Course Name/Description)
+    > .form__label:not(:first-of-type):not(:nth-of-type(2)) {
+        max-width: 40rem;
+        
+        .input {
+            max-width: 40rem;
+        }
+    }
 }
 
 .article[data-course-section]>.placeholder {

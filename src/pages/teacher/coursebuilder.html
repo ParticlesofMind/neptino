@@ -270,29 +270,35 @@
               <textarea class="form__textarea" name="course_description" rows="4"
                 placeholder="Describe what students will learn" required></textarea>
             </label>
-            <label class="form__label">
-              Teacher
-              <input class="input input--text" type="text" name="teacher_id" placeholder="Loading..." readonly />
-            </label>
-            <label class="form__label">
-              Institution
-              <input class="input input--text" type="text" name="institution" placeholder="Loading..." readonly />
-            </label>
-            <label class="form__label" for="course-language">
-              Course Language
-              <select class="input input--select" name="course_language" id="course-language" required>
-                <option value="">Select language...</option>
-              </select>
-            </label>
-            <label class="form__label" for="course-type">
-              Course Type
-              <select class="input input--select" name="course_type" id="course-type" required>
-                <option value="">Select course type...</option>
-                <option value="In-person">In-person</option>
-                <option value="Online">Online</option>
-                <option value="Hybrid">Hybrid</option>
-              </select>
-            </label>
+            <div class="form__row form__row--essentials">
+              <label class="form__label" for="teacher-id">
+                Teacher
+                <select class="input input--select input--select--essentials" name="teacher_id" id="teacher-id" required>
+                  <option value="">Select teacher...</option>
+                </select>
+              </label>
+              <label class="form__label" for="institution">
+                Institution
+                <select class="input input--select input--select--essentials" name="institution" id="institution" required>
+                  <option value="">Select institution...</option>
+                </select>
+              </label>
+              <label class="form__label" for="course-language">
+                Course Language
+                <select class="input input--select input--select--essentials" name="course_language" id="course-language" required>
+                  <option value="">Select language...</option>
+                </select>
+              </label>
+              <label class="form__label" for="course-type">
+                Course Type
+                <select class="input input--select input--select--essentials" name="course_type" id="course-type" required>
+                  <option value="">Select course type...</option>
+                  <option value="In-person">In-person</option>
+                  <option value="Online">Online</option>
+                  <option value="Hybrid">Hybrid</option>
+                </select>
+              </label>
+            </div>
             <label class="form__label form__label--file">
               Course Image
             </label>

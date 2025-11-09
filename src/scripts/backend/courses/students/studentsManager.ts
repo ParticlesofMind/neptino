@@ -117,7 +117,8 @@ export class StudentsManager {
       const detail = (event as CustomEvent).detail;
       const courseId = detail?.courseId ?? detail?.id;
       if (typeof courseId === "string" && courseId) {
-        // setCourseId() already handles refresh logic when courseId changes
+        // setCourseId() handles refresh logic internally when courseId changes.
+        // Do NOT call refreshRoster() here to avoid double-refresh.
         this.setCourseId(courseId);
       }
     };

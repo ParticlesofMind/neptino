@@ -306,7 +306,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-2);
-    font-weight: 700;
+    font-weight: var(--font-weight-normal);
     font-size: var(--font-size-base);
     color: var(--color-text-primary);
 

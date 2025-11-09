@@ -10,6 +10,7 @@ import {
 import { validateFormSection, isFormSectionValid } from "../shared/courseFormValidator";
 import { createCourse, updateCourse, getCourse } from "../essentials/createCourse";
 import { uploadCourseImage, deleteCourseImage } from "./uploadCourseImage";
+import { supabase } from "../../supabase";
 
 // ==========================================================================
 // COURSE FORM HANDLER CLASS
@@ -242,15 +243,23 @@ export class CourseFormHandler {
 
             // Handle select fields with options
             if (fieldConfig.type === "select" && field.tagName === "SELECT") {
-                if (fieldConfig.loadDynamically && fieldConfig.name === "course_language") {
-                    // Load languages dynamically
-                    try {
-                        const { populateCourseLanguageSelect } = await import('../settings/languageLoader');
-                        await populateCourseLanguageSelect(field as HTMLSelectElement);
-                    } catch (error) {
-                        console.error('❌ Error loading course languages:', error);
-                        // Fallback to basic options
-                        this.addFallbackLanguageOptions(field as HTMLSelectElement);
+                if (fieldConfig.loadDynamically) {
+                    if (fieldConfig.name === "course_language") {
+                        // Load languages dynamically
+                        try {
+                            const { populateCourseLanguageSelect } = await import('../settings/languageLoader');
+                            await populateCourseLanguageSelect(field as HTMLSelectElement);
+                        } catch (error) {
+                            console.error('❌ Error loading course languages:', error);
+                            // Fallback to basic options
+                            this.addFallbackLanguageOptions(field as HTMLSelectElement);
+                        }
+                    } else if (fieldConfig.name === "teacher_id") {
+                        // Load teachers dynamically
+                        await this.loadTeachers(field as HTMLSelectElement);
+                    } else if (fieldConfig.name === "institution") {
+                        // Load institutions dynamically
+                        await this.loadInstitutions(field as HTMLSelectElement);
                     }
                 } else if (fieldConfig.options) {
                     this.populateSelectField(field as HTMLSelectElement, fieldConfig);
@@ -322,6 +331,139 @@ export class CourseFormHandler {
   
     }
 
+    private async loadTeachers(select: HTMLSelectElement): Promise<void> {
+        try {
+            console.log('👤 Loading teachers...');
+            
+            // Get all users with teacher role
+            const { data: teachers, error } = await supabase
+                .from('users')
+                .select('id, first_name, last_name, email')
+                .eq('role', 'teacher')
+                .order('last_name')
+                .order('first_name');
+
+            if (error) {
+                console.error('❌ Error loading teachers:', error);
+                // Fallback: add current user as option
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const { data: profile } = await supabase
+                        .from('users')
+                        .select('first_name, last_name')
+                        .eq('id', user.id)
+                        .single();
+                    
+                    if (profile) {
+                        const option = document.createElement('option');
+                        option.value = user.id;
+                        option.textContent = `${profile.first_name} ${profile.last_name}`;
+                        select.appendChild(option);
+                    }
+                }
+                return;
+            }
+
+            // Clear existing options except placeholder
+            const placeholder = select.querySelector('option[value=""]');
+            select.innerHTML = '';
+            if (placeholder) {
+                select.appendChild(placeholder);
+            } else {
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Select teacher...';
+                select.appendChild(defaultOption);
+            }
+
+            // Add teacher options
+            if (teachers && teachers.length > 0) {
+                teachers.forEach(teacher => {
+                    const option = document.createElement('option');
+                    option.value = teacher.id;
+                    const name = `${teacher.first_name || ''} ${teacher.last_name || ''}`.trim() || teacher.email;
+                    option.textContent = name;
+                    select.appendChild(option);
+                });
+                console.log('✅ Loaded', teachers.length, 'teachers');
+            } else {
+                console.warn('⚠️ No teachers found');
+            }
+        } catch (error) {
+            console.error('❌ Exception loading teachers:', error);
+        }
+    }
+
+    private async loadInstitutions(select: HTMLSelectElement): Promise<void> {
+        try {
+            console.log('🏫 Loading institutions...');
+            
+            // Get unique institutions from users table
+            const { data: users, error } = await supabase
+                .from('users')
+                .select('institution')
+                .not('institution', 'is', null);
+
+            if (error) {
+                console.error('❌ Error loading institutions:', error);
+                // Fallback: add common options
+                const fallbackInstitutions = ['Independent', 'School', 'University', 'College'];
+                const placeholder = select.querySelector('option[value=""]');
+                select.innerHTML = '';
+                if (placeholder) {
+                    select.appendChild(placeholder);
+                }
+                fallbackInstitutions.forEach(inst => {
+                    const option = document.createElement('option');
+                    option.value = inst;
+                    option.textContent = inst;
+                    select.appendChild(option);
+                });
+                return;
+            }
+
+            // Clear existing options except placeholder
+            const placeholder = select.querySelector('option[value=""]');
+            select.innerHTML = '';
+            if (placeholder) {
+                select.appendChild(placeholder);
+            } else {
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Select institution...';
+                select.appendChild(defaultOption);
+            }
+
+            // Extract unique institutions
+            const institutions = new Set<string>();
+            if (users && users.length > 0) {
+                users.forEach(user => {
+                    if (user.institution) {
+                        institutions.add(user.institution);
+                    }
+                });
+            }
+
+            // Add "Independent" as default option
+            if (!institutions.has('Independent')) {
+                institutions.add('Independent');
+            }
+
+            // Sort and add options
+            const sortedInstitutions = Array.from(institutions).sort();
+            sortedInstitutions.forEach(institution => {
+                const option = document.createElement('option');
+                option.value = institution;
+                option.textContent = institution;
+                select.appendChild(option);
+            });
+
+            console.log('✅ Loaded', sortedInstitutions.length, 'institutions');
+        } catch (error) {
+            console.error('❌ Exception loading institutions:', error);
+        }
+    }
+
     // ==========================================================================
     // DATA LOADING
     // ==========================================================================
@@ -377,6 +519,8 @@ export class CourseFormHandler {
         
             this.setFieldValue("course_name", courseData.course_name);
             this.setFieldValue("course_description", courseData.course_description);
+            this.setFieldValue("teacher_id", courseData.teacher_id);
+            this.setFieldValue("institution", courseData.institution);
             this.setFieldValue("course_language", courseData.course_language);
             this.setFieldValue("course_type", courseData.course_type);
 

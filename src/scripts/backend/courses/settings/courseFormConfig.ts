@@ -105,18 +105,18 @@ export const SECTION_CONFIGS: { [key: string]: SectionConfig } = {
  required: true,
  minLength: 10,
  },
- {
- name: "teacher_id",
- type: "display",
- required: true,
- displayFunction: displayFunctions.getTeacherName,
- },
- {
- name: "institution",
- type: "display",
- required: true,
- displayFunction: displayFunctions.getInstitution,
- },
+    {
+      name: "teacher_id",
+      type: "select",
+      required: true,
+      loadDynamically: true, // Signal that this should be loaded dynamically
+    },
+    {
+      name: "institution",
+      type: "select",
+      required: true,
+      loadDynamically: true, // Signal that this should be loaded dynamically
+    },
  {
  name: "course_language",
  type: "select",
