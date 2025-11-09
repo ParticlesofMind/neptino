@@ -70,10 +70,72 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+
+      // Tablet and up: Both panels visible
+      @media (min-width: 768px) {
+        display: flex !important;
+      }
+
+      // Mobile (phones): Hide by default, show only active one
+      // Extra Small (≤480px) and Small (481-767px)
+      @media (max-width: 767px) {
+        display: none;
+        
+        &.is-active {
+          display: flex;
+        }
+      }
     }
 
-    @media (min-width: 64rem) {
+    // Mobile (phones): Stack config and preview, show toggle button
+    // Extra Small (≤480px) and Small (481-767px)
+    @media (max-width: 767px) {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+      gap: var(--spacing-3);
+    }
+
+    // Tablet (768-1023px): Side by side panels
+    @media (min-width: 768px) and (max-width: 1023px) {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--spacing-3);
+    }
+
+    // Large (1024-1439px): Standard desktop layout
+    @media (min-width: 1024px) and (max-width: 1439px) {
       grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    }
+
+    // Extra Large (≥1440px): Wider layout
+    @media (min-width: 1440px) {
+      grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+    }
+  }
+
+  // Toggle button for config/preview (mobile only - phones)
+  &__view-toggle {
+    display: none;
+    
+    // Mobile (phones): Show toggle button
+    // Extra Small (≤480px) and Small (481-767px)
+    @media (max-width: 767px) {
+      display: flex;
+      gap: var(--spacing-2);
+      padding: var(--spacing-2);
+      background: var(--color-neutral-50);
+      border: 1px solid var(--color-neutral-200);
+      border-radius: var(--radius-medium);
+      margin-bottom: var(--spacing-3);
+
+      .button {
+        flex: 1;
+        
+        &.is-active {
+          background: var(--color-primary-100);
+          color: var(--color-primary-700);
+          border-color: var(--color-primary-200);
+        }
+      }
     }
   }
 
@@ -91,6 +153,12 @@
     background: transparent;
     border-top: none;
     flex-shrink: 0;
+
+    // Mobile (phones): Add extra bottom margin to ensure button is fully visible above bottom nav
+    // Extra Small (≤480px) and Small (481-767px)
+    @media (max-width: 767px) {
+      margin-bottom: calc(4.5rem + var(--spacing-3));
+    }
   }
 
   &__footer-content {
@@ -124,11 +192,13 @@
   }
 }
 
-.course-code {
-  display: flex;
+// Course code card (renamed from course-code to card--code)
+.card.card--code {
+  display: flex !important;
   align-items: center;
   gap: var(--spacing-2);
-  padding: var(--spacing-2) var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4) var(--spacing-3) var(--spacing-4);
+  padding-right: 0;
   border: 1px solid var(--color-neutral-200);
   border-radius: var(--radius-medium);
   color: var(--color-primary-700);
@@ -137,14 +207,26 @@
   min-width: 32rem;
   width: 32rem;
   flex-shrink: 0;
+  height: var(--size-button-base);
   min-height: var(--size-button-base);
+  max-height: var(--size-button-base);
   box-sizing: border-box;
+  line-height: 1;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  
+  // Override any grid properties from base .card
+  grid-template-columns: none;
+  grid-template-rows: none;
 
   .button {
     margin-left: auto;
+    margin-right: 0;
     background: var(--color-primary-100);
     border: 1px solid var(--color-primary-200);
     color: white;
+    flex-shrink: 0;
+    flex-grow: 0;
     
     &:hover {
       background: var(--color-primary-200);
@@ -158,14 +240,15 @@
     }
   }
 
-  &__label {
+  .card__label {
     font-weight: var(--font-weight-semibold);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     white-space: nowrap;
+    flex-shrink: 0;
   }
 
-  &__value {
+  .card__value {
     font-family: var(--font-mono, "SFMono-Regular", Menlo, Consolas, monospace);
     font-size: var(--font-size-small);
     min-width: 12rem;
@@ -174,8 +257,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    flex-shrink: 0;
+    flex-grow: 0;
   }
 }
+
 
 .article__main--classification {
   display: flex;

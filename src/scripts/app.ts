@@ -5,6 +5,7 @@
 
 import { initializeGlobalNavigation, initializeDashboardNavigation } from './navigation';
 import { initAuth, AuthFormHandler } from './backend/auth/auth';
+import { ViewToggleHandler } from './navigation/CourseBuilderNavigation';
 import './backend/courses/settings/pageSetupHandler';
 import './coursebuilder/canvasInit'; // Initialize canvas system
 import './coursebuilder/PanelToggle'; // Initialize panel toggle
@@ -60,6 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
    }).catch(error => {
      console.error('Failed to initialize page setup handler:', error);
    });
+
+   // Initialize view toggle handler for config/preview panels
+   new ViewToggleHandler();
  }
 });
 

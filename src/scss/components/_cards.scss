@@ -571,13 +571,48 @@
     }
   }
 
+  // Character counter card variant
+  &--counter {
+    display: inline-flex !important;
+    align-items: center;
+    gap: var(--spacing-1);
+    padding: var(--spacing-2) var(--spacing-3);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-medium);
+    background: var(--color-background);
+    flex-shrink: 0;
+    box-sizing: border-box;
+    position: absolute;
+    bottom: var(--spacing-3);
+    right: var(--spacing-3);
+    z-index: 1;
+    
+    // Override any grid properties from base .card
+    grid-template-columns: none;
+    grid-template-rows: none;
+
+    &__number {
+      font-family: var(--font-mono, "SFMono-Regular", Menlo, Consolas, monospace);
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-primary-700);
+      line-height: 1;
+    }
+
+    &__label {
+      font-size: var(--font-size-small);
+      color: var(--color-text-secondary);
+      line-height: 1;
+    }
+  }
+
   // Save status card variant (small card for status indicators)
   &--save-status {
     display: flex;
     align-items: center;
     gap: var(--spacing-2);
     padding: var(--spacing-2) var(--spacing-3);
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-medium);
     border: 1px solid var(--color-neutral-200);
     background: transparent;
     color: var(--color-text-secondary);

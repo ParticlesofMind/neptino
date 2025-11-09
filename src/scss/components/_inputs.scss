@@ -356,10 +356,10 @@
             linear-gradient(140deg,
                 rgba(var(--color-primary-50-rgb, 230, 240, 255), 0.45),
                 rgba(var(--color-neutral-0-rgb, 255, 255, 255), 0.95)),
-            url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2326447a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231e293b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
         background-repeat: no-repeat, no-repeat;
         background-position: center, right var(--spacing-3) center;
-        background-size: cover, 0.25rem 0.25rem;
+        background-size: cover, 1.25rem 1.25rem;
         box-shadow: 0 10px 26px rgba(17, 45, 109, 0.08);
         transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
         line-height: 1.4;
@@ -381,8 +381,8 @@
                 linear-gradient(140deg,
                     rgba(var(--color-neutral-100-rgb, 240, 241, 245), 0.75),
                     rgba(var(--color-neutral-0-rgb, 255, 255, 255), 0.9)),
-                url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2399a1b7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-size: cover, 0.25rem 0.25rem;
+                url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-size: cover, 1.25rem 1.25rem;
             box-shadow: none;
             transform: none;
         }

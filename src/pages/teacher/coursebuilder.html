@@ -267,8 +267,12 @@
             </label>
             <label class="form__label">
               Course Description
-              <textarea class="form__textarea" name="course_description" rows="4"
+              <textarea class="form__textarea" name="course_description" id="course-description" rows="4"
                 placeholder="Describe what students will learn" required></textarea>
+              <div class="card card--counter" id="description-counter">
+                <span class="card--counter__number" id="description-counter-value">0</span>
+                <span class="card--counter__label">characters</span>
+              </div>
             </label>
             <div class="form__row form__row--essentials">
               <label class="form__label" for="teacher-id">
@@ -335,9 +339,9 @@
               <span class="card__text">No data submitted yet</span>
             </div>
 
-            <div class="course-code" id="course-code-display" hidden>
-              <span class="course-code__label">Course ID</span>
-              <span class="course-code__value" id="course-id-value">—</span>
+            <div class="card card--code" id="course-code-display" hidden>
+              <span class="card__label">Course ID</span>
+              <span class="card__value" id="course-id-value">—</span>
               <button class="button button--subtle button--small" type="button" id="course-code-copy-btn" disabled>
                 Copy
               </button>
@@ -463,6 +467,14 @@
       <!-- Templates Article -->
       <article id="templates" data-course-section class="article article--templates">
         <div class="article__main article__main--panels">
+          <div class="article__view-toggle">
+            <button type="button" class="button button--outline article__view-toggle-btn" data-view="config">
+              Config
+            </button>
+            <button type="button" class="button button--outline article__view-toggle-btn is-active" data-view="preview">
+              Preview
+            </button>
+          </div>
           <section class="article__config">
             <div class="template-config__actions">
               <button type="button" class="button button--primary" id="create-template-btn">
@@ -496,6 +508,14 @@
       <!-- Schedule Article -->
       <article id="schedule" data-course-section class="article article--schedule">
         <div class="article__main article__main--panels">
+          <div class="article__view-toggle">
+            <button type="button" class="button button--outline article__view-toggle-btn is-active" data-view="config">
+              Config
+            </button>
+            <button type="button" class="button button--outline article__view-toggle-btn" data-view="preview">
+              Preview
+            </button>
+          </div>
           <section class="article__config">
             <form class="form form--schedule" id="schedule-config">
               <div class="form__row form__row--dates">
@@ -595,6 +615,14 @@
       <!-- Curriculum Article -->
       <article id="curriculum" data-course-section class="article article--curriculum article--templates">
         <div class="article__main article__main--panels">
+          <div class="article__view-toggle">
+            <button type="button" class="button button--outline article__view-toggle-btn is-active" data-view="config">
+              Config
+            </button>
+            <button type="button" class="button button--outline article__view-toggle-btn" data-view="preview">
+              Preview
+            </button>
+          </div>
           <section class="article__config">
             <form class="form form--curriculum">
 
@@ -813,6 +841,14 @@
       <!-- Generation Article -->
       <article id="generation" data-course-section class="article article--generation article--templates">
         <div class="article__main article__main--panels">
+          <div class="article__view-toggle">
+            <button type="button" class="button button--outline article__view-toggle-btn is-active" data-view="config">
+              Config
+            </button>
+            <button type="button" class="button button--outline article__view-toggle-btn" data-view="preview">
+              Preview
+            </button>
+          </div>
           <section class="article__config">
             <form class="form form--generation">
 
@@ -991,6 +1027,14 @@
       <!-- Students Article -->
       <article id="students" data-course-section class="article article--students">
         <div class="article__main article__main--panels">
+          <div class="article__view-toggle">
+            <button type="button" class="button button--outline article__view-toggle-btn is-active" data-view="config">
+              Config
+            </button>
+            <button type="button" class="button button--outline article__view-toggle-btn" data-view="preview">
+              Preview
+            </button>
+          </div>
           <section class="article__config students__config" aria-labelledby="students-roster-title">
             <div class="students__options">
               <button class="button button--primary button--medium students__trigger" type="button"
@@ -1228,6 +1272,14 @@
       <!-- Pedagogy Article -->
       <article id="pedagogy" data-course-section class="article article--pedagogy article--templates">
         <div class="article__main article__main--panels">
+          <div class="article__view-toggle">
+            <button type="button" class="button button--outline article__view-toggle-btn is-active" data-view="config">
+              Config
+            </button>
+            <button type="button" class="button button--outline article__view-toggle-btn" data-view="preview">
+              Preview
+            </button>
+          </div>
           <section class="article__config">
             <form class="form form--pedagogy" id="course-pedagogy-form">
             <input type="hidden" name="course_pedagogy" id="course-pedagogy-input" />
@@ -1388,6 +1440,14 @@
       <!-- Page Setup Article -->
       <article id="page-setup" data-course-section class="article article--page-setup article--page-setup">
         <div class="article__main article__main--panels">
+          <div class="article__view-toggle">
+            <button type="button" class="button button--outline article__view-toggle-btn is-active" data-view="config">
+              Config
+            </button>
+            <button type="button" class="button button--outline article__view-toggle-btn" data-view="preview">
+              Preview
+            </button>
+          </div>
           <section class="article__config">
             <form class="form form--page-setup" id="page-setup-form">
             <fieldset class="page-setup__section page-setup__unit-options">

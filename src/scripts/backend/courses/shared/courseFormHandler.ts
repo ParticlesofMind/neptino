@@ -523,6 +523,12 @@ export class CourseFormHandler {
             this.setFieldValue("institution", courseData.institution);
             this.setFieldValue("course_language", courseData.course_language);
             this.setFieldValue("course_type", courseData.course_type);
+            
+            // Update character counter after populating description
+            const textarea = document.getElementById("course-description") as HTMLTextAreaElement;
+            if (textarea && (textarea as any).updateCharacterCounter) {
+                (textarea as any).updateCharacterCounter();
+            }
 
             if (courseData.course_image) {
                 this.displayExistingImage(courseData.course_image);
@@ -752,7 +758,42 @@ export class CourseFormHandler {
             removeImageBtn.addEventListener("click", () => this.handleRemoveImage());
         }
 
+        // Initialize character counter for course description (essentials section only)
+        if (this.sectionConfig.section === "essentials") {
+            this.initializeCharacterCounter();
+        }
+
         this.form.dataset.listenersAttached = "true";
+    }
+
+    private initializeCharacterCounter(): void {
+        const textarea = document.getElementById("course-description") as HTMLTextAreaElement;
+        const counterValue = document.getElementById("description-counter-value");
+
+        if (!textarea || !counterValue) {
+            return;
+        }
+
+        // Update counter function (exported for use when form is populated)
+        const updateCounter = () => {
+            const length = textarea.value.length;
+            // Cap at 999
+            const displayValue = length > 999 ? 999 : length;
+            counterValue.textContent = displayValue.toString();
+        };
+
+        // Store update function on textarea for access when form is populated
+        (textarea as any).updateCharacterCounter = updateCounter;
+
+        // Initialize with current value
+        updateCounter();
+
+        // Update on input
+        textarea.addEventListener("input", updateCounter);
+        textarea.addEventListener("paste", () => {
+            // Use setTimeout to ensure paste content is processed
+            setTimeout(updateCounter, 0);
+        });
     }
 
     private handleInputChange(): void {

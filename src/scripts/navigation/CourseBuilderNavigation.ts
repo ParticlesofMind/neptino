@@ -406,6 +406,131 @@ export class AsideNavigation {
 }
 
 /**
+ * View Toggle Handler for Config/Preview Panels
+ * Handles toggling between config and preview views on mobile
+ */
+export class ViewToggleHandler {
+  private toggleButtons!: NodeListOf<HTMLButtonElement>;
+  private boundHandleToggleClick!: (e: Event) => void;
+
+  constructor() {
+    if (!this.isOnCourseBuilderPage()) {
+      return;
+    }
+
+    this.toggleButtons = document.querySelectorAll('.article__view-toggle-btn');
+    this.boundHandleToggleClick = this.handleToggleClick.bind(this);
+
+    this.init();
+  }
+
+  private isOnCourseBuilderPage(): boolean {
+    return window.location.pathname.includes('coursebuilder.html');
+  }
+
+  private init(): void {
+    if (this.toggleButtons.length === 0) {
+      return; // No toggle buttons found, exit silently
+    }
+
+    this.bindEvents();
+    this.initializeDefaultViews();
+  }
+
+  private bindEvents(): void {
+    this.toggleButtons.forEach((button: HTMLButtonElement) => {
+      button.addEventListener('click', this.boundHandleToggleClick);
+    });
+  }
+
+  private handleToggleClick(e: Event): void {
+    const button = e.currentTarget as HTMLButtonElement;
+    const view = button.getAttribute('data-view');
+
+    if (!view) {
+      console.error('No data-view attribute found on toggle button');
+      return;
+    }
+
+    // Find the parent article
+    const article = button.closest('article[data-course-section]');
+    if (!article) {
+      console.error('Toggle button not within an article');
+      return;
+    }
+
+    // Find the toggle container
+    const toggleContainer = button.closest('.article__view-toggle');
+    if (!toggleContainer) {
+      console.error('Toggle button not within .article__view-toggle');
+      return;
+    }
+
+    // Update button states
+    const allButtons = toggleContainer.querySelectorAll('.article__view-toggle-btn');
+    allButtons.forEach((btn) => {
+      btn.classList.remove('is-active');
+    });
+    button.classList.add('is-active');
+
+    // Update panel visibility
+    const configPanel = article.querySelector('.article__config');
+    const previewPanel = article.querySelector('.article__preview');
+
+    if (view === 'config') {
+      if (configPanel) {
+        configPanel.classList.add('is-active');
+      }
+      if (previewPanel) {
+        previewPanel.classList.remove('is-active');
+      }
+    } else if (view === 'preview') {
+      if (configPanel) {
+        configPanel.classList.remove('is-active');
+      }
+      if (previewPanel) {
+        previewPanel.classList.add('is-active');
+      }
+    }
+  }
+
+  private initializeDefaultViews(): void {
+    // On desktop, both panels should be visible
+    // On mobile, only the active one should be visible
+    // This is handled by CSS, but we ensure the initial state is correct
+    const articles = document.querySelectorAll('article[data-course-section]');
+    
+    articles.forEach((article) => {
+      const toggleContainer = article.querySelector('.article__view-toggle');
+      if (!toggleContainer) {
+        return; // No toggle for this article
+      }
+
+      const activeButton = toggleContainer.querySelector('.article__view-toggle-btn.is-active');
+      if (activeButton) {
+        const view = activeButton.getAttribute('data-view');
+        const configPanel = article.querySelector('.article__config');
+        const previewPanel = article.querySelector('.article__preview');
+
+        if (view === 'config') {
+          if (configPanel) configPanel.classList.add('is-active');
+          if (previewPanel) previewPanel.classList.remove('is-active');
+        } else if (view === 'preview') {
+          if (configPanel) configPanel.classList.remove('is-active');
+          if (previewPanel) previewPanel.classList.add('is-active');
+        }
+      }
+    });
+  }
+
+  public destroy(): void {
+    this.toggleButtons.forEach((button: HTMLButtonElement) => {
+      button.removeEventListener('click', this.boundHandleToggleClick);
+    });
+  }
+}
+
+/**
  * Modal Handler for CourseBuilder
  * Simple utility to show/hide modals with proper overlay behavior
  */

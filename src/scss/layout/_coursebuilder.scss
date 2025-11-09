@@ -24,38 +24,294 @@
         display: grid;
         grid-template-columns: clamp(13rem, 12vw, 15rem) minmax(0, 1fr);
         grid-template-rows: minmax(0, 1fr);
-        gap: 0;
+        gap: 0 !important;
+        column-gap: 0 !important;
+        row-gap: 0 !important;
         height: 100%;
         max-height: 100%;
         overflow: hidden;
 
         container-type: inline-size;
         container-name: coursebuilder-setup;
+
+        // Mobile (phones): Stack article on top, aside becomes bottom nav
+        // Extra Small (≤480px) and Small (481-767px)
+        @media (max-width: 767px) {
+            grid-template-columns: 1fr;
+            grid-template-rows: 1fr;
+            gap: 0;
+            padding-bottom: 4.5rem; // Space for bottom nav
+
+            // Remove aside from grid flow on mobile
+            .aside {
+                grid-column: 1;
+                grid-row: 1;
+                // Position fixed will take it out of flow, but we need to ensure it doesn't take space
+                position: fixed;
+            }
+        }
+
+        // Tablet (768-1023px): Show sidebar, adjust layout - NO gap
+        @media (min-width: 768px) and (max-width: 1023px) {
+            grid-template-columns: 12rem 1fr;
+            gap: 0 !important;
+            column-gap: 0 !important;
+        }
+
+        // Large (1024-1439px): Standard desktop layout - NO gap
+        @media (min-width: 1024px) and (max-width: 1439px) {
+            grid-template-columns: 13rem 1fr;
+            gap: 0 !important;
+            column-gap: 0 !important;
+        }
+
+        // Extra Large (≥1440px): Wider layout for editing UIs - NO gap
+        @media (min-width: 1440px) {
+            grid-template-columns: 14rem 1fr;
+            gap: 0 !important;
+            column-gap: 0 !important;
+        }
     }
 
-    &__aside {
+    // Target the aside within coursebuilder__setup
+    .aside {
         position: sticky;
         top: 0;
         align-self: start;
         height: 100vh;
         max-height: 100vh;
         max-width: 15rem;
+        min-width: 11rem;
+        width: 100%;
         padding-bottom: var(--spacing-4);
         box-sizing: border-box;
         overflow-y: auto;
         overflow-x: hidden;
+        flex-shrink: 0;
+        border-right: none !important;
+
+        // Tablet (768-1023px): Narrower sidebar - NO gap
+        @media (min-width: 768px) and (max-width: 1023px) {
+            min-width: 12rem !important;
+            max-width: 12rem !important;
+            width: 12rem !important;
+            padding: var(--spacing-3) var(--spacing-2) var(--spacing-4) var(--spacing-2) !important;
+            padding-right: 0 !important;
+            margin-right: 0 !important;
+            margin-left: 0 !important;
+            flex-shrink: 0;
+        }
+
+        // Large (1024-1439px): Standard sidebar - NO gap
+        @media (min-width: 1024px) and (max-width: 1439px) {
+            min-width: 13rem !important;
+            max-width: 13rem !important;
+            width: 13rem !important;
+            padding: var(--spacing-3) var(--spacing-2) var(--spacing-4) var(--spacing-2) !important;
+            padding-right: 0 !important;
+            margin-right: 0 !important;
+            margin-left: 0 !important;
+            flex-shrink: 0;
+        }
+
+        // Extra Large (≥1440px): Wider sidebar - NO gap
+        @media (min-width: 1440px) {
+            min-width: 14rem !important;
+            max-width: 14rem !important;
+            width: 14rem !important;
+            padding: var(--spacing-4) var(--spacing-3) var(--spacing-4) var(--spacing-3) !important;
+            padding-right: 0 !important;
+            margin-right: 0 !important;
+            margin-left: 0 !important;
+            flex-shrink: 0;
+        }
+
+        // Tablet and up: Normal sidebar display with headings, override base padding
+        @media (min-width: 768px) {
+            padding: var(--spacing-3) var(--spacing-2) var(--spacing-4) var(--spacing-2) !important;
+            padding-right: 0 !important;
+            margin-right: 0 !important;
+            border-right: none !important;
+            
+            .aside__heading {
+                display: block;
+            }
+
+            // Show all navigation items at tablet size and up
+            .aside__item:has(.aside__link[data-section="page-setup"]),
+            .aside__item:has(.aside__link[data-section="interface"]),
+            .aside__item:has(.aside__link[data-section="themes"]),
+            .aside__item:has(.aside__link[data-section="accessibility-comfort"]) {
+                display: list-item;
+            }
+        }
+
+        // Mobile (phones): Transform to bottom navigation
+        // Extra Small (≤480px) and Small (481-767px)
+        @media (max-width: 767px) {
+            // Override base aside styles
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            top: auto !important;
+            height: auto !important;
+            max-height: 4.5rem !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: var(--spacing-2) var(--spacing-3) !important;
+            background: var(--color-background) !important;
+            border-top: 1px solid var(--color-neutral-200);
+            border-right: none !important;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+            z-index: var(--z-fixed, 1030);
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            display: block !important;
+            flex-direction: row !important;
+
+            // Hide section headings on mobile
+            .aside__heading {
+                display: none;
+            }
+
+            // Make nav container scrollable and display all lists horizontally
+            nav {
+                display: flex !important;
+                flex-direction: row !important;
+                overflow-x: auto;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; /* Firefox */
+                -ms-overflow-style: none; /* IE and Edge */
+                width: 100%;
+                gap: var(--spacing-2);
+                align-items: center;
+
+                &::-webkit-scrollbar {
+                    display: none; /* Chrome, Safari, Opera */
+                }
+            }
+
+            // Combine all lists into one horizontal scrollable row
+            .aside__list {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: var(--spacing-2);
+                align-items: center;
+                margin: 0 !important;
+                padding: 0;
+                flex-shrink: 0;
+            }
+
+            // Hide specific navigation items on mobile
+            .aside__item:has(.aside__link[data-section="page-setup"]),
+            .aside__item:has(.aside__link[data-section="interface"]),
+            .aside__item:has(.aside__link[data-section="themes"]),
+            .aside__item:has(.aside__link[data-section="accessibility-comfort"]) {
+                display: none !important;
+            }
+
+            .aside__item {
+                flex: 0 0 auto;
+                min-width: fit-content;
+                margin: 0 !important;
+            }
+
+            .aside__link {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center;
+                gap: var(--spacing-1);
+                padding: var(--spacing-2) var(--spacing-3) !important;
+                border-radius: var(--radius-medium);
+                text-align: center;
+                font-size: var(--font-size-extra-small) !important;
+                min-width: fit-content;
+                white-space: nowrap;
+                transition: background-color var(--transition-fast), color var(--transition-fast);
+                margin: 0 !important;
+
+                &[aria-current="page"],
+                &.is-active {
+                    background: var(--color-primary-50) !important;
+                    color: var(--color-primary-700) !important;
+                }
+            }
+
+            .aside__icon {
+                width: 1.5rem !important;
+                height: 1.5rem !important;
+                flex-shrink: 0;
+            }
+
+            .aside__text {
+                font-size: 0.7rem !important;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                width: 100%;
+                flex: 0 !important;
+            }
+        }
     }
 
     &__setup article[data-course-section] {
         display: none;
         flex-direction: column;
         padding: 0;
+        padding-left: 0 !important;
+        margin-left: 0 !important;
         background: white;
         min-height: 0;
+        min-width: 0;
         height: 100%;
         max-height: 100%;
         overflow: hidden;
+        overflow-x: hidden;
         box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+
+        // Mobile (phones): Adjust height to account for bottom nav
+        // Extra Small (≤480px) and Small (481-767px)
+        @media (max-width: 767px) {
+            height: calc(100vh - 4.5rem);
+            max-height: calc(100vh - 4.5rem);
+            overflow-y: auto;
+            background: transparent;
+
+            // Hide "No data submitted yet" status cards on mobile
+            .card--save-status[data-status="empty"] {
+                display: none !important;
+            }
+
+            // Hide course ID card on mobile
+            #course-code-display,
+            .card--code#course-code-display {
+                display: none !important;
+            }
+        }
+
+        // Tablet and up: Show white background, normal height, show all cards
+        @media (min-width: 768px) {
+            background: white;
+            height: 100%;
+            max-height: 100%;
+            overflow: hidden;
+
+            // Show "No data submitted yet" status cards at tablet and up
+            .card--save-status[data-status="empty"] {
+                display: flex;
+            }
+
+            // Show course ID card at tablet and up
+            #course-code-display,
+            .card--code#course-code-display {
+                display: flex;
+            }
+        }
     }
 
     &__setup article[data-course-section].is-active {
@@ -64,6 +320,7 @@
 
     &__setup article[data-course-section] .form {
         width: 100%;
+        max-width: 100%;
         margin: 0;
         padding: clamp(var(--spacing-2), 1.25vw, var(--spacing-3));
         box-shadow: none;
@@ -71,6 +328,9 @@
         display: grid;
         gap: var(--spacing-5);
         align-content: start;
+        min-width: 0;
+        overflow-x: hidden;
+        box-sizing: border-box;
     }
 
     // Reduce max-width of all inputs in coursebuilder setup
@@ -243,7 +503,7 @@
             grid-template-columns: repeat(2, 1fr);
         }
 
-        @media (max-width: 48rem) {
+        @media (max-width: 767px) {
             grid-template-columns: 1fr;
         }
     }
