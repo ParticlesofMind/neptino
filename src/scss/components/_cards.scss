@@ -680,9 +680,11 @@
       color: var(--color-success-700);
 
       .card__icon::before {
-        content: "✓";
-        color: var(--color-success-500);
-        font-weight: var(--font-weight-semibold);
+        content: "";
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: 50%;
+        background: var(--color-success-500);
       }
     }
 

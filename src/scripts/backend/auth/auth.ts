@@ -96,7 +96,16 @@ export async function signUp(
  });
 
  if (error) {
- return { success: false, error: error.message };
+ console.error("Signup error details:", {
+   message: error.message,
+   status: error.status,
+   error: error,
+   fullError: JSON.stringify(error, null, 2)
+ });
+ return { 
+   success: false, 
+   error: error.message || error.status || JSON.stringify(error) || "Database error saving new user" 
+ };
  }
 
  const createdUser = data?.user;

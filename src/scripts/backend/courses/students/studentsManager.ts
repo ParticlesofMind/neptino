@@ -79,7 +79,13 @@ export class StudentsManager {
   }
 
   public activate(): void {
-    this.init();
+    // Ensure initialization happens - init() has a guard, but we want to make sure modal controller is ready
+    if (!this.initialized) {
+      this.init();
+    } else {
+      // Even if already initialized, ensure modal controller is ready
+      this.modalController.init();
+    }
     // Always refresh on activate to ensure roster is loaded when entering students view
     const courseId = this.repository.getCourseId();
     if (courseId) {
@@ -148,7 +154,7 @@ export class StudentsManager {
     const day = now.getDate().toString().padStart(2, "0");
     const month = (now.getMonth() + 1).toString().padStart(2, "0");
     const year = now.getFullYear();
-    return `This page was last saved at ${hours}:${minutes}, on ${day}.${month}.${year}`;
+    return `Last Saved: ${day}.${month}.${year}, ${hours}:${minutes}`;
   }
 
   private updateStatus(

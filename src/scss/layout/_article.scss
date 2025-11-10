@@ -197,15 +197,15 @@
   display: flex !important;
   align-items: center;
   gap: var(--spacing-2);
-  padding: var(--spacing-3) var(--spacing-4) var(--spacing-3) var(--spacing-4);
+  padding: var(--spacing-2) var(--spacing-3) var(--spacing-2) var(--spacing-3);
   padding-right: 0;
   border: 1px solid var(--color-neutral-200);
   border-radius: var(--radius-medium);
   color: var(--color-primary-700);
   font-size: var(--font-size-small);
   background: var(--color-background);
-  min-width: 32rem;
-  width: 32rem;
+  min-width: 28rem;
+  width: 28rem;
   flex-shrink: 0;
   height: var(--size-button-base);
   min-height: var(--size-button-base);
@@ -214,6 +214,7 @@
   line-height: 1;
   flex-wrap: nowrap;
   white-space: nowrap;
+  margin-top: var(--spacing-8);
   
   // Override any grid properties from base .card
   grid-template-columns: none;
@@ -253,6 +254,7 @@
     font-size: var(--font-size-small);
     min-width: 12rem;
     width: 12rem;
+    max-width: 12rem;
     text-align: left;
     overflow: hidden;
     text-overflow: ellipsis;

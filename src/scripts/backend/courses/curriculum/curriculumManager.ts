@@ -381,11 +381,16 @@ class CurriculumManager {
       let teacherProfile = null;
       if (courseData.teacher_id) {
         const { data: profileData } = await supabase
-          .from("profiles")
-          .select("id, email, username, full_name")
+          .from("users")
+          .select("id, email, first_name, last_name")
           .eq("id", courseData.teacher_id)
           .single();
-        teacherProfile = profileData;
+        teacherProfile = profileData ? {
+          id: profileData.id,
+          email: profileData.email,
+          username: profileData.email?.split('@')[0] || null,
+          full_name: [profileData.first_name, profileData.last_name].filter(Boolean).join(' ') || profileData.email?.split('@')[0] || null
+        } : null;
       }
 
       console.log('\n┌─────────────────────────────────────────────────────────────┐');

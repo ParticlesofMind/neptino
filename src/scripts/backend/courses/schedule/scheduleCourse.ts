@@ -689,7 +689,7 @@ export class ScheduleCourseManager {
     const day = now.getDate().toString().padStart(2, "0");
     const month = (now.getMonth() + 1).toString().padStart(2, "0");
     const year = now.getFullYear();
-    return `This page was last saved at ${hours}:${minutes}, on ${day}.${month}.${year}`;
+    return `Last Saved: ${day}.${month}.${year}, ${hours}:${minutes}`;
   }
 
   private setStatus(

@@ -28,13 +28,24 @@ export class StudentsModalController {
     this.initialized = true;
     this.root.addEventListener("click", this.handleClick);
     this.root.addEventListener("keydown", this.handleKeydown, true);
+    
+    // Debug: Log initialization
+    console.log("✅ StudentsModalController initialized");
   }
 
   public open(modalId: string): void {
     const modal = this.root.getElementById(modalId);
-    if (!modal) return;
+    if (!modal) {
+      console.error("❌ Modal not found:", modalId);
+      return;
+    }
 
-    if (!(modal instanceof HTMLElement)) return;
+    if (!(modal instanceof HTMLElement)) {
+      console.error("❌ Modal element is not HTMLElement:", modalId);
+      return;
+    }
+    
+    console.log("✅ Opening modal:", modalId);
 
     this.lastFocused = this.root.activeElement as HTMLElement | null;
     this.closeActiveModal();
@@ -84,9 +95,12 @@ export class StudentsModalController {
     const trigger = target.closest<HTMLElement>(".students__trigger[data-modal-target]");
     if (trigger) {
       const modalId = trigger.getAttribute("data-modal-target");
+      console.log("🔘 Students upload button clicked, modal ID:", modalId);
       if (modalId) {
         event.preventDefault();
         this.open(modalId);
+      } else {
+        console.warn("⚠️ No modal ID found on trigger");
       }
       return;
     }
