@@ -684,7 +684,6 @@ export class CurriculumPageBridge {
 
     // Hide the single-canvas layout overlay so it doesn't tint the first page
     canvasEngine.setLayoutVisibility(false);
-    canvasEngine.setMarginOverlayVisibility(false);
 
     // Get current margins
     const margins = canvasMarginManager.getMargins();
@@ -703,6 +702,8 @@ export class CurriculumPageBridge {
       onPageChange: (index) => this.handlePageChange(index),
       onTotalHeightChange: (totalHeight) => canvasEngine.setWorldSize({ height: totalHeight }),
     });
+
+    canvasEngine.resetUserInteractionState();
 
     this.isInitialized = true;
 
@@ -847,7 +848,6 @@ export class CurriculumPageBridge {
     this.isInitialized = false;
     canvasEngine.resetWorldSize();
     canvasEngine.setLayoutVisibility(true);
-    canvasEngine.setMarginOverlayVisibility(true);
     console.log(`🧼 Canvas cleared${reason ? ` due to ${reason}` : ""}.`);
   }
 }

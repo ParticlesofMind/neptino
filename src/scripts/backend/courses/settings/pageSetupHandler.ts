@@ -21,10 +21,10 @@ export interface PageLayoutSettings {
 
 export class PageSetupHandler {
   private static readonly DEFAULT_MARGINS_MM = {
-    top: 33.87,
-    bottom: 29.63,
-    left: 25.4,
-    right: 25.4,
+    top: 20,
+    bottom: 20,
+    left: 20,
+    right: 20,
     unit: "mm" as const,
   };
   private courseId: string | null = null;
@@ -46,18 +46,48 @@ export class PageSetupHandler {
     value: unknown,
     unit: "mm" | "cm" | "inches",
   ): number | undefined {
-    if (typeof value !== "number" || Number.isNaN(value)) {
+    const numericValue = this.parseMarginValue(value);
+    if (numericValue === undefined) {
       return undefined;
     }
 
     switch (unit) {
       case "cm":
-        return value * 10;
+        return numericValue * 10;
       case "inches":
-        return value * 25.4;
+        return numericValue * 25.4;
       default:
-        return value;
+        return numericValue;
     }
+  }
+
+  private parseMarginValue(value: unknown): number | undefined {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === "string" && value.trim().length > 0) {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+
+    return undefined;
+  }
+
+  private marginsLikelyCentimeters(margins: {
+    top?: unknown;
+    right?: unknown;
+    bottom?: unknown;
+    left?: unknown;
+  }): boolean {
+    const thresholdCmValue = 10; // values <= 10 likely represent centimeters (e.g., 2.54)
+
+    return ["top", "right", "bottom", "left"].every((key) => {
+      const parsed = this.parseMarginValue(margins[key as keyof typeof margins]);
+      return parsed !== undefined && parsed > 0 && parsed <= thresholdCmValue;
+    });
   }
 
   private roundMargin(value: number | undefined): number {
@@ -405,11 +435,13 @@ export class PageSetupHandler {
         const incoming = course.course_layout;
         const incomingMargins = incoming.margins || {};
         const unit = (incomingMargins.unit as "mm" | "cm" | "inches" | undefined) ?? "mm";
+        const correctedUnit =
+          unit === "mm" && this.marginsLikelyCentimeters(incomingMargins) ? "cm" : unit;
 
-        const topMm = this.convertMarginToMillimeters(incomingMargins.top, unit);
-        const bottomMm = this.convertMarginToMillimeters(incomingMargins.bottom, unit);
-        const leftMm = this.convertMarginToMillimeters(incomingMargins.left, unit);
-        const rightMm = this.convertMarginToMillimeters(incomingMargins.right, unit);
+        const topMm = this.convertMarginToMillimeters(incomingMargins.top, correctedUnit);
+        const bottomMm = this.convertMarginToMillimeters(incomingMargins.bottom, correctedUnit);
+        const leftMm = this.convertMarginToMillimeters(incomingMargins.left, correctedUnit);
+        const rightMm = this.convertMarginToMillimeters(incomingMargins.right, correctedUnit);
 
         const hasInvalidMargins =
           topMm === undefined ||

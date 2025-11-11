@@ -18,7 +18,7 @@ type MarginListener = (margins: CanvasMarginState) => void;
 
 class CanvasMarginManager {
   // Initialize with database defaults (in mm), converted to pixels
-  // These match the course_layout defaults: top: 33.87mm, bottom: 29.63mm, left/right: 25.4mm
+  // These match the course_layout defaults: 20mm on every side
   private margins: CanvasMarginState = this.initializeDefaultMargins();
 
   private listeners = new Set<MarginListener>();
@@ -63,7 +63,7 @@ class CanvasMarginManager {
    * Apply margins provided from the page layout settings panel.
    */
   public setMarginsFromPageLayout(layout: {
-    margins: { top: number; right: number; bottom: number; left: number; unit: "mm" | "cm" | "inches" };
+    margins: { top: number; right: number; bottom: number; left: number; unit?: "mm" | "cm" | "inches" };
   }): void {
     console.log("📐 CanvasMarginManager: Setting margins from page layout:", layout.margins);
     this.setMargins({
@@ -71,7 +71,7 @@ class CanvasMarginManager {
       right: layout.margins.right,
       bottom: layout.margins.bottom,
       left: layout.margins.left,
-      unit: layout.margins.unit === "mm" ? "mm" : layout.margins.unit,
+      unit: this.normalizeLayoutUnit(layout.margins.unit),
     });
     const finalMargins = this.getMargins();
     console.log("📐 CanvasMarginManager: Final margins in pixels:", finalMargins);
@@ -137,6 +137,17 @@ class CanvasMarginManager {
     });
 
     return result;
+  }
+
+  private normalizeLayoutUnit(unit: "mm" | "cm" | "inches" | undefined): "mm" | "cm" | "inches" {
+    switch (unit) {
+      case "cm":
+        return "cm";
+      case "inches":
+        return "inches";
+      default:
+        return "mm";
+    }
   }
 
   private notify(): void {

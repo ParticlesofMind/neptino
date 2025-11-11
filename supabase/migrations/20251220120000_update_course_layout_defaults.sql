@@ -3,8 +3,8 @@
 ALTER TABLE public.courses
 ALTER COLUMN course_layout SET DEFAULT '{
   "margins": {
-    "top": 33.87,
-    "bottom": 29.63,
+    "top": 25.4,
+    "bottom": 25.4,
     "left": 25.4,
     "right": 25.4,
     "unit": "mm"
@@ -26,9 +26,9 @@ SET course_layout = jsonb_set(
         jsonb_set(
           jsonb_set(
             normalized.layout,
-            '{margins,top}',         to_jsonb(33.87::numeric), true
+            '{margins,top}',         to_jsonb(25.4::numeric), true
           ),
-          '{margins,bottom}',      to_jsonb(29.63::numeric), true
+          '{margins,bottom}',      to_jsonb(25.4::numeric), true
         ),
         '{margins,left}',         to_jsonb(25.4::numeric), true
       ),
@@ -38,12 +38,12 @@ SET course_layout = jsonb_set(
   )
 FROM normalized
 WHERE c.id = normalized.id
-  AND (
-    normalized.layout = '{}'::jsonb
+    AND (
+      normalized.layout = '{}'::jsonb
     OR (
-      COALESCE((normalized.layout->'margins'->>'top')::numeric,    25) = 25
-      AND COALESCE((normalized.layout->'margins'->>'bottom')::numeric, 25) = 25
-      AND COALESCE((normalized.layout->'margins'->>'left')::numeric,   25) = 25
-      AND COALESCE((normalized.layout->'margins'->>'right')::numeric,  25) = 25
+      COALESCE((normalized.layout->'margins'->>'top')::numeric,    25.4) = 25.4
+      AND COALESCE((normalized.layout->'margins'->>'bottom')::numeric, 25.4) = 25.4
+      AND COALESCE((normalized.layout->'margins'->>'left')::numeric,   25.4) = 25.4
+      AND COALESCE((normalized.layout->'margins'->>'right')::numeric,  25.4) = 25.4
     )
   );

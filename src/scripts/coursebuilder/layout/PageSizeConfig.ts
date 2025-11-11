@@ -17,10 +17,10 @@ export const DEFAULT_CANVAS_ORIENTATION: CanvasOrientation = "portrait";
 export const DEFAULT_CANVAS_WIDTH_PX = 1200;
 
 export const DEFAULT_PAGE_MARGINS_MM = {
-  top: 33.87,
-  bottom: 29.63,
-  left: 25.4,
-  right: 25.4,
+  top: 20,
+  bottom: 20,
+  left: 20,
+  right: 20,
   unit: "mm" as const,
 };
 

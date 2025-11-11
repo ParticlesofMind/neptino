@@ -28,8 +28,6 @@ export class CanvasEngine {
   private perspectiveElement: HTMLElement | null = null;
   private viewport: Viewport | null = null;
   private layers: Record<LayerName, Container> | null = null;
-  private marginOverlay: Graphics | null = null;
-  private marginOverlayVisible = true;
   private backgroundFill: Graphics | null = null;
   private watermarkLabel: Text | null = null;
   private layoutRenderer: CanvasLayoutRenderer | null = null;
@@ -108,7 +106,6 @@ export class CanvasEngine {
     this.initializeViewport();
     this.createLayers();
     this.drawBackground();
-    this.setupMarginOverlay();
     this.initializeLayout();
     this.setupResizeHandling();
     this.attachWheelHandler();
@@ -165,8 +162,6 @@ export class CanvasEngine {
     this.layers = null;
     this.backgroundFill = null;
     this.watermarkLabel = null;
-    this.marginOverlay = null;
-    this.marginOverlayVisible = true;
     this.objects.clear();
     this.userHasInteracted = false;
     this.grabModeActive = false;
@@ -184,6 +179,10 @@ export class CanvasEngine {
 
   public resetView(): void {
     this.resetZoom();
+  }
+
+  public resetUserInteractionState(): void {
+    this.userHasInteracted = false;
   }
 
   public onReady(callback: () => void): void {
@@ -234,13 +233,6 @@ export class CanvasEngine {
     this.layoutBlocks.header.visible = visible;
     this.layoutBlocks.body.visible = visible;
     this.layoutBlocks.footer.visible = visible;
-  }
-
-  public setMarginOverlayVisibility(visible: boolean): void {
-    this.marginOverlayVisible = visible;
-    if (this.marginOverlay) {
-      this.marginOverlay.visible = visible;
-    }
   }
 
   private handleDimensionChange(state: CanvasDimensionState): void {
@@ -590,15 +582,6 @@ export class CanvasEngine {
     this.watermarkLabel.position.set(this.baseWidth / 2, 48);
   }
 
-  private setupMarginOverlay(): void {
-    if (!this.layers) return;
-
-    this.marginOverlay = new Graphics();
-    this.marginOverlay.alpha = 0.45;
-    this.layers.ui.addChild(this.marginOverlay);
-    this.marginOverlay.visible = this.marginOverlayVisible;
-  }
-
   private initializeLayout(): void {
     if (!this.layers) return;
 
@@ -883,28 +866,12 @@ export class CanvasEngine {
   }
 
   private updateMargins(margins: { top: number; right: number; bottom: number; left: number }): void {
-    if (!this.marginOverlay) return;
-
-    const safeWidth = Math.max(0, this.baseWidth - (margins.left + margins.right));
-    const safeHeight = Math.max(0, this.baseHeight - (margins.top + margins.bottom));
-
-    this.marginOverlay.clear();
-
-    this.marginOverlay
-      .rect(margins.left, margins.top, safeWidth, safeHeight)
-      .stroke({ color: 0x4c6ef5, width: 4, alpha: 0.75 });
-
-    this.marginOverlay
-      .rect(margins.left, margins.top, safeWidth, safeHeight)
-      .fill({ color: 0x4c6ef5, alpha: 0.04 });
-
-    // Update layout blocks with new margins
-    if (this.layoutRenderer) {
-      this.layoutRenderer.updateMargins({ ...margins, unit: "px" });
-      console.log("📐 Layout blocks updated with new margins:", margins);
+    if (!this.layoutRenderer) {
+      return;
     }
 
-    this.marginOverlay.visible = this.marginOverlayVisible;
+    this.layoutRenderer.updateMargins({ ...margins, unit: "px" });
+    console.log("📐 Layout blocks updated with new margins:", margins);
   }
 
   private registerCanvasAPI(): void {

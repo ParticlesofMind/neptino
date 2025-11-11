@@ -38,8 +38,8 @@ CREATE TABLE IF NOT EXISTS public.courses (
     communication_settings jsonb DEFAULT '{}',
     course_layout jsonb DEFAULT '{
       "margins": {
-        "top": 33.87,
-        "bottom": 29.63,
+        "top": 25.4,
+        "bottom": 25.4,
         "left": 25.4,
         "right": 25.4,
         "unit": "mm"
