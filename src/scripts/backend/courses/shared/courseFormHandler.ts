@@ -168,13 +168,72 @@ export class CourseFormHandler {
     // ==========================================================================
 
     private async initialize(): Promise<void> {
-        this.findForm();
+        // Wait for form to be available (section might not be visible yet)
+        await this.findFormWithRetry();
         if (this.form) {
             await this.initializeFields();
             await this.loadExistingData();
             this.setupEventListeners();
             this.validateForm();
+        } else {
+            console.warn('⚠️ Form not found after retries, will retry when section becomes active');
+            // Set up a listener to retry when section becomes active
+            this.setupFormRetryListener();
         }
+    }
+
+    private async findFormWithRetry(maxRetries: number = 5, delay: number = 100): Promise<void> {
+        for (let i = 0; i < maxRetries; i++) {
+            this.findForm();
+            if (this.form) {
+                return;
+            }
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+
+    private setupFormRetryListener(): void {
+        // Listen for section activation to retry finding the form
+        const observer = new MutationObserver(() => {
+            if (!this.form) {
+                this.findForm();
+                if (this.form) {
+                    // Form found, initialize it
+                    this.initializeFields().then(() => {
+                        this.loadExistingData();
+                        this.setupEventListeners();
+                        this.validateForm();
+                    });
+                    observer.disconnect();
+                }
+            }
+        });
+
+        // Observe the document for changes to is-active class
+        const targetNode = document.querySelector('[data-course-section]')?.parentElement || document.body;
+        observer.observe(targetNode, {
+            attributes: true,
+            attributeFilter: ['class'],
+            subtree: true
+        });
+
+        // Also try immediately when section activation event fires
+        const handleSectionActivated = () => {
+            if (!this.form) {
+                this.findForm();
+                if (this.form) {
+                    this.initializeFields().then(() => {
+                        this.loadExistingData();
+                        this.setupEventListeners();
+                        this.validateForm();
+                    });
+                    window.removeEventListener('coursebuilderSectionActivated', handleSectionActivated);
+                    observer.disconnect();
+                }
+            }
+        };
+        window.addEventListener('coursebuilderSectionActivated', handleSectionActivated);
     }
 
     private findForm(): void {
@@ -194,15 +253,24 @@ export class CourseFormHandler {
             }
         }
 
-        // Try to find the form in the active article 
+        // Try to find the form in the active article matching our section
+        const sectionArticle = document.querySelector<HTMLElement>(`[data-course-section="${this.sectionConfig.section}"].is-active`) ||
+                               document.querySelector<HTMLElement>(`#${this.sectionConfig.section}[data-course-section]`) ||
+                               document.querySelector<HTMLElement>(`[data-course-section="${this.sectionConfig.section}"]`);
+        if (sectionArticle) {
+            this.form = sectionArticle.querySelector("form");
+            if (this.form) {
+                return;
+            }
+        }
+        
+        // Fallback: Try to find the form in any active article
         const activeArticle = document.querySelector<HTMLElement>('[data-course-section].is-active');
         if (activeArticle) {
             this.form = activeArticle.querySelector("form");
             if (this.form) {
                 return;
             }
-        } else {
-             
         }
 
         // If still not found, try to find any form in the current section
@@ -637,6 +705,11 @@ export class CourseFormHandler {
    
 
         try {
+            if (field instanceof HTMLInputElement && field.type === "checkbox") {
+                field.checked = Boolean(value === true || value === "true");
+                return;
+            }
+
             if (field.tagName === "SELECT") {
                 const selectField = field as HTMLSelectElement;
 
@@ -915,6 +988,13 @@ export class CourseFormHandler {
         for (const [key, value] of formData.entries()) {
             data[key] = value instanceof File ? value : String(value).trim();
         }
+
+        // Ensure checkbox fields are captured even when unchecked
+        const checkboxFields = this.form.querySelectorAll<HTMLInputElement>('input[type="checkbox"][name]');
+        checkboxFields.forEach((checkbox) => {
+            if (!checkbox.name) return;
+            data[checkbox.name] = checkbox.checked;
+        });
 
         return data;
     }

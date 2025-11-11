@@ -1,10 +1,22 @@
+import {
+  computePixelDimensions,
+  DEFAULT_CANVAS_ORIENTATION,
+  DEFAULT_CANVAS_SIZE,
+  DEFAULT_PAGE_MARGINS_MM,
+} from "../../../../coursebuilder/layout/PageSizeConfig";
+
+const DEFAULT_LAYOUT = computePixelDimensions(DEFAULT_CANVAS_SIZE, DEFAULT_CANVAS_ORIENTATION);
+
 export class CanvasDimensions {
-  private static readonly DEFAULT_DIMENSIONS = { width: 1200, height: 1800 };
+  private static readonly DEFAULT_DIMENSIONS = {
+    width: DEFAULT_LAYOUT.widthPx,
+    height: DEFAULT_LAYOUT.heightPx,
+  };
   private static readonly DEFAULT_MARGINS = {
-    top: 96,
-    right: 96,
-    bottom: 96,
-    left: 96,
+    top: DEFAULT_PAGE_MARGINS_MM.top * DEFAULT_LAYOUT.pixelsPerMillimeter,
+    right: DEFAULT_PAGE_MARGINS_MM.right * DEFAULT_LAYOUT.pixelsPerMillimeter,
+    bottom: DEFAULT_PAGE_MARGINS_MM.bottom * DEFAULT_LAYOUT.pixelsPerMillimeter,
+    left: DEFAULT_PAGE_MARGINS_MM.left * DEFAULT_LAYOUT.pixelsPerMillimeter,
     unit: "px" as const,
   };
 
@@ -104,4 +116,3 @@ export class CanvasDimensions {
     return typeof value === "number" && Number.isFinite(value) && value > 0;
   }
 }
-

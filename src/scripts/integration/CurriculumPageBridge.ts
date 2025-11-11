@@ -18,6 +18,7 @@ import type {
 } from "../coursebuilder/pages/PageMetadata";
 import { canvasEngine } from "../coursebuilder/CanvasEngine";
 import { canvasMarginManager } from "../coursebuilder/layout/CanvasMarginManager";
+import { canvasDimensionManager } from "../coursebuilder/layout/CanvasDimensionManager";
 import { supabase } from "../backend/supabase";
 
 type CanvasScrollNavInstance = {
@@ -122,9 +123,13 @@ export class CurriculumPageBridge {
   private canvasScrollNav: CanvasScrollNavInstance | null = null;
   private canvasScrollNavReadyListener: ((event: Event) => void) | null = null;
   private handleCurriculumResetListener: EventListener;
+  private currentPageData: PageMetadata[] = [];
+  private dimensionUnsubscribe: (() => void) | null = null;
+  private rebuildingPages = false;
 
   constructor() {
     this.init();
+    this.dimensionUnsubscribe = canvasDimensionManager.onChange(() => this.handleDimensionChange());
     this.handleCurriculumResetListener = this.handleCurriculumResetEvent.bind(this);
     document.addEventListener('curriculum-reset', this.handleCurriculumResetListener);
   }
@@ -143,6 +148,17 @@ export class CurriculumPageBridge {
     });
 
     console.log('🌉 CurriculumPageBridge initialized and listening for canvases');
+  }
+
+  private handleDimensionChange(): void {
+    if (!this.currentPageData.length || this.rebuildingPages) {
+      return;
+    }
+
+    this.rebuildingPages = true;
+    void this.initializePageManager(this.currentPageData).finally(() => {
+      this.rebuildingPages = false;
+    });
   }
 
   /**
@@ -283,6 +299,7 @@ export class CurriculumPageBridge {
 
       if (!canvases || canvases.length === 0) {
         console.warn('⚠️ No canvases found for course:', courseId);
+        this.currentPageData = [];
         return;
       }
 
@@ -292,6 +309,8 @@ export class CurriculumPageBridge {
       const pageData = this.convertCanvasesToPageData(canvases as CurriculumCanvas[]);
 
       console.log(`📄 Converted to ${pageData.length} page metadata entries`);
+
+      this.currentPageData = pageData;
 
       // Initialize page manager with canvas engine viewport
       await this.initializePageManager(pageData);
@@ -669,12 +688,17 @@ export class CurriculumPageBridge {
 
     // Get current margins
     const margins = canvasMarginManager.getMargins();
+    const dimensions = canvasDimensionManager.getState();
 
     // Create page manager
     this.pageManager = new PageManager({
       viewport,
       pageData,
       margins,
+      pageDimensions: {
+        width: dimensions.width,
+        height: dimensions.height,
+      },
       showDebugBorders: false, // Set to true for debugging
       onPageChange: (index) => this.handlePageChange(index),
       onTotalHeightChange: (totalHeight) => canvasEngine.setWorldSize({ height: totalHeight }),

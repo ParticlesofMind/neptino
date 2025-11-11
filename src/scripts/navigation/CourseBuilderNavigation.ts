@@ -360,6 +360,12 @@ export class AsideNavigation {
   private setActiveStates(activeLink: HTMLAnchorElement, targetSection: HTMLElement): void {
     activeLink.setAttribute('aria-current', 'page');
     targetSection.classList.add('is-active');
+    
+    // Dispatch custom event to notify CourseBuilder to load section data
+    const sectionActivatedEvent = new CustomEvent('coursebuilderSectionActivated', {
+      detail: { sectionId: targetSection.id }
+    });
+    window.dispatchEvent(sectionActivatedEvent);
   }
 
   private restoreActiveSection(): void {

@@ -7,6 +7,11 @@ import { Container, Graphics, Text, TextStyle } from "pixi.js";
 import type { PageMetadata, LayoutNode } from "./PageMetadata";
 import type { TableData } from "../layout/utils/TableRenderer";
 import { formatDate } from "./PageMetadata";
+import {
+  computePixelDimensions,
+  DEFAULT_CANVAS_ORIENTATION,
+  DEFAULT_CANVAS_SIZE,
+} from "../layout/PageSizeConfig";
 
 type PlaceholderKind =
   | "generic"
@@ -22,8 +27,9 @@ type PlaceholderKind =
   | "institution"
   | "teacher";
 
-const BASE_WIDTH = 1200;
-const BASE_HEIGHT = 1800;
+const DEFAULT_DIMENSIONS = computePixelDimensions(DEFAULT_CANVAS_SIZE, DEFAULT_CANVAS_ORIENTATION);
+const FALLBACK_WIDTH = DEFAULT_DIMENSIONS.widthPx;
+const FALLBACK_HEIGHT = DEFAULT_DIMENSIONS.heightPx;
 const HEADER_FOOTER_BG_COLOR = 0xdbeafe;
 const HEADER_FOOTER_BG_ALPHA = 0.35;
 
@@ -92,8 +98,8 @@ export class PageContainer extends Container {
     super();
     
     this.config = {
-      width: config.width ?? BASE_WIDTH,
-      height: config.height ?? BASE_HEIGHT,
+      width: config.width ?? FALLBACK_WIDTH,
+      height: config.height ?? FALLBACK_HEIGHT,
       margins: config.margins,
       showDebugBorders: config.showDebugBorders ?? false,
     };
@@ -128,6 +134,14 @@ export class PageContainer extends Container {
     this.addChild(this.headerContainer);
     this.addChild(this.bodyContainer);
     this.addChild(this.footerContainer);
+  }
+
+  private get pageWidth(): number {
+    return this.config.width ?? FALLBACK_WIDTH;
+  }
+
+  private get pageHeight(): number {
+    return this.config.height ?? FALLBACK_HEIGHT;
   }
 
   private sanitizeTextInput(input: string | null | undefined): string {
@@ -260,7 +274,9 @@ export class PageContainer extends Container {
    * Build the layout structure
    */
   private buildLayout(): void {
-    const { width = BASE_WIDTH, height = BASE_HEIGHT, margins } = this.config;
+    const width = this.pageWidth;
+    const height = this.pageHeight;
+    const { margins } = this.config;
     
     // Calculate dimensions
     const headerWidth = width;
@@ -312,7 +328,8 @@ export class PageContainer extends Container {
    * Populate header with metadata
    */
   private populateHeader(): void {
-    const { width = BASE_WIDTH, margins } = this.config;
+    const width = this.pageWidth;
+    const { margins } = this.config;
     const headerWidth = width;
     const headerHeight = Math.max(1, margins.top);
     const labelValueSpacing = 4;
@@ -372,7 +389,8 @@ export class PageContainer extends Container {
    * Populate footer with metadata
    */
   private populateFooter(): void {
-    const { width = BASE_WIDTH, margins } = this.config;
+    const width = this.pageWidth;
+    const { margins } = this.config;
     const footerWidth = width;
     const footerHeight = Math.max(1, margins.bottom);
     const separatorPadding = 8;
@@ -443,7 +461,9 @@ export class PageContainer extends Container {
    * Populate body with placeholder content
    */
   private populateBody(): void {
-    const { width = BASE_WIDTH, height = BASE_HEIGHT, margins } = this.config;
+    const width = this.pageWidth;
+    const height = this.pageHeight;
+    const { margins } = this.config;
     const bodyWidth = width - margins.left - margins.right;
     const bodyHeight = height - margins.top - margins.bottom;
 

@@ -250,14 +250,16 @@ export const SECTION_CONFIGS: { [key: string]: SectionConfig } = {
  autoSave: true,
  },
 
-  settings: {
-    section: "settings",
+  "course-visibility": {
+    section: "course-visibility",
     requiredFields: [],
-    jsonbField: "course_settings",
+    jsonbField: "visibility_settings",
     fields: [
       { name: "course_visible", type: "checkbox", required: false },
       { name: "allow_enrollment", type: "checkbox", required: false },
       { name: "require_approval", type: "checkbox", required: false },
+      { name: "enable_notifications", type: "checkbox", required: false },
+      { name: "public_course", type: "checkbox", required: false },
     ],
     autoSave: true,
   },
@@ -267,6 +269,101 @@ export const SECTION_CONFIGS: { [key: string]: SectionConfig } = {
     // Stored as a top-level column in courses
     fields: [
       { name: "course_pedagogy", type: "text", required: true },
+    ],
+    autoSave: true,
+  },
+  marketplace: {
+    section: "marketplace",
+    requiredFields: ["listing_status"],
+    jsonbField: "marketplace_settings",
+    fields: [
+      {
+        name: "listing_status",
+        type: "select",
+        required: true,
+        options: ["draft", "pending", "published"],
+      },
+      { name: "target_audience", type: "text", required: false },
+      { name: "revenue_share", type: "number", required: false },
+      { name: "distribution_channels", type: "textarea", required: false },
+    ],
+    autoSave: true,
+  },
+  resources: {
+    section: "resources",
+    requiredFields: [],
+    jsonbField: "resources_settings",
+    fields: [
+      { name: "resource_policy", type: "textarea", required: false },
+      {
+        name: "allow_student_uploads",
+        type: "checkbox",
+        required: false,
+      },
+      {
+        name: "default_storage_provider",
+        type: "select",
+        required: false,
+        options: ["internal", "google-drive", "dropbox"],
+      },
+      { name: "featured_resources", type: "text", required: false },
+    ],
+    autoSave: true,
+  },
+  "pricing-monetization": {
+    section: "pricing-monetization",
+    requiredFields: [],
+    jsonbField: "pricing_settings",
+    fields: [
+      {
+        name: "pricing_model",
+        type: "select",
+        required: false,
+        options: ["free", "subscription", "one-time", "license"],
+      },
+      { name: "base_price", type: "number", required: false },
+      {
+        name: "currency",
+        type: "select",
+        required: false,
+        options: ["USD", "EUR", "GBP"],
+      },
+      { name: "trial_available", type: "checkbox", required: false },
+      { name: "discount_notes", type: "textarea", required: false },
+    ],
+    autoSave: true,
+  },
+  "external-integrations": {
+    section: "external-integrations",
+    requiredFields: [],
+    jsonbField: "integration_settings",
+    fields: [
+      {
+        name: "lms_provider",
+        type: "select",
+        required: false,
+        options: ["None", "Canvas", "Moodle", "Schoology"],
+      },
+      { name: "api_access", type: "checkbox", required: false },
+      { name: "webhook_url", type: "text", required: false },
+      { name: "integration_notes", type: "textarea", required: false },
+    ],
+    autoSave: true,
+  },
+  communication: {
+    section: "communication",
+    requiredFields: [],
+    jsonbField: "communication_settings",
+    fields: [
+      { name: "welcome_message", type: "textarea", required: false },
+      {
+        name: "announcement_channel",
+        type: "select",
+        required: false,
+        options: ["email", "in-app", "sms"],
+      },
+      { name: "enable_updates", type: "checkbox", required: false },
+      { name: "office_hours", type: "text", required: false },
     ],
     autoSave: true,
   },

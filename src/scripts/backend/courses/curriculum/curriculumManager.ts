@@ -76,7 +76,7 @@ export interface TemplateSummary {
   type: string;
   description?: string | null;
   isMissing?: boolean;
-  scope?: "course" | "global";
+  scope?: "course" | "global" | "shared";
   definition?: TemplateDefinition;
 }
 
@@ -1269,6 +1269,7 @@ class CurriculumManager {
     } catch (error) {
       console.error("Error loading templates for curriculum placement:", error);
     } finally {
+      this.renderCurriculumPreview();
       this.renderTemplatePlacementUI();
     }
   }
@@ -1282,15 +1283,27 @@ class CurriculumManager {
     const { data, error } = await supabase
       .from("templates")
       .select(
-        "id, template_id, template_description, template_type, template_data, course_id",
+        "id, template_id, template_description, template_type, template_data, course_id, created_at",
       )
-      .or(`course_id.eq.${this.courseId},course_id.is.null`);
+      .order("course_id", { ascending: false })
+      .order("created_at", { ascending: false });
 
     if (error) {
       throw error;
     }
 
     const templates = Array.isArray(data) ? data : [];
+    const scopeRank = (scope: TemplateSummary["scope"] | undefined): number => {
+      switch (scope) {
+        case "course":
+          return 0;
+        case "shared":
+          return 1;
+        default:
+          return 2;
+      }
+    };
+
     this.availableTemplates = templates
       .map((template: any) => {
         const templateData =
@@ -1306,7 +1319,12 @@ class CurriculumManager {
             ? template.template_type.trim()
             : "lesson";
         const normalizedType = this.normalizeTemplateTypeName(rawType);
-        const scope: "course" | "global" = template.course_id ? "course" : "global";
+        let scope: TemplateSummary["scope"] = "global";
+        if (template.course_id === this.courseId) {
+          scope = "course";
+        } else if (template.course_id) {
+          scope = "shared";
+        }
         const definition = this.normalizeTemplateDefinition(template.template_data);
         return {
           id: template.id,
@@ -1319,9 +1337,11 @@ class CurriculumManager {
         } as TemplateSummary;
       })
       .sort((a, b) => {
-        if (a.scope !== b.scope) {
-          return a.scope === "course" ? -1 : 1;
+        const scopeDifference = scopeRank(a.scope) - scopeRank(b.scope);
+        if (scopeDifference !== 0) {
+          return scopeDifference;
         }
+
         return a.name.localeCompare(b.name);
       });
   }
@@ -1334,16 +1354,34 @@ class CurriculumManager {
     const summaryById = new Map(
       this.availableTemplates.map((template) => [template.id, template]),
     );
+    const summaryBySlug = new Map(
+      this.availableTemplates
+        .filter(
+          (template) =>
+            typeof template.templateId === "string" && template.templateId.length > 0,
+        )
+        .map((template) => [template.templateId, template]),
+    );
 
     this.templatePlacements = this.templatePlacements.map((placement) => {
-      const summary = summaryById.get(placement.templateId);
+      let summary = summaryById.get(placement.templateId);
+
+      if (!summary) {
+        const slugCandidate = placement.templateSlug || placement.templateId;
+        if (slugCandidate) {
+          summary = summaryBySlug.get(slugCandidate);
+        }
+      }
+
       if (summary) {
         return {
           ...placement,
+          templateId: summary.id,
           templateSlug: summary.templateId,
           templateName: summary.name,
         };
       }
+
       return placement;
     });
   }
@@ -1650,7 +1688,32 @@ class CurriculumManager {
   private getTemplatePlacement(
     templateId: string,
   ): TemplatePlacementConfig | undefined {
-    return this.templatePlacements.find((placement) => placement.templateId === templateId);
+    const directMatch = this.templatePlacements.find(
+      (placement) => placement.templateId === templateId,
+    );
+    if (directMatch) {
+      return directMatch;
+    }
+
+    const summary = this.availableTemplates.find(
+      (template) => template.id === templateId,
+    );
+    const slugCandidates = new Set<string>();
+
+    if (summary?.templateId) {
+      slugCandidates.add(summary.templateId);
+    }
+
+    if (templateId) {
+      slugCandidates.add(templateId);
+    }
+
+    return this.templatePlacements.find((placement) => {
+      const slugMatch =
+        placement.templateSlug && slugCandidates.has(placement.templateSlug);
+      const idMatch = placement.templateId && slugCandidates.has(placement.templateId);
+      return Boolean(slugMatch || idMatch);
+    });
   }
 
   private lookupTemplateSummary(

@@ -43,6 +43,7 @@ export class CourseBuilder {
  this.getCourseId();
  this.initializeCurrentSection();
  this.setupSectionNavigation();
+ this.setupAsideNavigationListener();
  
  // Manage navigation tabs based on course existence
  this.updateNavigationTabsState();
@@ -190,8 +191,11 @@ export class CourseBuilder {
  }
  
  // Update classification handler if available
- if (typeof window !== 'undefined' && (window as any).classificationHandler) {
- (window as any).classificationHandler.setCourseId(courseId);
+ if (typeof window !== "undefined") {
+ const handler = (window as any).classificationHandler;
+ if (handler && typeof handler.setCourseId === "function") {
+ void handler.setCourseId(courseId);
+ }
  }
  
  // Update page setup handler
@@ -277,7 +281,7 @@ const normalized = saved.trim();
 return normalized.length ? normalized : null;
 }
 
-private setupSectionNavigation(): void {
+ private setupSectionNavigation(): void {
  // Listen for aside navigation clicks
  const asideLinks = document.querySelectorAll('.aside__link[data-section]');
  asideLinks.forEach((link) => {
@@ -289,6 +293,19 @@ private setupSectionNavigation(): void {
  }
  });
  });
+ }
+
+ private setupAsideNavigationListener(): void {
+ // Listen for section activation events from AsideNavigation
+ window.addEventListener('coursebuilderSectionActivated', ((e: CustomEvent) => {
+ const sectionId = e.detail?.sectionId;
+ if (sectionId) {
+ // Small delay to ensure DOM is updated
+ setTimeout(() => {
+ this.loadSection(sectionId);
+ }, 50);
+ }
+ }) as EventListener);
  }
 
  // ==========================================================================
@@ -360,10 +377,32 @@ articles.forEach((article) => {
         this.studentsManager.setCourseId(this.courseId);
         void this.studentsManager.refreshRoster();
       }
-    } else if (sectionId === "essentials" || sectionId === "settings" || sectionId === "pedagogy") {
-      // Initialize generic form handler for form-based sections
-      console.log('✅ Creating CourseFormHandler for section:', sectionId);
-  this.currentFormHandler = new CourseFormHandler(sectionId, this.courseId || undefined);
+    } else if (sectionId === "classification") {
+      if (typeof window !== "undefined") {
+        const handler = (window as any).classificationHandler;
+        if (handler && typeof handler.setCourseId === "function") {
+          void handler.setCourseId(this.courseId || null);
+        }
+      }
+    } else {
+      const formSections = new Set([
+        "essentials",
+        "pedagogy",
+        "course-visibility",
+        "marketplace",
+        "resources",
+        "pricing-monetization",
+        "external-integrations",
+        "communication",
+      ]);
+
+      if (formSections.has(sectionId)) {
+        console.log('✅ Creating CourseFormHandler for section:', sectionId);
+        this.currentFormHandler = new CourseFormHandler(
+          sectionId,
+          this.courseId || undefined,
+        );
+      }
     }
 
  // Log form handler initialization

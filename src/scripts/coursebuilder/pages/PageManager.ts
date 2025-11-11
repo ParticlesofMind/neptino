@@ -7,9 +7,8 @@ import { Container, Graphics, Text, TextStyle } from "pixi.js";
 import type { Viewport } from "pixi-viewport";
 import { PageContainer } from "./PageContainer";
 import type { PageMetadata } from "./PageMetadata";
+import { canvasDimensionManager } from "../layout/CanvasDimensionManager";
 
-const BASE_WIDTH = 1200;
-const BASE_HEIGHT = 1800;
 const PAGE_GAP = 40; // Gap between pages
 const PAGE_BOUNDARY_PADDING = 24; // Space before first and after last page
 const VIEWPORT_BUFFER = 200; // Pre-load buffer in pixels
@@ -27,6 +26,10 @@ interface PageManagerConfig {
   showDebugBorders?: boolean;
   onPageChange?: (index: number) => void;
   onTotalHeightChange?: (totalHeight: number) => void;
+  pageDimensions?: {
+    width: number;
+    height: number;
+  };
 }
 
 interface LoadedPage {
@@ -61,6 +64,8 @@ export class PageManager {
 
   // Background
   private backgroundContainer: Container;
+  private pageWidth: number;
+  private pageHeight: number;
 
   constructor(config: PageManagerConfig) {
     this.viewport = config.viewport;
@@ -69,6 +74,9 @@ export class PageManager {
     this.showDebugBorders = config.showDebugBorders ?? false;
     this.onPageChangeCallback = config.onPageChange;
     this.onTotalHeightChangeCallback = config.onTotalHeightChange;
+    const dimensionDefaults = canvasDimensionManager.getState();
+    this.pageWidth = config.pageDimensions?.width ?? dimensionDefaults.width;
+    this.pageHeight = config.pageDimensions?.height ?? dimensionDefaults.height;
 
     // Create scroll container
     this.scrollContainer = new Container();
@@ -106,7 +114,7 @@ export class PageManager {
 
     for (let i = 0; i < this.pageData.length; i++) {
       this.pagePositions.push(currentY);
-      currentY += BASE_HEIGHT + PAGE_GAP;
+      currentY += this.pageHeight + PAGE_GAP;
     }
 
     if (this.pageData.length > 0) {
@@ -128,7 +136,7 @@ export class PageManager {
 
     this.pagePositions.forEach((y, index) => {
       // Draw page background
-      bg.rect(0, y, BASE_WIDTH, BASE_HEIGHT);
+      bg.rect(0, y, this.pageWidth, this.pageHeight);
       bg.fill({ color: 0xffffff, alpha: 1 });
       bg.stroke({ color: 0xe2e8f0, width: 2 });
 
@@ -144,8 +152,8 @@ export class PageManager {
         style: numberStyle,
       });
       numberText.anchor.set(0.5);
-      numberText.x = BASE_WIDTH / 2;
-      numberText.y = y + BASE_HEIGHT / 2;
+      numberText.x = this.pageWidth / 2;
+      numberText.y = y + this.pageHeight / 2;
       bg.addChild(numberText);
     });
 
@@ -193,7 +201,7 @@ export class PageManager {
     const pagesToLoad: number[] = [];
     
     this.pagePositions.forEach((y, index) => {
-      const pageBottom = y + BASE_HEIGHT;
+      const pageBottom = y + this.pageHeight;
       
       // Check if page intersects with load range
       if (y <= loadBottom && pageBottom >= loadTop) {
@@ -235,7 +243,7 @@ export class PageManager {
     const distant: { index: number; distance: number }[] = [];
 
     this.loadedPages.forEach((page) => {
-      const pageCenter = page.yPosition + BASE_HEIGHT / 2;
+      const pageCenter = page.yPosition + this.pageHeight / 2;
       const distance = Math.abs(pageCenter - viewportCenter);
       distant.push({ index: page.index, distance });
     });
@@ -265,8 +273,8 @@ export class PageManager {
 
     // Create page container
     const pageContainer = new PageContainer(metadata, {
-      width: BASE_WIDTH,
-      height: BASE_HEIGHT,
+      width: this.pageWidth,
+      height: this.pageHeight,
       margins: this.margins,
       showDebugBorders: this.showDebugBorders,
     });
@@ -318,7 +326,7 @@ export class PageManager {
     let closestDistance = Infinity;
 
     this.pagePositions.forEach((y, index) => {
-      const pageCenter = y + BASE_HEIGHT / 2;
+      const pageCenter = y + this.pageHeight / 2;
       const distance = Math.abs(pageCenter - viewportCenter);
       
       if (distance < closestDistance) {
@@ -343,8 +351,8 @@ export class PageManager {
       return;
     }
 
-    const targetY = this.pagePositions[index] + BASE_HEIGHT / 2;
-    const targetX = BASE_WIDTH / 2;
+    const targetY = this.pagePositions[index] + this.pageHeight / 2;
+    const targetX = this.pageWidth / 2;
 
     this.currentPageIndex = index;
     this.notifyPageChange();

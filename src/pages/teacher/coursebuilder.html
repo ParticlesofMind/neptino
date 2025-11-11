@@ -342,7 +342,7 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="card card--card card--save-status" id="essentials-card card--save-status" aria-live="polite" data-status="empty">
+            <div class="card card--card card--save-status" id="essentials-save-status" aria-live="polite" data-status="empty">
               <span class="card__icon" aria-hidden="true"></span>
               <span class="card__text">No data submitted yet</span>
             </div>
@@ -432,21 +432,21 @@
                 <label class="form__label" for="previous-course-select">
                   <span>Previous Course</span>
                   <span class="form__label-hint">Course that should come before this one</span>
-                  <select class="input input--select" name="previous_course" id="previous-course-select">
+                  <select class="input input--select input--select--essentials" name="previous_course" id="previous-course-select">
                     <option value="">Loading courses...</option>
                   </select>
                 </label>
                 <label class="form__label" for="current-course-select">
                   <span>Current Course</span>
                   <span class="form__label-hint">Other courses at this level</span>
-                  <select class="input input--select" name="current_course" id="current-course-select">
+                  <select class="input input--select input--select--essentials" name="current_course" id="current-course-select">
                     <option value="">Loading courses...</option>
                   </select>
                 </label>
                 <label class="form__label" for="next-course-select">
                   <span>Next Course</span>
                   <span class="form__label-hint">Course that should come after this one</span>
-                  <select class="input input--select" name="next_course" id="next-course-select">
+                  <select class="input input--select input--select--essentials" name="next_course" id="next-course-select">
                     <option value="">Loading courses...</option>
                   </select>
                 </label>
@@ -457,7 +457,7 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="card card--save-status" id="classification-card card--save-status" aria-live="polite" data-status="empty">
+            <div class="card card--save-status" id="classification-save-status" aria-live="polite" data-status="empty">
               <span class="card card--card__icon" aria-hidden="true"></span>
               <span class="card card--card__text">No data submitted yet</span>
             </div>
@@ -498,7 +498,7 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="card card--save-status" id="template-card card--save-status" aria-live="polite" data-status="empty">
+            <div class="card card--save-status" id="templates-save-status" aria-live="polite" data-status="empty">
               <span class="card card--card__icon" aria-hidden="true"></span>
               <span class="card card--card__text">No data submitted yet</span>
             </div>
@@ -577,8 +577,8 @@
                 <div class="schedule__breaks__list" id="break-times-list">
                   <!-- Break time inputs will be dynamically added here -->
                 </div>
-                <button class="button button--outline button--small" type="button" id="add-break-time-btn">
-                  + Add Break Time
+                <button class="button button--primary button--small schedule__break-add-standalone" type="button" id="add-break-time-btn">
+                  +
                 </button>
               </div>
 
@@ -605,7 +605,7 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="card card--save-status" id="schedule-card card--save-status" aria-live="polite" data-status="empty">
+            <div class="card card--save-status" id="schedule-save-status" aria-live="polite" data-status="empty">
               <span class="card card--card__icon" aria-hidden="true"></span>
               <span class="card card--card__text">No data submitted yet</span>
             </div>
@@ -749,10 +749,6 @@
                   <div class="card__content">
                     <span class="card__title">Minimalist Course</span>
                     <span class="card__description">Core instructional templates only</span>
-                    <ul class="card__meta">
-                      <li>Lesson</li>
-                      <li>Quiz</li>
-                    </ul>
                   </div>
                 </label>
                 
@@ -761,13 +757,6 @@
                   <div class="card__content">
                     <span class="card__title">Essential Course</span>
                     <span class="card__description">All Minimalist templates plus evaluation and certification</span>
-                    <ul class="card__meta">
-                      <li>Lesson</li>
-                      <li>Quiz</li>
-                      <li>Feedback</li>
-                      <li>Assessment</li>
-                      <li>Certificate</li>
-                    </ul>
                   </div>
                 </label>
                 
@@ -776,18 +765,6 @@
                   <div class="card__content">
                     <span class="card__title">Complete Course</span>
                     <span class="card__description">Every available template included</span>
-                    <ul class="card__meta">
-                      <li>Lesson</li>
-                      <li>Quiz</li>
-                      <li>Feedback</li>
-                      <li>Assessment</li>
-                      <li>Report</li>
-                      <li>Review</li>
-                      <li>Project</li>
-                      <li>Module Orientation</li>
-                      <li>Course Orientation</li>
-                      <li>Certificate</li>
-                    </ul>
                   </div>
                 </label>
                 
@@ -830,7 +807,7 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="card card--save-status" id="curriculum-card card--save-status" aria-live="polite" data-status="empty">
+            <div class="card card--save-status" id="curriculum-save-status" aria-live="polite" data-status="empty">
               <span class="card card--card__icon" aria-hidden="true"></span>
               <span class="card card--card__text">No data submitted yet</span>
             </div>
@@ -850,7 +827,7 @@
             </button>
           </div>
           <section class="article__config">
-            <form class="form form--generation">
+            <form class="form form--generation" id="generation-settings-form">
 
             <!-- AI Generation Section -->
             <div class="curriculum-config__group curriculum-config__group--ai-generation">
@@ -889,40 +866,41 @@
                       <input type="checkbox" name="ai-context-existing">
                       <span>Existing Curriculum Content</span>
                     </label>
-                  </div>
-                </div>
-              </div>
-              <div class="ai-generation__options">
 
-                <div class="ai-generation__buttons">
-                  <button type="button" class="button button--primary" data-ai-generate="all">
-                    Generate All
-                  </button>
-                  <button type="button" class="button button--outline" data-ai-generate="modules">
-                    Generate Module Names
-                  </button>
-                  <button type="button" class="button button--outline" data-ai-generate="lessons">
-                    Generate Lesson Names
-                  </button>
-                  <button type="button" class="button button--outline" data-ai-generate="topics">
-                    Generate Topic Titles
-                  </button>
-                  <button type="button" class="button button--outline" data-ai-generate="objectives">
-                    Generate Objectives
-                  </button>
-                  <button type="button" class="button button--outline" data-ai-generate="tasks">
-                    Generate Tasks
-                  </button>
-                </div>
+                    <div class="ai-generation__options">
 
-                <!-- Status Display -->
-                <div class="ai-generation__status" id="ai-generation-status" style="display: none;">
-                  <div class="ai-generation__status-content">
-                    <div class="spinner"></div>
-                    <span class="ai-generation__status-text">Initializing AI model...</span>
-                  </div>
-                  <div class="ai-generation__progress-bar">
-                    <div class="ai-generation__progress-fill" style="width: 0%"></div>
+                      <div class="ai-generation__buttons">
+                        <button type="button" class="button button--primary" data-ai-generate="all">
+                          Generate All
+                        </button>
+                        <button type="button" class="button button--outline" data-ai-generate="modules">
+                          Generate Module Names
+                        </button>
+                        <button type="button" class="button button--outline" data-ai-generate="lessons">
+                          Generate Lesson Names
+                        </button>
+                        <button type="button" class="button button--outline" data-ai-generate="topics">
+                          Generate Topic Titles
+                        </button>
+                        <button type="button" class="button button--outline" data-ai-generate="objectives">
+                          Generate Objectives
+                        </button>
+                        <button type="button" class="button button--outline" data-ai-generate="tasks">
+                          Generate Tasks
+                        </button>
+                      </div>
+
+                      <!-- Status Display -->
+                      <div class="ai-generation__status" id="ai-generation-status" style="display: none;">
+                        <div class="ai-generation__status-content">
+                          <div class="spinner"></div>
+                          <span class="ai-generation__status-text">Initializing AI model...</span>
+                        </div>
+                        <div class="ai-generation__progress-bar">
+                          <div class="ai-generation__progress-fill" style="width: 0%"></div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -968,7 +946,7 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="card card--save-status" id="generation-card card--save-status" aria-live="polite" data-status="empty">
+            <div class="card card--save-status" id="generation-save-status" aria-live="polite" data-status="empty">
               <span class="card card--card__icon" aria-hidden="true"></span>
               <span class="card card--card__text">No data submitted yet</span>
             </div>
@@ -984,7 +962,7 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="card card--save-status" id="general-settings-card card--save-status" aria-live="polite" data-status="empty">
+            <div class="card card--save-status" id="general-settings-save-status" aria-live="polite" data-status="empty">
               <span class="card card--card__icon" aria-hidden="true"></span>
               <span class="card card--card__text">No data submitted yet</span>
             </div>
@@ -995,12 +973,33 @@
 
       <article id="marketplace" data-course-section class="article article--marketplace">
         <div class="article__main">
-          <p class="placeholder">Marketplace integration features will be available here...</p>
+          <form class="form form--marketplace" id="marketplace-form">
+            <label class="form__label">
+              Listing Status
+              <select class="input input--select" name="listing_status" required>
+                <option value="draft">Draft</option>
+                <option value="pending">Pending Review</option>
+                <option value="published">Published</option>
+              </select>
+            </label>
+            <label class="form__label">
+              Target Audience
+              <input class="input" type="text" name="target_audience" placeholder="e.g., Grade 11 Humanities" />
+            </label>
+            <label class="form__label">
+              Revenue Share (%)
+              <input class="input" type="number" name="revenue_share" min="0" max="100" step="1" placeholder="30" />
+            </label>
+            <label class="form__label">
+              Distribution Channels
+              <textarea class="input input--textarea" name="distribution_channels" placeholder="List marketplaces or partner channels"></textarea>
+            </label>
+          </form>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="card card--save-status" id="marketplace-card card--save-status" aria-live="polite" data-status="empty">
+            <div class="card card--save-status" id="marketplace-save-status" aria-live="polite" data-status="empty">
               <span class="card card--card__icon" aria-hidden="true"></span>
               <span class="card card--card__text">No data submitted yet</span>
             </div>
@@ -1011,12 +1010,33 @@
       <!-- Resources Article -->
       <article id="resources" data-course-section class="article article--resources">
         <div class="article__main">
-          <p class="placeholder">Resources content will be added here.</p>
+          <form class="form form--resources" id="resources-form">
+            <label class="form__label">
+              Resource Policy
+              <textarea class="input input--textarea" name="resource_policy" placeholder="Describe how resources should be used or shared."></textarea>
+            </label>
+            <label class="form__label form__label--checkbox">
+              <input class="input input--checkbox" type="checkbox" name="allow_student_uploads" />
+              Allow students to upload resources
+            </label>
+            <label class="form__label">
+              Default Storage Provider
+              <select class="input input--select" name="default_storage_provider">
+                <option value="internal">Neptino Storage</option>
+                <option value="google-drive">Google Drive</option>
+                <option value="dropbox">Dropbox</option>
+              </select>
+            </label>
+            <label class="form__label">
+              Featured Resources (comma separated)
+              <input class="input" type="text" name="featured_resources" placeholder="Intro deck, syllabus, reading list" />
+            </label>
+          </form>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="card card--save-status" id="resources-card card--save-status" aria-live="polite" data-status="empty">
+            <div class="card card--save-status" id="resources-save-status" aria-live="polite" data-status="empty">
               <span class="card card--card__icon" aria-hidden="true"></span>
               <span class="card card--card__text">No data submitted yet</span>
             </div>
@@ -1042,11 +1062,6 @@
                 Upload students
               </button>
 
-              <label class="form__label students__option" for="students-import-contacts-toggle">
-                <input class="input input--radio" type="radio" id="students-import-contacts-toggle" name="students-method" value="import-contacts" />
-                <span>Import Contacts</span>
-              </label>
-
               <label class="form__label students__option" for="students-manual-entry-toggle">
                 <input class="input input--radio" type="radio" id="students-manual-entry-toggle" name="students-method" value="manual-entry" />
                 <span>Manual Entry</span>
@@ -1059,36 +1074,28 @@
           </section>
 
           <section class="article__preview students__preview" aria-labelledby="students-preview-title">
-          <div class="students__table-wrapper" role="region" aria-live="polite" aria-busy="false"
+          <div class="students__list-wrapper" role="region" aria-live="polite" aria-busy="false"
             aria-describedby="students-preview-empty">
-            <table class="students__table" id="students-preview-table">
-              <thead>
-                <tr>
-                  <th scope="col">First name</th>
-                  <th scope="col">Last name</th>
-                  <th scope="col">Email</th>
-                  <th scope="col">Student ID</th>
-                  <th scope="col">Grade level</th>
-                  <th scope="col">Learning style</th>
-                  <th scope="col">Initial assessment</th>
-                  <th scope="col" class="students__table-delete-col">Action</th>
-                </tr>
-              </thead>
-              <tbody id="students-preview-body">
-                <tr class="students__preview-empty" id="students-preview-empty">
-                  <td colspan="8">
-                    No roster loaded yet. Upload or enter students to generate a preview.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="students__list" id="students-preview-list">
+              <div class="students__list-header">
+                <div class="students__list-header-cell">First name</div>
+                <div class="students__list-header-cell">Last name</div>
+                <div class="students__list-header-cell">Email</div>
+                <div class="students__list-header-cell">Student ID</div>
+              </div>
+              <div class="students__list-body" id="students-preview-body">
+                <div class="students__preview-empty" id="students-preview-empty">
+                  No roster loaded yet. Upload or enter students to generate a preview.
+                </div>
+              </div>
+            </div>
           </div>
           </section>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="card card--save-status" id="students-card card--save-status" aria-live="polite" data-status="empty">
+            <div class="card card--save-status" id="students-save-status" aria-live="polite" data-status="empty">
               <span class="card card--card__icon" aria-hidden="true"></span>
               <span class="card card--card__text">No data submitted yet</span>
             </div>
@@ -1099,57 +1106,29 @@
       <article class="modal modal--coursebuilder modal--students" id="students-upload-modal" aria-hidden="true"
         role="dialog" aria-labelledby="students-upload-title" aria-modal="true">
         <div class="modal__content">
-          <header class="modal__header">
-            <h2 class="modal__title" id="students-upload-title">Upload students</h2>
-            <button class="button button--subtle button--small modal__close" type="button"
-              data-modal-close="students-upload-modal" aria-label="Close upload students modal">
-              &times;
-            </button>
-          </header>
+          <section class="students-upload__mapping" id="students-mapping" hidden aria-live="polite">
+            <div class="students-upload__mapping-grid" id="students-mapping-grid" role="group"
+              aria-describedby="students-mapping-support">
+              <!-- Mapping controls injected by studentsUploadManager.ts -->
+            </div>
+            <p class="students-upload__mapping-support" id="students-mapping-support">
+              Required: First name and Last name. Optional fields improve personalised pathways.
+            </p>
+          </section>
+
           <form class="form form--students-upload modal__body" id="students-upload-form" novalidate>
             <fieldset class="students-upload__fieldset">
-              <legend class="students-upload__legend">Select a roster file</legend>
-              <label class="form__label form__label--stacked" for="students-upload-input">
-                Supported formats: Excel (XLSX), CSV, Google Sheets, PDF, Word (DOCX)
+              <legend class="students-upload__legend">Upload file</legend>
+              <label class="form__label" for="students-upload-input">
+                Select roster file
                 <input class="input input--file" type="file" id="students-upload-input" name="rosterFile"
                   accept=".csv,.tsv,.xls,.xlsx,.ods,.pdf,.docx,.doc,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/csv"
                   aria-describedby="students-upload-help" />
               </label>
-          
-            </fieldset>
-
-            <fieldset class="students-upload__fieldset">
-              <legend class="students-upload__legend">Import from Google Sheets</legend>
-              <label class="form__label" for="students-sheets-url">
-                Paste a shareable URL
-                <input class="input input--url" type="url" id="students-sheets-url" name="sheetsUrl"
-                  placeholder="https://docs.google.com/spreadsheets/d/..." />
-              </label>
-              <div class="students-upload__actions">
-                <button class="button button--outline button--small" type="button" id="students-fetch-sheets-btn">
-                  Fetch Sheet
-                </button>
-                <button class="button button--subtle button--small" type="button" id="students-sheets-help-btn">
-                  How do I share a sheet?
-                </button>
-              </div>
-            </fieldset>
-
-            <section class="students-upload__mapping" id="students-mapping" hidden aria-live="polite">
-              <header class="students-upload__mapping-header">
-                <h3 class="students-upload__mapping-title">Map your columns</h3>
-                <p class="students-upload__mapping-text">
-                  We could not automatically match every column. Map each field below to continue.
-                </p>
-              </header>
-              <div class="students-upload__mapping-grid" id="students-mapping-grid" role="group"
-                aria-describedby="students-mapping-support">
-                <!-- Mapping controls injected by studentsUploadManager.ts -->
-              </div>
-              <p class="students-upload__mapping-support" id="students-mapping-support">
-                Required fields: First name and Last name. Optional fields improve personalised pathways.
+              <p class="students-upload__hint" id="students-upload-help">
+                Supported formats: Excel (XLSX), CSV, PDF, Word (DOCX)
               </p>
-            </section>
+            </fieldset>
 
             <div class="students-upload__feedback" id="students-upload-feedback" role="alert" hidden></div>
 
@@ -1338,7 +1317,7 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="card card--save-status" id="pedagogy-card card--save-status" aria-live="polite" data-status="empty">
+            <div class="card card--save-status" id="pedagogy-save-status" aria-live="polite" data-status="empty">
               <span class="card card--card__icon" aria-hidden="true"></span>
               <span class="card card--card__text">No data submitted yet</span>
             </div>
@@ -1349,7 +1328,7 @@
       <!-- Course Visibility Article -->
       <article id="course-visibility" data-course-section class="article article--course-visibility">
         <div class="article__main">
-          <form class="form form--course-visibility settings__section" id="course-settings-form">
+          <form class="form form--course-visibility settings__section" id="course-visibility-form">
             <fieldset class="settings__checkboxes">
               <label class="form__label">
                 <input class="input input--checkbox" type="checkbox" name="course_visible" />
@@ -1381,7 +1360,7 @@
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="card card--save-status" id="course-visibility-card card--save-status" aria-live="polite" data-status="empty">
+            <div class="card card--save-status" id="course-visibility-save-status" aria-live="polite" data-status="empty">
               <span class="card card--card__icon" aria-hidden="true"></span>
               <span class="card card--card__text">No data submitted yet</span>
             </div>
@@ -1392,12 +1371,42 @@
       <!-- Pricing & Monetization Article -->
       <article id="pricing-monetization" data-course-section class="article article--pricing-monetization">
         <div class="article__main">
-          <p class="placeholder">Pricing & Monetization content will be added here.</p>
+          <form class="form form--pricing" id="pricing-monetization-form">
+            <label class="form__label">
+              Pricing Model
+              <select class="input input--select" name="pricing_model">
+                <option value="free">Free</option>
+                <option value="subscription">Subscription</option>
+                <option value="one-time">One-time purchase</option>
+                <option value="license">Site license</option>
+              </select>
+            </label>
+            <label class="form__label">
+              Base Price
+              <input class="input" type="number" name="base_price" min="0" step="1" placeholder="99" />
+            </label>
+            <label class="form__label">
+              Currency
+              <select class="input input--select" name="currency">
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+              </select>
+            </label>
+            <label class="form__label form__label--checkbox">
+              <input class="input input--checkbox" type="checkbox" name="trial_available" />
+              Offer free trial
+            </label>
+            <label class="form__label">
+              Discount Notes
+              <textarea class="input input--textarea" name="discount_notes" placeholder="Describe educator or early-bird discounts"></textarea>
+            </label>
+          </form>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="card card--save-status" id="pricing-card card--save-status" aria-live="polite" data-status="empty">
+            <div class="card card--save-status" id="pricing-save-status" aria-live="polite" data-status="empty">
               <span class="card card--card__icon" aria-hidden="true"></span>
               <span class="card card--card__text">No data submitted yet</span>
             </div>
@@ -1408,12 +1417,34 @@
       <!-- External Integrations & APIs Article -->
       <article id="external-integrations" data-course-section class="article article--external-integrations">
         <div class="article__main">
-          <p class="placeholder">External Integrations & APIs content will be added here.</p>
+          <form class="form form--integrations" id="external-integrations-form">
+            <label class="form__label">
+              LMS Provider
+              <select class="input input--select" name="lms_provider">
+                <option value="None">None</option>
+                <option value="Canvas">Canvas</option>
+                <option value="Moodle">Moodle</option>
+                <option value="Schoology">Schoology</option>
+              </select>
+            </label>
+            <label class="form__label form__label--checkbox">
+              <input class="input input--checkbox" type="checkbox" name="api_access" />
+              Enable API access for this course
+            </label>
+            <label class="form__label">
+              Webhook URL
+              <input class="input" type="text" name="webhook_url" placeholder="https://example.com/webhook" />
+            </label>
+            <label class="form__label">
+              Integration Notes
+              <textarea class="input input--textarea" name="integration_notes" placeholder="Describe external automation related to this course"></textarea>
+            </label>
+          </form>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="card card--save-status" id="integrations-card card--save-status" aria-live="polite" data-status="empty">
+            <div class="card card--save-status" id="integrations-save-status" aria-live="polite" data-status="empty">
               <span class="card card--card__icon" aria-hidden="true"></span>
               <span class="card card--card__text">No data submitted yet</span>
             </div>
@@ -1424,12 +1455,33 @@
       <!-- Communication Article -->
       <article id="communication" data-course-section class="article article--communication">
         <div class="article__main">
-          <p class="placeholder">Communication content will be added here.</p>
+          <form class="form form--communication" id="communication-form">
+            <label class="form__label">
+              Welcome Message
+              <textarea class="input input--textarea" name="welcome_message" placeholder="Send a short welcome note to enrolled students"></textarea>
+            </label>
+            <label class="form__label">
+              Announcement Channel
+              <select class="input input--select" name="announcement_channel">
+                <option value="email">Email</option>
+                <option value="in-app">In-app</option>
+                <option value="sms">SMS</option>
+              </select>
+            </label>
+            <label class="form__label form__label--checkbox">
+              <input class="input input--checkbox" type="checkbox" name="enable_updates" />
+              Enable weekly update digest
+            </label>
+            <label class="form__label">
+              Office Hours
+              <input class="input" type="text" name="office_hours" placeholder="Thursdays 3-5pm CET" />
+            </label>
+          </form>
         </div>
 
         <footer class="article__footer">
           <div class="article__footer-content">
-            <div class="card card--save-status" id="communication-card card--save-status" aria-live="polite" data-status="empty">
+            <div class="card card--save-status" id="communication-save-status" aria-live="polite" data-status="empty">
               <span class="card card--card__icon" aria-hidden="true"></span>
               <span class="card card--card__text">No data submitted yet</span>
             </div>
@@ -2132,6 +2184,7 @@
   <script type="module" src="/src/scripts/backend/courses/templates/templatePreviewHandler.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/schedule/scheduleCourse.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/settings/pageSetupHandler.ts"></script>
+  <script type="module" src="/src/scripts/backend/courses/generation/generationSettingsHandler.ts"></script>
   <script type="module" src="/src/scripts/backend/courses/pedagogy/pedagogyHandler.ts"></script>
   <!-- Media Manager UI (search + providers) -->
   <script type="module" src="/src/scripts/media/ui/MediaInterface.ts"></script>

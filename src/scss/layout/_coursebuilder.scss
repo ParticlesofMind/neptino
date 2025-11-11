@@ -57,6 +57,34 @@
             gap: 0 !important;
             column-gap: 0 !important;
             padding: var(--spacing-1) var(--spacing-2) var(--spacing-1) var(--spacing-2);
+            
+            // Make aside horizontally scrollable when at bottom
+            .aside {
+                nav {
+                    overflow-x: auto;
+                    overflow-y: hidden;
+                    -webkit-overflow-scrolling: touch;
+                    scrollbar-width: thin;
+                    scrollbar-color: var(--color-neutral-300) transparent;
+                    
+                    &::-webkit-scrollbar {
+                        height: 0.5rem;
+                    }
+                    
+                    &::-webkit-scrollbar-track {
+                        background: transparent;
+                    }
+                    
+                    &::-webkit-scrollbar-thumb {
+                        background: var(--color-neutral-300);
+                        border-radius: var(--radius-small);
+                    }
+                    
+                    &::-webkit-scrollbar-thumb:hover {
+                        background: var(--color-neutral-400);
+                    }
+                }
+            }
         }
 
         // Large (1024-1439px): Standard desktop layout - NO gap
@@ -194,14 +222,27 @@
                 overflow-x: auto;
                 overflow-y: hidden;
                 -webkit-overflow-scrolling: touch;
-                scrollbar-width: none; /* Firefox */
-                -ms-overflow-style: none; /* IE and Edge */
+                scrollbar-width: thin;
+                scrollbar-color: var(--color-neutral-300) transparent;
                 width: 100%;
                 gap: var(--spacing-2);
                 align-items: center;
 
                 &::-webkit-scrollbar {
-                    display: none; /* Chrome, Safari, Opera */
+                    height: 0.5rem;
+                }
+                
+                &::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                
+                &::-webkit-scrollbar-thumb {
+                    background: var(--color-neutral-300);
+                    border-radius: var(--radius-small);
+                }
+                
+                &::-webkit-scrollbar-thumb:hover {
+                    background: var(--color-neutral-400);
                 }
             }
 
@@ -461,15 +502,80 @@
     min-height: 0;
 }
 
+// Ensure panels fill full height in panel layout
+.article__main--panels > .article__config,
+.article__main--panels > .article__preview {
+    height: 100%;
+    align-self: stretch;
+}
+
+// Override students grid display when in panel layout to allow full height
+.article__main--panels > .article__config.students__config,
+.article__main--panels > .article__preview.students__preview {
+    // Tablet and up: Use flex layout
+    @media (min-width: 768px) {
+        display: flex !important;
+        flex-direction: column;
+    }
+    
+    // Mobile: Respect is-active class for show/hide behavior
+    @media (max-width: 767px) {
+        display: none !important;
+        
+        &.is-active {
+            display: flex !important;
+            flex-direction: column;
+        }
+    }
+    
+    // Ensure table wrapper fills available space in preview
+    .students__table-wrapper {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .students__table {
+        flex: 1;
+        min-height: 0;
+    }
+}
+
 .article__config {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: var(--spacing-4);
-    align-content: start;
     min-width: 0;
     min-height: 0;
     flex: 1;
-    overflow-y: auto;
+    overflow-y: auto !important;
     overflow-x: hidden;
+    
+    // Ensure form inside is scrollable and expands naturally
+    .form--curriculum {
+        display: grid;
+        gap: var(--spacing-4);
+        align-content: start;
+        width: 100%;
+        flex: 0 1 auto;
+        overflow: visible;
+    }
+}
+
+// Override parent constraints for curriculum article config
+.article--curriculum .article__main--panels > .article__config {
+    height: 100% !important;
+    min-height: 0;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    
+    // Ensure form expands to show all content
+    .form--curriculum {
+        overflow: visible;
+        height: auto;
+    }
+    
 }
 
 .article__preview {
@@ -613,6 +719,22 @@
 
 .article--schedule .article__config {
     gap: var(--spacing-4);
+    
+    &--disabled {
+        opacity: 0.5;
+        pointer-events: none;
+        
+        * {
+            cursor: not-allowed;
+        }
+        
+        // Keep delete schedule button enabled
+        #delete-schedule-btn {
+            opacity: 1;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+    }
 }
 
 .article--schedule .form--schedule {
@@ -659,6 +781,17 @@
     width: 100%;
 }
 
+.article--schedule .schedule__days__button.button--primary {
+    background: var(--color-primary-100);
+    border-color: var(--color-primary-200);
+    color: var(--color-text-primary);
+    
+    &:hover {
+        background: var(--color-primary-200);
+        border-color: var(--color-primary-300);
+    }
+}
+
 .article--schedule .schedule__actions {
     display: flex;
     flex-wrap: wrap;
@@ -680,6 +813,8 @@
     border: 1px solid var(--color-neutral-200);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
     height: 100%;
+    overflow-y: auto;
+    max-height: 100%;
 }
 
 .article--schedule .schedule__content {
@@ -711,8 +846,8 @@
         "number day start end actions"
         "number day breaks breaks breaks";
     grid-template-columns: minmax(3rem, auto) minmax(8rem, 1.2fr) minmax(8rem, 1fr) minmax(8rem, 1fr) auto;
-    gap: var(--spacing-3);
-    padding: var(--spacing-3);
+    gap: var(--spacing-2);
+    padding: var(--spacing-2);
     border: 1px solid var(--color-neutral-200);
     border-radius: var(--radius-medium);
     background: var(--color-neutral-50, #f9fafb);
@@ -731,6 +866,10 @@
     flex-direction: column;
     gap: var(--spacing-1);
     min-width: 0;
+}
+
+.article--schedule .schedule__cell--day .schedule__field-label {
+    display: none;
 }
 
 .article--schedule .schedule__cell--number {
@@ -755,7 +894,7 @@
     grid-area: actions;
     display: flex;
     justify-content: flex-end;
-    align-items: center;
+    align-items: flex-end;
 }
 
 .article--schedule .schedule__breaks-preview {
@@ -775,7 +914,7 @@
 
 .article--schedule .schedule__break-preview-item {
     display: grid;
-    grid-template-columns: 1fr 1fr auto;
+    grid-template-columns: auto 1fr 1fr auto;
     gap: var(--spacing-2);
     align-items: end;
     padding: var(--spacing-2);
@@ -783,12 +922,41 @@
     border-radius: var(--radius-small);
 }
 
-.article--schedule .schedule__break-input {
+.article--schedule .schedule__break-add-inline {
+    min-width: 1.5rem;
+    min-height: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+// Unified styling for all time inputs (not date inputs)
+.article--schedule .input--time:not(.input--date),
+.article--schedule .schedule__input,
+.article--schedule .schedule__break-input,
+.article--schedule .schedule__break-start,
+.article--schedule .schedule__break-end {
     width: 100%;
+    padding: 0.25rem 0.5rem;
+    font-size: var(--font-size-extra-small);
+    min-height: 1.75rem;
+    height: 1.75rem;
 }
 
 .article--schedule .schedule__cell--time {
     gap: var(--spacing-2);
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.article--schedule .schedule__cell--time label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
 }
 
 .article--schedule .schedule__field-label {
@@ -800,13 +968,13 @@
 }
 
 .article--schedule .schedule__day {
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-small);
     font-weight: var(--font-weight-semibold);
     color: var(--color-text-primary);
 }
 
 .article--schedule .schedule__date {
-    font-size: var(--font-size-small);
+    font-size: var(--font-size-extra-small);
     color: var(--color-text-secondary);
 }
 
@@ -814,34 +982,48 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
     border-radius: 999px;
-    background: var(--color-primary-100);
-    color: var(--color-primary-700);
-    font-size: var(--font-size-small);
-    font-weight: var(--font-weight-semibold);
-    box-shadow: 0 1px 3px rgba(46, 125, 249, 0.08);
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-extra-small);
+    font-weight: var(--font-weight-medium);
+    box-shadow: none;
 }
 
-.article--schedule .schedule__input {
-    width: 100%;
-}
 
 .article--schedule .schedule__delete {
-    min-width: 2.25rem;
-    min-height: 2.25rem;
+    min-width: 1.5rem;
+    min-height: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    font-size: 14px;
 }
 
 // Break times form section
 .article--schedule .schedule__breaks {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-3);
+    gap: var(--spacing-2);
     padding: var(--spacing-3);
     background: var(--color-neutral-50);
     border-radius: var(--radius-medium);
     border: 1px solid var(--color-neutral-200);
+}
+
+.article--schedule .schedule__break-add-standalone {
+    min-width: 1.5rem;
+    min-height: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-start;
 }
 
 .article--schedule .schedule__breaks__list {
@@ -852,13 +1034,25 @@
 
 .article--schedule .schedule__break-item {
     display: grid;
-    grid-template-columns: 1fr 1fr auto;
+    grid-template-columns: auto 1fr 1fr auto;
     gap: var(--spacing-2);
     align-items: end;
     padding: var(--spacing-2);
     background: var(--color-white);
     border-radius: var(--radius-small);
     border: 1px solid var(--color-neutral-200);
+}
+
+.article--schedule .schedule__break-item .schedule__break-add-inline {
+    min-width: 1.5rem;
+    min-height: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .article--schedule .schedule__break-label {
@@ -1115,7 +1309,7 @@
     gap: var(--spacing-2);
     width: 100%;
     max-width: 100%;
-    overflow: hidden;
+    overflow: visible;
     padding-bottom: var(--spacing-4);
     border-bottom: 1px solid var(--color-neutral-100);
     
@@ -1192,7 +1386,7 @@
 // Module Organization Options
 .module-organization-options {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--spacing-2);
 }
 
@@ -1214,6 +1408,11 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-2);
+    overflow: visible;
+    
+    @media (max-width: 48rem) {
+        grid-template-columns: 1fr;
+    }
 }
 
 // Lesson Structure Inputs
@@ -1232,6 +1431,11 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-2);
+    overflow: visible;
+    
+    @media (max-width: 48rem) {
+        grid-template-columns: 1fr;
+    }
 }
 
 .curriculum-config__group--structure {
@@ -1270,7 +1474,8 @@
 
 @media (max-width: 48rem) {
     .module-organization-options {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--spacing-1);
     }
     
     .structure-inputs {

@@ -5,6 +5,7 @@
 
 import { supabase } from "../../supabase";
 import { canvasMarginManager } from "../../../coursebuilder/layout/CanvasMarginManager";
+import { canvasDimensionManager } from "../../../coursebuilder/layout/CanvasDimensionManager";
 
 export interface PageLayoutSettings {
   margins: {
@@ -19,20 +20,21 @@ export interface PageLayoutSettings {
 }
 
 export class PageSetupHandler {
+  private static readonly DEFAULT_MARGINS_MM = {
+    top: 33.87,
+    bottom: 29.63,
+    left: 25.4,
+    right: 25.4,
+    unit: "mm" as const,
+  };
   private courseId: string | null = null;
   private currentSettings: PageLayoutSettings;
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    // Default values (2.54cm = 1 inch)
+    // Default values stored in millimeters (aligns with database format)
     this.currentSettings = {
-      margins: {
-        top: 2.54,
-        bottom: 2.54,
-        left: 2.54,
-        right: 2.54,
-        unit: "cm",
-      },
+      margins: { ...PageSetupHandler.DEFAULT_MARGINS_MM },
       orientation: "portrait",
       canvas_size: "a4",
     };
@@ -40,13 +42,38 @@ export class PageSetupHandler {
     this.init();
   }
 
+  private convertMarginToMillimeters(
+    value: unknown,
+    unit: "mm" | "cm" | "inches",
+  ): number | undefined {
+    if (typeof value !== "number" || Number.isNaN(value)) {
+      return undefined;
+    }
+
+    switch (unit) {
+      case "cm":
+        return value * 10;
+      case "inches":
+        return value * 25.4;
+      default:
+        return value;
+    }
+  }
+
+  private roundMargin(value: number | undefined): number {
+    if (typeof value !== "number" || Number.isNaN(value)) {
+      return 0;
+    }
+    return Math.round(value * 100) / 100;
+  }
+
+
   private init(): void {
     this.bindEvents();
     this.updateUI();
-    
-    // Initialize margin manager with default settings
-    canvasMarginManager.setMarginsFromPageLayout(this.currentSettings);
-    
+
+    // Initialize canvas + margin managers with default layout
+    this.syncCanvasSystems();
   }
 
   private bindEvents(): void {
@@ -300,8 +327,8 @@ export class PageSetupHandler {
       step = "0.1"; // Allow tenths of a cm
       max = "10"; // 10 cm max
     } else { // mm
-      step = "0.01"; // Allow hundredths of a mm
-      max = "100"; // 100 mm max
+      step = "0.1"; // Tenths of a mm keeps inputs manageable
+      max = "120"; // Allow up to 12 cm margins
     }
 
     // Update all margin inputs
@@ -316,8 +343,8 @@ export class PageSetupHandler {
 
   private updatePreview(): void {
     // Update canvas margin manager with current settings  
-    canvasMarginManager.setMarginsFromPageLayout(this.currentSettings);
-    
+    this.syncCanvasSystems();
+
     // Trigger the canvas preview update if it exists
     const event = new CustomEvent('pageLayoutChange', {
       detail: this.currentSettings
@@ -372,26 +399,52 @@ export class PageSetupHandler {
         return;
       }
 
+      let shouldPersistDefaults = false;
+
       if (course?.course_layout) {
-        // Merge loaded settings with defaults to ensure all fields exist
+        const incoming = course.course_layout;
+        const incomingMargins = incoming.margins || {};
+        const unit = (incomingMargins.unit as "mm" | "cm" | "inches" | undefined) ?? "mm";
+
+        const topMm = this.convertMarginToMillimeters(incomingMargins.top, unit);
+        const bottomMm = this.convertMarginToMillimeters(incomingMargins.bottom, unit);
+        const leftMm = this.convertMarginToMillimeters(incomingMargins.left, unit);
+        const rightMm = this.convertMarginToMillimeters(incomingMargins.right, unit);
+
+        const hasInvalidMargins =
+          topMm === undefined ||
+          bottomMm === undefined ||
+          leftMm === undefined ||
+          rightMm === undefined;
+
         this.currentSettings = {
-          margins: {
-            ...this.currentSettings.margins,
-            ...(course.course_layout.margins || {})
-          },
-          orientation: course.course_layout.orientation || this.currentSettings.orientation,
-          canvas_size: course.course_layout.canvas_size || this.currentSettings.canvas_size
+          margins: hasInvalidMargins
+            ? { ...PageSetupHandler.DEFAULT_MARGINS_MM }
+            : {
+                top: this.roundMargin(topMm),
+                bottom: this.roundMargin(bottomMm),
+                left: this.roundMargin(leftMm),
+                right: this.roundMargin(rightMm),
+                unit: "mm",
+              },
+          orientation: incoming.orientation || this.currentSettings.orientation,
+          canvas_size: incoming.canvas_size || this.currentSettings.canvas_size,
         };
-        
-        
-        // Update margin manager immediately with loaded settings
-        canvasMarginManager.setMarginsFromPageLayout(this.currentSettings);
+
+        if (hasInvalidMargins || unit !== "mm") {
+          shouldPersistDefaults = true;
+        }
       } else {
-        // Still update margin manager with defaults
-        canvasMarginManager.setMarginsFromPageLayout(this.currentSettings);
+        shouldPersistDefaults = true;
       }
 
+      console.log("📄 PageSetupHandler: Loaded settings from database:", this.currentSettings);
+      this.syncCanvasSystems();
       this.updateUI();
+
+      if (shouldPersistDefaults) {
+        await this.forceSaveToDatabase();
+      }
     } catch (error) {
       console.error("📄 Error loading page layout settings:", error);
       this.updateUI();
@@ -417,6 +470,15 @@ export class PageSetupHandler {
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout);
     }
+  }
+
+  private syncCanvasSystems(): void {
+    console.log("📄 PageSetupHandler: Syncing canvas systems with settings:", this.currentSettings);
+    canvasDimensionManager.applyPageLayout({
+      canvas_size: this.currentSettings.canvas_size,
+      orientation: this.currentSettings.orientation,
+    });
+    canvasMarginManager.setMarginsFromPageLayout(this.currentSettings);
   }
 }
 

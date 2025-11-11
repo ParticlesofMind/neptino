@@ -2,7 +2,9 @@
  * CanvasMarginManager - lightweight margin state for the simple canvas.
  */
 
+import { canvasDimensionManager } from "./CanvasDimensionManager";
 import { UnitConverter, type MarginValues } from "../utils/UnitConverter";
+import { DEFAULT_PAGE_MARGINS_MM } from "./PageSizeConfig";
 
 export interface CanvasMarginState {
   top: number;
@@ -15,35 +17,44 @@ export interface CanvasMarginState {
 type MarginListener = (margins: CanvasMarginState) => void;
 
 class CanvasMarginManager {
-  private margins: CanvasMarginState = {
-    top: 96,
-    right: 96,
-    bottom: 96,
-    left: 96,
-    unit: "px",
-  };
+  // Initialize with database defaults (in mm), converted to pixels
+  // These match the course_layout defaults: top: 33.87mm, bottom: 29.63mm, left/right: 25.4mm
+  private margins: CanvasMarginState = this.initializeDefaultMargins();
 
   private listeners = new Set<MarginListener>();
+
+  /**
+   * Initialize default margins from PageSizeConfig defaults, converted to pixels
+   */
+  private initializeDefaultMargins(): CanvasMarginState {
+    // Get pixelsPerMillimeter from dimension manager (will use defaults if not yet initialized)
+    const dimensionState = canvasDimensionManager.getState();
+    const pixelsPerMillimeter = dimensionState.pixelsPerMillimeter;
+
+    // Convert database defaults (in mm) to pixels
+    const defaults = {
+      top: DEFAULT_PAGE_MARGINS_MM.top * pixelsPerMillimeter,
+      right: DEFAULT_PAGE_MARGINS_MM.right * pixelsPerMillimeter,
+      bottom: DEFAULT_PAGE_MARGINS_MM.bottom * pixelsPerMillimeter,
+      left: DEFAULT_PAGE_MARGINS_MM.left * pixelsPerMillimeter,
+      unit: "px" as const,
+    };
+
+    console.log("📐 CanvasMarginManager: Initializing with defaults:", {
+      defaultsMm: DEFAULT_PAGE_MARGINS_MM,
+      pixelsPerMillimeter,
+      defaultsPx: defaults,
+    });
+
+    return defaults;
+  }
 
   /**
    * Set pixel-based margins directly.
    */
   public setMargins(margins: MarginValues): void {
-    const resolved = UnitConverter.marginsToPixels({
-      top: margins.top,
-      right: margins.right,
-      bottom: margins.bottom,
-      left: margins.left,
-      unit: margins.unit ?? "px",
-    });
-
-    this.margins = {
-      top: resolved.top,
-      right: resolved.right,
-      bottom: resolved.bottom,
-      left: resolved.left,
-      unit: "px",
-    };
+    const resolved = this.convertToPixels(margins);
+    this.margins = resolved;
 
     this.notify();
   }
@@ -54,6 +65,7 @@ class CanvasMarginManager {
   public setMarginsFromPageLayout(layout: {
     margins: { top: number; right: number; bottom: number; left: number; unit: "mm" | "cm" | "inches" };
   }): void {
+    console.log("📐 CanvasMarginManager: Setting margins from page layout:", layout.margins);
     this.setMargins({
       top: layout.margins.top,
       right: layout.margins.right,
@@ -61,6 +73,8 @@ class CanvasMarginManager {
       left: layout.margins.left,
       unit: layout.margins.unit === "mm" ? "mm" : layout.margins.unit,
     });
+    const finalMargins = this.getMargins();
+    console.log("📐 CanvasMarginManager: Final margins in pixels:", finalMargins);
   }
 
   /**
@@ -78,6 +92,51 @@ class CanvasMarginManager {
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  private convertToPixels(margins: MarginValues): CanvasMarginState {
+    const unit = margins.unit ?? "px";
+    if (unit === "px") {
+      return {
+        top: margins.top,
+        right: margins.right,
+        bottom: margins.bottom,
+        left: margins.left,
+        unit: "px",
+      };
+    }
+
+    const marginsInMm = UnitConverter.convertMargins(
+      {
+        top: margins.top,
+        right: margins.right,
+        bottom: margins.bottom,
+        left: margins.left,
+        unit,
+      },
+      unit,
+      "mm",
+    );
+
+    const dimensionState = canvasDimensionManager.getState();
+    const pixelsPerMillimeter = dimensionState.pixelsPerMillimeter;
+
+    const result = {
+      top: marginsInMm.top * pixelsPerMillimeter,
+      right: marginsInMm.right * pixelsPerMillimeter,
+      bottom: marginsInMm.bottom * pixelsPerMillimeter,
+      left: marginsInMm.left * pixelsPerMillimeter,
+      unit: "px" as const,
+    };
+
+    console.log("📐 CanvasMarginManager: Converting margins:", {
+      input: margins,
+      marginsInMm,
+      pixelsPerMillimeter,
+      result,
+    });
+
+    return result;
   }
 
   private notify(): void {

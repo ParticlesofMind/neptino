@@ -1,11 +1,9 @@
 import { Application, Assets, Container, Graphics, Sprite, Text, Rectangle, FederatedPointerEvent, type DisplayObject } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { canvasMarginManager } from "./layout/CanvasMarginManager";
+import { canvasDimensionManager, type CanvasDimensionState } from "./layout/CanvasDimensionManager";
 import { CanvasLayoutRenderer } from "./layout/CanvasLayoutRenderer";
 import type { LayoutBlocks } from "./layout/CanvasLayoutRenderer";
-
-const BASE_WIDTH = 1200;
-const BASE_HEIGHT = 1800;
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 10;
 const DEFAULT_ZOOM_STEP = 0.15;
@@ -32,6 +30,8 @@ export class CanvasEngine {
   private layers: Record<LayerName, Container> | null = null;
   private marginOverlay: Graphics | null = null;
   private marginOverlayVisible = true;
+  private backgroundFill: Graphics | null = null;
+  private watermarkLabel: Text | null = null;
   private layoutRenderer: CanvasLayoutRenderer | null = null;
   private layoutBlocks: LayoutBlocks | null = null;
   private interactionOverlay: Graphics | null = null;
@@ -50,10 +50,24 @@ export class CanvasEngine {
   private zoomListeners = new Set<(scale: number) => void>();
   private zoomStep = DEFAULT_ZOOM_STEP;
   private idCounter = 0;
-  private worldSize = { width: BASE_WIDTH, height: BASE_HEIGHT };
+  private dimensionState: CanvasDimensionState = canvasDimensionManager.getState();
+  private worldSize = { width: this.dimensionState.width, height: this.dimensionState.height };
   private interactionLocked = false;
+  private dimensionUnsubscribe: (() => void) | null = null;
 
-  constructor(private readonly selector: string) {}
+  constructor(private readonly selector: string) {
+    this.dimensionUnsubscribe = canvasDimensionManager.onChange((state) => {
+      this.handleDimensionChange(state);
+    });
+  }
+
+  private get baseWidth(): number {
+    return this.dimensionState.width;
+  }
+
+  private get baseHeight(): number {
+    return this.dimensionState.height;
+  }
 
   public async init(): Promise<void> {
     if (typeof window === "undefined") {
@@ -136,7 +150,7 @@ export class CanvasEngine {
       this.interactionOverlay = null;
     }
     this.interactionLocked = false;
-    this.worldSize = { width: BASE_WIDTH, height: BASE_HEIGHT };
+    this.worldSize = { width: this.baseWidth, height: this.baseHeight };
 
     if (this.viewport) {
       this.viewport.destroy();
@@ -149,6 +163,8 @@ export class CanvasEngine {
     }
 
     this.layers = null;
+    this.backgroundFill = null;
+    this.watermarkLabel = null;
     this.marginOverlay = null;
     this.marginOverlayVisible = true;
     this.objects.clear();
@@ -162,6 +178,8 @@ export class CanvasEngine {
     this.ready = false;
     this.readyCallbacks = [];
     this.zoomListeners.clear();
+    this.dimensionUnsubscribe?.();
+    this.dimensionUnsubscribe = null;
   }
 
   public resetView(): void {
@@ -225,6 +243,25 @@ export class CanvasEngine {
     }
   }
 
+  private handleDimensionChange(state: CanvasDimensionState): void {
+    this.dimensionState = state;
+    this.resetWorldSize();
+
+    if (this.layoutRenderer) {
+      this.layoutRenderer.updateConfig({
+        width: this.baseWidth,
+        height: this.baseHeight,
+      });
+    }
+
+    if (this.layers) {
+      this.drawBackground();
+    }
+
+    this.updateMargins(canvasMarginManager.getMargins());
+    this.queueResize();
+  }
+
   public getCurrentZoom(): number {
     return this.viewport?.scale.x ?? this.defaultZoom;
   }
@@ -248,8 +285,8 @@ export class CanvasEngine {
       return;
     }
 
-    const clampedWidth = Math.max(nextWidth, BASE_WIDTH);
-    const clampedHeight = Math.max(nextHeight, BASE_HEIGHT);
+    const clampedWidth = Math.max(nextWidth, this.baseWidth);
+    const clampedHeight = Math.max(nextHeight, this.baseHeight);
     this.worldSize = { width: clampedWidth, height: clampedHeight };
 
     if (this.viewport) {
@@ -267,7 +304,7 @@ export class CanvasEngine {
   }
 
   public resetWorldSize(): void {
-    this.setWorldSize({ width: BASE_WIDTH, height: BASE_HEIGHT });
+    this.setWorldSize({ width: this.baseWidth, height: this.baseHeight });
   }
 
   public setInteractionLocked(locked: boolean): void {
@@ -529,21 +566,28 @@ export class CanvasEngine {
   private drawBackground(): void {
     if (!this.layers) return;
 
-    const gfx = new Graphics();
-    gfx.rect(0, 0, BASE_WIDTH, BASE_HEIGHT).fill({ color: 0xffffff, alpha: 1 });
-    this.layers.background.addChild(gfx);
+    if (!this.backgroundFill) {
+      this.backgroundFill = new Graphics();
+      this.layers.background.addChild(this.backgroundFill);
+    }
 
-    const watermark = new Text({
-      text: "",
-      style: {
-        fontSize: 36,
-        fill: 0x4c6ef5,
-        fontWeight: "600",
-      },
-    });
-    watermark.anchor.set(0.5, 0);
-    watermark.position.set(BASE_WIDTH / 2, 48);
-    this.layers.ui.addChild(watermark);
+    this.backgroundFill.clear();
+    this.backgroundFill.rect(0, 0, this.baseWidth, this.baseHeight).fill({ color: 0xffffff, alpha: 1 });
+
+    if (!this.watermarkLabel) {
+      this.watermarkLabel = new Text({
+        text: "",
+        style: {
+          fontSize: 36,
+          fill: 0x4c6ef5,
+          fontWeight: "600",
+        },
+      });
+      this.watermarkLabel.anchor.set(0.5, 0);
+      this.layers.ui.addChild(this.watermarkLabel);
+    }
+
+    this.watermarkLabel.position.set(this.baseWidth / 2, 48);
   }
 
   private setupMarginOverlay(): void {
@@ -561,8 +605,8 @@ export class CanvasEngine {
     // Initialize the layout renderer with current margins
     const margins = canvasMarginManager.getMargins();
     this.layoutRenderer = new CanvasLayoutRenderer({
-      width: BASE_WIDTH,
-      height: BASE_HEIGHT,
+      width: this.baseWidth,
+      height: this.baseHeight,
       margins,
     });
 
@@ -763,7 +807,7 @@ export class CanvasEngine {
   }
 
   private computeFitScale(width: number, height: number): number {
-    const scale = Math.min(width / BASE_WIDTH, height / BASE_HEIGHT);
+    const scale = Math.min(width / this.baseWidth, height / this.baseHeight);
     if (!isFinite(scale) || scale <= 0) {
       return this.defaultZoom;
     }
@@ -841,8 +885,8 @@ export class CanvasEngine {
   private updateMargins(margins: { top: number; right: number; bottom: number; left: number }): void {
     if (!this.marginOverlay) return;
 
-    const safeWidth = Math.max(0, BASE_WIDTH - (margins.left + margins.right));
-    const safeHeight = Math.max(0, BASE_HEIGHT - (margins.top + margins.bottom));
+    const safeWidth = Math.max(0, this.baseWidth - (margins.left + margins.right));
+    const safeHeight = Math.max(0, this.baseHeight - (margins.top + margins.bottom));
 
     this.marginOverlay.clear();
 
@@ -871,7 +915,7 @@ export class CanvasEngine {
       getViewport: () => this.viewport,
       getLayer: (name: LayerName) => this.layers?.[name] ?? null,
       getLayoutBlocks: () => this.getLayoutBlocks(),
-      getDimensions: () => ({ width: BASE_WIDTH, height: BASE_HEIGHT }),
+      getDimensions: () => ({ width: this.baseWidth, height: this.baseHeight }),
       getCurrentZoom: () => this.getCurrentZoom(),
       getDefaultZoom: () => this.getDefaultZoom(),
       fitToContainer: () => {
@@ -893,7 +937,7 @@ export class CanvasEngine {
       addText: (content: string, x: number, y: number) => this.addText(content, x, y),
       addImage: (url: string, x: number, y: number) => this.addImage(url, x, y),
       addAudioElement: (url: string, title: string, x: number, y: number) => this.addText(`🎧 ${title}`, x, y),
-      addAudioPlaceholder: (title: string) => this.addText(`🎵 ${title}`, BASE_WIDTH / 2, BASE_HEIGHT / 2),
+      addAudioPlaceholder: (title: string) => this.addText(`🎵 ${title}`, this.baseWidth / 2, this.baseHeight / 2),
       addVideoElement: (url: string, title: string, x: number, y: number) => this.addText(`📹 ${title}`, x, y),
       showSnapHintForId: (id: string) => this.flashObject(id),
       destroy: () => this.destroy(),
@@ -907,7 +951,8 @@ export class CanvasEngine {
         layoutBlocks: this.layoutBlocks,
         marginManager: canvasMarginManager,
         dimensionManager: {
-          getCurrentDimensions: () => ({ width: BASE_WIDTH, height: BASE_HEIGHT }),
+          getCurrentDimensions: () => ({ width: this.baseWidth, height: this.baseHeight }),
+          getPixelsPerMillimeter: () => canvasDimensionManager.getState().pixelsPerMillimeter,
         },
         fitToContainer: api.fitToContainer,
       };

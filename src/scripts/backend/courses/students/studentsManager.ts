@@ -3,8 +3,9 @@ import { StudentsModalController } from "./studentsModalController.js";
 import { StudentsPreview } from "./studentsPreview.js";
 import { StudentsRepository } from "./studentsRepository.js";
 import { StudentsUploadManager } from "./studentsUploadManager.js";
-import type { StudentRecord } from "./studentsTypes.js";
+import type { StudentRecord, RosterSummary } from "./studentsTypes.js";
 import { dispatchProfilesIndexed } from "./studentsProfileService.js";
+import { supabase } from "../../supabase";
 
 interface StudentsManagerOptions {
   courseId?: string | null;
@@ -196,7 +197,7 @@ export class StudentsManager {
     this.preview.setBusy(true);
     
     const { data, error } = await this.repository.fetchRoster();
-    const { data: summary } = await this.repository.fetchSummary();
+    const { data: summaryData } = await this.repository.fetchSummary();
     
     this.preview.setBusy(false);
 
@@ -225,8 +226,10 @@ export class StudentsManager {
     this.currentStudents = data ?? [];
     this.preview.render(this.currentStudents);
     
-    if (summary) {
-      this.preview.updateSummary(summary);
+    void this.persistSummary(summaryData || null);
+
+    if (summaryData) {
+      this.preview.updateSummary(summaryData);
     }
 
     if (courseId && this.currentStudents.length) {
@@ -241,6 +244,37 @@ export class StudentsManager {
 
     if (showActivity) {
       this.preview.appendActivity("Roster refreshed from Supabase.");
+    }
+  }
+
+  private async persistSummary(summary: RosterSummary | null): Promise<void> {
+    if (!summary) {
+      return;
+    }
+
+    const courseId = this.repository.getCourseId();
+    if (!courseId) {
+      return;
+    }
+
+    try {
+      const payload = {
+        total: summary.total,
+        synced: summary.synced,
+        grade_levels: summary.gradeLevels,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from("courses")
+        .update({ students_overview: payload })
+        .eq("id", courseId);
+
+      if (error) {
+        console.warn("Failed to persist students summary to course record:", error.message);
+      }
+    } catch (error) {
+      console.warn("Unexpected error while saving students summary:", error);
     }
   }
 

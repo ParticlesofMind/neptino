@@ -4,6 +4,7 @@ import { TemplateConfigManager } from "./TemplateConfigManager.js";
 import { TemplateBlockRenderer } from "./TemplateBlockRenderer.js";
 import { TemplateManagerState } from "./types.js";
 import { loadTemplatesModal } from "./modals/loadTemplates.js";
+import { syncTemplateSettingsWithCourse } from "./templateCourseSync.js";
 
 export class TemplateManager {
   private static state: TemplateManagerState = {
@@ -69,6 +70,7 @@ export class TemplateManager {
         
         // Persist changes
         await TemplateDataHandler.saveTemplateChanges(templateId, actualData);
+        void syncTemplateSettingsWithCourse(templateData);
       }
     } catch (error) {
       console.error('Failed to update template field:', error);
@@ -93,6 +95,7 @@ export class TemplateManager {
       
       if (success) {
         console.log('Template changes saved successfully');
+        void syncTemplateSettingsWithCourse(templateData);
       } else {
         console.error('Failed to save template changes');
       }
@@ -174,6 +177,7 @@ export class TemplateManager {
         
         TemplateRenderer.displayTemplateBlocks(templateData);
         TemplateRenderer.updateTemplatePreview(templateData);
+        void syncTemplateSettingsWithCourse(templateData);
       }
     } catch (error) {
       console.error("Failed to preview template:", error);
@@ -317,6 +321,7 @@ export class TemplateManager {
         
         TemplateRenderer.displayTemplateBlocks(templateData);
         TemplateRenderer.updateTemplatePreview(templateData);
+        void syncTemplateSettingsWithCourse(templateData);
       } else {
         this.loadExistingTemplates();
       }

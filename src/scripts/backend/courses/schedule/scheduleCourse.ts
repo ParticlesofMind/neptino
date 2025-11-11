@@ -586,6 +586,13 @@ export class ScheduleCourseManager {
     });
 
     // Add break time button
+    // Always show at least one break time row on initialization
+    const breakTimesList = document.getElementById("break-times-list");
+    if (breakTimesList && breakTimesList.children.length === 0) {
+      this.addBreakTimeInput();
+    }
+    
+    // Keep the add button for adding additional break times
     const addBreakTimeButton = document.getElementById("add-break-time-btn");
     if (addBreakTimeButton) {
       addBreakTimeButton.addEventListener("click", () => {
@@ -762,21 +769,28 @@ export class ScheduleCourseManager {
     const item = document.createElement("div");
     item.className = "schedule__break-item";
     item.innerHTML = `
+      <button class="button button--extra-small button--primary schedule__break-add-inline" 
+              type="button" aria-label="Add break time" data-index="${index}">+</button>
       <label class="form__label schedule__break-label">
-        Break Start
         <input class="input input--time schedule__break-start" type="text" 
-               placeholder="HH:MM" inputmode="numeric" autocomplete="off" 
+               placeholder="Start" inputmode="numeric" autocomplete="off" 
                value="${breakTime?.startTime || ""}" />
       </label>
       <label class="form__label schedule__break-label">
-        Break End
         <input class="input input--time schedule__break-end" type="text" 
-               placeholder="HH:MM" inputmode="numeric" autocomplete="off" 
+               placeholder="End" inputmode="numeric" autocomplete="off" 
                value="${breakTime?.endTime || ""}" />
       </label>
       <button class="button button--extra-small button--cross schedule__break-remove" 
               type="button" aria-label="Remove break time" data-index="${index}"></button>
     `;
+
+    const addButton = item.querySelector(
+      ".schedule__break-add-inline",
+    ) as HTMLButtonElement;
+    addButton.addEventListener("click", () => {
+      this.addBreakTimeInput();
+    });
 
     const removeButton = item.querySelector(
       ".schedule__break-remove",
@@ -827,11 +841,14 @@ export class ScheduleCourseManager {
     // Clear existing break times
     breakTimesList.innerHTML = "";
 
-    // Add break times if they exist
+    // Always show at least one break time row
     if (breakTimes && breakTimes.length > 0) {
       breakTimes.forEach((breakTime) => {
         this.addBreakTimeInput(breakTime);
       });
+    } else {
+      // Add one empty break time row
+      this.addBreakTimeInput();
     }
   }
 
@@ -902,6 +919,8 @@ export class ScheduleCourseManager {
       throw new Error('No course ID available for saving schedule');
     }
 
+    await this.syncLessonsTableWithSchedule(sessions);
+
     const { error } = await supabase
       .from("courses")
       .update({
@@ -912,6 +931,77 @@ export class ScheduleCourseManager {
 
     if (error) {
       throw error;
+    }
+  }
+
+  private async syncLessonsTableWithSchedule(
+    sessions: ScheduleSession[],
+  ): Promise<void> {
+    if (!this.courseId || sessions.length === 0) {
+      return;
+    }
+
+    try {
+      const { data: lessons, error } = await supabase
+        .from("lessons")
+        .select("id, lesson_number")
+        .eq("course_id", this.courseId)
+        .order("lesson_number");
+
+      if (error) {
+        // Table might not exist in some environments yet
+        console.warn("📅 Unable to sync lessons with schedule:", error.message);
+        return;
+      }
+
+      const targetCount = sessions.length;
+      const existingNumbers = new Set<number>();
+      const numbersToDelete: number[] = [];
+
+      (lessons ?? []).forEach((lesson: any) => {
+        if (typeof lesson.lesson_number === "number") {
+          existingNumbers.add(lesson.lesson_number);
+          if (lesson.lesson_number > targetCount) {
+            numbersToDelete.push(lesson.lesson_number);
+          }
+        }
+      });
+
+      if (numbersToDelete.length > 0) {
+        const { error: deleteError } = await supabase
+          .from("lessons")
+          .delete()
+          .eq("course_id", this.courseId)
+          .in("lesson_number", numbersToDelete);
+
+        if (deleteError) {
+          console.warn("📅 Failed to trim excess lessons:", deleteError.message);
+        }
+      }
+
+      const inserts: Array<Record<string, unknown>> = [];
+      for (let lessonNumber = 1; lessonNumber <= targetCount; lessonNumber += 1) {
+        if (!existingNumbers.has(lessonNumber)) {
+          inserts.push({
+            course_id: this.courseId,
+            lesson_number: lessonNumber,
+            title: `Lesson ${lessonNumber}`,
+            payload: {},
+          });
+        }
+      }
+
+      if (inserts.length > 0) {
+        const { error: insertError } = await supabase
+          .from("lessons")
+          .insert(inserts);
+
+        if (insertError) {
+          console.warn("📅 Failed to create missing lessons:", insertError.message);
+        }
+      }
+    } catch (error) {
+      console.warn("📅 Unexpected error while syncing lessons:", error);
     }
   }
 
@@ -937,6 +1027,12 @@ export class ScheduleCourseManager {
 
     previewContainer.classList.toggle('schedule__content--empty', !hasSchedule);
     this.schedulePreviewSection.classList.toggle('schedule__preview--empty', !hasSchedule);
+    
+    // Grey out config section when schedule exists
+    const configSection = document.querySelector('.article--schedule .article__config');
+    if (configSection) {
+      configSection.classList.toggle('article__config--disabled', hasSchedule);
+    }
 
     // Show schedule rows or placeholder
     if (hasSchedule) {
@@ -968,53 +1064,60 @@ export class ScheduleCourseManager {
     const row = document.createElement("div");
     row.className = 'schedule__row';
 
-    // Build break times HTML with inline inputs
-    let breakTimesHTML = "";
-    if (session.breakTimes && session.breakTimes.length > 0) {
-      breakTimesHTML = `
-        <div class="schedule__breaks-preview">
-          <span class="schedule__field-label">Breaks</span>
-          <div class="schedule__breaks-list">
-            ${session.breakTimes
-              .map(
-                (bt, btIndex) => `
+    // Build break times HTML - always show at least one break time row
+    const breakTimes = session.breakTimes || [];
+    const breakTimesHTML = `
+      <div class="schedule__breaks-preview">
+        <div class="schedule__breaks-list">
+          ${breakTimes.length > 0
+            ? breakTimes
+                .map(
+                  (bt, btIndex) => `
+                <div class="schedule__break-preview-item">
+                  <button class="button button--extra-small button--primary schedule__break-add-inline" 
+                          type="button" aria-label="Add break" 
+                          data-index="${index}" data-break-index="${btIndex}">+</button>
+                  <label class="schedule__cell schedule__cell--time">
+                    <input type="text" class="input input--time schedule__break-input schedule__break-input--start" 
+                           value="${bt.startTime}" placeholder="HH:MM" autocomplete="off" inputmode="numeric" 
+                           data-index="${index}" data-break-index="${btIndex}">
+                  </label>
+                  <label class="schedule__cell schedule__cell--time">
+                    <input type="text" class="input input--time schedule__break-input schedule__break-input--end" 
+                           value="${bt.endTime}" placeholder="HH:MM" autocomplete="off" inputmode="numeric" 
+                           data-index="${index}" data-break-index="${btIndex}">
+                  </label>
+                  <button class="button button--extra-small button--cross schedule__break-delete" 
+                          type="button" aria-label="Remove break" 
+                          data-index="${index}" data-break-index="${btIndex}"></button>
+                </div>
+              `,
+                )
+                .join("")
+            : `
               <div class="schedule__break-preview-item">
+                <button class="button button--extra-small button--primary schedule__break-add-inline" 
+                        type="button" aria-label="Add break" 
+                        data-index="${index}">+</button>
                 <label class="schedule__cell schedule__cell--time">
-                  <span class="schedule__field-label">Break Start</span>
                   <input type="text" class="input input--time schedule__break-input schedule__break-input--start" 
-                         value="${bt.startTime}" placeholder="HH:MM" autocomplete="off" inputmode="numeric" 
-                         data-index="${index}" data-break-index="${btIndex}">
+                         value="" placeholder="HH:MM" autocomplete="off" inputmode="numeric" 
+                         data-index="${index}" data-break-index="0">
                 </label>
                 <label class="schedule__cell schedule__cell--time">
-                  <span class="schedule__field-label">Break End</span>
                   <input type="text" class="input input--time schedule__break-input schedule__break-input--end" 
-                         value="${bt.endTime}" placeholder="HH:MM" autocomplete="off" inputmode="numeric" 
-                         data-index="${index}" data-break-index="${btIndex}">
+                         value="" placeholder="HH:MM" autocomplete="off" inputmode="numeric" 
+                         data-index="${index}" data-break-index="0">
                 </label>
-                <button class="button button--extra-small button--cross schedule__break-delete" 
-                        type="button" aria-label="Remove break" 
-                        data-index="${index}" data-break-index="${btIndex}"></button>
               </div>
-            `,
-              )
-              .join("")}
-          </div>
-          <button class="button button--extra-small button--outline schedule__break-add" 
-                  type="button" data-index="${index}">+ Add Break</button>
+            `}
         </div>
-      `;
-    } else {
-      breakTimesHTML = `
-        <div class="schedule__breaks-preview">
-          <button class="button button--extra-small button--outline schedule__break-add" 
-                  type="button" data-index="${index}">+ Add Break</button>
-        </div>
-      `;
-    }
+      </div>
+    `;
 
     row.innerHTML = `
   <div class="schedule__cell schedule__cell--number">
-    <span class="schedule__badge">#${session.lessonNumber}</span>
+    <span class="schedule__badge">${session.lessonNumber}</span>
   </div>
   <div class="schedule__cell schedule__cell--day">
     <span class="schedule__field-label">Day</span>
@@ -1062,15 +1165,15 @@ export class ScheduleCourseManager {
     );
     deleteButton.addEventListener("click", () => this.deleteLessonRow(index));
 
-    // Bind break time events
-    const addBreakButton = row.querySelector(
-      ".schedule__break-add",
-    ) as HTMLButtonElement;
-    if (addBreakButton) {
-      addBreakButton.addEventListener("click", () => {
+    // Bind break time events - handle inline add buttons
+    const addBreakButtons = row.querySelectorAll(
+      ".schedule__break-add-inline",
+    );
+    addBreakButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
         this.addBreakTimeToLessonInline(index);
       });
-    }
+    });
 
     const breakDeleteButtons = row.querySelectorAll(
       ".schedule__break-delete",

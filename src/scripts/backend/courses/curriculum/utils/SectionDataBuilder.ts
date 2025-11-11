@@ -226,7 +226,14 @@ export class SectionDataBuilder {
     }
 
     if (typeof value === "string") {
-      return value.trim().length > 0;
+      const trimmed = value.trim();
+      if (!trimmed.length) {
+        return false;
+      }
+      if (this.isPlaceholderToken(trimmed)) {
+        return false;
+      }
+      return true;
     }
 
     if (typeof value === "number") {
@@ -238,5 +245,36 @@ export class SectionDataBuilder {
     }
 
     return typeof value === "object";
+  }
+
+  private static isPlaceholderToken(value: string): boolean {
+    const normalized = value.trim().toLowerCase();
+    if (!normalized.length) {
+      return true;
+    }
+
+    if (normalized.startsWith("{{") && normalized.endsWith("}}")) {
+      return true;
+    }
+
+    if (normalized.startsWith("[") && normalized.endsWith("]")) {
+      const inner = normalized.slice(1, -1).trim();
+      return this.isPlaceholderToken(inner);
+    }
+
+    const placeholderPatterns = [
+      /^(lesson\s*(number|title)?)$/,
+      /^(module\s*(number|title)?)$/,
+      /^(course\s*(title|name)?)$/,
+      /^(teacher(\s*name)?)$/,
+      /^(institution(\s*name)?)$/,
+      /^date$/,
+      /^page(\s*number)?$/,
+      /^copyright$/,
+      /^add\s+.+$/,
+      /^click\s+to\s+add.+$/,
+    ];
+
+    return placeholderPatterns.some((pattern) => pattern.test(normalized));
   }
 }

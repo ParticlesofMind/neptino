@@ -1,18 +1,8 @@
 import type { RosterSummary, StudentRecord } from "./studentsTypes.js";
 
-function formatLearningStyle(styles?: string[] | null): string {
-  if (!styles?.length) return "—";
-  return styles.join(", ");
-}
-
-function formatAssessment(score?: number | null): string {
-  if (score === null || score === undefined) return "—";
-  return Number.isFinite(score) ? score.toString() : "—";
-}
-
 export class StudentsPreview {
-  private readonly previewTable: HTMLTableSectionElement | null;
-  private readonly emptyRow: HTMLTableRowElement | null;
+  private readonly previewBody: HTMLElement | null;
+  private readonly emptyRow: HTMLElement | null;
   private readonly wrapper: HTMLElement | null;
   private readonly feedback: HTMLElement | null;
   private readonly totalEl: HTMLElement | null;
@@ -29,9 +19,9 @@ export class StudentsPreview {
   private onUpdateRow: ((index: number, updates: Partial<StudentRecord>) => Promise<void>) | null = null;
 
   constructor() {
-    this.previewTable = document.getElementById("students-preview-body") as HTMLTableSectionElement | null;
-    this.emptyRow = document.getElementById("students-preview-empty") as HTMLTableRowElement | null;
-    this.wrapper = document.querySelector(".students__table-wrapper");
+    this.previewBody = document.getElementById("students-preview-body") as HTMLElement | null;
+    this.emptyRow = document.getElementById("students-preview-empty") as HTMLElement | null;
+    this.wrapper = document.querySelector(".students__list-wrapper");
     this.feedback = document.getElementById("students-feedback");
     this.totalEl = document.getElementById("students-count-total");
     this.gradesEl = document.getElementById("students-count-grades");
@@ -49,22 +39,22 @@ export class StudentsPreview {
   }
 
   public render(students: StudentRecord[]): void {
-    if (!this.previewTable) return;
+    if (!this.previewBody) return;
 
     this.setBusy(true);
-    this.previewTable.innerHTML = "";
+    this.previewBody.innerHTML = "";
 
     if (!students.length) {
       if (this.emptyRow) {
         this.emptyRow.removeAttribute("hidden");
-        this.previewTable.appendChild(this.emptyRow);
+        this.previewBody.appendChild(this.emptyRow);
       }
       this.setBusy(false);
       return;
     }
 
     students.forEach((student, index) => {
-      const row = document.createElement("tr");
+      const row = document.createElement("div");
       row.className = "students__preview-row";
       row.dataset.studentIndex = String(index);
 
@@ -73,26 +63,11 @@ export class StudentsPreview {
         this.createEditableCell(student.last_name ?? "", "last_name", index),
         this.createEditableCell(student.email ?? "", "email", index),
         this.createEditableCell(student.student_id ?? "", "student_id", index),
-        this.createEditableCell(student.grade_level ?? "", "grade_level", index),
-        this.createReadOnlyCell(formatLearningStyle(student.learning_style)),
-        this.createReadOnlyCell(formatAssessment(student.assessment_score)),
       ];
 
       cells.forEach((cell) => row.appendChild(cell));
 
-      // Add delete button cell
-      const deleteCell = document.createElement("td");
-      deleteCell.className = "students__preview-delete";
-      const deleteBtn = document.createElement("button");
-      deleteBtn.type = "button";
-      deleteBtn.className = "students__preview-delete-btn";
-      deleteBtn.textContent = "×";
-      deleteBtn.title = "Delete this student";
-      deleteBtn.addEventListener("click", () => this.handleDelete(index));
-      deleteCell.appendChild(deleteBtn);
-      row.appendChild(deleteCell);
-
-      this.previewTable?.appendChild(row);
+      this.previewBody?.appendChild(row);
     });
 
     if (this.emptyRow) {
@@ -102,9 +77,9 @@ export class StudentsPreview {
     this.setBusy(false);
   }
 
-  private createEditableCell(value: string, field: keyof StudentRecord, index: number): HTMLTableCellElement {
-    const td = document.createElement("td");
-    td.className = "students__preview-cell students__preview-cell--editable";
+  private createEditableCell(value: string, field: keyof StudentRecord, index: number): HTMLElement {
+    const cell = document.createElement("div");
+    cell.className = "students__preview-cell students__preview-cell--editable";
     
     const input = document.createElement("input");
     input.type = "text";
@@ -120,15 +95,15 @@ export class StudentsPreview {
       }
     });
 
-    td.appendChild(input);
-    return td;
+    cell.appendChild(input);
+    return cell;
   }
 
-  private createReadOnlyCell(value: string): HTMLTableCellElement {
-    const td = document.createElement("td");
-    td.className = "students__preview-cell students__preview-cell--readonly";
-    td.textContent = value;
-    return td;
+  private createReadOnlyCell(value: string): HTMLElement {
+    const cell = document.createElement("div");
+    cell.className = "students__preview-cell students__preview-cell--readonly";
+    cell.textContent = value;
+    return cell;
   }
 
   private async handleFieldUpdate(index: number, field: keyof StudentRecord, value: string): Promise<void> {
@@ -223,10 +198,10 @@ export class StudentsPreview {
   }
 
   public clearPreview(): void {
-    if (!this.previewTable) return;
-    this.previewTable.innerHTML = "";
+    if (!this.previewBody) return;
+    this.previewBody.innerHTML = "";
     if (this.emptyRow) {
-      this.previewTable.appendChild(this.emptyRow);
+      this.previewBody.appendChild(this.emptyRow);
       this.emptyRow.removeAttribute("hidden");
     }
   }

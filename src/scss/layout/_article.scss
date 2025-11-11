@@ -57,7 +57,14 @@
     align-items: stretch;
     flex: 1;
     min-height: 0;
+    height: 100%;
     overflow: hidden;
+    grid-template-rows: auto 1fr;
+
+    >.article__view-toggle {
+      grid-column: 1 / -1;
+      grid-row: 1;
+    }
 
     >.article__config,
     >.article__preview {
@@ -67,6 +74,8 @@
       padding: var(--spacing-4);
       min-height: 0;
       height: 100%;
+      align-self: stretch;
+      grid-row: 2;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -79,10 +88,10 @@
       // Mobile (phones): Hide by default, show only active one
       // Extra Small (≤480px) and Small (481-767px)
       @media (max-width: 767px) {
-        display: none;
+        display: none !important;
         
         &.is-active {
-          display: flex;
+          display: flex !important;
         }
       }
     }
@@ -98,17 +107,20 @@
     // Tablet (768-1023px): Side by side panels
     @media (min-width: 768px) and (max-width: 1023px) {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-rows: auto 1fr;
       gap: var(--spacing-3);
     }
 
     // Large (1024-1439px): Standard desktop layout
     @media (min-width: 1024px) and (max-width: 1439px) {
       grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+      grid-template-rows: auto 1fr;
     }
 
     // Extra Large (≥1440px): Wider layout
     @media (min-width: 1440px) {
       grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+      grid-template-rows: auto 1fr;
     }
   }
 
@@ -192,6 +204,18 @@
   }
 }
 
+.article--curriculum .article__main--panels {
+  // Large (1024-1439px): Give config slightly more space
+  @media (min-width: 64rem) and (max-width: 89.9375rem) {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
+  
+  // Extra Large (≥1440px): Slightly more space for config
+  @media (min-width: 90rem) {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  }
+}
+
 // Course code card (renamed from course-code to card--code)
 .card.card--code {
   display: flex !important;
@@ -214,7 +238,6 @@
   line-height: 1;
   flex-wrap: nowrap;
   white-space: nowrap;
-  margin-top: var(--spacing-8);
   
   // Override any grid properties from base .card
   grid-template-columns: none;
@@ -318,7 +341,7 @@
       min-width: 150px;
     }
 
-    select {
+    select:not(.input--select) {
       appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 8 10 12 14 8'%3E%3C/polyline%3E%3C/svg%3E");
       background-repeat: no-repeat;

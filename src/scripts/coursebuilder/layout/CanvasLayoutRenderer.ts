@@ -31,6 +31,13 @@ export class CanvasLayoutRenderer {
    */
   public updateConfig(config: Partial<LayoutConfig>): void {
     this.config = { ...this.config, ...config };
+
+     if (this.blocks) {
+       const { width, height, margins } = this.config;
+       this.updateHeaderBlock(this.blocks.header, width, margins);
+       this.updateBodyBlock(this.blocks.body, width, height, margins);
+       this.updateFooterBlock(this.blocks.footer, width, height, margins);
+     }
   }
 
   /**

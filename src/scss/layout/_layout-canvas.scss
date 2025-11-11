@@ -11,9 +11,9 @@
   --canvas-height: 1800px;
   
   // Margins (matches PIXI.js margins)
-  --canvas-margin-top: 96px;
+  --canvas-margin-top: 128px; // Header height - increased for better visibility
   --canvas-margin-right: 96px;
-  --canvas-margin-bottom: 96px;
+  --canvas-margin-bottom: 112px; // Footer height - slightly increased
   --canvas-margin-left: 96px;
   
   // Typography (matches PIXI.js text styling)

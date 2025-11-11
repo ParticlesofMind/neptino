@@ -647,11 +647,19 @@ export class CurriculumRenderer {
     const templatesForUI = this.getFilteredTemplatesForCourseType();
 
     if (!templatesForUI.length) {
-      const courseTypeLabel = this.courseType === "custom"
-        ? "Create a template to unlock placement options."
-        : `No templates available for ${this.courseType} course type. Switch to "Custom" to access all templates.`;
+      const allowedTypes = this.getAllowedTemplateTypesForCourse();
+      if (!allowedTypes || !allowedTypes.length) {
+        this.templatePlacementList.innerHTML =
+          '<p class="template-placement__empty">Create a template in the Templates tab to unlock placement options.</p>';
+        return;
+      }
+
+      const allowedLabels = allowedTypes
+        .map((type) => this.formatTemplateType(type))
+        .join(", ");
+      const emptyMessage = `No ${this.courseType} templates found. This course expects: ${allowedLabels}. Create a matching template in the Templates tab or switch to "Custom" to use every template.`;
       this.templatePlacementList.innerHTML =
-        `<p class="template-placement__empty">${courseTypeLabel}</p>`;
+        `<p class="template-placement__empty">${emptyMessage}</p>`;
       return;
     }
 
@@ -707,6 +715,8 @@ export class CurriculumRenderer {
             ? null
             : template.scope === "global"
             ? "Global template"
+            : template.scope === "shared"
+            ? "Shared template"
             : "Course template";
         const metaLabel = [typeLabel, scopeLabel].filter(Boolean).join(" · ");
 
@@ -964,15 +974,29 @@ export class CurriculumRenderer {
   private getTemplatePlacement(
     templateId: string,
   ): TemplatePlacementConfig | undefined {
-    // Try exact match first (by database ID)
-    let placement = this.templatePlacements.find((placement) => placement.templateId === templateId);
-    
-    // If not found, try matching by template slug (for backwards compatibility)
-    if (!placement) {
-      placement = this.templatePlacements.find((placement) => placement.templateSlug === templateId);
+    const directMatch = this.templatePlacements.find(
+      (placement) => placement.templateId === templateId,
+    );
+    if (directMatch) {
+      return directMatch;
     }
-    
-    return placement;
+
+    const summary = this.availableTemplates.find(
+      (template) => template.id === templateId,
+    );
+    const slugCandidates = new Set<string>();
+    if (summary?.templateId) {
+      slugCandidates.add(summary.templateId);
+    }
+    slugCandidates.add(templateId);
+
+    return this.templatePlacements.find((placement) => {
+      const matchesId =
+        placement.templateId && slugCandidates.has(placement.templateId);
+      const matchesSlug =
+        placement.templateSlug && slugCandidates.has(placement.templateSlug);
+      return Boolean(matchesId || matchesSlug);
+    });
   }
 
   private getFilteredTemplatesForCourseType(): TemplateSummary[] {
@@ -982,23 +1006,7 @@ export class CurriculumRenderer {
       return allTemplates;
     }
 
-    const allowedTypes = {
-      minimalist: ["lesson", "quiz"],
-      essential: ["lesson", "quiz", "feedback", "assessment", "certificate"],
-      complete: [
-        "lesson",
-        "quiz",
-        "feedback",
-        "assessment",
-        "report",
-        "review",
-        "project",
-        "module_orientation",
-        "course_orientation",
-        "certificate",
-      ],
-    }[this.courseType];
-
+    const allowedTypes = this.getAllowedTemplateTypesForCourse();
     if (!allowedTypes) {
       return allTemplates;
     }
@@ -1033,28 +1041,66 @@ export class CurriculumRenderer {
     const displayTemplates = [...this.availableTemplates];
     // Create sets for both database ID and template slug matching
     const existingIds = new Set(displayTemplates.map((template) => template.id));
-    const existingTemplateIds = new Set(displayTemplates.map((template) => template.templateId));
+    const existingTemplateIds = new Set(
+      displayTemplates
+        .map((template) => template.templateId)
+        .filter(
+          (value): value is string => typeof value === "string" && value.length > 0,
+        ),
+    );
 
     this.templatePlacements.forEach((placement) => {
       // Check if template exists by database ID or by template slug
-      const existsById = existingIds.has(placement.templateId);
-      const existsBySlug = existingTemplateIds.has(placement.templateSlug);
+      const existsById = placement.templateId ? existingIds.has(placement.templateId) : false;
+      const slugCandidates = [placement.templateSlug, placement.templateId].filter(
+        (value): value is string => typeof value === "string" && value.length > 0,
+      );
+      const existsBySlug = slugCandidates.some((slug) => existingTemplateIds.has(slug));
       
       if (!existsById && !existsBySlug) {
         // Only mark as missing if it truly doesn't exist
+        const fallbackId = placement.templateId || placement.templateSlug || `missing-${slugCandidates[0] || "template"}`;
         displayTemplates.push({
-          id: placement.templateId,
-          templateId: placement.templateSlug,
-          name: `${placement.templateName || placement.templateSlug} (missing)`,
+          id: fallbackId,
+          templateId: slugCandidates[0] || fallbackId,
+          name: `${placement.templateName || slugCandidates[0] || "Template"} (missing)`,
           type: "missing",
           description: null,
           isMissing: true,
         });
-        existingIds.add(placement.templateId);
+        existingIds.add(fallbackId);
+        if (slugCandidates[0]) {
+          existingTemplateIds.add(slugCandidates[0]);
+        }
       }
     });
 
     return displayTemplates;
+  }
+
+  private getAllowedTemplateTypesForCourse(): string[] | null {
+    const mapping: Record<
+      NonNullable<typeof this.courseType>,
+      string[] | null
+    > = {
+      minimalist: ["lesson", "quiz"],
+      essential: ["lesson", "quiz", "feedback", "assessment", "certificate"],
+      complete: [
+        "lesson",
+        "quiz",
+        "feedback",
+        "assessment",
+        "report",
+        "review",
+        "project",
+        "module_orientation",
+        "course_orientation",
+        "certificate",
+      ],
+      custom: null,
+    };
+
+    return mapping[this.courseType] || null;
   }
 
   private normalizeTemplateTypeName(type: string | null | undefined): string | null {
@@ -1299,4 +1345,3 @@ export class CurriculumRenderer {
     return [];
   }
 }
-

@@ -104,6 +104,62 @@ export async function createCourse(
  course_language: data.course_language.trim(),
  course_type: data.course_type.trim(),
  teacher_id: user.id, // Use teacher_id from your schema
+ template_settings: {},
+ schedule_settings: {},
+ curriculum_data: {},
+ generation_settings: {
+ required_context: ["essentials", "classification", "pedagogy"],
+ optional_context: {
+ schedule: true,
+ structure: true,
+ existing: false,
+ },
+ updated_at: new Date().toISOString(),
+ },
+ students_overview: {
+ total: 0,
+ synced: 0,
+ grade_levels: [],
+ updated_at: new Date().toISOString(),
+ },
+ visibility_settings: {
+ course_visible: false,
+ allow_enrollment: true,
+ require_approval: false,
+ enable_notifications: false,
+ public_course: false,
+ },
+ marketplace_settings: {
+ listing_status: "draft",
+ target_audience: "",
+ revenue_share: null,
+ distribution_channels: "",
+ },
+ resources_settings: {
+ resource_policy: "",
+ allow_student_uploads: false,
+ default_storage_provider: "internal",
+ featured_resources: "",
+ },
+ pricing_settings: {
+ pricing_model: "free",
+ base_price: null,
+ currency: "USD",
+ trial_available: false,
+ discount_notes: "",
+ },
+ integration_settings: {
+ lms_provider: "None",
+ api_access: false,
+ webhook_url: "",
+ integration_notes: "",
+ },
+ communication_settings: {
+ welcome_message: "",
+ announcement_channel: "email",
+ enable_updates: false,
+ office_hours: "",
+ },
  created_at: new Date().toISOString(),
  updated_at: new Date().toISOString(),
  };

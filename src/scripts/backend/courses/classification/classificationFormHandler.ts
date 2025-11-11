@@ -27,6 +27,8 @@ export class ClassificationFormHandler {
   private selectedDomain: string = "";
   private selectedSubject: string = "";
   private _selectedTopic: string = "";
+  private isLoadingData: boolean = false;
+  private resolvedCourseId: string | null = null;
 
   /**
    * Get/set selected topic with proper tracking
@@ -43,7 +45,7 @@ export class ClassificationFormHandler {
    * Get current course ID from URL
    */
   private get courseId(): string | null {
-    return getCourseId();
+    return this.resolvedCourseId || getCourseId();
   }
 
   /**
@@ -55,6 +57,10 @@ export class ClassificationFormHandler {
   }
 
   constructor() {
+    this.resolvedCourseId = getCourseId();
+    if (typeof window !== "undefined") {
+      (window as any).classificationHandler = this;
+    }
     this.initialize();
   }
 
@@ -395,6 +401,11 @@ export class ClassificationFormHandler {
   }
 
   private triggerAutoSave(): void {
+    // Don't auto-save while loading data to prevent overwriting with incomplete data
+    if (this.isLoadingData) {
+      return;
+    }
+
     // Clear existing timeout
     if (this.autoSaveTimeout) {
       clearTimeout(this.autoSaveTimeout);
@@ -417,6 +428,8 @@ export class ClassificationFormHandler {
 
     try {
       const classificationData = this.getCurrentFormData();
+      
+      console.log("Auto-save: Form data being sent:", classificationData);
 
       // Check if data has actually changed
       const currentDataString = JSON.stringify(classificationData);
@@ -447,17 +460,23 @@ export class ClassificationFormHandler {
     const form = document.getElementById("course-classification-form") as HTMLFormElement;
     if (!form) throw new Error("Classification form not found");
 
-    const formData = new FormData(form);
+    // Get values directly from select elements (not FormData) because disabled selects
+    // are not included in FormData, but we still need their values
+    const getSelectValue = (id: string): string => {
+      const select = document.getElementById(id) as HTMLSelectElement;
+      return select?.value || "";
+    };
+
     return {
-      class_year: (formData.get("class_year") as string) || "",
-      curricular_framework: (formData.get("curricular_framework") as string) || "",
-      domain: (formData.get("domain") as string) || "",
-      subject: (formData.get("subject") as string) || "",
-      topic: (formData.get("topic") as string) || "",
-      subtopic: (formData.get("subtopic") as string) || undefined,
-      previous_course: (formData.get("previous_course") as string) || undefined,
-      current_course: (formData.get("current_course") as string) || undefined,
-      next_course: (formData.get("next_course") as string) || undefined,
+      class_year: getSelectValue("class-year-select"),
+      curricular_framework: getSelectValue("curricular-framework-select"),
+      domain: getSelectValue("domain-select"),
+      subject: getSelectValue("subject-select"),
+      topic: getSelectValue("topic-select"),
+      subtopic: getSelectValue("subtopic-select") || undefined,
+      previous_course: getSelectValue("previous-course-select") || undefined,
+      current_course: getSelectValue("current-course-select") || undefined,
+      next_course: getSelectValue("next-course-select") || undefined,
     };
   }
 
@@ -465,8 +484,8 @@ export class ClassificationFormHandler {
     message: string,
     state: "empty" | "saving" | "saved" | "error" = "saved",
   ): void {
-    const statusElement = document.getElementById(
-      "classification-save-status",
+    const statusElement = document.querySelector(
+      '[data-course-section="classification"] .card--save-status',
     ) as HTMLElement | null;
     if (!statusElement) return;
 
@@ -493,16 +512,53 @@ export class ClassificationFormHandler {
   // UTILITY METHODS
   // ==========================================================================
 
+  public async setCourseId(courseId: string | null): Promise<void> {
+    if (!courseId) {
+      this.resolvedCourseId = null;
+      this.lastSavedData = "";
+      this.updateSaveStatus("Waiting for course creation...", "empty");
+      return;
+    }
+
+    if (this.resolvedCourseId === courseId) {
+      return;
+    }
+
+    this.resolvedCourseId = courseId;
+    await this.loadExistingClassification(courseId);
+  }
+
   public async loadExistingClassification(courseId: string): Promise<void> {
     try {
+      // Set loading flag to prevent auto-save during form population
+      this.isLoadingData = true;
+      
+      // Clear any pending auto-save
+      if (this.autoSaveTimeout) {
+        clearTimeout(this.autoSaveTimeout);
+        this.autoSaveTimeout = null;
+      }
+
       const classification = await getCourseClassification(courseId);
       if (classification) {
+        console.log("Loading classification into form:", classification);
+        
         this.populateFormWithData(classification);
+        
+        // Set lastSavedData immediately to prevent auto-save from triggering
         this.lastSavedData = JSON.stringify(classification);
-        this.updateSaveStatus(this.formatSavedMessage(), "saved");
+        
+        // Wait for all cascading dropdowns to populate before re-enabling auto-save
+        setTimeout(() => {
+          this.isLoadingData = false;
+          this.updateSaveStatus(this.formatSavedMessage(), "saved");
+        }, 1500); // Give enough time for all setTimeout chains to complete
+      } else {
+        this.isLoadingData = false;
       }
     } catch (error) {
       console.error("Error loading existing classification:", error);
+      this.isLoadingData = false;
       this.updateSaveStatus("Error loading existing data", "error");
     }
   }

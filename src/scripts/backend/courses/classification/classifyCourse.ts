@@ -193,10 +193,10 @@ export async function savePartialCourseClassification(
  courseId,
  );
 
- // Verify course ownership
+ // Verify course ownership and fetch existing classification data
  const { data: courseData, error: courseError } = await supabase
  .from("courses")
- .select("teacher_id")
+ .select("teacher_id, classification_data")
  .eq("id", courseId)
  .single();
 
@@ -212,32 +212,83 @@ export async function savePartialCourseClassification(
  };
  }
 
- // Prepare classification data for JSONB column (allow partial data)
- const classificationData: any = {
- updated_at: new Date().toISOString(),
- };
+ // Get existing classification data and merge with new data
+ const existingClassificationData = courseData.classification_data || {};
+ const classificationData: any = { ...existingClassificationData };
 
- // Only include fields that have values
- if (data.class_year?.trim())
- classificationData.class_year = data.class_year.trim();
- if (data.curricular_framework?.trim())
- classificationData.curricular_framework =
- data.curricular_framework.trim();
- if (data.domain?.trim()) classificationData.domain = data.domain.trim();
- if (data.subject?.trim()) classificationData.subject = data.subject.trim();
- if (data.topic?.trim()) classificationData.topic = data.topic.trim();
- if (data.subtopic?.trim())
- classificationData.subtopic = data.subtopic.trim();
- if (data.previous_course?.trim())
- classificationData.previous_course = data.previous_course.trim();
- if (data.current_course?.trim())
- classificationData.current_course = data.current_course.trim();
- if (data.next_course?.trim())
- classificationData.next_course = data.next_course.trim();
+ // Only update fields that have non-empty values (preserve existing if empty)
+ // This ensures we don't overwrite existing data with empty strings
+ if (data.class_year !== undefined) {
+   const trimmed = data.class_year.trim();
+   if (trimmed) {
+     classificationData.class_year = trimmed;
+   }
+ }
+ if (data.curricular_framework !== undefined) {
+   const trimmed = data.curricular_framework.trim();
+   if (trimmed) {
+     classificationData.curricular_framework = trimmed;
+   }
+ }
+ if (data.domain !== undefined) {
+   const trimmed = data.domain.trim();
+   if (trimmed) {
+     classificationData.domain = trimmed;
+   }
+ }
+ if (data.subject !== undefined) {
+   const trimmed = data.subject.trim();
+   if (trimmed) {
+     classificationData.subject = trimmed;
+   }
+ }
+ if (data.topic !== undefined) {
+   const trimmed = data.topic.trim();
+   if (trimmed) {
+     classificationData.topic = trimmed;
+   }
+ }
+ if (data.subtopic !== undefined) {
+   const trimmed = data.subtopic?.trim() || "";
+   if (trimmed) {
+     classificationData.subtopic = trimmed;
+   } else if (data.subtopic === "") {
+     // Explicitly clear if empty string is passed
+     classificationData.subtopic = null;
+   }
+ }
+ if (data.previous_course !== undefined) {
+   const trimmed = data.previous_course?.trim() || "";
+   if (trimmed) {
+     classificationData.previous_course = trimmed;
+   } else if (data.previous_course === "") {
+     classificationData.previous_course = null;
+   }
+ }
+ if (data.current_course !== undefined) {
+   const trimmed = data.current_course?.trim() || "";
+   if (trimmed) {
+     classificationData.current_course = trimmed;
+   } else if (data.current_course === "") {
+     classificationData.current_course = null;
+   }
+ }
+ if (data.next_course !== undefined) {
+   const trimmed = data.next_course?.trim() || "";
+   if (trimmed) {
+     classificationData.next_course = trimmed;
+   } else if (data.next_course === "") {
+     classificationData.next_course = null;
+   }
+ }
 
  console.log(
  "Saving partial course classification data:",
- classificationData,
+ {
+   incoming: data,
+   existing: existingClassificationData,
+   merged: classificationData,
+ },
  );
 
  // Update course with classification data in the JSONB column
@@ -379,18 +430,24 @@ export async function getCourseClassification(
  // Extract classification data from JSONB column
  const classificationData = data?.classification_data || {};
 
+ console.log("Loading classification data from database:", classificationData);
+
  // Return the classification data with proper structure
- return {
- class_year: classificationData.class_year || "",
- curricular_framework: classificationData.curricular_framework || "",
- domain: classificationData.domain || "",
- subject: classificationData.subject || "",
- topic: classificationData.topic || "",
- subtopic: classificationData.subtopic || undefined,
- previous_course: classificationData.previous_course || undefined,
- current_course: classificationData.current_course || undefined,
- next_course: classificationData.next_course || undefined,
+ // Use nullish coalescing to preserve empty strings and only default to "" for null/undefined
+ const result = {
+ class_year: classificationData.class_year ?? "",
+ curricular_framework: classificationData.curricular_framework ?? "",
+ domain: classificationData.domain ?? "",
+ subject: classificationData.subject ?? "",
+ topic: classificationData.topic ?? "",
+ subtopic: classificationData.subtopic ?? undefined,
+ previous_course: classificationData.previous_course ?? undefined,
+ current_course: classificationData.current_course ?? undefined,
+ next_course: classificationData.next_course ?? undefined,
  };
+
+ console.log("Returning classification data:", result);
+ return result;
  } catch (error) {
  console.error("Error in getCourseClassification:", error);
  return null;
