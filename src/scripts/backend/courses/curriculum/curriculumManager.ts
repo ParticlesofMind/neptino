@@ -3549,6 +3549,44 @@ class CurriculumManager {
     }
   }
 
+  /**
+   * Clear all canvas cache for the current course
+   * This will force canvases to be regenerated with the new hierarchical structure
+   */
+  public async clearCanvasCache(): Promise<void> {
+    if (!this.courseId) {
+      console.warn('⚠️ No course ID - cannot clear canvas cache');
+      return;
+    }
+
+    try {
+      console.log(`🗑️  Clearing canvas cache for course: ${this.courseId}`);
+      
+      const { data, error } = await supabase
+        .from('canvases')
+        .delete()
+        .eq('course_id', this.courseId)
+        .select();
+
+      if (error) {
+        console.error('❌ Error clearing canvas cache:', error);
+        return;
+      }
+
+      const deletedCount = data?.length || 0;
+      console.log(`✅ Successfully deleted ${deletedCount} canvas(es)`);
+      console.log('🔄 Canvases will be regenerated with the new hierarchical structure when you save the curriculum.');
+      
+      // Regenerate canvases immediately
+      if (this.currentCurriculum.length > 0) {
+        console.log('🔄 Regenerating canvases...');
+        await this.ensureLessonCanvases(this.currentCurriculum);
+      }
+    } catch (error) {
+      console.error('❌ Failed to clear canvas cache:', error);
+    }
+  }
+
   private setPreviewMode(mode: PreviewMode): void {
     this.currentPreviewMode = mode;
     this.savePreviewMode(mode);
@@ -3602,6 +3640,15 @@ class CurriculumManager {
   private renderCurriculumPreview(): void {
     const curriculumPreviewMode: PreviewMode = "modules";
 
+    const sectionsToRender = this.generationRenderer ? 2 : 1;
+    let completedSections = 0;
+    const onSectionRenderComplete = (): void => {
+      completedSections += 1;
+      if (completedSections >= sectionsToRender) {
+        this.bindEditableEvents();
+      }
+    };
+
     // Update and render curriculum preview
     this.renderer.updateData({
       currentCurriculum: this.currentCurriculum,
@@ -3613,7 +3660,7 @@ class CurriculumManager {
       courseType: this.courseType,
       moduleOrganization: this.moduleOrganization,
     });
-    this.renderer.renderCurriculumPreview();
+    this.renderer.renderCurriculumPreview(onSectionRenderComplete);
 
     // Update and render generation preview if it exists
     if (this.generationRenderer) {
@@ -3627,10 +3674,8 @@ class CurriculumManager {
         courseType: this.courseType,
         moduleOrganization: this.moduleOrganization,
       });
-      this.generationRenderer.renderCurriculumPreview();
+      this.generationRenderer.renderCurriculumPreview(onSectionRenderComplete);
     }
-
-    this.bindEditableEvents();
   }
 
   private bindEditableEvents(): void {

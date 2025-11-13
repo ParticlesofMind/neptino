@@ -585,12 +585,14 @@
     border: 1px solid var(--color-neutral-200);
     border-radius: var(--radius-medium);
     background: var(--color-background);
-    flex-shrink: 0;
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 100%;
     box-sizing: border-box;
     position: absolute;
-    bottom: var(--spacing-3);
-    right: var(--spacing-3);
-    z-index: 1;
+    z-index: 2;
+    pointer-events: none;
+    white-space: nowrap;
     
     // Override any grid properties from base .card
     grid-template-columns: none;
@@ -598,16 +600,30 @@
 
     &__number {
       font-family: var(--font-mono, "SFMono-Regular", Menlo, Consolas, monospace);
-      font-size: var(--font-size-base);
+      font-size: var(--font-size-small);
       font-weight: var(--font-weight-semibold);
-      color: var(--color-primary-700);
+      color: var(--color-text-secondary);
       line-height: 1;
+      white-space: nowrap;
+      
+      // Make font size responsive on smaller screens
+      @media (max-width: 48rem) {
+        font-size: var(--font-size-extra-small);
+      }
     }
 
     &__label {
-      font-size: var(--font-size-small);
-      color: var(--color-text-secondary);
+      font-size: var(--font-size-extra-small);
+      color: var(--color-text-tertiary);
       line-height: 1;
+    }
+    
+    // For textarea, position at bottom-right instead
+    textarea ~ & {
+      top: auto;
+      bottom: var(--spacing-3);
+      right: var(--spacing-3);
+      transform: none;
     }
   }
 

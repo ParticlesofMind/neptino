@@ -132,7 +132,34 @@ export class CourseBuilder {
  this.scheduleManager = new ScheduleCourseManager(this.courseId);
  
  // Initialize curriculum manager (always ready)
- this.curriculumManager = new CurriculumManager(this.courseId);
+    this.curriculumManager = new CurriculumManager(this.courseId);
+    
+    // Expose clearCanvasCache method globally for console access
+    if (typeof window !== 'undefined') {
+      (window as any).clearCanvasCache = async () => {
+        if (this.curriculumManager) {
+          await this.curriculumManager.clearCanvasCache();
+        } else {
+          console.error('❌ Curriculum manager not initialized. Please wait for the page to load.');
+        }
+      };
+      
+      // Auto-clear canvas cache if ?clearCanvasCache=true is in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('clearCanvasCache') === 'true') {
+        console.log('🔄 Auto-clearing canvas cache (triggered by URL parameter)...');
+        // Wait a bit for curriculum manager to initialize
+        setTimeout(async () => {
+          if (this.curriculumManager) {
+            await this.curriculumManager.clearCanvasCache();
+            // Remove the parameter from URL
+            urlParams.delete('clearCanvasCache');
+            const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+            window.history.replaceState({}, '', newUrl);
+          }
+        }, 2000);
+      }
+    }
 
  if (this.studentsManager) {
  this.studentsManager.setCourseId(this.courseId);

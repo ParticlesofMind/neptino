@@ -254,6 +254,7 @@ export class CurriculumRenderer {
                    <div class="objective-title">
                      <span class="objective-text" contenteditable="true"
                            data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}"
+                           data-field="objective"
                            data-placeholder="Click to add learning objective...">
                        ${objective || `Objective ${objIndex + 1}`}
                      </span>
@@ -274,6 +275,7 @@ export class CurriculumRenderer {
                       html += `
                          <li class="task-item task-item--editable" contenteditable="true"
                              data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-task="${taskIdx}"
+                             data-field="task"
                              data-placeholder="Click to add task...">
                            ${topic.tasks[taskIdx] || `Task ${(taskIdx % tasksPerObjective) + 1}`}
                          </li>`;
@@ -401,6 +403,7 @@ export class CurriculumRenderer {
                    <div class="objective-title">
                      <span class="objective-text" contenteditable="true"
                            data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}"
+                           data-field="objective"
                            data-placeholder="Click to add learning objective...">
                        ${objective || `Objective ${objIndex + 1}`}
                      </span>
@@ -454,6 +457,7 @@ export class CurriculumRenderer {
                     html += `
                          <li class="task-item task-item--editable" contenteditable="true"
                              data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-task="${taskIdx}"
+                             data-field="task"
                              data-placeholder="Click to add task...">
                            ${topic.tasks[taskIdx] || `Task ${(taskIdx % tasksPerObjective) + 1}`}
                          </li>`;

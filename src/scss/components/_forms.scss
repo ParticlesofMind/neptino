@@ -248,9 +248,39 @@
     gap: var(--spacing-3);
   }
   
-  // Position relative for counter positioning
-  &:has(textarea) {
+  // Position relative for counter positioning (for both textarea and input with counters)
+  &:has(textarea),
+  &:has(.card--counter) {
     position: relative;
+  }
+  
+  // Make inputs with counters have padding for the counter
+  &:has(input + .card--counter) {
+    input {
+      position: relative;
+      padding-right: calc(var(--spacing-3) + 5rem); // Make room for counter on the right
+      
+      // Reduce padding on smaller screens to accommodate counter
+      @media (max-width: 48rem) {
+        padding-right: calc(var(--spacing-2) + 4rem);
+      }
+    }
+    
+    // Position the counter inside the input field, aligned with input content
+    // The counter is positioned absolutely within the label, aligned with the input's vertical center
+    .card--counter {
+      position: absolute;
+      // Position at: label text (~1.5rem) + gap + input padding-top + half of input line-height to center
+      top: calc(1.5rem + var(--spacing-2) + var(--spacing-4) + 0.75rem);
+      right: var(--spacing-3);
+      transform: translateY(-50%);
+      
+      // Adjust positioning and size on smaller screens
+      @media (max-width: 48rem) {
+        right: var(--spacing-2);
+        padding: var(--spacing-1) var(--spacing-2);
+      }
+    }
   }
 }
 

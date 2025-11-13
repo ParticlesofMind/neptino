@@ -98,12 +98,14 @@ export const SECTION_CONFIGS: { [key: string]: SectionConfig } = {
  "course_image",
  ],
  fields: [
- { name: "course_name", type: "text", required: true, minLength: 3 },
+ { name: "course_name", type: "text", required: true, minLength: 3, maxLength: 50 },
+ { name: "course_subtitle", type: "text", required: false, maxLength: 75 },
  {
  name: "course_description",
  type: "textarea",
  required: true,
  minLength: 10,
+ maxLength: 999,
  },
     {
       name: "teacher_id",

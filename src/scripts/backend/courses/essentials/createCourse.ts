@@ -8,6 +8,7 @@ import { uploadCourseImage, deleteCourseImage } from "../shared/uploadCourseImag
 // Course creation interface
 export interface CourseCreationData {
  course_name: string;
+ course_subtitle?: string;
  course_description: string;
  course_language: string;
  course_type: string;
@@ -100,6 +101,7 @@ export async function createCourse(
  // Create course record with your actual schema
  const courseInsertData = {
  course_name: data.course_name,
+ course_subtitle: data.course_subtitle?.trim() || null,
  course_description: data.course_description,
  course_language: data.course_language.trim(),
  course_type: data.course_type.trim(),

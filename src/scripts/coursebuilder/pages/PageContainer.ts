@@ -643,7 +643,8 @@ export class PageContainer extends Container {
     const table = data.table as TableData | undefined;
     const tableHasContent = this.tableHasContent(table);
 
-    if (table) {
+    // Skip table rendering for content and assignment blocks - they use hierarchical rendering
+    if (table && block.type !== "content" && block.type !== "assignment") {
       cursorY = this.renderTable(container, table, cursorY, contentWidth);
     }
 
@@ -651,9 +652,9 @@ export class PageContainer extends Container {
       cursorY = this.renderProgramDetails(container, data.program, cursorY, contentWidth);
     }
 
-    if (block.type === "content") {
+    if (block.type === "content" || block.type === "assignment") {
       const topicNodes = Array.isArray(block.children) ? (block.children as LayoutNode[]) : [];
-      cursorY = this.renderContentTopics(container, topicNodes, cursorY, contentWidth);
+      cursorY = this.renderHierarchicalContent(container, topicNodes, cursorY, contentWidth, block.type);
     }
 
     const blockMessage = this.toDisplayString(data.message);
@@ -981,6 +982,172 @@ export class PageContainer extends Container {
           cursorY += taskText.height + PageContainer.LINE_SPACING;
         }
       });
+    });
+
+    return cursorY;
+  }
+
+  /**
+   * Render hierarchical content structure matching the preview
+   * Structure: Topic > Competency > Objective > Task > (Instruction/Student/Teacher areas)
+   */
+  private renderHierarchicalContent(
+    container: Container,
+    topicNodes: LayoutNode[],
+    startY: number,
+    contentWidth: number,
+    blockType: "content" | "assignment",
+  ): number {
+    const topics = topicNodes.filter(
+      (node) => node.type === "topic" || node.role === "lesson-topic",
+    );
+
+    if (!topics.length) {
+      return startY;
+    }
+
+    let cursorY = startY;
+    const sectionPadding = 12;
+    const groupPadding = 8;
+    const headerHeight = 32;
+    const cellPadding = 8;
+    const rowHeight = 28;
+    const emptyRowHeight = 40;
+
+    topics.forEach((topicNode) => {
+      const topicData = (topicNode.data ?? {}) as Record<string, unknown>;
+      const topicTitle = this.toDisplayString(topicData.title, "topic") || "TOPIC";
+
+      // Topic Section (hierarchy-0)
+      const topicSection = new Container();
+      topicSection.x = 0;
+      topicSection.y = cursorY;
+
+      // Topic header
+      const topicHeaderBg = new Graphics();
+      topicHeaderBg.rect(0, 0, contentWidth, headerHeight);
+      topicHeaderBg.fill({ color: 0xf5f5f5, alpha: 1 });
+      topicHeaderBg.stroke({ color: 0xe0e0e0, width: 1 });
+      topicSection.addChild(topicHeaderBg);
+
+      const topicHeaderText = new Text({
+        text: topicTitle.toUpperCase(),
+        style: this.createSubheadingStyle(contentWidth - cellPadding * 2),
+      });
+      topicHeaderText.x = cellPadding;
+      topicHeaderText.y = (headerHeight - topicHeaderText.height) / 2;
+      topicSection.addChild(topicHeaderText);
+
+      let sectionY = headerHeight + groupPadding;
+
+      // Get competencies (if structured that way) or treat topic as top level
+      const competencies = Array.isArray(topicData.competencies) 
+        ? (topicData.competencies as Array<unknown>)
+        : topicData.competence 
+        ? [topicData.competence]
+        : [];
+
+      if (competencies.length === 0) {
+        // If no competencies, treat topic's objectives directly
+        const objectives = Array.isArray(topicData.objectives)
+          ? (topicData.objectives as Array<unknown>)
+          : [];
+
+        objectives.forEach((objective) => {
+          const objectiveText = this.toDisplayString(objective, "objective");
+          if (objectiveText) {
+            // Objective header
+            const objHeaderBg = new Graphics();
+            objHeaderBg.rect(0, sectionY, contentWidth, headerHeight);
+            objHeaderBg.fill({ color: 0xffffff, alpha: 1 });
+            objHeaderBg.stroke({ color: 0xe0e0e0, width: 1 });
+            topicSection.addChild(objHeaderBg);
+
+            const objHeaderText = new Text({
+              text: `OBJECTIVE: ${objectiveText.toUpperCase()}`,
+              style: this.createBodyStyle(contentWidth - cellPadding * 2 - 48),
+            });
+            objHeaderText.x = cellPadding + 48;
+            objHeaderText.y = sectionY + (headerHeight - objHeaderText.height) / 2;
+            topicSection.addChild(objHeaderText);
+
+            sectionY += headerHeight + groupPadding;
+
+            // Tasks under objective
+            const tasks = Array.isArray(topicData.tasks) ? (topicData.tasks as Array<unknown>) : [];
+            tasks.forEach((task) => {
+              const taskText = this.toDisplayString(task, "task");
+              if (taskText) {
+                // Task header
+                const taskHeaderBg = new Graphics();
+                taskHeaderBg.rect(0, sectionY, contentWidth, headerHeight);
+                taskHeaderBg.fill({ color: 0xffffff, alpha: 1 });
+                taskHeaderBg.stroke({ color: 0xe0e0e0, width: 1 });
+                topicSection.addChild(taskHeaderBg);
+
+                const taskHeaderText = new Text({
+                  text: `TASK: ${taskText.toUpperCase()}`,
+                  style: this.createBodyStyle(contentWidth - cellPadding * 2 - 96),
+                });
+                taskHeaderText.x = cellPadding + 96;
+                taskHeaderText.y = sectionY + (headerHeight - taskHeaderText.height) / 2;
+                topicSection.addChild(taskHeaderText);
+
+                sectionY += headerHeight + groupPadding;
+
+                // Instruction/Student/Teacher areas
+                const areas = ["Instruction Area", "Student Area", "Teacher Area"];
+                areas.forEach((areaName) => {
+                  // Area row
+                  const areaRowBg = new Graphics();
+                  areaRowBg.rect(0, sectionY, contentWidth, rowHeight);
+                  areaRowBg.fill({ color: 0xffffff, alpha: 1 });
+                  areaRowBg.stroke({ color: 0xe0e0e0, width: 1 });
+                  topicSection.addChild(areaRowBg);
+
+                  const columnWidth = contentWidth / 3;
+                  
+                  // Primary column (area name)
+                  const areaText = new Text({
+                    text: `— ${areaName}`,
+                    style: this.createBodyStyle(columnWidth - cellPadding * 2),
+                  });
+                  areaText.x = cellPadding + 120;
+                  areaText.y = sectionY + (rowHeight - areaText.height) / 2;
+                  topicSection.addChild(areaText);
+
+                  // Method column
+                  const methodText = new Text({
+                    text: "—",
+                    style: this.createSecondaryStyle(columnWidth - cellPadding * 2),
+                  });
+                  methodText.x = columnWidth + cellPadding;
+                  methodText.y = sectionY + (rowHeight - methodText.height) / 2;
+                  topicSection.addChild(methodText);
+
+                  // Social Form column
+                  const socialText = new Text({
+                    text: "—",
+                    style: this.createSecondaryStyle(columnWidth - cellPadding * 2),
+                  });
+                  socialText.x = columnWidth * 2 + cellPadding;
+                  socialText.y = sectionY + (rowHeight - socialText.height) / 2;
+                  topicSection.addChild(socialText);
+
+                  sectionY += rowHeight;
+
+                  // Empty row
+                  sectionY += emptyRowHeight;
+                });
+              }
+            });
+          }
+        });
+      }
+
+      topicSection.height = sectionY;
+      container.addChild(topicSection);
+      cursorY += sectionY + PageContainer.SECTION_SPACING;
     });
 
     return cursorY;

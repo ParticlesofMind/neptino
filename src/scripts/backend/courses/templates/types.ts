@@ -40,6 +40,10 @@ export interface FieldRow {
   placeholders: {
     [key: string]: string;
   };
+  isHeaderRow?: boolean;
+  headerLabel?: string;
+  childRows?: FieldRow[];
+  hierarchyLevel?: number; // 0 = Topic, 1 = Competency, 2 = Objective, 3 = Task
 }
 
 export interface TemplateManagerState {

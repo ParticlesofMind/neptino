@@ -586,13 +586,24 @@ export class CourseFormHandler {
         if (this.sectionConfig.section === "essentials") {
         
             this.setFieldValue("course_name", courseData.course_name);
+            this.setFieldValue("course_subtitle", courseData.course_subtitle || "");
             this.setFieldValue("course_description", courseData.course_description);
             this.setFieldValue("teacher_id", courseData.teacher_id);
             this.setFieldValue("institution", courseData.institution);
             this.setFieldValue("course_language", courseData.course_language);
             this.setFieldValue("course_type", courseData.course_type);
             
-            // Update character counter after populating description
+            // Update character counters after populating fields
+            const titleInput = document.getElementById("course-name") as HTMLInputElement;
+            if (titleInput && (titleInput as any).updateCharacterCounter) {
+                (titleInput as any).updateCharacterCounter();
+            }
+            
+            const subtitleInput = document.getElementById("course-subtitle") as HTMLInputElement;
+            if (subtitleInput && (subtitleInput as any).updateCharacterCounter) {
+                (subtitleInput as any).updateCharacterCounter();
+            }
+            
             const textarea = document.getElementById("course-description") as HTMLTextAreaElement;
             if (textarea && (textarea as any).updateCharacterCounter) {
                 (textarea as any).updateCharacterCounter();
@@ -840,6 +851,55 @@ export class CourseFormHandler {
     }
 
     private initializeCharacterCounter(): void {
+        // Initialize counter for course title (max 50 characters)
+        const titleInput = document.getElementById("course-name") as HTMLInputElement;
+        const titleCounterValue = document.getElementById("title-counter-value");
+        if (titleInput && titleCounterValue) {
+            const maxLength = 50;
+            const updateTitleCounter = () => {
+                const length = titleInput.value.length;
+                const displayValue = length > maxLength ? maxLength : length;
+                titleCounterValue.textContent = `${displayValue} / ${maxLength}`;
+            };
+            (titleInput as any).updateCharacterCounter = updateTitleCounter;
+            updateTitleCounter();
+            titleInput.addEventListener("input", updateTitleCounter);
+            titleInput.addEventListener("paste", () => {
+                setTimeout(() => {
+                    // Enforce maxlength on paste
+                    if (titleInput.value.length > maxLength) {
+                        titleInput.value = titleInput.value.substring(0, maxLength);
+                    }
+                    updateTitleCounter();
+                }, 0);
+            });
+        }
+
+        // Initialize counter for course subtitle (max 75 characters)
+        const subtitleInput = document.getElementById("course-subtitle") as HTMLInputElement;
+        const subtitleCounterValue = document.getElementById("subtitle-counter-value");
+        if (subtitleInput && subtitleCounterValue) {
+            const maxLength = 75;
+            const updateSubtitleCounter = () => {
+                const length = subtitleInput.value.length;
+                const displayValue = length > maxLength ? maxLength : length;
+                subtitleCounterValue.textContent = `${displayValue} / ${maxLength}`;
+            };
+            (subtitleInput as any).updateCharacterCounter = updateSubtitleCounter;
+            updateSubtitleCounter();
+            subtitleInput.addEventListener("input", updateSubtitleCounter);
+            subtitleInput.addEventListener("paste", () => {
+                setTimeout(() => {
+                    // Enforce maxlength on paste
+                    if (subtitleInput.value.length > maxLength) {
+                        subtitleInput.value = subtitleInput.value.substring(0, maxLength);
+                    }
+                    updateSubtitleCounter();
+                }, 0);
+            });
+        }
+
+        // Initialize counter for course description (max 999 characters)
         const textarea = document.getElementById("course-description") as HTMLTextAreaElement;
         const counterValue = document.getElementById("description-counter-value");
 
@@ -847,12 +907,13 @@ export class CourseFormHandler {
             return;
         }
 
+        const maxLength = 999;
         // Update counter function (exported for use when form is populated)
         const updateCounter = () => {
             const length = textarea.value.length;
-            // Cap at 999
-            const displayValue = length > 999 ? 999 : length;
-            counterValue.textContent = displayValue.toString();
+            // Cap at maxLength
+            const displayValue = length > maxLength ? maxLength : length;
+            counterValue.textContent = `${displayValue} / ${maxLength}`;
         };
 
         // Store update function on textarea for access when form is populated
@@ -865,7 +926,13 @@ export class CourseFormHandler {
         textarea.addEventListener("input", updateCounter);
         textarea.addEventListener("paste", () => {
             // Use setTimeout to ensure paste content is processed
-            setTimeout(updateCounter, 0);
+            setTimeout(() => {
+                // Enforce maxlength on paste
+                if (textarea.value.length > maxLength) {
+                    textarea.value = textarea.value.substring(0, maxLength);
+                }
+                updateCounter();
+            }, 0);
         });
     }
 
@@ -1010,6 +1077,7 @@ export class CourseFormHandler {
             const formData = this.getFormData();
             const courseData = {
                 course_name: formData.course_name,
+                course_subtitle: formData.course_subtitle || undefined,
                 course_description: formData.course_description,
                 course_language: formData.course_language,
                 course_type: formData.course_type,
@@ -1123,7 +1191,11 @@ export class CourseFormHandler {
                     if (value instanceof File) {
                         continue;
                     }
+                    // For optional fields like course_subtitle, allow empty strings to be set to null
                     if (typeof value === 'string' && value === '' && key !== 'course_image') {
+                        if (key === 'course_subtitle') {
+                            updateData[key] = null;
+                        }
                         continue;
                     }
                     updateData[key] = value;

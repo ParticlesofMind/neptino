@@ -262,16 +262,25 @@
         <div class="article__main">
           <form class="form form--essentials" id="course-essentials-form">
             <label class="form__label">
-              Course Name
-              <input class="input input--text" type="text" name="course_name" placeholder="Enter course name" required />
+              Course title
+              <input class="input input--text" type="text" name="course_name" id="course-name" placeholder="Enter course title" maxlength="50" required />
+              <div class="card card--counter" id="title-counter">
+                <span class="card--counter__number" id="title-counter-value">0 / 50</span>
+              </div>
+            </label>
+            <label class="form__label">
+              Course subtitle (optional)
+              <input class="input input--text" type="text" name="course_subtitle" id="course-subtitle" placeholder="Enter course subtitle" maxlength="75" />
+              <div class="card card--counter" id="subtitle-counter">
+                <span class="card--counter__number" id="subtitle-counter-value">0 / 75</span>
+              </div>
             </label>
             <label class="form__label">
               Course Description
               <textarea class="form__textarea" name="course_description" id="course-description" rows="4"
-                placeholder="Describe what students will learn" required></textarea>
+                placeholder="Describe what students will learn" maxlength="999" required></textarea>
               <div class="card card--counter" id="description-counter">
-                <span class="card--counter__number" id="description-counter-value">0</span>
-                <span class="card--counter__label">characters</span>
+                <span class="card--counter__number" id="description-counter-value">0 / 999</span>
               </div>
             </label>
             <div class="form__row form__row--essentials">
@@ -792,9 +801,7 @@
 
           <section class="article__preview">
             <div class="curriculum__preview" id="curriculum-preview">
-              <p class="placeholder" id="curriculum-preview-placeholder">
-                Configure your module structure on the left to unlock the live modules preview.
-              </p>
+             
               <div class="curriculum__preview-content">
            
                 <div class="editable-surface" aria-live="polite">
@@ -866,39 +873,40 @@
                       <input type="checkbox" name="ai-context-existing">
                       <span>Existing Curriculum Content</span>
                     </label>
+                  </div>
 
-                    <div class="ai-generation__options">
+                  <!-- Generation Actions -->
+                  <div class="ai-generation__context-section">
+                    <h5 class="heading heading--h5">Generation Actions</h5>
+                    <div class="ai-generation__buttons">
+                      <button type="button" class="button button--primary" data-ai-generate="all">
+                        Generate All
+                      </button>
+                      <button type="button" class="button button--outline" data-ai-generate="modules">
+                        Generate Module Names
+                      </button>
+                      <button type="button" class="button button--outline" data-ai-generate="lessons">
+                        Generate Lesson Names
+                      </button>
+                      <button type="button" class="button button--outline" data-ai-generate="topics">
+                        Generate Topic Titles
+                      </button>
+                      <button type="button" class="button button--outline" data-ai-generate="objectives">
+                        Generate Objectives
+                      </button>
+                      <button type="button" class="button button--outline" data-ai-generate="tasks">
+                        Generate Tasks
+                      </button>
+                    </div>
 
-                      <div class="ai-generation__buttons">
-                        <button type="button" class="button button--primary" data-ai-generate="all">
-                          Generate All
-                        </button>
-                        <button type="button" class="button button--outline" data-ai-generate="modules">
-                          Generate Module Names
-                        </button>
-                        <button type="button" class="button button--outline" data-ai-generate="lessons">
-                          Generate Lesson Names
-                        </button>
-                        <button type="button" class="button button--outline" data-ai-generate="topics">
-                          Generate Topic Titles
-                        </button>
-                        <button type="button" class="button button--outline" data-ai-generate="objectives">
-                          Generate Objectives
-                        </button>
-                        <button type="button" class="button button--outline" data-ai-generate="tasks">
-                          Generate Tasks
-                        </button>
+                    <!-- Status Display -->
+                    <div class="ai-generation__status" id="ai-generation-status" style="display: none;">
+                      <div class="ai-generation__status-content">
+                        <div class="spinner"></div>
+                        <span class="ai-generation__status-text">Initializing AI model...</span>
                       </div>
-
-                      <!-- Status Display -->
-                      <div class="ai-generation__status" id="ai-generation-status" style="display: none;">
-                        <div class="ai-generation__status-content">
-                          <div class="spinner"></div>
-                          <span class="ai-generation__status-text">Initializing AI model...</span>
-                        </div>
-                        <div class="ai-generation__progress-bar">
-                          <div class="ai-generation__progress-fill" style="width: 0%"></div>
-                        </div>
+                      <div class="ai-generation__progress-bar">
+                        <div class="ai-generation__progress-fill" style="width: 0%"></div>
                       </div>
                     </div>
                   </div>

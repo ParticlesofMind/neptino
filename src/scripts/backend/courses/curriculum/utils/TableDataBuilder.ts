@@ -222,8 +222,17 @@ export class TableDataBuilder {
 
   /**
    * Build content table data
+   * NOTE: Content blocks now use hierarchical rendering instead of flat tables
+   * Returning null will cause the canvas to use hierarchical topic rendering
+   * TODO: Create a hierarchical canvas renderer that matches the preview structure
+   * (with Topic > Competency > Objective > Task > Instruction/Student/Teacher areas)
    */
-  private static buildContentTable(block: TemplateDefinitionBlock): TableData {
+  private static buildContentTable(block: TemplateDefinitionBlock): TableData | null {
+    // Return null to use hierarchical rendering instead of flat table
+    // The canvas will fall back to renderContentTopics() which shows topics hierarchically
+    return null;
+    
+    /* OLD FLAT TABLE CODE - REMOVED
     const columnDefs: ColumnDef[] = [
       { key: "content", label: "Content", configKey: "competence" },
       { key: "time", label: "Time", configKey: "competence_time" },
@@ -339,6 +348,7 @@ export class TableDataBuilder {
       })),
       emptyMessage: "No content configured.",
     };
+    */
   }
 
   /**
@@ -358,8 +368,17 @@ export class TableDataBuilder {
 
   /**
    * Build assignment table data
+   * NOTE: Assignment blocks now use hierarchical rendering instead of flat tables
+   * Returning null will cause the canvas to use hierarchical topic rendering
+   * TODO: Create a hierarchical canvas renderer that matches the preview structure
+   * (with Topic > Competency > Objective > Task > Instruction/Student/Teacher areas)
    */
-  private static buildAssignmentTable(block: TemplateDefinitionBlock): TableData {
+  private static buildAssignmentTable(block: TemplateDefinitionBlock): TableData | null {
+    // Return null to use hierarchical rendering instead of flat table
+    // The canvas will fall back to renderContentTopics() which shows topics hierarchically
+    return null;
+    
+    /* OLD FLAT TABLE CODE - REMOVED
     const columnDefs: ColumnDef[] = [
       { key: "content", label: "Assignment", configKey: "competence" },
       { key: "time", label: "Time", configKey: "competence_time" },
@@ -475,6 +494,7 @@ export class TableDataBuilder {
       })),
       emptyMessage: "No assignment configured.",
     };
+    */
   }
 
   /**

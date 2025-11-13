@@ -41,7 +41,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: var(--spacing-3);
-    margin-top: var(--spacing-4);
+    margin-top: var(--spacing-3);
 
     .button {
       text-align: left;
