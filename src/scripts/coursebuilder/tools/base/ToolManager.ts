@@ -1,7 +1,7 @@
 import { Container } from "pixi.js";
 import type { FederatedPointerEvent } from "pixi.js";
 import type { Viewport } from "pixi-viewport";
-import type { CanvasEngine } from "../../CanvasEngine";
+import type { CanvasEngine } from "../../canvas/CanvasEngine";
 import { SelectionManager } from "../selection/SelectionManager";
 import { TransformHelper } from "../selection/TransformHelper";
 import { ToolSettingsStore } from "./ToolSettingsStore";

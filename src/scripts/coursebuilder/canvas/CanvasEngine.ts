@@ -1,9 +1,8 @@
 import { Application, Assets, Container, Graphics, Sprite, Text, Rectangle, FederatedPointerEvent, type DisplayObject } from "pixi.js";
 import { Viewport } from "pixi-viewport";
-import { canvasMarginManager } from "./layout/CanvasMarginManager";
-import { canvasDimensionManager, type CanvasDimensionState } from "./layout/CanvasDimensionManager";
-import { CanvasLayoutRenderer } from "./layout/CanvasLayoutRenderer";
-import type { LayoutBlocks } from "./layout/CanvasLayoutRenderer";
+import { canvasMarginManager, canvasDimensionManager, type CanvasDimensionState } from "../layout/CanvasConfigManager";
+import { CanvasLayoutRenderer } from "../layout/CanvasLayoutRenderer";
+import type { LayoutBlocks } from "../layout/CanvasLayoutRenderer";
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 10;
 const DEFAULT_ZOOM_STEP = 0.15;

@@ -1,6 +1,6 @@
 import type { Viewport } from "pixi-viewport";
 import type { Container } from "pixi.js";
-import type { CanvasEngine } from "../../CanvasEngine";
+import type { CanvasEngine } from "../../canvas/CanvasEngine";
 import type { SelectionManager } from "../selection/SelectionManager";
 import type { TransformHelper } from "../selection/TransformHelper";
 

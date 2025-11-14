@@ -552,7 +552,7 @@ export class CurriculumRenderer {
   private getLessonCompetenciesForPreview(
     lesson: CurriculumLesson,
   ): Array<{ title: string; topics: CurriculumTopic[] }> {
-    const competencySource = (lesson as unknown as { competencies?: Array<{ title?: string; topics?: CurriculumTopic[] }> })
+    const competencySource = (lesson as unknown as { competencies?: Array<{ title?: string; topics?: CurriculumTopic[]; competencyNumber?: number }> })
       .competencies;
 
     if (Array.isArray(competencySource) && competencySource.length) {

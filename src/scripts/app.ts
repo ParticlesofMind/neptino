@@ -7,14 +7,13 @@ import { initializeGlobalNavigation, initializeDashboardNavigation } from './nav
 import { initAuth, AuthFormHandler } from './backend/auth/auth';
 import { ViewToggleHandler } from './navigation/CourseBuilderNavigation';
 import './backend/courses/settings/pageSetupHandler';
-import './coursebuilder/canvasInit'; // Initialize canvas system
+import './coursebuilder/canvas/canvasInit'; // Initialize canvas system
 import './coursebuilder/PanelToggle'; // Initialize panel toggle
-import './coursebuilder/ViewportControls'; // Perspective zoom/drag controls
-import './coursebuilder/EngineController'; // Initialize engine controller
+import './coursebuilder/canvas/ViewportControls'; // Perspective zoom/drag controls
+import './coursebuilder/canvas/EngineController'; // Initialize engine controller
 import './coursebuilder/tools/ToolSystem'; // Initialize tool system
 import './coursebuilder/KeyboardShortcuts'; // Keyboard shortcuts for tools
 import './integration/CurriculumPageBridge'; // Bridge curriculum data to page system
-// import PageTransitions from './navigation/PageTransitions'; // DISABLED
 
 
 
@@ -28,7 +27,7 @@ initializeGlobalNavigation();
 // Initialize dashboard navigation if present
 const dashboardNav = initializeDashboardNavigation();
 if (dashboardNav) {
-   
+  // Dashboard navigation initialized
 }
 
 
@@ -54,9 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
      
      if (courseId) {
        pageSetupHandler.setCourseId(courseId);
-    
-     } else {
-        
      }
    }).catch(error => {
      console.error('Failed to initialize page setup handler:', error);

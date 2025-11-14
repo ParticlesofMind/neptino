@@ -5,13 +5,13 @@
 
 import { Container, Graphics, Text, TextStyle } from "pixi.js";
 import type { PageMetadata, LayoutNode } from "./PageMetadata";
-import type { TableData } from "../layout/utils/TableRenderer";
+import type { TableData } from "../utils/TableRenderer";
 import { formatDate } from "./PageMetadata";
 import {
   computePixelDimensions,
   DEFAULT_CANVAS_ORIENTATION,
   DEFAULT_CANVAS_SIZE,
-} from "../layout/PageSizeConfig";
+} from "../PageSizeConfig";
 
 type PlaceholderKind =
   | "generic"

@@ -1,4 +1,4 @@
-import { canvasEngine } from "../canvasInit";
+import { canvasEngine } from "../canvas/canvasInit";
 import { ToolManager } from "./base/ToolManager";
 import type { ToolFactory } from "./base/ToolTypes";
 import { registerBuildTools } from "./build/registerBuildTools";

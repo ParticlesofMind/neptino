@@ -16,7 +16,6 @@ let currentUser: User | null = null;
 async function syncRocketChatAccount(
   user: User,
   password: string,
-  _fullName?: string,
 ): Promise<void> {
   try {
     const { data: sessionData } = await supabase.auth.getSession();

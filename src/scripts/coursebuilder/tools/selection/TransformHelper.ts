@@ -1,7 +1,7 @@
 import { Container, Graphics, Point, Rectangle, type DisplayObject } from "pixi.js";
 import type { FederatedPointerEvent } from "pixi.js";
 import type { Viewport } from "pixi-viewport";
-import type { CanvasEngine } from "../../CanvasEngine";
+import type { CanvasEngine } from "../../canvas/CanvasEngine";
 import type { SelectionTarget } from "./SelectionManager";
 
 type HandleId =

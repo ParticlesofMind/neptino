@@ -8,17 +8,16 @@
  * 4. Initializes PageManager with populated headers/footers
  */
 
-import { PageManager } from "../coursebuilder/pages/PageManager";
+import { PageManager } from "../coursebuilder/layout/pages/PageManager";
 import type {
   PageMetadata,
   MethodType,
   SocialFormType,
   LayoutNode,
   TemplateSummary,
-} from "../coursebuilder/pages/PageMetadata";
-import { canvasEngine } from "../coursebuilder/CanvasEngine";
-import { canvasMarginManager } from "../coursebuilder/layout/CanvasMarginManager";
-import { canvasDimensionManager } from "../coursebuilder/layout/CanvasDimensionManager";
+} from "../coursebuilder/layout/pages/PageMetadata";
+import { canvasEngine } from "../coursebuilder/canvas/CanvasEngine";
+import { canvasMarginManager, canvasDimensionManager } from "../coursebuilder/layout/CanvasConfigManager";
 import { supabase } from "../backend/supabase";
 
 type CanvasScrollNavInstance = {

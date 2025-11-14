@@ -4,7 +4,7 @@
  */
 
 import { Container, Graphics, Text } from "pixi.js";
-import type { CanvasMarginState } from "./CanvasMarginManager";
+import type { CanvasMarginState } from "./CanvasConfigManager";
 
 export interface LayoutConfig {
   width: number;

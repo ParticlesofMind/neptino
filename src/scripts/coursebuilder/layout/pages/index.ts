@@ -19,4 +19,3 @@ export {
   formatDate,
   formatDuration,
 } from "./PageMetadata";
-export { initMultiPageDemo, destroyMultiPageDemo } from "./MultiPageDemo";

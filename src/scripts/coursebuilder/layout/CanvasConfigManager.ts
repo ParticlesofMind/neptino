@@ -1,10 +1,22 @@
-/**
- * CanvasMarginManager - lightweight margin state for the simple canvas.
- */
-
-import { canvasDimensionManager } from "./CanvasDimensionManager";
+import {
+  computePixelDimensions,
+  DEFAULT_CANVAS_ORIENTATION,
+  DEFAULT_CANVAS_SIZE,
+  type CanvasOrientation,
+  type CanvasSizeKey,
+} from "./PageSizeConfig";
 import { UnitConverter, type MarginValues } from "../utils/UnitConverter";
 import { DEFAULT_PAGE_MARGINS_MM } from "./PageSizeConfig";
+
+export interface CanvasDimensionState {
+  width: number;
+  height: number;
+  widthMm: number;
+  heightMm: number;
+  pixelsPerMillimeter: number;
+  canvasSize: CanvasSizeKey;
+  orientation: CanvasOrientation;
+}
 
 export interface CanvasMarginState {
   top: number;
@@ -14,58 +26,112 @@ export interface CanvasMarginState {
   unit: "px";
 }
 
+type DimensionListener = (state: CanvasDimensionState) => void;
 type MarginListener = (margins: CanvasMarginState) => void;
 
+class CanvasDimensionManager {
+  private state: CanvasDimensionState;
+  private listeners = new Set<DimensionListener>();
+
+  constructor() {
+    this.state = this.computeState(DEFAULT_CANVAS_SIZE, DEFAULT_CANVAS_ORIENTATION);
+  }
+
+  private computeState(
+    canvasSize: CanvasSizeKey,
+    orientation: CanvasOrientation,
+  ): CanvasDimensionState {
+    const { widthPx, heightPx, widthMm, heightMm, pixelsPerMillimeter } = computePixelDimensions(
+      canvasSize,
+      orientation,
+    );
+
+    return {
+      width: widthPx,
+      height: heightPx,
+      widthMm,
+      heightMm,
+      pixelsPerMillimeter,
+      canvasSize,
+      orientation,
+    };
+  }
+
+  public getState(): CanvasDimensionState {
+    return { ...this.state };
+  }
+
+  public onChange(listener: DimensionListener): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  public applyPageLayout(options: {
+    canvas_size?: CanvasSizeKey;
+    orientation?: CanvasOrientation;
+  }): void {
+    const canvasSize = options.canvas_size ?? this.state.canvasSize;
+    const orientation = options.orientation ?? this.state.orientation;
+
+    if (canvasSize === this.state.canvasSize && orientation === this.state.orientation) {
+      return;
+    }
+
+    this.state = this.computeState(canvasSize, orientation);
+    this.notify();
+  }
+
+  private notify(): void {
+    const snapshot = this.getState();
+    this.listeners.forEach((listener) => {
+      try {
+        listener(snapshot);
+      } catch (error) {
+        console.warn("CanvasDimensionManager listener error:", error);
+      }
+    });
+  }
+}
+
 class CanvasMarginManager {
-  // Initialize with database defaults (in mm), converted to pixels
-  // These match the course_layout defaults: 20mm on every side
-  private margins: CanvasMarginState = this.initializeDefaultMargins();
-
+  private margins: CanvasMarginState;
   private listeners = new Set<MarginListener>();
+  private dimensionManager: CanvasDimensionManager;
 
-  /**
-   * Initialize default margins from PageSizeConfig defaults, converted to pixels
-   */
+  constructor(dimensionManager: CanvasDimensionManager) {
+    this.dimensionManager = dimensionManager;
+    this.margins = this.initializeDefaultMargins();
+    
+    // Update margins when dimensions change
+    dimensionManager.onChange(() => {
+      this.margins = this.initializeDefaultMargins();
+      this.notify();
+    });
+  }
+
   private initializeDefaultMargins(): CanvasMarginState {
-    // Get pixelsPerMillimeter from dimension manager (will use defaults if not yet initialized)
-    const dimensionState = canvasDimensionManager.getState();
+    const dimensionState = this.dimensionManager.getState();
     const pixelsPerMillimeter = dimensionState.pixelsPerMillimeter;
 
-    // Convert database defaults (in mm) to pixels
-    const defaults = {
+    return {
       top: DEFAULT_PAGE_MARGINS_MM.top * pixelsPerMillimeter,
       right: DEFAULT_PAGE_MARGINS_MM.right * pixelsPerMillimeter,
       bottom: DEFAULT_PAGE_MARGINS_MM.bottom * pixelsPerMillimeter,
       left: DEFAULT_PAGE_MARGINS_MM.left * pixelsPerMillimeter,
       unit: "px" as const,
     };
-
-    console.log("📐 CanvasMarginManager: Initializing with defaults:", {
-      defaultsMm: DEFAULT_PAGE_MARGINS_MM,
-      pixelsPerMillimeter,
-      defaultsPx: defaults,
-    });
-
-    return defaults;
   }
 
-  /**
-   * Set pixel-based margins directly.
-   */
   public setMargins(margins: MarginValues): void {
-    const resolved = this.convertToPixels(margins);
-    this.margins = resolved;
-
+    this.margins = this.convertToPixels(margins);
     this.notify();
   }
 
-  /**
-   * Apply margins provided from the page layout settings panel.
-   */
   public setMarginsFromPageLayout(layout: {
     margins: { top: number; right: number; bottom: number; left: number; unit?: "mm" | "cm" | "inches" };
   }): void {
-    console.log("📐 CanvasMarginManager: Setting margins from page layout:", layout.margins);
     this.setMargins({
       top: layout.margins.top,
       right: layout.margins.right,
@@ -73,20 +139,12 @@ class CanvasMarginManager {
       left: layout.margins.left,
       unit: this.normalizeLayoutUnit(layout.margins.unit),
     });
-    const finalMargins = this.getMargins();
-    console.log("📐 CanvasMarginManager: Final margins in pixels:", finalMargins);
   }
 
-  /**
-   * Retrieve the current margins in pixels.
-   */
   public getMargins(): CanvasMarginState {
     return { ...this.margins };
   }
 
-  /**
-   * Subscribe to margin change events.
-   */
   public onChange(listener: MarginListener): () => void {
     this.listeners.add(listener);
     return () => {
@@ -118,36 +176,20 @@ class CanvasMarginManager {
       "mm",
     );
 
-    const dimensionState = canvasDimensionManager.getState();
+    const dimensionState = this.dimensionManager.getState();
     const pixelsPerMillimeter = dimensionState.pixelsPerMillimeter;
 
-    const result = {
+    return {
       top: marginsInMm.top * pixelsPerMillimeter,
       right: marginsInMm.right * pixelsPerMillimeter,
       bottom: marginsInMm.bottom * pixelsPerMillimeter,
       left: marginsInMm.left * pixelsPerMillimeter,
       unit: "px" as const,
     };
-
-    console.log("📐 CanvasMarginManager: Converting margins:", {
-      input: margins,
-      marginsInMm,
-      pixelsPerMillimeter,
-      result,
-    });
-
-    return result;
   }
 
   private normalizeLayoutUnit(unit: "mm" | "cm" | "inches" | undefined): "mm" | "cm" | "inches" {
-    switch (unit) {
-      case "cm":
-        return "cm";
-      case "inches":
-        return "inches";
-      default:
-        return "mm";
-    }
+    return unit === "cm" ? "cm" : unit === "inches" ? "inches" : "mm";
   }
 
   private notify(): void {
@@ -167,7 +209,8 @@ class CanvasMarginManager {
   }
 }
 
-export const canvasMarginManager = new CanvasMarginManager();
+export const canvasDimensionManager = new CanvasDimensionManager();
+export const canvasMarginManager = new CanvasMarginManager(canvasDimensionManager);
 
 try {
   (window as any).canvasMarginManager = canvasMarginManager;
@@ -176,3 +219,4 @@ try {
 }
 
 export default canvasMarginManager;
+

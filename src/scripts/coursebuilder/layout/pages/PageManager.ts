@@ -7,7 +7,7 @@ import { Container, Graphics, Text, TextStyle } from "pixi.js";
 import type { Viewport } from "pixi-viewport";
 import { PageContainer } from "./PageContainer";
 import type { PageMetadata } from "./PageMetadata";
-import { canvasDimensionManager } from "../layout/CanvasDimensionManager";
+import { canvasDimensionManager } from "../CanvasConfigManager";
 
 const PAGE_GAP = 40; // Gap between pages
 const PAGE_BOUNDARY_PADDING = 24; // Space before first and after last page

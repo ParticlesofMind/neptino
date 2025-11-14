@@ -3,8 +3,8 @@
  * Handles media, mode, and tool button interactions with localStorage persistence
  */
 
-import { toolConfigs, type ModeConfig } from './config/toolConfig';
-import { initializeContentTypeSelect, isContentTypeSelect } from './utils/contentTypeSelect';
+import { toolConfigs, type ModeConfig } from '../config/toolConfig';
+import { initializeContentTypeSelect, isContentTypeSelect } from '../utils/contentTypeSelect';
 
 const MODE_CHANGED_EVENT = 'engine:mode-change';
 const TOOL_CHANGED_EVENT = 'engine:tool-change';
