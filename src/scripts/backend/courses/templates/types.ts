@@ -32,6 +32,8 @@ export interface BlockFieldConfig {
   inlineGroup?: string;
   role?: "primary" | "time" | "method" | "social";
   rowGroup?: string;
+  defaultValue?: boolean;
+  placeholderLabel?: string;
 }
 
 export interface FieldRow {

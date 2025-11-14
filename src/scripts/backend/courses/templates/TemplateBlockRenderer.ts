@@ -1,21 +1,25 @@
 import { TemplateBlock, TemplateBlockType, BlockFieldConfig, FieldRow } from "./types.js";
 
+export interface TemplateRenderOptions {
+  competencyEnabled: boolean;
+}
+
 export class TemplateBlockRenderer {
   private static formatPlaceholder(label: string): string {
     return `<span class="template-placeholder">${label}</span>`;
   }
 
-  static renderBlockContent(block: TemplateBlock, checkedFields: BlockFieldConfig[]): string {
+  static renderBlockContent(block: TemplateBlock, checkedFields: BlockFieldConfig[], options?: TemplateRenderOptions): string {
     if (block.type === "resources") {
       return this.renderResourcesBlockContent(checkedFields, block);
     }
 
     if (block.type === "program") {
-      return this.renderProgramBlockContent(checkedFields);
+      return this.renderProgramBlockContent(block, checkedFields);
     }
 
     if (block.type === "content" || block.type === "assignment") {
-      return this.renderNestedBlockContent(block, checkedFields);
+      return this.renderNestedBlockContent(block, checkedFields, options);
     }
 
     // Default table rendering for other blocks - single row with values only
@@ -34,8 +38,8 @@ ${checkedFields
 `;
   }
 
-  static renderNestedBlockContent(block: TemplateBlock, checkedFields: BlockFieldConfig[]): string {
-    const rows = this.buildFieldRows(checkedFields);
+  static renderNestedBlockContent(block: TemplateBlock, checkedFields: BlockFieldConfig[], options?: TemplateRenderOptions): string {
+    const rows = this.buildFieldRows(this.filterFieldsForHierarchy(checkedFields, options));
     const baseTable = this.renderRowsTable(rows);
 
     if (!baseTable) {
@@ -44,18 +48,25 @@ ${checkedFields
 
     const includeProject = Boolean(block.config?.include_project);
     const projectSection = includeProject
-      ? this.renderProjectExtension(block.type === "assignment" ? "Project Assignment" : "Project")
+      ? this.renderProjectExtension(block.type === "assignment" ? "Project Assignment" : "Project", options)
       : "";
 
     return `${baseTable}${projectSection}`;
+  }
+
+  private static filterFieldsForHierarchy(fields: BlockFieldConfig[], options?: TemplateRenderOptions): BlockFieldConfig[] {
+    if (options?.competencyEnabled === false) {
+      return fields.filter((field) => field.name !== "competency" && field.name !== "competence");
+    }
+    return fields;
   }
 
   private static buildFieldRows(fields: BlockFieldConfig[]): FieldRow[] {
     const rows: FieldRow[] = [];
     const rowIndex = new Map<string, number>();
 
-    // Identify header fields (topic, competence, objective, task)
-    const headerFields = ['topic', 'competence', 'objective', 'task'];
+    // Identify header fields (topic, competency, objective, task)
+    const headerFields = ['topic', 'competency', 'objective', 'task'];
     
     fields.forEach((field) => {
       if (field.separator || field.name === "include_project") {
@@ -80,7 +91,8 @@ ${checkedFields
       }
 
       const row = rows[rowIndex.get(groupId)!];
-      const placeholder = this.formatPlaceholder(field.label);
+      const placeholderLabel = field.placeholderLabel ?? field.label;
+      const placeholder = this.formatPlaceholder(placeholderLabel);
 
       switch (field.role) {
         case "time":
@@ -99,7 +111,7 @@ ${checkedFields
 
     // Build nested hierarchical structure: headers contain their child headers
     // Assign hierarchy levels: Topic=0, Competency=1, Objective=2, Task=3
-    const headerOrder = ['topic', 'competence', 'objective', 'task'];
+    const headerOrder = ['topic', 'competency', 'objective', 'task'];
     const headerStack: FieldRow[] = []; // Stack to track nested headers
     const finalRows: FieldRow[] = [];
 
@@ -201,7 +213,7 @@ ${rows
     const hierarchyClass = ` lesson-plan-grid__group--hierarchy-${hierarchyLevel}`;
     
     // Show time for Topic (0) and Objective (2)
-    const showTime = (hierarchyLevel === 0 || hierarchyLevel === 2) && headerRow.placeholders.time;
+    const showTime = ([0, 2, 3].includes(hierarchyLevel) && headerRow.placeholders.time);
     const timeDisplay = showTime ? `<span class="lesson-plan-grid__header-time">${headerRow.placeholders.time}</span>` : "";
     
     let html = `
@@ -290,9 +302,105 @@ ${rows.map((row) => this.renderRow(row)).join("")}
 `;
   }
 
-  private static renderProjectExtension(sectionTitle: string): string {
-    // Build project rows with flat header structure (each header encompasses rows until next header)
-    // Hierarchy levels: Topic=0, Competence=1, Objective=2, Task=3
+  private static renderProjectExtension(sectionTitle: string, options?: TemplateRenderOptions): string {
+    const includeCompetency = options?.competencyEnabled ?? true;
+    const objectiveLevel = includeCompetency ? 2 : 1;
+    const taskLevel = includeCompetency ? 3 : 2;
+
+    const projectInstructionRows: FieldRow[] = [
+      {
+        groupId: "project_instruction",
+        indentLevel: 1,
+        hierarchyLevel: taskLevel,
+        placeholders: {
+          primary: this.formatPlaceholder("Project Instruction Area"),
+          method: this.formatPlaceholder("Method"),
+          social: this.formatPlaceholder("Social form"),
+        },
+      },
+      {
+        groupId: "project_instruction_empty",
+        indentLevel: 1,
+        hierarchyLevel: taskLevel,
+        placeholders: { primary: "", time: "", method: "", social: "" },
+      },
+      {
+        groupId: "project_student",
+        indentLevel: 1,
+        hierarchyLevel: taskLevel,
+        placeholders: {
+          primary: this.formatPlaceholder("Project Student Area"),
+          method: this.formatPlaceholder("Method"),
+          social: this.formatPlaceholder("Social form"),
+        },
+      },
+      {
+        groupId: "project_student_empty",
+        indentLevel: 1,
+        hierarchyLevel: taskLevel,
+        placeholders: { primary: "", time: "", method: "", social: "" },
+      },
+      {
+        groupId: "project_teacher",
+        indentLevel: 1,
+        hierarchyLevel: taskLevel,
+        placeholders: {
+          primary: this.formatPlaceholder("Project Teacher Area"),
+          method: this.formatPlaceholder("Method"),
+          social: this.formatPlaceholder("Social form"),
+        },
+      },
+      {
+        groupId: "project_teacher_empty",
+        indentLevel: 1,
+        hierarchyLevel: taskLevel,
+        placeholders: { primary: "", time: "", method: "", social: "" },
+      },
+    ];
+
+    const projectTaskRow: FieldRow = {
+      groupId: "project_task",
+      indentLevel: 0,
+      isHeaderRow: true,
+      headerLabel: "Project Task",
+      hierarchyLevel: taskLevel,
+      placeholders: {
+        primary: this.formatPlaceholder("Project Task"),
+        time: this.formatPlaceholder("Time"),
+      },
+      childRows: projectInstructionRows,
+    };
+
+    const projectObjectiveRow: FieldRow = {
+      groupId: "project_objective",
+      indentLevel: 0,
+      isHeaderRow: true,
+      headerLabel: "Project Objective",
+      hierarchyLevel: objectiveLevel,
+      placeholders: {
+        primary: this.formatPlaceholder("Project Objective"),
+        time: this.formatPlaceholder("Time"),
+      },
+      childRows: [projectTaskRow],
+    };
+
+    const projectCompetenceRow: FieldRow | undefined = includeCompetency
+      ? {
+          groupId: "project_competence",
+          indentLevel: 0,
+          isHeaderRow: true,
+          headerLabel: "Project Competence",
+          hierarchyLevel: 1,
+          placeholders: {
+            primary: this.formatPlaceholder("Project Competence"),
+            time: this.formatPlaceholder("Time"),
+          },
+          childRows: [projectObjectiveRow],
+        }
+      : undefined;
+
+    const topicChildRows = includeCompetency ? [projectCompetenceRow!] : [projectObjectiveRow];
+
     const projectRows: FieldRow[] = [
       {
         groupId: "project_topic",
@@ -304,95 +412,7 @@ ${rows.map((row) => this.renderRow(row)).join("")}
           primary: this.formatPlaceholder("Project Topic"),
           time: this.formatPlaceholder("Time"),
         },
-        childRows: [
-          {
-            groupId: "project_competence",
-            indentLevel: 0,
-            isHeaderRow: true,
-            headerLabel: "Project Competence",
-            hierarchyLevel: 1,
-            placeholders: {
-              primary: this.formatPlaceholder("Project Competence"),
-              time: this.formatPlaceholder("Time"),
-            },
-            childRows: [
-              {
-                groupId: "project_objective",
-                indentLevel: 0,
-                isHeaderRow: true,
-                headerLabel: "Project Objective",
-                hierarchyLevel: 2,
-                placeholders: {
-                  primary: this.formatPlaceholder("Project Objective"),
-                  time: this.formatPlaceholder("Time"),
-                },
-                childRows: [
-                  {
-                    groupId: "project_task",
-                    indentLevel: 0,
-                    isHeaderRow: true,
-                    headerLabel: "Project Task",
-                    hierarchyLevel: 3,
-                    placeholders: {
-                      primary: this.formatPlaceholder("Project Task"),
-                      time: this.formatPlaceholder("Time"),
-                    },
-                    childRows: [
-                      {
-                        groupId: "project_instruction",
-                        indentLevel: 1,
-                        hierarchyLevel: 3, // Align with Task
-                        placeholders: {
-                          primary: this.formatPlaceholder("Project Instruction Area"),
-                          method: this.formatPlaceholder("Method"),
-                          social: this.formatPlaceholder("Social form"),
-                        },
-                      },
-                      {
-                        groupId: "project_instruction_empty",
-                        indentLevel: 1,
-                        hierarchyLevel: 3, // Align with Task
-                        placeholders: { primary: "", time: "", method: "", social: "" },
-                      },
-                      {
-                        groupId: "project_student",
-                        indentLevel: 1,
-                        hierarchyLevel: 3, // Align with Task
-                        placeholders: {
-                          primary: this.formatPlaceholder("Project Student Area"),
-                          method: this.formatPlaceholder("Method"),
-                          social: this.formatPlaceholder("Social form"),
-                        },
-                      },
-                      {
-                        groupId: "project_student_empty",
-                        indentLevel: 1,
-                        hierarchyLevel: 3, // Align with Task
-                        placeholders: { primary: "", time: "", method: "", social: "" },
-                      },
-                      {
-                        groupId: "project_teacher",
-                        indentLevel: 1,
-                        hierarchyLevel: 3, // Align with Task
-                        placeholders: {
-                          primary: this.formatPlaceholder("Project Teacher Area"),
-                          method: this.formatPlaceholder("Method"),
-                          social: this.formatPlaceholder("Social form"),
-                        },
-                      },
-                      {
-                        groupId: "project_teacher_empty",
-                        indentLevel: 1,
-                        hierarchyLevel: 3, // Align with Task
-                        placeholders: { primary: "", time: "", method: "", social: "" },
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
+        childRows: topicChildRows,
       },
     ];
 
@@ -402,29 +422,45 @@ ${this.renderRowsTable(projectRows)}
 `;
   }
 
-  private static renderProgramBlockContent(fields: BlockFieldConfig[]): string {
-    const lookup = new Map<string, BlockFieldConfig>();
-    fields.forEach((field) => {
-      lookup.set(field.name, field);
-    });
+  private static renderProgramBlockContent(block: TemplateBlock, fields: BlockFieldConfig[]): string {
+    const fieldMap = new Map(fields.map((field) => [field.name, field]));
+    const columnOrder = [
+      "topic",
+      "competency",
+      "objective",
+      "task",
+      "program_method",
+      "program_social_form",
+      "program_time",
+    ];
 
-    const getPlaceholder = (name: string): string => {
-      const field = lookup.get(name);
-      return field ? this.formatPlaceholder(field.label) : "";
-    };
+    const availableFields = columnOrder
+      .map((name) => fieldMap.get(name))
+      .filter((field): field is BlockFieldConfig => Boolean(field));
 
-    // Create single row with all fields on the same row
+    const summaryEnabled = block.config?.["program_summary"] !== false;
+    const summaryHtml = summaryEnabled
+      ? `<p class="preview-block__subtitle">Lorem ipsum dolor sit amet</p>`
+      : "";
+
+    if (!availableFields.length) {
+      return `
+${summaryHtml}
+<p class="preview-placeholder">No fields selected</p>
+`;
+    }
+
+    const cells = availableFields
+      .map((field) => this.formatPlaceholder(field.placeholderLabel ?? field.label))
+      .map((placeholder) => `<td>${placeholder}</td>`)
+      .join("");
+
     return `
+${summaryHtml}
 <table class="lesson-plan-table lesson-plan-table--program">
 <tbody>
 <tr>
-<td>${getPlaceholder("topic")}</td>
-<td>${getPlaceholder("competence")}</td>
-<td>${getPlaceholder("objective")}</td>
-<td>${getPlaceholder("task")}</td>
-<td>${getPlaceholder("program_method")}</td>
-<td>${getPlaceholder("program_social_form")}</td>
-<td>${getPlaceholder("program_time")}</td>
+${cells}
 </tr>
 </tbody>
 </table>

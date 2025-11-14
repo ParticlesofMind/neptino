@@ -1,6 +1,6 @@
 import { TemplateBlock, TemplateBlockType, BlockFieldConfig } from "./types.js";
 import { TemplateConfigManager } from "./TemplateConfigManager.js";
-import { TemplateBlockRenderer } from "./TemplateBlockRenderer.js";
+import { TemplateBlockRenderer, TemplateRenderOptions } from "./TemplateBlockRenderer.js";
 import { TEMPLATE_BLOCK_SEQUENCES, TEMPLATE_BODY_BLOCKS } from "./templateOptions.js";
 
 export class TemplateRenderer {
@@ -21,15 +21,14 @@ export class TemplateRenderer {
     const templateId = templateData.id;
     const fieldConfig = TemplateConfigManager.getBlockFieldConfiguration();
 
-    const blocksHtml = `
-      <div class="template-blocks">
-        ${blocks
-          .map((block: TemplateBlock) => {
-            const fields = fieldConfig[block.type] || [];
-            const rowsHtml = this.renderBlockConfigRows(templateId ?? null, block, fields);
-            const title = block.type.charAt(0).toUpperCase() + block.type.slice(1);
+    const blockItems = blocks
+      .filter((block: TemplateBlock) => block.type !== "body")
+      .map((block: TemplateBlock) => {
+        const fields = fieldConfig[block.type] || [];
+        const rowsHtml = this.renderBlockConfigRows(templateId ?? null, block, fields);
+        const title = block.type.charAt(0).toUpperCase() + block.type.slice(1);
 
-            return `
+        return `
               <div class="block-config" data-block="${block.type}" data-template-id="${templateId}">
                 <h4 class="block-config__title">${title}</h4>
                 <div class="block-config__fields">
@@ -37,8 +36,12 @@ export class TemplateRenderer {
                 </div>
               </div>
             `;
-          })
-          .join("")}
+      })
+      .join("");
+
+    const blocksHtml = `
+      <div class="template-blocks">
+        ${blockItems}
       </div>
     `;
 
@@ -113,6 +116,10 @@ export class TemplateRenderer {
       (a: TemplateBlock, b: TemplateBlock) => a.order - b.order,
     );
 
+    const programBlock = sortedBlocks.find((b: TemplateBlock) => b.type === 'program');
+    const competencyEnabled = programBlock?.config?.competency !== false;
+    const renderOptions: TemplateRenderOptions = { competencyEnabled };
+
     // Separate header, footer, body, and body sub-blocks
     const headerBlock = sortedBlocks.find((b: TemplateBlock) => b.type === 'header');
     const footerBlock = sortedBlocks.find((b: TemplateBlock) => b.type === 'footer');
@@ -127,7 +134,7 @@ export class TemplateRenderer {
     const headerHtml = headerBlock
       ? `<div class="preview-block preview-block--${headerBlock.type}">
           <h4 class="preview-block__title">${headerBlock.type.charAt(0).toUpperCase() + headerBlock.type.slice(1)}</h4>
-          ${TemplateBlockRenderer.renderBlockContent(headerBlock, TemplateConfigManager.getCheckedFields(headerBlock))}
+          ${TemplateBlockRenderer.renderBlockContent(headerBlock, TemplateConfigManager.getCheckedFields(headerBlock), renderOptions)}
         </div>`
       : '';
 
@@ -138,7 +145,7 @@ export class TemplateRenderer {
         return `
 <div class="preview-block preview-block--${block.type}">
 <h4 class="preview-block__title">${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</h4>
-${TemplateBlockRenderer.renderBlockContent(block, checkedFields)}
+${TemplateBlockRenderer.renderBlockContent(block, checkedFields, renderOptions)}
 </div>
 `;
       })
@@ -148,7 +155,7 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields)}
     const footerHtml = footerBlock
       ? `<div class="preview-block preview-block--${footerBlock.type}">
           <h4 class="preview-block__title">${footerBlock.type.charAt(0).toUpperCase() + footerBlock.type.slice(1)}</h4>
-          ${TemplateBlockRenderer.renderBlockContent(footerBlock, TemplateConfigManager.getCheckedFields(footerBlock))}
+          ${TemplateBlockRenderer.renderBlockContent(footerBlock, TemplateConfigManager.getCheckedFields(footerBlock), renderOptions)}
         </div>`
       : '';
 

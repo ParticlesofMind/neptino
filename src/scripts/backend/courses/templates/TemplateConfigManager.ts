@@ -9,6 +9,8 @@ export interface BlockFieldConfig {
   inlineGroup?: string;
   rowGroup?: string;
   role?: "primary" | "time" | "method" | "social";
+  defaultValue?: boolean;
+  placeholderLabel?: string;
 }
 
 export class TemplateConfigManager {
@@ -21,9 +23,6 @@ export class TemplateConfigManager {
         { name: "course_title", label: "Course title", mandatory: true },
         { name: "date", label: "Date", mandatory: true },
       ],
-      body: [
-        { name: "body_content", label: "Body content", mandatory: true },
-      ],
       footer: [
         { name: "copyright", label: "Copyright", mandatory: true },
         { name: "teacher_name", label: "Teacher name", mandatory: false },
@@ -31,13 +30,43 @@ export class TemplateConfigManager {
         { name: "page_number", label: "Page number", mandatory: true },
       ],
       program: [
-        { name: "topic", label: "Topic", mandatory: true },
-        { name: "competence", label: "Competence", mandatory: true },
-        { name: "objective", label: "Objective", mandatory: true },
-        { name: "task", label: "Task", mandatory: true },
-        { name: "program_method", label: "Method", mandatory: true, role: "method" },
-        { name: "program_social_form", label: "Social form", mandatory: true, role: "social" },
-        { name: "program_time", label: "Time", mandatory: true, role: "time" },
+        { name: "topic", label: "Topic", mandatory: true, placeholderLabel: "Topic" },
+        {
+          name: "competency",
+          label: "Enable Competency",
+          placeholderLabel: "Competency",
+          mandatory: false,
+          defaultValue: true,
+        },
+        { name: "objective", label: "Objective", mandatory: true, placeholderLabel: "Objective" },
+        { name: "task", label: "Task", mandatory: true, placeholderLabel: "Task" },
+        {
+          name: "program_method",
+          label: "Method",
+          mandatory: true,
+          role: "method",
+          placeholderLabel: "Method",
+        },
+        {
+          name: "program_social_form",
+          label: "Social form",
+          mandatory: true,
+          role: "social",
+          placeholderLabel: "Social form",
+        },
+        {
+          name: "program_time",
+          label: "Time",
+          mandatory: true,
+          role: "time",
+          placeholderLabel: "Time",
+        },
+        {
+          name: "program_summary",
+          label: "Include Program Summary",
+          mandatory: false,
+          defaultValue: true,
+        },
       ],
       resources: [
         { name: "task", label: "Task", mandatory: true, rowGroup: "resources-main" },
@@ -52,9 +81,36 @@ export class TemplateConfigManager {
       ],
       content: [
         { name: "topic", label: "Topic", mandatory: true },
-        { name: "competence", label: "Competency", mandatory: true },
+        { name: "competency", label: "Competency", mandatory: true },
         { name: "objective", label: "Objective", mandatory: true },
         { name: "task", label: "Task", mandatory: true },
+        {
+          name: "topic_time",
+          label: "Add next to Topic",
+          mandatory: false,
+          defaultValue: true,
+          inlineGroup: "topic",
+          role: "time",
+          placeholderLabel: "Time",
+        },
+        {
+          name: "objective_time",
+          label: "Add next to Objective",
+          mandatory: false,
+          defaultValue: true,
+          inlineGroup: "objective",
+          role: "time",
+          placeholderLabel: "Time",
+        },
+        {
+          name: "task_time",
+          label: "Add next to Task",
+          mandatory: false,
+          defaultValue: true,
+          inlineGroup: "task",
+          role: "time",
+          placeholderLabel: "Time",
+        },
         { name: "instruction_area", label: "Instruction Area", mandatory: true, indentLevel: 1, inlineGroup: "instruction", role: "primary" },
         { name: "instruction_method", label: "Method", mandatory: true, indentLevel: 1, inlineGroup: "instruction", role: "method" },
         { name: "instruction_social_form", label: "Social form", mandatory: true, indentLevel: 1, inlineGroup: "instruction", role: "social" },
@@ -68,9 +124,36 @@ export class TemplateConfigManager {
       ],
       assignment: [
         { name: "topic", label: "Topic", mandatory: true },
-        { name: "competence", label: "Competency", mandatory: true },
+        { name: "competency", label: "Competency", mandatory: true },
         { name: "objective", label: "Objective", mandatory: true },
         { name: "task", label: "Task", mandatory: true },
+        {
+          name: "topic_time",
+          label: "Add next to Topic",
+          mandatory: false,
+          defaultValue: true,
+          inlineGroup: "topic",
+          role: "time",
+          placeholderLabel: "Time",
+        },
+        {
+          name: "objective_time",
+          label: "Add next to Objective",
+          mandatory: false,
+          defaultValue: true,
+          inlineGroup: "objective",
+          role: "time",
+          placeholderLabel: "Time",
+        },
+        {
+          name: "task_time",
+          label: "Add next to Task",
+          mandatory: false,
+          defaultValue: true,
+          inlineGroup: "task",
+          role: "time",
+          placeholderLabel: "Time",
+        },
         { name: "instruction_area", label: "Instruction Area", mandatory: true, indentLevel: 1, inlineGroup: "instruction", role: "primary" },
         { name: "instruction_method", label: "Method", mandatory: true, indentLevel: 1, inlineGroup: "instruction", role: "method" },
         { name: "instruction_social_form", label: "Social form", mandatory: true, indentLevel: 1, inlineGroup: "instruction", role: "social" },
@@ -100,18 +183,16 @@ export class TemplateConfigManager {
 
     let changed = false;
 
+    this.migrateLegacyFieldNames(block);
+
     fieldConfig.forEach((field) => {
       if (field.separator) {
         return;
       }
 
-      if (field.mandatory) {
-        if (block.config[field.name] !== true) {
-          block.config[field.name] = true;
-          changed = true;
-        }
-      } else if (typeof block.config[field.name] === "undefined") {
-        block.config[field.name] = false;
+      const defaultValue = this.getFieldDefaultValue(field);
+      if (block.config[field.name] !== defaultValue) {
+        block.config[field.name] = defaultValue;
         changed = true;
       }
     });
@@ -149,7 +230,6 @@ export class TemplateConfigManager {
   static getBlockDescription(blockType: TemplateBlockType): string {
     const descriptions: Record<TemplateBlockType, string> = {
       header: "Contains lesson metadata and course information",
-      body: "Main content container for template blocks",
       footer: "Contains copyright, contact, and page information",
       program: "Displays lesson structure with competencies, topics, objectives, and tasks",
       resources: "Lists materials, files, links, and reference resources",
@@ -158,5 +238,32 @@ export class TemplateConfigManager {
       scoring: "Contains assessment criteria and scoring information",
     };
     return descriptions[blockType] || "Template block";
+  }
+
+  static getFieldDefaultValue(field: BlockFieldConfig): boolean {
+    if (field.mandatory) {
+      return true;
+    }
+    if (typeof field.defaultValue === "boolean") {
+      return field.defaultValue;
+    }
+    return false;
+  }
+
+  private static migrateLegacyFieldNames(block: TemplateBlock): void {
+    if (!block.config) {
+      return;
+    }
+
+    const legacyMappings: Record<string, string> = {
+      competence: "competency",
+    };
+
+    Object.entries(legacyMappings).forEach(([legacyKey, normalizedKey]) => {
+      if (typeof block.config[normalizedKey] === "undefined" && typeof block.config[legacyKey] !== "undefined") {
+        block.config[normalizedKey] = block.config[legacyKey];
+        delete block.config[legacyKey];
+      }
+    });
   }
 }

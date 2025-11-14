@@ -1,7 +1,7 @@
 import { TemplateDataHandler } from "./TemplateDataHandler.js";
 import { TemplateRenderer } from "./TemplateRenderer.js";
 import { TemplateConfigManager } from "./TemplateConfigManager.js";
-import { TemplateBlockRenderer } from "./TemplateBlockRenderer.js";
+import { TemplateBlockRenderer, TemplateRenderOptions } from "./TemplateBlockRenderer.js";
 import { TemplateManagerState } from "./types.js";
 import { loadTemplatesModal } from "./modals/loadTemplates.js";
 import { syncTemplateSettingsWithCourse } from "./templateCourseSync.js";
@@ -355,8 +355,8 @@ export class TemplateManager {
     return TemplateBlockRenderer.getDefaultBlockContent(blockType as any);
   }
 
-  static renderBlockContent(block: any, checkedFields: any[]) {
-    return TemplateBlockRenderer.renderBlockContent(block, checkedFields);
+  static renderBlockContent(block: any, checkedFields: any[], options?: TemplateRenderOptions) {
+    return TemplateBlockRenderer.renderBlockContent(block, checkedFields, options);
   }
 
   static renderResourcesBlockContent(checkedFields: any[], block?: any) {

@@ -228,19 +228,23 @@
 
 // Preview Block Container
 // Used in both preview UI and canvas rendering
-.preview-block {
-  display: grid;
-  gap: var(--spacing-4);
-  padding: 1rem;
-  margin-bottom: var(--spacing-6);
+@mixin template-card {
   background: #FDFDFD;
   border: 1px solid #E0E0E0;
   border-radius: 0.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #333333;
+}
+
+.preview-block {
+  @include template-card;
+  display: grid;
+  gap: var(--spacing-4);
+  padding: 1rem;
+  margin-bottom: var(--spacing-6);
   font-size: 1rem;
   line-height: 1.5;
-  color: #333333;
 
   &:not(:last-child) {
     margin-bottom: var(--spacing-6);
@@ -408,6 +412,7 @@
 // Lesson Plan Grid - hierarchical sections with semantic markup
 // Shared between preview and canvas rendering - uses same HTML structure
 .lesson-plan-grid {
+  @include template-card;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -415,14 +420,8 @@
   max-width: 50rem;
   margin: 0 auto;
   padding: 1rem;
-  background: #FDFDFD;
-  border: 1px solid #E0E0E0;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 1rem;
   line-height: 1.5;
-  color: #333333;
 
   &__group {
     display: flex;

@@ -74,7 +74,6 @@ export class PageContainer extends Container {
     "lesson_title",
     "module_title",
     "course_title",
-    "institution_name",
     "teacher_name",
   ];
   private static readonly HEADER_FIELD_LABELS: Record<string, string> = {
@@ -83,7 +82,6 @@ export class PageContainer extends Container {
     lesson_title: "Lesson Title",
     module_title: "Module Title",
     course_title: "Course Title",
-    institution_name: "Institution",
     teacher_name: "Teacher",
   };
   private static readonly FOOTER_FIELD_ORDER = ["copyright", "teacher_name", "institution_name", "page_number"];
@@ -340,8 +338,9 @@ export class PageContainer extends Container {
         ? headerTemplate.order
         : [...PageContainer.HEADER_FIELD_ORDER];
 
+    const headerSequence = headerOrder.filter((key) => key !== "institution_name");
     const headerItems: Array<{ label: string; value: string }> = [];
-    headerOrder.forEach((key) => {
+    headerSequence.forEach((key) => {
       const templateValue = headerTemplate ? headerTemplate.values[key] : undefined;
       const value = this.formatHeaderFieldValue(key, templateValue);
       if (value) {
@@ -1041,10 +1040,11 @@ export class PageContainer extends Container {
       let sectionY = headerHeight + groupPadding;
 
       // Get competencies (if structured that way) or treat topic as top level
-      const competencies = Array.isArray(topicData.competencies) 
+      const competencyValue = topicData.competency ?? topicData.competence;
+      const competencies = Array.isArray(topicData.competencies)
         ? (topicData.competencies as Array<unknown>)
-        : topicData.competence 
-        ? [topicData.competence]
+        : competencyValue
+        ? [competencyValue]
         : [];
 
       if (competencies.length === 0) {
@@ -1207,12 +1207,6 @@ export class PageContainer extends Container {
       }
       case "course_title":
         return this.toDisplayString(templateValue, "course") || this.normalizeString(this.metadata.courseName, "course");
-      case "institution_name":
-        const metadataInstitution =
-          typeof this.metadata.institutionName === "string"
-            ? this.normalizeString(this.metadata.institutionName, "institution")
-            : "";
-        return this.toDisplayString(templateValue, "institution") || metadataInstitution || "";
       case "teacher_name":
         return this.toDisplayString(templateValue, "teacher") || this.getTeacherMetadataValue();
       default:

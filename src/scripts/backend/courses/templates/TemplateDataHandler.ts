@@ -275,7 +275,7 @@ export class TemplateDataHandler {
       if (field.separator) {
         return acc;
       }
-      acc[field.name] = field.mandatory ? true : false;
+      acc[field.name] = TemplateConfigManager.getFieldDefaultValue(field);
       return acc;
     }, {});
   }
