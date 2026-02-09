@@ -7,6 +7,7 @@ import {
   CurriculumTopic,
 } from "./curriculumManager.js";
 import { TEMPLATE_TYPE_LABELS } from "../templates/templateOptions.js";
+import type { CanvasLessonSummary } from "./CanvasSummaryService.js";
 
 type PreviewMode = "modules" | "titles" | "competencies" | "topics" | "objectives" | "tasks" | "all";
 
@@ -21,6 +22,8 @@ export class CurriculumRenderer {
   private templatePlacements: TemplatePlacementConfig[] = [];
   private courseType: "minimalist" | "essential" | "complete" | "custom" = "essential";
   private moduleOrganization: ModuleOrganizationType = "linear";
+  private canvasSummaries: CanvasLessonSummary[] = [];
+  private canvasSummaryLookup: Map<number, CanvasLessonSummary> = new Map();
     private readonly templateAccentPalette: string[] = [
     "template-accent--sky",
     "template-accent--violet",
@@ -58,6 +61,7 @@ export class CurriculumRenderer {
     templatePlacements: TemplatePlacementConfig[];
     courseType: "minimalist" | "essential" | "complete" | "custom";
     moduleOrganization: ModuleOrganizationType;
+    canvasSummaries?: CanvasLessonSummary[];
   }) {
     this.currentCurriculum = data.currentCurriculum;
     this.currentModules = data.currentModules;
@@ -67,6 +71,10 @@ export class CurriculumRenderer {
     this.templatePlacements = data.templatePlacements;
     this.courseType = data.courseType;
     this.moduleOrganization = data.moduleOrganization;
+    this.canvasSummaries = data.canvasSummaries ?? [];
+    this.canvasSummaryLookup = new Map(
+      this.canvasSummaries.map((summary) => [summary.lessonNumber, summary]),
+    );
   }
 
   public render(): void {
@@ -220,14 +228,33 @@ export class CurriculumRenderer {
 
         if (this.currentPreviewMode === "all") {
           const metaItems: string[] = [];
-          if (this.scheduledLessonDuration) {
+          const summary = this.canvasSummaryLookup.get(lesson.lessonNumber ?? 0);
+          if (summary) {
             metaItems.push(
-              `<span class="lesson__meta-item lesson__meta-item--duration">${this.scheduledLessonDuration} minutes</span>`,
+              `<span class="lesson__meta-item lesson__meta-item--duration">${summary.duration} minutes</span>`,
+            );
+            metaItems.push(
+              `<span class="lesson__meta-item lesson__meta-item--method">${this.escapeHtml(summary.method)}</span>`,
+            );
+            if (summary.structure?.topics) {
+              metaItems.push(
+                `<span class="lesson__meta-item lesson__meta-item--topics">${summary.structure.topics} topics</span>`,
+              );
+            } else {
+              metaItems.push(
+                `<span class="lesson__meta-item lesson__meta-item--topics">${lesson.topics.length} topics</span>`,
+              );
+            }
+          } else {
+            if (this.scheduledLessonDuration) {
+              metaItems.push(
+                `<span class="lesson__meta-item lesson__meta-item--duration">${this.scheduledLessonDuration} minutes</span>`,
+              );
+            }
+            metaItems.push(
+              `<span class="lesson__meta-item lesson__meta-item--topics">${lesson.topics.length} topics</span>`,
             );
           }
-          metaItems.push(
-            `<span class="lesson__meta-item lesson__meta-item--topics">${lesson.topics.length} topics</span>`,
-          );
           const metaHtml = metaItems.length
             ? `<div class="lesson__meta">${metaItems.join("")}</div>`
             : "";
@@ -531,6 +558,8 @@ export class CurriculumRenderer {
     const templateControls = showTemplateSelector
       ? this.renderLessonTemplateSelector(lesson)
       : "";
+    const summary = this.canvasSummaryLookup.get(lessonNumber);
+    const summaryMeta = this.renderLessonMetaBadges(summary);
 
     return `
       <div class="lesson__header">
@@ -544,9 +573,34 @@ export class CurriculumRenderer {
             ${rawTitle}
           </h3>
         </div>
+        ${summaryMeta}
         ${templateControls}
       </div>
     `;
+  }
+
+  private renderLessonMetaBadges(summary?: CanvasLessonSummary): string {
+    if (!summary) {
+      return "";
+    }
+
+    const badges: string[] = [];
+    badges.push(
+      `<span class="lesson__meta-item lesson__meta-item--duration">${summary.duration} minutes</span>`,
+    );
+    badges.push(
+      `<span class="lesson__meta-item lesson__meta-item--method">${this.escapeHtml(summary.method)}</span>`,
+    );
+
+    if (summary.structure?.topics) {
+      badges.push(
+        `<span class="lesson__meta-item lesson__meta-item--topics">${summary.structure.topics} topics</span>`,
+      );
+    }
+
+    return badges.length
+      ? `<div class="lesson__meta lesson__meta--canvas">${badges.join("")}</div>`
+      : "";
   }
 
   private getLessonCompetenciesForPreview(

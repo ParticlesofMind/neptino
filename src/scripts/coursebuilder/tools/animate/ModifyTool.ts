@@ -1,4 +1,4 @@
-import type { DisplayObject } from "pixi.js";
+import { Container } from "pixi.js";
 import type { CanvasTool, ToolPointerEvent, ToolRuntimeContext } from "../base/ToolTypes";
 import type { SelectionTarget } from "../selection/SelectionManager";
 import { timelineStore } from "./TimelineStore";
@@ -55,14 +55,23 @@ export class ModifyTool implements CanvasTool {
       return;
     }
     const objects = this.context.canvas.getObjectsSnapshot();
+    const viewport = this.context.canvas.getViewport();
     for (let i = objects.length - 1; i >= 0; i -= 1) {
       const { id, displayObject } = objects[i];
-      const bounds = displayObject.getBounds(true);
-      if (x >= bounds.x && x <= bounds.x + bounds.width && y >= bounds.y && y <= bounds.y + bounds.height) {
-        this.selected = { id, object: displayObject };
-        this.context.selection.setSelection([{ id, object: displayObject }]);
-        this.context.transformHelper.attach(this.context.selection.getSelection());
-        return;
+      const screenBounds = displayObject.getBounds();
+      // Convert screen-space bounds to world space for comparison
+      if (viewport) {
+        const topLeft = viewport.toWorld(screenBounds.x, screenBounds.y);
+        const bottomRight = viewport.toWorld(
+          screenBounds.x + screenBounds.width,
+          screenBounds.y + screenBounds.height,
+        );
+        if (x >= topLeft.x && x <= bottomRight.x && y >= topLeft.y && y <= bottomRight.y) {
+          this.selected = { id, object: displayObject };
+          this.context.selection.setSelection([{ id, object: displayObject }]);
+          this.context.transformHelper.attach(this.context.selection.getSelection());
+          return;
+        }
       }
     }
     this.selected = null;
@@ -92,7 +101,7 @@ export class ModifyTool implements CanvasTool {
     });
   }
 
-  private resolvePosition(object: DisplayObject): { x: number; y: number } {
+  private resolvePosition(object: Container): { x: number; y: number } {
     if (object.parent) {
       const global = object.parent.toGlobal(object.position);
       return { x: global.x, y: global.y };

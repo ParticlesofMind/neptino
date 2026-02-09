@@ -250,10 +250,8 @@ export class SelectTool implements CanvasTool {
     this.selectionOverlay.clear();
     this.selectionOverlay
       .rect(minX, minY, overlayWidth, overlayHeight)
+      .fill({ color: 0x4a7fb8, alpha: 0.08 })
       .stroke({ color: 0x4a7fb8, width: 2, alpha: 0.85 });
-    this.selectionOverlay
-      .rect(minX, minY, overlayWidth, overlayHeight)
-      .fill({ color: 0x4a7fb8, alpha: 0.08 });
   }
 
   private normalizeRect(x1: number, y1: number, x2: number, y2: number): { x: number; y: number; width: number; height: number } {
@@ -274,16 +272,18 @@ export class SelectTool implements CanvasTool {
 
   private hitTest(displayObject: Container, event: ToolPointerEvent): boolean {
     const interactive = displayObject as Container & { containsPoint?: (point: Point) => boolean };
-    const screenPoint = new Point(event.screenX, event.screenY);
+    // PIXI v8 containsPoint expects a point in the object's local coordinate space
     if (typeof interactive.containsPoint === "function") {
       try {
-        if (interactive.containsPoint(screenPoint)) {
+        const localPoint = displayObject.toLocal(new Point(event.screenX, event.screenY));
+        if (interactive.containsPoint(localPoint)) {
           return true;
         }
       } catch {
         // Ignore containsPoint errors and fall back to bounds-based hit test.
       }
     }
+    // Fallback: bounds-based hit test in world coordinates
     const bounds = this.getWorldBounds(displayObject);
     return (
       event.worldX >= bounds.x &&

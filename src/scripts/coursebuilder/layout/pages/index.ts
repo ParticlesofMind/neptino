@@ -14,8 +14,6 @@ export {
   type PageMetadata,
   type MethodType,
   type SocialFormType,
-  createDefaultMetadata,
-  createSampleCourseData,
   formatDate,
   formatDuration,
 } from "./PageMetadata";

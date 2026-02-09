@@ -9,93 +9,22 @@
  */
 
 import { PageManager } from "../coursebuilder/layout/pages/PageManager";
-import type {
-  PageMetadata,
-  MethodType,
-  SocialFormType,
-  LayoutNode,
-  TemplateSummary,
-} from "../coursebuilder/layout/pages/PageMetadata";
+import type { PageMetadata } from "../coursebuilder/layout/pages/PageMetadata";
 import { canvasEngine } from "../coursebuilder/canvas/CanvasEngine";
 import { canvasMarginManager, canvasDimensionManager } from "../coursebuilder/layout/CanvasConfigManager";
 import { supabase } from "../backend/supabase";
+import {
+  CanvasDataAccessor,
+  type CourseInfo,
+  type CurriculumCanvas,
+} from "./utils/CanvasDataAccessor";
+import { DataNormalizer } from "./utils/DataNormalizer";
 
 type CanvasScrollNavInstance = {
   setTotalCanvases(total: number): void;
   setCurrentCanvas(canvasNumber: number): void;
   setOnNavigate(callback: (canvasIndex: number) => void): void;
 };
-
-interface CurriculumCanvas {
-  id: string;
-  course_id: string;
-  lesson_number: number;
-  canvas_index: number;
-  canvas_data?: {
-    lesson?: {
-      number?: number;
-      title?: string;
-      moduleNumber?: number;
-    };
-    template?: {
-      name?: string;
-      type?: string;
-      method?: string;
-      socialForm?: string;
-      duration?: number;
-      id?: string;
-      slug?: string;
-      scope?: string;
-      description?: string | null;
-    };
-    dimensions?: {
-      width?: number;
-      height?: number;
-    };
-    margins?: {
-      top?: number;
-      right?: number;
-      bottom?: number;
-      left?: number;
-      unit?: string;
-    };
-    layout?: LayoutNode;
-    structure?: Record<string, unknown>;
-  };
-  canvas_metadata?: {
-    title?: string;
-    lessonNumber?: number;
-    moduleNumber?: number;
-    generatedAt?: string;
-    template?: {
-      name?: string;
-      type?: string;
-      method?: string;
-      socialForm?: string;
-      duration?: number;
-      id?: string;
-      slug?: string;
-      scope?: string;
-      description?: string | null;
-    };
-    canvasType?: string;
-    // Merged from lesson_data
-    courseId?: string | null;
-    courseTitle?: string | null;
-    courseCode?: string | null;
-    institutionName?: string | null;
-    teacherName?: string | null;
-    lessonTitle?: string | null;
-    moduleTitle?: string | null;
-    templateId?: string | null;
-    templateName?: string | null;
-    templateType?: string | null;
-    layout?: LayoutNode;
-    structure?: Record<string, unknown>;
-  };
-  created_at?: string;
-  updated_at?: string;
-}
 
 type LessonScheduleEntry = {
   date?: string;
@@ -108,16 +37,7 @@ export class CurriculumPageBridge {
   private pageManager: PageManager | null = null;
   private isInitialized = false;
   private currentCourseId: string | null = null;
-  private courseInfo: {
-    id: string;
-    course_name: string;
-    course_description?: string;
-    course_language?: string;
-    schedule_settings?: unknown;
-    institution?: string | null;
-    teacher_id?: string | null;
-    teacherName?: string | null;
-  } | null = null;
+  private courseInfo: CourseInfo | null = null;
   private lessonSchedule = new Map<number, LessonScheduleEntry>();
   private canvasScrollNav: CanvasScrollNavInstance | null = null;
   private canvasScrollNavReadyListener: ((event: Event) => void) | null = null;
@@ -319,167 +239,53 @@ export class CurriculumPageBridge {
   }
 
   private convertCanvasesToPageData(canvases: CurriculumCanvas[]): PageMetadata[] {
-    const pageData: PageMetadata[] = [];
-
-    canvases.forEach((canvas, index) => {
-      const canvasData = canvas.canvas_data;
-      const canvasMeta = canvas.canvas_metadata;
-
-      // Extract lesson info
-      const lessonNumber = canvasData?.lesson?.number ?? canvasMeta?.lessonNumber ?? 1;
-      const lessonTitle = canvasData?.lesson?.title ?? canvasMeta?.lessonTitle ?? `Lesson ${lessonNumber}`;
-      const moduleNumber = canvasData?.lesson?.moduleNumber ?? canvasMeta?.moduleNumber;
+    return canvases.map((canvas, index) => {
+      const accessor = new CanvasDataAccessor(canvas, this.courseInfo);
       const canvasIndex = typeof canvas.canvas_index === "number" ? canvas.canvas_index : index + 1;
-      const moduleTitle = this.resolveString(
-        canvasMeta?.moduleTitle,
-        (canvasData?.lesson as any)?.moduleTitle,
-        moduleNumber ? `Module ${moduleNumber}` : null,
-      );
-
-      // Extract template info
-      const template = canvasData?.template ?? canvasMeta?.template;
-      const method = this.normalizeMethod(template?.method);
-      const socialForm = this.normalizeSocialForm(template?.socialForm);
-      const duration = template?.duration ?? 50;
-      const templateInfo = (template as TemplateSummary | undefined) ?? null;
-      const layout = this.normalizeLayoutNode(canvasData?.layout ?? canvasMeta?.layout);
-      const courseTitle =
-        this.resolveString(canvasMeta?.courseTitle, (canvasData?.lesson as any)?.courseTitle, this.courseInfo?.course_name) ??
-        "Course Name";
-      const courseCode =
-        this.resolveString(canvasMeta?.courseCode, (canvasData?.lesson as any)?.courseCode, this.courseInfo?.id) ??
-        "COURSE-101";
-      const institutionName = this.resolveString(
-        canvasMeta?.institutionName,
-        (canvasData?.lesson as any)?.institutionName,
-        this.courseInfo?.institution,
-      );
-      const teacherName = this.resolveString(
-        canvasMeta?.teacherName,
-        (canvasData?.lesson as any)?.teacherName,
-        this.courseInfo?.teacherName,
-      );
-      const canvasType = this.resolveString(
-        canvasMeta?.canvasType,
-        canvasMeta?.canvasType,
-        template?.type,
-      );
-      const structureSummary = this.normalizeStructureSummary(
-        (canvasMeta?.structure as any) ?? (canvasData?.structure as any) ?? null,
-      );
-      const canvasTitle =
-        canvasMeta?.title ??
-        (typeof template?.name === "string" ? template.name : null) ??
-        `${lessonTitle} - Canvas ${canvasIndex}`;
-      const combinedTopicBase = canvasTitle ?? `${lessonTitle} - Canvas ${canvasIndex}`;
-      const topicValue = moduleTitle
-        ? `${moduleTitle} · ${combinedTopicBase}`
-        : moduleNumber
-        ? `Module ${moduleNumber} - ${combinedTopicBase}`
-        : combinedTopicBase;
-
-      const explicitCopyright = this.resolveString(
-        this.extractString(canvasMeta, "copyright"),
-        this.extractString(canvasMeta?.template, "copyright"),
-        this.extractString(canvasData, "copyright"),
-        this.extractString(canvasData?.lesson, "copyright"),
-        this.extractString(canvasData?.template, "copyright"),
-      );
       const copyrightValue = this.generateCopyrightValue(
-        explicitCopyright,
-        teacherName,
-        institutionName,
-        courseTitle,
+        accessor.explicitCopyright,
+        accessor.teacherName,
+        accessor.institutionName,
+        accessor.courseTitle,
       );
 
-      // Build page metadata
       const metadata: PageMetadata = {
         pageNumber: index + 1,
         totalPages: canvases.length,
-        lessonNumber,
-        lessonTitle,
-        moduleNumber: typeof moduleNumber === "number" ? moduleNumber : null,
-        courseName: courseTitle,
-        courseCode,
+        lessonNumber: accessor.lessonNumber,
+        lessonTitle: accessor.lessonTitle,
+        moduleNumber: accessor.moduleNumber,
+        courseName: accessor.courseTitle,
+        courseCode: accessor.courseCode,
         canvasId: canvas.id,
-        date: this.resolveLessonDate(lessonNumber, canvasData, canvasMeta, canvas),
-        method,
-        socialForm,
-        duration,
-        instructor: teacherName ?? "Instructor",
-        topic: topicValue,
+        date: this.resolveLessonDate(
+          accessor.lessonNumber,
+          accessor.rawCanvasData,
+          accessor.rawCanvasMeta,
+          canvas,
+        ),
+        method: accessor.method,
+        socialForm: accessor.socialForm,
+        duration: accessor.duration,
+        instructor: accessor.teacherName ?? "Instructor",
+        topic: accessor.getTopicValue(canvasIndex),
         canvasIndex,
-        canvasType: canvasType ?? null,
+        canvasType: accessor.canvasType ?? null,
         copyright: copyrightValue,
-        templateInfo,
-        layout,
-        moduleTitle: moduleTitle ?? null,
-        institutionName: institutionName ?? null,
-        teacherName: teacherName ?? null,
-        structure: structureSummary,
+        templateInfo: accessor.templateInfo,
+        layout: accessor.layout,
+        moduleTitle: accessor.moduleTitle ?? null,
+        institutionName: accessor.institutionName ?? null,
+        teacherName: accessor.teacherName ?? null,
+        structure: accessor.structureSummary,
       };
 
-      // Ensure module title fallback if unavailable
-      if (!metadata.moduleTitle && moduleNumber) {
-        metadata.moduleTitle = `Module ${moduleNumber}`;
+      if (!metadata.moduleTitle && accessor.moduleNumber) {
+        metadata.moduleTitle = `Module ${accessor.moduleNumber}`;
       }
 
-      pageData.push(metadata);
+      return metadata;
     });
-
-    return pageData;
-  }
-
-  private normalizeStructureSummary(input: unknown): { topics: number; objectives: number; tasks: number } | null {
-    if (!input || typeof input !== "object") {
-      return null;
-    }
-
-    const record = input as Record<string, unknown>;
-    const toNumber = (value: unknown): number =>
-      typeof value === "number" && Number.isFinite(value) ? value : 0;
-
-    let topics = toNumber(record.topics ?? record.topicCount ?? record.topicsPerLesson);
-    let objectives = toNumber(record.objectives ?? record.objectiveCount);
-    let tasks = toNumber(record.tasks ?? record.taskCount);
-
-    const objectivesPerTopic = toNumber(record.objectivesPerTopic);
-    if (!objectives && objectivesPerTopic && topics) {
-      objectives = objectivesPerTopic * topics;
-    }
-
-    const tasksPerObjective = toNumber(record.tasksPerObjective);
-    if (!tasks && tasksPerObjective && objectives) {
-      tasks = tasksPerObjective * objectives;
-    }
-
-    if (!topics && !objectives && !tasks) {
-      return null;
-    }
-
-    return { topics, objectives, tasks };
-  }
-
-  private normalizeLayoutNode(layout: unknown): LayoutNode | null {
-    if (!layout) {
-      return null;
-    }
-
-    if (typeof layout === "string") {
-      try {
-        const parsed = JSON.parse(layout) as LayoutNode;
-        return parsed ?? null;
-      } catch (error) {
-        console.warn("⚠️ Failed to parse layout JSON string:", error);
-        return null;
-      }
-    }
-
-    if (typeof layout === "object") {
-      return layout as LayoutNode;
-    }
-
-    return null;
   }
 
   private resolveLessonDate(
@@ -506,13 +312,12 @@ export class CurriculumPageBridge {
     ];
 
     for (const candidate of candidates) {
-      if (candidate && this.isValidDate(candidate)) {
-        return this.normalizeDate(candidate);
+      if (candidate && DataNormalizer.isValidDate(candidate)) {
+        return DataNormalizer.date(candidate);
       }
     }
 
-    // Final fallback: current date/time
-    return new Date().toISOString();
+    return DataNormalizer.date(new Date().toISOString());
   }
 
   private combineDateAndTime(schedule?: LessonScheduleEntry): string | null {
@@ -533,61 +338,6 @@ export class CurriculumPageBridge {
     return isoCandidate;
   }
 
-  private normalizeDate(value: string): string {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-      return new Date(`${value}T12:00:00Z`).toISOString();
-    }
-
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?Z$/.test(value)) {
-      return value.length === 16 ? `${value}:00Z` : value;
-    }
-
-    const date = new Date(value);
-    if (!Number.isNaN(date.getTime())) {
-      return date.toISOString();
-    }
-
-    return new Date().toISOString();
-  }
-
-  private isValidDate(value: string): boolean {
-    if (!value || typeof value !== "string") {
-      return false;
-    }
-
-    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-      return true;
-    }
-
-    const date = new Date(value);
-    return !Number.isNaN(date.getTime());
-  }
-
-  private resolveString(...values: Array<string | null | undefined>): string | null {
-    for (const value of values) {
-      if (typeof value === 'string') {
-        const trimmed = value.trim();
-        if (trimmed.length) {
-          return trimmed;
-        }
-      }
-    }
-    return null;
-  }
-
-  private extractString(source: unknown, key: string): string | null {
-    if (!source || typeof source !== "object") {
-      return null;
-    }
-    const record = source as Record<string, unknown>;
-    const value = record[key];
-    if (typeof value === "string") {
-      const trimmed = value.trim();
-      return trimmed.length ? trimmed : null;
-    }
-    return null;
-  }
-
   private generateCopyrightValue(
     explicit: string | null,
     teacherName: string | null,
@@ -598,7 +348,7 @@ export class CurriculumPageBridge {
       return explicit;
     }
     const owner =
-      this.resolveString(
+      DataNormalizer.resolveString(
         teacherName,
         institutionName,
         courseTitle,
@@ -607,61 +357,6 @@ export class CurriculumPageBridge {
       ) ?? "Neptino";
     const year = new Date().getFullYear();
     return `© ${year} ${owner}`;
-  }
-
-  private normalizeMethod(method: string | undefined): MethodType {
-    if (!method) return "Lecture";
-
-    const normalized = method.toLowerCase().trim();
-    
-    switch (normalized) {
-      case "lecture":
-        return "Lecture";
-      case "discussion":
-        return "Discussion";
-      case "activity":
-        return "Activity";
-      case "assessment":
-        return "Assessment";
-      case "lab":
-        return "Lab";
-      case "workshop":
-        return "Workshop";
-      case "seminar":
-        return "Seminar";
-      default:
-        return "Lecture";
-    }
-  }
-
-  private normalizeSocialForm(socialForm: string | undefined): SocialFormType {
-    if (!socialForm) return "Whole Class";
-
-    const normalized = socialForm.toLowerCase().trim();
-    
-    switch (normalized) {
-      case "individual":
-      case "solo":
-        return "Individual";
-      case "pairs":
-      case "pair":
-      case "partner":
-        return "Pairs";
-      case "small group":
-      case "group":
-      case "small groups":
-        return "Small Group";
-      case "whole class":
-      case "class":
-      case "full class":
-        return "Whole Class";
-      case "online":
-        return "Online";
-      case "hybrid":
-        return "Hybrid";
-      default:
-        return "Whole Class";
-    }
   }
 
   private async initializePageManager(pageData: PageMetadata[]): Promise<void> {

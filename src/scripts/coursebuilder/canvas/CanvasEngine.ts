@@ -1,4 +1,4 @@
-import { Application, Assets, Container, Graphics, Sprite, Text, Rectangle, FederatedPointerEvent, type DisplayObject } from "pixi.js";
+import { Application, Assets, Container, Graphics, Sprite, Text, Rectangle, FederatedPointerEvent } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { canvasMarginManager, canvasDimensionManager, type CanvasDimensionState } from "../layout/CanvasConfigManager";
 import { CanvasLayoutRenderer } from "../layout/CanvasLayoutRenderer";
@@ -12,7 +12,7 @@ export type LayerName = "background" | "drawing" | "ui";
 
 interface CanvasObject {
   id: string;
-  displayObject: DisplayObject;
+  displayObject: Container;
 }
 
 interface SizeSnapshot {
@@ -363,36 +363,28 @@ export class CanvasEngine {
     const currentScale = this.getCurrentZoom();
     const scaleChanged = !this.approximatelyEqual(currentScale, clampedScale, SCALE_EPSILON);
     const previousSuppress = this.suppressInteractionFlag;
+
+    // Save state before zoom
     const currentCenter = this.viewport.center;
-    const preservedCenter = {
-      x: currentCenter.x,
-      y: currentCenter.y,
-    };
+    const preservedCenter = { x: currentCenter.x, y: currentCenter.y };
 
     if (!markInteraction) {
       this.suppressInteractionFlag = true;
     }
 
     if (scaleChanged) {
-      if (targetCenter) {
-        this.viewport.setZoom(clampedScale, targetCenter);
-      } else if (keepCentered) {
-        this.viewport.setZoom(clampedScale, preservedCenter);
-      } else {
-        this.viewport.setZoom(clampedScale, true);
-      }
+      // setZoom only accepts (scale, boolean?) in pixi-viewport v6
+      this.viewport.setZoom(clampedScale, true);
     }
 
-    if (keepCentered) {
-      this.moveCenterIfNecessary(
-        targetCenter?.x ?? preservedCenter.x,
-        targetCenter?.y ?? preservedCenter.y,
-      );
-    } else if (targetCenter) {
+    // After zoom, decide where to position the viewport
+    if (targetCenter) {
+      // Move center to the requested target (used by resetZoom / fitToContainer)
       this.moveCenterIfNecessary(targetCenter.x, targetCenter.y);
+    } else if (keepCentered) {
+      // Restore the center we had before zoom so the view doesn't jump
+      this.moveCenterIfNecessary(preservedCenter.x, preservedCenter.y);
     }
-
-    this.centerViewportIfUnderflow();
 
     if (markInteraction) {
       this.userHasInteracted = true;
@@ -697,23 +689,41 @@ export class CanvasEngine {
     const currentScale = this.getCurrentZoom();
     const targetScale = this.clampScale(currentScale * scaleFactor);
 
-    let targetCenter = this.viewport.center;
-    const rect = this.container?.getBoundingClientRect();
-    if (rect) {
-      const pointerX = event.clientX - rect.left;
-      const pointerY = event.clientY - rect.top;
-      const worldPoint = this.viewport.toWorld(pointerX, pointerY);
-      if (worldPoint) {
-        targetCenter = worldPoint;
-      }
+    if (this.approximatelyEqual(currentScale, targetScale, SCALE_EPSILON)) {
+      return;
     }
 
-    this.zoomTo(targetScale, {
-      keepCentered: false,
-      targetCenter,
-    });
+    // --- Zoom-to-cursor: keep the world point under the mouse pointer fixed ---
+    const rect = this.container?.getBoundingClientRect();
+    if (!rect) {
+      // Fallback: zoom from centre
+      this.viewport.setZoom(targetScale, true);
+      this.notifyZoomChange();
+      return;
+    }
 
-    this.viewport.emit("wheel-scroll", { viewport: this.viewport, type: "wheel-zoom" });
+    // Screen-space pointer position relative to the canvas element
+    const pointerScreenX = event.clientX - rect.left;
+    const pointerScreenY = event.clientY - rect.top;
+
+    // World point currently under the pointer
+    const worldBefore = this.viewport.toWorld(pointerScreenX, pointerScreenY);
+
+    // Apply the new scale (centred zoom – we'll fix position after)
+    this.viewport.setZoom(targetScale, true);
+
+    // After scaling, the same world point has moved on screen; compute where it ended up
+    const worldAfter = this.viewport.toWorld(pointerScreenX, pointerScreenY);
+
+    // Shift the viewport so the original world point is back under the cursor
+    const center = this.viewport.center;
+    this.viewport.moveCenter(
+      center.x + (worldBefore.x - worldAfter.x),
+      center.y + (worldBefore.y - worldAfter.y),
+    );
+
+    this.userHasInteracted = true;
+    this.notifyZoomChange();
   }
 
   private queueResize(): void {
@@ -985,7 +995,7 @@ export class CanvasEngine {
     }
   }
 
-  public addDisplayObject(displayObject: DisplayObject, layerName: LayerName = "drawing"): string | null {
+  public addDisplayObject(displayObject: Container, layerName: LayerName = "drawing"): string | null {
     if (!this.layers) {
       return null;
     }
@@ -1008,18 +1018,18 @@ export class CanvasEngine {
     return true;
   }
 
-  public getObjectById(id: string): DisplayObject | null {
+  public getObjectById(id: string): Container | null {
     return this.objects.get(id)?.displayObject ?? null;
   }
 
-  public getObjectsSnapshot(): Array<{ id: string; displayObject: DisplayObject }> {
+  public getObjectsSnapshot(): Array<{ id: string; displayObject: Container }> {
     return Array.from(this.objects.values()).map(({ id, displayObject }) => ({
       id,
       displayObject,
     }));
   }
 
-  private registerDisplayObject(displayObject: DisplayObject, layerName: LayerName): string {
+  private registerDisplayObject(displayObject: Container, layerName: LayerName): string {
     if (!this.layers) {
       return "";
     }

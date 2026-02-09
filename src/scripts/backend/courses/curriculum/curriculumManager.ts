@@ -2,6 +2,19 @@ import { supabase } from "../../supabase.js";
 import { CurriculumRenderer } from "./curriculumRenderer.js";
 import { CanvasBuilder } from "./canvasBuilder.js";
 import { LessonStructure } from "./utils/LessonStructure.js";
+import { CourseContext } from "./CourseContext.js";
+import {
+  CanvasSummaryService,
+  type CanvasLessonSummary,
+} from "./CanvasSummaryService.js";
+import { TemplatePlacementService } from "./TemplatePlacementService.js";
+import {
+  ContentLoadService,
+  type ContentLoadConfig,
+  type DurationPresetKey,
+} from "./ContentLoadService.js";
+import { ContentLoadController } from "./ContentLoadController.js";
+import type { CurriculumCanvas } from "../../../integration/utils/CanvasDataAccessor.js";
 
 // Module organization types
 export type ModuleOrganizationType = "linear" | "equal" | "tiered" | "custom";
@@ -33,19 +46,7 @@ export interface CurriculumCompetency {
   topics: CurriculumTopic[];
 }
 
-interface ContentLoadConfig {
-  type: "mini" | "single" | "double" | "triple" | "halfFull";
-  duration: number; // in minutes
-  topicsPerLesson: number;
-  competenciesPerLesson: number;
-  objectivesPerTopic: number;
-  tasksPerObjective: number;
-  isRecommended: boolean;
-  recommendationText: string;
-}
-
-
-type TemplatePlacementChoice =
+export type TemplatePlacementChoice =
   | "none"
   | "end-of-each-module"
   | "specific-modules"
@@ -155,21 +156,20 @@ class CurriculumManager {
   private contentLoadConfig: ContentLoadConfig | null = null;
   private currentPreviewMode: PreviewMode = "all";
   private scheduledLessonDuration: number = 0; // Store the actual scheduled duration
-  private saveTimeout: number | null = null; // For debouncing saves
   private editableUpdateTimers: Map<string, number> = new Map();
   private templatePlacementList: HTMLElement | null = null;
   private templatePlacements: TemplatePlacementConfig[] = [];
   private availableTemplates: TemplateSummary[] = [];
   private templatePlacementSaveTimeout: number | null = null;
   private courseType: "minimalist" | "essential" | "complete" | "custom" = "essential";
-  private courseTitle: string | null = null;
-  private courseCode: string | null = null;
-  private institutionName: string | null = null;
-  private teacherName: string | null = null;
+  private courseContext: CourseContext;
+  private canvasSummaryService: CanvasSummaryService;
+  private contentLoadController: ContentLoadController;
   private lessonStructureCounts: Map<number, { topics: number; objectives: number; tasks: number }> = new Map();
   private curriculumStructureDefaults: CurriculumStructureConfig | null = null;
   private initialModuleTitles: Map<number, string> = new Map();
   private lessonDates: Map<number, string> = new Map();
+  private canvasSummaries: CanvasLessonSummary[] = [];
   private globalEventsBound = false;
   private pendingExternalReset: { reason?: string } | null = null;
   private readonly onCurriculumReset = (event: Event): void => {
@@ -181,62 +181,29 @@ class CurriculumManager {
     this.resetCurriculumState(customEvent.detail?.reason);
   };
 
-  // Duration presets with default values and rationale
-  private readonly durationPresets: Record<string, DurationPreset> = {
-    mini: {
-      type: "mini",
-      maxDuration: 30,
-      defaultTopics: 1,
-      defaultObjectives: 1,
-      defaultTasks: 2,
-      rationale: "One tight focus with two quick practice reps.",
-    },
-    single: {
-      type: "single",
-      maxDuration: 60,
-      defaultTopics: 2,
-      defaultObjectives: 1,
-      defaultTasks: 2,
-      rationale: "Two short topics; one objective each; two reps to lock in.",
-    },
-    double: {
-      type: "double",
-      maxDuration: 120,
-      defaultTopics: 2,
-      defaultObjectives: 2,
-      defaultTasks: 2,
-      rationale: "Balanced two-hour block: 2×2×2 for eight solid tasks.",
-    },
-    triple: {
-      type: "triple",
-      maxDuration: 180,
-      defaultTopics: 3,
-      defaultObjectives: 2,
-      defaultTasks: 2,
-      rationale: "Broader scope; keep per-objective load steady.",
-    },
-    halfFull: {
-      type: "halfFull",
-      maxDuration: 240,
-      defaultTopics: 3,
-      defaultObjectives: 3,
-      defaultTasks: 2,
-      rationale: "Half-day: three topics with three objectives; two tasks each.",
-    },
-    fullDay: {
-      type: "fullDay",
-      maxDuration: 480,
-      defaultTopics: 4,
-      defaultObjectives: 3,
-      defaultTasks: 2,
-      rationale: "Full day pacing without fatigue; steady 4–5 tasks/hour.",
-    },
-  };
-
   constructor(courseId?: string) {
     this.canvasBuilder = new CanvasBuilder();
     // Get course ID from parameter, URL, or session storage
     this.courseId = courseId || this.getCourseId();
+    this.courseContext = new CourseContext(this.courseId);
+    this.canvasSummaryService = new CanvasSummaryService(() => this.courseContext.buildCourseInfo());
+    this.contentLoadController = new ContentLoadController({
+      supabase,
+      lessonDates: this.lessonDates,
+      getCourseId: () => this.courseId,
+      getCurrentCurriculum: () => this.currentCurriculum,
+      getContentLoadConfig: () => this.contentLoadConfig,
+      setContentLoadConfig: (config) => {
+        this.contentLoadConfig = config;
+      },
+      getScheduledLessonDuration: () => this.scheduledLessonDuration,
+      setScheduledLessonDuration: (duration) => {
+        this.scheduledLessonDuration = duration;
+      },
+      computeCompetencies: (topics) => this.computeCompetenciesPerLesson(topics),
+      regenerateAndSaveCurriculum: () => this.regenerateAndSaveCurriculum(),
+      renderCurriculumPreview: () => this.renderCurriculumPreview(),
+    });
 
     // Load saved preview mode from localStorage (or force default to 'all' for better UX)
     this.currentPreviewMode = "all"; // Force to show full structure by default
@@ -285,16 +252,14 @@ class CurriculumManager {
       moduleTitleMap.set(moduleNumber, title);
     });
 
-    this.canvasBuilder.setCourseContext({
+    const builderContext = this.courseContext.buildCanvasBuilderContext({
       courseId: this.courseId,
-      courseTitle: this.courseTitle,
-      courseCode: this.courseCode,
-      institutionName: this.institutionName,
-      teacherName: this.teacherName,
       moduleTitles: moduleTitleMap,
       lessonStructures: this.lessonStructureCounts,
       lessonDates: this.lessonDates,
     });
+
+    this.canvasBuilder.setCourseContext(builderContext);
     this.canvasBuilder.setLessonStructures(new Map(this.lessonStructureCounts));
   }
 
@@ -326,7 +291,7 @@ class CurriculumManager {
       await this.logAllCourseData();
 
       // Load schedule data first
-      await this.loadScheduleData();
+      await this.contentLoadController.loadScheduleData();
 
       // Load existing curriculum
       await this.loadExistingCurriculum();
@@ -399,20 +364,12 @@ class CurriculumManager {
       console.log('Course ID:', courseData.id);
       const courseName = courseData.course_name || courseData.title || 'Untitled Course';
       console.log('Course Title:', courseName);
-      this.courseTitle = courseName;
-      this.courseCode = courseData.course_code ?? courseData.id ?? null;
-      this.institutionName = courseData.institution ?? null;
       this.curriculumStructureDefaults = courseData.curriculum_data?.structure ?? this.curriculumStructureDefaults;
       console.log('Course Tagline:', courseData.tagline);
       console.log('Teacher ID:', courseData.teacher_id);
       console.log('Teacher Profile:', teacherProfile || 'Not loaded');
-      const teacherNameCandidate =
-        (teacherProfile?.full_name && teacherProfile.full_name.trim().length
-          ? teacherProfile.full_name.trim()
-          : teacherProfile?.username) ??
-        courseData.teacher_name ??
-        null;
-      this.teacherName = teacherNameCandidate;
+      this.courseContext.applyCourseData(courseData, teacherProfile ?? undefined);
+      console.log('Teacher Name:', this.courseContext.getTeacherName() ?? 'Unknown Instructor');
       console.log('Created:', courseData.created_at);
       console.log('Updated:', courseData.updated_at);
 
@@ -448,7 +405,15 @@ class CurriculumManager {
         console.log('  - Day:', firstLesson.day);
         console.log('  - Start Time:', firstLesson.startTime);
         console.log('  - End Time:', firstLesson.endTime);
-        console.log('  - Duration:', this.calculateLessonDuration(firstLesson.startTime, firstLesson.endTime, firstLesson.breakTimes), 'minutes');
+        console.log(
+          '  - Duration:',
+          ContentLoadService.calculateLessonDuration(
+            firstLesson.startTime,
+            firstLesson.endTime,
+            firstLesson.breakTimes,
+          ),
+          'minutes',
+        );
       }
 
       console.log('\n┌─────────────────────────────────────────────────────────────┐');
@@ -532,6 +497,8 @@ class CurriculumManager {
         console.log('❌ No canvas/lesson content yet');
       }
 
+      this.canvasSummaries = this.canvasSummaryService.build(canvases || []);
+
       console.log('\n╔════════════════════════════════════════════════════════════════╗');
       console.log('║         ✅ COURSE CONTEXT DATA LOADED SUCCESSFULLY             ║');
       console.log('╚════════════════════════════════════════════════════════════════╝\n');
@@ -573,7 +540,7 @@ class CurriculumManager {
             day: courseData.schedule_settings[0].day,
             startTime: courseData.schedule_settings[0].startTime,
             endTime: courseData.schedule_settings[0].endTime,
-            calculated_duration_minutes: this.calculateLessonDuration(
+            calculated_duration_minutes: ContentLoadService.calculateLessonDuration(
               courseData.schedule_settings[0].startTime,
               courseData.schedule_settings[0].endTime,
               courseData.schedule_settings[0].breakTimes
@@ -802,9 +769,9 @@ class CurriculumManager {
       radio.addEventListener('change', (event) => {
         const target = event.target as HTMLInputElement;
         if (target.checked) {
-          const durationType = target.value as keyof typeof this.durationPresets;
-          if (this.isDurationPresetKey(durationType)) {
-            this.handleDurationSelection(durationType);
+          const durationType = target.value as DurationPresetKey;
+          if (ContentLoadService.isDurationPresetKey(durationType)) {
+            this.contentLoadController.handleDurationSelection(durationType);
           }
         }
       });
@@ -1263,9 +1230,7 @@ class CurriculumManager {
 
     try {
       await this.fetchAvailableTemplates();
-      this.syncTemplatePlacementsWithTemplates();
-      this.syncTemplatePlacementsWithModules();
-      this.syncTemplatePlacementsWithLessons();
+      this.syncTemplatePlacements();
     } catch (error) {
       console.error("Error loading templates for curriculum placement:", error);
     } finally {
@@ -1346,44 +1311,19 @@ class CurriculumManager {
       });
   }
 
-  private syncTemplatePlacementsWithTemplates(): void {
-    if (!this.templatePlacements.length || !this.availableTemplates.length) {
-      return;
-    }
-
-    const summaryById = new Map(
-      this.availableTemplates.map((template) => [template.id, template]),
+  private syncTemplatePlacements(): void {
+    this.templatePlacements = TemplatePlacementService.syncWithTemplates(
+      this.templatePlacements,
+      this.availableTemplates,
     );
-    const summaryBySlug = new Map(
-      this.availableTemplates
-        .filter(
-          (template) =>
-            typeof template.templateId === "string" && template.templateId.length > 0,
-        )
-        .map((template) => [template.templateId, template]),
+    this.templatePlacements = TemplatePlacementService.syncWithModules(
+      this.templatePlacements,
+      this.currentModules,
     );
-
-    this.templatePlacements = this.templatePlacements.map((placement) => {
-      let summary = summaryById.get(placement.templateId);
-
-      if (!summary) {
-        const slugCandidate = placement.templateSlug || placement.templateId;
-        if (slugCandidate) {
-          summary = summaryBySlug.get(slugCandidate);
-        }
-      }
-
-      if (summary) {
-        return {
-          ...placement,
-          templateId: summary.id,
-          templateSlug: summary.templateId,
-          templateName: summary.name,
-        };
-      }
-
-      return placement;
-    });
+    this.templatePlacements = TemplatePlacementService.syncWithLessons(
+      this.templatePlacements,
+      this.currentCurriculum,
+    );
   }
 
   private renderTemplatePlacementUI(): void {
@@ -1474,37 +1414,13 @@ class CurriculumManager {
     templateId: string,
     choice: TemplatePlacementChoice,
   ): void {
-    const existing = this.getTemplatePlacement(templateId);
-
-    if (choice === "none") {
-      if (existing) {
-        this.templatePlacements = this.templatePlacements.filter(
-          (placement) => placement.templateId !== templateId,
-        );
-      }
-      return;
-    }
-
-    const summary = this.availableTemplates.find((template) => template.id === templateId);
-    const placementType = choice as Exclude<TemplatePlacementChoice, "none">;
-
-    const updated: TemplatePlacementConfig = {
+    this.templatePlacements = TemplatePlacementService.updatePlacementChoice(
+      this.templatePlacements,
+      this.availableTemplates,
       templateId,
-      templateSlug: summary?.templateId || existing?.templateSlug || templateId,
-      templateName: summary?.name || existing?.templateName || summary?.templateId || templateId,
-      placementType,
-      moduleNumbers: placementType === "specific-modules" ? [...(existing?.moduleNumbers ?? [])] : undefined,
-      lessonNumbers: placementType === "specific-lessons" ? [...(existing?.lessonNumbers ?? [])] : undefined,
-      lessonRanges: placementType === "lesson-ranges" ? [...(existing?.lessonRanges ?? [{ start: 1, end: this.currentCurriculum.length || 1 }])] : undefined,
-    };
-
-    if (existing) {
-      this.templatePlacements = this.templatePlacements.map((placement) =>
-        placement.templateId === templateId ? updated : placement,
-      );
-    } else {
-      this.templatePlacements.push(updated);
-    }
+      choice,
+      this.currentCurriculum.length,
+    );
   }
 
   private updateTemplatePlacementModules(
@@ -1512,38 +1428,13 @@ class CurriculumManager {
     moduleNumber: number,
     isChecked: boolean,
   ): void {
-    let placement = this.getTemplatePlacement(templateId);
-
-    if (!placement) {
-      this.updateTemplatePlacementChoice(templateId, "specific-modules");
-      placement = this.getTemplatePlacement(templateId);
-    }
-
-    if (!placement) {
-      return;
-    }
-
-    const moduleNumbers = Array.isArray(placement.moduleNumbers)
-      ? [...placement.moduleNumbers]
-      : [];
-
-    if (isChecked) {
-      if (!moduleNumbers.includes(moduleNumber)) {
-        moduleNumbers.push(moduleNumber);
-      }
-    } else {
-      const index = moduleNumbers.indexOf(moduleNumber);
-      if (index >= 0) {
-        moduleNumbers.splice(index, 1);
-      }
-    }
-
-    moduleNumbers.sort((a, b) => a - b);
-
-    placement.moduleNumbers = moduleNumbers;
-
-    this.templatePlacements = this.templatePlacements.map((entry) =>
-      entry.templateId === templateId ? placement! : entry,
+    this.templatePlacements = TemplatePlacementService.toggleModuleSelection(
+      this.templatePlacements,
+      this.availableTemplates,
+      templateId,
+      moduleNumber,
+      isChecked,
+      this.currentCurriculum.length,
     );
   }
 
@@ -1552,95 +1443,38 @@ class CurriculumManager {
     lessonNumber: number,
     isChecked: boolean,
   ): void {
-    let placement = this.getTemplatePlacement(templateId);
-
-    if (!placement) {
-      this.updateTemplatePlacementChoice(templateId, "specific-lessons");
-      placement = this.getTemplatePlacement(templateId);
-    }
-
-    if (!placement) {
-      return;
-    }
-
-    const lessonNumbers = Array.isArray(placement.lessonNumbers)
-      ? [...placement.lessonNumbers]
-      : [];
-
-    if (isChecked) {
-      if (!lessonNumbers.includes(lessonNumber)) {
-        lessonNumbers.push(lessonNumber);
-      }
-    } else {
-      const index = lessonNumbers.indexOf(lessonNumber);
-      if (index >= 0) {
-        lessonNumbers.splice(index, 1);
-      }
-    }
-
-    lessonNumbers.sort((a, b) => a - b);
-
-    placement.lessonNumbers = lessonNumbers;
-
-    this.templatePlacements = this.templatePlacements.map((entry) =>
-      entry.templateId === templateId ? placement! : entry,
+    this.templatePlacements = TemplatePlacementService.toggleLessonSelection(
+      this.templatePlacements,
+      this.availableTemplates,
+      templateId,
+      lessonNumber,
+      isChecked,
+      this.currentCurriculum.length,
     );
   }
 
   private addLessonRange(templateId: string): void {
-    let placement = this.getTemplatePlacement(templateId);
-
-    if (!placement) {
-      this.updateTemplatePlacementChoice(templateId, "lesson-ranges");
-      placement = this.getTemplatePlacement(templateId);
-    }
-
-    if (!placement) {
-      return;
-    }
-
-    const lessonRanges = Array.isArray(placement.lessonRanges)
-      ? [...placement.lessonRanges]
-      : [];
-
-    const lessonCount = this.currentCurriculum.length;
-    lessonRanges.push({ start: 1, end: lessonCount || 1 });
-
-    placement.lessonRanges = lessonRanges;
-
-    this.templatePlacements = this.templatePlacements.map((entry) =>
-      entry.templateId === templateId ? placement! : entry,
+    this.templatePlacements = TemplatePlacementService.addLessonRange(
+      this.templatePlacements,
+      this.availableTemplates,
+      templateId,
+      this.currentCurriculum.length,
     );
 
-    // Apply template placements immediately for lesson templates
     this.applyTemplatePlacementsToLessons();
-
     this.renderTemplatePlacementUI();
     this.renderCurriculumPreview();
     this.persistTemplatePlacements();
   }
 
   private removeLessonRange(templateId: string, rangeIndex: number): void {
-    const placement = this.getTemplatePlacement(templateId);
-    if (!placement) {
-      return;
-    }
-
-    const lessonRanges = Array.isArray(placement.lessonRanges)
-      ? [...placement.lessonRanges]
-      : [];
-
-    lessonRanges.splice(rangeIndex, 1);
-
-    placement.lessonRanges = lessonRanges;
-
-    this.templatePlacements = this.templatePlacements.map((entry) =>
-      entry.templateId === templateId ? placement! : entry,
+    this.templatePlacements = TemplatePlacementService.removeLessonRange(
+      this.templatePlacements,
+      templateId,
+      rangeIndex,
     );
 
-    // Apply template placements immediately for lesson templates
     this.applyTemplatePlacementsToLessons();
-
     this.renderTemplatePlacementUI();
     this.renderCurriculumPreview();
     this.persistTemplatePlacements();
@@ -1652,35 +1486,15 @@ class CurriculumManager {
     isStart: boolean,
     value: number,
   ): void {
-    const placement = this.getTemplatePlacement(templateId);
-    if (!placement) {
-      return;
-    }
-
-    const lessonRanges = Array.isArray(placement.lessonRanges)
-      ? [...placement.lessonRanges]
-      : [];
-
-    if (rangeIndex >= lessonRanges.length) {
-      return;
-    }
-
-    const range = lessonRanges[rangeIndex];
-    if (isStart) {
-      range.start = Math.max(1, Math.min(value, range.end));
-    } else {
-      range.end = Math.max(range.start, value);
-    }
-
-    placement.lessonRanges = lessonRanges;
-
-    this.templatePlacements = this.templatePlacements.map((entry) =>
-      entry.templateId === templateId ? placement! : entry,
+    this.templatePlacements = TemplatePlacementService.updateLessonRange(
+      this.templatePlacements,
+      templateId,
+      rangeIndex,
+      isStart,
+      value,
     );
 
-    // Apply template placements immediately for lesson templates
     this.applyTemplatePlacementsToLessons();
-
     this.renderCurriculumPreview();
     this.persistTemplatePlacements();
   }
@@ -1688,42 +1502,17 @@ class CurriculumManager {
   private getTemplatePlacement(
     templateId: string,
   ): TemplatePlacementConfig | undefined {
-    const directMatch = this.templatePlacements.find(
-      (placement) => placement.templateId === templateId,
+    return TemplatePlacementService.findPlacement(
+      templateId,
+      this.templatePlacements,
+      this.availableTemplates,
     );
-    if (directMatch) {
-      return directMatch;
-    }
-
-    const summary = this.availableTemplates.find(
-      (template) => template.id === templateId,
-    );
-    const slugCandidates = new Set<string>();
-
-    if (summary?.templateId) {
-      slugCandidates.add(summary.templateId);
-    }
-
-    if (templateId) {
-      slugCandidates.add(templateId);
-    }
-
-    return this.templatePlacements.find((placement) => {
-      const slugMatch =
-        placement.templateSlug && slugCandidates.has(placement.templateSlug);
-      const idMatch = placement.templateId && slugCandidates.has(placement.templateId);
-      return Boolean(slugMatch || idMatch);
-    });
   }
 
   private lookupTemplateSummary(
     templateId: string | null | undefined,
   ): TemplateSummary | undefined {
-    if (!templateId) {
-      return undefined;
-    }
-
-    return this.availableTemplates.find((template) => template.id === templateId);
+    return TemplatePlacementService.lookupTemplateSummary(templateId, this.availableTemplates);
   }
 
   private normalizeTemplateDefinition(raw: unknown): TemplateDefinition {
@@ -1859,8 +1648,7 @@ class CurriculumManager {
       return;
     }
 
-    this.syncTemplatePlacementsWithModules();
-    this.syncTemplatePlacementsWithLessons();
+    this.syncTemplatePlacements();
 
     try {
       await this.saveCurriculumToDatabase(this.currentCurriculum);
@@ -1869,559 +1657,16 @@ class CurriculumManager {
     }
   }
 
-  private syncTemplatePlacementsWithModules(): void {
-    const modules = this.currentModules;
-    if (!modules.length) {
-      return;
-    }
-
-    const validModuleNumbers = new Set(
-      modules.map((module: CurriculumModule) => module.moduleNumber ?? 1),
-    );
-
-    this.templatePlacements = this.templatePlacements.map((placement) => {
-      if (placement.placementType !== "specific-modules") {
-        return placement;
-      }
-
-      const filtered = (placement.moduleNumbers ?? []).filter((number) =>
-        validModuleNumbers.has(number),
-      );
-
-      return {
-        ...placement,
-        moduleNumbers: filtered,
-      };
-    });
-  }
-
-  private syncTemplatePlacementsWithLessons(): void {
-    const lessons = Array.isArray(this.currentCurriculum)
-      ? this.currentCurriculum
-      : [];
-
-    if (!lessons.length) {
-      return;
-    }
-
-    const validLessonNumbers = new Set(
-      lessons
-        .map((lesson) => lesson.lessonNumber)
-        .filter(
-          (number): number is number =>
-            typeof number === "number" && !Number.isNaN(number),
-        ),
-    );
-
-    this.templatePlacements = this.templatePlacements.map((placement) => {
-      if (placement.placementType !== "specific-lessons") {
-        return placement;
-      }
-
-      const filtered = (placement.lessonNumbers ?? []).filter((number) =>
-        validLessonNumbers.has(number),
-      );
-
-      return {
-        ...placement,
-        lessonNumbers: filtered,
-      };
-    });
-
-    // Apply template placements to lessons
-    this.applyTemplatePlacementsToLessons();
-  }
-
-  /**
-   * Apply template placements (all-lessons, lesson-ranges) directly to lesson.templateId
-   * This ensures that templates are actually assigned to the lessons
-   */
   private applyTemplatePlacementsToLessons(): void {
-    const lessons = Array.isArray(this.currentCurriculum)
-      ? this.currentCurriculum
-      : [];
-
+    const lessons = Array.isArray(this.currentCurriculum) ? this.currentCurriculum : [];
     if (!lessons.length) {
       return;
     }
 
-    // Find lesson template placements
-    const lessonTemplatePlacements = this.templatePlacements.filter(
-      (placement) => {
-        const summary = this.lookupTemplateSummary(placement.templateId);
-        return summary?.type === "lesson";
-      }
-    );
-
-    // Apply templates to lessons
-    lessons.forEach((lesson) => {
-      const lessonNumber = lesson.lessonNumber;
-
-      // Check if this lesson should have a template applied
-      const applicablePlacement = lessonTemplatePlacements.find((placement) => {
-        // All lessons placement
-        if (placement.placementType === "all-lessons") {
-          return true;
-        }
-
-        // Lesson ranges placement
-        if (
-          placement.placementType === "lesson-ranges" &&
-          Array.isArray(placement.lessonRanges)
-        ) {
-          return placement.lessonRanges.some(
-            (range) => lessonNumber >= range.start && lessonNumber <= range.end
-          );
-        }
-
-        return false;
-      });
-
-      // Apply the template if found
-      if (applicablePlacement) {
-        lesson.templateId = applicablePlacement.templateId;
-        console.log(`📄 Auto-applied template "${applicablePlacement.templateName}" to Lesson ${lessonNumber}`);
-      }
-    });
+    TemplatePlacementService.applyToLessons(this.templatePlacements, lessons);
   }
 
-  private async loadScheduleData(): Promise<void> {
-    try {
-      const { data, error } = await supabase
-        .from("courses")
-        .select("schedule_settings")
-        .eq("id", this.courseId)
-        .single();
-
-      if (error) throw error;
-
-      if (
-        data?.schedule_settings &&
-        Array.isArray(data.schedule_settings) &&
-        data.schedule_settings.length > 0
-      ) {
-        // Store lesson dates from schedule
-        this.lessonDates.clear();
-        data.schedule_settings.forEach((session: any, index: number) => {
-          if (session.date) {
-            this.lessonDates.set(index + 1, session.date);
-          }
-        });
-
-        // Get the first lesson to determine duration
-        const firstLesson = data.schedule_settings[0];
-        const duration = this.calculateLessonDuration(
-          firstLesson.startTime,
-          firstLesson.endTime,
-          firstLesson.breakTimes,
-        );
-        this.contentLoadConfig = this.determineContentLoad(duration);
-        this.displayContentLoad();
-      } else {
-        this.displayNoScheduleWarning();
-      }
-    } catch (error) {
-      console.error("Error loading schedule data:", error);
-      this.displayNoScheduleWarning();
-    }
-  }
-
-  private calculateLessonDuration(startTime: string, endTime: string, breakTimes?: Array<{ startTime: string; endTime: string }>): number {
-    const start = new Date(`2000-01-01T${startTime}`);
-    const end = new Date(`2000-01-01T${endTime}`);
-    let totalMinutes = Math.abs(end.getTime() - start.getTime()) / (1000 * 60); // Convert to minutes
-
-    // Subtract break times if they exist
-    if (breakTimes && breakTimes.length > 0) {
-      breakTimes.forEach((breakTime) => {
-        const breakStart = new Date(`2000-01-01T${breakTime.startTime}`);
-        const breakEnd = new Date(`2000-01-01T${breakTime.endTime}`);
-        const breakDuration = Math.abs(breakEnd.getTime() - breakStart.getTime()) / (1000 * 60);
-        totalMinutes -= breakDuration;
-      });
-    }
-
-    return Math.max(0, totalMinutes);
-  }
-
-  private determineContentLoad(duration: number): ContentLoadConfig {
-    this.scheduledLessonDuration = duration;
-
-    let selectedPreset: DurationPreset;
-    const isRecommended = true;
-    const recommendationText = "Recommended";
-
-    if (duration <= 30) {
-      selectedPreset = this.durationPresets.mini;
-    } else if (duration <= 60) {
-      selectedPreset = this.durationPresets.single;
-    } else if (duration <= 120) {
-      selectedPreset = this.durationPresets.double;
-    } else if (duration <= 180) {
-      selectedPreset = this.durationPresets.triple;
-    } else if (duration <= 240) {
-      selectedPreset = this.durationPresets.halfFull;
-    } else {
-      selectedPreset = this.durationPresets.fullDay;
-    }
-
-    return {
-      type: selectedPreset.type,
-      duration,
-      topicsPerLesson: selectedPreset.defaultTopics,
-      competenciesPerLesson: this.computeCompetenciesPerLesson(selectedPreset.defaultTopics),
-      objectivesPerTopic: selectedPreset.defaultObjectives,
-      tasksPerObjective: selectedPreset.defaultTasks,
-      isRecommended,
-      recommendationText
-    };
-  }
-
-  private displayContentLoad(): void {
-    if (!this.contentLoadConfig) return;
-
-    // Setup the duration configuration immediately
-    this.setupDurationConfiguration();
-  }
-
-  private setupDurationConfiguration(): void {
-    const contentVolumeRadios = document.querySelectorAll<HTMLInputElement>('input[name="content-volume"]');
-    const topicsInput = document.getElementById('curriculum-topics') as HTMLInputElement;
-    const objectivesInput = document.getElementById('curriculum-objectives') as HTMLInputElement;
-    const tasksInput = document.getElementById('curriculum-tasks') as HTMLInputElement;
-
-    console.log('🔧 Setting up duration configuration...', {
-      contentVolumeRadios: contentVolumeRadios.length,
-      topicsInput: !!topicsInput,
-      objectivesInput: !!objectivesInput,
-      tasksInput: !!tasksInput
-    });
-
-    if (!topicsInput || !objectivesInput || !tasksInput) {
-      console.error('❌ Duration configuration elements not found:', {
-        topicsInput: !!topicsInput,
-        objectivesInput: !!objectivesInput,
-        tasksInput: !!tasksInput
-      });
-
-      // Try again after a short delay in case DOM isn't ready
-      setTimeout(() => {
-        this.setupDurationConfiguration();
-      }, 1000);
-      return;
-    }
-
-    // Set up input change handlers to update curriculum in real-time
-    [topicsInput, objectivesInput, tasksInput].forEach(input => {
-      // Use 'input' event for real-time updates as user types
-      input.addEventListener('input', () => {
-        this.handleInputChange(topicsInput, objectivesInput, tasksInput);
-      });
-
-      // Also listen for 'change' event for when user tabs out
-      input.addEventListener('change', () => {
-        this.handleInputChange(topicsInput, objectivesInput, tasksInput);
-      });
-    });
-
-    // Auto-select the recommended duration option (but don't override existing curriculum structure)
-    this.autoSelectRecommendedDuration();
-
-    // Populate inputs with current curriculum structure if it exists, otherwise use recommended defaults
-    this.populateInputsFromExistingCurriculum();
-  }
-
-  private syncStructureInputsWithConfig(): void {
-    const topicsInput = document.getElementById(
-      "curriculum-topics",
-    ) as HTMLInputElement | null;
-    const objectivesInput = document.getElementById(
-      "curriculum-objectives",
-    ) as HTMLInputElement | null;
-    const tasksInput = document.getElementById(
-      "curriculum-tasks",
-    ) as HTMLInputElement | null;
-
-    if (!topicsInput || !objectivesInput || !tasksInput || !this.contentLoadConfig) {
-      return;
-    }
-
-    topicsInput.value =
-      this.contentLoadConfig.topicsPerLesson.toString();
-    objectivesInput.value =
-      this.contentLoadConfig.objectivesPerTopic.toString();
-    tasksInput.value =
-      this.contentLoadConfig.tasksPerObjective.toString();
-
-    console.log("📋 Synced inputs with configuration:", {
-      topics: this.contentLoadConfig.topicsPerLesson,
-      objectives: this.contentLoadConfig.objectivesPerTopic,
-      tasks: this.contentLoadConfig.tasksPerObjective,
-    });
-  }
-
-  private clampValue(value: number, min: number, max: number): number {
-    return Math.min(Math.max(value, min), max);
-  }
-
-  private deriveStructureFromCurriculum():
-    | { topics: number; objectives: number; tasksPerObjective: number }
-    | null {
-    if (!Array.isArray(this.currentCurriculum) || !this.currentCurriculum.length) {
-      return null;
-    }
-
-    const firstLesson = this.currentCurriculum[0];
-    if (!firstLesson || !Array.isArray(firstLesson.topics) || !firstLesson.topics.length) {
-      return null;
-    }
-
-    const topicsCount = this.clampValue(firstLesson.topics.length, 1, 10);
-    const firstTopic = firstLesson.topics[0];
-    const objectivesCountRaw = Array.isArray(firstTopic?.objectives)
-      ? firstTopic.objectives.length
-      : 0;
-    const tasksCountRaw = Array.isArray(firstTopic?.tasks)
-      ? firstTopic.tasks.length
-      : 0;
-
-    const objectivesCount = this.clampValue(objectivesCountRaw || 1, 1, 5);
-    const tasksPerObjectiveCount =
-      objectivesCount > 0
-        ? Math.ceil(tasksCountRaw / objectivesCount) || 1
-        : 1;
-    const tasksPerObjective = this.clampValue(tasksPerObjectiveCount, 1, 5);
-
-    return {
-      topics: topicsCount,
-      objectives: objectivesCount,
-      tasksPerObjective,
-    };
-  }
-
-  private ensureContentLoadConfigFromCounts(counts: {
-    topics: number;
-    objectives: number;
-    tasksPerObjective: number;
-  }): void {
-    const baseDuration =
-      this.contentLoadConfig?.duration || this.scheduledLessonDuration || 0;
-    const durationType: keyof typeof this.durationPresets =
-      this.contentLoadConfig?.type ||
-      this.getPresetKeyForDuration(baseDuration || this.scheduledLessonDuration);
-
-    const isRecommended = this.isRecommendedDuration(
-      durationType,
-      baseDuration || this.scheduledLessonDuration,
-    );
-
-    const recommendationText = this.getRecommendationText(
-      durationType,
-      baseDuration || this.scheduledLessonDuration,
-    );
-
-    this.contentLoadConfig = {
-      type: durationType as "mini" | "single" | "double" | "triple" | "halfFull",
-      duration: baseDuration || this.scheduledLessonDuration,
-      topicsPerLesson: counts.topics,
-      competenciesPerLesson: this.computeCompetenciesPerLesson(counts.topics),
-      objectivesPerTopic: counts.objectives,
-      tasksPerObjective: counts.tasksPerObjective,
-      isRecommended,
-      recommendationText,
-    };
-
-    console.log("🔧 ContentLoadConfig derived from existing curriculum:", {
-      durationType,
-      duration: baseDuration || this.scheduledLessonDuration,
-      ...counts,
-    });
-  }
-
-  private populateInputsFromExistingCurriculum(): void {
-    const derivedCounts = this.deriveStructureFromCurriculum();
-
-    if (derivedCounts) {
-      this.ensureContentLoadConfigFromCounts(derivedCounts);
-      this.syncStructureInputsWithConfig();
-
-      if (this.isDurationPresetKey(this.contentLoadConfig?.type)) {
-        this.setDurationButtonVisualState(this.contentLoadConfig.type);
-      }
-
-      console.log("📚 Populated inputs from existing curriculum:", derivedCounts);
-      return;
-    }
-
-    // No existing curriculum data; fall back to current configuration defaults
-    this.syncStructureInputsWithConfig();
-  }
-
-  private handleInputChange(
-    topicsInput: HTMLInputElement,
-    objectivesInput: HTMLInputElement,
-    tasksInput: HTMLInputElement
-  ): void {
-    if (!this.contentLoadConfig) return;
-
-    // Clear any existing timeout
-    if (this.saveTimeout) {
-      clearTimeout(this.saveTimeout);
-    }
-
-    // Update the config immediately
-    const topics = this.clampValue(
-      parseInt(topicsInput.value, 10) || 1,
-      parseInt(topicsInput.min || "1", 10) || 1,
-      parseInt(topicsInput.max || "10", 10) || 10,
-    );
-    const objectives = this.clampValue(
-      parseInt(objectivesInput.value, 10) || 1,
-      parseInt(objectivesInput.min || "1", 10) || 1,
-      parseInt(objectivesInput.max || "5", 10) || 5,
-    );
-    const tasks = this.clampValue(
-      parseInt(tasksInput.value, 10) || 1,
-      parseInt(tasksInput.min || "1", 10) || 1,
-      parseInt(tasksInput.max || "5", 10) || 5,
-    );
-
-    topicsInput.value = topics.toString();
-    objectivesInput.value = objectives.toString();
-    tasksInput.value = tasks.toString();
-
-    this.contentLoadConfig.topicsPerLesson = topics;
-    this.contentLoadConfig.objectivesPerTopic = objectives;
-    this.contentLoadConfig.tasksPerObjective = tasks;
-
-    console.log('📝 Input values changed (before debounce):', {
-      topics: this.contentLoadConfig.topicsPerLesson,
-      objectives: this.contentLoadConfig.objectivesPerTopic,
-      tasks: this.contentLoadConfig.tasksPerObjective
-    });
-
-    // Debounce the actual save operation
-    this.saveTimeout = window.setTimeout(() => {
-      this.regenerateAndSaveCurriculum();
-    }, 500); // Wait 500ms after last change
-  }
-
-  private isRecommendedDuration(durationType: keyof typeof this.durationPresets, actualDuration: number): boolean {
-    const preset = this.durationPresets[durationType];
-
-    if (durationType === 'halfFull') {
-      return actualDuration > 180;
-    }
-
-    const previousMaxDuration = this.getPreviousMaxDuration(durationType);
-    return actualDuration > previousMaxDuration && actualDuration <= preset.maxDuration;
-  }
-
-  private getPreviousMaxDuration(durationType: keyof typeof this.durationPresets): number {
-    switch (durationType) {
-      case 'mini': return 0;
-      case 'single': return 30;
-      case 'double': return 60;
-      case 'triple': return 120;
-      case 'halfFull': return 180;
-      default: return 0;
-    }
-  }
-
-  private getRecommendationText(
-    durationType: keyof typeof this.durationPresets,
-    actualDuration: number,
-  ): string {
-    void durationType;
-    void actualDuration;
-    // Return empty string to remove recommendation text while satisfying lint rules
-    return "";
-  }
-
-  private getPresetKeyForDuration(duration: number): keyof typeof this.durationPresets {
-    if (duration <= 30) {
-      return "mini";
-    }
-    if (duration <= 60) {
-      return "single";
-    }
-    if (duration <= 120) {
-      return "double";
-    }
-    if (duration <= 180) {
-      return "triple";
-    }
-    return "halfFull";
-  }
-
-  private isDurationPresetKey(
-    value: string | undefined,
-  ): value is keyof typeof this.durationPresets {
-    return Boolean(value && value in this.durationPresets);
-  }
-
-  private autoSelectRecommendedDuration(): void {
-    if (this.scheduledLessonDuration <= 0) return;
-
-    // Find the recommended duration type
-    const recommendedType = this.getPresetKeyForDuration(
-      this.scheduledLessonDuration,
-    );
-
-    // Update contentLoadConfig with recommended preset values
-    const preset = this.durationPresets[recommendedType];
-    if (!this.contentLoadConfig) {
-      this.contentLoadConfig = {
-        type: preset.type,
-        duration: this.scheduledLessonDuration,
-        topicsPerLesson: preset.defaultTopics,
-        competenciesPerLesson: this.computeCompetenciesPerLesson(preset.defaultTopics),
-        objectivesPerTopic: preset.defaultObjectives,
-        tasksPerObjective: preset.defaultTasks,
-        isRecommended: this.isRecommendedDuration(recommendedType, this.scheduledLessonDuration),
-        recommendationText: this.getRecommendationText(recommendedType, this.scheduledLessonDuration)
-      };
-
-      console.log('🎯 Auto-selected contentLoadConfig:', {
-        type: recommendedType,
-        duration: this.scheduledLessonDuration,
-        topics: preset.defaultTopics,
-        objectives: preset.defaultObjectives,
-        tasks: preset.defaultTasks
-      });
-    }
-
-    // Set the visual state (check the appropriate radio button)
-    const typeToHighlight = this.contentLoadConfig?.type || recommendedType;
-    if (this.isDurationPresetKey(typeToHighlight)) {
-      this.setDurationRadioState(typeToHighlight);
-    }
-
-    // Ensure inputs mirror the current configuration
-    this.syncStructureInputsWithConfig();
-  }
-
-  private setDurationRadioState(durationType: keyof typeof this.durationPresets): void {
-    const targetRadio = document.querySelector<HTMLInputElement>(
-      `input[name="content-volume"][value="${durationType}"]`
-    );
-
-    if (targetRadio) {
-      targetRadio.checked = true;
-    }
-  }
-
-  /**
-   * @deprecated - Use setDurationRadioState instead
-   */
-  private setDurationButtonVisualState(durationType: keyof typeof this.durationPresets): void {
-    this.setDurationRadioState(durationType);
-  }
-
-  private displayNoScheduleWarning(): void {
-    // Just show the setup configuration without a warning
-    this.setupDurationConfiguration();
-  } private async regenerateAndSaveCurriculum(): Promise<void> {
+  private async regenerateAndSaveCurriculum(): Promise<void> {
     if (!this.contentLoadConfig) {
       console.warn("Content load configuration not available.");
       return;
@@ -3198,8 +2443,7 @@ class CurriculumManager {
       throw error;
     }
 
-    this.syncTemplatePlacementsWithModules();
-    this.syncTemplatePlacementsWithLessons();
+    this.syncTemplatePlacements();
     this.renderTemplatePlacementUI();
 
     await this.ensureLessonCanvases(curriculum);
@@ -3659,6 +2903,7 @@ class CurriculumManager {
       templatePlacements: this.templatePlacements,
       courseType: this.courseType,
       moduleOrganization: this.moduleOrganization,
+      canvasSummaries: this.canvasSummaries,
     });
     this.renderer.renderCurriculumPreview(onSectionRenderComplete);
 
@@ -3673,6 +2918,7 @@ class CurriculumManager {
         templatePlacements: this.templatePlacements,
         courseType: this.courseType,
         moduleOrganization: this.moduleOrganization,
+        canvasSummaries: this.canvasSummaries,
       });
       this.generationRenderer.renderCurriculumPreview(onSectionRenderComplete);
     }
@@ -3950,21 +3196,24 @@ class CurriculumManager {
       this.scheduledLessonDuration;
 
     // Determine duration type with proper type checking
-    let durationType: keyof typeof this.durationPresets;
-    if (this.isDurationPresetKey(structure.durationType)) {
+    let durationType: DurationPresetKey;
+    if (ContentLoadService.isDurationPresetKey(structure.durationType)) {
       durationType = structure.durationType;
     } else if (this.contentLoadConfig?.type) {
       durationType = this.contentLoadConfig.type;
     } else {
-      durationType = this.getPresetKeyForDuration(rawDuration || this.scheduledLessonDuration);
+      durationType = ContentLoadService.getPresetKeyForDuration(
+        rawDuration || this.scheduledLessonDuration,
+      );
     }
 
     const resolvedDuration =
       typeof rawDuration === "number" && !Number.isNaN(rawDuration)
         ? rawDuration
-        : this.scheduledLessonDuration || this.durationPresets[durationType].maxDuration;
+        : this.scheduledLessonDuration ||
+          ContentLoadService.getPreset(durationType).maxDuration;
 
-    const fallbackPreset = this.durationPresets[durationType];
+    const fallbackPreset = ContentLoadService.getPreset(durationType);
 
     const resolvedTopicsPerLesson =
       structure.topicsPerLesson ??
@@ -3990,13 +3239,16 @@ class CurriculumManager {
       competenciesPerLesson: resolvedCompetenciesPerLesson,
       objectivesPerTopic: resolvedObjectivesPerTopic,
       tasksPerObjective: resolvedTasksPerObjective,
-      isRecommended: this.isRecommendedDuration(durationType, resolvedDuration),
-      recommendationText: this.getRecommendationText(durationType, resolvedDuration),
+      isRecommended: ContentLoadService.isRecommendedDuration(durationType, resolvedDuration),
+      recommendationText: ContentLoadService.getRecommendationText(durationType, resolvedDuration),
     };
 
     this.syncStructureInputsWithConfig();
 
-    if (this.contentLoadConfig && this.isDurationPresetKey(this.contentLoadConfig.type)) {
+    if (
+      this.contentLoadConfig &&
+      ContentLoadService.isDurationPresetKey(this.contentLoadConfig.type)
+    ) {
       this.setDurationButtonVisualState(this.contentLoadConfig.type);
     }
   }
@@ -4038,7 +3290,7 @@ class CurriculumManager {
         this.renderCurriculumPreview();
 
         // Update inputs to match loaded curriculum structure
-        this.populateInputsFromExistingCurriculum();
+        this.contentLoadController.populateInputsFromExistingCurriculum();
       } else if (
         rawCurriculum &&
         typeof rawCurriculum === "object"
@@ -4104,8 +3356,7 @@ class CurriculumManager {
           this.templatePlacements = [];
         }
 
-        this.syncTemplatePlacementsWithModules();
-        this.syncTemplatePlacementsWithLessons();
+        this.syncTemplatePlacements();
 
         console.log('✅ Loaded existing curriculum payload:', {
           lessonsCount: this.currentCurriculum.length,
@@ -4119,7 +3370,7 @@ class CurriculumManager {
 
         if (this.currentCurriculum.length > 0) {
           this.renderCurriculumPreview();
-          this.populateInputsFromExistingCurriculum();
+          this.contentLoadController.populateInputsFromExistingCurriculum();
         } else {
           this.hideCurriculumPreview();
         }
@@ -4316,8 +3567,8 @@ class CurriculumManager {
   /**
    * Handles duration/content volume selection
    */
-  private handleDurationSelection(durationType: keyof typeof this.durationPresets): void {
-    const preset = this.durationPresets[durationType];
+  private handleDurationSelection(durationType: DurationPresetKey): void {
+    const preset = ContentLoadService.getPreset(durationType);
     const topicsInput = document.getElementById('curriculum-topics') as HTMLInputElement;
     const objectivesInput = document.getElementById('curriculum-objectives') as HTMLInputElement;
     const tasksInput = document.getElementById('curriculum-tasks') as HTMLInputElement;
@@ -4332,16 +3583,10 @@ class CurriculumManager {
     tasksInput.value = preset.defaultTasks.toString();
 
     // Update content load config
-    this.contentLoadConfig = {
-      type: preset.type,
-      duration: this.scheduledLessonDuration || preset.maxDuration,
-      topicsPerLesson: preset.defaultTopics,
-      competenciesPerLesson: this.computeCompetenciesPerLesson(preset.defaultTopics),
-      objectivesPerTopic: preset.defaultObjectives,
-      tasksPerObjective: preset.defaultTasks,
-      isRecommended: this.isRecommendedDuration(durationType, this.scheduledLessonDuration),
-      recommendationText: this.getRecommendationText(durationType, this.scheduledLessonDuration)
-    };
+    this.contentLoadConfig = ContentLoadService.determineContentLoad(
+      this.scheduledLessonDuration || preset.maxDuration,
+      (topics) => this.computeCompetenciesPerLesson(topics),
+    );
 
     // Regenerate curriculum with new structure
     this.regenerateAndSaveCurriculum();

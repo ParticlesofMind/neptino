@@ -6,6 +6,7 @@
 import { initializeGlobalNavigation, initializeDashboardNavigation } from './navigation';
 import { initAuth, AuthFormHandler } from './backend/auth/auth';
 import { ViewToggleHandler } from './navigation/CourseBuilderNavigation';
+import { initLandingPreview } from './landing/landingPreview';
 import './backend/courses/settings/pageSetupHandler';
 import './coursebuilder/canvas/canvasInit'; // Initialize canvas system
 import './coursebuilder/PanelToggle'; // Initialize panel toggle
@@ -33,6 +34,7 @@ if (dashboardNav) {
 
 // Initialize auth form handlers on auth pages
 document.addEventListener('DOMContentLoaded', () => {
+ initLandingPreview();
  // Check if we're on an auth page
  const isAuthPage = window.location.pathname.includes('/pages/shared/signin.html') || 
  window.location.pathname.includes('/pages/shared/signup.html');

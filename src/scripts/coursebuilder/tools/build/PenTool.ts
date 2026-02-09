@@ -247,22 +247,28 @@ class FreehandPenController implements PenModeController {
       return;
     }
 
+    const isClosed = points.length >= 3 && distance(points[0], points[points.length - 1]) <= CLOSE_DISTANCE;
+
+    // Build the full path first
     graphics.moveTo(points[0].x, points[0].y);
     for (let i = 1; i < points.length; i += 1) {
       graphics.lineTo(points[i].x, points[i].y);
     }
+
+    if (isClosed) {
+      graphics.closePath();
+      // Fill the closed shape first (drawn behind the stroke)
+      const fill = this.resolveFillColor();
+      graphics.fill({ color: fill.color, alpha: fill.alpha });
+    }
+
+    // Apply stroke on top
     graphics.stroke({
       color: hexToNumber(this.strokeColor, 0x4a7fb8),
       width: this.strokeSize,
       cap: "round",
       join: "round",
     });
-
-    if (points.length >= 3 && distance(points[0], points[points.length - 1]) <= CLOSE_DISTANCE) {
-      graphics.closePath();
-      const fill = this.resolveFillColor();
-      graphics.fill({ color: fill.color, alpha: fill.alpha });
-    }
   }
 
   private resolveFillColor(): { color: number; alpha: number } {
@@ -461,11 +467,14 @@ class VectorPenController implements PenModeController {
       this.interaction.dragged = true;
       node.handleIn = { x: node.position.x - dx, y: node.position.y - dy };
       node.handleOut = { x: node.position.x + dx, y: node.position.y + dy };
-      prev.handleOut = { x: prev.position.x - dx, y: prev.position.y - dy };
+      // Only auto-set previous node's handleOut if it doesn't already have one
+      // (i.e. the user placed a sharp corner node previously)
+      if (!prev.handleOut) {
+        prev.handleOut = { x: prev.position.x + dx * 0.5, y: prev.position.y + dy * 0.5 };
+      }
     } else if (!this.interaction.dragged) {
       node.handleIn = null;
       node.handleOut = null;
-      prev.handleOut = null;
     }
 
     this.renderPath(path);

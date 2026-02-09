@@ -1,4 +1,4 @@
-import { Graphics } from "pixi.js";
+import { Graphics, Point } from "pixi.js";
 import type { CanvasTool, ToolPointerEvent, ToolRuntimeContext } from "../base/ToolTypes";
 
 const SETTING_SIZE = "size";
@@ -42,21 +42,20 @@ export class EraserTool implements CanvasTool {
   }
 
   public pointerMove(event: ToolPointerEvent): void {
+    // Always show the hover preview when the tool is active
+    this.updateOverlay(event.worldX, event.worldY);
     if (!this.active) {
       return;
     }
-    this.updateOverlay(event.worldX, event.worldY);
     this.eraseAt(event.worldX, event.worldY);
   }
 
   public pointerUp(): void {
     this.active = false;
-    this.hideOverlay();
   }
 
   public pointerCancel(): void {
     this.active = false;
-    this.hideOverlay();
   }
 
   private ensureOverlay(): void {
@@ -75,35 +74,91 @@ export class EraserTool implements CanvasTool {
     }
   }
 
-  private updateOverlay(x: number, y: number): void {
+  /**
+   * Convert world coordinates to the overlay layer's local coordinate space,
+   * so the eraser circle renders correctly regardless of viewport zoom/pan.
+   */
+  private worldToOverlay(worldX: number, worldY: number): Point {
+    if (!this.context) {
+      return new Point(worldX, worldY);
+    }
+    const viewport = this.context.viewport;
+    const screenPoint = viewport.toScreen(worldX, worldY);
+    return this.context.overlayLayer.toLocal(new Point(screenPoint.x, screenPoint.y));
+  }
+
+  /**
+   * Get the scale factor so the eraser circle stays constant size on screen
+   * regardless of viewport zoom.
+   */
+  private getOverlayPixelSize(): number {
+    if (!this.context) {
+      return 1;
+    }
+    const matrix = this.context.overlayLayer.worldTransform;
+    const scaleX = Math.hypot(matrix.a, matrix.b);
+    const scaleY = Math.hypot(matrix.c, matrix.d);
+    const scale = (scaleX + scaleY) / 2;
+    if (!isFinite(scale) || scale <= 1e-6) {
+      return 1;
+    }
+    return 1 / scale;
+  }
+
+  private updateOverlay(worldX: number, worldY: number): void {
     if (!this.overlay) {
       return;
     }
+    const local = this.worldToOverlay(worldX, worldY);
+    const pixelSize = this.getOverlayPixelSize();
+    const visualRadius = this.radius * pixelSize;
+    const strokeWidth = 2 * pixelSize;
+
     this.overlay.clear();
-    this.overlay.circle(x, y, this.radius).stroke({ color: 0xc35c5c, width: 2, alpha: 0.9 });
+    this.overlay.circle(local.x, local.y, visualRadius).stroke({
+      color: this.active ? 0xc35c5c : 0x888888,
+      width: strokeWidth,
+      alpha: this.active ? 0.9 : 0.6,
+    });
   }
 
-  private eraseAt(x: number, y: number): void {
+  /**
+   * Erase objects whose world-space bounds intersect the eraser circle.
+   * Converts screen bounds to world bounds before comparison.
+   */
+  private eraseAt(worldX: number, worldY: number): void {
     if (!this.context) {
       return;
     }
 
+    const viewport = this.context.viewport;
     const radiusSq = this.radius * this.radius;
     const objects = this.context.canvas.getObjectsSnapshot();
 
     objects.forEach(({ id, displayObject }) => {
-      const bounds = displayObject.getBounds(true);
-      const closestX = Math.max(bounds.x, Math.min(x, bounds.x + bounds.width));
-      const closestY = Math.max(bounds.y, Math.min(y, bounds.y + bounds.height));
-      const dx = x - closestX;
-      const dy = y - closestY;
+      // getBounds returns screen-space bounds; convert to world space
+      const screenBounds = displayObject.getBounds(true);
+      const topLeftWorld = viewport.toWorld(new Point(screenBounds.x, screenBounds.y));
+      const bottomRightWorld = viewport.toWorld(
+        new Point(screenBounds.x + screenBounds.width, screenBounds.y + screenBounds.height),
+      );
+      const bx = Math.min(topLeftWorld.x, bottomRightWorld.x);
+      const by = Math.min(topLeftWorld.y, bottomRightWorld.y);
+      const bw = Math.abs(bottomRightWorld.x - topLeftWorld.x);
+      const bh = Math.abs(bottomRightWorld.y - topLeftWorld.y);
+
+      // Closest point on the world-space bounding box to the eraser center
+      const closestX = Math.max(bx, Math.min(worldX, bx + bw));
+      const closestY = Math.max(by, Math.min(worldY, by + bh));
+      const dx = worldX - closestX;
+      const dy = worldY - closestY;
       const distanceSq = dx * dx + dy * dy;
 
       if (distanceSq <= radiusSq) {
         const removed = this.context?.canvas.removeObject(id);
         if (removed) {
-          this.context.selection.clear();
-          this.context.transformHelper.detach();
+          this.context!.selection.clear();
+          this.context!.transformHelper.detach();
         }
       }
     });

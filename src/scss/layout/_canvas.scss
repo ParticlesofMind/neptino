@@ -123,6 +123,12 @@
   cursor: default;
 }
 
+.cursor-crosshair,
+.canvas.cursor-crosshair,
+#pixi-canvas.cursor-crosshair {
+  cursor: crosshair;
+}
+
 .engine {
   &__canvas {
     &.cursor-pen {
@@ -143,6 +149,10 @@
 
     &.cursor-default {
       cursor: default;
+    }
+
+    &.cursor-crosshair {
+      cursor: crosshair;
     }
   }
 }

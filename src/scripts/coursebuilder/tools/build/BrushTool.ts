@@ -2,6 +2,22 @@ import { Graphics } from "pixi.js";
 import type { CanvasTool, ToolPointerEvent, ToolRuntimeContext } from "../base/ToolTypes";
 import { hexToNumber, normalizeHex } from "../common/color";
 
+/**
+ * Simple seeded pseudo-random number generator (mulberry32).
+ * Used instead of Math.random() in brush style effects so that
+ * the same seed always produces the same jitter pattern,
+ * preventing scatter/spray/bristle dots from flickering on redraw.
+ */
+const createSeededRng = (seed: number) => {
+  let state = seed | 0;
+  return (): number => {
+    state = (state + 0x6d2b79f5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+};
+
 interface StrokePoint {
   x: number;
   y: number;
@@ -18,7 +34,7 @@ const SETTING_COLOR = "color";
 const SETTING_SMOOTHING = "smoothing";
 const SETTING_OPACITY = "opacity";
 const SETTING_STYLE = "style";
-const DEFAULT_SMOOTHING = 0.35;
+const DEFAULT_SMOOTHING = 0.65;
 const DEFAULT_OPACITY = 1;
 const DEFAULT_STYLE = "solid-round";
 
@@ -222,17 +238,18 @@ export class BrushTool implements CanvasTool {
   }
 
   private drawCalligraphicStroke(graphics: Graphics, points: StrokePoint[]): void {
-    this.drawSolidStroke(graphics, points, this.size * 1.25, "butt");
+    this.drawSolidStroke(graphics, points, this.size * 1.25, "square");
     this.drawSolidStroke(graphics, points, this.size * 0.6, "round");
   }
 
   private drawScatterStroke(graphics: Graphics, points: StrokePoint[]): void {
     this.drawSolidStroke(graphics, points, this.size * 0.45, "round");
+    const rng = createSeededRng(points.length * 7919);
     const dotRadius = Math.max(0.5, this.size * 0.12);
     points.forEach((point) => {
       for (let i = 0; i < 3; i += 1) {
-        const jitterX = (Math.random() - 0.5) * this.size;
-        const jitterY = (Math.random() - 0.5) * this.size;
+        const jitterX = (rng() - 0.5) * this.size;
+        const jitterY = (rng() - 0.5) * this.size;
         graphics.circle(point.x + jitterX, point.y + jitterY, dotRadius).fill({
           color: hexToNumber(this.color, 0x2e2e2e),
           alpha: this.opacity * 0.65,
@@ -246,6 +263,7 @@ export class BrushTool implements CanvasTool {
       this.drawSolidStroke(graphics, points, this.size, "round");
       return;
     }
+    const rng = createSeededRng(points.length * 6271);
     const total = points.length - 1;
     for (let i = 1; i < points.length; i += 1) {
       const progress = i / total;
@@ -257,7 +275,7 @@ export class BrushTool implements CanvasTool {
         width,
         cap: "round",
         join: "round",
-        alpha: this.opacity * (0.85 + 0.15 * Math.random()),
+        alpha: this.opacity * (0.85 + 0.15 * rng()),
       });
     }
   }
@@ -265,11 +283,12 @@ export class BrushTool implements CanvasTool {
   private drawBristleStroke(graphics: Graphics, points: StrokePoint[]): void {
     const strands = 5;
     const spread = this.size * 0.6;
+    const rng = createSeededRng(points.length * 4801);
     for (let i = 0; i < strands; i += 1) {
       const offset = -spread / 2 + (spread / (strands - 1)) * i;
       const strandPoints = points.map((point) => ({
-        x: point.x + offset * 0.35 + (Math.random() - 0.5),
-        y: point.y + offset * 0.35 + (Math.random() - 0.5),
+        x: point.x + offset * 0.35 + (rng() - 0.5),
+        y: point.y + offset * 0.35 + (rng() - 0.5),
       }));
       this.drawSolidStroke(graphics, strandPoints, Math.max(1, this.size * 0.25), "round");
     }
@@ -326,11 +345,12 @@ export class BrushTool implements CanvasTool {
 
   private drawTexturedStroke(graphics: Graphics, points: StrokePoint[]): void {
     this.drawSolidStroke(graphics, points, this.size, "round");
+    const rng = createSeededRng(points.length * 3571);
     const overlays = 3;
     for (let i = 0; i < overlays; i += 1) {
       const jittered = points.map((point) => ({
-        x: point.x + (Math.random() - 0.5) * 2,
-        y: point.y + (Math.random() - 0.5) * 2,
+        x: point.x + (rng() - 0.5) * 2,
+        y: point.y + (rng() - 0.5) * 2,
       }));
       this.drawSolidStroke(graphics, jittered, Math.max(1, this.size * 0.5), "round");
     }
@@ -338,11 +358,12 @@ export class BrushTool implements CanvasTool {
 
   private drawSprayStroke(graphics: Graphics, points: StrokePoint[]): void {
     this.drawSolidStroke(graphics, points, Math.max(1, this.size * 0.2), "round");
+    const rng = createSeededRng(points.length * 9137);
     const density = Math.max(8, Math.round(this.size * 3));
     points.forEach((point) => {
       for (let i = 0; i < density; i += 1) {
-        const angle = Math.random() * Math.PI * 2;
-        const radius = Math.random() * (this.size * 0.8);
+        const angle = rng() * Math.PI * 2;
+        const radius = rng() * (this.size * 0.8);
         const x = point.x + Math.cos(angle) * radius;
         const y = point.y + Math.sin(angle) * radius;
         graphics.circle(x, y, Math.max(0.4, this.size * 0.08)).fill({

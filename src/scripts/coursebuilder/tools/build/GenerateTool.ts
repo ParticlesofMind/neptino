@@ -175,8 +175,9 @@ export class GenerateTool implements CanvasTool {
 
     const id = this.context.canvas.addDisplayObject(container);
     if (id) {
-      this.context.selection.setSelection([{ id, object: container }]);
-      this.context.transformHelper.attach(container);
+      const targets = [{ id, object: container }];
+      this.context.selection.setSelection(targets);
+      this.context.transformHelper.attach(targets);
     }
   }
 
@@ -214,8 +215,9 @@ export class GenerateTool implements CanvasTool {
 
     const id = this.context.canvas.addDisplayObject(container);
     if (id) {
-      this.context.selection.setSelection([{ id, object: container }]);
-      this.context.transformHelper.attach(container);
+      const targets = [{ id, object: container }];
+      this.context.selection.setSelection(targets);
+      this.context.transformHelper.attach(targets);
     }
   }
 }

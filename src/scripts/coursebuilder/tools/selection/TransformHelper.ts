@@ -1,4 +1,4 @@
-import { Container, Graphics, Point, Rectangle, type DisplayObject } from "pixi.js";
+import { Container, Graphics, Point, Rectangle } from "pixi.js";
 import type { FederatedPointerEvent } from "pixi.js";
 import type { Viewport } from "pixi-viewport";
 import type { CanvasEngine } from "../../canvas/CanvasEngine";
@@ -32,7 +32,7 @@ interface TransformHandle {
 type InteractionKind = "move" | "scale" | "rotate";
 
 interface SelectionSnapshotEntry {
-  object: DisplayObject;
+  object: Container;
   parent: Container | null;
   startWorldPosition: Point;
   offsetFromCenter: Point;
@@ -250,9 +250,9 @@ export class TransformHelper {
       width: radius * 0.3,
     });
     this.rotateHandle
-      .lineStyle({ width: radius * 0.4, color: 0x4a7fb8 })
       .moveTo(x, y + radius)
-      .lineTo(x, y + radius * 3);
+      .lineTo(x, y + radius * 3)
+      .stroke({ width: radius * 0.4, color: 0x4a7fb8 });
   }
 
   private toOverlayPoint(x: number, y: number): Point {
@@ -560,7 +560,7 @@ export class TransformHelper {
   private captureSnapshots(center: Point): SelectionSnapshotEntry[] {
     return this.selection
       .map(({ object }) => object)
-      .filter((object): object is DisplayObject => Boolean(object))
+      .filter((object): object is Container => Boolean(object))
       .map((object) => {
         const parent = object.parent ?? null;
         const globalPosition = parent ? parent.toGlobal(object.position) : new Point(object.position.x, object.position.y);

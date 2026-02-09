@@ -67,69 +67,47 @@
                 <p class="landing__note">14-day free trial. No credit card required.</p>
             </div>
 
-            <div class="landing__visual">
-                <article class="landing-card landing-card--payouts">
-                    <h2 class="landing-card__title">Automated payments and payouts</h2>
-                    <p class="landing-card__subtitle">Accept payments in 45 currencies. Get paid straight after your meeting.</p>
-                    <ul class="landing-card__list">
-                        <li class="landing-card__item">
-                            <span class="landing-card__avatar" aria-hidden="true">AL</span>
-                            <div class="landing-card__details">
-                                <span class="landing-card__name">Ashley Lewis</span>
-                                <span class="landing-card__label">Physics · Completed</span>
-                            </div>
-                            <span class="landing-card__amount">+$480.00</span>
+            <section class="landing-preview" data-landing-preview>
+                <div class="landing-preview__panel">
+                    <div class="landing-preview__hud">
+                        <span class="landing-preview__tag">Live demo</span>
+                        <div class="landing-preview__time">
+                            <span data-preview-clock>0.0</span>s · 10s orbit
+                        </div>
+                    </div>
+                    <h2 class="landing-preview__title">Orbit through a Neptino session.</h2>
+                    <p class="landing-preview__description">
+                        We render entire courses on a high-performance PIXI.js canvas. Watch the rotating planet as it
+                        highlights how builders plan, teach, and track progress in seconds.
+                    </p>
+                    <ul class="landing-preview__timeline">
+                        <li class="landing-preview__timeline-step is-active" data-preview-phase>
+                            <span class="landing-preview__timeline-label">Plan stellar lessons</span>
+                            <span class="landing-preview__timeline-detail">Layer templates, syllabi, and multi-page
+                                canvases.</span>
                         </li>
-                        <li class="landing-card__item">
-                            <span class="landing-card__avatar" aria-hidden="true">AW</span>
-                            <div class="landing-card__details">
-                                <span class="landing-card__name">Andrew Walters</span>
-                                <span class="landing-card__label">Chemistry · Pending</span>
-                            </div>
-                            <span class="landing-card__amount">+$620.00</span>
+                        <li class="landing-preview__timeline-step" data-preview-phase>
+                            <span class="landing-preview__timeline-label">Guide live orbits</span>
+                            <span class="landing-preview__timeline-detail">Interactive canvas + live tools keep every
+                                learner in sync.</span>
                         </li>
-                        <li class="landing-card__item">
-                            <span class="landing-card__avatar" aria-hidden="true">SJ</span>
-                            <div class="landing-card__details">
-                                <span class="landing-card__name">Samantha Jane</span>
-                                <span class="landing-card__label">Algebra · Scheduled</span>
-                            </div>
-                            <span class="landing-card__amount">+$320.00</span>
+                        <li class="landing-preview__timeline-step" data-preview-phase>
+                            <span class="landing-preview__timeline-label">Summarize &amp; act</span>
+                            <span class="landing-preview__timeline-detail">Auto summaries, payouts, and feedback roll
+                                in instantly.</span>
                         </li>
                     </ul>
-                </article>
-
-                <article class="landing-card landing-card--analytics">
-                    <h2 class="landing-card__title">Analytics to help you understand how you're doing.</h2>
-                    <dl class="landing-card__metrics">
-                        <div class="landing-card__metric">
-                            <dt>Total earnings</dt>
-                            <dd>$3,350</dd>
-                        </div>
-                        <div class="landing-card__metric">
-                            <dt>Bookings</dt>
-                            <dd>62</dd>
-                        </div>
-                    </dl>
-                    <div class="landing-card__chart" role="img" aria-label="Bookings vs Earnings trend">
-                        <div class="landing-card__bar landing-card__bar--earnings"></div>
-                        <div class="landing-card__bar landing-card__bar--bookings"></div>
-                        <div class="landing-card__bar landing-card__bar--projected"></div>
+                    <div class="landing-preview__progress" aria-hidden="true">
+                        <div class="landing-preview__progress-fill" data-preview-progress></div>
                     </div>
-                    <div class="landing-card__summary">
-                        <div class="landing-card__summary-item">
-                            <span class="landing-card__summary-label">Generating session summary</span>
-                            <strong class="landing-card__summary-value">73.5</strong>
-                            <span class="landing-card__summary-unit">w / min</span>
-                        </div>
-                        <div class="landing-card__summary-item landing-card__summary-item--highlight">
-                            <span class="landing-card__summary-label">Completion rate</span>
-                            <strong class="landing-card__summary-value">61%</strong>
-                            <span class="landing-card__summary-unit">w / min</span>
-                        </div>
+                </div>
+                <div class="landing-preview__canvas" data-landing-preview-canvas role="img"
+                    aria-label="Animated preview of the Neptino learning universe">
+                    <div class="landing-preview__fallback">
+                        Loading Neptino preview…
                     </div>
-                </article>
-            </div>
+                </div>
+            </section>
         </section>
 
         <section class="landing__brands" aria-label="Trusted partners">

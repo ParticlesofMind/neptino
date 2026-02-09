@@ -111,21 +111,28 @@ export class TableTool implements CanvasTool {
     const height = Math.max(Math.abs(currentY - startY), MIN_DIMENSION);
     const strokeColor = hexToNumber("#2E2E2E", 0x2e2e2e);
 
+    // Draw outer rectangle with fill
     graphics.rect(minX, minY, width, height);
     graphics.fill({ color: 0xffffff, alpha: 0.1 });
     graphics.stroke({ color: strokeColor, width: this.strokeWidth, alignment: 0.5 });
 
+    // Batch all grid lines into a single path, then stroke once
     const cellWidth = width / this.columns;
     const cellHeight = height / this.rows;
 
     for (let col = 1; col < this.columns; col += 1) {
       const x = minX + cellWidth * col;
-      graphics.moveTo(x, minY).lineTo(x, minY + height).stroke({ color: strokeColor, width: this.strokeWidth });
+      graphics.moveTo(x, minY).lineTo(x, minY + height);
     }
 
     for (let row = 1; row < this.rows; row += 1) {
       const y = minY + cellHeight * row;
-      graphics.moveTo(minX, y).lineTo(minX + width, y).stroke({ color: strokeColor, width: this.strokeWidth });
+      graphics.moveTo(minX, y).lineTo(minX + width, y);
+    }
+
+    // Single stroke call for all grid lines
+    if (this.columns > 1 || this.rows > 1) {
+      graphics.stroke({ color: strokeColor, width: this.strokeWidth });
     }
   }
 }

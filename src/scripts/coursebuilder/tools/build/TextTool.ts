@@ -1,4 +1,4 @@
-import { Text } from "pixi.js";
+import { Container, Graphics, Text } from "pixi.js";
 import type { CanvasTool, ToolPointerEvent, ToolRuntimeContext } from "../base/ToolTypes";
 import { hexToNumber, normalizeHex } from "../common/color";
 
@@ -77,8 +77,11 @@ export class TextTool implements CanvasTool {
     this.applyEditorStyle();
   }
 
-  public pointerDown(): void {
-    // no-op to prevent other tools
+  public pointerDown(_event: ToolPointerEvent): void {
+    // If already editing, commit the current text first
+    if (this.isEditing) {
+      this.commitEditing(true);
+    }
   }
 
   public pointerUp(event: ToolPointerEvent): void {
@@ -102,6 +105,7 @@ export class TextTool implements CanvasTool {
     element.style.position = "fixed";
     element.style.minWidth = "48px";
     element.style.minHeight = "24px";
+    element.style.maxWidth = "480px";
     element.style.background = "rgba(255, 255, 255, 0.95)";
     element.style.border = "1px solid #4A7FB8";
     element.style.borderRadius = "4px";
@@ -111,7 +115,7 @@ export class TextTool implements CanvasTool {
     element.style.whiteSpace = "pre-wrap";
     element.style.zIndex = "1000";
     element.addEventListener("keydown", this.handleEditorKeyDown);
-    element.addEventListener("blur", () => this.commitEditing(true));
+    element.addEventListener("blur", this.handleEditorBlur);
     document.body.appendChild(element);
     this.editor = element;
     this.applyEditorStyle();
@@ -161,22 +165,49 @@ export class TextTool implements CanvasTool {
       return;
     }
 
+    const fontSize = this.resolveFontSize();
+    const fillColor = hexToNumber(this.fontColor, 0x2e2e2e);
+
     const style = {
       fontFamily: this.fontFamily,
-      fontSize: this.resolveFontSize(),
-      fill: hexToNumber(this.fontColor, 0x2e2e2e),
+      fontSize,
+      fill: fillColor,
       fontWeight: this.bold ? "700" : "400",
       fontStyle: this.italic ? "italic" : "normal",
-      textDecoration: this.underline ? "underline" : "none",
       breakWords: true,
       wordWrap: true,
       wordWrapWidth: 480,
     } as const;
 
-    const text = new Text({ text: content, style });
-    text.position.set(this.editPosition.x, this.editPosition.y);
-    text.anchor.set(0.5, 0.5);
-    this.context.canvas.addDisplayObject(text);
+    const textObj = new Text({ text: content, style });
+
+    if (this.underline) {
+      // PIXI v8 TextStyle has no textDecoration; render underline manually
+      const container = new Container();
+      container.label = "text-underline-group";
+      textObj.anchor.set(0.5, 0.5);
+      textObj.position.set(0, 0);
+      container.addChild(textObj);
+
+      // Measure text bounds after first layout pass
+      const bounds = textObj.getBounds();
+      const underline = new Graphics();
+      const lineY = bounds.height / 2 + 2;
+      const halfWidth = bounds.width / 2;
+      underline.moveTo(-halfWidth, lineY).lineTo(halfWidth, lineY).stroke({
+        color: fillColor,
+        width: Math.max(1, fontSize * 0.06),
+        cap: "round",
+      });
+      container.addChild(underline);
+      container.position.set(this.editPosition.x, this.editPosition.y);
+      this.context.canvas.addDisplayObject(container);
+    } else {
+      textObj.position.set(this.editPosition.x, this.editPosition.y);
+      textObj.anchor.set(0.5, 0.5);
+      this.context.canvas.addDisplayObject(textObj);
+    }
+
     this.editPosition = null;
   }
 
@@ -206,6 +237,16 @@ export class TextTool implements CanvasTool {
       event.preventDefault();
       this.commitEditing(true);
     }
+  };
+
+  private handleEditorBlur = (): void => {
+    // Delay to avoid race condition: if pointerDown commits and pointerUp
+    // opens a new editor, the blur from the old commit shouldn't destroy it
+    requestAnimationFrame(() => {
+      if (this.isEditing && this.editor) {
+        this.commitEditing(true);
+      }
+    });
   };
 }
 

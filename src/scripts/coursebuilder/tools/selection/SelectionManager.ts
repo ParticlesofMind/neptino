@@ -1,8 +1,8 @@
-import { Graphics, Point, type Container, type DisplayObject } from "pixi.js";
+import { Graphics, Point, type Container } from "pixi.js";
 
 export interface SelectionTarget {
   id: string;
-  object: DisplayObject;
+  object: Container;
 }
 
 interface SelectionOptions {
@@ -91,7 +91,7 @@ export class SelectionManager {
     });
   }
 
-  private toOverlayRect(object: DisplayObject): { x: number; y: number; width: number; height: number } {
+  private toOverlayRect(object: Container): { x: number; y: number; width: number; height: number } {
     const bounds = object.getBounds();
     const topLeft = this.overlayLayer.toLocal(new Point(bounds.x, bounds.y));
     const bottomRight = this.overlayLayer.toLocal(new Point(bounds.x + bounds.width, bounds.y + bounds.height));
