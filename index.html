@@ -1,147 +1,138 @@
 <!DOCTYPE html>
+
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neptino - Educational Platform</title>
-    <link rel="stylesheet" href="/src/scss/main.scss">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Neptino - Educational Platform</title>
+<link href="/src/styles/app.css" rel="stylesheet"/>
 </head>
-
-
-<body class="grid body">
-    <header class="grid__header header header--index">
-        <nav class="nav">
-            <ul class="ul ul--header">
-                <li class="ul__item ul__item--brand">
-                    <a href="/" class="brand">
-                        <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
-                    </a>
-                </li>
-                <li class="ul__item"><a href="/src/pages/shared/features.html" class="link link--header">Features</a></li>
-                <li class="ul__item"><a href="/src/pages/shared/about.html" class="link link--header">About</a></li>
-                <li class="ul__item ul__item--dropdown">
-                    <div class="dropdown dropdown--right">
-                        <button class="dropdown__toggle" id="language-toggle" aria-expanded="false"
-                            aria-haspopup="true">
-                            <span class="dropdown__text">EN</span>
-                            <svg class="dropdown__icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M7 10l5 5 5-5z" />
-                            </svg>
-                        </button>
-                        <ul class="dropdown__menu" id="language-menu">
-                            <li class="dropdown__item">
-                                <button class="dropdown__link" data-lang="en">English</button>
-                            </li>
-                            <li class="dropdown__item">
-                                <button class="dropdown__link" data-lang="es">Español</button>
-                            </li>
-                            <li class="dropdown__item">
-                                <button class="dropdown__link" data-lang="fr">Français</button>
-                            </li>
-                            <li class="dropdown__item">
-                                <button class="dropdown__link" data-lang="de">Deutsch</button>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-                <li class="ul__item ul__item--cta">
-                    <a href="/src/pages/shared/signin.html" class="cta button button--outline">Sign In</a>
-                </li>
-            </ul>
-        </nav>
-    </header>
-
-    <main class="grid__main landing">
-        <section class="landing__hero">
-            <div class="landing__text">
-                <h1 class="landing__title">
-                    <span class="landing__title-highlight">Powerful</span>
+<body class="min-h-screen bg-neutral-50 font-sans text-neutral-900 body">
+<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200 flex h-16 items-center justify-between header--index">
+<nav class="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
+<ul class="flex items-center gap-6 list-none m-0 p-0">
+<li class="relative ul__item--brand">
+<a class="brand" href="/">
+<img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
+</a>
+</li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/shared/features.html">Features</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/shared/about.html">About</a></li>
+<li class="relative ul__item--dropdown">
+<div class="relative inline-block text-left dropdown--right">
+<button aria-expanded="false" aria-haspopup="true" class="inline-flex items-center gap-x-1 text-sm font-semibold leading-6 text-neutral-900" id="language-toggle">
+<span class="dropdown__text">EN</span>
+<svg class="dropdown__icon" fill="currentColor" height="12" viewbox="0 0 24 24" width="12">
+<path d="M7 10l5 5 5-5z"></path>
+</svg>
+</button>
+<ul class="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden" id="language-menu">
+<li class="block">
+<button class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 w-full text-left" data-lang="en">English</button>
+</li>
+<li class="block">
+<button class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 w-full text-left" data-lang="es">Español</button>
+</li>
+<li class="block">
+<button class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 w-full text-left" data-lang="fr">Français</button>
+</li>
+<li class="block">
+<button class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 w-full text-left" data-lang="de">Deutsch</button>
+</li>
+</ul>
+</div>
+</li>
+<li class="relative ul__item--cta">
+<a class="cta inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" href="/src/pages/shared/signin.html">Sign In</a>
+</li>
+</ul>
+</nav>
+</header>
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 landing">
+<section class="relative isolate px-6 pt-14 lg:px-8 bg-white overflow-hidden">
+<div class="max-w-2xl mx-auto text-center">
+<h1 class="text-4xl font-bold tracking-tight text-neutral-900 sm:text-6xl">
+<span class="inline-block relative px-2 bg-gradient-to-r from-pink-200 to-pink-100 rounded-lg transform -skew-x-3">Powerful</span>
                     tutoring and classes.
                 </h1>
-                <p class="landing__subtitle">Set your own rate, we'll connect you with students, you earn money on your schedule.</p>
-                <div class="landing__actions">
-                    <a href="/src/pages/shared/signup.html" class="button button--primary landing__cta-main">Get started today</a>
-                    <a href="/src/pages/shared/pricing.html" class="landing__cta-secondary">See Details</a>
-                </div>
-                <p class="landing__note">14-day free trial. No credit card required.</p>
-            </div>
-
-            <section class="landing-preview" data-landing-preview>
-                <div class="landing-preview__panel">
-                    <div class="landing-preview__hud">
-                        <span class="landing-preview__tag">Live demo</span>
-                        <div class="landing-preview__time">
-                            <span data-preview-clock>0.0</span>s · 10s orbit
+<p class="mt-6 text-lg leading-8 text-neutral-600">Set your own rate, we'll connect you with students, you earn money on your schedule.</p>
+<div class="mt-10 flex items-center justify-center gap-x-6">
+<a class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 button--primary landing__cta-main" href="/src/pages/shared/signup.html">Get started today</a>
+<a class="landing__cta-secondary" href="/src/pages/shared/pricing.html">See Details</a>
+</div>
+<p class="mt-4 text-sm text-neutral-500">14-day free trial. No credit card required.</p>
+</div>
+<section class="mt-16 bg-neutral-900 rounded-3xl overflow-hidden shadow-2xl grid lg:grid-cols-2 text-white relative isolate" data-landing-preview="">
+<div class="p-8 sm:p-12 lg:p-16 flex flex-col justify-center">
+<div class="flex items-center gap-4 mb-8">
+<span class="inline-flex items-center rounded-full bg-primary-500/10 px-3 py-1 text-xs font-medium text-primary-400 ring-1 ring-inset ring-primary-500/20">Live demo</span>
+<div class="text-xs font-mono text-neutral-400">
+<span data-preview-clock="">0.0</span>s · 10s orbit
                         </div>
-                    </div>
-                    <h2 class="landing-preview__title">Orbit through a Neptino session.</h2>
-                    <p class="landing-preview__description">
+</div>
+<h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl mb-4">Orbit through a Neptino session.</h2>
+<p class="text-lg leading-8 text-neutral-300 mb-8">
                         We render entire courses on a high-performance PIXI.js canvas. Watch the rotating planet as it
                         highlights how builders plan, teach, and track progress in seconds.
                     </p>
-                    <ul class="landing-preview__timeline">
-                        <li class="landing-preview__timeline-step is-active" data-preview-phase>
-                            <span class="landing-preview__timeline-label">Plan stellar lessons</span>
-                            <span class="landing-preview__timeline-detail">Layer templates, syllabi, and multi-page
+<ul class="space-y-6 border-l border-neutral-800 pl-6 relative">
+<li class="relative pl-4 transition-opacity opacity-50 hover:opacity-100 is-active" data-preview-phase="">
+<span class="block text-sm font-semibold text-white">Plan stellar lessons</span>
+<span class="block text-sm text-neutral-400">Layer templates, syllabi, and multi-page
                                 canvases.</span>
-                        </li>
-                        <li class="landing-preview__timeline-step" data-preview-phase>
-                            <span class="landing-preview__timeline-label">Guide live orbits</span>
-                            <span class="landing-preview__timeline-detail">Interactive canvas + live tools keep every
+</li>
+<li class="relative pl-4 transition-opacity opacity-50 hover:opacity-100" data-preview-phase="">
+<span class="block text-sm font-semibold text-white">Guide live orbits</span>
+<span class="block text-sm text-neutral-400">Interactive canvas + live tools keep every
                                 learner in sync.</span>
-                        </li>
-                        <li class="landing-preview__timeline-step" data-preview-phase>
-                            <span class="landing-preview__timeline-label">Summarize &amp; act</span>
-                            <span class="landing-preview__timeline-detail">Auto summaries, payouts, and feedback roll
+</li>
+<li class="relative pl-4 transition-opacity opacity-50 hover:opacity-100" data-preview-phase="">
+<span class="block text-sm font-semibold text-white">Summarize &amp; act</span>
+<span class="block text-sm text-neutral-400">Auto summaries, payouts, and feedback roll
                                 in instantly.</span>
-                        </li>
-                    </ul>
-                    <div class="landing-preview__progress" aria-hidden="true">
-                        <div class="landing-preview__progress-fill" data-preview-progress></div>
-                    </div>
-                </div>
-                <div class="landing-preview__canvas" data-landing-preview-canvas role="img"
-                    aria-label="Animated preview of the Neptino learning universe">
-                    <div class="landing-preview__fallback">
+</li>
+</ul>
+<div aria-hidden="true" class="absolute left-0 top-0 bottom-0 w-0.5 bg-neutral-800">
+<div class="absolute top-0 left-0 w-full bg-primary-500 transition-all" data-preview-progress=""></div>
+</div>
+</div>
+<div aria-label="Animated preview of the Neptino learning universe" class="relative min-h-[400px] bg-neutral-950 flex items-center justify-center overflow-hidden" data-landing-preview-canvas="" role="img">
+<div class="landing-preview__fallback">
                         Loading Neptino preview…
                     </div>
-                </div>
-            </section>
-        </section>
-
-        <section class="landing__brands" aria-label="Trusted partners">
-            <div class="landing__brands-label">Used by</div>
-            <ul class="landing__brands-list">
-                <li class="landing__brands-item">Paraswap</li>
-                <li class="landing__brands-item">Superfluid</li>
-                <li class="landing__brands-item">Cobo</li>
-                <li class="landing__brands-item">CowSwap</li>
-                <li class="landing__brands-item">DODO</li>
-                <li class="landing__brands-item">Steelwallet</li>
-                <li class="landing__brands-item">AlphaWallet</li>
-                <li class="landing__brands-item">Frontier</li>
-            </ul>
-        </section>
-    </main>
-
-    <footer class="grid__footer footer">
-        <nav class="footer__nav">
-            <ul class="ul ul--footer">
-                <li class="ul__item ul__item--brand">
-                    <a href="/" class="brand">
-                        <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
-                    </a>
-                </li>
-                <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Privacy
+</div>
+</section>
+</section>
+<section aria-label="Trusted partners" class="py-24 sm:py-32 bg-white">
+<div class="text-center text-sm font-semibold leading-8 text-neutral-500 mb-10 uppercase tracking-wide">Used by</div>
+<ul class="mx-auto max-w-7xl px-6 lg:px-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-10 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+<li class="text-xl font-bold text-neutral-400 hover:text-primary-600 cursor-default">Paraswap</li>
+<li class="text-xl font-bold text-neutral-400 hover:text-primary-600 cursor-default">Superfluid</li>
+<li class="text-xl font-bold text-neutral-400 hover:text-primary-600 cursor-default">Cobo</li>
+<li class="text-xl font-bold text-neutral-400 hover:text-primary-600 cursor-default">CowSwap</li>
+<li class="text-xl font-bold text-neutral-400 hover:text-primary-600 cursor-default">DODO</li>
+<li class="text-xl font-bold text-neutral-400 hover:text-primary-600 cursor-default">Steelwallet</li>
+<li class="text-xl font-bold text-neutral-400 hover:text-primary-600 cursor-default">AlphaWallet</li>
+<li class="text-xl font-bold text-neutral-400 hover:text-primary-600 cursor-default">Frontier</li>
+</ul>
+</section>
+</main>
+<footer class="bg-white border-t border-neutral-200 mt-auto footer">
+<nav class="footer__nav">
+<ul class="flex items-center gap-6 gap-8 list-none m-0 p-0">
+<li class="relative ul__item--brand">
+<a class="brand" href="/">
+<img alt="Neptino Logo" class="h-8 w-auto h-6" src="/src/assets/logo/octopus-logo.png"/>
+</a>
+</li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Privacy
                         Policy</a></li>
-                <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Terms of
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Terms of
                         Service</a></li>
-                <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Contact</a></li>
-            </ul>
-        </nav>
-    </footer>
-    <script type="module" src="/src/scripts/app.ts"></script>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Contact</a></li>
+</ul>
+</nav>
+</footer>
+<script src="/src/scripts/app.ts" type="module"></script>
 </body>
-
 </html>

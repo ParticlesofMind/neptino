@@ -1,172 +1,152 @@
 <!DOCTYPE html>
+
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>For Institutions - Neptino</title>
-  <link rel="stylesheet" href="/src/scss/main.scss">
-</head>
-
-<body class="grid body">
-  <header class="grid__header header header--institutions">
-    <nav class="header__nav">
-      <ul class="ul ul--header">
-        <li class="ul__item ul__item--brand">
-          <a href="/" class="brand">
-            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
-          </a>
-        </li>
-        <li class="ul__item"><a href="/src/pages/shared/features.html" class="link link--header">Features</a></li>
-        <li class="ul__item"><a href="/src/pages/shared/about.html" class="link link--header">About</a></li>
-        <li class="ul__item ul__item--dropdown">
-          <div class="dropdown dropdown--right">
-            <button class="dropdown__toggle" id="language-toggle" aria-expanded="false" aria-haspopup="true">
-              <span class="dropdown__text">EN</span>
-              <svg class="dropdown__icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7 10l5 5 5-5z" />
-              </svg>
-            </button>
-            <ul class="dropdown__menu" id="language-menu">
-              <li class="dropdown__item">
-                <button class="dropdown__link" data-lang="en">English</button>
-              </li>
-              <li class="dropdown__item">
-                <button class="dropdown__link" data-lang="es">Español</button>
-              </li>
-              <li class="dropdown__item">
-                <button class="dropdown__link" data-lang="fr">Français</button>
-              </li>
-              <li class="dropdown__item">
-                <button class="dropdown__link" data-lang="de">Deutsch</button>
-              </li>
-            </ul>
-          </div>
-        </li>
-        <li class="ul__item ul__item--cta">
-          <a href="/src/pages/shared/signin.html" class="cta button button--outline">Sign In</a>
-        </li>
-      </ul>
-    </nav>
-  </header>
-
-  <main class="grid__main main main--institutions">
-    <section>
-      <h1>Scale Education Excellence with Neptino</h1>
-      <p>Empower your institution with comprehensive learning management tools, advanced analytics, and seamless
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>For Institutions - Neptino</title>
+<link href="/src/styles/app.css" rel="stylesheet"/>
+</meta></head>
+<body class="min-h-screen bg-neutral-50 font-sans text-neutral-900 body">
+<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200 flex h-16 items-center justify-between header--institutions">
+<nav class="flex items-center gap-8">
+<ul class="flex items-center gap-6 list-none m-0 p-0">
+<li class="relative ul__item--brand">
+<a class="brand" href="/">
+<img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
+</a>
+</li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/shared/features.html">Features</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/shared/about.html">About</a></li>
+<li class="relative ul__item--dropdown">
+<div class="relative inline-block text-left dropdown--right">
+<button aria-expanded="false" aria-haspopup="true" class="inline-flex items-center gap-x-1 text-sm font-semibold leading-6 text-neutral-900" id="language-toggle">
+<span class="dropdown__text">EN</span>
+<svg class="dropdown__icon" fill="currentColor" height="12" viewbox="0 0 24 24" width="12">
+<path d="M7 10l5 5 5-5z"></path>
+</svg>
+</button>
+<ul class="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden" id="language-menu">
+<li class="block">
+<button class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 w-full text-left" data-lang="en">English</button>
+</li>
+<li class="block">
+<button class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 w-full text-left" data-lang="es">Español</button>
+</li>
+<li class="block">
+<button class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 w-full text-left" data-lang="fr">Français</button>
+</li>
+<li class="block">
+<button class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 w-full text-left" data-lang="de">Deutsch</button>
+</li>
+</ul>
+</div>
+</li>
+<li class="relative ul__item--cta">
+<a class="cta inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" href="/src/pages/shared/signin.html">Sign In</a>
+</li>
+</ul>
+</nav>
+</header>
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 main main--institutions">
+<section>
+<h1>Scale Education Excellence with Neptino</h1>
+<p>Empower your institution with comprehensive learning management tools, advanced analytics, and seamless
         administration capabilities.</p>
-      <a href="/src/pages/shared/signup.html">Request Demo</a>
-      <a href="/src/pages/shared/pricing.html">View Enterprise Plans</a>
-    </section>
-
-    <section>
-      <h2>Enterprise-Grade Educational Solutions</h2>
-
-      <article>
-        <h3>Centralized Administration</h3>
-        <p>Manage users, courses, and resources from a single dashboard. Streamline enrollment, permissions, and
+<a href="/src/pages/shared/signup.html">Request Demo</a>
+<a href="/src/pages/shared/pricing.html">View Enterprise Plans</a>
+</section>
+<section>
+<h2>Enterprise-Grade Educational Solutions</h2>
+<article>
+<h3>Centralized Administration</h3>
+<p>Manage users, courses, and resources from a single dashboard. Streamline enrollment, permissions, and
           institutional workflows.</p>
-      </article>
-
-      <article>
-        <h3>Advanced Analytics</h3>
-        <p>Gain insights into institutional performance with comprehensive reporting, learning analytics, and outcome
+</article>
+<article>
+<h3>Advanced Analytics</h3>
+<p>Gain insights into institutional performance with comprehensive reporting, learning analytics, and outcome
           tracking across all programs.</p>
-      </article>
-
-      <article>
-        <h3>Integration Capabilities</h3>
-        <p>Seamlessly integrate with existing SIS, LTI tools, and third-party applications. Support for SAML, OAuth, and
+</article>
+<article>
+<h3>Integration Capabilities</h3>
+<p>Seamlessly integrate with existing SIS, LTI tools, and third-party applications. Support for SAML, OAuth, and
           custom APIs.</p>
-      </article>
-
-      <article>
-        <h3>Compliance & Security</h3>
-        <p>Meet FERPA, GDPR, and accessibility standards with enterprise-grade security, data protection, and audit
+</article>
+<article>
+<h3>Compliance &amp; Security</h3>
+<p>Meet FERPA, GDPR, and accessibility standards with enterprise-grade security, data protection, and audit
           trails.</p>
-      </article>
-
-      <article>
-        <h3>Scalable Infrastructure</h3>
-        <p>Support thousands of concurrent users with 99.9% uptime guarantee, global CDN, and auto-scaling architecture.
+</article>
+<article>
+<h3>Scalable Infrastructure</h3>
+<p>Support thousands of concurrent users with 99.9% uptime guarantee, global CDN, and auto-scaling architecture.
         </p>
-      </article>
-
-      <article>
-        <h3>24/7 Support</h3>
-        <p>Dedicated account management, priority support, training resources, and implementation assistance for smooth
+</article>
+<article>
+<h3>24/7 Support</h3>
+<p>Dedicated account management, priority support, training resources, and implementation assistance for smooth
           adoption.</p>
-      </article>
-    </section>
-
-    <section>
-      <blockquote>
+</article>
+</section>
+<section>
+<blockquote>
         "Neptino has revolutionized how we deliver education across our campuses. The analytics give us unprecedented
         insight into student success, and the platform scales beautifully with our growing enrollment."
         <cite>— Dr. Maria Rodriguez, VP of Academic Technology, State University System</cite>
-      </blockquote>
-    </section>
-
-    <section>
-      <h2>Trusted by Leading Institutions</h2>
-
-      <dl>
-        <dt>500+</dt>
-        <dd>Educational Institutions</dd>
-        <dt>2M+</dt>
-        <dd>Students Served</dd>
-        <dt>99.9%</dt>
-        <dd>Uptime Guarantee</dd>
-        <dt>40%</dt>
-        <dd>Cost Reduction</dd>
-      </dl>
-    </section>
-
-    <section>
-      <h2>Enterprise Features</h2>
-
-      <article>
-        <h3>White-Label Solutions</h3>
-        <p>Customize the platform with your institution's branding, colors, and domain for a seamless branded
+</blockquote>
+</section>
+<section>
+<h2>Trusted by Leading Institutions</h2>
+<dl>
+<dt>500+</dt>
+<dd>Educational Institutions</dd>
+<dt>2M+</dt>
+<dd>Students Served</dd>
+<dt>99.9%</dt>
+<dd>Uptime Guarantee</dd>
+<dt>40%</dt>
+<dd>Cost Reduction</dd>
+</dl>
+</section>
+<section>
+<h2>Enterprise Features</h2>
+<article>
+<h3>White-Label Solutions</h3>
+<p>Customize the platform with your institution's branding, colors, and domain for a seamless branded
           experience.</p>
-      </article>
-
-      <article>
-        <h3>Multi-Tenant Architecture</h3>
-        <p>Manage multiple campuses, departments, or programs with isolated environments and centralized oversight.</p>
-      </article>
-
-      <article>
-        <h3>Custom Development</h3>
-        <p>Work with our team to develop custom features, integrations, and workflows tailored to your specific needs.
+</article>
+<article>
+<h3>Multi-Tenant Architecture</h3>
+<p>Manage multiple campuses, departments, or programs with isolated environments and centralized oversight.</p>
+</article>
+<article>
+<h3>Custom Development</h3>
+<p>Work with our team to develop custom features, integrations, and workflows tailored to your specific needs.
         </p>
-      </article>
-    </section>
-
-    <section>
-      <h2>Ready to Transform Your Institution?</h2>
-      <p>Join hundreds of institutions already delivering exceptional educational experiences with Neptino.</p>
-      <a href="/src/pages/shared/signup.html">Schedule Demo</a>
-      <a href="#">Download Brochure</a>
-    </section>
-  </main>
-
-  <footer class="grid__footer footer">
-    <nav class="footer__nav">
-      <ul class="ul ul--footer">
-        <li class="ul__item ul__item--brand">
-          <a href="/" class="brand">
-            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
-          </a>
-        </li>
-        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Privacy Policy</a></li>
-        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Terms of Service</a></li>
-        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Contact</a></li>
-      </ul>
-    </nav>
-  </footer>
-
-  <script type="module" src="/src/scripts/app.ts"></script>
+</article>
+</section>
+<section>
+<h2>Ready to Transform Your Institution?</h2>
+<p>Join hundreds of institutions already delivering exceptional educational experiences with Neptino.</p>
+<a href="/src/pages/shared/signup.html">Schedule Demo</a>
+<a href="#">Download Brochure</a>
+</section>
+</main>
+<footer class="bg-white border-t border-neutral-200 mt-auto footer">
+<nav class="mx-auto max-w-7xl px-6 lg:px-8 py-8 flex justify-between items-center">
+<ul class="flex items-center gap-6 gap-8 list-none m-0 p-0">
+<li class="relative ul__item--brand">
+<a class="brand" href="/">
+<img alt="Neptino Logo" class="h-8 w-auto h-6" src="/src/assets/logo/octopus-logo.png"/>
+</a>
+</li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Privacy Policy</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Terms of Service</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Contact</a></li>
+</ul>
+</nav>
+</footer>
+<script src="/src/scripts/app.ts" type="module"></script>
 </body>
-
 </html>
