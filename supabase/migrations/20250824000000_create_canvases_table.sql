@@ -2,7 +2,7 @@
 -- Each lesson can have multiple canvases, starting with 1 canvas per lesson
 
 CREATE TABLE canvases (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   lesson_number INTEGER NOT NULL, -- 1 to course_sessions
   canvas_index INTEGER NOT NULL DEFAULT 1, -- 1, 2, 3... for multiple canvases per lesson
