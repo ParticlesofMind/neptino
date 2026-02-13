@@ -1,4 +1,5 @@
 import { canvasEngine } from "./canvasInit";
+import { setButtonActive } from "../../utils/tailwindState";
 
 const ZOOM_FACTOR = 1.2;
 
@@ -26,7 +27,7 @@ const initializePerspectiveControls = (): void => {
 
   const setGrabActive = (active: boolean): void => {
     if (!grabButton) return;
-    grabButton.classList.toggle("button--active", active);
+    setButtonActive(grabButton, active);
     grabButton.setAttribute("aria-pressed", String(active));
   };
 
@@ -70,7 +71,9 @@ const initializePerspectiveControls = (): void => {
       "beforeunload",
       () => {
         unsubscribeZoom();
-        grabButton?.classList.remove("button--active");
+        if (grabButton) {
+          setButtonActive(grabButton, false);
+        }
       },
       { once: true },
     );

@@ -13,7 +13,7 @@
 <nav class="nav">
 <ul class="ul ul--header">
 <li class="ul__item">
-<button class="button button--nav inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" id="previous-btn" title="Previous Step">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" id="previous-btn" title="Previous Step">
             Previous
           </button>
 </li>
@@ -23,7 +23,7 @@
 </a>
 </li>
 <li class="ul__item">
-<button class="button button--nav inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" id="next-btn" title="Next Step">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" id="next-btn" title="Next Step">
             Next
           </button>
 </li>
@@ -250,49 +250,49 @@
 <article class="article article--essentials is-active flex flex-col bg-white border border-neutral-200 rounded-xl shadow-sm mb-6 overflow-visible" data-course-section="" id="essentials">
 <div class="article__main">
 <form class="form form--essentials" id="course-essentials-form">
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Course title
-              <input class="input input--text block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="course-name" maxlength="50" name="course_name" placeholder="Enter course title" required="" type="text"/>
+              <input class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="course-name" maxlength="50" name="course_name" placeholder="Enter course title" required="" type="text"/>
 <div class="card card--counter" id="title-counter">
 <span class="card--counter__number" id="title-counter-value">0 / 50</span>
 </div>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Course subtitle (optional)
-              <input class="input input--text block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="course-subtitle" maxlength="75" name="course_subtitle" placeholder="Enter course subtitle" type="text"/>
+              <input class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="course-subtitle" maxlength="75" name="course_subtitle" placeholder="Enter course subtitle" type="text"/>
 <div class="card card--counter" id="subtitle-counter">
 <span class="card--counter__number" id="subtitle-counter-value">0 / 75</span>
 </div>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Course Description
-              <textarea class="form__textarea" id="course-description" maxlength="999" name="course_description" placeholder="Describe what students will learn" required="" rows="4"></textarea>
+              <textarea class="" id="course-description" maxlength="999" name="course_description" placeholder="Describe what students will learn" required="" rows="4"></textarea>
 <div class="card card--counter" id="description-counter">
 <span class="card--counter__number" id="description-counter-value">0 / 999</span>
 </div>
 </label>
-<div class="form__row form__row--essentials grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="teacher-id">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="teacher-id">
                 Teacher
-                <select class="input input--select input--select--essentials block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="teacher-id" name="teacher_id" required="">
+                <select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="teacher-id" name="teacher_id" required="">
 <option value="">Select teacher...</option>
 </select>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="institution">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="institution">
                 Institution
-                <select class="input input--select input--select--essentials block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="institution" name="institution" required="">
+                <select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="institution" name="institution" required="">
 <option value="">Select institution...</option>
 </select>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="course-language">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="course-language">
                 Course Language
-                <select class="input input--select input--select--essentials block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="course-language" name="course_language" required="">
+                <select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="course-language" name="course_language" required="">
 <option value="">Select language...</option>
 </select>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="course-type">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="course-type">
                 Course Type
-                <select class="input input--select input--select--essentials block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="course-type" name="course_type" required="">
+                <select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="course-type" name="course_type" required="">
 <option value="">Select course type...</option>
 <option value="In-person">In-person</option>
 <option value="Online">Online</option>
@@ -300,11 +300,11 @@
 </select>
 </label>
 </div>
-<label class="form__label form__label--file block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Course Image
             </label>
 <div class="image-upload" id="course-image-upload">
-<input accept="image/*" aria-label="Upload course image" class="image-upload__input input input--file" id="course-image" name="course_image" required="" type="file"/>
+<input accept="image/*" aria-label="Upload course image" class="image-upload__input" id="course-image" name="course_image" required="" type="file"/>
 <div class="image-upload__content" id="course-image-overlay">
 <div class="image-upload__empty" id="course-image-empty">
 <span class="image-upload__cta-title">Upload course image</span>
@@ -312,7 +312,7 @@
 <div class="image-upload__details" hidden="" id="course-image-details">
 <div class="image-upload__thumbnail">
 <img alt="Course preview" class="image-upload__preview" hidden="" id="preview-img" src=""/>
-<button aria-label="Remove course image" class="button button--small image-upload__remove inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" hidden="" id="remove-image" type="button">
+<button aria-label="Remove course image" class="image-upload__remove inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" hidden="" id="remove-image" type="button">
 <span aria-hidden="true">×</span>
 </button>
 </div>
@@ -326,7 +326,7 @@
 <div class="card card--code" hidden="" id="course-code-display">
 <span class="card__label">Course ID</span>
 <span class="card__value" id="course-id-value">—</span>
-<button class="button button--subtle button--small inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" disabled="" id="course-code-copy-btn" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" disabled="" id="course-code-copy-btn" type="button">
                 Copy
               </button>
 </div>
@@ -339,7 +339,7 @@
 <span class="card__text">No data submitted yet</span>
 </div>
 <div class="article__footer-actions">
-<button class="button button--primary button--medium inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" form="course-essentials-form" id="save-essentials-btn" type="submit">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" form="course-essentials-form" id="save-essentials-btn" type="submit">
                 Create Course
               </button>
 </div>
@@ -353,19 +353,19 @@
 <!-- Row 1: Preliminary -->
 <div class="classification-section classification-section--preliminary">
 <div class="classification-section__header">
-<h3 class="heading heading--h3">Preliminary</h3>
-<p class="text text--description">Age group and educational framework</p>
+<h3 class="">Preliminary</h3>
+<p class="">Age group and educational framework</p>
 </div>
 <div class="classification-section__content">
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="class-year-select">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="class-year-select">
 <span>Class Year</span>
-<select class="input input--select block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="class-year-select" name="class_year" required="">
+<select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="class-year-select" name="class_year" required="">
 <option value="">Loading...</option>
 </select>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="curricular-framework-select">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="curricular-framework-select">
 <span>Curricular Framework</span>
-<select class="input input--select block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="curricular-framework-select" name="curricular_framework" required="">
+<select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="curricular-framework-select" name="curricular_framework" required="">
 <option value="">Loading...</option>
 </select>
 </label>
@@ -374,35 +374,35 @@
 <!-- Row 2: Classification -->
 <div class="classification-section classification-section--classification">
 <div class="classification-section__header">
-<h3 class="heading heading--h3">Classification</h3>
-<p class="text text--description">Subject matter hierarchy</p>
+<h3 class="">Classification</h3>
+<p class="">Subject matter hierarchy</p>
 </div>
 <div class="classification-section__content">
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="domain-select">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="domain-select">
 <span>Domain</span>
-<span class="form__label-hint">Academic field</span>
-<select class="input input--select block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="domain-select" name="domain" required="">
+<span class="">Academic field</span>
+<select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="domain-select" name="domain" required="">
 <option value="">Loading...</option>
 </select>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="subject-select">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="subject-select">
 <span>Subject</span>
-<span class="form__label-hint">Specific discipline</span>
-<select class="input input--select block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" disabled="" id="subject-select" name="subject" required="">
+<span class="">Specific discipline</span>
+<select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" disabled="" id="subject-select" name="subject" required="">
 <option value="">Select domain first...</option>
 </select>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="topic-select">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="topic-select">
 <span>Topic</span>
-<span class="form__label-hint">Area of study</span>
-<select class="input input--select block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" disabled="" id="topic-select" name="topic" required="">
+<span class="">Area of study</span>
+<select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" disabled="" id="topic-select" name="topic" required="">
 <option value="">Select subject first...</option>
 </select>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="subtopic-select">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="subtopic-select">
 <span>Subtopic</span>
-<span class="form__label-hint">Specific focus</span>
-<select class="input input--select block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" disabled="" id="subtopic-select" name="subtopic">
+<span class="">Specific focus</span>
+<select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" disabled="" id="subtopic-select" name="subtopic">
 <option value="">Select topic first...</option>
 </select>
 </label>
@@ -411,28 +411,28 @@
 <!-- Row 3: Course Sequence -->
 <div class="classification-section classification-section--sequence">
 <div class="classification-section__header">
-<h3 class="heading heading--h3">Course Sequence</h3>
-<p class="text text--description">Position within the learning pathway</p>
+<h3 class="">Course Sequence</h3>
+<p class="">Position within the learning pathway</p>
 </div>
 <div class="classification-section__content">
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="previous-course-select">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="previous-course-select">
 <span>Previous Course</span>
-<span class="form__label-hint">Course that should come before this one</span>
-<select class="input input--select input--select--essentials block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="previous-course-select" name="previous_course">
+<span class="">Course that should come before this one</span>
+<select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="previous-course-select" name="previous_course">
 <option value="">Loading courses...</option>
 </select>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="current-course-select">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="current-course-select">
 <span>Current Course</span>
-<span class="form__label-hint">Other courses at this level</span>
-<select class="input input--select input--select--essentials block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="current-course-select" name="current_course">
+<span class="">Other courses at this level</span>
+<select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="current-course-select" name="current_course">
 <option value="">Loading courses...</option>
 </select>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="next-course-select">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="next-course-select">
 <span>Next Course</span>
-<span class="form__label-hint">Course that should come after this one</span>
-<select class="input input--select input--select--essentials block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="next-course-select" name="next_course">
+<span class="">Course that should come after this one</span>
+<select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="next-course-select" name="next_course">
 <option value="">Loading courses...</option>
 </select>
 </label>
@@ -453,19 +453,19 @@
 <article class="article article--templates flex flex-col bg-white border border-neutral-200 rounded-xl shadow-sm mb-6 overflow-visible" data-course-section="" id="templates">
 <div class="article__main article__main--panels grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 min-h-[600px]">
 <div class="article__view-toggle">
-<button class="button button--outline article__view-toggle-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="config" type="button">
+<button class="article__view-toggle-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="config" type="button">
               Config
             </button>
-<button class="button button--outline article__view-toggle-btn is-active inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="preview" type="button">
+<button class="article__view-toggle-btn is-active inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="preview" type="button">
               Preview
             </button>
 </div>
 <section class="article__config flex flex-col bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm h-full p-6">
 <div class="template-config__actions">
-<button class="button button--primary inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" id="create-template-btn" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" id="create-template-btn" type="button">
                 Create Template
               </button>
-<button class="button button--outline inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" id="load-template-btn" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" id="load-template-btn" type="button">
                 Load Template
               </button>
 </div>
@@ -492,73 +492,73 @@
 <article class="article article--schedule flex flex-col bg-white border border-neutral-200 rounded-xl shadow-sm mb-6 overflow-visible" data-course-section="" id="schedule">
 <div class="article__main article__main--panels grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 min-h-[600px]">
 <div class="article__view-toggle">
-<button class="button button--outline article__view-toggle-btn is-active inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="config" type="button">
+<button class="article__view-toggle-btn is-active inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="config" type="button">
               Config
             </button>
-<button class="button button--outline article__view-toggle-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="preview" type="button">
+<button class="article__view-toggle-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="preview" type="button">
               Preview
             </button>
 </div>
 <section class="article__config flex flex-col bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm h-full p-6">
 <form class="form form--schedule" id="schedule-config">
-<div class="form__row form__row--dates grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   Start Date
-                  <input autocomplete="off" class="input input--date block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="start-date" inputmode="numeric" placeholder="DD.MM.YYYY" required="" type="text"/>
+                  <input autocomplete="off" class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="start-date" inputmode="numeric" placeholder="DD.MM.YYYY" required="" type="text"/>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   End Date
-                  <input autocomplete="off" class="input input--date block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="end-date" inputmode="numeric" placeholder="DD.MM.YYYY" required="" type="text"/>
+                  <input autocomplete="off" class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="end-date" inputmode="numeric" placeholder="DD.MM.YYYY" required="" type="text"/>
 </label>
 </div>
 <fieldset aria-label="Days of the Week" class="schedule__days">
-<legend class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">Days of the Week</legend>
-<button class="button button--outline button--small schedule__days__button inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="monday" type="button">
+<legend class="block text-sm font-medium leading-6 text-neutral-900 mb-2">Days of the Week</legend>
+<button class="schedule__days__button inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="monday" type="button">
                   Mon
                 </button>
-<button class="button button--outline button--small schedule__days__button inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="tuesday" type="button">
+<button class="schedule__days__button inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="tuesday" type="button">
                   Tue
                 </button>
-<button class="button button--outline button--small schedule__days__button inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="wednesday" type="button">
+<button class="schedule__days__button inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="wednesday" type="button">
                   Wed
                 </button>
-<button class="button button--outline button--small schedule__days__button inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="thursday" type="button">
+<button class="schedule__days__button inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="thursday" type="button">
                   Thu
                 </button>
-<button class="button button--outline button--small schedule__days__button inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="friday" type="button">
+<button class="schedule__days__button inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="friday" type="button">
                   Fri
                 </button>
-<button class="button button--outline button--small schedule__days__button inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="saturday" type="button">
+<button class="schedule__days__button inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="saturday" type="button">
                   Sat
                 </button>
-<button class="button button--outline button--small schedule__days__button inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="sunday" type="button">
+<button class="schedule__days__button inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="sunday" type="button">
                   Sun
                 </button>
 </fieldset>
-<div class="form__row form__row--times grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   Start Time
-                  <input autocomplete="off" class="input input--time block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="start-time" inputmode="numeric" placeholder="HH:MM" required="" type="text"/>
+                  <input autocomplete="off" class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="start-time" inputmode="numeric" placeholder="HH:MM" required="" type="text"/>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   End Time
-                  <input autocomplete="off" class="input input--time block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="end-time" inputmode="numeric" placeholder="HH:MM" required="" type="text"/>
+                  <input autocomplete="off" class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="end-time" inputmode="numeric" placeholder="HH:MM" required="" type="text"/>
 </label>
 </div>
 <div class="schedule__breaks">
-<div class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">Break Times</div>
+<div class="block text-sm font-medium leading-6 text-neutral-900 mb-2">Break Times</div>
 <div class="schedule__breaks__list" id="break-times-list">
 <!-- Break time inputs will be dynamically added here -->
 </div>
-<button class="button button--primary button--small schedule__break-add-standalone inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" id="add-break-time-btn" type="button">
+<button class="schedule__break-add-standalone inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" id="add-break-time-btn" type="button">
                   +
                 </button>
 </div>
 <div class="schedule__actions button-group">
-<button class="button button--primary inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" disabled="" id="schedule-course-btn" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" disabled="" id="schedule-course-btn" type="button">
                   Schedule Course
                 </button>
-<button class="button button--delete inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-red-600 hover:bg-red-700 active:bg-red-800 text-white focus-visible:ring-red-500" id="delete-schedule-btn" style="display: none;" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-red-600 hover:bg-red-700 active:bg-red-800 text-white focus-visible:ring-red-500" id="delete-schedule-btn" style="display: none;" type="button">
                   Delete Schedule
                 </button>
 </div>
@@ -586,10 +586,10 @@
 <article class="article article--curriculum article--templates flex flex-col bg-white border border-neutral-200 rounded-xl shadow-sm mb-6 overflow-visible" data-course-section="" id="curriculum">
 <div class="article__main article__main--panels grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 min-h-[600px]">
 <div class="article__view-toggle">
-<button class="button button--outline article__view-toggle-btn is-active inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="config" type="button">
+<button class="article__view-toggle-btn is-active inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="config" type="button">
               Config
             </button>
-<button class="button button--outline article__view-toggle-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="preview" type="button">
+<button class="article__view-toggle-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="preview" type="button">
               Preview
             </button>
 </div>
@@ -597,24 +597,24 @@
 <form class="form form--curriculum">
 <!-- Module Organization -->
 <div class="curriculum-config__group curriculum-config__group--modules">
-<h3 class="heading heading--h3">Module Organization</h3>
+<h3 class="">Module Organization</h3>
 <div class="module-organization-options">
 <label class="card card--option">
-<input checked="" class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="module-org-linear" name="module-organization" type="radio" value="linear"/>
+<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="module-org-linear" name="module-organization" type="radio" value="linear"/>
 <div class="card__content">
 <span class="card__title">No Modules</span>
 <span class="card__description">Lessons appear in a single list with no module grouping.</span>
 </div>
 </label>
 <label class="card card--option">
-<input class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="module-org-equal" name="module-organization" type="radio" value="equal"/>
+<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="module-org-equal" name="module-organization" type="radio" value="equal"/>
 <div class="card__content">
 <span class="card__title">Equal Modules</span>
 <span class="card__description">Lessons are evenly distributed across modules of equal size.</span>
 </div>
 </label>
 <label class="card card--option">
-<input class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="module-org-custom" name="module-organization" type="radio" value="custom"/>
+<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="module-org-custom" name="module-organization" type="radio" value="custom"/>
 <div class="card__content">
 <span class="card__title">Custom Modules</span>
 <span class="card__description">Define your own module boundaries.</span>
@@ -630,10 +630,10 @@
 </div>
 <!-- Content Volume -->
 <div class="curriculum-config__group curriculum-config__group--content-volume">
-<h3 class="heading heading--h3">Content Volume</h3>
+<h3 class="">Content Volume</h3>
 <div class="content-volume-options">
 <label class="card card--option">
-<input class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" data-duration="mini" data-max="30" name="content-volume" type="radio" value="mini"/>
+<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" data-duration="mini" data-max="30" name="content-volume" type="radio" value="mini"/>
 <div class="card__content">
 <span class="card__title">Mini</span>
 <span class="card__meta">≤ 30 min</span>
@@ -641,7 +641,7 @@
 </div>
 </label>
 <label class="card card--option">
-<input checked="" class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" data-duration="single" data-max="60" name="content-volume" type="radio" value="single"/>
+<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" data-duration="single" data-max="60" name="content-volume" type="radio" value="single"/>
 <div class="card__content">
 <span class="card__title">Standard</span>
 <span class="card__meta">≤ 60 min</span>
@@ -649,7 +649,7 @@
 </div>
 </label>
 <label class="card card--option">
-<input class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" data-duration="double" data-max="120" name="content-volume" type="radio" value="double"/>
+<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" data-duration="double" data-max="120" name="content-volume" type="radio" value="double"/>
 <div class="card__content">
 <span class="card__title">Extended</span>
 <span class="card__meta">≤ 120 min</span>
@@ -657,7 +657,7 @@
 </div>
 </label>
 <label class="card card--option">
-<input class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" data-duration="triple" data-max="180" name="content-volume" type="radio" value="triple"/>
+<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" data-duration="triple" data-max="180" name="content-volume" type="radio" value="triple"/>
 <div class="card__content">
 <span class="card__title">Intensive</span>
 <span class="card__meta">≤ 180 min</span>
@@ -665,7 +665,7 @@
 </div>
 </label>
 <label class="card card--option">
-<input class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" data-duration="halfFull" data-max="999" name="content-volume" type="radio" value="halfFull"/>
+<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" data-duration="halfFull" data-max="999" name="content-volume" type="radio" value="halfFull"/>
 <div class="card__content">
 <span class="card__title">Full Day</span>
 <span class="card__meta">&gt; 180 min</span>
@@ -676,51 +676,51 @@
 </div>
 <!-- Numeric Structure Fields -->
 <div class="curriculum-config__group curriculum-config__group--structure">
-<p class="text text--help">
+<p class="">
                 Fine-tune the content density for each lesson.
               </p>
 <div class="structure-inputs">
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   Topics per lesson
-                  <input class="input input--number block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="curriculum-topics" max="10" min="1" type="number" value="2"/>
+                  <input class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="curriculum-topics" max="10" min="1" type="number" value="2"/>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   Objectives per topic
-                  <input class="input input--number block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="curriculum-objectives" max="5" min="1" type="number" value="2"/>
+                  <input class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="curriculum-objectives" max="5" min="1" type="number" value="2"/>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   Tasks per objective
-                  <input class="input input--number block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="curriculum-tasks" max="5" min="1" type="number" value="2"/>
+                  <input class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="curriculum-tasks" max="5" min="1" type="number" value="2"/>
 </label>
 </div>
 </div>
 <!-- Course Type -->
 <div class="curriculum-config__group curriculum-config__group--course-type">
-<h3 class="heading heading--h3">Course Type</h3>
+<h3 class="">Course Type</h3>
 <div class="course-type-options">
 <label class="card card--option">
-<input class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="course-type-minimalist" name="course-type" type="radio" value="minimalist"/>
+<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="course-type-minimalist" name="course-type" type="radio" value="minimalist"/>
 <div class="card__content">
 <span class="card__title">Minimalist Course</span>
 <span class="card__description">Core instructional templates only</span>
 </div>
 </label>
 <label class="card card--option">
-<input checked="" class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="course-type-essential" name="course-type" type="radio" value="essential"/>
+<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="course-type-essential" name="course-type" type="radio" value="essential"/>
 <div class="card__content">
 <span class="card__title">Essential Course</span>
 <span class="card__description">All Minimalist templates plus evaluation and certification</span>
 </div>
 </label>
 <label class="card card--option">
-<input class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="course-type-complete" name="course-type" type="radio" value="complete"/>
+<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="course-type-complete" name="course-type" type="radio" value="complete"/>
 <div class="card__content">
 <span class="card__title">Complete Course</span>
 <span class="card__description">Every available template included</span>
 </div>
 </label>
 <label class="card card--option">
-<input class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="course-type-custom" name="course-type" type="radio" value="custom"/>
+<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="course-type-custom" name="course-type" type="radio" value="custom"/>
 <div class="card__content">
 <span class="card__title">Custom Course</span>
 <span class="card__description">Manually select any combination of templates</span>
@@ -731,7 +731,7 @@
 </div>
 <!-- Template Placement Section -->
 <div class="curriculum-config__group curriculum-config__group--templates">
-<h3 class="heading heading--h3">Template Placement</h3>
+<h3 class="">Template Placement</h3>
 <div class="template-placement" id="curriculum-template-placement-list">
 <!-- Template placement cards will be rendered here by JavaScript -->
 </div>
@@ -761,10 +761,10 @@
 <article class="article article--generation article--templates flex flex-col bg-white border border-neutral-200 rounded-xl shadow-sm mb-6 overflow-visible" data-course-section="" id="generation">
 <div class="article__main article__main--panels grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 min-h-[600px]">
 <div class="article__view-toggle">
-<button class="button button--outline article__view-toggle-btn is-active inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="config" type="button">
+<button class="article__view-toggle-btn is-active inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="config" type="button">
               Config
             </button>
-<button class="button button--outline article__view-toggle-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="preview" type="button">
+<button class="article__view-toggle-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="preview" type="button">
               Preview
             </button>
 </div>
@@ -772,12 +772,12 @@
 <form class="form form--generation" id="generation-settings-form">
 <!-- AI Generation Section -->
 <div class="curriculum-config__group curriculum-config__group--ai-generation">
-<h3 class="heading heading--h3">Generate Curriculum Content</h3>
+<h3 class="">Generate Curriculum Content</h3>
 <div class="ai-generation__context">
 <div class="ai-generation__context-checkboxes">
 <!-- Mandatory Context -->
 <div class="ai-generation__context-section">
-<h5 class="heading heading--h5">Required Context</h5>
+<h5 class="">Required Context</h5>
 <label class="checkbox-label checkbox-label--disabled">
 <input checked="" class="" disabled="" name="ai-context-essentials" type="checkbox"/>
 <span>Course Essentials</span>
@@ -793,7 +793,7 @@
 </div>
 <!-- Optional Context -->
 <div class="ai-generation__context-section">
-<h5 class="heading heading--h5">Optional Context</h5>
+<h5 class="">Optional Context</h5>
 <label class="checkbox-label">
 <input checked="" class="" name="ai-context-schedule" type="checkbox"/>
 <span>Schedule Settings</span>
@@ -809,24 +809,24 @@
 </div>
 <!-- Generation Actions -->
 <div class="ai-generation__context-section">
-<h5 class="heading heading--h5">Generation Actions</h5>
+<h5 class="">Generation Actions</h5>
 <div class="ai-generation__buttons">
-<button class="button button--primary inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" data-ai-generate="all" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" data-ai-generate="all" type="button">
                         Generate All
                       </button>
-<button class="button button--outline inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-ai-generate="modules" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-ai-generate="modules" type="button">
                         Generate Module Names
                       </button>
-<button class="button button--outline inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-ai-generate="lessons" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-ai-generate="lessons" type="button">
                         Generate Lesson Names
                       </button>
-<button class="button button--outline inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-ai-generate="topics" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-ai-generate="topics" type="button">
                         Generate Topic Titles
                       </button>
-<button class="button button--outline inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-ai-generate="objectives" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-ai-generate="objectives" type="button">
                         Generate Objectives
                       </button>
-<button class="button button--outline inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-ai-generate="tasks" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-ai-generate="tasks" type="button">
                         Generate Tasks
                       </button>
 </div>
@@ -850,25 +850,25 @@
 <div class="curriculum__preview" id="generation-preview">
 <div class="curriculum__preview-content">
 <nav aria-label="Generation view modes" class="curriculum__controls">
-<button class="button button--small button--outline inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="modules" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="modules" type="button">
                     Modules
                   </button>
-<button class="button button--small button--outline inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="titles" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="titles" type="button">
                     Lessons
                   </button>
-<button class="button button--small button--outline inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="competencies" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="competencies" type="button">
                     Competencies
                   </button>
-<button class="button button--small button--outline inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="topics" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="topics" type="button">
                     Topics
                   </button>
-<button class="button button--small button--outline inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="objectives" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="objectives" type="button">
                     Objectives
                   </button>
-<button class="button button--small button--outline inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="tasks" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="tasks" type="button">
                     Tasks
                   </button>
-<button class="button button--small button--outline inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="all" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="all" type="button">
                     All
                   </button>
 </nav>
@@ -906,25 +906,25 @@
 <article class="article article--marketplace flex flex-col bg-white border border-neutral-200 rounded-xl shadow-sm mb-6 overflow-visible" data-course-section="" id="marketplace">
 <div class="article__main">
 <form class="form form--marketplace" id="marketplace-form">
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Listing Status
-              <select class="input input--select block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="listing_status" required="">
+              <select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="listing_status" required="">
 <option value="draft">Draft</option>
 <option value="pending">Pending Review</option>
 <option value="published">Published</option>
 </select>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Target Audience
-              <input class="input" name="target_audience" placeholder="e.g., Grade 11 Humanities" type="text"/>
+              <input class="" name="target_audience" placeholder="e.g., Grade 11 Humanities" type="text"/>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Revenue Share (%)
-              <input class="input" max="100" min="0" name="revenue_share" placeholder="30" step="1" type="number"/>
+              <input class="" max="100" min="0" name="revenue_share" placeholder="30" step="1" type="number"/>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Distribution Channels
-              <textarea class="input input--textarea block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="distribution_channels" placeholder="List marketplaces or partner channels"></textarea>
+              <textarea class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="distribution_channels" placeholder="List marketplaces or partner channels"></textarea>
 </label>
 </form>
 </div>
@@ -941,25 +941,25 @@
 <article class="article article--resources flex flex-col bg-white border border-neutral-200 rounded-xl shadow-sm mb-6 overflow-visible" data-course-section="" id="resources">
 <div class="article__main">
 <form class="form form--resources" id="resources-form">
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Resource Policy
-              <textarea class="input input--textarea block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="resource_policy" placeholder="Describe how resources should be used or shared."></textarea>
+              <textarea class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="resource_policy" placeholder="Describe how resources should be used or shared."></textarea>
 </label>
-<label class="form__label form__label--checkbox block text-sm font-medium leading-6 text-neutral-900 mb-2">
-<input class="input input--checkbox h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="allow_student_uploads" type="checkbox"/>
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<input class="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="allow_student_uploads" type="checkbox"/>
               Allow students to upload resources
             </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Default Storage Provider
-              <select class="input input--select block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="default_storage_provider">
+              <select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="default_storage_provider">
 <option value="internal">Neptino Storage</option>
 <option value="google-drive">Google Drive</option>
 <option value="dropbox">Dropbox</option>
 </select>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Featured Resources (comma separated)
-              <input class="input" name="featured_resources" placeholder="Intro deck, syllabus, reading list" type="text"/>
+              <input class="" name="featured_resources" placeholder="Intro deck, syllabus, reading list" type="text"/>
 </label>
 </form>
 </div>
@@ -976,20 +976,20 @@
 <article class="article article--students flex flex-col bg-white border border-neutral-200 rounded-xl shadow-sm mb-6 overflow-visible" data-course-section="" id="students">
 <div class="article__main article__main--panels grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 min-h-[600px]">
 <div class="article__view-toggle">
-<button class="button button--outline article__view-toggle-btn is-active inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="config" type="button">
+<button class="article__view-toggle-btn is-active inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="config" type="button">
               Config
             </button>
-<button class="button button--outline article__view-toggle-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="preview" type="button">
+<button class="article__view-toggle-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="preview" type="button">
               Preview
             </button>
 </div>
 <section aria-labelledby="students-roster-title" class="article__config students__config flex flex-col bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm h-full p-6">
 <div class="students__options">
-<button class="button button--primary button--medium students__trigger inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" data-modal-target="students-upload-modal" id="students-upload-btn" type="button">
+<button class="students__trigger inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" data-modal-target="students-upload-modal" id="students-upload-btn" type="button">
                 Upload students
               </button>
-<label class="form__label students__option block text-sm font-medium leading-6 text-neutral-900 mb-2" for="students-manual-entry-toggle">
-<input class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="students-manual-entry-toggle" name="students-method" type="radio" value="manual-entry"/>
+<label class="students__option block text-sm font-medium leading-6 text-neutral-900 mb-2" for="students-manual-entry-toggle">
+<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="students-manual-entry-toggle" name="students-method" type="radio" value="manual-entry"/>
 <span>Manual Entry</span>
 </label>
 </div>
@@ -1037,9 +1037,9 @@
 <form class="form form--students-upload modal__body" id="students-upload-form" novalidate="">
 <fieldset class="students-upload__fieldset">
 <legend class="students-upload__legend">Upload file</legend>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="students-upload-input">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="students-upload-input">
                 Select roster file
-                <input accept=".csv,.tsv,.xls,.xlsx,.ods,.pdf,.docx,.doc,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/csv" aria-describedby="students-upload-help" class="input input--file" id="students-upload-input" name="rosterFile" type="file"/>
+                <input accept=".csv,.tsv,.xls,.xlsx,.ods,.pdf,.docx,.doc,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/csv" aria-describedby="students-upload-help" class="" id="students-upload-input" name="rosterFile" type="file"/>
 </label>
 <p class="students-upload__hint" id="students-upload-help">
                 Supported formats: Excel (XLSX), CSV, PDF, Word (DOCX)
@@ -1051,10 +1051,10 @@
 <span aria-hidden="true" class="students-upload__spinner"></span>
 <span class="students-upload__status-text">Processing roster…</span>
 </div>
-<button class="button button--outline inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-modal-close="students-upload-modal" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-modal-close="students-upload-modal" type="button">
                 Cancel
               </button>
-<button class="button button--primary inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" disabled="" id="students-upload-submit-btn" type="submit">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" disabled="" id="students-upload-submit-btn" type="submit">
                 Import Students
               </button>
 </footer>
@@ -1065,7 +1065,7 @@
 <div class="modal__content">
 <header class="modal__header">
 <h2 class="modal__title" id="students-manual-title">Manual student entry</h2>
-<button aria-label="Close manual entry modal" class="button button--subtle button--small modal__close inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-modal-close="students-manual-modal" type="button">
+<button aria-label="Close manual entry modal" class="modal__close inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-modal-close="students-manual-modal" type="button">
               ×
             </button>
 </header>
@@ -1073,25 +1073,25 @@
 <fieldset class="students-manual__fieldset">
 <legend class="students-manual__legend">Single student</legend>
 <div class="students-manual__grid">
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-first-name">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-first-name">
                   First name*
-                  <input autocomplete="given-name" class="input input--text block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-first-name" name="first_name" required="" type="text"/>
+                  <input autocomplete="given-name" class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-first-name" name="first_name" required="" type="text"/>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-last-name">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-last-name">
                   Last name*
-                  <input autocomplete="family-name" class="input input--text block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-last-name" name="last_name" required="" type="text"/>
+                  <input autocomplete="family-name" class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-last-name" name="last_name" required="" type="text"/>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-email">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-email">
                   Email
-                  <input autocomplete="email" class="input input--email block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-email" name="email" placeholder="learner@school.org (optional)" type="email"/>
+                  <input autocomplete="email" class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-email" name="email" placeholder="learner@school.org (optional)" type="email"/>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-student-id">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-student-id">
                   Student ID
-                  <input class="input input--text block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-student-id" name="student_id" placeholder="Auto-generated if blank" type="text"/>
+                  <input class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-student-id" name="student_id" placeholder="Auto-generated if blank" type="text"/>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-grade-level">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-grade-level">
                   Grade level
-                  <select class="input input--select block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-grade-level" name="grade_level">
+                  <select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-grade-level" name="grade_level">
 <option value="">Select grade level</option>
 <option value="Elementary">Elementary</option>
 <option value="Middle">Middle</option>
@@ -1100,21 +1100,21 @@
 <option value="Professional">Professional</option>
 </select>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-enrollment-date">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-enrollment-date">
                   Enrollment date
-                  <input class="input input--date block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-enrollment-date" name="enrollment_date" type="date"/>
+                  <input class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-enrollment-date" name="enrollment_date" type="date"/>
 </label>
-<label class="form__label form__label--stacked block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-learning-style">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-learning-style">
                   Learning style preferences
-                  <input class="input input--text block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-learning-style" name="learning_style" placeholder="e.g., Visual, Collaborative" type="text"/>
+                  <input class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-learning-style" name="learning_style" placeholder="e.g., Visual, Collaborative" type="text"/>
 </label>
-<label class="form__label form__label--stacked block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-assessment-score">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-assessment-score">
                   Initial assessment score
-                  <input class="input input--number block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-assessment-score" name="assessment_score" placeholder="Optional score" step="0.1" type="number"/>
+                  <input class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-assessment-score" name="assessment_score" placeholder="Optional score" step="0.1" type="number"/>
 </label>
-<label class="form__label form__label--stacked block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-notes">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-notes">
                   Custom notes
-                  <textarea class="form__textarea" id="manual-notes" name="notes" placeholder="Pedagogy flags like ‘needs extra simulations’" rows="3"></textarea>
+                  <textarea class="" id="manual-notes" name="notes" placeholder="Pedagogy flags like ‘needs extra simulations’" rows="3"></textarea>
 </label>
 </div>
 </fieldset>
@@ -1124,9 +1124,9 @@
                 Paste CSV-style rows (First name, Last name, Email, Student ID, Grade level, Learning style,
                 Assessment score, Enrollment date, Notes). Missing optional fields will fall back to defaults.
               </p>
-<label class="form__label form__label--stacked block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-bulk-input">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-bulk-input">
                 Bulk students
-                <textarea class="form__textarea" id="manual-bulk-input" name="bulk_students" placeholder="Jane,Doe,jane@school.org,12345,High School,Visual,88,2024-08-24,Loves experiments" rows="6">
+                <textarea class="" id="manual-bulk-input" name="bulk_students" placeholder="Jane,Doe,jane@school.org,12345,High School,Visual,88,2024-08-24,Loves experiments" rows="6">
                 </textarea>
 </label>
 </fieldset>
@@ -1136,10 +1136,10 @@
 <span aria-hidden="true" class="students-manual__spinner"></span>
 <span class="students-manual__status-text">Saving students…</span>
 </div>
-<button class="button button--outline inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-modal-close="students-manual-modal" type="button">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-modal-close="students-manual-modal" type="button">
                 Cancel
               </button>
-<button class="button button--primary inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" id="students-manual-submit-btn" type="submit">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" id="students-manual-submit-btn" type="submit">
                 Save Students
               </button>
 </footer>
@@ -1150,10 +1150,10 @@
 <article class="article article--pedagogy article--templates flex flex-col bg-white border border-neutral-200 rounded-xl shadow-sm mb-6 overflow-visible" data-course-section="" id="pedagogy">
 <div class="article__main article__main--panels grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 min-h-[600px]">
 <div class="article__view-toggle">
-<button class="button button--outline article__view-toggle-btn is-active inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="config" type="button">
+<button class="article__view-toggle-btn is-active inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="config" type="button">
               Config
             </button>
-<button class="button button--outline article__view-toggle-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="preview" type="button">
+<button class="article__view-toggle-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="preview" type="button">
               Preview
             </button>
 </div>
@@ -1179,10 +1179,10 @@
 </p>
 </div>
 <menu aria-label="Preset positions" class="learning-plane__presets button-group">
-<button class="button button--preset inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-x="-75" data-y="-75" type="button">Traditional</button>
-<button class="button button--preset inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-x="75" data-y="75" type="button">Progressive</button>
-<button class="button button--preset inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-x="-25" data-y="75" type="button">Guided Discovery</button>
-<button class="button button--preset inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-x="0" data-y="0" type="button">Balanced</button>
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-preset data-x="-75" data-y="-75" type="button">Traditional</button>
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-preset data-x="75" data-y="75" type="button">Progressive</button>
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-preset data-x="-25" data-y="75" type="button">Guided Discovery</button>
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-preset data-x="0" data-y="0" type="button">Balanced</button>
 </menu>
 </div>
 </form>
@@ -1217,26 +1217,26 @@
 <!-- Course Visibility Article -->
 <article class="article article--course-visibility flex flex-col bg-white border border-neutral-200 rounded-xl shadow-sm mb-6 overflow-visible" data-course-section="" id="course-visibility">
 <div class="article__main">
-<form class="form form--course-visibility settings__section" id="course-visibility-form">
-<fieldset class="settings__checkboxes">
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
-<input class="input input--checkbox h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="course_visible" type="checkbox"/>
+<form class="space-y-4" id="course-visibility-form">
+<fieldset class="space-y-3">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<input class="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="course_visible" type="checkbox"/>
                 Course visible to students
               </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
-<input class="input input--checkbox h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="allow_enrollment" type="checkbox"/>
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<input class="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="allow_enrollment" type="checkbox"/>
                 Allow new enrollments
               </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
-<input class="input input--checkbox h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="require_approval" type="checkbox"/>
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<input class="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="require_approval" type="checkbox"/>
                 Require enrollment approval
               </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
-<input class="input input--checkbox h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="enable_notifications" type="checkbox"/>
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<input class="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="enable_notifications" type="checkbox"/>
                 Enable email notifications for new enrollments
               </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
-<input class="input input--checkbox h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="public_course" type="checkbox"/>
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<input class="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="public_course" type="checkbox"/>
                 Make course publicly discoverable
               </label>
 </fieldset>
@@ -1255,34 +1255,34 @@
 <article class="article article--pricing-monetization flex flex-col bg-white border border-neutral-200 rounded-xl shadow-sm mb-6 overflow-visible" data-course-section="" id="pricing-monetization">
 <div class="article__main">
 <form class="form form--pricing" id="pricing-monetization-form">
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Pricing Model
-              <select class="input input--select block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="pricing_model">
+              <select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="pricing_model">
 <option value="free">Free</option>
 <option value="subscription">Subscription</option>
 <option value="one-time">One-time purchase</option>
 <option value="license">Site license</option>
 </select>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Base Price
-              <input class="input" min="0" name="base_price" placeholder="99" step="1" type="number"/>
+              <input class="" min="0" name="base_price" placeholder="99" step="1" type="number"/>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Currency
-              <select class="input input--select block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="currency">
+              <select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="currency">
 <option value="USD">USD</option>
 <option value="EUR">EUR</option>
 <option value="GBP">GBP</option>
 </select>
 </label>
-<label class="form__label form__label--checkbox block text-sm font-medium leading-6 text-neutral-900 mb-2">
-<input class="input input--checkbox h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="trial_available" type="checkbox"/>
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<input class="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="trial_available" type="checkbox"/>
               Offer free trial
             </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Discount Notes
-              <textarea class="input input--textarea block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="discount_notes" placeholder="Describe educator or early-bird discounts"></textarea>
+              <textarea class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="discount_notes" placeholder="Describe educator or early-bird discounts"></textarea>
 </label>
 </form>
 </div>
@@ -1299,26 +1299,26 @@
 <article class="article article--external-integrations flex flex-col bg-white border border-neutral-200 rounded-xl shadow-sm mb-6 overflow-visible" data-course-section="" id="external-integrations">
 <div class="article__main">
 <form class="form form--integrations" id="external-integrations-form">
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               LMS Provider
-              <select class="input input--select block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="lms_provider">
+              <select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="lms_provider">
 <option value="None">None</option>
 <option value="Canvas">Canvas</option>
 <option value="Moodle">Moodle</option>
 <option value="Schoology">Schoology</option>
 </select>
 </label>
-<label class="form__label form__label--checkbox block text-sm font-medium leading-6 text-neutral-900 mb-2">
-<input class="input input--checkbox h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="api_access" type="checkbox"/>
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<input class="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="api_access" type="checkbox"/>
               Enable API access for this course
             </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Webhook URL
-              <input class="input" name="webhook_url" placeholder="https://example.com/webhook" type="text"/>
+              <input class="" name="webhook_url" placeholder="https://example.com/webhook" type="text"/>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Integration Notes
-              <textarea class="input input--textarea block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="integration_notes" placeholder="Describe external automation related to this course"></textarea>
+              <textarea class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="integration_notes" placeholder="Describe external automation related to this course"></textarea>
 </label>
 </form>
 </div>
@@ -1335,25 +1335,25 @@
 <article class="article article--communication flex flex-col bg-white border border-neutral-200 rounded-xl shadow-sm mb-6 overflow-visible" data-course-section="" id="communication">
 <div class="article__main">
 <form class="form form--communication" id="communication-form">
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Welcome Message
-              <textarea class="input input--textarea block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="welcome_message" placeholder="Send a short welcome note to enrolled students"></textarea>
+              <textarea class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="welcome_message" placeholder="Send a short welcome note to enrolled students"></textarea>
 </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Announcement Channel
-              <select class="input input--select block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="announcement_channel">
+              <select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="announcement_channel">
 <option value="email">Email</option>
 <option value="in-app">In-app</option>
 <option value="sms">SMS</option>
 </select>
 </label>
-<label class="form__label form__label--checkbox block text-sm font-medium leading-6 text-neutral-900 mb-2">
-<input class="input input--checkbox h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="enable_updates" type="checkbox"/>
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<input class="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="enable_updates" type="checkbox"/>
               Enable weekly update digest
             </label>
-<label class="form__label block text-sm font-medium leading-6 text-neutral-900 mb-2">
+<label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Office Hours
-              <input class="input" name="office_hours" placeholder="Thursdays 3-5pm CET" type="text"/>
+              <input class="" name="office_hours" placeholder="Thursdays 3-5pm CET" type="text"/>
 </label>
 </form>
 </div>
@@ -1370,10 +1370,10 @@
 <article class="article article--page-setup article--page-setup flex flex-col bg-white border border-neutral-200 rounded-xl shadow-sm mb-6 overflow-visible" data-course-section="" id="page-setup">
 <div class="article__main article__main--panels grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 min-h-[600px]">
 <div class="article__view-toggle">
-<button class="button button--outline article__view-toggle-btn is-active inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="config" type="button">
+<button class="article__view-toggle-btn is-active inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="config" type="button">
               Config
             </button>
-<button class="button button--outline article__view-toggle-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="preview" type="button">
+<button class="article__view-toggle-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-view="preview" type="button">
               Preview
             </button>
 </div>
@@ -1382,33 +1382,33 @@
 <fieldset class="page-setup__section page-setup__unit-options">
 <legend class="page-setup__label">Units</legend>
 <label class="page-setup__option">
-<input checked="" class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="units" type="radio" value="cm"/>
+<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="units" type="radio" value="cm"/>
                 Metric (cm)
               </label>
 <label class="page-setup__option">
-<input class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="units" type="radio" value="inches"/>
+<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="units" type="radio" value="inches"/>
                 Imperial (inches)
               </label>
 </fieldset>
 <fieldset class="page-setup__section page-setup__orientation-options">
 <legend class="page-setup__label">Orientation</legend>
 <label class="page-setup__option">
-<input checked="" class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="orientation" type="radio" value="portrait"/>
+<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="orientation" type="radio" value="portrait"/>
                 Portrait
               </label>
 <label class="page-setup__option">
-<input class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="orientation" type="radio" value="landscape"/>
+<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="orientation" type="radio" value="landscape"/>
                 Landscape
               </label>
 </fieldset>
 <fieldset class="page-setup__section page-setup__size-options">
 <legend class="page-setup__label">Canvas Size</legend>
 <label class="page-setup__option">
-<input checked="" class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="canvas-size" type="radio" value="a4"/>
+<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="canvas-size" type="radio" value="a4"/>
 <span class="canvas-size-label" data-cm="A4 (21.0 × 29.7 cm)" data-inches='A4 (8.27" × 11.69")'>A4 (21.0 × 29.7 cm)</span>
 </label>
 <label class="page-setup__option">
-<input class="input input--radio h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="canvas-size" type="radio" value="us-letter"/>
+<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="canvas-size" type="radio" value="us-letter"/>
 <span class="canvas-size-label" data-cm="US Letter (21.6 × 27.9 cm)" data-inches='US Letter (8.5" × 11")'>US Letter (21.6 × 27.9 cm)</span>
 </label>
 </fieldset>
@@ -1418,24 +1418,24 @@
 <div class="page-setup__margin-group">
 <label class="page-setup__margin">
                     Top
-                    <input class="input input--number block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" max="100" min="0" name="margin_top" step="0.01" type="number" value="2.54"/>
+                    <input class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" max="100" min="0" name="margin_top" step="0.01" type="number" value="2.54"/>
 <span class="page-setup__unit">cm</span>
 </label>
 <label class="page-setup__margin">
                     Bottom
-                    <input class="input input--number block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" max="100" min="0" name="margin_bottom" step="0.01" type="number" value="2.54"/>
+                    <input class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" max="100" min="0" name="margin_bottom" step="0.01" type="number" value="2.54"/>
 <span class="page-setup__unit">cm</span>
 </label>
 </div>
 <div class="page-setup__margin-group">
 <label class="page-setup__margin">
                     Left
-                    <input class="input input--number block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" max="100" min="0" name="margin_left" step="0.01" type="number" value="2.54"/>
+                    <input class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" max="100" min="0" name="margin_left" step="0.01" type="number" value="2.54"/>
 <span class="page-setup__unit">cm</span>
 </label>
 <label class="page-setup__margin">
                     Right
-                    <input class="input input--number block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" max="100" min="0" name="margin_right" step="0.01" type="number" value="2.54"/>
+                    <input class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" max="100" min="0" name="margin_right" step="0.01" type="number" value="2.54"/>
 <span class="page-setup__unit">cm</span>
 </label>
 </div>
@@ -1542,14 +1542,14 @@
 <article class="article article--advanced-settings flex flex-col bg-white border border-neutral-200 rounded-xl shadow-sm mb-6 overflow-visible" data-course-section="" id="advanced-settings">
 <!-- Danger Zone -->
 <div class="article__main">
-<section class="settings__section settings__section--danger">
-<h3 class="settings__heading settings__heading--danger">
+<section class="rounded-xl border border-red-200 bg-red-50 p-4">
+<h3 class="text-base font-semibold text-red-700">
               Danger Zone
             </h3>
-<p class="settings__description">
+<p class="mt-2 text-sm text-red-600">
               Once you delete a course, there is no going back. Please be certain.
             </p>
-<button class="button button--delete inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-red-600 hover:bg-red-700 active:bg-red-800 text-white focus-visible:ring-red-500" id="delete-course-btn">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-red-600 hover:bg-red-700 active:bg-red-800 text-white focus-visible:ring-red-500" id="delete-course-btn">
               Delete Course
             </button>
 </section>
@@ -1569,46 +1569,46 @@
 <div class="engine">
 <div class="engine__content">
 <div class="engine__media">
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="files">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="files">
 <img alt="" class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-files.svg"/>
 <span class="label label--small">Files</span>
 </button>
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="images">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="images">
 <img alt="" class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-image.svg"/>
 <span class="label label--small">Images</span>
 </button>
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="videos">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="videos">
 <img alt="" class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-video.svg"/>
 <span class="label label--small">Videos</span>
 </button>
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="audio">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="audio">
 <img alt="" class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-audio.svg"/>
 <span class="label label--small">Audio</span>
 </button>
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="text">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="text">
 <img alt="" class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-text.svg"/>
 <span class="label label--small">Text</span>
 </button>
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="plugin">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="plugin">
 <img alt="" class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-plugins.svg"/>
 <span class="label label--small">Plugins</span>
 </button>
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="links">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="links">
 <img alt="" class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-link.svg"/>
 <span class="label label--small">Links</span>
 </button>
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="games">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="games">
 <img alt="" class="icon icon--base" src="/src/assets/icons/joystick-icon.svg"/>
 <span class="label label--small">Games</span>
 </button>
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="graphs">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="graphs">
 <img alt="" class="icon icon--base" src="/src/assets/icons/chart-area-icon.svg"/>
 <span class="label label--small">Graphs</span>
 </button>
 </div>
 <!-- Search -->
 <div class="engine__search search">
-<input class="input input--search" id="media-search-input" placeholder="Search media..." type="search"/>
+<input class="" id="media-search-input" placeholder="Search media..." type="search"/>
 </div>
 </div>
 <button aria-label="Resize search column" class="engine__resizer inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-engine-resizer="search" type="button"></button>
@@ -1619,24 +1619,24 @@
 <div class="engine__perspective">
 <!-- Zoom Indicator -->
 <div class="engine__perspective-zoom" title="Current zoom level - Ctrl/Cmd+wheel to zoom">100%</div>
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-perspective="zoom-in" title="Focus">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-perspective="zoom-in" title="Focus">
 <img alt="Focus" class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/zoomin-icon.svg"/>
 <span class="label label--small">Focus</span>
 </button>
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-perspective="zoom-out" title="Expand">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-perspective="zoom-out" title="Expand">
 <img alt="Expand" class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/zoomout-icon.svg"/>
 <span class="label label--small">Expand</span>
 </button>
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-perspective="reset" title="Reset View">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-perspective="reset" title="Reset View">
 <img alt="Reset View" class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/reset-icon.svg"/>
 <span class="label label--small">Reset</span>
 </button>
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-perspective="grab" title="grab">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-perspective="grab" title="grab">
 <img alt="grab" class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/grab-icon.svg"/>
 <span class="label label--small">Grab</span>
 </button>
 <!-- Grid button (opens Snap Menu) -->
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-perspective="grid" data-snap-anchor="" title="Snapping">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-perspective="grid" data-snap-anchor="" title="Snapping">
 <img alt="Snapping" class="icon icon--base" src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg"/>
 <span class="label label--small">Grid</span>
 </button>
@@ -1644,7 +1644,7 @@
 <!-- Right Side: Canvas Scroll Navigation -->
 <div class="engine__scroll">
 <!-- Go to top -->
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-scroll="first" title="Go to first canvas">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-scroll="first" title="Go to first canvas">
 <svg class="icon icon--base" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
 <path d="M18 15l-6-6-6 6"></path>
 <path d="M18 9l-6-6-6 6"></path>
@@ -1652,7 +1652,7 @@
 <span class="label label--small">First</span>
 </button>
 <!-- Go back one -->
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-scroll="prev" title="Previous canvas">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-scroll="prev" title="Previous canvas">
 <svg class="icon icon--base" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
 <path d="M18 15l-6-6-6 6"></path>
 </svg>
@@ -1665,14 +1665,14 @@
 <span class="engine__scroll-total" title="Total canvases">225</span>
 </div>
 <!-- Go forward one -->
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-scroll="next" title="Next canvas">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-scroll="next" title="Next canvas">
 <svg class="icon icon--base" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
 <path d="M6 9l6 6 6-6"></path>
 </svg>
 <span class="label label--small">Next</span>
 </button>
 <!-- Go to bottom -->
-<button class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-scroll="last" title="Go to last canvas">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-scroll="last" title="Go to last canvas">
 <svg class="icon icon--base" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
 <path d="M6 9l6 6 6-6"></path>
 <path d="M6 15l6 6 6-6"></path>
@@ -1684,11 +1684,11 @@
 <div class="engine__controls">
 <!-- Mode Selector -->
 <div class="engine__modes">
-<button class="button button--engine button--compact inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build">
 <img alt="" class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-build.svg"/>
 <span class="label label--small">Build</span>
 </button>
-<button class="button button--engine button--compact inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="animate">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="animate">
 <img alt="" class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-animate.svg"/>
 <span class="label label--small">Animate</span>
 </button>
@@ -1699,13 +1699,13 @@
 <div class="engine__tools-options">
 <!-- Pen Settings -->
 <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--pen" style="display: none;">
-<input aria-label="Pen size" class="input input--number block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="size" id="pen-size-input" max="15" min="1" name="pen-size" type="number" value="2"/>
-<div class="input input--color-picker color-selector" data-color-selector="pen-stroke" data-initial-color="#282a29"></div>
-<div class="input input--color-picker color-selector" data-allow-transparent="true" data-color-selector="pen-fill" data-initial-color="#fef6eb"></div>
+<input aria-label="Pen size" class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="size" id="pen-size-input" max="15" min="1" name="pen-size" type="number" value="2"/>
+<div class="color-selector" data-color-selector="pen-stroke" data-initial-color="#282a29"></div>
+<div class="color-selector" data-allow-transparent="true" data-color-selector="pen-fill" data-initial-color="#fef6eb"></div>
 </div>
 <!-- Text Settings -->
 <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--text" style="display: none;">
-<select class="input input--select block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="fontSize" id="text-size-select">
+<select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="fontSize" id="text-size-select">
 <option data-label="Normal" value="12">Normal Text (12 pt)</option>
 <option data-label="Title" value="26">Title (26 pt)</option>
 <option data-label="Header1" value="20">Header 1 (20 pt)</option>
@@ -1713,38 +1713,38 @@
 <option data-label="Header3" value="14">Header 3 (14 pt)</option>
 </select>
 <div aria-label="Text Style" class="engine__text-style-controls">
-<button class="button button--engine engine__text-style-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-text-style="bold" type="button">B</button>
-<button class="button button--engine engine__text-style-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-text-style="italic" type="button">I</button>
+<button class="engine__text-style-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-text-style="bold" type="button">B</button>
+<button class="engine__text-style-btn inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-text-style="italic" type="button">I</button>
 </div>
-<select class="input input--select block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="fontFamily" id="font-family-select">
+<select class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="fontFamily" id="font-family-select">
 <option data-font-family="Arial" value="Arial">Arial</option>
 <option data-font-family="Times New Roman" value="Times New Roman">Times New Roman</option>
 <option data-font-family="Georgia" value="Georgia">Georgia</option>
 <option data-font-family="Verdana" value="Verdana">Verdana</option>
 <option data-font-family="Tahoma" value="Tahoma">Tahoma</option>
 </select>
-<div class="input input--color-picker color-selector" data-color-selector="text" data-initial-color="#282a29"></div>
+<div class="color-selector" data-color-selector="text" data-initial-color="#282a29"></div>
 </div>
 <!-- Brush Settings -->
 <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--brush" style="display: none;">
-<input aria-label="Brush size" class="input input--number block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="size" id="brush-size-input" max="50" min="10" name="brush-size" type="number" value="20"/>
-<div class="input input--color-picker color-selector" data-color-selector="brush" data-initial-color="#2b8059"></div>
+<input aria-label="Brush size" class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="size" id="brush-size-input" max="50" min="10" name="brush-size" type="number" value="20"/>
+<div class="color-selector" data-color-selector="brush" data-initial-color="#2b8059"></div>
 </div>
 <!-- Shapes Settings -->
 <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--shapes" style="display: none;">
-<div class="input input--shape-picker shape-selector" data-initial-shape="rectangle" data-shape-selector="shapes"></div>
-<input aria-label="Shape stroke width" class="input input--number block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="strokeWidth" id="shape-stroke-width-input" max="20" min="1" name="shape-stroke-width" type="number" value="2"/>
-<div class="input input--color-picker color-selector" data-color-selector="shapes-stroke" data-initial-color="#282a29"></div>
-<div class="input input--color-picker color-selector" data-allow-transparent="true" data-color-selector="shapes-fill" data-initial-color="transparent"></div>
+<div class="shape-selector" data-initial-shape="rectangle" data-shape-selector="shapes"></div>
+<input aria-label="Shape stroke width" class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="strokeWidth" id="shape-stroke-width-input" max="20" min="1" name="shape-stroke-width" type="number" value="2"/>
+<div class="color-selector" data-color-selector="shapes-stroke" data-initial-color="#282a29"></div>
+<div class="color-selector" data-allow-transparent="true" data-color-selector="shapes-fill" data-initial-color="transparent"></div>
 </div>
 <!-- Eraser Settings -->
 <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--eraser" style="display: none;">
-<input aria-label="Eraser size" class="input input--number block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="size" id="eraser-size-input" max="50" min="5" name="eraser-size" type="number" value="20"/>
+<input aria-label="Eraser size" class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="size" id="eraser-size-input" max="50" min="5" name="eraser-size" type="number" value="20"/>
 </div>
 <!-- Table Settings -->
 <div class="engine__tools-item engine__tools-item--horizontal engine__tools-item--tables" style="display: none;">
-<input aria-label="Table size" class="input input--number block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="size" id="table-size-input" max="20" min="1" name="table-size" type="number" value="3"/>
-<select aria-label="Table type" class="input input--select block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="tableType" id="table-type-select" name="table-type">
+<input aria-label="Table size" class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="size" id="table-size-input" max="20" min="1" name="table-size" type="number" value="3"/>
+<select aria-label="Table type" class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="tableType" id="table-type-select" name="table-type">
 <option value="basic">Basic</option>
 <option value="bordered">Bordered</option>
 <option value="striped">Striped</option>
@@ -1753,41 +1753,41 @@
 </div>
 <div class="engine__tools-selection">
 <!-- Build Mode Tools -->
-<button aria-label="Select" class="button button--engine button--active inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="selection">
+<button aria-label="Select" class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="selection">
 <img alt="Selection Tool" class="icon icon--base" src="/src/assets/icons/coursebuilder/tools/tool-select.svg"/>
 </button>
-<button aria-label="Pen" class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="pen">
+<button aria-label="Pen" class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="pen">
 <img alt="Pen Tool" class="icon icon--base" src="/src/assets/icons/coursebuilder/tools/tool-pen.svg"/>
 </button>
-<button aria-label="Brush" class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="brush">
+<button aria-label="Brush" class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="brush">
 <img alt="Brush Tool" class="icon icon--base" src="/src/assets/icons/coursebuilder/tools/tool-brush.svg"/>
 </button>
-<button aria-label="Text" class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="text">
+<button aria-label="Text" class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="text">
 <img alt="Text Tool" class="icon icon--base" src="/src/assets/icons/coursebuilder/tools/tool-write.svg"/>
 </button>
-<button aria-label="Shapes" class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="shapes">
+<button aria-label="Shapes" class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="shapes">
 <img alt="Shapes Tool" class="icon icon--base" src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg"/>
 </button>
-<button aria-label="Tables" class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="tables">
+<button aria-label="Tables" class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="tables">
 <img alt="Table Tool" class="icon icon--base" src="/src/assets/icons/coursebuilder/media/media-table.svg"/>
 </button>
-<button aria-label="Generate" class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="generate">
+<button aria-label="Generate" class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="generate">
 <img alt="Generate Tool" class="icon icon--base" src="/src/assets/icons/bot-icon.svg"/>
 </button>
-<button aria-label="Eraser" class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="eraser">
+<button aria-label="Eraser" class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="eraser">
 <img alt="Eraser Tool" class="icon icon--base" src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg"/>
 </button>
 <!-- Animate Mode Tools -->
-<button aria-label="Select" class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="animate" data-tool="selection" style="display: none;">
+<button aria-label="Select" class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="animate" data-tool="selection" style="display: none;">
 <img alt="Selection Tool" class="icon icon--base" src="/src/assets/icons/coursebuilder/tools/tool-select.svg"/>
 </button>
-<button aria-label="Scene" class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="animate" data-tool="scene" style="display: none;">
+<button aria-label="Scene" class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="animate" data-tool="scene" style="display: none;">
 <img alt="Scene Tool" class="icon icon--base" src="/src/assets/icons/coursebuilder/modes/mode-animate.svg"/>
 </button>
-<button aria-label="Path" class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="animate" data-tool="path" style="display: none;">
+<button aria-label="Path" class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="animate" data-tool="path" style="display: none;">
 <img alt="Path Tool" class="icon icon--base" src="/src/assets/icons/coursebuilder/tools/tool-pen.svg"/>
 </button>
-<button aria-label="Modify" class="button button--engine inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="animate" data-tool="modify" style="display: none;">
+<button aria-label="Modify" class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="animate" data-tool="modify" style="display: none;">
 <img alt="Modify Tool" class="icon icon--base" src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg"/>
 </button>
 </div>
@@ -1857,7 +1857,7 @@
 </div>
 <div class="engine__snap-grid-spacing">
 <label for="grid-spacing">Grid spacing:</label>
-<input class="input input--number block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="grid-spacing" max="100" min="1" type="number" value="20"/>
+<input class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="grid-spacing" max="100" min="1" type="number" value="20"/>
 <span class="grid-spacing-unit">px</span>
 </div>
 </div>

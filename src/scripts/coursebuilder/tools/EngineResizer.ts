@@ -42,8 +42,8 @@ const REGION_TARGETS = {
 } as const;
 
 const REGION_COLLAPSED_CLASSES = {
-  search: 'engine__search--collapsed',
-  panel: 'engine__panel--collapsed',
+  search: 'hidden',
+  panel: 'hidden',
 } as const;
 
 const loadSavedWidths = (): Partial<Record<ResizableRegion, number>> => {
@@ -77,6 +77,7 @@ const toggleRegionCollapsed = (engine: HTMLElement, region: ResizableRegion, col
   }
 
   target.classList.toggle(REGION_COLLAPSED_CLASSES[region], collapsed);
+  target.setAttribute('aria-hidden', collapsed ? 'true' : 'false');
 };
 
 const getNumericProperty = (element: HTMLElement, property: string, fallback: number): number => {
@@ -111,7 +112,7 @@ const handlePointerResize = (
 
   handle.focus();
   handle.setPointerCapture(pointerId);
-  handle.classList.add('engine__resizer--active');
+  handle.classList.add('ring-2', 'ring-primary-500', 'bg-primary-50');
 
   const previousCursor = document.body.style.cursor;
   const previousUserSelect = document.body.style.userSelect;
@@ -129,7 +130,7 @@ const handlePointerResize = (
       handle.releasePointerCapture(pointerId);
     }
 
-    handle.classList.remove('engine__resizer--active');
+    handle.classList.remove('ring-2', 'ring-primary-500', 'bg-primary-50');
     document.body.style.cursor = previousCursor;
     document.body.style.userSelect = previousUserSelect;
 

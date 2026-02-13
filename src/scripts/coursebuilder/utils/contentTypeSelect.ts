@@ -3,6 +3,8 @@
  * Replaces the native select element with icon radio buttons for better UX.
  */
 
+import { applyEngineButtonBase, setButtonActive } from "../../utils/tailwindState";
+
 const ICON_PATHS = {
   text: '/src/assets/icons/coursebuilder/media/media-text.svg',
   image: '/src/assets/icons/coursebuilder/media/media-image.svg',
@@ -29,7 +31,7 @@ function getOptionIcon(option: HTMLOptionElement): string | null {
 function syncIconState(buttons: HTMLButtonElement[], activeValue: string): void {
   buttons.forEach((button) => {
     const isActive = button.dataset.value === activeValue;
-    button.classList.toggle('is-active', isActive);
+    setButtonActive(button, isActive);
     button.setAttribute('aria-checked', isActive ? 'true' : 'false');
     button.tabIndex = isActive ? 0 : -1;
   });
@@ -90,7 +92,7 @@ export function initializeContentTypeSelect(selectElement: HTMLSelectElement): v
   }
 
   const radiogroup = document.createElement('div');
-  radiogroup.className = 'tools__icon-options';
+  radiogroup.className = 'tools__icon-options flex flex-wrap gap-2';
   radiogroup.setAttribute('role', 'radiogroup');
   const label =
     selectElement.getAttribute('aria-label') ??
@@ -103,7 +105,8 @@ export function initializeContentTypeSelect(selectElement: HTMLSelectElement): v
   enhancedOptions.forEach((option, index) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'button button--engine tools__icon-option';
+    button.className = 'tools__icon-option';
+    applyEngineButtonBase(button);
     button.dataset.value = option.value;
     button.setAttribute('role', 'radio');
     button.setAttribute('aria-checked', 'false');
@@ -112,11 +115,11 @@ export function initializeContentTypeSelect(selectElement: HTMLSelectElement): v
     const image = document.createElement('img');
     image.src = option.icon;
     image.alt = option.label;
-    image.className = 'tools__icon-option-image';
+    image.className = 'h-4 w-4';
     button.appendChild(image);
 
     const text = document.createElement('span');
-    text.className = 'tools__icon-option-label';
+    text.className = 'text-xs font-medium';
     text.textContent = option.label;
     button.appendChild(text);
 
@@ -165,7 +168,7 @@ export function initializeContentTypeSelect(selectElement: HTMLSelectElement): v
     radiogroup.appendChild(button);
   });
 
-  selectElement.classList.add('tools__dropdown-native');
+  selectElement.classList.add('sr-only');
   selectElement.setAttribute('aria-hidden', 'true');
   selectElement.tabIndex = -1;
 

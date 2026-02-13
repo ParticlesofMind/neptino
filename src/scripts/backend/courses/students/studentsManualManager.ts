@@ -107,7 +107,8 @@ export class StudentsManualManager {
       this.submitButton.disabled = isBusy;
     }
     if (this.form) {
-      this.form.classList.toggle("is-loading", isBusy);
+      this.form.classList.toggle('opacity-60', isBusy);
+      this.form.classList.toggle('pointer-events-none', isBusy);
     }
   }
 

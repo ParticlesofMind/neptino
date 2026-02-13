@@ -46,27 +46,27 @@ export class DeleteCourseManager {
   private showDeleteConfirmation(): void {
     // Create confirmation modal dynamically
     const modalHTML = `
-      <div class="modal modal--delete" id="delete-course-modal">
-        <div class="modal__content">
-          <div class="modal__header">
-            <h2 class="modal__title">Delete Course</h2>
-            <button class="button button--subtle button--small modal__close" type="button">
+      <div class="modal modal--delete fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" id="delete-course-modal">
+        <div class="modal__content w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+          <div class="modal__header flex items-start justify-between">
+            <h2 class="modal__title text-xl font-semibold text-neutral-900">Delete Course</h2>
+            <button class="modal__close inline-flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100" type="button">
               &times;
             </button>
           </div>
-          <div class="modal__body">
+          <div class="modal__body mt-4 space-y-2 text-sm text-neutral-700">
             <p class="modal__text">
               Are you sure you want to delete this course?
             </p>
-            <p class="modal__warning">
+            <p class="modal__warning text-sm text-red-600">
               <strong>This action cannot be undone.</strong> All course data will be permanently removed.
             </p>
           </div>
-          <div class="modal__footer">
-            <button class="button button--outline" type="button" id="cancel-delete-btn">
+          <div class="modal__footer mt-6 flex justify-end gap-3">
+            <button class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50" type="button" id="cancel-delete-btn">
               No
             </button>
-            <button class="button button--delete" type="button" id="confirm-delete-btn">
+            <button class="inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700" type="button" id="confirm-delete-btn">
               Yes
             </button>
           </div>
@@ -106,8 +106,8 @@ export class DeleteCourseManager {
 
     // Show modal
     if (this.confirmationModal) {
-      this.confirmationModal.classList.add('modal--active');
-      document.body.style.overflow = 'hidden';
+      this.confirmationModal.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
     }
   }
 
@@ -115,7 +115,7 @@ export class DeleteCourseManager {
     if (this.confirmationModal) {
       this.confirmationModal.remove();
       this.confirmationModal = null;
-      document.body.style.overflow = '';
+      document.body.classList.remove('overflow-hidden');
     }
   }
 
@@ -260,11 +260,17 @@ export class DeleteCourseManager {
   private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
     // Create notification element
     const notification = document.createElement('div');
-    notification.className = `notification notification--${type}`;
+    const toneClasses =
+      type === 'success'
+        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+        : type === 'error'
+        ? 'bg-red-50 text-red-700 border-red-200'
+        : 'bg-slate-50 text-slate-700 border-slate-200';
+    notification.className = `fixed right-6 top-6 z-50 w-[320px] rounded-lg border px-4 py-3 shadow-lg opacity-0 translate-y-2 transition ${toneClasses}`;
     notification.innerHTML = `
-      <div class="notification__content">
-        <span class="notification__message">${message}</span>
-        <button class="notification__close">&times;</button>
+      <div class="flex items-center justify-between gap-3">
+        <span class="text-sm font-medium">${message}</span>
+        <button class="inline-flex h-6 w-6 items-center justify-center rounded-md text-current/70 hover:text-current">&times;</button>
       </div>
     `;
 
@@ -273,7 +279,8 @@ export class DeleteCourseManager {
 
     // Show with animation
     setTimeout(() => {
-      notification.classList.add('notification--show');
+      notification.classList.remove('opacity-0', 'translate-y-2');
+      notification.classList.add('opacity-100', 'translate-y-0');
     }, 10);
 
     // Auto-hide after 5 seconds
@@ -282,14 +289,14 @@ export class DeleteCourseManager {
     }, 5000);
 
     // Close button functionality
-    const closeBtn = notification.querySelector('.notification__close');
+    const closeBtn = notification.querySelector('button');
     closeBtn?.addEventListener('click', () => {
       this.hideNotification(notification);
     });
   }
 
   private hideNotification(notification: HTMLElement): void {
-    notification.classList.remove('notification--show');
+    notification.classList.add('opacity-0', 'translate-y-2');
     setTimeout(() => {
       notification.remove();
     }, 300);

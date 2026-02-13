@@ -118,13 +118,15 @@ export class CourseBuilderNavigation {
  // Hide all coursebuilder elements
  this.sections.forEach(element => {
  element.classList.remove('coursebuilder__setup--active', 'coursebuilder__create--active', 'coursebuilder__preview--active', 'coursebuilder__launch--active');
+ element.classList.add('hidden');
  element.setAttribute('aria-hidden', 'true');
  });
  
  // Show target coursebuilder element
  const targetElement = document.querySelector(`.coursebuilder__${sectionId}`);
  if (targetElement) {
- targetElement.classList.add(`coursebuilder__${sectionId}--active`);
+ targetElement.classList.remove(`coursebuilder__${sectionId}--active`);
+ targetElement.classList.remove('hidden');
  targetElement.setAttribute('aria-hidden', 'false');
  
  // Initialize aside navigation when entering setup section
@@ -473,30 +475,38 @@ export class ViewToggleHandler {
     }
 
     // Update button states
-    const allButtons = toggleContainer.querySelectorAll('.article__view-toggle-btn');
+    const allButtons = toggleContainer.querySelectorAll<HTMLButtonElement>('.article__view-toggle-btn');
     allButtons.forEach((btn) => {
       btn.classList.remove('is-active');
+      btn.classList.remove('bg-primary-600', 'text-white', 'border-primary-600');
+      btn.classList.add('bg-white', 'text-neutral-700', 'border-neutral-300');
+      btn.classList.add('hover:bg-neutral-50', 'hover:text-neutral-900');
+      btn.classList.remove('hover:bg-primary-700', 'hover:text-white');
     });
-    button.classList.add('is-active');
+    button.classList.remove('is-active');
+    button.classList.add('bg-primary-600', 'text-white', 'border-primary-600');
+    button.classList.remove('bg-white', 'text-neutral-700', 'border-neutral-300');
+    button.classList.add('hover:bg-primary-700', 'hover:text-white');
+    button.classList.remove('hover:bg-neutral-50', 'hover:text-neutral-900');
 
     // Update panel visibility
     const configPanel = article.querySelector('.article__config');
     const previewPanel = article.querySelector('.article__preview');
 
+    const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+
+    if (isDesktop) {
+      if (configPanel) configPanel.classList.remove('hidden');
+      if (previewPanel) previewPanel.classList.remove('hidden');
+      return;
+    }
+
     if (view === 'config') {
-      if (configPanel) {
-        configPanel.classList.add('is-active');
-      }
-      if (previewPanel) {
-        previewPanel.classList.remove('is-active');
-      }
+      if (configPanel) configPanel.classList.remove('hidden');
+      if (previewPanel) previewPanel.classList.add('hidden');
     } else if (view === 'preview') {
-      if (configPanel) {
-        configPanel.classList.remove('is-active');
-      }
-      if (previewPanel) {
-        previewPanel.classList.add('is-active');
-      }
+      if (configPanel) configPanel.classList.add('hidden');
+      if (previewPanel) previewPanel.classList.remove('hidden');
     }
   }
 
@@ -512,19 +522,44 @@ export class ViewToggleHandler {
         return; // No toggle for this article
       }
 
-      const activeButton = toggleContainer.querySelector('.article__view-toggle-btn.is-active');
+      const activeButton =
+        toggleContainer.querySelector<HTMLButtonElement>('.article__view-toggle-btn.is-active') ??
+        toggleContainer.querySelector<HTMLButtonElement>('.article__view-toggle-btn');
       if (activeButton) {
         const view = activeButton.getAttribute('data-view');
         const configPanel = article.querySelector('.article__config');
         const previewPanel = article.querySelector('.article__preview');
 
-        if (view === 'config') {
-          if (configPanel) configPanel.classList.add('is-active');
-          if (previewPanel) previewPanel.classList.remove('is-active');
-        } else if (view === 'preview') {
-          if (configPanel) configPanel.classList.remove('is-active');
-          if (previewPanel) previewPanel.classList.add('is-active');
+        const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+
+        if (isDesktop) {
+          if (configPanel) configPanel.classList.remove('hidden');
+          if (previewPanel) previewPanel.classList.remove('hidden');
+          return;
         }
+
+        if (view === 'config') {
+          if (configPanel) configPanel.classList.remove('hidden');
+          if (previewPanel) previewPanel.classList.add('hidden');
+        } else if (view === 'preview') {
+          if (configPanel) configPanel.classList.add('hidden');
+          if (previewPanel) previewPanel.classList.remove('hidden');
+        }
+
+        const allButtons = toggleContainer.querySelectorAll<HTMLButtonElement>('.article__view-toggle-btn');
+        allButtons.forEach((btn) => {
+          const isActive = btn === activeButton;
+          btn.classList.toggle('bg-primary-600', isActive);
+          btn.classList.toggle('text-white', isActive);
+          btn.classList.toggle('border-primary-600', isActive);
+          btn.classList.toggle('bg-white', !isActive);
+          btn.classList.toggle('text-neutral-700', !isActive);
+          btn.classList.toggle('border-neutral-300', !isActive);
+          btn.classList.toggle('hover:bg-primary-700', isActive);
+          btn.classList.toggle('hover:text-white', isActive);
+          btn.classList.toggle('hover:bg-neutral-50', !isActive);
+          btn.classList.toggle('hover:text-neutral-900', !isActive);
+        });
       }
     });
   }
@@ -601,24 +636,25 @@ export class ModalHandler {
     this.hideModal();
 
     // Show the new modal
-    modal.classList.add('modal--active');
+    modal.classList.remove('modal--active');
+    modal.classList.remove('hidden');
     modal.setAttribute('aria-hidden', 'false');
     this.activeModal = modal;
 
     // Prevent body scroll
-    document.body.style.overflow = 'hidden';
+    document.body.classList.add('overflow-hidden');
 
   }
 
   public hideModal(): void {
     if (!this.activeModal) return;
 
-    this.activeModal.classList.remove('modal--active');
+    this.activeModal.classList.add('hidden');
     this.activeModal.setAttribute('aria-hidden', 'true');
     this.activeModal = null;
 
     // Restore body scroll
-    document.body.style.overflow = '';
+    document.body.classList.remove('overflow-hidden');
 
   }
 

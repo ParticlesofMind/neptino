@@ -5,6 +5,12 @@
 
 import { toolConfigs, type ModeConfig } from '../config/toolConfig';
 import { initializeContentTypeSelect, isContentTypeSelect } from '../utils/contentTypeSelect';
+import {
+  applyEngineButtonBase,
+  setButtonActive,
+  setElementHidden,
+  setFieldError,
+} from '../../utils/tailwindState';
 
 const MODE_CHANGED_EVENT = 'engine:mode-change';
 const TOOL_CHANGED_EVENT = 'engine:tool-change';
@@ -236,20 +242,20 @@ export class EngineController {
     if (this.state.currentMedia) {
       const mediaButton = document.querySelector<HTMLButtonElement>(`[data-media="${this.state.currentMedia}"]`);
       if (mediaButton) {
-        mediaButton.classList.add('button--active');
+        setButtonActive(mediaButton, true);
       }
     }
 
     // Restore mode selection
     const modeButton = document.querySelector<HTMLButtonElement>(`[data-mode="${this.state.currentMode}"]`);
     if (modeButton) {
-      modeButton.classList.add('button--active');
+      setButtonActive(modeButton, true);
     }
 
     // Restore tool selection
     const toolButton = this.toolsContainer?.querySelector<HTMLButtonElement>(`[data-tool="${this.state.currentTool}"]`);
     if (toolButton) {
-      toolButton.classList.add('button--active');
+      setButtonActive(toolButton, true);
       this.showToolOptions(this.state.currentTool);
     }
   }
@@ -260,12 +266,12 @@ export class EngineController {
     
     // Remove active class from all media buttons
     const mediaButtons = document.querySelectorAll<HTMLButtonElement>('[data-media]');
-    mediaButtons.forEach(btn => btn.classList.remove('button--active'));
+    mediaButtons.forEach(btn => setButtonActive(btn, false));
     
     // Add active class to selected media button
     const selectedButton = document.querySelector<HTMLButtonElement>(`[data-media="${media}"]`);
     if (selectedButton) {
-      selectedButton.classList.add('button--active');
+      setButtonActive(selectedButton, true);
     }
     
     console.log(`Media selected: ${media}`);
@@ -278,12 +284,12 @@ export class EngineController {
     
     // Remove active class from all mode buttons
     const modeButtons = document.querySelectorAll<HTMLButtonElement>('.engine__modes [data-mode]');
-    modeButtons.forEach(btn => btn.classList.remove('button--active'));
+    modeButtons.forEach(btn => setButtonActive(btn, false));
     
     // Add active class to selected mode button
     const selectedButton = document.querySelector<HTMLButtonElement>(`.engine__modes [data-mode="${mode}"]`);
     if (selectedButton) {
-      selectedButton.classList.add('button--active');
+      setButtonActive(selectedButton, true);
     }
     
     // Render tools for the new mode
@@ -304,18 +310,19 @@ export class EngineController {
     // Render tools for this mode
     config.tools.forEach((tool, index) => {
       const button = document.createElement('button');
-      button.className = 'button button--engine';
+      button.className = '';
+      applyEngineButtonBase(button);
       button.dataset.tool = tool.id;
       
       // Set first tool (or saved tool) as active
       if (tool.id === this.state.currentTool || (index === 0 && !this.state.currentTool)) {
-        button.classList.add('button--active');
+        setButtonActive(button, true);
         this.state.currentTool = tool.id;
       }
 
       button.innerHTML = `
-        <img src="${tool.icon}" alt="${tool.name} Tool" class="icon icon--base">
-        <span class="label label--small">${tool.name}</span>
+        <img src="${tool.icon}" alt="${tool.name} Tool" class="h-4 w-4">
+        <span class="text-xs font-medium">${tool.name}</span>
       `;
 
       button.addEventListener('click', () => {
@@ -346,7 +353,7 @@ export class EngineController {
 
       const optionsDiv = document.createElement('div');
       optionsDiv.className = `engine__tools-item engine__tools-item--${tool.id}`;
-      optionsDiv.style.display = 'none';
+      optionsDiv.classList.add('hidden');
 
       // Render each option based on type
       tool.options.forEach(option => {
@@ -399,19 +406,19 @@ export class EngineController {
 
     // Container for the stepper (minus button + input + plus button)
     const stepperContainer = document.createElement('div');
-    stepperContainer.className = 'tools__number-stepper';
+    stepperContainer.className = 'tools__number-stepper flex items-center gap-2';
 
     // Minus button
     const minusButton = document.createElement('button');
     minusButton.type = 'button';
-    minusButton.className = 'button button--stepper button--stepper-minus';
+    minusButton.className = 'button--stepper-minus inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm font-medium text-neutral-700 shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2';
     minusButton.setAttribute('aria-label', 'Decrease');
     minusButton.textContent = '−';
 
     // Number input
     const input = document.createElement('input');
     input.type = 'number';
-    input.className = 'input input--number-stepper';
+    input.className = 'input--number-stepper w-16 rounded-md border-0 py-1 text-center text-sm text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 bg-white';
     input.min = min.toString();
     input.max = max.toString();
     input.step = step.toString();
@@ -421,7 +428,7 @@ export class EngineController {
     // Plus button
     const plusButton = document.createElement('button');
     plusButton.type = 'button';
-    plusButton.className = 'button button--stepper button--stepper-plus';
+    plusButton.className = 'button--stepper-plus inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm font-medium text-neutral-700 shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2';
     plusButton.setAttribute('aria-label', 'Increase');
     plusButton.textContent = '+';
 
@@ -571,13 +578,14 @@ export class EngineController {
 
     const trigger = document.createElement('button');
     trigger.type = 'button';
-    trigger.className = 'button button--engine tools__color-trigger';
+    trigger.className = 'tools__color-trigger';
+    applyEngineButtonBase(trigger);
     trigger.setAttribute('aria-label', `${option.label} color picker`);
     trigger.setAttribute('aria-haspopup', 'dialog');
     trigger.setAttribute('aria-expanded', 'false');
 
     const preview = document.createElement('span');
-    preview.className = 'tools__color-preview';
+    preview.className = 'tools__color-preview h-6 w-6 rounded-full border border-neutral-300';
     trigger.appendChild(preview);
 
     const popoverId = `tools-color-${toolId}-${option.id}`;
@@ -608,7 +616,8 @@ export class EngineController {
 
     const addButton = document.createElement('button');
     addButton.type = 'button';
-    addButton.className = 'button button--engine tools__color-add';
+    addButton.className = 'tools__color-add';
+    applyEngineButtonBase(addButton);
     addButton.textContent = 'Add to favorites';
     favorites.appendChild(addButton);
 
@@ -622,7 +631,7 @@ export class EngineController {
 
     // Curated color palette grid for coursebuilding
     const colorGrid = document.createElement('div');
-    colorGrid.className = 'tools__color-grid';
+    colorGrid.className = 'tools__color-grid grid grid-cols-6 gap-2';
     
     const curatedColors = [
       // Row 1: Reds to Purples
@@ -642,7 +651,7 @@ export class EngineController {
     curatedColors.forEach((color) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'tools__color-grid-option';
+      button.className = 'tools__color-grid-option h-6 w-6 rounded-full border border-neutral-200 shadow-sm';
       button.style.background = color;
       button.dataset.value = color;
       button.title = color;
@@ -650,7 +659,7 @@ export class EngineController {
       button.addEventListener('click', () => {
         workingColor = color;
         hexInput.value = color;
-        hexInput.classList.remove('is-invalid');
+        setFieldError(hexInput, false);
         updatePreview(color);
       });
       colorGrid.appendChild(button);
@@ -660,7 +669,7 @@ export class EngineController {
 
     const hexInput = document.createElement('input');
     hexInput.type = 'text';
-    hexInput.className = 'input input--text tools__color-hex-input';
+    hexInput.className = 'tools__color-hex-input block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white';
     hexInput.placeholder = '#RRGGBB';
     editor.appendChild(hexInput);
 
@@ -673,12 +682,15 @@ export class EngineController {
 
     const cancelButton = document.createElement('button');
     cancelButton.type = 'button';
-    cancelButton.className = 'button button--engine tools__color-cancel';
+    cancelButton.className = 'tools__color-cancel';
+    applyEngineButtonBase(cancelButton);
     cancelButton.textContent = 'Cancel';
 
     const applyButton = document.createElement('button');
     applyButton.type = 'button';
-    applyButton.className = 'button button--engine button--active tools__color-apply';
+    applyButton.className = 'tools__color-apply';
+    applyEngineButtonBase(applyButton);
+    setButtonActive(applyButton, true);
     applyButton.textContent = 'Select';
 
     actions.appendChild(cancelButton);
@@ -686,10 +698,10 @@ export class EngineController {
 
     const updatePreview = (color: string): void => {
       if (color === 'transparent') {
-        preview.classList.add('is-transparent');
+        preview.classList.add('bg-transparent', 'border', 'border-dashed', 'border-neutral-300');
         preview.style.background = '';
       } else {
-        preview.classList.remove('is-transparent');
+        preview.classList.remove('bg-transparent', 'border', 'border-dashed', 'border-neutral-300');
         preview.style.background = color;
       }
     };
@@ -697,7 +709,7 @@ export class EngineController {
     const highlightSelection = (color: string): void => {
       paletteList.querySelectorAll<HTMLButtonElement>('.tools__color-option').forEach((button) => {
         const value = button.dataset.value;
-        button.classList.toggle('is-active', value === color);
+        setButtonActive(button, value === color);
       });
     };
 
@@ -710,7 +722,7 @@ export class EngineController {
         const normalized = this.normalizeColorValue(color);
         hexInput.value = normalized;
       }
-      hexInput.classList.remove('is-invalid');
+      setFieldError(hexInput, false);
       highlightSelection(color);
       updatePreview(color);
     };
@@ -720,17 +732,17 @@ export class EngineController {
       palette.forEach((color) => {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'tools__color-option';
+        button.className = 'tools__color-option h-6 w-6 rounded-full border border-neutral-200 shadow-sm';
         button.dataset.value = color;
         button.setAttribute('aria-label', color === 'transparent' ? 'Transparent' : color);
         button.title = color === 'transparent' ? 'Transparent' : color;
         if (color === 'transparent') {
-          button.classList.add('tools__color-option--transparent');
+          button.classList.add('tools__color-option--transparent', 'bg-transparent', 'border', 'border-dashed', 'border-neutral-300');
         } else {
           button.style.background = color;
         }
         if (color === workingColor) {
-          button.classList.add('is-active');
+          setButtonActive(button, true);
         }
         button.addEventListener('click', () => {
           workingColor = color;
@@ -749,14 +761,13 @@ export class EngineController {
       }
 
       popover.hidden = true;
-      popover.classList.remove('is-open');
       trigger.setAttribute('aria-expanded', 'false');
       document.removeEventListener('mousedown', handleOutsideClick);
       document.removeEventListener('keydown', handleEscape);
 
       const host = this.colorLayer;
       if (host && host.contains(popover)) {
-        host.classList.remove('is-open');
+        // no-op for Tailwind: rely on hidden state
       }
 
       const owner = this.colorPopoverOwners.get(popover);
@@ -791,12 +802,10 @@ export class EngineController {
       }
 
       if (host) {
-        host.classList.add('is-open');
         host.appendChild(popover);
       }
 
       popover.hidden = false;
-      popover.classList.add('is-open');
       trigger.setAttribute('aria-expanded', 'true');
       document.addEventListener('mousedown', handleOutsideClick);
       document.addEventListener('keydown', handleEscape);
@@ -823,7 +832,7 @@ export class EngineController {
       if (workingColor !== 'transparent') {
         const normalized = this.tryNormalizeHex(workingColor);
         if (!normalized) {
-          hexInput.classList.add('is-invalid');
+          setFieldError(hexInput, true);
           hexInput.focus();
           return;
         }
@@ -838,11 +847,11 @@ export class EngineController {
     addButton.addEventListener('click', () => {
       const normalized = this.tryNormalizeHex(hexInput.value);
       if (!normalized) {
-        hexInput.classList.add('is-invalid');
+        setFieldError(hexInput, true);
         hexInput.focus();
         return;
       }
-      hexInput.classList.remove('is-invalid');
+      setFieldError(hexInput, false);
       if (!palette.includes(normalized)) {
         palette = [...palette, normalized];
         this.storeColorPalette(toolId, option.id, palette);
@@ -853,7 +862,7 @@ export class EngineController {
     });
 
     hexInput.addEventListener('input', () => {
-      hexInput.classList.remove('is-invalid');
+      setFieldError(hexInput, false);
       const normalized = this.tryNormalizeHex(hexInput.value);
       if (normalized) {
         workingColor = normalized;
@@ -879,7 +888,7 @@ export class EngineController {
     button.className = 'tools__control tools__control--toggle';
     button.title = option.label;
     button.setAttribute('aria-label', option.label);
-    button.classList.add('button', 'button--engine');
+    applyEngineButtonBase(button);
     
     let contentSet = false;
 
@@ -904,7 +913,7 @@ export class EngineController {
       img.alt = option.label;
       img.className = 'icon icon--base';
       button.appendChild(img);
-      button.classList.add('button--icon-only');
+      button.classList.add('p-2');
       contentSet = true;
     }
 
@@ -915,12 +924,12 @@ export class EngineController {
     
     let active = Boolean(this.getInitialValue(toolId, option) ?? option.settings.value ?? false);
     if (active) {
-      button.classList.add('is-active');
+      setButtonActive(button, true);
     }
 
     button.addEventListener('click', () => {
       active = !active;
-      button.classList.toggle('is-active', active);
+      setButtonActive(button, active);
       this.updateToolSetting(toolId, option.id, active);
     });
 
@@ -946,7 +955,7 @@ export class EngineController {
       button.className = 'tools__segment-button';
       button.title = entry.label;
       button.setAttribute('aria-label', entry.label);
-      button.classList.add('button', 'button--engine');
+      applyEngineButtonBase(button);
       
       // Add icon if provided, otherwise use text label
       if (entry.icon) {
@@ -961,12 +970,12 @@ export class EngineController {
       }
       
       if (entry.value === currentValue) {
-        button.classList.add('is-active');
+        setButtonActive(button, true);
       }
       button.addEventListener('click', () => {
         currentValue = entry.value;
-        group.querySelectorAll('.tools__segment-button').forEach((el) => el.classList.remove('is-active'));
-        button.classList.add('is-active');
+        group.querySelectorAll<HTMLButtonElement>('.tools__segment-button').forEach((el) => setButtonActive(el, false));
+        setButtonActive(button, true);
         this.updateToolSetting(toolId, option.id, currentValue);
       });
       group.appendChild(button);
@@ -984,7 +993,7 @@ export class EngineController {
 
     const input = document.createElement('input');
     input.type = 'number';
-    input.className = 'input input--number';
+    input.className = 'input--number w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white';
     if (option.settings.min !== undefined) input.min = option.settings.min.toString();
     if (option.settings.max !== undefined) input.max = option.settings.max.toString();
     if (option.settings.step !== undefined) input.step = option.settings.step.toString();
@@ -1011,7 +1020,7 @@ export class EngineController {
 
     const input = document.createElement('input');
     input.type = 'text';
-    input.className = 'input input--text';
+    input.className = 'input--text w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white';
     if (option.settings.placeholder) {
       input.placeholder = option.settings.placeholder;
     }
@@ -1034,7 +1043,7 @@ export class EngineController {
     button.className = 'tools__control tools__control--button';
     button.title = option.label;
     button.setAttribute('aria-label', option.label);
-    button.classList.add('button', 'button--engine');
+    applyEngineButtonBase(button);
     
     if (option.icon) {
       const img = document.createElement('img');
@@ -1067,12 +1076,12 @@ export class EngineController {
     
     // Remove active class from all tool buttons
     const toolButtons = this.toolsContainer?.querySelectorAll<HTMLButtonElement>('[data-tool]');
-    toolButtons?.forEach(btn => btn.classList.remove('button--active'));
+    toolButtons?.forEach(btn => setButtonActive(btn, false));
     
     // Add active class to selected tool button
     const selectedButton = this.toolsContainer?.querySelector<HTMLButtonElement>(`[data-tool="${tool}"]`);
     if (selectedButton) {
-      selectedButton.classList.add('button--active');
+      setButtonActive(selectedButton, true);
     }
     
     // Show tool options
@@ -1085,13 +1094,15 @@ export class EngineController {
     // Hide all tool options
     const allOptions = document.querySelectorAll<HTMLElement>('.engine__tools-item');
     allOptions.forEach(option => {
-      option.style.display = 'none';
+      option.style.display = '';
+      setElementHidden(option, true);
     });
     
     // Show options for current tool
     const currentOptions = document.querySelector<HTMLElement>(`.engine__tools-item--${tool}`);
     if (currentOptions) {
-      currentOptions.style.display = 'flex';
+      setElementHidden(currentOptions, false);
+      currentOptions.classList.add('flex', 'flex-wrap', 'items-center', 'gap-3');
     }
   }
 

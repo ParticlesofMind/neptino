@@ -11,9 +11,15 @@ export class StudentsPreview {
   private readonly statusEl: HTMLElement | null;
   private readonly activityList: HTMLElement | null;
   private readonly feedbackModifiers = [
-    "students__feedback--success",
-    "students__feedback--error",
-    "students__feedback--warning",
+    "bg-emerald-50",
+    "text-emerald-700",
+    "border-emerald-200",
+    "bg-red-50",
+    "text-red-700",
+    "border-red-200",
+    "bg-amber-50",
+    "text-amber-700",
+    "border-amber-200",
   ];
   private onDeleteRow: ((index: number) => Promise<void>) | null = null;
   private onUpdateRow: ((index: number, updates: Partial<StudentRecord>) => Promise<void>) | null = null;
@@ -167,7 +173,13 @@ export class StudentsPreview {
     if (!this.feedback) return;
     this.feedback.classList.remove(...this.feedbackModifiers);
     if (tone) {
-      this.feedback.classList.add(`students__feedback--${tone}`);
+      if (tone === "success") {
+        this.feedback.classList.add("bg-emerald-50", "text-emerald-700", "border", "border-emerald-200");
+      } else if (tone === "error") {
+        this.feedback.classList.add("bg-red-50", "text-red-700", "border", "border-red-200");
+      } else {
+        this.feedback.classList.add("bg-amber-50", "text-amber-700", "border", "border-amber-200");
+      }
     }
   }
 

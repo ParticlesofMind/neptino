@@ -66,13 +66,13 @@ export class CoursesManager {
 
     // Show loading message
     const loadingElement = document.createElement('div');
-    loadingElement.className = 'courses-loading';
+     loadingElement.className = 'courses-loading flex w-full justify-center py-10';
     loadingElement.dataset.dynamic = 'true';
     loadingElement.innerHTML = `
- <div class="courses-loading__content">
- <div class="courses-loading__spinner"></div>
- <p class="courses-loading__text">Loading your courses...</p>
- </div>
+   <div class="courses-loading__content flex items-center gap-3 rounded-lg border border-neutral-200 bg-white px-4 py-3 shadow-sm">
+   <div class="courses-loading__spinner h-4 w-4 animate-spin rounded-full border-2 border-neutral-200 border-t-primary-600"></div>
+   <p class="courses-loading__text text-sm text-neutral-600">Loading your courses...</p>
+   </div>
  `;
     this.coursesContainer.appendChild(loadingElement);
   }
@@ -88,17 +88,17 @@ export class CoursesManager {
 
   private showErrorState(): void {
     const errorElement = document.createElement('div');
-    errorElement.className = 'courses-error';
+     errorElement.className = 'courses-error flex w-full justify-center py-10';
     errorElement.dataset.dynamic = 'true';
     errorElement.innerHTML = `
- <div class="courses-error__content">
- <i class="icon icon--error icon--large"></i>
- <h3 class="heading heading--h3">Failed to load courses</h3>
- <p class="paragraph">There was an error loading your courses. Please try refreshing the page.</p>
- <button class="button button--primary" onclick="window.location.reload()">
- Refresh Page
- </button>
- </div>
+   <div class="courses-error__content flex flex-col items-center gap-3 rounded-lg border border-neutral-200 bg-white px-5 py-4 text-center shadow-sm">
+   <i class="icon icon--error icon--large"></i>
+   <h3 class="text-base font-semibold text-neutral-900">Failed to load courses</h3>
+   <p class="text-sm text-neutral-600">There was an error loading your courses. Please try refreshing the page.</p>
+   <button class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700" onclick="window.location.reload()">
+   Refresh Page
+   </button>
+   </div>
  `;
     this.coursesContainer.appendChild(errorElement);
   }
@@ -159,7 +159,7 @@ export class CoursesManager {
    <div class="relative w-full aspect-[4/3] bg-neutral-100 overflow-hidden flex-shrink-0">
      ${courseImageHtml}
      <div class="absolute top-2 right-2">
-       <span class="card__status-badge ${statusClass}">${statusText}</span>
+       <span class="card__status-badge inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass}">${statusText}</span>
      </div>
    </div>
    

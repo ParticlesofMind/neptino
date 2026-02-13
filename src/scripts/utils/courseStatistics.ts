@@ -188,12 +188,12 @@ export function formatCourseStatus(status: 'draft' | 'active' | 'completed'): st
 export function getStatusClassName(status: 'draft' | 'active' | 'completed'): string {
   switch (status) {
     case 'draft':
-      return 'card__status-badge--draft';
+      return 'border border-amber-200 bg-amber-100 text-amber-700';
     case 'active':
-      return 'card__status-badge--active';
+      return 'border border-emerald-200 bg-emerald-100 text-emerald-700';
     case 'completed':
-      return 'card__status-badge--completed';
+      return 'border border-neutral-300 bg-neutral-200 text-neutral-700';
     default:
-      return 'card__status-badge--draft';
+      return 'border border-amber-200 bg-amber-100 text-amber-700';
   }
 }

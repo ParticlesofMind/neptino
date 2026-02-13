@@ -232,7 +232,7 @@ function attachPedagogyGrid() {
   const subtitleEl = getEl<HTMLElement>('#pedagogy-approach-subtitle');
   const descEl = getEl<HTMLElement>('#pedagogy-approach-desc');
   const listEl = getEl<HTMLUListElement>('#pedagogy-effects-list');
-  const presetButtons = document.querySelectorAll<HTMLButtonElement>('.button--preset');
+  const presetButtons = document.querySelectorAll<HTMLButtonElement>('[data-preset]');
   const form = input?.closest('form') as HTMLFormElement | null;
 
   if (!input || !grid || !marker || !xOut || !yOut || !titleEl || !subtitleEl || !descEl || !listEl) {

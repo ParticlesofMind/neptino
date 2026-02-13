@@ -122,10 +122,10 @@ export class CourseIdHandler {
  <polyline points="20,6 9,17 4,12"></polyline>
  </svg>
  `;
- this.courseCopyBtn.classList.add('coursebuilder-course-code__copy--success');
+ this.courseCopyBtn.classList.add('text-emerald-600');
  } else {
  this.courseCopyBtn.title = 'Copy failed';
- this.courseCopyBtn.classList.add('coursebuilder-course-code__copy--error');
+ this.courseCopyBtn.classList.add('text-red-600');
  }
 
  // Reset after 2 seconds
@@ -134,8 +134,8 @@ export class CourseIdHandler {
  this.courseCopyBtn.title = originalTitle;
  this.courseCopyBtn.innerHTML = originalIcon;
  this.courseCopyBtn.classList.remove(
- 'coursebuilder-course-code__copy--success',
- 'coursebuilder-course-code__copy--error'
+ 'text-emerald-600',
+ 'text-red-600'
  );
  }
  }, 2000);

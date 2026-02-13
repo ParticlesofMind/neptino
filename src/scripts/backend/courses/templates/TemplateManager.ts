@@ -15,18 +15,19 @@ export class TemplateManager {
   static showCreateTemplateModal(): void {
     const modal = document.getElementById('create-template-modal');
     if (modal) {
-      modal.classList.add('modal--active');
+      modal.classList.remove('modal--active');
+      modal.classList.remove('hidden');
       modal.setAttribute('aria-hidden', 'false');
-      document.body.classList.add('modal-open');
+      document.body.classList.add('overflow-hidden');
     }
   }
 
   static hideCreateTemplateModal(): void {
     const modal = document.getElementById('create-template-modal');
     if (modal) {
-      modal.classList.remove('modal--active');
+      modal.classList.add('hidden');
       modal.setAttribute('aria-hidden', 'true');
-      document.body.classList.remove('modal-open');
+      document.body.classList.remove('overflow-hidden');
     }
   }
 

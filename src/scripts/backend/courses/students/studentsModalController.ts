@@ -50,9 +50,10 @@ export class StudentsModalController {
     this.lastFocused = this.root.activeElement as HTMLElement | null;
     this.closeActiveModal();
 
-    modal.classList.add("modal--active");
+    modal.classList.remove("modal--active");
+    modal.classList.remove("hidden");
     modal.setAttribute("aria-hidden", "false");
-    this.root.body.classList.add("is-modal-open");
+    this.root.body.classList.add("overflow-hidden");
     this.activeModal = modal;
 
     const content = modal.querySelector<HTMLElement>(".modal__content");
@@ -77,10 +78,10 @@ export class StudentsModalController {
 
   private closeActiveModal(): void {
     if (!this.activeModal) return;
-    this.activeModal.classList.remove("modal--active");
+    this.activeModal.classList.add("hidden");
     this.activeModal.setAttribute("aria-hidden", "true");
     this.activeModal = null;
-    this.root.body.classList.remove("is-modal-open");
+    this.root.body.classList.remove("overflow-hidden");
 
     if (this.lastFocused) {
       this.lastFocused.focus();

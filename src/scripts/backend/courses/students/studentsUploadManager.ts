@@ -17,6 +17,7 @@ import {
   parseLearningStyle,
   sanitiseValue,
 } from "./studentsUtils.js";
+import { setElementHidden } from "../../../utils/tailwindState";
 
 interface UploadManagerOptions {
   preview: StudentsPreview;
@@ -152,10 +153,10 @@ export class StudentsUploadManager {
 
     STUDENT_FIELD_LABELS.forEach(({ field, label }) => {
       const wrapper = document.createElement("label");
-      wrapper.className = "form__label";
+      wrapper.className = "flex flex-col gap-2 text-sm font-medium text-neutral-700";
       wrapper.innerHTML = `
         ${label}${REQUIRED_FIELDS.includes(field) ? "*" : ""}
-        <select class="input input--select" data-field="${field}">
+        <select class="w-full rounded-md border-0 py-2 text-sm text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" data-field="${field}">
           <option value="">Not mapped</option>
           ${headers
             .map(
@@ -213,16 +214,17 @@ export class StudentsUploadManager {
 
   private setBusy(isBusy: boolean): void {
     if (this.status) {
-      this.status.hidden = !isBusy;
+      this.status.hidden = !isBusy; // Keep the original hidden logic
     }
     if (this.submitButton) {
       this.submitButton.disabled = isBusy;
     }
     if (this.form) {
-      this.form.classList.toggle("is-loading", isBusy);
+      this.form.classList.toggle('opacity-60', isBusy);
+      this.form.classList.toggle('pointer-events-none', isBusy);
     }
     if (this.spinner) {
-      this.spinner.classList.toggle("is-active", isBusy);
+      setElementHidden(this.spinner, !isBusy); // Use Tailwind utility for visibility
     }
   }
 

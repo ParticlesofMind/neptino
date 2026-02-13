@@ -254,7 +254,7 @@ export class CourseFormHandler {
         }
 
         // Try to find the form in the active article matching our section
-        const sectionArticle = document.querySelector<HTMLElement>(`[data-course-section="${this.sectionConfig.section}"].is-active`) ||
+        const sectionArticle = document.querySelector<HTMLElement>(`[data-course-section="${this.sectionConfig.section}"]:not(.hidden)`) ||
                                document.querySelector<HTMLElement>(`#${this.sectionConfig.section}[data-course-section]`) ||
                                document.querySelector<HTMLElement>(`[data-course-section="${this.sectionConfig.section}"]`);
         if (sectionArticle) {
@@ -265,7 +265,7 @@ export class CourseFormHandler {
         }
         
         // Fallback: Try to find the form in any active article
-        const activeArticle = document.querySelector<HTMLElement>('[data-course-section].is-active');
+        const activeArticle = document.querySelector<HTMLElement>('[data-course-section]:not(.hidden)');
         if (activeArticle) {
             this.form = activeArticle.querySelector("form");
             if (this.form) {
@@ -1501,7 +1501,6 @@ export class CourseFormHandler {
             // After course creation, button shows status and is disabled since auto-save is active
             submitBtn.textContent = "✓ Course Created";
             submitBtn.disabled = true;
-            submitBtn.classList.add("button--disabled");
             submitBtn.setAttribute("aria-disabled", "true");
             submitBtn.title = "Changes are automatically saved as you type";
             return;
@@ -1516,10 +1515,8 @@ export class CourseFormHandler {
         submitBtn.disabled = shouldDisable;
 
         if (shouldDisable) {
-            submitBtn.classList.add("button--disabled");
             submitBtn.setAttribute("aria-disabled", "true");
         } else {
-            submitBtn.classList.remove("button--disabled");
             submitBtn.removeAttribute("aria-disabled");
         }
     }
@@ -1635,7 +1632,6 @@ export class CourseFormHandler {
         if (submitBtn) {
             submitBtn.textContent = "Created Course";
             submitBtn.disabled = true;
-            submitBtn.classList.add("button--disabled");
             submitBtn.setAttribute("aria-disabled", "true");
         }
     }
@@ -1648,7 +1644,6 @@ export class CourseFormHandler {
         const nextButton = document.getElementById('next-btn');
         if (nextButton) {
             nextButton.removeAttribute('disabled');
-            nextButton.classList.remove('button--disabled');
         }
 
         // Store course ID globally for other components

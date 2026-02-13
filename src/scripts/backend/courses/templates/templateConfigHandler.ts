@@ -21,21 +21,21 @@ export class TemplateConfigHandler {
     if (!configContainer) return;
 
     const blockSelectorHtml = `
-      <div class="template-blocks">
+      <div class="template-blocks space-y-4">
         ${TEMPLATE_BLOCKS.map(
           (block) => `
-            <div class="block-config">
-              <h4 class="block-config__title">${block.label}</h4>
-              <div class="block-config__fields">
+            <div class="block-config rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition">
+              <h4 class="block-config__title text-base font-semibold text-neutral-900">${block.label}</h4>
+              <div class="block-config__fields mt-3 grid gap-2">
                 ${block.configFields.map((field: any, index: number) => `
-                  <label class="block-config__field">
+                  <label class="block-config__field flex items-center gap-2 text-sm text-neutral-700">
                     <input
                       type="checkbox"
                       id="field-${block.type}-${field.name}-${index}"
                       name="field-${block.type}-${field.name}-${index}"
                       ${(field.required || field.defaultValue) ? 'checked' : ''}
                       ${field.required ? 'disabled' : ''}
-                      class="input input--checkbox">
+                      class="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
                     <span class="block-config__label">${field.label}</span>
                   </label>
                 `).join('')}
@@ -117,6 +117,7 @@ export class TemplateConfigHandler {
     // Remove previous selection
     document.querySelectorAll('.block-config').forEach((block) => {
       block.classList.remove('block-config--selected');
+      block.classList.remove('ring-2', 'ring-primary-500', 'bg-primary-50');
     });
 
     // Add selection to current block
@@ -125,7 +126,8 @@ export class TemplateConfigHandler {
     });
     
     if (selectedBlock) {
-      selectedBlock.classList.add('block-config--selected');
+      selectedBlock.classList.remove('block-config--selected');
+      selectedBlock.classList.add('ring-2', 'ring-primary-500', 'bg-primary-50');
     }
 
     this.currentlySelectedBlock = blockType;

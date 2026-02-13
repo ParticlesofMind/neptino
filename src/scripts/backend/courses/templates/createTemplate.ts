@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const generationSection = document.getElementById('generation');
   
   // Initialize immediately if templates section is active
-  if (templatesSection && templatesSection.classList.contains('is-active')) {
+  if (templatesSection && !templatesSection.classList.contains('hidden')) {
     console.log('✅ Templates section already active, initializing now');
     setTimeout(() => initializeTemplateInterface(), 50); // Small delay to ensure buttons are rendered
   }
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = mutation.target as HTMLElement;
         const isTemplatesOrGeneration = target.id === 'templates' || target.id === 'generation';
         
-        if (isTemplatesOrGeneration && target.classList.contains('is-active')) {
+        if (isTemplatesOrGeneration && !target.classList.contains('hidden')) {
           console.log(`🔔 ${target.id} section became active, initializing template interface`);
           setTimeout(() => initializeTemplateInterface(), 50); // Small delay to ensure buttons are rendered
         }

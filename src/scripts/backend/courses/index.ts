@@ -281,7 +281,7 @@ if (persistedSection && document.getElementById(persistedSection)) {
   return;
 }
 
-const activeSection = document.querySelector('[data-course-section].is-active');
+const activeSection = document.querySelector('[data-course-section]:not(.hidden)');
 if (activeSection) {
   const sectionId = activeSection.id;
   console.log('✅ Found active section:', sectionId);
@@ -343,13 +343,15 @@ return normalized.length ? normalized : null;
  // Hide all articles
 const articles = document.querySelectorAll<HTMLElement>('[data-course-section]');
 articles.forEach((article) => {
-  article.classList.remove('is-active');
+  article.classList.add('hidden');
+  article.setAttribute('aria-hidden', 'true');
  });
 
  // Show target article
  const targetArticle = document.getElementById(sectionId);
  if (targetArticle) {
-  targetArticle.classList.add('is-active');
+  targetArticle.classList.remove('hidden');
+  targetArticle.setAttribute('aria-hidden', 'false');
  this.currentSection = sectionId;
  this.loadSection(sectionId);
  }

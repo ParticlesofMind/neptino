@@ -826,10 +826,19 @@ class CurriculumManager {
           event.preventDefault();
           const card = toggleButton.closest<HTMLElement>('[data-template-card]');
           if (card) {
-            card.classList.toggle('template-placement-card--collapsed');
+            const bodyElements = card.querySelectorAll<HTMLElement>(
+              '.template-placement-card__description, .template-placement-card__warning, .template-placement-card__options'
+            );
+            const currentlyCollapsed =
+              card.classList.contains('template-placement-card--collapsed') ||
+              Array.from(bodyElements).every((el) => el.classList.contains('hidden'));
+            const nextCollapsed = !currentlyCollapsed;
+
+            bodyElements.forEach((el) => el.classList.toggle('hidden', nextCollapsed));
+            card.classList.remove('template-placement-card--collapsed');
 
             // Update aria-expanded attribute for accessibility
-            const isExpanded = !card.classList.contains('template-placement-card--collapsed');
+            const isExpanded = !nextCollapsed;
             toggleButton.setAttribute('aria-expanded', isExpanded.toString());
           }
           return;
@@ -2849,12 +2858,10 @@ class CurriculumManager {
     if (modulesButton) {
       if (organization === 'linear') {
         modulesButton.disabled = true;
-        modulesButton.style.opacity = '0.5';
-        modulesButton.style.cursor = 'not-allowed';
+        modulesButton.classList.add('opacity-50', 'cursor-not-allowed');
       } else {
         modulesButton.disabled = false;
-        modulesButton.style.opacity = '1';
-        modulesButton.style.cursor = 'pointer';
+        modulesButton.classList.remove('opacity-50', 'cursor-not-allowed');
       }
     }
 
@@ -2863,12 +2870,12 @@ class CurriculumManager {
     if (customModulesConfig) {
       if (organization === 'custom') {
         customModulesConfig.removeAttribute('hidden');
-        customModulesConfig.classList.remove('disabled');
+        customModulesConfig.classList.remove('opacity-60', 'pointer-events-none');
         this.renderCustomModuleRows();
       } else {
         // Keep visible but grey out when not custom
         customModulesConfig.removeAttribute('hidden');
-        customModulesConfig.classList.add('disabled');
+        customModulesConfig.classList.add('opacity-60', 'pointer-events-none');
       }
     }
 
@@ -3400,12 +3407,12 @@ class CurriculumManager {
     if (customModulesConfig) {
       if (this.moduleOrganization === 'custom') {
         customModulesConfig.removeAttribute('hidden');
-        customModulesConfig.classList.remove('disabled');
+        customModulesConfig.classList.remove('opacity-60', 'pointer-events-none');
         this.renderCustomModuleRows();
       } else {
         // Keep visible but grey out when not custom
         customModulesConfig.removeAttribute('hidden');
-        customModulesConfig.classList.add('disabled');
+        customModulesConfig.classList.add('opacity-60', 'pointer-events-none');
       }
     }
 
@@ -3414,12 +3421,10 @@ class CurriculumManager {
     if (modulesButton) {
       if (this.moduleOrganization === 'linear') {
         modulesButton.disabled = true;
-        modulesButton.style.opacity = '0.5';
-        modulesButton.style.cursor = 'not-allowed';
+        modulesButton.classList.add('opacity-50', 'cursor-not-allowed');
       } else {
         modulesButton.disabled = false;
-        modulesButton.style.opacity = '1';
-        modulesButton.style.cursor = 'pointer';
+        modulesButton.classList.remove('opacity-50', 'cursor-not-allowed');
       }
     }
   }
@@ -3445,7 +3450,7 @@ class CurriculumManager {
 
     const totalLessons = this.currentCurriculum.length;
     if (totalLessons === 0) {
-      customModulesList.innerHTML = '<p class="form__help-text">Generate a curriculum first to define custom modules.</p>';
+      customModulesList.innerHTML = '<p class="form__help-text text-sm text-neutral-500">Generate a curriculum first to define custom modules.</p>';
       return;
     }
 
@@ -3460,20 +3465,20 @@ class CurriculumManager {
       const lastLessonNumber = lastLesson ? lastLesson.lessonNumber : (index + 1);
 
       html += `
-       <div class="custom-module-row" data-module-index="${index}">
-         <span class="custom-module-row__label">Module ${index + 1}</span>
-         <div class="custom-module-row__input-group">
+       <div class="custom-module-row flex flex-wrap items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3" data-module-index="${index}">
+         <span class="custom-module-row__label text-sm font-semibold text-neutral-800">Module ${index + 1}</span>
+         <div class="custom-module-row__input-group flex items-center gap-2 text-sm text-neutral-600">
            <span>Lesson 1 →</span>
            <input 
              type="number" 
-             class="input input--number custom-module-row__input" 
+             class="custom-module-row__input w-20 rounded-md border-0 py-1.5 text-sm text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" 
              min="1" 
              max="${totalLessons}" 
              value="${lastLessonNumber}"
              data-module-end="${index}"
            />
          </div>
-         ${index > 0 ? '<button type="button" class="custom-module-row__remove" data-remove-module="' + index + '">×</button>' : '<span style="width: 2rem;"></span>'}
+         ${index > 0 ? '<button type="button" class="custom-module-row__remove inline-flex h-7 w-7 items-center justify-center rounded-md border border-red-200 text-sm font-semibold text-red-600 hover:bg-red-50" data-remove-module="' + index + '">×</button>' : '<span class="inline-block w-8"></span>'}
        </div>
      `;
     });
