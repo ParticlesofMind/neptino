@@ -1,7 +1,6 @@
 {
   "recommendations": [
     "denoland.vscode-deno",
-    "openai.chatgpt",
     "github.copilot-chat",
     "github.copilot"
   ]
