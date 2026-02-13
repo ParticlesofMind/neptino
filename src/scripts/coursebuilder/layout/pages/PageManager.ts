@@ -455,8 +455,11 @@ export class PageManager {
 
     // Update all loaded pages
     this.loadedPages.forEach((page) => {
-      // Note: Would need to implement updateMargins in PageContainer
-      console.log(`Updating margins for page ${page.index + 1}`);
+      page.container.updateLayout({
+        margins: this.margins,
+        width: this.pageWidth,
+        height: this.pageHeight,
+      });
     });
   }
 

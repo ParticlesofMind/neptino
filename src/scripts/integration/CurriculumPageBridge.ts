@@ -44,11 +44,13 @@ export class CurriculumPageBridge {
   private handleCurriculumResetListener: EventListener;
   private currentPageData: PageMetadata[] = [];
   private dimensionUnsubscribe: (() => void) | null = null;
+  private marginUnsubscribe: (() => void) | null = null;
   private rebuildingPages = false;
 
   constructor() {
     this.init();
     this.dimensionUnsubscribe = canvasDimensionManager.onChange(() => this.handleDimensionChange());
+    this.marginUnsubscribe = canvasMarginManager.onChange((margins) => this.handleMarginChange(margins));
     this.handleCurriculumResetListener = this.handleCurriculumResetEvent.bind(this);
     document.addEventListener('curriculum-reset', this.handleCurriculumResetListener);
   }
@@ -78,6 +80,14 @@ export class CurriculumPageBridge {
     void this.initializePageManager(this.currentPageData).finally(() => {
       this.rebuildingPages = false;
     });
+  }
+
+  private handleMarginChange(margins: { top: number; right: number; bottom: number; left: number }): void {
+    if (!this.pageManager || !this.isInitialized) {
+      return;
+    }
+
+    this.pageManager.updateMargins(margins);
   }
 
   /**
@@ -517,6 +527,10 @@ export class CurriculumPageBridge {
   }
 
   public destroy(): void {
+    this.dimensionUnsubscribe?.();
+    this.dimensionUnsubscribe = null;
+    this.marginUnsubscribe?.();
+    this.marginUnsubscribe = null;
     this.resetCanvasDisplay("bridge-destroyed");
     document.removeEventListener('curriculum-reset', this.handleCurriculumResetListener);
     console.log('🧹 CurriculumPageBridge destroyed');

@@ -515,31 +515,24 @@ articles.forEach((article) => {
 let courseBuilderInitialized = false;
 
 document.addEventListener("DOMContentLoaded", () => {
- // Only initialize if we're on the coursebuilder page, in the setup section, and not already initialized
- const isInSetupSection =
- document.querySelector('.coursebuilder__setup') ||
- window.location.hash === "#setup" ||
- window.location.hash === "";
- const hasSetupSection = document.querySelector('.coursebuilder__setup');
+  // Initialize when the coursebuilder markup is present.
+  const hasSetupSection = document.querySelector('.coursebuilder__setup');
 
- if (hasSetupSection && isInSetupSection && !courseBuilderInitialized) {
- courseBuilderInitialized = true;
- new CourseBuilder();
-
- }
+  if (hasSetupSection && !courseBuilderInitialized) {
+    courseBuilderInitialized = true;
+    new CourseBuilder();
+  }
 });
 
-// Also listen for hash changes to initialize when entering setup
+// Also listen for hash changes as a fallback (e.g., lazy-loaded views)
 window.addEventListener("hashchange", () => {
- const isInSetupSection =
- window.location.hash === "#setup" || window.location.hash === "";
- const hasSetupSection = document.querySelector('.coursebuilder__setup');
+  const hasSetupSection = document.querySelector('.coursebuilder__setup');
 
- if (hasSetupSection && isInSetupSection && !courseBuilderInitialized) {
- courseBuilderInitialized = true;
- new CourseBuilder();
- console.log(
- "CourseBuilder (form handler) initialized on hash change to setup",
- );
- }
+  if (hasSetupSection && !courseBuilderInitialized) {
+    courseBuilderInitialized = true;
+    new CourseBuilder();
+    console.log(
+      "CourseBuilder (form handler) initialized on hash change",
+    );
+  }
 });

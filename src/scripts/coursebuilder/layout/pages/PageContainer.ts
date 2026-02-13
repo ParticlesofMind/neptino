@@ -130,6 +130,30 @@ export class PageContainer extends Container {
   }
 
   /**
+   * Update layout configuration and re-render content.
+   */
+  public updateLayout(options: {
+    width?: number;
+    height?: number;
+    margins?: { top: number; right: number; bottom: number; left: number };
+  }): void {
+    this.config = {
+      ...this.config,
+      width: options.width ?? this.config.width,
+      height: options.height ?? this.config.height,
+      margins: options.margins ?? this.config.margins,
+    };
+
+    this.buildLayout();
+    this.clearHeader();
+    this.clearFooter();
+    this.clearBody();
+    this.populateHeader();
+    this.populateFooter();
+    this.populateBody();
+  }
+
+  /**
    * Build the layout structure
    */
   private buildLayout(): void {
