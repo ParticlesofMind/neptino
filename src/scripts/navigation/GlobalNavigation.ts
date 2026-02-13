@@ -192,10 +192,10 @@ export class GlobalNavigation {
  }
  
  // Language selection
- if (target.closest('.dropdown__link[data-lang]')) {
+ const langTarget = target.closest('[data-lang]') as HTMLButtonElement | null;
+ if (langTarget) {
  e.preventDefault();
- const langButton = target.closest('.dropdown__link[data-lang]') as HTMLButtonElement;
- const selectedLang = langButton.getAttribute('data-lang');
+ const selectedLang = langTarget.getAttribute('data-lang');
  if (selectedLang) {
  this.handleLanguageChange(selectedLang);
  }
@@ -262,6 +262,7 @@ export class GlobalNavigation {
  
  toggle.setAttribute('aria-expanded', newState.toString());
  menu.classList.toggle('dropdown__menu--active', newState);
+ menu.classList.toggle('hidden', !newState);
  }
  }
 
@@ -274,7 +275,7 @@ export class GlobalNavigation {
  };
  
  // Update the dropdown toggle text
- const dropdownText = document.querySelector('.dropdown__text');
+ const dropdownText = document.querySelector('[data-language-label]') || document.querySelector('.dropdown__text');
  if (dropdownText) {
  dropdownText.textContent = languages[langCode as keyof typeof languages] || 'EN';
  }
@@ -292,6 +293,7 @@ export class GlobalNavigation {
  if (toggle && menu) {
  toggle.setAttribute('aria-expanded', 'false');
  menu.classList.remove('dropdown__menu--active');
+ menu.classList.add('hidden');
  }
  }
 

@@ -520,19 +520,24 @@ export class AuthFormHandler {
 
  private showMessage(message: string, type: 'success' | 'error'): void {
  // Remove any existing messages
- const existingMessage = document.querySelector('.form__message');
+ const existingMessage = document.querySelector('[data-auth-message]');
  if (existingMessage) {
  existingMessage.remove();
  }
 
  // Create new message element
  const messageElement = document.createElement('div');
- messageElement.className = `form__message form__message--${type}`;
+ messageElement.setAttribute('data-auth-message', '');
+ const baseClasses = 'mt-4 rounded-xl border px-4 py-3 text-sm font-medium';
+ const typeClasses = type === 'success'
+ ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+ : 'border-rose-200 bg-rose-50 text-rose-700';
+ messageElement.className = `${baseClasses} ${typeClasses}`;
  messageElement.textContent = message;
 
  // Insert message after the form header
- const form = document.querySelector('.form--signin, .form--signup');
- const header = form?.querySelector('.form__header');
+ const form = document.querySelector('[data-auth-form]');
+ const header = form?.querySelector('[data-auth-header]');
  
  if (header && form) {
  header.insertAdjacentElement('afterend', messageElement);

@@ -5,93 +5,130 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Sign In - Neptino</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 <link href="/src/styles/app.css" rel="stylesheet"/>
+<style>
+    :root { font-family: "Source Sans 3", "Segoe UI", sans-serif; }
+    .font-display { font-family: "Space Grotesk", "Segoe UI", sans-serif; }
+</style>
 </head>
-<body class="min-h-screen bg-neutral-50 font-sans text-neutral-900 body">
-<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200 flex h-16 items-center justify-between header--signin">
-<nav class="flex items-center gap-8">
-<ul class="flex items-center gap-6 list-none m-0 p-0">
-<li class="relative ul__item--brand">
-<a class="brand" href="/">
+<body class="min-h-screen flex flex-col bg-gradient-to-br from-neutral-50 via-white to-primary-50 text-neutral-900 antialiased">
+<header class="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white/80 backdrop-blur">
+<nav class="w-full flex items-center justify-between px-6 py-4 lg:px-8">
+<a href="/" class="flex items-center">
 <img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
 </a>
-</li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/shared/features.html">Features</a></li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/shared/about.html">About</a></li>
-<li class="relative ul__item--dropdown">
-<div class="relative inline-block text-left dropdown--right">
-<button aria-expanded="false" aria-haspopup="true" class="inline-flex items-center gap-x-1 text-sm font-semibold leading-6 text-neutral-900" id="language-toggle">
-<span class="dropdown__text">EN</span>
-<svg class="dropdown__icon" fill="currentColor" height="12" viewbox="0 0 24 24" width="12">
+<ul class="hidden sm:flex items-center gap-12 list-none m-0 p-0">
+<li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/features.html">Features</a></li>
+<li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/about.html">About</a></li>
+<li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Resources</a></li>
+<li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Partners</a></li>
+<li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">News</a></li>
+</ul>
+<div class="flex items-center gap-4">
+<div class="relative">
+<button aria-expanded="false" aria-haspopup="true" class="inline-flex items-center gap-1 text-sm font-semibold text-neutral-900" id="language-toggle">
+<span data-language-label="">EN</span>
+<svg fill="currentColor" height="12" viewbox="0 0 24 24" width="12">
 <path d="M7 10l5 5 5-5z"></path>
 </svg>
 </button>
-<ul class="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden" id="language-menu">
-<li class="block">
-<button class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 w-full text-left" data-lang="en">English</button>
+<ul class="absolute right-0 z-10 mt-2 hidden w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5" id="language-menu">
+<li>
+<button class="block w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100" data-lang="en">English</button>
 </li>
-<li class="block">
-<button class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 w-full text-left" data-lang="es">Español</button>
+<li>
+<button class="block w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100" data-lang="es">Español</button>
 </li>
-<li class="block">
-<button class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 w-full text-left" data-lang="fr">Français</button>
+<li>
+<button class="block w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100" data-lang="fr">Français</button>
 </li>
-<li class="block">
-<button class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 w-full text-left" data-lang="de">Deutsch</button>
+<li>
+<button class="block w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100" data-lang="de">Deutsch</button>
 </li>
 </ul>
 </div>
-</li>
-<li class="relative ul__item--cta">
-<a class="cta inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" href="/src/pages/shared/signup.html">Sign Up</a>
-</li>
-</ul>
+<a class="inline-flex items-center justify-center rounded-lg px-6 py-3 text-sm font-medium text-white shadow-sm transition-all bg-primary-600 hover:bg-primary-700 active:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ml-auto" href="/src/pages/shared/signup.html">Sign Up</a>
+</div>
 </nav>
 </header>
-<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid__main--auth main">
-<form action="#" class="form form--signin" id="signin-form" method="post">
-<header class="form__header">
-<h1 class="form__title heading heading--h1">Welcome back</h1>
-<p class="form__description paragraph paragraph--lead">Sign in to your Neptino account</p>
+<main class="flex-1 flex-col w-full px-4 sm:px-6 lg:px-8 py-12">
+<section class="relative mx-auto w-full max-w-lg">
+<div aria-hidden="true" class="pointer-events-none absolute -top-16 -left-12 h-40 w-40 rounded-full bg-primary-100/70 blur-3xl"></div>
+<div aria-hidden="true" class="pointer-events-none absolute -bottom-20 -right-12 h-44 w-44 rounded-full bg-secondary-100/70 blur-3xl"></div>
+<form action="#" class="relative z-10 space-y-6 rounded-2xl bg-white/80 p-8 backdrop-blur" data-auth-form="signin" id="signin-form" method="post">
+<header class="space-y-2" data-auth-header="">
+<p class="text-xs font-semibold uppercase tracking-[0.3em] text-primary-600">Welcome back</p>
+<h1 class="font-display text-3xl font-semibold text-neutral-900">Sign in to Neptino</h1>
+<p class="text-sm text-neutral-600">Pick up right where you left off with your learners.</p>
 </header>
-<div class="form__body">
-<div class="form__group">
-<svg class="form__icon" fill="none" height="20" viewbox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
-<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#3B82F6" stroke-width="2"></path>
-<polyline points="22,6 12,13 2,6" stroke="#3B82F6" stroke-width="2"></polyline>
+<div class="space-y-4">
+<div class="relative">
+<label class="sr-only" for="email">Email address</label>
+<svg aria-hidden="true" class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-primary-500" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"></path>
+<polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2"></polyline>
 </svg>
-<input autocomplete="email" class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white input--auth" id="email" name="email" placeholder="Email address" required="" type="email"/>
+<input autocomplete="email" class="w-full rounded-xl border border-neutral-200 bg-white px-10 py-3 text-sm text-neutral-900 shadow-sm placeholder:text-neutral-400 focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" id="email" name="email" placeholder="Email address" required="" type="email"/>
 </div>
-<div class="form__group">
-<svg class="form__icon" fill="none" height="20" viewbox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
-<rect height="11" rx="2" ry="2" stroke="#3B82F6" stroke-width="2" width="18" x="3" y="11"></rect>
-<circle cx="12" cy="16" r="1" stroke="#3B82F6" stroke-width="2"></circle>
-<path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#3B82F6" stroke-width="2"></path>
+<div class="relative">
+<label class="sr-only" for="password">Password</label>
+<svg aria-hidden="true" class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-primary-500" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<rect height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2" width="18" x="3" y="11"></rect>
+<circle cx="12" cy="16" r="1" stroke="currentColor" stroke-width="2"></circle>
+<path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2"></path>
 </svg>
-<input autocomplete="current-password" class="block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white input--auth" id="password" name="password" placeholder="Password" required="" type="password"/>
+<input autocomplete="current-password" class="w-full rounded-xl border border-neutral-200 bg-white px-10 py-3 text-sm text-neutral-900 shadow-sm placeholder:text-neutral-400 focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" id="password" name="password" placeholder="Password" required="" type="password"/>
 </div>
-<button class="form__submit inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 button--primary" type="submit">Sign In</button>
+<button class="w-full rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-200 transition hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-200" type="submit">Sign In</button>
 </div>
-<footer class="form__footer">
-<p class="form__footer-text">Don't have an account yet? <a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/shared/signup.html">Sign up</a></p>
+<footer class="space-y-3 text-center text-sm text-neutral-600">
+<p>Don't have an account yet? <a class="font-semibold text-primary-600 hover:text-primary-700" href="/src/pages/shared/signup.html">Sign up</a></p>
+<p class="text-xs text-neutral-500">Forgot your password? Contact support to reset.</p>
 </footer>
 </form>
+</section>
 </main>
-<footer class="bg-white border-t border-neutral-200 mt-auto footer">
-<nav class="mx-auto max-w-7xl px-6 lg:px-8 py-8 flex justify-between items-center">
-<ul class="flex items-center gap-6 gap-8 list-none m-0 p-0">
-<li class="relative ul__item--brand">
-<a class="brand" href="/">
-<img alt="Neptino Logo" class="h-8 w-auto h-6" src="/src/assets/logo/octopus-logo.png"/>
+<footer class="border-t border-neutral-200 bg-white mt-auto">
+<div class="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+<div>
+<a href="/" class="inline-block mb-4">
+<img alt="Neptino Logo" class="h-6 w-auto" src="/src/assets/logo/octopus-logo.png"/>
 </a>
-</li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Privacy
-            Policy</a></li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Terms of
-            Service</a></li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Contact</a></li>
+<p class="text-xs text-neutral-500">Empowering educators and students worldwide.</p>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-neutral-900 mb-4">Product</h3>
+<ul class="space-y-2 list-none m-0 p-0">
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/features.html">Features</a></li>
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/pricing.html">Pricing</a></li>
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/about.html">About</a></li>
 </ul>
-</nav>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-neutral-900 mb-4">Legal</h3>
+<ul class="space-y-2 list-none m-0 p-0">
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Privacy Policy</a></li>
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Terms of Service</a></li>
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Contact</a></li>
+</ul>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-neutral-900 mb-4">Connect</h3>
+<ul class="space-y-2 list-none m-0 p-0">
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Twitter</a></li>
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">LinkedIn</a></li>
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">GitHub</a></li>
+</ul>
+</div>
+</div>
+<div class="border-t border-neutral-200 pt-8">
+<p class="text-xs text-center text-neutral-500">© 2024 Neptino. All rights reserved.</p>
+</div>
+</div>
 </footer>
 <script src="/src/scripts/app.ts" type="module"></script>
 </body>

@@ -1,198 +1,253 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Teacher Dashboard - Neptino</title>
-<link href="/src/styles/app.css" rel="stylesheet"/>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Teacher Dashboard - Neptino</title>
+  <link href="/src/styles/app.css" rel="stylesheet"/>
 </head>
-<body class="min-h-screen bg-neutral-50 font-sans text-neutral-900 body">
-<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200 flex h-16 items-center justify-between">
-<nav aria-label="Primary" class="flex items-center gap-8">
-<ul class="flex items-center gap-6 list-none m-0 p-0">
-<li class="relative">
-<a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline flex items-center gap-2 text-primary-600 font-bold text-xl hover:text-primary-700" href="/src/pages/teacher/home.html">
-<img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
-</a>
-</li>
-<li class="relative">
-<a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/teacher/courses.html">My Courses</a>
-</li>
-<li class="relative">
-<a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/teacher/marketplace.html">Marketplace</a>
-</li>
-<li class="relative">
-<a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/teacher/tutorials.html">Tutorials</a>
-</li>
-<li class="relative">
-<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" id="logout-btn">Logout</button>
-</li>
-</ul>
-</nav>
+<body class="min-h-screen flex flex-col bg-neutral-50 font-sans text-neutral-900">
+<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur border-b border-neutral-200">
+  <nav class="w-full flex items-center px-6 py-4 lg:px-8">
+    <a href="/src/pages/teacher/home.html" class="flex items-center flex-shrink-0">
+      <img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
+    </a>
+    <ul class="hidden sm:flex flex-1 justify-center items-center gap-8 list-none m-0 p-0">
+      <li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/teacher/courses.html">My Courses</a></li>
+      <li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/teacher/marketplace.html">Marketplace</a></li>
+      <li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/teacher/tutorials.html">Tutorials</a></li>
+    </ul>
+    <button class="inline-flex items-center justify-center rounded-lg px-6 py-3 text-sm font-medium text-white shadow-sm transition-all bg-primary-600 hover:bg-primary-700 active:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 flex-shrink-0 ml-auto" id="logout-btn">Logout</button>
+  </nav>
 </header>
-<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 main">
-<section class="grid grid-cols-1 md:grid-cols-[280px_1fr] min-h-screen">
-<aside class="hidden md:flex flex-col bg-white border-r border-neutral-200 h-screen sticky top-0 overflow-y-auto bg-neutral-900 text-white border-none">
-<div class="flex items-center gap-3 px-6 h-16 border-b border-neutral-800">
-<img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
-<span class="font-bold text-xl tracking-tight text-white">Neptino</span>
-</div>
-<nav>
-<h3 class="px-6 mt-8 mb-2 text-xs font-semibold text-neutral-500 uppercase tracking-wider">MENU</h3>
-<ul class="flex flex-col gap-1 px-3">
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors bg-primary-600 text-white hover:bg-primary-700" data-section="home" href="#home">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<rect height="7" width="7" x="3" y="3"></rect>
-<rect height="7" width="7" x="14" y="3"></rect>
-<rect height="7" width="7" x="14" y="14"></rect>
-<rect height="7" width="7" x="3" y="14"></rect>
-</svg>
-<span class="truncate">Dashboard</span>
-</a>
-</li>
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="classes" href="#classes">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-</svg>
-<span class="truncate">Classes</span>
-</a>
-</li>
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="messages" href="#messages">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-<polyline points="22,6 12,13 2,6"></polyline>
-</svg>
-<span class="truncate">Messages</span>
-</a>
-</li>
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="settings" href="#settings">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<circle cx="12" cy="12" r="3"></circle>
-<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-</svg>
-<span class="truncate">Settings</span>
-</a>
-</li>
-</ul>
-</nav>
-</aside>
-<!-- Home Article -->
-<article class="hidden opacity-0 transition-opacity duration-300 ease-in-out [&amp;.is-active]:block [&amp;.is-active]:opacity-100 article--home is-active" data-dashboard-section="" id="home">
-<header class="mb-8">
-<h2 class="text-2xl font-bold text-neutral-900">Dashboard</h2>
-</header>
-<div class="space-y-6">
-<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-<figure class="relative overflow-hidden rounded-xl bg-white p-6 shadow-sm ring-1 ring-neutral-900/5">
-<figcaption class="text-sm font-medium text-neutral-500">Active Courses</figcaption>
-<data class="mt-2 flex items-baseline gap-x-2" value="5">5</data>
-</figure>
-<figure class="relative overflow-hidden rounded-xl bg-white p-6 shadow-sm ring-1 ring-neutral-900/5">
-<figcaption class="text-sm font-medium text-neutral-500">Total Students</figcaption>
-<data class="mt-2 flex items-baseline gap-x-2" value="127">127</data>
-</figure>
-<figure class="relative overflow-hidden rounded-xl bg-white p-6 shadow-sm ring-1 ring-neutral-900/5">
-<figcaption class="text-sm font-medium text-neutral-500">Pending Reviews</figcaption>
-<data class="mt-2 flex items-baseline gap-x-2" value="12">12</data>
-</figure>
-</div>
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">Quick Actions</h3>
-<button class="w-full mt-4 inline-flex justify-center items-center bg-white text-sm text-neutral-900 shadow-sm hover:bg-neutral-50 rounded-lg px-4 font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none border border-neutral-300 py-2 text-neutral-700 hover:text-neutral-900">Create new course content</button>
-</div>
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">Recent Activity</h3>
-<a class="mt-4 block text-sm font-medium text-primary-600 hover:text-primary-500 text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#submissions">View latest student submissions</a>
-</div>
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">Messages</h3>
-<a class="mt-4 block text-sm font-medium text-primary-600 hover:text-primary-500 text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#messages">
-<data value="8">8</data> unread messages
-            </a>
-</div>
-</div>
-</article>
-<!-- Classes Article -->
-<article class="hidden opacity-0 transition-opacity duration-300 ease-in-out [&amp;.is-active]:block [&amp;.is-active]:opacity-100 article--classes" data-dashboard-section="" id="classes">
-<header class="mb-8">
-<h2 class="text-2xl font-bold text-neutral-900">Classes</h2>
-</header>
-<div class="space-y-6">
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">Manage your courses</h3>
-<p class="mt-2 text-sm text-neutral-500">View and edit all your courses</p>
-</div>
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">Course Analytics</h3>
-<p class="mt-2 text-sm text-neutral-500">View performance metrics</p>
-</div>
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">Create Course</h3>
-<button class="w-full mt-4 inline-flex justify-center items-center bg-white text-sm text-neutral-900 shadow-sm hover:bg-neutral-50 rounded-lg px-4 font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none border border-neutral-300 py-2 text-neutral-700 hover:text-neutral-900">Start a new course</button>
-</div>
-</div>
-</article>
-<!-- Messages Article -->
-<article class="hidden opacity-0 transition-opacity duration-300 ease-in-out [&amp;.is-active]:block [&amp;.is-active]:opacity-100 article--messages" data-dashboard-section="" id="messages">
-<header class="mb-8">
-<h2 class="text-2xl font-bold text-neutral-900">Messages</h2>
-</header>
-<div class="space-y-6">
-<div class="messaging__container" id="rocketchat-container">
-<div class="messaging__loading">
-<p>Loading messaging interface...</p>
-</div>
-</div>
-</div>
-</article>
-<!-- Settings Article -->
-<article class="hidden opacity-0 transition-opacity duration-300 ease-in-out [&amp;.is-active]:block [&amp;.is-active]:opacity-100 article--settings" data-dashboard-section="" id="settings">
-<header class="mb-8">
-<h2 class="text-2xl font-bold text-neutral-900">Settings</h2>
-</header>
-<div class="space-y-6">
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">Profile Settings</h3>
-<a class="mt-4 block text-sm font-medium text-primary-600 hover:text-primary-500 text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#profile">Update your profile</a>
-</div>
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">Account Security</h3>
-<p class="mt-2 text-sm text-neutral-500">Manage passwords &amp; 2FA</p>
-</div>
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">Preferences</h3>
-<a class="mt-4 block text-sm font-medium text-primary-600 hover:text-primary-500 text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#preferences">Customize your experience</a>
-</div>
-</div>
-</article>
-</section>
+
+<main class="flex-1 w-full flex">
+  <aside class="hidden md:flex w-64 flex-col bg-white text-neutral-900 border-r border-neutral-200 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
+    <nav class="flex-1 px-3 py-6">
+      <h3 class="px-3 mb-4 text-xs font-semibold text-neutral-600 uppercase tracking-wider">Menu</h3>
+      <ul class="flex flex-col gap-2">
+        <li>
+          <button class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md bg-primary-600 text-white hover:bg-primary-700 transition-colors" data-nav-section="home">
+            <svg class="h-5 w-5 shrink-0" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="20">
+              <rect height="7" width="7" x="3" y="3"></rect>
+              <rect height="7" width="7" x="14" y="3"></rect>
+              <rect height="7" width="7" x="14" y="14"></rect>
+              <rect height="7" width="7" x="3" y="14"></rect>
+            </svg>
+            <span class="truncate">Home</span>
+          </button>
+        </li>
+        <li>
+          <button class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md text-neutral-600 hover:text-primary-600 hover:bg-primary-50 transition-colors" data-nav-section="classes">
+            <svg class="h-5 w-5 shrink-0" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="20">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+            <span class="truncate">Classes</span>
+          </button>
+        </li>
+        <li>
+          <button class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md text-neutral-600 hover:text-primary-600 hover:bg-primary-50 transition-colors" data-nav-section="students">
+            <svg class="h-5 w-5 shrink-0" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="20">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span class="truncate">Students</span>
+          </button>
+        </li>
+        <li>
+          <button class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md text-neutral-600 hover:text-primary-600 hover:bg-primary-50 transition-colors" data-nav-section="messages">
+            <svg class="h-5 w-5 shrink-0" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="20">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <span class="truncate">Messages</span>
+          </button>
+        </li>
+        <li>
+          <button class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md text-neutral-600 hover:text-primary-600 hover:bg-primary-50 transition-colors" data-nav-section="calendar">
+            <svg class="h-5 w-5 shrink-0" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="20">
+              <rect height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2" width="18" x="3" y="4"></rect>
+              <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2"></path>
+            </svg>
+            <span class="truncate">Calendar</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <div class="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Dashboard Section -->
+    <section class="hidden" data-section="home">
+      <header class="mb-8">
+        <h2 class="text-3xl font-bold text-neutral-900">Dashboard</h2>
+      </header>
+      <div class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
+            <p class="text-sm font-medium text-neutral-500">Active Courses</p>
+            <p class="mt-3 text-3xl font-bold text-neutral-900">5</p>
+          </div>
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
+            <p class="text-sm font-medium text-neutral-500">Total Students</p>
+            <p class="mt-3 text-3xl font-bold text-neutral-900">127</p>
+          </div>
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
+            <p class="text-sm font-medium text-neutral-500">Pending Reviews</p>
+            <p class="mt-3 text-3xl font-bold text-neutral-900">12</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
+            <h3 class="text-lg font-semibold text-neutral-900 mb-4">Quick Actions</h3>
+            <button class="w-full inline-flex items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-all">Create new course content</button>
+          </div>
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
+            <h3 class="text-lg font-semibold text-neutral-900 mb-4">Recent Activity</h3>
+            <a class="inline-block text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors no-underline" href="#submissions">View latest student submissions</a>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
+          <h3 class="text-lg font-semibold text-neutral-900 mb-4">Messages</h3>
+          <a class="inline-block text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors no-underline" href="#messages">8 unread messages</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Classes Section -->
+    <section class="hidden" data-section="classes">
+      <header class="mb-8">
+        <h2 class="text-3xl font-bold text-neutral-900">Classes</h2>
+      </header>
+      <div class="space-y-6">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
+          <h3 class="text-lg font-semibold text-neutral-900 mb-2">Manage your courses</h3>
+          <p class="text-sm text-neutral-500">View and edit all your courses</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
+          <h3 class="text-lg font-semibold text-neutral-900 mb-2">Course Analytics</h3>
+          <p class="text-sm text-neutral-500">View performance metrics</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
+          <h3 class="text-lg font-semibold text-neutral-900 mb-4">Create Course</h3>
+          <button class="w-full inline-flex items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-all">Start a new course</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Messages Section -->
+    <section class="hidden" data-section="messages">
+      <header class="mb-8">
+        <h2 class="text-3xl font-bold text-neutral-900">Messages</h2>
+      </header>
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-neutral-200" data-messaging-container="">
+        <p class="text-sm text-neutral-500">Loading messaging interface...</p>
+      </div>
+    </section>
+
+    <!-- Students Section -->
+    <section class="hidden" data-section="students">
+      <header class="mb-8">
+        <h2 class="text-3xl font-bold text-neutral-900">Students</h2>
+      </header>
+      <div class="space-y-6">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
+          <h3 class="text-lg font-semibold text-neutral-900 mb-2">Student Management</h3>
+          <p class="text-sm text-neutral-500">View and manage your enrolled students</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
+          <h3 class="text-lg font-semibold text-neutral-900 mb-2">Student Progress</h3>
+          <p class="text-sm text-neutral-500">Track individual student progress and performance</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Calendar Section -->
+    <section class="hidden" data-section="calendar">
+      <header class="mb-8">
+        <h2 class="text-3xl font-bold text-neutral-900">Calendar</h2>
+      </header>
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
+        <p class="text-sm text-neutral-500">View your teaching schedule and important dates</p>
+      </div>
+    </section>
+  </div>
 </main>
-<footer class="bg-white border-t border-neutral-200 mt-auto footer">
-<nav class="mx-auto max-w-7xl px-6 lg:px-8 py-8 flex justify-between items-center">
-<a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline flex items-center gap-2 text-primary-600 font-bold text-xl hover:text-primary-700" href="/src/pages/teacher/home.html">
-<img alt="Neptino Logo" class="h-8 w-auto h-5" src="/src/assets/logo/octopus-logo.png"/>
-</a>
-<ul class="flex items-center gap-6 gap-8 list-none m-0 p-0">
-<li class="relative">
-<a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#privacy">Privacy Policy</a>
-</li>
-<li class="relative">
-<a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#terms">Terms of Service</a>
-</li>
-<li class="relative">
-<a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#contact">Contact</a>
-</li>
-</ul>
-</nav>
+
+<footer class="border-t border-neutral-200 bg-white mt-auto">
+  <div class="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+      <div>
+        <a href="/" class="inline-block mb-4">
+          <img alt="Neptino Logo" class="h-6 w-auto" src="/src/assets/logo/octopus-logo.png"/>
+        </a>
+        <p class="text-xs text-neutral-500">Empowering educators and students worldwide.</p>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-neutral-900 mb-4">Product</h3>
+        <ul class="space-y-2 list-none m-0 p-0">
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/features.html">Features</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/pricing.html">Pricing</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/about.html">About</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-neutral-900 mb-4">Legal</h3>
+        <ul class="space-y-2 list-none m-0 p-0">
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Privacy Policy</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Terms of Service</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-neutral-900 mb-4">Connect</h3>
+        <ul class="space-y-2 list-none m-0 p-0">
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Twitter</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">LinkedIn</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-neutral-200 pt-8">
+      <p class="text-xs text-center text-neutral-500">© 2024 Neptino. All rights reserved.</p>
+    </div>
+  </div>
 </footer>
+
 <script src="/src/scripts/app.ts" type="module"></script>
 <script src="/src/scripts/navigation/index.ts" type="module"></script>
 <script src="/src/scripts/backend/rocketchat/MessagingInterface.ts" type="module"></script>
+<script>
+  // Dashboard navigation
+  document.querySelectorAll('[data-nav-section]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const section = e.currentTarget.getAttribute('data-nav-section');
+      
+      // Hide all sections
+      document.querySelectorAll('[data-section]').forEach(el => {
+        el.classList.add('hidden');
+      });
+      
+      // Remove active state from all buttons
+      document.querySelectorAll('[data-nav-section]').forEach(el => {
+        el.classList.remove('bg-primary-600', 'text-white', 'hover:bg-primary-700');
+        el.classList.add('text-neutral-600', 'hover:text-primary-600', 'hover:bg-primary-50');
+      });
+      
+      // Show selected section
+      document.querySelector(`[data-section="${section}"]`).classList.remove('hidden');
+      
+      // Set active button
+      e.currentTarget.classList.remove('text-neutral-600', 'hover:text-primary-600', 'hover:bg-primary-50');
+      e.currentTarget.classList.add('bg-primary-600', 'text-white', 'hover:bg-primary-700');
+    });
+  });
+  
+  // Show home section by default
+  document.querySelector('[data-section="home"]').classList.remove('hidden');
+</script>
 </body>
 </html>
