@@ -1,77 +1,69 @@
 <!DOCTYPE html>
+
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tutorials - Neptino</title>
-  <link rel="stylesheet" href="/src/scss/main.scss" />
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tutorials - Neptino</title>
+<link href="/src/styles/app.css" rel="stylesheet"/>
 </head>
-
-<body class="grid body">
-  <header class="grid__header header header--home">
-    <nav class="header__nav">
-      <ul class="ul ul--header">
-        <li class="ul__item ul__item--brand">
-          <a href="/src/pages/admin/home.html" class="brand">
-            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
-          </a>
-        </li>
-        <li class="ul__item"><a href="/src/pages/admin/courses.html" class="link link--header">My Courses</a></li>
-        <li class="ul__item"><a href="/src/pages/admin/marketplace.html" class="link link--header">Marketplace</a></li>
-        <li class="ul__item"><a href="/src/pages/admin/tutorials.html" class="link link--header">Tutorials</a></li>
-        <li class="ul__item ul__item--cta">
-          <button id="logout-btn" class="cta button button--outline">Logout</button>
-        </li>
-      </ul>
-    </nav>
-  </header>
-
-  <main class="grid__main main">
-    <article class="article article--tutorials">
-      <header class="article__header">
-        <h1 class="article__title">Administrative Tutorials</h1>
-        <p class="article__description">Learn how to manage your institution and optimize educational outcomes.</p>
-      </header>
-      
-      <section class="article__content">
-        <div class="card">
-          <h3 class="card__title">Getting Started</h3>
-          <p class="card__description">Essential tutorials for new administrators</p>
-          <button class="card__action button button--primary">Start Learning</button>
-        </div>
-        
-        <div class="card">
-          <h3 class="card__title">User Management</h3>
-          <p class="card__description">Learn how to manage users, roles, and permissions</p>
-          <button class="card__action button button--secondary">View Tutorial</button>
-        </div>
-        
-        <div class="card">
-          <h3 class="card__title">Analytics & Reporting</h3>
-          <p class="card__description">Master institutional analytics and reporting tools</p>
-          <button class="card__action button button--secondary">View Tutorial</button>
-        </div>
-      </section>
-    </article>
-  </main>
-
-  <footer class="grid__footer footer">
-    <nav class="footer__nav">
-      <ul class="ul ul--footer">
-        <li class="ul__item ul__item--brand">
-          <a href="/src/pages/admin/home.html" class="brand">
-            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
-          </a>
-        </li>
-        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Privacy Policy</a></li>
-        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Terms of Service</a></li>
-        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Contact</a></li>
-      </ul>
-    </nav>
-  </footer>
-
-  <script type="module" src="/src/scripts/app.ts"></script>
+<body class="min-h-screen bg-neutral-50 font-sans text-neutral-900 body">
+<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200 flex h-16 items-center justify-between header--home">
+<nav class="flex items-center gap-8">
+<ul class="flex items-center gap-6 list-none m-0 p-0">
+<li class="relative ul__item--brand">
+<a class="brand" href="/src/pages/admin/home.html">
+<img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
+</a>
+</li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/admin/courses.html">My Courses</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/admin/marketplace.html">Marketplace</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/admin/tutorials.html">Tutorials</a></li>
+<li class="relative ul__item--cta">
+<button class="cta inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" id="logout-btn">Logout</button>
+</li>
+</ul>
+</nav>
+</header>
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 main">
+<article class="hidden opacity-0 transition-opacity duration-300 ease-in-out [&amp;.is-active]:block [&amp;.is-active]:opacity-100 article--tutorials">
+<header class="mb-8">
+<h1 class="text-2xl font-bold text-neutral-900">Administrative Tutorials</h1>
+<p class="article__description">Learn how to manage your institution and optimize educational outcomes.</p>
+</header>
+<section class="article__content">
+<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+<h3 class="text-lg font-semibold text-neutral-900">Getting Started</h3>
+<p class="mt-2 text-sm text-neutral-500">Essential tutorials for new administrators</p>
+<button class="w-full mt-4 inline-flex justify-center items-center bg-white text-sm text-neutral-900 shadow-sm hover:bg-neutral-50 rounded-lg px-4 font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none button--primary border border-neutral-300 py-2 text-neutral-700 hover:text-neutral-900">Start Learning</button>
+</div>
+<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+<h3 class="text-lg font-semibold text-neutral-900">User Management</h3>
+<p class="mt-2 text-sm text-neutral-500">Learn how to manage users, roles, and permissions</p>
+<button class="w-full mt-4 inline-flex justify-center items-center bg-white text-sm text-neutral-900 shadow-sm hover:bg-neutral-50 rounded-lg px-4 font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-secondary-500 hover:bg-secondary-600 focus-visible:ring-secondary-500 border border-neutral-300 py-2 text-neutral-700 hover:text-neutral-900">View Tutorial</button>
+</div>
+<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+<h3 class="text-lg font-semibold text-neutral-900">Analytics &amp; Reporting</h3>
+<p class="mt-2 text-sm text-neutral-500">Master institutional analytics and reporting tools</p>
+<button class="w-full mt-4 inline-flex justify-center items-center bg-white text-sm text-neutral-900 shadow-sm hover:bg-neutral-50 rounded-lg px-4 font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-secondary-500 hover:bg-secondary-600 focus-visible:ring-secondary-500 border border-neutral-300 py-2 text-neutral-700 hover:text-neutral-900">View Tutorial</button>
+</div>
+</section>
+</article>
+</main>
+<footer class="bg-white border-t border-neutral-200 mt-auto footer">
+<nav class="mx-auto max-w-7xl px-6 lg:px-8 py-8 flex justify-between items-center">
+<ul class="flex items-center gap-6 gap-8 list-none m-0 p-0">
+<li class="relative ul__item--brand">
+<a class="brand" href="/src/pages/admin/home.html">
+<img alt="Neptino Logo" class="h-8 w-auto h-6" src="/src/assets/logo/octopus-logo.png"/>
+</a>
+</li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Privacy Policy</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Terms of Service</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Contact</a></li>
+</ul>
+</nav>
+</footer>
+<script src="/src/scripts/app.ts" type="module"></script>
 </body>
-
 </html>

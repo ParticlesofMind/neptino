@@ -1,70 +1,87 @@
 <!DOCTYPE html>
+
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Courses - Neptino</title>
-  <link rel="stylesheet" href="/src/scss/main.scss" />
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Courses - Neptino</title>
+<link href="/src/styles/app.css" rel="stylesheet"/>
 </head>
-
-<body class="grid">
-  <header class="grid__header header">
-    <nav class="header__nav" aria-label="Primary">
-      <ul class="ul ul--header">
-        <li class="ul__item">
-          <a href="/src/pages/teacher/home.html" class="link link--brand">
-            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
-          </a>
-        </li>
-        <li class="ul__item">
-          <a href="/src/pages/teacher/courses.html" class="link link--header is-active">My Courses</a>
-        </li>
-        <li class="ul__item">
-          <a href="/src/pages/teacher/marketplace.html" class="link link--header">Marketplace</a>
-        </li>
-        <li class="ul__item">
-          <a href="/src/pages/teacher/tutorials.html" class="link link--header">Tutorials</a>
-        </li>
-        <li class="ul__item">
-          <button id="logout-btn" class="button button--outline" data-js="logout">Logout</button>
-        </li>
-      </ul>
-    </nav>
-  </header>
-  <main class="grid__main main main--courses">
-    <article class="article article--courses" aria-labelledby="courses-heading">
-      <section class="article__summary">
-        <h2 id="courses-heading" class="heading heading--h2">My Courses</h2>
-        <a href="/src/pages/teacher/coursebuilder.html#setup" class="button button--primary" id="create-course-btn">
-          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+<body class="min-h-screen bg-neutral-50 font-sans text-neutral-900">
+<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200 flex h-16 items-center justify-between">
+<nav aria-label="Primary" class="flex items-center gap-8">
+<ul class="flex items-center gap-6 list-none m-0 p-0">
+<li class="relative">
+<a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline flex items-center gap-2 text-primary-600 font-bold text-xl hover:text-primary-700" href="/src/pages/teacher/home.html">
+<img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
+</a>
+</li>
+<li class="relative">
+<a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline is-active" href="/src/pages/teacher/courses.html">My Courses</a>
+</li>
+<li class="relative">
+<a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/teacher/marketplace.html">Marketplace</a>
+</li>
+<li class="relative">
+<a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/teacher/tutorials.html">Tutorials</a>
+</li>
+<li class="relative">
+<button class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" data-js="logout" id="logout-btn">Logout</button>
+</li>
+</ul>
+</nav>
+</header>
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 main main--courses">
+<article aria-labelledby="courses-heading" class="hidden opacity-0 transition-opacity duration-300 ease-in-out [&amp;.is-active]:block [&amp;.is-active]:opacity-100 article--courses flex flex-col gap-6">
+<section class="article__summary flex justify-between items-center mb-6">
+<h2 class="text-2xl font-bold text-neutral-900" id="courses-heading">My Courses</h2>
+<a class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800" href="/src/pages/teacher/coursebuilder.html#setup" id="create-course-btn">
+<svg class="mr-2 h-4 w-4" fill="none" height="16" viewbox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 5V19M5 12H19" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
           Create New Course
         </a>
-      </section>
-      <section class="article__content grid grid--small" aria-live="polite" aria-busy="false" data-js="courses">
-        <!-- Course cards will be dynamically loaded here -->
-      </section>
-    </article>
-  </main>
+</section>
 
-  <footer class="grid__footer footer">
-    <nav class="footer__nav">
-      <ul class="ul ul--footer">
-        <li class="ul__item">
-          <a href="/src/pages/teacher/home.html" class="link link--brand">
-            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
-          </a>
-        </li>
-        <li class="ul__item"><a href="#" class="link link--footer link--subtle">Privacy Policy</a></li>
-        <li class="ul__item"><a href="#" class="link link--footer link--subtle">Terms of Service</a></li>
-        <li class="ul__item"><a href="#" class="link link--footer link--subtle">Contact</a></li>
-      </ul>
-    </nav>
-  </footer>
-  <script type="module" src="/src/scripts/app.ts"></script>
-  <script type="module" src="/src/scripts/backend/courses/essentials/createCourseCard.ts"></script>
+<!-- Empty State Message -->
+<div id="no-courses-message" style="display: none;" class="text-center py-12">
+    <div class="mx-auto h-24 w-24 text-neutral-300 mb-4">
+        <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+        </svg>
+    </div>
+    <h3 class="mt-2 text-sm font-semibold text-neutral-900">No courses yet</h3>
+    <p class="mt-1 text-sm text-neutral-500">Get started by creating your first course.</p>
+    <div class="mt-6">
+        <a href="/src/pages/teacher/coursebuilder.html#setup" class="inline-flex items-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">
+            <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+            </svg>
+            New Course
+        </a>
+    </div>
+</div>
+
+<section aria-busy="false" aria-live="polite" class="article__content min-h-screen bg-neutral-50 font-sans text-neutral-900 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" data-js="courses">
+<!-- Course cards will be dynamically loaded here -->
+</section>
+</article>
+</main>
+<footer class="bg-white border-t border-neutral-200 mt-auto footer">
+<nav class="mx-auto max-w-7xl px-6 lg:px-8 py-8 flex justify-between items-center">
+<ul class="flex items-center gap-6 gap-8 list-none m-0 p-0">
+<li class="relative">
+<a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline flex items-center gap-2 text-primary-600 font-bold text-xl hover:text-primary-700" href="/src/pages/teacher/home.html">
+<img alt="Neptino Logo" class="h-8 w-auto h-6" src="/src/assets/logo/octopus-logo.png"/>
+</a>
+</li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle" href="#">Privacy Policy</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle" href="#">Terms of Service</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle" href="#">Contact</a></li>
+</ul>
+</nav>
+</footer>
+<script src="/src/scripts/app.ts" type="module"></script>
+<script src="/src/scripts/backend/courses/essentials/createCourseCard.ts" type="module"></script>
 </body>
-
 </html>

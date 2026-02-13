@@ -1,209 +1,186 @@
 <!DOCTYPE html>
+
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Student Dashboard - Neptino</title>
-  <link rel="stylesheet" href="/src/scss/main.scss" />
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Student Dashboard - Neptino</title>
+<link href="/src/styles/app.css" rel="stylesheet"/>
 </head>
-
-<body class="grid body">
-  <header class="grid__header header header--home">
-    <nav class="header__nav">
-      <ul class="ul ul--header">
-        <li class="ul__item ul__item--brand">
-          <a href="/src/pages/student/home.html" class="brand">
-            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
-          </a>
-        </li>
-        <li class="ul__item"><a href="/src/pages/student/courses.html" class="link link--header">My Courses</a></li>
-        <li class="ul__item"><a href="/src/pages/student/marketplace.html" class="link link--header">Marketplace</a></li>
-        <li class="ul__item"><a href="/src/pages/student/tutorials.html" class="link link--header">Tutorials</a></li>
-        <li class="ul__item ul__item--cta">
-          <button id="logout-btn" class="cta button button--outline">Logout</button>
-        </li>
-      </ul>
-    </nav>
-  </header>
-  
-  <main class="grid__main main">
-    <section class="dashboard__layout">
-      <aside class="aside aside--main">
-        <div class="aside__brand">
-          <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="aside__logo">
-          <span class="aside__brand-text">Neptino</span>
-        </div>
-        
-        <nav>
-          <h3 class="aside__heading">MENU</h3>
-          <ul class="aside__list">
-            <li class="aside__item">
-              <a href="#home" class="aside__link aside__link--active" data-section="home">
-                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="7" height="7"/>
-                  <rect x="14" y="3" width="7" height="7"/>
-                  <rect x="14" y="14" width="7" height="7"/>
-                  <rect x="3" y="14" width="7" height="7"/>
-                </svg>
-                <span class="aside__text">Dashboard</span>
-              </a>
-            </li>
-            <li class="aside__item">
-              <a href="#classes" class="aside__link" data-section="classes">
-                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                </svg>
-                <span class="aside__text">Classes</span>
-              </a>
-            </li>
-            <li class="aside__item">
-              <a href="#messages" class="aside__link" data-section="messages">
-                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
-                </svg>
-                <span class="aside__text">Messages</span>
-              </a>
-            </li>
-            <li class="aside__item">
-              <a href="#settings" class="aside__link" data-section="settings">
-                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="3"/>
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                </svg>
-                <span class="aside__text">Settings</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </aside>
-
-      <!-- Home Article -->
-      <article id="home" data-dashboard-section class="article article--home is-active">
-        <header class="article__header">
-          <h2 class="article__title">Dashboard</h2>
-        </header>
-
-        <div class="article__main">
-          <div class="dashboard__metrics">
-            <figure class="metric">
-              <figcaption class="metric__label">Enrolled Courses</figcaption>
-              <data class="metric__value" value="0">0</data>
-            </figure>
-
-            <figure class="metric">
-              <figcaption class="metric__label">Progress</figcaption>
-              <data class="metric__value" value="0">0%</data>
-            </figure>
-
-            <figure class="metric">
-              <figcaption class="metric__label">Assignments Due</figcaption>
-              <data class="metric__value" value="0">0</data>
-            </figure>
-          </div>
-
-          <div class="card">
-            <h3 class="card__title">Browse Courses</h3>
-            <p class="card__description">Discover new courses</p>
-          </div>
-
-          <div class="card">
-            <h3 class="card__title">Recent Activity</h3>
-            <p class="card__description">No recent activity</p>
-          </div>
-
-          <div class="card">
-            <h3 class="card__title">Achievements</h3>
-            <p class="card__description">Unlock your first achievement</p>
-          </div>
-        </div>
-      </article>
-
-      <!-- Classes Article -->
-      <article id="classes" data-dashboard-section class="article article--classes">
-        <header class="article__header">
-          <h2 class="article__title">Classes</h2>
-        </header>
-
-        <div class="article__main">
-          <div class="card">
-            <h3 class="card__title">My Courses</h3>
-            <p class="card__description">View enrolled courses</p>
-          </div>
-
-          <div class="card">
-            <h3 class="card__title">Browse Marketplace</h3>
-            <p class="card__description">Find new courses</p>
-          </div>
-
-          <div class="card">
-            <h3 class="card__title">Wishlist</h3>
-            <p class="card__description">Saved courses</p>
-          </div>
-        </div>
-      </article>
-
-      <!-- Messages Article -->
-      <article id="messages" data-dashboard-section class="article article--messages">
-        <header class="article__header">
-          <h2 class="article__title">Messages</h2>
-        </header>
-
-        <div class="article__main">
-          <div id="rocketchat-container" class="messaging__container">
-            <div class="messaging__loading">
-              <p>Loading messaging interface...</p>
-            </div>
-          </div>
-        </div>
-      </article>
-
-      <!-- Settings Article -->
-      <article id="settings" data-dashboard-section class="article article--settings">
-        <header class="article__header">
-          <h2 class="article__title">Settings</h2>
-        </header>
-
-        <div class="article__main">
-          <div class="card">
-            <h3 class="card__title">Profile Settings</h3>
-            <p class="card__description">Update your profile</p>
-          </div>
-
-          <div class="card">
-            <h3 class="card__title">Notifications</h3>
-            <p class="card__description">Manage notifications</p>
-          </div>
-
-          <div class="card">
-            <h3 class="card__title">Privacy & Security</h3>
-            <p class="card__description">Account security settings</p>
-          </div>
-        </div>
-      </article>
-    </section>
-  </main>
-  
-  <footer class="grid__footer footer">
-    <nav class="footer__nav">
-      <ul class="ul ul--footer">
-        <li class="ul__item ul__item--brand">
-          <a href="/src/pages/student/home.html" class="brand">
-            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
-          </a>
-        </li>
-        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Privacy Policy</a></li>
-        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Terms of Service</a></li>
-        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Contact</a></li>
-      </ul>
-    </nav>
-  </footer>
-  
-  <script type="module" src="/src/scripts/app.ts"></script>
-  <script type="module" src="/src/scripts/navigation/index.ts"></script>
-  <script type="module" src="/src/scripts/backend/rocketchat/MessagingInterface.ts"></script>
+<body class="min-h-screen bg-neutral-50 font-sans text-neutral-900 body">
+<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200 flex h-16 items-center justify-between header--home">
+<nav class="flex items-center gap-8">
+<ul class="flex items-center gap-6 list-none m-0 p-0">
+<li class="relative ul__item--brand">
+<a class="brand" href="/src/pages/student/home.html">
+<img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
+</a>
+</li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/student/courses.html">My Courses</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/student/marketplace.html">Marketplace</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/student/tutorials.html">Tutorials</a></li>
+<li class="relative ul__item--cta">
+<button class="cta inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" id="logout-btn">Logout</button>
+</li>
+</ul>
+</nav>
+</header>
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 main">
+<section class="grid grid-cols-1 md:grid-cols-[280px_1fr] min-h-screen">
+<aside class="hidden md:flex flex-col bg-white border-r border-neutral-200 h-screen sticky top-0 overflow-y-auto bg-neutral-900 text-white border-none">
+<div class="flex items-center gap-3 px-6 h-16 border-b border-neutral-800">
+<img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
+<span class="font-bold text-xl tracking-tight text-white">Neptino</span>
+</div>
+<nav>
+<h3 class="px-6 mt-8 mb-2 text-xs font-semibold text-neutral-500 uppercase tracking-wider">MENU</h3>
+<ul class="flex flex-col gap-1 px-3">
+<li class="w-full">
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors bg-primary-600 text-white hover:bg-primary-700" data-section="home" href="#home">
+<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
+<rect height="7" width="7" x="3" y="3"></rect>
+<rect height="7" width="7" x="14" y="3"></rect>
+<rect height="7" width="7" x="14" y="14"></rect>
+<rect height="7" width="7" x="3" y="14"></rect>
+</svg>
+<span class="truncate">Dashboard</span>
+</a>
+</li>
+<li class="w-full">
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="classes" href="#classes">
+<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
+<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+</svg>
+<span class="truncate">Classes</span>
+</a>
+</li>
+<li class="w-full">
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="messages" href="#messages">
+<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
+<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+<polyline points="22,6 12,13 2,6"></polyline>
+</svg>
+<span class="truncate">Messages</span>
+</a>
+</li>
+<li class="w-full">
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="settings" href="#settings">
+<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>
+<span class="truncate">Settings</span>
+</a>
+</li>
+</ul>
+</nav>
+</aside>
+<!-- Home Article -->
+<article class="hidden opacity-0 transition-opacity duration-300 ease-in-out [&amp;.is-active]:block [&amp;.is-active]:opacity-100 article--home is-active" data-dashboard-section="" id="home">
+<header class="mb-8">
+<h2 class="text-2xl font-bold text-neutral-900">Dashboard</h2>
+</header>
+<div class="space-y-6">
+<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+<figure class="relative overflow-hidden rounded-xl bg-white p-6 shadow-sm ring-1 ring-neutral-900/5">
+<figcaption class="text-sm font-medium text-neutral-500">Enrolled Courses</figcaption>
+<data class="mt-2 flex items-baseline gap-x-2" value="0">0</data>
+</figure>
+<figure class="relative overflow-hidden rounded-xl bg-white p-6 shadow-sm ring-1 ring-neutral-900/5">
+<figcaption class="text-sm font-medium text-neutral-500">Progress</figcaption>
+<data class="mt-2 flex items-baseline gap-x-2" value="0">0%</data>
+</figure>
+<figure class="relative overflow-hidden rounded-xl bg-white p-6 shadow-sm ring-1 ring-neutral-900/5">
+<figcaption class="text-sm font-medium text-neutral-500">Assignments Due</figcaption>
+<data class="mt-2 flex items-baseline gap-x-2" value="0">0</data>
+</figure>
+</div>
+<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+<h3 class="text-lg font-semibold text-neutral-900">Browse Courses</h3>
+<p class="mt-2 text-sm text-neutral-500">Discover new courses</p>
+</div>
+<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+<h3 class="text-lg font-semibold text-neutral-900">Recent Activity</h3>
+<p class="mt-2 text-sm text-neutral-500">No recent activity</p>
+</div>
+<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+<h3 class="text-lg font-semibold text-neutral-900">Achievements</h3>
+<p class="mt-2 text-sm text-neutral-500">Unlock your first achievement</p>
+</div>
+</div>
+</article>
+<!-- Classes Article -->
+<article class="hidden opacity-0 transition-opacity duration-300 ease-in-out [&amp;.is-active]:block [&amp;.is-active]:opacity-100 article--classes" data-dashboard-section="" id="classes">
+<header class="mb-8">
+<h2 class="text-2xl font-bold text-neutral-900">Classes</h2>
+</header>
+<div class="space-y-6">
+<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+<h3 class="text-lg font-semibold text-neutral-900">My Courses</h3>
+<p class="mt-2 text-sm text-neutral-500">View enrolled courses</p>
+</div>
+<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+<h3 class="text-lg font-semibold text-neutral-900">Browse Marketplace</h3>
+<p class="mt-2 text-sm text-neutral-500">Find new courses</p>
+</div>
+<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+<h3 class="text-lg font-semibold text-neutral-900">Wishlist</h3>
+<p class="mt-2 text-sm text-neutral-500">Saved courses</p>
+</div>
+</div>
+</article>
+<!-- Messages Article -->
+<article class="hidden opacity-0 transition-opacity duration-300 ease-in-out [&amp;.is-active]:block [&amp;.is-active]:opacity-100 article--messages" data-dashboard-section="" id="messages">
+<header class="mb-8">
+<h2 class="text-2xl font-bold text-neutral-900">Messages</h2>
+</header>
+<div class="space-y-6">
+<div class="messaging__container" id="rocketchat-container">
+<div class="messaging__loading">
+<p>Loading messaging interface...</p>
+</div>
+</div>
+</div>
+</article>
+<!-- Settings Article -->
+<article class="hidden opacity-0 transition-opacity duration-300 ease-in-out [&amp;.is-active]:block [&amp;.is-active]:opacity-100 article--settings" data-dashboard-section="" id="settings">
+<header class="mb-8">
+<h2 class="text-2xl font-bold text-neutral-900">Settings</h2>
+</header>
+<div class="space-y-6">
+<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+<h3 class="text-lg font-semibold text-neutral-900">Profile Settings</h3>
+<p class="mt-2 text-sm text-neutral-500">Update your profile</p>
+</div>
+<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+<h3 class="text-lg font-semibold text-neutral-900">Notifications</h3>
+<p class="mt-2 text-sm text-neutral-500">Manage notifications</p>
+</div>
+<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+<h3 class="text-lg font-semibold text-neutral-900">Privacy &amp; Security</h3>
+<p class="mt-2 text-sm text-neutral-500">Account security settings</p>
+</div>
+</div>
+</article>
+</section>
+</main>
+<footer class="bg-white border-t border-neutral-200 mt-auto footer">
+<nav class="mx-auto max-w-7xl px-6 lg:px-8 py-8 flex justify-between items-center">
+<ul class="flex items-center gap-6 gap-8 list-none m-0 p-0">
+<li class="relative ul__item--brand">
+<a class="brand" href="/src/pages/student/home.html">
+<img alt="Neptino Logo" class="h-8 w-auto h-6" src="/src/assets/logo/octopus-logo.png"/>
+</a>
+</li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Privacy Policy</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Terms of Service</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Contact</a></li>
+</ul>
+</nav>
+</footer>
+<script src="/src/scripts/app.ts" type="module"></script>
+<script src="/src/scripts/navigation/index.ts" type="module"></script>
+<script src="/src/scripts/backend/rocketchat/MessagingInterface.ts" type="module"></script>
 </body>
-
 </html>

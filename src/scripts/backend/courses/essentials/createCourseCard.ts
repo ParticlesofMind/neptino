@@ -124,7 +124,7 @@ export class CoursesManager {
 
   private async createCourseCard(course: Course): Promise<HTMLElement> {
     const cardElement = document.createElement("div");
-    cardElement.className = "card card--course";
+    cardElement.className = "card flex flex-col bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full";
     cardElement.dataset.courseId = course.id;
     cardElement.dataset.dynamic = "true"; // Mark as dynamically generated
 
@@ -145,8 +145,8 @@ export class CoursesManager {
 
     // Create course image or placeholder
     const courseImageHtml = course.course_image
-      ? `<img src="${course.course_image}" alt="${course.course_name} Course" class="card__media-image">`
-      : `<div class="card__media-placeholder">${this.getInitials(course.course_name)}</div>`;
+      ? `<img src="${course.course_image}" alt="${course.course_name} Course" class="w-full h-full object-cover">`
+      : `<div class="w-full h-full flex items-center justify-center text-4xl text-neutral-400 font-bold bg-neutral-100">${this.getInitials(course.course_name)}</div>`;
 
     // Format description with fallback
     const courseDescription = course.course_description?.trim() || 'No description available.';
@@ -156,47 +156,47 @@ export class CoursesManager {
     const lessonText = `${lessonCount} lesson${lessonCount !== 1 ? 's' : ''}`;
 
     cardElement.innerHTML = `
-   <div class="card__media">
+   <div class="relative w-full aspect-[4/3] bg-neutral-100 overflow-hidden flex-shrink-0">
      ${courseImageHtml}
-     <div class="card__media-overlay">
+     <div class="absolute top-2 right-2">
        <span class="card__status-badge ${statusClass}">${statusText}</span>
      </div>
    </div>
    
-   <div class="card__header">
-     <h3 class="heading heading--h3 card__title">${course.course_name}</h3>
-     <p class="card__description">${courseDescription}</p>
+   <div class="p-4 border-b border-neutral-100 flex-shrink-0">
+     <h3 class="text-lg font-semibold text-neutral-900 mb-1 line-clamp-2">${course.course_name}</h3>
+     <p class="text-sm text-neutral-500 line-clamp-2">${courseDescription}</p>
    </div>
    
-   <div class="card__body">
-     <div class="card__meta card__meta--inline">
-       <span class="card__info">
+   <div class="p-4 flex flex-col gap-4 flex-1">
+     <div class="flex gap-4 text-sm text-neutral-500">
+       <span class="flex items-center gap-1">
          <i class="icon icon--students"></i>
          ${studentText}
        </span>
-       <span class="card__info">
+       <span class="flex items-center gap-1">
          <i class="icon icon--lessons"></i>
          ${lessonText}
        </span>
      </div>
      
-     <div class="card__actions card__actions--stacked">
-       <button class="button button--outline button--small card__action" 
+     <div class="grid grid-cols-4 gap-2 mt-auto pt-4 border-t border-neutral-100">
+       <button class="inline-flex items-center justify-center rounded-lg px-2 py-1 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
                data-section="setup" data-course-id="${course.id}"
                title="Configure course settings and details">
          Setup
        </button>
-       <button class="button button--outline button--small card__action" 
+       <button class="inline-flex items-center justify-center rounded-lg px-2 py-1 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
                data-section="create" data-course-id="${course.id}"
                title="Create and design course content">
          Create
        </button>
-       <button class="button button--outline button--small card__action" 
+       <button class="inline-flex items-center justify-center rounded-lg px-2 py-1 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
                data-section="preview" data-course-id="${course.id}"
                title="Preview course before publishing">
          Preview
        </button>
-       <button class="button button--primary button--small card__action" 
+       <button class="inline-flex items-center justify-center rounded-lg px-2 py-1 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 border border-transparent bg-primary-600 text-white hover:bg-primary-700"
                data-section="launch" data-course-id="${course.id}"
                title="Launch course for students">
          Launch

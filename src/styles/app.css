@@ -1,51 +1,44 @@
-// ==========================================================================
-// COLOR SYSTEM - ALL COLORS IN ONE PLACE
-// ==========================================================================
+@import "tailwindcss";
 
-:root {
-  // BRAND COLORS
-  // ==========================================================================
-  // Primary Brand Colors (Ocean/Nautical theme inspired by Neptino/Neptune)
-  --color-primary-25: #f5f9ff; // Even lighter than 50 for subtle highlights
+@theme {
+  /* BRAND COLORS */
+  --color-primary-25: #f5f9ff;
   --color-primary-50: #e6f2ff;
   --color-primary-100: #b3d7ff;
   --color-primary-200: #9ac8ff;
   --color-primary-300: #7fb6ff;
   --color-primary-400: #65a5ff;
-  --color-primary-500: #4a94ff; // Main brand blue
+  --color-primary-500: #4a94ff;
   --color-primary-600: #2f7de0;
   --color-primary-700: #1f5fb3;
   --color-primary-800: #134080;
   --color-primary-900: #0a234d;
 
-  // Secondary Colors (Complementary teal/green for education/growth)
   --color-secondary-50: #e6fffe;
   --color-secondary-100: #b3fffc;
   --color-secondary-200: #80fff9;
   --color-secondary-300: #4dffef;
   --color-secondary-400: #1affe6;
-  --color-secondary-500: #00ccb3; // Educational teal
+  --color-secondary-500: #00ccb3;
   --color-secondary-600: #00a392;
   --color-secondary-700: #007a70;
   --color-secondary-800: #00524d;
   --color-secondary-900: #00292b;
 
-  // Neutral Colors (Clean, professional)
-  --color-neutral-25: #fcfcfc; // Ultra light gray
+  --color-neutral-25: #fcfcfc;
   --color-neutral-50: #fafafa;
-  --color-neutral-75: #f8f8f8; // Between 50 and 100
+  --color-neutral-75: #f8f8f8;
   --color-neutral-100: #f5f5f5;
   --color-neutral-200: #e5e5e5;
   --color-neutral-300: #d4d4d4;
   --color-neutral-400: #a3a3a3;
-  --color-neutral-500: #737373; // Main text
+  --color-neutral-500: #737373;
   --color-neutral-600: #525252;
   --color-neutral-700: #404040;
   --color-neutral-800: #262626;
   --color-neutral-900: #171717;
 
-  // SEMANTIC COLORS
-  // ==========================================================================
+  /* SEMANTIC COLORS */
   --color-success-50: #f0fdf4;
   --color-success-100: #dcfce7;
   --color-success-500: #22c55e;
@@ -76,61 +69,101 @@
   --color-purple-700: #7c3aed;
   --color-purple-800: #6b21a8;
 
-  // FUNCTIONAL COLORS
-  // ==========================================================================
-  // Background Colors
+  /* FUNCTIONAL COLORS */
   --color-background: #ffffff;
-  --color-background-rgb: 255, 255, 255; // RGB values for backdrop-filter
   --color-background-secondary: var(--color-neutral-50);
   --color-background-tertiary: var(--color-neutral-100);
 
-  // Border Colors
   --color-border-primary: var(--color-neutral-300);
   --color-border-secondary: var(--color-neutral-400);
   --color-border-disabled: var(--color-neutral-200);
 
-  // Text Colors
   --color-text-primary: var(--color-neutral-900);
   --color-text-secondary: var(--color-neutral-600);
   --color-text-tertiary: var(--color-neutral-400);
   --color-text-inverse: #ffffff;
 
-  // INTERACTIVE COLORS
-  // ==========================================================================
-  // Link Colors
   --color-link: var(--color-primary-500);
   --color-link-hover: var(--color-primary-600);
   --color-link-visited: var(--color-primary-700);
 
-  // Button Colors
   --color-button-primary: var(--color-primary-100);
   --color-button-primary-hover: var(--color-primary-200);
   --color-button-secondary: var(--color-secondary-500);
   --color-button-secondary-hover: var(--color-secondary-600);
 
-  // Form Colors
   --color-input-border: var(--color-neutral-300);
   --color-input-border-focus: var(--color-primary-200);
   --color-input-background: var(--color-background);
 
-  // STATUS COLORS (Generic - can be used for courses, tasks, etc.)
-  // ==========================================================================
   --color-status-active: var(--color-secondary-500);
   --color-status-complete: var(--color-success-500);
   --color-status-pending: var(--color-warning-500);
   --color-status-inactive: var(--color-neutral-300);
   --color-status-error: var(--color-error-500);
 
-  // PROGRESS COLORS
-  // ==========================================================================
   --color-progress-background: var(--color-neutral-200);
   --color-progress-fill: var(--color-primary-500);
   --color-progress-complete: var(--color-success-500);
 
-  // ACHIEVEMENT COLORS (Generic badges/awards)
-  // ==========================================================================
-  --color-achievement-bronze: #cd7f32;
-  --color-achievement-silver: #c0c0c0;
-  --color-achievement-gold: #ffd700;
-  --color-achievement-platinum: #e5e4e2;
+  /* SPACING SCALE */
+  --spacing-1: 0.125rem;
+  --spacing-2: 0.25rem;
+  --spacing-3: 0.5rem;
+  --spacing-4: 0.75rem;
+  --spacing-5: 1rem;
+  --spacing-6: 1.25rem;
+  --spacing-7: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-9: 2.5rem;
+  --spacing-10: 3rem;
+  --spacing-12: 4rem;
+  --spacing-16: 6rem;
+  --spacing-20: 8rem;
+  --spacing-24: 10rem;
+}
+
+/* SIZING VARIABLES (Not directly part of Tailwind theme unless mapped manually, but can be used as CSS variables) */
+:root {
+  --size-icon-extra-small: 1rem;
+  --size-icon-small: 1.25rem;
+  --size-icon-base: 1.5rem;
+  --size-icon-large: 2rem;
+  --size-icon-extra-large: 2.5rem;
+
+  --size-logo-extra-small: 1.5rem;
+  --size-logo-small: 2rem;
+  --size-logo-base: 2.5rem;
+  --size-logo-large: 4rem;
+  --size-logo-extra-large: 6rem;
+
+  --size-avatar-extra-small: 1.5rem;
+  --size-avatar-small: 2rem;
+  --size-avatar-base: 2.5rem;
+  --size-avatar-large: 4rem;
+  --size-avatar-extra-large: 6rem;
+
+  --size-image-extra-small: 3rem;
+  --size-image-small: 4rem;
+  --size-image-base: 6rem;
+  --size-image-large: 8rem;
+  --size-image-extra-large: 12rem;
+
+  --size-button-extra-small: 2rem;
+  --size-button-small: 2.25rem;
+  --size-button-base: 2.5rem;
+  --size-button-large: 3rem;
+  --size-button-extra-large: 3.5rem;
+
+  --size-input-extra-small: 2rem;
+  --size-input-small: 2.25rem;
+  --size-input-base: 2.5rem;
+  --size-input-large: 3rem;
+  --size-input-extra-large: 3.5rem;
+
+  --size-container-extra-small: 20rem;
+  --size-container-small: 28rem;
+  --size-container-base: 42rem;
+  --size-container-large: 64rem;
+  --size-container-extra-large: 80rem;
 }
