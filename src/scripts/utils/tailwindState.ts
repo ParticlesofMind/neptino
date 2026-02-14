@@ -1,8 +1,8 @@
 const ACTIVE_BUTTON_CLASSES = [
-  'bg-primary-600',
+  'bg-primary-400',
   'text-white',
-  'border-primary-600',
-  'hover:bg-primary-700',
+  'border-primary-400',
+  'hover:bg-primary-500',
   'hover:text-white',
 ];
 
@@ -15,18 +15,20 @@ const INACTIVE_BUTTON_CLASSES = [
 ];
 
 const ENGINE_BUTTON_BASE_CLASSES = [
-  'inline-flex',
+  'flex',
+  'flex-col',
   'items-center',
   'justify-center',
-  'gap-2',
-  'rounded-lg',
+  'gap-0.5',
+  'w-[50px]',
+  'h-[50px]',
+  'rounded-md',
   'border',
-  'px-3',
-  'py-2',
   'text-sm',
   'font-medium',
   'shadow-sm',
   'transition-all',
+  'cursor-pointer',
   'focus-visible:outline-none',
   'focus-visible:ring-2',
   'focus-visible:ring-primary-500',
@@ -47,9 +49,27 @@ export const setButtonActive = (button: HTMLElement, active: boolean): void => {
   if (active) {
     button.classList.remove(...INACTIVE_BUTTON_CLASSES);
     button.classList.add(...ACTIVE_BUTTON_CLASSES);
+    // Make icons white when button is active
+    const img = button.querySelector('img');
+    if (img) {
+      img.style.filter = 'brightness(0) invert(1)';
+    }
+    const svg = button.querySelector('svg');
+    if (svg) {
+      svg.style.filter = 'brightness(0) invert(1)';
+    }
   } else {
     button.classList.remove(...ACTIVE_BUTTON_CLASSES);
     button.classList.add(...INACTIVE_BUTTON_CLASSES);
+    // Reset icon filter
+    const img = button.querySelector('img');
+    if (img) {
+      img.style.filter = '';
+    }
+    const svg = button.querySelector('svg');
+    if (svg) {
+      svg.style.filter = '';
+    }
   }
 };
 

@@ -10,10 +10,10 @@
 </head>
 <body class="h-screen flex flex-col overflow-hidden bg-neutral-50">
 <header class="shrink-0 bg-white border-b border-neutral-200 z-50">
-<nav class="w-full px-6 py-4 lg:px-8">
+<nav class="w-full px-4 py-1.5">
 <div class="relative flex items-center justify-between">
-<div class="flex items-center">
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" id="previous-btn" title="Previous Step">
+<div class="flex items-center pl-2">
+<button class="btn btn-ghost h-9 px-3 py-1 min-w-[112px]" id="previous-btn" title="Previous Step">
             Previous
           </button>
 </div>
@@ -22,8 +22,8 @@
 <img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
 </a>
 </div>
-<div class="flex items-center">
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" id="next-btn" title="Next Step">
+<div class="flex items-center pr-2">
+<button class="btn btn-ghost h-9 px-3 py-1 min-w-[112px]" id="next-btn" title="Next Step">
             Next
           </button>
 </div>
@@ -32,13 +32,13 @@
 </header>
 <main class="flex-1 min-h-0">
 <!-- Setup View -->
-<section aria-hidden="false" class="grid grid-cols-1 md:grid-cols-[256px_1fr] h-full" data-coursebuilder-section="setup" id="setup">
-<aside class="hidden md:flex w-64 flex-col bg-white text-neutral-900 border-r border-neutral-200 h-full overflow-y-auto">
+<section aria-hidden="false" class="grid grid-cols-1 md:grid-cols-[256px_1fr] h-full p-3 md:p-4 gap-3" data-coursebuilder-section="setup" id="setup">
+<aside class="hidden md:flex w-64 flex-col setup-panel text-neutral-900 h-full overflow-y-auto">
 <nav class="flex-1 px-3 py-6">
 <h3 class="px-3 mb-4 text-xs font-semibold text-neutral-600 uppercase tracking-wider">SETUP</h3>
 <ul class="flex flex-col gap-2">
 <li>
-<a class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-sm bg-primary-600 text-white hover:bg-primary-700 transition-colors" data-aside-link="" data-section="essentials" href="#essentials">
+<a class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-sm bg-primary-400 text-white hover:bg-primary-500 transition-colors" data-aside-link="" data-section="essentials" href="#essentials">
 <svg class="w-5 h-5 flex-shrink-0" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
 <polyline points="14,2 14,8 20,8"></polyline>
@@ -246,28 +246,28 @@
 </ul>
 </nav>
 </aside>
-<div class="flex flex-col h-full min-h-0 overflow-hidden bg-white">
+<div class="flex flex-col h-full min-h-0 overflow-hidden setup-panel">
 <!-- Essentials Article -->
 <article class="article is-active flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="essentials">
 <div class="p-6 bg-white">
 <form class="space-y-6" id="course-essentials-form">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Course title
-              <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="course-name" maxlength="50" name="course_name" placeholder="Enter course title" required="" type="text"/>
+              <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="course-name" maxlength="50" name="course_name" placeholder="Enter course title" required="" type="text"/>
 <div class="mt-2 text-xs text-neutral-500" id="title-counter">
 <span class="" id="title-counter-value">0 / 50</span>
 </div>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Course subtitle (optional)
-              <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="course-subtitle" maxlength="75" name="course_subtitle" placeholder="Enter course subtitle" type="text"/>
+              <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="course-subtitle" maxlength="75" name="course_subtitle" placeholder="Enter course subtitle" type="text"/>
 <div class="mt-2 text-xs text-neutral-500" id="subtitle-counter">
 <span class="" id="subtitle-counter-value">0 / 75</span>
 </div>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Course Description
-              <textarea class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="course-description" maxlength="999" name="course_description" placeholder="Describe what students will learn" required="" rows="4"></textarea>
+              <textarea class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="course-description" maxlength="999" name="course_description" placeholder="Describe what students will learn" required="" rows="4"></textarea>
 <div class="mt-2 text-xs text-neutral-500" id="description-counter">
 <span class="" id="description-counter-value">0 / 999</span>
 </div>
@@ -275,25 +275,25 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="teacher-id">
                 Teacher
-                <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="teacher-id" name="teacher_id" required="">
+                <select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="teacher-id" name="teacher_id" required="">
 <option value="">Select teacher...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="institution">
                 Institution
-                <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="institution" name="institution" required="">
+                <select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="institution" name="institution" required="">
 <option value="">Select institution...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="course-language">
                 Course Language
-                <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="course-language" name="course_language" required="">
+                <select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="course-language" name="course_language" required="">
 <option value="">Select language...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="course-type">
                 Course Type
-                <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="course-type" name="course_type" required="">
+                <select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="course-type" name="course_type" required="">
 <option value="">Select course type...</option>
 <option value="In-person">In-person</option>
 <option value="Online">Online</option>
@@ -313,7 +313,7 @@
 <div class="flex items-center gap-4" hidden="" id="course-image-details">
 <div class="relative">
 <img alt="Course preview" class="w-32 h-32 object-cover rounded" hidden="" id="preview-img" src=""/>
-<button aria-label="Remove course image" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" hidden="" id="remove-image" type="button">
+<button aria-label="Remove course image" class="btn btn-ghost" hidden="" id="remove-image" type="button">
 <span aria-hidden="true">×</span>
 </button>
 </div>
@@ -327,7 +327,7 @@
 <div class="mt-4 p-4 bg-neutral-100 rounded text-sm" hidden="" id="course-code-display">
 <span class="text-xs font-medium text-neutral-500 uppercase">Course ID</span>
 <span class="text-lg font-semibold text-neutral-900" id="course-id-value">—</span>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" disabled="" id="course-code-copy-btn" type="button">
+<button class="btn btn-ghost" disabled="" id="course-code-copy-btn" type="button">
                 Copy
               </button>
 </div>
@@ -340,7 +340,7 @@
 <span class="truncate" data-status-text="">No data submitted yet</span>
 </div>
 <div class="flex items-center gap-3">
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" form="course-essentials-form" id="save-essentials-btn" type="submit">
+<button class="btn btn-primary" form="course-essentials-form" id="save-essentials-btn" type="submit">
                 Create Course
               </button>
 </div>
@@ -360,13 +360,13 @@
 <div class="space-y-4">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="class-year-select">
 <span>Class Year</span>
-<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="class-year-select" name="class_year" required="">
+<select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="class-year-select" name="class_year" required="">
 <option value="">Loading...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="curricular-framework-select">
 <span>Curricular Framework</span>
-<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="curricular-framework-select" name="curricular_framework" required="">
+<select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="curricular-framework-select" name="curricular_framework" required="">
 <option value="">Loading...</option>
 </select>
 </label>
@@ -382,28 +382,28 @@
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="domain-select">
 <span>Domain</span>
 <span class="truncate">Academic field</span>
-<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="domain-select" name="domain" required="">
+<select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="domain-select" name="domain" required="">
 <option value="">Loading...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="subject-select">
 <span>Subject</span>
 <span class="truncate">Specific discipline</span>
-<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" disabled="" id="subject-select" name="subject" required="">
+<select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" disabled="" id="subject-select" name="subject" required="">
 <option value="">Select domain first...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="topic-select">
 <span>Topic</span>
 <span class="truncate">Area of study</span>
-<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" disabled="" id="topic-select" name="topic" required="">
+<select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" disabled="" id="topic-select" name="topic" required="">
 <option value="">Select subject first...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="subtopic-select">
 <span>Subtopic</span>
 <span class="truncate">Specific focus</span>
-<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" disabled="" id="subtopic-select" name="subtopic">
+<select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" disabled="" id="subtopic-select" name="subtopic">
 <option value="">Select topic first...</option>
 </select>
 </label>
@@ -419,21 +419,21 @@
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="previous-course-select">
 <span>Previous Course</span>
 <span class="truncate">Course that should come before this one</span>
-<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="previous-course-select" name="previous_course">
+<select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="previous-course-select" name="previous_course">
 <option value="">Loading courses...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="current-course-select">
 <span>Current Course</span>
 <span class="truncate">Other courses at this level</span>
-<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="current-course-select" name="current_course">
+<select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="current-course-select" name="current_course">
 <option value="">Loading courses...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="next-course-select">
 <span>Next Course</span>
 <span class="truncate">Course that should come after this one</span>
-<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="next-course-select" name="next_course">
+<select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="next-course-select" name="next_course">
 <option value="">Loading courses...</option>
 </select>
 </label>
@@ -454,20 +454,20 @@
 <article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="templates">
 <div class="flex flex-col flex-1 min-h-0 p-6">
 <div class="flex items-center gap-2 mb-4 lg:hidden" data-article-toggle="">
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="config" type="button">
+<button class="btn btn-ghost" data-article-toggle-btn="" data-view="config" type="button">
               Config
             </button>
-<button class="inline-flex bg-primary-500 text-white border-primary-500 items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="preview" type="button">
+<button class="btn btn-ghost" data-article-toggle-btn="" data-view="preview" type="button">
               Preview
             </button>
 </div>
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
 <section class="flex flex-col bg-white border border-neutral-200 rounded-lg overflow-y-auto h-full p-6" data-article-panel="config">
 <div class="flex items-center gap-2 mb-4">
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" id="create-template-btn" type="button">
+<button class="btn btn-primary" id="create-template-btn" type="button">
                 Create Template
               </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" id="load-template-btn" type="button">
+<button class="btn btn-ghost" id="load-template-btn" type="button">
                 Load Template
               </button>
 </div>
@@ -495,10 +495,10 @@
 <article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="schedule">
 <div class="flex flex-col flex-1 min-h-0 p-6">
 <div class="flex items-center gap-2 mb-4 lg:hidden" data-article-toggle="">
-<button class="inline-flex bg-primary-500 text-white border-primary-500 items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="config" type="button">
+<button class="btn btn-ghost" data-article-toggle-btn="" data-view="config" type="button">
               Config
             </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="preview" type="button">
+<button class="btn btn-ghost" data-article-toggle-btn="" data-view="preview" type="button">
               Preview
             </button>
 </div>
@@ -508,45 +508,45 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   Start Date
-                  <input autocomplete="off" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="start-date" inputmode="numeric" placeholder="DD.MM.YYYY" required="" type="text"/>
+                  <input autocomplete="off" class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="start-date" inputmode="numeric" placeholder="DD.MM.YYYY" required="" type="text"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   End Date
-                  <input autocomplete="off" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="end-date" inputmode="numeric" placeholder="DD.MM.YYYY" required="" type="text"/>
+                  <input autocomplete="off" class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="end-date" inputmode="numeric" placeholder="DD.MM.YYYY" required="" type="text"/>
 </label>
 </div>
 <fieldset aria-label="Days of the Week" class="flex flex-wrap gap-2 mb-4">
 <legend class="block text-sm font-medium leading-6 text-neutral-900 mb-2">Days of the Week</legend>
-<button class="inline-flex inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="monday" type="button">
+<button class="btn btn-ghost" data-day="monday" type="button">
                   Mon
                 </button>
-<button class="inline-flex inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="tuesday" type="button">
+<button class="btn btn-ghost" data-day="tuesday" type="button">
                   Tue
                 </button>
-<button class="inline-flex inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="wednesday" type="button">
+<button class="btn btn-ghost" data-day="wednesday" type="button">
                   Wed
                 </button>
-<button class="inline-flex inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="thursday" type="button">
+<button class="btn btn-ghost" data-day="thursday" type="button">
                   Thu
                 </button>
-<button class="inline-flex inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="friday" type="button">
+<button class="btn btn-ghost" data-day="friday" type="button">
                   Fri
                 </button>
-<button class="inline-flex inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="saturday" type="button">
+<button class="btn btn-ghost" data-day="saturday" type="button">
                   Sat
                 </button>
-<button class="inline-flex inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-day="sunday" type="button">
+<button class="btn btn-ghost" data-day="sunday" type="button">
                   Sun
                 </button>
 </fieldset>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   Start Time
-                  <input autocomplete="off" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="start-time" inputmode="numeric" placeholder="HH:MM" required="" type="text"/>
+                  <input autocomplete="off" class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="start-time" inputmode="numeric" placeholder="HH:MM" required="" type="text"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   End Time
-                  <input autocomplete="off" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="end-time" inputmode="numeric" placeholder="HH:MM" required="" type="text"/>
+                  <input autocomplete="off" class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="end-time" inputmode="numeric" placeholder="HH:MM" required="" type="text"/>
 </label>
 </div>
 <div class="space-y-4">
@@ -554,15 +554,15 @@
 <div class="space-y-2" id="break-times-list">
 <!-- Break time inputs will be dynamically added here -->
 </div>
-<button class="inline-flex inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" id="add-break-time-btn" type="button">
+<button class="btn btn-primary" id="add-break-time-btn" type="button">
                   +
                 </button>
 </div>
 <div class="flex items-center gap-2 button-group">
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" disabled="" id="schedule-course-btn" type="button">
+<button class="btn btn-primary" disabled="" id="schedule-course-btn" type="button">
                   Schedule Course
                 </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-red-600 hover:bg-red-700 active:bg-red-800 text-white focus-visible:ring-red-500" id="delete-schedule-btn" style="display: none;" type="button">
+<button class="btn btn-danger" id="delete-schedule-btn" style="display: none;" type="button">
                   Delete Schedule
                 </button>
 </div>
@@ -591,10 +591,10 @@
 <article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="curriculum">
 <div class="flex flex-col flex-1 min-h-0 p-6">
 <div class="flex items-center gap-2 mb-4 lg:hidden" data-article-toggle="">
-<button class="inline-flex bg-primary-500 text-white border-primary-500 items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="config" type="button">
+<button class="btn btn-ghost" data-article-toggle-btn="" data-view="config" type="button">
               Config
             </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="preview" type="button">
+<button class="btn btn-ghost" data-article-toggle-btn="" data-view="preview" type="button">
               Preview
             </button>
 </div>
@@ -688,15 +688,15 @@
 <div class="structure-inputs">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   Topics per lesson
-                  <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="curriculum-topics" max="10" min="1" type="number" value="2"/>
+                  <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="curriculum-topics" max="10" min="1" type="number" value="2"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   Objectives per topic
-                  <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="curriculum-objectives" max="5" min="1" type="number" value="2"/>
+                  <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="curriculum-objectives" max="5" min="1" type="number" value="2"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   Tasks per objective
-                  <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="curriculum-tasks" max="5" min="1" type="number" value="2"/>
+                  <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="curriculum-tasks" max="5" min="1" type="number" value="2"/>
 </label>
 </div>
 </div>
@@ -768,10 +768,10 @@
 <article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="generation">
 <div class="flex flex-col flex-1 min-h-0 p-6">
 <div class="flex items-center gap-2 mb-4 lg:hidden" data-article-toggle="">
-<button class="inline-flex bg-primary-500 text-white border-primary-500 items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="config" type="button">
+<button class="btn btn-ghost" data-article-toggle-btn="" data-view="config" type="button">
               Config
             </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="preview" type="button">
+<button class="btn btn-ghost" data-article-toggle-btn="" data-view="preview" type="button">
               Preview
             </button>
 </div>
@@ -819,22 +819,22 @@
 <div class="space-y-3">
 <h5 class="text-sm font-semibold text-neutral-900">Generation Actions</h5>
 <div class="flex flex-wrap gap-3">
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" data-ai-generate="all" type="button">
+<button class="btn btn-primary" data-ai-generate="all" type="button">
                         Generate All
                       </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-ai-generate="modules" type="button">
+<button class="btn btn-ghost" data-ai-generate="modules" type="button">
                         Generate Module Names
                       </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-ai-generate="lessons" type="button">
+<button class="btn btn-ghost" data-ai-generate="lessons" type="button">
                         Generate Lesson Names
                       </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-ai-generate="topics" type="button">
+<button class="btn btn-ghost" data-ai-generate="topics" type="button">
                         Generate Topic Titles
                       </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-ai-generate="objectives" type="button">
+<button class="btn btn-ghost" data-ai-generate="objectives" type="button">
                         Generate Objectives
                       </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-ai-generate="tasks" type="button">
+<button class="btn btn-ghost" data-ai-generate="tasks" type="button">
                         Generate Tasks
                       </button>
 </div>
@@ -858,25 +858,25 @@
 <div class="flex h-full flex-col" data-curriculum-preview="" id="generation-preview">
 <div class="flex-1 overflow-auto" data-curriculum-preview-content="">
 <nav aria-label="Generation view modes" class="flex flex-wrap gap-2" data-curriculum-controls="">
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="modules" type="button">
+<button class="btn btn-ghost" data-mode="modules" type="button">
                     Modules
                   </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="titles" type="button">
+<button class="btn btn-ghost" data-mode="titles" type="button">
                     Lessons
                   </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="competencies" type="button">
+<button class="btn btn-ghost" data-mode="competencies" type="button">
                     Competencies
                   </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="topics" type="button">
+<button class="btn btn-ghost" data-mode="topics" type="button">
                     Topics
                   </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="objectives" type="button">
+<button class="btn btn-ghost" data-mode="objectives" type="button">
                     Objectives
                   </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="tasks" type="button">
+<button class="btn btn-ghost" data-mode="tasks" type="button">
                     Tasks
                   </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="all" type="button">
+<button class="btn btn-ghost" data-mode="all" type="button">
                     All
                   </button>
 </nav>
@@ -917,7 +917,7 @@
 <form class="space-y-6" id="marketplace-form">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Listing Status
-              <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="listing_status" required="">
+              <select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="listing_status" required="">
 <option value="draft">Draft</option>
 <option value="pending">Pending Review</option>
 <option value="published">Published</option>
@@ -925,15 +925,15 @@
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Target Audience
-              <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="target_audience" placeholder="e.g., Grade 11 Humanities" type="text"/>
+              <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="target_audience" placeholder="e.g., Grade 11 Humanities" type="text"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Revenue Share (%)
-              <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" max="100" min="0" name="revenue_share" placeholder="30" step="1" type="number"/>
+              <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" max="100" min="0" name="revenue_share" placeholder="30" step="1" type="number"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Distribution Channels
-              <textarea class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="distribution_channels" placeholder="List marketplaces or partner channels"></textarea>
+              <textarea class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="distribution_channels" placeholder="List marketplaces or partner channels"></textarea>
 </label>
 </form>
 </div>
@@ -952,7 +952,7 @@
 <form class="space-y-6" id="resources-form">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Resource Policy
-              <textarea class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="resource_policy" placeholder="Describe how resources should be used or shared."></textarea>
+              <textarea class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="resource_policy" placeholder="Describe how resources should be used or shared."></textarea>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
 <input class="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="allow_student_uploads" type="checkbox"/>
@@ -960,7 +960,7 @@
             </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Default Storage Provider
-              <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="default_storage_provider">
+              <select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="default_storage_provider">
 <option value="internal">Neptino Storage</option>
 <option value="google-drive">Google Drive</option>
 <option value="dropbox">Dropbox</option>
@@ -968,7 +968,7 @@
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Featured Resources (comma separated)
-              <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="featured_resources" placeholder="Intro deck, syllabus, reading list" type="text"/>
+              <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="featured_resources" placeholder="Intro deck, syllabus, reading list" type="text"/>
 </label>
 </form>
 </div>
@@ -985,17 +985,17 @@
 <article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="students">
 <div class="flex flex-col flex-1 min-h-0 p-6">
 <div class="flex items-center gap-2 mb-4 lg:hidden" data-article-toggle="">
-<button class="inline-flex bg-primary-500 text-white border-primary-500 items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="config" type="button">
+<button class="btn btn-ghost" data-article-toggle-btn="" data-view="config" type="button">
               Config
             </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="preview" type="button">
+<button class="btn btn-ghost" data-article-toggle-btn="" data-view="preview" type="button">
               Preview
             </button>
 </div>
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
 <section aria-labelledby="students-roster-title" class="flex flex-col bg-white border border-neutral-200 rounded-lg overflow-y-auto h-full p-6" data-article-panel="config">
 <div class="flex flex-wrap items-center gap-4">
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" data-modal-target="students-upload-modal" data-students-trigger="" id="students-upload-btn" type="button">
+<button class="btn btn-primary" data-modal-target="students-upload-modal" data-students-trigger="" id="students-upload-btn" type="button">
                 Upload students
               </button>
 <label class="flex items-center gap-2 text-sm font-medium leading-6 text-neutral-900" for="students-manual-entry-toggle">
@@ -1062,10 +1062,10 @@
 <span aria-hidden="true" class="h-3 w-3 animate-spin rounded-full border-2 border-neutral-300 border-t-primary-600" data-students-upload-spinner=""></span>
 <span data-students-upload-status-text="">Processing roster…</span>
 </div>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-modal-close="students-upload-modal" type="button">
+<button class="btn btn-ghost" data-modal-close="students-upload-modal" type="button">
                 Cancel
               </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" disabled="" id="students-upload-submit-btn" type="submit">
+<button class="btn btn-primary" disabled="" id="students-upload-submit-btn" type="submit">
                 Import Students
               </button>
 </footer>
@@ -1076,7 +1076,7 @@
 <div class="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl" data-modal-content="">
 <header class="flex items-start justify-between gap-3">
 <h2 class="text-lg font-semibold text-neutral-900" id="students-manual-title">Manual student entry</h2>
-<button aria-label="Close manual entry modal" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 hover:bg-neutral-100" data-modal-close="students-manual-modal" type="button">
+<button aria-label="Close manual entry modal" class="inline-flex h-9 w-9 items-center justify-center w-[50px] h-[50px] rounded-full border border-neutral-200 text-neutral-500 hover:bg-neutral-100" data-modal-close="students-manual-modal" type="button">
               ×
             </button>
 </header>
@@ -1086,23 +1086,23 @@
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-first-name">
                   First name*
-                  <input autocomplete="given-name" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-first-name" name="first_name" required="" type="text"/>
+                  <input autocomplete="given-name" class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-first-name" name="first_name" required="" type="text"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-last-name">
                   Last name*
-                  <input autocomplete="family-name" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-last-name" name="last_name" required="" type="text"/>
+                  <input autocomplete="family-name" class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-last-name" name="last_name" required="" type="text"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-email">
                   Email
-                  <input autocomplete="email" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-email" name="email" placeholder="learner@school.org (optional)" type="email"/>
+                  <input autocomplete="email" class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-email" name="email" placeholder="learner@school.org (optional)" type="email"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-student-id">
                   Student ID
-                  <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-student-id" name="student_id" placeholder="Auto-generated if blank" type="text"/>
+                  <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-student-id" name="student_id" placeholder="Auto-generated if blank" type="text"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-grade-level">
                   Grade level
-                  <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-grade-level" name="grade_level">
+                  <select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-grade-level" name="grade_level">
 <option value="">Select grade level</option>
 <option value="Elementary">Elementary</option>
 <option value="Middle">Middle</option>
@@ -1113,19 +1113,19 @@
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-enrollment-date">
                   Enrollment date
-                  <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-enrollment-date" name="enrollment_date" type="date"/>
+                  <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-enrollment-date" name="enrollment_date" type="date"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-learning-style">
                   Learning style preferences
-                  <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-learning-style" name="learning_style" placeholder="e.g., Visual, Collaborative" type="text"/>
+                  <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-learning-style" name="learning_style" placeholder="e.g., Visual, Collaborative" type="text"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-assessment-score">
                   Initial assessment score
-                  <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-assessment-score" name="assessment_score" placeholder="Optional score" step="0.1" type="number"/>
+                  <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-assessment-score" name="assessment_score" placeholder="Optional score" step="0.1" type="number"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-notes">
                   Custom notes
-                  <textarea class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-notes" name="notes" placeholder="Pedagogy flags like ‘needs extra simulations’" rows="3"></textarea>
+                  <textarea class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-notes" name="notes" placeholder="Pedagogy flags like ‘needs extra simulations’" rows="3"></textarea>
 </label>
 </div>
 </fieldset>
@@ -1137,7 +1137,7 @@
               </p>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-bulk-input">
                 Bulk students
-                <textarea class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-bulk-input" name="bulk_students" placeholder="Jane,Doe,jane@school.org,12345,High School,Visual,88,2024-08-24,Loves experiments" rows="6">
+                <textarea class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-bulk-input" name="bulk_students" placeholder="Jane,Doe,jane@school.org,12345,High School,Visual,88,2024-08-24,Loves experiments" rows="6">
                 </textarea>
 </label>
 </fieldset>
@@ -1147,10 +1147,10 @@
 <span aria-hidden="true" class="h-3 w-3 animate-spin rounded-full border-2 border-neutral-300 border-t-primary-600" data-students-manual-spinner=""></span>
 <span data-students-manual-status-text="">Saving students…</span>
 </div>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-modal-close="students-manual-modal" type="button">
+<button class="btn btn-ghost" data-modal-close="students-manual-modal" type="button">
                 Cancel
               </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" id="students-manual-submit-btn" type="submit">
+<button class="btn btn-primary" id="students-manual-submit-btn" type="submit">
                 Save Students
               </button>
 </footer>
@@ -1161,10 +1161,10 @@
 <article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="pedagogy">
 <div class="flex flex-col flex-1 min-h-0 p-6">
 <div class="flex items-center gap-2 mb-4 lg:hidden" data-article-toggle="">
-<button class="inline-flex bg-primary-500 text-white border-primary-500 items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="config" type="button">
+<button class="btn btn-ghost" data-article-toggle-btn="" data-view="config" type="button">
               Config
             </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="preview" type="button">
+<button class="btn btn-ghost" data-article-toggle-btn="" data-view="preview" type="button">
               Preview
             </button>
 </div>
@@ -1191,10 +1191,10 @@
 </p>
 </div>
 <menu aria-label="Preset positions" class="flex flex-wrap gap-2" data-learning-plane-presets="">
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-preset data-x="-75" data-y="-75" type="button">Traditional</button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-preset data-x="75" data-y="75" type="button">Progressive</button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-preset data-x="-25" data-y="75" type="button">Guided Discovery</button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-preset data-x="0" data-y="0" type="button">Balanced</button>
+<button class="btn btn-ghost" data-preset data-x="-75" data-y="-75" type="button">Traditional</button>
+<button class="btn btn-ghost" data-preset data-x="75" data-y="75" type="button">Progressive</button>
+<button class="btn btn-ghost" data-preset data-x="-25" data-y="75" type="button">Guided Discovery</button>
+<button class="btn btn-ghost" data-preset data-x="0" data-y="0" type="button">Balanced</button>
 </menu>
 </div>
 </form>
@@ -1270,7 +1270,7 @@
 <form class="space-y-6" id="pricing-monetization-form">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Pricing Model
-              <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="pricing_model">
+              <select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="pricing_model">
 <option value="free">Free</option>
 <option value="subscription">Subscription</option>
 <option value="one-time">One-time purchase</option>
@@ -1279,11 +1279,11 @@
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Base Price
-              <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" min="0" name="base_price" placeholder="99" step="1" type="number"/>
+              <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" min="0" name="base_price" placeholder="99" step="1" type="number"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Currency
-              <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="currency">
+              <select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="currency">
 <option value="USD">USD</option>
 <option value="EUR">EUR</option>
 <option value="GBP">GBP</option>
@@ -1295,7 +1295,7 @@
             </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Discount Notes
-              <textarea class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="discount_notes" placeholder="Describe educator or early-bird discounts"></textarea>
+              <textarea class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="discount_notes" placeholder="Describe educator or early-bird discounts"></textarea>
 </label>
 </form>
 </div>
@@ -1314,7 +1314,7 @@
 <form class="space-y-6" id="external-integrations-form">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               LMS Provider
-              <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="lms_provider">
+              <select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="lms_provider">
 <option value="None">None</option>
 <option value="Canvas">Canvas</option>
 <option value="Moodle">Moodle</option>
@@ -1327,11 +1327,11 @@
             </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Webhook URL
-              <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="webhook_url" placeholder="https://example.com/webhook" type="text"/>
+              <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="webhook_url" placeholder="https://example.com/webhook" type="text"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Integration Notes
-              <textarea class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="integration_notes" placeholder="Describe external automation related to this course"></textarea>
+              <textarea class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="integration_notes" placeholder="Describe external automation related to this course"></textarea>
 </label>
 </form>
 </div>
@@ -1350,11 +1350,11 @@
 <form class="space-y-6" id="communication-form">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Welcome Message
-              <textarea class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="welcome_message" placeholder="Send a short welcome note to enrolled students"></textarea>
+              <textarea class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="welcome_message" placeholder="Send a short welcome note to enrolled students"></textarea>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Announcement Channel
-              <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="announcement_channel">
+              <select class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="announcement_channel">
 <option value="email">Email</option>
 <option value="in-app">In-app</option>
 <option value="sms">SMS</option>
@@ -1366,7 +1366,7 @@
             </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Office Hours
-              <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="office_hours" placeholder="Thursdays 3-5pm CET" type="text"/>
+              <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="office_hours" placeholder="Thursdays 3-5pm CET" type="text"/>
 </label>
 </form>
 </div>
@@ -1383,10 +1383,10 @@
 <article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="page-setup">
 <div class="flex flex-col flex-1 min-h-0 p-6">
 <div class="flex items-center gap-2 mb-4 lg:hidden" data-article-toggle="">
-<button class="inline-flex bg-primary-500 text-white border-primary-500 items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="config" type="button">
+<button class="btn btn-ghost" data-article-toggle-btn="" data-view="config" type="button">
               Config
             </button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="preview" type="button">
+<button class="btn btn-ghost" data-article-toggle-btn="" data-view="preview" type="button">
               Preview
             </button>
 </div>
@@ -1432,24 +1432,24 @@
 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 <label class="flex flex-col gap-2 text-sm text-neutral-700">
                     Top
-                    <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" max="100" min="0" name="margin_top" step="0.01" type="number" value="2.54"/>
+                    <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" max="100" min="0" name="margin_top" step="0.01" type="number" value="2.54"/>
 <span class="text-xs text-neutral-500" data-page-setup-unit="">cm</span>
 </label>
 <label class="flex flex-col gap-2 text-sm text-neutral-700">
                     Bottom
-                    <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" max="100" min="0" name="margin_bottom" step="0.01" type="number" value="2.54"/>
+                    <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" max="100" min="0" name="margin_bottom" step="0.01" type="number" value="2.54"/>
 <span class="text-xs text-neutral-500" data-page-setup-unit="">cm</span>
 </label>
 </div>
 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 <label class="flex flex-col gap-2 text-sm text-neutral-700">
                     Left
-                    <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" max="100" min="0" name="margin_left" step="0.01" type="number" value="2.54"/>
+                    <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" max="100" min="0" name="margin_left" step="0.01" type="number" value="2.54"/>
 <span class="text-xs text-neutral-500" data-page-setup-unit="">cm</span>
 </label>
 <label class="flex flex-col gap-2 text-sm text-neutral-700">
                     Right
-                    <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" max="100" min="0" name="margin_right" step="0.01" type="number" value="2.54"/>
+                    <input class="block w-full rounded-md border border-neutral-300 px-4 py-3 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" max="100" min="0" name="margin_right" step="0.01" type="number" value="2.54"/>
 <span class="text-xs text-neutral-500" data-page-setup-unit="">cm</span>
 </label>
 </div>
@@ -1564,7 +1564,7 @@
 <p class="mt-2 text-sm text-red-600">
               Once you delete a course, there is no going back. Please be certain.
             </p>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-red-600 hover:bg-red-700 active:bg-red-800 text-white focus-visible:ring-red-500" id="delete-course-btn">
+<button class="btn btn-danger" id="delete-course-btn">
               Delete Course
             </button>
 </section>
@@ -1581,340 +1581,334 @@
 </div>
 </section>
 <!-- Create View -->
-<div aria-hidden="true" class="hidden" data-coursebuilder-section="create" id="create">
-<div class="engine">
-<div class="flex flex-col gap-4" data-engine-content="">
-<div class="flex flex-wrap gap-2" data-engine-media="">
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="files">
-<img alt="" class="h-4 w-4" src="/src/assets/icons/coursebuilder/media/media-files.svg"/>
-<span class="text-xs text-neutral-600">Files</span>
-</button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="images">
-<img alt="" class="h-4 w-4" src="/src/assets/icons/coursebuilder/media/media-image.svg"/>
-<span class="text-xs text-neutral-600">Images</span>
-</button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="videos">
-<img alt="" class="h-4 w-4" src="/src/assets/icons/coursebuilder/media/media-video.svg"/>
-<span class="text-xs text-neutral-600">Videos</span>
-</button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="audio">
-<img alt="" class="h-4 w-4" src="/src/assets/icons/coursebuilder/media/media-audio.svg"/>
-<span class="text-xs text-neutral-600">Audio</span>
-</button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="text">
-<img alt="" class="h-4 w-4" src="/src/assets/icons/coursebuilder/media/media-text.svg"/>
-<span class="text-xs text-neutral-600">Text</span>
-</button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="plugin">
-<img alt="" class="h-4 w-4" src="/src/assets/icons/coursebuilder/media/media-plugins.svg"/>
-<span class="text-xs text-neutral-600">Plugins</span>
-</button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="links">
-<img alt="" class="h-4 w-4" src="/src/assets/icons/coursebuilder/media/media-link.svg"/>
-<span class="text-xs text-neutral-600">Links</span>
-</button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="games">
-<img alt="" class="h-4 w-4" src="/src/assets/icons/joystick-icon.svg"/>
-<span class="text-xs text-neutral-600">Games</span>
-</button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-media="graphs">
-<img alt="" class="h-4 w-4" src="/src/assets/icons/chart-area-icon.svg"/>
-<span class="text-xs text-neutral-600">Graphs</span>
-</button>
-</div>
-<!-- Search -->
-<div class="search mt-2" data-engine-search="">
-<input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="media-search-input" placeholder="Search media..." type="search"/>
-</div>
-</div>
-<button aria-label="Resize search column" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-engine-resizer="search" type="button"></button>
-<!-- Canvas Area -->
-<div class="relative flex-1 bg-white" data-engine-canvas="" id="canvas-container">
-<!-- Canvas will be inserted here by JavaScript -->
-<!-- Left Side: Perspective + Mode (inside canvas) -->
-<div class="absolute left-4 top-4 flex flex-col gap-2" data-engine-perspective="">
-<!-- Zoom Indicator -->
-<div class="text-xs font-semibold text-neutral-600" data-engine-perspective-zoom="" title="Current zoom level - Ctrl/Cmd+wheel to zoom">100%</div>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-perspective="zoom-in" title="Focus">
-<img alt="Focus" class="h-4 w-4" src="/src/assets/icons/coursebuilder/perspective/zoomin-icon.svg"/>
-<span class="text-xs text-neutral-600">Focus</span>
-</button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-perspective="zoom-out" title="Expand">
-<img alt="Expand" class="h-4 w-4" src="/src/assets/icons/coursebuilder/perspective/zoomout-icon.svg"/>
-<span class="text-xs text-neutral-600">Expand</span>
-</button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-perspective="reset" title="Reset View">
-<img alt="Reset View" class="h-4 w-4" src="/src/assets/icons/coursebuilder/perspective/reset-icon.svg"/>
-<span class="text-xs text-neutral-600">Reset</span>
-</button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-perspective="grab" title="grab">
-<img alt="grab" class="h-4 w-4" src="/src/assets/icons/coursebuilder/perspective/grab-icon.svg"/>
-<span class="text-xs text-neutral-600">Grab</span>
-</button>
-<!-- Grid button (opens Snap Menu) -->
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-perspective="grid" data-snap-anchor="" title="Snapping">
-<img alt="Snapping" class="h-4 w-4" src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg"/>
-<span class="text-xs text-neutral-600">Grid</span>
-</button>
-</div>
-<!-- Right Side: Canvas Scroll Navigation -->
-<div class="absolute right-4 top-4 flex flex-col gap-2" data-engine-scroll="">
-<!-- Go to top -->
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-scroll="first" title="Go to first canvas">
-<svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
-<path d="M18 15l-6-6-6 6"></path>
-<path d="M18 9l-6-6-6 6"></path>
-</svg>
-<span class="text-xs text-neutral-600">First</span>
-</button>
-<!-- Go back one -->
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-scroll="prev" title="Previous canvas">
-<svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
-<path d="M18 15l-6-6-6 6"></path>
-</svg>
-<span class="text-xs text-neutral-600">Prev</span>
-</button>
-<!-- Current position / total -->
-<div class="flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-2 py-1" data-engine-scroll-display="">
-<input aria-label="Current canvas number" class="w-12 bg-transparent text-sm text-neutral-700" data-engine-scroll-input="" id="engine-scroll-input" min="1" name="engine-scroll-input" title="Current canvas number" type="number" value="1"/>
-<span class="text-xs text-neutral-400">/</span>
-<span class="text-xs text-neutral-500" data-engine-scroll-total="" title="Total canvases">225</span>
-</div>
-<!-- Go forward one -->
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-scroll="next" title="Next canvas">
-<svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
-<path d="M6 9l6 6 6-6"></path>
-</svg>
-<span class="text-xs text-neutral-600">Next</span>
-</button>
-<!-- Go to bottom -->
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-scroll="last" title="Go to last canvas">
-<svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
-<path d="M6 9l6 6 6-6"></path>
-<path d="M6 15l6 6 6-6"></path>
-</svg>
-<span class="text-xs text-neutral-600">Last</span>
-</button>
-</div>
-<!-- Bottom: Modes and Tools Container -->
-<div class="absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col gap-3" data-engine-controls="">
-<!-- Mode Selector -->
-<div class="flex gap-2" data-engine-modes="">
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build">
-<img alt="" class="h-4 w-4" src="/src/assets/icons/coursebuilder/modes/mode-build.svg"/>
-<span class="text-xs text-neutral-600">Build</span>
-</button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="animate">
-<img alt="" class="h-4 w-4" src="/src/assets/icons/coursebuilder/modes/mode-animate.svg"/>
-<span class="text-xs text-neutral-600">Animate</span>
-</button>
-</div>
-<!-- Tools (2 rows) -->
-<div class="flex flex-col gap-2" data-engine-tools="">
-<!-- Tool Options Row (Top) -->
-<div class="flex flex-wrap gap-3" data-engine-tools-options="">
-<!-- Pen Settings -->
-<div class="flex flex-wrap items-center gap-3" data-engine-tool-options="pen" data-engine-tool-options-layout="horizontal" style="display: none;">
-<input aria-label="Pen size" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" data-setting="size" id="pen-size-input" max="15" min="1" name="pen-size" type="number" value="2"/>
-<div class="color-selector" data-color-selector="pen-stroke" data-initial-color="#282a29"></div>
-<div class="color-selector" data-allow-transparent="true" data-color-selector="pen-fill" data-initial-color="#fef6eb"></div>
-</div>
-<!-- Text Settings -->
-<div class="flex flex-wrap items-center gap-3" data-engine-tool-options="text" data-engine-tool-options-layout="horizontal" style="display: none;">
-<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" data-setting="fontSize" id="text-size-select">
-<option data-label="Normal" value="12">Normal Text (12 pt)</option>
-<option data-label="Title" value="26">Title (26 pt)</option>
-<option data-label="Header1" value="20">Header 1 (20 pt)</option>
-<option data-label="Header2" selected="" value="16">Header 2 (16 pt)</option>
-<option data-label="Header3" value="14">Header 3 (14 pt)</option>
-</select>
-<div aria-label="Text Style" class="flex items-center gap-2" data-engine-text-style-controls="">
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-engine-text-style="bold" type="button">B</button>
-<button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-engine-text-style="italic" type="button">I</button>
-</div>
-<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" data-setting="fontFamily" id="font-family-select">
-<option data-font-family="Arial" value="Arial">Arial</option>
-<option data-font-family="Times New Roman" value="Times New Roman">Times New Roman</option>
-<option data-font-family="Georgia" value="Georgia">Georgia</option>
-<option data-font-family="Verdana" value="Verdana">Verdana</option>
-<option data-font-family="Tahoma" value="Tahoma">Tahoma</option>
-</select>
-<div class="color-selector" data-color-selector="text" data-initial-color="#282a29"></div>
-</div>
-<!-- Brush Settings -->
-<div class="flex flex-wrap items-center gap-3" data-engine-tool-options="brush" data-engine-tool-options-layout="horizontal" style="display: none;">
-<input aria-label="Brush size" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" data-setting="size" id="brush-size-input" max="50" min="10" name="brush-size" type="number" value="20"/>
-<div class="color-selector" data-color-selector="brush" data-initial-color="#2b8059"></div>
-</div>
-<!-- Shapes Settings -->
-<div class="flex flex-wrap items-center gap-3" data-engine-tool-options="shapes" data-engine-tool-options-layout="horizontal" style="display: none;">
-<div class="shape-selector" data-initial-shape="rectangle" data-shape-selector="shapes"></div>
-<input aria-label="Shape stroke width" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" data-setting="strokeWidth" id="shape-stroke-width-input" max="20" min="1" name="shape-stroke-width" type="number" value="2"/>
-<div class="color-selector" data-color-selector="shapes-stroke" data-initial-color="#282a29"></div>
-<div class="color-selector" data-allow-transparent="true" data-color-selector="shapes-fill" data-initial-color="transparent"></div>
-</div>
-<!-- Eraser Settings -->
-<div class="flex flex-wrap items-center gap-3" data-engine-tool-options="eraser" data-engine-tool-options-layout="horizontal" style="display: none;">
-<input aria-label="Eraser size" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" data-setting="size" id="eraser-size-input" max="50" min="5" name="eraser-size" type="number" value="20"/>
-</div>
-<!-- Table Settings -->
-<div class="flex flex-wrap items-center gap-3" data-engine-tool-options="tables" data-engine-tool-options-layout="horizontal" style="display: none;">
-<input aria-label="Table size" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" data-setting="size" id="table-size-input" max="20" min="1" name="table-size" type="number" value="3"/>
-<select aria-label="Table type" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" data-setting="tableType" id="table-type-select" name="table-type">
-<option value="basic">Basic</option>
-<option value="bordered">Bordered</option>
-<option value="striped">Striped</option>
-</select>
-</div>
-</div>
-<div class="flex flex-wrap gap-2" data-engine-tools-selection="">
-<!-- Build Mode Tools -->
-<button aria-label="Select" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="selection">
-<img alt="Selection Tool" class="h-4 w-4" src="/src/assets/icons/coursebuilder/tools/tool-select.svg"/>
-</button>
-<button aria-label="Pen" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="pen">
-<img alt="Pen Tool" class="h-4 w-4" src="/src/assets/icons/coursebuilder/tools/tool-pen.svg"/>
-</button>
-<button aria-label="Brush" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="brush">
-<img alt="Brush Tool" class="h-4 w-4" src="/src/assets/icons/coursebuilder/tools/tool-brush.svg"/>
-</button>
-<button aria-label="Text" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="text">
-<img alt="Text Tool" class="h-4 w-4" src="/src/assets/icons/coursebuilder/tools/tool-write.svg"/>
-</button>
-<button aria-label="Shapes" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="shapes">
-<img alt="Shapes Tool" class="h-4 w-4" src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg"/>
-</button>
-<button aria-label="Tables" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="tables">
-<img alt="Table Tool" class="h-4 w-4" src="/src/assets/icons/coursebuilder/media/media-table.svg"/>
-</button>
-<button aria-label="Generate" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="generate">
-<img alt="Generate Tool" class="h-4 w-4" src="/src/assets/icons/bot-icon.svg"/>
-</button>
-<button aria-label="Eraser" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="build" data-tool="eraser">
-<img alt="Eraser Tool" class="h-4 w-4" src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg"/>
-</button>
-<!-- Animate Mode Tools -->
-<button aria-label="Select" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="animate" data-tool="selection" style="display: none;">
-<img alt="Selection Tool" class="h-4 w-4" src="/src/assets/icons/coursebuilder/tools/tool-select.svg"/>
-</button>
-<button aria-label="Scene" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="animate" data-tool="scene" style="display: none;">
-<img alt="Scene Tool" class="h-4 w-4" src="/src/assets/icons/coursebuilder/modes/mode-animate.svg"/>
-</button>
-<button aria-label="Path" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="animate" data-tool="path" style="display: none;">
-<img alt="Path Tool" class="h-4 w-4" src="/src/assets/icons/coursebuilder/tools/tool-pen.svg"/>
-</button>
-<button aria-label="Modify" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-mode="animate" data-tool="modify" style="display: none;">
-<img alt="Modify Tool" class="h-4 w-4" src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg"/>
-</button>
-</div>
-</div>
-</div> <!-- End engine controls -->
-<!-- Navigation inside canvas can be added here if needed -->
-<!-- Snap Menu (positioned inside canvas) -->
-<div class="absolute right-6 top-24 hidden w-72 rounded-xl border border-neutral-200 bg-white p-4 shadow-lg" data-snap-menu="" id="snap-menu">
-<!-- Smart Guides Toggle -->
-<div class="flex items-center gap-2 text-sm font-medium text-neutral-800" data-snap-option="smart">
-<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="smart-guides-toggle" type="checkbox"/>
-<span>Smart Guides</span>
-</div>
-<!-- Enhanced Smart Guides Settings -->
-<div class="mt-4 space-y-3" data-snap-section="">
-<div class="flex items-center gap-2 text-sm text-neutral-700" data-smart-setting="showDistToAll">
-<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="showDistToAll" type="checkbox"/>
-<label for="showDistToAll">Distance Labels</label>
-</div>
-<div class="flex items-center gap-2 text-sm text-neutral-700" data-smart-setting="enableResizeGuides">
-<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="enableResizeGuides" type="checkbox"/>
-<label for="enableResizeGuides">Resize Guides</label>
-</div>
-<div class="flex items-center gap-2 text-sm text-neutral-700" data-smart-setting="enableSmartSelection">
-<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="enableSmartSelection" type="checkbox"/>
-<label for="enableSmartSelection">Smart Selection</label>
-</div>
-<div class="flex items-center gap-2 text-sm text-neutral-700" data-smart-setting="enableColorCoding">
-<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="enableColorCoding" type="checkbox"/>
-<label for="enableColorCoding">Color Coding</label>
-</div>
-</div>
-<!-- Distribute actions -->
-<div class="my-4 h-px bg-neutral-200"></div>
-<div class="grid gap-2">
-<div class="flex items-center gap-2 text-sm text-neutral-700" data-distribute="horizontal">
-<img alt="Distribute H" class="h-4 w-4" src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg"/><span>Distribute
-                  Horizontally</span>
-</div>
-<div class="flex items-center gap-2 text-sm text-neutral-700" data-distribute="vertical">
-<img alt="Distribute V" class="h-4 w-4" src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg"/><span>Distribute
-                  Vertically</span>
-</div>
-</div>
-<!-- Smart Guide Reference Modes -->
-<div class="my-4 h-px bg-neutral-200"></div>
-<div class="space-y-2" data-snap-guide-modes="">
-<label class="text-xs font-semibold uppercase tracking-wide text-neutral-500">Smart Guide Reference</label>
-<div class="grid gap-2">
-<div class="flex items-center gap-2 rounded-md border border-neutral-200 px-2 py-1 text-xs text-neutral-700" data-reference-mode="canvas" title="Smart guides snap objects to canvas edges, center, or quadrants. Provides absolute positioning relative to the viewport; guides appear as lines from canvas boundaries during drag, with minimal tolerance for alignment.">
-<img alt="Canvas Reference" class="h-4 w-4" src="/src/assets/icons/coursebuilder/perspective/canvas-icon.svg"/><span>Canvas Reference</span>
-</div>
-<div class="flex items-center gap-2 rounded-md border border-neutral-200 px-2 py-1 text-xs text-neutral-700" data-reference-mode="object" title="Smart guides align to other objects' edges, centers, or paths. Dynamic snapping based on nearby elements; shows temporary guide lines connecting matching points, with adjustable sensitivity for crowded scenes.">
-<img alt="Object Reference" class="h-4 w-4" src="/src/assets/icons/coursebuilder/perspective/selection-icon.svg"/><span>Object Reference</span>
-</div>
-<div class="flex items-center gap-2 rounded-md border border-neutral-200 px-2 py-1 text-xs text-neutral-700" data-reference-mode="grid" title="Smart guides follow a predefined grid system (e.g., pixel or custom intervals). Restricts movement to grid increments; displays persistent grid lines or dots, enforcing uniform spacing unlike freeform object snapping.">
-<img alt="Grid Reference" class="h-4 w-4" src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg"/><span>Grid
-                    Reference</span>
-</div>
-</div>
-</div>
-<!-- Grid Options (only visible when Grid Reference is selected) -->
-<div class="mt-4 space-y-3" data-snap-grid-options="" id="grid-options" style="display: none;">
-<div class="flex items-center gap-2 text-sm text-neutral-700">
-<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="show-grid" type="checkbox"/>
-<label for="show-grid">Show grid</label>
-</div>
-<div class="flex items-center gap-2 text-sm text-neutral-700">
-<label for="grid-spacing">Grid spacing:</label>
-<input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="grid-spacing" max="100" min="1" type="number" value="20"/>
-<span class="text-xs text-neutral-500">px</span>
-</div>
-</div>
-</div>
-</div>
-<button aria-label="Resize inspector panel" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-engine-resizer="panel" type="button"></button>
-<!-- Layers Panel - Now floating overlay on the right -->
-<div class="absolute right-4 bottom-4 w-80 rounded-xl border border-neutral-200 bg-white shadow-lg" data-engine-panel="">
-<div class="border-b border-neutral-200 p-3" data-engine-panel-header="">
-<div class="flex items-center gap-2" data-engine-panel-toggle="">
-<button aria-label="Show Layers panel" aria-pressed="true" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 text-white" data-panel-view="layers" data-engine-panel-toggle-btn="">
-                Layers
-              </button>
-<span class="text-neutral-300">|</span>
-<button aria-label="Show Navigation panel" aria-pressed="false" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-panel-view="navigation" data-engine-panel-toggle-btn="">
-                Navigation
-              </button>
-</div>
-</div>
-<div class="p-3" data-engine-panel-content="">
-<!-- Layers Panel View -->
-<div class="" data-engine-panel-view="" data-view="layers">
-<div class="">
-<div class="">
-<div class="">
-<ol class="layers-list" id="layers-list-root"></ol>
-</div>
-</div>
-</div>
-</div>
-<!-- Navigation Panel View -->
-<div class="hidden" data-engine-panel-view="" data-view="navigation">
-<div class="">
-<div class="space-y-2">
-<h4>Course Structure</h4>
-<p>Loading course outline…</p>
-</div>
-</div>
-</div>
-</div>
-</div>
+<div aria-hidden="true" class="hidden h-full" data-coursebuilder-section="create" id="create">
+<div class="engine grid h-full min-h-0 overflow-hidden">
+
+  <!-- ═══ Col 1+2: Media sidebar (shared background) ═══ -->
+  <div class="flex h-full min-h-0 rounded-lg bg-white border border-neutral-200 shadow-md overflow-hidden" data-engine-content="">
+
+    <!-- Col 1 – Media Type Toolbar -->
+    <div class="flex flex-col items-center gap-1.5 pt-3 pb-2 px-1.5 bg-neutral-50/30 overflow-y-auto" data-engine-media="">
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-media="files" title="Files">
+        <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/media/media-files.svg"/>
+        <span class="text-[11px] leading-tight font-medium">Files</span>
+      </button>
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-media="images" title="Images">
+        <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/media/media-image.svg"/>
+        <span class="text-[11px] leading-tight font-medium">Images</span>
+      </button>
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-media="videos" title="Videos">
+        <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/media/media-video.svg"/>
+        <span class="text-[11px] leading-tight font-medium">Videos</span>
+      </button>
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-media="audio" title="Audio">
+        <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/media/media-audio.svg"/>
+        <span class="text-[11px] leading-tight font-medium">Audio</span>
+      </button>
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-media="text" title="Text">
+        <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/media/media-text.svg"/>
+        <span class="text-[11px] leading-tight font-medium">Text</span>
+      </button>
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-media="plugin" title="Plugins">
+        <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/media/media-plugins.svg"/>
+        <span class="text-[11px] leading-tight font-medium">Plugins</span>
+      </button>
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-media="links" title="Links">
+        <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/media/media-link.svg"/>
+        <span class="text-[11px] leading-tight font-medium">Links</span>
+      </button>
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-media="games" title="Games">
+        <img alt="" class="h-6 w-6" src="/src/assets/icons/joystick-icon.svg"/>
+        <span class="text-[11px] leading-tight font-medium">Games</span>
+      </button>
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-media="graphs" title="Graphs">
+        <img alt="" class="h-6 w-6" src="/src/assets/icons/chart-area-icon.svg"/>
+        <span class="text-[11px] leading-tight font-medium">Graphs</span>
+      </button>
+    </div>
+
+    <!-- Col 2 – Media Content Area -->
+    <div class="flex flex-col flex-1 min-w-0 min-h-0 pt-3 pr-3 pb-3 pl-1.5 gap-2" data-engine-search="">
+      <input class="block w-full rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" id="media-search-input" placeholder="Search media…" type="search"/>
+      <!-- Results appended by MediaInterface.ts -->
+    </div>
+  </div>
+
+  <!-- ═══ Grabber: sidebar ↔ canvas ═══ -->
+  <button aria-label="Resize search column" class="flex items-center justify-center w-full cursor-col-resize border-none transition-colors focus-visible:outline-none" data-engine-resizer="search" type="button"></button>
+
+  <!-- ═══ Col 3: Canvas (largest) ═══ -->
+  <div class="relative min-h-0 overflow-hidden bg-white" data-engine-canvas="" id="canvas-container">
+    <!-- PIXI canvas inserted by JS -->
+
+    <!-- View controls – left overlay -->
+    <div class="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-1.5 rounded-lg bg-white border border-neutral-200 shadow-md p-2" data-engine-perspective="">
+      <div class="rounded-md bg-white/80 px-2 py-1 text-xs font-semibold text-neutral-600 shadow-sm backdrop-blur-sm text-center" data-engine-perspective-zoom="" title="Current zoom level">100%</div>
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-perspective="zoom-in" title="Focus">
+        <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/perspective/zoomin-icon.svg"/>
+        <span class="text-[11px] leading-tight font-medium">Focus</span>
+      </button>
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-perspective="zoom-out" title="Expand">
+        <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/perspective/zoomout-icon.svg"/>
+        <span class="text-[11px] leading-tight font-medium">Expand</span>
+      </button>
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-perspective="reset" title="Reset View">
+        <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/perspective/reset-icon.svg"/>
+        <span class="text-[11px] leading-tight font-medium">Reset</span>
+      </button>
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-perspective="grab" title="Grab">
+        <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/perspective/grab-icon.svg"/>
+        <span class="text-[11px] leading-tight font-medium">Grab</span>
+      </button>
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-perspective="grid" data-snap-anchor="" title="Grid">
+        <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg"/>
+        <span class="text-[11px] leading-tight font-medium">Grid</span>
+      </button>
+    </div>
+
+    <!-- Scroll nav – right overlay -->
+    <div class="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-1.5 rounded-lg bg-white border border-neutral-200 shadow-md p-2" data-engine-scroll="">
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-scroll="first" title="Go to first canvas">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/><path d="M18 9l-6-6-6 6"/></svg>
+        <span class="text-[11px] leading-tight font-medium">First</span>
+      </button>
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-scroll="prev" title="Previous canvas">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg>
+        <span class="text-[11px] leading-tight font-medium">Prev</span>
+      </button>
+      <div class="flex flex-col items-center justify-center w-[50px] h-[50px] rounded-md border border-neutral-200 bg-white shadow-sm" data-engine-scroll-display="">
+        <input aria-label="Current canvas number" class="w-full bg-transparent text-center text-[11px] font-medium text-neutral-700 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" data-engine-scroll-input="" id="engine-scroll-input" min="1" name="engine-scroll-input" title="Current canvas number" type="number" value="1"/>
+        <span class="h-px w-4 bg-neutral-300"></span>
+        <span class="text-[11px] text-neutral-500" data-engine-scroll-total="" title="Total canvases">45</span>
+      </div>
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-scroll="next" title="Next canvas">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        <span class="text-[11px] leading-tight font-medium">Next</span>
+      </button>
+      <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-scroll="last" title="Go to last canvas">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/><path d="M6 15l6 6 6-6"/></svg>
+        <span class="text-[11px] leading-tight font-medium">Last</span>
+      </button>
+    </div>
+
+    <!-- Toolbar – bottom overlay -->
+    <div class="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 flex-col gap-2" data-engine-controls="">
+
+      <!-- Tool options row (contextual, above tool buttons) -->
+      <div class="flex flex-wrap items-center gap-2 rounded-lg border border-neutral-200 bg-white/90 px-3 py-1.5 shadow-md backdrop-blur-sm" data-engine-tools="">
+        <div class="flex flex-wrap items-center gap-2" data-engine-tools-options="">
+          <!-- Pen -->
+          <div class="flex items-center gap-2" data-engine-tool-options="pen" data-engine-tool-options-layout="horizontal" style="display:none;">
+            <input aria-label="Pen size" class="w-20 rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" data-setting="size" id="pen-size-input" max="15" min="1" name="pen-size" type="number" value="2"/>
+            <div class="color-selector" data-color-selector="pen-stroke" data-initial-color="#282a29"></div>
+            <div class="color-selector" data-allow-transparent="true" data-color-selector="pen-fill" data-initial-color="#fef6eb"></div>
+          </div>
+          <!-- Text -->
+          <div class="flex items-center gap-2" data-engine-tool-options="text" data-engine-tool-options-layout="horizontal" style="display:none;">
+            <select class="w-20 rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" data-setting="fontSize" id="text-size-select">
+              <option data-label="Normal" value="12">Normal (12pt)</option>
+              <option data-label="Title" value="26">Title (26pt)</option>
+              <option data-label="Header1" value="20">H1 (20pt)</option>
+              <option data-label="Header2" selected="" value="16">H2 (16pt)</option>
+              <option data-label="Header3" value="14">H3 (14pt)</option>
+            </select>
+            <div aria-label="Text Style" class="flex items-center gap-1" data-engine-text-style-controls="">
+              <button class="inline-flex items-center justify-center w-[50px] h-[50px] rounded border border-neutral-300 bg-white px-2 py-1 text-xs font-bold shadow-sm transition-all hover:bg-neutral-50 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500" data-engine-text-style="bold" type="button">B</button>
+              <button class="inline-flex items-center justify-center w-[50px] h-[50px] rounded border border-neutral-300 bg-white px-2 py-1 text-xs font-bold shadow-sm transition-all hover:bg-neutral-50 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500" data-engine-text-style="italic" type="button">I</button>
+            </div>
+            <select class="w-20 rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" data-setting="fontFamily" id="font-family-select">
+              <option value="Arial">Arial</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Verdana">Verdana</option>
+              <option value="Tahoma">Tahoma</option>
+            </select>
+            <div class="color-selector" data-color-selector="text" data-initial-color="#282a29"></div>
+          </div>
+          <!-- Brush -->
+          <div class="flex items-center gap-2" data-engine-tool-options="brush" data-engine-tool-options-layout="horizontal" style="display:none;">
+            <input aria-label="Brush size" class="w-20 rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" data-setting="size" id="brush-size-input" max="50" min="10" name="brush-size" type="number" value="20"/>
+            <div class="color-selector" data-color-selector="brush" data-initial-color="#2b8059"></div>
+          </div>
+          <!-- Shapes -->
+          <div class="flex items-center gap-2" data-engine-tool-options="shapes" data-engine-tool-options-layout="horizontal" style="display:none;">
+            <div class="shape-selector" data-initial-shape="rectangle" data-shape-selector="shapes"></div>
+            <input aria-label="Stroke width" class="w-20 rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" data-setting="strokeWidth" id="shape-stroke-width-input" max="20" min="1" name="shape-stroke-width" type="number" value="2"/>
+            <div class="color-selector" data-color-selector="shapes-stroke" data-initial-color="#282a29"></div>
+            <div class="color-selector" data-allow-transparent="true" data-color-selector="shapes-fill" data-initial-color="transparent"></div>
+          </div>
+          <!-- Eraser -->
+          <div class="flex items-center gap-2" data-engine-tool-options="eraser" data-engine-tool-options-layout="horizontal" style="display:none;">
+            <input aria-label="Eraser size" class="w-20 rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" data-setting="size" id="eraser-size-input" max="50" min="5" name="eraser-size" type="number" value="20"/>
+          </div>
+          <!-- Tables -->
+          <div class="flex items-center gap-2" data-engine-tool-options="tables" data-engine-tool-options-layout="horizontal" style="display:none;">
+            <input aria-label="Table size" class="w-20 rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" data-setting="size" id="table-size-input" max="20" min="1" name="table-size" type="number" value="3"/>
+            <select aria-label="Table type" class="w-20 rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" data-setting="tableType" id="table-type-select" name="table-type">
+              <option value="basic">Basic</option>
+              <option value="bordered">Bordered</option>
+              <option value="striped">Striped</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode selector + Tool buttons row -->
+      <div class="flex items-center gap-2 rounded-lg border border-neutral-200 bg-white/90 px-2 py-1.5 shadow-md backdrop-blur-sm" data-engine-tools="">
+        <!-- Modes (left) -->
+        <div class="flex items-center gap-1.5 border-r border-neutral-200 pr-2" data-engine-modes="">
+          <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-mode="build">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/modes/mode-build.svg"/>
+            <span class="text-[11px] leading-tight font-medium">Build</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" data-mode="animate">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/modes/mode-animate.svg"/>
+            <span class="text-[11px] leading-tight font-medium">Animate</span>
+          </button>
+        </div>
+        <!-- Tool buttons (right of modes) -->
+        <div class="flex flex-nowrap items-center gap-1.5" data-engine-tools-selection="">
+          <!-- Build tools -->
+          <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" aria-label="Select" data-mode="build" data-tool="selection">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/tools/tool-select.svg"/>
+            <span class="text-[11px] leading-tight font-medium">Select</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" aria-label="Pen" data-mode="build" data-tool="pen">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/tools/tool-pen.svg"/>
+            <span class="text-[11px] leading-tight font-medium">Pen</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" aria-label="Brush" data-mode="build" data-tool="brush">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/tools/tool-brush.svg"/>
+            <span class="text-[11px] leading-tight font-medium">Brush</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" aria-label="Text" data-mode="build" data-tool="text">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/tools/tool-write.svg"/>
+            <span class="text-[11px] leading-tight font-medium">Text</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" aria-label="Shapes" data-mode="build" data-tool="shapes">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg"/>
+            <span class="text-[11px] leading-tight font-medium">Shapes</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" aria-label="Tables" data-mode="build" data-tool="tables">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/media/media-table.svg"/>
+            <span class="text-[11px] leading-tight font-medium">Tables</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" aria-label="Generate" data-mode="build" data-tool="generate">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/bot-icon.svg"/>
+            <span class="text-[11px] leading-tight font-medium">Generate</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" aria-label="Eraser" data-mode="build" data-tool="eraser">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/tools/tool-eraser.svg"/>
+            <span class="text-[11px] leading-tight font-medium">Eraser</span>
+          </button>
+          <!-- Animate tools -->
+          <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" aria-label="Select" data-mode="animate" data-tool="selection" style="display:none;">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/tools/tool-select.svg"/>
+            <span class="text-[11px] leading-tight font-medium">Select</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" aria-label="Scene" data-mode="animate" data-tool="scene" style="display:none;">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/modes/mode-animate.svg"/>
+            <span class="text-[11px] leading-tight font-medium">Scene</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" aria-label="Path" data-mode="animate" data-tool="path" style="display:none;">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/tools/tool-pen.svg"/>
+            <span class="text-[11px] leading-tight font-medium">Path</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-0.5 rounded-md border border-neutral-300 bg-white w-[50px] h-[50px] shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer" aria-label="Modify" data-mode="animate" data-tool="modify" style="display:none;">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/tools/tool-shapes.svg"/>
+            <span class="text-[11px] leading-tight font-medium">Modify</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Snap Menu (popover, inside canvas) -->
+    <div class="absolute right-6 top-24 z-20 hidden w-72 rounded-xl border border-neutral-200 bg-white p-4 shadow-lg" data-snap-menu="" id="snap-menu">
+      <div class="flex items-center gap-2 text-sm font-medium text-neutral-800" data-snap-option="smart">
+        <input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600" id="smart-guides-toggle" type="checkbox"/>
+        <span>Smart Guides</span>
+      </div>
+      <div class="mt-4 space-y-3" data-snap-section="">
+        <div class="flex items-center gap-2 text-sm text-neutral-700" data-smart-setting="showDistToAll">
+          <input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600" id="showDistToAll" type="checkbox"/>
+          <label for="showDistToAll">Distance Labels</label>
+        </div>
+        <div class="flex items-center gap-2 text-sm text-neutral-700" data-smart-setting="enableResizeGuides">
+          <input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600" id="enableResizeGuides" type="checkbox"/>
+          <label for="enableResizeGuides">Resize Guides</label>
+        </div>
+        <div class="flex items-center gap-2 text-sm text-neutral-700" data-smart-setting="enableSmartSelection">
+          <input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600" id="enableSmartSelection" type="checkbox"/>
+          <label for="enableSmartSelection">Smart Selection</label>
+        </div>
+        <div class="flex items-center gap-2 text-sm text-neutral-700" data-smart-setting="enableColorCoding">
+          <input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600" id="enableColorCoding" type="checkbox"/>
+          <label for="enableColorCoding">Color Coding</label>
+        </div>
+      </div>
+      <div class="my-4 h-px bg-neutral-200"></div>
+      <div class="grid gap-2">
+        <div class="flex items-center gap-2 text-sm text-neutral-700" data-distribute="horizontal">
+          <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg"/><span>Distribute Horizontally</span>
+        </div>
+        <div class="flex items-center gap-2 text-sm text-neutral-700" data-distribute="vertical">
+          <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/perspective/snap-smart.svg"/><span>Distribute Vertically</span>
+        </div>
+      </div>
+      <div class="my-4 h-px bg-neutral-200"></div>
+      <div class="space-y-2" data-snap-guide-modes="">
+        <label class="text-xs font-semibold uppercase tracking-wide text-neutral-500">Smart Guide Reference</label>
+        <div class="grid gap-2">
+          <div class="flex items-center gap-2 rounded-md border border-neutral-200 px-2 py-1 text-xs text-neutral-700" data-reference-mode="canvas">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/perspective/canvas-icon.svg"/><span>Canvas Reference</span>
+          </div>
+          <div class="flex items-center gap-2 rounded-md border border-neutral-200 px-2 py-1 text-xs text-neutral-700" data-reference-mode="object">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/perspective/selection-icon.svg"/><span>Object Reference</span>
+          </div>
+          <div class="flex items-center gap-2 rounded-md border border-neutral-200 px-2 py-1 text-xs text-neutral-700" data-reference-mode="grid">
+            <img alt="" class="h-6 w-6" src="/src/assets/icons/coursebuilder/perspective/grid-icon.svg"/><span>Grid Reference</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4 space-y-3" data-snap-grid-options="" id="grid-options" style="display:none;">
+        <div class="flex items-center gap-2 text-sm text-neutral-700">
+          <input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600" id="show-grid" type="checkbox"/>
+          <label for="show-grid">Show grid</label>
+        </div>
+        <div class="flex items-center gap-2 text-sm text-neutral-700">
+          <label for="grid-spacing">Grid spacing:</label>
+          <input class="w-20 rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" id="grid-spacing" max="100" min="1" type="number" value="20"/>
+          <span class="text-xs text-neutral-500">px</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Grabber: canvas ↔ panel ═══ -->
+  <button aria-label="Resize inspector panel" class="flex items-center justify-center w-full cursor-col-resize border-none transition-colors focus-visible:outline-none" data-engine-resizer="panel" type="button"></button>
+
+  <!-- ═══ Col 4: Layers / Navigation Panel ═══ -->
+  <div class="flex flex-col min-h-0 overflow-hidden bg-white" data-engine-panel="">
+    <div class="flex items-stretch border-b border-neutral-200" data-engine-panel-header="">
+      <div class="flex items-stretch flex-1" data-engine-panel-toggle="">
+        <button aria-label="Show Layers panel" aria-pressed="true" class="flex-1 py-2.5 text-sm font-medium text-white bg-primary-400 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-inset" data-panel-view="layers" data-engine-panel-toggle-btn="">Layers</button>
+        <button aria-label="Show Navigation panel" aria-pressed="false" class="flex-1 py-2.5 text-sm font-medium text-neutral-700 bg-white transition-all hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-inset" data-panel-view="navigation" data-engine-panel-toggle-btn="">Navigation</button>
+      </div>
+    </div>
+    <div class="flex-1 min-h-0 overflow-y-auto p-3" data-engine-panel-content="">
+      <!-- Layers -->
+      <div class="" data-engine-panel-view="" data-view="layers">
+        <ol class="layers-list" id="layers-list-root"></ol>
+      </div>
+      <!-- Navigation (scrollable thumbnails) -->
+      <div class="hidden" data-engine-panel-view="" data-view="navigation">
+        <div class="space-y-2">
+          <p class="text-sm text-neutral-500">Loading course outline…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 </div>
 <!-- Preview View -->

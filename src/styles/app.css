@@ -2,17 +2,17 @@
 
 @theme {
   /* BRAND COLORS */
-  --color-primary-25: #f5f9ff;
-  --color-primary-50: #e6f2ff;
-  --color-primary-100: #b3d7ff;
-  --color-primary-200: #9ac8ff;
-  --color-primary-300: #7fb6ff;
-  --color-primary-400: #65a5ff;
-  --color-primary-500: #4a94ff;
-  --color-primary-600: #2f7de0;
-  --color-primary-700: #1f5fb3;
-  --color-primary-800: #134080;
-  --color-primary-900: #0a234d;
+  --color-primary-25: #f7f9fd;
+  --color-primary-50: #edf3fb;
+  --color-primary-100: #cddcf2;
+  --color-primary-200: #b4cced;
+  --color-primary-300: #96b8e4;
+  --color-primary-400: #7da8dc;
+  --color-primary-500: #6898d2;
+  --color-primary-600: #5283bc;
+  --color-primary-700: #3f6a9e;
+  --color-primary-800: #2d4f78;
+  --color-primary-900: #1b3452;
 
   --color-secondary-50: #e6fffe;
   --color-secondary-100: #b3fffc;
@@ -166,4 +166,202 @@
   --size-container-base: 42rem;
   --size-container-large: 64rem;
   --size-container-extra-large: 80rem;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900;
+  }
+
+  .btn-primary {
+    @apply bg-primary-400 text-white hover:bg-primary-500 active:bg-primary-600;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700 active:bg-red-800 focus-visible:ring-red-500;
+  }
+
+  .setup-panel {
+    @apply rounded-lg border border-neutral-200 bg-white shadow-sm;
+  }
+
+  #setup input:not([type='file']),
+  #setup select,
+  #setup textarea {
+    @apply block w-full rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   ENGINE LAYOUT — Coursebuilder Create View
+   Only custom CSS needed: grid-template-columns with
+   CSS custom properties driven by EngineResizer.ts.
+   Everything else is Tailwind utility classes.
+   ═══════════════════════════════════════════════════════ */
+
+.engine {
+  grid-template-columns:
+    var(--engine-search-width, 320px)
+    8px
+    1fr
+    8px
+    var(--engine-panel-width, 260px);
+  padding: 12px;
+  gap: 0;
+  align-items: stretch;
+}
+
+/* Canvas area rounded with shadow */
+.engine [data-engine-canvas] {
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  border: 1px solid var(--color-neutral-200);
+}
+
+/* Right panel rounded with shadow */
+.engine [data-engine-panel] {
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  border: 1px solid var(--color-neutral-200);
+  overflow: hidden;
+}
+
+/* Column resizer grip handles */
+.engine [data-engine-resizer] {
+  background: transparent;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 8px;
+  min-width: 8px;
+}
+
+.engine [data-engine-resizer]::before {
+  content: '';
+  display: block;
+  width: 6px;
+  height: 28px;
+  border-radius: 3px;
+  background: white;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12), 0 0 0 1px rgb(0 0 0 / 0.04);
+  transition: background 0.15s, box-shadow 0.15s;
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      var(--color-primary-300) 0px,
+      var(--color-primary-300) 2px,
+      transparent 2px,
+      transparent 4px
+    );
+  background-position: center;
+  background-size: 2px 100%;
+  background-repeat: no-repeat;
+}
+
+.engine [data-engine-resizer]:hover::before,
+.engine [data-engine-resizer]:focus-visible::before {
+  background-color: var(--color-primary-50);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.18), 0 0 0 1px var(--color-primary-200);
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      var(--color-primary-400) 0px,
+      var(--color-primary-400) 2px,
+      transparent 2px,
+      transparent 4px
+    );
+  background-position: center;
+  background-size: 2px 100%;
+  background-repeat: no-repeat;
+}
+
+/* Hide scrollbar in media search content area */
+.engine [data-engine-search],
+.engine [data-engine-search] * {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+.engine [data-engine-search]::-webkit-scrollbar,
+.engine [data-engine-search] *::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+/* Hide scrollbar in media type toolbar */
+.engine [data-engine-media] {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.engine [data-engine-media]::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tool options bar — uniform height, clean look */
+.engine [data-engine-tools-options] [data-control] {
+  border: none;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.engine [data-engine-tools-options] select {
+  height: 2rem;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: 0.8125rem;
+}
+
+.engine [data-engine-tools-options] input[type='number'] {
+  height: 2rem;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: 0.8125rem;
+}
+
+.engine [data-engine-tools-options] [data-button-stepper] {
+  height: 2rem;
+  padding: 0 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.engine [data-engine-tools-options] [data-color-trigger] {
+  height: 2rem;
+  width: 2rem;
+  padding: 0;
+  border-radius: 0.375rem;
+  border: 1px solid var(--color-neutral-300);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  background: white;
+}
+
+/* Swatch preview inside color trigger */
+.engine [data-engine-tools-options] [data-color-trigger] [data-color-preview] {
+  height: 1.25rem;
+  width: 1.25rem;
+}
+
+/* Engine button labels — truncate long text like "Generate" */
+.engine button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Scroll display — hide number input spinners */
+.engine [data-engine-scroll-display] input[type='number'] {
+  -moz-appearance: textfield;
+}
+.engine [data-engine-scroll-display] input[type='number']::-webkit-inner-spin-button,
+.engine [data-engine-scroll-display] input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }

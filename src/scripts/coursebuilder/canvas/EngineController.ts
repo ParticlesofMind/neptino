@@ -322,8 +322,8 @@ export class EngineController {
       }
 
       button.innerHTML = `
-        <img src="${tool.icon}" alt="${tool.name} Tool" class="h-4 w-4">
-        <span class="text-xs font-medium">${tool.name}</span>
+        <img src="${tool.icon}" alt="${tool.name} Tool" class="h-6 w-6">
+        <span class="text-[11px] leading-tight font-medium">${tool.name}</span>
       `;
 
       button.addEventListener('click', () => {
@@ -513,7 +513,7 @@ export class EngineController {
 
   private createDropdownControl(toolId: string, option: any): HTMLElement {
     const wrapper = document.createElement('div');
-    wrapper.className = 'flex flex-col gap-2 rounded-md border border-neutral-200 bg-white p-3';
+    wrapper.className = 'flex items-center';
     wrapper.setAttribute('data-control', 'dropdown');
     wrapper.title = option.label;
     wrapper.setAttribute('aria-label', option.label);
@@ -561,7 +561,7 @@ export class EngineController {
 
   private createSwatchControl(toolId: string, option: any): HTMLElement {
     const wrapper = document.createElement('div');
-    wrapper.className = 'flex flex-col gap-2 rounded-md border border-neutral-200 bg-white p-3';
+    wrapper.className = 'relative flex items-center';
     wrapper.setAttribute('data-control', 'color');
     wrapper.title = option.label;
     wrapper.setAttribute('aria-label', option.label);
@@ -584,9 +584,8 @@ export class EngineController {
 
     const trigger = document.createElement('button');
     trigger.type = 'button';
-    trigger.className = 'inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium hover:bg-neutral-50';
+    trigger.className = 'inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white shadow-sm hover:bg-neutral-50 cursor-pointer';
     trigger.setAttribute('data-color-trigger', 'true');
-    applyEngineButtonBase(trigger);
     trigger.setAttribute('aria-label', `${option.label} color picker`);
     trigger.setAttribute('aria-haspopup', 'dialog');
     trigger.setAttribute('aria-expanded', 'false');
@@ -709,7 +708,7 @@ export class EngineController {
 
     const applyButton = document.createElement('button');
     applyButton.type = 'button';
-    applyButton.className = 'inline-flex items-center justify-center rounded-md border border-primary-300 bg-primary-600 px-3 py-2 text-sm font-medium text-white hover:bg-primary-700';
+    applyButton.className = 'inline-flex items-center justify-center rounded-md border border-primary-300 bg-primary-400 px-3 py-2 text-sm font-medium text-white hover:bg-primary-500';
     applyButton.setAttribute('data-color-apply', 'true');
     applyEngineButtonBase(applyButton);
     setButtonActive(applyButton, true);
@@ -934,7 +933,7 @@ export class EngineController {
       const img = document.createElement('img');
       img.src = option.icon;
       img.alt = option.label;
-      img.className = 'h-4 w-4';
+      img.className = 'h-6 w-6';
       button.appendChild(img);
       button.classList.add('p-2');
       contentSet = true;
@@ -987,7 +986,7 @@ export class EngineController {
         const img = document.createElement('img');
         img.src = entry.icon;
         img.alt = entry.label;
-        img.className = 'h-4 w-4';
+        img.className = 'h-6 w-6';
         button.appendChild(img);
       } else {
         // Use the full label text
@@ -1074,7 +1073,7 @@ export class EngineController {
       const img = document.createElement('img');
       img.src = option.icon;
       img.alt = option.label;
-      img.className = 'h-4 w-4';
+      img.className = 'h-6 w-6';
       button.appendChild(img);
     } else {
       button.textContent = '';

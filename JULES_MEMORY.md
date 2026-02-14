@@ -17,12 +17,12 @@ Neptino is an interactive learning platform built with TypeScript, Vite, PIXI.js
 - Vite for development and building
 - Supabase for auth and database
 - TypeScript with strict mode
+- Tailwind CSS utilities for styling (SCSS/BEM removed)
 
 Key directories:
 - `src/scripts/coursebuilder/` - Canvas engine and tools
 - `src/scripts/backend/` - Supabase integration
 - `tests/` - Playwright E2E tests
-- `src/scss/` - BEM-style SCSS
 
 ---
 

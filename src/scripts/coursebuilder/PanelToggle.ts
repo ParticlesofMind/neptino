@@ -63,15 +63,10 @@ export class PanelToggle {
       const isActive = button.getAttribute('data-panel-view') === viewName;
       button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       button.classList.toggle('hover:bg-neutral-50', !isActive);
-      button.classList.toggle('hover:text-neutral-900', !isActive);
-      button.classList.toggle('hover:bg-primary-700', isActive);
-      button.classList.toggle('hover:text-white', isActive);
-      button.classList.toggle('bg-primary-600', isActive);
+      button.classList.toggle('bg-primary-400', isActive);
       button.classList.toggle('text-white', isActive);
-      button.classList.toggle('border-primary-600', isActive);
       button.classList.toggle('bg-white', !isActive);
       button.classList.toggle('text-neutral-700', !isActive);
-      button.classList.toggle('border-neutral-300', !isActive);
     });
 
     // Update panel view visibility

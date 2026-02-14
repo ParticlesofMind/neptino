@@ -67,14 +67,13 @@ npm run format           # Format code with Prettier
 ### Key Directories
 - `src/scripts/coursebuilder/` - Canvas engine and drawing tools (PIXI.js)
 - `src/scripts/backend/` - Supabase integration (auth, database)
-- `src/scss/` - BEM-methodology SCSS styles
 - `tests/` - Playwright E2E tests
 
 ### Tech Stack
 - **Frontend:** TypeScript, Vite, PIXI.js 8.13
 - **Backend:** Supabase (PostgreSQL, Auth, Storage)
 - **Testing:** Playwright with Chromium
-- **Styling:** SCSS with BEM methodology
+- **Styling:** Tailwind CSS utilities (no SCSS/BEM)
 - **Canvas:** PIXI.js for high-performance 2D rendering
 
 ## Troubleshooting

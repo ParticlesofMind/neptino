@@ -117,11 +117,11 @@ export function initializeContentTypeSelect(selectElement: HTMLSelectElement): v
     const image = document.createElement('img');
     image.src = option.icon;
     image.alt = option.label;
-    image.className = 'h-4 w-4';
+    image.className = 'h-6 w-6';
     button.appendChild(image);
 
     const text = document.createElement('span');
-    text.className = 'text-xs font-medium';
+    text.className = 'text-[11px] leading-tight font-medium';
     text.textContent = option.label;
     button.appendChild(text);
 

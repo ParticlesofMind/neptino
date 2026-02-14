@@ -345,9 +345,16 @@ export class AsideNavigation {
     this.setActiveStates(activeLink, targetSection);
   }
 
+  // CSS classes for active vs inactive sidebar links
+  private static readonly ACTIVE_LINK_CLASSES = ['bg-primary-400', 'text-white', 'hover:bg-primary-500'];
+  private static readonly INACTIVE_LINK_CLASSES = ['text-neutral-600', 'hover:text-primary-600', 'hover:bg-primary-50'];
+
   private removeActiveStates(): void {
     this.asideLinks.forEach((link: HTMLAnchorElement) => {
       link.removeAttribute('aria-current');
+      // Reset all links to inactive styling
+      link.classList.remove(...AsideNavigation.ACTIVE_LINK_CLASSES);
+      link.classList.add(...AsideNavigation.INACTIVE_LINK_CLASSES);
     });
 
     this.contentSections.forEach((section: HTMLElement) => {
@@ -359,6 +366,10 @@ export class AsideNavigation {
 
   private setActiveStates(activeLink: HTMLAnchorElement, targetSection: HTMLElement): void {
     activeLink.setAttribute('aria-current', 'page');
+    // Apply active styling to the clicked link
+    activeLink.classList.add(...AsideNavigation.ACTIVE_LINK_CLASSES);
+    activeLink.classList.remove(...AsideNavigation.INACTIVE_LINK_CLASSES);
+
     targetSection.classList.add('is-active');
     targetSection.classList.remove('hidden');
     targetSection.setAttribute('aria-hidden', 'false');
@@ -669,6 +680,7 @@ export class ModalHandler {
 document.addEventListener('DOMContentLoaded', () => {
  if (window.location.pathname.includes('coursebuilder.html')) {
  new CourseBuilderNavigation();
+ new ViewToggleHandler();
  new ModalHandler();
  }
 });

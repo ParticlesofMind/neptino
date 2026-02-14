@@ -112,7 +112,7 @@ const handlePointerResize = (
 
   handle.focus();
   handle.setPointerCapture(pointerId);
-  handle.classList.add('ring-2', 'ring-primary-500', 'bg-primary-50');
+  // Subtle visual feedback during drag (no ring)
 
   const previousCursor = document.body.style.cursor;
   const previousUserSelect = document.body.style.userSelect;
@@ -130,7 +130,6 @@ const handlePointerResize = (
       handle.releasePointerCapture(pointerId);
     }
 
-    handle.classList.remove('ring-2', 'ring-primary-500', 'bg-primary-50');
     document.body.style.cursor = previousCursor;
     document.body.style.userSelect = previousUserSelect;
 

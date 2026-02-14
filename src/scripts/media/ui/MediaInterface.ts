@@ -53,20 +53,19 @@ class MediaInterface {
 
     // Build UI container (CSS handles all layout)
     this.container = document.createElement('div');
-    this.container.className = 'flex flex-col gap-3';
+    this.container.className = 'flex flex-col flex-1 min-h-0 gap-3';
     
     // filters removed per request (keep node to maintain layout hooks)
     this.filtersEl = document.createElement('div');
     this.filtersEl.className = 'hidden';
 
     this.resultsEl = document.createElement('div');
-    this.resultsEl.className = 'flex max-h-72 flex-col gap-3 overflow-auto';
+    this.resultsEl.className = 'flex flex-1 min-h-0 flex-col gap-3 overflow-auto';
 
     // Provider/Connect/Upload removed per request (stock provider is used behind the scenes)
     this.container.appendChild(this.filtersEl);
     this.container.appendChild(this.resultsEl);
     host.appendChild(this.container);
-    host.classList.add('rounded-lg', 'border', 'border-neutral-200', 'bg-white', 'p-3');
 
     // Listen media tab clicks
     document.querySelectorAll('[data-media]').forEach(el => {
