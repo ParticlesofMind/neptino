@@ -485,7 +485,7 @@ export class ClassificationFormHandler {
     state: "empty" | "saving" | "saved" | "error" = "saved",
   ): void {
     const statusElement = document.querySelector(
-      '[data-course-section="classification"] .card--save-status',
+      '[data-course-section="classification"] [data-card-save-status]',
     ) as HTMLElement | null;
     if (!statusElement) return;
 

@@ -53,7 +53,7 @@ async function bootstrapLandingPreview(root: HTMLElement): Promise<void> {
   }
 
   canvasHost.appendChild(app.canvas);
-  canvasHost.querySelector(".landing-preview__fallback")?.remove();
+  canvasHost.querySelector("[data-landing-preview-fallback]")?.remove();
 
   const scene = new Container();
   scene.label = "landing-preview-scene";

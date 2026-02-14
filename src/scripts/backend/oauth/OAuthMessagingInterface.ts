@@ -173,14 +173,14 @@ export class OAuthMessagingInterface {
                 aria-label="Search users by email"
                 class="search-input"
               />
-              <button id="search-user-btn" class="button button--primary">Search</button>
+              <button id="search-user-btn" class="inline-flex items-center justify-center rounded-md border border-primary-300 bg-primary-600 px-3 py-2 text-sm font-medium text-white hover:bg-primary-700">Search</button>
             </div>
           </div>
           
           <div class="messaging-content">
-            <div class="search-results" id="search-results" style="display: none;">
+            <div class="rounded-lg border border-neutral-200 p-4" id="search-results" style="display: none;" data-search-results>
               <h4>Search Results</h4>
-              <div id="search-results-message" class="search-results__message"></div>
+              <div id="search-results-message" class="mt-2 text-sm" data-search-results-message></div>
               <div id="search-results-list"></div>
             </div>
             
@@ -301,7 +301,7 @@ export class OAuthMessagingInterface {
               ${user.role ? `<span class="user-role">${user.role}</span>` : ''}
             </div>
             <div class="user-actions">
-              <button class="button button--small" onclick="this.startChat('${user.email}')">
+              <button class="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50" onclick="this.startChat('${user.email}')">
                 Start Chat
               </button>
             </div>
@@ -346,7 +346,7 @@ export class OAuthMessagingInterface {
         <div class="error-icon">⚠️</div>
         <h3>Messaging Unavailable</h3>
         <p>${message}</p>
-        <button class="button button--primary" onclick="location.reload()">
+        <button class="inline-flex items-center justify-center rounded-md border border-primary-300 bg-primary-600 px-3 py-2 text-sm font-medium text-white hover:bg-primary-700" onclick="location.reload()">
           Try Again
         </button>
       </div>

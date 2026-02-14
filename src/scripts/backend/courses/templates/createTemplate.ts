@@ -33,7 +33,10 @@ export function setTemplateStatus(message: string, isError = false): void {
   const statusElement = document.getElementById('template-status');
   if (statusElement) {
     statusElement.textContent = message;
-    statusElement.className = isError ? 'template-status template-status--error' : 'template-status template-status--success';
+    const baseClass = 'text-sm font-medium';
+    const statusClass = isError ? 'text-red-600' : 'text-green-600';
+    statusElement.className = `${baseClass} ${statusClass}`;
+    statusElement.setAttribute('data-template-status', isError ? 'error' : 'success');
   }
 }
 

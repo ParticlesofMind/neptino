@@ -8,8 +8,8 @@
 <title>Course Builder - Neptino</title>
 <link href="/src/styles/app.css" rel="stylesheet"/>
 </head>
-<body class="min-h-screen bg-neutral-50">
-<header class="fixed top-0 left-0 right-0 bg-white border-b border-neutral-200 z-50">
+<body class="h-screen flex flex-col overflow-hidden bg-neutral-50">
+<header class="shrink-0 bg-white border-b border-neutral-200 z-50">
 <nav class="w-full px-6 py-4 lg:px-8">
 <div class="relative flex items-center justify-between">
 <div class="flex items-center">
@@ -30,10 +30,10 @@
 </div>
 </nav>
 </header>
-<main class="pt-20">
+<main class="flex-1 min-h-0">
 <!-- Setup View -->
-<section aria-hidden="false" class="grid grid-cols-1 md:grid-cols-[256px_1fr] h-[calc(100vh-5rem)]" data-coursebuilder-section="setup" id="setup">
-<aside class="hidden md:flex w-64 flex-col bg-white text-neutral-900 border-r border-neutral-200 sticky top-20 h-[calc(100vh-5rem)] overflow-y-auto">
+<section aria-hidden="false" class="grid grid-cols-1 md:grid-cols-[256px_1fr] h-full" data-coursebuilder-section="setup" id="setup">
+<aside class="hidden md:flex w-64 flex-col bg-white text-neutral-900 border-r border-neutral-200 h-full overflow-y-auto">
 <nav class="flex-1 px-3 py-6">
 <h3 class="px-3 mb-4 text-xs font-semibold text-neutral-600 uppercase tracking-wider">SETUP</h3>
 <ul class="flex flex-col gap-2">
@@ -246,28 +246,28 @@
 </ul>
 </nav>
 </aside>
-<div class="max-w-6xl w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col h-full min-h-0">
+<div class="flex flex-col h-full min-h-0 overflow-hidden bg-white">
 <!-- Essentials Article -->
-<article class="article is-active flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="essentials">
+<article class="article is-active flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="essentials">
 <div class="p-6 bg-white">
 <form class="space-y-6" id="course-essentials-form">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Course title
-              <input class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="course-name" maxlength="50" name="course_name" placeholder="Enter course title" required="" type="text"/>
+              <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="course-name" maxlength="50" name="course_name" placeholder="Enter course title" required="" type="text"/>
 <div class="mt-2 text-xs text-neutral-500" id="title-counter">
 <span class="" id="title-counter-value">0 / 50</span>
 </div>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Course subtitle (optional)
-              <input class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="course-subtitle" maxlength="75" name="course_subtitle" placeholder="Enter course subtitle" type="text"/>
+              <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="course-subtitle" maxlength="75" name="course_subtitle" placeholder="Enter course subtitle" type="text"/>
 <div class="mt-2 text-xs text-neutral-500" id="subtitle-counter">
 <span class="" id="subtitle-counter-value">0 / 75</span>
 </div>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Course Description
-              <textarea class="" id="course-description" maxlength="999" name="course_description" placeholder="Describe what students will learn" required="" rows="4"></textarea>
+              <textarea class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="course-description" maxlength="999" name="course_description" placeholder="Describe what students will learn" required="" rows="4"></textarea>
 <div class="mt-2 text-xs text-neutral-500" id="description-counter">
 <span class="" id="description-counter-value">0 / 999</span>
 </div>
@@ -275,25 +275,25 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="teacher-id">
                 Teacher
-                <select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="teacher-id" name="teacher_id" required="">
+                <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="teacher-id" name="teacher_id" required="">
 <option value="">Select teacher...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="institution">
                 Institution
-                <select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="institution" name="institution" required="">
+                <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="institution" name="institution" required="">
 <option value="">Select institution...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="course-language">
                 Course Language
-                <select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="course-language" name="course_language" required="">
+                <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="course-language" name="course_language" required="">
 <option value="">Select language...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="course-type">
                 Course Type
-                <select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="course-type" name="course_type" required="">
+                <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="course-type" name="course_type" required="">
 <option value="">Select course type...</option>
 <option value="In-person">In-person</option>
 <option value="Online">Online</option>
@@ -333,7 +333,7 @@
 </div>
 </form>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="essentials-save-status">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -348,25 +348,25 @@
 </footer>
 </article>
 <!-- Classification Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="classification">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="classification">
 <div class="p-6 bg-white">
 <form class="space-y-6" id="course-classification-form">
 <!-- Row 1: Preliminary -->
 <div class="space-y-4 mb-6">
 <div class="flex items-center justify-between mb-2">
-<h3 class="">Preliminary</h3>
-<p class="">Age group and educational framework</p>
+<h3 class="text-base font-semibold text-neutral-900">Preliminary</h3>
+<p class="text-sm text-neutral-500">Age group and educational framework</p>
 </div>
 <div class="space-y-4">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="class-year-select">
 <span>Class Year</span>
-<select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="class-year-select" name="class_year" required="">
+<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="class-year-select" name="class_year" required="">
 <option value="">Loading...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="curricular-framework-select">
 <span>Curricular Framework</span>
-<select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="curricular-framework-select" name="curricular_framework" required="">
+<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="curricular-framework-select" name="curricular_framework" required="">
 <option value="">Loading...</option>
 </select>
 </label>
@@ -375,35 +375,35 @@
 <!-- Row 2: Classification -->
 <div class="space-y-4 mb-6">
 <div class="flex items-center justify-between mb-2">
-<h3 class="">Classification</h3>
-<p class="">Subject matter hierarchy</p>
+<h3 class="text-base font-semibold text-neutral-900">Classification</h3>
+<p class="text-sm text-neutral-500">Subject matter hierarchy</p>
 </div>
 <div class="space-y-4">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="domain-select">
 <span>Domain</span>
 <span class="truncate">Academic field</span>
-<select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="domain-select" name="domain" required="">
+<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="domain-select" name="domain" required="">
 <option value="">Loading...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="subject-select">
 <span>Subject</span>
 <span class="truncate">Specific discipline</span>
-<select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" disabled="" id="subject-select" name="subject" required="">
+<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" disabled="" id="subject-select" name="subject" required="">
 <option value="">Select domain first...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="topic-select">
 <span>Topic</span>
 <span class="truncate">Area of study</span>
-<select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" disabled="" id="topic-select" name="topic" required="">
+<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" disabled="" id="topic-select" name="topic" required="">
 <option value="">Select subject first...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="subtopic-select">
 <span>Subtopic</span>
 <span class="truncate">Specific focus</span>
-<select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" disabled="" id="subtopic-select" name="subtopic">
+<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" disabled="" id="subtopic-select" name="subtopic">
 <option value="">Select topic first...</option>
 </select>
 </label>
@@ -412,28 +412,28 @@
 <!-- Row 3: Course Sequence -->
 <div class="space-y-4 mb-6">
 <div class="flex items-center justify-between mb-2">
-<h3 class="">Course Sequence</h3>
-<p class="">Position within the learning pathway</p>
+<h3 class="text-base font-semibold text-neutral-900">Course Sequence</h3>
+<p class="text-sm text-neutral-500">Position within the learning pathway</p>
 </div>
 <div class="space-y-4">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="previous-course-select">
 <span>Previous Course</span>
 <span class="truncate">Course that should come before this one</span>
-<select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="previous-course-select" name="previous_course">
+<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="previous-course-select" name="previous_course">
 <option value="">Loading courses...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="current-course-select">
 <span>Current Course</span>
 <span class="truncate">Other courses at this level</span>
-<select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="current-course-select" name="current_course">
+<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="current-course-select" name="current_course">
 <option value="">Loading courses...</option>
 </select>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="next-course-select">
 <span>Next Course</span>
 <span class="truncate">Course that should come after this one</span>
-<select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="next-course-select" name="next_course">
+<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="next-course-select" name="next_course">
 <option value="">Loading courses...</option>
 </select>
 </label>
@@ -441,7 +441,7 @@
 </div>
 </form>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="classification-save-status">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -451,9 +451,9 @@
 </footer>
 </article>
 <!-- Templates Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="templates">
-<div class="grid grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 min-h-[600px]">
-<div class="flex items-center gap-2 mb-6" data-article-toggle="">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="templates">
+<div class="flex flex-col flex-1 min-h-0 p-6">
+<div class="flex items-center gap-2 mb-4 lg:hidden" data-article-toggle="">
 <button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="config" type="button">
               Config
             </button>
@@ -461,7 +461,8 @@
               Preview
             </button>
 </div>
-<section class="flex flex-col bg-white border border-neutral-200 rounded-lg overflow-hidden shadow-sm h-full p-6" data-article-panel="config">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
+<section class="flex flex-col bg-white border border-neutral-200 rounded-lg overflow-y-auto h-full p-6" data-article-panel="config">
 <div class="flex items-center gap-2 mb-4">
 <button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" id="create-template-btn" type="button">
                 Create Template
@@ -474,13 +475,14 @@
 <p class="text-neutral-500 text-center py-8">Select or create a template to configure its settings.</p>
 </div>
 </section>
-<section class="flex flex-col bg-neutral-50 border border-neutral-200 rounded-lg overflow-hidden shadow-sm h-full relative p-6" data-article-panel="preview">
+<section class="flex flex-col bg-neutral-50 border border-neutral-200 rounded-lg overflow-y-auto h-full relative p-6" data-article-panel="preview">
 <div id="template-preview-content">
 <p class="text-neutral-500 text-center py-8">Create a new template or select an existing one to see the preview here.</p>
 </div>
 </section>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+</div>
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="templates-save-status">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -490,9 +492,9 @@
 </footer>
 </article>
 <!-- Schedule Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="schedule">
-<div class="grid grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 min-h-[600px]">
-<div class="flex items-center gap-2 mb-6" data-article-toggle="">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="schedule">
+<div class="flex flex-col flex-1 min-h-0 p-6">
+<div class="flex items-center gap-2 mb-4 lg:hidden" data-article-toggle="">
 <button class="inline-flex bg-primary-500 text-white border-primary-500 items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="config" type="button">
               Config
             </button>
@@ -500,16 +502,17 @@
               Preview
             </button>
 </div>
-<section class="flex flex-col bg-white border border-neutral-200 rounded-lg overflow-hidden shadow-sm h-full p-6" data-article-panel="config">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
+<section class="flex flex-col bg-white border border-neutral-200 rounded-lg overflow-y-auto h-full p-6" data-article-panel="config">
 <form class="space-y-6" id="schedule-config">
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   Start Date
-                  <input autocomplete="off" class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="start-date" inputmode="numeric" placeholder="DD.MM.YYYY" required="" type="text"/>
+                  <input autocomplete="off" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="start-date" inputmode="numeric" placeholder="DD.MM.YYYY" required="" type="text"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   End Date
-                  <input autocomplete="off" class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="end-date" inputmode="numeric" placeholder="DD.MM.YYYY" required="" type="text"/>
+                  <input autocomplete="off" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="end-date" inputmode="numeric" placeholder="DD.MM.YYYY" required="" type="text"/>
 </label>
 </div>
 <fieldset aria-label="Days of the Week" class="flex flex-wrap gap-2 mb-4">
@@ -539,11 +542,11 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   Start Time
-                  <input autocomplete="off" class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="start-time" inputmode="numeric" placeholder="HH:MM" required="" type="text"/>
+                  <input autocomplete="off" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="start-time" inputmode="numeric" placeholder="HH:MM" required="" type="text"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   End Time
-                  <input autocomplete="off" class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="end-time" inputmode="numeric" placeholder="HH:MM" required="" type="text"/>
+                  <input autocomplete="off" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="end-time" inputmode="numeric" placeholder="HH:MM" required="" type="text"/>
 </label>
 </div>
 <div class="space-y-4">
@@ -565,7 +568,7 @@
 </div>
 </form>
 </section>
-<section class="flex flex-col bg-neutral-50 border border-neutral-200 rounded-lg overflow-hidden shadow-sm h-full relative p-6" data-article-panel="preview">
+<section class="flex flex-col bg-neutral-50 border border-neutral-200 rounded-lg overflow-y-auto h-full relative p-6" data-article-panel="preview">
 <div class="bg-neutral-50 p-4 rounded" id="schedule-preview">
 <div class="space-y-2" data-schedule-preview-content="">
 <p class="text-neutral-500 text-center py-8">Click "Schedule Course" to generate your lesson schedule</p>
@@ -574,7 +577,8 @@
 </div>
 </section>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+</div>
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="schedule-save-status">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -584,9 +588,9 @@
 </footer>
 </article>
 <!-- Curriculum Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="curriculum">
-<div class="grid grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 min-h-[600px]">
-<div class="flex items-center gap-2 mb-6" data-article-toggle="">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="curriculum">
+<div class="flex flex-col flex-1 min-h-0 p-6">
+<div class="flex items-center gap-2 mb-4 lg:hidden" data-article-toggle="">
 <button class="inline-flex bg-primary-500 text-white border-primary-500 items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="config" type="button">
               Config
             </button>
@@ -594,28 +598,29 @@
               Preview
             </button>
 </div>
-<section class="flex flex-col bg-white border border-neutral-200 rounded-lg overflow-hidden shadow-sm h-full p-6" data-article-panel="config">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
+<section class="flex flex-col bg-white border border-neutral-200 rounded-lg overflow-y-auto h-full p-6" data-article-panel="config">
 <form class="space-y-6">
 <!-- Module Organization -->
 <div class="space-y-4">
-<h3 class="">Module Organization</h3>
+<h3 class="text-base font-semibold text-neutral-900">Module Organization</h3>
 <div class="module-organization-options">
-<label class="flex items-center p-4 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
-<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="module-org-linear" name="module-organization" type="radio" value="linear"/>
+<label class="flex items-start gap-3 p-4 border border-neutral-200 rounded-md cursor-pointer hover:bg-neutral-50 transition-colors">
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="module-org-linear" name="module-organization" type="radio" value="linear"/>
 <div class="flex flex-col gap-1">
 <span class="text-sm font-semibold text-neutral-900">No Modules</span>
 <span class="text-xs text-neutral-500">Lessons appear in a single list with no module grouping.</span>
 </div>
 </label>
-<label class="flex items-center p-4 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
-<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="module-org-equal" name="module-organization" type="radio" value="equal"/>
+<label class="flex items-start gap-3 p-4 border border-neutral-200 rounded-md cursor-pointer hover:bg-neutral-50 transition-colors">
+<input class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="module-org-equal" name="module-organization" type="radio" value="equal"/>
 <div class="flex flex-col gap-1">
 <span class="text-sm font-semibold text-neutral-900">Equal Modules</span>
 <span class="text-xs text-neutral-500">Lessons are evenly distributed across modules of equal size.</span>
 </div>
 </label>
-<label class="flex items-center p-4 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
-<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="module-org-custom" name="module-organization" type="radio" value="custom"/>
+<label class="flex items-start gap-3 p-4 border border-neutral-200 rounded-md cursor-pointer hover:bg-neutral-50 transition-colors">
+<input class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="module-org-custom" name="module-organization" type="radio" value="custom"/>
 <div class="flex flex-col gap-1">
 <span class="text-sm font-semibold text-neutral-900">Custom Modules</span>
 <span class="text-xs text-neutral-500">Define your own module boundaries.</span>
@@ -631,42 +636,42 @@
 </div>
 <!-- Content Volume -->
 <div class="space-y-4">
-<h3 class="">Content Volume</h3>
+<h3 class="text-base font-semibold text-neutral-900">Content Volume</h3>
 <div class="content-volume-options">
-<label class="flex items-center p-4 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
-<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" data-duration="mini" data-max="30" name="content-volume" type="radio" value="mini"/>
+<label class="flex items-start gap-3 p-4 border border-neutral-200 rounded-md cursor-pointer hover:bg-neutral-50 transition-colors">
+<input class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" data-duration="mini" data-max="30" name="content-volume" type="radio" value="mini"/>
 <div class="flex flex-col gap-1">
 <span class="text-sm font-semibold text-neutral-900">Mini</span>
 <span class="text-xs text-neutral-400">≤ 30 min</span>
 <span class="text-xs text-neutral-500">Short session with 1–2 topics and light tasks.</span>
 </div>
 </label>
-<label class="flex items-center p-4 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
-<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" data-duration="single" data-max="60" name="content-volume" type="radio" value="single"/>
+<label class="flex items-start gap-3 p-4 border border-neutral-200 rounded-md cursor-pointer hover:bg-neutral-50 transition-colors">
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" data-duration="single" data-max="60" name="content-volume" type="radio" value="single"/>
 <div class="flex flex-col gap-1">
 <span class="text-sm font-semibold text-neutral-900">Standard</span>
 <span class="text-xs text-neutral-400">≤ 60 min</span>
 <span class="text-xs text-neutral-500">Normal lesson with balanced topics and tasks.</span>
 </div>
 </label>
-<label class="flex items-center p-4 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
-<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" data-duration="double" data-max="120" name="content-volume" type="radio" value="double"/>
+<label class="flex items-start gap-3 p-4 border border-neutral-200 rounded-md cursor-pointer hover:bg-neutral-50 transition-colors">
+<input class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" data-duration="double" data-max="120" name="content-volume" type="radio" value="double"/>
 <div class="flex flex-col gap-1">
 <span class="text-sm font-semibold text-neutral-900">Extended</span>
 <span class="text-xs text-neutral-400">≤ 120 min</span>
 <span class="text-xs text-neutral-500">Double-length lesson with more practice and discussion.</span>
 </div>
 </label>
-<label class="flex items-center p-4 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
-<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" data-duration="triple" data-max="180" name="content-volume" type="radio" value="triple"/>
+<label class="flex items-start gap-3 p-4 border border-neutral-200 rounded-md cursor-pointer hover:bg-neutral-50 transition-colors">
+<input class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" data-duration="triple" data-max="180" name="content-volume" type="radio" value="triple"/>
 <div class="flex flex-col gap-1">
 <span class="text-sm font-semibold text-neutral-900">Intensive</span>
 <span class="text-xs text-neutral-400">≤ 180 min</span>
 <span class="text-xs text-neutral-500">Long block for deeper coverage or projects.</span>
 </div>
 </label>
-<label class="flex items-center p-4 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
-<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" data-duration="halfFull" data-max="999" name="content-volume" type="radio" value="halfFull"/>
+<label class="flex items-start gap-3 p-4 border border-neutral-200 rounded-md cursor-pointer hover:bg-neutral-50 transition-colors">
+<input class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" data-duration="halfFull" data-max="999" name="content-volume" type="radio" value="halfFull"/>
 <div class="flex flex-col gap-1">
 <span class="text-sm font-semibold text-neutral-900">Full Day</span>
 <span class="text-xs text-neutral-400">&gt; 180 min</span>
@@ -677,51 +682,51 @@
 </div>
 <!-- Numeric Structure Fields -->
 <div class="space-y-4">
-<p class="">
+<p class="text-sm text-neutral-500">
                 Fine-tune the content density for each lesson.
               </p>
 <div class="structure-inputs">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   Topics per lesson
-                  <input class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="curriculum-topics" max="10" min="1" type="number" value="2"/>
+                  <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="curriculum-topics" max="10" min="1" type="number" value="2"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   Objectives per topic
-                  <input class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="curriculum-objectives" max="5" min="1" type="number" value="2"/>
+                  <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="curriculum-objectives" max="5" min="1" type="number" value="2"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
                   Tasks per objective
-                  <input class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="curriculum-tasks" max="5" min="1" type="number" value="2"/>
+                  <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="curriculum-tasks" max="5" min="1" type="number" value="2"/>
 </label>
 </div>
 </div>
 <!-- Course Type -->
 <div class="space-y-4">
-<h3 class="">Course Type</h3>
+<h3 class="text-base font-semibold text-neutral-900">Course Type</h3>
 <div class="course-type-options">
-<label class="flex items-center p-4 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
-<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="course-type-minimalist" name="course-type" type="radio" value="minimalist"/>
+<label class="flex items-start gap-3 p-4 border border-neutral-200 rounded-md cursor-pointer hover:bg-neutral-50 transition-colors">
+<input class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="course-type-minimalist" name="course-type" type="radio" value="minimalist"/>
 <div class="flex flex-col gap-1">
 <span class="text-sm font-semibold text-neutral-900">Minimalist Course</span>
 <span class="text-xs text-neutral-500">Core instructional templates only</span>
 </div>
 </label>
-<label class="flex items-center p-4 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
-<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="course-type-essential" name="course-type" type="radio" value="essential"/>
+<label class="flex items-start gap-3 p-4 border border-neutral-200 rounded-md cursor-pointer hover:bg-neutral-50 transition-colors">
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="course-type-essential" name="course-type" type="radio" value="essential"/>
 <div class="flex flex-col gap-1">
 <span class="text-sm font-semibold text-neutral-900">Essential Course</span>
 <span class="text-xs text-neutral-500">All Minimalist templates plus evaluation and certification</span>
 </div>
 </label>
-<label class="flex items-center p-4 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
-<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="course-type-complete" name="course-type" type="radio" value="complete"/>
+<label class="flex items-start gap-3 p-4 border border-neutral-200 rounded-md cursor-pointer hover:bg-neutral-50 transition-colors">
+<input class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="course-type-complete" name="course-type" type="radio" value="complete"/>
 <div class="flex flex-col gap-1">
 <span class="text-sm font-semibold text-neutral-900">Complete Course</span>
 <span class="text-xs text-neutral-500">Every available template included</span>
 </div>
 </label>
-<label class="flex items-center p-4 border border-neutral-200 rounded cursor-pointer hover:bg-neutral-50">
-<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="course-type-custom" name="course-type" type="radio" value="custom"/>
+<label class="flex items-start gap-3 p-4 border border-neutral-200 rounded-md cursor-pointer hover:bg-neutral-50 transition-colors">
+<input class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="course-type-custom" name="course-type" type="radio" value="custom"/>
 <div class="flex flex-col gap-1">
 <span class="text-sm font-semibold text-neutral-900">Custom Course</span>
 <span class="text-xs text-neutral-500">Manually select any combination of templates</span>
@@ -732,14 +737,14 @@
 </div>
 <!-- Template Placement Section -->
 <div class="space-y-4">
-<h3 class="">Template Placement</h3>
+<h3 class="text-base font-semibold text-neutral-900">Template Placement</h3>
 <div class="template-placement" id="curriculum-template-placement-list">
 <!-- Template placement cards will be rendered here by JavaScript -->
 </div>
 </div>
 </form>
 </section>
-<section class="flex flex-col bg-neutral-50 border border-neutral-200 rounded-lg overflow-hidden shadow-sm h-full relative p-6" data-article-panel="preview">
+<section class="flex flex-col bg-neutral-50 border border-neutral-200 rounded-lg overflow-y-auto h-full relative p-6" data-article-panel="preview">
 <div class="flex h-full flex-col" data-curriculum-preview="" id="curriculum-preview">
 <div class="flex-1 overflow-auto" data-curriculum-preview-content="">
 <div aria-live="polite" class="editable-surface">
@@ -749,7 +754,8 @@
 </div>
 </section>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+</div>
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="curriculum-save-status">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -759,9 +765,9 @@
 </footer>
 </article>
 <!-- Generation Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="generation">
-<div class="grid grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 min-h-[600px]">
-<div class="flex items-center gap-2 mb-6" data-article-toggle="">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="generation">
+<div class="flex flex-col flex-1 min-h-0 p-6">
+<div class="flex items-center gap-2 mb-4 lg:hidden" data-article-toggle="">
 <button class="inline-flex bg-primary-500 text-white border-primary-500 items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="config" type="button">
               Config
             </button>
@@ -769,48 +775,49 @@
               Preview
             </button>
 </div>
-<section class="flex flex-col bg-white border border-neutral-200 rounded-lg overflow-hidden shadow-sm h-full p-6" data-article-panel="config">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
+<section class="flex flex-col bg-white border border-neutral-200 rounded-lg overflow-y-auto h-full p-6" data-article-panel="config">
 <form class="space-y-6" id="generation-settings-form">
 <!-- AI Generation Section -->
 <div class="space-y-4">
-<h3 class="">Generate Curriculum Content</h3>
+<h3 class="text-base font-semibold text-neutral-900">Generate Curriculum Content</h3>
 <div class="space-y-6">
 <div class="grid gap-6">
 <!-- Mandatory Context -->
 <div class="space-y-3">
-<h5 class="">Required Context</h5>
+<h5 class="text-sm font-semibold text-neutral-900">Required Context</h5>
 <label class="flex items-center gap-2 text-sm text-neutral-500">
-<input checked="" class="" disabled="" name="ai-context-essentials" type="checkbox"/>
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer rounded border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" disabled="" name="ai-context-essentials" type="checkbox"/>
 <span>Course Essentials</span>
 </label>
 <label class="flex items-center gap-2 text-sm text-neutral-500">
-<input checked="" class="" disabled="" name="ai-context-classification" type="checkbox"/>
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer rounded border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" disabled="" name="ai-context-classification" type="checkbox"/>
 <span>Classification</span>
 </label>
 <label class="flex items-center gap-2 text-sm text-neutral-500">
-<input checked="" class="" disabled="" name="ai-context-pedagogy" type="checkbox"/>
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer rounded border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" disabled="" name="ai-context-pedagogy" type="checkbox"/>
 <span>Pedagogy Approach</span>
 </label>
 </div>
 <!-- Optional Context -->
 <div class="space-y-3">
-<h5 class="">Optional Context</h5>
+<h5 class="text-sm font-semibold text-neutral-900">Optional Context</h5>
 <label class="flex items-center gap-2 text-sm text-neutral-700">
-<input checked="" class="" name="ai-context-schedule" type="checkbox"/>
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer rounded border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" name="ai-context-schedule" type="checkbox"/>
 <span>Schedule Settings</span>
 </label>
 <label class="flex items-center gap-2 text-sm text-neutral-700">
-<input checked="" class="" name="ai-context-structure" type="checkbox"/>
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer rounded border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" name="ai-context-structure" type="checkbox"/>
 <span>Content Structure</span>
 </label>
 <label class="flex items-center gap-2 text-sm text-neutral-700">
-<input class="" name="ai-context-existing" type="checkbox"/>
+<input class="h-4 w-4 shrink-0 cursor-pointer rounded border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" name="ai-context-existing" type="checkbox"/>
 <span>Existing Curriculum Content</span>
 </label>
 </div>
 <!-- Generation Actions -->
 <div class="space-y-3">
-<h5 class="">Generation Actions</h5>
+<h5 class="text-sm font-semibold text-neutral-900">Generation Actions</h5>
 <div class="flex flex-wrap gap-3">
 <button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" data-ai-generate="all" type="button">
                         Generate All
@@ -847,7 +854,7 @@
 </div>
 </form>
 </section>
-<section class="flex flex-col bg-neutral-50 border border-neutral-200 rounded-lg overflow-hidden shadow-sm h-full relative p-6" data-article-panel="preview">
+<section class="flex flex-col bg-neutral-50 border border-neutral-200 rounded-lg overflow-y-auto h-full relative p-6" data-article-panel="preview">
 <div class="flex h-full flex-col" data-curriculum-preview="" id="generation-preview">
 <div class="flex-1 overflow-auto" data-curriculum-preview-content="">
 <nav aria-label="Generation view modes" class="flex flex-wrap gap-2" data-curriculum-controls="">
@@ -880,7 +887,8 @@
 </div>
 </section>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+</div>
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="generation-save-status">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -890,11 +898,11 @@
 </footer>
 </article>
 <!-- Settings Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="settings">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="settings">
 <div class="p-6 bg-white">
 <p class="text-neutral-500 text-center py-8">General settings content will be added here.</p>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="general-settings-save-status">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -904,12 +912,12 @@
 </footer>
 </article>
 <!-- Marketplace Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="marketplace">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="marketplace">
 <div class="p-6 bg-white">
 <form class="space-y-6" id="marketplace-form">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Listing Status
-              <select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="listing_status" required="">
+              <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="listing_status" required="">
 <option value="draft">Draft</option>
 <option value="pending">Pending Review</option>
 <option value="published">Published</option>
@@ -917,19 +925,19 @@
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Target Audience
-              <input class="" name="target_audience" placeholder="e.g., Grade 11 Humanities" type="text"/>
+              <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="target_audience" placeholder="e.g., Grade 11 Humanities" type="text"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Revenue Share (%)
-              <input class="" max="100" min="0" name="revenue_share" placeholder="30" step="1" type="number"/>
+              <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" max="100" min="0" name="revenue_share" placeholder="30" step="1" type="number"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Distribution Channels
-              <textarea class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="distribution_channels" placeholder="List marketplaces or partner channels"></textarea>
+              <textarea class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="distribution_channels" placeholder="List marketplaces or partner channels"></textarea>
 </label>
 </form>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="marketplace-save-status">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -939,12 +947,12 @@
 </footer>
 </article>
 <!-- Resources Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="resources">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="resources">
 <div class="p-6 bg-white">
 <form class="space-y-6" id="resources-form">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Resource Policy
-              <textarea class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="resource_policy" placeholder="Describe how resources should be used or shared."></textarea>
+              <textarea class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="resource_policy" placeholder="Describe how resources should be used or shared."></textarea>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
 <input class="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-600" name="allow_student_uploads" type="checkbox"/>
@@ -952,7 +960,7 @@
             </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Default Storage Provider
-              <select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="default_storage_provider">
+              <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="default_storage_provider">
 <option value="internal">Neptino Storage</option>
 <option value="google-drive">Google Drive</option>
 <option value="dropbox">Dropbox</option>
@@ -960,11 +968,11 @@
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Featured Resources (comma separated)
-              <input class="" name="featured_resources" placeholder="Intro deck, syllabus, reading list" type="text"/>
+              <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="featured_resources" placeholder="Intro deck, syllabus, reading list" type="text"/>
 </label>
 </form>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="resources-save-status">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -974,9 +982,9 @@
 </footer>
 </article>
 <!-- Students Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="students">
-<div class="grid grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 min-h-[600px]">
-<div class="flex items-center gap-2 mb-6" data-article-toggle="">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="students">
+<div class="flex flex-col flex-1 min-h-0 p-6">
+<div class="flex items-center gap-2 mb-4 lg:hidden" data-article-toggle="">
 <button class="inline-flex bg-primary-500 text-white border-primary-500 items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="config" type="button">
               Config
             </button>
@@ -984,13 +992,14 @@
               Preview
             </button>
 </div>
-<section aria-labelledby="students-roster-title" class="flex flex-col bg-white border border-neutral-200 rounded-lg overflow-hidden shadow-sm h-full p-6" data-article-panel="config">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
+<section aria-labelledby="students-roster-title" class="flex flex-col bg-white border border-neutral-200 rounded-lg overflow-y-auto h-full p-6" data-article-panel="config">
 <div class="flex flex-wrap items-center gap-4">
 <button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" data-modal-target="students-upload-modal" data-students-trigger="" id="students-upload-btn" type="button">
                 Upload students
               </button>
 <label class="flex items-center gap-2 text-sm font-medium leading-6 text-neutral-900" for="students-manual-entry-toggle">
-<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="students-manual-entry-toggle" name="students-method" type="radio" value="manual-entry"/>
+<input class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="students-manual-entry-toggle" name="students-method" type="radio" value="manual-entry"/>
 <span>Manual Entry</span>
 </label>
 </div>
@@ -998,7 +1007,7 @@
 <div aria-live="assertive" class="text-sm text-red-600" data-students-feedback="" hidden="" id="students-feedback" role="alert"></div>
 </form>
 </section>
-<section aria-labelledby="students-preview-title" class="flex flex-col bg-neutral-50 border border-neutral-200 rounded-lg overflow-hidden shadow-sm h-full relative p-6" data-article-panel="preview">
+<section aria-labelledby="students-preview-title" class="flex flex-col bg-neutral-50 border border-neutral-200 rounded-lg overflow-y-auto h-full relative p-6" data-article-panel="preview">
 <div aria-busy="false" aria-describedby="students-preview-empty" aria-live="polite" class="flex flex-col gap-3" data-students-list-wrapper="" role="region">
 <div class="w-full" data-students-list="" id="students-preview-list">
 <div class="grid grid-cols-4 gap-2 text-xs font-semibold uppercase text-neutral-500">
@@ -1016,7 +1025,8 @@
 </div>
 </section>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+</div>
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="students-save-status">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -1040,7 +1050,7 @@
 <legend class="text-sm font-semibold text-neutral-900">Upload file</legend>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="students-upload-input">
                 Select roster file
-                <input accept=".csv,.tsv,.xls,.xlsx,.ods,.pdf,.docx,.doc,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/csv" aria-describedby="students-upload-help" class="" id="students-upload-input" name="rosterFile" type="file"/>
+                <input accept=".csv,.tsv,.xls,.xlsx,.ods,.pdf,.docx,.doc,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/csv" aria-describedby="students-upload-help" class="block w-full text-sm text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer" id="students-upload-input" name="rosterFile" type="file"/>
 </label>
 <p class="text-xs text-neutral-500" id="students-upload-help">
                 Supported formats: Excel (XLSX), CSV, PDF, Word (DOCX)
@@ -1076,23 +1086,23 @@
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-first-name">
                   First name*
-                  <input autocomplete="given-name" class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-first-name" name="first_name" required="" type="text"/>
+                  <input autocomplete="given-name" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-first-name" name="first_name" required="" type="text"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-last-name">
                   Last name*
-                  <input autocomplete="family-name" class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-last-name" name="last_name" required="" type="text"/>
+                  <input autocomplete="family-name" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-last-name" name="last_name" required="" type="text"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-email">
                   Email
-                  <input autocomplete="email" class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-email" name="email" placeholder="learner@school.org (optional)" type="email"/>
+                  <input autocomplete="email" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-email" name="email" placeholder="learner@school.org (optional)" type="email"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-student-id">
                   Student ID
-                  <input class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-student-id" name="student_id" placeholder="Auto-generated if blank" type="text"/>
+                  <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-student-id" name="student_id" placeholder="Auto-generated if blank" type="text"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-grade-level">
                   Grade level
-                  <select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-grade-level" name="grade_level">
+                  <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-grade-level" name="grade_level">
 <option value="">Select grade level</option>
 <option value="Elementary">Elementary</option>
 <option value="Middle">Middle</option>
@@ -1103,19 +1113,19 @@
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-enrollment-date">
                   Enrollment date
-                  <input class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-enrollment-date" name="enrollment_date" type="date"/>
+                  <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-enrollment-date" name="enrollment_date" type="date"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-learning-style">
                   Learning style preferences
-                  <input class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-learning-style" name="learning_style" placeholder="e.g., Visual, Collaborative" type="text"/>
+                  <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-learning-style" name="learning_style" placeholder="e.g., Visual, Collaborative" type="text"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-assessment-score">
                   Initial assessment score
-                  <input class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="manual-assessment-score" name="assessment_score" placeholder="Optional score" step="0.1" type="number"/>
+                  <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-assessment-score" name="assessment_score" placeholder="Optional score" step="0.1" type="number"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-notes">
                   Custom notes
-                  <textarea class="" id="manual-notes" name="notes" placeholder="Pedagogy flags like ‘needs extra simulations’" rows="3"></textarea>
+                  <textarea class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-notes" name="notes" placeholder="Pedagogy flags like ‘needs extra simulations’" rows="3"></textarea>
 </label>
 </div>
 </fieldset>
@@ -1127,7 +1137,7 @@
               </p>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2" for="manual-bulk-input">
                 Bulk students
-                <textarea class="" id="manual-bulk-input" name="bulk_students" placeholder="Jane,Doe,jane@school.org,12345,High School,Visual,88,2024-08-24,Loves experiments" rows="6">
+                <textarea class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="manual-bulk-input" name="bulk_students" placeholder="Jane,Doe,jane@school.org,12345,High School,Visual,88,2024-08-24,Loves experiments" rows="6">
                 </textarea>
 </label>
 </fieldset>
@@ -1148,9 +1158,9 @@
 </div>
 </article>
 <!-- Pedagogy Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="pedagogy">
-<div class="grid grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 min-h-[600px]">
-<div class="flex items-center gap-2 mb-6" data-article-toggle="">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="pedagogy">
+<div class="flex flex-col flex-1 min-h-0 p-6">
+<div class="flex items-center gap-2 mb-4 lg:hidden" data-article-toggle="">
 <button class="inline-flex bg-primary-500 text-white border-primary-500 items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="config" type="button">
               Config
             </button>
@@ -1158,7 +1168,8 @@
               Preview
             </button>
 </div>
-<section class="flex flex-col bg-white border border-neutral-200 rounded-lg overflow-hidden shadow-sm h-full p-6" data-article-panel="config">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
+<section class="flex flex-col bg-white border border-neutral-200 rounded-lg overflow-y-auto h-full p-6" data-article-panel="config">
 <form class="space-y-6" id="course-pedagogy-form">
 <input class="" id="course-pedagogy-input" name="course_pedagogy" type="hidden"/>
 <div class="space-y-4" id="pedagogy-ui">
@@ -1188,7 +1199,7 @@
 </div>
 </form>
 </section>
-<section class="flex flex-col bg-neutral-50 border border-neutral-200 rounded-lg overflow-hidden shadow-sm h-full relative p-6" data-article-panel="preview">
+<section class="flex flex-col bg-neutral-50 border border-neutral-200 rounded-lg overflow-y-auto h-full relative p-6" data-article-panel="preview">
 <div class="space-y-3" data-learning-plane-summary="">
 <h3 class="text-lg font-semibold text-neutral-900" data-learning-plane-summary-title="" id="pedagogy-approach-title">Balanced</h3>
 <p class="text-sm text-neutral-500" data-learning-plane-summary-subtitle="" id="pedagogy-approach-subtitle">
@@ -1206,7 +1217,8 @@
 </div>
 </section>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+</div>
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="pedagogy-save-status">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -1216,7 +1228,7 @@
 </footer>
 </article>
 <!-- Course Visibility Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="course-visibility">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="course-visibility">
 <div class="p-6 bg-white">
 <form class="space-y-4" id="course-visibility-form">
 <fieldset class="space-y-3">
@@ -1243,7 +1255,7 @@
 </fieldset>
 </form>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="course-visibility-save-status">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -1253,12 +1265,12 @@
 </footer>
 </article>
 <!-- Pricing & Monetization Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="pricing-monetization">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="pricing-monetization">
 <div class="p-6 bg-white">
 <form class="space-y-6" id="pricing-monetization-form">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Pricing Model
-              <select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="pricing_model">
+              <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="pricing_model">
 <option value="free">Free</option>
 <option value="subscription">Subscription</option>
 <option value="one-time">One-time purchase</option>
@@ -1267,11 +1279,11 @@
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Base Price
-              <input class="" min="0" name="base_price" placeholder="99" step="1" type="number"/>
+              <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" min="0" name="base_price" placeholder="99" step="1" type="number"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Currency
-              <select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="currency">
+              <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="currency">
 <option value="USD">USD</option>
 <option value="EUR">EUR</option>
 <option value="GBP">GBP</option>
@@ -1283,11 +1295,11 @@
             </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Discount Notes
-              <textarea class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="discount_notes" placeholder="Describe educator or early-bird discounts"></textarea>
+              <textarea class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="discount_notes" placeholder="Describe educator or early-bird discounts"></textarea>
 </label>
 </form>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="pricing-save-status">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -1297,12 +1309,12 @@
 </footer>
 </article>
 <!-- External Integrations & APIs Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="external-integrations">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="external-integrations">
 <div class="p-6 bg-white">
 <form class="space-y-6" id="external-integrations-form">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               LMS Provider
-              <select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="lms_provider">
+              <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="lms_provider">
 <option value="None">None</option>
 <option value="Canvas">Canvas</option>
 <option value="Moodle">Moodle</option>
@@ -1315,15 +1327,15 @@
             </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Webhook URL
-              <input class="" name="webhook_url" placeholder="https://example.com/webhook" type="text"/>
+              <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="webhook_url" placeholder="https://example.com/webhook" type="text"/>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Integration Notes
-              <textarea class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="integration_notes" placeholder="Describe external automation related to this course"></textarea>
+              <textarea class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="integration_notes" placeholder="Describe external automation related to this course"></textarea>
 </label>
 </form>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="integrations-save-status">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -1333,16 +1345,16 @@
 </footer>
 </article>
 <!-- Communication Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="communication">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="communication">
 <div class="p-6 bg-white">
 <form class="space-y-6" id="communication-form">
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Welcome Message
-              <textarea class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="welcome_message" placeholder="Send a short welcome note to enrolled students"></textarea>
+              <textarea class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="welcome_message" placeholder="Send a short welcome note to enrolled students"></textarea>
 </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Announcement Channel
-              <select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" name="announcement_channel">
+              <select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="announcement_channel">
 <option value="email">Email</option>
 <option value="in-app">In-app</option>
 <option value="sms">SMS</option>
@@ -1354,11 +1366,11 @@
             </label>
 <label class="block text-sm font-medium leading-6 text-neutral-900 mb-2">
               Office Hours
-              <input class="" name="office_hours" placeholder="Thursdays 3-5pm CET" type="text"/>
+              <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" name="office_hours" placeholder="Thursdays 3-5pm CET" type="text"/>
 </label>
 </form>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="communication-save-status">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -1368,9 +1380,9 @@
 </footer>
 </article>
 <!-- Page Setup Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="page-setup">
-<div class="grid grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 min-h-[600px]">
-<div class="flex items-center gap-2 mb-6" data-article-toggle="">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="page-setup">
+<div class="flex flex-col flex-1 min-h-0 p-6">
+<div class="flex items-center gap-2 mb-4 lg:hidden" data-article-toggle="">
 <button class="inline-flex bg-primary-500 text-white border-primary-500 items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-article-toggle-btn="" data-view="config" type="button">
               Config
             </button>
@@ -1378,38 +1390,39 @@
               Preview
             </button>
 </div>
-<section class="flex flex-col bg-white border border-neutral-200 rounded-lg overflow-hidden shadow-sm h-full p-6" data-article-panel="config">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
+<section class="flex flex-col bg-white border border-neutral-200 rounded-lg overflow-y-auto h-full p-6" data-article-panel="config">
 <form class="space-y-6" id="page-setup-form">
 <fieldset class="space-y-3">
 <legend class="text-sm font-semibold text-neutral-900">Units</legend>
 <label class="flex items-center gap-2 text-sm text-neutral-700">
-<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="units" type="radio" value="cm"/>
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" name="units" type="radio" value="cm"/>
                 Metric (cm)
               </label>
 <label class="flex items-center gap-2 text-sm text-neutral-700">
-<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="units" type="radio" value="inches"/>
+<input class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" name="units" type="radio" value="inches"/>
                 Imperial (inches)
               </label>
 </fieldset>
 <fieldset class="space-y-3">
 <legend class="text-sm font-semibold text-neutral-900">Orientation</legend>
 <label class="flex items-center gap-2 text-sm text-neutral-700">
-<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="orientation" type="radio" value="portrait"/>
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" name="orientation" type="radio" value="portrait"/>
                 Portrait
               </label>
 <label class="flex items-center gap-2 text-sm text-neutral-700">
-<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="orientation" type="radio" value="landscape"/>
+<input class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" name="orientation" type="radio" value="landscape"/>
                 Landscape
               </label>
 </fieldset>
 <fieldset class="space-y-3">
 <legend class="text-sm font-semibold text-neutral-900">Canvas Size</legend>
 <label class="flex items-center gap-2 text-sm text-neutral-700">
-<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="canvas-size" type="radio" value="a4"/>
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" name="canvas-size" type="radio" value="a4"/>
 <span class="canvas-size-label" data-cm="A4 (21.0 × 29.7 cm)" data-inches='A4 (8.27" × 11.69")'>A4 (21.0 × 29.7 cm)</span>
 </label>
 <label class="flex items-center gap-2 text-sm text-neutral-700">
-<input class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" name="canvas-size" type="radio" value="us-letter"/>
+<input class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" name="canvas-size" type="radio" value="us-letter"/>
 <span class="canvas-size-label" data-cm="US Letter (21.6 × 27.9 cm)" data-inches='US Letter (8.5" × 11")'>US Letter (21.6 × 27.9 cm)</span>
 </label>
 </fieldset>
@@ -1419,24 +1432,24 @@
 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 <label class="flex flex-col gap-2 text-sm text-neutral-700">
                     Top
-                    <input class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" max="100" min="0" name="margin_top" step="0.01" type="number" value="2.54"/>
+                    <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" max="100" min="0" name="margin_top" step="0.01" type="number" value="2.54"/>
 <span class="text-xs text-neutral-500" data-page-setup-unit="">cm</span>
 </label>
 <label class="flex flex-col gap-2 text-sm text-neutral-700">
                     Bottom
-                    <input class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" max="100" min="0" name="margin_bottom" step="0.01" type="number" value="2.54"/>
+                    <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" max="100" min="0" name="margin_bottom" step="0.01" type="number" value="2.54"/>
 <span class="text-xs text-neutral-500" data-page-setup-unit="">cm</span>
 </label>
 </div>
 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 <label class="flex flex-col gap-2 text-sm text-neutral-700">
                     Left
-                    <input class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" max="100" min="0" name="margin_left" step="0.01" type="number" value="2.54"/>
+                    <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" max="100" min="0" name="margin_left" step="0.01" type="number" value="2.54"/>
 <span class="text-xs text-neutral-500" data-page-setup-unit="">cm</span>
 </label>
 <label class="flex flex-col gap-2 text-sm text-neutral-700">
                     Right
-                    <input class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" max="100" min="0" name="margin_right" step="0.01" type="number" value="2.54"/>
+                    <input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" max="100" min="0" name="margin_right" step="0.01" type="number" value="2.54"/>
 <span class="text-xs text-neutral-500" data-page-setup-unit="">cm</span>
 </label>
 </div>
@@ -1444,7 +1457,7 @@
 </fieldset>
 </form>
 </section>
-<section class="flex flex-col bg-neutral-50 border border-neutral-200 rounded-lg overflow-hidden shadow-sm h-full relative p-6" data-article-panel="preview">
+<section class="flex flex-col bg-neutral-50 border border-neutral-200 rounded-lg overflow-y-auto h-full relative p-6" data-article-panel="preview">
 <div class="space-y-4" data-page-setup-preview="">
 <p class="text-neutral-500 text-center py-8" id="page-setup-preview-placeholder">
                 Adjust page settings to refresh the live preview instantly.
@@ -1460,7 +1473,8 @@
 </div>
 </section>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+</div>
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="page-setup-flex items-center gap-2 text-sm">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -1470,11 +1484,11 @@
 </footer>
 </article>
 <!-- Interface Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="interface">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="interface">
 <div class="p-6 bg-white">
 <p class="text-neutral-500 text-center py-8">Interface content will be added here.</p>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="interface-flex items-center gap-2 text-sm">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -1484,11 +1498,11 @@
 </footer>
 </article>
 <!-- Themes Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="themes">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="themes">
 <div class="p-6 bg-white">
 <p class="text-neutral-500 text-center py-8">Themes content will be added here.</p>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="themes-flex items-center gap-2 text-sm">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -1498,11 +1512,11 @@
 </footer>
 </article>
 <!-- Accessibility & Comfort Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="accessibility-comfort">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="accessibility-comfort">
 <div class="p-6 bg-white">
 <p class="text-neutral-500 text-center py-8">Accessibility &amp; Comfort content will be added here.</p>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="accessibility-flex items-center gap-2 text-sm">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -1512,11 +1526,11 @@
 </footer>
 </article>
 <!-- Notifications & Alerts Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="notifications-alerts">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="notifications-alerts">
 <div class="p-6 bg-white">
 <p class="text-neutral-500 text-center py-8">Notifications &amp; Alerts content will be added here.</p>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="notifications-flex items-center gap-2 text-sm">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -1526,11 +1540,11 @@
 </footer>
 </article>
 <!-- Data Management & Backup Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="data-management">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="data-management">
 <div class="p-6 bg-white">
 <p class="text-neutral-500 text-center py-8">Data Management &amp; Backup content will be added here.</p>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="data-management-flex items-center gap-2 text-sm">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -1540,7 +1554,7 @@
 </footer>
 </article>
 <!-- Advanced Settings Article -->
-<article class="article hidden flex flex-col bg-white border border-neutral-200 rounded-lg shadow-sm flex-1 min-h-0 overflow-y-auto" data-course-section="" id="advanced-settings">
+<article class="article hidden flex flex-col bg-white flex-1 min-h-0 overflow-y-auto" data-course-section="" id="advanced-settings">
 <!-- Danger Zone -->
 <div class="p-6 bg-white">
 <section class="rounded-lg border border-red-200 bg-red-50 p-4">
@@ -1555,7 +1569,7 @@
             </button>
 </section>
 </div>
-<footer class="mt-6 pt-6 border-t border-neutral-200">
+<footer class="mt-auto pt-6 px-6 pb-6 border-t border-neutral-200">
 <div class="flex items-center justify-between">
 <div aria-live="polite" class="flex items-center gap-2 text-sm" data-status="empty" id="advanced-settings-flex items-center gap-2 text-sm">
 <span aria-hidden="true" class="w-4 h-4"></span>
@@ -1610,7 +1624,7 @@
 </div>
 <!-- Search -->
 <div class="search mt-2" data-engine-search="">
-<input class="" id="media-search-input" placeholder="Search media..." type="search"/>
+<input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="media-search-input" placeholder="Search media..." type="search"/>
 </div>
 </div>
 <button aria-label="Resize search column" class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-engine-resizer="search" type="button"></button>
@@ -1701,13 +1715,13 @@
 <div class="flex flex-wrap gap-3" data-engine-tools-options="">
 <!-- Pen Settings -->
 <div class="flex flex-wrap items-center gap-3" data-engine-tool-options="pen" data-engine-tool-options-layout="horizontal" style="display: none;">
-<input aria-label="Pen size" class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="size" id="pen-size-input" max="15" min="1" name="pen-size" type="number" value="2"/>
+<input aria-label="Pen size" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" data-setting="size" id="pen-size-input" max="15" min="1" name="pen-size" type="number" value="2"/>
 <div class="color-selector" data-color-selector="pen-stroke" data-initial-color="#282a29"></div>
 <div class="color-selector" data-allow-transparent="true" data-color-selector="pen-fill" data-initial-color="#fef6eb"></div>
 </div>
 <!-- Text Settings -->
 <div class="flex flex-wrap items-center gap-3" data-engine-tool-options="text" data-engine-tool-options-layout="horizontal" style="display: none;">
-<select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="fontSize" id="text-size-select">
+<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" data-setting="fontSize" id="text-size-select">
 <option data-label="Normal" value="12">Normal Text (12 pt)</option>
 <option data-label="Title" value="26">Title (26 pt)</option>
 <option data-label="Header1" value="20">Header 1 (20 pt)</option>
@@ -1718,7 +1732,7 @@
 <button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-engine-text-style="bold" type="button">B</button>
 <button class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:ring-neutral-500" data-engine-text-style="italic" type="button">I</button>
 </div>
-<select class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="fontFamily" id="font-family-select">
+<select class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" data-setting="fontFamily" id="font-family-select">
 <option data-font-family="Arial" value="Arial">Arial</option>
 <option data-font-family="Times New Roman" value="Times New Roman">Times New Roman</option>
 <option data-font-family="Georgia" value="Georgia">Georgia</option>
@@ -1729,24 +1743,24 @@
 </div>
 <!-- Brush Settings -->
 <div class="flex flex-wrap items-center gap-3" data-engine-tool-options="brush" data-engine-tool-options-layout="horizontal" style="display: none;">
-<input aria-label="Brush size" class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="size" id="brush-size-input" max="50" min="10" name="brush-size" type="number" value="20"/>
+<input aria-label="Brush size" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" data-setting="size" id="brush-size-input" max="50" min="10" name="brush-size" type="number" value="20"/>
 <div class="color-selector" data-color-selector="brush" data-initial-color="#2b8059"></div>
 </div>
 <!-- Shapes Settings -->
 <div class="flex flex-wrap items-center gap-3" data-engine-tool-options="shapes" data-engine-tool-options-layout="horizontal" style="display: none;">
 <div class="shape-selector" data-initial-shape="rectangle" data-shape-selector="shapes"></div>
-<input aria-label="Shape stroke width" class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="strokeWidth" id="shape-stroke-width-input" max="20" min="1" name="shape-stroke-width" type="number" value="2"/>
+<input aria-label="Shape stroke width" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" data-setting="strokeWidth" id="shape-stroke-width-input" max="20" min="1" name="shape-stroke-width" type="number" value="2"/>
 <div class="color-selector" data-color-selector="shapes-stroke" data-initial-color="#282a29"></div>
 <div class="color-selector" data-allow-transparent="true" data-color-selector="shapes-fill" data-initial-color="transparent"></div>
 </div>
 <!-- Eraser Settings -->
 <div class="flex flex-wrap items-center gap-3" data-engine-tool-options="eraser" data-engine-tool-options-layout="horizontal" style="display: none;">
-<input aria-label="Eraser size" class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="size" id="eraser-size-input" max="50" min="5" name="eraser-size" type="number" value="20"/>
+<input aria-label="Eraser size" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" data-setting="size" id="eraser-size-input" max="50" min="5" name="eraser-size" type="number" value="20"/>
 </div>
 <!-- Table Settings -->
 <div class="flex flex-wrap items-center gap-3" data-engine-tool-options="tables" data-engine-tool-options-layout="horizontal" style="display: none;">
-<input aria-label="Table size" class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="size" id="table-size-input" max="20" min="1" name="table-size" type="number" value="3"/>
-<select aria-label="Table type" class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" data-setting="tableType" id="table-type-select" name="table-type">
+<input aria-label="Table size" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" data-setting="size" id="table-size-input" max="20" min="1" name="table-size" type="number" value="3"/>
+<select aria-label="Table type" class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" data-setting="tableType" id="table-type-select" name="table-type">
 <option value="basic">Basic</option>
 <option value="bordered">Bordered</option>
 <option value="striped">Striped</option>
@@ -1800,25 +1814,25 @@
 <div class="absolute right-6 top-24 hidden w-72 rounded-xl border border-neutral-200 bg-white p-4 shadow-lg" data-snap-menu="" id="snap-menu">
 <!-- Smart Guides Toggle -->
 <div class="flex items-center gap-2 text-sm font-medium text-neutral-800" data-snap-option="smart">
-<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="smart-guides-toggle" type="checkbox"/>
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="smart-guides-toggle" type="checkbox"/>
 <span>Smart Guides</span>
 </div>
 <!-- Enhanced Smart Guides Settings -->
 <div class="mt-4 space-y-3" data-snap-section="">
 <div class="flex items-center gap-2 text-sm text-neutral-700" data-smart-setting="showDistToAll">
-<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="showDistToAll" type="checkbox"/>
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="showDistToAll" type="checkbox"/>
 <label for="showDistToAll">Distance Labels</label>
 </div>
 <div class="flex items-center gap-2 text-sm text-neutral-700" data-smart-setting="enableResizeGuides">
-<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="enableResizeGuides" type="checkbox"/>
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="enableResizeGuides" type="checkbox"/>
 <label for="enableResizeGuides">Resize Guides</label>
 </div>
 <div class="flex items-center gap-2 text-sm text-neutral-700" data-smart-setting="enableSmartSelection">
-<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="enableSmartSelection" type="checkbox"/>
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="enableSmartSelection" type="checkbox"/>
 <label for="enableSmartSelection">Smart Selection</label>
 </div>
 <div class="flex items-center gap-2 text-sm text-neutral-700" data-smart-setting="enableColorCoding">
-<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="enableColorCoding" type="checkbox"/>
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="enableColorCoding" type="checkbox"/>
 <label for="enableColorCoding">Color Coding</label>
 </div>
 </div>
@@ -1854,12 +1868,12 @@
 <!-- Grid Options (only visible when Grid Reference is selected) -->
 <div class="mt-4 space-y-3" data-snap-grid-options="" id="grid-options" style="display: none;">
 <div class="flex items-center gap-2 text-sm text-neutral-700">
-<input checked="" class="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-600" id="show-grid" type="checkbox"/>
+<input checked="" class="h-4 w-4 shrink-0 cursor-pointer accent-primary-600 border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" id="show-grid" type="checkbox"/>
 <label for="show-grid">Show grid</label>
 </div>
 <div class="flex items-center gap-2 text-sm text-neutral-700">
 <label for="grid-spacing">Grid spacing:</label>
-<input class="block w-full rounded-sm border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white" id="grid-spacing" max="100" min="1" type="number" value="20"/>
+<input class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-neutral-900 bg-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors" id="grid-spacing" max="100" min="1" type="number" value="20"/>
 <span class="text-xs text-neutral-500">px</span>
 </div>
 </div>

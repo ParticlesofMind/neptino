@@ -9,7 +9,7 @@ export class DashboardNavigation {
   private articles: NodeListOf<HTMLElement>;
 
   constructor() {
-    this.navLinks = document.querySelectorAll('.aside__link[data-section]');
+    this.navLinks = document.querySelectorAll('[data-dashboard-link][data-section]');
     this.articles = document.querySelectorAll('[data-dashboard-section]');
     
     // Only initialize if we actually have dashboard elements
@@ -42,7 +42,7 @@ export class DashboardNavigation {
     document.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
       const actionLink = target.closest('[data-section]') as HTMLAnchorElement;
-      if (actionLink && !actionLink.matches('.aside__link')) {
+      if (actionLink && !actionLink.hasAttribute('data-dashboard-link')) {
         e.preventDefault();
         const section = actionLink.getAttribute('data-section');
         if (section && this.isValidSection(section)) {
@@ -94,11 +94,11 @@ export class DashboardNavigation {
 
   private updateNavLinkStates(activeSection: string): void {
     this.navLinks.forEach(link => {
-      link.classList.remove('aside__link--active');
+      link.removeAttribute('data-dashboard-link-active');
       
       const linkSection = link.getAttribute('data-section');
       if (linkSection === activeSection) {
-        link.classList.add('aside__link--active');
+        link.setAttribute('data-dashboard-link-active', 'true');
       }
     });
   }
@@ -112,7 +112,7 @@ export class DashboardNavigation {
 export function initializeDashboardNavigation(): DashboardNavigation | null {
   // Only initialize if we have actual dashboard content elements
   const contentArticles = document.querySelectorAll('[data-dashboard-section]');
-  const dashboardNav = document.querySelector('.aside--main');
+  const dashboardNav = document.querySelector('[data-dashboard-nav]');
   
   if (dashboardNav && contentArticles.length > 0) {
     return new DashboardNavigation();

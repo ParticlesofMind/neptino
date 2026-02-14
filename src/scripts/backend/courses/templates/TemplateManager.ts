@@ -15,7 +15,7 @@ export class TemplateManager {
   static showCreateTemplateModal(): void {
     const modal = document.getElementById('create-template-modal');
     if (modal) {
-      modal.classList.remove('modal--active');
+      modal.removeAttribute('data-modal-state');
       modal.classList.remove('hidden');
       modal.setAttribute('aria-hidden', 'false');
       document.body.classList.add('overflow-hidden');

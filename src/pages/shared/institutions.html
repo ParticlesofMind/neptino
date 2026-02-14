@@ -8,21 +8,21 @@
 <link href="/src/styles/app.css" rel="stylesheet"/>
 </head>
 <body class="min-h-screen bg-neutral-50 font-sans text-neutral-900 body">
-<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200 flex h-16 items-center justify-between header--institutions">
+<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200 flex h-16 items-center justify-between" data-header-institutions>
 <nav class="flex items-center gap-8">
 <ul class="flex items-center gap-6 list-none m-0 p-0">
-<li class="relative ul__item--brand">
+<li class="relative">
 <a class="brand" href="/">
 <img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
 </a>
 </li>
 <li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/shared/features.html">Features</a></li>
 <li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/shared/about.html">About</a></li>
-<li class="relative ul__item--dropdown">
-<div class="relative inline-block text-left dropdown--right">
+<li class="relative">
+<div class="relative inline-block text-left">
 <button aria-expanded="false" aria-haspopup="true" class="inline-flex items-center gap-x-1 text-sm font-semibold leading-6 text-neutral-900" id="language-toggle">
-<span class="dropdown__text">EN</span>
-<svg class="dropdown__icon" fill="currentColor" height="12" viewbox="0 0 24 24" width="12">
+<span>EN</span>
+<svg fill="currentColor" height="12" viewbox="0 0 24 24" width="12">
 <path d="M7 10l5 5 5-5z"></path>
 </svg>
 </button>
@@ -42,13 +42,13 @@
 </ul>
 </div>
 </li>
-<li class="relative ul__item--cta">
+<li class="relative">
 <a class="cta inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" href="/src/pages/shared/signin.html">Sign In</a>
 </li>
 </ul>
 </nav>
 </header>
-<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 main main--institutions">
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 <section>
 <h1>Scale Education Excellence with Neptino</h1>
 <p>Empower your institution with comprehensive learning management tools, advanced analytics, and seamless
@@ -136,14 +136,14 @@
 <footer class="bg-white border-t border-neutral-200 mt-auto footer">
 <nav class="mx-auto max-w-7xl px-6 lg:px-8 py-8 flex justify-between items-center">
 <ul class="flex items-center gap-6 gap-8 list-none m-0 p-0">
-<li class="relative ul__item--brand">
+<li class="relative">
 <a class="brand" href="/">
 <img alt="Neptino Logo" class="h-8 w-auto h-6" src="/src/assets/logo/octopus-logo.png"/>
 </a>
 </li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Privacy Policy</a></li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Terms of Service</a></li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Contact</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#">Privacy Policy</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#">Terms of Service</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#">Contact</a></li>
 </ul>
 </nav>
 </footer>

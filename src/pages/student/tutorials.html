@@ -8,10 +8,10 @@
 <link href="/src/styles/app.css" rel="stylesheet"/>
 </head>
 <body class="min-h-screen bg-neutral-50 font-sans text-neutral-900 body">
-<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200 flex h-16 items-center justify-between header--home">
+<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200 flex h-16 items-center justify-between" data-header-home>
 <nav class="flex items-center gap-8">
 <ul class="flex items-center gap-6 list-none m-0 p-0">
-<li class="relative ul__item--brand">
+<li class="relative">
 <a class="brand" href="/src/pages/student/home.html">
 <img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
 </a>
@@ -19,7 +19,7 @@
 <li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/student/courses.html">My Courses</a></li>
 <li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/student/marketplace.html">Marketplace</a></li>
 <li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/student/tutorials.html">Tutorials</a></li>
-<li class="relative ul__item--cta">
+<li class="relative">
 <button class="cta inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" id="logout-btn">Logout</button>
 </li>
 </ul>
@@ -34,14 +34,14 @@
 <footer class="bg-white border-t border-neutral-200 mt-auto footer">
 <nav class="mx-auto max-w-7xl px-6 lg:px-8 py-8 flex justify-between items-center">
 <ul class="flex items-center gap-6 gap-8 list-none m-0 p-0">
-<li class="relative ul__item--brand">
+<li class="relative">
 <a class="brand" href="/src/pages/student/home.html">
 <img alt="Neptino Logo" class="h-8 w-auto h-6" src="/src/assets/logo/octopus-logo.png"/>
 </a>
 </li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Privacy Policy</a></li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Terms of Service</a></li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Contact</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#">Privacy Policy</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#">Terms of Service</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#">Contact</a></li>
 </ul>
 </nav>
 </footer>

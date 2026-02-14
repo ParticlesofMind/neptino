@@ -166,14 +166,14 @@ export class MessagingInterface {
               aria-label="Search users by email"
               class="search-input"
             />
-            <button id="search-user-btn" class="button button--primary">Search</button>
+            <button id="search-user-btn" class="inline-flex items-center justify-center rounded-md border border-primary-300 bg-primary-600 px-3 py-2 text-sm font-medium text-white hover:bg-primary-700">Search</button>
           </div>
         </div>
         
         <div class="messaging-content">
-          <div class="search-results" id="search-results" style="display: none;">
+          <div class="rounded-lg border border-neutral-200 p-4" id="search-results" style="display: none;" data-search-results>
             <h4>Search Results</h4>
-            <div id="search-results-message" class="search-results__message"></div>
+            <div id="search-results-message" class="mt-2 text-sm" data-search-results-message></div>
             <div id="search-results-list"></div>
           </div>
           
@@ -200,7 +200,7 @@ export class MessagingInterface {
       <div class="messaging-error">
         <h3>🚀 Rocket.Chat Setup Required</h3>
         <p>Rocket.Chat needs to be set up before messaging is available.</p>
-        <a href="${rocketChatUrl}" target="_blank" class="button button--primary" style="margin-top: 1rem;">
+        <a href="${rocketChatUrl}" target="_blank" class="inline-flex items-center justify-center rounded-md border border-primary-300 bg-primary-600 px-3 py-2 text-sm font-medium text-white hover:bg-primary-700" style="margin-top: 1rem;">
           Complete Setup
         </a>
         <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--color-text-secondary);">
@@ -491,11 +491,12 @@ export class MessagingInterface {
       user.source === "rocket" ? "Messaging Enabled" : "Platform User";
     const sourceClass =
       user.source === "rocket"
-        ? "user-source user-source--rocket"
-        : "user-source user-source--platform";
+        ? "inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800" 
+        : "inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800";
+    const sourceDataAttr = `data-user-source="${user.source}"`;
 
     const buttonAttributes = [
-      'class="button button--small start-conversation"',
+      'class="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed" data-start-conversation',
       `data-email="${safeEmail}"`,
     ];
 
@@ -519,7 +520,7 @@ export class MessagingInterface {
           <strong>${safeName}</strong>
           <span class="user-email">${safeEmail}</span>
           ${roleMarkup}
-          <span class="${sourceClass}">${sourceLabel}</span>
+          <span class="${sourceClass}" ${sourceDataAttr}>${sourceLabel}</span>
         </div>
         <button ${buttonAttributes.join(" ")}>
           ${buttonLabel}
@@ -652,9 +653,11 @@ export class MessagingInterface {
     messageElement.textContent = message;
 
     if (type === "error") {
-      messageElement.classList.add("search-results__message--error");
+      messageElement.classList.add("text-red-600");
+      messageElement.setAttribute('data-search-results-error', 'true');
     } else {
-      messageElement.classList.remove("search-results__message--error");
+      messageElement.classList.remove("text-red-600");
+      messageElement.removeAttribute('data-search-results-error');
     }
   }
 

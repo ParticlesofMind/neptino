@@ -1529,14 +1529,14 @@ export class CourseFormHandler {
     private getStatusContainer(): HTMLElement | null {
         if (!this.form) return null;
 
-        const embeddedStatus = this.form.querySelector('.card--save-status');
+        const embeddedStatus = this.form.querySelector('[data-card-save-status]');
         if (embeddedStatus instanceof HTMLElement) {
             return embeddedStatus;
         }
 
         const article = this.form.closest('[data-course-section]');
         return (
-            (article?.querySelector('.card--save-status') as HTMLElement | null) || null
+            (article?.querySelector('[data-card-save-status]') as HTMLElement | null) || null
         );
     }
 

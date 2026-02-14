@@ -412,14 +412,16 @@ export class EngineController {
     // Minus button
     const minusButton = document.createElement('button');
     minusButton.type = 'button';
-    minusButton.className = 'button--stepper-minus inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm font-medium text-neutral-700 shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2';
+    minusButton.className = 'inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm font-medium text-neutral-700 shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2';
+    minusButton.setAttribute('data-button-stepper', 'minus');
     minusButton.setAttribute('aria-label', 'Decrease');
     minusButton.textContent = '−';
 
     // Number input
     const input = document.createElement('input');
     input.type = 'number';
-    input.className = 'input--number-stepper w-16 rounded-md border-0 py-1 text-center text-sm text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 bg-white';
+    input.className = 'w-16 rounded-md border-0 py-1 text-center text-sm text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 bg-white';
+    input.setAttribute('data-input-stepper', 'true');
     input.min = min.toString();
     input.max = max.toString();
     input.step = step.toString();
@@ -429,7 +431,8 @@ export class EngineController {
     // Plus button
     const plusButton = document.createElement('button');
     plusButton.type = 'button';
-    plusButton.className = 'button--stepper-plus inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm font-medium text-neutral-700 shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2';
+    plusButton.className = 'inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm font-medium text-neutral-700 shadow-sm transition-all hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2';
+    plusButton.setAttribute('data-button-stepper', 'plus');
     plusButton.setAttribute('aria-label', 'Increase');
     plusButton.textContent = '+';
 
@@ -510,12 +513,13 @@ export class EngineController {
 
   private createDropdownControl(toolId: string, option: any): HTMLElement {
     const wrapper = document.createElement('div');
-    wrapper.className = 'tools__control tools__control--dropdown';
+    wrapper.className = 'flex flex-col gap-2 rounded-md border border-neutral-200 bg-white p-3';
+    wrapper.setAttribute('data-control', 'dropdown');
     wrapper.title = option.label;
     wrapper.setAttribute('aria-label', option.label);
 
     const select = document.createElement('select');
-    select.className = 'input input--select';
+    select.className = 'block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white';
     select.setAttribute('aria-label', option.label);
 
     const initialValue = this.getInitialValue(toolId, option) ?? option.settings.value;
@@ -557,7 +561,8 @@ export class EngineController {
 
   private createSwatchControl(toolId: string, option: any): HTMLElement {
     const wrapper = document.createElement('div');
-    wrapper.className = 'tools__control tools__control--color';
+    wrapper.className = 'flex flex-col gap-2 rounded-md border border-neutral-200 bg-white p-3';
+    wrapper.setAttribute('data-control', 'color');
     wrapper.title = option.label;
     wrapper.setAttribute('aria-label', option.label);
     wrapper.dataset.toolId = toolId;
@@ -579,60 +584,71 @@ export class EngineController {
 
     const trigger = document.createElement('button');
     trigger.type = 'button';
-    trigger.className = 'tools__color-trigger';
+    trigger.className = 'inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium hover:bg-neutral-50';
+    trigger.setAttribute('data-color-trigger', 'true');
     applyEngineButtonBase(trigger);
     trigger.setAttribute('aria-label', `${option.label} color picker`);
     trigger.setAttribute('aria-haspopup', 'dialog');
     trigger.setAttribute('aria-expanded', 'false');
 
     const preview = document.createElement('span');
-    preview.className = 'tools__color-preview h-6 w-6 rounded-full border border-neutral-300';
+    preview.className = 'h-6 w-6 rounded-full border border-neutral-300';
+    preview.setAttribute('data-color-preview', 'true');
     trigger.appendChild(preview);
 
     const popoverId = `tools-color-${toolId}-${option.id}`;
     trigger.setAttribute('aria-controls', popoverId);
 
     const popover = document.createElement('div');
-    popover.className = 'tools__color-popover';
+    popover.className = 'absolute right-0 z-50 mt-2 w-80 rounded-lg border border-neutral-200 bg-white shadow-lg';
+    popover.setAttribute('data-color-popover', 'true');
     popover.id = popoverId;
     popover.setAttribute('role', 'dialog');
     popover.setAttribute('aria-modal', 'true');
     popover.hidden = true;
 
     const content = document.createElement('div');
-    content.className = 'tools__color-content';
+    content.className = 'flex flex-col gap-4 p-4';
+    content.setAttribute('data-color-content', 'true');
     popover.appendChild(content);
 
     const favorites = document.createElement('div');
-    favorites.className = 'tools__color-favorites';
+    favorites.className = 'flex flex-col gap-2';
+    favorites.setAttribute('data-color-favorites', 'true');
 
     const favoritesHeader = document.createElement('span');
-    favoritesHeader.className = 'tools__color-section-title';
+    favoritesHeader.className = 'text-sm font-semibold text-neutral-900';
+    favoritesHeader.setAttribute('data-color-section-title', 'true');
     favoritesHeader.textContent = 'Favorites';
     favorites.appendChild(favoritesHeader);
 
     const paletteList = document.createElement('div');
-    paletteList.className = 'tools__color-list';
+    paletteList.className = 'flex flex-wrap gap-2';
+    paletteList.setAttribute('data-color-list', 'true');
     favorites.appendChild(paletteList);
 
     const addButton = document.createElement('button');
     addButton.type = 'button';
-    addButton.className = 'tools__color-add';
+    addButton.className = 'inline-flex items-center gap-1 rounded-md border border-dashed border-neutral-400 px-2 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-50';
+    addButton.setAttribute('data-color-add', 'true');
     applyEngineButtonBase(addButton);
     addButton.textContent = 'Add to favorites';
     favorites.appendChild(addButton);
 
     const editor = document.createElement('div');
-    editor.className = 'tools__color-editor';
+    editor.className = 'rounded-lg border border-neutral-200 bg-neutral-50 p-3';
+    editor.setAttribute('data-color-editor', 'true');
 
     const editorHeader = document.createElement('span');
-    editorHeader.className = 'tools__color-section-title';
+    editorHeader.className = 'text-sm font-semibold text-neutral-900';
+    editorHeader.setAttribute('data-color-section-title', 'true');
     editorHeader.textContent = 'Color';
     editor.appendChild(editorHeader);
 
     // Curated color palette grid for coursebuilding
     const colorGrid = document.createElement('div');
-    colorGrid.className = 'tools__color-grid grid grid-cols-6 gap-2';
+    colorGrid.className = 'grid grid-cols-6 gap-2';
+    colorGrid.setAttribute('data-color-grid', 'true');
     
     const curatedColors = [
       // Row 1: Reds to Purples
@@ -652,7 +668,8 @@ export class EngineController {
     curatedColors.forEach((color) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'tools__color-grid-option h-6 w-6 rounded-full border border-neutral-200 shadow-sm';
+      button.className = 'h-6 w-6 rounded-full border border-neutral-200 shadow-sm cursor-pointer hover:ring-2 hover:ring-primary-500';
+      button.setAttribute('data-color-grid-option', 'true');
       button.style.background = color;
       button.dataset.value = color;
       button.title = color;
@@ -670,7 +687,8 @@ export class EngineController {
 
     const hexInput = document.createElement('input');
     hexInput.type = 'text';
-    hexInput.className = 'tools__color-hex-input block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white';
+    hexInput.className = 'block w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white';
+    hexInput.setAttribute('data-color-hex-input', 'true');
     hexInput.placeholder = '#RRGGBB';
     editor.appendChild(hexInput);
 
@@ -678,18 +696,21 @@ export class EngineController {
     content.appendChild(editor);
 
     const actions = document.createElement('div');
-    actions.className = 'tools__color-actions';
+    actions.className = 'flex gap-2 border-t border-neutral-200 pt-3';
+    actions.setAttribute('data-color-actions', 'true');
     popover.appendChild(actions);
 
     const cancelButton = document.createElement('button');
     cancelButton.type = 'button';
-    cancelButton.className = 'tools__color-cancel';
+    cancelButton.className = 'inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50';
+    cancelButton.setAttribute('data-color-cancel', 'true');
     applyEngineButtonBase(cancelButton);
     cancelButton.textContent = 'Cancel';
 
     const applyButton = document.createElement('button');
     applyButton.type = 'button';
-    applyButton.className = 'tools__color-apply';
+    applyButton.className = 'inline-flex items-center justify-center rounded-md border border-primary-300 bg-primary-600 px-3 py-2 text-sm font-medium text-white hover:bg-primary-700';
+    applyButton.setAttribute('data-color-apply', 'true');
     applyEngineButtonBase(applyButton);
     setButtonActive(applyButton, true);
     applyButton.textContent = 'Select';
@@ -708,7 +729,7 @@ export class EngineController {
     };
 
     const highlightSelection = (color: string): void => {
-      paletteList.querySelectorAll<HTMLButtonElement>('.tools__color-option').forEach((button) => {
+      paletteList.querySelectorAll<HTMLButtonElement>('[data-color-palette-option]').forEach((button) => {
         const value = button.dataset.value;
         setButtonActive(button, value === color);
       });
@@ -733,12 +754,13 @@ export class EngineController {
       palette.forEach((color) => {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'tools__color-option h-6 w-6 rounded-full border border-neutral-200 shadow-sm';
+        button.className = 'h-6 w-6 rounded-full border border-neutral-200 shadow-sm';
+        button.setAttribute('data-color-palette-option', 'true');
         button.dataset.value = color;
         button.setAttribute('aria-label', color === 'transparent' ? 'Transparent' : color);
         button.title = color === 'transparent' ? 'Transparent' : color;
         if (color === 'transparent') {
-          button.classList.add('tools__color-option--transparent', 'bg-transparent', 'border', 'border-dashed', 'border-neutral-300');
+          button.classList.add('bg-transparent', 'border', 'border-dashed', 'border-neutral-300');
         } else {
           button.style.background = color;
         }

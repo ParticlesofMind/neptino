@@ -65,13 +65,13 @@ export class GlobalNavigation {
  // Add appropriate sign in/sign up links based on current page
  if (this.config.currentPage.includes('signin')) {
  navActions.innerHTML = `
- <a href="/src/pages/shared/signup.html" class="button button--secondary">
+ <a href="/src/pages/shared/signup.html" class="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
  Sign Up
  </a>
  `;
  } else if (this.config.currentPage.includes('signup')) {
  navActions.innerHTML = `
- <a href="/src/pages/shared/signin.html" class="button button--secondary">
+ <a href="/src/pages/shared/signin.html" class="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
  Sign In
  </a>
  `;
@@ -96,10 +96,10 @@ export class GlobalNavigation {
  const navActions = document.querySelector('element');
  if (navActions && !this.currentUser) {
  navActions.innerHTML = `
- <a href="/src/pages/shared/signin.html" class="button button--secondary">
+ <a href="/src/pages/shared/signin.html" class="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
  Sign In
  </a>
- <a href="/src/pages/shared/signup.html" class="button button--primary">
+ <a href="/src/pages/shared/signup.html" class="inline-flex items-center justify-center rounded-md border border-primary-300 bg-primary-600 px-3 py-2 text-sm font-medium text-white hover:bg-primary-700">
  Sign Up
  </a>
  `;
@@ -118,22 +118,22 @@ export class GlobalNavigation {
  if (navActions) {
  navActions.innerHTML = `
  <div class="">
- <button class="button button--ghost nav__user-button" id="user-menu-toggle">
+ <button class="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50" data-user-menu-button id="user-menu-toggle">
  <span class="">👤</span>
  <span class="" id="user-name">Loading...</span>
  </button>
- <div class="" id="user-dropdown" style="display: none;">
- <a href="/src/pages/${role}/home.html" class="">
+ <div class="" id="user-dropdown" style="display: none;" data-user-dropdown>
+ <a href="/src/pages/${role}/home.html" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100">
  Dashboard
  </a>
- <a href="#" class="" id="profile-link">
+ <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" id="profile-link">
  Profile
  </a>
- <a href="#" class="" id="settings-link">
+ <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" id="settings-link">
  Settings
  </a>
- <hr class="">
- <button class="nav__dropdown-item nav__sign-out" id="sign-out-btn">
+ <hr class="my-1">
+ <button class="block w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100" id="sign-out-btn" data-sign-out>
  Sign Out
  </button>
  </div>
@@ -164,10 +164,10 @@ export class GlobalNavigation {
  const links = baseLinks[role as keyof typeof baseLinks] || [];
  
  return `
- <ul class="list list--nav">
+ <ul class="flex gap-6">
  ${links.map(link => `
  <li class="">
- <a href="${link.href}" class="link link--nav ${this.isCurrentPage(link.href) ? "" : ''}">
+ <a href="${link.href}" class="text-neutral-900 hover:text-primary-600 font-medium text-sm transition-colors ${this.isCurrentPage(link.href) ? 'text-primary-600' : ''}">
  ${link.text}
  </a>
  </li>
@@ -214,7 +214,7 @@ export class GlobalNavigation {
  }
  
  // Close dropdowns when clicking outside
- if (!target.closest('.dropdown') && !target.closest('.nav__user-menu')) {
+ if (!target.closest('[data-user-dropdown]') && !target.closest('[data-user-menu]')) {
  this.closeAllDropdowns();
  }
  });
@@ -261,8 +261,8 @@ export class GlobalNavigation {
  const newState = !isExpanded;
  
  toggle.setAttribute('aria-expanded', newState.toString());
- menu.classList.toggle('dropdown__menu--active', newState);
  menu.classList.toggle('hidden', !newState);
+ menu.setAttribute('data-language-dropdown-state', newState ? 'open' : 'closed');
  }
  }
 
@@ -275,7 +275,7 @@ export class GlobalNavigation {
  };
  
  // Update the dropdown toggle text
- const dropdownText = document.querySelector('[data-language-label]') || document.querySelector('.dropdown__text');
+ const dropdownText = document.querySelector('[data-language-label]') || document.querySelector('[data-language-dropdown-text]');
  if (dropdownText) {
  dropdownText.textContent = languages[langCode as keyof typeof languages] || 'EN';
  }
@@ -292,7 +292,7 @@ export class GlobalNavigation {
  
  if (toggle && menu) {
  toggle.setAttribute('aria-expanded', 'false');
- menu.classList.remove('dropdown__menu--active');
+ menu.setAttribute('data-language-dropdown-state', 'closed');
  menu.classList.add('hidden');
  }
  }

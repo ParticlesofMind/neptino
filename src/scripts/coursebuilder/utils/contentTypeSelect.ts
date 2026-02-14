@@ -67,7 +67,7 @@ export function initializeContentTypeSelect(selectElement: HTMLSelectElement): v
     return;
   }
 
-  const wrapper = selectElement.closest('.tools__control--dropdown');
+  const wrapper = selectElement.closest('[data-control="dropdown"]');
   if (!wrapper) {
     return;
   }
@@ -92,7 +92,8 @@ export function initializeContentTypeSelect(selectElement: HTMLSelectElement): v
   }
 
   const radiogroup = document.createElement('div');
-  radiogroup.className = 'tools__icon-options flex flex-wrap gap-2';
+  radiogroup.className = 'flex flex-wrap gap-2';
+  radiogroup.setAttribute('data-icon-options', 'true');
   radiogroup.setAttribute('role', 'radiogroup');
   const label =
     selectElement.getAttribute('aria-label') ??
@@ -105,8 +106,9 @@ export function initializeContentTypeSelect(selectElement: HTMLSelectElement): v
   enhancedOptions.forEach((option, index) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'tools__icon-option';
+    button.className = '';
     applyEngineButtonBase(button);
+    button.setAttribute('data-icon-option', 'true');
     button.dataset.value = option.value;
     button.setAttribute('role', 'radio');
     button.setAttribute('aria-checked', 'false');
@@ -195,7 +197,7 @@ export function isContentTypeSelect(element: HTMLElement): boolean {
   }
 
   const select = element as HTMLSelectElement;
-  const wrapper = select.closest('.tools__control--dropdown');
+  const wrapper = select.closest('[data-control="dropdown"]');
   if (!wrapper) {
     return false;
   }
