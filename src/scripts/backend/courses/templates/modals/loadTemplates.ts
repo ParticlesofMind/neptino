@@ -125,8 +125,8 @@ export class LoadTemplatesModal {
 
     if (filteredTemplates.length === 0) {
       contentEl.innerHTML = `
-        <div class="template-browser__empty template-browser__empty--inline text-center text-sm text-neutral-500">
-          <span class="template-browser__empty-icon text-2xl">🔍</span>
+        <div class="text-center text-sm text-neutral-500" data-template-empty-inline>
+          <span class="text-2xl" data-template-empty-icon>🔍</span>
           <h3 class="mt-2 text-base font-semibold text-neutral-800">No Templates Match</h3>
           <p class="mt-1">Try selecting a different template type.</p>
         </div>
@@ -143,18 +143,18 @@ export class LoadTemplatesModal {
 
         const isSelected = this.selectedTemplateId === template.id;
         return `
-          <div class="card card--template ${isSelected ? 'card--selected' : ''} rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:shadow-md" data-template-id="${template.id}" onclick="loadTemplatesModal.selectTemplateCard('${template.id}')">
-            <div class="card__header flex items-start justify-between gap-3">
-              <h4 class="card__title text-base font-semibold text-neutral-900">${templateName}</h4>
-              <span class="card__type rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600">${typeLabel}</span>
+          <div class="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:shadow-md" data-template-card data-template-id="${template.id}" ${isSelected ? 'data-selected="true"' : ''} onclick="loadTemplatesModal.selectTemplateCard('${template.id}')">
+            <div class="flex items-start justify-between gap-3">
+              <h4 class="text-base font-semibold text-neutral-900">${templateName}</h4>
+              <span class="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600">${typeLabel}</span>
             </div>
-            <div class="card__description mt-2 text-sm text-neutral-600">
+            <div class="mt-2 text-sm text-neutral-600">
               ${description}
             </div>
-            <div class="card__meta mt-3 text-xs text-neutral-500">
-              <span class="card__date">Created: ${createdDate}</span>
+            <div class="mt-3 text-xs text-neutral-500">
+              <span>Created: ${createdDate}</span>
             </div>
-            <div class="card__actions mt-4 flex flex-wrap gap-2">
+            <div class="mt-4 flex flex-wrap gap-2">
               <button class="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50" onclick="event.stopPropagation(); loadTemplatesModal.previewTemplate('${template.id}')">
                 Preview
               </button>
@@ -202,12 +202,14 @@ export class LoadTemplatesModal {
    * Updates the visual selection state of cards
    */
   private updateCardSelection(): void {
-    const cards = document.querySelectorAll('.card--template');
+    const cards = document.querySelectorAll('[data-template-card]');
     cards.forEach((card) => {
       const templateId = card.getAttribute('data-template-id');
       if (templateId === this.selectedTemplateId) {
+        card.setAttribute('data-selected', 'true');
         card.classList.add('ring-2', 'ring-primary-500');
       } else {
+        card.removeAttribute('data-selected');
         card.classList.remove('ring-2', 'ring-primary-500');
       }
     });
@@ -285,7 +287,7 @@ export class LoadTemplatesModal {
     
     if (noTemplatesEl) {
       noTemplatesEl.innerHTML = `
-        <div class="template-browser__empty-icon text-2xl">⚠️</div>
+        <div class="text-2xl" data-template-empty-icon>⚠️</div>
         <h3 class="mt-2 text-base font-semibold text-neutral-800">Error Loading Templates</h3>
         <p class="mt-1 text-sm text-neutral-500">${message}</p>
         <button class="mt-4 inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50" onclick="loadTemplatesModal.reloadTemplates()">

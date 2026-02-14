@@ -16,40 +16,42 @@
 <img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
 </a>
 </li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/student/home.html">Dashboard</a></li>
 <li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/student/courses.html">My Courses</a></li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/student/progress.html">Progress</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/student/marketplace.html">Marketplace</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/student/tutorials.html">Tutorials</a></li>
 <li class="relative ul__item--cta">
-<button class="cta inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" id="logout-btn">Logout</button>
+<button class="cta inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" id="logout-btn">Logout</button>
 </li>
 </ul>
 </nav>
 </header>
-<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 main main--courses">
-<article class="hidden opacity-0 transition-opacity duration-300 ease-in-out [&amp;.is-active]:block [&amp;.is-active]:opacity-100 article--courses">
-<header class="article__summary">
-<h1 class="heading heading--h2">My Courses</h1>
-<p class="paragraph paragraph--lead">Manage your enrolled courses and continue learning.</p>
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<article class="flex flex-col gap-6">
+<header class="flex items-center justify-between gap-4">
+<div>
+<h1 class="text-2xl font-bold text-neutral-900">My Courses</h1>
+<p class="mt-1 text-neutral-600">Manage your enrolled courses and continue learning.</p>
+</div>
 </header>
-<section class="article__content">
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200 card--course">
-<div class="card__media">
-<div class="card__media-placeholder">📚</div>
+
+<!-- Empty State Message -->
+<div id="no-courses-message" style="display: none;" class="text-center py-12">
+<div class="mx-auto h-24 w-24 text-neutral-300 mb-4">
+<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+</svg>
 </div>
-<div class="px-6 py-4 border-b border-neutral-100">
-<h3 class="text-lg font-semibold text-neutral-900">No Courses Yet</h3>
-<p class="mt-2 text-sm text-neutral-500">
-              You haven't enrolled in any courses yet. Start exploring our
-              course catalog to begin your learning journey!
-            </p>
-</div>
-<div class="p-6">
-<div class="card__actions">
-<a class="w-full mt-4 inline-flex justify-center items-center bg-white text-sm text-neutral-900 shadow-sm hover:bg-neutral-50 rounded-lg px-4 font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none button--primary border border-neutral-300 py-2 text-neutral-700 hover:text-neutral-900" href="#">Browse Course Catalog</a>
-<a class="w-full mt-4 inline-flex justify-center items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50 rounded-lg px-4 font-medium text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" href="#">View Marketplace</a>
+<h3 class="mt-2 text-sm font-semibold text-neutral-900">No courses yet</h3>
+<p class="mt-1 text-sm text-neutral-500">Browse the marketplace to find courses to enroll in.</p>
+<div class="mt-6">
+<a href="/src/pages/student/marketplace.html" class="inline-flex items-center rounded-sm bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">
+Browse Marketplace
+</a>
 </div>
 </div>
-</div>
+
+<section aria-busy="false" aria-live="polite" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" data-js="courses">
+<!-- Course cards will be dynamically loaded here -->
 </section>
 </article>
 </main>
@@ -61,8 +63,8 @@
 <img alt="Neptino Logo" class="h-8 w-auto h-6" src="/src/assets/logo/octopus-logo.png"/>
 </a>
 </li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Help Center</a></li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Support</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Privacy Policy</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Terms of Service</a></li>
 <li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900 link--subtle font-size--small" href="#">Contact</a></li>
 </ul>
 </nav>

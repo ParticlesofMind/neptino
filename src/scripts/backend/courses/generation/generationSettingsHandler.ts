@@ -184,7 +184,7 @@ class GenerationSettingsHandler {
     if (!this.statusCard) return;
     this.statusCard.dataset.status = status;
     const textElement = this.statusCard.querySelector(
-      ".card__text",
+      "[data-status-text]",
     ) as HTMLElement | null;
     if (!textElement) return;
 

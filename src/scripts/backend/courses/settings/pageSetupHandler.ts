@@ -324,7 +324,7 @@ export class PageSetupHandler {
     const unit = this.currentSettings.margins.unit;
     const displayUnit = unit === "inches" ? "in" : unit;
     
-    document.querySelectorAll('.page-setup__unit').forEach(element => {
+    document.querySelectorAll('[data-page-setup-unit]').forEach(element => {
       element.textContent = displayUnit;
     });
   }

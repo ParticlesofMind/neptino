@@ -29,9 +29,9 @@ export class TemplateRenderer {
         const title = block.type.charAt(0).toUpperCase() + block.type.slice(1);
 
         return `
-              <div class="block-config" data-block="${block.type}" data-template-id="${templateId}">
-                <h4 class="block-config__title">${title}</h4>
-                <div class="block-config__fields">
+              <div class="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm" data-block-config data-block="${block.type}" data-template-id="${templateId}">
+                <h4 class="text-base font-semibold text-neutral-900" data-block-title>${title}</h4>
+                <div class="mt-3 grid gap-2" data-block-fields>
                   ${rowsHtml}
                 </div>
               </div>
@@ -40,7 +40,7 @@ export class TemplateRenderer {
       .join("");
 
     const blocksHtml = `
-      <div class="template-blocks">
+      <div class="space-y-4" data-template-blocks>
         ${blockItems}
       </div>
     `;
@@ -66,13 +66,13 @@ export class TemplateRenderer {
     if (!configArea) return;
 
     // Find all checkboxes in block config areas
-    const checkboxes = configArea.querySelectorAll('.block-config input[type="checkbox"]');
+    const checkboxes = configArea.querySelectorAll('[data-block-config] input[type="checkbox"]');
     
     checkboxes.forEach((checkbox) => {
       checkbox.addEventListener('change', async (e) => {
         const input = e.target as HTMLInputElement;
-        const fieldLabel = input.closest('.field-label');
-        const blockConfig = input.closest('.block-config');
+        const fieldLabel = input.closest('[data-field-label]');
+        const blockConfig = input.closest('[data-block-config]');
         
         if (!fieldLabel || !blockConfig) return;
         
@@ -101,11 +101,11 @@ export class TemplateRenderer {
     const actualData = templateData?.template_data || templateData;
     if (!actualData || !actualData.blocks) {
       previewContainer.innerHTML = `
-<div class="preview-placeholder">
-<h4 class="">No Template Selected</h4>
-<p class="">Create a new template or select an existing one to see the preview here.</p>
-</div>
-`;
+    <div class="rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center">
+    <h4 class="text-base font-semibold text-neutral-800">No Template Selected</h4>
+    <p class="mt-2 text-sm text-neutral-500">Create a new template or select an existing one to see the preview here.</p>
+    </div>
+    `;
       return;
     }
 
@@ -132,8 +132,8 @@ export class TemplateRenderer {
 
     // Render header
     const headerHtml = headerBlock
-      ? `<div class="preview-block preview-block--${headerBlock.type}">
-          <h4 class="preview-block__title">${headerBlock.type.charAt(0).toUpperCase() + headerBlock.type.slice(1)}</h4>
+      ? `<div class="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm" data-preview-block="${headerBlock.type}">
+          <h4 class="text-sm font-semibold text-neutral-800">${headerBlock.type.charAt(0).toUpperCase() + headerBlock.type.slice(1)}</h4>
           ${TemplateBlockRenderer.renderBlockContent(headerBlock, TemplateConfigManager.getCheckedFields(headerBlock), renderOptions)}
         </div>`
       : '';
@@ -143,27 +143,27 @@ export class TemplateRenderer {
       .map((block: TemplateBlock) => {
         const checkedFields = TemplateConfigManager.getCheckedFields(block);
         return `
-<div class="preview-block preview-block--${block.type}">
-<h4 class="preview-block__title">${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</h4>
-${TemplateBlockRenderer.renderBlockContent(block, checkedFields, renderOptions)}
-</div>
-`;
+      <div class="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm" data-preview-block="${block.type}">
+      <h4 class="text-sm font-semibold text-neutral-800">${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</h4>
+      ${TemplateBlockRenderer.renderBlockContent(block, checkedFields, renderOptions)}
+      </div>
+      `;
       })
       .join("");
 
     // Render footer
     const footerHtml = footerBlock
-      ? `<div class="preview-block preview-block--${footerBlock.type}">
-          <h4 class="preview-block__title">${footerBlock.type.charAt(0).toUpperCase() + footerBlock.type.slice(1)}</h4>
+      ? `<div class="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm" data-preview-block="${footerBlock.type}">
+          <h4 class="text-sm font-semibold text-neutral-800">${footerBlock.type.charAt(0).toUpperCase() + footerBlock.type.slice(1)}</h4>
           ${TemplateBlockRenderer.renderBlockContent(footerBlock, TemplateConfigManager.getCheckedFields(footerBlock), renderOptions)}
         </div>`
       : '';
 
     // Build canvas-style layout
     previewContainer.innerHTML = `
-      <div class="template-canvas-sheet">
+      <div class="flex flex-col gap-4" data-template-preview-sheet>
         ${headerHtml}
-        <div class="template-canvas-content">
+        <div class="flex flex-col gap-4" data-template-preview-body>
           ${contentHtml}
         </div>
         ${footerHtml}
@@ -180,9 +180,9 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields, renderOptions)}
 
     if (!templates.length) {
       listContainer.innerHTML = `
-        <div class="empty-state">
-          <h4>No Templates Found</h4>
-          <p>Create your first template to get started.</p>
+        <div class="rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center">
+          <h4 class="text-base font-semibold text-neutral-800">No Templates Found</h4>
+          <p class="mt-2 text-sm text-neutral-500">Create your first template to get started.</p>
         </div>
       `;
       return;
@@ -190,12 +190,12 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields, renderOptions)}
 
     const templatesHtml = templates
       .map((template) => `
-        <div class="template-item" data-template-id="${template.id}">
-          <h4 class="template-item__title">${template.template_data?.name || 'Unnamed Template'}</h4>
-          <p class="template-item__description">${template.template_description || 'No description'}</p>
-          <div class="template-item__meta">
-            <span class="template-item__type">${template.template_type}</span>
-            <span class="template-item__date">${new Date(template.created_at).toLocaleDateString()}</span>
+        <div class="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm" data-template-item data-template-id="${template.id}">
+          <h4 class="text-sm font-semibold text-neutral-900">${template.template_data?.name || 'Unnamed Template'}</h4>
+          <p class="mt-1 text-xs text-neutral-600">${template.template_description || 'No description'}</p>
+          <div class="mt-2 flex flex-wrap gap-2 text-xs text-neutral-500">
+            <span>${template.template_type}</span>
+            <span>${new Date(template.created_at).toLocaleDateString()}</span>
           </div>
         </div>
       `)
@@ -246,9 +246,9 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields, renderOptions)}
     const previewContainer = document.getElementById('template-preview-content');
     if (previewContainer) {
       previewContainer.innerHTML = `
-        <div class="preview-placeholder">
-          <h4>No Template Selected</h4>
-          <p>Template preview will appear here when you load a template...</p>
+        <div class="rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center">
+          <h4 class="text-base font-semibold text-neutral-800">No Template Selected</h4>
+          <p class="mt-2 text-sm text-neutral-500">Template preview will appear here when you load a template...</p>
         </div>
       `;
     }
@@ -256,9 +256,9 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields, renderOptions)}
 
   static toggleGlossaryItems(glossaryEnabled: boolean): void {
     const glossarySelectors = [
-      '.field-label[data-field="historical_figures"]',
-      '.field-label[data-field="terminology"]',
-      '.field-label[data-field="concepts"]',
+      '[data-field-label][data-field="historical_figures"]',
+      '[data-field-label][data-field="terminology"]',
+      '[data-field-label][data-field="concepts"]',
     ];
     const glossaryItems = document.querySelectorAll(glossarySelectors.join(','));
     glossaryItems.forEach((item) => {
@@ -271,7 +271,8 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields, renderOptions)}
       if (!glossaryEnabled) {
         checkbox.checked = false;
       }
-      label.classList.toggle('field-label--disabled', !glossaryEnabled);
+      label.classList.toggle('opacity-50', !glossaryEnabled);
+      label.classList.toggle('text-neutral-400', !glossaryEnabled);
     });
   }
 
@@ -304,7 +305,7 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields, renderOptions)}
     for (let i = 0; i < simpleFields.length; i += 3) {
       const rowFields = simpleFields.slice(i, i + 3);
       rows.push(`
-        <div class="field-row field-row--compact">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3" data-field-row="compact">
           ${rowFields.map((field) => this.renderFieldCheckbox(templateId, block, field)).join("")}
         </div>
       `);
@@ -334,12 +335,12 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields, renderOptions)}
     
     sortedIndents.forEach((indentLevel) => {
       const indentFields = fieldsByIndent.get(indentLevel)!;
-      const indentClass = indentLevel ? ` field-row--indent-${indentLevel}` : "";
+      const indentStyle = indentLevel ? ` style="padding-left: ${indentLevel * 0.75}rem"` : "";
       
       for (let i = 0; i < indentFields.length; i += 3) {
         const rowFields = indentFields.slice(i, i + 3);
         rows.push(`
-          <div class="field-row field-row--compact${indentClass}">
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-3" data-field-row="compact"${indentStyle}>
             ${rowFields.map((field) => this.renderFieldCheckbox(templateId, block, field)).join("")}
           </div>
         `);
@@ -349,7 +350,7 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields, renderOptions)}
     // Add "Include Project" in its own row at the bottom
     if (includeProjectField) {
       rows.push(`
-        <div class="field-row field-row--full">
+        <div class="flex flex-col gap-2" data-field-row="full">
           ${this.renderFieldCheckbox(templateId, block, includeProjectField)}
         </div>
       `);
@@ -360,10 +361,10 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields, renderOptions)}
 
   private static renderHierarchicalRow(templateId: string | null, block: TemplateBlock, field: BlockFieldConfig): string {
     const indentLevel = field.indentLevel ?? 0;
-    const indentClass = indentLevel ? ` field-row--indent-${indentLevel}` : "";
+    const indentStyle = indentLevel ? ` style="padding-left: ${indentLevel * 0.75}rem"` : "";
 
     return `
-      <div class="field-row field-row--hierarchy${indentClass}">
+      <div class="flex flex-col gap-2" data-field-row="hierarchy"${indentStyle}>
         ${this.renderFieldCheckbox(templateId, block, field)}
       </div>
     `;
@@ -389,27 +390,27 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields, renderOptions)}
         return;
       }
       rows.push(`
-        <div class="field-row field-row--resource ${className}">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3" data-field-row="resource" data-field-row-group="${className}">
           ${groupFields.map((field) => this.renderFieldCheckbox(templateId, block, field)).join("")}
         </div>
       `);
       byGroup.delete(groupKey);
     };
 
-    renderGroup("resources-main", "field-row--resource-main");
+    renderGroup("resources-main", "resource-main");
     
     // Render glossary toggle in its own row with separator styling (like Include Project)
     const glossaryToggleFields = byGroup.get("resources-glossary-toggle");
     if (glossaryToggleFields && glossaryToggleFields.length) {
       rows.push(`
-        <div class="field-row field-row--full">
+        <div class="flex flex-col gap-2" data-field-row="full">
           ${glossaryToggleFields.map((field) => this.renderFieldCheckbox(templateId, block, field)).join("")}
         </div>
       `);
       byGroup.delete("resources-glossary-toggle");
     }
     
-    renderGroup("resources-glossary-items", "field-row--resource-glossary");
+    renderGroup("resources-glossary-items", "resource-glossary");
 
     if (byGroup.size) {
       const remainingFields = Array.from(byGroup.values()).flat();
@@ -437,25 +438,25 @@ ${TemplateBlockRenderer.renderBlockContent(block, checkedFields, renderOptions)}
       updateHandler = `onchange="TemplateRenderer.toggleGlossaryItems(this.checked)"`;
     }
 
-    const labelClasses = ["field-label"];
+    const labelClasses = ["inline-flex items-center gap-2 text-sm text-neutral-700"];
     if (field.mandatory) {
-      labelClasses.push("field-label--locked");
+      labelClasses.push("font-medium", "text-neutral-900");
     }
     if (isGlossaryItem && !glossaryEnabled) {
-      labelClasses.push("field-label--disabled");
+      labelClasses.push("opacity-50", "text-neutral-400");
     }
 
     const fieldId = this.buildFieldId(templateId, block, field);
 
     return `
-      <label class="${labelClasses.join(" ")}" data-field="${field.name}">
+      <label class="${labelClasses.join(" ")}" data-field-label data-field="${field.name}">
         <input type="checkbox"
                id="${fieldId}"
                name="${field.name}"
                ${shouldCheck ? "checked" : ""}
                ${shouldDisable ? "disabled" : ""}
                ${updateHandler}>
-        <span class="field-label__text">${field.label}</span>
+        <span>${field.label}</span>
       </label>
     `;
   }

@@ -22,7 +22,7 @@ const isTypingTarget = (target: EventTarget | null): boolean => {
 };
 
 const activateTool = (toolId: string): void => {
-  const button = document.querySelector<HTMLButtonElement>(`.engine__tools-selection [data-tool="${toolId}"]`);
+  const button = document.querySelector<HTMLButtonElement>(`[data-engine-tools-selection] [data-tool="${toolId}"]`);
   if (button) {
     button.click();
     return;

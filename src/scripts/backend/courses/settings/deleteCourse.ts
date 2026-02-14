@@ -46,23 +46,23 @@ export class DeleteCourseManager {
   private showDeleteConfirmation(): void {
     // Create confirmation modal dynamically
     const modalHTML = `
-      <div class="modal modal--delete fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" id="delete-course-modal">
-        <div class="modal__content w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-          <div class="modal__header flex items-start justify-between">
-            <h2 class="modal__title text-xl font-semibold text-neutral-900">Delete Course</h2>
-            <button class="modal__close inline-flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100" type="button">
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" data-modal id="delete-course-modal">
+        <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl" data-modal-content>
+          <div class="flex items-start justify-between">
+            <h2 class="text-xl font-semibold text-neutral-900">Delete Course</h2>
+            <button class="inline-flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100" data-modal-close type="button">
               &times;
             </button>
           </div>
-          <div class="modal__body mt-4 space-y-2 text-sm text-neutral-700">
-            <p class="modal__text">
+          <div class="mt-4 space-y-2 text-sm text-neutral-700">
+            <p>
               Are you sure you want to delete this course?
             </p>
-            <p class="modal__warning text-sm text-red-600">
+            <p class="text-sm text-red-600">
               <strong>This action cannot be undone.</strong> All course data will be permanently removed.
             </p>
           </div>
-          <div class="modal__footer mt-6 flex justify-end gap-3">
+          <div class="mt-6 flex justify-end gap-3">
             <button class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50" type="button" id="cancel-delete-btn">
               No
             </button>
@@ -81,7 +81,7 @@ export class DeleteCourseManager {
     this.confirmationModal = document.getElementById('delete-course-modal');
     const confirmButton = document.getElementById('confirm-delete-btn') as HTMLButtonElement;
     const cancelButton = document.getElementById('cancel-delete-btn') as HTMLButtonElement;
-    const closeButton = this.confirmationModal?.querySelector('.modal__close') as HTMLButtonElement;
+    const closeButton = this.confirmationModal?.querySelector('[data-modal-close]') as HTMLButtonElement;
 
     // Setup event listeners
     confirmButton?.addEventListener('click', () => this.confirmDelete());

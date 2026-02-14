@@ -25,8 +25,8 @@ export class PanelToggle {
   }
 
   private setupToggle(): void {
-    this.toggleButtons = document.querySelectorAll<HTMLElement>('[data-panel-view]');
-    this.panelViews = document.querySelectorAll<HTMLElement>('.engine__panel-view');
+    this.toggleButtons = document.querySelectorAll<HTMLElement>('[data-engine-panel-toggle-btn]');
+    this.panelViews = document.querySelectorAll<HTMLElement>('[data-engine-panel-view]');
 
     if (!this.toggleButtons || this.toggleButtons.length === 0) {
       return;
@@ -45,7 +45,7 @@ export class PanelToggle {
 
     const initial = Array.from(this.toggleButtons).find((button) =>
       button.getAttribute('aria-pressed') === 'true' ||
-      button.classList.contains('engine__panel-toggle-btn--active')
+      button.getAttribute('aria-pressed') === 'true'
     );
     const initialView = initial?.getAttribute('data-panel-view') ?? this.toggleButtons[0]?.getAttribute('data-panel-view');
     if (initialView) {
@@ -61,7 +61,6 @@ export class PanelToggle {
     // Update button active states
     this.toggleButtons.forEach(button => {
       const isActive = button.getAttribute('data-panel-view') === viewName;
-      button.classList.remove('engine__panel-toggle-btn--active');
       button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       button.classList.toggle('hover:bg-neutral-50', !isActive);
       button.classList.toggle('hover:text-neutral-900', !isActive);
@@ -79,11 +78,9 @@ export class PanelToggle {
     this.panelViews.forEach(view => {
       const isActive = view.getAttribute('data-view') === viewName;
       if (isActive) {
-        view.classList.remove('engine__panel-view--active');
         view.classList.remove('hidden');
         view.setAttribute('aria-hidden', 'false');
       } else {
-        view.classList.remove('engine__panel-view--active');
         view.classList.add('hidden');
         view.setAttribute('aria-hidden', 'true');
       }

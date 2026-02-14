@@ -26,23 +26,23 @@ export class CurriculumRenderer {
   private canvasSummaries: CanvasLessonSummary[] = [];
   private canvasSummaryLookup: Map<number, CanvasLessonSummary> = new Map();
     private readonly templateAccentPalette: string[] = [
-    "template-accent--sky",
-    "template-accent--violet",
-    "template-accent--amber",
-    "template-accent--teal",
-    "template-accent--rose",
-    "template-accent--slate",
-    "template-accent--cobalt",
-    "template-accent--mint",
-    "template-accent--sunset",
-    "template-accent--gold",
+    "border-sky-200 bg-sky-50 text-sky-700",
+    "border-violet-200 bg-violet-50 text-violet-700",
+    "border-amber-200 bg-amber-50 text-amber-700",
+    "border-teal-200 bg-teal-50 text-teal-700",
+    "border-rose-200 bg-rose-50 text-rose-700",
+    "border-slate-200 bg-slate-50 text-slate-700",
+    "border-blue-200 bg-blue-50 text-blue-700",
+    "border-emerald-200 bg-emerald-50 text-emerald-700",
+    "border-orange-200 bg-orange-50 text-orange-700",
+    "border-yellow-200 bg-yellow-50 text-yellow-700",
   ];
   private readonly templateAccentByType: Record<string, string> = {
-    assessment: "template-accent--teal",
-    quiz: "template-accent--violet",
-    exam: "template-accent--rose",
-    lesson: "template-accent--sky",
-    certificate: "template-accent--gold",
+    assessment: "border-teal-200 bg-teal-50 text-teal-700",
+    quiz: "border-violet-200 bg-violet-50 text-violet-700",
+    exam: "border-rose-200 bg-rose-50 text-rose-700",
+    lesson: "border-sky-200 bg-sky-50 text-sky-700",
+    certificate: "border-yellow-200 bg-yellow-50 text-yellow-700",
   };
 
   constructor(
@@ -93,7 +93,7 @@ export class CurriculumRenderer {
     }
 
     const placeholder = this.curriculumPreviewSection.querySelector(
-      ".article__preview-placeholder",
+      "[data-article-preview-placeholder]",
     ) as HTMLElement | null;
     if (placeholder) {
       placeholder.hidden = this.currentCurriculum.length > 0;
@@ -138,19 +138,19 @@ export class CurriculumRenderer {
 
     if (this.currentCurriculum.length === 0) {
       html = `
-       <div class="empty-state rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center">
-         <div class="empty-state__icon mx-auto h-8 w-8 rounded-full bg-neutral-200"></div>
-         <div class="empty-state__title mt-3 text-base font-semibold text-neutral-800">No Curriculum Generated Yet</div>
-         <div class="empty-state__message mt-1 text-sm text-neutral-500">
+       <div class="rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center" data-curriculum-empty>
+         <div class="mx-auto h-8 w-8 rounded-full bg-neutral-200"></div>
+         <div class="mt-3 text-base font-semibold text-neutral-800">No Curriculum Generated Yet</div>
+         <div class="mt-1 text-sm text-neutral-500">
            Configure your lesson settings and generate a curriculum to see the preview.
          </div>
        </div>`;
     } else if (this.currentPreviewMode === "modules") {
       if (modulesForPreview.length === 0) {
         html = `
-         <div class="empty-state rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center">
-           <div class="empty-state__title text-base font-semibold text-neutral-800">Linear Organization</div>
-           <div class="empty-state__message mt-1 text-sm text-neutral-500">
+         <div class="rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center" data-curriculum-empty>
+           <div class="text-base font-semibold text-neutral-800">Linear Organization</div>
+           <div class="mt-1 text-sm text-neutral-500">
              No modules in linear mode. Switch to "Lesson Titles" to view all lessons.
            </div>
          </div>`;
@@ -163,12 +163,12 @@ export class CurriculumRenderer {
             : `Module ${moduleNumber}`;
 
           html += `
-          <div class="module rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-            <div class="module__header flex flex-wrap items-start justify-between gap-4">
-              <div class="module__title-block flex items-center gap-3">
-                <span class="module__chip inline-flex items-center rounded-full bg-primary-600 px-2.5 py-1 text-xs font-semibold text-white" aria-hidden="true">Module ${moduleNumber}</span>
+          <div class="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm" data-module-card data-module-number="${moduleNumber}">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <span class="inline-flex items-center rounded-full bg-primary-600 px-2.5 py-1 text-xs font-semibold text-white" aria-hidden="true" data-module-chip>Module ${moduleNumber}</span>
                 <h2
-                  class="module__title text-lg font-semibold text-neutral-900"
+                  class="text-lg font-semibold text-neutral-900"
                   contenteditable="true"
                   data-module="${moduleNumber}"
                   data-field="title"
@@ -176,12 +176,12 @@ export class CurriculumRenderer {
                   ${moduleTitle}
                 </h2>
               </div>
-              <div class="module__meta text-sm text-neutral-500">
-                <span class="module__meta-item inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${module.lessons.length} lessons</span>
+              <div class="text-sm text-neutral-500">
+                <span class="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${module.lessons.length} lessons</span>
               </div>
             </div>
-            <div class="module__body mt-4 space-y-4">
-              <div class="module__lessons space-y-3">`;
+            <div class="mt-4 space-y-4" data-module-body>
+              <div class="space-y-3" data-module-lessons>`;
 
           module.lessons.forEach((lesson) => {
             const lessonHeader = this.renderLessonHeader(lesson, {
@@ -190,7 +190,7 @@ export class CurriculumRenderer {
             });
 
             html += `
-                <div class="lesson lesson--in-module rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+                <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-3" data-lesson-card>
                   ${lessonHeader}
                 </div>`;
           });
@@ -200,7 +200,7 @@ export class CurriculumRenderer {
 
           const modulePlacements = this.getTemplatePlacementsForModule(moduleNumber);
           if (modulePlacements.length) {
-            html += `<div class="module__templates space-y-3">`;
+            html += `<div class="space-y-3" data-module-templates>`;
             modulePlacements.forEach((placement) => {
               html += this.renderTemplateBlock(placement, "module", {
                 ...module,
@@ -232,55 +232,55 @@ export class CurriculumRenderer {
           const summary = this.canvasSummaryLookup.get(lesson.lessonNumber ?? 0);
           if (summary) {
             metaItems.push(
-                `<span class="lesson__meta-item lesson__meta-item--duration inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${summary.duration} minutes</span>`,
+              `<span class="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${summary.duration} minutes</span>`,
             );
             metaItems.push(
-                `<span class="lesson__meta-item lesson__meta-item--method inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${this.escapeHtml(summary.method)}</span>`,
+              `<span class="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${this.escapeHtml(summary.method)}</span>`,
             );
             if (summary.structure?.topics) {
               metaItems.push(
-                `<span class="lesson__meta-item lesson__meta-item--topics inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${summary.structure.topics} topics</span>`,
+                `<span class="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${summary.structure.topics} topics</span>`,
               );
             } else {
               metaItems.push(
-                `<span class="lesson__meta-item lesson__meta-item--topics inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${lesson.topics.length} topics</span>`,
+                `<span class="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${lesson.topics.length} topics</span>`,
               );
             }
           } else {
             if (this.scheduledLessonDuration) {
               metaItems.push(
-                `<span class="lesson__meta-item lesson__meta-item--duration inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${this.scheduledLessonDuration} minutes</span>`,
+                `<span class="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${this.scheduledLessonDuration} minutes</span>`,
               );
             }
             metaItems.push(
-              `<span class="lesson__meta-item lesson__meta-item--topics inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${lesson.topics.length} topics</span>`,
+              `<span class="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${lesson.topics.length} topics</span>`,
             );
           }
           const metaHtml = metaItems.length
-            ? `<div class="lesson__meta mt-2 flex flex-wrap gap-2 text-xs text-neutral-500">${metaItems.join("")}</div>`
+            ? `<div class="mt-2 flex flex-wrap gap-2 text-xs text-neutral-500" data-lesson-meta>${metaItems.join("")}</div>`
             : "";
 
           html += `
-           <div class="lesson rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+           <div class="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm" data-lesson-card>
              ${lessonHeader}
              ${metaHtml}`;
 
           lesson.topics.forEach((topic, topicIndex) => {
             html += `
-             <div class="topic rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-               <h4 class="topic__title text-sm font-semibold text-neutral-900" contenteditable="true"
+             <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-3" data-topic-card>
+               <h4 class="text-sm font-semibold text-neutral-900" contenteditable="true" data-topic-title
                     data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title"
                     data-placeholder="Click to add topic title...">
                  ${topic.title || `Topic ${topicIndex + 1}`}
                </h4>
 
-               <div class="topic__objectives mt-2 space-y-2">`;
+               <div class="mt-2 space-y-2" data-topic-objectives>`;
 
             topic.objectives.forEach((objective, objIndex) => {
               html += `
-                 <div class="objective-group rounded-md border border-neutral-200 bg-white p-2">
-                   <div class="objective-title text-sm font-medium text-neutral-700">
-                     <span class="objective-text block" contenteditable="true"
+                 <div class="rounded-md border border-neutral-200 bg-white p-2" data-objective-group>
+                   <div class="text-sm font-medium text-neutral-700">
+                     <span class="block" contenteditable="true" data-objective-text
                            data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}"
                            data-field="objective"
                            data-placeholder="Click to add learning objective...">
@@ -295,13 +295,13 @@ export class CurriculumRenderer {
 
                 if (startTaskIndex < topic.tasks.length) {
                   html += `
-                   <div class="objective-tasks mt-2">
-                     <ul class="tasks__list list-none space-y-1 text-sm text-neutral-700">`;
+                   <div class="mt-2" data-objective-tasks>
+                     <ul class="list-none space-y-1 text-sm text-neutral-700" data-task-list>`;
 
                   for (let taskIdx = startTaskIndex; taskIdx < endTaskIndex; taskIdx++) {
                     if (topic.tasks[taskIdx] !== undefined) {
                       html += `
-                         <li class="task-item task-item--editable rounded-md border border-neutral-200 bg-white px-2 py-1" contenteditable="true"
+                         <li class="rounded-md border border-neutral-200 bg-white px-2 py-1" contenteditable="true" data-task-item
                              data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-task="${taskIdx}"
                              data-field="task"
                              data-placeholder="Click to add task...">
@@ -329,7 +329,7 @@ export class CurriculumRenderer {
 
         } else if (this.currentPreviewMode === "titles") {
           html += `
-           <div class="lesson lesson--simple rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+           <div class="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm" data-lesson-card data-lesson-variant="simple">
              ${lessonHeader}
            </div>`;
 
@@ -337,7 +337,7 @@ export class CurriculumRenderer {
           const competencies = this.getLessonCompetenciesForPreview(lesson);
           let topicCounter = 0;
           html += `
-           <div class="lesson lesson--medium rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+           <div class="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm" data-lesson-card data-lesson-variant="competencies">
              ${lessonHeader}`;
 
           if (!competencies.length) {
@@ -352,8 +352,8 @@ export class CurriculumRenderer {
                 : `Competency ${competencyIndex + 1}`;
 
             html += `
-             <div class="topic topic--competency rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-               <h4 class="topic__title competency__title text-sm font-semibold text-neutral-900" contenteditable="true"
+             <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-3" data-competency-card>
+               <h4 class="text-sm font-semibold text-neutral-900" contenteditable="true" data-competency-title
                     data-lesson="${lesson.lessonNumber}" data-competency="${competencyIndex}"
                     data-field="competency-title"
                     data-placeholder="Click to add competency title...">
@@ -361,7 +361,7 @@ export class CurriculumRenderer {
                </h4>`;
 
             if (competency.topics.length) {
-              html += `<ul class="competency__topics mt-2 space-y-2">`;
+              html += `<ul class="mt-2 space-y-2" data-competency-topics>`;
               competency.topics.forEach((topic) => {
                 const topicTitle =
                   topic.title && topic.title.trim().length
@@ -369,8 +369,8 @@ export class CurriculumRenderer {
                     : `Topic ${topicCounter + 1}`;
 
                 html += `
-                 <li class="competency__topic rounded-md border border-neutral-200 bg-white p-2">
-                   <span class="topic__title text-sm font-medium text-neutral-800" contenteditable="true"
+                 <li class="rounded-md border border-neutral-200 bg-white p-2" data-competency-topic>
+                   <span class="text-sm font-medium text-neutral-800" contenteditable="true" data-topic-title
                          data-lesson="${lesson.lessonNumber}"
                          data-competency="${competencyIndex}"
                          data-topic="${topicCounter}"
@@ -384,7 +384,7 @@ export class CurriculumRenderer {
               });
               html += `</ul>`;
             } else {
-              html += `<p class="competency__topics-empty text-sm text-neutral-500">No topics assigned yet.</p>`;
+              html += `<p class="text-sm text-neutral-500" data-competency-topics-empty>No topics assigned yet.</p>`;
             }
 
             html += `</div>`;
@@ -394,13 +394,13 @@ export class CurriculumRenderer {
 
         } else if (this.currentPreviewMode === "topics") {
           html += `
-           <div class="lesson lesson--medium rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+           <div class="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm" data-lesson-card data-lesson-variant="topics">
              ${lessonHeader}`;
 
           lesson.topics.forEach((topic, topicIndex) => {
             html += `
-             <div class="topic topic--simple rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-               <h4 class="topic__title text-sm font-semibold text-neutral-900" contenteditable="true"
+             <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-3" data-topic-card>
+               <h4 class="text-sm font-semibold text-neutral-900" contenteditable="true" data-topic-title
                     data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title"
                     data-placeholder="Click to add topic title...">
                  ${topic.title || `Topic ${topicIndex + 1}`}
@@ -412,24 +412,24 @@ export class CurriculumRenderer {
 
         } else if (this.currentPreviewMode === "objectives") {
           html += `
-           <div class="lesson lesson--detailed rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+           <div class="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm" data-lesson-card data-lesson-variant="objectives">
              ${lessonHeader}`;
 
           lesson.topics.forEach((topic, topicIndex) => {
             html += `
-             <div class="topic rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-               <h4 class="topic__title text-sm font-semibold text-neutral-900" contenteditable="false"
+             <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-3" data-topic-card>
+               <h4 class="text-sm font-semibold text-neutral-900" contenteditable="false" data-topic-title
                     data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title">
                  ${topic.title || `Topic ${topicIndex + 1}`}
                </h4>
 
-               <div class="topic__objectives mt-2 space-y-2">`;
+               <div class="mt-2 space-y-2" data-topic-objectives>`;
 
             topic.objectives.forEach((objective, objIndex) => {
               html += `
-                 <div class="objective-group rounded-md border border-neutral-200 bg-white p-2">
-                   <div class="objective-title text-sm font-medium text-neutral-700">
-                     <span class="objective-text block" contenteditable="true"
+                 <div class="rounded-md border border-neutral-200 bg-white p-2" data-objective-group>
+                   <div class="text-sm font-medium text-neutral-700">
+                     <span class="block" contenteditable="true" data-objective-text
                            data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}"
                            data-field="objective"
                            data-placeholder="Click to add learning objective...">
@@ -448,24 +448,24 @@ export class CurriculumRenderer {
 
         } else if (this.currentPreviewMode === "tasks") {
           html += `
-           <div class="lesson lesson--full rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+           <div class="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm" data-lesson-card data-lesson-variant="tasks">
              ${lessonHeader}`;
 
           lesson.topics.forEach((topic, topicIndex) => {
             html += `
-             <div class="topic rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-               <h4 class="topic__title text-sm font-semibold text-neutral-900" contenteditable="false"
+             <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-3" data-topic-card>
+               <h4 class="text-sm font-semibold text-neutral-900" contenteditable="false" data-topic-title
                     data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-field="title">
                  ${topic.title || `Topic ${topicIndex + 1}`}
                </h4>
 
-               <div class="topic__objectives mt-2 space-y-2">`;
+               <div class="mt-2 space-y-2" data-topic-objectives>`;
 
             topic.objectives.forEach((objective, objIndex) => {
               html += `
-                 <div class="objective-group rounded-md border border-neutral-200 bg-white p-2">
-                   <div class="objective-title text-sm font-medium text-neutral-700">
-                     <span class="objective-text block" contenteditable="false"
+                 <div class="rounded-md border border-neutral-200 bg-white p-2" data-objective-group>
+                   <div class="text-sm font-medium text-neutral-700">
+                     <span class="block" contenteditable="false" data-objective-text
                            data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-objective="${objIndex}">
                        ${objective || `Objective ${objIndex + 1}`}
                      </span>
@@ -477,13 +477,13 @@ export class CurriculumRenderer {
                 const endTaskIndex = Math.min(startTaskIndex + tasksPerObjective, topic.tasks.length);
 
                 html += `
-                   <div class="objective-tasks objective-tasks--detailed mt-2">
-                     <ul class="tasks__list tasks__list--detailed list-none space-y-1 text-sm text-neutral-700">`;
+                   <div class="mt-2" data-objective-tasks>
+                     <ul class="list-none space-y-1 text-sm text-neutral-700" data-task-list>`;
 
                 for (let taskIdx = startTaskIndex; taskIdx < endTaskIndex; taskIdx++) {
                   if (topic.tasks[taskIdx] !== undefined) {
                     html += `
-                         <li class="task-item task-item--editable rounded-md border border-neutral-200 bg-white px-2 py-1" contenteditable="true"
+                         <li class="rounded-md border border-neutral-200 bg-white px-2 py-1" contenteditable="true" data-task-item
                              data-lesson="${lesson.lessonNumber}" data-topic="${topicIndex}" data-task="${taskIdx}"
                              data-field="task"
                              data-placeholder="Click to add task...">
@@ -563,11 +563,11 @@ export class CurriculumRenderer {
     const summaryMeta = this.renderLessonMetaBadges(summary);
 
     return `
-      <div class="lesson__header flex flex-wrap items-start justify-between gap-4">
-        <div class="lesson__title-block flex items-center gap-3">
-          <span class="lesson__chip inline-flex items-center rounded-full bg-primary-600 px-2.5 py-1 text-xs font-semibold text-white" aria-hidden="true">Lesson ${lessonNumber}</span>
+      <div class="flex flex-wrap items-start justify-between gap-4" data-lesson-header>
+        <div class="flex items-center gap-3">
+          <span class="inline-flex items-center rounded-full bg-primary-600 px-2.5 py-1 text-xs font-semibold text-white" aria-hidden="true" data-lesson-chip>Lesson ${lessonNumber}</span>
           <h3
-            class="lesson__title text-base font-semibold text-neutral-900"
+            class="text-base font-semibold text-neutral-900"
             contenteditable="${titleEditable ? "true" : "false"}"
             data-lesson="${lessonNumber}"
             data-field="title"${placeholderAttr}>
@@ -587,20 +587,20 @@ export class CurriculumRenderer {
 
     const badges: string[] = [];
     badges.push(
-      `<span class="lesson__meta-item lesson__meta-item--duration inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${summary.duration} minutes</span>`,
+      `<span class="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${summary.duration} minutes</span>`,
     );
     badges.push(
-      `<span class="lesson__meta-item lesson__meta-item--method inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${this.escapeHtml(summary.method)}</span>`,
+      `<span class="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${this.escapeHtml(summary.method)}</span>`,
     );
 
     if (summary.structure?.topics) {
       badges.push(
-        `<span class="lesson__meta-item lesson__meta-item--topics inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${summary.structure.topics} topics</span>`,
+        `<span class="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5">${summary.structure.topics} topics</span>`,
       );
     }
 
     return badges.length
-      ? `<div class="lesson__meta lesson__meta--canvas mt-2 flex flex-wrap gap-2 text-xs text-neutral-500">${badges.join("")}</div>`
+      ? `<div class="mt-2 flex flex-wrap gap-2 text-xs text-neutral-500" data-lesson-meta>${badges.join("")}</div>`
       : "";
   }
 
@@ -673,7 +673,7 @@ export class CurriculumRenderer {
       : '';
 
     const badgeHtml = currentTemplate
-      ? `<span class="lesson__template-badge ${accentClass} inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-xs font-medium text-neutral-600">${this.escapeHtml(
+      ? `<span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${accentClass}" data-template-badge>${this.escapeHtml(
         this.formatTemplateType(currentTemplate.type),
       )}</span>`
       : "";
@@ -681,15 +681,16 @@ export class CurriculumRenderer {
     const selectId = `lesson-template-${lesson.lessonNumber}`;
 
     return `
-     <div class="lesson__template-selector flex flex-wrap items-center gap-3">
-       <label class="lesson__template-label text-xs font-medium text-neutral-500" for="${selectId}">
-         <span class="lesson__template-label-text">Template</span>
+     <div class="flex flex-wrap items-center gap-3" data-lesson-template-selector>
+       <label class="text-xs font-medium text-neutral-500" for="${selectId}">
+         <span>Template</span>
        </label>
-       <div class="lesson__template-controls flex flex-wrap items-center gap-2">
+       <div class="flex flex-wrap items-center gap-2">
          <select
            id="${selectId}"
-           class="lesson__template-dropdown rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600"
-           data-lesson-number="${lesson.lessonNumber}">
+           class="rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600"
+           data-lesson-number="${lesson.lessonNumber}"
+           data-lesson-template-select>
            ${optionsHtml}
          </select>
          ${badgeHtml}
@@ -709,7 +710,7 @@ export class CurriculumRenderer {
       const allowedTypes = this.getAllowedTemplateTypesForCourse();
       if (!allowedTypes || !allowedTypes.length) {
         this.templatePlacementList.innerHTML =
-          '<p class="template-placement__empty text-sm text-neutral-500">Create a template in the Templates tab to unlock placement options.</p>';
+          '<p class="text-sm text-neutral-500" data-template-placement-empty>Create a template in the Templates tab to unlock placement options.</p>';
         return;
       }
 
@@ -718,7 +719,7 @@ export class CurriculumRenderer {
         .join(", ");
       const emptyMessage = `No ${this.courseType} templates found. This course expects: ${allowedLabels}. Create a matching template in the Templates tab or switch to "Custom" to use every template.`;
       this.templatePlacementList.innerHTML =
-        `<p class="template-placement__empty text-sm text-neutral-500">${emptyMessage}</p>`;
+        `<p class="text-sm text-neutral-500" data-template-placement-empty>${emptyMessage}</p>`;
       return;
     }
 
@@ -760,7 +761,6 @@ export class CurriculumRenderer {
             template.id || template.templateId,
           );
         const cardClassName = [
-          "template-placement-card",
           "rounded-xl",
           "border",
           "border-neutral-200",
@@ -768,7 +768,7 @@ export class CurriculumRenderer {
           "p-4",
           "shadow-sm",
           accentClass,
-          template.isMissing ? "template-placement-card--missing" : "",
+          template.isMissing ? "border-dashed opacity-70" : "",
         ]
           .filter(Boolean)
           .join(" ");
@@ -787,7 +787,6 @@ export class CurriculumRenderer {
 
         const optionClass = (value: any): string =>
           [
-            "template-placement-card__option",
             "flex",
             "items-center",
             "gap-2",
@@ -813,18 +812,18 @@ export class CurriculumRenderer {
               const labelTitle = module.title
                 ? this.escapeHtml(module.title)
                 : `Module ${moduleNumber}`;
-              return `<label class="template-placement-card__module flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-700 hover:border-neutral-300">
+              return `<label class="flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-700 hover:border-neutral-300" data-template-module-option>
                  <input class="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500" type="checkbox" data-template-module="${moduleNumber}" ${checked ? "checked" : ""
                 }>
                  <span>${labelTitle}</span>
                </label>`;
             })
             .join("")
-          : '<p class="template-placement-card__modules-empty text-sm text-neutral-500">Generate curriculum modules to target placements.</p>';
+          : '<p class="text-sm text-neutral-500" data-template-modules-empty>Generate curriculum modules to target placements.</p>';
 
         const moduleSelectionHint =
           showModules && moduleCount && moduleNumbers.length === 0
-            ? '<p class="template-placement-card__modules-hint text-xs text-neutral-500">Select at least one module.</p>'
+            ? '<p class="text-xs text-neutral-500" data-template-modules-hint>Select at least one module.</p>'
             : "";
 
         const lessonOptions = lessonCount
@@ -844,45 +843,45 @@ export class CurriculumRenderer {
                 ? this.escapeHtml(lesson.title)
                 : `Lesson ${lessonNumber}`;
               const moduleMeta = moduleLabelRaw
-                ? `<span class="template-placement-card__lesson-meta text-xs text-neutral-500">${this.escapeHtml(
+                ? `<span class="text-xs text-neutral-500" data-template-lesson-meta>${this.escapeHtml(
                   moduleLabelRaw,
                 )}</span>`
                 : "";
 
-              return `<label class="template-placement-card__lesson flex items-start gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-700 hover:border-neutral-300">
+              return `<label class="flex items-start gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-700 hover:border-neutral-300" data-template-lesson-option>
                   <input class="mt-0.5 h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500" type="checkbox" data-template-lesson="${lessonNumber}" ${checked ? "checked" : ""
                 }>
-                  <span class="template-placement-card__lesson-content flex flex-col">
-                    <span class="template-placement-card__lesson-title font-medium text-neutral-800">${lessonLabel}</span>
+                  <span class="flex flex-col" data-template-lesson-content>
+                    <span class="font-medium text-neutral-800" data-template-lesson-title>${lessonLabel}</span>
                     ${moduleMeta}
                   </span>
                 </label>`;
             })
             .filter(Boolean)
             .join("")
-          : '<p class="template-placement-card__lessons-empty text-sm text-neutral-500">Generate curriculum lessons to target placements.</p>';
+          : '<p class="text-sm text-neutral-500" data-template-lessons-empty>Generate curriculum lessons to target placements.</p>';
 
         const lessonSelectionHint =
           showLessons && lessonCount && lessonNumbers.length === 0
-            ? '<p class="template-placement-card__lessons-hint text-xs text-neutral-500">Select at least one lesson.</p>'
+            ? '<p class="text-xs text-neutral-500" data-template-lessons-hint>Select at least one lesson.</p>'
             : "";
 
         return `
         <article class="${cardClassName}" data-template-card data-template-id="${template.id}" data-template-type="${this.escapeHtml(
           template.type ?? "",
         )}">
-           <header class="template-placement-card__header flex items-start justify-between gap-3">
-             <div class="template-placement-card__header-content flex-1">
-               <h4 class="template-placement-card__title text-base font-semibold text-neutral-900">
+           <header class="flex items-start justify-between gap-3" data-template-card-header>
+             <div class="flex-1" data-template-card-header-content>
+               <h4 class="text-base font-semibold text-neutral-900">
                  ${this.escapeHtml(template.name)}
-                 ${choice === "all-lessons" && isLessonTemplate ? '<span class="template-placement-card__main-tag text-xs font-medium text-neutral-400">(main)</span>' : ''}
+                 ${choice === "all-lessons" && isLessonTemplate ? '<span class="text-xs font-medium text-neutral-400" data-template-main-tag>(main)</span>' : ''}
                </h4>
-               <p class="template-placement-card__meta text-xs text-neutral-500">${this.escapeHtml(
+               <p class="text-xs text-neutral-500" data-template-card-meta>${this.escapeHtml(
           metaLabel || typeLabel || "",
         )}</p>
              </div>
-             <button type="button" class="template-placement-card__toggle inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 hover:bg-neutral-50" aria-label="Toggle template details" aria-expanded="false" data-template-toggle>
-               <span class="template-placement-card__toggle-icon inline-flex h-4 w-4">
+             <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 hover:bg-neutral-50" aria-label="Toggle template details" aria-expanded="false" data-template-toggle>
+               <span class="inline-flex h-4 w-4">
                  <svg class="h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                    <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
                  </svg>
@@ -890,16 +889,16 @@ export class CurriculumRenderer {
              </button>
            </header>
              ${template.description
-            ? `<p class="template-placement-card__description hidden text-sm text-neutral-600">${this.escapeHtml(
+            ? `<p class="hidden text-sm text-neutral-600" data-template-card-description>${this.escapeHtml(
               template.description,
             )}</p>`
             : ""
           }
              ${template.isMissing
-            ? '<p class="template-placement-card__warning hidden text-sm text-red-600">Template not available. Remove or update placement.</p>'
+            ? '<p class="hidden text-sm text-red-600" data-template-card-warning>Template not available. Remove or update placement.</p>'
             : ""
           }
-           <div class="template-placement-card__options hidden mt-4 space-y-3">
+           <div class="hidden mt-4 space-y-3" data-template-card-options>
              <label class="${optionClass("none")}">
                <input type="radio" name="placement-${template.id}" value="none"${choice === "none" ? " checked" : ""
           }>
@@ -916,7 +915,7 @@ export class CurriculumRenderer {
             } ${lessonCount > 0 ? "" : "disabled"}>
                <span>Apply to specific lesson ranges</span>
              </label>
-             <div class="template-placement-card__lesson-ranges mt-3"${showLessonRanges ? "" : " hidden"
+             <div class="mt-3" data-template-card-lesson-ranges${showLessonRanges ? "" : " hidden"
             }>
                ${this.renderLessonRanges(template.id, lessonRanges, lessonCount)}
              </div>
@@ -932,7 +931,7 @@ export class CurriculumRenderer {
             } ${moduleCount > 0 ? "" : "disabled"}>
                <span>Specific modules</span>
              </label>
-             <div class="template-placement-card__modules mt-3 space-y-2"${showModules ? "" : " hidden"
+             <div class="mt-3 space-y-2" data-template-card-modules${showModules ? "" : " hidden"
             }>
                ${moduleOptions}
                ${moduleSelectionHint}
@@ -942,7 +941,7 @@ export class CurriculumRenderer {
             } ${lessonCount > 0 ? "" : "disabled"}>
                <span>Specific lessons</span>
              </label>
-             <div class="template-placement-card__lessons mt-3 space-y-2"${showLessons ? "" : " hidden"
+             <div class="mt-3 space-y-2" data-template-card-lessons${showLessons ? "" : " hidden"
             }>
                ${lessonOptions}
                ${lessonSelectionHint}
@@ -974,9 +973,9 @@ export class CurriculumRenderer {
     const rangesHTML = ranges
       .map(
         (range, index) => `
-     <div class="template-placement-card__lesson-range flex flex-wrap items-end gap-3" data-range-index="${index}">
-       <div class="template-placement-card__lesson-range-inputs flex flex-wrap gap-3">
-         <div class="template-placement-card__lesson-range-input flex flex-col gap-2">
+     <div class="flex flex-wrap items-end gap-3" data-range-index="${index}" data-lesson-range>
+       <div class="flex flex-wrap gap-3" data-lesson-range-inputs>
+         <div class="flex flex-col gap-2" data-lesson-range-input>
            <label class="text-xs font-medium text-neutral-600" for="range-start-${templateId}-${index}">Start lesson</label>
            <input
              type="number"
@@ -989,7 +988,7 @@ export class CurriculumRenderer {
              class="w-24 rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600"
            >
          </div>
-         <div class="template-placement-card__lesson-range-input flex flex-col gap-2">
+         <div class="flex flex-col gap-2" data-lesson-range-input>
            <label class="text-xs font-medium text-neutral-600" for="range-end-${templateId}-${index}">End lesson</label>
            <input
              type="number"
@@ -1004,7 +1003,7 @@ export class CurriculumRenderer {
          </div>
        </div>
        ${ranges.length > 1
-            ? `<button type="button" class="template-placement-card__lesson-range-remove inline-flex h-8 w-8 items-center justify-center rounded-md border border-red-200 text-red-600 hover:bg-red-50" data-range-remove="${index}" aria-label="Remove range">
+            ? `<button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-red-200 text-red-600 hover:bg-red-50" data-range-remove="${index}" aria-label="Remove range">
            <svg class="h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
            </svg>
@@ -1018,13 +1017,13 @@ export class CurriculumRenderer {
 
     return `
      ${rangesHTML}
-     <button type="button" class="template-placement-card__lesson-range-add inline-flex items-center gap-2 rounded-lg border border-neutral-300 px-3 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50" data-range-add>
+     <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-neutral-300 px-3 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50" data-range-add>
        <svg class="h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
        </svg>
        <span>Add another range</span>
      </button>
-     ${!ranges.length || ranges.length === 0 ? '<p class="template-placement-card__lesson-ranges-hint text-xs text-neutral-500">Add at least one lesson range.</p>' : ""}
+     ${!ranges.length || ranges.length === 0 ? '<p class="text-xs text-neutral-500" data-lesson-range-hint>Add at least one lesson range.</p>' : ""}
    `;
   }
 
@@ -1312,10 +1311,14 @@ export class CurriculumRenderer {
 
     const slug = placement.templateSlug || placement.templateId;
     const classNames = [
-      "template-block",
-      `template-block--${context}`,
-      accentClass,
-      isMissing ? "template-block--missing" : "",
+      "rounded-lg",
+      "border",
+      "px-3",
+      "py-2",
+      "text-xs",
+      "font-medium",
+      accentClass || "border-neutral-200 bg-neutral-50 text-neutral-600",
+      isMissing ? "border-dashed text-red-600" : "",
     ]
       .filter(Boolean)
       .join(" ");
@@ -1326,13 +1329,13 @@ export class CurriculumRenderer {
     return `
     <div class="${classNames}" data-template-block="${placement.templateId}" data-template-type="${this.escapeHtml(
       typeLabel,
-    )}">
-       <div class="template-block__content">
-         <span class="template-block__name">${this.escapeHtml(
+    )}" data-template-context="${context}">
+       <div class="flex flex-col gap-1" data-template-block-content>
+         <span class="text-sm font-semibold">${this.escapeHtml(
       placement.templateName,
     )}</span>
-         <span class="template-block__context">${this.escapeHtml(contextLabel)}</span>
-        <span class="template-block__slug">${this.escapeHtml(slug)}</span>
+         <span class="text-xs text-neutral-500">${this.escapeHtml(contextLabel)}</span>
+        <span class="text-[10px] uppercase tracking-wide text-neutral-400">${this.escapeHtml(slug)}</span>
        </div>
      </div>
    `;

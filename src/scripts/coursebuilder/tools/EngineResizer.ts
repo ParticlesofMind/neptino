@@ -37,8 +37,8 @@ type ResizableRegion = keyof typeof RESIZER_CONFIG;
 
 const KEYBOARD_STEP = 24;
 const REGION_TARGETS = {
-  search: '.engine__search',
-  panel: '.engine__panel',
+  search: '[data-engine-search]',
+  panel: '[data-engine-panel]',
 } as const;
 
 const REGION_COLLAPSED_CLASSES = {

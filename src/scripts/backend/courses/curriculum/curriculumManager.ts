@@ -611,18 +611,18 @@ class CurriculumManager {
   }
 
   private initializeElements(): void {
-    // The curriculum config is actually in .article__config within the curriculum article
+    // The curriculum config panel lives in the config data panel within the curriculum article.
     this.curriculumConfigSection = document.querySelector(
-      "#curriculum .article__config",
+      "#curriculum [data-article-panel=\"config\"]",
     ) as HTMLElement;
 
     // Initialize both curriculum and generation previews
     // They will show the same data but with different view mode controls
     const curriculumPreview = document.querySelector(
-      "#curriculum .curriculum__preview",
+      "#curriculum [data-curriculum-preview]",
     ) as HTMLElement;
     const generationPreview = document.querySelector(
-      "#generation .curriculum__preview",
+      "#generation [data-curriculum-preview]",
     ) as HTMLElement;
 
     // Store both preview sections for dual rendering
@@ -639,7 +639,7 @@ class CurriculumManager {
       return;
     }
     if (!this.curriculumPreviewSection) {
-      console.error("curriculum__preview element not found");
+      console.error("curriculum preview element not found");
       return;
     }
 
@@ -807,7 +807,7 @@ class CurriculumManager {
     if (this.curriculumPreviewSection) {
       this.curriculumPreviewSection.addEventListener('change', (event) => {
         const target = event.target as HTMLSelectElement;
-        if (target.classList.contains('lesson__template-dropdown')) {
+        if (target.matches('[data-lesson-template-select]')) {
           this.handleLessonTemplateChange(target);
         }
       });
@@ -827,15 +827,19 @@ class CurriculumManager {
           const card = toggleButton.closest<HTMLElement>('[data-template-card]');
           if (card) {
             const bodyElements = card.querySelectorAll<HTMLElement>(
-              '.template-placement-card__description, .template-placement-card__warning, .template-placement-card__options'
+              '[data-template-card-description], [data-template-card-warning], [data-template-card-options]'
             );
             const currentlyCollapsed =
-              card.classList.contains('template-placement-card--collapsed') ||
+              card.dataset.collapsed === 'true' ||
               Array.from(bodyElements).every((el) => el.classList.contains('hidden'));
             const nextCollapsed = !currentlyCollapsed;
 
             bodyElements.forEach((el) => el.classList.toggle('hidden', nextCollapsed));
-            card.classList.remove('template-placement-card--collapsed');
+            if (nextCollapsed) {
+              card.dataset.collapsed = 'true';
+            } else {
+              delete card.dataset.collapsed;
+            }
 
             // Update aria-expanded attribute for accessibility
             const isExpanded = !nextCollapsed;
@@ -958,8 +962,8 @@ class CurriculumManager {
 
     // Show status UI
     const statusElement = document.getElementById('ai-generation-status');
-    const statusText = statusElement?.querySelector('.ai-generation__status-text');
-    const progressBar = statusElement?.querySelector('.ai-generation__progress-fill') as HTMLElement;
+    const statusText = statusElement?.querySelector('[data-ai-status-text]');
+    const progressBar = statusElement?.querySelector('[data-ai-progress-fill]') as HTMLElement;
 
     if (statusElement) {
       statusElement.style.display = 'block';
@@ -3450,7 +3454,7 @@ class CurriculumManager {
 
     const totalLessons = this.currentCurriculum.length;
     if (totalLessons === 0) {
-      customModulesList.innerHTML = '<p class="form__help-text text-sm text-neutral-500">Generate a curriculum first to define custom modules.</p>';
+      customModulesList.innerHTML = '<p class="text-sm text-neutral-500" data-custom-modules-empty>Generate a curriculum first to define custom modules.</p>';
       return;
     }
 
@@ -3465,20 +3469,21 @@ class CurriculumManager {
       const lastLessonNumber = lastLesson ? lastLesson.lessonNumber : (index + 1);
 
       html += `
-       <div class="custom-module-row flex flex-wrap items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3" data-module-index="${index}">
-         <span class="custom-module-row__label text-sm font-semibold text-neutral-800">Module ${index + 1}</span>
-         <div class="custom-module-row__input-group flex items-center gap-2 text-sm text-neutral-600">
+       <div class="flex flex-wrap items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3" data-custom-module-row data-module-index="${index}">
+         <span class="text-sm font-semibold text-neutral-800">Module ${index + 1}</span>
+         <div class="flex items-center gap-2 text-sm text-neutral-600" data-custom-module-input-group>
            <span>Lesson 1 →</span>
            <input 
              type="number" 
-             class="custom-module-row__input w-20 rounded-md border-0 py-1.5 text-sm text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" 
+             class="w-20 rounded-md border-0 py-1.5 text-sm text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" 
              min="1" 
              max="${totalLessons}" 
              value="${lastLessonNumber}"
              data-module-end="${index}"
+             data-custom-module-input
            />
          </div>
-         ${index > 0 ? '<button type="button" class="custom-module-row__remove inline-flex h-7 w-7 items-center justify-center rounded-md border border-red-200 text-sm font-semibold text-red-600 hover:bg-red-50" data-remove-module="' + index + '">×</button>' : '<span class="inline-block w-8"></span>'}
+         ${index > 0 ? '<button type="button" class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-red-200 text-sm font-semibold text-red-600 hover:bg-red-50" data-remove-module="' + index + '">×</button>' : '<span class="inline-block w-8"></span>'}
        </div>
      `;
     });
@@ -3486,7 +3491,7 @@ class CurriculumManager {
     customModulesList.innerHTML = html;
 
     // Bind events to module inputs and remove buttons
-    customModulesList.querySelectorAll<HTMLInputElement>('.custom-module-row__input').forEach(input => {
+    customModulesList.querySelectorAll<HTMLInputElement>('[data-custom-module-input]').forEach(input => {
       input.addEventListener('change', () => {
         this.updateCustomModulesFromInputs();
       });
@@ -3539,7 +3544,7 @@ class CurriculumManager {
    * Updates module structure based on custom module inputs
    */
   private updateCustomModulesFromInputs(): void {
-    const inputs = document.querySelectorAll<HTMLInputElement>('.custom-module-row__input');
+    const inputs = document.querySelectorAll<HTMLInputElement>('[data-custom-module-input]');
     const boundaries: number[] = Array.from(inputs).map(input => parseInt(input.value));
 
     // Rebuild modules based on boundaries

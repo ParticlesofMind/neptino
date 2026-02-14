@@ -15,8 +15,8 @@ export class CanvasScrollNav {
   }
 
   private init(): void {
-    this.inputElement = document.querySelector('.engine__scroll-input');
-    this.totalElement = document.querySelector('.engine__scroll-total');
+    this.inputElement = document.querySelector('[data-engine-scroll-input]');
+    this.totalElement = document.querySelector('[data-engine-scroll-total]');
 
     if (!this.inputElement) {
       console.warn('Canvas scroll input not found');

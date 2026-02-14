@@ -143,7 +143,7 @@ export class StudentsManager {
       "students-save-status",
     ) as HTMLElement | null;
     const text = container?.querySelector(
-      ".card__text",
+      "[data-status-text]",
     ) as HTMLElement | null;
     return { container, text };
   }
@@ -336,7 +336,7 @@ export class StudentsManager {
     this.preview.showFeedback("Save the course essentials first so we can link students to this course.", "warning");
     this.updateStatus("error", "Create the course before managing students.");
     document
-      .querySelector<HTMLAnchorElement>(".aside__link[data-section='essentials']")
+      .querySelector<HTMLAnchorElement>("[data-aside-link][data-section='essentials']")
       ?.focus();
   }
 

@@ -176,16 +176,17 @@ export class EngineController {
       return this.colorLayer;
     }
 
-    const tools = document.querySelector('.engine__tools');
+    const tools = document.querySelector('[data-engine-tools]');
     if (!tools) {
       return null;
     }
 
-    let layer = tools.querySelector<HTMLElement>('.engine__color-layer');
+    let layer = tools.querySelector<HTMLElement>('[data-engine-color-layer]');
     if (!layer) {
       layer = document.createElement('div');
-      layer.className = 'engine__color-layer';
-      const options = tools.querySelector('.engine__tools-options');
+      layer.className = 'h-8 w-full rounded-md border border-neutral-200 bg-white';
+      layer.dataset.engineColorLayer = '';
+      const options = tools.querySelector('[data-engine-tools-options]');
       if (options) {
         tools.insertBefore(layer, options);
       } else {
@@ -198,7 +199,7 @@ export class EngineController {
   }
 
   private setupEventListeners(): void {
-    this.toolsContainer = document.querySelector('.engine__tools-selection');
+    this.toolsContainer = document.querySelector('[data-engine-tools-selection]');
 
     // Setup media buttons
     this.setupMediaButtons();
@@ -283,11 +284,11 @@ export class EngineController {
     this.dispatchModeChange(mode);
     
     // Remove active class from all mode buttons
-    const modeButtons = document.querySelectorAll<HTMLButtonElement>('.engine__modes [data-mode]');
+    const modeButtons = document.querySelectorAll<HTMLButtonElement>('[data-engine-modes] [data-mode]');
     modeButtons.forEach(btn => setButtonActive(btn, false));
     
     // Add active class to selected mode button
-    const selectedButton = document.querySelector<HTMLButtonElement>(`.engine__modes [data-mode="${mode}"]`);
+    const selectedButton = document.querySelector<HTMLButtonElement>(`[data-engine-modes] [data-mode="${mode}"]`);
     if (selectedButton) {
       setButtonActive(selectedButton, true);
     }
@@ -341,7 +342,7 @@ export class EngineController {
   }
 
   private renderToolOptions(config: ModeConfig): void {
-    const optionsContainer = document.querySelector('.engine__tools-options');
+    const optionsContainer = document.querySelector('[data-engine-tools-options]');
     if (!optionsContainer) return;
 
     // Clear existing options
@@ -352,8 +353,8 @@ export class EngineController {
       if (!tool.options || tool.options.length === 0) return;
 
       const optionsDiv = document.createElement('div');
-      optionsDiv.className = `engine__tools-item engine__tools-item--${tool.id}`;
-      optionsDiv.classList.add('hidden');
+      optionsDiv.className = 'hidden flex flex-wrap items-center gap-3';
+      optionsDiv.dataset.engineToolOptions = tool.id;
 
       // Render each option based on type
       tool.options.forEach(option => {
@@ -392,7 +393,7 @@ export class EngineController {
 
   private createSliderControl(toolId: string, option: any): HTMLElement {
     const wrapper = document.createElement('div');
-    wrapper.className = 'tools__control tools__control--number-stepper';
+    wrapper.className = 'flex flex-col gap-2 text-sm text-neutral-700';
     wrapper.title = option.label;
     wrapper.setAttribute('aria-label', option.label);
 
@@ -406,7 +407,7 @@ export class EngineController {
 
     // Container for the stepper (minus button + input + plus button)
     const stepperContainer = document.createElement('div');
-    stepperContainer.className = 'tools__number-stepper flex items-center gap-2';
+    stepperContainer.className = 'flex items-center gap-2';
 
     // Minus button
     const minusButton = document.createElement('button');
@@ -885,7 +886,7 @@ export class EngineController {
   private createToggleControl(toolId: string, option: any): HTMLElement {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'tools__control tools__control--toggle';
+    button.className = '';
     button.title = option.label;
     button.setAttribute('aria-label', option.label);
     applyEngineButtonBase(button);
@@ -894,15 +895,15 @@ export class EngineController {
 
     // Add specific styling classes and text content for text formatting toggles
     if (option.id === 'bold') {
-      button.classList.add('tools__control--bold');
+      button.classList.add('font-semibold');
       button.textContent = 'B';
       contentSet = true;
     } else if (option.id === 'italic') {
-      button.classList.add('tools__control--italic');
+      button.classList.add('italic');
       button.textContent = 'I';
       contentSet = true;
     } else if (option.id === 'underline') {
-      button.classList.add('tools__control--underline');
+      button.classList.add('underline');
       button.textContent = 'U';
       contentSet = true;
     }
@@ -911,7 +912,7 @@ export class EngineController {
       const img = document.createElement('img');
       img.src = option.icon;
       img.alt = option.label;
-      img.className = 'icon icon--base';
+      img.className = 'h-4 w-4';
       button.appendChild(img);
       button.classList.add('p-2');
       contentSet = true;
@@ -939,12 +940,13 @@ export class EngineController {
 
   private createToggleGroupControl(toolId: string, option: any): HTMLElement {
     const wrapper = document.createElement('div');
-    wrapper.className = 'tools__control tools__control--group';
+    wrapper.className = 'flex flex-col gap-2 text-sm text-neutral-700';
     wrapper.title = option.label;
     wrapper.setAttribute('aria-label', option.label);
 
     const group = document.createElement('div');
-    group.className = 'tools__segment';
+    group.className = 'flex flex-wrap gap-2';
+    group.dataset.engineToggleGroup = '';
     wrapper.appendChild(group);
 
     let currentValue = (this.getInitialValue(toolId, option) ?? option.settings.value) as string;
@@ -952,7 +954,8 @@ export class EngineController {
     option.settings.options.forEach((entry: any) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'tools__segment-button';
+      button.className = '';
+      button.dataset.engineToggleGroupButton = '';
       button.title = entry.label;
       button.setAttribute('aria-label', entry.label);
       applyEngineButtonBase(button);
@@ -962,7 +965,7 @@ export class EngineController {
         const img = document.createElement('img');
         img.src = entry.icon;
         img.alt = entry.label;
-        img.className = 'icon icon--base';
+        img.className = 'h-4 w-4';
         button.appendChild(img);
       } else {
         // Use the full label text
@@ -974,7 +977,7 @@ export class EngineController {
       }
       button.addEventListener('click', () => {
         currentValue = entry.value;
-        group.querySelectorAll<HTMLButtonElement>('.tools__segment-button').forEach((el) => setButtonActive(el, false));
+        group.querySelectorAll<HTMLButtonElement>('[data-engine-toggle-group-button]').forEach((el) => setButtonActive(el, false));
         setButtonActive(button, true);
         this.updateToolSetting(toolId, option.id, currentValue);
       });
@@ -987,13 +990,13 @@ export class EngineController {
 
   private createNumberControl(toolId: string, option: any): HTMLElement {
     const wrapper = document.createElement('div');
-    wrapper.className = 'tools__control tools__control--number';
+    wrapper.className = 'flex flex-col gap-2 text-sm text-neutral-700';
     wrapper.title = option.label;
     wrapper.setAttribute('aria-label', option.label);
 
     const input = document.createElement('input');
     input.type = 'number';
-    input.className = 'input--number w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white';
+    input.className = 'w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white';
     if (option.settings.min !== undefined) input.min = option.settings.min.toString();
     if (option.settings.max !== undefined) input.max = option.settings.max.toString();
     if (option.settings.step !== undefined) input.step = option.settings.step.toString();
@@ -1014,13 +1017,13 @@ export class EngineController {
 
   private createTextControl(toolId: string, option: any): HTMLElement {
     const wrapper = document.createElement('div');
-    wrapper.className = 'tools__control tools__control--text';
+    wrapper.className = 'flex flex-col gap-2 text-sm text-neutral-700';
     wrapper.title = option.label;
     wrapper.setAttribute('aria-label', option.label);
 
     const input = document.createElement('input');
     input.type = 'text';
-    input.className = 'input--text w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white';
+    input.className = 'w-full rounded-md border-0 py-1.5 text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white';
     if (option.settings.placeholder) {
       input.placeholder = option.settings.placeholder;
     }
@@ -1040,7 +1043,7 @@ export class EngineController {
   private createButtonControl(toolId: string, option: any): HTMLElement {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'tools__control tools__control--button';
+    button.className = '';
     button.title = option.label;
     button.setAttribute('aria-label', option.label);
     applyEngineButtonBase(button);
@@ -1049,7 +1052,7 @@ export class EngineController {
       const img = document.createElement('img');
       img.src = option.icon;
       img.alt = option.label;
-      img.className = 'icon icon--base';
+      img.className = 'h-4 w-4';
       button.appendChild(img);
     } else {
       button.textContent = '';
@@ -1092,17 +1095,16 @@ export class EngineController {
 
   private showToolOptions(tool: string): void {
     // Hide all tool options
-    const allOptions = document.querySelectorAll<HTMLElement>('.engine__tools-item');
+    const allOptions = document.querySelectorAll<HTMLElement>('[data-engine-tool-options]');
     allOptions.forEach(option => {
       option.style.display = '';
       setElementHidden(option, true);
     });
     
     // Show options for current tool
-    const currentOptions = document.querySelector<HTMLElement>(`.engine__tools-item--${tool}`);
+    const currentOptions = document.querySelector<HTMLElement>(`[data-engine-tool-options="${tool}"]`);
     if (currentOptions) {
       setElementHidden(currentOptions, false);
-      currentOptions.classList.add('flex', 'flex-wrap', 'items-center', 'gap-3');
     }
   }
 

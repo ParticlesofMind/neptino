@@ -17,7 +17,7 @@ export class StaticCourseCardManager {
 
   private async init(): Promise<void> {
     // Find the static course card
-    this.courseCard = document.querySelector('.card.card--course:not([data-dynamic])') as HTMLElement;
+    this.courseCard = document.querySelector('[data-course-card][data-static-course-card]') as HTMLElement;
     
     if (!this.courseCard) {
       return;
@@ -57,7 +57,7 @@ export class StaticCourseCardManager {
     if (!this.courseCard) return;
 
     // Update course image
-    const imageContainer = this.courseCard.querySelector('.card__media');
+    const imageContainer = this.courseCard.querySelector('[data-course-card-media]');
     if (imageContainer) {
       const imgElement = imageContainer.querySelector('img') as HTMLImageElement;
       if (imgElement && courseData.course_image) {
@@ -67,37 +67,48 @@ export class StaticCourseCardManager {
     }
 
     // Update status
-    const statusElement = this.courseCard.querySelector('.card__status-badge');
+    const statusElement = this.courseCard.querySelector('[data-course-card-status]');
     if (statusElement) {
       statusElement.textContent = formatCourseStatus(courseData.status);
-      statusElement.className = `card__status-badge ${getStatusClassName(courseData.status)}`;
+      statusElement.className = `inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${getStatusClassName(courseData.status)}`;
     }
 
     // Update title
-    const titleElement = this.courseCard.querySelector('.card__title');
+    const titleElement = this.courseCard.querySelector('[data-course-card-title]');
     if (titleElement) {
       titleElement.textContent = courseData.course_name;
     }
 
     // Update description
-    const descriptionElement = this.courseCard.querySelector('.card__description');
+    const descriptionElement = this.courseCard.querySelector('[data-course-card-description]');
     if (descriptionElement) {
       descriptionElement.textContent = courseData.course_description || 'No description available.';
     }
 
     // Update student count
-    const studentsInfo = this.courseCard.querySelector('.card__info');
-    if (studentsInfo && studentsInfo.querySelector('.icon--students')) {
+    const studentsInfo = this.courseCard.querySelector('[data-course-card-info="students"]');
+    if (studentsInfo) {
       const count = courseData.student_count || 0;
-      studentsInfo.innerHTML = `<i class="icon icon--students"></i> ${count} student${count !== 1 ? 's' : ''}`;
+      const valueEl = studentsInfo.querySelector('[data-course-card-info-value]');
+      const text = `${count} student${count !== 1 ? 's' : ''}`;
+      if (valueEl) {
+        valueEl.textContent = text;
+      } else {
+        studentsInfo.textContent = text;
+      }
     }
 
-    // Update lessons count - find the second card__info element
-    const allInfoElements = this.courseCard.querySelectorAll('.card__info');
-    const lessonsInfo = Array.from(allInfoElements).find(el => el.querySelector('.icon--lessons'));
+    // Update lessons count
+    const lessonsInfo = this.courseCard.querySelector('[data-course-card-info="lessons"]');
     if (lessonsInfo) {
       const count = courseData.lesson_count || 0;
-      lessonsInfo.innerHTML = `<i class="icon icon--lessons"></i> ${count} lesson${count !== 1 ? 's' : ''}`;
+      const valueEl = lessonsInfo.querySelector('[data-course-card-info-value]');
+      const text = `${count} lesson${count !== 1 ? 's' : ''}`;
+      if (valueEl) {
+        valueEl.textContent = text;
+      } else {
+        lessonsInfo.textContent = text;
+      }
     }
   }
 
@@ -105,16 +116,18 @@ export class StaticCourseCardManager {
     if (!this.courseCard) return;
 
     // Update all action buttons to include courseId
-    const actionButtons = this.courseCard.querySelectorAll('.card__action');
-    actionButtons.forEach(button => {
-      const link = button as HTMLAnchorElement;
-      const href = link.getAttribute('href');
-      
+    const actionButtons = this.courseCard.querySelectorAll('[data-course-card-action]');
+    actionButtons.forEach((button) => {
+      if (!(button instanceof HTMLAnchorElement)) {
+        return;
+      }
+      const href = button.getAttribute('href');
+
       if (href) {
         // Add courseId parameter to the URL
         const url = new URL(href, window.location.origin);
         url.searchParams.set('courseId', courseId);
-        link.href = url.toString();
+        button.href = url.toString();
       }
     });
   }
@@ -137,7 +150,7 @@ export function initializeStaticCourseCardManager(): StaticCourseCardManager {
 // Auto-initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   // Only initialize if we're on a page that has static course cards
-  const staticCourseCard = document.querySelector('.card.card--course:not([data-dynamic])');
+  const staticCourseCard = document.querySelector('[data-course-card][data-static-course-card]');
   if (staticCourseCard) {
     initializeStaticCourseCardManager();
   }

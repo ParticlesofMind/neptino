@@ -458,7 +458,7 @@ export class CanvasEngine {
   private ensureDomStructure(): void {
     if (!this.container) return;
 
-    const perspective = this.container.querySelector<HTMLElement>(".engine__perspective");
+    const perspective = this.container.querySelector<HTMLElement>("[data-engine-perspective]");
     this.perspectiveElement = perspective ?? null;
 
     this.canvasScroll = this.container;

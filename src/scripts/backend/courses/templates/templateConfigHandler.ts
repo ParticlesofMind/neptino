@@ -21,14 +21,14 @@ export class TemplateConfigHandler {
     if (!configContainer) return;
 
     const blockSelectorHtml = `
-      <div class="template-blocks space-y-4">
+      <div class="space-y-4" data-template-blocks>
         ${TEMPLATE_BLOCKS.map(
           (block) => `
-            <div class="block-config rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition">
-              <h4 class="block-config__title text-base font-semibold text-neutral-900">${block.label}</h4>
-              <div class="block-config__fields mt-3 grid gap-2">
+            <div class="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition" data-block-config data-block-type="${block.type}">
+              <h4 class="text-base font-semibold text-neutral-900">${block.label}</h4>
+              <div class="mt-3 grid gap-2" data-block-fields>
                 ${block.configFields.map((field: any, index: number) => `
-                  <label class="block-config__field flex items-center gap-2 text-sm text-neutral-700">
+                  <label class="flex items-center gap-2 text-sm text-neutral-700" data-field-label>
                     <input
                       type="checkbox"
                       id="field-${block.type}-${field.name}-${index}"
@@ -36,7 +36,7 @@ export class TemplateConfigHandler {
                       ${(field.required || field.defaultValue) ? 'checked' : ''}
                       ${field.required ? 'disabled' : ''}
                       class="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500">
-                    <span class="block-config__label">${field.label}</span>
+                    <span>${field.label}</span>
                   </label>
                 `).join('')}
               </div>
@@ -63,7 +63,7 @@ export class TemplateConfigHandler {
     });
 
     // Block selection listeners
-    document.querySelectorAll('.block-config').forEach((blockElement) => {
+    document.querySelectorAll('[data-block-config]').forEach((blockElement) => {
       blockElement.addEventListener("click", (e) => {
         // Avoid triggering when clicking checkboxes
         if ((e.target as HTMLElement).tagName !== "INPUT") {
@@ -115,18 +115,18 @@ export class TemplateConfigHandler {
    */
   private selectBlock(blockType: string): void {
     // Remove previous selection
-    document.querySelectorAll('.block-config').forEach((block) => {
-      block.classList.remove('block-config--selected');
+    document.querySelectorAll('[data-block-config]').forEach((block) => {
+      block.removeAttribute('data-selected');
       block.classList.remove('ring-2', 'ring-primary-500', 'bg-primary-50');
     });
 
     // Add selection to current block
-    const selectedBlock = Array.from(document.querySelectorAll('.block-config')).find(block => {
+    const selectedBlock = Array.from(document.querySelectorAll('[data-block-config]')).find(block => {
       return block.querySelector('h4')?.textContent?.toLowerCase() === blockType;
     });
     
     if (selectedBlock) {
-      selectedBlock.classList.remove('block-config--selected');
+      selectedBlock.setAttribute('data-selected', 'true');
       selectedBlock.classList.add('ring-2', 'ring-primary-500', 'bg-primary-50');
     }
 

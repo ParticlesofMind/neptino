@@ -217,7 +217,7 @@ export class MarginSettingsHandler {
 
  private showSaveStatus(status: "saving" | "saved" | "error"): void {
  const statusElement = document.querySelector(
-      "#margins-save-status .card__text",
+      "#margins-save-status [data-status-text]",
  ) as HTMLElement;
  if (!statusElement) return;
 

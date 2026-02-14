@@ -484,8 +484,8 @@ export class ScheduleCourseManager {
     this.scheduleConfigSection = document.getElementById(
       "schedule-config",
     ) as HTMLElement;
-    this.schedulePreviewSection = document.querySelector(
-      ".schedule__preview",
+    this.schedulePreviewSection = document.getElementById(
+      "schedule-preview",
     ) as HTMLElement;
     this.scheduleButton = document.getElementById(
       "schedule-course-btn",
@@ -532,7 +532,7 @@ export class ScheduleCourseManager {
 
     // Day selection buttons
     const dayButtons =
-      this.scheduleConfigSection.querySelectorAll('.schedule__days__button');
+      this.scheduleConfigSection.querySelectorAll<HTMLButtonElement>('[data-day]');
     dayButtons.forEach((button) => {
       button.addEventListener("click", (e) =>
         this.toggleDaySelection(e.target as HTMLButtonElement),
@@ -680,7 +680,7 @@ export class ScheduleCourseManager {
       "schedule-save-status",
     ) as HTMLElement | null;
     const text = container?.querySelector(
-      ".card__text",
+      "[data-status-text]",
     ) as HTMLElement | null;
     return { container, text };
   }
@@ -724,7 +724,7 @@ export class ScheduleCourseManager {
 
   private getSelectedDays(): string[] {
     const selectedButtons = this.scheduleConfigSection.querySelectorAll(
-      ".schedule__days__button[aria-pressed='true'], .schedule__days__button.bg-primary-600",
+      "[data-day][aria-pressed='true']",
     );
     return Array.from(selectedButtons).map(
       (btn) => (btn as HTMLElement).dataset.day || "",
@@ -737,15 +737,15 @@ export class ScheduleCourseManager {
       return [];
     }
 
-    const breakTimeItems = breakTimesList.querySelectorAll(".schedule__break-item");
+    const breakTimeItems = breakTimesList.querySelectorAll("[data-break-time-item]");
     const breakTimes: BreakTime[] = [];
 
     breakTimeItems.forEach((item) => {
       const startInput = item.querySelector(
-        ".schedule__break-start",
+        '[data-break-input="start"]',
       ) as HTMLInputElement;
       const endInput = item.querySelector(
-        ".schedule__break-end",
+        '[data-break-input="end"]',
       ) as HTMLInputElement;
 
       if (startInput && endInput) {
@@ -763,35 +763,36 @@ export class ScheduleCourseManager {
 
   private createBreakTimeInput(index: number, breakTime?: BreakTime): HTMLElement {
     const item = document.createElement("div");
-    item.className = "schedule__break-item flex items-center gap-2";
+    item.className = "flex items-center gap-2";
+    item.dataset.breakTimeItem = "true";
     item.innerHTML = `
-      <button class="schedule__break-add-inline inline-flex h-7 w-7 items-center justify-center rounded-md border border-primary-600 bg-primary-600 text-xs font-semibold text-white shadow-sm hover:bg-primary-700" 
-              type="button" aria-label="Add break time" data-index="${index}">+</button>
-      <label class="schedule__break-label block text-xs font-medium text-neutral-600">
+      <button class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-primary-600 bg-primary-600 text-xs font-semibold text-white shadow-sm hover:bg-primary-700" 
+              type="button" aria-label="Add break time" data-break-add-inline data-index="${index}">+</button>
+      <label class="block text-xs font-medium text-neutral-600">
         <span class="sr-only">Start</span>
-        <input class="schedule__break-start w-20 rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" type="text" 
+        <input class="w-20 rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" type="text" 
                placeholder="Start" inputmode="numeric" autocomplete="off" 
-               value="${breakTime?.startTime || ""}" />
+               value="${breakTime?.startTime || ""}" data-break-input="start" />
       </label>
-      <label class="schedule__break-label block text-xs font-medium text-neutral-600">
+      <label class="block text-xs font-medium text-neutral-600">
         <span class="sr-only">End</span>
-        <input class="schedule__break-end w-20 rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" type="text" 
+        <input class="w-20 rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" type="text" 
                placeholder="End" inputmode="numeric" autocomplete="off" 
-               value="${breakTime?.endTime || ""}" />
+               value="${breakTime?.endTime || ""}" data-break-input="end" />
       </label>
-      <button class="schedule__break-remove inline-flex h-7 w-7 items-center justify-center rounded-md border border-red-200 text-sm font-semibold text-red-600 hover:bg-red-50" 
-              type="button" aria-label="Remove break time" data-index="${index}">&times;</button>
+      <button class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-red-200 text-sm font-semibold text-red-600 hover:bg-red-50" 
+              type="button" aria-label="Remove break time" data-break-remove data-index="${index}">&times;</button>
     `;
 
     const addButton = item.querySelector(
-      ".schedule__break-add-inline",
+      "[data-break-add-inline]",
     ) as HTMLButtonElement;
     addButton.addEventListener("click", () => {
       this.addBreakTimeInput();
     });
 
     const removeButton = item.querySelector(
-      ".schedule__break-remove",
+      "[data-break-remove]",
     ) as HTMLButtonElement;
     removeButton.addEventListener("click", () => {
       item.remove();
@@ -799,10 +800,10 @@ export class ScheduleCourseManager {
     });
 
     const startInput = item.querySelector(
-      ".schedule__break-start",
+      '[data-break-input="start"]',
     ) as HTMLInputElement;
     const endInput = item.querySelector(
-      ".schedule__break-end",
+      '[data-break-input="end"]',
     ) as HTMLInputElement;
 
     [startInput, endInput].forEach((input) => {
@@ -1005,9 +1006,9 @@ export class ScheduleCourseManager {
 
   private renderSchedulePreview(): void {
     setElementHidden(this.schedulePreviewSection, false);
-    const previewContainer = this.schedulePreviewSection.querySelector('.schedule__content');
+    const previewContainer = this.schedulePreviewSection.querySelector('[data-schedule-preview-content]');
     if (!previewContainer) {
-      console.error('📅 .schedule__content container not found');
+      console.error('📅 schedule preview content container not found');
       return;
     }
 
@@ -1027,7 +1028,7 @@ export class ScheduleCourseManager {
     previewContainer.classList.toggle('py-8', !hasSchedule);
     
     // Grey out config section when schedule exists
-    const configSection = document.querySelector('.article--schedule .article__config');
+    const configSection = document.querySelector('#schedule [data-article-panel="config"]');
     if (configSection) {
       configSection.classList.toggle('opacity-60', hasSchedule);
       configSection.classList.toggle('pointer-events-none', hasSchedule);
@@ -1045,7 +1046,8 @@ export class ScheduleCourseManager {
     } else {
       // Show placeholder if no schedule
       const placeholder = document.createElement('div');
-      placeholder.className = 'schedule__placeholder rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center text-sm text-neutral-500';
+      placeholder.className = 'rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center text-sm text-neutral-500';
+      placeholder.dataset.schedulePlaceholder = 'true';
       placeholder.innerHTML = '<p>Click "Schedule Course" to generate your lesson schedule</p>';
       previewContainer.appendChild(placeholder);
 
@@ -1061,52 +1063,53 @@ export class ScheduleCourseManager {
     index: number,
   ): HTMLElement {
     const row = document.createElement("div");
-    row.className = 'schedule__row grid grid-cols-12 items-start gap-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm';
+    row.className = 'grid grid-cols-12 items-start gap-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm';
+    row.dataset.scheduleRow = 'true';
 
     // Build break times HTML - always show at least one break time row
     const breakTimes = session.breakTimes || [];
     const breakTimesHTML = `
-      <div class="schedule__breaks-preview col-span-12">
-        <div class="schedule__breaks-list flex flex-col gap-2">
+      <div class="col-span-12" data-breaks-preview>
+        <div class="flex flex-col gap-2" data-breaks-list>
           ${breakTimes.length > 0
             ? breakTimes
                 .map(
                   (bt, btIndex) => `
-                <div class="schedule__break-preview-item flex items-center gap-2">
-                  <button class="schedule__break-add-inline inline-flex h-7 w-7 items-center justify-center rounded-md border border-primary-600 bg-primary-600 text-xs font-semibold text-white shadow-sm hover:bg-primary-700" 
+                <div class="flex items-center gap-2" data-break-preview-item>
+                  <button class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-primary-600 bg-primary-600 text-xs font-semibold text-white shadow-sm hover:bg-primary-700" 
                           type="button" aria-label="Add break" 
-                          data-index="${index}" data-break-index="${btIndex}">+</button>
-                  <label class="schedule__cell schedule__cell--time block">
-                    <input type="text" class="schedule__break-input schedule__break-input--start w-20 rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" 
+                          data-break-add-inline data-index="${index}" data-break-index="${btIndex}">+</button>
+                  <label class="block">
+                    <input type="text" class="w-20 rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" 
                            value="${bt.startTime}" placeholder="HH:MM" autocomplete="off" inputmode="numeric" 
-                           data-index="${index}" data-break-index="${btIndex}">
+                           data-break-input="start" data-index="${index}" data-break-index="${btIndex}">
                   </label>
-                  <label class="schedule__cell schedule__cell--time block">
-                    <input type="text" class="schedule__break-input schedule__break-input--end w-20 rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" 
+                  <label class="block">
+                    <input type="text" class="w-20 rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" 
                            value="${bt.endTime}" placeholder="HH:MM" autocomplete="off" inputmode="numeric" 
-                           data-index="${index}" data-break-index="${btIndex}">
+                           data-break-input="end" data-index="${index}" data-break-index="${btIndex}">
                   </label>
-                  <button class="schedule__break-delete inline-flex h-7 w-7 items-center justify-center rounded-md border border-red-200 text-sm font-semibold text-red-600 hover:bg-red-50" 
+                  <button class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-red-200 text-sm font-semibold text-red-600 hover:bg-red-50" 
                           type="button" aria-label="Remove break" 
-                          data-index="${index}" data-break-index="${btIndex}">&times;</button>
+                          data-break-remove data-index="${index}" data-break-index="${btIndex}">&times;</button>
                 </div>
               `,
                 )
                 .join("")
             : `
-              <div class="schedule__break-preview-item flex items-center gap-2">
-                <button class="schedule__break-add-inline inline-flex h-7 w-7 items-center justify-center rounded-md border border-primary-600 bg-primary-600 text-xs font-semibold text-white shadow-sm hover:bg-primary-700" 
+              <div class="flex items-center gap-2" data-break-preview-item>
+                <button class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-primary-600 bg-primary-600 text-xs font-semibold text-white shadow-sm hover:bg-primary-700" 
                         type="button" aria-label="Add break" 
-                        data-index="${index}">+</button>
-                <label class="schedule__cell schedule__cell--time block">
-                  <input type="text" class="schedule__break-input schedule__break-input--start w-20 rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" 
+                        data-break-add-inline data-index="${index}">+</button>
+                <label class="block">
+                  <input type="text" class="w-20 rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" 
                          value="" placeholder="HH:MM" autocomplete="off" inputmode="numeric" 
-                         data-index="${index}" data-break-index="0">
+                         data-break-input="start" data-index="${index}" data-break-index="0">
                 </label>
-                <label class="schedule__cell schedule__cell--time block">
-                  <input type="text" class="schedule__break-input schedule__break-input--end w-20 rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" 
+                <label class="block">
+                  <input type="text" class="w-20 rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" 
                          value="" placeholder="HH:MM" autocomplete="off" inputmode="numeric" 
-                         data-index="${index}" data-break-index="0">
+                         data-break-input="end" data-index="${index}" data-break-index="0">
                 </label>
               </div>
             `}
@@ -1115,37 +1118,37 @@ export class ScheduleCourseManager {
     `;
 
     row.innerHTML = `
-  <div class="schedule__cell schedule__cell--number col-span-2 sm:col-span-1">
-    <span class="schedule__badge inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-xs font-semibold text-white">${session.lessonNumber}</span>
+  <div class="col-span-2 sm:col-span-1">
+    <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-xs font-semibold text-white" data-lesson-badge>${session.lessonNumber}</span>
   </div>
-  <div class="schedule__cell schedule__cell--day col-span-10 sm:col-span-3">
-    <span class="schedule__field-label text-xs font-medium text-neutral-500">Day</span>
-    <span class="schedule__day block text-sm font-semibold text-neutral-900">${this.formatDay(session.day)}</span>
-    <span class="schedule__date block text-xs text-neutral-500">${this.formatScheduleDate(session.date)}</span>
+  <div class="col-span-10 sm:col-span-3">
+    <span class="text-xs font-medium text-neutral-500">Day</span>
+    <span class="block text-sm font-semibold text-neutral-900" data-lesson-day>${this.formatDay(session.day)}</span>
+    <span class="block text-xs text-neutral-500" data-lesson-date>${this.formatScheduleDate(session.date)}</span>
   </div>
-  <label class="schedule__cell schedule__cell--time schedule__cell--start col-span-6 sm:col-span-2">
-    <span class="schedule__field-label text-xs font-medium text-neutral-500">Start</span>
-    <input type="text" class="schedule__input schedule__input--start mt-1 w-full rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" value="${session.startTime}" placeholder="HH:MM" autocomplete="off" inputmode="numeric" data-index="${index}">
+  <label class="col-span-6 sm:col-span-2">
+    <span class="text-xs font-medium text-neutral-500">Start</span>
+    <input type="text" class="mt-1 w-full rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" value="${session.startTime}" placeholder="HH:MM" autocomplete="off" inputmode="numeric" data-lesson-time="start" data-index="${index}">
   </label>
-  <label class="schedule__cell schedule__cell--time schedule__cell--end col-span-6 sm:col-span-2">
-    <span class="schedule__field-label text-xs font-medium text-neutral-500">End</span>
-    <input type="text" class="schedule__input schedule__input--end mt-1 w-full rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" value="${session.endTime}" placeholder="HH:MM" autocomplete="off" inputmode="numeric" data-index="${index}">
+  <label class="col-span-6 sm:col-span-2">
+    <span class="text-xs font-medium text-neutral-500">End</span>
+    <input type="text" class="mt-1 w-full rounded-md border-0 py-1.5 text-xs text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" value="${session.endTime}" placeholder="HH:MM" autocomplete="off" inputmode="numeric" data-lesson-time="end" data-index="${index}">
   </label>
   ${breakTimesHTML}
-  <div class="schedule__cell schedule__cell--actions col-span-12 flex justify-end">
-    <button class="schedule__delete inline-flex h-7 w-7 items-center justify-center rounded-md border border-red-200 text-sm font-semibold text-red-600 hover:bg-red-50" type="button" aria-label="Remove lesson ${session.lessonNumber}" data-index="${index}">&times;</button>
+  <div class="col-span-12 flex justify-end">
+    <button class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-red-200 text-sm font-semibold text-red-600 hover:bg-red-50" type="button" aria-label="Remove lesson ${session.lessonNumber}" data-lesson-remove data-index="${index}">&times;</button>
   </div>
  `;
 
     // Bind events for time editing
     const startTimeInput = row.querySelector(
-      ".schedule__input--start",
+      '[data-lesson-time="start"]',
     ) as HTMLInputElement;
     const endTimeInput = row.querySelector(
-      ".schedule__input--end",
+      '[data-lesson-time="end"]',
     ) as HTMLInputElement;
     const deleteButton = row.querySelector(
-      ".schedule__delete",
+      '[data-lesson-remove]',
     ) as HTMLButtonElement;
 
     startTimeInput.addEventListener("blur", (e) =>
@@ -1166,7 +1169,7 @@ export class ScheduleCourseManager {
 
     // Bind break time events - handle inline add buttons
     const addBreakButtons = row.querySelectorAll(
-      ".schedule__break-add-inline",
+      "[data-break-add-inline]",
     );
     addBreakButtons.forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -1175,7 +1178,7 @@ export class ScheduleCourseManager {
     });
 
     const breakDeleteButtons = row.querySelectorAll(
-      ".schedule__break-delete",
+      "[data-break-remove]",
     );
     breakDeleteButtons.forEach((btn) => {
       btn.addEventListener("click", (e) => {
@@ -1189,7 +1192,7 @@ export class ScheduleCourseManager {
 
     // Bind break time input events
     const breakStartInputs = row.querySelectorAll(
-      ".schedule__break-input--start",
+      '[data-break-input="start"]',
     );
     breakStartInputs.forEach((input) => {
       input.addEventListener("blur", (e) => {
@@ -1207,7 +1210,7 @@ export class ScheduleCourseManager {
     });
 
     const breakEndInputs = row.querySelectorAll(
-      ".schedule__break-input--end",
+      '[data-break-input="end"]',
     );
     breakEndInputs.forEach((input) => {
       input.addEventListener("blur", (e) => {
@@ -1295,8 +1298,8 @@ export class ScheduleCourseManager {
     const normalizedTime = this.parseTimeInput(newTime);
     const inputSelector =
       timeType === "startTime"
-        ? ".schedule__break-input--start"
-        : ".schedule__break-input--end";
+        ? '[data-break-input="start"]'
+        : '[data-break-input="end"]';
     const input = this.schedulePreviewSection.querySelector(
       `${inputSelector}[data-index="${lessonIndex}"][data-break-index="${breakIndex}"]`,
     ) as HTMLInputElement | null;
@@ -1410,8 +1413,8 @@ export class ScheduleCourseManager {
     const normalizedTime = this.parseTimeInput(newTime);
     const inputSelector =
       timeType === "startTime"
-        ? ".schedule__input--start"
-        : ".schedule__input--end";
+        ? '[data-lesson-time="start"]'
+        : '[data-lesson-time="end"]';
     const input = this.schedulePreviewSection.querySelector(
       `${inputSelector}[data-index="${index}"]`,
     ) as HTMLInputElement | null;
@@ -1670,7 +1673,7 @@ export class ScheduleCourseManager {
 
   private updateTotalLessonsDisplay(): void {
     const totalDisplay =
-      this.schedulePreviewSection.querySelector('.schedule__total');
+      this.schedulePreviewSection.querySelector('[data-schedule-total]');
     if (totalDisplay) {
       totalDisplay.textContent = `Total lessons: ${this.currentSchedule.length}`;
     }

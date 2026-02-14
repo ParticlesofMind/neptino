@@ -66,19 +66,20 @@ export class CoursesManager {
 
     // Show loading message
     const loadingElement = document.createElement('div');
-     loadingElement.className = 'courses-loading flex w-full justify-center py-10';
+    loadingElement.className = 'flex w-full justify-center py-10';
     loadingElement.dataset.dynamic = 'true';
+    loadingElement.dataset.coursesLoading = 'true';
     loadingElement.innerHTML = `
-   <div class="courses-loading__content flex items-center gap-3 rounded-lg border border-neutral-200 bg-white px-4 py-3 shadow-sm">
-   <div class="courses-loading__spinner h-4 w-4 animate-spin rounded-full border-2 border-neutral-200 border-t-primary-600"></div>
-   <p class="courses-loading__text text-sm text-neutral-600">Loading your courses...</p>
+   <div class="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white px-4 py-3 shadow-sm">
+   <div class="h-4 w-4 animate-spin rounded-full border-2 border-neutral-200 border-t-primary-600"></div>
+   <p class="text-sm text-neutral-600">Loading your courses...</p>
    </div>
  `;
     this.coursesContainer.appendChild(loadingElement);
   }
 
   private hideLoadingState(): void {
-    const loadingElement = this.coursesContainer.querySelector('.courses-loading');
+    const loadingElement = this.coursesContainer.querySelector('[data-courses-loading="true"]');
     if (loadingElement) {
       loadingElement.remove();
     }
@@ -88,11 +89,16 @@ export class CoursesManager {
 
   private showErrorState(): void {
     const errorElement = document.createElement('div');
-     errorElement.className = 'courses-error flex w-full justify-center py-10';
+    errorElement.className = 'flex w-full justify-center py-10';
     errorElement.dataset.dynamic = 'true';
+    errorElement.dataset.coursesError = 'true';
     errorElement.innerHTML = `
-   <div class="courses-error__content flex flex-col items-center gap-3 rounded-lg border border-neutral-200 bg-white px-5 py-4 text-center shadow-sm">
-   <i class="icon icon--error icon--large"></i>
+   <div class="flex flex-col items-center gap-3 rounded-lg border border-neutral-200 bg-white px-5 py-4 text-center shadow-sm">
+   <svg class="h-8 w-8 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+     <circle cx="12" cy="12" r="10"></circle>
+     <line x1="12" y1="8" x2="12" y2="12"></line>
+     <line x1="12" y1="16" x2="12.01" y2="16"></line>
+   </svg>
    <h3 class="text-base font-semibold text-neutral-900">Failed to load courses</h3>
    <p class="text-sm text-neutral-600">There was an error loading your courses. Please try refreshing the page.</p>
    <button class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700" onclick="window.location.reload()">
@@ -124,7 +130,7 @@ export class CoursesManager {
 
   private async createCourseCard(course: Course): Promise<HTMLElement> {
     const cardElement = document.createElement("div");
-    cardElement.className = "card flex flex-col bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full";
+    cardElement.className = "flex flex-col bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full";
     cardElement.dataset.courseId = course.id;
     cardElement.dataset.dynamic = "true"; // Mark as dynamically generated
 
@@ -159,7 +165,7 @@ export class CoursesManager {
    <div class="relative w-full aspect-[4/3] bg-neutral-100 overflow-hidden flex-shrink-0">
      ${courseImageHtml}
      <div class="absolute top-2 right-2">
-       <span class="card__status-badge inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass}">${statusText}</span>
+      <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass}" data-course-status>${statusText}</span>
      </div>
    </div>
    
@@ -171,11 +177,20 @@ export class CoursesManager {
    <div class="p-4 flex flex-col gap-4 flex-1">
      <div class="flex gap-4 text-sm text-neutral-500">
        <span class="flex items-center gap-1">
-         <i class="icon icon--students"></i>
+         <svg class="h-4 w-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+           <circle cx="9" cy="7" r="4"></circle>
+           <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+           <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+         </svg>
          ${studentText}
        </span>
        <span class="flex items-center gap-1">
-         <i class="icon icon--lessons"></i>
+         <svg class="h-4 w-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+           <path d="M4 4.5A2.5 2.5 0 0 1 6.5 7H20"></path>
+           <path d="M6.5 7H20v10H6.5A2.5 2.5 0 0 0 4 19.5v-15A2.5 2.5 0 0 1 6.5 4.5"></path>
+         </svg>
          ${lessonText}
        </span>
      </div>

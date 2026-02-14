@@ -683,22 +683,13 @@ export class CourseFormHandler {
 
         // Handle classification dropdown fields
         if (this.sectionConfig.section === "classification") {
-            const hiddenInput = this.form.querySelector(
-                `#${fieldName}-value`,
-            ) as HTMLInputElement;
-            const dropdownTrigger = this.form.querySelector(`#${fieldName}-dropdown`);
-            const dropdownLabel = dropdownTrigger?.querySelector('.dropdown__label, .dropdown__selected, .dropdown__trigger span');
+            const selectField = this.form.querySelector(
+                `[name="${fieldName}"]`,
+            ) as HTMLSelectElement | null;
 
-            if (hiddenInput && dropdownTrigger && dropdownLabel) {
-                hiddenInput.value = value;
-                dropdownLabel.textContent = this.getDisplayTextForValue(
-                    fieldName,
-                    value,
-                );
-           
+            if (selectField) {
+                selectField.value = value;
                 return;
-            } else {
-          
             }
         }
 
@@ -1565,7 +1556,7 @@ export class CourseFormHandler {
     ): void {
         const statusContainer = this.getStatusContainer();
         const statusText = statusContainer?.querySelector(
-            ".card__text",
+            "[data-status-text]",
         ) as HTMLElement | null;
 
         if (!statusContainer || !statusText) return;

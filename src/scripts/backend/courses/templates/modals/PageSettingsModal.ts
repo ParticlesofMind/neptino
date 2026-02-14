@@ -36,13 +36,14 @@ export class PageSettingsModal {
  */
  private createModal(page: any): HTMLElement {
  const modal = document.createElement("div");
- modal.className = "page-settings-modal fixed inset-0 z-50 flex items-center justify-center p-4";
+ modal.className = "fixed inset-0 z-50 flex items-center justify-center p-4";
+ modal.setAttribute("data-modal", "");
  modal.innerHTML = `
- <div class="page-settings-modal__backdrop absolute inset-0 bg-black/40" aria-hidden="true"></div>
- <div class="page-settings-modal__panel relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+ <div class="absolute inset-0 bg-black/40" aria-hidden="true" data-modal-backdrop></div>
+ <div class="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl" data-modal-content>
  <div class="flex items-start justify-between">
  <h3 class="text-xl font-semibold text-neutral-900">Page Settings</h3>
- <button class="page-settings-modal__close inline-flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100" aria-label="Close">&times;</button>
+ <button class="inline-flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100" data-modal-close aria-label="Close">&times;</button>
  </div>
  <div class="mt-6 space-y-4">
  <div class="form-group">
@@ -55,8 +56,8 @@ export class PageSettingsModal {
  </div>
  </div>
  <div class="mt-8 flex justify-end gap-3">
- <button class="page-settings-modal__cancel inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50">Cancel</button>
- <button class="page-settings-modal__save inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700">Save Changes</button>
+ <button class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50" data-modal-cancel>Cancel</button>
+ <button class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700" data-modal-save>Save Changes</button>
  </div>
  </div>
  `;
@@ -73,7 +74,7 @@ export class PageSettingsModal {
  const reject = (modal as any).__reject;
 
  // Close button
- const closeBtn = modal.querySelector(".page-settings-modal__close");
+ const closeBtn = modal.querySelector("[data-modal-close]");
  if (closeBtn) {
  closeBtn.addEventListener("click", () => {
  this.close();
@@ -82,7 +83,7 @@ export class PageSettingsModal {
  }
 
  // Cancel button
- const cancelBtn = modal.querySelector(".page-settings-modal__cancel");
+ const cancelBtn = modal.querySelector("[data-modal-cancel]");
  if (cancelBtn) {
  cancelBtn.addEventListener("click", () => {
  this.close();
@@ -91,7 +92,7 @@ export class PageSettingsModal {
  }
 
  // Save button
- const saveBtn = modal.querySelector(".page-settings-modal__save");
+ const saveBtn = modal.querySelector("[data-modal-save]");
  if (saveBtn) {
  saveBtn.addEventListener("click", () => {
  const result = this.collectFormData(modal, page);
@@ -104,7 +105,7 @@ export class PageSettingsModal {
 
  // Backdrop click
  const backdrop = modal.querySelector(
- ".page-settings-modal__backdrop",
+ "[data-modal-backdrop]",
  );
  if (backdrop) {
  backdrop.addEventListener("click", () => {

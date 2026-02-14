@@ -79,10 +79,10 @@ export class CanvasNavigator {
  */
  private createNavigationHeader(courseLayout: CourseLayout): void {
  const header = document.createElement("div");
- header
+ header.className = "flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-600";
  header.innerHTML = `
- <h3>Course Navigation</h3>
- <div class="">
+ <h3 class="text-base font-semibold text-neutral-900">Course Navigation</h3>
+ <div class="space-y-1">
  Total Sessions: ${courseLayout.scheduledSessions}<br>
  Total Canvases: ${courseLayout.totalCanvases}<br>
  Lesson Duration: ${courseLayout.lessonDuration.type}
@@ -90,25 +90,25 @@ export class CanvasNavigator {
  `;
 
  const controls = document.createElement("div");
- controls
+ controls.className = "flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-600";
  controls.innerHTML = `
- <button class="canvas-nav-btn canvas-nav-btn--prev" title="Previous Canvas">
- <span class="">←</span>
+ <button class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-300 text-neutral-600 hover:bg-white" title="Previous Canvas" data-canvas-nav="prev">
+ <span aria-hidden="true">←</span>
  </button>
- <span class="canvas-nav-current">
- Canvas <span class="current-number">1</span> of ${courseLayout.totalCanvases}
+ <span class="text-sm font-medium text-neutral-700" data-canvas-nav-current>
+ Canvas <span data-canvas-nav-current-number>1</span> of ${courseLayout.totalCanvases}
  </span>
- <button class="canvas-nav-btn canvas-nav-btn--next" title="Next Canvas">
- <span class="">→</span>
+ <button class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-neutral-300 text-neutral-600 hover:bg-white" title="Next Canvas" data-canvas-nav="next">
+ <span aria-hidden="true">→</span>
  </button>
  `;
 
  // Add event listeners
  const prevBtn = controls.querySelector(
- ".canvas-nav-btn--prev",
+ "[data-canvas-nav=\"prev\"]",
  ) as HTMLElement;
  const nextBtn = controls.querySelector(
- ".canvas-nav-btn--next",
+ "[data-canvas-nav=\"next\"]",
  ) as HTMLElement;
 
  prevBtn?.addEventListener("click", () =>
@@ -130,17 +130,17 @@ export class CanvasNavigator {
  index: number,
  ): CanvasThumbnail {
  const thumbnail = document.createElement("div");
- thumbnail
+ thumbnail.className = "flex cursor-pointer items-start gap-3 rounded-lg border border-neutral-200 bg-white p-3 text-sm text-neutral-700 transition hover:border-primary-300 hover:shadow-sm";
  thumbnail.dataset.canvasIndex = index.toString();
 
  // Create visual preview of canvas layout
  const preview = document.createElement("div");
- preview
+ preview.className = "relative h-16 w-12 flex-shrink-0 rounded-md border border-neutral-200 bg-neutral-50";
 
  // Add miniature blocks
  canvas.blocks.forEach((block: any) => {
  const blockElement = document.createElement("div");
- blockElement
+ blockElement.className = "rounded-sm bg-neutral-300/70";
 
  // Scale down the block proportionally
  const scaleX = 0.1; // 10% of original width
@@ -159,16 +159,16 @@ export class CanvasNavigator {
 
  // Create label
  const label = document.createElement("div");
- label
+ label.className = "flex flex-col gap-1";
 
  const canvasTypeName = this.getCanvasTypeName(
  canvas.sessionNumber,
  canvas.canvasNumber,
  );
  label.innerHTML = `
- <div class="">Session ${canvas.sessionNumber}</div>
- <div class="">${canvasTypeName}</div>
- <div class="">${canvas.canvasNumber}</div>
+ <div class="text-xs font-semibold text-neutral-500">Session ${canvas.sessionNumber}</div>
+ <div class="text-sm font-semibold text-neutral-900">${canvasTypeName}</div>
+ <div class="text-xs text-neutral-500">Canvas ${canvas.canvasNumber}</div>
  `;
 
  thumbnail.appendChild(preview);
@@ -199,7 +199,7 @@ export class CanvasNavigator {
 
  // Update current canvas counter
  const currentNumberSpan =
- this.tocContainer?.querySelector('element');
+ this.tocContainer?.querySelector('[data-canvas-nav-current-number]');
  if (currentNumberSpan) {
  currentNumberSpan.textContent = (index + 1).toString();
  }
@@ -217,13 +217,15 @@ export class CanvasNavigator {
  // Remove active class from all thumbnails
  this.thumbnails.forEach((thumbnail) => {
  thumbnail.isActive = false;
- thumbnail.element
+ thumbnail.element.classList.remove("ring-2", "ring-primary-500", "bg-primary-50");
+ thumbnail.element.setAttribute("aria-current", "false");
  });
 
  // Set new active canvas
  if (this.thumbnails[index]) {
  this.thumbnails[index].isActive = true;
- this.thumbnails[index].element
+ this.thumbnails[index].element.classList.add("ring-2", "ring-primary-500", "bg-primary-50");
+ this.thumbnails[index].element.setAttribute("aria-current", "true");
  this.currentCanvasIndex = index;
  }
  }

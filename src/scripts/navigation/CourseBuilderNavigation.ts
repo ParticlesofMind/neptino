@@ -19,7 +19,7 @@ export class CourseBuilderNavigation {
  }
 
  
- this.sections = document.querySelectorAll('.coursebuilder__setup, .coursebuilder__create, .coursebuilder__preview, .coursebuilder__launch');
+ this.sections = document.querySelectorAll('[data-coursebuilder-section]');
  this.nextButton = document.getElementById('next-btn');
  this.previousButton = document.getElementById('previous-btn');
  
@@ -114,18 +114,15 @@ export class CourseBuilderNavigation {
 
  private activateSection(sectionId: string): void {
  
- // Get all coursebuilder sections
  // Hide all coursebuilder elements
  this.sections.forEach(element => {
- element.classList.remove('coursebuilder__setup--active', 'coursebuilder__create--active', 'coursebuilder__preview--active', 'coursebuilder__launch--active');
  element.classList.add('hidden');
  element.setAttribute('aria-hidden', 'true');
  });
  
  // Show target coursebuilder element
- const targetElement = document.querySelector(`.coursebuilder__${sectionId}`);
+ const targetElement = document.querySelector(`[data-coursebuilder-section="${sectionId}"]`);
  if (targetElement) {
- targetElement.classList.remove(`coursebuilder__${sectionId}--active`);
  targetElement.classList.remove('hidden');
  targetElement.setAttribute('aria-hidden', 'false');
  
@@ -277,7 +274,7 @@ export class AsideNavigation {
       return;
     }
 
-    this.asideLinks = document.querySelectorAll('.aside__link[data-section]');
+    this.asideLinks = document.querySelectorAll('[data-aside-link][data-section]');
     this.contentSections = document.querySelectorAll<HTMLElement>('[data-course-section][id]');
     this.boundHandleLinkClick = this.handleLinkClick.bind(this);
 
@@ -285,7 +282,7 @@ export class AsideNavigation {
   }
 
   private isInSetupSection(): boolean {
-    const setupElement = document.querySelector('.coursebuilder__setup');
+    const setupElement = document.querySelector('[data-coursebuilder-section="setup"]');
     return setupElement !== null;
   }
 
@@ -316,8 +313,7 @@ export class AsideNavigation {
     const target = e.currentTarget as HTMLAnchorElement;
     
     // Prevent navigation if link is disabled
-    if (target.classList.contains('aside__link--disabled') || 
-        target.getAttribute('aria-disabled') === 'true') {
+    if (target.getAttribute('aria-disabled') === 'true') {
       return;
     }
     
@@ -356,12 +352,16 @@ export class AsideNavigation {
 
     this.contentSections.forEach((section: HTMLElement) => {
       section.classList.remove('is-active');
+      section.classList.add('hidden');
+      section.setAttribute('aria-hidden', 'true');
     });
   }
 
   private setActiveStates(activeLink: HTMLAnchorElement, targetSection: HTMLElement): void {
     activeLink.setAttribute('aria-current', 'page');
     targetSection.classList.add('is-active');
+    targetSection.classList.remove('hidden');
+    targetSection.setAttribute('aria-hidden', 'false');
     
     // Dispatch custom event to notify CourseBuilder to load section data
     const sectionActivatedEvent = new CustomEvent('coursebuilderSectionActivated', {
@@ -426,7 +426,7 @@ export class ViewToggleHandler {
       return;
     }
 
-    this.toggleButtons = document.querySelectorAll('.article__view-toggle-btn');
+    this.toggleButtons = document.querySelectorAll('[data-article-toggle-btn]');
     this.boundHandleToggleClick = this.handleToggleClick.bind(this);
 
     this.init();
@@ -468,14 +468,14 @@ export class ViewToggleHandler {
     }
 
     // Find the toggle container
-    const toggleContainer = button.closest('.article__view-toggle');
+    const toggleContainer = button.closest('[data-article-toggle]');
     if (!toggleContainer) {
       console.error('Toggle button not within .article__view-toggle');
       return;
     }
 
     // Update button states
-    const allButtons = toggleContainer.querySelectorAll<HTMLButtonElement>('.article__view-toggle-btn');
+    const allButtons = toggleContainer.querySelectorAll<HTMLButtonElement>('[data-article-toggle-btn]');
     allButtons.forEach((btn) => {
       btn.classList.remove('is-active');
       btn.classList.remove('bg-primary-600', 'text-white', 'border-primary-600');
@@ -490,8 +490,8 @@ export class ViewToggleHandler {
     button.classList.remove('hover:bg-neutral-50', 'hover:text-neutral-900');
 
     // Update panel visibility
-    const configPanel = article.querySelector('.article__config');
-    const previewPanel = article.querySelector('.article__preview');
+    const configPanel = article.querySelector('[data-article-panel="config"]');
+    const previewPanel = article.querySelector('[data-article-panel="preview"]');
 
     const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
 
@@ -517,18 +517,18 @@ export class ViewToggleHandler {
     const articles = document.querySelectorAll('article[data-course-section]');
     
     articles.forEach((article) => {
-      const toggleContainer = article.querySelector('.article__view-toggle');
+      const toggleContainer = article.querySelector('[data-article-toggle]');
       if (!toggleContainer) {
         return; // No toggle for this article
       }
 
       const activeButton =
-        toggleContainer.querySelector<HTMLButtonElement>('.article__view-toggle-btn.is-active') ??
-        toggleContainer.querySelector<HTMLButtonElement>('.article__view-toggle-btn');
+        toggleContainer.querySelector<HTMLButtonElement>('[data-article-toggle-btn].is-active') ??
+        toggleContainer.querySelector<HTMLButtonElement>('[data-article-toggle-btn]');
       if (activeButton) {
         const view = activeButton.getAttribute('data-view');
-        const configPanel = article.querySelector('.article__config');
-        const previewPanel = article.querySelector('.article__preview');
+        const configPanel = article.querySelector('[data-article-panel="config"]');
+        const previewPanel = article.querySelector('[data-article-panel="preview"]');
 
         const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
 
@@ -546,7 +546,7 @@ export class ViewToggleHandler {
           if (previewPanel) previewPanel.classList.remove('hidden');
         }
 
-        const allButtons = toggleContainer.querySelectorAll<HTMLButtonElement>('.article__view-toggle-btn');
+        const allButtons = toggleContainer.querySelectorAll<HTMLButtonElement>('[data-article-toggle-btn]');
         allButtons.forEach((btn) => {
           const isActive = btn === activeButton;
           btn.classList.toggle('bg-primary-600', isActive);
@@ -592,11 +592,11 @@ export class ModalHandler {
     // Close modal when clicking backdrop area
     document.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
-      const modal = target.closest('.modal') as HTMLElement | null;
+      const modal = target.closest('[data-modal]') as HTMLElement | null;
       if (!modal || modal !== this.activeModal) {
         return;
       }
-      if (!target.closest('.modal__content')) {
+      if (!target.closest('[data-modal-content]')) {
         this.hideModal();
       }
     });
@@ -604,7 +604,7 @@ export class ModalHandler {
     // Close modal when clicking close button
     document.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
-      if (target.closest('.modal__close')) {
+      if (target.closest('[data-modal-close]')) {
         e.preventDefault();
         this.hideModal();
       }
@@ -636,7 +636,6 @@ export class ModalHandler {
     this.hideModal();
 
     // Show the new modal
-    modal.classList.remove('modal--active');
     modal.classList.remove('hidden');
     modal.setAttribute('aria-hidden', 'false');
     this.activeModal = modal;

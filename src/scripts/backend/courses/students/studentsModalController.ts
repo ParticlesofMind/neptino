@@ -50,13 +50,12 @@ export class StudentsModalController {
     this.lastFocused = this.root.activeElement as HTMLElement | null;
     this.closeActiveModal();
 
-    modal.classList.remove("modal--active");
     modal.classList.remove("hidden");
     modal.setAttribute("aria-hidden", "false");
     this.root.body.classList.add("overflow-hidden");
     this.activeModal = modal;
 
-    const content = modal.querySelector<HTMLElement>(".modal__content");
+    const content = modal.querySelector<HTMLElement>("[data-modal-content]");
     const focusable = content ? getFocusableElements(content) : [];
     const preferred = modal.querySelector<HTMLElement>("[data-modal-autofocus]");
 
@@ -93,7 +92,7 @@ export class StudentsModalController {
     const target = event.target as HTMLElement | null;
     if (!target) return;
 
-    const trigger = target.closest<HTMLElement>(".students__trigger[data-modal-target]");
+    const trigger = target.closest<HTMLElement>("[data-students-trigger][data-modal-target]");
     if (trigger) {
       const modalId = trigger.getAttribute("data-modal-target");
       console.log("🔘 Students upload button clicked, modal ID:", modalId);
@@ -118,7 +117,7 @@ export class StudentsModalController {
       return;
     }
 
-    if (this.activeModal && !this.activeModal.contains(target) && target.matches(".modal")) {
+    if (this.activeModal && !this.activeModal.contains(target) && target.matches("[data-modal]")) {
       event.preventDefault();
       this.close();
     }
@@ -136,7 +135,7 @@ export class StudentsModalController {
 
     if (event.key !== "Tab") return;
 
-    const content = this.activeModal.querySelector<HTMLElement>(".modal__content");
+    const content = this.activeModal.querySelector<HTMLElement>("[data-modal-content]");
     if (!content) return;
 
     const focusable = getFocusableElements(content);

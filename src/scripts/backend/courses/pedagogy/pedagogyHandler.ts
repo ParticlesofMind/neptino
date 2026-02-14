@@ -116,7 +116,7 @@ function getPedagogyStatusElements(): {
     'pedagogy-save-status',
   ) as HTMLElement | null;
   const text = container?.querySelector(
-    '.card__text',
+    '[data-status-text]',
   ) as HTMLElement | null;
   return { container, text };
 }
@@ -224,7 +224,7 @@ function effectsBullets(x: number, y: number): string[] {
 
 function attachPedagogyGrid() {
   const input = getInput();
-  const grid = getEl<HTMLElement>('.learning-plane__grid');
+  const grid = getEl<HTMLElement>('[data-learning-plane-grid]');
   const marker = getEl<HTMLElement>('#pedagogy-marker');
   const xOut = getEl<HTMLElement>('#pedagogy-x');
   const yOut = getEl<HTMLElement>('#pedagogy-y');

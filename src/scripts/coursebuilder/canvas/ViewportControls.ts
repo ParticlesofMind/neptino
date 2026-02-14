@@ -14,12 +14,12 @@ const formatZoomLabel = (scale: number): string => {
 };
 
 const initializePerspectiveControls = (): void => {
-  const perspective = document.querySelector<HTMLElement>(".engine__perspective");
+  const perspective = document.querySelector<HTMLElement>("[data-engine-perspective]");
   if (!perspective) {
     return;
   }
 
-  const zoomIndicator = perspective.querySelector<HTMLElement>(".engine__perspective-zoom");
+  const zoomIndicator = perspective.querySelector<HTMLElement>("[data-engine-perspective-zoom]");
   const zoomInButton = perspective.querySelector<HTMLButtonElement>('[data-perspective="zoom-in"]');
   const zoomOutButton = perspective.querySelector<HTMLButtonElement>('[data-perspective="zoom-out"]');
   const resetButton = perspective.querySelector<HTMLButtonElement>('[data-perspective="reset"]');

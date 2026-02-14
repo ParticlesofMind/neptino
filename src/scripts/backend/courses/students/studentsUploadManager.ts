@@ -49,7 +49,7 @@ export class StudentsUploadManager {
     this.mappingGrid = document.getElementById("students-mapping-grid");
     this.submitButton = document.getElementById("students-upload-submit-btn") as HTMLButtonElement | null;
     this.status = document.getElementById("students-upload-status");
-    this.spinner = this.status?.querySelector(".students-upload__spinner") ?? null;
+    this.spinner = this.status?.querySelector("[data-students-upload-spinner]") ?? null;
   }
 
   public init(): void {

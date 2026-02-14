@@ -6,7 +6,7 @@ export interface TemplateRenderOptions {
 
 export class TemplateBlockRenderer {
   private static formatPlaceholder(label: string): string {
-    return `<span class="template-placeholder">${label}</span>`;
+    return `<span class="text-neutral-500 italic" data-template-placeholder>${label}</span>`;
   }
 
   static renderBlockContent(block: TemplateBlock, checkedFields: BlockFieldConfig[], options?: TemplateRenderOptions): string {
@@ -24,12 +24,12 @@ export class TemplateBlockRenderer {
 
     // Default table rendering for other blocks - single row with values only
     return `
-<table class="lesson-plan-table">
+<table class="w-full text-xs text-neutral-600" data-lesson-table>
 <tbody>
 <tr>
 ${checkedFields
   .map((field) => `
-<td>${this.formatPlaceholder(field.label)}</td>
+<td class="px-3 py-2 align-top">${this.formatPlaceholder(field.label)}</td>
 `)
   .join("")}
 </tr>
@@ -43,7 +43,7 @@ ${checkedFields
     const baseTable = this.renderRowsTable(rows);
 
     if (!baseTable) {
-      return '<p class="preview-placeholder">No fields selected</p>';
+      return '<p class="text-sm text-neutral-500" data-preview-placeholder>No fields selected</p>';
     }
 
     const includeProject = Boolean(block.config?.include_project);
@@ -193,7 +193,7 @@ ${checkedFields
     }
 
     return `
-<article class="lesson-plan-grid lesson-plan-grid--hierarchy" aria-label="Lesson plan hierarchy">
+<article class="space-y-3" data-lesson-plan-grid aria-label="Lesson plan hierarchy">
 ${rows
   .map((row, index) => {
     if (row.isHeaderRow) {
@@ -210,18 +210,17 @@ ${rows
   private static renderHeaderRowWithChildren(headerRow: FieldRow, isLastHeader: boolean): string {
     const headerLabel = headerRow.headerLabel || headerRow.placeholders.primary || "";
     const hierarchyLevel = headerRow.hierarchyLevel ?? 0;
-    const hierarchyClass = ` lesson-plan-grid__group--hierarchy-${hierarchyLevel}`;
     
     // Show time for Topic (0) and Objective (2)
     const showTime = ([0, 2, 3].includes(hierarchyLevel) && headerRow.placeholders.time);
-    const timeDisplay = showTime ? `<span class="lesson-plan-grid__header-time">${headerRow.placeholders.time}</span>` : "";
+    const timeDisplay = showTime ? `${headerRow.placeholders.time}` : "";
     
     let html = `
-<section class="lesson-plan-grid__group${hierarchyClass}">
-  <header class="lesson-plan-grid__header">
-    <h6 class="lesson-plan-grid__title">${headerLabel.toUpperCase()}${timeDisplay}</h6>
+<section class="rounded-lg border border-neutral-200 bg-white p-3" data-lesson-group data-hierarchy="${hierarchyLevel}">
+  <header class="flex items-center justify-between gap-3">
+    <h6 class="text-xs font-semibold uppercase tracking-wide text-neutral-600">${headerLabel.toUpperCase()}${timeDisplay ? ` <span class=\"ml-2 text-xs text-neutral-400\">${timeDisplay}</span>` : ""}</h6>
   </header>
-  <div class="lesson-plan-grid__content">`;
+  <div class="mt-2 space-y-3">`;
 
     if (headerRow.childRows && headerRow.childRows.length > 0) {
       let bufferedRows: FieldRow[] = [];
@@ -264,8 +263,8 @@ ${rows
     }
 
     return `
-  <div class="lesson-plan-grid__table-wrapper">
-    <table class="lesson-plan-grid__table">
+  <div class="overflow-hidden rounded-md border border-neutral-200" data-lesson-table-wrapper>
+    <table class="w-full text-xs text-neutral-700" data-lesson-table>
       <tbody>
 ${rows.map((row) => this.renderRow(row)).join("")}
       </tbody>
@@ -275,29 +274,28 @@ ${rows.map((row) => this.renderRow(row)).join("")}
   }
 
   private static renderRow(row: FieldRow): string {
-    const indentClass = row.indentLevel
-      ? ` lesson-plan-grid__cell--indent-${row.indentLevel}`
+    const indentStyle = row.indentLevel
+      ? ` style="padding-left: ${row.indentLevel * 0.75}rem"`
       : "";
     
     const isEmpty = !row.placeholders.primary && 
                     !row.placeholders.method && !row.placeholders.social;
     
     const hierarchyLevel = row.hierarchyLevel ?? 0;
-    const hierarchyClass = ` lesson-plan-grid__row--hierarchy-${hierarchyLevel}`;
 
     if (isEmpty) {
       return `
-        <tr class="lesson-plan-grid__row lesson-plan-grid__row--empty${hierarchyClass}">
-          <td class="lesson-plan-grid__cell lesson-plan-grid__cell--empty" colspan="3"></td>
+        <tr class="border-b border-neutral-100 last:border-b-0" data-lesson-row data-hierarchy="${hierarchyLevel}">
+          <td class="px-3 py-2" colspan="3"></td>
         </tr>
 `;
     }
 
     return `
-        <tr class="lesson-plan-grid__row${hierarchyClass}">
-          <td class="lesson-plan-grid__cell lesson-plan-grid__cell--primary${indentClass}">${row.placeholders.primary ?? ""}</td>
-          <td class="lesson-plan-grid__cell lesson-plan-grid__cell--method">${row.placeholders.method ?? ""}</td>
-          <td class="lesson-plan-grid__cell lesson-plan-grid__cell--social">${row.placeholders.social ?? ""}</td>
+        <tr class="border-b border-neutral-100 last:border-b-0" data-lesson-row data-hierarchy="${hierarchyLevel}">
+          <td class="px-3 py-2 align-top"${indentStyle}>${row.placeholders.primary ?? ""}</td>
+          <td class="px-3 py-2 align-top">${row.placeholders.method ?? ""}</td>
+          <td class="px-3 py-2 align-top">${row.placeholders.social ?? ""}</td>
         </tr>
 `;
   }
@@ -417,9 +415,9 @@ ${rows.map((row) => this.renderRow(row)).join("")}
     ];
 
     return `
-<h5 class="preview-block__subtitle">${sectionTitle}</h5>
-${this.renderRowsTable(projectRows)}
-`;
+  <h5 class="mt-4 text-xs font-semibold uppercase tracking-wide text-neutral-500">${sectionTitle}</h5>
+  ${this.renderRowsTable(projectRows)}
+  `;
   }
 
   private static renderProgramBlockContent(block: TemplateBlock, fields: BlockFieldConfig[]): string {
@@ -440,14 +438,14 @@ ${this.renderRowsTable(projectRows)}
 
     const summaryEnabled = block.config?.["program_summary"] !== false;
     const summaryHtml = summaryEnabled
-      ? `<p class="preview-block__subtitle">Lorem ipsum dolor sit amet</p>`
+      ? `<p class="text-xs font-semibold uppercase tracking-wide text-neutral-500">Lorem ipsum dolor sit amet</p>`
       : "";
 
     if (!availableFields.length) {
       return `
-${summaryHtml}
-<p class="preview-placeholder">No fields selected</p>
-`;
+    ${summaryHtml}
+    <p class="text-sm text-neutral-500" data-preview-placeholder>No fields selected</p>
+    `;
     }
 
     const cells = availableFields
@@ -456,15 +454,15 @@ ${summaryHtml}
       .join("");
 
     return `
-${summaryHtml}
-<table class="lesson-plan-table lesson-plan-table--program">
-<tbody>
-<tr>
-${cells}
-</tr>
-</tbody>
-</table>
-`;
+  ${summaryHtml}
+  <table class="w-full text-xs text-neutral-600" data-lesson-table>
+  <tbody>
+  <tr>
+  ${cells}
+  </tr>
+  </tbody>
+  </table>
+  `;
   }
 
   static renderResourcesBlockContent(checkedFields: BlockFieldConfig[], block?: TemplateBlock): string {
@@ -492,13 +490,13 @@ ${cells}
     // Main resources table - single row with values only
     if (mainFields.length > 0) {
       html += `
-<table class="lesson-plan-table">
+<table class="w-full text-xs text-neutral-600" data-lesson-table>
 <tbody>
 <tr>
 ${mainFields
   .map(
     (field) => `
-<td>${this.formatPlaceholder(field.label)}</td>
+<td class="px-3 py-2 align-top">${this.formatPlaceholder(field.label)}</td>
 `,
   )
   .join("")}
@@ -511,15 +509,15 @@ ${mainFields
     // Glossary section - each selected item gets its own row
     if (includeGlossary && glossaryItems.length > 0) {
       html += `
-<h5 class="preview-block__subtitle">Glossary</h5>
-<table class="lesson-plan-table">
+<h5 class="mt-4 text-xs font-semibold uppercase tracking-wide text-neutral-500">Glossary</h5>
+<table class="w-full text-xs text-neutral-600" data-lesson-table>
 <tbody>
 ${glossaryItems
   .map(
     (item) => `
 <tr>
-<td>${item.label}</td>
-<td>${this.formatPlaceholder("URL")}</td>
+<td class="px-3 py-2 align-top">${item.label}</td>
+<td class="px-3 py-2 align-top">${this.formatPlaceholder("URL")}</td>
 </tr>
 `,
   )

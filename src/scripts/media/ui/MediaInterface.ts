@@ -48,25 +48,25 @@ class MediaInterface {
     mediaManager.init();
 
     const searchBox = document.getElementById('media-search-input') as HTMLInputElement | null;
-    const host = document.querySelector('.engine__search');
+    const host = document.querySelector('[data-engine-search]');
     if (!searchBox || !host) return;
 
     // Build UI container (CSS handles all layout)
     this.container = document.createElement('div');
-    this.container.className = 'search__panel';
+    this.container.className = 'flex flex-col gap-3';
     
     // filters removed per request (keep node to maintain layout hooks)
     this.filtersEl = document.createElement('div');
-    this.filtersEl.className = 'search__filters search__filters--hidden';
+    this.filtersEl.className = 'hidden';
 
     this.resultsEl = document.createElement('div');
-    this.resultsEl.className = 'search__results';
+    this.resultsEl.className = 'flex max-h-72 flex-col gap-3 overflow-auto';
 
     // Provider/Connect/Upload removed per request (stock provider is used behind the scenes)
     this.container.appendChild(this.filtersEl);
     this.container.appendChild(this.resultsEl);
     host.appendChild(this.container);
-    host.classList.add('engine__search--ready');
+    host.classList.add('rounded-lg', 'border', 'border-neutral-200', 'bg-white', 'p-3');
 
     // Listen media tab clicks
     document.querySelectorAll('[data-media]').forEach(el => {
@@ -147,7 +147,7 @@ class MediaInterface {
     this.loading = true;
 
     const loader = document.createElement('div');
-    loader.className = 'search__loader';
+    loader.className = 'text-xs text-neutral-500';
     loader.textContent = 'Searching...';
     if (clear) {
       this.resultsEl.innerHTML = '';
@@ -176,25 +176,25 @@ class MediaInterface {
 
   private renderErrorWithConnect(message: string) {
     const wrap = document.createElement('div');
-    wrap.className = 'search__error';
+    wrap.className = 'rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700';
 
     const msg = document.createElement('div');
     msg.textContent = `Error: ${message}`;
-    msg.className = 'search__error-message';
+    msg.className = 'text-sm font-medium';
     wrap.appendChild(msg);
 
     if (this.selectedProviderKey === 'files:google-drive' || this.selectedProviderKey === 'files:dropbox') {
       const hint = document.createElement('div');
-      hint.className = 'search__error-hint';
+      hint.className = 'mt-2 text-xs text-red-600';
       hint.textContent = 'Paste an access token to connect:';
       const row = document.createElement('div');
-      row.className = 'search__error-controls';
+      row.className = 'mt-2 flex flex-wrap gap-2';
       const input = document.createElement('input');
       input.type = 'password';
-      input.className = 'input search__error-input';
+      input.className = 'w-full rounded-md border border-neutral-200 px-3 py-2 text-sm text-neutral-700';
       input.placeholder = 'Access token';
       const btn = document.createElement('button');
-      btn.className = 'button button--primary button--small search__error-button';
+      btn.className = 'inline-flex items-center justify-center rounded-md bg-primary-600 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-primary-700';
       btn.textContent = 'Save Token';
       btn.addEventListener('click', () => {
         const token = input.value.trim();
@@ -230,7 +230,7 @@ class MediaInterface {
     if (result.items.length === 0 && result.page === 1 && !injectedLocalTests) {
       const empty = document.createElement('div');
       empty.textContent = 'No results.';
-      empty.className = 'search__empty';
+      empty.className = 'text-sm text-neutral-500';
       this.resultsEl.appendChild(empty);
       return;
     }
@@ -254,8 +254,8 @@ class MediaInterface {
 
   private renderItemCard(item: MediaItem): HTMLElement {
     const card = document.createElement('div');
-    // Unified media card class for all media types
-    card.className = 'card card--media';
+    card.className = 'flex flex-col gap-2 rounded-lg border border-neutral-200 bg-white p-3 shadow-sm transition hover:shadow-md';
+    card.dataset.mediaCard = 'true';
 
     // Make the entire card draggable for all media types
     card.draggable = true;
@@ -265,7 +265,7 @@ class MediaInterface {
       const img = document.createElement('img');
       img.src = item.thumbnailUrl;
       img.alt = item.title || '';
-      img.className = 'card__preview';
+      img.className = 'h-24 w-full rounded-md object-cover';
       img.draggable = false; // Prevent nested drag
       card.appendChild(img);
     }
@@ -276,14 +276,14 @@ class MediaInterface {
         videoPreview.controls = false;
         videoPreview.muted = true;
         videoPreview.src = item.previewUrl;
-        videoPreview.className = 'card__preview';
+        videoPreview.className = 'h-24 w-full rounded-md object-cover';
         videoPreview.draggable = false;
         card.appendChild(videoPreview);
       } else if (item.thumbnailUrl) {
         const videoThumb = document.createElement('img');
         videoThumb.src = item.thumbnailUrl;
         videoThumb.alt = item.title || '';
-        videoThumb.className = 'card__preview';
+        videoThumb.className = 'h-24 w-full rounded-md object-cover';
         videoThumb.draggable = false;
         card.appendChild(videoThumb);
       }
@@ -291,11 +291,11 @@ class MediaInterface {
 
     if (item.type === 'audio') {
       const audioWrapper = document.createElement('div');
-      audioWrapper.className = 'card__preview';
+      audioWrapper.className = 'flex h-24 items-center justify-center rounded-md bg-neutral-100';
 
       const audioIcon = document.createElement('div');
       audioIcon.innerHTML = '🔊';
-      audioIcon.className = 'card__icon';
+      audioIcon.className = 'text-2xl';
       audioWrapper.appendChild(audioIcon);
 
       card.appendChild(audioWrapper);
@@ -303,7 +303,7 @@ class MediaInterface {
         const audio = document.createElement('audio');
         audio.controls = false;
         audio.src = item.previewUrl;
-        audio.className = 'card__audio';
+        audio.className = 'w-full';
         audio.draggable = false;
         card.appendChild(audio);
       }
@@ -311,11 +311,11 @@ class MediaInterface {
 
     if (item.type === 'text') {
       const textWrapper = document.createElement('div');
-      textWrapper.className = 'card__preview';
+      textWrapper.className = 'flex h-24 items-center justify-center rounded-md bg-neutral-100';
 
       const textIcon = document.createElement('div');
       textIcon.innerHTML = '📝';
-      textIcon.className = 'card__icon';
+      textIcon.className = 'text-2xl';
       textWrapper.appendChild(textIcon);
 
       card.appendChild(textWrapper);
@@ -323,11 +323,11 @@ class MediaInterface {
 
     if (item.type === 'plugins') {
       const pluginWrapper = document.createElement('div');
-      pluginWrapper.className = 'card__preview';
+      pluginWrapper.className = 'flex h-24 items-center justify-center rounded-md bg-neutral-100';
 
       const pluginIcon = document.createElement('div');
       pluginIcon.innerHTML = '🔌';
-      pluginIcon.className = 'card__icon';
+      pluginIcon.className = 'text-2xl';
       pluginWrapper.appendChild(pluginIcon);
 
       card.appendChild(pluginWrapper);
@@ -335,11 +335,11 @@ class MediaInterface {
 
     if (item.type === 'links') {
       const linkWrapper = document.createElement('div');
-      linkWrapper.className = 'card__preview';
+      linkWrapper.className = 'flex h-24 items-center justify-center rounded-md bg-neutral-100';
 
       const linkIcon = document.createElement('div');
       linkIcon.innerHTML = '🔗';
-      linkIcon.className = 'card__icon';
+      linkIcon.className = 'text-2xl';
       linkWrapper.appendChild(linkIcon);
 
       card.appendChild(linkWrapper);
@@ -347,11 +347,11 @@ class MediaInterface {
 
     if (item.type === 'files' && !item.thumbnailUrl) {
       const fileWrapper = document.createElement('div');
-      fileWrapper.className = 'card__preview';
+      fileWrapper.className = 'flex h-24 items-center justify-center rounded-md bg-neutral-100';
 
       const fileIcon = document.createElement('div');
       fileIcon.innerHTML = '📄';
-      fileIcon.className = 'card__icon';
+      fileIcon.className = 'text-2xl';
       fileWrapper.appendChild(fileIcon);
 
       card.appendChild(fileWrapper);
@@ -359,11 +359,11 @@ class MediaInterface {
 
     const title = document.createElement('div');
     title.textContent = item.title || '(untitled)';
-    title.className = 'card__title';
+    title.className = 'text-sm font-semibold text-neutral-900';
     card.appendChild(title);
 
     const meta = document.createElement('div');
-    meta.className = 'card__meta';
+    meta.className = 'flex flex-col gap-1 text-xs text-neutral-500';
     if (item.author) meta.appendChild(this.kv('By', item.author));
     if (item.license) meta.appendChild(this.kv('License', item.license));
     if (item.durationSec) meta.appendChild(this.kv('Duration', `${Math.round(item.durationSec)}s`));
@@ -371,11 +371,11 @@ class MediaInterface {
     card.appendChild(meta);
 
     const actions = document.createElement('div');
-    actions.className = 'card__actions';
+    actions.className = 'flex justify-end';
 
     const infoButton = document.createElement('button');
     infoButton.type = 'button';
-    infoButton.className = 'card__info-button';
+    infoButton.className = 'inline-flex items-center justify-center rounded-md border border-neutral-200 px-2 py-1 text-xs font-semibold text-neutral-600 hover:bg-neutral-50';
     infoButton.textContent = 'Info';
     infoButton.setAttribute('aria-label', `View details for ${item.title || 'media item'}`);
     infoButton.draggable = false;
@@ -402,9 +402,9 @@ class MediaInterface {
     const overlay = this.buildInfoOverlay(item);
     this.infoOverlay = overlay;
     document.body.appendChild(overlay);
-    document.body.classList.add('media-info-overlay--open');
+    document.body.classList.add('overflow-hidden');
 
-    const closeButton = overlay.querySelector<HTMLElement>('.card__close');
+    const closeButton = overlay.querySelector<HTMLElement>('[data-media-info-close]');
     closeButton?.focus({ preventScroll: true });
 
     this.keydownListener = (event: KeyboardEvent) => {
@@ -427,7 +427,7 @@ class MediaInterface {
       this.keydownListener = null;
     }
 
-    document.body.classList.remove('media-info-overlay--open');
+    document.body.classList.remove('overflow-hidden');
 
     if (this.lastFocusedElement) {
       try {
@@ -441,7 +441,8 @@ class MediaInterface {
 
   private buildInfoOverlay(item: MediaItem): HTMLElement {
     const overlay = document.createElement('div');
-    overlay.className = 'media-info-overlay';
+    overlay.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4';
+    overlay.dataset.mediaInfoOverlay = 'true';
     overlay.addEventListener('click', (event) => {
       if (event.target === overlay) {
         this.hideInfoPopup();
@@ -449,7 +450,8 @@ class MediaInterface {
     });
 
     const card = document.createElement('div');
-    card.className = 'card card--media-info media-info';
+    card.className = 'w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl';
+    card.dataset.mediaInfoCard = 'true';
     card.setAttribute('role', 'dialog');
     card.setAttribute('aria-modal', 'true');
     card.setAttribute('aria-label', `${item.title || 'Media item'} details`);
@@ -457,7 +459,8 @@ class MediaInterface {
 
     const closeButton = document.createElement('button');
     closeButton.type = 'button';
-    closeButton.className = 'card__close';
+    closeButton.className = 'inline-flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100';
+    closeButton.dataset.mediaInfoClose = 'true';
     closeButton.setAttribute('aria-label', 'Close media details');
     closeButton.innerHTML = '&times;';
     closeButton.addEventListener('click', () => this.hideInfoPopup());
@@ -469,15 +472,18 @@ class MediaInterface {
     card.appendChild(closeButton);
 
     const layout = document.createElement('div');
-    layout.className = 'media-info__layout';
+    layout.className = 'grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]';
+    layout.dataset.mediaInfoLayout = 'true';
     card.appendChild(layout);
 
     const details = document.createElement('div');
-    details.className = 'media-info__details';
+    details.className = 'flex flex-col gap-3';
+    details.dataset.mediaInfoDetails = 'true';
     layout.appendChild(details);
 
     const detailList = document.createElement('div');
-    detailList.className = 'media-info__list';
+    detailList.className = 'grid gap-2';
+    detailList.dataset.mediaInfoList = 'true';
     details.appendChild(detailList);
 
     const metadata = item.metadata || {};
@@ -507,17 +513,20 @@ class MediaInterface {
     this.appendDetail(detailList, 'Upload Date', uploadDate);
 
     const preview = document.createElement('div');
-    preview.className = 'media-info__preview';
+    preview.className = 'flex flex-col gap-3';
+    preview.dataset.mediaInfoPreview = 'true';
     layout.appendChild(preview);
 
     const previewFrame = document.createElement('div');
-    previewFrame.className = 'media-info__preview-frame';
+    previewFrame.className = 'rounded-lg border border-neutral-200 bg-neutral-50 p-3';
+    previewFrame.dataset.mediaInfoPreviewFrame = 'true';
     const previewContent = this.buildPreviewContent(item);
     previewFrame.appendChild(previewContent);
     preview.appendChild(previewFrame);
 
     const previewNote = document.createElement('div');
-    previewNote.className = 'media-info__preview-note';
+    previewNote.className = 'text-xs text-neutral-500';
+    previewNote.dataset.mediaInfoPreviewNote = 'true';
     previewNote.textContent = 'Preview is for reference only. Drag to the canvas to add this media.';
     preview.appendChild(previewNote);
 
@@ -531,6 +540,7 @@ class MediaInterface {
       video.playsInline = true;
       video.preload = 'metadata';
       video.src = item.previewUrl || item.contentUrl || '';
+      video.className = 'w-full rounded-md';
       return video;
     }
 
@@ -539,6 +549,7 @@ class MediaInterface {
       audio.controls = true;
       audio.preload = 'metadata';
       audio.src = item.previewUrl || item.contentUrl || '';
+      audio.className = 'w-full';
       return audio;
     }
 
@@ -546,26 +557,27 @@ class MediaInterface {
       const img = document.createElement('img');
       img.src = item.previewUrl || item.thumbnailUrl || '';
       img.alt = item.title || 'Media preview';
+      img.className = 'w-full rounded-md object-cover';
       return img;
     }
 
     const placeholder = document.createElement('div');
-    placeholder.className = 'media-info__preview-fallback';
+    placeholder.className = 'flex h-40 items-center justify-center rounded-lg border border-dashed border-neutral-200 bg-neutral-50 text-sm text-neutral-500';
     placeholder.textContent = 'Preview not available for this media type.';
     return placeholder;
   }
 
   private appendDetail(container: HTMLElement, label: string, value: string) {
     const item = document.createElement('div');
-    item.className = 'media-info__item';
+    item.className = 'flex flex-col gap-1';
 
     const labelEl = document.createElement('span');
-    labelEl.className = 'media-info__label';
+    labelEl.className = 'text-xs font-semibold uppercase tracking-wide text-neutral-400';
     labelEl.textContent = label;
     item.appendChild(labelEl);
 
     const valueEl = document.createElement('span');
-    valueEl.className = 'media-info__value';
+    valueEl.className = 'text-sm text-neutral-700';
     valueEl.textContent = value;
     item.appendChild(valueEl);
 
@@ -643,7 +655,7 @@ class MediaInterface {
 
   private kv(k: string, v: string) {
     const el = document.createElement('div');
-    el.className = 'card__meta-item';
+    el.className = 'text-xs text-neutral-500';
     el.textContent = `${k}: ${v}`;
     return el;
   }
@@ -657,13 +669,15 @@ class MediaInterface {
       
       // Add visual feedback during drag
       const target = ev.target as HTMLElement;
-      const card = target.closest('.card') as HTMLElement;
+      const card = target.closest('[data-media-card]') as HTMLElement;
       if (card) {
-        card.classList.add('card--dragging');
+        card.dataset.dragging = 'true';
+        card.classList.add('ring-2', 'ring-primary-300', 'opacity-70');
         
         // Remove the class after drag ends
         const removeDragClass = () => {
-          card.classList.remove('card--dragging');
+          card.classList.remove('ring-2', 'ring-primary-300', 'opacity-70');
+          delete card.dataset.dragging;
           document.removeEventListener('dragend', removeDragClass);
         };
         document.addEventListener('dragend', removeDragClass);

@@ -310,7 +310,7 @@ return normalized.length ? normalized : null;
 
  private setupSectionNavigation(): void {
  // Listen for aside navigation clicks
- const asideLinks = document.querySelectorAll('.aside__link[data-section]');
+ const asideLinks = document.querySelectorAll('[data-aside-link][data-section]');
  asideLinks.forEach((link) => {
  link.addEventListener("click", (e) => {
  e.preventDefault();
@@ -470,7 +470,7 @@ articles.forEach((article) => {
   */
  private updateNavigationTabsState(): void {
    const hasCourse = !!this.courseId;
-   const allNavLinks = document.querySelectorAll<HTMLAnchorElement>('.aside__link[data-section]');
+  const allNavLinks = document.querySelectorAll<HTMLAnchorElement>('[data-aside-link][data-section]');
    
    // Sections that should always be enabled
    const alwaysEnabledSections = ['essentials', 'advanced-settings'];
@@ -480,17 +480,15 @@ articles.forEach((article) => {
      if (!section) return;
      
      if (alwaysEnabledSections.includes(section)) {
-       // Always enable essentials and advanced-settings
-       link.classList.remove('aside__link--disabled');
        link.removeAttribute('aria-disabled');
+       link.classList.remove('pointer-events-none', 'opacity-50');
      } else {
-       // Enable/disable other sections based on course existence
        if (hasCourse) {
-         link.classList.remove('aside__link--disabled');
          link.removeAttribute('aria-disabled');
+         link.classList.remove('pointer-events-none', 'opacity-50');
        } else {
-         link.classList.add('aside__link--disabled');
          link.setAttribute('aria-disabled', 'true');
+         link.classList.add('pointer-events-none', 'opacity-50');
        }
      }
    });
@@ -518,7 +516,7 @@ let courseBuilderInitialized = false;
 
 document.addEventListener("DOMContentLoaded", () => {
   // Initialize when the coursebuilder markup is present.
-  const hasSetupSection = document.querySelector('.coursebuilder__setup');
+  const hasSetupSection = document.querySelector('[data-coursebuilder-section="setup"]');
 
   if (hasSetupSection && !courseBuilderInitialized) {
     courseBuilderInitialized = true;
@@ -528,7 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Also listen for hash changes as a fallback (e.g., lazy-loaded views)
 window.addEventListener("hashchange", () => {
-  const hasSetupSection = document.querySelector('.coursebuilder__setup');
+  const hasSetupSection = document.querySelector('[data-coursebuilder-section="setup"]');
 
   if (hasSetupSection && !courseBuilderInitialized) {
     courseBuilderInitialized = true;

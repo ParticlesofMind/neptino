@@ -27,7 +27,7 @@ export class StudentsPreview {
   constructor() {
     this.previewBody = document.getElementById("students-preview-body") as HTMLElement | null;
     this.emptyRow = document.getElementById("students-preview-empty") as HTMLElement | null;
-    this.wrapper = document.querySelector(".students__list-wrapper");
+    this.wrapper = document.querySelector("[data-students-list-wrapper]");
     this.feedback = document.getElementById("students-feedback");
     this.totalEl = document.getElementById("students-count-total");
     this.gradesEl = document.getElementById("students-count-grades");
@@ -61,7 +61,7 @@ export class StudentsPreview {
 
     students.forEach((student, index) => {
       const row = document.createElement("div");
-      row.className = "students__preview-row";
+      row.className = "grid grid-cols-4 gap-2 rounded-md border border-neutral-200 bg-white p-2 text-sm text-neutral-700";
       row.dataset.studentIndex = String(index);
 
       const cells = [
@@ -85,11 +85,11 @@ export class StudentsPreview {
 
   private createEditableCell(value: string, field: keyof StudentRecord, index: number): HTMLElement {
     const cell = document.createElement("div");
-    cell.className = "students__preview-cell students__preview-cell--editable";
+    cell.className = "flex items-center";
     
     const input = document.createElement("input");
     input.type = "text";
-    input.className = "students__preview-input";
+    input.className = "w-full rounded-md border border-neutral-200 px-2 py-1 text-sm text-neutral-800 focus:border-primary-500 focus:ring-1 focus:ring-primary-500";
     input.value = value;
     input.dataset.field = String(field);
     input.dataset.studentIndex = String(index);
@@ -107,7 +107,7 @@ export class StudentsPreview {
 
   private createReadOnlyCell(value: string): HTMLElement {
     const cell = document.createElement("div");
-    cell.className = "students__preview-cell students__preview-cell--readonly";
+    cell.className = "text-sm text-neutral-700";
     cell.textContent = value;
     return cell;
   }
@@ -186,10 +186,10 @@ export class StudentsPreview {
   public appendActivity(message: string): void {
     if (!this.activityList) return;
     const li = document.createElement("li");
-    li.className = "students__activity-item";
+    li.className = "text-xs text-neutral-500";
     li.textContent = `${new Date().toLocaleString()}: ${message}`;
 
-    const emptyItem = this.activityList.querySelector(".students__activity-item--empty");
+    const emptyItem = this.activityList.querySelector("[data-students-activity-empty]");
     if (emptyItem) {
       emptyItem.remove();
     }
@@ -203,7 +203,7 @@ export class StudentsPreview {
   public clearActivity(): void {
     if (!this.activityList) return;
     this.activityList.innerHTML = `
-      <li class="students__activity-item students__activity-item--empty">
+      <li class="text-xs text-neutral-400" data-students-activity-empty>
         Nothing yet — uploads will appear here with timestamps and status.
       </li>
     `;
