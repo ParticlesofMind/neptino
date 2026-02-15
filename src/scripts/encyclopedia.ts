@@ -1,10 +1,21 @@
 import { fetchFigureData, type WikidataProfile, type WikidataFigureData, type WikidataRelatedPerson, type WikidataTimelineEvent } from "./encyclopedia/wikidata";
 
+type EntityType =
+  | "Person"
+  | "Event"
+  | "Location"
+  | "Concept / Theory"
+  | "Invention / Technology"
+  | "Work"
+  | "Institution"
+  | "Movement / School"
+  | "Era / Period";
+
 type KnowledgeItem = {
   id: string;
   title: string;
   wikidataId?: string;
-  knowledgeType: "Historical Figures" | "Key Events" | "Concepts";
+  knowledgeType: EntityType;
   domain: string;
   secondaryDomains: string[];
   eraGroup: "ancient" | "early-modern" | "modern" | "contemporary";
@@ -61,19 +72,31 @@ const initialsFor = (title: string) =>
     .join("");
 
 const artworkFor = (type: KnowledgeItem["knowledgeType"]) => {
-  const palette: Record<KnowledgeItem["knowledgeType"], string> = {
-    "Historical Figures": "from-amber-100 via-amber-200 to-orange-200 text-amber-900",
-    "Key Events": "from-blue-100 via-cyan-200 to-sky-200 text-blue-900",
-    "Concepts": "from-emerald-100 via-teal-200 to-green-200 text-emerald-900",
+  const palette: Record<EntityType, string> = {
+    "Person": "from-amber-100 via-amber-200 to-orange-200 text-amber-900",
+    "Event": "from-blue-100 via-cyan-200 to-sky-200 text-blue-900",
+    "Concept / Theory": "from-emerald-100 via-teal-200 to-green-200 text-emerald-900",
+    "Location": "from-violet-100 via-purple-200 to-fuchsia-200 text-violet-900",
+    "Invention / Technology": "from-slate-100 via-gray-200 to-zinc-200 text-slate-900",
+    "Work": "from-rose-100 via-pink-200 to-red-200 text-rose-900",
+    "Institution": "from-indigo-100 via-blue-200 to-sky-200 text-indigo-900",
+    "Movement / School": "from-lime-100 via-green-200 to-emerald-200 text-lime-900",
+    "Era / Period": "from-yellow-100 via-amber-200 to-yellow-200 text-yellow-900",
   };
-  const label: Record<KnowledgeItem["knowledgeType"], string> = {
-    "Historical Figures": "Figures",
-    "Key Events": "Events",
-    "Concepts": "Concepts",
+  const label: Record<EntityType, string> = {
+    "Person": "Person",
+    "Event": "Event",
+    "Concept / Theory": "Concept",
+    "Location": "Location",
+    "Invention / Technology": "Invention",
+    "Work": "Work",
+    "Institution": "Institution",
+    "Movement / School": "Movement",
+    "Era / Period": "Era",
   };
   return {
-    gradient: palette[type],
-    label: label[type],
+    gradient: palette[type] ?? "from-neutral-100 via-neutral-200 to-neutral-300 text-neutral-800",
+    label: label[type] ?? type,
   };
 };
 

@@ -30,18 +30,20 @@ const LIMIT = parseInt(process.env.LIMIT ?? "50000", 10);
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-/** The 10 core domains shared across all knowledge types */
+/** The 12 knowledge domains (adapted from ISCED-F 2013, corrected for Western biases) */
 const CORE_DOMAINS = [
-  "Philosophy & Religion",
-  "Politics & Governance",
-  "Economics & Commerce",
-  "Sciences",
   "Mathematics & Logic",
-  "Technology & Engineering",
-  "Arts, Literature & Culture",
-  "Military, Conflict & Strategy",
-  "Exploration & Environment",
-  "Society & Social Movements",
+  "Natural Sciences",
+  "Medical & Health Sciences",
+  "Engineering & Technology",
+  "Philosophy & Thought",
+  "Social Sciences",
+  "Arts & Creative Expression",
+  "Language & Communication",
+  "Governance & Institutions",
+  "Spiritual & Religious Thought",
+  "Exploration & Discovery",
+  "Agriculture & Ecology",
 ] as const;
 
 type CoreDomain = (typeof CORE_DOMAINS)[number];
@@ -50,7 +52,7 @@ interface CatalogItem {
   id: string;
   title: string;
   wikidataId: string;
-  knowledgeType: "Historical Figures";
+  knowledgeType: "Person";
   domain: CoreDomain;
   secondaryDomains: CoreDomain[];
   eraGroup: "ancient" | "early-modern" | "modern" | "contemporary";
@@ -70,129 +72,137 @@ interface CatalogItem {
  * matches keywords for multiple domains, extra matches become secondaries.
  */
 const DOMAIN_MAP: Record<string, CoreDomain> = {
-  // ── Sciences ──────────────────────────────────────────────────────
-  physicist: "Sciences",
-  chemist: "Sciences",
-  biologist: "Sciences",
-  astronomer: "Sciences",
-  geologist: "Sciences",
-  botanist: "Sciences",
-  zoologist: "Sciences",
-  geneticist: "Sciences",
-  neuroscientist: "Sciences",
-  paleontologist: "Sciences",
-  meteorologist: "Sciences",
-  oceanographer: "Sciences",
-  ecologist: "Sciences",
-  microbiologist: "Sciences",
-  physician: "Sciences",
-  surgeon: "Sciences",
-  pharmacist: "Sciences",
-  nurse: "Sciences",
-  psychoanalyst: "Sciences",
-  psychologist: "Sciences",
-  "political scientist": "Sciences",
-  linguist: "Sciences",
+  // ── Natural Sciences ──────────────────────────────────────────────
+  physicist: "Natural Sciences",
+  chemist: "Natural Sciences",
+  biologist: "Natural Sciences",
+  astronomer: "Natural Sciences",
+  geologist: "Natural Sciences",
+  botanist: "Natural Sciences",
+  zoologist: "Natural Sciences",
+  geneticist: "Natural Sciences",
+  neuroscientist: "Natural Sciences",
+  paleontologist: "Natural Sciences",
+  meteorologist: "Natural Sciences",
+  oceanographer: "Natural Sciences",
+  ecologist: "Natural Sciences",
+  microbiologist: "Natural Sciences",
+
+  // ── Medical & Health Sciences ─────────────────────────────────────
+  physician: "Medical & Health Sciences",
+  surgeon: "Medical & Health Sciences",
+  pharmacist: "Medical & Health Sciences",
+  nurse: "Medical & Health Sciences",
+  psychoanalyst: "Medical & Health Sciences",
+
+  // ── Social Sciences ───────────────────────────────────────────────
+  psychologist: "Social Sciences",
+  "political scientist": "Social Sciences",
+  linguist: "Social Sciences",
+  sociologist: "Social Sciences",
+  anthropologist: "Social Sciences",
+  archaeologist: "Social Sciences",
+  economist: "Social Sciences",
+  historian: "Social Sciences",
 
   // ── Mathematics & Logic ───────────────────────────────────────────
   mathematician: "Mathematics & Logic",
 
-  // ── Technology & Engineering ──────────────────────────────────────
-  "computer scientist": "Technology & Engineering",
-  engineer: "Technology & Engineering",
-  inventor: "Technology & Engineering",
-  computer: "Technology & Engineering",
-  programmer: "Technology & Engineering",
-  astronaut: "Technology & Engineering",
-  architect: "Technology & Engineering",
+  // ── Engineering & Technology ──────────────────────────────────────
+  "computer scientist": "Engineering & Technology",
+  engineer: "Engineering & Technology",
+  inventor: "Engineering & Technology",
+  computer: "Engineering & Technology",
+  programmer: "Engineering & Technology",
+  astronaut: "Engineering & Technology",
+  architect: "Engineering & Technology",
 
-  // ── Philosophy & Religion ─────────────────────────────────────────
-  philosopher: "Philosophy & Religion",
-  theologian: "Philosophy & Religion",
-  cleric: "Philosophy & Religion",
-  priest: "Philosophy & Religion",
-  bishop: "Philosophy & Religion",
-  pope: "Philosophy & Religion",
-  missionary: "Philosophy & Religion",
-  rabbi: "Philosophy & Religion",
-  imam: "Philosophy & Religion",
-  monk: "Philosophy & Religion",
+  // ── Philosophy & Thought ──────────────────────────────────────────
+  philosopher: "Philosophy & Thought",
 
-  // ── Arts, Literature & Culture ────────────────────────────────────
-  writer: "Arts, Literature & Culture",
-  poet: "Arts, Literature & Culture",
-  novelist: "Arts, Literature & Culture",
-  playwright: "Arts, Literature & Culture",
-  author: "Arts, Literature & Culture",
-  essayist: "Arts, Literature & Culture",
-  journalist: "Arts, Literature & Culture",
-  translator: "Arts, Literature & Culture",
-  screenwriter: "Arts, Literature & Culture",
-  lyricist: "Arts, Literature & Culture",
-  literary: "Arts, Literature & Culture",
-  artist: "Arts, Literature & Culture",
-  painter: "Arts, Literature & Culture",
-  sculptor: "Arts, Literature & Culture",
-  photographer: "Arts, Literature & Culture",
-  illustrator: "Arts, Literature & Culture",
-  "graphic designer": "Arts, Literature & Culture",
-  printmaker: "Arts, Literature & Culture",
-  engraver: "Arts, Literature & Culture",
-  ceramicist: "Arts, Literature & Culture",
-  composer: "Arts, Literature & Culture",
-  musician: "Arts, Literature & Culture",
-  singer: "Arts, Literature & Culture",
-  conductor: "Arts, Literature & Culture",
-  pianist: "Arts, Literature & Culture",
-  violinist: "Arts, Literature & Culture",
-  opera: "Arts, Literature & Culture",
-  actor: "Arts, Literature & Culture",
-  actress: "Arts, Literature & Culture",
-  "film director": "Arts, Literature & Culture",
-  director: "Arts, Literature & Culture",
-  dancer: "Arts, Literature & Culture",
-  choreographer: "Arts, Literature & Culture",
+  // ── Spiritual & Religious Thought ─────────────────────────────────
+  theologian: "Spiritual & Religious Thought",
+  cleric: "Spiritual & Religious Thought",
+  priest: "Spiritual & Religious Thought",
+  bishop: "Spiritual & Religious Thought",
+  pope: "Spiritual & Religious Thought",
+  missionary: "Spiritual & Religious Thought",
+  rabbi: "Spiritual & Religious Thought",
+  imam: "Spiritual & Religious Thought",
+  monk: "Spiritual & Religious Thought",
 
-  // ── Politics & Governance ─────────────────────────────────────────
-  politician: "Politics & Governance",
-  diplomat: "Politics & Governance",
-  statesman: "Politics & Governance",
-  monarch: "Politics & Governance",
-  emperor: "Politics & Governance",
-  president: "Politics & Governance",
-  prime: "Politics & Governance",
-  activist: "Society & Social Movements",
-  revolutionary: "Politics & Governance",
-  jurist: "Politics & Governance",
-  lawyer: "Politics & Governance",
-  judge: "Politics & Governance",
+  // ── Arts & Creative Expression ────────────────────────────────────
+  writer: "Arts & Creative Expression",
+  poet: "Arts & Creative Expression",
+  novelist: "Arts & Creative Expression",
+  playwright: "Arts & Creative Expression",
+  author: "Arts & Creative Expression",
+  essayist: "Arts & Creative Expression",
+  screenwriter: "Arts & Creative Expression",
+  lyricist: "Arts & Creative Expression",
+  literary: "Arts & Creative Expression",
+  artist: "Arts & Creative Expression",
+  painter: "Arts & Creative Expression",
+  sculptor: "Arts & Creative Expression",
+  photographer: "Arts & Creative Expression",
+  illustrator: "Arts & Creative Expression",
+  "graphic designer": "Arts & Creative Expression",
+  printmaker: "Arts & Creative Expression",
+  engraver: "Arts & Creative Expression",
+  ceramicist: "Arts & Creative Expression",
+  composer: "Arts & Creative Expression",
+  musician: "Arts & Creative Expression",
+  singer: "Arts & Creative Expression",
+  conductor: "Arts & Creative Expression",
+  pianist: "Arts & Creative Expression",
+  violinist: "Arts & Creative Expression",
+  opera: "Arts & Creative Expression",
+  actor: "Arts & Creative Expression",
+  actress: "Arts & Creative Expression",
+  "film director": "Arts & Creative Expression",
+  director: "Arts & Creative Expression",
+  dancer: "Arts & Creative Expression",
+  choreographer: "Arts & Creative Expression",
 
-  // ── Economics & Commerce ──────────────────────────────────────────
-  economist: "Economics & Commerce",
-  businessperson: "Economics & Commerce",
-  industrialist: "Economics & Commerce",
-  entrepreneur: "Economics & Commerce",
+  // ── Language & Communication ──────────────────────────────────────
+  journalist: "Language & Communication",
+  translator: "Language & Communication",
 
-  // ── Military, Conflict & Strategy ─────────────────────────────────
-  general: "Military, Conflict & Strategy",
-  military: "Military, Conflict & Strategy",
-  admiral: "Military, Conflict & Strategy",
-  officer: "Military, Conflict & Strategy",
+  // ── Governance & Institutions ─────────────────────────────────────
+  politician: "Governance & Institutions",
+  diplomat: "Governance & Institutions",
+  statesman: "Governance & Institutions",
+  monarch: "Governance & Institutions",
+  emperor: "Governance & Institutions",
+  president: "Governance & Institutions",
+  prime: "Governance & Institutions",
+  revolutionary: "Governance & Institutions",
+  jurist: "Governance & Institutions",
+  lawyer: "Governance & Institutions",
+  judge: "Governance & Institutions",
+  activist: "Governance & Institutions",
 
-  // ── Exploration & Environment ─────────────────────────────────────
-  explorer: "Exploration & Environment",
-  navigator: "Exploration & Environment",
-  cartographer: "Exploration & Environment",
-  geographer: "Exploration & Environment",
+  // ── Economics (Social Sciences) ───────────────────────────────────
+  businessperson: "Social Sciences",
+  industrialist: "Social Sciences",
+  entrepreneur: "Social Sciences",
 
-  // ── Society & Social Movements ────────────────────────────────────
-  historian: "Society & Social Movements",
-  archaeologist: "Society & Social Movements",
-  anthropologist: "Society & Social Movements",
-  sociologist: "Society & Social Movements",
-  pedagogue: "Society & Social Movements",
-  professor: "Society & Social Movements",
-  academic: "Society & Social Movements",
+  // ── Military (Governance & Institutions) ──────────────────────────
+  general: "Governance & Institutions",
+  military: "Governance & Institutions",
+  admiral: "Governance & Institutions",
+  officer: "Governance & Institutions",
+
+  // ── Exploration & Discovery ───────────────────────────────────────
+  explorer: "Exploration & Discovery",
+  navigator: "Exploration & Discovery",
+  cartographer: "Exploration & Discovery",
+  geographer: "Exploration & Discovery",
+
+  // ── Agriculture & Ecology ─────────────────────────────────────────
+  pedagogue: "Social Sciences",
+  professor: "Social Sciences",
+  academic: "Social Sciences",
 };
 
 /**
@@ -201,27 +211,29 @@ const DOMAIN_MAP: Record<string, CoreDomain> = {
  */
 const SECONDARY_RULES: { keyword: string; domain: CoreDomain }[] = [
   // Scientists who also contributed to Philosophy
-  { keyword: "philosopher", domain: "Sciences" },           // philosopher-scientists
+  { keyword: "philosopher", domain: "Natural Sciences" },
   // Politicians who led wars
-  { keyword: "monarch",     domain: "Military, Conflict & Strategy" },
-  { keyword: "emperor",     domain: "Military, Conflict & Strategy" },
+  { keyword: "monarch",     domain: "Governance & Institutions" },
+  { keyword: "emperor",     domain: "Governance & Institutions" },
   // Engineers/inventors → Sciences background
-  { keyword: "engineer",    domain: "Sciences" },
-  { keyword: "inventor",    domain: "Sciences" },
-  // Economists → Sciences (social science)
-  { keyword: "economist",   domain: "Sciences" },
-  // Psychologist → Sciences
-  { keyword: "psychologist", domain: "Society & Social Movements" },
+  { keyword: "engineer",    domain: "Natural Sciences" },
+  { keyword: "inventor",    domain: "Natural Sciences" },
+  // Economists → Social Sciences
+  { keyword: "economist",   domain: "Social Sciences" },
+  // Psychologist → Social Sciences secondary
+  { keyword: "psychologist", domain: "Medical & Health Sciences" },
   // Architect → Arts as secondary
-  { keyword: "architect",   domain: "Arts, Literature & Culture" },
-  // Mathematician → Sciences as secondary
-  { keyword: "mathematician", domain: "Sciences" },
-  // Explorer → Sciences as secondary (naturalists)
-  { keyword: "explorer",    domain: "Sciences" },
-  // Journalist → Society
-  { keyword: "journalist",  domain: "Society & Social Movements" },
-  // Activist → Politics
-  { keyword: "activist",    domain: "Politics & Governance" },
+  { keyword: "architect",   domain: "Arts & Creative Expression" },
+  // Mathematician → Natural Sciences as secondary
+  { keyword: "mathematician", domain: "Natural Sciences" },
+  // Explorer → Natural Sciences as secondary (naturalists)
+  { keyword: "explorer",    domain: "Natural Sciences" },
+  // Journalist → Language & Communication
+  { keyword: "journalist",  domain: "Language & Communication" },
+  // Activist → Governance & Institutions
+  { keyword: "activist",    domain: "Governance & Institutions" },
+  // Theologian → Philosophy as secondary
+  { keyword: "theologian",  domain: "Philosophy & Thought" },
 ];
 
 function inferDomains(
@@ -348,78 +360,80 @@ WHERE {
 
 /** Categories of occupations to query, with their Wikidata IDs, per-category limits, and primary domain */
 const OCCUPATION_CATEGORIES: { id: string; name: string; limit: number; domain: CoreDomain }[] = [
-  // ── Sciences ──────────────────────────────────────────────────────
-  { id: "Q169470",  name: "physicist",            limit: 1200, domain: "Sciences" },
-  { id: "Q593644",  name: "chemist",              limit: 800,  domain: "Sciences" },
-  { id: "Q864503",  name: "biologist",            limit: 600,  domain: "Sciences" },
-  { id: "Q11063",   name: "astronomer",           limit: 600,  domain: "Sciences" },
-  { id: "Q520549",  name: "geologist",            limit: 400,  domain: "Sciences" },
-  { id: "Q2374149", name: "botanist",             limit: 400,  domain: "Sciences" },
-  { id: "Q350979",  name: "zoologist",            limit: 300,  domain: "Sciences" },
-  { id: "Q2504617", name: "paleontologist",       limit: 200,  domain: "Sciences" },
-  { id: "Q2259451", name: "meteorologist",        limit: 150,  domain: "Sciences" },
-  { id: "Q39631",   name: "physician",            limit: 600,  domain: "Sciences" },
-  { id: "Q774306",  name: "surgeon",              limit: 300,  domain: "Sciences" },
-  { id: "Q2640827", name: "pharmacist",           limit: 150,  domain: "Sciences" },
-  { id: "Q212980",  name: "psychologist",         limit: 400,  domain: "Sciences" },
+  // ── Natural Sciences ─────────────────────────────────────────────
+  { id: "Q169470",  name: "physicist",            limit: 1200, domain: "Natural Sciences" },
+  { id: "Q593644",  name: "chemist",              limit: 800,  domain: "Natural Sciences" },
+  { id: "Q864503",  name: "biologist",            limit: 600,  domain: "Natural Sciences" },
+  { id: "Q11063",   name: "astronomer",           limit: 600,  domain: "Natural Sciences" },
+  { id: "Q520549",  name: "geologist",            limit: 400,  domain: "Natural Sciences" },
+  { id: "Q2374149", name: "botanist",             limit: 400,  domain: "Natural Sciences" },
+  { id: "Q350979",  name: "zoologist",            limit: 300,  domain: "Natural Sciences" },
+  { id: "Q2504617", name: "paleontologist",       limit: 200,  domain: "Natural Sciences" },
+  { id: "Q2259451", name: "meteorologist",        limit: 150,  domain: "Natural Sciences" },
+
+  // ── Medical & Health Sciences ────────────────────────────────────
+  { id: "Q39631",   name: "physician",            limit: 600,  domain: "Medical & Health Sciences" },
+  { id: "Q774306",  name: "surgeon",              limit: 300,  domain: "Medical & Health Sciences" },
+  { id: "Q2640827", name: "pharmacist",           limit: 150,  domain: "Medical & Health Sciences" },
+
+  // ── Social Sciences ──────────────────────────────────────────────
+  { id: "Q212980",  name: "psychologist",         limit: 400,  domain: "Social Sciences" },
+  { id: "Q188094",  name: "economist",            limit: 600,  domain: "Social Sciences" },
+  { id: "Q3621491", name: "historian",            limit: 800,  domain: "Social Sciences" },
+  { id: "Q10876391",name: "archaeologist",        limit: 300,  domain: "Social Sciences" },
+  { id: "Q2306091", name: "sociologist",          limit: 300,  domain: "Social Sciences" },
+  { id: "Q1622272", name: "university professor", limit: 500,  domain: "Social Sciences" },
 
   // ── Mathematics & Logic ───────────────────────────────────────────
   { id: "Q170790",  name: "mathematician",        limit: 1200, domain: "Mathematics & Logic" },
 
-  // ── Technology & Engineering ──────────────────────────────────────
-  { id: "Q15839134",name: "computer scientist",   limit: 300,  domain: "Technology & Engineering" },
-  { id: "Q81096",   name: "engineer",             limit: 800,  domain: "Technology & Engineering" },
-  { id: "Q205375",  name: "inventor",             limit: 600,  domain: "Technology & Engineering" },
-  { id: "Q11631",   name: "astronaut",            limit: 300,  domain: "Technology & Engineering" },
+  // ── Engineering & Technology ──────────────────────────────────────
+  { id: "Q15839134",name: "computer scientist",   limit: 300,  domain: "Engineering & Technology" },
+  { id: "Q81096",   name: "engineer",             limit: 800,  domain: "Engineering & Technology" },
+  { id: "Q205375",  name: "inventor",             limit: 600,  domain: "Engineering & Technology" },
+  { id: "Q11631",   name: "astronaut",            limit: 300,  domain: "Engineering & Technology" },
 
-  // ── Arts, Literature & Culture ────────────────────────────────────
-  { id: "Q36180",   name: "writer",               limit: 2000, domain: "Arts, Literature & Culture" },
-  { id: "Q49757",   name: "poet",                 limit: 1200, domain: "Arts, Literature & Culture" },
-  { id: "Q6625963", name: "novelist",             limit: 1000, domain: "Arts, Literature & Culture" },
-  { id: "Q214917",  name: "playwright",           limit: 600,  domain: "Arts, Literature & Culture" },
-  { id: "Q1930187", name: "journalist",           limit: 500,  domain: "Arts, Literature & Culture" },
-  { id: "Q4853732", name: "essayist",             limit: 300,  domain: "Arts, Literature & Culture" },
-  { id: "Q333634",  name: "translator",           limit: 200,  domain: "Arts, Literature & Culture" },
-  { id: "Q28389",   name: "screenwriter",         limit: 400,  domain: "Arts, Literature & Culture" },
-  { id: "Q1028181", name: "painter",              limit: 1500, domain: "Arts, Literature & Culture" },
-  { id: "Q1281618", name: "sculptor",             limit: 500,  domain: "Arts, Literature & Culture" },
-  { id: "Q42973",   name: "architect",            limit: 600,  domain: "Arts, Literature & Culture" },
-  { id: "Q33231",   name: "photographer",         limit: 400,  domain: "Arts, Literature & Culture" },
-  { id: "Q644687",  name: "illustrator",          limit: 300,  domain: "Arts, Literature & Culture" },
-  { id: "Q36834",   name: "composer",             limit: 1000, domain: "Arts, Literature & Culture" },
-  { id: "Q639669",  name: "musician",             limit: 800,  domain: "Arts, Literature & Culture" },
-  { id: "Q177220",  name: "singer",               limit: 300,  domain: "Arts, Literature & Culture" },
-  { id: "Q158852",  name: "conductor",            limit: 300,  domain: "Arts, Literature & Culture" },
-  { id: "Q33999",   name: "actor",                limit: 1000, domain: "Arts, Literature & Culture" },
-  { id: "Q2526255", name: "film director",        limit: 800,  domain: "Arts, Literature & Culture" },
-  { id: "Q486748",  name: "dancer",               limit: 200,  domain: "Arts, Literature & Culture" },
-  { id: "Q2490358", name: "choreographer",        limit: 150,  domain: "Arts, Literature & Culture" },
+  // ── Arts & Creative Expression ────────────────────────────────────
+  { id: "Q36180",   name: "writer",               limit: 2000, domain: "Arts & Creative Expression" },
+  { id: "Q49757",   name: "poet",                 limit: 1200, domain: "Arts & Creative Expression" },
+  { id: "Q6625963", name: "novelist",             limit: 1000, domain: "Arts & Creative Expression" },
+  { id: "Q214917",  name: "playwright",           limit: 600,  domain: "Arts & Creative Expression" },
+  { id: "Q4853732", name: "essayist",             limit: 300,  domain: "Arts & Creative Expression" },
+  { id: "Q28389",   name: "screenwriter",         limit: 400,  domain: "Arts & Creative Expression" },
+  { id: "Q1028181", name: "painter",              limit: 1500, domain: "Arts & Creative Expression" },
+  { id: "Q1281618", name: "sculptor",             limit: 500,  domain: "Arts & Creative Expression" },
+  { id: "Q42973",   name: "architect",            limit: 600,  domain: "Arts & Creative Expression" },
+  { id: "Q33231",   name: "photographer",         limit: 400,  domain: "Arts & Creative Expression" },
+  { id: "Q644687",  name: "illustrator",          limit: 300,  domain: "Arts & Creative Expression" },
+  { id: "Q36834",   name: "composer",             limit: 1000, domain: "Arts & Creative Expression" },
+  { id: "Q639669",  name: "musician",             limit: 800,  domain: "Arts & Creative Expression" },
+  { id: "Q177220",  name: "singer",               limit: 300,  domain: "Arts & Creative Expression" },
+  { id: "Q158852",  name: "conductor",            limit: 300,  domain: "Arts & Creative Expression" },
+  { id: "Q33999",   name: "actor",                limit: 1000, domain: "Arts & Creative Expression" },
+  { id: "Q2526255", name: "film director",        limit: 800,  domain: "Arts & Creative Expression" },
+  { id: "Q486748",  name: "dancer",               limit: 200,  domain: "Arts & Creative Expression" },
+  { id: "Q2490358", name: "choreographer",        limit: 150,  domain: "Arts & Creative Expression" },
 
-  // ── Politics & Governance ─────────────────────────────────────────
-  { id: "Q82955",   name: "politician",           limit: 800,  domain: "Politics & Governance" },
-  { id: "Q116",     name: "monarch",              limit: 800,  domain: "Politics & Governance" },
-  { id: "Q193391",  name: "diplomat",             limit: 400,  domain: "Politics & Governance" },
-  { id: "Q82594",   name: "lawyer",               limit: 300,  domain: "Politics & Governance" },
-  { id: "Q16533",   name: "judge",                limit: 300,  domain: "Politics & Governance" },
+  // ── Language & Communication ──────────────────────────────────────
+  { id: "Q1930187", name: "journalist",           limit: 500,  domain: "Language & Communication" },
+  { id: "Q333634",  name: "translator",           limit: 200,  domain: "Language & Communication" },
 
-  // ── Economics & Commerce ──────────────────────────────────────────
-  { id: "Q188094",  name: "economist",            limit: 600,  domain: "Economics & Commerce" },
+  // ── Governance & Institutions ─────────────────────────────────────
+  { id: "Q82955",   name: "politician",           limit: 800,  domain: "Governance & Institutions" },
+  { id: "Q116",     name: "monarch",              limit: 800,  domain: "Governance & Institutions" },
+  { id: "Q193391",  name: "diplomat",             limit: 400,  domain: "Governance & Institutions" },
+  { id: "Q82594",   name: "lawyer",               limit: 300,  domain: "Governance & Institutions" },
+  { id: "Q16533",   name: "judge",                limit: 300,  domain: "Governance & Institutions" },
+  { id: "Q189290",  name: "military officer",     limit: 800,  domain: "Governance & Institutions" },
 
-  // ── Military, Conflict & Strategy ─────────────────────────────────
-  { id: "Q189290",  name: "military officer",     limit: 800,  domain: "Military, Conflict & Strategy" },
+  // ── Exploration & Discovery ───────────────────────────────────────
+  { id: "Q13582652",name: "explorer",             limit: 400,  domain: "Exploration & Discovery" },
 
-  // ── Exploration & Environment ─────────────────────────────────────
-  { id: "Q13582652",name: "explorer",             limit: 400,  domain: "Exploration & Environment" },
+  // ── Philosophy & Thought ──────────────────────────────────────────
+  { id: "Q4964182", name: "philosopher",          limit: 800,  domain: "Philosophy & Thought" },
 
-  // ── Philosophy & Religion ─────────────────────────────────────────
-  { id: "Q4964182", name: "philosopher",          limit: 800,  domain: "Philosophy & Religion" },
-  { id: "Q1234713", name: "theologian",           limit: 400,  domain: "Philosophy & Religion" },
-
-  // ── Society & Social Movements ────────────────────────────────────
-  { id: "Q3621491", name: "historian",            limit: 800,  domain: "Society & Social Movements" },
-  { id: "Q10876391",name: "archaeologist",        limit: 300,  domain: "Society & Social Movements" },
-  { id: "Q2306091", name: "sociologist",          limit: 300,  domain: "Society & Social Movements" },
-  { id: "Q1622272", name: "university professor", limit: 500,  domain: "Society & Social Movements" },
+  // ── Spiritual & Religious Thought ─────────────────────────────────
+  { id: "Q1234713", name: "theologian",           limit: 400,  domain: "Spiritual & Religious Thought" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -597,7 +611,7 @@ async function main() {
       id: slug,
       title: fig.label,
       wikidataId: fig.wikidataId,
-      knowledgeType: "Historical Figures",
+      knowledgeType: "Person",
       domain: primary,
       secondaryDomains: secondary,
       eraGroup: era.eraGroup,
