@@ -52,7 +52,7 @@
           </label>
           <label class="flex flex-col gap-2">
             <select id="discipline-select" name="discipline" class="w-full rounded-lg border border-neutral-300 px-4 py-3 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200">
-              <option value="all">All disciplines</option>
+              <option value="all">All domains</option>
               <!-- Populated dynamically from data -->
             </select>
           </label>
@@ -88,7 +88,13 @@
         </div>
       </form>
 
-      <div class="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 flex-1 min-h-0 h-full">
+      <!-- Loading overlay -->
+      <div id="encyclopedia-loading" class="flex flex-col items-center justify-center gap-4 py-20">
+        <div class="h-10 w-10 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></div>
+        <p class="text-sm font-medium text-neutral-500">Loading encyclopedia…</p>
+      </div>
+
+      <div id="encyclopedia-content" class="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 flex-1 min-h-0 h-full">
         <aside class="rounded-lg border border-neutral-200 bg-white p-4 lg:p-5 shadow-sm h-full min-h-0 lg:h-[calc(100vh-220px)] lg:overflow-y-auto hide-scrollbar">
           <div id="sidebar-list" class="space-y-2">
             <!-- Sidebar items rendered by script -->

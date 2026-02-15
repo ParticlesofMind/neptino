@@ -1,4 +1,3 @@
-import historicalFigures from "../data/encyclopedia/historical-figures.json";
 import { fetchFigureData, type WikidataProfile, type WikidataFigureData, type WikidataRelatedPerson, type WikidataTimelineEvent } from "./encyclopedia/wikidata";
 
 type KnowledgeItem = {
@@ -6,7 +5,8 @@ type KnowledgeItem = {
   title: string;
   wikidataId?: string;
   knowledgeType: "Historical Figures" | "Key Events" | "Concepts";
-  disciplines: string[];
+  domain: string;
+  secondaryDomains: string[];
   eraGroup: "ancient" | "early-modern" | "modern" | "contemporary";
   eraLabel: string;
   depth: "foundation" | "intermediate" | "advanced";
@@ -22,7 +22,8 @@ type SizeMode = "small" | "large";
 
 type DataSource = KnowledgeItem[];
 
-const knowledgeItems: DataSource = [...historicalFigures] as KnowledgeItem[];
+/** Populated asynchronously from fetched JSON */
+let knowledgeItems: DataSource = [];
 
 const form = document.getElementById("knowledge-search-form") as HTMLFormElement | null;
 const searchInput = document.getElementById("search-input") as HTMLInputElement | null;
@@ -39,6 +40,11 @@ const viewButtons = Array.from(document.querySelectorAll<HTMLButtonElement>(".vi
 const sizeButtons = Array.from(document.querySelectorAll<HTMLButtonElement>(".size-toggle"));
 
 let sizeMode: SizeMode = "small";
+
+/** How many cards to render per batch */
+const CARD_BATCH = 30;
+let renderedCount = 0;
+let scrollSentinelObserver: IntersectionObserver | null = null;
 
 const getCheckedValues = (name: string) =>
   Array.from(document.querySelectorAll<HTMLInputElement>(`input[name="${name}"]:checked`)).map((el) => el.value);
@@ -98,8 +104,8 @@ const enrichOnVisible = (entries: IntersectionObserverEntry[]) => {
     fetchFigureData(item.wikidataId, item.title)
       .then((data: WikidataFigureData) => {
         wdData.set(itemId, data);
-        // Re-render cards with updated data
-        renderCards(lastFiltered);
+        // Update only this single card instead of re-rendering everything
+        updateSingleCard(itemId);
         requestAnimationFrame(mountTimelines);
       })
       .catch((err: unknown) => console.warn(`[encyclopedia] Failed for ${item.title}:`, err));
@@ -133,7 +139,7 @@ const matchesFilters = (item: KnowledgeItem) => {
     ? [item.title, item.summary, item.tags.join(" ")].join(" ").toLowerCase().includes(term)
     : true;
 
-  const matchesDiscipline = discipline === "all" ? true : item.disciplines.includes(discipline);
+  const matchesDiscipline = discipline === "all" ? true : (item.domain === discipline || item.secondaryDomains.includes(discipline));
   const matchesType = knowledgeType === "all" ? true : item.knowledgeType === knowledgeType;
   const matchesEra = eras.length === 0 ? true : eras.includes(item.eraGroup);
   const matchesDepth = depths.length === 0 ? true : depths.includes(item.depth);
@@ -155,7 +161,7 @@ const renderSidebar = (items: KnowledgeItem[]) => {
               <p class="text-sm font-semibold text-neutral-900">${item.title}</p>
               <p class="text-xs text-neutral-500">${item.knowledgeType}</p>
             </div>
-            ${formatBadge(item.disciplines[0])}
+            ${formatBadge(item.domain)}
           </div>
         </button>
       `
@@ -202,7 +208,7 @@ const renderLargeCardBottom = (
 
   const fields = wdData.get(item.id)?.fields ?? [];
   const knowledgeRows =
-    (fields.length > 0 ? fields.slice(0, 6) : item.disciplines.slice(0, 6).map((d) => ({ name: d, description: "" })))
+    (fields.length > 0 ? fields.slice(0, 6) : [item.domain, ...item.secondaryDomains].slice(0, 6).map((d) => ({ name: d, description: "" })))
       .map(
         (f: { name: string; description: string }) => `
           <div class="flex items-center gap-2">
@@ -267,8 +273,18 @@ const renderLargeCardBottom = (
 const renderCards = (items: KnowledgeItem[]) => {
   if (!cardGridEl) return;
 
-  cardGridEl.innerHTML = items
-    .map((item, index) => {
+  // Tear down previous scroll sentinel observer
+  scrollSentinelObserver?.disconnect();
+  scrollSentinelObserver = null;
+  renderedCount = 0;
+  cardGridEl.innerHTML = "";
+
+  // Render first batch immediately
+  appendCardBatch(items);
+};
+
+/** Render a single card's HTML */
+const renderSingleCardHtml = (item: KnowledgeItem, index: number): string => {
       const art = artworkFor(item.knowledgeType);
       const wd = wdData.get(item.id)?.profile;
       const isSmall = sizeMode === "small";
@@ -299,7 +315,7 @@ const renderCards = (items: KnowledgeItem[]) => {
         ? `<div class="w-full ${media.image} rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 space-y-2 text-xs">
              <div class="flex items-center justify-between gap-2 text-neutral-600"><span>Era</span><span class="font-semibold text-neutral-900">${item.eraLabel}</span></div>
              <div class="flex items-center justify-between gap-2 text-neutral-600"><span>Depth</span><span class="font-semibold text-neutral-900">${capitalize(item.depth)}</span></div>
-             <div class="flex items-start justify-between gap-2 text-neutral-600"><span class="pt-0.5">Disciplines</span><span class="flex flex-wrap justify-end gap-1.5">${item.disciplines
+             <div class="flex items-start justify-between gap-2 text-neutral-600"><span class="pt-0.5">Domain</span><span class="flex flex-wrap justify-end gap-1.5">${[item.domain, ...item.secondaryDomains]
                .map(formatBadge)
                .join("")}</span></div>
            </div>`
@@ -350,13 +366,75 @@ const renderCards = (items: KnowledgeItem[]) => {
           </div>
         </article>
       `;
-    })
-    .join("");
+};
+
+/** Append the next batch of cards and set up a sentinel for infinite scroll */
+const appendCardBatch = (items: KnowledgeItem[]) => {
+  if (!cardGridEl) return;
+  const batch = items.slice(renderedCount, renderedCount + CARD_BATCH);
+  if (batch.length === 0) return;
+
+  // Remove old sentinel
+  cardGridEl.querySelector(".scroll-sentinel")?.remove();
+
+  const fragment = document.createDocumentFragment();
+  const temp = document.createElement("div");
+  temp.innerHTML = batch.map((item, i) => renderSingleCardHtml(item, renderedCount + i)).join("");
+  while (temp.firstChild) fragment.appendChild(temp.firstChild);
+
+  renderedCount += batch.length;
+
+  // If more items remain, add a sentinel element to trigger the next batch
+  if (renderedCount < items.length) {
+    const sentinel = document.createElement("div");
+    sentinel.className = "scroll-sentinel col-span-full";
+    sentinel.style.height = "1px";
+    fragment.appendChild(sentinel);
+  }
+
+  cardGridEl.appendChild(fragment);
+
+  // Observe the sentinel for infinite scroll
+  const sentinelEl = cardGridEl.querySelector(".scroll-sentinel");
+  if (sentinelEl) {
+    if (!scrollSentinelObserver) {
+      scrollSentinelObserver = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              appendCardBatch(lastFiltered);
+              // Also observe new cards for enrichment
+              requestAnimationFrame(observeCards);
+            }
+          }
+        },
+        { rootMargin: "400px" },
+      );
+    }
+    scrollSentinelObserver.observe(sentinelEl);
+  }
+};
+
+/** Update a single card in-place after enrichment data arrives */
+const updateSingleCard = (itemId: string) => {
+  if (!cardGridEl) return;
+  const item = lastFiltered.find((i) => i.id === itemId);
+  if (!item) return;
+  const existing = cardGridEl.querySelector<HTMLElement>(`article#${CSS.escape(itemId)}`);
+  if (!existing) return;
+  const idx = lastFiltered.indexOf(item);
+  const temp = document.createElement("div");
+  temp.innerHTML = renderSingleCardHtml(item, idx);
+  if (temp.firstElementChild) {
+    existing.replaceWith(temp.firstElementChild);
+  }
 };
 
 const renderList = (items: KnowledgeItem[]) => {
   if (!listItemsEl) return;
-  listItemsEl.innerHTML = items
+  // Cap list rendering for DOM perf
+  const listItems = items.slice(0, 200);
+  listItemsEl.innerHTML = listItems
     .map(
       (item) => `
         <li class="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -369,7 +447,7 @@ const renderList = (items: KnowledgeItem[]) => {
             <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-neutral-600">
               <span class="rounded-md bg-neutral-100 px-3 py-1 font-semibold text-neutral-700">${item.eraLabel}</span>
               <span class="rounded-md bg-neutral-100 px-3 py-1 font-semibold text-neutral-700">${capitalize(item.depth)} depth</span>
-              ${item.disciplines.map(formatBadge).join("")}
+              ${[item.domain, ...item.secondaryDomains].map(formatBadge).join("")}
             </div>
           </div>
           <div class="flex flex-wrap justify-start sm:justify-end gap-2 text-xs font-semibold text-primary-700">
@@ -522,25 +600,67 @@ const attachEvents = () => {
   });
 };
 
-const bootstrap = () => {
+/* ------------------------------------------------------------------ */
+/*  Async data loading                                                 */
+/* ------------------------------------------------------------------ */
+
+const showLoading = () => {
+  const overlay = document.getElementById("encyclopedia-loading");
+  const content = document.getElementById("encyclopedia-content");
+  if (overlay) overlay.classList.remove("hidden");
+  if (content) content.classList.add("hidden");
+};
+
+const hideLoading = () => {
+  const overlay = document.getElementById("encyclopedia-loading");
+  const content = document.getElementById("encyclopedia-content");
+  if (overlay) overlay.classList.add("hidden");
+  if (content) content.classList.remove("hidden");
+};
+
+async function loadData(): Promise<KnowledgeItem[]> {
+  const res = await fetch("/data/encyclopedia/historical-figures.json");
+  if (!res.ok) throw new Error(`Failed to load encyclopedia data: ${res.status}`);
+  return res.json();
+}
+
+const bootstrap = async () => {
   if (!form) return;
 
-  // Dynamically populate discipline filter from loaded data
+  showLoading();
+
+  // Attach UI events immediately so controls are responsive
+  setView("gallery");
+  attachEvents();
+
+  try {
+    const data = await loadData();
+    knowledgeItems = data;
+  } catch (err) {
+    console.error("[encyclopedia] Failed to load data:", err);
+    hideLoading();
+    if (resultCountEl) resultCountEl.textContent = "Failed to load data";
+    return;
+  }
+
+  // Dynamically populate domain filter from loaded data
   if (disciplineSelect) {
-    const allDisc = new Set<string>();
-    for (const item of knowledgeItems) item.disciplines.forEach((d) => allDisc.add(d));
-    const sorted = [...allDisc].sort();
-    for (const disc of sorted) {
+    const allDomains = new Set<string>();
+    for (const item of knowledgeItems) {
+      allDomains.add(item.domain);
+      item.secondaryDomains.forEach((d) => allDomains.add(d));
+    }
+    const sorted = [...allDomains].sort();
+    for (const dom of sorted) {
       const opt = document.createElement("option");
-      opt.value = disc;
-      opt.textContent = disc;
+      opt.value = dom;
+      opt.textContent = dom;
       disciplineSelect.appendChild(opt);
     }
   }
 
-  setView("gallery");
+  hideLoading();
   setSize("small");
-  attachEvents();
   render();
 
   // Lazy enrichment happens via IntersectionObserver (set up in render)

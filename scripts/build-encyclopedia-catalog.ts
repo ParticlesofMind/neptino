@@ -2,16 +2,18 @@
 /**
  * build-encyclopedia-catalog.ts
  *
- * Fetches thousands of notable historical figures from Wikidata SPARQL
- * and writes them as a JSON catalog to src/data/encyclopedia/historical-figures.json
+ * Fetches tens of thousands of notable historical figures from Wikidata SPARQL
+ * and writes them as a JSON catalog to public/data/encyclopedia/historical-figures.json
+ *
+ * Each occupation category is queried separately (fast) and results are
+ * ordered by Wikipedia sitelinks count so the most notable figures come first.
  *
  * Usage:
  *   npx tsx scripts/build-encyclopedia-catalog.ts
  *   npm run build:encyclopedia
  *
  * Options (env vars):
- *   LIMIT=5000          Max figures to fetch (default 5000)
- *   MIN_SITELINKS=20    Minimum Wikipedia sitelinks for notability (default 20)
+ *   LIMIT=50000         Max figures to fetch (default 50000)
  */
 
 import { writeFileSync, mkdirSync } from "node:fs";
@@ -19,21 +21,38 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const OUT_PATH = resolve(__dirname, "../src/data/encyclopedia/historical-figures.json");
+const OUT_PATH = resolve(__dirname, "../public/data/encyclopedia/historical-figures.json");
 
 const SPARQL_ENDPOINT = "https://query.wikidata.org/sparql";
-const LIMIT = parseInt(process.env.LIMIT ?? "5000", 10);
+const LIMIT = parseInt(process.env.LIMIT ?? "50000", 10);
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
+
+/** The 10 core domains shared across all knowledge types */
+const CORE_DOMAINS = [
+  "Philosophy & Religion",
+  "Politics & Governance",
+  "Economics & Commerce",
+  "Sciences",
+  "Mathematics & Logic",
+  "Technology & Engineering",
+  "Arts, Literature & Culture",
+  "Military, Conflict & Strategy",
+  "Exploration & Environment",
+  "Society & Social Movements",
+] as const;
+
+type CoreDomain = (typeof CORE_DOMAINS)[number];
 
 interface CatalogItem {
   id: string;
   title: string;
   wikidataId: string;
   knowledgeType: "Historical Figures";
-  disciplines: string[];
+  domain: CoreDomain;
+  secondaryDomains: CoreDomain[];
   eraGroup: "ancient" | "early-modern" | "modern" | "contemporary";
   eraLabel: string;
   depth: "foundation" | "intermediate" | "advanced";
@@ -42,73 +61,199 @@ interface CatalogItem {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Discipline mapping from occupation superclasses                    */
+/*  Domain mapping from occupation keywords                            */
 /* ------------------------------------------------------------------ */
 
-/** Map broad occupation keywords → disciplines */
-const DISCIPLINE_MAP: Record<string, string> = {
-  mathematician: "Mathematics",
-  physicist: "Physics",
-  chemist: "Chemistry",
-  biologist: "Biology",
-  astronomer: "Physics",
-  geologist: "Biology",
-  engineer: "Technology",
-  inventor: "Technology",
-  computer: "Technology",
-  programmer: "Technology",
-  physician: "Biology",
-  surgeon: "Biology",
-  philosopher: "Philosophy",
-  writer: "Literature",
-  poet: "Literature",
-  novelist: "Literature",
-  playwright: "Literature",
-  author: "Literature",
-  historian: "History",
-  archaeologist: "History",
-  politician: "Politics",
-  diplomat: "Politics",
-  statesman: "Politics",
-  monarch: "Politics",
-  emperor: "Politics",
-  president: "Politics",
-  prime: "Politics",
-  general: "History",
-  military: "History",
-  admiral: "History",
-  artist: "Art",
-  painter: "Art",
-  sculptor: "Art",
-  architect: "Art",
-  composer: "Music",
-  musician: "Music",
-  singer: "Music",
-  explorer: "History",
-  navigator: "History",
-  economist: "Economics",
-  sociologist: "Social Science",
-  psychologist: "Social Science",
-  theologian: "Philosophy",
-  jurist: "Politics",
-  lawyer: "Politics",
-  astronaut: "Technology",
-  activist: "Politics",
-  revolutionary: "Politics",
+/**
+ * Maps occupation keywords → primary core domain.
+ * Secondary domains are inferred by multi-match: if an occupation string
+ * matches keywords for multiple domains, extra matches become secondaries.
+ */
+const DOMAIN_MAP: Record<string, CoreDomain> = {
+  // ── Sciences ──────────────────────────────────────────────────────
+  physicist: "Sciences",
+  chemist: "Sciences",
+  biologist: "Sciences",
+  astronomer: "Sciences",
+  geologist: "Sciences",
+  botanist: "Sciences",
+  zoologist: "Sciences",
+  geneticist: "Sciences",
+  neuroscientist: "Sciences",
+  paleontologist: "Sciences",
+  meteorologist: "Sciences",
+  oceanographer: "Sciences",
+  ecologist: "Sciences",
+  microbiologist: "Sciences",
+  physician: "Sciences",
+  surgeon: "Sciences",
+  pharmacist: "Sciences",
+  nurse: "Sciences",
+  psychoanalyst: "Sciences",
+  psychologist: "Sciences",
+  "political scientist": "Sciences",
+  linguist: "Sciences",
+
+  // ── Mathematics & Logic ───────────────────────────────────────────
+  mathematician: "Mathematics & Logic",
+
+  // ── Technology & Engineering ──────────────────────────────────────
+  "computer scientist": "Technology & Engineering",
+  engineer: "Technology & Engineering",
+  inventor: "Technology & Engineering",
+  computer: "Technology & Engineering",
+  programmer: "Technology & Engineering",
+  astronaut: "Technology & Engineering",
+  architect: "Technology & Engineering",
+
+  // ── Philosophy & Religion ─────────────────────────────────────────
+  philosopher: "Philosophy & Religion",
+  theologian: "Philosophy & Religion",
+  cleric: "Philosophy & Religion",
+  priest: "Philosophy & Religion",
+  bishop: "Philosophy & Religion",
+  pope: "Philosophy & Religion",
+  missionary: "Philosophy & Religion",
+  rabbi: "Philosophy & Religion",
+  imam: "Philosophy & Religion",
+  monk: "Philosophy & Religion",
+
+  // ── Arts, Literature & Culture ────────────────────────────────────
+  writer: "Arts, Literature & Culture",
+  poet: "Arts, Literature & Culture",
+  novelist: "Arts, Literature & Culture",
+  playwright: "Arts, Literature & Culture",
+  author: "Arts, Literature & Culture",
+  essayist: "Arts, Literature & Culture",
+  journalist: "Arts, Literature & Culture",
+  translator: "Arts, Literature & Culture",
+  screenwriter: "Arts, Literature & Culture",
+  lyricist: "Arts, Literature & Culture",
+  literary: "Arts, Literature & Culture",
+  artist: "Arts, Literature & Culture",
+  painter: "Arts, Literature & Culture",
+  sculptor: "Arts, Literature & Culture",
+  photographer: "Arts, Literature & Culture",
+  illustrator: "Arts, Literature & Culture",
+  "graphic designer": "Arts, Literature & Culture",
+  printmaker: "Arts, Literature & Culture",
+  engraver: "Arts, Literature & Culture",
+  ceramicist: "Arts, Literature & Culture",
+  composer: "Arts, Literature & Culture",
+  musician: "Arts, Literature & Culture",
+  singer: "Arts, Literature & Culture",
+  conductor: "Arts, Literature & Culture",
+  pianist: "Arts, Literature & Culture",
+  violinist: "Arts, Literature & Culture",
+  opera: "Arts, Literature & Culture",
+  actor: "Arts, Literature & Culture",
+  actress: "Arts, Literature & Culture",
+  "film director": "Arts, Literature & Culture",
+  director: "Arts, Literature & Culture",
+  dancer: "Arts, Literature & Culture",
+  choreographer: "Arts, Literature & Culture",
+
+  // ── Politics & Governance ─────────────────────────────────────────
+  politician: "Politics & Governance",
+  diplomat: "Politics & Governance",
+  statesman: "Politics & Governance",
+  monarch: "Politics & Governance",
+  emperor: "Politics & Governance",
+  president: "Politics & Governance",
+  prime: "Politics & Governance",
+  activist: "Society & Social Movements",
+  revolutionary: "Politics & Governance",
+  jurist: "Politics & Governance",
+  lawyer: "Politics & Governance",
+  judge: "Politics & Governance",
+
+  // ── Economics & Commerce ──────────────────────────────────────────
+  economist: "Economics & Commerce",
+  businessperson: "Economics & Commerce",
+  industrialist: "Economics & Commerce",
+  entrepreneur: "Economics & Commerce",
+
+  // ── Military, Conflict & Strategy ─────────────────────────────────
+  general: "Military, Conflict & Strategy",
+  military: "Military, Conflict & Strategy",
+  admiral: "Military, Conflict & Strategy",
+  officer: "Military, Conflict & Strategy",
+
+  // ── Exploration & Environment ─────────────────────────────────────
+  explorer: "Exploration & Environment",
+  navigator: "Exploration & Environment",
+  cartographer: "Exploration & Environment",
+  geographer: "Exploration & Environment",
+
+  // ── Society & Social Movements ────────────────────────────────────
+  historian: "Society & Social Movements",
+  archaeologist: "Society & Social Movements",
+  anthropologist: "Society & Social Movements",
+  sociologist: "Society & Social Movements",
+  pedagogue: "Society & Social Movements",
+  professor: "Society & Social Movements",
+  academic: "Society & Social Movements",
 };
 
-function inferDisciplines(occupation: string): string[] {
-  const occ = occupation.toLowerCase();
-  const disciplines = new Set<string>();
+/**
+ * Secondary-domain rules: certain occupation keywords strongly imply
+ * a second domain beyond the primary.
+ */
+const SECONDARY_RULES: { keyword: string; domain: CoreDomain }[] = [
+  // Scientists who also contributed to Philosophy
+  { keyword: "philosopher", domain: "Sciences" },           // philosopher-scientists
+  // Politicians who led wars
+  { keyword: "monarch",     domain: "Military, Conflict & Strategy" },
+  { keyword: "emperor",     domain: "Military, Conflict & Strategy" },
+  // Engineers/inventors → Sciences background
+  { keyword: "engineer",    domain: "Sciences" },
+  { keyword: "inventor",    domain: "Sciences" },
+  // Economists → Sciences (social science)
+  { keyword: "economist",   domain: "Sciences" },
+  // Psychologist → Sciences
+  { keyword: "psychologist", domain: "Society & Social Movements" },
+  // Architect → Arts as secondary
+  { keyword: "architect",   domain: "Arts, Literature & Culture" },
+  // Mathematician → Sciences as secondary
+  { keyword: "mathematician", domain: "Sciences" },
+  // Explorer → Sciences as secondary (naturalists)
+  { keyword: "explorer",    domain: "Sciences" },
+  // Journalist → Society
+  { keyword: "journalist",  domain: "Society & Social Movements" },
+  // Activist → Politics
+  { keyword: "activist",    domain: "Politics & Governance" },
+];
 
-  for (const [keyword, discipline] of Object.entries(DISCIPLINE_MAP)) {
-    if (occ.includes(keyword)) disciplines.add(discipline);
+function inferDomains(
+  occupation: string,
+  categoryDomain: CoreDomain,
+): { primary: CoreDomain; secondary: CoreDomain[] } {
+  const occ = occupation.toLowerCase();
+  const matched = new Set<CoreDomain>();
+
+  // 1. Match keywords → domains
+  for (const [keyword, domain] of Object.entries(DOMAIN_MAP)) {
+    if (occ.includes(keyword)) matched.add(domain);
   }
 
-  // Always include History for historical figures
-  disciplines.add("History");
+  // 2. Always include the category's declared domain
+  matched.add(categoryDomain);
 
-  return [...disciplines].slice(0, 4);
+  // 3. Apply secondary rules
+  const extra = new Set<CoreDomain>();
+  for (const rule of SECONDARY_RULES) {
+    if (occ.includes(rule.keyword) && !matched.has(rule.domain)) {
+      extra.add(rule.domain);
+    }
+  }
+
+  // 4. Pick primary: the category domain is the most specific
+  const primary = categoryDomain;
+  const secondary = [...matched, ...extra]
+    .filter((d) => d !== primary)
+    .slice(0, 2); // max 2 secondary
+
+  return { primary, secondary };
 }
 
 /* ------------------------------------------------------------------ */
@@ -141,11 +286,9 @@ function classifyEra(birthYear: number): { eraGroup: CatalogItem["eraGroup"]; er
 /*  Depth classification by sitelinks count (proxy for notability)     */
 /* ------------------------------------------------------------------ */
 
-function classifyDepth(occupationCount: number): CatalogItem["depth"] {
-  // Without sitelinks, use occupation count as a rough proxy for notability.
-  // Figures with many indexed occupations tend to be more prominent.
-  if (occupationCount >= 3) return "foundation";
-  if (occupationCount >= 2) return "intermediate";
+function classifyDepth(sitelinks: number): CatalogItem["depth"] {
+  if (sitelinks >= 80) return "foundation";
+  if (sitelinks >= 40) return "intermediate";
   return "advanced";
 }
 
@@ -170,15 +313,18 @@ function slugify(name: string): string {
  * Build a SPARQL query for notable people in a specific occupation category.
  * Querying by specific occupation class is MUCH faster than scanning all Q5 instances.
  */
-function buildCategoryQuery(occupationId: string, occupationName: string, limit: number): string {
+function buildCategoryQuery(occupationId: string, _occupationName: string, limit: number): string {
   return `
-SELECT ?item ?itemLabel ?itemDescription ?birthDate
+SELECT ?item ?itemLabel ?itemDescription ?birthDate ?sl
 WHERE {
   ?item wdt:P31 wd:Q5 .
   ?item wdt:P106 wd:${occupationId} .
   ?item wdt:P569 ?birthDate .
+  ?item wikibase:sitelinks ?sl .
+  FILTER(?sl >= 10)
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }
+ORDER BY DESC(?sl)
 LIMIT ${limit}
   `.trim();
 }
@@ -200,34 +346,80 @@ WHERE {
   `.trim();
 }
 
-/** Categories of occupations to query, with their Wikidata IDs and per-category limits */
-const OCCUPATION_CATEGORIES: { id: string; name: string; limit: number; discipline: string }[] = [
-  // Scientists
-  { id: "Q170790", name: "mathematician", limit: 300, discipline: "Mathematics" },
-  { id: "Q169470", name: "physicist", limit: 300, discipline: "Physics" },
-  { id: "Q593644", name: "chemist", limit: 150, discipline: "Chemistry" },
-  { id: "Q864503", name: "biologist", limit: 150, discipline: "Biology" },
-  { id: "Q11063", name: "astronomer", limit: 150, discipline: "Physics" },
-  { id: "Q81096", name: "engineer", limit: 200, discipline: "Technology" },
-  { id: "Q205375", name: "inventor", limit: 150, discipline: "Technology" },
-  // Writers & artists
-  { id: "Q36180", name: "writer", limit: 400, discipline: "Literature" },
-  { id: "Q49757", name: "poet", limit: 200, discipline: "Literature" },
-  { id: "Q1028181", name: "painter", limit: 300, discipline: "Art" },
-  { id: "Q1281618", name: "sculptor", limit: 100, discipline: "Art" },
-  { id: "Q42973", name: "architect", limit: 150, discipline: "Art" },
-  { id: "Q36834", name: "composer", limit: 250, discipline: "Music" },
-  // Politics & history
-  { id: "Q82955", name: "politician", limit: 400, discipline: "Politics" },
-  { id: "Q116", name: "monarch", limit: 200, discipline: "Politics" },
-  { id: "Q189290", name: "military officer", limit: 200, discipline: "History" },
-  { id: "Q3621491", name: "historian", limit: 200, discipline: "History" },
-  { id: "Q13582652", name: "explorer", limit: 150, discipline: "History" },
-  // Philosophers & thinkers
-  { id: "Q4964182", name: "philosopher", limit: 250, discipline: "Philosophy" },
-  { id: "Q188094", name: "economist", limit: 150, discipline: "Economics" },
-  // Medicine
-  { id: "Q39631", name: "physician", limit: 200, discipline: "Biology" },
+/** Categories of occupations to query, with their Wikidata IDs, per-category limits, and primary domain */
+const OCCUPATION_CATEGORIES: { id: string; name: string; limit: number; domain: CoreDomain }[] = [
+  // ── Sciences ──────────────────────────────────────────────────────
+  { id: "Q169470",  name: "physicist",            limit: 1200, domain: "Sciences" },
+  { id: "Q593644",  name: "chemist",              limit: 800,  domain: "Sciences" },
+  { id: "Q864503",  name: "biologist",            limit: 600,  domain: "Sciences" },
+  { id: "Q11063",   name: "astronomer",           limit: 600,  domain: "Sciences" },
+  { id: "Q520549",  name: "geologist",            limit: 400,  domain: "Sciences" },
+  { id: "Q2374149", name: "botanist",             limit: 400,  domain: "Sciences" },
+  { id: "Q350979",  name: "zoologist",            limit: 300,  domain: "Sciences" },
+  { id: "Q2504617", name: "paleontologist",       limit: 200,  domain: "Sciences" },
+  { id: "Q2259451", name: "meteorologist",        limit: 150,  domain: "Sciences" },
+  { id: "Q39631",   name: "physician",            limit: 600,  domain: "Sciences" },
+  { id: "Q774306",  name: "surgeon",              limit: 300,  domain: "Sciences" },
+  { id: "Q2640827", name: "pharmacist",           limit: 150,  domain: "Sciences" },
+  { id: "Q212980",  name: "psychologist",         limit: 400,  domain: "Sciences" },
+
+  // ── Mathematics & Logic ───────────────────────────────────────────
+  { id: "Q170790",  name: "mathematician",        limit: 1200, domain: "Mathematics & Logic" },
+
+  // ── Technology & Engineering ──────────────────────────────────────
+  { id: "Q15839134",name: "computer scientist",   limit: 300,  domain: "Technology & Engineering" },
+  { id: "Q81096",   name: "engineer",             limit: 800,  domain: "Technology & Engineering" },
+  { id: "Q205375",  name: "inventor",             limit: 600,  domain: "Technology & Engineering" },
+  { id: "Q11631",   name: "astronaut",            limit: 300,  domain: "Technology & Engineering" },
+
+  // ── Arts, Literature & Culture ────────────────────────────────────
+  { id: "Q36180",   name: "writer",               limit: 2000, domain: "Arts, Literature & Culture" },
+  { id: "Q49757",   name: "poet",                 limit: 1200, domain: "Arts, Literature & Culture" },
+  { id: "Q6625963", name: "novelist",             limit: 1000, domain: "Arts, Literature & Culture" },
+  { id: "Q214917",  name: "playwright",           limit: 600,  domain: "Arts, Literature & Culture" },
+  { id: "Q1930187", name: "journalist",           limit: 500,  domain: "Arts, Literature & Culture" },
+  { id: "Q4853732", name: "essayist",             limit: 300,  domain: "Arts, Literature & Culture" },
+  { id: "Q333634",  name: "translator",           limit: 200,  domain: "Arts, Literature & Culture" },
+  { id: "Q28389",   name: "screenwriter",         limit: 400,  domain: "Arts, Literature & Culture" },
+  { id: "Q1028181", name: "painter",              limit: 1500, domain: "Arts, Literature & Culture" },
+  { id: "Q1281618", name: "sculptor",             limit: 500,  domain: "Arts, Literature & Culture" },
+  { id: "Q42973",   name: "architect",            limit: 600,  domain: "Arts, Literature & Culture" },
+  { id: "Q33231",   name: "photographer",         limit: 400,  domain: "Arts, Literature & Culture" },
+  { id: "Q644687",  name: "illustrator",          limit: 300,  domain: "Arts, Literature & Culture" },
+  { id: "Q36834",   name: "composer",             limit: 1000, domain: "Arts, Literature & Culture" },
+  { id: "Q639669",  name: "musician",             limit: 800,  domain: "Arts, Literature & Culture" },
+  { id: "Q177220",  name: "singer",               limit: 300,  domain: "Arts, Literature & Culture" },
+  { id: "Q158852",  name: "conductor",            limit: 300,  domain: "Arts, Literature & Culture" },
+  { id: "Q33999",   name: "actor",                limit: 1000, domain: "Arts, Literature & Culture" },
+  { id: "Q2526255", name: "film director",        limit: 800,  domain: "Arts, Literature & Culture" },
+  { id: "Q486748",  name: "dancer",               limit: 200,  domain: "Arts, Literature & Culture" },
+  { id: "Q2490358", name: "choreographer",        limit: 150,  domain: "Arts, Literature & Culture" },
+
+  // ── Politics & Governance ─────────────────────────────────────────
+  { id: "Q82955",   name: "politician",           limit: 800,  domain: "Politics & Governance" },
+  { id: "Q116",     name: "monarch",              limit: 800,  domain: "Politics & Governance" },
+  { id: "Q193391",  name: "diplomat",             limit: 400,  domain: "Politics & Governance" },
+  { id: "Q82594",   name: "lawyer",               limit: 300,  domain: "Politics & Governance" },
+  { id: "Q16533",   name: "judge",                limit: 300,  domain: "Politics & Governance" },
+
+  // ── Economics & Commerce ──────────────────────────────────────────
+  { id: "Q188094",  name: "economist",            limit: 600,  domain: "Economics & Commerce" },
+
+  // ── Military, Conflict & Strategy ─────────────────────────────────
+  { id: "Q189290",  name: "military officer",     limit: 800,  domain: "Military, Conflict & Strategy" },
+
+  // ── Exploration & Environment ─────────────────────────────────────
+  { id: "Q13582652",name: "explorer",             limit: 400,  domain: "Exploration & Environment" },
+
+  // ── Philosophy & Religion ─────────────────────────────────────────
+  { id: "Q4964182", name: "philosopher",          limit: 800,  domain: "Philosophy & Religion" },
+  { id: "Q1234713", name: "theologian",           limit: 400,  domain: "Philosophy & Religion" },
+
+  // ── Society & Social Movements ────────────────────────────────────
+  { id: "Q3621491", name: "historian",            limit: 800,  domain: "Society & Social Movements" },
+  { id: "Q10876391",name: "archaeologist",        limit: 300,  domain: "Society & Social Movements" },
+  { id: "Q2306091", name: "sociologist",          limit: 300,  domain: "Society & Social Movements" },
+  { id: "Q1622272", name: "university professor", limit: 500,  domain: "Society & Social Movements" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -312,6 +504,8 @@ async function main() {
       birthYear: number;
       occupations: Set<string>;
       sitelinks: number;
+      /** Primary domain from the first category that matched this figure */
+      categoryDomain: CoreDomain;
     }
   >();
 
@@ -352,7 +546,8 @@ async function main() {
           description: row.itemDescription ?? "",
           birthYear,
           occupations: new Set([cat.name]),
-          sitelinks: 0, // not available in this query mode
+          sitelinks: parseInt(row.sl ?? "0", 10),
+          categoryDomain: cat.domain,
         });
         newCount++;
       }
@@ -363,7 +558,7 @@ async function main() {
 
     // Polite pause between categories
     if (ci < OCCUPATION_CATEGORIES.length - 1) {
-      await new Promise((r) => setTimeout(r, 2000));
+      await new Promise((r) => setTimeout(r, 1000));
     }
 
     // Early stop if we have enough
@@ -382,9 +577,9 @@ async function main() {
 
   for (const fig of byId.values()) {
     const allOccupations = [...fig.occupations].join(", ");
-    const disciplines = inferDisciplines(allOccupations);
+    const { primary, secondary } = inferDomains(allOccupations, fig.categoryDomain);
     const era = classifyEra(fig.birthYear);
-    const depth = classifyDepth(fig.occupations.size);
+    const depth = classifyDepth(fig.sitelinks);
 
     let slug = slugify(fig.label);
     // Ensure unique id
@@ -403,7 +598,8 @@ async function main() {
       title: fig.label,
       wikidataId: fig.wikidataId,
       knowledgeType: "Historical Figures",
-      disciplines,
+      domain: primary,
+      secondaryDomains: secondary,
       eraGroup: era.eraGroup,
       eraLabel: era.eraLabel,
       depth,
@@ -412,8 +608,12 @@ async function main() {
     });
   }
 
-  // Sort alphabetically since we don't have sitelinks for notability ranking
-  catalog.sort((a, b) => a.title.localeCompare(b.title));
+  // Sort by sitelinks (most notable first)
+  catalog.sort((a, b) => {
+    const slA = byId.get(a.wikidataId)?.sitelinks ?? 0;
+    const slB = byId.get(b.wikidataId)?.sitelinks ?? 0;
+    return slB - slA;
+  });
   console.log(`  → ${catalog.length} catalog items built`);
 
   // Stats
@@ -427,15 +627,28 @@ async function main() {
   console.log(`  Era breakdown: ${JSON.stringify(byEra)}`);
   console.log(`  Depth breakdown: ${JSON.stringify(byDepth)}`);
 
-  // Collect all disciplines
-  const allDisc = new Set<string>();
-  for (const item of catalog) item.disciplines.forEach((d) => allDisc.add(d));
-  console.log(`  Disciplines: ${[...allDisc].sort().join(", ")}`);
+  // Domain breakdown
+  const byDomain: Record<string, number> = {};
+  for (const item of catalog) {
+    byDomain[item.domain] = (byDomain[item.domain] ?? 0) + 1;
+  }
+  console.log(`  Domain breakdown:`);
+  for (const [dom, count] of Object.entries(byDomain).sort(([, a], [, b]) => b - a)) {
+    console.log(`    ${dom}: ${count}`);
+  }
+  const withSecondary = catalog.filter((i) => i.secondaryDomains.length > 0).length;
+  console.log(`  Figures with secondary domains: ${withSecondary} (${((withSecondary / catalog.length) * 100).toFixed(1)}%)`);
+  const allDoms = new Set<string>();
+  for (const item of catalog) {
+    allDoms.add(item.domain);
+    item.secondaryDomains.forEach((d) => allDoms.add(d));
+  }
+  console.log(`  Domains represented: ${[...allDoms].sort().join(", ")}`);
 
   // 3. Write JSON
   console.log("[3/3] Writing catalog…");
   mkdirSync(dirname(OUT_PATH), { recursive: true });
-  writeFileSync(OUT_PATH, JSON.stringify(catalog, null, 2) + "\n", "utf-8");
+  writeFileSync(OUT_PATH, JSON.stringify(catalog) + "\n", "utf-8");
   console.log(`  ✔ Written ${catalog.length} items to ${OUT_PATH}`);
   console.log();
   console.log("Done! Run `npm run dev` to see the encyclopedia.");

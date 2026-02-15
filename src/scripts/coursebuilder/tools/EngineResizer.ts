@@ -21,6 +21,7 @@ const RESIZER_CONFIG = {
     max: 420,
     visibleMin: 240,
     collapseThreshold: 200,
+    invertDelta: false,
   },
   panel: {
     property: '--engine-panel-width',
@@ -149,7 +150,7 @@ const handlePointerResize = (
   window.addEventListener('pointercancel', onPointerUp);
 };
 
-const handleKeyboardResize = (engine: HTMLElement, handle: HTMLButtonElement, region: ResizableRegion, event: KeyboardEvent) => {
+const handleKeyboardResize = (engine: HTMLElement, _handle: HTMLButtonElement, region: ResizableRegion, event: KeyboardEvent) => {
   const config = RESIZER_CONFIG[region];
   const currentWidth = getNumericProperty(engine, config.property, config.defaultWidth);
   const step = event.shiftKey ? KEYBOARD_STEP * 2 : KEYBOARD_STEP;
