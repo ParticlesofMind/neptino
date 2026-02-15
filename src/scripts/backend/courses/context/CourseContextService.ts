@@ -47,8 +47,8 @@ import {
   derivePedagogyBias,
   deriveDepthLevel,
   deriveApproachLabel,
-} from './CourseFingerprint.js';
-import type { TemplateBlockType, TemplateType } from '../templates/templateOptions.js';
+} from './CourseFingerprint';
+import type { TemplateBlockType, TemplateType } from '../templates/templateOptions';
 
 // ── Listener type ─────────────────────────────────────────────────────
 

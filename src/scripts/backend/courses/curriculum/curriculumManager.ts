@@ -1,20 +1,20 @@
-import { supabase } from "../../supabase.js";
-import { CurriculumRenderer } from "./curriculumRenderer.js";
-import { CanvasBuilder } from "./canvasBuilder.js";
-import { LessonStructure } from "./utils/LessonStructure.js";
-import { CourseContext } from "./CourseContext.js";
+import { supabase } from "../../supabase";
+import { CurriculumRenderer } from "./curriculumRenderer";
+import { CanvasBuilder } from "./canvasBuilder";
+import { LessonStructure } from "./utils/LessonStructure";
+import { CourseContext } from "./CourseContext";
 import {
   CanvasSummaryService,
   type CanvasLessonSummary,
-} from "./CanvasSummaryService.js";
-import { TemplatePlacementService } from "./TemplatePlacementService.js";
+} from "./CanvasSummaryService";
+import { TemplatePlacementService } from "./TemplatePlacementService";
 import {
   ContentLoadService,
   type ContentLoadConfig,
   type DurationPresetKey,
-} from "./ContentLoadService.js";
-import { ContentLoadController } from "./ContentLoadController.js";
-import type { CurriculumCanvas } from "../../../integration/utils/CanvasDataAccessor.js";
+} from "./ContentLoadService";
+import { ContentLoadController } from "./ContentLoadController";
+import type { CurriculumCanvas } from "../../../integration/utils/CanvasDataAccessor";
 
 // Module organization types
 export type ModuleOrganizationType = "linear" | "equal" | "tiered" | "custom";
@@ -957,7 +957,7 @@ class CurriculumManager {
     }
 
     // Import AI generator dynamically
-    const { AICurriculumGenerator } = await import('./aiCurriculumGenerator.js');
+    const { AICurriculumGenerator } = await import('./aiCurriculumGenerator');
     const generator = new AICurriculumGenerator(this.courseId);
 
     // Show status UI

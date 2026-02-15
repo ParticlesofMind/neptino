@@ -15,7 +15,7 @@ import type {
   CourseFingerprint,
   ISCEDPath,
   DepthLevel,
-} from '../backend/courses/context/CourseFingerprint.js';
+} from '../backend/courses/context/CourseFingerprint';
 
 // ── Types (mirrored from encyclopedia.ts to avoid coupling) ───────────
 

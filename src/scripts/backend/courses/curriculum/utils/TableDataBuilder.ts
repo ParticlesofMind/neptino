@@ -1,6 +1,6 @@
-import { CurriculumLesson, CurriculumTopic, TemplateDefinitionBlock } from "../curriculumManager.js";
+import { CurriculumLesson, CurriculumTopic, TemplateDefinitionBlock } from "../curriculumManager";
 // @ts-ignore - Path resolution issue with bundler mode
-import type { TableRow, TableData } from "../../../coursebuilder/layout/utils/TableRenderer.js";
+import type { TableRow, TableData } from "../../../coursebuilder/layout/utils/TableRenderer";
 
 interface ColumnDef {
   key: string;

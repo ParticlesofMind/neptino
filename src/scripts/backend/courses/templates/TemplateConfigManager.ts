@@ -1,4 +1,4 @@
-import { TemplateBlockType, TemplateBlock } from "./types.js";
+import { TemplateBlockType, TemplateBlock } from "./types";
 
 export interface BlockFieldConfig {
   name: string;

@@ -1,7 +1,7 @@
-import { supabase } from "../../supabase.js";
-import { TemplateData, TemplateBlock, TemplateBlockType, TemplateType } from "./types.js";
-import { TemplateConfigManager } from "./TemplateConfigManager.js";
-import { BLOCK_CONTENT_TEMPLATES, TEMPLATE_BLOCK_SEQUENCES, TEMPLATE_BODY_BLOCKS } from "./templateOptions.js";
+import { supabase } from "../../supabase";
+import { TemplateData, TemplateBlock, TemplateBlockType, TemplateType } from "./types";
+import { TemplateConfigManager } from "./TemplateConfigManager";
+import { BLOCK_CONTENT_TEMPLATES, TEMPLATE_BLOCK_SEQUENCES, TEMPLATE_BODY_BLOCKS } from "./templateOptions";
 
 export class TemplateDataHandler {
   static async loadExistingTemplates(): Promise<any[]> {

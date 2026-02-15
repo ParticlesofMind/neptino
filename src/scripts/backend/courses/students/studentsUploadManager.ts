@@ -1,7 +1,7 @@
-import { dispatchProfilesIndexed } from "./studentsProfileService.js";
-import { parseGoogleSheet, parseRosterFile } from "./studentsParser.js";
-import { StudentsPreview } from "./studentsPreview.js";
-import { StudentsRepository } from "./studentsRepository.js";
+import { dispatchProfilesIndexed } from "./studentsProfileService";
+import { parseGoogleSheet, parseRosterFile } from "./studentsParser";
+import { StudentsPreview } from "./studentsPreview";
+import { StudentsRepository } from "./studentsRepository";
 import {
   STUDENT_FIELD_LABELS,
   type RawStudentRow,
@@ -10,13 +10,13 @@ import {
   type StudentParseResult,
   type StudentRecord,
   type StudentTransformResult,
-} from "./studentsTypes.js";
+} from "./studentsTypes";
 import {
   ensureStudentId,
   parseAssessment,
   parseLearningStyle,
   sanitiseValue,
-} from "./studentsUtils.js";
+} from "./studentsUtils";
 import { setElementHidden } from "../../../utils/tailwindState";
 
 interface UploadManagerOptions {

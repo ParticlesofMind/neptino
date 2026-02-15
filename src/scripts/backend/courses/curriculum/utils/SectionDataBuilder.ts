@@ -1,5 +1,5 @@
-import { TemplateDefinitionBlock, CurriculumLesson } from "../curriculumManager.js";
-import { formatDate } from "../../../../coursebuilder/layout/pages/PageMetadata.js";
+import { TemplateDefinitionBlock, CurriculumLesson } from "../curriculumManager";
+import { formatDate } from "../../../../coursebuilder/layout/pages/PageMetadata";
 
 export class SectionDataBuilder {
   /**

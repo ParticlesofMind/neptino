@@ -1,4 +1,4 @@
-import type { RosterSummary, StudentRecord } from "./studentsTypes.js";
+import type { RosterSummary, StudentRecord } from "./studentsTypes";
 
 export class StudentsPreview {
   private readonly previewBody: HTMLElement | null;

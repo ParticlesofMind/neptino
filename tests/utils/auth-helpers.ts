@@ -12,7 +12,7 @@ export class AuthHelpers {
    * Navigate to signin page
    */
   async goToSignIn(): Promise<void> {
-    await this.page.goto('/src/pages/shared/signin.html');
+    await this.page.goto('/shared/signin');
     await this.page.waitForLoadState('networkidle');
   }
 
@@ -32,14 +32,14 @@ export class AuthHelpers {
     await this.page.click('button[type="submit"]');
     
     // Wait for redirect to home page
-    await this.page.waitForURL(/\/pages\/(student|teacher|admin)\/home\.html/);
+    await this.page.waitForURL(/\/(student|teacher|admin)\/home/);
   }
 
   /**
    * Sign up a new test user
    */
   async signUp(user: TestUser): Promise<void> {
-    await this.page.goto('/src/pages/shared/signup.html');
+    await this.page.goto('/shared/signup');
     await this.page.waitForLoadState('networkidle');
     
     // Fill in signup form
@@ -55,7 +55,7 @@ export class AuthHelpers {
     await this.page.click('button[type="submit"]');
     
     // Wait for redirect
-    await this.page.waitForURL(/\/pages\/(student|teacher|admin)\/home\.html/);
+    await this.page.waitForURL(/\/(student|teacher|admin)\/home/);
   }
 
   /**
@@ -63,14 +63,14 @@ export class AuthHelpers {
    */
   async signOut(): Promise<void> {
     await this.page.click('#logout-btn');
-    await this.page.waitForURL(/\/pages\/shared\/signin\.html/);
+    await this.page.waitForURL(/\/shared\/signin/);
   }
 
   /**
    * Verify user is redirected to correct home page based on role
    */
   async verifyRoleRedirect(role: 'student' | 'teacher' | 'admin'): Promise<void> {
-    const expectedUrl = `/src/pages/${role}/home.html`;
+    const expectedUrl = `/${role}/home`;
     await expect(this.page).toHaveURL(expectedUrl);
   }
 
@@ -79,10 +79,10 @@ export class AuthHelpers {
    */
   async verifyProtectedPage(): Promise<void> {
     // Should not be on signin page
-    await expect(this.page).not.toHaveURL(/\/pages\/shared\/signin\.html/);
+    await expect(this.page).not.toHaveURL(/\/shared\/signin/);
     
     // Should be on a role-specific page
-    await expect(this.page).toHaveURL(/\/pages\/(student|teacher|admin)\//);
+    await expect(this.page).toHaveURL(/\/(student|teacher|admin)\//);
   }
 
   /**

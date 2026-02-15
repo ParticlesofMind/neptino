@@ -1,4 +1,4 @@
-import { TemplateBlock, TemplateBlockType, BlockFieldConfig, FieldRow } from "./types.js";
+import { TemplateBlock, TemplateBlockType, BlockFieldConfig, FieldRow } from "./types";
 
 export interface TemplateRenderOptions {
   competencyEnabled: boolean;

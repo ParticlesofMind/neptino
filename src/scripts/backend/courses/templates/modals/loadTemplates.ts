@@ -1,10 +1,10 @@
-import { supabase } from '../../../supabase.js';
-import { ensureTemplateModals } from '../templateModals.js';
-import { ModalHandler } from '../../../../navigation/CourseBuilderNavigation.js';
+import { supabase } from '../../../supabase';
+import { ensureTemplateModals } from '../templateModals';
+import { ModalHandler } from '../../../../navigation/CourseBuilderNavigation';
 import {
   TEMPLATE_TYPE_LABELS,
   TemplateType,
-} from '../templateOptions.js';
+} from '../templateOptions';
 
 interface Template {
   id: string;

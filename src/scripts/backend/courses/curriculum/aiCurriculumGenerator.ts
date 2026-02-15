@@ -15,7 +15,7 @@ import type {
   CurriculumTopic 
 } from './curriculumManager';
 import { supabase } from '../../supabase';
-import { courseContextService } from '../context/CourseContextService.js';
+import { courseContextService } from '../context/CourseContextService';
 
 /**
  * AI-specific context shape. Extends the shared fingerprint with fields

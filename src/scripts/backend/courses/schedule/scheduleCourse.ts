@@ -1,4 +1,4 @@
-import { supabase } from "../../supabase.js";
+import { supabase } from "../../supabase";
 import { setButtonActive, setElementHidden, setFieldError } from "../../../utils/tailwindState";
 
 interface BreakTime {

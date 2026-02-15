@@ -1,4 +1,4 @@
-import { CurriculumLesson, CurriculumTopic } from "../curriculumManager.js";
+import { CurriculumLesson, CurriculumTopic } from "../curriculumManager";
 
 export class LessonStructure {
   /**

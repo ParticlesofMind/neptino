@@ -43,7 +43,7 @@ export async function loadClassYearData() {
  if (!classYearData) {
  try {
  const response = await fetch(
- "/src/scripts/json/classification/classYear.json",
+ "/data/classification/classYear.json",
  );
  classYearData = await response.json();
  } catch (error) {
@@ -58,7 +58,7 @@ export async function loadCurricularFrameworkData() {
  if (!curricularFrameworkData) {
  try {
  const response = await fetch(
- "/src/scripts/json/classification/curricularFramework.json",
+ "/data/classification/curricularFramework.json",
  );
  curricularFrameworkData = await response.json();
  } catch (error) {
@@ -73,7 +73,7 @@ export async function loadIscedData() {
  if (!iscedData) {
  try {
  const response = await fetch(
- "/src/scripts/json/classification/isced2011.json",
+ "/data/classification/isced2011.json",
  );
  iscedData = await response.json();
  } catch (error) {

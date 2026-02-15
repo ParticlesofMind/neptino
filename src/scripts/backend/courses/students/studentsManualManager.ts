@@ -1,13 +1,13 @@
-import { dispatchProfilesIndexed } from "./studentsProfileService.js";
-import { StudentsPreview } from "./studentsPreview.js";
-import { StudentsRepository } from "./studentsRepository.js";
-import type { StudentRecord } from "./studentsTypes.js";
+import { dispatchProfilesIndexed } from "./studentsProfileService";
+import { StudentsPreview } from "./studentsPreview";
+import { StudentsRepository } from "./studentsRepository";
+import type { StudentRecord } from "./studentsTypes";
 import {
   ensureStudentId,
   parseAssessment,
   parseLearningStyle,
   sanitiseValue,
-} from "./studentsUtils.js";
+} from "./studentsUtils";
 
 interface ManualManagerOptions {
   preview: StudentsPreview;

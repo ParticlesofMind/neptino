@@ -1,5 +1,5 @@
-import { supabase } from "../../supabase.js";
-import { getCourseId } from "../../../utils/courseId.js";
+import { supabase } from "../../supabase";
+import { getCourseId } from "../../../utils/courseId";
 
 function resolveCourseId(): string | null {
   const idFromUrl = getCourseId();

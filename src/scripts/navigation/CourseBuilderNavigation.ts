@@ -28,9 +28,12 @@ export class CourseBuilderNavigation {
  }
 
  private isOnCourseBuilderPage(): boolean {
- return window.location.pathname.includes('coursebuilder.html');
+ return (
+ window.location.pathname.includes('coursebuilder') ||
+ document.querySelector('[data-coursebuilder-section]') !== null
+ );
  }
-
+ 
  private initialize(): void {
  this.setupEventListeners();
  this.initializeFromHash();
@@ -444,7 +447,10 @@ export class ViewToggleHandler {
   }
 
   private isOnCourseBuilderPage(): boolean {
-    return window.location.pathname.includes('coursebuilder.html');
+    return (
+      window.location.pathname.includes('coursebuilder') ||
+      document.querySelector('[data-coursebuilder-section]') !== null
+    );
   }
 
   private init(): void {
@@ -678,7 +684,7 @@ export class ModalHandler {
 
 // Initialize CourseBuilder navigation when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
- if (window.location.pathname.includes('coursebuilder.html')) {
+ if (window.location.pathname.includes('/teacher/coursebuilder')) {
  new CourseBuilderNavigation();
  new ViewToggleHandler();
  new ModalHandler();

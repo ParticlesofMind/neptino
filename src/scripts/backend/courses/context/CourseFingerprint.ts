@@ -10,7 +10,7 @@
  * See: Course Builder Architecture §2.2
  */
 
-import type { TemplateType, TemplateBlockType } from '../templates/templateOptions.js';
+import type { TemplateType, TemplateBlockType } from '../templates/templateOptions';
 
 // ── Re-exported / shared enums ────────────────────────────────────────
 

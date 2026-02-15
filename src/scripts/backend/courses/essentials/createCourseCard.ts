@@ -245,7 +245,7 @@ export class CoursesManager {
 
   private navigateToCourseSection(courseId: string, section: string): void {
     // Navigate to the course builder with the course ID as URL parameter and hash for section
-    const url = `/src/pages/teacher/coursebuilder.html?courseId=${courseId}#${section}`;
+    const url = `/teacher/coursebuilder?courseId=${courseId}#${section}`;
     window.location.href = url;
   }
 

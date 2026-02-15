@@ -827,6 +827,19 @@ export class CourseFormHandler {
 
         this.form.addEventListener("submit", (e) => this.handleSubmit(e));
 
+        // Handle course image picker overlay
+        const imageInput = this.form.querySelector("#course-image") as HTMLInputElement | null;
+        const imageOverlay = this.form.querySelector("#course-image-overlay") as HTMLElement | null;
+        if (imageInput && imageOverlay) {
+            imageOverlay.addEventListener("click", () => imageInput.click());
+            imageOverlay.addEventListener("keydown", (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    imageInput.click();
+                }
+            });
+        }
+
         // Handle remove image button
         const removeImageBtn = this.form.querySelector("#remove-image");
         if (removeImageBtn) {

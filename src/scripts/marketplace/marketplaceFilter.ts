@@ -21,8 +21,8 @@ import type {
   InteractivityType,
   PedagogyBias,
   DepthLevel,
-} from '../backend/courses/context/CourseFingerprint.js';
-import { derivePedagogyBias } from '../backend/courses/context/CourseFingerprint.js';
+} from '../backend/courses/context/CourseFingerprint';
+import { derivePedagogyBias } from '../backend/courses/context/CourseFingerprint';
 
 /**
  * String label derived from PedagogyBias characteristics, used as a

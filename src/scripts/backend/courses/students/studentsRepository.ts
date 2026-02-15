@@ -1,9 +1,9 @@
-import { supabase } from "../../supabase.js";
+import { supabase } from "../../supabase";
 import type {
   RepositoryResult,
   RosterSummary,
   StudentRecord,
-} from "./studentsTypes.js";
+} from "./studentsTypes";
 
 const DEFAULT_GRADE_LEVEL = "Unspecified";
 

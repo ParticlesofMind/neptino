@@ -4,7 +4,7 @@ import type {
   TemplatePlacementChoice,
   TemplatePlacementConfig,
   TemplateSummary,
-} from "./curriculumManager.js";
+} from "./curriculumManager";
 
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
 

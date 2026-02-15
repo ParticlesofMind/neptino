@@ -25,7 +25,7 @@ export async function loadCourseLanguages(): Promise<CourseLanguage[]> {
   }
 
   try {
-    const response = await fetch('/src/scripts/json/courseLanguage.json');
+    const response = await fetch('/data/courseLanguage.json');
     
     if (!response.ok) {
       throw new Error(`Failed to load languages: ${response.status}`);

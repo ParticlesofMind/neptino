@@ -8,7 +8,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Coursebuilder Canvas System', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to coursebuilder page
-    await page.goto('/src/pages/teacher/coursebuilder.html');
+    await page.goto('/teacher/coursebuilder');
     
     // Wait for page to be fully loaded
     await page.waitForLoadState('networkidle');
@@ -148,7 +148,7 @@ test.describe('Coursebuilder Canvas System', () => {
 
 test.describe('Coursebuilder Canvas with Course', () => {
   test('Canvases load when course ID is set', async ({ page }) => {
-    await page.goto('/src/pages/teacher/coursebuilder.html');
+    await page.goto('/teacher/coursebuilder');
     await page.waitForLoadState('networkidle');
     
     // Wait for canvas API to initialize

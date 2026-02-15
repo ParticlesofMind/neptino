@@ -1,4 +1,4 @@
-import type { CourseInfo } from "../../../integration/utils/CanvasDataAccessor.js";
+import type { CourseInfo } from "../../../integration/utils/CanvasDataAccessor";
 
 type LessonStructureSummary = { topics: number; objectives: number; tasks: number };
 
