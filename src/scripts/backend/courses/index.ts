@@ -7,6 +7,7 @@ import { ScheduleCourseManager } from "./schedule/scheduleCourse.js";
 import { CurriculumManager } from "./curriculum/curriculumManager.js";
 import { ensureStudentsManager, StudentsManager } from "./students/studentsManager.js";
 import { DeleteCourseManager } from "./settings/deleteCourse.js";
+import { courseContextService } from "./context/CourseContextService.js";
 
 // Re-export course creation and classification functions
 export * from "./essentials/createCourse";
@@ -47,10 +48,15 @@ export class CourseBuilder {
  
  // Manage navigation tabs based on course existence
  this.updateNavigationTabsState();
+
+ // Start the CourseContextService event listeners
+ courseContextService.startListening();
  
  // Only initialize managers if we have a course ID (existing course mode)
  if (this.courseId) {
  this.initializeAllManagers();
+ // Trigger initial fingerprint refresh
+ courseContextService.refreshFromCourse(this.courseId);
  } else {
   
  }
@@ -188,6 +194,9 @@ export class CourseBuilder {
  */
  public setCourseId(courseId: string): void {
  this.courseId = courseId;
+
+ // Refresh the Course Fingerprint for the new course
+ courseContextService.refreshFromCourse(courseId);
  
  // Update delete course manager if it exists
  if (this.deleteCourseManager) {

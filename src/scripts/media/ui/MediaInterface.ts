@@ -1,5 +1,19 @@
 import { mediaManager } from '../MediaManager';
 import { MediaItem, MediaType, SearchResult } from '../types';
+import { courseContextService } from '../../backend/courses/context/CourseContextService.js';
+import {
+  filterByFingerprint as filterEncyclopediaByFingerprint,
+  type KnowledgeItem,
+  type ScoredKnowledgeItem,
+} from '../../encyclopedia/encyclopediaFilter.js';
+import {
+  filterByFingerprint as filterMarketplaceByFingerprint,
+  type ForgeAsset,
+  type ScoredForgeAsset,
+} from '../../marketplace/marketplaceFilter.js';
+
+/** Extended media type that includes knowledge-source tabs. */
+type ExtendedMediaType = MediaType | 'encyclopedia' | 'marketplace';
 
 function debounce<T extends (...args: any[]) => void>(fn: T, delay = 300) {
   let t: any;
@@ -30,7 +44,7 @@ const LOCAL_TEST_IMAGES: MediaItem[] = [
 ];
 
 class MediaInterface {
-  private currentType: MediaType = 'files';
+  private currentType: ExtendedMediaType = 'files';
   private query = '';
   private page = 1;
   private pageSize = 24;
@@ -43,6 +57,17 @@ class MediaInterface {
   private infoOverlay: HTMLElement | null = null;
   private lastFocusedElement: HTMLElement | null = null;
   private keydownListener: ((event: KeyboardEvent) => void) | null = null;
+
+  // ── Knowledge-source state ──────────────────────────────────────────
+  private encyclopediaData: KnowledgeItem[] | null = null;
+  private marketplaceData: ForgeAsset[] | null = null;
+  /** Unsubscribe from CourseContextService.onChange; called on cleanup. */
+  private fingerprintUnsub: (() => void) | null = null;
+
+  destroy() {
+    this.fingerprintUnsub?.();
+    this.fingerprintUnsub = null;
+  }
 
   init() {
     mediaManager.init();
@@ -74,7 +99,7 @@ class MediaInterface {
         let val = (target.dataset.media || 'files');
         // Normalize plugin -> plugins
         if (val === 'plugin') val = 'plugins';
-        this.setType(val as MediaType);
+        this.setType(val as ExtendedMediaType);
       });
     });
 
@@ -82,7 +107,7 @@ class MediaInterface {
     document.addEventListener('media:selected', (e: any) => {
       let val = (e?.detail || 'files');
       if (val === 'plugin') val = 'plugins';
-      this.setType(val as MediaType);
+      this.setType(val as ExtendedMediaType);
     });
 
     // Try to read initial selection from ToolStateManager if present
@@ -110,9 +135,24 @@ class MediaInterface {
     const doSearch = debounce(() => {
       this.query = searchBox.value.trim();
       this.page = 1;
+      // Knowledge-source tabs use their own search
+      if (this.currentType === 'encyclopedia') {
+        this.renderEncyclopedia();
+        return;
+      }
+      if (this.currentType === 'marketplace') {
+        this.renderMarketplace();
+        return;
+      }
       this.search(true);
     }, 400);
     searchBox.addEventListener('input', doSearch);
+
+    // Subscribe to fingerprint changes — re-filter if showing knowledge tabs
+    this.fingerprintUnsub = courseContextService.onChange(() => {
+      if (this.currentType === 'encyclopedia') this.renderEncyclopedia();
+      if (this.currentType === 'marketplace') this.renderMarketplace();
+    });
 
     // Scrolling pagination
     this.resultsEl.addEventListener('scroll', () => {
@@ -125,11 +165,24 @@ class MediaInterface {
     });
   }
 
-  private setType(t: MediaType) {
+  private setType(t: ExtendedMediaType) {
     this.currentType = t;
     this.resultsEl.innerHTML = '';
     this.page = 1;
     this.hasMore = false;
+
+    // Knowledge-source tabs use their own render pipeline
+    if (t === 'encyclopedia') {
+      this.selectedProviderKey = null;
+      this.renderEncyclopedia();
+      return;
+    }
+    if (t === 'marketplace') {
+      this.selectedProviderKey = null;
+      this.renderMarketplace();
+      return;
+    }
+
     this.selectedProviderKey = `${this.currentType}:stock`;
     this.search(true, true);
   }
@@ -161,7 +214,7 @@ class MediaInterface {
       }
       const result = this.selectedProviderKey
         ? await mediaManager.searchWithProvider(this.selectedProviderKey, this.query)
-        : await mediaManager.search(this.currentType, this.query, opts);
+        : await mediaManager.search(this.currentType as MediaType, this.query, opts);
     this.hasMore = result.hasMore;
       this.renderResults(result, clear);
     } catch (e: any) {
@@ -391,6 +444,356 @@ class MediaInterface {
 
     // Remove Add/Open buttons – drag-and-drop only
     return card;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // Encyclopedia rendering
+  // ═══════════════════════════════════════════════════════════════════
+
+  private async renderEncyclopedia() {
+    this.resultsEl.innerHTML = '';
+
+    // Lazy-load encyclopedia data
+    if (!this.encyclopediaData) {
+      const loader = document.createElement('div');
+      loader.className = 'text-xs text-neutral-500';
+      loader.textContent = 'Loading encyclopedia…';
+      this.resultsEl.appendChild(loader);
+      try {
+        const res = await fetch('/data/encyclopedia/historical-figures.json');
+        this.encyclopediaData = (await res.json()) as KnowledgeItem[];
+      } catch (err) {
+        loader.textContent = 'Failed to load encyclopedia data.';
+        console.error('Encyclopedia load error:', err);
+        return;
+      }
+      loader.remove();
+    }
+
+    const fingerprint = courseContextService.getFingerprint();
+
+    let items: ScoredKnowledgeItem[];
+    if (fingerprint.courseName) {
+      // We have a course context — use fingerprint-driven filtering
+      items = filterEncyclopediaByFingerprint(
+        this.encyclopediaData,
+        fingerprint,
+        undefined,
+        this.query || undefined,
+      );
+    } else {
+      // No course loaded — simple text search only
+      items = this.encyclopediaData
+        .filter((item) => {
+          if (!this.query) return true;
+          const q = this.query.toLowerCase();
+          return [item.title, item.summary, ...item.tags].join(' ').toLowerCase().includes(q);
+        })
+        .map((item) => ({ item, score: 0, matchReasons: [] }));
+    }
+
+    if (items.length === 0) {
+      const empty = document.createElement('div');
+      empty.textContent = this.query ? 'No matching encyclopedia entries.' : 'No encyclopedia entries available.';
+      empty.className = 'text-sm text-neutral-500 p-2';
+      this.resultsEl.appendChild(empty);
+      return;
+    }
+
+    // Relevance summary when fingerprint-filtered
+    if (fingerprint.courseName) {
+      const hint = document.createElement('div');
+      hint.className = 'text-xs text-primary-600 bg-primary-50 rounded-md px-3 py-1.5 mb-1';
+      hint.textContent = `${items.length} entries ranked by course relevance`;
+      this.resultsEl.appendChild(hint);
+    }
+
+    for (const scored of items) {
+      const card = this.renderEncyclopediaCard(scored);
+      this.resultsEl.appendChild(card);
+    }
+  }
+
+  private renderEncyclopediaCard(scored: ScoredKnowledgeItem): HTMLElement {
+    const item = scored.item;
+    const card = document.createElement('div');
+    card.className = 'flex flex-col gap-1.5 rounded-lg border border-neutral-200 bg-white p-3 shadow-sm transition hover:shadow-md cursor-grab';
+    card.dataset.mediaCard = 'true';
+    card.dataset.sourceType = 'encyclopedia';
+    card.draggable = true;
+
+    card.addEventListener('dragstart', (ev) => {
+      const payload = {
+        sourceType: 'encyclopedia' as const,
+        id: item.id,
+        title: item.title,
+        knowledgeType: item.knowledgeType,
+        domain: item.domain,
+        summary: item.summary,
+        tags: item.tags,
+        depth: item.depth,
+        eraLabel: item.eraLabel,
+        wikidataId: item.wikidataId,
+      };
+      ev.dataTransfer?.setData('application/json', JSON.stringify(payload));
+      ev.dataTransfer?.setData('text/plain', item.title);
+      card.classList.add('ring-2', 'ring-amber-300', 'opacity-70');
+      const cleanup = () => {
+        card.classList.remove('ring-2', 'ring-amber-300', 'opacity-70');
+        document.removeEventListener('dragend', cleanup);
+      };
+      document.addEventListener('dragend', cleanup);
+    });
+
+    // Icon + type badge
+    const header = document.createElement('div');
+    header.className = 'flex items-center gap-2';
+    const icon = document.createElement('span');
+    icon.className = 'text-base';
+    icon.textContent = this.encyclopediaIcon(item.knowledgeType);
+    header.appendChild(icon);
+    const typeBadge = document.createElement('span');
+    typeBadge.className = 'rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800';
+    typeBadge.textContent = item.knowledgeType;
+    header.appendChild(typeBadge);
+
+    // Relevance score badge (only when filtered)
+    if (scored.score > 0) {
+      const scoreBadge = document.createElement('span');
+      scoreBadge.className = 'ml-auto rounded-full bg-primary-100 px-1.5 py-0.5 text-[10px] font-semibold text-primary-700';
+      scoreBadge.textContent = `${scored.score}`;
+      scoreBadge.title = scored.matchReasons.join(', ') || 'relevance score';
+      header.appendChild(scoreBadge);
+    }
+    card.appendChild(header);
+
+    // Title
+    const title = document.createElement('div');
+    title.textContent = item.title;
+    title.className = 'text-sm font-semibold text-neutral-900';
+    card.appendChild(title);
+
+    // Summary (truncated)
+    const summary = document.createElement('div');
+    summary.textContent = item.summary.length > 120 ? item.summary.slice(0, 117) + '…' : item.summary;
+    summary.className = 'text-xs text-neutral-600 leading-relaxed';
+    card.appendChild(summary);
+
+    // Meta row
+    const meta = document.createElement('div');
+    meta.className = 'flex flex-wrap gap-1.5 text-[10px] text-neutral-500';
+    meta.appendChild(this.pill(item.domain, 'bg-neutral-100'));
+    meta.appendChild(this.pill(item.eraLabel, 'bg-blue-50 text-blue-700'));
+    meta.appendChild(this.pill(item.depth, 'bg-green-50 text-green-700'));
+    card.appendChild(meta);
+
+    return card;
+  }
+
+  private encyclopediaIcon(type: string): string {
+    const icons: Record<string, string> = {
+      'Person': '👤',
+      'Event': '📅',
+      'Location': '📍',
+      'Concept / Theory': '💡',
+      'Invention / Technology': '⚙️',
+      'Work': '📖',
+      'Institution': '🏛️',
+      'Movement / School': '✊',
+      'Era / Period': '🕰️',
+    };
+    return icons[type] || '📚';
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // Marketplace rendering
+  // ═══════════════════════════════════════════════════════════════════
+
+  private async renderMarketplace() {
+    this.resultsEl.innerHTML = '';
+
+    // Lazy-load marketplace data
+    if (!this.marketplaceData) {
+      const loader = document.createElement('div');
+      loader.className = 'text-xs text-neutral-500';
+      loader.textContent = 'Loading marketplace…';
+      this.resultsEl.appendChild(loader);
+      try {
+        const res = await fetch('/data/marketplace/assets.json');
+        this.marketplaceData = (await res.json()) as ForgeAsset[];
+      } catch (err) {
+        loader.textContent = 'Failed to load marketplace data.';
+        console.error('Marketplace load error:', err);
+        return;
+      }
+      loader.remove();
+    }
+
+    const fingerprint = courseContextService.getFingerprint();
+
+    let items: ScoredForgeAsset[];
+    if (fingerprint.courseName) {
+      items = filterMarketplaceByFingerprint(
+        this.marketplaceData,
+        fingerprint,
+        undefined,
+        this.query || undefined,
+      );
+    } else {
+      items = this.marketplaceData
+        .filter((asset) => {
+          if (!this.query) return true;
+          const q = this.query.toLowerCase();
+          return [asset.title, asset.description, ...asset.topicTags].join(' ').toLowerCase().includes(q);
+        })
+        .map((asset) => ({ asset, score: 0, matchReasons: [] }));
+    }
+
+    if (items.length === 0) {
+      const empty = document.createElement('div');
+      empty.textContent = this.query ? 'No matching marketplace assets.' : 'No marketplace assets available.';
+      empty.className = 'text-sm text-neutral-500 p-2';
+      this.resultsEl.appendChild(empty);
+      return;
+    }
+
+    if (fingerprint.courseName) {
+      const hint = document.createElement('div');
+      hint.className = 'text-xs text-primary-600 bg-primary-50 rounded-md px-3 py-1.5 mb-1';
+      hint.textContent = `${items.length} assets ranked by course relevance`;
+      this.resultsEl.appendChild(hint);
+    }
+
+    for (const scored of items) {
+      const card = this.renderMarketplaceCard(scored);
+      this.resultsEl.appendChild(card);
+    }
+  }
+
+  private renderMarketplaceCard(scored: ScoredForgeAsset): HTMLElement {
+    const asset = scored.asset;
+    const card = document.createElement('div');
+    card.className = 'flex flex-col gap-1.5 rounded-lg border border-neutral-200 bg-white p-3 shadow-sm transition hover:shadow-md cursor-grab';
+    card.dataset.mediaCard = 'true';
+    card.dataset.sourceType = 'marketplace';
+    card.draggable = true;
+
+    card.addEventListener('dragstart', (ev) => {
+      const payload = {
+        sourceType: 'marketplace' as const,
+        id: asset.id,
+        title: asset.title,
+        description: asset.description,
+        assetCategory: asset.assetCategory,
+        assetType: asset.assetType,
+        subjectDomains: asset.subjectDomains,
+        topicTags: asset.topicTags,
+        gradeLevel: asset.gradeLevel,
+        difficulty: asset.difficulty,
+        bloomLevel: asset.bloomLevel,
+        pedagogicalApproach: asset.pedagogicalApproach,
+        estimatedDuration: asset.estimatedDuration,
+        learningObjectives: asset.learningObjectives,
+        linkedEntities: asset.linkedEntities,
+        interactivityType: asset.interactivityType,
+        thumbnailUrl: asset.thumbnailUrl,
+        creatorName: asset.creatorName,
+        language: asset.language,
+        price: asset.price,
+        license: asset.license,
+      };
+      ev.dataTransfer?.setData('application/json', JSON.stringify(payload));
+      ev.dataTransfer?.setData('text/plain', asset.title);
+      card.classList.add('ring-2', 'ring-violet-300', 'opacity-70');
+      const cleanup = () => {
+        card.classList.remove('ring-2', 'ring-violet-300', 'opacity-70');
+        document.removeEventListener('dragend', cleanup);
+      };
+      document.addEventListener('dragend', cleanup);
+    });
+
+    // Category badge + rating
+    const header = document.createElement('div');
+    header.className = 'flex items-center gap-2';
+    const catIcon = document.createElement('span');
+    catIcon.className = 'text-base';
+    catIcon.textContent = this.categoryIcon(asset.assetCategory);
+    header.appendChild(catIcon);
+    const catBadge = document.createElement('span');
+    catBadge.className = 'rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-800';
+    catBadge.textContent = asset.assetCategory;
+    header.appendChild(catBadge);
+
+    // Rating stars
+    if (asset.ratingAverage > 0) {
+      const rating = document.createElement('span');
+      rating.className = 'ml-auto text-[10px] text-amber-600 font-semibold';
+      rating.textContent = `★ ${asset.ratingAverage.toFixed(1)}`;
+      header.appendChild(rating);
+    }
+
+    // Relevance score
+    if (scored.score > 0) {
+      const scoreBadge = document.createElement('span');
+      scoreBadge.className = 'rounded-full bg-primary-100 px-1.5 py-0.5 text-[10px] font-semibold text-primary-700';
+      scoreBadge.textContent = `${Math.round(scored.score)}`;
+      scoreBadge.title = scored.matchReasons.join(', ') || 'relevance score';
+      header.appendChild(scoreBadge);
+    }
+    card.appendChild(header);
+
+    // Title
+    const title = document.createElement('div');
+    title.textContent = asset.title;
+    title.className = 'text-sm font-semibold text-neutral-900';
+    card.appendChild(title);
+
+    // Description (truncated)
+    const desc = document.createElement('div');
+    desc.textContent = asset.description.length > 100 ? asset.description.slice(0, 97) + '…' : asset.description;
+    desc.className = 'text-xs text-neutral-600 leading-relaxed';
+    card.appendChild(desc);
+
+    // Meta row 1: domains
+    const domainRow = document.createElement('div');
+    domainRow.className = 'flex flex-wrap gap-1 text-[10px]';
+    for (const d of asset.subjectDomains.slice(0, 3)) {
+      domainRow.appendChild(this.pill(d, 'bg-neutral-100'));
+    }
+    card.appendChild(domainRow);
+
+    // Meta row 2: grade, difficulty, duration, price
+    const metaRow = document.createElement('div');
+    metaRow.className = 'flex flex-wrap gap-1.5 text-[10px] text-neutral-500';
+    metaRow.appendChild(this.pill(asset.gradeLevel.join(', '), 'bg-blue-50 text-blue-700'));
+    metaRow.appendChild(this.pill(asset.difficulty, 'bg-green-50 text-green-700'));
+    metaRow.appendChild(this.pill(asset.estimatedDuration, 'bg-orange-50 text-orange-700'));
+    if (asset.price == null || asset.price === 0) {
+      metaRow.appendChild(this.pill('Free', 'bg-emerald-50 text-emerald-700'));
+    } else {
+      metaRow.appendChild(this.pill(`$${asset.price}`, 'bg-neutral-100'));
+    }
+    card.appendChild(metaRow);
+
+    return card;
+  }
+
+  private categoryIcon(cat: string): string {
+    const icons: Record<string, string> = {
+      'simulation': '🧪',
+      'activity': '🎯',
+      'explanation': '📝',
+      'assessment': '📋',
+      'planning': '📐',
+    };
+    return icons[cat] || '📦';
+  }
+
+  private pill(text: string, colorClass: string): HTMLElement {
+    const el = document.createElement('span');
+    el.className = `rounded-full px-2 py-0.5 text-[10px] font-medium ${colorClass}`;
+    el.textContent = text;
+    return el;
   }
 
   private showInfoPopup(item: MediaItem) {
@@ -788,6 +1191,33 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (item.type === 'links' && item.title) {
           const id = canvasAPI.addText(`🔗 ${item.title}`, x, y);
           if (id) canvasAPI.showSnapHintForId(id);
+        }
+
+        // ── Knowledge-source drops ───────────────────────────────
+        // These items use a `sourceType` discriminator instead of `type`.
+
+        if (item.sourceType === 'encyclopedia') {
+          const label = `📚 ${item.title}`;
+          const id = canvasAPI.addText(label, x, y);
+          if (id) canvasAPI.showSnapHintForId(id);
+          // Dispatch event so other systems can react (e.g. auto-populate fields)
+          window.dispatchEvent(new CustomEvent('encyclopediaItemDropped', {
+            detail: { canvasElementId: id, item, x, y },
+          }));
+        }
+
+        if (item.sourceType === 'marketplace') {
+          const icon = item.assetCategory === 'simulation' ? '🧪'
+            : item.assetCategory === 'activity' ? '🎯'
+            : item.assetCategory === 'assessment' ? '📋'
+            : item.assetCategory === 'explanation' ? '📝'
+            : '📦';
+          const label = `${icon} ${item.title}`;
+          const id = canvasAPI.addText(label, x, y);
+          if (id) canvasAPI.showSnapHintForId(id);
+          window.dispatchEvent(new CustomEvent('marketplaceAssetDropped', {
+            detail: { canvasElementId: id, item, x, y },
+          }));
         }
       } catch (error) {
         console.warn('Failed to add media item to canvas:', error);

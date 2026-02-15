@@ -1,6 +1,11 @@
 /**
  * AI Curriculum Generator
- * Uses on-device LLM to generate curriculum content based on course context
+ * Uses on-device LLM to generate curriculum content based on course context.
+ *
+ * Context gathering has been partially extracted into CourseContextService
+ * (see ../context/CourseContextService.ts). This class can optionally reuse
+ * the shared fingerprint via `gatherContextFromService()` or keep using its
+ * own `gatherContext()` which queries Supabase directly.
  */
 
 import { modelManager } from '../../../../machine-learning/ModelManager';
@@ -10,7 +15,12 @@ import type {
   CurriculumTopic 
 } from './curriculumManager';
 import { supabase } from '../../supabase';
+import { courseContextService } from '../context/CourseContextService.js';
 
+/**
+ * AI-specific context shape. Extends the shared fingerprint with fields
+ * the LLM prompt needs (teacher name, existing curriculum for delta gen).
+ */
 interface CourseContext {
   // Required/Mandatory
   courseName: string;
@@ -163,6 +173,100 @@ export class AICurriculumGenerator {
       console.error('Error gathering context:', error);
       return null;
     }
+  }
+
+  /**
+   * Build a CourseContext from the shared CourseContextService fingerprint.
+   * Falls back to gatherContext() if the fingerprint isn't populated.
+   *
+   * This lets callers avoid a redundant Supabase fetch when the fingerprint
+   * is already warm (e.g., the teacher just finished filling in setup panels).
+   */
+  public async gatherContextFromService(options: {
+    includeSchedule: boolean;
+    includeStructure: boolean;
+    includeExisting: boolean;
+  }): Promise<CourseContext | null> {
+    // Ensure fingerprint is up-to-date
+    if (courseContextService.getCourseId() !== this.courseId) {
+      await courseContextService.refreshFromCourse(this.courseId);
+    }
+
+    const fp = courseContextService.getFingerprint();
+    if (!fp.courseId) {
+      // Service couldn't load — fall back to direct query
+      return this.gatherContext(options);
+    }
+
+    const context: CourseContext = {
+      courseName: fp.courseName,
+      courseDescription: fp.courseDescription,
+      teacher: '', // fingerprint doesn't carry teacher name; we'll fetch it
+      institution: fp.institution,
+      language: fp.language,
+      classification: {
+        classYear: fp.classification.classYear,
+        domain: fp.classification.domain,
+        subject: fp.classification.subject,
+        topic: fp.classification.topic,
+      },
+      pedagogy: fp.pedagogyCoordinates
+        ? { x: fp.pedagogyCoordinates.x, y: fp.pedagogyCoordinates.y, approach: fp.instructionalApproach }
+        : null,
+    };
+
+    if (options.includeSchedule && fp.schedule) {
+      const totalLessons = fp.modules.reduce((sum, m) => sum + m.lessons.length, 0);
+      context.schedule = {
+        lessonDuration: fp.schedule.lessonDuration,
+        totalLessons,
+        totalModules: fp.modules.length,
+      };
+    }
+
+    if (options.includeStructure) {
+      context.structure = { ...fp.structureConfig };
+    }
+
+    // existingCurriculum still needs the raw Supabase data (lesson objects
+    // with nested topics/objectives/tasks), which the fingerprint summarizes
+    // but doesn't store verbatim. Fall back to a targeted fetch.
+    if (options.includeExisting) {
+      try {
+        const { data: course } = await supabase
+          .from('courses')
+          .select('curriculum_data')
+          .eq('id', this.courseId)
+          .single();
+        if (course?.curriculum_data) {
+          context.existingCurriculum = {
+            modules: course.curriculum_data.modules,
+            lessons: course.curriculum_data.lessons,
+          };
+        }
+      } catch { /* non-critical */ }
+    }
+
+    // Fetch teacher name (lightweight query)
+    try {
+      const { data: course } = await supabase
+        .from('courses')
+        .select('teacher_id')
+        .eq('id', this.courseId)
+        .single();
+      if (course?.teacher_id) {
+        const { data: teacher } = await supabase
+          .from('users')
+          .select('first_name, last_name')
+          .eq('id', course.teacher_id)
+          .single();
+        context.teacher = teacher
+          ? `${teacher.first_name ?? ''} ${teacher.last_name ?? ''}`.trim()
+          : 'Unknown Teacher';
+      }
+    } catch { /* non-critical */ }
+
+    return context;
   }
 
   /**

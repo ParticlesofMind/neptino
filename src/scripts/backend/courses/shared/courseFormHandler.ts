@@ -1251,6 +1251,14 @@ export class CourseFormHandler {
                     timestamp: new Date().toISOString()
                 });
                 this.showStatus("Saved ✓", "success");
+
+                // Notify CourseContextService that course data changed
+                window.dispatchEvent(new CustomEvent('courseSectionUpdated', {
+                    detail: {
+                        courseId: this.currentCourseId,
+                        section: this.sectionConfig.section,
+                    },
+                }));
                 if (uploadedImageUrl) {
                     this.displayExistingImage(uploadedImageUrl);
                     if (previousImageUrl && previousImageUrl !== uploadedImageUrl) {
