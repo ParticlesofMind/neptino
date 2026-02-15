@@ -22,7 +22,8 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,html}\"",
     "clean": "rm -rf dist node_modules/.vite",
     "reset": "npm run clean && npm install && npm run dev",
-    "fonts:generate": "node scripts/generate-bitmap-fonts.js"
+    "fonts:generate": "node scripts/generate-bitmap-fonts.js",
+    "build:encyclopedia": "tsx scripts/build-encyclopedia-catalog.ts"
   },
   "keywords": [
     "education",
