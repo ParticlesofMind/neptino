@@ -25,7 +25,7 @@ export class StockMediaProvider extends BaseProvider {
     } catch {
       try {
         // Fallback to absolute /src path for dev servers
-        url = '/assets/stock_media/manifest.json';
+        url = '/src/assets/stock_media/manifest.json';
         const res2 = await fetch(url);
         if (!res2.ok) throw new Error('fallback fetch failed');
         const data2 = await res2.json();

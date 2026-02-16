@@ -1,7 +1,7 @@
-import { TemplateBlock, TemplateBlockType, BlockFieldConfig } from "./types";
-import { TemplateConfigManager } from "./TemplateConfigManager";
-import { TemplateBlockRenderer, TemplateRenderOptions } from "./TemplateBlockRenderer";
-import { TEMPLATE_BLOCK_SEQUENCES, TEMPLATE_BODY_BLOCKS } from "./templateOptions";
+import { TemplateBlock, TemplateBlockType, BlockFieldConfig } from "./types.js";
+import { TemplateConfigManager } from "./TemplateConfigManager.js";
+import { TemplateBlockRenderer, TemplateRenderOptions } from "./TemplateBlockRenderer.js";
+import { TEMPLATE_BLOCK_SEQUENCES, TEMPLATE_BODY_BLOCKS } from "./templateOptions.js";
 
 export class TemplateRenderer {
   static displayTemplateBlocks(templateData: any): void {
@@ -82,7 +82,7 @@ export class TemplateRenderer {
         if (!fieldName || !blockType) return;
         
         // Import dynamically to avoid circular dependency
-        const { TemplateManager } = await import('./TemplateManager');
+        const { TemplateManager } = await import('./TemplateManager.js');
         await TemplateManager.updateTemplateField(templateId, blockType, fieldName, input.checked);
         
         console.log(`✅ Saved ${blockType}.${fieldName} = ${input.checked}`);

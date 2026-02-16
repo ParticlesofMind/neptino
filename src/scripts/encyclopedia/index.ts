@@ -1,11 +1,11 @@
 export {
   filterEncyclopediaItems,
   filterByFingerprint,
-} from './encyclopediaFilter';
+} from './encyclopediaFilter.js';
 
 export type {
   KnowledgeItem,
   EntityType,
   EncyclopediaFilterCriteria,
   ScoredKnowledgeItem,
-} from './encyclopediaFilter';
+} from './encyclopediaFilter.js';

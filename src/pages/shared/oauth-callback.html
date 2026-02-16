@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OAuth Callback</title>
+<style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 24px; }
+      .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; max-width: 560px; }
+    </style>
+</head>
+<body>
+<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+<h2>Completing sign-in…</h2>
+<p>This window will close automatically.</p>
+</div>
+<script>
+      (function () {
+        try {
+          // OAuth implicit flow returns tokens in URL hash
+          const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+          const accessToken = hash.get('access_token');
+          const tokenType = hash.get('token_type');
+          const state = hash.get('state');
+          if (accessToken) {
+            if (state === 'googledrive') {
+              localStorage.setItem('GOOGLE_DRIVE_TOKEN', accessToken);
+              window.GOOGLE_DRIVE_TOKEN = accessToken;
+            } else if (state === 'dropbox') {
+              localStorage.setItem('DROPBOX_TOKEN', accessToken);
+              window.DROPBOX_TOKEN = accessToken;
+            }
+            // Fire a storage-based signal for opener
+            localStorage.setItem('OAUTH_DONE_TIME', String(Date.now()));
+          }
+        } catch (e) {
+          console.error('OAuth callback error', e);
+        }
+        setTimeout(() => { window.close(); }, 500);
+      })();
+    </script>
+</body>
+</html>

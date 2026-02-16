@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Courses - Neptino</title>
+<link href="/src/styles/app.css" rel="stylesheet"/>
+</head>
+<body class="min-h-screen flex flex-col bg-neutral-50 font-sans text-neutral-900">
+<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur border-b border-neutral-200">
+  <nav class="w-full flex items-center px-6 py-4 lg:px-8">
+    <a href="/src/pages/teacher/home.html" class="flex items-center flex-shrink-0">
+      <img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
+    </a>
+    <ul class="hidden sm:flex flex-1 justify-center items-center gap-8 list-none m-0 p-0">
+      <li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/teacher/courses.html">My Courses</a></li>
+      <li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/teacher/marketplace.html">Marketplace</a></li>
+      <li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/teacher/tutorials.html">Tutorials</a></li>
+      <li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/teacher/encyclopedia.html">Encyclopedia</a></li>
+    </ul>
+    <button class="inline-flex items-center justify-center rounded px-6 py-3 text-sm font-medium text-white shadow-sm transition-all bg-primary-600 hover:bg-primary-700 active:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 flex-shrink-0 ml-auto" id="logout-btn">Logout</button>
+  </nav>
+</header>
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<article aria-labelledby="courses-heading" class="flex flex-col gap-6">
+<section class="flex items-center justify-between gap-4">
+<h2 class="text-2xl font-bold text-neutral-900" id="courses-heading">My Courses</h2>
+<a class="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800" href="/src/pages/teacher/coursebuilder.html#setup" id="create-course-btn">
+<svg class="mr-2 h-4 w-4" fill="none" height="16" viewbox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 5V19M5 12H19" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+          Create New Course
+        </a>
+</section>
+
+<!-- Empty State Message -->
+<div id="no-courses-message" style="display: none;" class="text-center py-12">
+    <div class="mx-auto h-24 w-24 text-neutral-300 mb-4">
+        <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+        </svg>
+    </div>
+    <h3 class="mt-2 text-sm font-semibold text-neutral-900">No courses yet</h3>
+    <p class="mt-1 text-sm text-neutral-500">Get started by creating your first course.</p>
+    <div class="mt-6">
+        <a href="/src/pages/teacher/coursebuilder.html#setup" class="inline-flex items-center rounded-sm bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">
+            <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+            </svg>
+            New Course
+        </a>
+    </div>
+</div>
+
+<section aria-busy="false" aria-live="polite" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" data-js="courses">
+<!-- Course cards will be dynamically loaded here -->
+</section>
+</article>
+</main>
+<footer class="border-t border-neutral-200 bg-white mt-auto">
+  <div class="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+      <div>
+        <a href="/" class="inline-block mb-4">
+          <img alt="Neptino Logo" class="h-6 w-auto" src="/src/assets/logo/octopus-logo.png"/>
+        </a>
+        <p class="text-xs text-neutral-500">Empowering educators and students worldwide.</p>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-neutral-900 mb-4">Product</h3>
+        <ul class="space-y-2 list-none m-0 p-0">
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/features.html">Features</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/pricing.html">Pricing</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/about.html">About</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-neutral-900 mb-4">Legal</h3>
+        <ul class="space-y-2 list-none m-0 p-0">
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Privacy Policy</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Terms of Service</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-neutral-900 mb-4">Connect</h3>
+        <ul class="space-y-2 list-none m-0 p-0">
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Twitter</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">LinkedIn</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-neutral-200 pt-8">
+      <p class="text-xs text-center text-neutral-500">© 2024 Neptino. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+<script src="/src/scripts/app.ts" type="module"></script>
+<script src="/src/scripts/backend/courses/essentials/createCourseCard.ts" type="module"></script>
+</body>
+</html>

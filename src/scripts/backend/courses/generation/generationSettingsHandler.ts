@@ -1,5 +1,5 @@
-import { supabase } from "../../supabase";
-import { getCourseId } from "../../../utils/courseId";
+import { supabase } from "../../supabase.js";
+import { getCourseId } from "../../../utils/courseId.js";
 
 type OptionalContextKey = "ai-context-schedule" | "ai-context-structure" | "ai-context-existing";
 

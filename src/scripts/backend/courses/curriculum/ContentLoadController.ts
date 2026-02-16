@@ -1,8 +1,8 @@
-import { ContentLoadService, type ContentLoadConfig, type DurationPresetKey } from "./ContentLoadService";
-import type { CurriculumLesson } from "./curriculumManager";
+import { ContentLoadService, type ContentLoadConfig, type DurationPresetKey } from "./ContentLoadService.js";
+import type { CurriculumLesson } from "./curriculumManager.js";
 
 interface ContentLoadControllerOptions {
-  supabase: typeof import("../../supabase").supabase;
+  supabase: typeof import("../../supabase.js").supabase;
   lessonDates: Map<number, string>;
   getCourseId(): string | null;
   getCurrentCurriculum(): CurriculumLesson[];

@@ -1,4 +1,4 @@
-import { TemplateRecord, TemplateDefinitionBlock, TemplateDefinition } from "../curriculumManager";
+import { TemplateRecord, TemplateDefinitionBlock, TemplateDefinition } from "../curriculumManager.js";
 
 export class TemplateDataBuilder {
   /**

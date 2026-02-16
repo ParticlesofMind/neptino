@@ -1,4 +1,4 @@
-import type { StudentProfile, StudentRecord } from "./studentsTypes";
+import type { StudentProfile, StudentRecord } from "./studentsTypes.js";
 
 function buildProfileTags(student: StudentRecord): string[] {
   const tags = new Set<string>();

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Teacher Dashboard - Neptino</title>
+  <link href="/src/styles/app.css" rel="stylesheet"/>
+</head>
+<body class="min-h-screen flex flex-col bg-neutral-50 font-sans text-neutral-900">
+<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur border-b border-neutral-200">
+  <nav class="w-full flex items-center px-6 py-4 lg:px-8">
+    <a href="/src/pages/teacher/home.html" class="flex items-center flex-shrink-0">
+      <img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
+    </a>
+    <ul class="hidden sm:flex flex-1 justify-center items-center gap-8 list-none m-0 p-0">
+      <li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/teacher/courses.html">My Courses</a></li>
+      <li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/teacher/marketplace.html">Marketplace</a></li>
+      <li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/teacher/tutorials.html">Tutorials</a></li>
+      <li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/teacher/encyclopedia.html">Encyclopedia</a></li>
+    </ul>
+    <button class="inline-flex items-center justify-center rounded px-6 py-3 text-sm font-medium text-white shadow-sm transition-all bg-primary-600 hover:bg-primary-700 active:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 flex-shrink-0 ml-auto" id="logout-btn">Logout</button>
+  </nav>
+</header>
+
+<main class="flex-1 w-full flex">
+  <aside class="hidden md:flex w-64 flex-col bg-white text-neutral-900 border-r border-neutral-200 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
+    <nav class="flex-1 px-3 py-6">
+      <h3 class="px-3 mb-4 text-xs font-semibold text-neutral-600 uppercase tracking-wider">Menu</h3>
+      <ul class="flex flex-col gap-2">
+        <li>
+          <button class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-sm bg-primary-600 text-white hover:bg-primary-700 transition-colors" data-nav-section="home">
+            <svg class="h-5 w-5 shrink-0" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="20">
+              <rect height="7" width="7" x="3" y="3"></rect>
+              <rect height="7" width="7" x="14" y="3"></rect>
+              <rect height="7" width="7" x="14" y="14"></rect>
+              <rect height="7" width="7" x="3" y="14"></rect>
+            </svg>
+            <span class="truncate">Home</span>
+          </button>
+        </li>
+        <li>
+          <button class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-sm text-neutral-600 hover:text-primary-600 hover:bg-primary-50 transition-colors" data-nav-section="classes">
+            <svg class="h-5 w-5 shrink-0" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="20">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+            <span class="truncate">Classes</span>
+          </button>
+        </li>
+        <li>
+          <button class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-sm text-neutral-600 hover:text-primary-600 hover:bg-primary-50 transition-colors" data-nav-section="students">
+            <svg class="h-5 w-5 shrink-0" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="20">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span class="truncate">Students</span>
+          </button>
+        </li>
+        <li>
+          <button class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-sm text-neutral-600 hover:text-primary-600 hover:bg-primary-50 transition-colors" data-nav-section="messages">
+            <svg class="h-5 w-5 shrink-0" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="20">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <span class="truncate">Messages</span>
+          </button>
+        </li>
+        <li>
+          <button class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-sm text-neutral-600 hover:text-primary-600 hover:bg-primary-50 transition-colors" data-nav-section="calendar">
+            <svg class="h-5 w-5 shrink-0" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="20">
+              <rect height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2" width="18" x="3" y="4"></rect>
+              <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2"></path>
+            </svg>
+            <span class="truncate">Calendar</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <div class="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Dashboard Section -->
+    <section class="hidden" data-section="home">
+      <header class="mb-8">
+        <h2 class="text-3xl font-bold text-neutral-900">Dashboard</h2>
+      </header>
+      <div class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white rounded-lg p-6 shadow-sm border border-neutral-200">
+            <p class="text-sm font-medium text-neutral-500">Active Courses</p>
+            <p class="mt-3 text-3xl font-bold text-neutral-900">5</p>
+          </div>
+          <div class="bg-white rounded-lg p-6 shadow-sm border border-neutral-200">
+            <p class="text-sm font-medium text-neutral-500">Total Students</p>
+            <p class="mt-3 text-3xl font-bold text-neutral-900">127</p>
+          </div>
+          <div class="bg-white rounded-lg p-6 shadow-sm border border-neutral-200">
+            <p class="text-sm font-medium text-neutral-500">Pending Reviews</p>
+            <p class="mt-3 text-3xl font-bold text-neutral-900">12</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white rounded-lg p-6 shadow-sm border border-neutral-200">
+            <h3 class="text-lg font-semibold text-neutral-900 mb-4">Quick Actions</h3>
+            <button class="w-full inline-flex items-center justify-center rounded px-4 py-3 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-all">Create new course content</button>
+          </div>
+          <div class="bg-white rounded-lg p-6 shadow-sm border border-neutral-200">
+            <h3 class="text-lg font-semibold text-neutral-900 mb-4">Recent Activity</h3>
+            <a class="inline-block text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors no-underline" href="#submissions">View latest student submissions</a>
+          </div>
+        </div>
+        <div class="bg-white rounded-lg p-6 shadow-sm border border-neutral-200">
+          <h3 class="text-lg font-semibold text-neutral-900 mb-4">Messages</h3>
+          <a class="inline-block text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors no-underline" href="#messages">8 unread messages</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Classes Section -->
+    <section class="hidden" data-section="classes">
+      <header class="mb-8">
+        <h2 class="text-3xl font-bold text-neutral-900">Classes</h2>
+      </header>
+      <div class="space-y-6">
+        <div class="bg-white rounded-lg p-6 shadow-sm border border-neutral-200">
+          <h3 class="text-lg font-semibold text-neutral-900 mb-2">Manage your courses</h3>
+          <p class="text-sm text-neutral-500">View and edit all your courses</p>
+        </div>
+        <div class="bg-white rounded-lg p-6 shadow-sm border border-neutral-200">
+          <h3 class="text-lg font-semibold text-neutral-900 mb-2">Course Analytics</h3>
+          <p class="text-sm text-neutral-500">View performance metrics</p>
+        </div>
+        <div class="bg-white rounded-lg p-6 shadow-sm border border-neutral-200">
+          <h3 class="text-lg font-semibold text-neutral-900 mb-4">Create Course</h3>
+          <button class="w-full inline-flex items-center justify-center rounded px-4 py-3 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-all">Start a new course</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Messages Section -->
+    <section class="hidden" data-section="messages">
+      <header class="mb-8">
+        <h2 class="text-3xl font-bold text-neutral-900">Messages</h2>
+      </header>
+      <div class="bg-white rounded-lg p-6 shadow-sm border border-neutral-200" data-messaging-container="">
+        <p class="text-sm text-neutral-500">Loading messaging interface...</p>
+      </div>
+    </section>
+
+    <!-- Students Section -->
+    <section class="hidden" data-section="students">
+      <header class="mb-8">
+        <h2 class="text-3xl font-bold text-neutral-900">Students</h2>
+      </header>
+      <div class="space-y-6">
+        <div class="bg-white rounded-lg p-6 shadow-sm border border-neutral-200">
+          <h3 class="text-lg font-semibold text-neutral-900 mb-2">Student Management</h3>
+          <p class="text-sm text-neutral-500">View and manage your enrolled students</p>
+        </div>
+        <div class="bg-white rounded-lg p-6 shadow-sm border border-neutral-200">
+          <h3 class="text-lg font-semibold text-neutral-900 mb-2">Student Progress</h3>
+          <p class="text-sm text-neutral-500">Track individual student progress and performance</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Calendar Section -->
+    <section class="hidden" data-section="calendar">
+      <header class="mb-8">
+        <h2 class="text-3xl font-bold text-neutral-900">Calendar</h2>
+      </header>
+      <div class="bg-white rounded-lg p-6 shadow-sm border border-neutral-200">
+        <p class="text-sm text-neutral-500">View your teaching schedule and important dates</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="border-t border-neutral-200 bg-white mt-auto">
+  <div class="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+      <div>
+        <a href="/" class="inline-block mb-4">
+          <img alt="Neptino Logo" class="h-6 w-auto" src="/src/assets/logo/octopus-logo.png"/>
+        </a>
+        <p class="text-xs text-neutral-500">Empowering educators and students worldwide.</p>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-neutral-900 mb-4">Product</h3>
+        <ul class="space-y-2 list-none m-0 p-0">
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/features.html">Features</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/pricing.html">Pricing</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/about.html">About</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-neutral-900 mb-4">Legal</h3>
+        <ul class="space-y-2 list-none m-0 p-0">
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Privacy Policy</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Terms of Service</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-neutral-900 mb-4">Connect</h3>
+        <ul class="space-y-2 list-none m-0 p-0">
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Twitter</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">LinkedIn</a></li>
+          <li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-neutral-200 pt-8">
+      <p class="text-xs text-center text-neutral-500">© 2024 Neptino. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="/src/scripts/app.ts" type="module"></script>
+<script src="/src/scripts/navigation/index.ts" type="module"></script>
+<script src="/src/scripts/backend/rocketchat/MessagingInterface.ts" type="module"></script>
+<script>
+  // Dashboard navigation
+  document.querySelectorAll('[data-nav-section]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const section = e.currentTarget.getAttribute('data-nav-section');
+      
+      // Hide all sections
+      document.querySelectorAll('[data-section]').forEach(el => {
+        el.classList.add('hidden');
+      });
+      
+      // Remove active state from all buttons
+      document.querySelectorAll('[data-nav-section]').forEach(el => {
+        el.classList.remove('bg-primary-600', 'text-white', 'hover:bg-primary-700');
+        el.classList.add('text-neutral-600', 'hover:text-primary-600', 'hover:bg-primary-50');
+      });
+      
+      // Show selected section
+      document.querySelector(`[data-section="${section}"]`).classList.remove('hidden');
+      
+      // Set active button
+      e.currentTarget.classList.remove('text-neutral-600', 'hover:text-primary-600', 'hover:bg-primary-50');
+      e.currentTarget.classList.add('bg-primary-600', 'text-white', 'hover:bg-primary-700');
+    });
+  });
+  
+  // Show home section by default
+  document.querySelector('[data-section="home"]').classList.remove('hidden');
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-import { TEMPLATE_TYPE_OPTIONS } from "./templateOptions";
+import { TEMPLATE_TYPE_OPTIONS } from "./templateOptions.js";
 
 const templateTypeOptionsMarkup = TEMPLATE_TYPE_OPTIONS
   .map(({ value, label }) => `<option value="${value}">${label}</option>`)

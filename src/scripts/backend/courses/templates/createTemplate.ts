@@ -1,10 +1,10 @@
-import { TemplateManager } from "./TemplateManager";
-import { TemplateDataHandler } from "./TemplateDataHandler";
-import { TemplateRenderer } from "./TemplateRenderer";
-import { TemplateConfigManager } from "./TemplateConfigManager";
-import { TemplateBlockRenderer } from "./TemplateBlockRenderer";
-import { ensureTemplateModals } from "./templateModals";
-import type { TemplateData, TemplateBlock, TemplateBlockType, TemplateType, BlockFieldConfig, FieldRow } from "./types";
+import { TemplateManager } from "./TemplateManager.js";
+import { TemplateDataHandler } from "./TemplateDataHandler.js";
+import { TemplateRenderer } from "./TemplateRenderer.js";
+import { TemplateConfigManager } from "./TemplateConfigManager.js";
+import { TemplateBlockRenderer } from "./TemplateBlockRenderer.js";
+import { ensureTemplateModals } from "./templateModals.js";
+import type { TemplateData, TemplateBlock, TemplateBlockType, TemplateType, BlockFieldConfig, FieldRow } from "./types.js";
 
 // Re-export all types and classes for backward compatibility
 export type {
@@ -87,26 +87,27 @@ function initializeTemplateInterface() {
   console.log('✅ Template interface fully initialized');
 }
 
-const initializeTemplateModule = () => {
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
   console.log('📋 Template module loaded, setting up observers...');
-
+  
   // Check if we're on the templates section immediately
   const templatesSection = document.getElementById('templates');
   const generationSection = document.getElementById('generation');
-
+  
   // Initialize immediately if templates section is active
   if (templatesSection && !templatesSection.classList.contains('hidden')) {
     console.log('✅ Templates section already active, initializing now');
     setTimeout(() => initializeTemplateInterface(), 50); // Small delay to ensure buttons are rendered
   }
-
+  
   // Watch for when either section becomes active
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
         const target = mutation.target as HTMLElement;
         const isTemplatesOrGeneration = target.id === 'templates' || target.id === 'generation';
-
+        
         if (isTemplatesOrGeneration && !target.classList.contains('hidden')) {
           console.log(`🔔 ${target.id} section became active, initializing template interface`);
           setTimeout(() => initializeTemplateInterface(), 50); // Small delay to ensure buttons are rendered
@@ -114,7 +115,7 @@ const initializeTemplateModule = () => {
       }
     });
   });
-
+  
   // Observe both sections
   if (templatesSection) {
     observer.observe(templatesSection, {
@@ -123,7 +124,7 @@ const initializeTemplateModule = () => {
     });
     console.log('👁️ Observing templates section for activation');
   }
-
+  
   if (generationSection) {
     observer.observe(generationSection, {
       attributes: true,
@@ -131,17 +132,11 @@ const initializeTemplateModule = () => {
     });
     console.log('👁️ Observing generation section for activation');
   }
-
+  
   if (!templatesSection && !generationSection) {
     console.warn('⚠️ Templates and generation sections not found in DOM');
   }
-};
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeTemplateModule);
-} else {
-  initializeTemplateModule();
-}
+});
 
 // Make TemplateManager available globally for backward compatibility
 (window as any).TemplateManager = TemplateManager;

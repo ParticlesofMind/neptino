@@ -41,12 +41,12 @@ export const toolConfigs: Record<string, ModeConfig> = {
   build: {
     id: "build",
     name: "Build",
-    icon: "/assets/icons/coursebuilder/modes/mode-build.svg",
+    icon: "/src/assets/icons/coursebuilder/modes/mode-build.svg",
     tools: [
       {
         id: "selection",
         name: "Select",
-        icon: "/assets/icons/coursebuilder/tools/tool-select.svg",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-select.svg",
         options: [
           {
             id: "mode",
@@ -55,8 +55,8 @@ export const toolConfigs: Record<string, ModeConfig> = {
             settings: {
               value: "contain",
               options: [
-                { value: "contain", label: "Contain", icon: "/assets/icons/square-mouse-pointer-icon.svg" },
-                { value: "intersect", label: "Intersect", icon: "/assets/icons/square-dashed-mouse-pointer-icon.svg" },
+                { value: "contain", label: "Contain", icon: "/src/assets/icons/square-mouse-pointer-icon.svg" },
+                { value: "intersect", label: "Intersect", icon: "/src/assets/icons/square-dashed-mouse-pointer-icon.svg" },
               ],
             },
           },
@@ -65,13 +65,13 @@ export const toolConfigs: Record<string, ModeConfig> = {
       {
         id: "pen",
         name: "Pen",
-        icon: "/assets/icons/coursebuilder/tools/tool-pen.svg",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-pen.svg",
         options: [
           {
             id: "vectorMode",
             type: "toggle",
             label: "Node Paths",
-            icon: "/assets/icons/coursebuilder/tools/tool-node.svg",
+            icon: "/src/assets/icons/coursebuilder/tools/tool-node.svg",
             settings: { value: true },
           },
           {
@@ -97,7 +97,7 @@ export const toolConfigs: Record<string, ModeConfig> = {
       {
         id: "brush",
         name: "Brush",
-        icon: "/assets/icons/coursebuilder/tools/tool-brush.svg",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-brush.svg",
         options: [
           {
             id: "size",
@@ -141,7 +141,7 @@ export const toolConfigs: Record<string, ModeConfig> = {
       {
         id: "text",
         name: "Text",
-        icon: "/assets/icons/coursebuilder/tools/tool-write.svg",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-write.svg",
         options: [
           {
             id: "fontSize",
@@ -178,7 +178,7 @@ export const toolConfigs: Record<string, ModeConfig> = {
       {
         id: "shapes",
         name: "Shapes",
-        icon: "/assets/icons/coursebuilder/tools/tool-shapes.svg",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-shapes.svg",
         options: [
           {
             id: "shapeType",
@@ -218,7 +218,7 @@ export const toolConfigs: Record<string, ModeConfig> = {
       {
         id: "tables",
         name: "Tables",
-        icon: "/assets/icons/coursebuilder/media/media-table.svg",
+        icon: "/src/assets/icons/coursebuilder/media/media-table.svg",
         options: [
           { id: "rows", type: "number", label: "Rows", settings: { min: 1, max: 10, step: 1, value: 3 } },
           { id: "columns", type: "number", label: "Columns", settings: { min: 1, max: 10, step: 1, value: 3 } },
@@ -233,7 +233,7 @@ export const toolConfigs: Record<string, ModeConfig> = {
       {
         id: "generate",
         name: "Generate",
-        icon: "/assets/icons/bot-icon.svg",
+        icon: "/src/assets/icons/bot-icon.svg",
         options: [
           {
             id: "contentType",
@@ -245,12 +245,12 @@ export const toolConfigs: Record<string, ModeConfig> = {
                 {
                   value: "text",
                   label: "Text",
-                  icon: "/assets/icons/coursebuilder/media/media-text.svg"
+                  icon: "/src/assets/icons/coursebuilder/media/media-text.svg"
                 },
                 {
                   value: "image",
                   label: "Image",
-                  icon: "/assets/icons/coursebuilder/media/media-image.svg"
+                  icon: "/src/assets/icons/coursebuilder/media/media-image.svg"
                 },
               ],
             },
@@ -261,13 +261,13 @@ export const toolConfigs: Record<string, ModeConfig> = {
             label: "Prompt",
             settings: { value: "", placeholder: "Describe what to generate…" },
           },
-          { id: "send", type: "button", label: "Send", icon: "/assets/icons/send-icon.svg", settings: {} },
+          { id: "send", type: "button", label: "Send", icon: "/src/assets/icons/send-icon.svg", settings: {} },
         ],
       },
       {
         id: "eraser",
         name: "Eraser",
-        icon: "/assets/icons/coursebuilder/tools/tool-eraser.svg",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-eraser.svg",
         options: [
           { id: "size", type: "slider", label: "Eraser Size", settings: { min: 1, max: 16, snaps: [1, 2, 4, 8, 16], value: 4 } },
         ],
@@ -277,12 +277,12 @@ export const toolConfigs: Record<string, ModeConfig> = {
   animate: {
     id: "animate",
     name: "Animate",
-    icon: "/assets/icons/coursebuilder/modes/mode-animate.svg",
+    icon: "/src/assets/icons/coursebuilder/modes/mode-animate.svg",
     tools: [
       {
         id: "selection",
         name: "Select",
-        icon: "/assets/icons/coursebuilder/tools/tool-select.svg",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-select.svg",
         options: [
           {
             id: "mode",
@@ -301,7 +301,7 @@ export const toolConfigs: Record<string, ModeConfig> = {
       {
         id: "scene",
         name: "Scene",
-        icon: "/assets/icons/coursebuilder/modes/mode-animate.svg",
+        icon: "/src/assets/icons/coursebuilder/modes/mode-animate.svg",
         options: [
           {
             id: "aspectRatio",
@@ -329,7 +329,7 @@ export const toolConfigs: Record<string, ModeConfig> = {
       {
         id: "path",
         name: "Path",
-        icon: "/assets/icons/coursebuilder/tools/tool-pen.svg",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-pen.svg",
         options: [
           { id: "simplify", type: "button", label: "Simplify Path", settings: {} },
           { id: "adherence", type: "slider", label: "Adherence", settings: { min: 0, max: 1, step: 0.05, value: 0.5 } },
@@ -338,7 +338,7 @@ export const toolConfigs: Record<string, ModeConfig> = {
       {
         id: "modify",
         name: "Modify",
-        icon: "/assets/icons/coursebuilder/tools/tool-shapes.svg",
+        icon: "/src/assets/icons/coursebuilder/tools/tool-shapes.svg",
         options: [
           { id: "time", type: "slider", label: "Timeline (s)", settings: { min: 0, max: 120, step: 0.5, value: 0 } },
           { id: "keyframe", type: "button", label: "Set Keyframe", settings: {} },

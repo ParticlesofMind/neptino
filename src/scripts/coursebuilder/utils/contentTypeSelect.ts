@@ -6,8 +6,8 @@
 import { applyEngineButtonBase, setButtonActive } from "../../utils/tailwindState";
 
 const ICON_PATHS = {
-  text: '/assets/icons/coursebuilder/media/media-text.svg',
-  image: '/assets/icons/coursebuilder/media/media-image.svg',
+  text: '/src/assets/icons/coursebuilder/media/media-text.svg',
+  image: '/src/assets/icons/coursebuilder/media/media-image.svg',
 } as const;
 
 interface EnhancedOption {

@@ -7,18 +7,15 @@ import type {
   StudentField,
   StudentFieldMapping,
   StudentParseResult,
-} from "./studentsTypes";
+} from "./studentsTypes.js";
 
 const GOOGLE_SHEETS_HOSTS = ["docs.google.com", "drive.google.com"];
+const PDF_WORKER = new URL("pdf.worker.mjs", import.meta.url).toString();
 
-// Configure PDF.js worker for Next.js
-if (typeof window !== "undefined") {
-  try {
-    // Use CDN for browser environment
-    GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.worker.min.mjs`;
-  } catch (error) {
-    console.warn("Unable to configure pdf.js worker. PDF parsing may be degraded.", error);
-  }
+try {
+  GlobalWorkerOptions.workerSrc = PDF_WORKER;
+} catch (error) {
+  console.warn("Unable to configure pdf.js worker. PDF parsing may be degraded.", error);
 }
 
 const HEADER_MATCHERS: Array<{ pattern: RegExp; field: StudentField }> = [

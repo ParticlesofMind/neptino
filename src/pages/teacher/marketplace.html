@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marketplace - Teacher | Neptino</title>
+  <link href="/src/styles/app.css" rel="stylesheet" />
+  <style>
+    .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-neutral-50 font-sans text-neutral-900 overflow-hidden">
+  <header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur border-b border-neutral-200">
+    <nav class="w-full flex items-center px-6 py-4 lg:px-8">
+      <a href="/src/pages/teacher/home.html" class="flex items-center flex-shrink-0">
+        <img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png" />
+      </a>
+      <ul class="hidden sm:flex flex-1 justify-center items-center gap-8 list-none m-0 p-0">
+        <li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/teacher/courses.html">My Courses</a></li>
+        <li><a class="text-sm font-medium text-primary-600" href="/src/pages/teacher/marketplace.html">Marketplace</a></li>
+        <li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/teacher/tutorials.html">Tutorials</a></li>
+        <li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/teacher/encyclopedia.html">Encyclopedia</a></li>
+      </ul>
+      <button class="inline-flex items-center justify-center rounded px-6 py-3 text-sm font-medium text-white shadow-sm transition-all bg-primary-600 hover:bg-primary-700 active:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 flex-shrink-0 ml-auto" id="logout-btn">Logout</button>
+    </nav>
+  </header>
+
+  <main class="flex-1 w-full overflow-hidden">
+    <section class="max-w-[1600px] mx-auto px-3 py-6 lg:px-5 lg:py-8 h-[calc(100vh-88px)] overflow-hidden flex flex-col gap-5">
+
+      <!-- Title -->
+      <div>
+        <h1 class="text-2xl font-bold text-neutral-900">Marketplace</h1>
+        <p class="mt-1 text-sm text-neutral-600">Discover, share, and use pedagogical assets — explanations, activities, assessments, simulations, and planning tools.</p>
+      </div>
+
+      <!-- Search & Filters -->
+      <form id="forge-search-form" class="space-y-3">
+        <!-- Row 1: Search + Category + Domain -->
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-[1.4fr_1fr_1fr]">
+          <label class="flex flex-col gap-2">
+            <div class="relative">
+              <input id="forge-search-input" name="query" type="search" placeholder="Search assets, topics, types…" class="w-full rounded-lg border border-neutral-300 px-4 py-3 pr-12 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200" />
+              <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </span>
+            </div>
+          </label>
+          <label class="flex flex-col gap-2">
+            <select id="category-select" name="category" class="w-full rounded-lg border border-neutral-300 px-4 py-3 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200">
+              <option value="all">All categories</option>
+              <option value="explanation">Explanations</option>
+              <option value="activity">Activities</option>
+              <option value="assessment">Assessments</option>
+              <option value="simulation">Simulations & Interactives</option>
+              <option value="planning">Planning & Organisation</option>
+            </select>
+          </label>
+          <label class="flex flex-col gap-2">
+            <select id="domain-select" name="domain" class="w-full rounded-lg border border-neutral-300 px-4 py-3 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200">
+              <option value="all">All domains</option>
+              <!-- Populated dynamically from data -->
+            </select>
+          </label>
+        </div>
+
+        <!-- Row 2: Grade + Difficulty + Bloom + Price -->
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <label class="flex flex-col gap-2">
+            <select id="grade-select" name="grade" class="w-full rounded-lg border border-neutral-300 px-4 py-3 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200">
+              <option value="all">All grades</option>
+              <option value="pre-k">Pre-K</option>
+              <option value="k-2">K–2</option>
+              <option value="3-5">3–5</option>
+              <option value="6-8">6–8</option>
+              <option value="9-12">9–12</option>
+              <option value="higher-ed">Higher Ed</option>
+              <option value="adult">Adult</option>
+            </select>
+          </label>
+          <label class="flex flex-col gap-2">
+            <select id="difficulty-select" name="difficulty" class="w-full rounded-lg border border-neutral-300 px-4 py-3 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200">
+              <option value="all">All levels</option>
+              <option value="introductory">Introductory</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+          </label>
+          <label class="flex flex-col gap-2">
+            <select id="bloom-select" name="bloom" class="w-full rounded-lg border border-neutral-300 px-4 py-3 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200">
+              <option value="all">All Bloom's levels</option>
+              <option value="remember">Remember</option>
+              <option value="understand">Understand</option>
+              <option value="apply">Apply</option>
+              <option value="analyse">Analyse</option>
+              <option value="evaluate">Evaluate</option>
+              <option value="create">Create</option>
+            </select>
+          </label>
+          <label class="flex flex-col gap-2">
+            <select id="price-select" name="price" class="w-full rounded-lg border border-neutral-300 px-4 py-3 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200">
+              <option value="all">Free & Paid</option>
+              <option value="free">Free only</option>
+              <option value="paid">Paid only</option>
+            </select>
+          </label>
+        </div>
+
+        <!-- Result count + View toggle -->
+        <div class="flex items-center justify-between gap-3 text-sm text-neutral-600" aria-live="polite">
+          <div class="flex items-center gap-3">
+            <span id="forge-result-count">0 assets available</span>
+            <button type="button" id="forge-clear-filters" class="text-xs text-primary-600 hover:text-primary-700 font-semibold">Clear filters</button>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <span class="text-neutral-500">View</span>
+            <div class="rounded-full border border-neutral-200 bg-neutral-50 p-1">
+              <button type="button" data-view="gallery" class="forge-view-toggle inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-semibold text-neutral-800 shadow-sm ring-1 ring-neutral-200">Gallery + Sidebar</button>
+              <button type="button" data-view="list" class="forge-view-toggle inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-white hover:shadow-sm">List only</button>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <!-- Loading overlay -->
+      <div id="forge-loading" class="flex flex-col items-center justify-center gap-4 py-20">
+        <div class="h-10 w-10 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></div>
+        <p class="text-sm font-medium text-neutral-500">Loading Marketplace…</p>
+      </div>
+
+      <!-- Content: Sidebar + Gallery/List -->
+      <div id="forge-content" class="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 flex-1 min-h-0 h-full hidden">
+        <!-- Sidebar -->
+        <aside class="rounded-lg border border-neutral-200 bg-white p-4 lg:p-5 shadow-sm h-full min-h-0 lg:h-[calc(100vh-320px)] lg:overflow-y-auto hide-scrollbar">
+          <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-3">Assets</h2>
+          <div id="forge-sidebar-list" class="space-y-2">
+            <!-- Sidebar items rendered by script -->
+          </div>
+        </aside>
+
+        <!-- Main content -->
+        <section class="flex flex-col gap-4 flex-1 min-h-0 h-full lg:h-[calc(100vh-320px)]">
+          <!-- Gallery view -->
+          <div id="forge-gallery-view" class="block flex-1 overflow-y-auto hide-scrollbar">
+            <div id="forge-card-grid" class="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
+              <!-- Cards rendered by script -->
+            </div>
+          </div>
+
+          <!-- List view -->
+          <div id="forge-list-view" class="hidden flex-1 overflow-y-auto hide-scrollbar">
+            <div class="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
+              <ul id="forge-list-items" class="divide-y divide-neutral-200">
+                <!-- List rows rendered by script -->
+              </ul>
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </section>
+  </main>
+
+  <script src="/src/scripts/app.ts" type="module"></script>
+  <script src="/src/scripts/marketplace.ts" type="module"></script>
+</body>
+</html>

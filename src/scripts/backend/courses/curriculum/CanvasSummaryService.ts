@@ -1,13 +1,13 @@
-import { CanvasDataAccessor } from "../../../integration/utils/CanvasDataAccessor";
+import { CanvasDataAccessor } from "../../../integration/utils/CanvasDataAccessor.js";
 import type {
   CourseInfo,
   CurriculumCanvas,
-} from "../../../integration/utils/CanvasDataAccessor";
+} from "../../../integration/utils/CanvasDataAccessor.js";
 import type {
   MethodType as PageMethodType,
   SocialFormType as PageSocialFormType,
   TemplateSummary as PageTemplateSummary,
-} from "../../../coursebuilder/layout/pages/PageMetadata";
+} from "../../../coursebuilder/layout/pages/PageMetadata.js";
 
 export interface CanvasLessonSummary {
   id: string;

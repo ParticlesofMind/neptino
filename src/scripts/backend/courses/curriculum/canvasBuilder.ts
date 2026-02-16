@@ -3,12 +3,12 @@ import {
   CurriculumTopic,
   TemplateRecord,
   TemplateDefinitionBlock,
-} from "./curriculumManager";
-import { TableDataBuilder } from "./utils/TableDataBuilder";
-import { CanvasDimensions } from "./utils/CanvasDimensions";
-import { LessonStructure } from "./utils/LessonStructure";
-import { TemplateDataBuilder } from "./utils/TemplateDataBuilder";
-import { SectionDataBuilder } from "./utils/SectionDataBuilder";
+} from "./curriculumManager.js";
+import { TableDataBuilder } from "./utils/TableDataBuilder.js";
+import { CanvasDimensions } from "./utils/CanvasDimensions.js";
+import { LessonStructure } from "./utils/LessonStructure.js";
+import { TemplateDataBuilder } from "./utils/TemplateDataBuilder.js";
+import { SectionDataBuilder } from "./utils/SectionDataBuilder.js";
 
 interface TableColumn {
   key: string;

@@ -2,12 +2,12 @@
 // COURSE BUILDER MAIN CONTROLLER - Uses Generic Form Handler
 // ==========================================================================
 
-import { CourseFormHandler } from "./shared/courseFormHandler";
-import { ScheduleCourseManager } from "./schedule/scheduleCourse";
-import { CurriculumManager } from "./curriculum/curriculumManager";
-import { ensureStudentsManager, StudentsManager } from "./students/studentsManager";
-import { DeleteCourseManager } from "./settings/deleteCourse";
-import { courseContextService } from "./context/CourseContextService";
+import { CourseFormHandler } from "./shared/courseFormHandler.js";
+import { ScheduleCourseManager } from "./schedule/scheduleCourse.js";
+import { CurriculumManager } from "./curriculum/curriculumManager.js";
+import { ensureStudentsManager, StudentsManager } from "./students/studentsManager.js";
+import { DeleteCourseManager } from "./settings/deleteCourse.js";
+import { courseContextService } from "./context/CourseContextService.js";
 
 // Re-export course creation and classification functions
 export * from "./essentials/createCourse";
@@ -175,7 +175,7 @@ export class CourseBuilder {
  this.deleteCourseManager = new DeleteCourseManager(this.courseId);
  
  // Initialize page setup handler with course ID
- import('./settings/pageSetupHandler').then(({ pageSetupHandler }) => {
+ import('./settings/pageSetupHandler.js').then(({ pageSetupHandler }) => {
  pageSetupHandler.setCourseId(this.courseId!);
  });
  
@@ -235,7 +235,7 @@ export class CourseBuilder {
  }
  
  // Update page setup handler
- import('./settings/pageSetupHandler').then(({ pageSetupHandler }) => {
+ import('./settings/pageSetupHandler.js').then(({ pageSetupHandler }) => {
  pageSetupHandler.setCourseId(courseId);
  });
 

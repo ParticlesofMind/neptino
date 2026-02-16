@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Features - Neptino</title>
+<link href="/src/styles/app.css" rel="stylesheet"/>
+</head>
+<body class="min-h-screen flex flex-col bg-neutral-50 font-sans text-neutral-900">
+<header class="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white/80 backdrop-blur">
+<nav class="w-full flex items-center justify-between px-6 py-4 lg:px-8">
+<a href="/" class="flex items-center">
+<img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
+</a>
+<ul class="hidden sm:flex items-center gap-12 list-none m-0 p-0">
+<li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline text-primary-600 font-semibold" href="/src/pages/shared/features.html">Features</a></li>
+<li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/about.html">About</a></li>
+<li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Resources</a></li>
+<li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Partners</a></li>
+<li><a class="text-sm font-medium text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">News</a></li>
+</ul>
+<div class="flex items-center gap-4">
+<div class="relative">
+<button aria-expanded="false" aria-haspopup="true" class="inline-flex items-center gap-1 text-sm font-semibold text-neutral-900" id="language-toggle">
+<span data-language-label="">EN</span>
+<svg fill="currentColor" height="12" viewbox="0 0 24 24" width="12">
+<path d="M7 10l5 5 5-5z"></path>
+</svg>
+</button>
+<ul class="absolute right-0 z-10 mt-2 hidden w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5" id="language-menu">
+<li><button class="block w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100" data-lang="en">English</button></li>
+<li><button class="block w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100" data-lang="es">Español</button></li>
+<li><button class="block w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100" data-lang="fr">Français</button></li>
+<li><button class="block w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100" data-lang="de">Deutsch</button></li>
+</ul>
+</div>
+<a class="inline-flex items-center justify-center rounded-lg px-6 py-3 text-sm font-medium text-white shadow-sm transition-all bg-primary-600 hover:bg-primary-700 active:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ml-auto" href="/src/pages/shared/signin.html">Sign In</a>
+</div>
+</nav>
+</header>
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<section>
+<div>
+<h1 class="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl">Powerful Features for Modern Education</h1>
+<p class="mt-4 text-lg text-neutral-600">Discover the tools and capabilities that make Neptino the leading platform for educators and students worldwide.</p>
+<div class="mt-6 flex gap-4">
+<a class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800" href="/src/pages/shared/signup.html">Get Started Free</a>
+<a class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" href="/src/pages/shared/pricing.html">View Pricing</a>
+</div>
+</div>
+</section>
+<section class="mt-16">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<article class="rounded-lg border border-neutral-200 p-8 shadow-sm hover:shadow-md transition-shadow">
+<div class="h-12 w-12 mb-4 text-primary-500">
+<svg fill="none" height="48" viewbox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M2 17L12 22L22 17" stroke="currentColor" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M2 12L12 17L22 12" stroke="currentColor" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="text-lg font-semibold text-neutral-900 mb-2">Course Builder</h3>
+<p class="text-neutral-600">Create engaging courses with our intuitive drag-and-drop interface. Add multimedia content, quizzes, and interactive elements effortlessly.</p>
+</article>
+<article class="rounded-lg border border-neutral-200 p-8 shadow-sm hover:shadow-md transition-shadow">
+<div class="h-12 w-12 mb-4 text-primary-500">
+<svg fill="none" height="48" viewbox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
+<path d="M18 20V10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M12 20V4" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M6 20V14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="text-lg font-semibold text-neutral-900 mb-2">Analytics Dashboard</h3>
+<p class="text-neutral-600">Track student progress with detailed analytics. Identify learning gaps and provide personalized feedback to improve outcomes.</p>
+</article>
+<article class="rounded-lg border border-neutral-200 p-8 shadow-sm hover:shadow-md transition-shadow">
+<div class="h-12 w-12 mb-4 text-primary-500">
+<svg fill="none" height="48" viewbox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
+<path d="M9 12L11 14L15 10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="text-lg font-semibold text-neutral-900 mb-2">Automated Assessment</h3>
+<p class="text-neutral-600">Create and grade assignments automatically. Support for multiple question types, rubrics, and instant feedback systems.</p>
+</article>
+<article class="rounded-lg border border-neutral-200 p-8 shadow-sm hover:shadow-md transition-shadow">
+<div class="h-12 w-12 mb-4 text-primary-500">
+<svg fill="none" height="48" viewbox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
+<path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89317 18.7122 8.75608 18.1676 9.45768C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h3 class="text-lg font-semibold text-neutral-900 mb-2">Collaboration Tools</h3>
+<p class="text-neutral-600">Foster classroom discussions, group projects, and peer-to-peer learning with integrated communication tools.</p>
+</article>
+<article class="rounded-lg border border-neutral-200 p-8 shadow-sm hover:shadow-md transition-shadow">
+<div class="h-12 w-12 mb-4 text-primary-500">
+<svg fill="none" height="48" viewbox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
+<rect height="14" rx="2" ry="2" stroke="currentColor" stroke-width="2" width="20" x="2" y="3"></rect>
+<line stroke="currentColor" stroke-width="2" x1="8" x2="16" y1="21" y2="21"></line>
+<line stroke="currentColor" stroke-width="2" x1="12" x2="12" y1="17" y2="21"></line>
+</svg>
+</div>
+<h3 class="text-lg font-semibold text-neutral-900 mb-2">Mobile Ready</h3>
+<p class="text-neutral-600">Access your courses anywhere with our responsive design. Full functionality on tablets and mobile devices for ultimate flexibility.</p>
+</article>
+<article class="rounded-lg border border-neutral-200 p-8 shadow-sm hover:shadow-md transition-shadow">
+<div class="h-12 w-12 mb-4 text-primary-500">
+<svg fill="none" height="48" viewbox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor"></path>
+</svg>
+</div>
+<h3 class="text-lg font-semibold text-neutral-900 mb-2">24/7 Support</h3>
+<p class="text-neutral-600">Get help when you need it with our comprehensive support system, documentation, and community resources.</p>
+</article>
+</div>
+</section>
+<section class="mt-20 py-12 px-8 bg-neutral-100 rounded-2xl text-center">
+<div>
+<h2 class="text-3xl font-bold text-neutral-900 mb-4">Ready to Experience These Features?</h2>
+<p class="text-lg text-neutral-600 mb-8">Join thousands of educators and students who are already using Neptino to transform their learning experience.</p>
+<div class="flex gap-4 justify-center">
+<a class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800" href="/src/pages/shared/signup.html">Start Free Trial</a>
+<a class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" href="/src/pages/shared/pricing.html">View Pricing Plans</a>
+</div>
+</div>
+</section>
+</main>
+<footer class="border-t border-neutral-200 bg-white mt-auto">
+<div class="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+<div>
+<a href="/" class="inline-block mb-4">
+<img alt="Neptino Logo" class="h-6 w-auto" src="/src/assets/logo/octopus-logo.png"/>
+</a>
+<p class="text-xs text-neutral-500">Empowering educators and students worldwide.</p>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-neutral-900 mb-4">Product</h3>
+<ul class="space-y-2 list-none m-0 p-0">
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/features.html">Features</a></li>
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/pricing.html">Pricing</a></li>
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="/src/pages/shared/about.html">About</a></li>
+</ul>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-neutral-900 mb-4">Legal</h3>
+<ul class="space-y-2 list-none m-0 p-0">
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Privacy Policy</a></li>
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Terms of Service</a></li>
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Contact</a></li>
+</ul>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-neutral-900 mb-4">Connect</h3>
+<ul class="space-y-2 list-none m-0 p-0">
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">Twitter</a></li>
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">LinkedIn</a></li>
+<li><a class="text-sm text-neutral-600 hover:text-primary-600 transition-colors no-underline" href="#">GitHub</a></li>
+</ul>
+</div>
+</div>
+<div class="border-t border-neutral-200 pt-8">
+<p class="text-xs text-center text-neutral-500">© 2024 Neptino. All rights reserved.</p>
+</div>
+</div>
+</footer>
+<script src="/src/scripts/app.ts" type="module"></script>
+</body>
+</html>

@@ -5,7 +5,7 @@
  *   import { courseContextService, type CourseFingerprint } from '../context';
  */
 
-export { courseContextService, CourseContextService } from './CourseContextService';
+export { courseContextService, CourseContextService } from './CourseContextService.js';
 
 export type {
   CourseFingerprint,
@@ -25,7 +25,7 @@ export type {
   BloomLevel,
   InteractivityType,
   DepthLevel,
-} from './CourseFingerprint';
+} from './CourseFingerprint.js';
 
 export {
   DEFAULT_BLOCK_ACCEPTANCE,
@@ -33,4 +33,4 @@ export {
   derivePedagogyBias,
   deriveDepthLevel,
   deriveApproachLabel,
-} from './CourseFingerprint';
+} from './CourseFingerprint.js';

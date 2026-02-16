@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Progress - Neptino</title>
+<link href="/src/styles/app.css" rel="stylesheet"/>
+</head>
+<body class="min-h-screen bg-neutral-50 font-sans text-neutral-900 body">
+<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200 flex h-16 items-center justify-between" data-header-home>
+<nav class="flex items-center gap-8">
+<ul class="flex items-center gap-6 list-none m-0 p-0">
+<li class="relative">
+<a class="brand" href="/src/pages/student/home.html">
+<img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
+</a>
+</li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/student/home.html">Dashboard</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/student/courses.html">My Courses</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/student/progress.html">Progress</a></li>
+<li class="relative">
+<button class="cta inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" id="logout-btn">Logout</button>
+</li>
+</ul>
+</nav>
+</header>
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 main">
+<article class="hidden opacity-0 transition-opacity duration-300 ease-in-out [&.is-active]:block [&.is-active]:opacity-100">
+<header class="mb-8">
+<h1 class="text-2xl font-bold text-neutral-900">Learning Progress</h1>
+<p class="text-sm text-neutral-500">Track your achievements and learning milestones.</p>
+</header>
+<section class="space-y-6">
+<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+<figure class="relative overflow-hidden rounded-xl bg-white p-6 shadow-sm ring-1 ring-neutral-900/5">
+<figcaption class="text-sm font-medium text-neutral-500">Courses Completed</figcaption>
+<data class="mt-2 flex items-baseline gap-x-2" value="0">0</data>
+</figure>
+<figure class="relative overflow-hidden rounded-xl bg-white p-6 shadow-sm ring-1 ring-neutral-900/5">
+<figcaption class="text-sm font-medium text-neutral-500">Hours Learned</figcaption>
+<data class="mt-2 flex items-baseline gap-x-2" value="0">0</data>
+</figure>
+<figure class="relative overflow-hidden rounded-xl bg-white p-6 shadow-sm ring-1 ring-neutral-900/5">
+<figcaption class="text-sm font-medium text-neutral-500">Certificates Earned</figcaption>
+<data class="mt-2 flex items-baseline gap-x-2" value="0">0</data>
+</figure>
+<figure class="relative overflow-hidden rounded-xl bg-white p-6 shadow-sm ring-1 ring-neutral-900/5">
+<figcaption class="text-sm font-medium text-neutral-500">Skills Acquired</figcaption>
+<data class="mt-2 flex items-baseline gap-x-2" value="0">0</data>
+</figure>
+</div>
+<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+<h3 class="text-lg font-semibold text-neutral-900">Course Progress</h3>
+<p class="mt-2 text-sm text-neutral-500">
+            No course progress to display yet. Enroll in courses to start
+            tracking your learning journey!
+          </p>
+<a class="w-full mt-4 inline-flex justify-center items-center bg-white text-sm text-neutral-900 shadow-sm hover:bg-neutral-50 rounded-lg px-4 font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none border border-neutral-300 py-2 text-neutral-700 hover:text-neutral-900" href="/src/pages/student/courses.html">View My Courses</a>
+</div>
+</section>
+</article>
+</main>
+<footer class="bg-white border-t border-neutral-200 mt-auto footer">
+<nav class="mx-auto max-w-7xl px-6 lg:px-8 py-8 flex justify-between items-center">
+<ul class="flex items-center gap-6 gap-8 list-none m-0 p-0">
+<li class="relative">
+<a class="brand" href="/src/pages/student/home.html">
+<img alt="Neptino Logo" class="h-8 w-auto h-6" src="/src/assets/logo/octopus-logo.png"/>
+</a>
+</li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#">Help Center</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#">Support</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#">Contact</a></li>
+</ul>
+</nav>
+</footer>
+<script src="/src/scripts/app.ts" type="module"></script>
+</body>
+</html>

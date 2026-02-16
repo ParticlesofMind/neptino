@@ -1,4 +1,4 @@
-import { TemplateBlockType, TemplateType } from "./templateOptions";
+import { TemplateBlockType, TemplateType } from "./templateOptions.js";
 
 // Re-export types for easier importing
 export type { TemplateBlockType, TemplateType };

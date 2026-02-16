@@ -5,9 +5,9 @@ import {
   TemplateSummary,
   ModuleOrganizationType,
   CurriculumTopic,
-} from "./curriculumManager";
-import { TEMPLATE_TYPE_LABELS } from "../templates/templateOptions";
-import type { CanvasLessonSummary } from "./CanvasSummaryService";
+} from "./curriculumManager.js";
+import { TEMPLATE_TYPE_LABELS } from "../templates/templateOptions.js";
+import type { CanvasLessonSummary } from "./CanvasSummaryService.js";
 import { setButtonActive } from "../../../utils/tailwindState";
 
 type PreviewMode = "modules" | "titles" | "competencies" | "topics" | "objectives" | "tasks" | "all";

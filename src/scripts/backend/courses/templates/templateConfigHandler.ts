@@ -1,4 +1,4 @@
-import { TEMPLATE_BLOCKS } from "./templateBlocks";
+import { TEMPLATE_BLOCKS } from "./templateBlocks.js";
 
 export class TemplateConfigHandler {
   private currentTemplate: any = { blocks: [] };
@@ -100,7 +100,7 @@ export class TemplateConfigHandler {
     }
 
     // Save to database via TemplateManager
-    const { TemplateManager } = await import('./TemplateManager');
+    const { TemplateManager } = await import('./TemplateManager.js');
     const templateId = TemplateManager.getCurrentTemplateId();
     if (templateId) {
       await TemplateManager.updateTemplateField(templateId, blockType, fieldName, value);

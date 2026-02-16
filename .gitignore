@@ -10,8 +10,6 @@ dist/
 /build/
 .cache/
 *.tsbuildinfo
-.next/
-next-env.d.ts
 
 # Environment variables
 .env

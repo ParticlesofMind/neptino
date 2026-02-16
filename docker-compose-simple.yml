@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  rocketchat:
+    image: registry.rocket.chat/rocketchat/rocket.chat:latest
+    restart: always
+    environment:
+      ROOT_URL: http://localhost:3001
+      PORT: 3000
+      DEPLOY_METHOD: docker
+      DEPLOY_PLATFORM: compose
+      MONGO_URL: mongodb://mongodb:27017/rocketchat?replicaSet=rs0
+      TRANSPORTER: nats://nats:4222
+    ports:
+      - "3001:3000"
+    depends_on:
+      - mongodb
+      - nats
+
+  mongodb:
+    image: mongo:6.0
+    restart: always
+    command: mongod --replSet rs0 --bind_ip_all
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+
+  nats:
+    image: nats:2.11-alpine
+    restart: always
+    command: --http_port 8222
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+
+volumes:
+  mongodb_data:

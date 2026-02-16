@@ -53,7 +53,7 @@ export function navigateToCourse(courseId: string, section?: string): void {
 export async function validateCourseAccess(courseId: string): Promise<boolean> {
  try {
  // This would make a backend call to verify access
- const { supabase } = await import('../backend/supabase');
+ const { supabase } = await import('../backend/supabase.js');
  
  const { data, error } = await supabase
  .from('courses')

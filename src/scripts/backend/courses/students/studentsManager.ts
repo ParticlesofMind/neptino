@@ -1,10 +1,10 @@
-import { StudentsManualManager } from "./studentsManualManager";
-import { StudentsModalController } from "./studentsModalController";
-import { StudentsPreview } from "./studentsPreview";
-import { StudentsRepository } from "./studentsRepository";
-import { StudentsUploadManager } from "./studentsUploadManager";
-import type { StudentRecord, RosterSummary } from "./studentsTypes";
-import { dispatchProfilesIndexed } from "./studentsProfileService";
+import { StudentsManualManager } from "./studentsManualManager.js";
+import { StudentsModalController } from "./studentsModalController.js";
+import { StudentsPreview } from "./studentsPreview.js";
+import { StudentsRepository } from "./studentsRepository.js";
+import { StudentsUploadManager } from "./studentsUploadManager.js";
+import type { StudentRecord, RosterSummary } from "./studentsTypes.js";
+import { dispatchProfilesIndexed } from "./studentsProfileService.js";
 import { supabase } from "../../supabase";
 
 interface StudentsManagerOptions {

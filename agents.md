@@ -1,55 +1,52 @@
-# Neptino Project - AI Agent Quick Reference
+# Neptino Project - AI Agent Configuration
 
 ## Project Overview
 
-Neptino is an interactive learning platform built with **Next.js 16 App Router**, **React 19**, **PIXI.js 8.13**, and **Supabase**.
+Neptino is an interactive learning platform built with TypeScript, PIXI.js, Vite, and Supabase.
 
-## Tech Stack
-
-- **Framework:** Next.js 16.x (App Router) + React 19
-- **Styling:** Tailwind CSS v4 (no SCSS)
-- **UI:** shadcn/ui + Radix UI
-- **Canvas:** PIXI.js 8.13 for 2D rendering
-- **Database:** Supabase (PostgreSQL, Auth, Storage)
-- **ORM:** Drizzle ORM
-- **Data Fetching:** TanStack Query
-- **Forms:** React Hook Form + Zod
-- **Testing:** Playwright (E2E)
-
-## Setup (Quick Start)
+## Setup Requirements
 
 ### Prerequisites
 - Node.js 18+ or 20+
-- npm
-- Chromium browser (for tests)
+- npm or yarn
+- Chromium browser (for Playwright tests)
 
-### Install & Run
+### Setup Steps
 
-```bash
-# Install dependencies
-npm install --legacy-peer-deps
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
 
-# Install Playwright browsers
-npx playwright install chromium --with-deps
+2. **Install Playwright Browsers**
+   ```bash
+   npx playwright install chromium --with-deps
+   ```
 
-# Set environment variables (.env.local)
-NEXT_PUBLIC_SUPABASE_URL=<your-url>
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-key>
-VITE_SUPABASE_URL=<your-url>          # Legacy support
-VITE_SUPABASE_ANON_KEY=<your-key>     # Legacy support
+3. **Set Environment Variables**
+   ```bash
+   VITE_SUPABASE_URL=<your-supabase-url>
+   VITE_SUPABASE_ANON_KEY=<your-supabase-anon-key>
+   VITE_APP_ENV=development
+   NODE_ENV=development
+   ```
 
-# Start dev server
-npm run dev
+4. **Build (Optional)**
+   ```bash
+   npm run build
+   ```
 
-# Run tests
-npm test
-```
+5. **Run Tests**
+   ```bash
+   npm test
+   ```
 
 ## Common Commands
 
 ```bash
 # Development
-npm run dev              # Start Next.js dev server (port 3000)
+npm run dev              # Start dev server with Arc browser
+npm run dev:strict       # Start dev server for testing (localhost only)
 
 # Testing
 npm test                 # Run all Playwright tests
@@ -68,27 +65,27 @@ npm run format           # Format code with Prettier
 ## Architecture
 
 ### Key Directories
-- `app/` - Next.js App Router pages/layouts
 - `src/scripts/coursebuilder/` - Canvas engine and drawing tools (PIXI.js)
 - `src/scripts/backend/` - Supabase integration (auth, database)
 - `tests/` - Playwright E2E tests
 
 ### Tech Stack
-- **Frontend:** Next.js, React 19, TypeScript, Tailwind CSS v4
+- **Frontend:** TypeScript, Vite, PIXI.js 8.13
 - **Backend:** Supabase (PostgreSQL, Auth, Storage)
-- **Canvas:** PIXI.js 8.13 for high-performance 2D rendering
 - **Testing:** Playwright with Chromium
+- **Styling:** Tailwind CSS utilities (no SCSS/BEM)
+- **Canvas:** PIXI.js for high-performance 2D rendering
 
 ## Troubleshooting
 
 ### Issue: Cannot find package '@playwright/test'
-**Solution:** Run `npm install --legacy-peer-deps` to install all dependencies including @playwright/test
+**Solution:** Run `npm install` to install all dependencies including @playwright/test
 
 ### Issue: Tests fail to connect to dev server
 **Solution:** Playwright auto-starts dev server. Check playwright.config.ts and ensure port 3000 is available
 
 ### Issue: Supabase connection errors
-**Solution:** Verify NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set correctly in .env.local
+**Solution:** Verify VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set correctly
 
 ## Canvas System
 
@@ -101,19 +98,34 @@ npm run format           # Format code with Prettier
 ## For AI Assistants
 
 ### Critical Setup Steps
-1. Always run `npm install --legacy-peer-deps` before any other commands
+1. Always run `npm install` before any other commands
 2. Install Playwright browsers: `npx playwright install chromium --with-deps`
 3. Ensure environment variables are set (especially Supabase credentials)
 4. Tests require dev server (auto-started by Playwright config)
 
 ### Common Error Patterns
-- "Cannot find package" → Run `npm install --legacy-peer-deps`
+- "Cannot find package" → Run `npm install`
 - "Browser not found" → Run `npx playwright install chromium`
 - "Connection refused" → Check if dev server is running
-- "Missing env variables" → Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
+- "Missing env variables" → Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
 
 ### Testing Notes
 - Tests use Chromium (not Arc browser)
 - Dev server runs on port 3000
 - Tests are in `tests/` directory with `.spec.ts` extension
 - Playwright config: `playwright.config.ts`
+
+## Documentation Files
+
+- `README.md` - Main project documentation
+- `JULES_QUICK_START.md` - Quick setup for Jules AI
+- `JULES_MEMORY.md` - Memory entries for Jules AI
+- `JULES_SETUP_GUIDE.md` - Comprehensive setup guide
+- `.env.example` - Environment variable template
+
+## Support
+
+For detailed setup and troubleshooting, see:
+- `JULES_QUICK_START.md` - 5-minute quick start
+- `JULES_SETUP_GUIDE.md` - Complete setup documentation
+- `JULES_MEMORY.md` - AI assistant memory entries

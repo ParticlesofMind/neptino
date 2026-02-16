@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pricing - Neptino</title>
+<link href="/src/styles/app.css" rel="stylesheet"/>
+</head>
+<body class="min-h-screen bg-neutral-50 font-sans text-neutral-900 body">
+<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200 flex h-16 items-center justify-between" data-header-pricing>
+<nav class="flex items-center gap-8">
+<ul class="flex items-center gap-6 list-none m-0 p-0">
+<li class="relative">
+<a class="brand" href="/">
+<img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
+</a>
+</li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/shared/features.html">Features</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/shared/about.html">About</a></li>
+<li class="relative">
+<div class="relative inline-block text-left">
+<button aria-expanded="false" aria-haspopup="true" class="inline-flex items-center gap-x-1 text-sm font-semibold leading-6 text-neutral-900" id="language-toggle">
+<span>EN</span>
+<svg fill="currentColor" height="12" viewbox="0 0 24 24" width="12">
+<path d="M7 10l5 5 5-5z"></path>
+</svg>
+</button>
+<ul class="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden" id="language-menu">
+<li class="block">
+<button class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 w-full text-left" data-lang="en">English</button>
+</li>
+<li class="block">
+<button class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 w-full text-left" data-lang="es">Español</button>
+</li>
+<li class="block">
+<button class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 w-full text-left" data-lang="fr">Français</button>
+</li>
+<li class="block">
+<button class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 w-full text-left" data-lang="de">Deutsch</button>
+</li>
+</ul>
+</div>
+</li>
+<li class="relative">
+<a class="cta inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" href="/src/pages/shared/signin.html">Sign In</a>
+</li>
+</ul>
+</nav>
+</header>
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<section class="pricing-hero">
+<div class="space-y-16">
+<h1 class="text-4xl font-bold text-neutral-900">Choose Your Perfect Plan</h1>
+<p class="text-lg text-neutral-500">From individual educators to large institutions, we have a plan that fits your needs and budget.</p>
+</div>
+</section>
+<section>
+<!-- Free Plan -->
+<div>
+<div>
+<h3>Free</h3>
+<div>
+<span>$0</span>
+<span>forever</span>
+<p>Perfect for getting started</p>
+</div>
+<ul>
+<li>✓ 3 courses maximum</li>
+<li>✓ Up to 50 students per course</li>
+<li>✓ Basic course builder</li>
+<li>✓ Community support</li>
+<li>✓ Mobile access</li>
+<li>× Advanced analytics</li>
+<li>× Integration tools</li>
+</ul>
+<a href="/src/pages/shared/signup.html">Get Started Free</a>
+</div>
+<!-- Teacher Plan -->
+<div>
+<h3>Teacher</h3>
+<div>
+<span>$9</span>
+<span>/month</span>
+<p>For individual educators</p>
+</div>
+<ul>
+<li>✓ Unlimited courses</li>
+<li>✓ Up to 200 students per course</li>
+<li>✓ Advanced course builder</li>
+<li>✓ Progress tracking</li>
+<li>✓ Assignment grading</li>
+<li>✓ Email support</li>
+<li>✓ Mobile app access</li>
+</ul>
+<a href="/src/pages/shared/signup.html">Start Free Trial</a>
+</div>
+<!-- Professional Plan -->
+<div>
+<div>Most Popular</div>
+<h3>Professional</h3>
+<div>
+<span>$29</span>
+<span>/month</span>
+<p>For serious educators</p>
+</div>
+<ul>
+<li>✓ Everything in Teacher</li>
+<li>✓ Unlimited students</li>
+<li>✓ Advanced analytics</li>
+<li>✓ Custom branding</li>
+<li>✓ Integration tools</li>
+<li>✓ Priority support</li>
+<li>✓ White-label options</li>
+</ul>
+<a href="/src/pages/shared/signup.html">Start Free Trial</a>
+</div>
+<!-- School Plan -->
+<div>
+<h3>School</h3>
+<div>
+<span>$99</span>
+<span>/month</span>
+<p>For schools and departments</p>
+</div>
+<ul>
+<li>✓ Everything in Professional</li>
+<li>✓ Up to 50 teachers</li>
+<li>✓ Admin dashboard</li>
+<li>✓ Bulk user management</li>
+<li>✓ Advanced reporting</li>
+<li>✓ SSO integration</li>
+<li>✓ Dedicated support</li>
+</ul>
+<a href="/src/pages/shared/signup.html">Request Demo</a>
+</div>
+<!-- Enterprise Plan -->
+<div>
+<h3>Enterprise</h3>
+<div>
+<span>Custom</span>
+<span>pricing</span>
+<p>For large institutions</p>
+</div>
+<ul>
+<li>✓ Everything in School</li>
+<li>✓ Unlimited teachers</li>
+<li>✓ Multi-tenant setup</li>
+<li>✓ Custom integrations</li>
+<li>✓ On-premise deployment</li>
+<li>✓ 24/7 phone support</li>
+<li>✓ Training &amp; onboarding</li>
+</ul>
+<a href="/src/pages/shared/signup.html">Contact Sales</a>
+</div>
+</div>
+</section>
+<section>
+<h2>Frequently Asked Questions</h2>
+<div>
+<div>
+<h3>
+                                                                                                                                                        Can I upgrade or downgrade anytime?
+                                                                                                                                                      </h3>
+<p>
+                                                                                                                                                        Yes! You can change your plan at any time. Upgrades take effect
+                                                                                                                                                        immediately, and downgrades take effect at the next billing
+                                                                                                                                                        cycle.
+                                                                                                                                                      </p>
+</div>
+<div>
+<h3>Is there a free trial?</h3>
+<p>
+                                                                                                                                                          Yes, all paid plans come with a 14-day free trial. No credit
+                                                                                                                                                          card required to start your trial.
+                                                                                                                                                        </p>
+</div>
+<div>
+<h3>
+                                                                                                                                                          What payment methods do you accept?
+                                                                                                                                                        </h3>
+<p>
+                                                                                                                                                          We accept all major credit cards, PayPal, and for Enterprise
+                                                                                                                                                          customers, we can accommodate wire transfers and purchase
+                                                                                                                                                          orders.
+                                                                                                                                                        </p>
+</div>
+<div>
+<h3>
+                                                                                                                                                          Do you offer discounts for nonprofits?
+                                                                                                                                                        </h3>
+<p>
+                                                                                                                                                          Yes! We offer special pricing for qualified educational
+                                                                                                                                                          institutions and nonprofits. Contact our sales team for more
+                                                                                                                                                          information.
+                                                                                                                                                        </p>
+</div>
+</div>
+</section>
+<section>
+<h2>Ready to Get Started?</h2>
+<p>
+                                                                                                                                                        Join thousands of educators already using Neptino to enhance their
+                                                                                                                                                        teaching.
+                                                                                                                                                      </p>
+<a href="/src/pages/shared/signup.html">Start Your Free Trial</a>
+<a href="#">Schedule a Demo</a>
+</section>
+</main>
+<footer class="bg-white border-t border-neutral-200 mt-auto footer">
+<nav class="mx-auto max-w-7xl px-6 lg:px-8 py-8 flex justify-between items-center">
+<ul class="flex items-center gap-6 gap-8 list-none m-0 p-0">
+<li class="relative">
+<a class="brand" href="/">
+<img alt="Neptino Logo" class="h-8 w-auto h-6" src="/src/assets/logo/octopus-logo.png"/>
+</a>
+</li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#">Privacy Policy</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#">Terms of Service</a></li>
+<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#">Contact</a></li>
+</ul>
+</nav>
+</footer>
+<script src="/src/scripts/app.ts" type="module"></script>
+</body>
+</html>

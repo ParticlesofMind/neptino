@@ -18,7 +18,7 @@ import {
   CourseClassificationData,
 } from "./classifyCourse";
 
-import { getCourseId, isNewCourseMode } from "../../../utils/courseId";
+import { getCourseId, isNewCourseMode } from "../../../utils/courseId.js";
 
 export class ClassificationFormHandler {
   // Private state tracking

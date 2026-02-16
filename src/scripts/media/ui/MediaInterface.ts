@@ -1,16 +1,16 @@
 import { mediaManager } from '../MediaManager';
 import { MediaItem, MediaType, SearchResult } from '../types';
-import { courseContextService } from '../../backend/courses/context/CourseContextService';
+import { courseContextService } from '../../backend/courses/context/CourseContextService.js';
 import {
   filterByFingerprint as filterEncyclopediaByFingerprint,
   type KnowledgeItem,
   type ScoredKnowledgeItem,
-} from '../../encyclopedia/encyclopediaFilter';
+} from '../../encyclopedia/encyclopediaFilter.js';
 import {
   filterByFingerprint as filterMarketplaceByFingerprint,
   type ForgeAsset,
   type ScoredForgeAsset,
-} from '../../marketplace/marketplaceFilter';
+} from '../../marketplace/marketplaceFilter.js';
 
 /** Extended media type that includes knowledge-source tabs. */
 type ExtendedMediaType = MediaType | 'encyclopedia' | 'marketplace';
@@ -24,7 +24,7 @@ function debounce<T extends (...args: any[]) => void>(fn: T, delay = 300) {
 }
 
 function createLocalTestImage(idSuffix: string, title: string, filename: string): MediaItem {
-  const assetUrl = `/assets/drawingTests/${filename}`;
+  const assetUrl = new URL(`../../../assets/drawingTests/${filename}`, import.meta.url).href;
   return {
     id: `local-test-${idSuffix}`,
     type: 'images',

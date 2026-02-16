@@ -1,11 +1,11 @@
 export {
   filterMarketplaceAssets,
   filterByFingerprint,
-} from './marketplaceFilter';
+} from './marketplaceFilter.js';
 
 export type {
   ForgeAsset,
   LinkedEntity,
   MarketplaceFilterCriteria,
   ScoredForgeAsset,
-} from './marketplaceFilter';
+} from './marketplaceFilter.js';

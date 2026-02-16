@@ -1,4 +1,4 @@
-import type { StudentRecord } from "./studentsTypes";
+import type { StudentRecord } from "./studentsTypes.js";
 
 export function ensureStudentId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {

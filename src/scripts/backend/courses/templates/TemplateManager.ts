@@ -1,10 +1,10 @@
-import { TemplateDataHandler } from "./TemplateDataHandler";
-import { TemplateRenderer } from "./TemplateRenderer";
-import { TemplateConfigManager } from "./TemplateConfigManager";
-import { TemplateBlockRenderer, TemplateRenderOptions } from "./TemplateBlockRenderer";
-import { TemplateManagerState } from "./types";
-import { loadTemplatesModal } from "./modals/loadTemplates";
-import { syncTemplateSettingsWithCourse } from "./templateCourseSync";
+import { TemplateDataHandler } from "./TemplateDataHandler.js";
+import { TemplateRenderer } from "./TemplateRenderer.js";
+import { TemplateConfigManager } from "./TemplateConfigManager.js";
+import { TemplateBlockRenderer, TemplateRenderOptions } from "./TemplateBlockRenderer.js";
+import { TemplateManagerState } from "./types.js";
+import { loadTemplatesModal } from "./modals/loadTemplates.js";
+import { syncTemplateSettingsWithCourse } from "./templateCourseSync.js";
 
 export class TemplateManager {
   private static state: TemplateManagerState = {
