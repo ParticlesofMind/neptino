@@ -1091,7 +1091,7 @@ class MediaInterface {
 }
 
 // Initialize after DOM ready
-document.addEventListener('DOMContentLoaded', () => {
+function initMediaInterface(): void {
   const iface = new MediaInterface();
   iface.init();
   (window as any).mediaInterface = iface;
@@ -1224,4 +1224,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMediaInterface, { once: true });
+} else {
+  initMediaInterface();
+}

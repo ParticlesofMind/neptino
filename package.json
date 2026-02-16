@@ -6,7 +6,7 @@
   "main": "index.html",
   "scripts": {
     "dev": "./start-dev.sh",
-    "dev:strict": "BROWSER=none BROWSER_NO_OPEN=1 vite --host localhost --port 3000 --strictPort",
+    "dev:strict": "BROWSER=none BROWSER_NO_OPEN=1 vite --host localhost --port 3000",
     "dev:manual": "BROWSER=none vite --port 3000 --host 0.0.0.0",
     "dev:monitor": "node scripts/dev-monitor.js",
     "dev:oauth": "tsx src/scripts/backend/oauth/start-server.ts",
@@ -54,7 +54,7 @@
     "rollup-plugin-visualizer": "^6.0.3",
     "svg-path-parser": "^1.1.0",
     "tailwindcss": "^4.1.18",
-    "tsx": "^4.20.6",
+    "tsx": "^4.21.0",
     "typescript": "^5.0.0",
     "vite": "^6.3.5",
     "vite-tsconfig-paths": "^5.1.4"
@@ -71,7 +71,7 @@
     "@huggingface/transformers": "^3.7.5",
     "@pixi/devtools": "^2.0.1",
     "@pixi/layout": "^3.1.0",
-    "@supabase/supabase-js": "^2.54.0",
+    "@supabase/supabase-js": "^2.95.3",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "express-session": "^1.18.2",

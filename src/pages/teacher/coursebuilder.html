@@ -1937,26 +1937,7 @@
 </article>
 </div>
 </main>
-<!-- Core application scripts -->
-<script src="/src/scripts/app.ts" type="module"></script>
-<!-- Engine layout resizer -->
-<script src="/src/scripts/coursebuilder/tools/EngineResizer.ts" type="module"></script>
-<!-- Language loader for course languages -->
-<script src="/src/scripts/backend/courses/settings/languageLoader.ts" type="module"></script>
-<!-- Navigation system (handles all coursebuilder navigation) -->
-<script src="/src/scripts/navigation/CourseBuilderNavigation.ts" type="module"></script>
-<!-- Canvas scroll navigation -->
-<script src="/src/scripts/navigation/CanvasScrollNav.ts" type="module"></script>
-<!-- Backend services -->
-<script src="/src/scripts/backend/courses/index.ts" type="module"></script>
-<script src="/src/scripts/backend/courses/classification/classificationFormHandler.ts" type="module"></script>
-<script src="/src/scripts/backend/courses/templates/createTemplate.ts" type="module"></script>
-<script src="/src/scripts/backend/courses/templates/templateConfigHandler.ts" type="module"></script>
-<script src="/src/scripts/backend/courses/schedule/scheduleCourse.ts" type="module"></script>
-<script src="/src/scripts/backend/courses/settings/pageSetupHandler.ts" type="module"></script>
-<script src="/src/scripts/backend/courses/generation/generationSettingsHandler.ts" type="module"></script>
-<script src="/src/scripts/backend/courses/pedagogy/pedagogyHandler.ts" type="module"></script>
-<!-- Media Manager UI (search + providers) -->
-<script src="/src/scripts/media/ui/MediaInterface.ts" type="module"></script>
+<!-- Single entry point — replaces 14 independent scripts with one ordered boot sequence -->
+<script src="/src/scripts/coursebuilder/main.ts" type="module"></script>
 </body>
 </html>

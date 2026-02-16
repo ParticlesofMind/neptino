@@ -28,6 +28,11 @@ type KnowledgeItem = {
 /** All Wikidata data indexed by item id */
 const wdData = new Map<string, WikidataFigureData>();
 
+// Feature flag: turn off remote Wikidata enrichment to speed up page load when
+// the data already lives in Supabase/local JSON. Defaults to false unless
+// explicitly enabled via Vite env.
+const ENABLE_ENRICHMENT = (import.meta.env?.VITE_ENCYCLOPEDIA_ENRICH ?? "false") === "true";
+
 type ViewMode = "gallery" | "list";
 type SizeMode = "small" | "large";
 
@@ -110,6 +115,7 @@ let enrichObserver: IntersectionObserver | null = null;
 
 /** Enrich a single card when it becomes visible */
 const enrichOnVisible = (entries: IntersectionObserverEntry[]) => {
+  if (!ENABLE_ENRICHMENT) return;
   for (const entry of entries) {
     if (!entry.isIntersecting) continue;
     const el = entry.target as HTMLElement;
@@ -137,6 +143,7 @@ const enrichOnVisible = (entries: IntersectionObserverEntry[]) => {
 
 /** Start observing all rendered card elements */
 const observeCards = () => {
+  if (!ENABLE_ENRICHMENT) return;
   if (!enrichObserver) {
     enrichObserver = new IntersectionObserver(enrichOnVisible, { rootMargin: "200px" });
   }
@@ -214,11 +221,13 @@ const renderLargeCardBottom = (
   /*  1. TIMELINE — Knight Lab TimelineJS container                  */
   /* -------------------------------------------------------------- */
 
-  const dated = timelineItems.filter((e) => e.year !== 0).slice(0, 7);
+  const dated = ENABLE_ENRICHMENT ? timelineItems.filter((e) => e.year !== 0).slice(0, 7) : [];
   const timelineContainerId = `timeline-${item.id}`;
 
   let timelineHtml: string;
-  if (dated.length === 0) {
+  if (!ENABLE_ENRICHMENT) {
+    timelineHtml = '<p class="text-sm text-neutral-500 italic">Enrichment disabled for speed.</p>';
+  } else if (dated.length === 0) {
     timelineHtml = '<p class="text-sm text-neutral-500 italic">Timeline loading…</p>';
   } else {
     // The div will be initialized by mountTimelines() after render
@@ -229,7 +238,7 @@ const renderLargeCardBottom = (
   /*  2. RELATED KNOWLEDGE — fields of work from Wikidata            */
   /* -------------------------------------------------------------- */
 
-  const fields = wdData.get(item.id)?.fields ?? [];
+  const fields = ENABLE_ENRICHMENT ? wdData.get(item.id)?.fields ?? [] : [];
   const knowledgeRows =
     (fields.length > 0 ? fields.slice(0, 6) : [item.domain, ...item.secondaryDomains].slice(0, 6).map((d) => ({ name: d, description: "" })))
       .map(
@@ -246,23 +255,25 @@ const renderLargeCardBottom = (
   /*  3. RELATED HISTORICAL FIGURES from Wikidata                    */
   /* -------------------------------------------------------------- */
 
-  const related = wdData.get(item.id)?.related ?? [];
+  const related = ENABLE_ENRICHMENT ? wdData.get(item.id)?.related ?? [] : [];
   const relatedRows =
-    related.length > 0
-      ? related
-          .slice(0, 6)
-          .map(
-            (p: WikidataRelatedPerson) => `
-              <div class="flex items-center gap-2">
-                <span class="h-2 w-2 flex-shrink-0 rounded-full bg-amber-400"></span>
-                <span class="font-medium text-neutral-900">${p.name}</span>
-                <span class="text-neutral-400">·</span>
-                <span class="text-neutral-500">${capitalize(p.relation)}</span>
-              </div>
-            `,
-          )
-          .join("")
-      : '<p class="text-base text-neutral-500 italic">Loading…</p>';
+    !ENABLE_ENRICHMENT
+      ? '<p class="text-base text-neutral-500 italic">Enrichment disabled for speed.</p>'
+      : related.length > 0
+        ? related
+            .slice(0, 6)
+            .map(
+              (p: WikidataRelatedPerson) => `
+                <div class="flex items-center gap-2">
+                  <span class="h-2 w-2 flex-shrink-0 rounded-full bg-amber-400"></span>
+                  <span class="font-medium text-neutral-900">${p.name}</span>
+                  <span class="text-neutral-400">·</span>
+                  <span class="text-neutral-500">${capitalize(p.relation)}</span>
+                </div>
+              `,
+            )
+            .join("")
+        : '<p class="text-base text-neutral-500 italic">Loading…</p>';
 
   /* -------------------------------------------------------------- */
   /*  Assemble — all three stacked vertically                        */
@@ -360,7 +371,7 @@ const renderSingleCardHtml = (item: KnowledgeItem, index: number): string => {
            </div>`;
 
       // Timeline events from Wikidata
-      const tlEvents = wdData.get(item.id)?.timeline ?? [];
+      const tlEvents = ENABLE_ENRICHMENT ? wdData.get(item.id)?.timeline ?? [] : [];
 
       const bottomSections = isSmall ? "" : renderLargeCardBottom(item, wd, tlEvents);
 
@@ -484,6 +495,7 @@ const renderList = (items: KnowledgeItem[]) => {
 
 /** Mount Knight Lab TimelineJS instances into rendered containers */
 const mountTimelines = () => {
+  if (!ENABLE_ENRICHMENT) return;
   if (sizeMode !== "large") return;
 
   // Declare TL on window (loaded via CDN script tag)
@@ -544,9 +556,11 @@ function render() {
   renderList(filtered);
 
   // Initialize TimelineJS instances for newly rendered cards
-  requestAnimationFrame(mountTimelines);
-  // Start observing visible cards for lazy Wikidata enrichment
-  requestAnimationFrame(observeCards);
+  if (ENABLE_ENRICHMENT) {
+    requestAnimationFrame(mountTimelines);
+    // Start observing visible cards for lazy Wikidata enrichment
+    requestAnimationFrame(observeCards);
+  }
 }
 
 const applySize = () => {
@@ -642,9 +656,8 @@ const hideLoading = () => {
 };
 
 async function loadData(): Promise<KnowledgeItem[]> {
-  const res = await fetch("/data/encyclopedia/historical-figures.json");
-  if (!res.ok) throw new Error(`Failed to load encyclopedia data: ${res.status}`);
-  return res.json();
+  // Data intentionally disabled; render shell UI only.
+  return [];
 }
 
 const bootstrap = async () => {
@@ -657,10 +670,9 @@ const bootstrap = async () => {
   attachEvents();
 
   try {
-    const data = await loadData();
-    knowledgeItems = data;
+    knowledgeItems = await loadData();
   } catch (err) {
-    console.error("[encyclopedia] Failed to load data:", err);
+    console.error("[encyclopedia] Data loading is disabled:", err);
     hideLoading();
     if (resultCountEl) resultCountEl.textContent = "Failed to load data";
     return;

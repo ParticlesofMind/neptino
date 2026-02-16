@@ -142,82 +142,7 @@ export async function signIn(email: string, password: string) {
 
     if (error) {
       console.error("Sign in error:", error);
-
-      const isDev = import.meta.env?.VITE_APP_ENV === "development";
-      const isInvalidCreds =
-        typeof error.message === "string" &&
-        error.message.toLowerCase().includes("invalid login credentials");
-
-      if (isDev && isInvalidCreds) {
-        try {
-          const path =
-            typeof window !== "undefined" ? window.location.pathname : "";
-          const inferredRole = path.includes("/teacher/")
-            ? "teacher"
-            : path.includes("/admin/")
-              ? "admin"
-              : "student";
-
-          const inferredName = email.split("@")[0];
-          const signupResult = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: {
-                full_name: inferredName,
-                first_name: inferredName,
-                last_name: "",
-                user_role: inferredRole,
-              },
-            },
-          });
-
-          if (signupResult.error) {
-            const msg = signupResult.error.message || "Sign up failed";
-            console.warn("Auto sign-up skipped:", msg);
-            return {
-              success: false,
-              error: "Incorrect password or user already exists.",
-            };
-          }
-
-          if (signupResult.data.user) {
-            signedInUser = signupResult.data.user as User;
-            currentUser = signedInUser;
-            rememberRocketChatPassword(password);
-            await syncRocketChatAccount(signedInUser, password);
-            return {
-              success: true,
-              info: "Account created and signed in (dev).",
-            };
-          }
-
-          const retry = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-          if (retry.error) {
-            console.error(
-              "Retry sign-in after auto sign-up failed:",
-              retry.error,
-            );
-            return { success: false, error: retry.error.message };
-          }
-          if (retry.data.user) {
-            signedInUser = retry.data.user as User;
-            currentUser = signedInUser;
-            rememberRocketChatPassword(password);
-            await syncRocketChatAccount(signedInUser, password);
-            return {
-              success: true,
-              info: "Account created and signed in (dev).",
-            };
-          }
-        } catch (autoErr) {
-          console.error("Auto sign-up flow error:", autoErr);
-        }
-      }
-
+      // Do NOT auto-create accounts on invalid creds; this caused duplicate unconfirmed users.
       return { success: false, error: error.message };
     }
 
@@ -391,6 +316,7 @@ export function initAuth() {
 export class AuthFormHandler {
  private signinForm: HTMLFormElement | null = null;
  private signupForm: HTMLFormElement | null = null;
+  private resendButton: HTMLButtonElement | null = null;
 
  constructor() {
  this.initialize();
@@ -400,6 +326,7 @@ export class AuthFormHandler {
  // Find forms
  this.signinForm = document.getElementById('signin-form') as HTMLFormElement;
  this.signupForm = document.getElementById('signup-form') as HTMLFormElement;
+  this.resendButton = document.querySelector('[data-resend-verification]') as HTMLButtonElement | null;
 
  // Setup event listeners
  if (this.signinForm) {
@@ -456,7 +383,14 @@ export class AuthFormHandler {
         this.showMessage(msg, 'success');
         // The auth state listener in auth.ts will handle the redirect
       } else {
-        this.showMessage(result.error || 'Sign in failed', 'error');
+        const isUnconfirmed = typeof result.error === 'string' && result.error.toLowerCase().includes('email not confirmed');
+
+        if (isUnconfirmed && email) {
+          await this.handleResendVerification(email);
+          this.showMessage('Email not confirmed. We just resent your verification link.', 'error');
+        } else {
+          this.showMessage(result.error || 'Sign in failed', 'error');
+        }
         console.error('❌ Sign in failed:', result.error);
       }
  } catch (error) {
@@ -468,6 +402,35 @@ export class AuthFormHandler {
  submitButton.disabled = false;
  }
  }
+
+  private async handleResendVerification(email: string): Promise<void> {
+    if (!this.resendButton) return;
+
+    this.resendButton.classList.remove('hidden');
+    this.resendButton.disabled = true;
+    const originalText = this.resendButton.textContent;
+    this.resendButton.textContent = 'Sending…';
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+
+      if (error) {
+        console.error('❌ Resend verification failed:', error.message);
+        this.showMessage('Could not resend verification email. Please check your address.', 'error');
+      } else {
+        this.showMessage('Verification email sent. Check your inbox (and spam).', 'success');
+      }
+    } catch (err) {
+      console.error('❌ Resend verification exception:', err);
+      this.showMessage('Could not resend verification email.', 'error');
+    } finally {
+      this.resendButton.textContent = originalText || 'Resend verification email';
+      this.resendButton.disabled = false;
+    }
+  }
 
  private async handleSignup(event: Event): Promise<void> {
  const form = event.target as HTMLFormElement;

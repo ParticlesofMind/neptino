@@ -677,10 +677,16 @@ export class ModalHandler {
 }
 
 // Initialize CourseBuilder navigation when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
- if (window.location.pathname.includes('coursebuilder.html')) {
- new CourseBuilderNavigation();
- new ViewToggleHandler();
- new ModalHandler();
- }
-});
+function initCourseBuilderNav(): void {
+  if (window.location.pathname.includes('coursebuilder.html')) {
+    new CourseBuilderNavigation();
+    new ViewToggleHandler();
+    new ModalHandler();
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCourseBuilderNav, { once: true });
+} else {
+  initCourseBuilderNav();
+}

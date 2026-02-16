@@ -166,12 +166,18 @@ export class CanvasScrollNav {
 }
 
 // Initialize on DOM ready
+function initCanvasScrollNav(): void {
+  const scrollNav = new CanvasScrollNav();
+  (window as any).canvasScrollNav = scrollNav;
+  window.dispatchEvent(
+    new CustomEvent('canvas-scroll-nav-ready', { detail: { instance: scrollNav } })
+  );
+}
+
 if (typeof document !== 'undefined') {
-  document.addEventListener('DOMContentLoaded', () => {
-    const scrollNav = new CanvasScrollNav();
-    (window as any).canvasScrollNav = scrollNav;
-    window.dispatchEvent(
-      new CustomEvent('canvas-scroll-nav-ready', { detail: { instance: scrollNav } })
-    );
-  });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCanvasScrollNav, { once: true });
+  } else {
+    initCanvasScrollNav();
+  }
 }
