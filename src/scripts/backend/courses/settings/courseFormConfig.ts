@@ -95,7 +95,6 @@ export const SECTION_CONFIGS: { [key: string]: SectionConfig } = {
  "institution",
  "course_language",
  "course_type",
- "course_image",
  ],
  fields: [
  { name: "course_name", type: "text", required: true, minLength: 3, maxLength: 50 },
@@ -131,7 +130,7 @@ export const SECTION_CONFIGS: { [key: string]: SectionConfig } = {
  required: true,
  options: ["In-person", "Online", "Hybrid"],
  },
- { name: "course_image", type: "file", required: true, accept: "image/*" },
+ { name: "course_image", type: "file", required: false, accept: "image/*" },
  ],
  submitLabel: "Create Course",
  autoSave: false,

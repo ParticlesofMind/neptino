@@ -13,6 +13,8 @@ export interface CourseCreationData {
  course_language: string;
  course_type: string;
  course_image?: File | null;
+ teacher_id?: string;
+ institution?: string;
  course_pedagogy?: { x: number; y: number } | null;
  // teacher_id will be auto-filled from auth
  // Other fields will have defaults or be added later
@@ -25,6 +27,8 @@ export interface CourseValidation {
  course_language: boolean;
  course_type: boolean;
  course_image: boolean;
+ teacher_id: boolean;
+ institution: boolean;
 }
 
 // ==========================================================================
@@ -50,6 +54,8 @@ export function validateCourseData(
  ['In-person', 'Online', 'Hybrid'].includes(data.course_type.trim())
  ),
  course_image: true, // Course image is optional for new courses
+ teacher_id: Boolean(data.teacher_id && data.teacher_id.trim()),
+ institution: Boolean(data.institution && data.institution.trim()),
  };
 }
 
@@ -88,8 +94,18 @@ export async function createCourse(
  // Ensure user profile exists in users table
  await ensureUserProfile(user);
 
+ const userMetadata = user.user_metadata || {};
+ const normalizedData: CourseCreationData = {
+ ...data,
+ teacher_id: data.teacher_id?.trim() || user.id,
+ institution:
+ data.institution?.trim() ||
+ userMetadata.institution ||
+ "Independent",
+ };
+
  // Validate data
- const validation = validateCourseData(data);
+ const validation = validateCourseData(normalizedData);
  if (!isValidCourse(validation)) {
  const missingFields = Object.entries(validation)
  .filter(([_, isValid]) => !isValid)
@@ -100,12 +116,13 @@ export async function createCourse(
 
  // Create course record with your actual schema
  const courseInsertData = {
- course_name: data.course_name,
- course_subtitle: data.course_subtitle?.trim() || null,
- course_description: data.course_description,
- course_language: data.course_language.trim(),
- course_type: data.course_type.trim(),
- teacher_id: user.id, // Use teacher_id from your schema
+ course_name: normalizedData.course_name,
+ course_subtitle: normalizedData.course_subtitle?.trim() || null,
+ course_description: normalizedData.course_description,
+ course_language: normalizedData.course_language.trim(),
+ course_type: normalizedData.course_type.trim(),
+ teacher_id: normalizedData.teacher_id, // Use teacher_id from your schema
+ institution: normalizedData.institution,
  template_settings: {},
  schedule_settings: {},
  curriculum_data: {},
@@ -183,9 +200,9 @@ export async function createCourse(
  const courseId = courseData.id;
 
  // Upload image if provided
- if (data.course_image) {
+ if (normalizedData.course_image) {
  const imageUrl = await uploadCourseImage({
- file: data.course_image,
+ file: normalizedData.course_image,
  courseId,
  });
  if (imageUrl) {

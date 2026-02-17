@@ -403,6 +403,11 @@ export class CourseFormHandler {
         try {
             console.log('👤 Loading teachers...');
             
+            const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+            if (authError) {
+                console.warn('⚠️ Unable to resolve current user for teacher fallback:', authError);
+            }
+
             // Get all users with teacher role
             const { data: teachers, error } = await supabase
                 .from('users')
@@ -413,21 +418,14 @@ export class CourseFormHandler {
 
             if (error) {
                 console.error('❌ Error loading teachers:', error);
-                // Fallback: add current user as option
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                    const { data: profile } = await supabase
-                        .from('users')
-                        .select('first_name, last_name')
-                        .eq('id', user.id)
-                        .single();
-                    
-                    if (profile) {
-                        const option = document.createElement('option');
-                        option.value = user.id;
-                        option.textContent = `${profile.first_name} ${profile.last_name}`;
-                        select.appendChild(option);
-                    }
+                // Fallback: add current user as option when available
+                if (authUser) {
+                    const fallbackName = this.buildUserDisplayName(authUser);
+                    const option = document.createElement('option');
+                    option.value = authUser.id;
+                    option.textContent = fallbackName;
+                    select.appendChild(option);
+                    select.value = authUser.id;
                 }
                 return;
             }
@@ -444,16 +442,32 @@ export class CourseFormHandler {
                 select.appendChild(defaultOption);
             }
 
-            // Add teacher options
+            const teacherOptions = new Map<string, string>();
+
             if (teachers && teachers.length > 0) {
                 teachers.forEach(teacher => {
-                    const option = document.createElement('option');
-                    option.value = teacher.id;
                     const name = `${teacher.first_name || ''} ${teacher.last_name || ''}`.trim() || teacher.email;
+                    if (teacher.id && name) {
+                        teacherOptions.set(teacher.id, name);
+                    }
+                });
+            }
+
+            if (authUser) {
+                teacherOptions.set(authUser.id, this.buildUserDisplayName(authUser));
+            }
+
+            if (teacherOptions.size > 0) {
+                teacherOptions.forEach((name, id) => {
+                    const option = document.createElement('option');
+                    option.value = id;
                     option.textContent = name;
                     select.appendChild(option);
                 });
-                console.log('✅ Loaded', teachers.length, 'teachers');
+                console.log('✅ Loaded', teacherOptions.size, 'teachers');
+                if (authUser && teacherOptions.has(authUser.id)) {
+                    select.value = authUser.id;
+                }
             } else {
                 console.warn('⚠️ No teachers found');
             }
@@ -465,6 +479,11 @@ export class CourseFormHandler {
     private async loadInstitutions(select: HTMLSelectElement): Promise<void> {
         try {
             console.log('🏫 Loading institutions...');
+
+            const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+            if (authError) {
+                console.warn('⚠️ Unable to resolve current user for institution fallback:', authError);
+            }
             
             // Get unique institutions from users table
             const { data: users, error } = await supabase
@@ -512,6 +531,25 @@ export class CourseFormHandler {
                 });
             }
 
+            let preferredInstitution: string | null = null;
+            if (authUser) {
+                const metadataInstitution = authUser.user_metadata?.institution;
+                if (metadataInstitution) {
+                    institutions.add(metadataInstitution);
+                    preferredInstitution = metadataInstitution;
+                } else {
+                    const { data: profile } = await supabase
+                        .from('users')
+                        .select('institution')
+                        .eq('id', authUser.id)
+                        .single();
+                    if (profile?.institution) {
+                        institutions.add(profile.institution);
+                        preferredInstitution = profile.institution;
+                    }
+                }
+            }
+
             // Add "Independent" as default option
             if (!institutions.has('Independent')) {
                 institutions.add('Independent');
@@ -527,6 +565,10 @@ export class CourseFormHandler {
             });
 
             console.log('✅ Loaded', sortedInstitutions.length, 'institutions');
+
+            if (preferredInstitution && institutions.has(preferredInstitution)) {
+                select.value = preferredInstitution;
+            }
         } catch (error) {
             console.error('❌ Exception loading institutions:', error);
         }
@@ -836,6 +878,7 @@ export class CourseFormHandler {
         // Initialize character counter for course description (essentials section only)
         if (this.sectionConfig.section === "essentials") {
             this.initializeCharacterCounter();
+            this.initializeImageUpload();
         }
 
         this.form.dataset.listenersAttached = "true";
@@ -964,6 +1007,45 @@ export class CourseFormHandler {
         }
     }
 
+    private initializeImageUpload(): void {
+        const { container, input, overlay } = this.getImageUploadElements();
+        if (!container || !input) {
+            return;
+        }
+
+        const clickTarget = overlay || container;
+        if (clickTarget.dataset.imageUploadBound === "true") {
+            return;
+        }
+
+        const triggerFilePicker = (event: Event) => {
+            const target = event.target as HTMLElement | null;
+            if (target?.closest('#remove-image')) {
+                return;
+            }
+            if (!input.disabled) {
+                input.click();
+            }
+        };
+
+        clickTarget.addEventListener("click", triggerFilePicker);
+        clickTarget.addEventListener("keydown", (event: KeyboardEvent) => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                triggerFilePicker(event);
+            }
+        });
+
+        if (!clickTarget.hasAttribute("tabindex")) {
+            clickTarget.setAttribute("tabindex", "0");
+        }
+        if (!clickTarget.hasAttribute("role")) {
+            clickTarget.setAttribute("role", "button");
+        }
+
+        clickTarget.dataset.imageUploadBound = "true";
+    }
+
     private handleRemoveImage(): void {
         const hadExistingImage = Boolean(this.currentCourseImageUrl);
         const confirmation = window.confirm("Are you sure you want to delete this image?");
@@ -1073,6 +1155,8 @@ export class CourseFormHandler {
                 course_language: formData.course_language,
                 course_type: formData.course_type,
                 course_image: formData.course_image,
+                teacher_id: formData.teacher_id,
+                institution: formData.institution,
             };
 
             const result = await createCourse(courseData);
@@ -1427,9 +1511,11 @@ export class CourseFormHandler {
         filename: HTMLElement | null;
         details: HTMLElement | null;
         emptyState: HTMLElement | null;
+        overlay: HTMLElement | null;
     } {
         return {
             container: document.getElementById("course-image-upload") as HTMLElement | null,
+            overlay: document.getElementById("course-image-overlay") as HTMLElement | null,
             input: document.getElementById("course-image") as HTMLInputElement | null,
             preview: document.getElementById("preview-img") as HTMLImageElement | null,
             removeButton: document.getElementById("remove-image") as HTMLButtonElement | null,
@@ -1437,6 +1523,15 @@ export class CourseFormHandler {
             details: document.getElementById("course-image-details") as HTMLElement | null,
             emptyState: document.getElementById("course-image-empty") as HTMLElement | null,
         };
+    }
+
+    private buildUserDisplayName(user: { email?: string | null; user_metadata?: Record<string, any> }): string {
+        const metadata = user.user_metadata || {};
+        const fullName = metadata.full_name || metadata.name;
+        if (typeof fullName === 'string' && fullName.trim()) {
+            return fullName.trim();
+        }
+        return user.email || "Current teacher";
     }
 
     private setFilenameLabel(

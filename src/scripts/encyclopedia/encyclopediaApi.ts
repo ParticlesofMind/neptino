@@ -64,6 +64,10 @@ export interface EncyclopediaMediaItem {
   /** Joined from parent entity */
   entity_title?: string;
   entity_knowledge_type?: string;
+  entity_domain?: string | null;
+  entity_secondary_domains?: string[] | null;
+  entity_era_group?: EraGroup | null;
+  entity_depth?: DepthLevel | null;
 }
 
 /** Manifest shape from the static JSON */
@@ -262,16 +266,28 @@ export async function fetchMedia(
   if (itemIds.length > 0) {
     const { data: entities } = await supabase
       .from("encyclopedia_items")
-      .select("id, title, knowledge_type")
+      .select("id, title, knowledge_type, domain, secondary_domains, era_group, depth")
       .in("id", itemIds);
     const entityMap = new Map(
-      (entities ?? []).map((e: { id: string; title: string; knowledge_type: string }) => [e.id, e]),
+      (entities ?? []).map((e: {
+        id: string;
+        title: string;
+        knowledge_type: string;
+        domain: string | null;
+        secondary_domains: string[] | null;
+        era_group: EraGroup | null;
+        depth: DepthLevel | null;
+      }) => [e.id, e]),
     );
     for (const m of mediaItems) {
       const parent = entityMap.get(m.item_id);
       if (parent) {
         m.entity_title = parent.title;
         m.entity_knowledge_type = parent.knowledge_type;
+        m.entity_domain = parent.domain;
+        m.entity_secondary_domains = parent.secondary_domains;
+        m.entity_era_group = parent.era_group;
+        m.entity_depth = parent.depth;
       }
     }
   }

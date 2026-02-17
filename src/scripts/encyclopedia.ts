@@ -810,6 +810,33 @@ const updateCounts = (count: number) => {
 /** Keep track of last filtered set */
 let lastFiltered: KnowledgeItem[] = [];
 
+const matchesEntityFilters = (
+  media: EncyclopediaMediaItem,
+  filters: EncyclopediaFilters,
+): boolean => {
+  if (filters.knowledge_type && media.entity_knowledge_type !== filters.knowledge_type) {
+    return false;
+  }
+
+  if (filters.domain) {
+    const domain = media.entity_domain ?? "";
+    const secondary = media.entity_secondary_domains ?? [];
+    if (!(domain === filters.domain || secondary.includes(filters.domain))) {
+      return false;
+    }
+  }
+
+  if (filters.era_group && media.entity_era_group !== filters.era_group) {
+    return false;
+  }
+
+  if (filters.depth && media.entity_depth !== filters.depth) {
+    return false;
+  }
+
+  return true;
+};
+
 /**
  * Core render: fetches the current page of items from Supabase with
  * active filters and search, then renders the results.
@@ -859,9 +886,10 @@ async function render() {
     if (showMedia) {
       const typeArg = mediaFilter && mediaFilter !== "Compendium" ? mediaFilter : null;
       const { data: mediaItems, count: mediaCount } = await fetchMedia(typeArg);
-      total += mediaCount;
+      const filteredMedia = mediaItems.filter((m) => matchesEntityFilters(m, activeFilters));
+      total += filteredMedia.length;
 
-      mediaHtml = mediaItems.map(renderMediaCard).join("");
+      mediaHtml = filteredMedia.map(renderMediaCard).join("");
     }
 
     // ── Combine and render ──
