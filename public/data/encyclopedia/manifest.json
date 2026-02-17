@@ -1,0 +1,66 @@
+{
+  "totalCount": 27,
+  "seededAt": "2026-02-16T23:57:02.512Z",
+  "testMode": true,
+  "knowledgeTypes": {
+    "Person": 3,
+    "Event": 3,
+    "Location": 3,
+    "Concept / Theory": 3,
+    "Invention / Technology": 3,
+    "Work": 3,
+    "Institution": 3,
+    "Movement / School": 3,
+    "Era / Period": 3
+  },
+  "domains": [
+    "Agriculture & Ecology",
+    "Arts & Creative Expression",
+    "Engineering & Technology",
+    "Exploration & Discovery",
+    "Governance & Institutions",
+    "Language & Communication",
+    "Mathematics & Logic",
+    "Medical & Health Sciences",
+    "Natural Sciences",
+    "Philosophy & Thought",
+    "Social Sciences",
+    "Spiritual & Religious Thought"
+  ],
+  "domainCounts": {
+    "Natural Sciences": 8,
+    "Arts & Creative Expression": 2,
+    "Philosophy & Thought": 5,
+    "Governance & Institutions": 3,
+    "Exploration & Discovery": 2,
+    "Medical & Health Sciences": 1,
+    "Language & Communication": 1,
+    "Engineering & Technology": 4,
+    "Social Sciences": 1
+  },
+  "eraGroups": [
+    "ancient",
+    "contemporary",
+    "early-modern",
+    "modern"
+  ],
+  "eraCounts": {
+    "modern": 5,
+    "early-modern": 11,
+    "ancient": 6,
+    "contemporary": 5
+  },
+  "depthCounts": {
+    "foundation": 23,
+    "intermediate": 4
+  },
+  "mediaTypes": {
+    "Compendium": 27,
+    "Text": 3,
+    "Audio": 3,
+    "Video": 3,
+    "Maps": 3,
+    "Timeline": 3
+  },
+  "totalMedia": 15
+}

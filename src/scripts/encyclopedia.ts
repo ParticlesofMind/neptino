@@ -1,4 +1,17 @@
 import { fetchFigureData, type WikidataProfile, type WikidataFigureData, type WikidataRelatedPerson, type WikidataTimelineEvent } from "./encyclopedia/wikidata";
+import {
+  fetchManifest,
+  fetchItems,
+  fetchItemDetail,
+  fetchMedia,
+  parseRoute,
+  PAGE_SIZE,
+  type EncyclopediaListItem,
+  type EncyclopediaDetailItem,
+  type EncyclopediaFilters,
+  type EncyclopediaManifest,
+  type EncyclopediaMediaItem,
+} from "./encyclopedia/encyclopediaApi.js";
 
 type EntityType =
   | "Person"
@@ -11,6 +24,10 @@ type EntityType =
   | "Movement / School"
   | "Era / Period";
 
+/**
+ * KnowledgeItem is the UI-facing shape. We map DB rows (snake_case)
+ * into this camelCase form so existing rendering code stays untouched.
+ */
 type KnowledgeItem = {
   id: string;
   title: string;
@@ -25,6 +42,23 @@ type KnowledgeItem = {
   tags: string[];
 };
 
+/** Convert a Supabase row into the UI KnowledgeItem shape */
+function rowToKnowledgeItem(row: EncyclopediaListItem): KnowledgeItem {
+  return {
+    id: row.id,
+    title: row.title,
+    wikidataId: row.wikidata_id ?? undefined,
+    knowledgeType: (row.knowledge_type ?? "Person") as EntityType,
+    domain: row.domain ?? "Unknown",
+    secondaryDomains: row.secondary_domains ?? [],
+    eraGroup: row.era_group ?? "modern",
+    eraLabel: row.era_label ?? "",
+    depth: row.depth ?? "intermediate",
+    summary: row.summary ?? "",
+    tags: row.tags ?? [],
+  };
+}
+
 /** All Wikidata data indexed by item id */
 const wdData = new Map<string, WikidataFigureData>();
 
@@ -33,32 +67,39 @@ const wdData = new Map<string, WikidataFigureData>();
 // explicitly enabled via Vite env.
 const ENABLE_ENRICHMENT = (import.meta.env?.VITE_ENCYCLOPEDIA_ENRICH ?? "false") === "true";
 
-type ViewMode = "gallery" | "list";
-type SizeMode = "small" | "large";
+type DisplayMode = "small" | "large";
 
-type DataSource = KnowledgeItem[];
+/** Items currently shown in the UI (the current page from Supabase) */
+let knowledgeItems: KnowledgeItem[] = [];
 
-/** Populated asynchronously from fetched JSON */
-let knowledgeItems: DataSource = [];
+/** Pagination & search state */
+let currentPage = 0;
+let totalCount = 0;
+let searchQuery = "";
+let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+let activeFilters: EncyclopediaFilters = {};
+let manifest: EncyclopediaManifest | null = null;
+/** True while a fetch is in-flight — prevents duplicate requests */
+let isFetching = false;
 
 const form = document.getElementById("knowledge-search-form") as HTMLFormElement | null;
 const searchInput = document.getElementById("search-input") as HTMLInputElement | null;
 const disciplineSelect = document.getElementById("discipline-select") as HTMLSelectElement | null;
 const typeSelect = document.getElementById("type-select") as HTMLSelectElement | null;
+const mediaSelect = document.getElementById("media-select") as HTMLSelectElement | null;
 const resultCountEl = document.getElementById("result-count");
-const sidebarListEl = document.getElementById("sidebar-list");
 const cardGridEl = document.getElementById("card-grid");
-const listItemsEl = document.getElementById("list-items");
-const galleryView = document.getElementById("gallery-view");
-const listView = document.getElementById("list-view");
 const clearButton = document.getElementById("clear-filters");
-const viewButtons = Array.from(document.querySelectorAll<HTMLButtonElement>(".view-toggle"));
-const sizeButtons = Array.from(document.querySelectorAll<HTMLButtonElement>(".size-toggle"));
+const displayButtons = Array.from(document.querySelectorAll<HTMLButtonElement>(".display-toggle"));
+const paginationEl = document.getElementById("pagination-controls");
 
-let sizeMode: SizeMode = "small";
+let displayMode: DisplayMode = "small";
 
-/** How many cards to render per batch */
-const CARD_BATCH = 30;
+/** Cache of Wikipedia thumbnail URLs keyed by wikidata_id (e.g. "Q937") */
+const thumbnailCache = new Map<string, string>();
+
+/** How many cards to render per batch (within a single page of results) */
+const CARD_BATCH = PAGE_SIZE;
 let renderedCount = 0;
 let scrollSentinelObserver: IntersectionObserver | null = null;
 
@@ -156,60 +197,25 @@ const observeCards = () => {
 /** Format a Wikidata field for display, with fallback */
 const wdField = (value: string | null | undefined, fallback = "Not provided") => value ?? fallback;
 
-const matchesFilters = (item: KnowledgeItem) => {
-  if (!searchInput || !disciplineSelect || !typeSelect) return false;
-
-  const term = searchInput.value.trim().toLowerCase();
-  const discipline = disciplineSelect.value;
-  const knowledgeType = typeSelect.value;
+/**
+ * Build active filters from the current UI state and trigger a Supabase
+ * query. Replaces the old client-side matchesFilters approach.
+ */
+function buildFiltersFromUI(): EncyclopediaFilters {
+  const discipline = disciplineSelect?.value ?? "all";
+  const knowledgeType = typeSelect?.value ?? "all";
+  const mediaType = mediaSelect?.value ?? "all";
   const eras = getCheckedValues("era");
   const depths = getCheckedValues("depth");
 
-  const matchesTerm = term
-    ? [item.title, item.summary, item.tags.join(" ")].join(" ").toLowerCase().includes(term)
-    : true;
-
-  const matchesDiscipline = discipline === "all" ? true : (item.domain === discipline || item.secondaryDomains.includes(discipline));
-  const matchesType = knowledgeType === "all" ? true : item.knowledgeType === knowledgeType;
-  const matchesEra = eras.length === 0 ? true : eras.includes(item.eraGroup);
-  const matchesDepth = depths.length === 0 ? true : depths.includes(item.depth);
-
-  return matchesTerm && matchesDiscipline && matchesType && matchesEra && matchesDepth;
-};
-
-/** Sidebar now shows the current filtered list (paginated in the sidebar itself, max 50) */
-const renderSidebar = (items: KnowledgeItem[]) => {
-  if (!sidebarListEl) return;
-  // Show all filtered items in sidebar (capped for DOM perf)
-  const sidebarItems = items.slice(0, 200);
-  sidebarListEl.innerHTML = sidebarItems
-    .map(
-      (item) => `
-        <button type="button" data-target="${item.id}" class="w-full rounded-lg border border-transparent px-3 py-2 text-left hover:border-primary-200 hover:bg-primary-50/60 focus:outline-none focus:ring-2 focus:ring-primary-400">
-          <div class="flex items-center justify-between gap-2">
-            <div>
-              <p class="text-sm font-semibold text-neutral-900">${item.title}</p>
-              <p class="text-xs text-neutral-500">${item.knowledgeType}</p>
-            </div>
-            ${formatBadge(item.domain)}
-          </div>
-        </button>
-      `
-    )
-    .join("");
-
-  sidebarListEl.querySelectorAll<HTMLButtonElement>("button").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const targetId = btn.dataset.target;
-      if (!targetId) return;
-      // Scroll to the target card
-      requestAnimationFrame(() => {
-        const target = document.getElementById(targetId);
-        if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
-      });
-    });
-  });
-};
+  return {
+    knowledge_type: knowledgeType !== "all" ? knowledgeType : null,
+    domain: discipline !== "all" ? discipline : null,
+    era_group: eras.length === 1 ? eras[0] as EncyclopediaFilters["era_group"] : null,
+    depth: depths.length === 1 ? depths[0] as EncyclopediaFilters["depth"] : null,
+    media_type: mediaType !== "all" ? mediaType : null,
+  };
+}
 
 /** Build the bottom section HTML for large-size cards — three stacked panels */
 const renderLargeCardBottom = (
@@ -304,102 +310,389 @@ const renderLargeCardBottom = (
   `;
 };
 
-const renderCards = (items: KnowledgeItem[]) => {
-  if (!cardGridEl) return;
+/* ------------------------------------------------------------------ */
+/*  Wikipedia thumbnail batch-fetching                                 */
+/* ------------------------------------------------------------------ */
 
-  // Tear down previous scroll sentinel observer
-  scrollSentinelObserver?.disconnect();
-  scrollSentinelObserver = null;
-  renderedCount = 0;
-  cardGridEl.innerHTML = "";
+/**
+ * Fetch Wikipedia thumbnails for a batch of items by their wikidata_id.
+ * Uses the Wikidata API (wbgetentities) to grab P18 (image) claims,
+ * then converts the Commons filename into a thumbnail URL.
+ * Results are cached so we never re-fetch the same QID.
+ */
+async function fetchThumbnails(items: KnowledgeItem[]): Promise<void> {
+  const qids = items
+    .map((i) => i.wikidataId)
+    .filter((q): q is string => !!q && !thumbnailCache.has(q));
+  if (qids.length === 0) return;
 
-  // Render first batch immediately
-  appendCardBatch(items);
+  // Wikidata allows up to 50 ids per request
+  const batchSize = 50;
+  for (let i = 0; i < qids.length; i += batchSize) {
+    const batch = qids.slice(i, i + batchSize);
+    try {
+      const url = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${batch.join("|")}&props=claims&format=json&origin=*`;
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const json = await res.json() as {
+        entities: Record<string, { claims?: { P18?: Array<{ mainsnak: { datavalue?: { value: string } } }> } }>;
+      };
+
+      for (const [qid, entity] of Object.entries(json.entities)) {
+        const filename = entity.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
+        if (filename) {
+          // Commons Special:FilePath handles redirects and generates thumbnails
+          const thumbUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(filename.replace(/ /g, "_"))}?width=300`;
+          thumbnailCache.set(qid, thumbUrl);
+        } else {
+          thumbnailCache.set(qid, ""); // mark as "no image"
+        }
+      }
+    } catch (err) {
+      console.warn("[encyclopedia] Thumbnail batch fetch failed:", err);
+    }
+  }
+}
+
+/** Get a cached thumbnail src for an item, or "" if none */
+const thumbFor = (item: KnowledgeItem): string =>
+  (item.wikidataId ? thumbnailCache.get(item.wikidataId) : "") ?? "";
+
+/* ------------------------------------------------------------------ */
+/*  Card renderers — one per display mode                              */
+/* ------------------------------------------------------------------ */
+
+/** Small mode: compact info cards — fits ≥ 3 per row */
+const renderSmallCard = (item: KnowledgeItem): string => {
+  const art = artworkFor(item.knowledgeType);
+  const thumb = thumbFor(item);
+  const imageInner = thumb
+    ? `<img src="${thumb}" alt="${item.title}" class="h-full w-full object-cover" loading="lazy" />`
+    : `<div class="flex h-full w-full items-center justify-center bg-gradient-to-br ${art.gradient} text-lg font-bold opacity-70">${initialsFor(item.title)}</div>`;
+
+  return `
+    <article id="${item.id}" class="rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md cursor-pointer" data-slug="${item.id}">
+      <div class="flex gap-3 p-3">
+        <div class="h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden">${imageInner}</div>
+        <div class="flex flex-col justify-center min-w-0">
+          <h3 class="text-sm font-semibold text-neutral-900 leading-tight line-clamp-1">${item.title}</h3>
+          <p class="text-[11px] text-neutral-500 line-clamp-1">${item.eraLabel}</p>
+          <div class="mt-1 flex flex-wrap gap-1">
+            <span class="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-600">${item.knowledgeType}</span>
+            ${formatBadge(item.domain)}
+          </div>
+        </div>
+      </div>
+      <div class="border-t border-neutral-100 px-3 py-2">
+        <p class="text-[11px] leading-relaxed text-neutral-600 line-clamp-2">${item.summary}</p>
+      </div>
+    </article>
+  `;
 };
 
-/** Render a single card's HTML */
-const renderSingleCardHtml = (item: KnowledgeItem, index: number): string => {
-      const art = artworkFor(item.knowledgeType);
-      const wd = wdData.get(item.id)?.profile;
-      const isSmall = sizeMode === "small";
-      const media = {
-        small: { padding: "p-4", title: "text-xl", height: "", image: "w-full", layout: "flex flex-col gap-4" },
-        large: { padding: "p-6", title: "text-3xl", height: "lg:h-[calc(100vh-220px)]", image: "w-full lg:w-[260px]", layout: "flex flex-col lg:grid lg:grid-cols-[1fr_260px] gap-6 h-full" },
-      }[sizeMode];
+/** Large mode: detailed expanded cards with full profile info */
+const renderLargeCard = (item: KnowledgeItem, index: number): string => {
+  const art = artworkFor(item.knowledgeType);
+  const wd = wdData.get(item.id)?.profile;
+  const thumb = thumbFor(item);
+  const occupationLabel = wd?.occupation ? capitalize(wd.occupation) : null;
+  const description = wd?.extract || wd?.description || item.summary;
+  const tags = item.tags.slice(0, 5);
 
-      const occupationLabel = wd?.occupation ? capitalize(wd.occupation) : null;
-      // Use the Wikipedia extract (multi-sentence) for large view, nothing for small
-      const description = isSmall
-        ? ""
-        : (wd?.extract || wd?.description || item.summary);
+  // Image
+  const imageInner = thumb
+    ? `<img src="${thumb}" alt="${item.title}" class="absolute inset-0 h-full w-full object-cover" loading="lazy" />`
+    : `<div class="absolute inset-0 flex items-center justify-center text-5xl font-bold opacity-50">${initialsFor(item.title)}</div>`;
 
-      const metaRow = isSmall
-        ? `<span class="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-semibold text-neutral-700">${item.knowledgeType}</span>`
-        : `<span class="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-semibold text-neutral-700">${item.knowledgeType}</span>
-           ${occupationLabel ? `<span class="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-semibold text-neutral-700">${occupationLabel}</span>` : ""}
-           <span class="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-semibold text-neutral-700">${item.eraLabel}</span>
-           <span class="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-semibold text-neutral-700">Card #${index + 1}</span>`;
+  // Meta badges
+  const badges = [
+    `<span class="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-semibold text-neutral-700">${item.knowledgeType}</span>`,
+    occupationLabel ? `<span class="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-semibold text-neutral-700">${occupationLabel}</span>` : "",
+    `<span class="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-semibold text-neutral-700">${item.eraLabel}</span>`,
+    `<span class="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-semibold text-neutral-700">Card #${index + 1}</span>`,
+  ].filter(Boolean).join("\n");
 
-      // Image area – use Wikidata thumbnail when available
-      const imageInner = wd?.thumbnailUrl
-        ? `<img src="${wd.thumbnailUrl}" alt="${item.title}" class="absolute inset-0 h-full w-full object-cover" loading="lazy" />`
-        : `<div class="text-4xl font-bold text-neutral-900/80 drop-shadow-sm">${initialsFor(item.title)}</div>`;
+  // Profile rows
+  const profileRows = [
+    { label: "Full name", value: wd?.label ?? item.title },
+    { label: "Date of birth", value: wdField(wd?.birthDate) },
+    { label: "Place of birth", value: wdField(wd?.birthPlace) },
+    { label: "Date of death", value: wdField(wd?.deathDate) },
+    { label: "Place of death", value: wdField(wd?.deathPlace) },
+    ...(wd?.occupation ? [{ label: "Occupation", value: capitalize(wd.occupation) }] : []),
+    { label: "Era", value: item.eraLabel },
+    { label: "Depth", value: capitalize(item.depth) },
+  ].map(
+    (r) => `<div class="flex items-center justify-between gap-2 text-neutral-600"><span class="text-xs">${r.label}</span><span class="text-xs font-semibold text-neutral-900">${r.value}</span></div>`
+  ).join("");
 
-      const profileCard = isSmall
-        ? `<div class="w-full ${media.image} rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 space-y-2 text-xs">
-             <div class="flex items-center justify-between gap-2 text-neutral-600"><span>Era</span><span class="font-semibold text-neutral-900">${item.eraLabel}</span></div>
-             <div class="flex items-center justify-between gap-2 text-neutral-600"><span>Depth</span><span class="font-semibold text-neutral-900">${capitalize(item.depth)}</span></div>
-             <div class="flex items-start justify-between gap-2 text-neutral-600"><span class="pt-0.5">Domain</span><span class="flex flex-wrap justify-end gap-1.5">${[item.domain, ...item.secondaryDomains]
-               .map(formatBadge)
-               .join("")}</span></div>
-           </div>`
-        : `<div class="w-full ${media.image} rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 space-y-3 text-xs">
-             <div class="flex items-center gap-2 text-[11px] font-semibold text-neutral-600 uppercase tracking-[0.1em]">Profile${wd ? "" : ` <span class="ml-auto text-neutral-400 normal-case">Loading…</span>`}</div>
-             <div class="space-y-2">
-               <div class="flex items-center justify-between gap-2 text-neutral-600"><span>Full name</span><span class="font-semibold text-neutral-900">${wd?.label ?? item.title}</span></div>
-               <div class="flex items-center justify-between gap-2 text-neutral-600"><span>Date of birth</span><span class="font-semibold text-neutral-900">${wdField(wd?.birthDate)}</span></div>
-               <div class="flex items-center justify-between gap-2 text-neutral-600"><span>Place of birth</span><span class="font-semibold text-neutral-900">${wdField(wd?.birthPlace)}</span></div>
-             </div>
-             <div class="space-y-2 pt-2 border-t border-neutral-200">
-               <div class="flex items-center justify-between gap-2 text-neutral-600"><span>Date of death</span><span class="font-semibold text-neutral-900">${wdField(wd?.deathDate)}</span></div>
-               <div class="flex items-center justify-between gap-2 text-neutral-600"><span>Place of death</span><span class="font-semibold text-neutral-900">${wdField(wd?.deathPlace)}</span></div>
-               ${wd?.occupation ? `<div class="flex items-center justify-between gap-2 text-neutral-600"><span>Occupation</span><span class="font-semibold text-neutral-900">${capitalize(wd.occupation)}</span></div>` : ""}
-             </div>
-             <div class="pt-2 border-t border-neutral-200">
-               <a class="text-primary-700 font-semibold hover:underline" href="https://www.wikidata.org/wiki/${item.wikidataId ?? ""}" target="_blank" rel="noopener noreferrer">Wikidata ↗</a>
-             </div>
-           </div>`;
+  // Domains
+  const domainBadges = [item.domain, ...item.secondaryDomains].map(formatBadge).join("");
 
-      // Timeline events from Wikidata
-      const tlEvents = ENABLE_ENRICHMENT ? wdData.get(item.id)?.timeline ?? [] : [];
+  // Tags
+  const tagBadges = tags.map(
+    (t) => `<span class="rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-semibold text-primary-700">${t}</span>`
+  ).join("");
 
-      const bottomSections = isSmall ? "" : renderLargeCardBottom(item, wd, tlEvents);
+  // Timeline events
+  const tlEvents = ENABLE_ENRICHMENT ? wdData.get(item.id)?.timeline ?? [] : [];
+  const bottomSections = renderLargeCardBottom(item, wd, tlEvents);
 
-      return `
-        <article id="${item.id}" class="rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${media.height}">
-          <div class="${media.padding} h-full">
-            <div class="${media.layout}">
-              <div class="flex flex-col gap-4">
-                <div class="flex flex-wrap items-center gap-2 text-xs font-semibold text-neutral-700">${metaRow}</div>
-                <h3 class="${media.title} font-semibold text-neutral-900 leading-tight">${item.title}</h3>
-                ${description ? `<p class="text-sm leading-relaxed text-neutral-700">${description}</p>` : ""}
-                ${bottomSections}
-              </div>
+  return `
+    <article id="${item.id}" class="rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:shadow-md cursor-pointer" data-slug="${item.id}">
+      <div class="p-5">
+        <div class="flex flex-col lg:grid lg:grid-cols-[1fr_280px] gap-5">
+          <!-- Left column: text content -->
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-wrap items-center gap-2">${badges}</div>
+            <h3 class="text-2xl font-bold text-neutral-900 leading-tight">${item.title}</h3>
+            <p class="text-sm leading-relaxed text-neutral-700">${description}</p>
+            ${tags.length > 0 ? `<div class="flex flex-wrap gap-1.5">${tagBadges}</div>` : ""}
+            <div class="flex flex-wrap gap-1.5">${domainBadges}</div>
+            ${bottomSections}
+          </div>
 
-              <div class="flex flex-col gap-3 items-start lg:items-end">
-                <div class="relative ${media.image} aspect-[4/5] rounded-xl bg-gradient-to-br ${art.gradient} overflow-hidden shadow-sm flex items-end p-4">
-                  <div class="absolute top-3 right-3 flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-neutral-800 ring-1 ring-white/70 backdrop-blur">
-                    <span class="h-2 w-2 rounded-full bg-primary-500"></span>
-                    ${art.label}
-                  </div>
-                  ${imageInner}
-                </div>
-                ${profileCard}
+          <!-- Right column: image + profile -->
+          <div class="flex flex-col gap-3">
+            <div class="relative aspect-[4/5] rounded-xl bg-gradient-to-br ${art.gradient} overflow-hidden shadow-sm">
+              ${imageInner}
+              <div class="absolute top-3 right-3 flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-neutral-800 ring-1 ring-white/70 backdrop-blur">
+                <span class="h-2 w-2 rounded-full bg-primary-500"></span>
+                ${art.label}
               </div>
             </div>
+
+            <div class="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 space-y-2">
+              <div class="text-[11px] font-semibold text-neutral-500 uppercase tracking-[0.1em]">Profile</div>
+              ${profileRows}
+              ${item.wikidataId ? `<div class="pt-2 border-t border-neutral-200"><a class="text-xs text-primary-700 font-semibold hover:underline" href="https://www.wikidata.org/wiki/${item.wikidataId}" target="_blank" rel="noopener noreferrer">Wikidata ↗</a></div>` : ""}
+            </div>
           </div>
-        </article>
-      `;
+        </div>
+      </div>
+    </article>
+  `;
+};
+
+/* ------------------------------------------------------------------ */
+/*  Media card renderer — matches entity card style exactly            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Render a media card — dispatches to small or large based on displayMode.
+ */
+const renderMediaCard = (m: EncyclopediaMediaItem): string => {
+  return displayMode === "large" ? renderLargeMediaCard(m) : renderSmallMediaCard(m);
+};
+
+/* ── Small media card (same structure as renderSmallCard) ──────────── */
+const renderSmallMediaCard = (m: EncyclopediaMediaItem): string => {
+  const meta = m.metadata ?? {};
+  const subtitle = buildMediaSubtitle(m.media_type, meta);
+
+  const initials = m.title
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w.charAt(0).toUpperCase())
+    .join("");
+
+  return `
+    <article class="rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md cursor-pointer" data-media-id="${m.id}">
+      <div class="flex gap-3 p-3">
+        <div class="h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden">
+          <div class="flex h-full w-full items-center justify-center bg-neutral-100 text-lg font-bold text-neutral-400">${initials}</div>
+        </div>
+        <div class="flex flex-col justify-center min-w-0">
+          <h3 class="text-sm font-semibold text-neutral-900 leading-tight line-clamp-1">${m.title}</h3>
+          <p class="text-[11px] text-neutral-500 line-clamp-1">${subtitle}</p>
+          <div class="mt-1 flex flex-wrap gap-1">
+            <span class="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-600">${m.media_type}</span>
+            ${m.entity_title ? `<span class="rounded-full bg-primary-50 px-2 py-0.5 text-[10px] font-semibold text-primary-700 ring-1 ring-primary-100">${m.entity_title}</span>` : ""}
+          </div>
+        </div>
+      </div>
+      <div class="border-t border-neutral-100 px-3 py-2">
+        <p class="text-[11px] leading-relaxed text-neutral-600 line-clamp-2">${m.description ?? ""}</p>
+      </div>
+    </article>
+  `;
+};
+
+/* ── Large media card (same structure as compendium large card) ────── */
+const renderLargeMediaCard = (m: EncyclopediaMediaItem): string => {
+  const meta = m.metadata ?? {};
+  const subtitle = buildMediaSubtitle(m.media_type, meta);
+
+  // Type-specific content block
+  const contentBlock = buildMediaContentBlock(m);
+
+  // Badges
+  const badges = [
+    `<span class="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-semibold text-neutral-700">${m.media_type}</span>`,
+    m.entity_title ? `<span class="rounded-full bg-primary-50 px-3 py-1 text-[11px] font-semibold text-primary-700 ring-1 ring-primary-100">${m.entity_title}</span>` : "",
+    m.entity_knowledge_type ? `<span class="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-semibold text-neutral-700">${m.entity_knowledge_type}</span>` : "",
+  ].filter(Boolean).join("\n");
+
+  // Metadata rows
+  const metaRows = buildMediaMetaRows(m.media_type, meta);
+
+  return `
+    <article class="rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:shadow-md cursor-pointer" data-media-id="${m.id}">
+      <div class="p-5">
+        <div class="flex flex-col gap-4">
+          <!-- Badges -->
+          <div class="flex flex-wrap items-center gap-2">${badges}</div>
+
+          <!-- Title -->
+          <h3 class="text-2xl font-bold text-neutral-900 leading-tight">${m.title}</h3>
+          <p class="text-sm text-neutral-500">${subtitle}</p>
+
+          <!-- Description -->
+          <p class="text-sm leading-relaxed text-neutral-700">${m.description ?? ""}</p>
+
+          <!-- Type-specific content (audio player, readable text, etc.) -->
+          ${contentBlock}
+
+          <!-- Metadata -->
+          ${metaRows ? `
+          <div class="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 space-y-2">
+            <div class="text-[11px] font-semibold text-neutral-500 uppercase tracking-[0.1em]">Details</div>
+            ${metaRows}
+          </div>` : ""}
+        </div>
+      </div>
+    </article>
+  `;
+};
+
+/** Build the type-specific content block for large media cards */
+function buildMediaContentBlock(m: EncyclopediaMediaItem): string {
+  const meta = m.metadata ?? {};
+
+  switch (m.media_type) {
+    case "Audio":
+      return `
+        <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+          <audio controls preload="metadata" crossorigin="anonymous" class="w-full">
+            <source src="${m.url}" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>`;
+
+    case "Video":
+      return `
+        <div class="rounded-lg border border-neutral-200 bg-black overflow-hidden" style="aspect-ratio:16/9">
+          <video controls preload="metadata" class="w-full h-full object-contain rounded-lg" src="${m.url}">
+            Your browser does not support the video element.
+          </video>
+        </div>`;
+
+    case "Text":
+      return `
+        <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-5">
+          <div class="prose prose-sm max-w-none text-neutral-800 leading-relaxed">
+            <p>${m.description ?? ""}</p>
+          </div>
+          ${meta.source ? `<div class="mt-3 pt-3 border-t border-neutral-200 text-xs text-neutral-500">Source: ${meta.source}</div>` : ""}
+          ${m.url && !m.url.includes("example.com") ? `<div class="mt-2"><a href="${m.url}" target="_blank" rel="noopener noreferrer" class="text-xs text-primary-700 font-semibold hover:underline">Read full text ↗</a></div>` : ""}
+        </div>`;
+
+    case "Maps":
+      return `
+        <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-4 text-center">
+          ${m.url && !m.url.includes("example.com")
+            ? `<img src="${m.url}" alt="${m.title}" class="w-full rounded-lg" />`
+            : `<div class="py-8 text-sm text-neutral-400">Map content will be available when media is uploaded.</div>`}
+        </div>`;
+
+    case "Timeline": {
+      const events = Number(meta.events) || 0;
+      const span = meta.span ? String(meta.span) : "";
+      return `
+        <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+          <div class="flex items-center justify-between text-sm text-neutral-600">
+            ${events ? `<span>${events} events</span>` : ""}
+            ${span ? `<span>${span}</span>` : ""}
+          </div>
+          <div class="mt-2 py-4 text-center text-sm text-neutral-400">Timeline visualization will load here.</div>
+        </div>`;
+    }
+
+    default:
+      return "";
+  }
+}
+
+/** Build metadata rows for the large card details panel */
+function buildMediaMetaRows(_type: string, meta: Record<string, unknown>): string {
+  const rows: { label: string; value: string }[] = [];
+
+  if (meta.source) rows.push({ label: "Source", value: String(meta.source) });
+  if (meta.duration) rows.push({ label: "Duration", value: String(meta.duration) });
+  if (meta.wordCount) rows.push({ label: "Word count", value: Number(meta.wordCount).toLocaleString() });
+  if (meta.pages) rows.push({ label: "Pages", value: String(meta.pages) });
+  if (meta.readingTime) rows.push({ label: "Reading time", value: String(meta.readingTime) });
+  if (meta.resolution) rows.push({ label: "Resolution", value: String(meta.resolution) });
+  if (meta.recorded) rows.push({ label: "Recorded", value: String(meta.recorded) });
+  if (meta.format) rows.push({ label: "Format", value: String(meta.format) });
+  if (meta.era) rows.push({ label: "Era", value: String(meta.era) });
+  if (meta.events) rows.push({ label: "Events", value: String(meta.events) });
+  if (meta.span) rows.push({ label: "Span", value: String(meta.span) });
+
+  if (rows.length === 0) return "";
+
+  return rows.map(
+    (r) => `<div class="flex items-center justify-between gap-2 text-neutral-600"><span class="text-xs">${r.label}</span><span class="text-xs font-semibold text-neutral-900">${r.value}</span></div>`
+  ).join("");
+}
+
+/** Build a concise subtitle string from media-type-specific metadata */
+function buildMediaSubtitle(type: string, meta: Record<string, unknown>): string {
+  switch (type) {
+    case "Audio": {
+      const parts: string[] = [];
+      if (meta.duration) parts.push(String(meta.duration));
+      if (meta.source) parts.push(String(meta.source));
+      return parts.join(" · ") || "Audio";
+    }
+    case "Video": {
+      const parts: string[] = [];
+      if (meta.duration) parts.push(String(meta.duration));
+      if (meta.resolution) parts.push(String(meta.resolution));
+      if (meta.source) parts.push(String(meta.source));
+      return parts.join(" · ") || "Video";
+    }
+    case "Text": {
+      const parts: string[] = [];
+      if (meta.wordCount) parts.push(`${Number(meta.wordCount).toLocaleString()} words`);
+      if (meta.source) parts.push(String(meta.source));
+      return parts.join(" · ") || "Text";
+    }
+    case "Maps": {
+      const parts: string[] = [];
+      if (meta.format) parts.push(String(meta.format));
+      if (meta.era) parts.push(String(meta.era));
+      if (meta.dateRange) parts.push(String(meta.dateRange));
+      return parts.join(" · ") || "Map";
+    }
+    case "Timeline": {
+      const parts: string[] = [];
+      if (meta.events) parts.push(`${meta.events} events`);
+      if (meta.span) parts.push(String(meta.span));
+      return parts.join(" · ") || "Timeline";
+    }
+    default:
+      return "";
+  }
+}
+
+/** Render a single card's HTML — dispatches to the correct mode renderer */
+const renderSingleCardHtml = (item: KnowledgeItem, index: number): string => {
+  switch (displayMode) {
+    case "small":   return renderSmallCard(item);
+    case "large":   return renderLargeCard(item, index);
+  }
 };
 
 /** Append the next batch of cards and set up a sentinel for infinite scroll */
@@ -464,39 +757,10 @@ const updateSingleCard = (itemId: string) => {
   }
 };
 
-const renderList = (items: KnowledgeItem[]) => {
-  if (!listItemsEl) return;
-  // Cap list rendering for DOM perf
-  const listItems = items.slice(0, 200);
-  listItemsEl.innerHTML = listItems
-    .map(
-      (item) => `
-        <li class="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div class="flex items-center gap-2">
-              <p class="text-base font-semibold text-neutral-900">${item.title}</p>
-              <span class="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-semibold text-neutral-700">${item.knowledgeType}</span>
-            </div>
-            <p class="text-sm text-neutral-600">${item.summary}</p>
-            <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-neutral-600">
-              <span class="rounded-md bg-neutral-100 px-3 py-1 font-semibold text-neutral-700">${item.eraLabel}</span>
-              <span class="rounded-md bg-neutral-100 px-3 py-1 font-semibold text-neutral-700">${capitalize(item.depth)} depth</span>
-              ${[item.domain, ...item.secondaryDomains].map(formatBadge).join("")}
-            </div>
-          </div>
-          <div class="flex flex-wrap justify-start sm:justify-end gap-2 text-xs font-semibold text-primary-700">
-            ${item.tags.map((tag) => `<span class="rounded-full bg-primary-50 px-3 py-1">${tag}</span>`).join("")}
-          </div>
-        </li>
-      `
-    )
-    .join("");
-};
-
 /** Mount Knight Lab TimelineJS instances into rendered containers */
 const mountTimelines = () => {
   if (!ENABLE_ENRICHMENT) return;
-  if (sizeMode !== "large") return;
+  if (displayMode !== "large") return;
 
   // Declare TL on window (loaded via CDN script tag)
   const TL = (window as unknown as { TL?: { Timeline: new (el: string | HTMLElement, data: unknown, options?: unknown) => void } }).TL;
@@ -546,41 +810,135 @@ const updateCounts = (count: number) => {
 /** Keep track of last filtered set */
 let lastFiltered: KnowledgeItem[] = [];
 
-function render() {
-  const filtered = knowledgeItems.filter(matchesFilters);
-  lastFiltered = filtered;
+/**
+ * Core render: fetches the current page of items from Supabase with
+ * active filters and search, then renders the results.
+ *
+ * Media type filter logic:
+ *   – "all"        → Compendium cards + all media cards
+ *   – "Compendium" → Compendium cards only (entity overview)
+ *   – "Audio" etc. → Media cards of that type only
+ */
+async function render() {
+  if (isFetching) return;
+  isFetching = true;
 
-  updateCounts(filtered.length);
-  renderSidebar(filtered);
-  renderCards(filtered);
-  renderList(filtered);
+  activeFilters = buildFiltersFromUI();
+  searchQuery = searchInput?.value.trim() ?? "";
 
-  // Initialize TimelineJS instances for newly rendered cards
-  if (ENABLE_ENRICHMENT) {
-    requestAnimationFrame(mountTimelines);
-    // Start observing visible cards for lazy Wikidata enrichment
-    requestAnimationFrame(observeCards);
+  const mediaFilter = activeFilters.media_type; // null = "all"
+  const showCompendium = !mediaFilter || mediaFilter === "Compendium";
+  const showMedia = !mediaFilter || (mediaFilter !== "Compendium");
+
+  try {
+    applyGridLayout();
+
+    let compendiumHtml = "";
+    let mediaHtml = "";
+    let total = 0;
+
+    // ── Compendium cards (entity overviews) ──
+    if (showCompendium) {
+      // Strip media_type from filters so fetchItems doesn't try to filter by it
+      const entityFilters = { ...activeFilters, media_type: null };
+      const { data, count } = await fetchItems(currentPage, entityFilters, searchQuery);
+      knowledgeItems = data.map(rowToKnowledgeItem);
+      totalCount = count;
+      lastFiltered = knowledgeItems;
+      total += count;
+
+      await fetchThumbnails(knowledgeItems);
+
+      // Build HTML for compendium cards
+      knowledgeItems.forEach((item, i) => {
+        compendiumHtml += renderSingleCardHtml(item, i);
+      });
+    }
+
+    // ── Media cards (Audio, Video, Text, Maps, Timeline) ──
+    if (showMedia) {
+      const typeArg = mediaFilter && mediaFilter !== "Compendium" ? mediaFilter : null;
+      const { data: mediaItems, count: mediaCount } = await fetchMedia(typeArg);
+      total += mediaCount;
+
+      mediaHtml = mediaItems.map(renderMediaCard).join("");
+    }
+
+    // ── Combine and render ──
+    if (cardGridEl) {
+      scrollSentinelObserver?.disconnect();
+      scrollSentinelObserver = null;
+      renderedCount = 0;
+      cardGridEl.innerHTML = compendiumHtml + mediaHtml;
+    }
+
+    totalCount = total;
+    updateCounts(total);
+
+    // Only show pagination for compendium-only view
+    if (showCompendium && !showMedia) {
+      renderPagination();
+    } else if (paginationEl) {
+      paginationEl.innerHTML = "";
+    }
+
+    // Initialize TimelineJS for newly rendered compendium cards
+    if (showCompendium && ENABLE_ENRICHMENT) {
+      requestAnimationFrame(mountTimelines);
+      requestAnimationFrame(observeCards);
+    }
+  } catch (err) {
+    console.error("[encyclopedia] Fetch failed:", err);
+  } finally {
+    isFetching = false;
   }
 }
 
-const applySize = () => {
-  if (!cardGridEl) return;
-  const sizeClasses: Record<SizeMode, string> = {
-    small: "grid grid-cols-3 gap-4",
-    large: "grid grid-cols-1 gap-6",
-  };
-  cardGridEl.className = sizeClasses[sizeMode];
-};
-
-const setView = (view: ViewMode) => {
-  if (galleryView && listView) {
-    const showGallery = view === "gallery";
-    galleryView.classList.toggle("hidden", !showGallery);
-    listView.classList.toggle("hidden", showGallery);
+/** Render prev/next pagination controls */
+const renderPagination = () => {
+  if (!paginationEl) return;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  if (totalPages <= 1) {
+    paginationEl.innerHTML = "";
+    return;
   }
 
-  viewButtons.forEach((btn) => {
-    const isActive = btn.dataset.view === view;
+  const prevDisabled = currentPage === 0;
+  const nextDisabled = currentPage >= totalPages - 1;
+
+  paginationEl.innerHTML = `
+    <div class="flex items-center justify-center gap-3 py-4">
+      <button id="page-prev" class="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed" ${prevDisabled ? "disabled" : ""}>← Previous</button>
+      <span class="text-sm text-neutral-600">Page ${currentPage + 1} of ${totalPages.toLocaleString()} · ${totalCount.toLocaleString()} items</span>
+      <button id="page-next" class="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed" ${nextDisabled ? "disabled" : ""}>Next →</button>
+    </div>
+  `;
+
+  document.getElementById("page-prev")?.addEventListener("click", () => {
+    if (currentPage > 0) { currentPage--; render(); }
+  });
+  document.getElementById("page-next")?.addEventListener("click", () => {
+    if (currentPage < totalPages - 1) { currentPage++; render(); }
+  });
+};
+
+/** Apply the grid class for the current display mode */
+const applyGridLayout = () => {
+  if (!cardGridEl) return;
+  const gridClasses: Record<DisplayMode, string> = {
+    small:   "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3",
+    large:   "grid grid-cols-1 gap-5",
+  };
+  cardGridEl.className = gridClasses[displayMode];
+};
+
+/** Switch display mode, update button styles, and re-render */
+const setDisplayMode = (mode: DisplayMode) => {
+  displayMode = mode;
+  applyGridLayout();
+  void render();
+  displayButtons.forEach((btn) => {
+    const isActive = btn.dataset.display === mode;
     btn.classList.toggle("bg-white", isActive);
     btn.classList.toggle("shadow-sm", isActive);
     btn.classList.toggle("ring-1", isActive);
@@ -590,19 +948,19 @@ const setView = (view: ViewMode) => {
   });
 };
 
-const setSize = (size: SizeMode) => {
-  sizeMode = size;
-  applySize();
-  render();
-  sizeButtons.forEach((btn) => {
-    const isActive = btn.dataset.size === size;
-    btn.classList.toggle("bg-white", isActive);
-    btn.classList.toggle("shadow-sm", isActive);
-    btn.classList.toggle("ring-1", isActive);
-    btn.classList.toggle("ring-neutral-200", isActive);
-    btn.classList.toggle("text-neutral-800", isActive);
-    btn.classList.toggle("text-neutral-700", !isActive);
-  });
+/** When any filter changes, reset to page 0 and re-fetch */
+const onFilterChange = () => {
+  currentPage = 0;
+  void render();
+};
+
+/** Debounced search: wait 300ms after typing stops before querying */
+const onSearchInput = () => {
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => {
+    currentPage = 0;
+    void render();
+  }, 300);
 };
 
 const attachEvents = () => {
@@ -610,32 +968,120 @@ const attachEvents = () => {
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    render();
+    currentPage = 0;
+    void render();
   });
 
-  [disciplineSelect, typeSelect].forEach((el) => el.addEventListener("change", render));
+  // Debounced search on keystroke
+  searchInput.addEventListener("input", onSearchInput);
+
+  [disciplineSelect, typeSelect, mediaSelect].forEach((el) => el?.addEventListener("change", onFilterChange));
 
   document
     .querySelectorAll<HTMLInputElement>("input[name='era'], input[name='depth']")
-    .forEach((el) => el.addEventListener("change", render));
+    .forEach((el) => el.addEventListener("change", onFilterChange));
 
-  viewButtons.forEach((btn) => btn.addEventListener("click", () => setView(btn.dataset.view as ViewMode)));
-  sizeButtons.forEach((btn) => btn.addEventListener("click", () => setSize(btn.dataset.size as SizeMode)));
+  displayButtons.forEach((btn) => btn.addEventListener("click", () => setDisplayMode(btn.dataset.display as DisplayMode)));
 
   clearButton?.addEventListener("click", () => {
     searchInput.value = "";
     disciplineSelect.value = "all";
     typeSelect.value = "all";
+    if (mediaSelect) mediaSelect.value = "all";
     document
       .querySelectorAll<HTMLInputElement>("input[name='era'], input[name='depth']")
       .forEach((el) => {
         el.checked = false;
       });
-    setView("gallery");
-    setSize("small");
-    render();
+    currentPage = 0;
+    searchQuery = "";
+    activeFilters = {};
+    setDisplayMode("small");  });
+
+  // Hash-based detail routing
+  window.addEventListener("hashchange", handleHashRoute);
+
+  // Delegated click handler for entity links inside media cards
+  cardGridEl?.addEventListener("click", (e) => {
+    const link = (e.target as HTMLElement).closest<HTMLElement>("a[data-slug]");
+    if (link) {
+      e.preventDefault();
+      const slug = link.dataset.slug;
+      if (slug) location.hash = `#/Item/${slug}`;
+    }
   });
 };
+
+/* ------------------------------------------------------------------ */
+/*  Detail panel (hash-based routing)                                  */
+/* ------------------------------------------------------------------ */
+
+async function handleHashRoute() {
+  const route = parseRoute();
+  if (!route) {
+    // Back to list — unhide content, hide detail
+    document.getElementById("detail-panel")?.classList.add("hidden");
+    document.getElementById("encyclopedia-content")?.classList.remove("hidden");
+    return;
+  }
+
+  const detail = await fetchItemDetail(route.slug);
+  if (!detail) {
+    console.warn(`[encyclopedia] Item not found: ${route.slug}`);
+    return;
+  }
+
+  renderDetailPanel(detail);
+}
+
+function renderDetailPanel(data: EncyclopediaDetailItem) {
+  const item = rowToKnowledgeItem(data);
+  const meta = data.metadata ?? {};
+
+  // Hide list, show detail
+  document.getElementById("encyclopedia-content")?.classList.add("hidden");
+
+  let panel = document.getElementById("detail-panel");
+  if (!panel) {
+    panel = document.createElement("div");
+    panel.id = "detail-panel";
+    document.getElementById("encyclopedia-loading")?.parentElement?.appendChild(panel);
+  }
+  panel.classList.remove("hidden");
+
+  const occupations = Array.isArray(meta.occupations) ? (meta.occupations as string[]).join(", ") : "";
+
+  panel.innerHTML = `
+    <div class="mx-auto max-w-4xl px-6 py-8">
+      <button id="detail-back" class="mb-6 inline-flex items-center gap-1 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50">← Back to list</button>
+      <h1 class="text-3xl font-bold text-neutral-900">${item.title}</h1>
+      <div class="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
+        <span class="rounded-full bg-neutral-100 px-3 py-1 text-neutral-700">${item.knowledgeType}</span>
+        <span class="rounded-full bg-primary-50 px-3 py-1 text-primary-700">${item.domain}</span>
+        <span class="rounded-full bg-neutral-100 px-3 py-1 text-neutral-700">${item.eraLabel}</span>
+        <span class="rounded-full bg-neutral-100 px-3 py-1 text-neutral-700">${capitalize(item.depth)} depth</span>
+      </div>
+      ${occupations ? `<p class="mt-3 text-sm text-neutral-600">${occupations}</p>` : ""}
+      <p class="mt-4 text-base leading-relaxed text-neutral-700">${item.summary}</p>
+      <div class="mt-6 flex flex-wrap gap-2">
+        ${item.tags.map((t) => `<span class="rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">${t}</span>`).join("")}
+      </div>
+      ${item.secondaryDomains.length > 0 ? `
+        <div class="mt-4">
+          <span class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Secondary domains</span>
+          <div class="mt-1 flex flex-wrap gap-2">
+            ${item.secondaryDomains.map((d) => `<span class="rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-semibold text-primary-700 ring-1 ring-primary-100">${d}</span>`).join("")}
+          </div>
+        </div>
+      ` : ""}
+      ${item.wikidataId ? `<a class="mt-4 inline-block text-sm text-primary-700 font-semibold hover:underline" href="https://www.wikidata.org/wiki/${item.wikidataId}" target="_blank" rel="noopener noreferrer">View on Wikidata ↗</a>` : ""}
+    </div>
+  `;
+
+  document.getElementById("detail-back")?.addEventListener("click", () => {
+    location.hash = "";
+  });
+}
 
 /* ------------------------------------------------------------------ */
 /*  Async data loading                                                 */
@@ -655,50 +1101,68 @@ const hideLoading = () => {
   if (content) content.classList.remove("hidden");
 };
 
-async function loadData(): Promise<KnowledgeItem[]> {
-  // Data intentionally disabled; render shell UI only.
-  return [];
-}
-
 const bootstrap = async () => {
   if (!form) return;
 
   showLoading();
 
   // Attach UI events immediately so controls are responsive
-  setView("gallery");
+  setDisplayMode("small");
   attachEvents();
 
   try {
-    knowledgeItems = await loadData();
+    // Phase 1: Load the static manifest to populate filter dropdowns instantly
+    manifest = await fetchManifest();
+    if (resultCountEl) {
+      resultCountEl.textContent = `${manifest.totalCount.toLocaleString()} items available`;
+    }
+
+    // Populate domain filter from manifest (instant, no DB query)
+    if (disciplineSelect) {
+      for (const dom of manifest.domains) {
+        const opt = document.createElement("option");
+        opt.value = dom;
+        opt.textContent = dom;
+        disciplineSelect.appendChild(opt);
+      }
+    }
+
+    // Populate knowledge type filter from manifest
+    if (typeSelect) {
+      for (const kt of Object.keys(manifest.knowledgeTypes)) {
+        const opt = document.createElement("option");
+        opt.value = kt;
+        opt.textContent = `${kt} (${manifest.knowledgeTypes[kt].toLocaleString()})`;
+        typeSelect.appendChild(opt);
+      }
+    }
+
+    // Populate media type filter from manifest (data-driven, not hardcoded)
+    if (mediaSelect && manifest.mediaTypes) {
+      // Clear existing options except the first "All" option
+      while (mediaSelect.options.length > 1) mediaSelect.remove(1);
+      for (const [mt, count] of Object.entries(manifest.mediaTypes)) {
+        const opt = document.createElement("option");
+        opt.value = mt;
+        opt.textContent = `${mt} (${count})`;
+        mediaSelect.appendChild(opt);
+      }
+    }
+
+    hideLoading();
+
+    // Phase 2: Load first page of items from Supabase
+    await render();
+
+    // Check if there's a hash route to handle on load
+    if (location.hash) {
+      await handleHashRoute();
+    }
   } catch (err) {
-    console.error("[encyclopedia] Data loading is disabled:", err);
+    console.error("[encyclopedia] Bootstrap failed:", err);
     hideLoading();
     if (resultCountEl) resultCountEl.textContent = "Failed to load data";
-    return;
   }
-
-  // Dynamically populate domain filter from loaded data
-  if (disciplineSelect) {
-    const allDomains = new Set<string>();
-    for (const item of knowledgeItems) {
-      allDomains.add(item.domain);
-      item.secondaryDomains.forEach((d) => allDomains.add(d));
-    }
-    const sorted = [...allDomains].sort();
-    for (const dom of sorted) {
-      const opt = document.createElement("option");
-      opt.value = dom;
-      opt.textContent = dom;
-      disciplineSelect.appendChild(opt);
-    }
-  }
-
-  hideLoading();
-  setSize("small");
-  render();
-
-  // Lazy enrichment happens via IntersectionObserver (set up in render)
 };
 
 document.addEventListener("DOMContentLoaded", bootstrap);

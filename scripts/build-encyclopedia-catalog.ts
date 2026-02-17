@@ -1,36 +1,56 @@
 #!/usr/bin/env tsx
 /**
- * build-encyclopedia-catalog.ts
+ * build-encyclopedia-catalog.ts  —  TEST MODE
  *
- * Fetches tens of thousands of notable historical figures from Wikidata SPARQL
- * and writes them as a JSON catalog to public/data/encyclopedia/historical-figures.json
+ * Seeds exactly 3 curated entities per knowledge type (27 total) into the
+ * Supabase `encyclopedia_items` table. Resolves Wikidata QIDs dynamically
+ * from Wikipedia article titles (no hardcoded QIDs that can be wrong).
  *
- * Each occupation category is queried separately (fast) and results are
- * ordered by Wikipedia sitelinks count so the most notable figures come first.
+ * Knowledge types: Person, Event, Location, Concept / Theory,
+ *   Invention / Technology, Work, Institution, Movement / School,
+ *   Era / Period — 3 each.
+ *
+ * When the product is close to release, swap back to the bulk Wikidata
+ * scraper (build-encyclopedia-catalog.ts.bak).
  *
  * Usage:
  *   npx tsx scripts/build-encyclopedia-catalog.ts
  *   npm run build:encyclopedia
  *
- * Options (env vars):
- *   LIMIT=50000         Max figures to fetch (default 50000)
+ * Required env vars:
+ *   SUPABASE_URL          – your Supabase project URL
+ *   SUPABASE_SERVICE_KEY  – service-role key (bypasses RLS)
  */
 
 import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createClient } from "@supabase/supabase-js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const OUT_PATH = resolve(__dirname, "../public/data/encyclopedia/historical-figures.json");
+const MANIFEST_PATH = resolve(__dirname, "../public/data/encyclopedia/manifest.json");
 
-const SPARQL_ENDPOINT = "https://query.wikidata.org/sparql";
-const LIMIT = parseInt(process.env.LIMIT ?? "50000", 10);
+/* ------------------------------------------------------------------ */
+/*  Supabase client                                                    */
+/* ------------------------------------------------------------------ */
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error(
+    "Missing SUPABASE_URL or SUPABASE_SERVICE_KEY.\n" +
+    "Set them before running: export SUPABASE_URL=... SUPABASE_SERVICE_KEY=..."
+  );
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-/** The 12 knowledge domains (adapted from ISCED-F 2013, corrected for Western biases) */
 const CORE_DOMAINS = [
   "Mathematics & Logic",
   "Natural Sciences",
@@ -48,450 +68,1026 @@ const CORE_DOMAINS = [
 
 type CoreDomain = (typeof CORE_DOMAINS)[number];
 
-interface CatalogItem {
+interface EncyclopediaRow {
   id: string;
+  wikidata_id: string;
   title: string;
-  wikidataId: string;
-  knowledgeType: "Person";
+  knowledge_type: string;
   domain: CoreDomain;
-  secondaryDomains: CoreDomain[];
-  eraGroup: "ancient" | "early-modern" | "modern" | "contemporary";
-  eraLabel: string;
+  secondary_domains: CoreDomain[];
+  era_group: "ancient" | "early-modern" | "modern" | "contemporary";
+  era_label: string;
   depth: "foundation" | "intermediate" | "advanced";
   summary: string;
   tags: string[];
+  metadata: Record<string, unknown>;
 }
 
 /* ------------------------------------------------------------------ */
-/*  Domain mapping from occupation keywords                            */
+/*  Knowledge types (mirrors the UI entity-type dropdown)               */
 /* ------------------------------------------------------------------ */
 
-/**
- * Maps occupation keywords → primary core domain.
- * Secondary domains are inferred by multi-match: if an occupation string
- * matches keywords for multiple domains, extra matches become secondaries.
- */
-const DOMAIN_MAP: Record<string, CoreDomain> = {
-  // ── Natural Sciences ──────────────────────────────────────────────
-  physicist: "Natural Sciences",
-  chemist: "Natural Sciences",
-  biologist: "Natural Sciences",
-  astronomer: "Natural Sciences",
-  geologist: "Natural Sciences",
-  botanist: "Natural Sciences",
-  zoologist: "Natural Sciences",
-  geneticist: "Natural Sciences",
-  neuroscientist: "Natural Sciences",
-  paleontologist: "Natural Sciences",
-  meteorologist: "Natural Sciences",
-  oceanographer: "Natural Sciences",
-  ecologist: "Natural Sciences",
-  microbiologist: "Natural Sciences",
+const KNOWLEDGE_TYPES = [
+  "Person",
+  "Event",
+  "Location",
+  "Concept / Theory",
+  "Invention / Technology",
+  "Work",
+  "Institution",
+  "Movement / School",
+  "Era / Period",
+] as const;
 
-  // ── Medical & Health Sciences ─────────────────────────────────────
-  physician: "Medical & Health Sciences",
-  surgeon: "Medical & Health Sciences",
-  pharmacist: "Medical & Health Sciences",
-  nurse: "Medical & Health Sciences",
-  psychoanalyst: "Medical & Health Sciences",
+type KnowledgeType = (typeof KNOWLEDGE_TYPES)[number];
 
-  // ── Social Sciences ───────────────────────────────────────────────
-  psychologist: "Social Sciences",
-  "political scientist": "Social Sciences",
-  linguist: "Social Sciences",
-  sociologist: "Social Sciences",
-  anthropologist: "Social Sciences",
-  archaeologist: "Social Sciences",
-  economist: "Social Sciences",
-  historian: "Social Sciences",
+/* ------------------------------------------------------------------ */
+/*  Curated test entities  — 3 per knowledge type, 27 total            */
+/*                                                                     */
+/*  Source of truth: Wikipedia article title (human-verifiable).        */
+/*  Wikidata QIDs are resolved dynamically at runtime.                 */
+/*  Entities are chosen for:                                           */
+/*    - Coverage of ALL 9 knowledge types                              */
+/*    - Cross-domain connections (secondary_domains link them)         */
+/*    - Era diversity (ancient → contemporary)                         */
+/*    - Geographic diversity (not just Western)                        */
+/*    - Educational value for an interactive learning platform         */
+/* ------------------------------------------------------------------ */
 
-  // ── Mathematics & Logic ───────────────────────────────────────────
-  mathematician: "Mathematics & Logic",
+interface SeedConnection {
+  /** Display title of the target entity (must match another SeedEntry.displayTitle) */
+  entity: string;
+  /** Describes the relationship FROM this entity TO the target */
+  relationship: string;
+}
 
-  // ── Engineering & Technology ──────────────────────────────────────
-  "computer scientist": "Engineering & Technology",
-  engineer: "Engineering & Technology",
-  inventor: "Engineering & Technology",
-  computer: "Engineering & Technology",
-  programmer: "Engineering & Technology",
-  astronaut: "Engineering & Technology",
-  architect: "Engineering & Technology",
+interface SeedEntry {
+  /** Exact Wikipedia article title — the source of truth */
+  wikipediaTitle: string;
+  /** Display name in the encyclopedia (may differ from WP title) */
+  displayTitle: string;
+  knowledgeType: KnowledgeType;
+  domain: CoreDomain;
+  secondaryDomains: CoreDomain[];
+  eraGroup: EncyclopediaRow["era_group"];
+  eraLabel: string;
+  depth: EncyclopediaRow["depth"];
+  tags: string[];
+  /** Explicit entity-to-entity connections (referencing other seed entries) */
+  connections: SeedConnection[];
+  /**
+   * Type-specific metadata — varies by knowledgeType:
+   *   Person:                birthYear, deathYear, nationality, occupation, knownFor
+   *   Event:                 startYear, endYear, location, outcome
+   *   Location:              coordinates {lat,lng}, country, founded, status
+   *   Concept / Theory:      originYear, originatedBy, field
+   *   Invention / Technology: inventionYear, inventor, field
+   *   Work:                  publicationYear, author, genre
+   *   Institution:           foundedYear, headquarters, type
+   *   Movement / School:     startYear, endYear, region, founders
+   *   Era / Period:          startYear, endYear, region, definingFeatures
+   */
+  typeMetadata: Record<string, unknown>;
+}
 
-  // ── Philosophy & Thought ──────────────────────────────────────────
-  philosopher: "Philosophy & Thought",
+const SEED_ENTITIES: SeedEntry[] = [
+  // ═══════════════════════════════════════════════════════════════════
+  //  PERSON  (3)
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    wikipediaTitle: "Marie Curie",
+    displayTitle: "Marie Curie",
+    knowledgeType: "Person",
+    domain: "Natural Sciences",
+    secondaryDomains: ["Medical & Health Sciences"],
+    eraGroup: "modern",
+    eraLabel: "19th–20th century",
+    depth: "foundation",
+    tags: ["physicist", "chemist", "radioactivity", "nobel prize"],
+    connections: [
+      { entity: "Theory of Relativity", relationship: "contemporary of Einstein's work on" },
+      { entity: "Royal Society", relationship: "elected foreign member of" },
+      { entity: "Industrial Revolution", relationship: "scientific culture of late era produced" },
+    ],
+    typeMetadata: {
+      birthYear: 1867,
+      deathYear: 1934,
+      nationality: "Polish-French",
+      occupation: "Physicist, chemist",
+      knownFor: "Pioneered research on radioactivity; first woman to win a Nobel Prize; only person to win Nobel Prizes in two different sciences",
+    },
+  },
+  {
+    wikipediaTitle: "Leonardo da Vinci",
+    displayTitle: "Leonardo da Vinci",
+    knowledgeType: "Person",
+    domain: "Arts & Creative Expression",
+    secondaryDomains: ["Engineering & Technology", "Natural Sciences"],
+    eraGroup: "early-modern",
+    eraLabel: "1452–1519",
+    depth: "foundation",
+    tags: ["painter", "inventor", "polymath", "renaissance"],
+    connections: [
+      { entity: "The Renaissance", relationship: "quintessential figure of" },
+      { entity: "Printing Press", relationship: "contemporary beneficiary of" },
+      { entity: "Machu Picchu", relationship: "exact contemporary of Incan builders of" },
+    ],
+    typeMetadata: {
+      birthYear: 1452,
+      deathYear: 1519,
+      nationality: "Italian (Florentine Republic)",
+      occupation: "Painter, inventor, polymath",
+      knownFor: "Mona Lisa, The Last Supper, Vitruvian Man, flying machine designs, anatomical studies",
+    },
+  },
+  {
+    wikipediaTitle: "Confucius",
+    displayTitle: "Confucius",
+    knowledgeType: "Person",
+    domain: "Philosophy & Thought",
+    secondaryDomains: ["Governance & Institutions", "Spiritual & Religious Thought"],
+    eraGroup: "ancient",
+    eraLabel: "551–479 BCE",
+    depth: "foundation",
+    tags: ["philosopher", "ethics", "confucianism"],
+    connections: [
+      { entity: "Classical Antiquity", relationship: "lived during, in parallel to Greek" },
+      { entity: "Stoicism", relationship: "parallel ethical tradition to" },
+      { entity: "Democracy", relationship: "explored governance theory alongside Greek" },
+    ],
+    typeMetadata: {
+      birthYear: -551,
+      deathYear: -479,
+      nationality: "Chinese (State of Lu)",
+      occupation: "Philosopher, teacher, political advisor",
+      knownFor: "The Analects, Confucianism, Five Classics, emphasis on ethics, filial piety, and proper social relationships",
+    },
+  },
 
-  // ── Spiritual & Religious Thought ─────────────────────────────────
-  theologian: "Spiritual & Religious Thought",
-  cleric: "Spiritual & Religious Thought",
-  priest: "Spiritual & Religious Thought",
-  bishop: "Spiritual & Religious Thought",
-  pope: "Spiritual & Religious Thought",
-  missionary: "Spiritual & Religious Thought",
-  rabbi: "Spiritual & Religious Thought",
-  imam: "Spiritual & Religious Thought",
-  monk: "Spiritual & Religious Thought",
+  // ═══════════════════════════════════════════════════════════════════
+  //  EVENT  (3)
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    wikipediaTitle: "French Revolution",
+    displayTitle: "French Revolution",
+    knowledgeType: "Event",
+    domain: "Governance & Institutions",
+    secondaryDomains: ["Social Sciences", "Philosophy & Thought"],
+    eraGroup: "modern",
+    eraLabel: "1789–1799",
+    depth: "foundation",
+    tags: ["revolution", "democracy", "rights of man"],
+    connections: [
+      { entity: "The Enlightenment", relationship: "directly inspired by ideals of" },
+      { entity: "Democracy", relationship: "advanced the cause of" },
+      { entity: "United Nations", relationship: "human rights legacy influenced" },
+    ],
+    typeMetadata: {
+      startYear: 1789,
+      endYear: 1799,
+      location: "France",
+      outcome: "End of absolute monarchy, Declaration of the Rights of Man, rise of the republic",
+    },
+  },
+  {
+    wikipediaTitle: "Apollo 11",
+    displayTitle: "Apollo 11 Moon Landing",
+    knowledgeType: "Event",
+    domain: "Exploration & Discovery",
+    secondaryDomains: ["Engineering & Technology"],
+    eraGroup: "contemporary",
+    eraLabel: "July 20, 1969",
+    depth: "foundation",
+    tags: ["space", "moon landing", "NASA"],
+    connections: [
+      { entity: "Telescope", relationship: "centuries of observation culminated in" },
+      { entity: "CERN", relationship: "shared era of 'big science' with" },
+      { entity: "Industrial Revolution", relationship: "engineering heritage traces back to" },
+    ],
+    typeMetadata: {
+      startYear: 1969,
+      endYear: 1969,
+      location: "Kennedy Space Center, Florida → Sea of Tranquility, Moon",
+      outcome: "First humans to walk on the Moon (Neil Armstrong, Buzz Aldrin); 21.5 hours on lunar surface",
+    },
+  },
+  {
+    wikipediaTitle: "Black Death",
+    displayTitle: "Black Death",
+    knowledgeType: "Event",
+    domain: "Medical & Health Sciences",
+    secondaryDomains: ["Social Sciences", "Agriculture & Ecology"],
+    eraGroup: "early-modern",
+    eraLabel: "1347–1351",
+    depth: "foundation",
+    tags: ["pandemic", "plague", "medieval"],
+    connections: [
+      { entity: "University of Bologna", relationship: "devastated medieval institutions like" },
+      { entity: "The Renaissance", relationship: "social upheaval contributed to rise of" },
+      { entity: "Printing Press", relationship: "labor shortages accelerated innovations like" },
+    ],
+    typeMetadata: {
+      startYear: 1347,
+      endYear: 1351,
+      location: "Europe, Asia, North Africa",
+      outcome: "Killed 30–60% of Europe's population; transformed labor markets, social structures, and medical thinking",
+    },
+  },
 
-  // ── Arts & Creative Expression ────────────────────────────────────
-  writer: "Arts & Creative Expression",
-  poet: "Arts & Creative Expression",
-  novelist: "Arts & Creative Expression",
-  playwright: "Arts & Creative Expression",
-  author: "Arts & Creative Expression",
-  essayist: "Arts & Creative Expression",
-  screenwriter: "Arts & Creative Expression",
-  lyricist: "Arts & Creative Expression",
-  literary: "Arts & Creative Expression",
-  artist: "Arts & Creative Expression",
-  painter: "Arts & Creative Expression",
-  sculptor: "Arts & Creative Expression",
-  photographer: "Arts & Creative Expression",
-  illustrator: "Arts & Creative Expression",
-  "graphic designer": "Arts & Creative Expression",
-  printmaker: "Arts & Creative Expression",
-  engraver: "Arts & Creative Expression",
-  ceramicist: "Arts & Creative Expression",
-  composer: "Arts & Creative Expression",
-  musician: "Arts & Creative Expression",
-  singer: "Arts & Creative Expression",
-  conductor: "Arts & Creative Expression",
-  pianist: "Arts & Creative Expression",
-  violinist: "Arts & Creative Expression",
-  opera: "Arts & Creative Expression",
-  actor: "Arts & Creative Expression",
-  actress: "Arts & Creative Expression",
-  "film director": "Arts & Creative Expression",
-  director: "Arts & Creative Expression",
-  dancer: "Arts & Creative Expression",
-  choreographer: "Arts & Creative Expression",
+  // ═══════════════════════════════════════════════════════════════════
+  //  LOCATION  (3)
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    wikipediaTitle: "Library of Alexandria",
+    displayTitle: "Library of Alexandria",
+    knowledgeType: "Location",
+    domain: "Language & Communication",
+    secondaryDomains: ["Philosophy & Thought", "Natural Sciences"],
+    eraGroup: "ancient",
+    eraLabel: "c. 283 BCE – c. 48 BCE",
+    depth: "foundation",
+    tags: ["library", "ancient egypt", "knowledge"],
+    connections: [
+      { entity: "Classical Antiquity", relationship: "premier institution of" },
+      { entity: "Stoicism", relationship: "housed and preserved texts of" },
+      { entity: "World Wide Web", relationship: "ancient predecessor vision of" },
+    ],
+    typeMetadata: {
+      coordinates: { lat: 31.2, lng: 29.9 },
+      country: "Egypt (Ptolemaic Kingdom)",
+      founded: "c. 283 BCE",
+      status: "Destroyed (exact date debated: 48 BCE – 642 CE)",
+    },
+  },
+  {
+    wikipediaTitle: "CERN",
+    displayTitle: "CERN",
+    knowledgeType: "Location",
+    domain: "Natural Sciences",
+    secondaryDomains: ["Engineering & Technology", "Mathematics & Logic"],
+    eraGroup: "contemporary",
+    eraLabel: "1954–present",
+    depth: "intermediate",
+    tags: ["particle physics", "large hadron collider", "research"],
+    connections: [
+      { entity: "World Wide Web", relationship: "birthplace of" },
+      { entity: "Theory of Relativity", relationship: "experiments test predictions of" },
+      { entity: "Royal Society", relationship: "modern peer institution to" },
+    ],
+    typeMetadata: {
+      coordinates: { lat: 46.2333, lng: 6.05 },
+      country: "Switzerland / France border (Meyrin, Geneva)",
+      founded: "1954",
+      status: "Active — 23 member states, ~17,000 personnel",
+    },
+  },
+  {
+    wikipediaTitle: "Machu Picchu",
+    displayTitle: "Machu Picchu",
+    knowledgeType: "Location",
+    domain: "Exploration & Discovery",
+    secondaryDomains: ["Engineering & Technology", "Spiritual & Religious Thought"],
+    eraGroup: "early-modern",
+    eraLabel: "c. 1450 CE",
+    depth: "foundation",
+    tags: ["inca", "archaeology", "peru"],
+    connections: [
+      { entity: "Leonardo da Vinci", relationship: "built during lifetime of" },
+      { entity: "The Renaissance", relationship: "Incan engineering contemporary with" },
+      { entity: "University of Bologna", relationship: "contemporary center of learning" },
+    ],
+    typeMetadata: {
+      coordinates: { lat: -13.1631, lng: -72.545 },
+      country: "Peru (Inca Empire)",
+      founded: "c. 1450 CE by Emperor Pachacuti",
+      status: "UNESCO World Heritage Site (1983); rediscovered 1911 by Hiram Bingham",
+    },
+  },
 
-  // ── Language & Communication ──────────────────────────────────────
-  journalist: "Language & Communication",
-  translator: "Language & Communication",
+  // ═══════════════════════════════════════════════════════════════════
+  //  CONCEPT / THEORY  (3)
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    wikipediaTitle: "Theory of relativity",
+    displayTitle: "Theory of Relativity",
+    knowledgeType: "Concept / Theory",
+    domain: "Natural Sciences",
+    secondaryDomains: ["Mathematics & Logic"],
+    eraGroup: "contemporary",
+    eraLabel: "1905–1915",
+    depth: "intermediate",
+    tags: ["physics", "einstein", "spacetime"],
+    connections: [
+      { entity: "Principia Mathematica (Newton)", relationship: "extended and superseded mechanics from" },
+      { entity: "CERN", relationship: "tested and validated at" },
+      { entity: "Scientific Revolution", relationship: "built on foundations of" },
+    ],
+    typeMetadata: {
+      originYear: 1905,
+      originatedBy: "Albert Einstein",
+      field: "Physics",
+    },
+  },
+  {
+    wikipediaTitle: "Democracy",
+    displayTitle: "Democracy",
+    knowledgeType: "Concept / Theory",
+    domain: "Governance & Institutions",
+    secondaryDomains: ["Philosophy & Thought", "Social Sciences"],
+    eraGroup: "ancient",
+    eraLabel: "5th century BCE (Athens)",
+    depth: "foundation",
+    tags: ["government", "voting", "civic participation"],
+    connections: [
+      { entity: "The Republic (Plato)", relationship: "critically examined in" },
+      { entity: "French Revolution", relationship: "central ideal of" },
+      { entity: "The Enlightenment", relationship: "championed by thinkers of" },
+      { entity: "United Nations", relationship: "promoted worldwide by" },
+    ],
+    typeMetadata: {
+      originYear: -508,
+      originatedBy: "Cleisthenes of Athens (Athenian reforms)",
+      field: "Political philosophy / Governance",
+    },
+  },
+  {
+    wikipediaTitle: "Natural selection",
+    displayTitle: "Natural Selection",
+    knowledgeType: "Concept / Theory",
+    domain: "Natural Sciences",
+    secondaryDomains: ["Agriculture & Ecology", "Philosophy & Thought"],
+    eraGroup: "modern",
+    eraLabel: "1859",
+    depth: "foundation",
+    tags: ["evolution", "darwin", "biology"],
+    connections: [
+      { entity: "On the Origin of Species", relationship: "first published in" },
+      { entity: "Royal Society", relationship: "debated and disseminated at" },
+      { entity: "Industrial Revolution", relationship: "observed alongside ecological changes of" },
+    ],
+    typeMetadata: {
+      originYear: 1859,
+      originatedBy: "Charles Darwin (also Alfred Russel Wallace)",
+      field: "Biology / Evolutionary theory",
+    },
+  },
 
-  // ── Governance & Institutions ─────────────────────────────────────
-  politician: "Governance & Institutions",
-  diplomat: "Governance & Institutions",
-  statesman: "Governance & Institutions",
-  monarch: "Governance & Institutions",
-  emperor: "Governance & Institutions",
-  president: "Governance & Institutions",
-  prime: "Governance & Institutions",
-  revolutionary: "Governance & Institutions",
-  jurist: "Governance & Institutions",
-  lawyer: "Governance & Institutions",
-  judge: "Governance & Institutions",
-  activist: "Governance & Institutions",
+  // ═══════════════════════════════════════════════════════════════════
+  //  INVENTION / TECHNOLOGY  (3)
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    wikipediaTitle: "Printing press",
+    displayTitle: "Printing Press",
+    knowledgeType: "Invention / Technology",
+    domain: "Engineering & Technology",
+    secondaryDomains: ["Language & Communication", "Arts & Creative Expression"],
+    eraGroup: "early-modern",
+    eraLabel: "c. 1440",
+    depth: "foundation",
+    tags: ["gutenberg", "movable type", "mass communication"],
+    connections: [
+      { entity: "The Renaissance", relationship: "accelerated the spread of" },
+      { entity: "Scientific Revolution", relationship: "enabled knowledge sharing during" },
+      { entity: "The Enlightenment", relationship: "made possible the pamphlets of" },
+      { entity: "University of Bologna", relationship: "transformed scholarly life at" },
+    ],
+    typeMetadata: {
+      inventionYear: 1440,
+      inventor: "Johannes Gutenberg",
+      field: "Information technology / Mass communication",
+    },
+  },
+  {
+    wikipediaTitle: "World Wide Web",
+    displayTitle: "World Wide Web",
+    knowledgeType: "Invention / Technology",
+    domain: "Engineering & Technology",
+    secondaryDomains: ["Language & Communication", "Social Sciences"],
+    eraGroup: "contemporary",
+    eraLabel: "1989–present",
+    depth: "foundation",
+    tags: ["internet", "berners-lee", "hypertext"],
+    connections: [
+      { entity: "CERN", relationship: "invented at" },
+      { entity: "Printing Press", relationship: "digital successor to" },
+      { entity: "Library of Alexandria", relationship: "modern realization of" },
+      { entity: "United Nations", relationship: "used for global communication by" },
+    ],
+    typeMetadata: {
+      inventionYear: 1989,
+      inventor: "Tim Berners-Lee",
+      field: "Information technology / Global communication",
+    },
+  },
+  {
+    wikipediaTitle: "Telescope",
+    displayTitle: "Telescope",
+    knowledgeType: "Invention / Technology",
+    domain: "Engineering & Technology",
+    secondaryDomains: ["Natural Sciences", "Exploration & Discovery"],
+    eraGroup: "early-modern",
+    eraLabel: "1608",
+    depth: "foundation",
+    tags: ["optics", "astronomy", "galileo"],
+    connections: [
+      { entity: "Scientific Revolution", relationship: "key instrument of" },
+      { entity: "Principia Mathematica (Newton)", relationship: "observations validated theories in" },
+      { entity: "Apollo 11 Moon Landing", relationship: "centuries of observation preceded" },
+    ],
+    typeMetadata: {
+      inventionYear: 1608,
+      inventor: "Hans Lippershey (credited); Galileo first astronomical use (1609)",
+      field: "Optics / Astronomy",
+    },
+  },
 
-  // ── Economics (Social Sciences) ───────────────────────────────────
-  businessperson: "Social Sciences",
-  industrialist: "Social Sciences",
-  entrepreneur: "Social Sciences",
+  // ═══════════════════════════════════════════════════════════════════
+  //  WORK  (3)
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    wikipediaTitle: "Republic (Plato)",
+    displayTitle: "The Republic (Plato)",
+    knowledgeType: "Work",
+    domain: "Philosophy & Thought",
+    secondaryDomains: ["Governance & Institutions", "Social Sciences"],
+    eraGroup: "ancient",
+    eraLabel: "c. 375 BCE",
+    depth: "intermediate",
+    tags: ["dialogue", "justice", "ideal state"],
+    connections: [
+      { entity: "Democracy", relationship: "critically examines" },
+      { entity: "Classical Antiquity", relationship: "foundational text of" },
+      { entity: "Confucius", relationship: "parallel political philosophy to work of" },
+      { entity: "Stoicism", relationship: "influenced later schools including" },
+    ],
+    typeMetadata: {
+      publicationYear: -375,
+      author: "Plato",
+      genre: "Philosophical dialogue (Socratic)",
+    },
+  },
+  {
+    wikipediaTitle: "On the Origin of Species",
+    displayTitle: "On the Origin of Species",
+    knowledgeType: "Work",
+    domain: "Natural Sciences",
+    secondaryDomains: ["Philosophy & Thought", "Agriculture & Ecology"],
+    eraGroup: "modern",
+    eraLabel: "1859",
+    depth: "foundation",
+    tags: ["darwin", "evolution", "biology"],
+    connections: [
+      { entity: "Natural Selection", relationship: "introduces the theory of" },
+      { entity: "Royal Society", relationship: "reviewed and debated by fellows of" },
+      { entity: "Industrial Revolution", relationship: "published at height of" },
+    ],
+    typeMetadata: {
+      publicationYear: 1859,
+      author: "Charles Darwin",
+      genre: "Scientific treatise (natural history)",
+    },
+  },
+  {
+    wikipediaTitle: "Philosophiæ Naturalis Principia Mathematica",
+    displayTitle: "Principia Mathematica (Newton)",
+    knowledgeType: "Work",
+    domain: "Natural Sciences",
+    secondaryDomains: ["Mathematics & Logic"],
+    eraGroup: "early-modern",
+    eraLabel: "1687",
+    depth: "intermediate",
+    tags: ["newton", "mechanics", "gravitation"],
+    connections: [
+      { entity: "Scientific Revolution", relationship: "culminating work of" },
+      { entity: "Royal Society", relationship: "published with support of" },
+      { entity: "Theory of Relativity", relationship: "later extended by" },
+      { entity: "Telescope", relationship: "validated by observations using" },
+    ],
+    typeMetadata: {
+      publicationYear: 1687,
+      author: "Isaac Newton",
+      genre: "Scientific treatise (mathematical physics)",
+    },
+  },
 
-  // ── Military (Governance & Institutions) ──────────────────────────
-  general: "Governance & Institutions",
-  military: "Governance & Institutions",
-  admiral: "Governance & Institutions",
-  officer: "Governance & Institutions",
+  // ═══════════════════════════════════════════════════════════════════
+  //  INSTITUTION  (3)
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    wikipediaTitle: "Royal Society",
+    displayTitle: "Royal Society",
+    knowledgeType: "Institution",
+    domain: "Natural Sciences",
+    secondaryDomains: ["Engineering & Technology"],
+    eraGroup: "early-modern",
+    eraLabel: "1660–present",
+    depth: "foundation",
+    tags: ["scientific academy", "london", "peer review"],
+    connections: [
+      { entity: "Scientific Revolution", relationship: "founded during" },
+      { entity: "Principia Mathematica (Newton)", relationship: "supported publication of" },
+      { entity: "On the Origin of Species", relationship: "Darwin was fellow; debated" },
+      { entity: "Marie Curie", relationship: "honored" },
+    ],
+    typeMetadata: {
+      foundedYear: 1660,
+      headquarters: "London, England",
+      type: "Learned society / Scientific academy",
+    },
+  },
+  {
+    wikipediaTitle: "University of Bologna",
+    displayTitle: "University of Bologna",
+    knowledgeType: "Institution",
+    domain: "Social Sciences",
+    secondaryDomains: ["Philosophy & Thought", "Governance & Institutions"],
+    eraGroup: "early-modern",
+    eraLabel: "1088–present",
+    depth: "foundation",
+    tags: ["university", "oldest university", "medieval"],
+    connections: [
+      { entity: "The Renaissance", relationship: "center of learning during" },
+      { entity: "Classical Antiquity", relationship: "preserved and studied texts from" },
+      { entity: "Black Death", relationship: "survived and was transformed by" },
+      { entity: "Printing Press", relationship: "scholarly life transformed by" },
+    ],
+    typeMetadata: {
+      foundedYear: 1088,
+      headquarters: "Bologna, Italy",
+      type: "University — oldest in continuous operation worldwide",
+    },
+  },
+  {
+    wikipediaTitle: "United Nations",
+    displayTitle: "United Nations",
+    knowledgeType: "Institution",
+    domain: "Governance & Institutions",
+    secondaryDomains: ["Social Sciences"],
+    eraGroup: "contemporary",
+    eraLabel: "1945–present",
+    depth: "foundation",
+    tags: ["international organization", "peace", "human rights"],
+    connections: [
+      { entity: "Democracy", relationship: "promotes worldwide" },
+      { entity: "French Revolution", relationship: "built on human rights legacy of" },
+      { entity: "World Wide Web", relationship: "leverages for global diplomacy" },
+    ],
+    typeMetadata: {
+      foundedYear: 1945,
+      headquarters: "New York City, USA",
+      type: "Intergovernmental organization — 193 member states",
+    },
+  },
 
-  // ── Exploration & Discovery ───────────────────────────────────────
-  explorer: "Exploration & Discovery",
-  navigator: "Exploration & Discovery",
-  cartographer: "Exploration & Discovery",
-  geographer: "Exploration & Discovery",
+  // ═══════════════════════════════════════════════════════════════════
+  //  MOVEMENT / SCHOOL  (3)
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    wikipediaTitle: "Renaissance",
+    displayTitle: "The Renaissance",
+    knowledgeType: "Movement / School",
+    domain: "Arts & Creative Expression",
+    secondaryDomains: ["Natural Sciences", "Philosophy & Thought"],
+    eraGroup: "early-modern",
+    eraLabel: "14th–17th century",
+    depth: "foundation",
+    tags: ["cultural rebirth", "humanism", "classical revival"],
+    connections: [
+      { entity: "Leonardo da Vinci", relationship: "epitomized by" },
+      { entity: "Classical Antiquity", relationship: "revival of ideals from" },
+      { entity: "Printing Press", relationship: "spread by" },
+      { entity: "University of Bologna", relationship: "nurtured at" },
+    ],
+    typeMetadata: {
+      startYear: 1300,
+      endYear: 1600,
+      region: "Europe (originating in Italy)",
+      founders: "Petrarch often credited as father of Renaissance humanism",
+    },
+  },
+  {
+    wikipediaTitle: "Age of Enlightenment",
+    displayTitle: "The Enlightenment",
+    knowledgeType: "Movement / School",
+    domain: "Philosophy & Thought",
+    secondaryDomains: ["Natural Sciences", "Governance & Institutions"],
+    eraGroup: "early-modern",
+    eraLabel: "17th–18th century",
+    depth: "foundation",
+    tags: ["reason", "science", "liberty"],
+    connections: [
+      { entity: "French Revolution", relationship: "directly inspired" },
+      { entity: "Democracy", relationship: "championed" },
+      { entity: "Scientific Revolution", relationship: "built on achievements of" },
+      { entity: "Printing Press", relationship: "disseminated through works on" },
+    ],
+    typeMetadata: {
+      startYear: 1685,
+      endYear: 1815,
+      region: "Europe (France, Britain, Germany, Scotland)",
+      founders: "Locke, Voltaire, Kant, Rousseau, Hume",
+    },
+  },
+  {
+    wikipediaTitle: "Stoicism",
+    displayTitle: "Stoicism",
+    knowledgeType: "Movement / School",
+    domain: "Philosophy & Thought",
+    secondaryDomains: ["Spiritual & Religious Thought"],
+    eraGroup: "ancient",
+    eraLabel: "3rd century BCE – 2nd century CE",
+    depth: "foundation",
+    tags: ["virtue", "ethics", "ancient philosophy"],
+    connections: [
+      { entity: "Classical Antiquity", relationship: "major school within" },
+      { entity: "Confucius", relationship: "parallel ethical tradition to" },
+      { entity: "The Republic (Plato)", relationship: "engaged with ideas from" },
+      { entity: "Library of Alexandria", relationship: "texts preserved at" },
+    ],
+    typeMetadata: {
+      startYear: -300,
+      endYear: 200,
+      region: "Hellenistic world, Roman Empire",
+      founders: "Zeno of Citium; later Seneca, Epictetus, Marcus Aurelius",
+    },
+  },
 
-  // ── Agriculture & Ecology ─────────────────────────────────────────
-  pedagogue: "Social Sciences",
-  professor: "Social Sciences",
-  academic: "Social Sciences",
-};
-
-/**
- * Secondary-domain rules: certain occupation keywords strongly imply
- * a second domain beyond the primary.
- */
-const SECONDARY_RULES: { keyword: string; domain: CoreDomain }[] = [
-  // Scientists who also contributed to Philosophy
-  { keyword: "philosopher", domain: "Natural Sciences" },
-  // Politicians who led wars
-  { keyword: "monarch",     domain: "Governance & Institutions" },
-  { keyword: "emperor",     domain: "Governance & Institutions" },
-  // Engineers/inventors → Sciences background
-  { keyword: "engineer",    domain: "Natural Sciences" },
-  { keyword: "inventor",    domain: "Natural Sciences" },
-  // Economists → Social Sciences
-  { keyword: "economist",   domain: "Social Sciences" },
-  // Psychologist → Social Sciences secondary
-  { keyword: "psychologist", domain: "Medical & Health Sciences" },
-  // Architect → Arts as secondary
-  { keyword: "architect",   domain: "Arts & Creative Expression" },
-  // Mathematician → Natural Sciences as secondary
-  { keyword: "mathematician", domain: "Natural Sciences" },
-  // Explorer → Natural Sciences as secondary (naturalists)
-  { keyword: "explorer",    domain: "Natural Sciences" },
-  // Journalist → Language & Communication
-  { keyword: "journalist",  domain: "Language & Communication" },
-  // Activist → Governance & Institutions
-  { keyword: "activist",    domain: "Governance & Institutions" },
-  // Theologian → Philosophy as secondary
-  { keyword: "theologian",  domain: "Philosophy & Thought" },
+  // ═══════════════════════════════════════════════════════════════════
+  //  ERA / PERIOD  (3)
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    wikipediaTitle: "Classical antiquity",
+    displayTitle: "Classical Antiquity",
+    knowledgeType: "Era / Period",
+    domain: "Philosophy & Thought",
+    secondaryDomains: ["Natural Sciences", "Arts & Creative Expression"],
+    eraGroup: "ancient",
+    eraLabel: "8th century BCE – 5th century CE",
+    depth: "foundation",
+    tags: ["greece", "rome", "ancient civilization"],
+    connections: [
+      { entity: "Confucius", relationship: "contemporaneous thinker (China) during" },
+      { entity: "The Republic (Plato)", relationship: "defining text of" },
+      { entity: "Stoicism", relationship: "major school within" },
+      { entity: "Democracy", relationship: "birthplace of" },
+      { entity: "Library of Alexandria", relationship: "premier institution of" },
+      { entity: "The Renaissance", relationship: "later rediscovered by" },
+    ],
+    typeMetadata: {
+      startYear: -800,
+      endYear: 500,
+      region: "Mediterranean (Greece, Rome, Egypt)",
+      definingFeatures: "Philosophy, democracy, theater, Roman law, engineering, art, rhetoric",
+    },
+  },
+  {
+    wikipediaTitle: "Scientific Revolution",
+    displayTitle: "Scientific Revolution",
+    knowledgeType: "Era / Period",
+    domain: "Natural Sciences",
+    secondaryDomains: ["Philosophy & Thought", "Mathematics & Logic"],
+    eraGroup: "early-modern",
+    eraLabel: "16th–17th century",
+    depth: "foundation",
+    tags: ["empiricism", "copernicus", "scientific method"],
+    connections: [
+      { entity: "Telescope", relationship: "key invention of" },
+      { entity: "Principia Mathematica (Newton)", relationship: "culminated in" },
+      { entity: "Royal Society", relationship: "institutionalized by" },
+      { entity: "The Enlightenment", relationship: "intellectual foundation for" },
+      { entity: "Theory of Relativity", relationship: "extended centuries later by" },
+    ],
+    typeMetadata: {
+      startYear: 1543,
+      endYear: 1687,
+      region: "Europe (Italy, England, Germany, Netherlands)",
+      definingFeatures: "Empiricism, scientific method, heliocentrism, mathematical physics, experimental verification",
+    },
+  },
+  {
+    wikipediaTitle: "Industrial Revolution",
+    displayTitle: "Industrial Revolution",
+    knowledgeType: "Era / Period",
+    domain: "Engineering & Technology",
+    secondaryDomains: ["Social Sciences", "Agriculture & Ecology"],
+    eraGroup: "modern",
+    eraLabel: "1760–1840",
+    depth: "foundation",
+    tags: ["mechanization", "factories", "urbanization"],
+    connections: [
+      { entity: "Printing Press", relationship: "built on innovations like" },
+      { entity: "On the Origin of Species", relationship: "Darwin published during late phase of" },
+      { entity: "Natural Selection", relationship: "ecological observations during" },
+      { entity: "Apollo 11 Moon Landing", relationship: "engineering tradition led to" },
+      { entity: "Marie Curie", relationship: "scientific culture produced researchers like" },
+    ],
+    typeMetadata: {
+      startYear: 1760,
+      endYear: 1840,
+      region: "Britain, then Europe, North America, worldwide",
+      definingFeatures: "Mechanization, steam power, factories, urbanization, railroad, mass production",
+    },
+  },
 ];
 
-function inferDomains(
-  occupation: string,
-  categoryDomain: CoreDomain,
-): { primary: CoreDomain; secondary: CoreDomain[] } {
-  const occ = occupation.toLowerCase();
-  const matched = new Set<CoreDomain>();
+/* ------------------------------------------------------------------ */
+/*  Media types                                                        */
+/* ------------------------------------------------------------------ */
 
-  // 1. Match keywords → domains
-  for (const [keyword, domain] of Object.entries(DOMAIN_MAP)) {
-    if (occ.includes(keyword)) matched.add(domain);
-  }
+const MEDIA_TYPES = [
+  "Text",
+  "Audio",
+  "Video",
+  "Maps",
+  "Timeline",
+] as const;
 
-  // 2. Always include the category's declared domain
-  matched.add(categoryDomain);
+type MediaType = (typeof MEDIA_TYPES)[number];
 
-  // 3. Apply secondary rules
-  const extra = new Set<CoreDomain>();
-  for (const rule of SECONDARY_RULES) {
-    if (occ.includes(rule.keyword) && !matched.has(rule.domain)) {
-      extra.add(rule.domain);
-    }
-  }
-
-  // 4. Pick primary: the category domain is the most specific
-  const primary = categoryDomain;
-  const secondary = [...matched, ...extra]
-    .filter((d) => d !== primary)
-    .slice(0, 2); // max 2 secondary
-
-  return { primary, secondary };
+interface MediaSeedEntry {
+  /** Slug suffix — combined with item slug for unique ID */
+  slugSuffix: string;
+  /** Display title of the target encyclopedia entity (must match a SeedEntry.displayTitle) */
+  entityTitle: string;
+  mediaType: MediaType;
+  title: string;
+  description: string;
+  /** Placeholder URL — real URLs will be added when content is created */
+  url: string;
+  metadata?: Record<string, unknown>;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Era classification from birth year                                 */
-/* ------------------------------------------------------------------ */
+/**
+ * 18 media resources: 3 per media type (6 types), spread across knowledge
+ * types and domains. Every filter option should return results.
+ *
+ * Each media entry is authentic to the entity it belongs to:
+ *   - Audio for a Person → actual voice recording (if one exists)
+ *   - Video → real footage or archival film
+ *   - Text → primary-source documents in the entity's own words
+ *   - Maps → geographic / spatial representation
+ *   - Timeline → chronological visualization of key events
+ */
+const SEED_MEDIA: MediaSeedEntry[] = [
+  // ═══════════════════════════════════════════════════════════════════
+  //  TEXT  (3)  — primary-source documents / excerpts
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    slugSuffix: "allegory-of-cave",
+    entityTitle: "The Republic (Plato)",
+    mediaType: "Text",
+    title: "The Allegory of the Cave — Republic VII",
+    description: "Plato's own words (Jowett translation): the prisoners, the shadows, the ascent into sunlight — the most famous passage in Western philosophy.",
+    url: "https://example.com/text/allegory-of-cave",
+    metadata: { wordCount: 3200, source: "Benjamin Jowett translation (1871)" },
+  },
+  {
+    slugSuffix: "natural-selection-chapter",
+    entityTitle: "On the Origin of Species",
+    mediaType: "Text",
+    title: "Chapter IV: Natural Selection — Full Text",
+    description: "Darwin's own exposition of natural selection — the central mechanism of evolution — as published in the first edition of 1859.",
+    url: "https://example.com/text/origin-ch4",
+    metadata: { wordCount: 8500, source: "First edition (1859)" },
+  },
+  {
+    slugSuffix: "analects-selections",
+    entityTitle: "Confucius",
+    mediaType: "Text",
+    title: "The Analects — Selected Passages",
+    description: "Key passages from Confucius's collected sayings on virtue, filial piety, governance, and education — in his own (translated) words.",
+    url: "https://example.com/text/analects-selections",
+    metadata: { wordCount: 4100, source: "James Legge translation (1861)" },
+  },
 
-function classifyEra(birthYear: number): { eraGroup: CatalogItem["eraGroup"]; eraLabel: string } {
-  if (birthYear < 0) {
-    return { eraGroup: "ancient", eraLabel: `${Math.abs(birthYear)} BCE` };
-  }
-  if (birthYear < 500) {
-    return { eraGroup: "ancient", eraLabel: `${Math.ceil(birthYear / 100)}th century` };
-  }
-  if (birthYear < 1500) {
-    return { eraGroup: "early-modern", eraLabel: `${Math.ceil(birthYear / 100)}th century` };
-  }
-  if (birthYear < 1800) {
-    return { eraGroup: "early-modern", eraLabel: `${Math.ceil(birthYear / 100)}th century` };
-  }
-  if (birthYear < 1900) {
-    return { eraGroup: "modern", eraLabel: "19th century" };
-  }
-  if (birthYear < 2000) {
-    return { eraGroup: "contemporary", eraLabel: "20th century" };
-  }
-  return { eraGroup: "contemporary", eraLabel: "21st century" };
-}
+  // ═══════════════════════════════════════════════════════════════════
+  //  AUDIO  (3)  — actual voice recordings / archival audio
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    slugSuffix: "curie-voice-recording",
+    entityTitle: "Marie Curie",
+    mediaType: "Audio",
+    title: "Marie Curie — Spoken Wikipedia Article",
+    description: "AI-narrated reading of the full Marie Curie Wikipedia article, covering her pioneering research on radioactivity, two Nobel Prizes, and lasting scientific legacy.",
+    url: "https://upload.wikimedia.org/wikipedia/commons/6/6c/Wikipedia_-_Marie_Curie.mp3",
+    metadata: { duration: "37 min 39 s", source: "Wikimedia Commons / SoniTranslate (CC BY-SA 4.0)", recorded: 2024 },
+  },
+  {
+    slugSuffix: "apollo-11-mission-audio",
+    entityTitle: "Apollo 11 Moon Landing",
+    mediaType: "Audio",
+    title: "'The Eagle Has Landed' — NASA Mission Audio",
+    description: "Original NASA mission audio capturing the moment the Eagle lunar module touched down on the Moon's surface — 'Houston, Tranquility Base here. The Eagle has landed.'",
+    url: "https://upload.wikimedia.org/wikipedia/commons/8/87/Apollo_11_Eagle_Has_Landed.mp3",
+    metadata: { duration: "5 s", source: "NASA (Public Domain)", recorded: 1969 },
+  },
+  {
+    slugSuffix: "udhr-1948-reading",
+    entityTitle: "United Nations",
+    mediaType: "Audio",
+    title: "Universal Declaration of Human Rights — Full Reading (English)",
+    description: "Complete reading of all 30 articles of the Universal Declaration of Human Rights in English, recorded by Kara Shallenberg for LibriVox.",
+    url: "https://upload.wikimedia.org/wikipedia/commons/transcoded/f/fc/Universal_Declaration_of_Human_Rights_-_eng_-_ks.ogg/Universal_Declaration_of_Human_Rights_-_eng_-_ks.ogg.mp3",
+    metadata: { duration: "16 min 4 s", source: "LibriVox (Public Domain)", recorded: 2006 },
+  },
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  VIDEO  (3)  — real footage / archival film
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    slugSuffix: "lhc-facility-footage",
+    entityTitle: "CERN",
+    mediaType: "Video",
+    title: "Inside the Large Hadron Collider — Facility Footage",
+    description: "Footage of CERN's 27 km particle accelerator ring, the ATLAS detector cavern, and the control room during a beam injection — filmed on-site by CERN's media team.",
+    url: "https://example.com/video/cern-lhc-footage",
+    metadata: { duration: "14 min", resolution: "4K", source: "CERN Document Server" },
+  },
+  {
+    slugSuffix: "moon-landing-footage",
+    entityTitle: "Apollo 11 Moon Landing",
+    mediaType: "Video",
+    title: "Apollo 11 — First Steps on the Moon (NASA Film)",
+    description: "Restored NASA footage of Neil Armstrong descending the ladder of the Lunar Module Eagle and taking humanity's first steps on the lunar surface, July 20, 1969.",
+    url: "https://example.com/video/apollo-11-first-steps",
+    metadata: { duration: "8 min", resolution: "Restored 720p", source: "NASA Johnson Space Center" },
+  },
+  {
+    slugSuffix: "berners-lee-www-demo",
+    entityTitle: "World Wide Web",
+    mediaType: "Video",
+    title: "Tim Berners-Lee — First Public Web Demonstration",
+    description: "Archival footage of Tim Berners-Lee demonstrating the WorldWideWeb browser on a NeXT computer at CERN. The first website, info.cern.ch, is shown navigating hypertext documents.",
+    url: "https://example.com/video/berners-lee-www-demo",
+    metadata: { duration: "6 min", resolution: "480p", source: "CERN Archives" },
+  },
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  MAPS  (3)  — geographic / spatial representations
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    slugSuffix: "machu-picchu-site-map",
+    entityTitle: "Machu Picchu",
+    mediaType: "Maps",
+    title: "Machu Picchu — Archaeological Site Map",
+    description: "Detailed topographic map of the citadel showing the Temple of the Sun, Intihuatana stone, agricultural terraces, and the Inca Trail approach.",
+    url: "https://example.com/maps/machu-picchu",
+    metadata: { format: "Interactive SVG", layers: ["buildings", "terraces", "water", "trails"] },
+  },
+  {
+    slugSuffix: "ancient-alexandria-plan",
+    entityTitle: "Library of Alexandria",
+    mediaType: "Maps",
+    title: "Ancient Alexandria — City & Harbor Plan",
+    description: "Reconstructed plan of Ptolemaic Alexandria showing the Great Library, Mouseion, Pharos lighthouse, royal quarter, and the Heptastadion causeway.",
+    url: "https://example.com/maps/ancient-alexandria",
+    metadata: { format: "Interactive SVG", era: "3rd century BCE" },
+  },
+  {
+    slugSuffix: "black-death-spread",
+    entityTitle: "Black Death",
+    mediaType: "Maps",
+    title: "The Spread of the Black Death, 1347–1351",
+    description: "Animated map tracking the plague's advance from Central Asia through trade routes into Europe, with estimated mortality rates per region.",
+    url: "https://example.com/maps/black-death-spread",
+    metadata: { format: "Animated timeline map", dateRange: "1347–1351" },
+  },
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  TIMELINE  (3)  — chronological event visualizations
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    slugSuffix: "scientific-revolution-timeline",
+    entityTitle: "Scientific Revolution",
+    mediaType: "Timeline",
+    title: "Milestones of the Scientific Revolution, 1543–1687",
+    description: "From Copernicus's De Revolutionibus to Newton's Principia — key discoveries, publications, and instrument inventions that transformed natural philosophy into modern science.",
+    url: "https://example.com/timeline/scientific-revolution",
+    metadata: { events: 18, span: "1543–1687" },
+  },
+  {
+    slugSuffix: "renaissance-timeline",
+    entityTitle: "The Renaissance",
+    mediaType: "Timeline",
+    title: "The Renaissance — A Cultural Timeline",
+    description: "Major artistic, literary, and scientific milestones from Petrarch (1304) through Galileo's telescope (1610): the rebirth of classical learning in Europe.",
+    url: "https://example.com/timeline/renaissance",
+    metadata: { events: 22, span: "1304–1610" },
+  },
+  {
+    slugSuffix: "industrial-revolution-timeline",
+    entityTitle: "Industrial Revolution",
+    mediaType: "Timeline",
+    title: "The Industrial Revolution — Key Innovations, 1760–1840",
+    description: "From Watt's steam engine to the first railways — milestones in mechanization, factory systems, and urbanization that reshaped the modern world.",
+    url: "https://example.com/timeline/industrial-revolution",
+    metadata: { events: 16, span: "1760–1840" },
+  },
+];
 
 /* ------------------------------------------------------------------ */
-/*  Depth classification by sitelinks count (proxy for notability)     */
-/* ------------------------------------------------------------------ */
-
-function classifyDepth(sitelinks: number): CatalogItem["depth"] {
-  if (sitelinks >= 80) return "foundation";
-  if (sitelinks >= 40) return "intermediate";
-  return "advanced";
-}
-
-/* ------------------------------------------------------------------ */
-/*  Slugify for id field                                               */
+/*  Slug helper                                                        */
 /* ------------------------------------------------------------------ */
 
 function slugify(name: string): string {
   return name
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // strip diacritics
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 }
 
 /* ------------------------------------------------------------------ */
-/*  SPARQL query                                                       */
+/*  Resolve Wikipedia titles → Wikidata QIDs + extracts                */
+/*  This is the RIGHT way: title is human-verifiable, QID is derived.  */
 /* ------------------------------------------------------------------ */
 
-/**
- * Build a SPARQL query for notable people in a specific occupation category.
- * Querying by specific occupation class is MUCH faster than scanning all Q5 instances.
- */
-function buildCategoryQuery(occupationId: string, _occupationName: string, limit: number): string {
-  return `
-SELECT ?item ?itemLabel ?itemDescription ?birthDate ?sl
-WHERE {
-  ?item wdt:P31 wd:Q5 .
-  ?item wdt:P106 wd:${occupationId} .
-  ?item wdt:P569 ?birthDate .
-  ?item wikibase:sitelinks ?sl .
-  FILTER(?sl >= 10)
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-}
-ORDER BY DESC(?sl)
-LIMIT ${limit}
-  `.trim();
+interface ResolvedEntity {
+  wikidataId: string;
+  extract: string;
 }
 
-/**
- * Fetch occupations for a batch of Wikidata IDs.
- * Uses VALUES to query specific items efficiently.
- */
-function buildOccupationQuery(ids: string[]): string {
-  const values = ids.map((id) => `wd:${id}`).join(" ");
-  return `
-SELECT ?item ?occupationLabel
-WHERE {
-  VALUES ?item { ${values} }
-  ?item wdt:P106 ?occupation .
-  ?occupation rdfs:label ?occupationLabel .
-  FILTER(LANG(?occupationLabel) = "en")
-}
-  `.trim();
-}
+async function resolveFromWikipedia(
+  titles: string[],
+): Promise<Map<string, ResolvedEntity>> {
+  const result = new Map<string, ResolvedEntity>();
+  const BATCH = 20; // Wikipedia API limit for prop queries
 
-/** Categories of occupations to query, with their Wikidata IDs, per-category limits, and primary domain */
-const OCCUPATION_CATEGORIES: { id: string; name: string; limit: number; domain: CoreDomain }[] = [
-  // ── Natural Sciences ─────────────────────────────────────────────
-  { id: "Q169470",  name: "physicist",            limit: 1200, domain: "Natural Sciences" },
-  { id: "Q593644",  name: "chemist",              limit: 800,  domain: "Natural Sciences" },
-  { id: "Q864503",  name: "biologist",            limit: 600,  domain: "Natural Sciences" },
-  { id: "Q11063",   name: "astronomer",           limit: 600,  domain: "Natural Sciences" },
-  { id: "Q520549",  name: "geologist",            limit: 400,  domain: "Natural Sciences" },
-  { id: "Q2374149", name: "botanist",             limit: 400,  domain: "Natural Sciences" },
-  { id: "Q350979",  name: "zoologist",            limit: 300,  domain: "Natural Sciences" },
-  { id: "Q2504617", name: "paleontologist",       limit: 200,  domain: "Natural Sciences" },
-  { id: "Q2259451", name: "meteorologist",        limit: 150,  domain: "Natural Sciences" },
+  for (let i = 0; i < titles.length; i += BATCH) {
+    const batch = titles.slice(i, i + BATCH);
+    const titlesParam = batch.map((t) => encodeURIComponent(t)).join("|");
 
-  // ── Medical & Health Sciences ────────────────────────────────────
-  { id: "Q39631",   name: "physician",            limit: 600,  domain: "Medical & Health Sciences" },
-  { id: "Q774306",  name: "surgeon",              limit: 300,  domain: "Medical & Health Sciences" },
-  { id: "Q2640827", name: "pharmacist",           limit: 150,  domain: "Medical & Health Sciences" },
-
-  // ── Social Sciences ──────────────────────────────────────────────
-  { id: "Q212980",  name: "psychologist",         limit: 400,  domain: "Social Sciences" },
-  { id: "Q188094",  name: "economist",            limit: 600,  domain: "Social Sciences" },
-  { id: "Q3621491", name: "historian",            limit: 800,  domain: "Social Sciences" },
-  { id: "Q10876391",name: "archaeologist",        limit: 300,  domain: "Social Sciences" },
-  { id: "Q2306091", name: "sociologist",          limit: 300,  domain: "Social Sciences" },
-  { id: "Q1622272", name: "university professor", limit: 500,  domain: "Social Sciences" },
-
-  // ── Mathematics & Logic ───────────────────────────────────────────
-  { id: "Q170790",  name: "mathematician",        limit: 1200, domain: "Mathematics & Logic" },
-
-  // ── Engineering & Technology ──────────────────────────────────────
-  { id: "Q15839134",name: "computer scientist",   limit: 300,  domain: "Engineering & Technology" },
-  { id: "Q81096",   name: "engineer",             limit: 800,  domain: "Engineering & Technology" },
-  { id: "Q205375",  name: "inventor",             limit: 600,  domain: "Engineering & Technology" },
-  { id: "Q11631",   name: "astronaut",            limit: 300,  domain: "Engineering & Technology" },
-
-  // ── Arts & Creative Expression ────────────────────────────────────
-  { id: "Q36180",   name: "writer",               limit: 2000, domain: "Arts & Creative Expression" },
-  { id: "Q49757",   name: "poet",                 limit: 1200, domain: "Arts & Creative Expression" },
-  { id: "Q6625963", name: "novelist",             limit: 1000, domain: "Arts & Creative Expression" },
-  { id: "Q214917",  name: "playwright",           limit: 600,  domain: "Arts & Creative Expression" },
-  { id: "Q4853732", name: "essayist",             limit: 300,  domain: "Arts & Creative Expression" },
-  { id: "Q28389",   name: "screenwriter",         limit: 400,  domain: "Arts & Creative Expression" },
-  { id: "Q1028181", name: "painter",              limit: 1500, domain: "Arts & Creative Expression" },
-  { id: "Q1281618", name: "sculptor",             limit: 500,  domain: "Arts & Creative Expression" },
-  { id: "Q42973",   name: "architect",            limit: 600,  domain: "Arts & Creative Expression" },
-  { id: "Q33231",   name: "photographer",         limit: 400,  domain: "Arts & Creative Expression" },
-  { id: "Q644687",  name: "illustrator",          limit: 300,  domain: "Arts & Creative Expression" },
-  { id: "Q36834",   name: "composer",             limit: 1000, domain: "Arts & Creative Expression" },
-  { id: "Q639669",  name: "musician",             limit: 800,  domain: "Arts & Creative Expression" },
-  { id: "Q177220",  name: "singer",               limit: 300,  domain: "Arts & Creative Expression" },
-  { id: "Q158852",  name: "conductor",            limit: 300,  domain: "Arts & Creative Expression" },
-  { id: "Q33999",   name: "actor",                limit: 1000, domain: "Arts & Creative Expression" },
-  { id: "Q2526255", name: "film director",        limit: 800,  domain: "Arts & Creative Expression" },
-  { id: "Q486748",  name: "dancer",               limit: 200,  domain: "Arts & Creative Expression" },
-  { id: "Q2490358", name: "choreographer",        limit: 150,  domain: "Arts & Creative Expression" },
-
-  // ── Language & Communication ──────────────────────────────────────
-  { id: "Q1930187", name: "journalist",           limit: 500,  domain: "Language & Communication" },
-  { id: "Q333634",  name: "translator",           limit: 200,  domain: "Language & Communication" },
-
-  // ── Governance & Institutions ─────────────────────────────────────
-  { id: "Q82955",   name: "politician",           limit: 800,  domain: "Governance & Institutions" },
-  { id: "Q116",     name: "monarch",              limit: 800,  domain: "Governance & Institutions" },
-  { id: "Q193391",  name: "diplomat",             limit: 400,  domain: "Governance & Institutions" },
-  { id: "Q82594",   name: "lawyer",               limit: 300,  domain: "Governance & Institutions" },
-  { id: "Q16533",   name: "judge",                limit: 300,  domain: "Governance & Institutions" },
-  { id: "Q189290",  name: "military officer",     limit: 800,  domain: "Governance & Institutions" },
-
-  // ── Exploration & Discovery ───────────────────────────────────────
-  { id: "Q13582652",name: "explorer",             limit: 400,  domain: "Exploration & Discovery" },
-
-  // ── Philosophy & Thought ──────────────────────────────────────────
-  { id: "Q4964182", name: "philosopher",          limit: 800,  domain: "Philosophy & Thought" },
-
-  // ── Spiritual & Religious Thought ─────────────────────────────────
-  { id: "Q1234713", name: "theologian",           limit: 400,  domain: "Spiritual & Religious Thought" },
-];
-
-/* ------------------------------------------------------------------ */
-/*  Fetch with retry                                                   */
-/* ------------------------------------------------------------------ */
-
-async function sparqlFetch(sparql: string): Promise<Record<string, string>[]> {
-  const url = `${SPARQL_ENDPOINT}?query=${encodeURIComponent(sparql)}&format=json`;
-  const maxRetries = 3;
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`  [sparql] Attempt ${attempt}/${maxRetries}…`);
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 120_000); // 2 min timeout
+      // Single call: get both pageprops (wikidata QID) and extracts
+      // &redirects=1 follows Wikipedia redirects (e.g. diacritics)
+      const url =
+        `https://en.wikipedia.org/w/api.php?action=query` +
+        `&titles=${titlesParam}` +
+        `&prop=pageprops|extracts&ppprop=wikibase_item` +
+        `&exintro=1&explaintext=1&exsectionformat=plain` +
+        `&redirects=1&format=json&formatversion=2`;
 
       const res = await fetch(url, {
-        signal: controller.signal,
-        headers: {
-          Accept: "application/sparql-results+json",
-          "User-Agent": "Neptino-Encyclopedia-Builder/1.0 (educational project)",
-        },
+        headers: { "User-Agent": "Neptino-Encyclopedia/1.0 (educational)" },
       });
-      clearTimeout(timer);
 
-      if (res.status === 429) {
-        const wait = Math.min(30_000, 5_000 * attempt);
-        console.warn(`  [sparql] Rate limited (429). Waiting ${wait / 1000}s…`);
-        await new Promise((r) => setTimeout(r, wait));
+      if (!res.ok) {
+        console.warn(`  ⚠ Wikipedia API returned ${res.status}`);
         continue;
       }
 
-      if (!res.ok) {
-        console.warn(`  [sparql] HTTP ${res.status}: ${res.statusText}`);
-        if (attempt < maxRetries) {
-          await new Promise((r) => setTimeout(r, 3_000 * attempt));
-          continue;
-        }
-        throw new Error(`SPARQL query failed: HTTP ${res.status}`);
-      }
-
       const json = (await res.json()) as {
-        results: { bindings: Record<string, { value: string }>[] };
+        query: {
+          redirects?: Array<{ from: string; to: string }>;
+          pages: Array<{
+            title: string;
+            pageprops?: { wikibase_item?: string };
+            extract?: string;
+          }>;
+        };
       };
 
-      return json.results.bindings.map((b) => {
-        const row: Record<string, string> = {};
-        for (const [k, v] of Object.entries(b)) row[k] = v.value;
-        return row;
-      });
+      // Build redirect map: redirected title → original input title
+      const redirectMap = new Map<string, string>();
+      for (const r of json.query.redirects ?? []) {
+        redirectMap.set(r.to.toLowerCase(), r.from);
+      }
+
+      for (const page of json.query.pages) {
+        const qid = page.pageprops?.wikibase_item;
+        if (!qid) {
+          console.warn(`  ⚠ No Wikidata QID for "${page.title}"`);
+          continue;
+        }
+
+        let extract = page.extract ?? "";
+        if (extract.length > 800) {
+          const truncated = extract.slice(0, 800);
+          const lastPeriod = truncated.lastIndexOf(". ");
+          extract = lastPeriod > 200 ? truncated.slice(0, lastPeriod + 1) : truncated + "…";
+        }
+
+        // Match back to our input title (Wikipedia may normalize or redirect)
+        const redirectedFrom = redirectMap.get(page.title.toLowerCase());
+        const matchedTitle =
+          redirectedFrom ??
+          batch.find((t) => t.toLowerCase() === page.title.toLowerCase()) ??
+          page.title;
+
+        result.set(matchedTitle, { wikidataId: qid, extract });
+      }
     } catch (err) {
-      if (attempt === maxRetries) throw err;
-      console.warn(`  [sparql] Error: ${err}. Retrying…`);
-      await new Promise((r) => setTimeout(r, 3_000 * attempt));
+      console.warn(`  ⚠ Wikipedia batch failed:`, err);
+    }
+
+    // Polite pause
+    if (i + BATCH < titles.length) {
+      await new Promise((r) => setTimeout(r, 200));
     }
   }
 
-  return [];
+  return result;
 }
 
 /* ------------------------------------------------------------------ */
@@ -499,173 +1095,262 @@ async function sparqlFetch(sparql: string): Promise<Record<string, string>[]> {
 /* ------------------------------------------------------------------ */
 
 async function main() {
-  console.log("╔══════════════════════════════════════════════════════╗");
-  console.log("║   Neptino Encyclopedia — Catalog Builder            ║");
-  console.log("╚══════════════════════════════════════════════════════╝");
-  console.log(`  Target:       ${OUT_PATH}`);
-  console.log(`  Limit:        ${LIMIT} figures`);
+  console.log("╔══════════════════════════════════════════════════════════╗");
+  console.log("║  Neptino Encyclopedia — TEST MODE (27 entities + media) ║");
+  console.log("║  3 per knowledge type × 9 types, 3 per media type × 5  ║");
+  console.log("╚══════════════════════════════════════════════════════════╝");
+  console.log(`  Target:  Supabase (${supabaseUrl})`);
+  console.log(`  Mode:    3 curated entities per knowledge type × 9 types`);
+  console.log(`           3 media resources per media type × 5 types`);
   console.log();
 
-  // 1. Fetch people by occupation category (fast targeted queries)
-  console.log(`[1/3] Querying Wikidata by ${OCCUPATION_CATEGORIES.length} occupation categories…`);
+  // ── Phase 1: Clear existing data ────────────────────────────────
 
-  const byId = new Map<
-    string,
-    {
-      wikidataId: string;
-      label: string;
-      description: string;
-      birthYear: number;
-      occupations: Set<string>;
-      sitelinks: number;
-      /** Primary domain from the first category that matched this figure */
-      categoryDomain: CoreDomain;
+  console.log("[1/5] Clearing existing encyclopedia data…");
+
+  // Clear media first (FK constraint)
+  const { error: mediaDeleteError } = await supabase
+    .from("encyclopedia_media")
+    .delete()
+    .neq("id", "__impossible__");
+
+  if (mediaDeleteError) {
+    console.error("  ⚠ Failed to clear media table:", mediaDeleteError.message);
+  } else {
+    console.log("  ✔ Media table cleared");
+  }
+
+  const { error: deleteError } = await supabase
+    .from("encyclopedia_items")
+    .delete()
+    .neq("id", "__impossible__");
+
+  if (deleteError) {
+    console.error("  ✗ Failed to clear items table:", deleteError.message);
+  } else {
+    console.log("  ✔ Items table cleared");
+  }
+
+  // ── Phase 2: Resolve Wikipedia titles → QIDs + extracts ─────────
+
+  console.log("[2/5] Resolving Wikipedia titles → Wikidata QIDs + extracts…");
+  const allTitles = SEED_ENTITIES.map((e) => e.wikipediaTitle);
+  const resolved = await resolveFromWikipedia(allTitles);
+  console.log(`  ✔ Resolved ${resolved.size} / ${allTitles.length} entities`);
+
+  // Verify all resolved correctly
+  for (const entry of SEED_ENTITIES) {
+    const r = resolved.get(entry.wikipediaTitle);
+    if (!r) {
+      console.warn(`  ⚠ MISSING: "${entry.wikipediaTitle}" — will use fallback`);
+    } else {
+      console.log(`    ✔ ${entry.displayTitle} → ${r.wikidataId}`);
     }
-  >();
+  }
 
-  for (let ci = 0; ci < OCCUPATION_CATEGORIES.length; ci++) {
-    const cat = OCCUPATION_CATEGORIES[ci];
-    const catLimit = Math.min(cat.limit, LIMIT);
-    console.log(`  [${ci + 1}/${OCCUPATION_CATEGORIES.length}] ${cat.name} (${cat.id}, limit ${catLimit})…`);
+  // ── Phase 3: Build rows & upsert ───────────────────────────────
 
-    try {
-      const sparql = buildCategoryQuery(cat.id, cat.name, catLimit);
-      const rows = await sparqlFetch(sparql);
-      console.log(`    → ${rows.length} rows`);
+  console.log("\n[3/5] Building entity rows & upserting…");
 
-      let newCount = 0;
-      for (const row of rows) {
-        const wikidataId = row.item?.split("/").pop();
-        if (!wikidataId) continue;
+  // Build a slug lookup for connections
+  const slugLookup = new Map<string, string>();
+  for (const entry of SEED_ENTITIES) {
+    slugLookup.set(entry.displayTitle, slugify(entry.displayTitle));
+  }
 
-        const label = row.itemLabel;
-        if (!label || label === wikidataId) continue;
-
-        const existing = byId.get(wikidataId);
-        if (existing) {
-          existing.occupations.add(cat.name);
-          continue;
-        }
-
-        // Parse birth year
-        const birthRaw = row.birthDate ?? "";
-        const isBce = birthRaw.startsWith("-");
-        const d = new Date(isBce ? birthRaw.slice(1) : birthRaw);
-        if (isNaN(d.getTime())) continue;
-        const birthYear = isBce ? -d.getFullYear() : d.getFullYear();
-
-        byId.set(wikidataId, {
-          wikidataId,
-          label,
-          description: row.itemDescription ?? "",
-          birthYear,
-          occupations: new Set([cat.name]),
-          sitelinks: parseInt(row.sl ?? "0", 10),
-          categoryDomain: cat.domain,
-        });
-        newCount++;
+  // Validate connections reference existing entities
+  for (const entry of SEED_ENTITIES) {
+    for (const conn of entry.connections) {
+      if (!slugLookup.has(conn.entity)) {
+        console.warn(`  ⚠ "${entry.displayTitle}" connection references unknown entity: "${conn.entity}"`);
       }
-      console.log(`    → ${newCount} new unique figures (total: ${byId.size})`);
-    } catch (err) {
-      console.warn(`    Category ${cat.name} failed (non-fatal):`, err);
-    }
-
-    // Polite pause between categories
-    if (ci < OCCUPATION_CATEGORIES.length - 1) {
-      await new Promise((r) => setTimeout(r, 1000));
-    }
-
-    // Early stop if we have enough
-    if (byId.size >= LIMIT) {
-      console.log(`  Reached limit of ${LIMIT} unique figures. Stopping.`);
-      break;
     }
   }
 
-  console.log(`\n  Total unique figures: ${byId.size}`);
+  const rows: EncyclopediaRow[] = SEED_ENTITIES.map((entry) => {
+    const slug = slugify(entry.displayTitle);
+    const r = resolved.get(entry.wikipediaTitle);
 
-  // 2. Build catalog items
-  console.log("[2/3] Building catalog…");
-  const seenSlugs = new Set<string>();
-  const catalog: CatalogItem[] = [];
+    const wikidataId = r?.wikidataId ?? "UNKNOWN";
+    const summary =
+      r?.extract && r.extract.length >= 50
+        ? r.extract
+        : `${entry.displayTitle} — ${entry.tags.join(", ")}.`;
 
-  for (const fig of byId.values()) {
-    const allOccupations = [...fig.occupations].join(", ");
-    const { primary, secondary } = inferDomains(allOccupations, fig.categoryDomain);
-    const era = classifyEra(fig.birthYear);
-    const depth = classifyDepth(fig.sitelinks);
+    // Build connections with resolved slugs
+    const resolvedConnections = entry.connections
+      .filter((c) => slugLookup.has(c.entity))
+      .map((c) => ({
+        slug: slugLookup.get(c.entity)!,
+        title: c.entity,
+        relationship: c.relationship,
+      }));
 
-    let slug = slugify(fig.label);
-    // Ensure unique id
-    if (seenSlugs.has(slug)) {
-      slug = `${slug}-${fig.wikidataId.toLowerCase()}`;
-    }
-    seenSlugs.add(slug);
-
-    // Build tags from occupations (up to 3)
-    const tags = [...fig.occupations]
-      .slice(0, 3)
-      .map((o) => o.toLowerCase());
-
-    catalog.push({
+    return {
       id: slug,
-      title: fig.label,
-      wikidataId: fig.wikidataId,
-      knowledgeType: "Person",
-      domain: primary,
-      secondaryDomains: secondary,
-      eraGroup: era.eraGroup,
-      eraLabel: era.eraLabel,
-      depth,
-      summary: fig.description || `${fig.label} — ${allOccupations || "historical figure"}.`,
-      tags,
-    });
-  }
-
-  // Sort by sitelinks (most notable first)
-  catalog.sort((a, b) => {
-    const slA = byId.get(a.wikidataId)?.sitelinks ?? 0;
-    const slB = byId.get(b.wikidataId)?.sitelinks ?? 0;
-    return slB - slA;
+      wikidata_id: wikidataId,
+      title: entry.displayTitle,
+      knowledge_type: entry.knowledgeType,
+      domain: entry.domain,
+      secondary_domains: entry.secondaryDomains,
+      era_group: entry.eraGroup,
+      era_label: entry.eraLabel,
+      depth: entry.depth,
+      summary,
+      tags: entry.tags,
+      metadata: {
+        ...entry.typeMetadata,
+        connections: resolvedConnections,
+        wikipedia_title: entry.wikipediaTitle,
+        test_mode: true,
+      },
+    };
   });
-  console.log(`  → ${catalog.length} catalog items built`);
 
-  // Stats
-  const byEra = { ancient: 0, "early-modern": 0, modern: 0, contemporary: 0 };
-  const byDepth = { foundation: 0, intermediate: 0, advanced: 0 };
-  for (const item of catalog) {
-    byEra[item.eraGroup]++;
-    byDepth[item.depth]++;
+  const { error: upsertError } = await supabase
+    .from("encyclopedia_items")
+    .upsert(rows, { onConflict: "id" });
+
+  if (upsertError) {
+    console.error("  ✗ Upsert failed:", upsertError.message);
+  } else {
+    console.log(`  ✔ Seeded ${rows.length} entities`);
   }
 
-  console.log(`  Era breakdown: ${JSON.stringify(byEra)}`);
-  console.log(`  Depth breakdown: ${JSON.stringify(byDepth)}`);
+  // ── Phase 4: Seed media resources ────────────────────────────────
 
-  // Domain breakdown
+  console.log("[4/5] Seeding media resources (3 per type × 5 types = 15)…");
+
+  const mediaRows = SEED_MEDIA.map((m) => {
+    const itemSlug = slugLookup.get(m.entityTitle);
+    if (!itemSlug) {
+      console.warn(`  ⚠ Media "${m.title}" references unknown entity: "${m.entityTitle}"`);
+    }
+    return {
+      id: `${itemSlug ?? "unknown"}--${m.slugSuffix}`,
+      item_id: itemSlug ?? "unknown",
+      media_type: m.mediaType,
+      title: m.title,
+      description: m.description,
+      url: m.url,
+      metadata: m.metadata ?? {},
+    };
+  });
+
+  const { error: mediaUpsertError } = await supabase
+    .from("encyclopedia_media")
+    .upsert(mediaRows, { onConflict: "id" });
+
+  if (mediaUpsertError) {
+    console.error("  ✗ Media upsert failed:", mediaUpsertError.message);
+  } else {
+    console.log(`  ✔ Seeded ${mediaRows.length} media resources`);
+  }
+
+  // ── Phase 5: Write static manifest ──────────────────────────────
+
+  console.log("[5/5] Writing manifest…");
+
   const byDomain: Record<string, number> = {};
-  for (const item of catalog) {
-    byDomain[item.domain] = (byDomain[item.domain] ?? 0) + 1;
-  }
-  console.log(`  Domain breakdown:`);
-  for (const [dom, count] of Object.entries(byDomain).sort(([, a], [, b]) => b - a)) {
-    console.log(`    ${dom}: ${count}`);
-  }
-  const withSecondary = catalog.filter((i) => i.secondaryDomains.length > 0).length;
-  console.log(`  Figures with secondary domains: ${withSecondary} (${((withSecondary / catalog.length) * 100).toFixed(1)}%)`);
-  const allDoms = new Set<string>();
-  for (const item of catalog) {
-    allDoms.add(item.domain);
-    item.secondaryDomains.forEach((d) => allDoms.add(d));
-  }
-  console.log(`  Domains represented: ${[...allDoms].sort().join(", ")}`);
+  const byEra: Record<string, number> = {};
+  const byDepth: Record<string, number> = {};
+  const byKnowledgeType: Record<string, number> = {};
+  const allDomains = new Set<string>();
+  const allEraGroups = new Set<string>();
 
-  // 3. Write JSON
-  console.log("[3/3] Writing catalog…");
-  mkdirSync(dirname(OUT_PATH), { recursive: true });
-  writeFileSync(OUT_PATH, JSON.stringify(catalog) + "\n", "utf-8");
-  console.log(`  ✔ Written ${catalog.length} items to ${OUT_PATH}`);
+  for (const row of rows) {
+    byDomain[row.domain] = (byDomain[row.domain] ?? 0) + 1;
+    byEra[row.era_group] = (byEra[row.era_group] ?? 0) + 1;
+    byDepth[row.depth] = (byDepth[row.depth] ?? 0) + 1;
+    byKnowledgeType[row.knowledge_type] = (byKnowledgeType[row.knowledge_type] ?? 0) + 1;
+    allDomains.add(row.domain);
+    row.secondary_domains.forEach((d) => allDomains.add(d));
+    allEraGroups.add(row.era_group);
+  }
+
+  // Count media types and track which items have media
+  // Compendium = entity overview cards (every entity has one)
+  const byMediaType: Record<string, number> = { Compendium: rows.length };
+  const itemsWithMedia = new Set<string>();
+  for (const m of mediaRows) {
+    byMediaType[m.media_type] = (byMediaType[m.media_type] ?? 0) + 1;
+    itemsWithMedia.add(m.item_id);
+  }
+
+  const manifest = {
+    totalCount: rows.length,
+    seededAt: new Date().toISOString(),
+    testMode: true,
+    knowledgeTypes: byKnowledgeType,
+    domains: [...allDomains].sort(),
+    domainCounts: byDomain,
+    eraGroups: [...allEraGroups].sort(),
+    eraCounts: byEra,
+    depthCounts: byDepth,
+    mediaTypes: byMediaType,
+    totalMedia: mediaRows.length,
+  };
+
+  mkdirSync(dirname(MANIFEST_PATH), { recursive: true });
+  writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2) + "\n", "utf-8");
+  console.log(`  ✔ Manifest written to ${MANIFEST_PATH}`);
+
+  // ── Summary ──────────────────────────────────────────────────────
+
   console.log();
-  console.log("Done! Run `npm run dev` to see the encyclopedia.");
+  console.log("═══ Summary ═══════════════════════════════════════════");
+  console.log(`  Mode:         TEST (3 per knowledge type × 9 types)`);
+  console.log(`  Total seeded: ${rows.length} entities, ${mediaRows.length} media resources`);
+  console.log(`  Knowledge types:`);
+  for (const kt of KNOWLEDGE_TYPES) {
+    const count = byKnowledgeType[kt] ?? 0;
+    const names = rows.filter((r) => r.knowledge_type === kt).map((r) => r.title);
+    console.log(`    ${kt}: ${count}  →  ${names.join(", ")}`);
+  }
+  console.log(`  Media types:`);
+  for (const mt of MEDIA_TYPES) {
+    const count = byMediaType[mt] ?? 0;
+    const titles = mediaRows.filter((m) => m.media_type === mt).map((m) => m.title);
+    console.log(`    ${mt}: ${count}  →  ${titles.join(", ")}`);
+  }
+  console.log(`  Domains:`);
+  for (const domain of CORE_DOMAINS) {
+    const count = byDomain[domain] ?? 0;
+    if (count > 0) {
+      const names = rows.filter((r) => r.domain === domain).map((r) => r.title);
+      console.log(`    ${domain}: ${count}  →  ${names.join(", ")}`);
+    }
+  }
+  console.log(`  Eras:   ${JSON.stringify(byEra)}`);
+  console.log(`  Depths: ${JSON.stringify(byDepth)}`);
+
+  // ── Connection graph validation ──
+  console.log(`\n  Connection graph:`);
+  let totalConns = 0;
+  const connectedTo = new Map<string, Set<string>>();
+  for (const row of rows) {
+    const conns = (row.metadata as Record<string, unknown>).connections as Array<{slug: string; title: string}>;
+    totalConns += conns.length;
+    if (!connectedTo.has(row.id)) connectedTo.set(row.id, new Set());
+    for (const c of conns) {
+      connectedTo.get(row.id)!.add(c.slug);
+      if (!connectedTo.has(c.slug)) connectedTo.set(c.slug, new Set());
+      connectedTo.get(c.slug)!.add(row.id);
+    }
+  }
+  const isolated = rows.filter((r) => !connectedTo.has(r.id) || connectedTo.get(r.id)!.size === 0);
+  console.log(`    Total connections: ${totalConns}`);
+  console.log(`    Entities with ≥1 connection: ${rows.filter((r) => connectedTo.get(r.id)?.size).length}/${rows.length}`);
+  if (isolated.length > 0) {
+    console.log(`    ⚠ ISOLATED entities: ${isolated.map((r) => r.title).join(", ")}`);
+  } else {
+    console.log(`    ✔ All entities are connected — no islands`);
+  }
+
+  console.log("════════════════════════════════════════════════════════");
+  console.log();
+  console.log(`Done! 27 test entities + ${mediaRows.length} media resources seeded.`);
+  console.log("Swap to bulk mode later with: build-encyclopedia-catalog.ts.bak");
 }
 
 main().catch((err) => {
