@@ -1,0 +1,99 @@
+// ==========================================================================
+// HEADER LAYOUT COMPONENT - BEM Methodology
+// ==========================================================================
+
+.header {
+  padding: 0.55rem; 
+  background: rgba(var(--color-background-rgb), 0.85);
+  backdrop-filter: blur(clamp(10px, 5vw, 12px)) saturate(1.1);
+  border-bottom: 1px solid rgba(var(--color-background-rgb), 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 4px 12px rgba(0, 0, 0, 0.04);
+  position: relative;
+  z-index: 100;
+  transition: all 0.2s ease-in-out;
+  background-image: linear-gradient(135deg, rgba(var(--color-background-rgb), 0.9) 0%, rgba(var(--color-background-rgb), 0.75) 100%);
+
+  // ==========================================================================
+  // ELEMENTS
+  // ==========================================================================
+  &__nav {
+    display: grid;
+    width: 100%;
+  }
+
+  &__list {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    align-items: center;
+    gap: var(--spacing-2);
+    justify-content: space-between;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+
+  &__brand {
+    display: inline-grid;
+    align-items: center;
+    text-decoration: none;
+    
+    img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  &__item {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    align-items: center;
+    white-space: nowrap;
+
+    &:last-child {
+      margin-left: auto;
+    }
+  }
+
+  &__link {
+    padding: var(--spacing-2) var(--spacing-3);
+    color: var(--color-text);
+    text-decoration: none;
+    border-radius: var(--radius-small);
+    transition: var(--transition-fast);
+
+    &:hover {
+      background-color: var(--color-neutral-100);
+      color: var(--color-primary-500);
+    }
+
+    &.is-active,
+    &--active {
+      background-color: var(--color-primary-100);
+      color: var(--color-primary-700);
+      font-weight: var(--font-weight-medium);
+    }
+  }
+
+  // ==========================================================================
+  // MODIFIERS
+  // ==========================================================================
+  &--home {
+    backdrop-filter: blur(16px) saturate(1.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03), 0 8px 16px rgba(0, 0, 0, 0.05);
+  }
+
+  &--signin,
+  &--signup {
+    background: rgba(var(--color-background-rgb), 0.95);
+    backdrop-filter: blur(8px);
+    border-bottom-color: rgba(var(--color-background-rgb), 0.3);
+  }
+}

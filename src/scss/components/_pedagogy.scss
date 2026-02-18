@@ -1,0 +1,404 @@
+// ==========================================================================
+// PEDAGOGY UI COMPONENT - BEM Methodology
+// Dark minimalist dashboard-inspired design
+// ==========================================================================
+@use '../abstracts/mixins' as *;
+
+.learning-plane {
+  // ==========================================================================
+  // BLOCK BASE STYLES
+  // ==========================================================================
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-4, 1.5rem);
+  width: 100%;
+  max-width: 650px; // Match form max-width
+
+  // ==========================================================================
+  // ELEMENTS
+  // ==========================================================================
+  &__grid {
+    position: relative;
+    width: 600px; // Increased from 400px
+    aspect-ratio: 1 / 1;
+    max-width: 100%;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    overflow: hidden;
+    touch-action: none;
+    pointer-events: auto; // Ensure pointer events work
+    user-select: none;
+
+    // Quadrant overlays removed - no longer using colorful gradients
+
+    // Thin semi-transparent grid lines
+    background-image: 
+      linear-gradient(to right, rgba(0, 0, 0, 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+    background-size: 25% 100%, 100% 25%;
+
+    // Central axes with subtle appearance
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: 
+        /* Vertical center axis */
+        linear-gradient(to right, transparent calc(50% - 1px), rgba(0, 0, 0, 0.15) calc(50% - 1px), rgba(0, 0, 0, 0.15) calc(50% + 1px), transparent calc(50% + 1px)),
+        /* Horizontal center axis */
+        linear-gradient(to bottom, transparent calc(50% - 1px), rgba(0, 0, 0, 0.15) calc(50% - 1px), rgba(0, 0, 0, 0.15) calc(50% + 1px), transparent calc(50% + 1px));
+    }
+  }
+
+  &__axis {
+    position: absolute;
+    color: #4b5563;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.025em;
+    user-select: none;
+    pointer-events: none; // Don't block grid clicks
+    z-index: 2;
+  }
+
+  &__marker {
+    position: absolute;
+    width: 24px; // Increased from 16px
+    height: 24px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3px dashed rgba(255, 255, 255, 0.4);
+    box-shadow: 
+      0 0 0 1px rgba(255, 255, 255, 0.2),
+      0 4px 12px rgba(0, 0, 0, 0.4),
+      inset 0 1px 2px rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    touch-action: none;
+    cursor: grab;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    z-index: 10;
+    pointer-events: none; // Let clicks pass through to grid
+
+    &:hover {
+      transform: translate(-50%, -50%) scale(1.1);
+      box-shadow: 
+        0 0 0 2px rgba(255, 255, 255, 0.3),
+        0 6px 16px rgba(0, 0, 0, 0.5),
+        inset 0 1px 2px rgba(255, 255, 255, 0.6);
+    }
+
+    &:active {
+      cursor: grabbing;
+      transform: translate(-50%, -50%) scale(0.95);
+    }
+  }
+
+  // Quadrant icons (SVG or icon font elements)
+  &__icon {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    pointer-events: none;
+    opacity: 0.6;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    z-index: 1;
+
+    // Position icons in center of each quadrant
+    &--top-left {
+      left: 25%;
+      top: 25%;
+      transform: translate(-50%, -50%);
+    }
+
+    &--top-right {
+      left: 75%;
+      top: 25%;
+      transform: translate(-50%, -50%);
+    }
+
+    &--bottom-left {
+      left: 25%;
+      top: 75%;
+      transform: translate(-50%, -50%);
+    }
+
+    &--bottom-right {
+      left: 75%;
+      top: 75%;
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  &__coords-container {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-6, 2rem); // Increased gap
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-3, 1rem) 0; // Increased padding
+    width: 100%;
+  }
+
+  &__coord {
+    display: grid;
+    grid-auto-flow: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px; // Increased from 10px
+    margin: 0;
+  }
+
+  &__coord-label {
+    font-weight: 700; // Increased from 600
+    color: #4b5563; // Slightly darker
+    font-size: 18px; // Increased from 14px
+  }
+
+  &__coord-value {
+    font-weight: 800; // Increased from 700
+    font-size: 42px; // Increased from 28px
+    color: #111827;
+    min-width: 80px; // Increased from 54px
+    text-align: center;
+  }
+
+  &__presets {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    max-width: 600px; // Match grid width
+    width: 100%;
+
+    .button--preset {
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      color: #374151;
+      font-weight: 600;
+      padding: 8px 12px; // Reduced from 10px 16px
+      font-size: 14px; // Slightly smaller
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+
+      &:hover,
+      &:focus {
+        background: #f9fafb;
+        color: #111827;
+        border-color: #9ca3af;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+
+  &__summary {
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 
+      0 4px 12px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    padding: var(--spacing-5, 1.5rem);
+  }
+
+  &__summary-title {
+    margin: 0 0 12px 0;
+    font-weight: 700;
+    color: #1d4ed8;
+    font-size: 24px;
+    letter-spacing: -0.01em;
+  }
+
+  &__summary-subtitle {
+    margin: 0 0 16px 0;
+    padding: var(--spacing-2, 0.5rem) var(--spacing-3, 1rem);
+    background: #f9fafb;
+    border-left: 3px solid #60a5fa;
+    border-radius: 6px;
+    color: #6b7280;
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  &__summary-description {
+    margin: 0 0 20px 0;
+    padding: var(--spacing-3, 1rem);
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 8px;
+    border: 1px solid #f3f4f6;
+    color: #374151;
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  &__effects-section {
+    display: grid;
+    gap: var(--spacing-3, 1rem);
+    padding-top: var(--spacing-4, 1.5rem);
+    border-top: 2px solid #e5e7eb;
+  }
+
+  &__effects-title {
+    margin: 0 0 12px 0;
+    font-weight: 600;
+    color: #111827;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2, 0.5rem);
+
+    &::before {
+      content: "●";
+      color: var(--color-primary-500);
+      font-size: 1.2em;
+    }
+  }
+
+  &__effects-list {
+    display: grid;
+    gap: var(--spacing-2, 0.5rem);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-2, 0.5rem);
+      padding: var(--spacing-2, 0.5rem) var(--spacing-3, 1rem);
+      background: #ffffff;
+      border-left: 2px solid #bfdbfe;
+      border-radius: 6px;
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.6;
+      transition: all 0.2s ease;
+
+      &::before {
+        content: "→";
+        color: var(--color-primary-500);
+        font-weight: 700;
+        flex-shrink: 0;
+        margin-top: 0.1em;
+      }
+
+      &:hover {
+        background: #eff6ff;
+        border-left-color: #60a5fa;
+        transform: translateX(4px);
+      }
+    }
+  }
+
+  // Legacy support (rename impact to effects)
+  &__impact-title {
+    @extend .learning-plane__effects-title;
+  }
+
+  &__impact-list {
+    @extend .learning-plane__effects-list;
+  }
+
+  // ==========================================================================
+  // MODIFIERS FOR AXIS LABELS (can't be elements due to positioning)
+  // ==========================================================================
+  &__axis--left { 
+    left: 12px; 
+    top: 50%; 
+    transform: translateY(-50%); 
+  }
+  
+  &__axis--right { 
+    right: 12px; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    text-align: right; 
+  }
+  
+  &__axis--top { 
+    top: 12px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+  }
+  
+  &__axis--bottom { 
+    bottom: 12px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+  }
+
+  // ==========================================================================
+  // STATES & INTERACTIONS
+  // ==========================================================================
+  &__grid:active {
+    cursor: grabbing;
+  }
+
+  // ==========================================================================
+  // RESPONSIVE ADJUSTMENTS
+  // ==========================================================================
+  @media (max-width: 768px) {
+    &__grid {
+      width: 100%;
+      max-width: 500px;
+    }
+
+    &__presets {
+      max-width: 100%;
+      grid-template-columns: repeat(2, 1fr); // 2 columns on tablets
+    }
+
+    &__coord-label {
+      font-size: 16px;
+    }
+
+    &__coord-value {
+      font-size: 36px;
+      min-width: 70px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    &__grid {
+      max-width: 400px;
+    }
+
+    &__axis {
+      font-size: 11px;
+    }
+
+    &__marker {
+      width: 20px;
+      height: 20px;
+    }
+
+    &__coords-container {
+      flex-direction: column;
+      gap: var(--spacing-2, 0.75rem);
+      padding: var(--spacing-2, 0.5rem) 0;
+    }
+
+    &__coord-label {
+      font-size: 14px;
+    }
+
+    &__coord-value {
+      font-size: 28px;
+      min-width: 60px;
+    }
+
+    &__presets {
+      grid-template-columns: 1fr; // Stack on mobile
+      
+      .button--preset {
+        padding: 10px 16px; // Full width on mobile, larger padding
+      }
+    }
+  }
+}

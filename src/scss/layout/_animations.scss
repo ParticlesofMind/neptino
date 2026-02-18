@@ -1,0 +1,223 @@
+// ==========================================================================
+// SCENE COMPONENT - Canvas-based Animation Scenes - BEM Methodology
+// ==========================================================================
+
+.scene {
+  // ==========================================================================
+  // BLOCK BASE STYLES
+  // ==========================================================================
+  pointer-events: none;
+  z-index: 10;
+
+  // ==========================================================================
+  // ELEMENTS
+  // ==========================================================================
+  &__playback {
+    display: grid;
+    gap: clamp(8px, 2vw, 16px);
+    align-items: center;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    pointer-events: auto;
+    padding: clamp(8px, 2vw, 12px);
+    max-width: 320px;
+  }
+
+  &__timeline {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: clamp(8px, 2vw, 12px);
+  }
+
+  &__timeline-bar {
+    position: relative;
+    height: clamp(10px, 2vw, 15px);
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+    cursor: pointer;
+  }
+
+  &__timeline-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #b3d7ff 0%, #9ac8ff 100%);
+    border-radius: 4px;
+    pointer-events: none;
+    width: 0; // Set dynamically
+  }
+
+  &__timeline-handle {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: clamp(14px, 3vw, 20px);
+    height: clamp(14px, 3vw, 20px);
+    background: linear-gradient(135deg, #b3d7ff 0%, #9ac8ff 100%);
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    cursor: grab;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  &__time-text {
+    font-family: Arial, sans-serif;
+    font-size: clamp(10px, 2vw, 11px);
+    font-weight: 500;
+    color: #666666;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  &__controls {
+    display: grid;
+    grid-auto-flow: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(8px, 2vw, 12px);
+  }
+
+  &__button {
+    width: clamp(28px, 6vw, 36px);
+    height: clamp(28px, 6vw, 36px);
+    padding: 6px;
+    background: linear-gradient(135deg, #b3d7ff 0%, #9ac8ff 100%);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  &__button-icon {
+    width: 100%;
+    height: 100%;
+    filter: brightness(0) invert(1);
+    pointer-events: none;
+  }
+
+  &__border {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #666666;
+    border-radius: 4px;
+    opacity: 0.3;
+    transition: all 0.2s ease;
+    pointer-events: none;
+  }
+
+  // ==========================================================================
+  // MODIFIERS
+  // ==========================================================================
+  &--video {
+    z-index: 15;
+  }
+
+  &--button-small {
+    .scene__button {
+      width: clamp(24px, 5vw, 32px);
+      height: clamp(24px, 5vw, 32px);
+    }
+  }
+  &--button-large {
+    .scene__button {
+      width: clamp(32px, 7vw, 44px);
+      height: clamp(32px, 7vw, 44px);
+    }
+  }
+
+  &--hide-traj {
+    .scene__button {
+      margin-left: auto;
+    }
+  }
+
+  &--border-selected {
+    .scene__border {
+      border-color: #9ac8ff;
+      border-width: 2px;
+      opacity: 0.6;
+    }
+  }
+  &--border-hovered {
+    .scene__border {
+      opacity: 0.8;
+    }
+  }
+
+  // ==========================================================================
+  // STATES & INTERACTIONS
+  // ==========================================================================
+  &__timeline-bar:hover {
+    background-color: #e8e8e8;
+    border-color: #9ac8ff;
+  }
+  &__timeline-handle:hover {
+    transform: translate(-50%, -50%) scale(1.15);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  }
+  &__timeline-handle:active {
+    cursor: grabbing;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  &__button:hover {
+    background: linear-gradient(135deg, #9ac8ff 0%, #b3d7ff 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  &__button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  &__button:focus-visible {
+    outline: 2px solid #9ac8ff;
+    outline-offset: 2px;
+  }
+}
+
+// ==========================================================================
+// ANIMATIONS
+// ==========================================================================
+@keyframes scene-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@keyframes scene-path-draw {
+  from { stroke-dashoffset: 100%; }
+  to { stroke-dashoffset: 0%; }
+}
+
+@keyframes scene-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scene-scale-in {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

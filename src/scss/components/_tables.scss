@@ -1,0 +1,98 @@
+// ==========================================================================
+// TABLE TOOL COMPONENT - BEM Methodology
+// ==========================================================================
+
+.table {
+  // ==========================================================================
+  // ELEMENTS
+  // ==========================================================================
+  &__preview {
+    position: absolute;
+    border: 1px solid #000000;
+    background-color: rgba(0, 123, 255, 0.1);
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  &__input {
+    position: absolute;
+    font-family: Arial, sans-serif;
+    background-color: rgba(255, 255, 255, 0.95);
+    border: 2px solid #2196f3;
+    outline: none;
+    z-index: 10000;
+    padding: clamp(2px, 1vw, 4px);
+    border-radius: 2px;
+    box-shadow: 0 0 5px rgba(33, 150, 243, 0.3);
+    text-align: left;
+    vertical-align: top;
+    font-size: clamp(14px, 2vw, 16px);
+    transition: none; // Per reduced-motion preference
+  }
+
+  &__menu {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10000;
+    font-size: clamp(14px, 2vw, 16px);
+    font-family: Arial, sans-serif;
+  }
+
+  &__menu-option {
+    padding: clamp(8px, 2vw, 12px) clamp(16px, 2vw, 20px);
+    cursor: pointer;
+    transition: none; // Per reduced-motion preference
+  }
+
+  // ==========================================================================
+  // MODIFIERS
+  // ==========================================================================
+  &__menu-option--delete {
+    color: #d32f2f;
+  }
+
+  // ==========================================================================
+  // STATES & INTERACTIONS
+  // ==========================================================================
+  &__input:focus {
+    box-shadow: 0 0 8px rgba(33, 150, 243, 0.5);
+  }
+
+  &__menu-option:hover {
+    background-color: #f0f0f0;
+  }
+
+  &__menu-option--delete:hover {
+    background-color: #ffebee;
+  }
+}
+
+// ==========================================================================
+// ACCESSIBILITY OVERRIDES
+// ==========================================================================
+@media (prefers-contrast: high) {
+  .table {
+    &__preview {
+      border-width: 2px;
+      background-color: rgba(0, 123, 255, 0.2);
+    }
+    &__input {
+      border-width: 3px;
+      box-shadow: 0 0 0 1px rgba(33, 150, 243, 0.5);
+    }
+    &__menu {
+      border-width: 2px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .table__menu-option {
+    transition: background-color 0.15s ease;
+  }
+}

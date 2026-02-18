@@ -1,0 +1,30 @@
+// ==========================================================================
+// SPACING SYSTEM
+// ==========================================================================
+
+:root {
+  // SPACING SCALE (8px base - scales with root font size)
+  // ==========================================================================
+  --spacing-0: 0;
+  --spacing-1: 0.125rem;  // 2px
+  --spacing-2: 0.25rem;   // 4px
+  --spacing-3: 0.5rem;    // 8px
+  --spacing-4: 0.75rem;   // 12px
+  --spacing-5: 1rem;      // 16px
+  --spacing-6: 1.25rem;   // 20px
+  --spacing-7: 1.5rem;    // 24px
+  --spacing-8: 2rem;      // 32px
+  --spacing-9: 2.5rem;    // 40px
+  --spacing-10: 3rem;     // 48px
+  --spacing-12: 4rem;     // 64px
+  --spacing-16: 6rem;     // 96px
+  --spacing-20: 8rem;     // 128px
+  --spacing-24: 10rem;    // 160px
+}
+
+// SCSS Variables for calculations
+// ==========================================================================
+
+$base-spacing: 1rem;
+$small-spacing: 0.5rem;
+$large-spacing: 2rem;

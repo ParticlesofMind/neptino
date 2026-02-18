@@ -1,0 +1,22 @@
+// abstracts/_mixins.scss
+
+@mixin input-focus($border: var(--color-primary-200)) {
+  outline: none;
+  border-color: $border;
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+}
+
+@mixin grid-responsive($min: 250px, $gap: var(--spacing-4)) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, #{$min}), 1fr));
+  gap: $gap;
+}
+
+@mixin card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}

@@ -1,0 +1,225 @@
+// ==========================================================================
+// MODAL COMPONENT - BEM Methodology
+// ==========================================================================
+@use '../abstracts/mixins' as *;
+
+.modal {
+  // ==========================================================================
+  // BLOCK BASE STYLES
+  // ==========================================================================
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(var(--spacing-3), 5vw, var(--spacing-8));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--transition-normal), visibility var(--transition-normal);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+  }
+
+  &__content {
+    background: var(--color-background);
+    border-radius: var(--radius-medium);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    z-index: 1;
+    transform: scale(0.95) translateY(-20px);
+    transition: transform var(--transition-normal);
+    border: 1px solid var(--color-neutral-200);
+  }
+
+  &__header {
+    display: grid;
+    grid-auto-flow: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-5);
+    border-bottom: 1px solid var(--color-neutral-200);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+  }
+
+  &__close {
+    margin-left: auto;
+    &:hover {
+      background-color: var(--color-background-secondary);
+    }
+  }
+
+  &__body {
+    padding: var(--spacing-5);
+  }
+
+  &__footer {
+    display: grid;
+    grid-auto-flow: column;
+    align-items: center;
+    justify-content: end;
+    gap: var(--spacing-3);
+    padding: var(--spacing-5);
+    border-top: 1px solid var(--color-neutral-200);
+    
+    // Make all buttons in footer the same size
+    .button {
+      min-width: 8rem;
+    }
+  }
+
+  &__text {
+    margin-bottom: var(--spacing-4);
+    color: var(--color-text-primary);
+    line-height: var(--line-height-relaxed);
+  }
+
+  &__warning {
+    margin-bottom: var(--spacing-3);
+    color: var(--color-error-600);
+    font-weight: var(--font-weight-medium);
+  }
+
+  &__list {
+    margin: var(--spacing-3) 0 var(--spacing-4) var(--spacing-5);
+    color: var(--color-text-secondary);
+    li {
+      margin-bottom: var(--spacing-1);
+    }
+  }
+
+  &__confirmation {
+    margin-top: var(--spacing-5);
+    padding: var(--spacing-4);
+    background: var(--color-error-50);
+    border: 1px solid var(--color-error-200);
+    border-radius: var(--radius-medium);
+  }
+
+  // ==========================================================================
+  // MODIFIERS
+  // ==========================================================================
+  &--active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    &::before {
+      opacity: 1;
+    }
+    .modal__content {
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  &--delete {
+    .modal__content {
+      max-width: 500px;
+    }
+    .modal__confirmation {
+      .form__label {
+        margin-bottom: 0;
+        font-size: var(--font-size-small);
+        color: var(--color-error-700);
+      }
+      .input {
+        margin-top: var(--spacing-2);
+        border-color: var(--color-error-300);
+        &:focus {
+          border-color: var(--color-error-500);
+          box-shadow: 0 0 0 3px var(--color-error-100);
+        }
+      }
+    }
+  }
+
+  &--coursebuilder {
+    .modal__content {
+      max-width: 600px;
+    }
+  }
+}
+
+// ==========================================================================
+// TEMPLATE BROWSER COMPONENT - BEM Methodology
+// ==========================================================================
+.template-browser {
+  // ==========================================================================
+  // ELEMENTS
+  // ==========================================================================
+  &__grid {
+    @include grid-responsive(250px, var(--spacing-5));
+    margin-bottom: var(--spacing-8);
+  }
+
+  &__card {
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-medium);
+    padding: var(--spacing-5);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+  }
+
+  &__title {
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--spacing-2);
+    color: var(--color-text-primary);
+  }
+
+  &__description {
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-3);
+  }
+
+  &__meta {
+    display: grid;
+    grid-auto-flow: column;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--font-size-extra-small);
+    color: var(--color-text-tertiary);
+  }
+
+  &__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--spacing-4);
+    padding: var(--spacing-4) 0;
+  }
+
+  // ==========================================================================
+  // MODIFIERS
+  // ==========================================================================
+  &--card-selected {
+    .template-browser__card {
+      border-color: var(--color-primary-200);
+      background-color: var(--color-primary-100);
+    }
+  }
+
+  // ==========================================================================
+  // STATES & INTERACTIONS
+  // ==========================================================================
+  &__card:hover {
+    border-color: var(--color-primary-200);
+    box-shadow: var(--shadow-small);
+  }
+}

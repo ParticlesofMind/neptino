@@ -1,0 +1,486 @@
+// ==========================================================================
+// INPUT COMPONENT - BEM Methodology
+// ==========================================================================
+
+// Base mixins
+@mixin input-focus($border: var(--color-primary-200), $shadow: var(--color-primary-100)) {
+    outline: none;
+    border-color: $border;
+    box-shadow: 0 0 0 3px $shadow;
+}
+
+@mixin input-hover($border: var(--color-neutral-400)) {
+    &:hover:not(:focus):not(:disabled) {
+        border-color: $border;
+    }
+}
+
+@mixin input-status($color, $bg, $shadow) {
+    border-color: $color;
+    background-color: $bg;
+
+    &:focus {
+        @include input-focus($color, $shadow);
+    }
+}
+
+@mixin control-base {
+    appearance: none;
+    width: 0.1rem;
+    height: 0.1rem;
+    border-color: var(--color-neutral-300);
+
+
+    &:focus {
+        @include input-focus();
+    }
+
+    &:hover:not(:disabled):not(:checked) {
+        border-color: var(--color-primary-200);
+        background: var(--color-primary-50);
+    }
+
+    &:checked {
+        background: var(--color-primary-100);
+        border-color: var(--color-primary-200);
+    }
+
+    &:disabled {
+        background: var(--color-neutral-100);
+        border-color: var(--color-neutral-200);
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+.input {
+    display: block;
+    width: 100%;
+    padding: var(--spacing-4);
+    font-size: var(--font-size-base);
+    font-family: inherit;
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-neutral-200);
+    background: var(--color-input-background);
+    border-radius: var(--radius-medium);
+    transition: all 0.2s ease;
+
+    &::placeholder {
+        color: var(--color-text-tertiary);
+        opacity: 1;
+    }
+
+    &:focus {
+        @include input-focus();
+    }
+
+    @include input-hover();
+
+    &:disabled {
+        background: var(--color-neutral-100);
+        color: var(--color-text-tertiary);
+        border-color: var(--color-neutral-200);
+        cursor: not-allowed;
+    }
+
+    // Status states
+    &--error {
+        @include input-status(var(--color-error-500), var(--color-error-50), var(--color-error-100));
+    }
+
+    &--success {
+        @include input-status(var(--color-success-500), var(--color-success-50), var(--color-success-100));
+    }
+
+    // Auth inputs
+    &--auth {
+        padding-left: 3rem;
+        position: relative;
+    }
+
+    // Search input
+    &--search {
+        border: 1px solid var(--color-neutral-200);
+        font-size: var(--font-size-sm);
+     
+
+        &::placeholder {
+            font-style: italic;
+        }
+
+        &:focus {
+            border-color: var(--color-primary-200);
+        }
+
+        &:hover:not(:focus) {
+            border-color: var(--color-neutral-300);
+        }
+    }
+
+    // Number input
+    &--number {
+
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+            -webkit-appearance: auto;
+            opacity: 1;
+        }
+    }
+
+    // Checkbox
+    &--checkbox {
+        @include control-base;
+        position: relative;
+
+        &:checked::after {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: 2px solid var(--color-text-primary);
+            border-left: 0;
+            border-top: 0;
+            transform: rotate(45deg);
+        }
+    }
+
+    // Radio
+    &--radio {
+        @include control-base;
+        border-radius: 50%;
+        position: relative;
+     
+
+
+        &:checked::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: white;
+            transform: translate(-50%, -50%);
+        }
+    }
+
+    // File input
+    &--file {
+        cursor: pointer;
+        background: var(--color-primary-50);
+        border: 2px dashed var(--color-primary-200);
+        padding: var(--spacing-4);
+        text-align: center;
+        min-height: 50px;
+        max-width: 24rem;
+        display: grid;
+        place-items: center;
+
+        &::-webkit-file-upload-button,
+        &::file-selector-button {
+            display: none;
+        }
+
+        &::before {
+            content: 'Upload file';
+            color: var(--color-primary-600);
+        }
+
+        &:hover {
+            border-color: var(--color-primary-200);
+            background: var(--color-primary-100);
+        }
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    }
+
+    // Date/time inputs
+    &--date,
+    &--time {
+        cursor: pointer;
+
+        &::-webkit-calendar-picker-indicator {
+            opacity: 0;
+            position: absolute;
+            right: 0;
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    // Color input (native)
+    &--color {
+        width: 50px;
+        height: 50px;
+        padding: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &::-webkit-color-swatch-wrapper,
+        &::-webkit-color-swatch,
+        &::-moz-color-swatch {
+            border: none;
+            border-radius: var(--border-radius-small);
+        }
+
+        &:hover {
+            border-color: var(--color-primary-200);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        &:focus {
+            outline: none;
+            border-color: var(--color-primary-200);
+            box-shadow: 0 0 0 3px var(--color-primary-100);
+        }
+    }
+
+    // Color picker (for engine tools)
+    &--color-picker {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 2px solid var(--color-neutral-300);
+        border-radius: var(--radius-medium);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: var(--color-background);
+
+        &:hover {
+            border-color: var(--color-primary-200);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        &:focus {
+            outline: none;
+            border-color: var(--color-primary-200);
+            box-shadow: 0 0 0 3px var(--color-primary-100);
+        }
+    }
+
+    // Shape picker (for engine tools)
+    &--shape-picker {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 2px solid var(--color-neutral-300);
+        border-radius: var(--radius-medium);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: var(--color-background);
+
+        &:hover {
+            border-color: var(--color-primary-200);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        &:focus {
+            outline: none;
+            border-color: var(--color-primary-200);
+            box-shadow: 0 0 0 3px var(--color-primary-100);
+        }
+    }
+
+    // Slider (range input)
+    &--slider {
+        width: 100%;
+        height: 6px;
+        padding: 0;
+        background: var(--color-neutral-200);
+        border: none;
+        border-radius: 3px;
+        outline: none;
+        cursor: pointer;
+        appearance: none;
+
+        &::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--color-primary-600);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: var(--color-primary-700);
+                transform: scale(1.1);
+            }
+        }
+
+        &::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: var(--color-primary-600);
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: var(--color-primary-700);
+                transform: scale(1.1);
+            }
+        }
+
+        &:focus {
+            &::-webkit-slider-thumb {
+                box-shadow: 0 0 0 3px var(--color-primary-100);
+            }
+
+            &::-moz-range-thumb {
+                box-shadow: 0 0 0 3px var(--color-primary-100);
+            }
+        }
+    }
+
+    // Select input
+    &--select {
+        cursor: pointer;
+        appearance: none;
+        padding-right: calc(var(--spacing-4) + 1.25rem);
+        min-height: var(--size-button-base);
+        border: 1px solid var(--color-neutral-200);
+        border-radius: var(--radius-large);
+        background-color: var(--color-neutral-0, #ffffff);
+        background-image:
+            linear-gradient(140deg,
+                rgba(var(--color-primary-50-rgb, 230, 240, 255), 0.45),
+                rgba(var(--color-neutral-0-rgb, 255, 255, 255), 0.95)),
+            url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231e293b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat, no-repeat;
+        background-position: center, right var(--spacing-3) center;
+        background-size: cover, 1.25rem 1.25rem;
+        box-shadow: 0 10px 26px rgba(17, 45, 109, 0.08);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        line-height: 1.4;
+
+        &:hover {
+            border-color: var(--color-primary-200);
+            box-shadow: 0 14px 32px rgba(17, 45, 109, 0.12);
+            transform: translateY(-1px);
+        }
+
+        &:focus {
+            @include input-focus();
+            transform: translateY(-1px);
+            box-shadow: 0 16px 38px rgba(17, 45, 109, 0.16);
+        }
+
+        &:disabled {
+            background-image:
+                linear-gradient(140deg,
+                    rgba(var(--color-neutral-100-rgb, 240, 241, 245), 0.75),
+                    rgba(var(--color-neutral-0-rgb, 255, 255, 255), 0.9)),
+                url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat, no-repeat;
+            background-position: center, right var(--spacing-3) center;
+            background-size: cover, 1.25rem 1.25rem;
+            box-shadow: none;
+            transform: none;
+        }
+
+        &::-ms-expand {
+            display: none;
+        }
+    }
+
+    // Text input
+    &--text {
+        // Standard text input styling - inherits base .input styles
+    }
+
+    // Email input
+    &--email {
+        // Standard email input styling - inherits base .input styles
+    }
+
+    // URL input
+    &--url {
+        // Standard URL input styling - inherits base .input styles
+    }
+
+    // Text input for course builder (specific variant)
+    &--text-coursebuilder {
+        resize: both;
+        background: transparent;
+        border: 1px solid var(--color-primary-200);
+        border-radius: var(--border-radius-small);
+        padding: var(--spacing-2) var(--spacing-3);
+        font-size: var(--font-size-base);
+        font-family: inherit;
+        color: var(--color-text-primary);
+
+        &::placeholder {
+            color: var(--color-text-tertiary);
+            opacity: 0.8;
+        }
+
+        &:focus {
+            outline: none;
+            border-color: var(--color-primary-200);
+            box-shadow: 0 0 0 2px var(--color-primary-100);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        &:hover:not(:focus) {
+            border-color: var(--color-primary-200);
+            background: rgba(255, 255, 255, 0.5);
+        }
+    }
+
+    // Dropdown input for engine panel
+    &--dropdown {
+        width: 100%;
+        appearance: none;
+        padding: var(--spacing-2) var(--spacing-5) var(--spacing-2) var(--spacing-3);
+        border-radius: var(--radius-large);
+        border: 1px solid var(--color-neutral-200);
+        background: var(--color-background);
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--color-neutral-700);
+        cursor: pointer;
+
+        &:focus {
+            outline: 2px solid var(--color-primary-200);
+            outline-offset: 2px;
+            border-color: var(--color-primary-200);
+        }
+    }
+
+
+
+    // Status combinations for controls
+    &--checkbox.input--error,
+    &--radio.input--error {
+        border-color: var(--color-error-500);
+
+        &:checked {
+            background: var(--color-error-500);
+        }
+    }
+
+    &--checkbox.input--success,
+    &--radio.input--success {
+        border-color: var(--color-success-500);
+
+        &:checked {
+            background: var(--color-success-500);
+        }
+    }
+}
+
+select.input.input--select option {
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-size-sm);
+}

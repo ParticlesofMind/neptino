@@ -1,0 +1,228 @@
+// ==========================================================================
+// TYPOGRAPHY SYSTEM - VARIABLES & FOUNDATION STYLES
+// ==========================================================================
+
+// Typography Variables (Design Tokens)
+// ==========================================================================
+:root {
+    // Font Families
+    --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    --font-family-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    --font-family-mono: 'Fira Code', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+
+    // Font Sizes (5-Scale System - Simple rem values that scale with root font size)
+    --font-size-extra-small: 0.875rem; // 14px
+    --font-size-small: 1rem; // 16px
+    --font-size-base: 1.125rem; // 18px (most regular text)
+    --font-size-large: 1.5rem; // 24px
+    --font-size-extra-large: 2rem; // 32px
+
+    // Font Weights
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 800;
+
+    // Line Heights
+    --line-height-tight: 1.25;
+    --line-height-snug: 1.375;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.625;
+    --line-height-loose: 2;
+}
+
+// Typography Foundation Styles
+// ==========================================================================
+
+// Set responsive root font size - this scales all rem values automatically
+html {
+    // Responsive root font size: 14px on mobile, scales to 16px on desktop
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+    font-family: var(--font-family-primary);
+    line-height: var(--line-height-normal);
+    color: var(--color-text-primary);
+}
+
+body {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+}
+
+// Headings
+// ==========================================================================
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-family-heading);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--spacing-5) 0;
+}
+
+h1 {
+    font-size: var(--font-size-extra-large);
+}
+
+// 32px
+h2 {
+    font-size: var(--font-size-large);
+}
+
+// 24px
+h3 {
+    font-size: var(--font-size-base);
+}
+
+// 18px
+h4 {
+    font-size: var(--font-size-small);
+}
+
+// 16px
+h5 {
+    font-size: var(--font-size-extra-small);
+}
+
+// 14px
+h6 {
+    font-size: var(--font-size-extra-small);
+}
+
+// 14px
+
+// Paragraphs and Text Elements
+// ==========================================================================
+
+p {
+    margin: 0 0 var(--spacing-5) 0;
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+}
+
+// Paragraph Component
+.paragraph {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  margin: 0 0 var(--spacing-5) 0;
+  
+  &--lead {
+    font-size: var(--font-size-large);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--line-height-relaxed);
+  }
+}
+
+// Quote Component
+.quote {
+  font-size: var(--font-size-large);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-relaxed);
+  font-style: italic;
+}
+
+// Citation Component
+.citation {
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  font-style: normal;
+  
+  &::before {
+    content: "— ";
+  }
+}
+
+// Link Component
+.link {
+  color: var(--color-primary-500);
+  text-decoration: none;
+  transition: color 0.2s ease;
+  
+  &:hover {
+    color: var(--color-primary-600);
+    text-decoration: underline;
+  }
+  
+  &:focus {
+    outline: 2px solid var(--color-primary-200);
+    outline-offset: 2px;
+  }
+  
+  &--subtle {
+    color: var(--color-text-secondary);
+    
+    &:hover {
+      color: var(--color-text-primary);
+    }
+  }
+}
+
+// Label Component
+.label {
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  display: block;
+  margin-bottom: var(--spacing-2);
+
+  &--small {
+    font-size: 0.625rem;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    text-align: center;
+    line-height: 1.2;
+    margin-bottom: 0;
+  }
+}
+
+// Heading Component (for section titles)
+.heading {
+  font-family: var(--font-family-heading);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+  margin: 0;
+
+  &--h3 {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &--h5 {
+    font-size: var(--font-size-extra-small);
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+// Text Component (for help text, descriptions, etc.)
+.text {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  margin: 0;
+
+  &--help {
+    font-size: var(--font-size-small);
+    color: var(--color-text-tertiary);
+  }
+
+  &--description {
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+    line-height: var(--line-height-normal);
+  }
+
+  &--secondary {
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+  }
+}

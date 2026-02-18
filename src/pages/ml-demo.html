@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Neptino ML Demo - Phi-3.5 Mini</title>
-<style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neptino ML Demo - Phi-3.5 Mini</title>
+  <style>
     * {
       margin: 0;
       padding: 0;
@@ -220,53 +219,60 @@
   </style>
 </head>
 <body>
-<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-<h1>🧠 Neptino Intelligence</h1>
-<p class="subtitle">Phi-3.5 Mini (3.8B) - On-device AI powered by Transformers.js</p>
-<div class="status-card">
-<div>
-<span class="status-indicator loading" id="statusIndicator"></span>
-<strong id="statusText">Initializing...</strong>
-</div>
-<div class="progress-bar" id="progressBar" style="display: none;">
-<div class="progress-fill" id="progressFill" style="width: 0%;"></div>
-</div>
-<div class="progress-text" id="progressText"></div>
-</div>
-<div class="info-box">
-<strong>ℹ️ First-time Setup</strong>
+  <div class="container">
+    <h1>🧠 Neptino Intelligence</h1>
+    <p class="subtitle">Phi-3.5 Mini (3.8B) - On-device AI powered by Transformers.js</p>
+
+    <div class="status-card">
+      <div>
+        <span class="status-indicator loading" id="statusIndicator"></span>
+        <strong id="statusText">Initializing...</strong>
+      </div>
+      <div class="progress-bar" id="progressBar" style="display: none;">
+        <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+      </div>
+      <div class="progress-text" id="progressText"></div>
+    </div>
+
+    <div class="info-box">
+      <strong>ℹ️ First-time Setup</strong>
       The model (~2.4GB) will download on first load. Subsequent loads are instant from cache.
     </div>
-<div class="controls">
-<button id="loadBtn" onclick="loadModel()">Load Model</button>
-<button disabled="" id="generateBtn" onclick="generateText()">Generate Text</button>
-<button disabled="" id="chatBtn" onclick="chatDemo()">Chat Demo</button>
-<button disabled="" id="eduBtn" onclick="eduDemo()">Educational Demo</button>
-</div>
-<div class="input-section">
-<label for="promptInput">Enter your prompt:</label>
-<textarea id="promptInput" placeholder="e.g., Explain quantum mechanics in simple terms...">Explain the water cycle in a way that a 5th grade student would understand.</textarea>
-</div>
-<div class="settings">
-<div class="setting-group">
-<label for="maxTokens">Max Tokens:</label>
-<input id="maxTokens" max="2048" min="50" type="number" value="256"/>
-</div>
-<div class="setting-group">
-<label for="temperature">Temperature:</label>
-<input id="temperature" max="1" min="0" step="0.1" type="number" value="0.7"/>
-</div>
-<div class="setting-group">
-<label for="topP">Top P:</label>
-<input id="topP" max="1" min="0" step="0.1" type="number" value="0.9"/>
-</div>
-</div>
-<div class="output-section">
-<h3>📝 Output</h3>
-<div class="output-content" id="output">Click "Load Model" to begin...</div>
-</div>
-</div>
-<script type="module">
+
+    <div class="controls">
+      <button id="loadBtn" onclick="loadModel()">Load Model</button>
+      <button id="generateBtn" onclick="generateText()" disabled>Generate Text</button>
+      <button id="chatBtn" onclick="chatDemo()" disabled>Chat Demo</button>
+      <button id="eduBtn" onclick="eduDemo()" disabled>Educational Demo</button>
+    </div>
+
+    <div class="input-section">
+      <label for="promptInput">Enter your prompt:</label>
+      <textarea id="promptInput" placeholder="e.g., Explain quantum mechanics in simple terms...">Explain the water cycle in a way that a 5th grade student would understand.</textarea>
+    </div>
+
+    <div class="settings">
+      <div class="setting-group">
+        <label for="maxTokens">Max Tokens:</label>
+        <input type="number" id="maxTokens" value="256" min="50" max="2048">
+      </div>
+      <div class="setting-group">
+        <label for="temperature">Temperature:</label>
+        <input type="number" id="temperature" value="0.7" min="0" max="1" step="0.1">
+      </div>
+      <div class="setting-group">
+        <label for="topP">Top P:</label>
+        <input type="number" id="topP" value="0.9" min="0" max="1" step="0.1">
+      </div>
+    </div>
+
+    <div class="output-section">
+      <h3>📝 Output</h3>
+      <div class="output-content" id="output">Click "Load Model" to begin...</div>
+    </div>
+  </div>
+
+  <script type="module">
     import { phi3Model } from '/src/machine-learning/index.ts';
 
     window.phi3Model = phi3Model;

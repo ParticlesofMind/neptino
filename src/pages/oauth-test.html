@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>OAuth Integration Test - Neptino</title>
-<style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth Integration Test - Neptino</title>
+    <style>
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
@@ -74,49 +73,56 @@
     </style>
 </head>
 <body>
-<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-<h1>🔐 OAuth/OIDC Integration Test</h1>
-<div class="info-box">
-<h3>📋 What This Tests</h3>
-<p>This page tests the OAuth 2.0 + OpenID Connect integration between Neptino and Rocket.Chat.
+    <div class="container">
+        <h1>🔐 OAuth/OIDC Integration Test</h1>
+        
+        <div class="info-box">
+            <h3>📋 What This Tests</h3>
+            <p>This page tests the OAuth 2.0 + OpenID Connect integration between Neptino and Rocket.Chat. 
                The integration allows users to seamlessly access Rocket.Chat without duplicate signup.</p>
-</div>
-<div class="endpoint-list">
-<h3>🌐 OAuth Endpoints</h3>
-<ul>
-<li><strong>Discovery:</strong> <a href="http://localhost:3001/.well-known/openid-configuration" target="_blank">http://localhost:3001/.well-known/openid-configuration</a></li>
-<li><strong>Authorization:</strong> http://localhost:3001/oauth/authorize</li>
-<li><strong>Token:</strong> http://localhost:3001/oauth/token</li>
-<li><strong>UserInfo:</strong> http://localhost:3001/oauth/userinfo</li>
-</ul>
-</div>
-<div class="status" id="auth-status">
-<strong>Authentication Status:</strong> <span id="status-text">Checking...</span>
-</div>
-<div id="oauth-buttons">
-<h3>🚀 Test OAuth Flow</h3>
-<button class="oauth-button" id="test-oauth">Test OAuth Flow</button>
-<button class="oauth-button" id="test-discovery">Test Discovery Endpoint</button>
-<button class="oauth-button" id="test-userinfo">Test UserInfo Endpoint</button>
-</div>
-<div id="results">
-<h3>📊 Test Results</h3>
-<pre id="result-output" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto;"></pre>
-</div>
-<div class="info-box">
-<h3>🔧 Rocket.Chat Configuration</h3>
-<p>To complete the integration, configure Rocket.Chat with these settings:</p>
-<ul>
-<li><strong>Authorization URL:</strong> http://localhost:3001/oauth/authorize</li>
-<li><strong>Token URL:</strong> http://localhost:3001/oauth/token</li>
-<li><strong>User Info URL:</strong> http://localhost:3001/oauth/userinfo</li>
-<li><strong>Client ID:</strong> rocketchat</li>
-<li><strong>Client Secret:</strong> rocketchat-secret</li>
-<li><strong>Callback URL:</strong> http://localhost:3000/_oauth/neptino</li>
-</ul>
-</div>
-</div>
-<script type="module">
+        </div>
+
+        <div class="endpoint-list">
+            <h3>🌐 OAuth Endpoints</h3>
+            <ul>
+                <li><strong>Discovery:</strong> <a href="http://localhost:3001/.well-known/openid-configuration" target="_blank">http://localhost:3001/.well-known/openid-configuration</a></li>
+                <li><strong>Authorization:</strong> http://localhost:3001/oauth/authorize</li>
+                <li><strong>Token:</strong> http://localhost:3001/oauth/token</li>
+                <li><strong>UserInfo:</strong> http://localhost:3001/oauth/userinfo</li>
+            </ul>
+        </div>
+
+        <div id="auth-status" class="status">
+            <strong>Authentication Status:</strong> <span id="status-text">Checking...</span>
+        </div>
+
+        <div id="oauth-buttons">
+            <h3>🚀 Test OAuth Flow</h3>
+            <button id="test-oauth" class="oauth-button">Test OAuth Flow</button>
+            <button id="test-discovery" class="oauth-button">Test Discovery Endpoint</button>
+            <button id="test-userinfo" class="oauth-button">Test UserInfo Endpoint</button>
+        </div>
+
+        <div id="results">
+            <h3>📊 Test Results</h3>
+            <pre id="result-output" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto;"></pre>
+        </div>
+
+        <div class="info-box">
+            <h3>🔧 Rocket.Chat Configuration</h3>
+            <p>To complete the integration, configure Rocket.Chat with these settings:</p>
+            <ul>
+                <li><strong>Authorization URL:</strong> http://localhost:3001/oauth/authorize</li>
+                <li><strong>Token URL:</strong> http://localhost:3001/oauth/token</li>
+                <li><strong>User Info URL:</strong> http://localhost:3001/oauth/userinfo</li>
+                <li><strong>Client ID:</strong> rocketchat</li>
+                <li><strong>Client Secret:</strong> rocketchat-secret</li>
+                <li><strong>Callback URL:</strong> http://localhost:3000/_oauth/neptino</li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="module">
         import { OAuthIntegration, initOAuthIntegration } from '../scripts/backend/oauth/OAuthIntegration.js';
         
         // Initialize OAuth integration
@@ -203,3 +209,4 @@
     </script>
 </body>
 </html>
+

@@ -1,0 +1,162 @@
+/**
+ * Canvas Scroll Styles
+ * Styles for vertical canvas scrolling and active highlighting
+ */
+
+#canvas-scroll-container {
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+.canvas-wrapper {
+  width: 1200px;
+  height: 1800px;
+  margin: 0 auto 40px auto;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: relative;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.canvas-wrapper.active {
+  border-color: #007bff;
+  box-shadow: 0 4px 16px rgba(0,123,255,0.2);
+}
+
+.canvas-wrapper:hover {
+  border-color: #6c757d;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+  .canvas-wrapper {
+    width: 90%;
+    max-width: 1200px;
+    height: auto;
+    aspect-ratio: 2/3; /* Maintain 1200x1800 aspect ratio */
+  }
+}
+
+@media (max-width: 768px) {
+  #canvas-scroll-container {
+    padding: 10px;
+  }
+  
+  .canvas-wrapper {
+    width: 95%;
+    margin-bottom: 20px;
+  }
+}
+
+/* Scroll indicator for active canvas */
+.canvas-wrapper::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 60px;
+  background: transparent;
+  border-radius: 2px;
+  transition: background-color 0.3s ease;
+}
+
+.canvas-wrapper.active::before {
+  background: #007bff;
+}
+
+/* Placeholder state */
+.canvas-placeholder {
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.canvas-placeholder:hover {
+  background-color: #e9ecef !important;
+}
+
+/* Loading state */
+.canvas-wrapper.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.canvas-wrapper.loading::after {
+  content: 'Loading...';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #6c757d;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* Navigation panel lesson item hover states */
+.navigation-content__lesson-group {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.navigation-content__item--lesson {
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.navigation-content__item--lesson:hover {
+  background-color: #f8f9fa;
+  transform: translateX(4px);
+}
+
+.navigation-content__item--lesson:active {
+  background-color: #e9ecef;
+  transform: translateX(2px);
+}
+
+/* Focus states for accessibility */
+.canvas-wrapper:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+.navigation-content__item--lesson:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+.navigation-content__item--page {
+  font-size: 0.9rem;
+  padding-left: 1.5rem;
+  border-left: 3px solid transparent;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.navigation-content__item--page strong {
+  font-weight: 600;
+  display: block;
+}
+
+.navigation-content__item--page p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.navigation-content__item--page:hover {
+  background-color: #f1f3f5;
+  border-color: #c0d3ff;
+  transform: translateX(2px);
+}
+
+.navigation-content__item--page:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}

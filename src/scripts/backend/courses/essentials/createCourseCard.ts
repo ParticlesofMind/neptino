@@ -66,20 +66,19 @@ export class CoursesManager {
 
     // Show loading message
     const loadingElement = document.createElement('div');
-    loadingElement.className = 'flex w-full justify-center py-10';
+    loadingElement.className = 'courses-loading';
     loadingElement.dataset.dynamic = 'true';
-    loadingElement.dataset.coursesLoading = 'true';
     loadingElement.innerHTML = `
-   <div class="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white px-4 py-3 shadow-sm">
-   <div class="h-4 w-4 animate-spin rounded-full border-2 border-neutral-200 border-t-primary-600"></div>
-   <p class="text-sm text-neutral-600">Loading your courses...</p>
-   </div>
+ <div class="courses-loading__content">
+ <div class="courses-loading__spinner"></div>
+ <p class="courses-loading__text">Loading your courses...</p>
+ </div>
  `;
     this.coursesContainer.appendChild(loadingElement);
   }
 
   private hideLoadingState(): void {
-    const loadingElement = this.coursesContainer.querySelector('[data-courses-loading="true"]');
+    const loadingElement = this.coursesContainer.querySelector('.courses-loading');
     if (loadingElement) {
       loadingElement.remove();
     }
@@ -89,22 +88,17 @@ export class CoursesManager {
 
   private showErrorState(): void {
     const errorElement = document.createElement('div');
-    errorElement.className = 'flex w-full justify-center py-10';
+    errorElement.className = 'courses-error';
     errorElement.dataset.dynamic = 'true';
-    errorElement.dataset.coursesError = 'true';
     errorElement.innerHTML = `
-   <div class="flex flex-col items-center gap-3 rounded-lg border border-neutral-200 bg-white px-5 py-4 text-center shadow-sm">
-   <svg class="h-8 w-8 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-     <circle cx="12" cy="12" r="10"></circle>
-     <line x1="12" y1="8" x2="12" y2="12"></line>
-     <line x1="12" y1="16" x2="12.01" y2="16"></line>
-   </svg>
-   <h3 class="text-base font-semibold text-neutral-900">Failed to load courses</h3>
-   <p class="text-sm text-neutral-600">There was an error loading your courses. Please try refreshing the page.</p>
-   <button class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700" onclick="window.location.reload()">
-   Refresh Page
-   </button>
-   </div>
+ <div class="courses-error__content">
+ <i class="icon icon--error icon--large"></i>
+ <h3 class="heading heading--h3">Failed to load courses</h3>
+ <p class="paragraph">There was an error loading your courses. Please try refreshing the page.</p>
+ <button class="button button--primary" onclick="window.location.reload()">
+ Refresh Page
+ </button>
+ </div>
  `;
     this.coursesContainer.appendChild(errorElement);
   }
@@ -130,7 +124,7 @@ export class CoursesManager {
 
   private async createCourseCard(course: Course): Promise<HTMLElement> {
     const cardElement = document.createElement("div");
-    cardElement.className = "flex flex-col bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full";
+    cardElement.className = "card card--course";
     cardElement.dataset.courseId = course.id;
     cardElement.dataset.dynamic = "true"; // Mark as dynamically generated
 
@@ -151,8 +145,8 @@ export class CoursesManager {
 
     // Create course image or placeholder
     const courseImageHtml = course.course_image
-      ? `<img src="${course.course_image}" alt="${course.course_name} Course" class="w-full h-full object-cover">`
-      : `<div class="w-full h-full flex items-center justify-center text-4xl text-neutral-400 font-bold bg-neutral-100">${this.getInitials(course.course_name)}</div>`;
+      ? `<img src="${course.course_image}" alt="${course.course_name} Course" class="card__media-image">`
+      : `<div class="card__media-placeholder">${this.getInitials(course.course_name)}</div>`;
 
     // Format description with fallback
     const courseDescription = course.course_description?.trim() || 'No description available.';
@@ -162,56 +156,47 @@ export class CoursesManager {
     const lessonText = `${lessonCount} lesson${lessonCount !== 1 ? 's' : ''}`;
 
     cardElement.innerHTML = `
-   <div class="relative w-full aspect-[4/3] bg-neutral-100 overflow-hidden flex-shrink-0">
+   <div class="card__media">
      ${courseImageHtml}
-     <div class="absolute top-2 right-2">
-      <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass}" data-course-status>${statusText}</span>
+     <div class="card__media-overlay">
+       <span class="card__status-badge ${statusClass}">${statusText}</span>
      </div>
    </div>
    
-   <div class="p-4 border-b border-neutral-100 flex-shrink-0">
-     <h3 class="text-lg font-semibold text-neutral-900 mb-1 line-clamp-2">${course.course_name}</h3>
-     <p class="text-sm text-neutral-500 line-clamp-2">${courseDescription}</p>
+   <div class="card__header">
+     <h3 class="heading heading--h3 card__title">${course.course_name}</h3>
+     <p class="card__description">${courseDescription}</p>
    </div>
    
-   <div class="p-4 flex flex-col gap-4 flex-1">
-     <div class="flex gap-4 text-sm text-neutral-500">
-       <span class="flex items-center gap-1">
-         <svg class="h-4 w-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-           <circle cx="9" cy="7" r="4"></circle>
-           <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-           <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-         </svg>
+   <div class="card__body">
+     <div class="card__meta card__meta--inline">
+       <span class="card__info">
+         <i class="icon icon--students"></i>
          ${studentText}
        </span>
-       <span class="flex items-center gap-1">
-         <svg class="h-4 w-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-           <path d="M4 4.5A2.5 2.5 0 0 1 6.5 7H20"></path>
-           <path d="M6.5 7H20v10H6.5A2.5 2.5 0 0 0 4 19.5v-15A2.5 2.5 0 0 1 6.5 4.5"></path>
-         </svg>
+       <span class="card__info">
+         <i class="icon icon--lessons"></i>
          ${lessonText}
        </span>
      </div>
      
-     <div class="grid grid-cols-4 gap-2 mt-auto pt-4 border-t border-neutral-100">
-       <button class="inline-flex items-center justify-center rounded-lg px-2 py-1 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+     <div class="card__actions card__actions--stacked">
+       <button class="button button--outline button--small card__action" 
                data-section="setup" data-course-id="${course.id}"
                title="Configure course settings and details">
          Setup
        </button>
-       <button class="inline-flex items-center justify-center rounded-lg px-2 py-1 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+       <button class="button button--outline button--small card__action" 
                data-section="create" data-course-id="${course.id}"
                title="Create and design course content">
          Create
        </button>
-       <button class="inline-flex items-center justify-center rounded-lg px-2 py-1 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+       <button class="button button--outline button--small card__action" 
                data-section="preview" data-course-id="${course.id}"
                title="Preview course before publishing">
          Preview
        </button>
-       <button class="inline-flex items-center justify-center rounded-lg px-2 py-1 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 border border-transparent bg-primary-600 text-white hover:bg-primary-700"
+       <button class="button button--primary button--small card__action" 
                data-section="launch" data-course-id="${course.id}"
                title="Launch course for students">
          Launch

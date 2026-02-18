@@ -1,444 +1,485 @@
 <!DOCTYPE html>
-
 <html lang="en">
+
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Admin Dashboard - Neptino</title>
-<link href="/src/styles/app.css" rel="stylesheet"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - Neptino</title>
+  <link rel="stylesheet" href="/src/scss/main.scss" />
 </head>
-<body class="min-h-screen bg-neutral-50 font-sans text-neutral-900 body">
-<header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-neutral-200 flex h-16 items-center justify-between" data-header-home>
-<nav class="flex items-center gap-8">
-<ul class="flex items-center gap-6 list-none m-0 p-0">
-<li class="relative">
-<a class="brand" href="/src/pages/admin/home.html">
-<img alt="Neptino Logo" class="h-8 w-auto" src="/src/assets/logo/octopus-logo.png"/>
-</a>
-</li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/admin/courses.html">My Courses</a></li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/admin/marketplace.html">Marketplace</a></li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline" href="/src/pages/admin/tutorials.html">Tutorials</a></li>
-<li class="relative">
-<button class="cta inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary-600 hover:bg-primary-700 active:bg-primary-800 !bg-transparent border border-neutral-300 !text-neutral-700 hover:!bg-neutral-50 hover:!text-neutral-900 focus-visible:ring-neutral-500" id="logout-btn">Logout</button>
-</li>
-</ul>
-</nav>
-</header>
-<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 main">
-<section class="grid grid-cols-1 md:grid-cols-[280px_1fr] min-h-screen">
-<aside class="hidden md:flex flex-col bg-white border-r border-neutral-200 h-screen sticky top-0 overflow-y-auto bg-neutral-900 text-white border-none">
-<nav>
-<h3 class="px-6 mt-8 mb-2 text-xs font-semibold text-neutral-500 uppercase tracking-wider">MENU</h3>
-<ul class="flex flex-col gap-1 px-3">
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors bg-primary-600 text-white hover:bg-primary-700" data-section="home" href="#home">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<rect height="7" width="7" x="3" y="3"></rect>
-<rect height="7" width="7" x="14" y="3"></rect>
-<rect height="7" width="7" x="14" y="14"></rect>
-<rect height="7" width="7" x="3" y="14"></rect>
-</svg>
-<span class="truncate">Dashboard</span>
-</a>
-</li>
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="classes" href="#classes">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<rect height="18" rx="2" ry="2" width="18" x="3" y="4"></rect>
-<line x1="16" x2="16" y1="2" y2="6"></line>
-<line x1="8" x2="8" y1="2" y2="6"></line>
-<line x1="3" x2="21" y1="10" y2="10"></line>
-</svg>
-<span class="truncate">Calendar</span>
-</a>
-</li>
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="profile" href="#profile">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-<circle cx="12" cy="7" r="4"></circle>
-</svg>
-<span class="truncate">Profile</span>
-</a>
-</li>
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="tasks" href="#tasks">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<path d="M9 11l3 3l8-8"></path>
-<path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9s4.03-9 9-9c1.3 0 2.52.28 3.61.78"></path>
-</svg>
-<span class="truncate">Task</span>
-</a>
-</li>
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="forms" href="#forms">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-<polyline points="14,2 14,8 20,8"></polyline>
-<line x1="16" x2="8" y1="13" y2="13"></line>
-<line x1="16" x2="8" y1="17" y2="17"></line>
-<polyline points="10,9 9,9 8,9"></polyline>
-</svg>
-<span class="truncate">Forms</span>
-</a>
-</li>
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="tables" href="#tables">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<rect height="18" rx="2" ry="2" width="18" x="3" y="3"></rect>
-<line x1="9" x2="21" y1="9" y2="9"></line>
-<line x1="9" x2="21" y1="15" y2="15"></line>
-<line x1="9" x2="21" y1="21" y2="21"></line>
-<line x1="9" x2="9" y1="3" y2="21"></line>
-</svg>
-<span class="truncate">Tables</span>
-</a>
-</li>
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="pages" href="#pages">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-<polyline points="14,2 14,8 20,8"></polyline>
-<line x1="16" x2="8" y1="13" y2="13"></line>
-<line x1="16" x2="8" y1="17" y2="17"></line>
-<polyline points="10,9 9,9 8,9"></polyline>
-</svg>
-<span class="truncate">Pages</span>
-</a>
-</li>
-</ul>
-<h3 class="px-6 mt-8 mb-2 text-xs font-semibold text-neutral-500 uppercase tracking-wider">SUPPORT</h3>
-<ul class="flex flex-col gap-1 px-3">
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="messages" href="#messages">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-<polyline points="22,6 12,13 2,6"></polyline>
-</svg>
-<span class="truncate">Messages</span>
-<span class="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2 py-0.5 text-xs font-semibold text-primary-700" data-aside-badge="primary">5</span>
-<span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700" data-aside-badge="pro">Pro</span>
-</a>
-</li>
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="inbox" href="#inbox">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<polyline points="22,12 18,12 15,21 9,3 6,12 2,12"></polyline>
-</svg>
-<span class="truncate">Inbox</span>
-<span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700" data-aside-badge="pro">Pro</span>
-</a>
-</li>
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="invoice" href="#invoice">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-<polyline points="14,2 14,8 20,8"></polyline>
-<line x1="16" x2="8" y1="13" y2="13"></line>
-<line x1="16" x2="8" y1="17" y2="17"></line>
-<polyline points="10,9 9,9 8,9"></polyline>
-</svg>
-<span class="truncate">Invoice</span>
-<span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700" data-aside-badge="pro">Pro</span>
-</a>
-</li>
-</ul>
-<h3 class="px-6 mt-8 mb-2 text-xs font-semibold text-neutral-500 uppercase tracking-wider">OTHERS</h3>
-<ul class="flex flex-col gap-1 px-3">
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="charts" href="#charts">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
-<path d="M22 12A10 10 0 0 0 12 2v10z"></path>
-</svg>
-<span class="truncate">Charts</span>
-</a>
-</li>
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="ui-elements" href="#ui-elements">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<rect height="7" width="7" x="3" y="3"></rect>
-<rect height="7" width="7" x="14" y="3"></rect>
-<rect height="7" width="7" x="14" y="14"></rect>
-<rect height="7" width="7" x="3" y="14"></rect>
-</svg>
-<span class="truncate">UI Elements</span>
-</a>
-</li>
-<li class="w-full">
-<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors" data-section="settings" href="#settings">
-<svg class="h-5 w-5 shrink-0 opacity-75" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<circle cx="12" cy="12" r="3"></circle>
-<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-</svg>
-<span class="truncate">Settings</span>
-</a>
-</li>
-</ul>
-</nav>
-</aside>
-<!-- Home Article -->
-<article class="hidden opacity-0 transition-opacity duration-300 ease-in-out [&.is-active]:block [&.is-active]:opacity-100 is-active" data-dashboard-section="" id="home">
-<header class="mb-8 flex items-center justify-between gap-4 rounded-lg border border-neutral-200 bg-white px-6 py-4">
-<div class="flex flex-1 items-center gap-4">
-<input class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm text-neutral-900 placeholder-neutral-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500" placeholder="Type to search..." type="text"/>
-</div>
-<div class="flex items-center gap-4">
-<label class="flex items-center gap-2">
-<input class="h-5 w-5 rounded border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500" type="checkbox"/>
-<span class="text-sm text-neutral-600">Dark Mode</span>
-</label>
-<button aria-label="Notifications" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-neutral-600 hover:bg-neutral-50">
-<svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
-<path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
-</svg>
-</button>
-<button aria-label="Chat" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 text-neutral-600 hover:bg-neutral-50">
-<svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20">
-<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-</svg>
-</button>
-<div class="flex items-center gap-3 border-l border-neutral-200 pl-4">
-<div class="text-right">
-<div class="text-sm font-semibold text-neutral-900">Admin User</div>
-<div class="text-xs text-neutral-500">System Administrator</div>
-</div>
-<img alt="User Avatar" class="h-9 w-9 rounded-full" src="/src/assets/logo/octopus-logo.png"/>
-</div>
-</div>
-</header>
-<div class="space-y-6">
-<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-<div class="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
-<div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-<svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24">
-<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-</svg>
-</div>
-<div class="flex flex-col gap-2">
-<div class="text-2xl font-bold text-neutral-900">3.456K</div>
-<div class="text-sm text-neutral-600">Total Views</div>
-<div class="inline-flex items-center gap-1 text-sm text-emerald-600">
-<svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="16">
-<polyline points="23,6 13.5,15.5 8.5,10.5 1,18"></polyline>
-<polyline points="17,6 23,6 23,12"></polyline>
-</svg>
-0.43%
-</div>
-</div>
-</div>
-<div class="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
-<div class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 text-green-600">
-<svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24">
-<line x1="12" x2="12" y1="1" y2="23"></line>
-<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-</svg>
-</div>
-<div class="flex flex-col gap-2">
-<div class="text-2xl font-bold text-neutral-900">$45.2K</div>
-<div class="text-sm text-neutral-600">Total Profit</div>
-<div class="inline-flex items-center gap-1 text-sm text-emerald-600">
-<svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="16">
-<polyline points="23,6 13.5,15.5 8.5,10.5 1,18"></polyline>
-<polyline points="17,6 23,6 23,12"></polyline>
-</svg>
-4.35%
-</div>
-</div>
-</div>
-<div class="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
-<div class="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
-<svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24">
-<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-<rect height="4" rx="1" ry="1" width="8" x="8" y="2"></rect>
-</svg>
-</div>
-<div class="flex flex-col gap-2">
-<div class="text-2xl font-bold text-neutral-900">2.450</div>
-<div class="text-sm text-neutral-600">Total Product</div>
-<div class="inline-flex items-center gap-1 text-sm text-emerald-600">
-<svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="16">
-<polyline points="23,6 13.5,15.5 8.5,10.5 1,18"></polyline>
-<polyline points="17,6 23,6 23,12"></polyline>
-</svg>
-2.59%
-</div>
-</div>
-</div>
-<div class="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
-<div class="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
-<svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24">
-<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-<circle cx="9" cy="7" r="4"></circle>
-<path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-</svg>
-</div>
-<div class="flex flex-col gap-2">
-<div class="text-2xl font-bold text-neutral-900">3.456</div>
-<div class="text-sm text-neutral-600">Total Users</div>
-<div class="inline-flex items-center gap-1 text-sm text-red-600">
-<svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="16">
-<polyline points="23,18 13.5,8.5 8.5,13.5 1,6"></polyline>
-<polyline points="17,18 23,18 23,12"></polyline>
-</svg>
-0.95%
-</div>
-</div>
-</div>
-</div>
-<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-<div class="flex flex-col gap-4 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-<div class="flex flex-col gap-1">
-<h3 class="text-lg font-semibold text-neutral-900">Total Revenue</h3>
-<p class="text-sm text-neutral-500">Total Sales (12.04.2022 - 12.05.2022)</p>
-</div>
-<div class="flex-1">
-<div class="chart-placeholder">
-<svg class="chart-svg" height="200" viewbox="0 0 400 200" width="100%">
-<defs>
-<lineargradient id="revenueGradient" x1="0%" x2="0%" y1="0%" y2="100%">
-<stop offset="0%" style="stop-color:#9ac8ff;stop-opacity:0.35"></stop>
-<stop offset="100%" style="stop-color:#9ac8ff;stop-opacity:0.08"></stop>
-</lineargradient>
-<lineargradient id="salesGradient" x1="0%" x2="0%" y1="0%" y2="100%">
-<stop offset="0%" style="stop-color:#00ccb3;stop-opacity:0.3"></stop>
-<stop offset="100%" style="stop-color:#00ccb3;stop-opacity:0.05"></stop>
-</lineargradient>
-</defs>
-<path d="M20,180 Q100,120 180,100 T360,60" fill="none" stroke="#9ac8ff" stroke-width="3"></path>
-<path d="M20,180 Q100,120 180,100 T360,60" fill="url(#revenueGradient)" stroke="#9ac8ff" stroke-width="2"></path>
-<path d="M20,180 Q100,140 180,120 T360,80" fill="none" stroke="#00ccb3" stroke-width="3"></path>
-<path d="M20,180 Q100,140 180,120 T360,80" fill="url(#salesGradient)" stroke="#00ccb3" stroke-width="2"></path>
-<text fill="#666" font-size="12" x="20" y="20">Sep</text>
-<text fill="#666" font-size="12" x="100" y="20">Oct</text>
-<text fill="#666" font-size="12" x="180" y="20">Nov</text>
-<text fill="#666" font-size="12" x="260" y="20">Dec</text>
-<text fill="#666" font-size="12" x="340" y="20">Jan</text>
-<text fill="#666" font-size="12" x="380" y="20">Feb</text>
-</svg>
-</div>
-</div>
-</div>
-<div class="flex flex-col gap-4 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-<div class="flex flex-col gap-1">
-<h3 class="text-lg font-semibold text-neutral-900">Profit this week</h3>
-</div>
-<div class="flex-1">
-<div class="chart-placeholder">
-<svg class="chart-svg" height="200" viewbox="0 0 400 200" width="100%">
-<rect fill="#b3d7ff" height="60" rx="2" stroke="#9ac8ff" stroke-width="1" width="40" x="20" y="120"></rect>
-<rect fill="#00ccb3" height="40" rx="2" width="40" x="20" y="80"></rect>
-<rect fill="#b3d7ff" height="80" rx="2" stroke="#9ac8ff" stroke-width="1" width="40" x="80" y="100"></rect>
-<rect fill="#00ccb3" height="40" rx="2" width="40" x="80" y="60"></rect>
-<rect fill="#b3d7ff" height="90" rx="2" stroke="#9ac8ff" stroke-width="1" width="40" x="140" y="90"></rect>
-<rect fill="#00ccb3" height="40" rx="2" width="40" x="140" y="50"></rect>
-<rect fill="#b3d7ff" height="70" rx="2" stroke="#9ac8ff" stroke-width="1" width="40" x="200" y="110"></rect>
-<rect fill="#00ccb3" height="40" rx="2" width="40" x="200" y="70"></rect>
-<rect fill="#b3d7ff" height="80" rx="2" stroke="#9ac8ff" stroke-width="1" width="40" x="260" y="100"></rect>
-<rect fill="#00ccb3" height="40" rx="2" width="40" x="260" y="60"></rect>
-<rect fill="#b3d7ff" height="85" rx="2" stroke="#9ac8ff" stroke-width="1" width="40" x="320" y="95"></rect>
-<rect fill="#00ccb3" height="40" rx="2" width="40" x="320" y="55"></rect>
-<text fill="#666" font-size="12" x="40" y="195">M</text>
-<text fill="#666" font-size="12" x="100" y="195">T</text>
-<text fill="#666" font-size="12" x="160" y="195">W</text>
-<text fill="#666" font-size="12" x="220" y="195">T</text>
-<text fill="#666" font-size="12" x="280" y="195">F</text>
-<text fill="#666" font-size="12" x="340" y="195">S</text>
-<text fill="#666" font-size="12" x="380" y="195">S</text>
-</svg>
-</div>
-</div>
-</div>
-</div>
-</div>
-</article>
-<!-- Classes Article -->
-<article class="hidden opacity-0 transition-opacity duration-300 ease-in-out [&amp;.is-active]:block [&amp;.is-active]:opacity-100" data-dashboard-section="classes" id="classes">
-<header class="mb-8">
-<h2 class="text-2xl font-bold text-neutral-900">Classes</h2>
-</header>
-<div class="space-y-6">
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">All Users</h3>
-<p class="mt-2 text-sm text-neutral-500">Manage all users</p>
-</div>
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">Teachers</h3>
-<p class="mt-2 text-sm text-neutral-500">24 active teachers</p>
-</div>
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">Students</h3>
-<p class="mt-2 text-sm text-neutral-500">486 active students</p>
-</div>
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">Add User</h3>
-<p class="mt-2 text-sm text-neutral-500">Create new account</p>
-</div>
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">Bulk Actions</h3>
-<p class="mt-2 text-sm text-neutral-500">Manage multiple users</p>
-</div>
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">User Reports</h3>
-<p class="mt-2 text-sm text-neutral-500">Export user data</p>
-</div>
-</div>
-</article>
-<!-- Messages Article -->
-<article class="hidden opacity-0 transition-opacity duration-300 ease-in-out [&amp;.is-active]:block [&amp;.is-active]:opacity-100" data-dashboard-section="messages" id="messages">
-<header class="mb-8">
-<h2 class="text-2xl font-bold text-neutral-900">Messages</h2>
-</header>
-<div class="space-y-6">
-<div class="flex flex-1 flex-col gap-4" id="rocketchat-container">
-<div class="flex items-center justify-center py-12">
-<p>Loading messaging interface...</p>
-</div>
-</div>
-</div>
-</article>
-<!-- Settings Article -->
-<article class="hidden opacity-0 transition-opacity duration-300 ease-in-out [&amp;.is-active]:block [&amp;.is-active]:opacity-100" data-dashboard-section="settings" id="settings">
-<header class="mb-8">
-<h2 class="text-2xl font-bold text-neutral-900">Settings</h2>
-</header>
-<div class="space-y-6">
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">Institution Settings</h3>
-<p class="mt-2 text-sm text-neutral-500">Configure institution details</p>
-</div>
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">System Settings</h3>
-<p class="mt-2 text-sm text-neutral-500">Platform configuration</p>
-</div>
-<div class="bg-white overflow-hidden rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-<h3 class="text-lg font-semibold text-neutral-900">Maintenance</h3>
-<p class="mt-2 text-sm text-neutral-500">System maintenance tools</p>
-</div>
-</div>
-</article>
-</section>
-</main>
-<footer class="bg-white border-t border-neutral-200 mt-auto footer">
-<nav class="mx-auto max-w-7xl px-6 lg:px-8 py-8 flex justify-between items-center">
-<ul class="flex items-center gap-6 gap-8 list-none m-0 p-0">
-<li class="relative">
-<a class="brand" href="/src/pages/admin/home.html">
-<img alt="Neptino Logo" class="h-8 w-auto h-6" src="/src/assets/logo/octopus-logo.png"/>
-</a>
-</li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#">Privacy Policy</a></li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#">Terms of Service</a></li>
-<li class="relative"><a class="text-neutral-600 hover:text-primary-600 transition-colors font-medium text-sm no-underline text-neutral-500 hover:text-neutral-900" href="#">Contact</a></li>
-</ul>
-</nav>
-</footer>
-<script src="/src/scripts/app.ts" type="module"></script>
-<script src="/src/scripts/navigation/index.ts" type="module"></script>
-<script src="/src/scripts/backend/rocketchat/MessagingInterface.ts" type="module"></script>
+
+<body class="grid body">
+  <header class="grid__header header header--home">
+    <nav class="header__nav">
+      <ul class="ul ul--header">
+        <li class="ul__item ul__item--brand">
+          <a href="/src/pages/admin/home.html" class="brand">
+            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--base">
+          </a>
+        </li>
+        <li class="ul__item"><a href="/src/pages/admin/courses.html" class="link link--header">My Courses</a></li>
+        <li class="ul__item"><a href="/src/pages/admin/marketplace.html" class="link link--header">Marketplace</a></li>
+        <li class="ul__item"><a href="/src/pages/admin/tutorials.html" class="link link--header">Tutorials</a></li>
+        <li class="ul__item ul__item--cta">
+          <button id="logout-btn" class="cta button button--outline">Logout</button>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="grid__main main">
+    <section class="dashboard__layout">
+      <aside class="aside aside--main">
+ 
+        
+        <nav>
+          <h3 class="aside__heading">MENU</h3>
+          <ul class="aside__list">
+            <li class="aside__item">
+              <a href="#home" class="aside__link aside__link--active" data-section="home">
+                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7"/>
+                  <rect x="14" y="3" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                <span class="aside__text">Dashboard</span>
+              </a>
+            </li>
+            <li class="aside__item">
+              <a href="#classes" class="aside__link" data-section="classes">
+                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span class="aside__text">Calendar</span>
+              </a>
+            </li>
+            <li class="aside__item">
+              <a href="#profile" class="aside__link" data-section="profile">
+                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span class="aside__text">Profile</span>
+              </a>
+            </li>
+            <li class="aside__item">
+              <a href="#tasks" class="aside__link" data-section="tasks">
+                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 11l3 3l8-8"/>
+                  <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9s4.03-9 9-9c1.3 0 2.52.28 3.61.78"/>
+                </svg>
+                <span class="aside__text">Task</span>
+              </a>
+            </li>
+            <li class="aside__item">
+              <a href="#forms" class="aside__link" data-section="forms">
+                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10,9 9,9 8,9"/>
+                </svg>
+                <span class="aside__text">Forms</span>
+              </a>
+            </li>
+            <li class="aside__item">
+              <a href="#tables" class="aside__link" data-section="tables">
+                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="9" y1="9" x2="21" y2="9"/>
+                  <line x1="9" y1="15" x2="21" y2="15"/>
+                  <line x1="9" y1="21" x2="21" y2="21"/>
+                  <line x1="9" y1="3" x2="9" y2="21"/>
+                </svg>
+                <span class="aside__text">Tables</span>
+              </a>
+            </li>
+            <li class="aside__item">
+              <a href="#pages" class="aside__link" data-section="pages">
+                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10,9 9,9 8,9"/>
+                </svg>
+                <span class="aside__text">Pages</span>
+              </a>
+            </li>
+          </ul>
+          
+          <h3 class="aside__heading">SUPPORT</h3>
+          <ul class="aside__list">
+            <li class="aside__item">
+              <a href="#messages" class="aside__link" data-section="messages">
+                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <span class="aside__text">Messages</span>
+                <span class="aside__badge aside__badge--primary">5</span>
+                <span class="aside__badge aside__badge--pro">Pro</span>
+              </a>
+            </li>
+            <li class="aside__item">
+              <a href="#inbox" class="aside__link" data-section="inbox">
+                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
+                </svg>
+                <span class="aside__text">Inbox</span>
+                <span class="aside__badge aside__badge--pro">Pro</span>
+              </a>
+            </li>
+            <li class="aside__item">
+              <a href="#invoice" class="aside__link" data-section="invoice">
+                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10,9 9,9 8,9"/>
+                </svg>
+                <span class="aside__text">Invoice</span>
+                <span class="aside__badge aside__badge--pro">Pro</span>
+              </a>
+            </li>
+          </ul>
+          
+          <h3 class="aside__heading">OTHERS</h3>
+          <ul class="aside__list">
+            <li class="aside__item">
+              <a href="#charts" class="aside__link" data-section="charts">
+                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+                  <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+                </svg>
+                <span class="aside__text">Charts</span>
+              </a>
+            </li>
+            <li class="aside__item">
+              <a href="#ui-elements" class="aside__link" data-section="ui-elements">
+                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7"/>
+                  <rect x="14" y="3" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                <span class="aside__text">UI Elements</span>
+              </a>
+            </li>
+            <li class="aside__item">
+              <a href="#settings" class="aside__link" data-section="settings">
+                <svg class="aside__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                <span class="aside__text">Settings</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- Home Article -->
+      <article id="home" data-dashboard-section class="article article--home is-active">
+        <header class="article__header">
+          <div class="dashboard__header">
+            <div class="dashboard__search">
+              <input type="text" placeholder="Type to search..." class="dashboard__search-input">
+            </div>
+            <div class="dashboard__controls">
+              <div class="dashboard__toggle">
+                <label class="toggle">
+                  <input type="checkbox" class="toggle__input">
+                  <span class="toggle__slider"></span>
+                </label>
+              </div>
+              <button class="dashboard__notification" aria-label="Notifications">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+                  <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+                </svg>
+              </button>
+              <button class="dashboard__chat" aria-label="Chat">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+              </button>
+              <div class="dashboard__user">
+                <div class="user__info">
+                  <div class="user__name">Admin User</div>
+                  <div class="user__role">System Administrator</div>
+                </div>
+                <div class="user__avatar">
+                  <img src="/src/assets/logo/octopus-logo.png" alt="User Avatar" class="user__image">
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div class="article__main">
+          <div class="dashboard__metrics">
+            <div class="metric-card">
+              <div class="metric-card__icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </div>
+              <div class="metric-card__content">
+                <div class="metric-card__value">3.456K</div>
+                <div class="metric-card__label">Total Views</div>
+                <div class="metric-card__change metric-card__change--positive">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23,6 13.5,15.5 8.5,10.5 1,18"/>
+                    <polyline points="17,6 23,6 23,12"/>
+                  </svg>
+                  0.43%
+                </div>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-card__icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="1" x2="12" y2="23"/>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </div>
+              <div class="metric-card__content">
+                <div class="metric-card__value">$45.2K</div>
+                <div class="metric-card__label">Total Profit</div>
+                <div class="metric-card__change metric-card__change--positive">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23,6 13.5,15.5 8.5,10.5 1,18"/>
+                    <polyline points="17,6 23,6 23,12"/>
+                  </svg>
+                  4.35%
+                </div>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-card__icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                </svg>
+              </div>
+              <div class="metric-card__content">
+                <div class="metric-card__value">2.450</div>
+                <div class="metric-card__label">Total Product</div>
+                <div class="metric-card__change metric-card__change--positive">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23,6 13.5,15.5 8.5,10.5 1,18"/>
+                    <polyline points="17,6 23,6 23,12"/>
+                  </svg>
+                  2.59%
+                </div>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-card__icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+              <div class="metric-card__content">
+                <div class="metric-card__value">3.456</div>
+                <div class="metric-card__label">Total Users</div>
+                <div class="metric-card__change metric-card__change--negative">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23,18 13.5,8.5 8.5,13.5 1,6"/>
+                    <polyline points="17,18 23,18 23,12"/>
+                  </svg>
+                  0.95%
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard__charts">
+            <div class="chart-card">
+              <div class="chart-card__header">
+                <h3 class="chart-card__title">Total Revenue</h3>
+                <p class="chart-card__subtitle">Total Sales (12.04.2022 - 12.05.2022)</p>
+              </div>
+              <div class="chart-card__content">
+                <div class="chart-placeholder">
+                  <svg width="100%" height="200" viewBox="0 0 400 200" class="chart-svg">
+                    <defs>
+                      <linearGradient id="revenueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#9ac8ff;stop-opacity:0.35" />
+                        <stop offset="100%" style="stop-color:#9ac8ff;stop-opacity:0.08" />
+                      </linearGradient>
+                      <linearGradient id="salesGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#00ccb3;stop-opacity:0.3" />
+                        <stop offset="100%" style="stop-color:#00ccb3;stop-opacity:0.05" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M20,180 Q100,120 180,100 T360,60" stroke="#9ac8ff" stroke-width="3" fill="none"/>
+                    <path d="M20,180 Q100,120 180,100 T360,60" stroke="#9ac8ff" stroke-width="2" fill="url(#revenueGradient)"/>
+                    <path d="M20,180 Q100,140 180,120 T360,80" stroke="#00ccb3" stroke-width="3" fill="none"/>
+                    <path d="M20,180 Q100,140 180,120 T360,80" stroke="#00ccb3" stroke-width="2" fill="url(#salesGradient)"/>
+                    <text x="20" y="20" font-size="12" fill="#666">Sep</text>
+                    <text x="100" y="20" font-size="12" fill="#666">Oct</text>
+                    <text x="180" y="20" font-size="12" fill="#666">Nov</text>
+                    <text x="260" y="20" font-size="12" fill="#666">Dec</text>
+                    <text x="340" y="20" font-size="12" fill="#666">Jan</text>
+                    <text x="380" y="20" font-size="12" fill="#666">Feb</text>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-card__header">
+                <h3 class="chart-card__title">Profit this week</h3>
+              </div>
+              <div class="chart-card__content">
+                <div class="chart-placeholder">
+                  <svg width="100%" height="200" viewBox="0 0 400 200" class="chart-svg">
+                    <rect x="20" y="120" width="40" height="60" fill="#b3d7ff" rx="2" stroke="#9ac8ff" stroke-width="1"/>
+                    <rect x="20" y="80" width="40" height="40" fill="#00ccb3" rx="2"/>
+                    
+                    <rect x="80" y="100" width="40" height="80" fill="#b3d7ff" rx="2" stroke="#9ac8ff" stroke-width="1"/>
+                    <rect x="80" y="60" width="40" height="40" fill="#00ccb3" rx="2"/>
+                    
+                    <rect x="140" y="90" width="40" height="90" fill="#b3d7ff" rx="2" stroke="#9ac8ff" stroke-width="1"/>
+                    <rect x="140" y="50" width="40" height="40" fill="#00ccb3" rx="2"/>
+                    
+                    <rect x="200" y="110" width="40" height="70" fill="#b3d7ff" rx="2" stroke="#9ac8ff" stroke-width="1"/>
+                    <rect x="200" y="70" width="40" height="40" fill="#00ccb3" rx="2"/>
+                    
+                    <rect x="260" y="100" width="40" height="80" fill="#b3d7ff" rx="2" stroke="#9ac8ff" stroke-width="1"/>
+                    <rect x="260" y="60" width="40" height="40" fill="#00ccb3" rx="2"/>
+                    
+                    <rect x="320" y="95" width="40" height="85" fill="#b3d7ff" rx="2" stroke="#9ac8ff" stroke-width="1"/>
+                    <rect x="320" y="55" width="40" height="40" fill="#00ccb3" rx="2"/>
+                    
+                    <text x="40" y="195" font-size="12" fill="#666">M</text>
+                    <text x="100" y="195" font-size="12" fill="#666">T</text>
+                    <text x="160" y="195" font-size="12" fill="#666">W</text>
+                    <text x="220" y="195" font-size="12" fill="#666">T</text>
+                    <text x="280" y="195" font-size="12" fill="#666">F</text>
+                    <text x="340" y="195" font-size="12" fill="#666">S</text>
+                    <text x="380" y="195" font-size="12" fill="#666">S</text>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Classes Article -->
+      <article id="classes" data-dashboard-section class="article article--classes">
+        <header class="article__header">
+          <h2 class="article__title">Classes</h2>
+        </header>
+
+        <div class="article__main">
+          <div class="card">
+            <h3 class="card__title">All Users</h3>
+            <p class="card__description">Manage all users</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Teachers</h3>
+            <p class="card__description">24 active teachers</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Students</h3>
+            <p class="card__description">486 active students</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Add User</h3>
+            <p class="card__description">Create new account</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Bulk Actions</h3>
+            <p class="card__description">Manage multiple users</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">User Reports</h3>
+            <p class="card__description">Export user data</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- Messages Article -->
+      <article id="messages" data-dashboard-section class="article article--messages">
+        <header class="article__header">
+          <h2 class="article__title">Messages</h2>
+        </header>
+
+        <div class="article__main">
+          <div id="rocketchat-container" class="messaging__container">
+            <div class="messaging__loading">
+              <p>Loading messaging interface...</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Settings Article -->
+      <article id="settings" data-dashboard-section class="article article--settings">
+        <header class="article__header">
+          <h2 class="article__title">Settings</h2>
+        </header>
+
+        <div class="article__main">
+          <div class="card">
+            <h3 class="card__title">Institution Settings</h3>
+            <p class="card__description">Configure institution details</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">System Settings</h3>
+            <p class="card__description">Platform configuration</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Maintenance</h3>
+            <p class="card__description">System maintenance tools</p>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="grid__footer footer">
+    <nav class="footer__nav">
+      <ul class="ul ul--footer">
+        <li class="ul__item ul__item--brand">
+          <a href="/src/pages/admin/home.html" class="brand">
+            <img src="/src/assets/logo/octopus-logo.png" alt="Neptino Logo" class="logo logo--small">
+          </a>
+        </li>
+        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Privacy Policy</a></li>
+        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Terms of Service</a></li>
+        <li class="ul__item"><a href="#" class="link link--footer link--subtle font-size--small">Contact</a></li>
+      </ul>
+    </nav>
+  </footer>
+
+  <script type="module" src="/src/scripts/app.ts"></script>
+  <script type="module" src="/src/scripts/navigation/index.ts"></script>
+  <script type="module" src="/src/scripts/backend/rocketchat/MessagingInterface.ts"></script>
 </body>
+
 </html>

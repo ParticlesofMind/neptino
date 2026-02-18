@@ -1,0 +1,64 @@
+// ==========================================================================
+// FOOTER LAYOUT COMPONENT - BEM Methodology
+// ==========================================================================
+
+.footer {
+  // ==========================================================================
+  // BLOCK BASE STYLES
+  // ==========================================================================
+  background: rgba(var(--color-background-rgb), 0.85);
+  backdrop-filter: blur(clamp(10px, 5vw, 12px)) saturate(1.1);
+  border-top: 1px solid rgba(var(--color-background-rgb), 0.2);
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.02), 0 -4px 12px rgba(0, 0, 0, 0.04);
+  padding: clamp(var(--spacing-3), 2vw, var(--spacing-4)) clamp(var(--spacing-4), 3vw, var(--spacing-5));
+  position: relative;
+  transition: all 0.2s ease-in-out;
+  background-image: linear-gradient(45deg, rgba(var(--color-background-rgb), 0.75) 0%, rgba(var(--color-background-rgb), 0.9) 100%);
+  color: var(--color-text-secondary);
+  font-size: clamp(0.8rem, 2vw, 0.875rem);
+  line-height: 1.5;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(var(--color-background-rgb), 0.05) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  // ==========================================================================
+  // ELEMENTS
+  // ==========================================================================
+  &__list {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    gap: var(--spacing-6);
+    align-items: center;
+    justify-content: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__item {
+    display: grid;
+    grid-auto-flow: column;
+    gap: var(--spacing-2);
+    align-items: center;
+
+    &--brand {
+      margin-right: var(--spacing-6);
+    }
+  }
+
+  &__link {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+
+    &:hover {
+      color: var(--color-text-primary);
+    }
+  }
+}

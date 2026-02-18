@@ -88,7 +88,7 @@ export class DataNormalizer {
     const toNumber = (value: unknown): number =>
       typeof value === "number" && Number.isFinite(value) ? value : 0;
 
-    const topics = toNumber(record.topics ?? record.topicCount ?? record.topicsPerLesson);
+    let topics = toNumber(record.topics ?? record.topicCount ?? record.topicsPerLesson);
     let objectives = toNumber(record.objectives ?? record.objectiveCount);
     let tasks = toNumber(record.tasks ?? record.taskCount);
 
