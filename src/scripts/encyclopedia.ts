@@ -885,7 +885,7 @@ async function render() {
     // ── Media cards (Audio, Video, Text, Maps, Timeline) ──
     if (showMedia) {
       const typeArg = mediaFilter && mediaFilter !== "Compendium" ? mediaFilter : null;
-      const { data: mediaItems, count: mediaCount } = await fetchMedia(typeArg);
+      const { data: mediaItems } = await fetchMedia(typeArg);
       const filteredMedia = mediaItems.filter((m) => matchesEntityFilters(m, activeFilters));
       total += filteredMedia.length;
 

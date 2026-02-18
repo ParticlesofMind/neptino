@@ -181,7 +181,7 @@ export function resolveCourseBuilderDOM(): CourseBuilderDOM {
     nextBtn:      reqId<HTMLButtonElement>('next-btn'),
     previousBtn:  reqId<HTMLButtonElement>('previous-btn'),
     sections:     all<HTMLElement>('[data-coursebuilder-section]'),
-    asideLinks:   all<HTMLAnchorElement>('[data-aside-link][data-section]'),
+    asideLinks:   all<HTMLAnchorElement>('.aside__link[data-section]'),
 
     // ── Canvas Scroll Nav (REQUIRED) ────────────────────
     scrollInput:    req<HTMLInputElement>('[data-engine-scroll-input]'),

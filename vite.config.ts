@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import { visualizer } from 'rollup-plugin-visualizer'
-import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
 import { readdirSync, statSync } from 'node:fs'
@@ -50,7 +49,6 @@ export default defineConfig({
     format: 'esm',
   },
   plugins: [
-    tailwindcss(),
     // Bundle analysis visualization (only when ANALYZE env var is set)
     ...(process.env.ANALYZE ? [visualizer({
       filename: 'dist/bundle-analysis.html',
