@@ -1,6 +1,7 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { PublicShell } from '@/components/layout/public-shell'
@@ -34,49 +35,86 @@ export default function LoginPage() {
 
   return (
     <PublicShell
-      title="Welcome back"
-      subtitle="Sign in to your Neptino account"
+      title="Sign In to Neptino"
+      subtitle="Access your learning platform with your credentials."
     >
-      <div className="mx-auto flex w-full max-w-2xl items-center justify-center py-2">
-        <form onSubmit={handleLogin} className="w-full max-w-md space-y-5 rounded-xl border bg-background p-8 shadow-sm">
-          <div className="space-y-5">
-          {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">{error}</div>}
+      <div className="mx-auto w-full max-w-md space-y-6">
+        {/* Form Introduction */}
+        <div>
+          <p className="text-slate-600 text-sm">
+            Welcome back to Neptino. Sign in with your email and password to continue.
+          </p>
+        </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Email</label>
+        {/* Sign In Form */}
+        <form onSubmit={handleLogin} className="space-y-4">
+          {error && (
+            <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+              {error}
+            </div>
+          )}
+
+          {/* Email Input */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-slate-900 mb-2">
+              Email Address
+            </label>
             <input
               type="email"
+              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              placeholder="Email address"
-              autoComplete="email"
+              placeholder="you@example.com"
               required
+              disabled={loading}
+              autoComplete="email"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition"
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Password</label>
+          {/* Password Input */}
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-slate-900 mb-2">
+              Password
+            </label>
             <input
               type="password"
+              id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              placeholder="Password"
-              autoComplete="current-password"
+              placeholder="••••••••"
               required
+              disabled={loading}
+              autoComplete="current-password"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition"
             />
           </div>
 
+          {/* Sign In Button */}
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex h-11 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
+            className="w-full py-2.5 px-4 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
-          </div>
         </form>
+
+        {/* Footer Links */}
+        <div className="pt-4 border-t border-slate-200 space-y-3">
+          <p className="text-sm text-slate-600 text-center">
+            Don&apos;t have an account yet?{' '}
+            <Link href="/signup" className="text-blue-600 font-medium hover:text-blue-700">
+              Sign up
+            </Link>
+          </p>
+          <p className="text-xs text-slate-500 text-center">
+            Need help?{' '}
+            <Link href="/" className="text-blue-600 hover:text-blue-700">
+              Contact support
+            </Link>
+          </p>
+        </div>
       </div>
     </PublicShell>
   )
