@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/scripts/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -23,6 +24,9 @@
 # misc
 .DS_Store
 *.pem
+supabase/.temp/
+supabase/.branches/
+supabase/supabase/.branches/
 
 # debug
 npm-debug.log*
