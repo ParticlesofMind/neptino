@@ -3,6 +3,9 @@
  * This file serves as the global initialization for all pages
  */
 
+// Import main stylesheet
+import '../scss/main.scss';
+
 import { initializeGlobalNavigation, initializeDashboardNavigation } from './navigation';
 import { initAuth, AuthFormHandler } from './backend/auth/auth';
 import { ViewToggleHandler } from './navigation/CourseBuilderNavigation';

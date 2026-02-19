@@ -5,84 +5,92 @@ const templateTypeOptionsMarkup = TEMPLATE_TYPE_OPTIONS
   .join("");
 
 const createTemplateModal = `
-  <article class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4" data-modal id="create-template-modal" aria-hidden="true">
-    <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl" data-modal-content>
-      <header class="mb-4 flex items-start justify-between">
-        <h2 class="text-xl font-semibold text-neutral-900">Create New Template</h2>
-        <button class="inline-flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100" data-modal-close type="button">
+  <article class="modal" data-modal id="create-template-modal" aria-hidden="true">
+    <div class="modal__content" data-modal-content style="max-width: 32rem;">
+      <header class="modal__header">
+        <h2 class="modal__title">Create New Template</h2>
+        <button class="button button--ghost" data-modal-close type="button" aria-label="Close">
           &times;
         </button>
       </header>
-      <form class="space-y-4" id="create-template-form" data-template-form>
-        <label class="block text-sm font-medium text-neutral-700">
-          Template Name*
-          <input class="mt-2 w-full rounded-md border-0 py-2 text-sm text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" type="text" name="template-name" required placeholder="Enter template name" />
-        </label>
-        <label class="block text-sm font-medium text-neutral-700">
-          Template Type*
-          <select class="mt-2 w-full rounded-md border-0 py-2 text-sm text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" name="template-type" required>
-            <option value="">Select template type</option>
-            ${templateTypeOptionsMarkup}
-          </select>
-        </label>
-        <label class="block text-sm font-medium text-neutral-700">
-          Description (Optional)
-          <textarea class="mt-2 w-full rounded-md border-0 py-2 text-sm text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" name="template-description" rows="3"
-            placeholder="Describe your template..."></textarea>
-        </label>
-        <footer class="flex justify-end gap-3">
-          <button class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50" type="button"
-            onclick="TemplateManager.hideCreateTemplateModal()">
-            Cancel
-          </button>
-          <button class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700" type="submit">
-            Create Template
-          </button>
-        </footer>
+      <form class="form" id="create-template-form" data-template-form>
+        <div class="modal__body">
+          <label class="form__label">
+            Template Name*
+            <input class="input input--text" type="text" name="template-name" required placeholder="Enter template name" />
+          </label>
+          <label class="form__label">
+            Template Type*
+            <select class="input input--select" name="template-type" required>
+              <option value="">Select template type</option>
+              ${templateTypeOptionsMarkup}
+            </select>
+          </label>
+          <label class="form__label">
+            Description (Optional)
+            <textarea class="input input--textarea form__textarea" name="template-description" rows="3"
+              placeholder="Describe your template..."></textarea>
+          </label>
+        </div>
       </form>
+      <footer class="modal__footer">
+        <button class="button button--outline" type="button"
+          onclick="TemplateManager.hideCreateTemplateModal()">
+          Cancel
+        </button>
+        <button class="button button--primary" type="submit" form="create-template-form">
+          Create Template
+        </button>
+      </footer>
     </div>
   </article>
 `;
 
 const loadTemplateModal = `
-  <article class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4" data-modal id="load-template-modal" aria-hidden="true">
-    <div class="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl" data-modal-content>
-      <header class="mb-4 flex items-start justify-between">
-        <h2 class="text-xl font-semibold text-neutral-900">Load Existing Template</h2>
-        <button class="inline-flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100" data-modal-close type="button">
+  <article class="modal" data-modal id="load-template-modal" aria-hidden="true">
+    <div class="modal__content" data-modal-content style="max-width: 48rem;">
+      <header class="modal__header">
+        <h2 class="modal__title">Load Existing Template</h2>
+        <button class="button button--ghost" data-modal-close type="button" aria-label="Close">
           &times;
         </button>
       </header>
-      <div class="space-y-4">
-        <form class="flex flex-col gap-3 sm:flex-row" role="search" data-template-browser-controls>
-          <input class="w-full rounded-md border-0 py-2 text-sm text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" type="text" id="template-search" placeholder="Search templates..." />
-          <select class="w-full rounded-md border-0 py-2 text-sm text-neutral-900 shadow-sm ring-1 ring-inset ring-neutral-300 focus:ring-2 focus:ring-inset focus:ring-primary-600" id="template-type-filter">
-            <option value="">All Types</option>
-            ${templateTypeOptionsMarkup}
-          </select>
+      <div class="modal__body">
+        <form class="form" role="search" data-template-browser-controls>
+          <div class="form__row">
+            <label class="form__label" style="flex: 1;">
+              <input class="input input--text" type="text" id="template-search" placeholder="Search templates..." />
+            </label>
+            <label class="form__label" style="flex: 0 0 12rem;">
+              <select class="input input--select" id="template-type-filter">
+                <option value="">All Types</option>
+                ${templateTypeOptionsMarkup}
+              </select>
+            </label>
+          </div>
         </form>
         <div>
-          <p class="text-sm text-neutral-500" id="template-loading" style="display: none" data-template-loading>
+          <p class="modal__text" id="template-loading" style="display: none; text-align: center;" data-template-loading>
             Loading your templates...
           </p>
-          <div class="grid gap-3" id="template-list-content" style="display: none" data-template-list>
+          <div id="template-list-content" style="display: none; margin-top: 1rem;" data-template-list>
             <!-- Templates will be populated here by JavaScript -->
           </div>
-          <div class="text-center text-sm text-neutral-500" id="no-templates-message" style="display: none" data-template-empty>
-            <span class="text-2xl" data-template-empty-icon>📄</span>
-            <h3 class="mt-2 text-base font-semibold text-neutral-800">No Templates Found</h3>
-            <p class="mt-1">
+          <div style="text-align: center; padding: 2rem; display: none;" id="no-templates-message" data-template-empty>
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;" data-template-empty-icon>📄</div>
+            <h3 class="heading heading--h4" style="margin: 0.5rem 0;">No Templates Found</h3>
+            <p class="modal__text">
               You haven't created any templates yet. Use the buttons in the Template Configuration section to create one.
             </p>
           </div>
         </div>
       </div>
-      <footer class="mt-6 flex justify-end gap-3">
-        <button class="inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50" type="button"
+      <footer class="modal__footer">
+        <button class="button button--outline" type="button"
           onclick="TemplateManager.hideLoadTemplateModal()">
           Cancel
         </button>
-        <button class="inline-flex items-center justify-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 disabled:opacity-50" type="button" id="load-selected-template" disabled>
+        <button class="button button--primary" type="button" id="load-selected-template" disabled>
           Load Template
         </button>
       </footer>

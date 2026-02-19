@@ -4,11 +4,14 @@
     $shadow: null,
     $border: 1px solid var(--color-neutral-200)
 ) {
-    $default-shadow: (0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1));
     background: $bg;
     border-radius: $radius;
     border: $border;
-    box-shadow: if($shadow == null, $default-shadow, $shadow);
+    @if $shadow == null {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+    } @else {
+        box-shadow: $shadow;
+    }
 }
 
 @mixin engine-hide-scrollbar {

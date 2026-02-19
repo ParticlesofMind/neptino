@@ -190,13 +190,20 @@ export async function createCourse(
  .single();
 
  if (courseError) {
- console.error("Error creating course:", courseError);
+ console.error("❌ Error creating course:", {
+   code: courseError.code,
+   message: courseError.message,
+   details: courseError.details,
+   hint: (courseError as any).hint,
+   fullError: courseError
+ });
  return {
  success: false,
  error: `Failed to create course: ${courseError.message}`,
  };
  }
 
+ console.log('✅ Course created with ID:', courseId);
  const courseId = courseData.id;
 
  // Upload image if provided

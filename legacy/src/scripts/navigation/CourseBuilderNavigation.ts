@@ -274,7 +274,7 @@ export class AsideNavigation {
       return;
     }
 
-    this.asideLinks = document.querySelectorAll('[data-aside-link][data-section]');
+    this.asideLinks = document.querySelectorAll('.aside__link[data-section]');
     this.contentSections = document.querySelectorAll<HTMLElement>('[data-course-section][id]');
     this.boundHandleLinkClick = this.handleLinkClick.bind(this);
 
@@ -647,7 +647,7 @@ export class ModalHandler {
     this.hideModal();
 
     // Show the new modal
-    modal.classList.remove('hidden');
+    modal.classList.add('modal--active');
     modal.setAttribute('aria-hidden', 'false');
     this.activeModal = modal;
 
@@ -659,7 +659,7 @@ export class ModalHandler {
   public hideModal(): void {
     if (!this.activeModal) return;
 
-    this.activeModal.classList.add('hidden');
+    this.activeModal.classList.remove('modal--active');
     this.activeModal.setAttribute('aria-hidden', 'true');
     this.activeModal = null;
 

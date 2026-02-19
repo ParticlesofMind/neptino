@@ -42,7 +42,11 @@ export class CourseFormHandler {
 
         this.currentCourseId = this.currentCourseId || this.getCourseId();
         this.registerCourseIdListeners();
-        this.initialize();
+        
+        // Fire initialization asynchronously with error handling
+        this.initialize().catch(error => {
+            console.error(`❌ CourseFormHandler initialization failed for section "${sectionName}":`, error);
+        });
     }
 
     // ==========================================================================
@@ -168,17 +172,38 @@ export class CourseFormHandler {
     // ==========================================================================
 
     private async initialize(): Promise<void> {
-        // Wait for form to be available (section might not be visible yet)
-        await this.findFormWithRetry();
-        if (this.form) {
-            await this.initializeFields();
-            await this.loadExistingData();
-            this.setupEventListeners();
-            this.validateForm();
-        } else {
-            console.warn('⚠️ Form not found after retries, will retry when section becomes active');
-            // Set up a listener to retry when section becomes active
-            this.setupFormRetryListener();
+        try {
+            console.log(`[${this.sectionConfig.section}] 📋 Initializing form handler...`);
+            
+            // Wait for form to be available (section might not be visible yet)
+            console.log(`[${this.sectionConfig.section}] 🔍 Finding form...`);
+            await this.findFormWithRetry();
+            
+            if (this.form) {
+                console.log(`[${this.sectionConfig.section}] ✅ Form found, initializing fields...`);
+                await this.initializeFields();
+                
+                console.log(`[${this.sectionConfig.section}] ✅ Fields initialized, loading existing data...`);
+                await this.loadExistingData();
+                
+                console.log(`[${this.sectionConfig.section}] ✅ Setting up event listeners...`);
+                this.setupEventListeners();
+                
+                console.log(`[${this.sectionConfig.section}] ✅ Validating form...`);
+                this.validateForm();
+                
+                console.log(`[${this.sectionConfig.section}] ✅ Form handler initialization COMPLETE`);
+            } else {
+                console.warn(`[${this.sectionConfig.section}] ⚠️ Form not found after retries, will retry when section becomes active`);
+                // Set up a listener to retry when section becomes active
+                this.setupFormRetryListener();
+            }
+        } catch (error) {
+            console.error(`[${this.sectionConfig.section}] ❌ Initialize() threw an error:`, error);
+            // Still try to setup retry listener
+            if (!this.form) {
+                this.setupFormRetryListener();
+            }
         }
     }
 
@@ -242,6 +267,7 @@ export class CourseFormHandler {
         if (this.sectionConfig.section === 'essentials') {
             this.form = document.querySelector('#course-essentials-form');
             if (this.form) {
+                console.log('✅ Found essentials form by ID');
                 return;
             }
         }
@@ -249,6 +275,7 @@ export class CourseFormHandler {
         if (this.sectionConfig.section === 'pedagogy') {
             this.form = document.querySelector('#course-pedagogy-form');
             if (this.form) {
+                console.log('✅ Found pedagogy form by ID');
                 return;
             }
         }
@@ -260,6 +287,7 @@ export class CourseFormHandler {
         if (sectionArticle) {
             this.form = sectionArticle.querySelector("form");
             if (this.form) {
+                console.log('✅ Found form in section article');
                 return;
             }
         }
@@ -269,6 +297,7 @@ export class CourseFormHandler {
         if (activeArticle) {
             this.form = activeArticle.querySelector("form");
             if (this.form) {
+                console.log('✅ Found form in active article');
                 return;
             }
         }
@@ -277,63 +306,88 @@ export class CourseFormHandler {
         if (!this.form) {
             this.form = document.querySelector('form');
             if (this.form) {
+                console.log('✅ Found form (fallback)');
                 return;
             }
         }
 
         if (this.form) {
-             
+            console.log('✅ Form found:', this.form.id || 'unnamed');
         } else {
-            console.error('❌ No form found for section:', this.sectionConfig.section);
+            console.error('❌ CRITICAL: No form found for section:', this.sectionConfig.section);
+            console.error('   - DOM state:', {
+               sectionExists: !!document.querySelector(`[data-course-section="${this.sectionConfig.section}"]`),
+               formsInDOM: document.querySelectorAll('form').length,
+                activeSections: document.querySelectorAll('[data-course-section]').length
+            });
         }
     } private async initializeFields(): Promise<void> {
-        if (!this.form) return;
+        if (!this.form) {
+            console.warn(`[${this.sectionConfig.section}] ⚠️ No form available to initialize fields`);
+            return;
+        }
+
+        console.log(`[${this.sectionConfig.section}] 📝 Initializing ${this.sectionConfig.fields.length} fields...`);
 
         for (const fieldConfig of this.sectionConfig.fields) {
             const field = this.form.querySelector(
                 `[name="${fieldConfig.name}"]`,
             ) as HTMLElement;
 
-            if (!field) continue;
-
-            // Handle display fields
-            if (fieldConfig.type === "display" && fieldConfig.displayFunction) {
-                try {
-                    const displayValue = await fieldConfig.displayFunction();
-                    this.setDisplayField(field, displayValue);
-                } catch (error) {
-                    console.error(
-                        `Error setting display field ${fieldConfig.name}:`,
-                        error,
-                    );
-                }
+            if (!field) {
+                console.warn(`[${this.sectionConfig.section}] ⚠️ Field not found: ${fieldConfig.name}`);
+                continue;
             }
 
-            // Handle select fields with options
-            if (fieldConfig.type === "select" && field.tagName === "SELECT") {
-                if (fieldConfig.loadDynamically) {
-                    if (fieldConfig.name === "course_language") {
-                        // Load languages dynamically
-                        try {
-                            const { populateCourseLanguageSelect } = await import('../settings/languageLoader');
-                            await populateCourseLanguageSelect(field as HTMLSelectElement);
-                        } catch (error) {
-                            console.error('❌ Error loading course languages:', error);
-                            // Fallback to basic options
-                            this.addFallbackLanguageOptions(field as HTMLSelectElement);
-                        }
-                    } else if (fieldConfig.name === "teacher_id") {
-                        // Load teachers dynamically
-                        await this.loadTeachers(field as HTMLSelectElement);
-                    } else if (fieldConfig.name === "institution") {
-                        // Load institutions dynamically
-                        await this.loadInstitutions(field as HTMLSelectElement);
+            try {
+                // Handle display fields
+                if (fieldConfig.type === "display" && fieldConfig.displayFunction) {
+                    try {
+                        const displayValue = await fieldConfig.displayFunction();
+                        this.setDisplayField(field, displayValue);
+                        console.log(`[${this.sectionConfig.section}] ✅ Display field "${fieldConfig.name}" initialized`);
+                    } catch (error) {
+                        console.error(
+                            `[${this.sectionConfig.section}] ❌ Error setting display field ${fieldConfig.name}:`,
+                            error,
+                        );
                     }
-                } else if (fieldConfig.options) {
-                    this.populateSelectField(field as HTMLSelectElement, fieldConfig);
                 }
+
+                // Handle select fields with options
+                if (fieldConfig.type === "select" && field.tagName === "SELECT") {
+                    if (fieldConfig.loadDynamically) {
+                        if (fieldConfig.name === "course_language") {
+                            // Load languages dynamically
+                            try {
+                                const { populateCourseLanguageSelect } = await import('../settings/languageLoader');
+                                await populateCourseLanguageSelect(field as HTMLSelectElement);
+                                console.log(`[${this.sectionConfig.section}] ✅ Languages loaded`);
+                            } catch (error) {
+                                console.error(`[${this.sectionConfig.section}] ❌ Error loading course languages:`, error);
+                                // Fallback to basic options
+                                this.addFallbackLanguageOptions(field as HTMLSelectElement);
+                            }
+                        } else if (fieldConfig.name === "teacher_id") {
+                            // Load teachers dynamically
+                            console.log(`[${this.sectionConfig.section}] 👤 Loading teachers...`);
+                            await this.loadTeachers(field as HTMLSelectElement);
+                        } else if (fieldConfig.name === "institution") {
+                            // Load institutions dynamically
+                            console.log(`[${this.sectionConfig.section}] 🏫 Loading institutions...`);
+                            await this.loadInstitutions(field as HTMLSelectElement);
+                        }
+                    } else if (fieldConfig.options) {
+                        this.populateSelectField(field as HTMLSelectElement, fieldConfig);
+                        console.log(`[${this.sectionConfig.section}] ✅ Select field "${fieldConfig.name}" populated with ${fieldConfig.options.length} options`);
+                    }
+                }
+            } catch (error) {
+                console.error(`[${this.sectionConfig.section}] ❌ Error initializing field "${fieldConfig.name}":`, error);
             }
         }
+        
+        console.log(`[${this.sectionConfig.section}] ✅ Field initialization complete`);
     }
 
     private setDisplayField(field: HTMLElement, value: string): void {
@@ -399,14 +453,29 @@ export class CourseFormHandler {
   
     }
 
+    private async getAuthUserSafely(): Promise<{ id: string; email?: string | null; user_metadata?: Record<string, any> } | null> {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) return user;
+        } catch (error) {
+            console.warn('⚠️ Unable to resolve auth user via getUser:', error);
+        }
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) return session.user;
+        } catch (error) {
+            console.warn('⚠️ Unable to resolve auth session:', error);
+        }
+
+        return null;
+    }
+
     private async loadTeachers(select: HTMLSelectElement): Promise<void> {
         try {
-            console.log('👤 Loading teachers...');
-            
-            const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
-            if (authError) {
-                console.warn('⚠️ Unable to resolve current user for teacher fallback:', authError);
-            }
+            console.log(`[${this.sectionConfig.section}] 👤 Loading teachers...`);
+
+            const authUser = await this.getAuthUserSafely();
 
             // Get all users with teacher role
             const { data: teachers, error } = await supabase
@@ -417,7 +486,7 @@ export class CourseFormHandler {
                 .order('first_name');
 
             if (error) {
-                console.error('❌ Error loading teachers:', error);
+                console.error(`[${this.sectionConfig.section}] ❌ Supabase error loading teachers:`, error);
                 // Fallback: add current user as option when available
                 if (authUser) {
                     const fallbackName = this.buildUserDisplayName(authUser);
@@ -426,6 +495,7 @@ export class CourseFormHandler {
                     option.textContent = fallbackName;
                     select.appendChild(option);
                     select.value = authUser.id;
+                    console.log(`[${this.sectionConfig.section}] ✅ Teacher fallback: added current user`);
                 }
                 return;
             }
@@ -464,26 +534,23 @@ export class CourseFormHandler {
                     option.textContent = name;
                     select.appendChild(option);
                 });
-                console.log('✅ Loaded', teacherOptions.size, 'teachers');
+                console.log(`[${this.sectionConfig.section}] ✅ Loaded ${teacherOptions.size} teachers`);
                 if (authUser && teacherOptions.has(authUser.id)) {
                     select.value = authUser.id;
                 }
             } else {
-                console.warn('⚠️ No teachers found');
+                console.warn(`[${this.sectionConfig.section}] ⚠️ No teachers found`);
             }
         } catch (error) {
-            console.error('❌ Exception loading teachers:', error);
+            console.error(`[${this.sectionConfig.section}] ❌ Exception loading teachers:`, error);
         }
     }
 
     private async loadInstitutions(select: HTMLSelectElement): Promise<void> {
         try {
-            console.log('🏫 Loading institutions...');
+            console.log(`[${this.sectionConfig.section}] 🏫 Loading institutions...`);
 
-            const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
-            if (authError) {
-                console.warn('⚠️ Unable to resolve current user for institution fallback:', authError);
-            }
+            const authUser = await this.getAuthUserSafely();
             
             // Get unique institutions from users table
             const { data: users, error } = await supabase
@@ -492,7 +559,7 @@ export class CourseFormHandler {
                 .not('institution', 'is', null);
 
             if (error) {
-                console.error('❌ Error loading institutions:', error);
+                console.error(`[${this.sectionConfig.section}] ❌ Supabase error loading institutions:`, error);
                 // Fallback: add common options
                 const fallbackInstitutions = ['Independent', 'School', 'University', 'College'];
                 const placeholder = select.querySelector('option[value=""]');
@@ -506,6 +573,7 @@ export class CourseFormHandler {
                     option.textContent = inst;
                     select.appendChild(option);
                 });
+                console.log(`[${this.sectionConfig.section}] ✅ Institution fallback options loaded`);
                 return;
             }
 
@@ -550,7 +618,10 @@ export class CourseFormHandler {
                 }
             }
 
-            // Add "Independent" as default option
+            // Ensure we always show baseline options
+            if (institutions.size === 0) {
+                ['Independent', 'School', 'University', 'College'].forEach(inst => institutions.add(inst));
+            }
             if (!institutions.has('Independent')) {
                 institutions.add('Independent');
             }
@@ -564,13 +635,13 @@ export class CourseFormHandler {
                 select.appendChild(option);
             });
 
-            console.log('✅ Loaded', sortedInstitutions.length, 'institutions');
+            console.log(`[${this.sectionConfig.section}] ✅ Loaded ${sortedInstitutions.length} institutions`);
 
             if (preferredInstitution && institutions.has(preferredInstitution)) {
                 select.value = preferredInstitution;
             }
         } catch (error) {
-            console.error('❌ Exception loading institutions:', error);
+            console.error(`[${this.sectionConfig.section}] ❌ Exception loading institutions:`, error);
         }
     }
 
@@ -1076,20 +1147,30 @@ export class CourseFormHandler {
 
     private async handleSubmit(event: Event): Promise<void> {
         event.preventDefault();
+        
+        console.log(`[${this.sectionConfig.section}] 📤 Form submission started`);
 
-        if (this.form?.dataset.submitting === "true") return;
+        if (this.form?.dataset.submitting === "true") {
+            console.warn(`[${this.sectionConfig.section}] ⚠️ Form already submitting, ignoring duplicate submission`);
+            return;
+        }
 
         if (!this.isFormValid()) {
+            console.warn(`[${this.sectionConfig.section}] ⚠️ Form validation failed`);
             this.showStatus("Please fill in all required fields", "error");
             return;
         }
+
+        console.log(`[${this.sectionConfig.section}] ✅ Form validation passed`);
 
         if (this.form) this.form.dataset.submitting = "true";
 
         try {
             if (this.sectionConfig.section === "essentials") {
+                console.log(`[${this.sectionConfig.section}] ➕ Creating new course...`);
                 await this.createNewCourse();
             } else {
+                console.log(`[${this.sectionConfig.section}] ♻️ Updating existing course...`);
                 await this.updateExistingCourse();
             }
         } finally {
@@ -1102,21 +1183,44 @@ export class CourseFormHandler {
     // ==========================================================================
 
     private validateForm(): void {
-        if (!this.form) return;
+        if (!this.form) {
+            console.warn(`[${this.sectionConfig.section}] ⚠️ Cannot validate - form not found`);
+            return;
+        }
 
         const formData = this.getFormData();
         this.validationState = validateFormSection(
             this.sectionConfig.fields,
             formData,
         );
+        
+        const missingFields = Object.entries(this.validationState)
+            .filter(([_, isValid]) => !isValid)
+            .map(([field, _]) => field);
+        
+        if (missingFields.length > 0) {
+            console.warn(`[${this.sectionConfig.section}] ⚠️ Validation failed - missing fields:`, missingFields);
+        } else {
+            console.log(`[${this.sectionConfig.section}] ✅ Form validation passed`);
+        }
+        
         this.updateUI();
     }
 
     private isFormValid(): boolean {
-        return isFormSectionValid(
+        const isValid = isFormSectionValid(
             this.sectionConfig.requiredFields,
             this.validationState,
         );
+        
+        if (!isValid) {
+            const missingRequired = this.sectionConfig.requiredFields.filter(
+                field => !this.validationState[field]
+            );
+            console.warn(`[${this.sectionConfig.section}] ⚠️ Form is not valid - missing required fields:`, missingRequired);
+        }
+        
+        return isValid;
     }
 
     private getFormData(): { [key: string]: any } {

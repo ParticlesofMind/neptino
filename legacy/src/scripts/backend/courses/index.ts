@@ -43,7 +43,7 @@ export class CourseBuilder {
  private initialize(): void {
  this.getCourseId();
  this.initializeCurrentSection();
- this.setupSectionNavigation();
+ // Remove duplicate: setupSectionNavigation() - handled by AsideNavigation only
  this.setupAsideNavigationListener();
  
  // Manage navigation tabs based on course existence
@@ -317,20 +317,6 @@ const normalized = saved.trim();
 return normalized.length ? normalized : null;
 }
 
- private setupSectionNavigation(): void {
- // Listen for aside navigation clicks
- const asideLinks = document.querySelectorAll('[data-aside-link][data-section]');
- asideLinks.forEach((link) => {
- link.addEventListener("click", (e) => {
- e.preventDefault();
- const section = (e.target as HTMLElement).getAttribute("data-section");
- if (section) {
- this.navigateToSection(section);
- }
- });
- });
- }
-
  private setupAsideNavigationListener(): void {
  // Listen for section activation events from AsideNavigation
  window.addEventListener('coursebuilderSectionActivated', ((e: CustomEvent) => {
@@ -479,7 +465,7 @@ articles.forEach((article) => {
   */
  private updateNavigationTabsState(): void {
    const hasCourse = !!this.courseId;
-  const allNavLinks = document.querySelectorAll<HTMLAnchorElement>('[data-aside-link][data-section]');
+  const allNavLinks = document.querySelectorAll<HTMLAnchorElement>('.aside__link[data-section]');
    
    // Sections that should always be enabled
    const alwaysEnabledSections = ['essentials', 'advanced-settings'];

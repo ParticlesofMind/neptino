@@ -268,17 +268,17 @@ export async function fetchMedia(
       .from("encyclopedia_items")
       .select("id, title, knowledge_type, domain, secondary_domains, era_group, depth")
       .in("id", itemIds);
-    const entityMap = new Map(
-      (entities ?? []).map((e: {
-        id: string;
-        title: string;
-        knowledge_type: string;
-        domain: string | null;
-        secondary_domains: string[] | null;
-        era_group: EraGroup | null;
-        depth: DepthLevel | null;
-      }) => [e.id, e]),
-    );
+    type ParentEntity = {
+      id: string;
+      title: string;
+      knowledge_type: string;
+      domain: string | null;
+      secondary_domains: string[] | null;
+      era_group: EraGroup | null;
+      depth: DepthLevel | null;
+    };
+    const entityRows = (entities ?? []) as ParentEntity[];
+    const entityMap = new Map(entityRows.map((e) => [e.id, e]));
     for (const m of mediaItems) {
       const parent = entityMap.get(m.item_id);
       if (parent) {

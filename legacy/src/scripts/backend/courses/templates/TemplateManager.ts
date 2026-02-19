@@ -15,8 +15,7 @@ export class TemplateManager {
   static showCreateTemplateModal(): void {
     const modal = document.getElementById('create-template-modal');
     if (modal) {
-      modal.removeAttribute('data-modal-state');
-      modal.classList.remove('hidden');
+      modal.classList.add('modal--active');
       modal.setAttribute('aria-hidden', 'false');
       document.body.classList.add('overflow-hidden');
     }
@@ -25,7 +24,7 @@ export class TemplateManager {
   static hideCreateTemplateModal(): void {
     const modal = document.getElementById('create-template-modal');
     if (modal) {
-      modal.classList.add('hidden');
+      modal.classList.remove('modal--active');
       modal.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('overflow-hidden');
     }

@@ -13,11 +13,92 @@ import {
 
 let currentUser: User | null = null;
 
+async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const timeout = new Promise<T>((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error("Timeout"));
+    }, ms);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timer) {
+      clearTimeout(timer);
+    }
+  }
+}
+
+async function ensureUserProfile(user: User): Promise<void> {
+  try {
+    console.log("👤 ensureUserProfile starting for:", user.email);
+    const metadata = user.user_metadata || {};
+    const normalizedFirstName =
+      typeof metadata.first_name === "string" && metadata.first_name.trim()
+        ? metadata.first_name.trim()
+        : user.email?.split("@")[0] || "User";
+    const normalizedLastName =
+      typeof metadata.last_name === "string" && metadata.last_name.trim()
+        ? metadata.last_name.trim()
+        : "";
+    const userRole =
+      typeof metadata.user_role === "string" && metadata.user_role.trim()
+        ? metadata.user_role.trim()
+        : "teacher";
+    const institution =
+      typeof metadata.institution === "string" && metadata.institution.trim()
+        ? metadata.institution.trim()
+        : "Independent";
+
+    console.log("📋 Calling ensure_user_profile RPC");
+    const { error: rpcError } = await withTimeout(
+      supabase.rpc("ensure_user_profile", {
+        user_id: user.id,
+        user_email: user.email,
+        user_role: userRole,
+      }),
+      3000
+    );
+
+    if (rpcError) {
+      console.warn("⚠️ RPC error, falling back to upsert:", rpcError.message);
+      await supabase
+        .from("users")
+        .upsert(
+          {
+            id: user.id,
+            email: user.email,
+            first_name: normalizedFirstName,
+            last_name: normalizedLastName,
+            role: userRole,
+            institution,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "id" },
+        );
+    }
+    console.log("✅ ensureUserProfile completed");
+  } catch (error) {
+    console.error("❌ ensureUserProfile error:", error);
+  }
+}
+
 async function syncRocketChatAccount(
   user: User,
   password: string,
 ): Promise<void> {
   try {
+    const isAvailable = await withTimeout(
+      rocketChatService.isServiceAvailable(),
+      2000,
+    ).catch(() => false);
+
+    if (!isAvailable) {
+      console.warn("Rocket.Chat unavailable - skipping sync");
+      return;
+    }
+
     const { data: sessionData } = await supabase.auth.getSession();
     if (!sessionData.session) {
       console.warn(
@@ -31,11 +112,14 @@ async function syncRocketChatAccount(
       user.user_metadata?.full_name ||
       user.email?.split("@")[0] || 'Unknown';
 
-    const credentials = await rocketChatService.ensureUserCredentials(
-      user.email || '',
-      password,
-      displayName,
-    );
+    const credentials = await withTimeout(
+      rocketChatService.ensureUserCredentials(
+        user.email || '',
+        password,
+        displayName,
+      ),
+      4000,
+    ).catch(() => null);
 
     if (!credentials) {
       console.warn(
@@ -48,15 +132,18 @@ async function syncRocketChatAccount(
     // Upsert Rocket.Chat credentials in private.user_integrations
     await supabase
       .from("user_integrations")
-      .upsert({
-        user_id: user.id,
-        rocketchat_user_id: credentials.userId,
-        rocketchat_auth_token: credentials.authToken,
-        rocketchat_username: credentials.username,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: "user_id",
-      });
+      .upsert(
+        {
+          user_id: user.id,
+          rocketchat_user_id: credentials.userId,
+          rocketchat_auth_token: credentials.authToken,
+          rocketchat_username: credentials.username,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "user_id",
+        },
+      );
   } catch (error) {
     console.error("Failed to sync Rocket.Chat account:", error);
   }
@@ -110,11 +197,11 @@ export async function signUp(
  const createdUser = data?.user;
 
  if (createdUser) {
-   await syncRocketChatAccount(createdUser as User, password, fullName);
+   void syncRocketChatAccount(createdUser as User, password, fullName);
  } else {
    // Provision a Rocket.Chat account even if the Supabase session is pending verification
    try {
-     await rocketChatService.ensureUserCredentials(email, password, fullName);
+     void rocketChatService.ensureUserCredentials(email, password, fullName);
    } catch (syncError) {
      console.error(
        "Failed to provision Rocket.Chat user during signup:",
@@ -132,6 +219,7 @@ export async function signUp(
 
 // Sign in existing user
 export async function signIn(email: string, password: string) {
+  console.log("🔐 Attempting sign in for:", email);
   try {
     let signedInUser: User | null = null;
 
@@ -141,7 +229,7 @@ export async function signIn(email: string, password: string) {
     });
 
     if (error) {
-      console.error("Sign in error:", error);
+      console.error("❌ Sign in error:", error);
       // Do NOT auto-create accounts on invalid creds; this caused duplicate unconfirmed users.
       return { success: false, error: error.message };
     }
@@ -149,6 +237,8 @@ export async function signIn(email: string, password: string) {
     if (data.user) {
       signedInUser = data.user as User;
       currentUser = data.user;
+      console.log("✅ Sign in successful, user:", data.user.email);
+      console.log("📊 User metadata:", data.user.user_metadata);
 
       rememberRocketChatPassword(password);
       console.log(
@@ -157,7 +247,7 @@ export async function signIn(email: string, password: string) {
     }
 
     if (signedInUser) {
-      await syncRocketChatAccount(signedInUser, password);
+      void syncRocketChatAccount(signedInUser, password);
     }
 
     return { success: true };
@@ -171,30 +261,40 @@ export async function signIn(email: string, password: string) {
 export async function signOut() {
  try {
  console.log("🔍 Attempting sign out...");
+
+  // Always clear local session first so the UI can move on.
+  try {
+    await withTimeout(supabase.auth.signOut({ scope: "local" }), 1500);
+  } catch (error) {
+    console.warn("⚠️ Local sign-out failed:", error);
+  }
  
  // Get current session to validate
- const { data: { session }, error: sessionError } = await supabase.auth.getSession();
- if (sessionError) {
- console.warn("⚠️ Could not retrieve session:", sessionError.message);
+ try {
+   const { data: { session }, error: sessionError } = await withTimeout(
+     supabase.auth.getSession(),
+     3000,
+   );
+   if (sessionError) {
+     console.warn("⚠️ Could not retrieve session:", sessionError.message);
+   }
+   console.log("📊 Current session:", session ? "Active" : "None");
+ } catch (error) {
+   console.warn("⚠️ Session check timed out:", error);
  }
- console.log("📊 Current session:", session ? "Active" : "None");
- 
- const { error } = await supabase.auth.signOut();
- 
- if (error) {
- console.error("❌ Supabase signOut error:", {
- message: error.message,
- status: (error as any).status,
- statusText: (error as any).statusText,
- fullError: error
- });
- 
- // Even if signOut fails, clear local state
- // This ensures the user can at least be redirected away
- currentUser = null;
- clearRememberedRocketChatPassword();
- console.log("⚠️ Forcing local sign-out due to server error");
- return { success: false, error: error.message };
+
+ let signOutError: Error | null = null;
+ try {
+   const { error } = await withTimeout(supabase.auth.signOut(), 3000);
+   if (error) {
+     signOutError = error;
+   }
+ } catch (error) {
+   signOutError = error instanceof Error ? error : new Error("Sign out failed");
+ }
+
+ if (signOutError) {
+   console.warn("⚠️ Remote sign-out failed:", signOutError.message);
  }
  
  console.log("✅ Sign out successful");
@@ -251,53 +351,73 @@ export function redirectUser(userRole: string) {
 
 // Initialize auth state listener
 export function initAuth() {
+ console.log("🔐 Initializing auth state listener");
+ 
  supabase.auth.onAuthStateChange(async (event, session) => {
+ console.log("🔔 Auth state change:", event, "User:", session?.user?.email);
 
- if (event === "SIGNED_IN" && session?.user) {
- currentUser = session.user;
+ try {
+   if (event === "SIGNED_IN" && session?.user) {
+   console.log("✅ User signed in:", session.user.email);
+   currentUser = session.user;
 
- // Check current page context - ONLY redirect from actual signin/signup pages
- const currentPath = window.location.pathname;
+   try {
+     await ensureUserProfile(session.user);
+   } catch (error) {
+     console.error("❌ ensureUserProfile threw error:", error);
+   }
 
- // ONLY redirect from signin and signup pages - nowhere else!
- const shouldRedirect =
- currentPath.includes("/pages/shared/signin.html") ||
- currentPath.includes("/pages/shared/signup.html");
+   // Check current page context - ONLY redirect from actual signin/signup pages
+   const currentPath = window.location.pathname;
+   console.log("📍 Current path:", currentPath);
 
- if (!shouldRedirect) {
- return;
- }
+   // ONLY redirect from signin and signup pages - nowhere else!
+   const shouldRedirect =
+   currentPath.includes("/pages/shared/signin.html") ||
+   currentPath.includes("/pages/shared/signup.html");
 
- console.log(
- "📍 On signin/signup page, proceeding with role-based redirect",
- );
+   console.log("🔀 Should redirect:", shouldRedirect);
 
- // Get role from user metadata - this is where the role is actually stored!
- const userMetadata = session.user.user_metadata || {};
- const userRole = userMetadata.user_role || "student";
+   if (!shouldRedirect) {
+   console.log("⏭️  Skipping redirect - not on signin/signup page");
+   return;
+   }
 
- // Add a small delay to ensure everything is ready
- setTimeout(() => {
- redirectUser(userRole);
- }, 500);
- } else if (event === "SIGNED_OUT") {
- currentUser = null;
+   console.log(
+   "📍 On signin/signup page, proceeding with role-based redirect",
+   );
 
- // Only redirect to signin if we're on a protected page
- const currentPath = window.location.pathname;
- const isProtectedPage =
- currentPath.includes("/pages/student/") ||
- currentPath.includes("/pages/teacher/") ||
- currentPath.includes("/pages/admin/");
+   // Get role from user metadata - this is where the role is actually stored!
+   const userMetadata = session.user.user_metadata || {};
+   const userRole = userMetadata.user_role || "student";
+   console.log("👤 User role:", userRole);
 
- if (isProtectedPage) {
- console.log(
- "📍 On protected page after sign out, redirecting to signin",
- );
- window.location.href = "/src/pages/shared/signin.html";
- } else {
-  
- }
+   // Add a small delay to ensure everything is ready
+   setTimeout(() => {
+   console.log("🚀 Executing redirect to:", userRole);
+   redirectUser(userRole);
+   }, 500);
+   } else if (event === "SIGNED_OUT") {
+   currentUser = null;
+
+   // Only redirect to signin if we're on a protected page
+   const currentPath = window.location.pathname;
+   const isProtectedPage =
+   currentPath.includes("/pages/student/") ||
+   currentPath.includes("/pages/teacher/") ||
+   currentPath.includes("/pages/admin/");
+
+   if (isProtectedPage) {
+   console.log(
+   "📍 On protected page after sign out, redirecting to signin",
+   );
+   window.location.href = "/src/pages/shared/signin.html";
+   } else {
+   
+   }
+   }
+ } catch (error) {
+   console.error("❌ Critical error in auth state listener:", error);
  }
  });
 
@@ -305,6 +425,18 @@ export function initAuth() {
  supabase.auth.getSession().then(({ data: { session } }) => {
  if (session?.user) {
  currentUser = session.user;
+  void ensureUserProfile(session.user);
+ return;
+ }
+
+ const currentPath = window.location.pathname;
+ const isProtectedPage =
+ currentPath.includes("/pages/student/") ||
+ currentPath.includes("/pages/teacher/") ||
+ currentPath.includes("/pages/admin/");
+
+ if (isProtectedPage) {
+ window.location.href = "/src/pages/shared/signin.html";
  }
  });
 }
@@ -375,12 +507,39 @@ export class AuthFormHandler {
  submitButton.disabled = true;
 
     try {
-      
+      console.log("📝 Form submission - attempting sign in");
       const result = await signIn(email, password);
 
       if (result.success) {
+        console.log("✅ Sign in result successful, waiting for auth state change...");
         const msg = (result as any).info || 'Sign in successful! Redirecting...';
         this.showMessage(msg, 'success');
+        
+        // Fallback redirect after 2 seconds if auth state listener doesn't handle it
+        const fallbackTimeout = setTimeout(() => {
+          console.log("⚠️ Auth state listener didn't redirect, using fallback");
+          const session = supabase.auth.getSession();
+          session.then(({ data }) => {
+            if (data.session?.user) {
+              const userRole = data.session.user.user_metadata?.user_role || "student";
+              console.log("🔄 Fallback redirect to role:", userRole);
+              redirectUser(userRole);
+            } else {
+              console.warn("❌ No session found for fallback redirect");
+            }
+          });
+        }, 2000);
+        
+        // Clear fallback if redirect happens naturally
+        const checkRedirect = setInterval(() => {
+          if (window.location.pathname.includes('/pages/admin/') ||
+              window.location.pathname.includes('/pages/teacher/') ||
+              window.location.pathname.includes('/pages/student/')) {
+            clearTimeout(fallbackTimeout);
+            clearInterval(checkRedirect);
+          }
+        }, 100);
+        
         // The auth state listener in auth.ts will handle the redirect
       } else {
         const isUnconfirmed = typeof result.error === 'string' && result.error.toLowerCase().includes('email not confirmed');

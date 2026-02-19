@@ -310,7 +310,7 @@
     }
 
     &__setup article[data-course-section] {
-        display: none;
+        display: none !important;
         flex-direction: column;
         padding: 0;
         padding-left: 0 !important;
@@ -329,55 +329,19 @@
         box-sizing: border-box;
         width: 100%;
         max-width: 100%;
-
-        // Mobile (phones): Adjust height to account for bottom nav
-        // Extra Small (≤480px) and Small (481-767px)
-        @media (max-width: 767px) {
-            height: calc(100vh - 4.5rem);
-            max-height: calc(100vh - 4.5rem);
-            overflow-y: auto;
-            background: transparent;
-
-            // Hide "No data submitted yet" status cards on mobile
-            .card--save-status[data-status="empty"] {
-                display: none !important;
-            }
-
-            // Hide course ID card on mobile
-            #course-code-display,
-            .card--code#course-code-display {
-                display: none !important;
-            }
-        }
-
-        // Tablet and up: Show white background, normal height, show all cards
-        @media (min-width: 768px) {
-            background: var(--color-background);
-            border: 1px solid var(--color-neutral-200);
-            border-left: none !important;
-            border-radius: 0 var(--radius-medium) var(--radius-medium) 0;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 1px rgba(0, 0, 0, 0.08);
-            height: 100%;
-            max-height: 100%;
-            overflow: hidden;
-            padding-left: 0 !important;
-            margin-left: 0 !important;
-
-            // Show "No data submitted yet" status cards at tablet and up
-            .card--save-status[data-status="empty"] {
-                display: flex;
-            }
-
-            // Show course ID card at tablet and up
-            #course-code-display,
-            .card--code#course-code-display {
-                display: flex;
-            }
+        
+        // Position all articles in the same grid cell (column 2, row 1) so they overlap
+        grid-column: 2;
+        grid-row: 1;
+        
+        // Hide when hidden class is added
+        &.hidden {
+            display: none !important;
         }
     }
 
     &__setup article[data-course-section].is-active {
-        display: flex;
+        display: flex !important;
     }
 
     &__setup article[data-course-section] .form {
