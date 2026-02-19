@@ -1,8 +1,8 @@
-import Link from "next/link"
 import { Home, BookOpen, MessageSquare, Settings, Library, PenTool, Globe } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { SignOutButton } from "@/components/auth/sign-out-button"
+import { DashboardShell } from "@/components/layout/dashboard-shell"
 
 export default async function TeacherLayout({
   children,
@@ -17,71 +17,26 @@ export default async function TeacherLayout({
   }
 
   return (
-    <div className="flex h-screen w-full flex-col md:flex-row">
-      <aside className="w-full border-r bg-muted/40 md:w-64 md:shrink-0">
-        <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-          <Link href="/teacher" className="flex items-center gap-2 font-semibold">
-            <span className="">Neptino Teacher</span>
-          </Link>
-        </div>
-        <nav className="grid items-start px-2 text-sm font-medium lg:px-4 py-4 gap-2">
-          <Link
-            href="/teacher"
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-          >
-            <Home className="h-4 w-4" />
-            Home
-          </Link>
-          <Link
-            href="/teacher/courses"
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-          >
-            <BookOpen className="h-4 w-4" />
-            My Courses
-          </Link>
-          <Link
-            href="/teacher/coursebuilder"
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-          >
-            <PenTool className="h-4 w-4" />
-            Course Builder
-          </Link>
-          <Link
-            href="/teacher/encyclopedia"
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-          >
-            <Library className="h-4 w-4" />
-            Encyclopedia
-          </Link>
-          <Link
-            href="/teacher/marketplace"
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-          >
-            <Globe className="h-4 w-4" />
-            Marketplace
-          </Link>
-          <Link
-            href="/teacher/messages"
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-          >
-            <MessageSquare className="h-4 w-4" />
-            Messages
-          </Link>
-          <Link
-            href="/teacher/settings"
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-          >
-            <Settings className="h-4 w-4" />
-            Settings
-          </Link>
-        </nav>
-        <div className="mt-auto p-4">
-             <SignOutButton />
-        </div>
-      </aside>
-      <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 overflow-auto">
+    <DashboardShell
+      brandHref="/teacher"
+      brandLabel="Neptino Teacher"
+      headerItems={[
+        { href: "/teacher/courses", label: "Courses" },
+        { href: "/teacher/marketplace", label: "Marketplace" },
+        { href: "/teacher/tutorials", label: "Tutorials" },
+      ]}
+      sidebarItems={[
+        { href: "/teacher", label: "Dashboard", icon: <Home className="h-4 w-4" /> },
+        { href: "/teacher/courses", label: "My Courses", icon: <BookOpen className="h-4 w-4" /> },
+        { href: "/teacher/coursebuilder", label: "Course Builder", icon: <PenTool className="h-4 w-4" /> },
+        { href: "/teacher/encyclopedia", label: "Encyclopedia", icon: <Library className="h-4 w-4" /> },
+        { href: "/teacher/marketplace", label: "Marketplace", icon: <Globe className="h-4 w-4" /> },
+        { href: "/teacher/messages", label: "Messages", icon: <MessageSquare className="h-4 w-4" /> },
+        { href: "/teacher/settings", label: "Settings", icon: <Settings className="h-4 w-4" /> },
+      ]}
+      actions={<SignOutButton />}
+    >
         {children}
-      </main>
-    </div>
+    </DashboardShell>
   )
 }

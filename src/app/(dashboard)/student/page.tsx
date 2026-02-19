@@ -1,8 +1,16 @@
+import { MetricCard, PageSection } from "@/components/ui/page-section"
+
 export default function StudentHomePage() {
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">Student Dashboard</h1>
-      <p className="text-muted-foreground">Welcome to your learning space.</p>
-    </div>
+    <PageSection
+      title="Student Dashboard"
+      description="Welcome to your learning space."
+    >
+      <div className="grid gap-4 md:grid-cols-3">
+        <MetricCard label="Enrolled Courses" value="6" />
+        <MetricCard label="Pending Assignments" value="4" />
+        <MetricCard label="Unread Messages" value="3" />
+        </div>
+    </PageSection>
   )
 }

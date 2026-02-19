@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -32,39 +33,62 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40">
-        <form onSubmit={handleLogin} className="w-full max-w-sm space-y-4 rounded-lg border bg-background p-6 shadow-sm">
-            <h1 className="text-2xl font-bold">Sign In</h1>
-            {error && <div className="text-destructive text-sm font-medium">{error}</div>}
-            <div className="space-y-2">
-                <label className="text-sm font-medium">Email</label>
-                <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="m@example.com"
-                    required
-                />
-            </div>
-            <div className="space-y-2">
-                <label className="text-sm font-medium">Password</label>
-                <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    required
-                />
-            </div>
-            <button
-                type="submit"
-                disabled={loading}
-                className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-            >
-                {loading ? 'Signing in...' : 'Sign In'}
-            </button>
+    <div className="min-h-screen bg-accent/30">
+      <header className="border-b bg-background/95">
+        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4 lg:px-6">
+          <span className="text-lg font-semibold text-primary">Neptino</span>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <Link href="/" className="hover:text-primary">Home</Link>
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto flex w-full max-w-5xl items-center justify-center px-4 py-12">
+        <form onSubmit={handleLogin} className="w-full max-w-md space-y-5 rounded-xl border bg-background p-8 shadow-sm">
+          <header className="space-y-2 text-center">
+            <h1 className="text-3xl font-bold">Welcome back</h1>
+            <p className="text-sm text-muted-foreground">Sign in to your Neptino account</p>
+          </header>
+
+          <div className="space-y-5">
+          {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">{error}</div>}
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              placeholder="Email address"
+              autoComplete="email"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              placeholder="Password"
+              autoComplete="current-password"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="inline-flex h-11 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
+          >
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+          </div>
         </form>
+      </div>
     </div>
   )
 }
