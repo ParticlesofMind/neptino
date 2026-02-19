@@ -1,20 +1,21 @@
+import { InfoCard, PageSection } from "@/components/ui/page-section"
+
 export default function AdminSettingsPage() {
   return (
-    <section className="space-y-4">
-      <header>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Configure platform behavior and policies.</p>
-      </header>
+    <PageSection
+      title="Settings"
+      description="Configure platform behavior and policies."
+    >
       <div className="grid gap-4 md:grid-cols-2">
-        <article className="rounded-xl border bg-background p-5 shadow-sm">
-          <h2 className="text-lg font-semibold">Security</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Manage authentication and access settings.</p>
-        </article>
-        <article className="rounded-xl border bg-background p-5 shadow-sm">
-          <h2 className="text-lg font-semibold">Notifications</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Set email and in-app alert behavior.</p>
-        </article>
+        <InfoCard
+          title="Security"
+          description="Manage authentication and access settings."
+        />
+        <InfoCard
+          title="Notifications"
+          description="Set email and in-app alert behavior."
+        />
       </div>
-    </section>
+    </PageSection>
   )
 }

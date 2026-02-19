@@ -1,4 +1,4 @@
-import { MetricCard, PageSection } from "@/components/ui/page-section"
+import { InfoCard, MetricCard, PageSection } from "@/components/ui/page-section"
 
 export default function AdminHomePage() {
   return (
@@ -10,7 +10,17 @@ export default function AdminHomePage() {
         <MetricCard label="Active Users" value="1,284" />
         <MetricCard label="Published Courses" value="96" />
         <MetricCard label="Pending Reviews" value="12" />
-        </div>
+      </div>
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <InfoCard
+          title="Platform Health"
+          description="All core services are online and API latency is within range."
+        />
+        <InfoCard
+          title="Moderation"
+          description="Review flagged content, reports, and compliance notifications."
+        />
+      </div>
     </PageSection>
   )
 }

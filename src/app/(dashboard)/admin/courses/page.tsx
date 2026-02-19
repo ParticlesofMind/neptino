@@ -1,14 +1,21 @@
+import { InfoCard, PageSection } from "@/components/ui/page-section"
+
 export default function AdminCoursesPage() {
   return (
-    <section className="space-y-4">
-      <header>
-        <h1 className="text-2xl font-bold">All Courses</h1>
-        <p className="text-muted-foreground">Monitor and review all course content.</p>
-      </header>
-      <div className="rounded-xl border bg-background p-5 shadow-sm">
-        <h2 className="text-lg font-semibold">Course Moderation Queue</h2>
-        <p className="mt-2 text-sm text-muted-foreground">12 courses are awaiting review.</p>
+    <PageSection
+      title="All Courses"
+      description="Monitor and review all course content."
+    >
+      <div className="grid gap-4 md:grid-cols-2">
+        <InfoCard
+          title="Course Moderation Queue"
+          description="12 courses are awaiting review."
+        />
+        <InfoCard
+          title="Quality Alerts"
+          description="4 courses need updated metadata or missing assets."
+        />
       </div>
-    </section>
+    </PageSection>
   )
 }

@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { PublicShell } from '@/components/layout/public-shell'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -33,23 +33,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-accent/30">
-      <header className="border-b bg-background/95">
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4 lg:px-6">
-          <span className="text-lg font-semibold text-primary">Neptino</span>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <Link href="/" className="hover:text-primary">Home</Link>
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-center px-4 py-12">
+    <PublicShell
+      title="Welcome back"
+      subtitle="Sign in to your Neptino account"
+    >
+      <div className="mx-auto flex w-full max-w-2xl items-center justify-center py-2">
         <form onSubmit={handleLogin} className="w-full max-w-md space-y-5 rounded-xl border bg-background p-8 shadow-sm">
-          <header className="space-y-2 text-center">
-            <h1 className="text-3xl font-bold">Welcome back</h1>
-            <p className="text-sm text-muted-foreground">Sign in to your Neptino account</p>
-          </header>
-
           <div className="space-y-5">
           {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">{error}</div>}
 
@@ -89,6 +78,6 @@ export default function LoginPage() {
           </div>
         </form>
       </div>
-    </div>
+    </PublicShell>
   )
 }

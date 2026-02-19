@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { type ReactNode } from "react"
 import { NavLink } from "@/components/layout/nav-link"
 
@@ -50,6 +51,10 @@ export function DashboardShell({
 
       <div className="mx-auto grid w-full max-w-[1400px] grid-cols-1 md:grid-cols-[240px_minmax(0,1fr)]">
         <aside className="border-b border-r bg-background p-4 md:min-h-[calc(100vh-56px)] md:border-b-0">
+          <div className="mb-6 flex items-center gap-3 rounded-lg border bg-accent/30 px-3 py-2">
+            <Image src="/octopus-logo.png" alt="Neptino Logo" width={28} height={28} className="rounded-sm" />
+            <span className="text-base font-semibold">Neptino</span>
+          </div>
           <h2 className="mb-3 text-xs font-semibold tracking-[0.14em] text-muted-foreground">MENU</h2>
           <nav className="grid gap-2">
             {sidebarItems.map((item) => (

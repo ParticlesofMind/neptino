@@ -1,13 +1,21 @@
+import { InfoCard, PageSection } from "@/components/ui/page-section"
+
 export default function TeacherMessagesPage() {
   return (
-    <section className="space-y-4">
-      <header>
-        <h1 className="text-2xl font-bold">Messages</h1>
-        <p className="text-muted-foreground">Talk with students and collaborators.</p>
-      </header>
-      <div className="rounded-xl border bg-background p-5 shadow-sm">
-        <p className="text-sm text-muted-foreground">Messaging interface will appear here.</p>
+    <PageSection
+      title="Messages"
+      description="Talk with students and collaborators."
+    >
+      <div className="grid gap-4 md:grid-cols-2">
+        <InfoCard
+          title="Direct Messages"
+          description="Open 8 active conversations with students."
+        />
+        <InfoCard
+          title="Integration"
+          description="Messaging interface will appear here."
+        />
       </div>
-    </section>
+    </PageSection>
   )
 }

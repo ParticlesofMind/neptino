@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { PageSection } from "@/components/ui/page-section"
+import { PublicShell } from "@/components/layout/public-shell"
 
 const menuItems = [
   { label: "Admin Dashboard", href: "/admin", description: "System administration and platform control" },
@@ -10,23 +10,22 @@ const menuItems = [
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-accent/30 p-6">
-      <section className="mx-auto w-full max-w-5xl">
-        <PageSection title="Neptino" description="Main menu and role entry point.">
-        <nav className="grid gap-4 md:grid-cols-2">
+    <PublicShell
+      title="Neptino Main Menu"
+      subtitle="Choose your workspace to continue."
+    >
+      <nav className="grid gap-4 md:grid-cols-2">
           {menuItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-xl border bg-background p-5 shadow-sm transition hover:border-primary/30 hover:shadow-md"
+              className="rounded-xl border bg-background p-5 shadow-sm transition hover:border-primary/30 hover:bg-accent hover:shadow-md"
             >
-              <span className="block text-lg font-semibold">{item.label}</span>
+              <span className="block text-lg font-semibold text-primary">{item.label}</span>
               <span className="mt-1 block text-sm text-muted-foreground">{item.description}</span>
             </Link>
           ))}
         </nav>
-        </PageSection>
-      </section>
-    </main>
+    </PublicShell>
   )
 }

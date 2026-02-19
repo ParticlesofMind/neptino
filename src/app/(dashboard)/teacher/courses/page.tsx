@@ -1,20 +1,21 @@
+import { InfoCard, PageSection } from "@/components/ui/page-section"
+
 export default function TeacherCoursesPage() {
   return (
-    <section className="space-y-4">
-      <header>
-        <h1 className="text-2xl font-bold">My Courses</h1>
-        <p className="text-muted-foreground">Create, organize, and publish your course library.</p>
-      </header>
+    <PageSection
+      title="My Courses"
+      description="Create, organize, and publish your course library."
+    >
       <div className="grid gap-4 md:grid-cols-2">
-        <article className="rounded-xl border bg-background p-5 shadow-sm">
-          <h2 className="text-lg font-semibold">Active Courses</h2>
-          <p className="mt-2 text-sm text-muted-foreground">You currently have 5 active courses.</p>
-        </article>
-        <article className="rounded-xl border bg-background p-5 shadow-sm">
-          <h2 className="text-lg font-semibold">Drafts</h2>
-          <p className="mt-2 text-sm text-muted-foreground">2 courses are saved as drafts.</p>
-        </article>
+        <InfoCard
+          title="Active Courses"
+          description="You currently have 5 active courses."
+        />
+        <InfoCard
+          title="Drafts"
+          description="2 courses are saved as drafts."
+        />
       </div>
-    </section>
+    </PageSection>
   )
 }

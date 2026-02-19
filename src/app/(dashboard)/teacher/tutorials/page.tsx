@@ -1,13 +1,21 @@
+import { InfoCard, PageSection } from "@/components/ui/page-section"
+
 export default function TeacherTutorialsPage() {
   return (
-    <section className="space-y-4">
-      <header>
-        <h1 className="text-2xl font-bold">Tutorials</h1>
-        <p className="text-muted-foreground">Learning guides for Neptino tools and workflows.</p>
-      </header>
-      <div className="rounded-xl border bg-background p-5 shadow-sm">
-        <p className="text-sm text-muted-foreground">Tutorial content can be added here in sections.</p>
+    <PageSection
+      title="Tutorials"
+      description="Learning guides for Neptino tools and workflows."
+    >
+      <div className="grid gap-4 md:grid-cols-2">
+        <InfoCard
+          title="Getting Started"
+          description="Tutorial content can be added here in sections."
+        />
+        <InfoCard
+          title="Advanced Workflows"
+          description="Deep-dive guides for course design, templates, and publishing."
+        />
       </div>
-    </section>
+    </PageSection>
   )
 }

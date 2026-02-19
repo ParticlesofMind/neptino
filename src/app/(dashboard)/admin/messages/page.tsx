@@ -1,13 +1,21 @@
+import { InfoCard, PageSection } from "@/components/ui/page-section"
+
 export default function AdminMessagesPage() {
   return (
-    <section className="space-y-4">
-      <header>
-        <h1 className="text-2xl font-bold">Messages</h1>
-        <p className="text-muted-foreground">System-wide communication center.</p>
-      </header>
-      <div className="rounded-xl border bg-background p-5 shadow-sm">
-        <p className="text-sm text-muted-foreground">Messaging integration is ready for connection.</p>
+    <PageSection
+      title="Messages"
+      description="System-wide communication center."
+    >
+      <div className="grid gap-4 md:grid-cols-2">
+        <InfoCard
+          title="Broadcast Channel"
+          description="Send announcements to all teachers and students."
+        />
+        <InfoCard
+          title="Integration Status"
+          description="Messaging integration is ready for connection."
+        />
       </div>
-    </section>
+    </PageSection>
   )
 }

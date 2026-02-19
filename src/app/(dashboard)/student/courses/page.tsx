@@ -1,13 +1,21 @@
+import { InfoCard, PageSection } from "@/components/ui/page-section"
+
 export default function StudentCoursesPage() {
   return (
-    <section className="space-y-4">
-      <header>
-        <h1 className="text-2xl font-bold">Courses</h1>
-        <p className="text-muted-foreground">View enrolled classes and continue learning.</p>
-      </header>
-      <div className="rounded-xl border bg-background p-5 shadow-sm">
-        <p className="text-sm text-muted-foreground">You are currently enrolled in 6 classes.</p>
+    <PageSection
+      title="Courses"
+      description="View enrolled classes and continue learning."
+    >
+      <div className="grid gap-4 md:grid-cols-2">
+        <InfoCard
+          title="Current Enrollments"
+          description="You are currently enrolled in 6 classes."
+        />
+        <InfoCard
+          title="Recommended Next"
+          description="Continue from your last lesson or review pending assignments."
+        />
       </div>
-    </section>
+    </PageSection>
   )
 }

@@ -31,3 +31,17 @@ export function MetricCard({ label, value }: MetricCardProps) {
     </article>
   )
 }
+
+type InfoCardProps = {
+  title: string
+  description: string
+}
+
+export function InfoCard({ title, description }: InfoCardProps) {
+  return (
+    <article className="rounded-xl border bg-background p-5 shadow-sm transition hover:border-primary/30 hover:shadow-md">
+      <h2 className="text-lg font-semibold">{title}</h2>
+      <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+    </article>
+  )
+}

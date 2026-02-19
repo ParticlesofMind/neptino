@@ -1,13 +1,21 @@
+import { InfoCard, PageSection } from "@/components/ui/page-section"
+
 export default function TeacherMarketplacePage() {
   return (
-    <section className="space-y-4">
-      <header>
-        <h1 className="text-2xl font-bold">Marketplace</h1>
-        <p className="text-muted-foreground">Discover templates and reusable learning assets.</p>
-      </header>
-      <div className="rounded-xl border bg-background p-5 shadow-sm">
-        <p className="text-sm text-muted-foreground">Browse featured content packs and teaching resources.</p>
+    <PageSection
+      title="Marketplace"
+      description="Discover templates and reusable learning assets."
+    >
+      <div className="grid gap-4 md:grid-cols-2">
+        <InfoCard
+          title="Featured Packs"
+          description="Browse featured content packs and teaching resources."
+        />
+        <InfoCard
+          title="Recently Added"
+          description="14 new template and media packs were published this week."
+        />
       </div>
-    </section>
+    </PageSection>
   )
 }
