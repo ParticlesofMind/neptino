@@ -1,4 +1,3 @@
-import { Home, BookOpen, MessageSquare, Settings } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { SignOutButton } from "@/components/auth/sign-out-button"
@@ -19,17 +18,11 @@ export default async function StudentLayout({
   return (
     <DashboardShell
       brandHref="/student"
-      brandLabel="Neptino Student"
       headerItems={[
         { href: "/student/courses", label: "Courses" },
+        { href: "/student/progress", label: "Progress" },
         { href: "/student/messages", label: "Messages" },
         { href: "/student/settings", label: "Settings" },
-      ]}
-      sidebarItems={[
-        { href: "/student", label: "Dashboard", icon: <Home className="h-4 w-4" /> },
-        { href: "/student/courses", label: "Courses", icon: <BookOpen className="h-4 w-4" /> },
-        { href: "/student/messages", label: "Messages", icon: <MessageSquare className="h-4 w-4" /> },
-        { href: "/student/settings", label: "Settings", icon: <Settings className="h-4 w-4" /> },
       ]}
       actions={<SignOutButton />}
     >
