@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { SaveStatusBar, SetupColumn, SetupSection } from "@/components/coursebuilder/layout-primitives"
+import { SetupColumn, SetupPanelLayout, SetupSection } from "@/components/coursebuilder/layout-primitives"
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
 import { createClient } from "@/lib/supabase/client"
 
@@ -160,7 +160,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
 
   return (
     <SetupSection title="Curriculum" description="Structure and content density of your course.">
-      <div className="grid flex-1 min-h-0 gap-4 lg:grid-cols-2 items-stretch">
+      <SetupPanelLayout>
         <SetupColumn className="space-y-5">
           <div>
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
@@ -298,8 +298,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
             ))}
           </div>
         </SetupColumn>
-      </div>
-      <SaveStatusBar status={courseId ? saveStatus : "empty"} lastSavedAt={lastSavedAt} />
+      </SetupPanelLayout>
     </SetupSection>
   )
 }

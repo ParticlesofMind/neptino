@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useState } from "react"
 import { Trash2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import { SaveStatusBar, SetupColumn, SetupSection } from "@/components/coursebuilder/layout-primitives"
+import {
+  DANGER_ACTION_BUTTON_SM_CLASS,
+  PRIMARY_ACTION_BUTTON_CLASS,
+  SaveStatusBar,
+  SetupColumn,
+  SetupSection,
+} from "@/components/coursebuilder/layout-primitives"
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
 
 const TEMPLATE_TYPES = ["lesson", "quiz", "assessment", "exam", "certificate"] as const
@@ -13,27 +19,27 @@ const TEMPLATE_TYPE_META: Record<TemplateType, { label: string; description: str
   lesson: {
     label: "Lesson",
     description: "Standard instructional lesson page",
-    badge: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+    badge: "border-border bg-muted/60 text-foreground",
   },
   quiz: {
     label: "Quiz",
     description: "Short formative assessment",
-    badge: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300",
+    badge: "border-border bg-muted/60 text-foreground",
   },
   assessment: {
     label: "Assessment",
     description: "Formal summative evaluation",
-    badge: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+    badge: "border-border bg-muted/60 text-foreground",
   },
   exam: {
     label: "Exam",
     description: "Comprehensive final examination",
-    badge: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300",
+    badge: "border-border bg-muted/60 text-foreground",
   },
   certificate: {
     label: "Certificate",
     description: "Course completion certificate",
-    badge: "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300",
+    badge: "border-border bg-muted/60 text-foreground",
   },
 }
 
@@ -225,12 +231,14 @@ function TemplatePreview({
   enabled,
   fieldEnabled,
   name,
+  description,
   isEmpty,
 }: {
   type: TemplateType
   enabled: Record<BlockId, boolean>
   fieldEnabled: TemplateFieldState
   name: string
+  description: string
   isEmpty: boolean
 }) {
   if (isEmpty) {
@@ -279,9 +287,12 @@ function TemplatePreview({
         <div className="flex items-center justify-between border-b border-border bg-muted/40 px-5 py-4">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-foreground">{name || "Untitled template"}</p>
+            {description.trim() ? (
+              <p className="truncate text-xs text-muted-foreground">{description}</p>
+            ) : null}
             <p className="text-xs text-muted-foreground">Lesson document preview</p>
           </div>
-          <span className={`rounded px-2 py-0.5 text-xs font-bold ${meta.badge}`}>{meta.label}</span>
+          <span className={`rounded border px-2 py-0.5 text-xs font-semibold ${meta.badge}`}>{meta.label}</span>
         </div>
 
         <div className="bg-muted/20 p-4">
@@ -500,6 +511,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
   function beginCreate() {
     const nextType: TemplateType = "lesson"
     const nextEnabled = defaultEnabled()
+    setActiveId(null)
     setConfigView("create")
     setConfigType(nextType)
     setConfigName("")
@@ -541,6 +553,31 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     setShowTypeOverlay(false)
   }
 
+  async function saveFromOverlay() {
+    if (!activeId || !pendingTypeSelection || !configName.trim()) return
+
+    const updated = templates.map((tplRaw) => {
+      if (tplRaw.id !== activeId) return tplRaw
+
+      const tpl = normalizeTemplate(tplRaw)
+      return normalizeTemplate({
+        ...tpl,
+        name: configName.trim(),
+        description: configDesc,
+        type: pendingTypeSelection,
+      })
+    })
+
+    setTemplates(updated)
+    setConfigType(pendingTypeSelection)
+    setConfigName(configName.trim())
+    setShowTypeOverlay(false)
+    setShowLoadOverlay(false)
+    setConfirmDelete(false)
+    setPendingLoadId(null)
+    await persistTemplates(updated)
+  }
+
   function formatTemplateDate(ts?: string) {
     if (!ts) return "Date unavailable"
     const parsed = new Date(ts)
@@ -549,6 +586,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
   }
 
   function toggleBlock(id: BlockId, force?: boolean) {
+    if (activeId) setConfigView("edit")
     const block = ALL_BLOCKS.find((b) => b.id === id)
     if (block?.mandatory) return
     setConfigEnabled((prev) => {
@@ -565,6 +603,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
   }
 
   function toggleField(blockId: BlockId, fieldKey: string, value?: boolean) {
+    if (activeId) setConfigView("edit")
     setConfigFieldEnabled((prev) => ({
       ...prev,
       [blockId]: {
@@ -597,7 +636,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     const savedUi = localUiState ?? serverUiState
     const targetId = savedUi?.activeId ?? templates[0]?.id ?? null
     const targetTemplate = targetId ? templates.find((t) => t.id === targetId) ?? null : null
-    const nextConfigView = savedUi?.configView ?? (targetTemplate ? "edit" : "idle")
+    const nextConfigView = targetTemplate ? "edit" : "idle"
     const nextPanelView = savedUi?.panelView
 
     queueMicrotask(() => {
@@ -632,7 +671,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
   }
 
   const persistTemplateDraft = useCallback(async () => {
-    if (!courseId || !isEditing || !activeId) return
+    if (!courseId || !activeId || configView === "create") return
     const active = templates.find((item) => item.id === activeId)
     if (!active) return
 
@@ -660,8 +699,8 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     await persistTemplates(updated)
   }, [
     courseId,
-    isEditing,
     activeId,
+    configView,
     templates,
     configName,
     configType,
@@ -673,11 +712,15 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
 
   useDebouncedChangeSave(persistTemplateDraft, 700, Boolean(courseId) && isEditing && Boolean(activeId))
 
-  const previewType = isConfiguring ? configType : (activeTemplate?.type ?? "lesson")
-  const previewEnabled = isConfiguring ? configEnabled : (activeTemplate?.enabled ?? defaultEnabled())
-  const previewFieldEnabled = isConfiguring ? configFieldEnabled : (activeTemplate?.fieldEnabled ?? defaultFieldEnabled(previewType, previewEnabled))
-  const previewName = isConfiguring ? configName : (activeTemplate?.name ?? "")
-  const previewIsEmpty = isConfiguring ? !configName.trim() : !activeTemplate
+  useDebouncedChangeSave(persistTemplateDraft, 700, Boolean(courseId) && Boolean(activeId))
+
+  const useDraftPreview = isCreating || Boolean(activeTemplate)
+  const previewType = useDraftPreview ? configType : (activeTemplate?.type ?? "lesson")
+  const previewEnabled = useDraftPreview ? configEnabled : (activeTemplate?.enabled ?? defaultEnabled())
+  const previewFieldEnabled = useDraftPreview ? configFieldEnabled : (activeTemplate?.fieldEnabled ?? defaultFieldEnabled(previewType, previewEnabled))
+  const previewName = useDraftPreview ? configName : (activeTemplate?.name ?? "")
+  const previewDescription = useDraftPreview ? configDesc : (activeTemplate?.description ?? "")
+  const previewIsEmpty = useDraftPreview ? !configName.trim() : !activeTemplate
 
   return (
     <SetupSection
@@ -688,7 +731,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
           <button
             type="button"
             onClick={beginCreate}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+            className={PRIMARY_ACTION_BUTTON_CLASS}
           >
             Create Template
           </button>
@@ -696,7 +739,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
             type="button"
             onClick={beginLoad}
             disabled={templates.length === 0}
-            className="rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:border-primary/30 disabled:cursor-not-allowed disabled:opacity-50"
+            className={PRIMARY_ACTION_BUTTON_CLASS}
           >
             Load Template
           </button>
@@ -802,11 +845,14 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
               enabled={previewEnabled}
               fieldEnabled={previewFieldEnabled}
               name={previewName}
+              description={previewDescription}
               isEmpty={previewIsEmpty}
             />
           </SetupColumn>
         </div>
       </div>
+
+      <SaveStatusBar status={saveStatus} lastSavedAt={lastSavedAt} />
 
       {isConfiguring && showTypeOverlay && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/75 p-4 backdrop-blur-sm">
@@ -867,11 +913,17 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
               </button>
               <button
                 type="button"
-                onClick={createFromOverlay}
+                onClick={() => {
+                  if (isCreating) {
+                    createFromOverlay()
+                    return
+                  }
+                  void saveFromOverlay()
+                }}
                 disabled={!pendingTypeSelection || !configName.trim()}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                className={PRIMARY_ACTION_BUTTON_CLASS}
               >
-                Create Template
+                {isCreating ? "Create Template" : "Save Template"}
               </button>
             </div>
           </div>
@@ -936,7 +988,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
                   void deletePendingTemplate()
                 }}
                 disabled={!pendingLoadId}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition hover:border-destructive/40 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-40"
+                className={`${DANGER_ACTION_BUTTON_SM_CLASS} inline-flex h-9 w-9 items-center justify-center p-0`}
                 aria-label="Delete selected template"
                 title="Delete selected template"
               >
@@ -963,7 +1015,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
                     if (tpl) loadTemplate(tpl)
                   }}
                   disabled={!pendingLoadId}
-                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                  className={PRIMARY_ACTION_BUTTON_CLASS}
                 >
                   Load Template
                 </button>
@@ -972,8 +1024,6 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
           </div>
         </div>
       )}
-
-      <SaveStatusBar status={courseId ? saveStatus : "empty"} lastSavedAt={lastSavedAt} />
     </SetupSection>
   )
 }

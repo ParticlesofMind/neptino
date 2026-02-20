@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { SaveStatusBar, SetupPanels, SetupSection } from "@/components/coursebuilder/layout-primitives"
+import { SetupPanels, SetupSection } from "@/components/coursebuilder/layout-primitives"
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
 import { createClient } from "@/lib/supabase/client"
 
@@ -107,7 +107,6 @@ export function VisibilitySection({ courseId }: { courseId: string | null }) {
           </div>
         )}
       />
-      <SaveStatusBar status={courseId ? saveStatus : "empty"} lastSavedAt={lastSavedAt} />
     </SetupSection>
   )
 }

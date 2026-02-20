@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { SaveStatusBar, SetupColumn, SetupSection } from "@/components/coursebuilder/layout-primitives"
+import { SetupColumn, SetupPanelLayout, SetupSection } from "@/components/coursebuilder/layout-primitives"
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
 import iscedData from "@/data/isced2011.json"
 import { createClient } from "@/lib/supabase/client"
@@ -161,7 +161,7 @@ export function ClassificationSection({
 
   return (
     <SetupSection title="Classification" description="Subject matter hierarchy and course positioning.">
-      <div className="grid flex-1 min-h-0 gap-4 lg:grid-cols-2 items-stretch">
+      <SetupPanelLayout>
         <SetupColumn className="space-y-5">
           <div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -375,8 +375,7 @@ export function ClassificationSection({
             </div>
           )}
         </SetupColumn>
-      </div>
-      <SaveStatusBar status={courseId ? saveStatus : "empty"} lastSavedAt={lastSavedAt} />
+      </SetupPanelLayout>
     </SetupSection>
   )
 }

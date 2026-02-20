@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { SaveStatusBar, SetupColumn, SetupSection } from "@/components/coursebuilder/layout-primitives"
+import { PRIMARY_ACTION_BUTTON_CLASS, SetupColumn, SetupPanelLayout, SetupSection } from "@/components/coursebuilder/layout-primitives"
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
 import { createClient } from "@/lib/supabase/client"
 
@@ -142,7 +142,7 @@ export function GenerationSection({ courseId }: { courseId: string | null }) {
 
   return (
     <SetupSection title="Generation" description="Use AI to generate curriculum content from your course settings.">
-      <div className="grid flex-1 min-h-0 gap-4 lg:grid-cols-2 items-stretch">
+      <SetupPanelLayout>
         <SetupColumn className="space-y-5">
           <div>
             <div className="space-y-2">
@@ -184,11 +184,7 @@ export function GenerationSection({ courseId }: { courseId: string | null }) {
                   key={action.key}
                   type="button"
                   onClick={() => runGeneration(action.key)}
-                  className={`w-full rounded-md border px-4 py-2.5 text-left text-sm font-medium transition ${
-                    action.primary
-                      ? "border-primary bg-primary text-primary-foreground hover:opacity-90"
-                      : "border-border bg-background text-foreground hover:border-primary/30 hover:bg-accent"
-                  }`}
+                  className={`${PRIMARY_ACTION_BUTTON_CLASS} w-full py-2.5 text-left`}
                 >
                   {action.label}
                 </button>
@@ -240,8 +236,7 @@ export function GenerationSection({ courseId }: { courseId: string | null }) {
             )}
           </div>
         </SetupColumn>
-      </div>
-      <SaveStatusBar status={courseId ? saveStatus : "empty"} lastSavedAt={lastSavedAt} />
+      </SetupPanelLayout>
     </SetupSection>
   )
 }

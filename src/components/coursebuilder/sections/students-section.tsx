@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { SaveStatusBar, SetupColumn, SetupSection } from "@/components/coursebuilder/layout-primitives"
+import { PRIMARY_ACTION_BUTTON_CLASS, PRIMARY_ACTION_BUTTON_SM_CLASS, SetupColumn, SetupPanelLayout, SetupSection } from "@/components/coursebuilder/layout-primitives"
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
 import { createClient } from "@/lib/supabase/client"
 
@@ -134,7 +134,7 @@ export function StudentsSection({ courseId }: { courseId: string | null }) {
 
   return (
     <SetupSection title="Students" description="Build or import your student roster.">
-      <div className="grid flex-1 min-h-0 gap-4 lg:grid-cols-2 items-stretch">
+      <SetupPanelLayout>
         <SetupColumn className="space-y-4">
           <div className="flex flex-col gap-3">
             {(["upload", "manual"] as const).map((m) => (
@@ -168,7 +168,7 @@ export function StudentsSection({ courseId }: { courseId: string | null }) {
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 transition"
+                className={`${PRIMARY_ACTION_BUTTON_CLASS} w-full py-2.5`}
               >
                 Upload Roster File
               </button>
@@ -201,7 +201,7 @@ export function StudentsSection({ courseId }: { courseId: string | null }) {
               <button
                 type="button"
                 onClick={addManualStudent}
-                className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 transition"
+                className={`${PRIMARY_ACTION_BUTTON_CLASS} w-full py-2.5`}
               >
                 Add Student
               </button>
@@ -218,7 +218,7 @@ export function StudentsSection({ courseId }: { courseId: string | null }) {
                 <button
                   type="button"
                   onClick={addBulkStudents}
-                  className="mt-2 w-full rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition hover:border-primary/30"
+                  className={`${PRIMARY_ACTION_BUTTON_SM_CLASS} mt-2 w-full`}
                 >
                   Add Bulk Students
                 </button>
@@ -253,8 +253,7 @@ export function StudentsSection({ courseId }: { courseId: string | null }) {
             )}
           </div>
         </SetupColumn>
-      </div>
-      <SaveStatusBar status={courseId ? saveStatus : "empty"} lastSavedAt={lastSavedAt} />
+      </SetupPanelLayout>
     </SetupSection>
   )
 }

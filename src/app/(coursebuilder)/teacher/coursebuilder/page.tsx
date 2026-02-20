@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { CreateView } from "@/components/canvas/CreateView"
 import { computePageConfig, type CanvasPageConfig } from "@/components/canvas/PixiCanvas"
-import { SaveStatusBar, SetupColumn, SetupPanels, SetupSection } from "@/components/coursebuilder/layout-primitives"
+import { SetupColumn, SetupPanelLayout, SetupPanels, SetupSection } from "@/components/coursebuilder/layout-primitives"
 import { ClassificationSection } from "@/components/coursebuilder/sections/classification-section"
 import { CurriculumSection } from "@/components/coursebuilder/sections/curriculum-section"
 import { EssentialsSection } from "@/components/coursebuilder/sections/essentials-section"
@@ -177,7 +177,6 @@ function Placeholder() {
       <div className="flex h-64 flex-col items-center justify-center rounded-lg border border-dashed border-border text-center">
         <p className="text-sm text-muted-foreground">This section is under construction.</p>
       </div>
-      <SaveStatusBar status="empty" lastSavedAt={null} />
     </div>
   )
 }
@@ -291,7 +290,6 @@ function MarketplaceSection({ courseId }: { courseId: string | null }) {
           </div>
         )}
       />
-      <SaveStatusBar status={courseId ? saveStatus : "empty"} lastSavedAt={lastSavedAt} />
     </SetupSection>
   )
 }
@@ -414,7 +412,6 @@ function PricingSection({ courseId }: { courseId: string | null }) {
           </div>
         )}
       />
-      <SaveStatusBar status={courseId ? saveStatus : "empty"} lastSavedAt={lastSavedAt} />
     </SetupSection>
   )
 }
@@ -522,7 +519,6 @@ function IntegrationsSection({ courseId }: { courseId: string | null }) {
           </div>
         )}
       />
-      <SaveStatusBar status={courseId ? saveStatus : "empty"} lastSavedAt={lastSavedAt} />
     </SetupSection>
   )
 }
@@ -628,7 +624,6 @@ function CommunicationSection({ courseId }: { courseId: string | null }) {
           </div>
         )}
       />
-      <SaveStatusBar status={courseId ? saveStatus : "empty"} lastSavedAt={lastSavedAt} />
     </SetupSection>
   )
 }
@@ -662,6 +657,17 @@ function PageSetupSection({
   const [saveStatus, setSaveStatus]   = useState<"empty" | "saving" | "saved" | "error">("empty")
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
 
+  // ── Print options ──
+  const [colorMode, setColorMode]       = useState<"color" | "grayscale" | "bw">("color")
+  const [headerFooter] = useState({ pageNumbers: true, courseTitle: false, date: false, studentName: false })
+  const [inkSaver, setInkSaver]         = useState(false)
+  const [bleed, setBleed]               = useState(0)        // mm
+  const [cropMarks, setCropMarks]       = useState(false)
+  const [pageScaling, setPageScaling]   = useState<"fit" | "actual" | "custom">("fit")
+  const [customScale, setCustomScale]   = useState(100)       // %
+  const [duplex, setDuplex]             = useState<"none" | "long" | "short">("none")
+  const [exportQuality, setExportQuality] = useState<"screen" | "print" | "high">("print")
+
   const updateMargin = (side: keyof typeof margins, val: string) =>
     setMargins((prev) => ({ ...prev, [side]: parseFloat(val) || 0 }))
 
@@ -686,6 +692,17 @@ function PageSetupSection({
       page_orientation: orientation,
       page_count:       pageCount,
       margins_mm:       marginsMm,
+      print_options: {
+        color_mode:      colorMode,
+        header_footer:   headerFooter,
+        ink_saver:       inkSaver,
+        bleed_mm:        bleed,
+        crop_marks:      cropMarks,
+        page_scaling:    pageScaling,
+        custom_scale:    pageScaling === "custom" ? customScale : null,
+        duplex:          duplex,
+        export_quality:  exportQuality,
+      },
     }
 
     const { error } = await supabase
@@ -700,7 +717,7 @@ function PageSetupSection({
       setSaveStatus("saved")
       onSaved?.(cfg)
     }
-  }, [courseId, units, margins, size, orientation, pageCount, onSaved])
+  }, [courseId, units, margins, size, orientation, pageCount, onSaved, colorMode, headerFooter, inkSaver, bleed, cropMarks, pageScaling, customScale, duplex, exportQuality])
 
   useDebouncedChangeSave(handleSave, 800, Boolean(courseId))
 
@@ -708,82 +725,85 @@ function PageSetupSection({
   const { w, h } = PAGE_DIMS[size]
   const physW = isLandscape ? h : w
   const physH = isLandscape ? w : h
-  const previewW = 160
+  const previewW = 480
   const previewH = Math.round(previewW * (physH / physW))
 
   return (
     <SetupSection title="Page Setup" description="Configure the canvas dimensions and margins for lesson pages.">
-      <div className="grid flex-1 min-h-0 gap-8 lg:grid-cols-2 items-stretch">
+      <SetupPanelLayout>
         {/* Config */}
-        <SetupColumn className="space-y-5">
+        <SetupColumn className="space-y-6">
+          {/* Units toggle */}
           <div>
-            <div className="flex gap-5">
+            <FieldLabel>Units</FieldLabel>
+            <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
               {(["cm", "inches"] as const).map((u) => (
-                <label key={u} className="flex cursor-pointer items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    name="units"
-                    value={u}
-                    checked={units === u}
-                    onChange={() => setUnits(u)}
-                    className="accent-primary"
-                  />
-                  <span className="text-foreground">{u === "cm" ? "Metric (cm)" : "Imperial (inches)"}</span>
-                </label>
+                <button
+                  key={u}
+                  type="button"
+                  onClick={() => setUnits(u)}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                    units === u
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {u === "cm" ? "Metric (cm)" : "Imperial (in)"}
+                </button>
               ))}
             </div>
           </div>
+
+          {/* Page size toggle */}
           <div>
-            <div className="flex gap-5">
-              {(["portrait", "landscape"] as const).map((o) => (
-                <label key={o} className="flex cursor-pointer items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    name="orientation"
-                    value={o}
-                    checked={orientation === o}
-                    onChange={() => setOrientation(o)}
-                    className="accent-primary"
-                  />
-                  <span className="text-foreground capitalize">{o}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-          <div>
-            <div className="flex flex-col gap-2">
+            <FieldLabel>Page Size</FieldLabel>
+            <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
               {(["a4", "us-letter"] as const).map((s) => (
-                <label key={s} className="flex cursor-pointer items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    name="canvas-size"
-                    value={s}
-                    checked={size === s}
-                    onChange={() => setSize(s)}
-                    className="accent-primary"
-                  />
-                  <span className="text-foreground">{PAGE_LABELS[s][units]}</span>
-                </label>
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSize(s)}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                    size === s
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {s === "a4" ? "A4" : "US Letter"}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">{PAGE_LABELS[size][units]}</p>
+          </div>
+
+          {/* Orientation toggle */}
+          <div>
+            <FieldLabel>Orientation</FieldLabel>
+            <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
+              {(["portrait", "landscape"] as const).map((o) => (
+                <button
+                  key={o}
+                  type="button"
+                  onClick={() => setOrientation(o)}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium capitalize transition ${
+                    orientation === o
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {o}
+                </button>
               ))}
             </div>
           </div>
-          <div>
-            <FieldLabel>Number of Pages</FieldLabel>
-            <TextInput
-              type="number"
-              min={1}
-              max={500}
-              step={1}
-              value={pageCount}
-              onChange={(e) => setPageCount(Math.max(1, parseInt(e.target.value) || 1))}
-            />
-          </div>
+
+          {/* Margins */}
           <div>
             <FieldLabel>Margins ({units})</FieldLabel>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 grid-cols-2">
               {(["top", "bottom", "left", "right"] as const).map((side) => (
                 <div key={side}>
-                  <FieldLabel>{side.charAt(0).toUpperCase() + side.slice(1)}</FieldLabel>
+                  <span className="mb-1 block text-xs text-muted-foreground">{side.charAt(0).toUpperCase() + side.slice(1)}</span>
                   <TextInput
                     type="number"
                     step={0.01}
@@ -797,17 +817,205 @@ function PageSetupSection({
             </div>
           </div>
 
+          {/* ── Print Options ── */}
+          <div className="border-t border-border pt-6">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Print Options</p>
+
+            {/* Color mode */}
+            <div className="mb-5">
+              <FieldLabel>Color Mode</FieldLabel>
+              <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
+                {(["color", "grayscale", "bw"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setColorMode(m)}
+                    className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition ${
+                      colorMode === m
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {m === "color" ? "Full Color" : m === "grayscale" ? "Grayscale" : "B & W"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Ink saver */}
+            <div className="mb-5">
+              <label className="flex cursor-pointer items-center justify-between rounded-md border border-border px-3 py-2.5">
+                <div>
+                  <span className="text-xs font-medium text-foreground">Ink Saver Mode</span>
+                  <p className="text-[11px] text-muted-foreground">Reduces backgrounds &amp; color saturation</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={inkSaver}
+                  onClick={() => setInkSaver((v) => !v)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition ${
+                    inkSaver ? "bg-primary" : "bg-muted"
+                  }`}
+                >
+                  <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition ${
+                    inkSaver ? "translate-x-[18px]" : "translate-x-[2px]"
+                  }`} />
+                </button>
+              </label>
+            </div>
+
+            {/* Bleed & Crop marks */}
+            <div className="mb-5 grid grid-cols-2 gap-3">
+              <div>
+                <FieldLabel>Bleed (mm)</FieldLabel>
+                <TextInput
+                  type="number"
+                  step={0.5}
+                  min={0}
+                  max={10}
+                  value={bleed}
+                  onChange={(e) => setBleed(parseFloat(e.target.value) || 0)}
+                />
+              </div>
+              <div>
+                <FieldLabel>Crop Marks</FieldLabel>
+                <label className="flex cursor-pointer items-center justify-between rounded-md border border-border px-3 py-2">
+                  <span className="text-xs text-foreground">{cropMarks ? "Enabled" : "Disabled"}</span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={cropMarks}
+                    onClick={() => setCropMarks((v) => !v)}
+                    className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition ${
+                      cropMarks ? "bg-primary" : "bg-muted"
+                    }`}
+                  >
+                    <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition ${
+                      cropMarks ? "translate-x-[18px]" : "translate-x-[2px]"
+                    }`} />
+                  </button>
+                </label>
+              </div>
+            </div>
+
+            {/* Page scaling */}
+            <div className="mb-5">
+              <FieldLabel>Page Scaling</FieldLabel>
+              <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
+                {(["fit", "actual", "custom"] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setPageScaling(s)}
+                    className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium capitalize transition ${
+                      pageScaling === s
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {s === "fit" ? "Fit to Page" : s === "actual" ? "Actual Size" : "Custom"}
+                  </button>
+                ))}
+              </div>
+              {pageScaling === "custom" && (
+                <div className="mt-2 flex items-center gap-2">
+                  <TextInput
+                    type="number"
+                    min={25}
+                    max={400}
+                    step={5}
+                    value={customScale}
+                    onChange={(e) => setCustomScale(Math.max(25, Math.min(400, parseInt(e.target.value) || 100)))}
+                  />
+                  <span className="text-xs text-muted-foreground">%</span>
+                </div>
+              )}
+            </div>
+
+            {/* Duplex */}
+            <div className="mb-5">
+              <FieldLabel>Duplex Binding</FieldLabel>
+              <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
+                {(["none", "long", "short"] as const).map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setDuplex(d)}
+                    className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition ${
+                      duplex === d
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {d === "none" ? "Single-Sided" : d === "long" ? "Long Edge" : "Short Edge"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Export quality */}
+            <div>
+              <FieldLabel>Export Quality</FieldLabel>
+              <div className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1">
+                {(["screen", "print", "high"] as const).map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => setExportQuality(q)}
+                    className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition ${
+                      exportQuality === q
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {q === "screen" ? "Screen (150 DPI)" : q === "print" ? "Print (300 DPI)" : "High (600 DPI)"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </SetupColumn>
 
         {/* Visual preview */}
         <SetupColumn>
-          <div className="flex flex-col items-center gap-3">
+          <div className="flex h-full flex-col items-center justify-center gap-4">
             <div
-              className="relative border border-border bg-white shadow-sm"
+              className="relative rounded-sm border border-border bg-white shadow-md transition-all duration-200"
               style={{ width: previewW, height: previewH }}
             >
+              {/* Bleed area (outside the page) */}
+              {bleed > 0 && (
+                <div
+                  className="absolute rounded-sm border border-dotted border-orange-400/50 bg-orange-400/5"
+                  style={{
+                    top:    `-${(bleed / 10 / physH) * 100}%`,
+                    bottom: `-${(bleed / 10 / physH) * 100}%`,
+                    left:   `-${(bleed / 10 / physW) * 100}%`,
+                    right:  `-${(bleed / 10 / physW) * 100}%`,
+                  }}
+                />
+              )}
+              {/* Crop marks */}
+              {cropMarks && (
+                <>
+                  {/* top-left */}
+                  <div className="absolute -top-3 left-0 h-3 w-px bg-foreground/40" />
+                  <div className="absolute top-0 -left-3 h-px w-3 bg-foreground/40" />
+                  {/* top-right */}
+                  <div className="absolute -top-3 right-0 h-3 w-px bg-foreground/40" />
+                  <div className="absolute top-0 -right-3 h-px w-3 bg-foreground/40" />
+                  {/* bottom-left */}
+                  <div className="absolute -bottom-3 left-0 h-3 w-px bg-foreground/40" />
+                  <div className="absolute bottom-0 -left-3 h-px w-3 bg-foreground/40" />
+                  {/* bottom-right */}
+                  <div className="absolute -bottom-3 right-0 h-3 w-px bg-foreground/40" />
+                  <div className="absolute bottom-0 -right-3 h-px w-3 bg-foreground/40" />
+                </>
+              )}
+              {/* Margin area */}
               <div
-                className="absolute border border-dashed border-primary/40"
+                className="absolute rounded-sm border border-dashed border-primary/30 bg-primary/[0.03]"
                 style={{
                   top:    `${(margins.top    / physH) * 100}%`,
                   bottom: `${(margins.bottom / physH) * 100}%`,
@@ -815,17 +1023,29 @@ function PageSetupSection({
                   right:  `${(margins.right  / physW) * 100}%`,
                 }}
               />
+              {/* Fake content lines */}
+              <div
+                className="absolute flex flex-col gap-[6px] opacity-30"
+                style={{
+                  top:    `calc(${(margins.top / physH) * 100}% + 8px)`,
+                  left:   `calc(${(margins.left / physW) * 100}% + 8px)`,
+                  right:  `calc(${(margins.right / physW) * 100}% + 8px)`,
+                }}
+              >
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className={`h-[3px] rounded-full ${colorMode === "bw" ? "bg-black/60" : colorMode === "grayscale" ? "bg-gray-400/60" : "bg-muted-foreground/60"}`} style={{ width: `${70 + (i % 3) * 10}%` }} />
+                ))}
+              </div>
+              {/* Grayscale/BW overlay */}
+              {colorMode !== "color" && (
+                <div className={`pointer-events-none absolute inset-0 rounded-sm ${
+                  colorMode === "bw" ? "mix-blend-saturation bg-white" : "mix-blend-saturation bg-gray-200/40"
+                }`} />
+              )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {PAGE_LABELS[size][units]} · {orientation}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {pageCount} page{pageCount !== 1 ? "s" : ""} · Margins: {margins.top} / {margins.right} / {margins.bottom} / {margins.left} {units}
-            </p>
           </div>
         </SetupColumn>
-      </div>
-      <SaveStatusBar status={courseId ? saveStatus : "empty"} lastSavedAt={lastSavedAt} />
+      </SetupPanelLayout>
     </SetupSection>
   )
 }
@@ -847,7 +1067,6 @@ function AdvancedSection() {
           Delete Course
         </button>
       </div>
-      <SaveStatusBar status="empty" lastSavedAt={null} />
     </SetupSection>
   )
 }
@@ -1177,28 +1396,9 @@ function CourseBuilderPageInner() {
           )}
         </div>
 
-        {/* Center: editable title + current step badge */}
-        <div className="flex flex-1 items-center justify-center gap-2 min-w-0 overflow-hidden">
-          {editingTitle ? (
-            <input
-              ref={titleRef}
-              value={courseTitle}
-              onChange={(e) => setCourseTitle(e.target.value)}
-              onBlur={() => setEditingTitle(false)}
-              onKeyDown={(e) => e.key === "Enter" && setEditingTitle(false)}
-              className="max-w-xs rounded border-0 bg-transparent text-sm font-medium text-foreground text-center focus:outline-none focus:ring-1 focus:ring-ring px-1"
-            />
-          ) : (
-            <button
-              onClick={startEditTitle}
-              className="text-sm font-medium text-foreground hover:text-primary transition-colors truncate max-w-xs"
-            >
-              {courseTitle}
-            </button>
-          )}
-          <span className="shrink-0 rounded-full border border-border/60 bg-muted/50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            {VIEW_LABELS[view]}
-          </span>
+        {/* Center: logo */}
+        <div className="flex flex-1 items-center justify-center">
+          <img src="/octopus-logo.png" alt="Neptino" className="h-6 w-6" />
         </div>
 
         {/* Right: next step */}
@@ -1234,7 +1434,7 @@ function CourseBuilderPageInner() {
       <div className="flex flex-1 overflow-hidden">
         {view === "setup" ? (
           <div className="flex flex-1 overflow-hidden p-2 bg-muted/10">
-            <div className="flex flex-1 overflow-hidden rounded-xl border border-border shadow-sm">
+            <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border shadow-sm md:flex-row">
               <aside className="no-scrollbar hidden w-52 shrink-0 overflow-y-auto border-r border-border bg-background md:block">
                 <nav className="px-3 py-4 space-y-5">
                   {SECTIONS.map((group) => (
@@ -1263,7 +1463,7 @@ function CourseBuilderPageInner() {
                 </nav>
               </aside>
 
-              <main className="flex-1 overflow-hidden bg-muted/20 px-8 pt-4 pb-8">
+              <main className="flex-1 overflow-hidden bg-muted/20 px-4 pt-4 pb-4 md:px-8 md:pb-8">
                 <div className="mx-auto flex h-full min-h-0 max-w-7xl flex-col">
                   {loadingCourse ? (
                     <div className="flex items-center justify-center h-48">
@@ -1282,6 +1482,24 @@ function CourseBuilderPageInner() {
                   )}
                 </div>
               </main>
+
+              {/* Mobile horizontal section nav — bottom bar */}
+              <div className="no-scrollbar flex shrink-0 items-center gap-1 overflow-x-auto border-t border-border bg-background px-2 py-2 md:hidden">
+                {SECTIONS.flatMap((group) => group.items).map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    onClick={() => setActiveSection(id)}
+                    className={`flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition ${
+                      activeSection === id
+                        ? "bg-accent text-primary"
+                        : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="h-3 w-3 shrink-0" />
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         ) : view === "create" ? (
