@@ -27,6 +27,10 @@
 supabase/.temp/
 supabase/.branches/
 supabase/supabase/.branches/
+legacy/supabase/.temp/
+legacy/supabase/.branches/
+chrome-extension/dist/
+chrome-extension/node_modules/
 
 # debug
 npm-debug.log*
