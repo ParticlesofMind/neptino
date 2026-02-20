@@ -16,6 +16,25 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Chrome Extension (Restored)
+
+The legacy Chrome extension is now active in the root workspace at [chrome-extension](chrome-extension).
+
+Use these commands from the project root:
+
+```bash
+npm run ext:build   # production build into chrome-extension/dist
+npm run ext:dev     # watch/rebuild during development
+npm run ext:icons   # regenerate extension icons
+```
+
+To load it in Chrome:
+
+1. Open `chrome://extensions`
+2. Enable **Developer mode**
+3. Click **Load unpacked**
+4. Select the folder `chrome-extension/dist`
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

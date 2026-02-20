@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "verify:clean-repo": "bash scripts/verify-clean-repo.sh"
+    "verify:clean-repo": "bash scripts/verify-clean-repo.sh && bash scripts/verify-no-legacy-imports.sh",
+    "ext:dev": "npm --prefix chrome-extension run dev",
+    "ext:build": "npm --prefix chrome-extension run build",
+    "ext:icons": "npm --prefix chrome-extension run generate-icons"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",

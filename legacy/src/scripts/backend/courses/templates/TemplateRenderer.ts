@@ -1,9 +1,18 @@
-import { TemplateBlock, TemplateBlockType, BlockFieldConfig } from "./types.js";
+import { TemplateBlock, TemplateBlockType, BlockFieldConfig, TemplateType } from "./types.js";
 import { TemplateConfigManager } from "./TemplateConfigManager.js";
 import { TemplateBlockRenderer, TemplateRenderOptions } from "./TemplateBlockRenderer.js";
 import { TEMPLATE_BLOCK_SEQUENCES, TEMPLATE_BODY_BLOCKS } from "./templateOptions.js";
 
 export class TemplateRenderer {
+  private static readonly LESSON_BLOCK_SEQUENCE: TemplateBlockType[] = [
+    "header",
+    "program",
+    "resources",
+    "content",
+    "assignment",
+    "footer",
+  ];
+
   static displayTemplateBlocks(templateData: any): void {
     const configArea = document.getElementById('template-config-content');
     if (!configArea) {
@@ -17,7 +26,8 @@ export class TemplateRenderer {
       { blocks: [], settings: {} };
     TemplateConfigManager.normalizeTemplateData(actualData);
 
-    const blocks = actualData.blocks || [];
+    const blocks = this.getRenderableBlocks(actualData, templateData);
+    actualData.blocks = blocks;
     const templateId = templateData.id;
     const fieldConfig = TemplateConfigManager.getBlockFieldConfiguration();
 
@@ -109,10 +119,11 @@ export class TemplateRenderer {
       return;
     }
 
-    const blocks = actualData.blocks || [];
+    const blocks = this.getRenderableBlocks(actualData, templateData);
+    actualData.blocks = blocks;
 
     // Sort blocks by order and render them
-    const sortedBlocks = blocks.sort(
+    const sortedBlocks = [...blocks].sort(
       (a: TemplateBlock, b: TemplateBlock) => a.order - b.order,
     );
 
@@ -120,53 +131,37 @@ export class TemplateRenderer {
     const competencyEnabled = programBlock?.config?.competency !== false;
     const renderOptions: TemplateRenderOptions = { competencyEnabled };
 
-    // Separate header, footer, body, and body sub-blocks
-    const headerBlock = sortedBlocks.find((b: TemplateBlock) => b.type === 'header');
-    const footerBlock = sortedBlocks.find((b: TemplateBlock) => b.type === 'footer');
-    const bodyBlock = sortedBlocks.find((b: TemplateBlock) => b.type === 'body');
-    // Content blocks are body sub-blocks (program, resources, content, assignment, scoring)
-    // The body block itself is not rendered as a visible block, only its sub-blocks
-    const contentBlocks = sortedBlocks.filter((b: TemplateBlock) => 
-      b.type !== 'header' && b.type !== 'footer' && b.type !== 'body'
-    );
+    const sectionLabels: Partial<Record<TemplateBlockType, string>> = {
+      header: "Lesson Header",
+      program: "Program",
+      resources: "Resources",
+      content: "Content",
+      assignment: "Assignment",
+      footer: "Lesson Footer",
+    };
 
-    // Render header
-    const headerHtml = headerBlock
-      ? `<div class="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm" data-preview-block="${headerBlock.type}">
-          <h4 class="text-sm font-semibold text-neutral-800">${headerBlock.type.charAt(0).toUpperCase() + headerBlock.type.slice(1)}</h4>
-          ${TemplateBlockRenderer.renderBlockContent(headerBlock, TemplateConfigManager.getCheckedFields(headerBlock), renderOptions)}
-        </div>`
-      : '';
-
-    // Render content blocks (scrollable middle section)
-    const contentHtml = contentBlocks
-      .map((block: TemplateBlock) => {
+    const lessonSections = this.LESSON_BLOCK_SEQUENCE
+      .map((type) => sortedBlocks.find((block) => block.type === type))
+      .filter((block): block is TemplateBlock => Boolean(block))
+      .map((block) => {
         const checkedFields = TemplateConfigManager.getCheckedFields(block);
+        const title = sectionLabels[block.type] ?? (block.type.charAt(0).toUpperCase() + block.type.slice(1));
+
         return `
-      <div class="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm" data-preview-block="${block.type}">
-      <h4 class="text-sm font-semibold text-neutral-800">${block.type.charAt(0).toUpperCase() + block.type.slice(1)}</h4>
-      ${TemplateBlockRenderer.renderBlockContent(block, checkedFields, renderOptions)}
-      </div>
-      `;
+          <section class="rounded-lg border border-neutral-200 bg-white p-4" data-preview-block="${block.type}">
+            <h4 class="mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">${title}</h4>
+            ${TemplateBlockRenderer.renderBlockContent(block, checkedFields, renderOptions)}
+          </section>
+        `;
       })
       .join("");
 
-    // Render footer
-    const footerHtml = footerBlock
-      ? `<div class="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm" data-preview-block="${footerBlock.type}">
-          <h4 class="text-sm font-semibold text-neutral-800">${footerBlock.type.charAt(0).toUpperCase() + footerBlock.type.slice(1)}</h4>
-          ${TemplateBlockRenderer.renderBlockContent(footerBlock, TemplateConfigManager.getCheckedFields(footerBlock), renderOptions)}
-        </div>`
-      : '';
-
-    // Build canvas-style layout
+    // Build lesson-sheet layout
     previewContainer.innerHTML = `
-      <div class="flex flex-col gap-4" data-template-preview-sheet>
-        ${headerHtml}
-        <div class="flex flex-col gap-4" data-template-preview-body>
-          ${contentHtml}
+      <div class="mx-auto w-full max-w-6xl rounded-2xl border border-neutral-200 bg-neutral-50 p-4 sm:p-6" data-template-preview-sheet>
+        <div class="space-y-4" data-template-preview-body>
+          ${lessonSections}
         </div>
-        ${footerHtml}
       </div>
     `;
   }
@@ -296,7 +291,7 @@ export class TemplateRenderer {
   }
 
   private static renderCompactRows(templateId: string | null, block: TemplateBlock, fields: BlockFieldConfig[]): string {
-    const simpleFields = fields.filter((field) => !field.separator && !field.mandatory);
+    const simpleFields = fields.filter((field) => !field.separator);
     if (!simpleFields.length) {
       return "";
     }
@@ -317,7 +312,7 @@ export class TemplateRenderer {
   private static renderHierarchicalRowsCompact(templateId: string | null, block: TemplateBlock, fields: BlockFieldConfig[]): string {
     // Separate "Include Project" field to render it separately at the bottom
     const includeProjectField = fields.find(f => f.name === "include_project");
-    const regularFields = fields.filter(f => f.name !== "include_project" && !f.separator && !f.mandatory);
+    const regularFields = fields.filter(f => f.name !== "include_project" && !f.separator);
     
     // Group regular fields by indent level
     const fieldsByIndent = new Map<number, BlockFieldConfig[]>();
@@ -359,23 +354,9 @@ export class TemplateRenderer {
     return rows.join("");
   }
 
-  private static renderHierarchicalRow(templateId: string | null, block: TemplateBlock, field: BlockFieldConfig): string {
-    const indentLevel = field.indentLevel ?? 0;
-    const indentStyle = indentLevel ? ` style="padding-left: ${indentLevel * 0.75}rem"` : "";
-
-    return `
-      <div class="flex flex-col gap-2" data-field-row="hierarchy"${indentStyle}>
-        ${this.renderFieldCheckbox(templateId, block, field)}
-      </div>
-    `;
-  }
-
   private static renderResourceRows(templateId: string | null, block: TemplateBlock, fields: BlockFieldConfig[]): string {
     const byGroup = new Map<string, BlockFieldConfig[]>();
     fields.forEach((field) => {
-      // Skip mandatory fields
-      if (field.mandatory) return;
-      
       const key = field.rowGroup ?? "resources-default";
       if (!byGroup.has(key)) {
         byGroup.set(key, []);
@@ -439,9 +420,6 @@ export class TemplateRenderer {
     }
 
     const labelClasses = ["inline-flex items-center gap-2 text-sm text-neutral-700"];
-    if (field.mandatory) {
-      labelClasses.push("font-medium", "text-neutral-900");
-    }
     if (isGlossaryItem && !glossaryEnabled) {
       labelClasses.push("opacity-50", "text-neutral-400");
     }
@@ -494,6 +472,60 @@ export class TemplateRenderer {
       acc[field.name] = field.mandatory ? true : false;
       return acc;
     }, {});
+  }
+
+  private static getRenderableBlocks(actualData: any, templateData?: any): TemplateBlock[] {
+    const existingBlocks = ((actualData?.blocks as TemplateBlock[] | undefined) ?? []).filter(
+      (block) => block.type !== "body",
+    );
+
+    const templateType = this.resolveTemplateType(actualData, templateData);
+    const sequence = this.getRequiredBlockSequence(templateType);
+    const blocksByType = new Map(existingBlocks.map((block) => [block.type, block]));
+
+    const normalizedBlocks = sequence.map((blockType, index) => {
+      const existing = blocksByType.get(blockType);
+      if (existing) {
+        return existing;
+      }
+      return this.createDefaultBlock(blockType, index + 1);
+    });
+
+    const extraBlocks = existingBlocks.filter((block) => !sequence.includes(block.type));
+    return [...normalizedBlocks, ...extraBlocks].map((block, index) => ({
+      ...block,
+      order: index + 1,
+    }));
+  }
+
+  private static resolveTemplateType(actualData: any, templateData?: any): TemplateType {
+    const rawTemplateType =
+      templateData?.template_type ??
+      actualData?.template_type ??
+      actualData?.settings?.template_type ??
+      "lesson";
+
+    if (typeof rawTemplateType === "string" && rawTemplateType in TEMPLATE_BODY_BLOCKS) {
+      return rawTemplateType as TemplateType;
+    }
+
+    return "lesson";
+  }
+
+  private static getRequiredBlockSequence(templateType: TemplateType): TemplateBlockType[] {
+    const mainSequence = TEMPLATE_BLOCK_SEQUENCES[templateType] ?? TEMPLATE_BLOCK_SEQUENCES.lesson;
+    const bodySubBlocks = TEMPLATE_BODY_BLOCKS[templateType] ?? TEMPLATE_BODY_BLOCKS.lesson;
+
+    const sequence: TemplateBlockType[] = [];
+    mainSequence.forEach((blockType) => {
+      if (blockType === "body") {
+        sequence.push(...bodySubBlocks);
+        return;
+      }
+      sequence.push(blockType);
+    });
+
+    return sequence;
   }
 
   private static ensureTemplateDataObject(raw: unknown): Record<string, unknown> | null {
