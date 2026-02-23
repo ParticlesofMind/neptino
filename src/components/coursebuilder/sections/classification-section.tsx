@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { SetupColumn, SetupPanelLayout, SetupSection } from "@/components/coursebuilder/layout-primitives"
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
+import { SearchableSelect } from "@/components/coursebuilder/searchable-select"
 import iscedData from "@/data/isced2011.json"
 import { createClient } from "@/lib/supabase/client"
 
@@ -41,7 +42,7 @@ function SelectInput({
   return (
     <select
       {...props}
-      className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
     >
       {children}
     </select>
@@ -71,9 +72,27 @@ export function ClassificationSection({
   const [subtopic, setSubtopic] = useState("")
   const [prevCourse, setPrevCourse] = useState("")
   const [nextCourse, setNextCourse] = useState("")
+  const [priorKnowledge, setPriorKnowledge] = useState("")
+  const [keyTerms, setKeyTerms] = useState<string[]>([])
+  const [newKeyTerm, setNewKeyTerm] = useState("")
+  const [mandatoryTopics, setMandatoryTopics] = useState<string[]>([])
+  const [newMandatoryTopic, setNewMandatoryTopic] = useState("")
+  const [applicationContext, setApplicationContext] = useState("")
   const [loading, setLoading] = useState(!!courseId)
   const [saveStatus, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+
+  // ISCED data types and loading
+  type IscedSubtopic = { value: string; label: string; code: string }
+  type IscedTopic = { value: string; label: string; code: string; subtopics: IscedSubtopic[] }
+  type IscedSubject = { value: string; label: string; code: string; topics: IscedTopic[] }
+  type IscedDomain = { value: string; label: string; code: string; subjects: IscedSubject[] }
+  const domains = (iscedData as { domains: IscedDomain[] }).domains
+
+  // Helper to convert DB value to display format
+  const toDisplayFormat = (item: { code: string; label: string } | undefined) => {
+    return item ? `${item.code} — ${item.label}` : ""
+  }
 
   useEffect(() => {
     if (!courseId) return
@@ -88,12 +107,31 @@ export function ClassificationSection({
           const c = data.classification_data as Record<string, string>
           setClassYear(c.class_year ?? "")
           setFramework(c.curricular_framework ?? "")
-          setDomain(c.domain ?? "")
-          setSubject(c.subject ?? "")
-          setTopic(c.topic ?? "")
-          setSubtopic(c.subtopic ?? "")
+          
+          // Convert DB values to display format for SearchableSelect
+          const dbDomain = domains.find((d) => d.value === c.domain)
+          if (dbDomain) {
+            setDomain(toDisplayFormat(dbDomain))
+            const dbSubject = dbDomain.subjects.find((s) => s.value === c.subject)
+            if (dbSubject) {
+              setSubject(toDisplayFormat(dbSubject))
+              const dbTopic = dbSubject.topics.find((t) => t.value === c.topic)
+              if (dbTopic) {
+                setTopic(toDisplayFormat(dbTopic))
+                const dbSubtopic = dbTopic.subtopics.find((st) => st.value === c.subtopic)
+                if (dbSubtopic) {
+                  setSubtopic(dbSubtopic.label)
+                }
+              }
+            }
+          }
+          
           setPrevCourse(c.previous_course ?? "")
           setNextCourse(c.next_course ?? "")
+          setPriorKnowledge(c.prior_knowledge ?? "")
+          if (Array.isArray(c.key_terms)) setKeyTerms(c.key_terms as string[])
+          if (Array.isArray(c.mandatory_topics)) setMandatoryTopics(c.mandatory_topics as string[])
+          setApplicationContext(c.application_context ?? "")
         }
         setLoading(false)
       })
@@ -103,19 +141,33 @@ export function ClassificationSection({
     if (!courseId) return
     setSaveStatus("saving")
     const supabase = createClient()
+    
+    // Convert display format back to clean values for DB storage
+    const domainValue = domains.find((d) => `${d.code} — ${d.label}` === domain || d.value === domain)?.value || ""
+    const allSubjects = domains.flatMap((d) => d.subjects)
+    const subjectValue = allSubjects.find((s) => `${s.code} — ${s.label}` === subject || s.value === subject)?.value || ""
+    const allTopics = allSubjects.flatMap((s) => s.topics)
+    const topicValue = allTopics.find((t) => `${t.code} — ${t.label}` === topic || t.value === topic)?.value || ""
+    const allSubtopics = allTopics.flatMap((t) => t.subtopics)
+    const subtopicValue = subtopic ? (allSubtopics.find((st) => st.label === subtopic || st.value === subtopic)?.value || "") : ""
+    
     const { error } = await supabase
       .from("courses")
       .update({
         classification_data: {
           class_year: classYear,
           curricular_framework: framework,
-          domain,
-          subject,
-          topic,
-          subtopic: subtopic || null,
+          domain: domainValue,
+          subject: subjectValue,
+          topic: topicValue,
+          subtopic: subtopicValue || null,
           previous_course: prevCourse || null,
           current_course: courseCreatedData?.title ?? null,
           next_course: nextCourse || null,
+          prior_knowledge: priorKnowledge || null,
+          key_terms: keyTerms.filter((t) => t.trim()),
+          mandatory_topics: mandatoryTopics.filter((t) => t.trim()),
+          application_context: applicationContext || null,
           updated_at: new Date().toISOString(),
         },
         updated_at: new Date().toISOString(),
@@ -127,28 +179,96 @@ export function ClassificationSection({
       setLastSavedAt(new Date().toISOString())
       setSaveStatus("saved")
     }
-  }, [courseId, classYear, framework, domain, subject, topic, subtopic, prevCourse, nextCourse, courseCreatedData?.title])
+  }, [courseId, classYear, framework, domain, subject, topic, subtopic, prevCourse, nextCourse, courseCreatedData?.title, domains, priorKnowledge, keyTerms, mandatoryTopics, applicationContext])
 
   useDebouncedChangeSave(handleSave, 800, Boolean(courseId) && !loading)
 
-  type IscedSubtopic = { value: string; label: string; code: string }
-  type IscedTopic = { value: string; label: string; code: string; subtopics: IscedSubtopic[] }
-  type IscedSubject = { value: string; label: string; code: string; topics: IscedTopic[] }
-  type IscedDomain = { value: string; label: string; code: string; subjects: IscedSubject[] }
-  const domains = (iscedData as { domains: IscedDomain[] }).domains
+  // Expanded class years (Year 1 through Year 20)
+  const classYears = Array.from({ length: 20 }, (_, i) => `Year ${i + 1}`)
 
-  const selectedDomain = domains.find((d) => d.value === domain)
+  // Comprehensive list of curricular frameworks
+  const curricularFrameworks = [
+    "IB (International Baccalaureate)",
+    "Cambridge (IGCSE / A-Level)",
+    "AP (Advanced Placement)",
+    "French Baccalaureate",
+    "German Abitur",
+    "Swiss Maturité",
+    "Italian Maturità",
+    "Spanish Bachillerato",
+    "Common Core (US)",
+    "National Curriculum (UK)",
+    "Australian Curriculum",
+    "Canadian Provincial Curriculum",
+    "New Zealand Curriculum",
+    "Singapore Curriculum",
+    "Indian CBSE",
+    "Indian ICSE",
+    "Indian State Boards",
+    "Chinese National Curriculum",
+    "Japanese Course of Study",
+    "Korean National Curriculum",
+    "Finnish National Core Curriculum",
+    "Swedish Curriculum",
+    "Norwegian Curriculum",
+    "Danish Curriculum",
+    "Dutch Curriculum",
+    "Belgian Curriculum (French)",
+    "Belgian Curriculum (Flemish)",
+    "Austrian Curriculum",
+    "Polish National Curriculum",
+    "Russian Federal Curriculum",
+    "Brazilian National Curriculum (BNCC)",
+    "Mexican National Curriculum",
+    "Argentinian Curriculum",
+    "Chilean Curriculum",
+    "South African CAPS",
+    "UAE Ministry of Education",
+    "Saudi Arabian Curriculum",
+    "Turkish National Curriculum",
+    "Israeli Curriculum",
+    "Egyptian National Curriculum",
+    "Kenyan 8-4-4 System",
+    "Nigerian National Curriculum",
+    "Hong Kong Curriculum",
+    "Taiwanese Curriculum",
+    "Thai National Curriculum",
+    "Vietnamese National Curriculum",
+    "Indonesian Curriculum",
+    "Malaysian Curriculum (KSSM)",
+    "Philippine K-12 Curriculum",
+    "Montessori",
+    "Waldorf/Steiner",
+    "Reggio Emilia",
+    "Project-Based Learning",
+    "Inquiry-Based Learning",
+    "STEAM Curriculum",
+    "Classical Education",
+    "Charlotte Mason",
+    "Unschooling",
+    "Homeschool - Eclectic",
+    "Homeschool - Traditional",
+    "College Preparatory",
+    "Vocational/Technical",
+    "Special Education (Individualized)",
+    "Gifted and Talented",
+    "Custom/Proprietary",
+    "Other",
+  ]
+
+  // Helper to match display string "01 — Education" or legacy value "education"
+  const selectedDomain = domains.find((d) => `${d.code} — ${d.label}` === domain || d.value === domain)
   const subjects = selectedDomain?.subjects ?? []
-  const selectedSubject = subjects.find((s) => s.value === subject)
+  const selectedSubject = subjects.find((s) => `${s.code} — ${s.label}` === subject || s.value === subject)
   const topics = selectedSubject?.topics ?? []
-  const selectedTopic = topics.find((t) => t.value === topic)
+  const selectedTopic = topics.find((t) => `${t.code} — ${t.label}` === topic || t.value === topic)
   const subtopics = selectedTopic?.subtopics ?? []
 
   const crumbs = [
     selectedDomain?.label,
     selectedSubject?.label,
     selectedTopic?.label,
-    subtopics.find((s) => s.value === subtopic)?.label,
+    subtopics.find((s) => s.label === subtopic || s.value === subtopic)?.label,
   ].filter(Boolean) as string[]
 
   if (loading) {
@@ -167,28 +287,23 @@ export function ClassificationSection({
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <FieldLabel>Class Year</FieldLabel>
-                <SelectInput value={classYear} onChange={(e) => setClassYear(e.target.value)}>
-                  <option value="">Select year...</option>
-                  {Array.from({ length: 12 }, (_, i) => `Year ${i + 1}`).map((y) => (
-                    <option key={y}>{y}</option>
-                  ))}
-                </SelectInput>
+                <SearchableSelect
+                  value={classYear}
+                  onChange={setClassYear}
+                  options={classYears}
+                  placeholder="Select year..."
+                  searchThreshold={15}
+                />
               </div>
               <div>
                 <FieldLabel>Curricular Framework</FieldLabel>
-                <SelectInput value={framework} onChange={(e) => setFramework(e.target.value)}>
-                  <option value="">Select framework...</option>
-                  {[
-                    "IB (International Baccalaureate)",
-                    "Cambridge (IGCSE / A-Level)",
-                    "French Baccalaureate",
-                    "Common Core (US)",
-                    "National Curriculum (UK)",
-                    "Custom",
-                  ].map((f) => (
-                    <option key={f}>{f}</option>
-                  ))}
-                </SelectInput>
+                <SearchableSelect
+                  value={framework}
+                  onChange={setFramework}
+                  options={curricularFrameworks}
+                  placeholder="Select framework..."
+                  searchThreshold={8}
+                />
               </div>
             </div>
           </div>
@@ -200,62 +315,58 @@ export function ClassificationSection({
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <FieldLabel hint="Broad field of education">Domain</FieldLabel>
-              <SelectInput
+              <SearchableSelect
                 value={domain}
-                onChange={(e) => {
-                  setDomain(e.target.value)
+                onChange={(val) => {
+                  setDomain(val)
                   setSubject("")
                   setTopic("")
                   setSubtopic("")
                 }}
-              >
-                <option value="">Select domain...</option>
-                {domains.map((d) => (
-                  <option key={d.value} value={d.value}>{d.code} — {d.label}</option>
-                ))}
-              </SelectInput>
+                options={domains.map((d) => `${d.code} — ${d.label}`)}
+                placeholder="Select domain..."
+                searchThreshold={8}
+              />
             </div>
             <div>
               <FieldLabel hint="Narrow field of education">Subject</FieldLabel>
-              <SelectInput
+              <SearchableSelect
                 value={subject}
                 disabled={!domain}
-                onChange={(e) => {
-                  setSubject(e.target.value)
+                onChange={(val) => {
+                  setSubject(val)
                   setTopic("")
                   setSubtopic("")
                 }}
-              >
-                <option value="">{domain ? "Select subject..." : "Select domain first..."}</option>
-                {subjects.map((s) => (
-                  <option key={s.value} value={s.value}>{s.code} — {s.label}</option>
-                ))}
-              </SelectInput>
+                options={subjects.map((s) => `${s.code} — ${s.label}`)}
+                placeholder={domain ? "Select subject..." : "Select domain first..."}
+                searchThreshold={8}
+              />
             </div>
             <div>
               <FieldLabel hint="Detailed field">Topic</FieldLabel>
-              <SelectInput
+              <SearchableSelect
                 value={topic}
                 disabled={!subject}
-                onChange={(e) => {
-                  setTopic(e.target.value)
+                onChange={(val) => {
+                  setTopic(val)
                   setSubtopic("")
                 }}
-              >
-                <option value="">{subject ? "Select topic..." : "Select subject first..."}</option>
-                {topics.map((t) => (
-                  <option key={t.value} value={t.value}>{t.code} — {t.label}</option>
-                ))}
-              </SelectInput>
+                options={topics.map((t) => `${t.code} — ${t.label}`)}
+                placeholder={subject ? "Select topic..." : "Select subject first..."}
+                searchThreshold={8}
+              />
             </div>
             <div>
               <FieldLabel hint="Specific focus">Subtopic</FieldLabel>
-              <SelectInput value={subtopic} disabled={!topic} onChange={(e) => setSubtopic(e.target.value)}>
-                <option value="">{topic ? "Select subtopic..." : "Select topic first..."}</option>
-                {subtopics.map((s) => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
-                ))}
-              </SelectInput>
+              <SearchableSelect
+                value={subtopic}
+                disabled={!topic}
+                onChange={setSubtopic}
+                options={subtopics.map((s) => s.label)}
+                placeholder={topic ? "Select subtopic..." : "Select topic first..."}
+                searchThreshold={8}
+              />
             </div>
           </div>
 
@@ -270,6 +381,109 @@ export function ClassificationSection({
               <FieldLabel hint="Comes after">Next Course</FieldLabel>
               <TextInput value={nextCourse} placeholder="e.g., Calculus" onChange={(e) => setNextCourse(e.target.value)} />
             </div>
+          </div>
+
+          <Divider label="Generation Context" />
+          <p className="text-sm text-muted-foreground -mt-4 mb-3">Metadata that enriches AI curriculum generation</p>
+
+          <div>
+            <FieldLabel hint="What students should already know">Prior Knowledge Baseline</FieldLabel>
+            <textarea
+              value={priorKnowledge}
+              onChange={(e) => setPriorKnowledge(e.target.value.slice(0, 500))}
+              placeholder="e.g., Students have completed Algebra I and basic geometry. They can solve linear equations and understand coordinate planes."
+              rows={3}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary resize-none"
+            />
+            <p className="mt-1 text-right text-[11px] text-muted-foreground">{priorKnowledge.length}/500</p>
+          </div>
+
+          <div>
+            <FieldLabel hint="Domain-specific terminology students will encounter">Key Terms / Seed Vocabulary</FieldLabel>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {keyTerms.map((term, i) => (
+                <span key={i} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/30 px-2.5 py-0.5 text-xs text-foreground">
+                  {term}
+                  <button type="button" onClick={() => setKeyTerms((prev) => prev.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-destructive transition">×</button>
+                </span>
+              ))}
+            </div>
+            {keyTerms.length < 30 && (
+              <div className="flex gap-2">
+                <input
+                  value={newKeyTerm}
+                  onChange={(e) => setNewKeyTerm(e.target.value.slice(0, 60))}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newKeyTerm.trim()) {
+                      e.preventDefault()
+                      setKeyTerms((prev) => [...prev, newKeyTerm.trim()])
+                      setNewKeyTerm("")
+                    }
+                  }}
+                  placeholder="e.g., photosynthesis"
+                  className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
+                />
+                <button
+                  type="button"
+                  disabled={!newKeyTerm.trim()}
+                  onClick={() => { if (newKeyTerm.trim()) { setKeyTerms((prev) => [...prev, newKeyTerm.trim()]); setNewKeyTerm("") } }}
+                  className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition hover:border-primary/40 hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Add
+                </button>
+              </div>
+            )}
+            <p className="mt-1 text-right text-[11px] text-muted-foreground">{keyTerms.length}/30 terms</p>
+          </div>
+
+          <div>
+            <FieldLabel hint="Topics required by curriculum standards">Mandatory Topics</FieldLabel>
+            <div className="space-y-1.5 mb-2">
+              {mandatoryTopics.map((t, i) => (
+                <div key={i} className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2">
+                  <span className="flex-1 text-sm text-foreground">{t}</span>
+                  <button type="button" onClick={() => setMandatoryTopics((prev) => prev.filter((_, idx) => idx !== i))} className="text-xs text-muted-foreground hover:text-destructive transition">×</button>
+                </div>
+              ))}
+            </div>
+            {mandatoryTopics.length < 20 && (
+              <div className="flex gap-2">
+                <input
+                  value={newMandatoryTopic}
+                  onChange={(e) => setNewMandatoryTopic(e.target.value.slice(0, 100))}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newMandatoryTopic.trim()) {
+                      e.preventDefault()
+                      setMandatoryTopics((prev) => [...prev, newMandatoryTopic.trim()])
+                      setNewMandatoryTopic("")
+                    }
+                  }}
+                  placeholder="e.g., Cell Division and Mitosis"
+                  className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
+                />
+                <button
+                  type="button"
+                  disabled={!newMandatoryTopic.trim()}
+                  onClick={() => { if (newMandatoryTopic.trim()) { setMandatoryTopics((prev) => [...prev, newMandatoryTopic.trim()]); setNewMandatoryTopic("") } }}
+                  className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition hover:border-primary/40 hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Add
+                </button>
+              </div>
+            )}
+            <p className="mt-1 text-right text-[11px] text-muted-foreground">{mandatoryTopics.length}/20 topics</p>
+          </div>
+
+          <div>
+            <FieldLabel hint="How the subject applies in context">Application Context / Domain Lens</FieldLabel>
+            <textarea
+              value={applicationContext}
+              onChange={(e) => setApplicationContext(e.target.value.slice(0, 500))}
+              placeholder="e.g., This biology course is taught through a medical sciences lens. Examples should use clinical scenarios, patient cases, and healthcare applications."
+              rows={3}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary resize-none"
+            />
+            <p className="mt-1 text-right text-[11px] text-muted-foreground">{applicationContext.length}/500</p>
           </div>
         </SetupColumn>
 

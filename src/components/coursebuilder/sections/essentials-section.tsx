@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { SetupColumn, SetupPanelLayout, SetupSection } from "@/components/coursebuilder/layout-primitives"
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
 import { createClient } from "@/lib/supabase/client"
@@ -83,11 +83,33 @@ export function EssentialsSection({
   const [imageObjectUrl, setImageObjectUrl] = useState<string | null>(null)
   const imageRef = useRef<HTMLInputElement>(null)
   const imageFileRef = useRef<File | null>(null)
+  const [courseGoals, setCourseGoals] = useState<string[]>([])
+  const [newGoal, setNewGoal] = useState("")
 
   const set = <K extends keyof CourseEssentials>(k: K, v: CourseEssentials[K]) =>
     setData((prev) => ({ ...prev, [k]: v }))
 
   const previewImageUrl = imageObjectUrl ?? initialData?.imageUrl ?? null
+
+  // Load course goals from generation_settings on mount
+  useEffect(() => {
+    const id = existingCourseId
+    if (!id) return
+    const supabase = createClient()
+    supabase
+      .from("courses")
+      .select("generation_settings")
+      .eq("id", id)
+      .single()
+      .then(({ data: row, error: err }) => {
+        if (!err && row?.generation_settings) {
+          const gs = row.generation_settings as Record<string, unknown>
+          if (Array.isArray(gs.course_goals)) {
+            setCourseGoals(gs.course_goals as string[])
+          }
+        }
+      })
+  }, [existingCourseId])
 
   const persistEssentials = useCallback(async () => {
     setError(null)
@@ -130,7 +152,7 @@ export function EssentialsSection({
         }
       }
 
-      const payload = {
+      const payload: Record<string, unknown> = {
         course_name: data.title.trim(),
         course_subtitle: data.subtitle.trim() || null,
         course_description: data.description.trim(),
@@ -139,7 +161,14 @@ export function EssentialsSection({
         course_image: imageUrl,
       }
 
+      const goalsPayload = courseGoals.filter((g) => g.trim())
+
       if (activeCourseId) {
+        // Merge course_goals into generation_settings
+        const { data: gsRow } = await supabase.from("courses").select("generation_settings").eq("id", activeCourseId).single()
+        const existingGs = (gsRow?.generation_settings as Record<string, unknown>) ?? {}
+        payload.generation_settings = { ...existingGs, course_goals: goalsPayload }
+
         const { error: updateError } = await supabase.from("courses").update(payload).eq("id", activeCourseId)
         if (updateError) {
           setError(updateError.message)
@@ -154,7 +183,7 @@ export function EssentialsSection({
             ...payload,
             teacher_id: user.id,
             institution: user.user_metadata?.institution ?? "Independent",
-            generation_settings: {},
+            generation_settings: { course_goals: goalsPayload },
             students_overview: { total: 0, synced: 0 },
           })
           .select("id")
@@ -174,7 +203,7 @@ export function EssentialsSection({
     } finally {
       setLoading(false)
     }
-  }, [data, existingCourseId, createdCourseId, initialData?.imageUrl, onCourseCreated])
+  }, [data, existingCourseId, createdCourseId, initialData?.imageUrl, onCourseCreated, courseGoals])
 
   useDebouncedChangeSave(persistEssentials, 800)
 
@@ -233,6 +262,55 @@ export function EssentialsSection({
                 ))}
               </SelectInput>
             </div>
+          </div>
+          <div>
+            <FieldLabel>Course Goals / Outcomes</FieldLabel>
+            <p className="mb-2 text-xs text-muted-foreground">Define 3–8 high-level learning outcomes for the course.</p>
+            <div className="space-y-1.5">
+              {courseGoals.map((goal, i) => (
+                <div key={i} className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2">
+                  <span className="flex-1 text-sm text-foreground">{goal}</span>
+                  <button
+                    type="button"
+                    onClick={() => setCourseGoals((prev) => prev.filter((_, idx) => idx !== i))}
+                    className="text-xs text-muted-foreground hover:text-destructive transition"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {courseGoals.length < 8 && (
+                <div className="flex gap-2">
+                  <input
+                    value={newGoal}
+                    onChange={(e) => setNewGoal(e.target.value.slice(0, 120))}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && newGoal.trim()) {
+                        e.preventDefault()
+                        setCourseGoals((prev) => [...prev, newGoal.trim()])
+                        setNewGoal("")
+                      }
+                    }}
+                    placeholder="e.g., Understand organic chemistry fundamentals"
+                    className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
+                  />
+                  <button
+                    type="button"
+                    disabled={!newGoal.trim()}
+                    onClick={() => {
+                      if (newGoal.trim()) {
+                        setCourseGoals((prev) => [...prev, newGoal.trim()])
+                        setNewGoal("")
+                      }
+                    }}
+                    className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition hover:border-primary/40 hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Add
+                  </button>
+                </div>
+              )}
+            </div>
+            <p className="mt-1 text-right text-[11px] text-muted-foreground">{courseGoals.length}/8 goals</p>
           </div>
           <div>
             <FieldLabel>Course Image</FieldLabel>

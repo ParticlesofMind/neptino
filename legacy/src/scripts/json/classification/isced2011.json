@@ -1,10 +1,106 @@
 {
   "domains": [
     {
-      "value": "00-generic",
+      "value": "00-generic-programmes-and-qualifications",
       "label": "Generic programmes and qualifications",
       "code": "00",
-      "subjects": []
+      "subjects": [
+        {
+          "value": "000-generic-programmes-and-qualifications-not-further-defined",
+          "label": "Generic programmes and qualifications not further defined",
+          "code": "000",
+          "topics": [
+            {
+              "value": "0000-generic-programmes-and-qualifications-not-further-defined",
+              "label": "Generic programmes and qualifications not further defined",
+              "code": "0000",
+              "subtopics": [
+                {
+                  "value": "0000-other",
+                  "label": "Other",
+                  "code": "0000-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "001-basic-programmes-and-qualifications",
+          "label": "Basic programmes and qualifications",
+          "code": "001",
+          "topics": [
+            {
+              "value": "0011-basic-programmes-and-qualifications",
+              "label": "Basic programmes and qualifications",
+              "code": "0011",
+              "subtopics": [
+                {
+                  "value": "0011-other",
+                  "label": "Other",
+                  "code": "0011-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "002-literacy-and-numeracy",
+          "label": "Literacy and numeracy",
+          "code": "002",
+          "topics": [
+            {
+              "value": "0021-literacy-and-numeracy",
+              "label": "Literacy and numeracy",
+              "code": "0021",
+              "subtopics": [
+                {
+                  "value": "0021-other",
+                  "label": "Other",
+                  "code": "0021-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "003-personal-skills-and-development",
+          "label": "Personal skills and development",
+          "code": "003",
+          "topics": [
+            {
+              "value": "0031-personal-skills-and-development",
+              "label": "Personal skills and development",
+              "code": "0031",
+              "subtopics": [
+                {
+                  "value": "0031-other",
+                  "label": "Other",
+                  "code": "0031-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "009-generic-programmes-and-qualifications-not-elsewhere-classified",
+          "label": "Generic programmes and qualifications not elsewhere classified",
+          "code": "009",
+          "topics": [
+            {
+              "value": "0099-generic-programmes-and-qualifications-not-elsewhere-classified",
+              "label": "Generic programmes and qualifications not elsewhere classified",
+              "code": "0099",
+              "subtopics": [
+                {
+                  "value": "0099-other",
+                  "label": "Other",
+                  "code": "0099-other"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     },
     {
       "value": "01-education",
@@ -12,10 +108,22 @@
       "code": "01",
       "subjects": [
         {
-          "value": "011-education-general",
-          "label": "Education - General",
+          "value": "011-education",
+          "label": "Education",
           "code": "011",
           "topics": [
+            {
+              "value": "0110-education-not-further-defined",
+              "label": "Education not further defined",
+              "code": "0110",
+              "subtopics": [
+                {
+                  "value": "0110-other",
+                  "label": "Other",
+                  "code": "0110-other"
+                }
+              ]
+            },
             {
               "value": "0111-education-science",
               "label": "Education science",
@@ -29,7 +137,7 @@
               ]
             },
             {
-              "value": "0112-training-teachers",
+              "value": "0112-training-for-pre-school-teachers",
               "label": "Training for pre-school teachers",
               "code": "0112",
               "subtopics": [
@@ -41,7 +149,7 @@
               ]
             },
             {
-              "value": "0113-teacher-training-primary",
+              "value": "0113-teacher-training-without-subject-specialisation",
               "label": "Teacher training without subject specialisation",
               "code": "0113",
               "subtopics": [
@@ -53,7 +161,7 @@
               ]
             },
             {
-              "value": "0114-teacher-training-subject",
+              "value": "0114-teacher-training-with-subject-specialisation",
               "label": "Teacher training with subject specialisation",
               "code": "0114",
               "subtopics": [
@@ -63,23 +171,85 @@
                   "code": "0114-other"
                 }
               ]
+            },
+            {
+              "value": "0119-education-not-elsewhere-classified",
+              "label": "Education not elsewhere classified",
+              "code": "0119",
+              "subtopics": [
+                {
+                  "value": "0119-other",
+                  "label": "Other",
+                  "code": "0119-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "018-inter-disciplinary-programmes-and-qualifications-involving-education",
+          "label": "Inter-disciplinary programmes and qualifications involving education",
+          "code": "018",
+          "topics": [
+            {
+              "value": "0188-inter-disciplinary-programmes-and-qualifications-involving-education",
+              "label": "Inter-disciplinary programmes and qualifications involving education",
+              "code": "0188",
+              "subtopics": [
+                {
+                  "value": "0188-other",
+                  "label": "Other",
+                  "code": "0188-other"
+                }
+              ]
             }
           ]
         }
       ]
     },
     {
-      "value": "02-arts-humanities",
+      "value": "02-arts-and-humanities",
       "label": "Arts and humanities",
       "code": "02",
       "subjects": [
+        {
+          "value": "020-arts-and-humanities-not-further-defined",
+          "label": "Arts and humanities not further defined",
+          "code": "020",
+          "topics": [
+            {
+              "value": "0200-arts-and-humanities-not-further-defined",
+              "label": "Arts and humanities not further defined",
+              "code": "0200",
+              "subtopics": [
+                {
+                  "value": "0200-other",
+                  "label": "Other",
+                  "code": "0200-other"
+                }
+              ]
+            }
+          ]
+        },
         {
           "value": "021-arts",
           "label": "Arts",
           "code": "021",
           "topics": [
             {
-              "value": "0211-audio-visual",
+              "value": "0210-arts-not-further-defined",
+              "label": "Arts not further defined",
+              "code": "0210",
+              "subtopics": [
+                {
+                  "value": "0210-other",
+                  "label": "Other",
+                  "code": "0210-other"
+                }
+              ]
+            },
+            {
+              "value": "0211-audio-visual-techniques-and-media-production",
               "label": "Audio-visual techniques and media production",
               "code": "0211",
               "subtopics": [
@@ -91,7 +261,7 @@
               ]
             },
             {
-              "value": "0212-fashion-interior",
+              "value": "0212-fashion-interior-and-industrial-design",
               "label": "Fashion, interior and industrial design",
               "code": "0212",
               "subtopics": [
@@ -127,7 +297,7 @@
               ]
             },
             {
-              "value": "0215-music-performing",
+              "value": "0215-music-and-performing-arts",
               "label": "Music and performing arts",
               "code": "0215",
               "subtopics": [
@@ -137,16 +307,40 @@
                   "code": "0215-other"
                 }
               ]
+            },
+            {
+              "value": "0219-arts-not-elsewhere-classified",
+              "label": "Arts not elsewhere classified",
+              "code": "0219",
+              "subtopics": [
+                {
+                  "value": "0219-other",
+                  "label": "Other",
+                  "code": "0219-other"
+                }
+              ]
             }
           ]
         },
         {
-          "value": "022-humanities",
+          "value": "022-humanities-except-languages",
           "label": "Humanities (except languages)",
           "code": "022",
           "topics": [
             {
-              "value": "0221-religion-theology",
+              "value": "0220-humanities-except-languages-not-further-defined",
+              "label": "Humanities (except languages) not further defined",
+              "code": "0220",
+              "subtopics": [
+                {
+                  "value": "0220-other",
+                  "label": "Other",
+                  "code": "0220-other"
+                }
+              ]
+            },
+            {
+              "value": "0221-religion-and-theology",
               "label": "Religion and theology",
               "code": "0221",
               "subtopics": [
@@ -158,7 +352,7 @@
               ]
             },
             {
-              "value": "0222-history-archaeology",
+              "value": "0222-history-and-archaeology",
               "label": "History and archaeology",
               "code": "0222",
               "subtopics": [
@@ -170,7 +364,7 @@
               ]
             },
             {
-              "value": "0223-philosophy-ethics",
+              "value": "0223-philosophy-and-ethics",
               "label": "Philosophy and ethics",
               "code": "0223",
               "subtopics": [
@@ -178,6 +372,18 @@
                   "value": "0223-other",
                   "label": "Other",
                   "code": "0223-other"
+                }
+              ]
+            },
+            {
+              "value": "0229-humanities-except-languages-not-elsewhere-classified",
+              "label": "Humanities (except languages) not elsewhere classified",
+              "code": "0229",
+              "subtopics": [
+                {
+                  "value": "0229-other",
+                  "label": "Other",
+                  "code": "0229-other"
                 }
               ]
             }
@@ -188,6 +394,18 @@
           "label": "Languages",
           "code": "023",
           "topics": [
+            {
+              "value": "0230-languages-not-further-defined",
+              "label": "Languages not further defined",
+              "code": "0230",
+              "subtopics": [
+                {
+                  "value": "0230-other",
+                  "label": "Other",
+                  "code": "0230-other"
+                }
+              ]
+            },
             {
               "value": "0231-language-acquisition",
               "label": "Language acquisition",
@@ -201,7 +419,7 @@
               ]
             },
             {
-              "value": "0232-literature-linguistics",
+              "value": "0232-literature-and-linguistics",
               "label": "Literature and linguistics",
               "code": "0232",
               "subtopics": [
@@ -211,21 +429,102 @@
                   "code": "0232-other"
                 }
               ]
+            },
+            {
+              "value": "0239-languages-not-elsewhere-classified",
+              "label": "Languages not elsewhere classified",
+              "code": "0239",
+              "subtopics": [
+                {
+                  "value": "0239-other",
+                  "label": "Other",
+                  "code": "0239-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "028-inter-disciplinary-programmes-and-qualifications-involving-arts-and-humanities",
+          "label": "Inter-disciplinary programmes and qualifications involving arts and humanities",
+          "code": "028",
+          "topics": [
+            {
+              "value": "0288-inter-disciplinary-programmes-and-qualifications-involving-arts-and-humanities",
+              "label": "Inter-disciplinary programmes and qualifications involving arts and humanities",
+              "code": "0288",
+              "subtopics": [
+                {
+                  "value": "0288-other",
+                  "label": "Other",
+                  "code": "0288-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "029-arts-and-humanities-not-elsewhere-classified",
+          "label": "Arts and humanities not elsewhere classified",
+          "code": "029",
+          "topics": [
+            {
+              "value": "0299-arts-and-humanities-not-elsewhere-classified",
+              "label": "Arts and humanities not elsewhere classified",
+              "code": "0299",
+              "subtopics": [
+                {
+                  "value": "0299-other",
+                  "label": "Other",
+                  "code": "0299-other"
+                }
+              ]
             }
           ]
         }
       ]
     },
     {
-      "value": "03-social-sciences",
+      "value": "03-social-sciences-journalism-and-information",
       "label": "Social sciences, journalism and information",
       "code": "03",
       "subjects": [
         {
-          "value": "031-social-behavioural",
+          "value": "030-social-sciences-journalism-and-information-not-further-defined",
+          "label": "Social sciences, journalism and information not further defined",
+          "code": "030",
+          "topics": [
+            {
+              "value": "0300-social-sciences-journalism-and-information-not-further-defined",
+              "label": "Social sciences, journalism and information not further defined",
+              "code": "0300",
+              "subtopics": [
+                {
+                  "value": "0300-other",
+                  "label": "Other",
+                  "code": "0300-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "031-social-and-behavioural-sciences",
           "label": "Social and behavioural sciences",
           "code": "031",
           "topics": [
+            {
+              "value": "0310-social-and-behavioural-sciences-not-further-defined",
+              "label": "Social and behavioural sciences not further defined",
+              "code": "0310",
+              "subtopics": [
+                {
+                  "value": "0310-other",
+                  "label": "Other",
+                  "code": "0310-other"
+                }
+              ]
+            },
             {
               "value": "0311-economics",
               "label": "Economics",
@@ -239,7 +538,7 @@
               ]
             },
             {
-              "value": "0312-political-science",
+              "value": "0312-political-sciences-and-civics",
               "label": "Political sciences and civics",
               "code": "0312",
               "subtopics": [
@@ -263,7 +562,7 @@
               ]
             },
             {
-              "value": "0314-sociology-anthropology",
+              "value": "0314-sociology-and-cultural-studies",
               "label": "Sociology and cultural studies",
               "code": "0314",
               "subtopics": [
@@ -273,16 +572,40 @@
                   "code": "0314-other"
                 }
               ]
+            },
+            {
+              "value": "0319-social-and-behavioural-sciences-not-elsewhere-classified",
+              "label": "Social and behavioural sciences not elsewhere classified",
+              "code": "0319",
+              "subtopics": [
+                {
+                  "value": "0319-other",
+                  "label": "Other",
+                  "code": "0319-other"
+                }
+              ]
             }
           ]
         },
         {
-          "value": "032-journalism",
+          "value": "032-journalism-and-information",
           "label": "Journalism and information",
           "code": "032",
           "topics": [
             {
-              "value": "0321-journalism-reporting",
+              "value": "0320-journalism-and-information-not-further-defined",
+              "label": "Journalism and information not further defined",
+              "code": "0320",
+              "subtopics": [
+                {
+                  "value": "0320-other",
+                  "label": "Other",
+                  "code": "0320-other"
+                }
+              ]
+            },
+            {
+              "value": "0321-journalism-and-reporting",
               "label": "Journalism and reporting",
               "code": "0321",
               "subtopics": [
@@ -294,7 +617,7 @@
               ]
             },
             {
-              "value": "0322-library-information",
+              "value": "0322-library-information-and-archival-studies",
               "label": "Library, information and archival studies",
               "code": "0322",
               "subtopics": [
@@ -304,23 +627,104 @@
                   "code": "0322-other"
                 }
               ]
+            },
+            {
+              "value": "0329-journalism-and-information-not-elsewhere-classified",
+              "label": "Journalism and information not elsewhere classified",
+              "code": "0329",
+              "subtopics": [
+                {
+                  "value": "0329-other",
+                  "label": "Other",
+                  "code": "0329-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "038-inter-disciplinary-programmes-and-qualifications-involving-social-sciences-journalism-and-information",
+          "label": "Inter-disciplinary programmes and qualifications involving social sciences, journalism and information",
+          "code": "038",
+          "topics": [
+            {
+              "value": "0388-inter-disciplinary-programmes-and-qualifications-involving-social-sciences-journalism-and-information",
+              "label": "Inter-disciplinary programmes and qualifications involving social sciences, journalism and information",
+              "code": "0388",
+              "subtopics": [
+                {
+                  "value": "0388-other",
+                  "label": "Other",
+                  "code": "0388-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "039-social-sciences-journalism-and-information-not-elsewhere-classified",
+          "label": "Social sciences, journalism and information not elsewhere classified",
+          "code": "039",
+          "topics": [
+            {
+              "value": "0399-social-sciences-journalism-and-information-not-elsewhere-classified",
+              "label": "Social sciences, journalism and information not elsewhere classified",
+              "code": "0399",
+              "subtopics": [
+                {
+                  "value": "0399-other",
+                  "label": "Other",
+                  "code": "0399-other"
+                }
+              ]
             }
           ]
         }
       ]
     },
     {
-      "value": "04-business",
+      "value": "04-business-administration-and-law",
       "label": "Business, administration and law",
       "code": "04",
       "subjects": [
         {
-          "value": "041-business-administration",
+          "value": "040-business-administration-and-law-not-further-defined",
+          "label": "Business, administration and law not further defined",
+          "code": "040",
+          "topics": [
+            {
+              "value": "0400-business-administration-and-law-not-further-defined",
+              "label": "Business, administration and law not further defined",
+              "code": "0400",
+              "subtopics": [
+                {
+                  "value": "0400-other",
+                  "label": "Other",
+                  "code": "0400-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "041-business-and-administration",
           "label": "Business and administration",
           "code": "041",
           "topics": [
             {
-              "value": "0411-accounting-taxation",
+              "value": "0410-business-and-administration-not-further-defined",
+              "label": "Business and administration not further defined",
+              "code": "0410",
+              "subtopics": [
+                {
+                  "value": "0410-other",
+                  "label": "Other",
+                  "code": "0410-other"
+                }
+              ]
+            },
+            {
+              "value": "0411-accounting-and-taxation",
               "label": "Accounting and taxation",
               "code": "0411",
               "subtopics": [
@@ -332,7 +736,7 @@
               ]
             },
             {
-              "value": "0412-finance-banking",
+              "value": "0412-finance-banking-and-insurance",
               "label": "Finance, banking and insurance",
               "code": "0412",
               "subtopics": [
@@ -344,7 +748,7 @@
               ]
             },
             {
-              "value": "0413-management-administration",
+              "value": "0413-management-and-administration",
               "label": "Management and administration",
               "code": "0413",
               "subtopics": [
@@ -356,7 +760,7 @@
               ]
             },
             {
-              "value": "0414-marketing-advertising",
+              "value": "0414-marketing-and-advertising",
               "label": "Marketing and advertising",
               "code": "0414",
               "subtopics": [
@@ -368,8 +772,8 @@
               ]
             },
             {
-              "value": "0415-secretarial-clerical",
-              "label": "Secretarial and clerical work",
+              "value": "0415-secretarial-and-office-work",
+              "label": "Secretarial and office work",
               "code": "0415",
               "subtopics": [
                 {
@@ -380,7 +784,7 @@
               ]
             },
             {
-              "value": "0416-wholesale-retail",
+              "value": "0416-wholesale-and-retail-sales",
               "label": "Wholesale and retail sales",
               "code": "0416",
               "subtopics": [
@@ -392,7 +796,7 @@
               ]
             },
             {
-              "value": "0417-work-counselling",
+              "value": "0417-work-skills",
               "label": "Work skills",
               "code": "0417",
               "subtopics": [
@@ -400,6 +804,18 @@
                   "value": "0417-other",
                   "label": "Other",
                   "code": "0417-other"
+                }
+              ]
+            },
+            {
+              "value": "0419-business-and-administration-not-elsewhere-classified",
+              "label": "Business and administration not elsewhere classified",
+              "code": "0419",
+              "subtopics": [
+                {
+                  "value": "0419-other",
+                  "label": "Other",
+                  "code": "0419-other"
                 }
               ]
             }
@@ -423,19 +839,88 @@
               ]
             }
           ]
+        },
+        {
+          "value": "048-inter-disciplinary-programmes-and-qualifications-involving-business-administration-and-law",
+          "label": "Inter-disciplinary programmes and qualifications involving business, administration and law",
+          "code": "048",
+          "topics": [
+            {
+              "value": "0488-inter-disciplinary-programmes-and-qualifications-involving-business-administration-and-law",
+              "label": "Inter-disciplinary programmes and qualifications involving business, administration and law",
+              "code": "0488",
+              "subtopics": [
+                {
+                  "value": "0488-other",
+                  "label": "Other",
+                  "code": "0488-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "049-business-administration-and-law-not-elsewhere-classified",
+          "label": "Business, administration and law not elsewhere classified",
+          "code": "049",
+          "topics": [
+            {
+              "value": "0499-business-administration-and-law-not-elsewhere-classified",
+              "label": "Business, administration and law not elsewhere classified",
+              "code": "0499",
+              "subtopics": [
+                {
+                  "value": "0499-other",
+                  "label": "Other",
+                  "code": "0499-other"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
     {
-      "value": "05-natural-sciences",
+      "value": "05-natural-sciences-mathematics-and-statistics",
       "label": "Natural sciences, mathematics and statistics",
       "code": "05",
       "subjects": [
         {
-          "value": "051-biological",
+          "value": "050-natural-sciences-mathematics-and-statistics-not-further-defined",
+          "label": "Natural sciences, mathematics and statistics not further defined",
+          "code": "050",
+          "topics": [
+            {
+              "value": "0500-natural-sciences-mathematics-and-statistics-not-further-defined",
+              "label": "Natural sciences, mathematics and statistics not further defined",
+              "code": "0500",
+              "subtopics": [
+                {
+                  "value": "0500-other",
+                  "label": "Other",
+                  "code": "0500-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "051-biological-and-related-sciences",
           "label": "Biological and related sciences",
           "code": "051",
           "topics": [
+            {
+              "value": "0510-biological-and-related-sciences-not-further-defined",
+              "label": "Biological and related sciences not further defined",
+              "code": "0510",
+              "subtopics": [
+                {
+                  "value": "0510-other",
+                  "label": "Other",
+                  "code": "0510-other"
+                }
+              ]
+            },
             {
               "value": "0511-biology",
               "label": "Biology",
@@ -459,6 +944,18 @@
                   "code": "0512-other"
                 }
               ]
+            },
+            {
+              "value": "0519-biological-and-related-sciences-not-elsewhere-classified",
+              "label": "Biological and related sciences not elsewhere classified",
+              "code": "0519",
+              "subtopics": [
+                {
+                  "value": "0519-other",
+                  "label": "Other",
+                  "code": "0519-other"
+                }
+              ]
             }
           ]
         },
@@ -467,6 +964,18 @@
           "label": "Environment",
           "code": "052",
           "topics": [
+            {
+              "value": "0520-environment-not-further-defined",
+              "label": "Environment not further defined",
+              "code": "0520",
+              "subtopics": [
+                {
+                  "value": "0520-other",
+                  "label": "Other",
+                  "code": "0520-other"
+                }
+              ]
+            },
             {
               "value": "0521-environmental-sciences",
               "label": "Environmental sciences",
@@ -480,7 +989,7 @@
               ]
             },
             {
-              "value": "0522-natural-environments",
+              "value": "0522-natural-environments-and-wildlife",
               "label": "Natural environments and wildlife",
               "code": "0522",
               "subtopics": [
@@ -488,6 +997,18 @@
                   "value": "0522-other",
                   "label": "Other",
                   "code": "0522-other"
+                }
+              ]
+            },
+            {
+              "value": "0529-environment-not-elsewhere-classified",
+              "label": "Environment not elsewhere classified",
+              "code": "0529",
+              "subtopics": [
+                {
+                  "value": "0529-other",
+                  "label": "Other",
+                  "code": "0529-other"
                 }
               ]
             }
@@ -498,6 +1019,18 @@
           "label": "Physical sciences",
           "code": "053",
           "topics": [
+            {
+              "value": "0530-physical-sciences-not-further-defined",
+              "label": "Physical sciences not further defined",
+              "code": "0530",
+              "subtopics": [
+                {
+                  "value": "0530-other",
+                  "label": "Other",
+                  "code": "0530-other"
+                }
+              ]
+            },
             {
               "value": "0531-chemistry",
               "label": "Chemistry",
@@ -533,14 +1066,38 @@
                   "code": "0533-other"
                 }
               ]
+            },
+            {
+              "value": "0539-physical-sciences-not-elsewhere-classified",
+              "label": "Physical sciences not elsewhere classified",
+              "code": "0539",
+              "subtopics": [
+                {
+                  "value": "0539-other",
+                  "label": "Other",
+                  "code": "0539-other"
+                }
+              ]
             }
           ]
         },
         {
-          "value": "054-mathematics-statistics",
+          "value": "054-mathematics-and-statistics",
           "label": "Mathematics and statistics",
           "code": "054",
           "topics": [
+            {
+              "value": "0540-mathematics-and-statistics-not-further-defined",
+              "label": "Mathematics and statistics not further defined",
+              "code": "0540",
+              "subtopics": [
+                {
+                  "value": "0540-other",
+                  "label": "Other",
+                  "code": "0540-other"
+                }
+              ]
+            },
             {
               "value": "0541-mathematics",
               "label": "Mathematics",
@@ -566,19 +1123,69 @@
               ]
             }
           ]
+        },
+        {
+          "value": "058-inter-disciplinary-programmes-and-qualifications-involving-natural-sciences-mathematics-and-statistics",
+          "label": "Inter-disciplinary programmes and qualifications involving natural sciences, mathematics and statistics",
+          "code": "058",
+          "topics": [
+            {
+              "value": "0588-inter-disciplinary-programmes-and-qualifications-involving-natural-sciences-mathematics-and-statistics",
+              "label": "Inter-disciplinary programmes and qualifications involving natural sciences, mathematics and statistics",
+              "code": "0588",
+              "subtopics": [
+                {
+                  "value": "0588-other",
+                  "label": "Other",
+                  "code": "0588-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "059-natural-sciences-mathematics-and-statistics-not-elsewhere-classified",
+          "label": "Natural sciences, mathematics and statistics not elsewhere classified",
+          "code": "059",
+          "topics": [
+            {
+              "value": "0599-natural-sciences-mathematics-and-statistics-not-elsewhere-classified",
+              "label": "Natural sciences, mathematics and statistics not elsewhere classified",
+              "code": "0599",
+              "subtopics": [
+                {
+                  "value": "0599-other",
+                  "label": "Other",
+                  "code": "0599-other"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
     {
-      "value": "06-ict",
-      "label": "Information and Communication Technologies (ICTs)",
+      "value": "06-information-and-communication-technologies",
+      "label": "Information and Communication Technologies",
       "code": "06",
       "subjects": [
         {
-          "value": "061-ict",
+          "value": "061-information-and-communication-technologies",
           "label": "Information and Communication Technologies",
           "code": "061",
           "topics": [
+            {
+              "value": "0610-information-and-communication-technologies-not-further-defined",
+              "label": "Information and Communication Technologies not further defined",
+              "code": "0610",
+              "subtopics": [
+                {
+                  "value": "0610-other",
+                  "label": "Other",
+                  "code": "0610-other"
+                }
+              ]
+            },
             {
               "value": "0611-computer-use",
               "label": "Computer use",
@@ -592,7 +1199,7 @@
               ]
             },
             {
-              "value": "0612-database-network",
+              "value": "0612-database-and-network-design-and-administration",
               "label": "Database and network design and administration",
               "code": "0612",
               "subtopics": [
@@ -604,7 +1211,7 @@
               ]
             },
             {
-              "value": "0613-software-applications",
+              "value": "0613-software-and-applications-development-and-analysis",
               "label": "Software and applications development and analysis",
               "code": "0613",
               "subtopics": [
@@ -612,6 +1219,1032 @@
                   "value": "0613-other",
                   "label": "Other",
                   "code": "0613-other"
+                }
+              ]
+            },
+            {
+              "value": "0619-information-and-communication-technologies-not-elsewhere-classified",
+              "label": "Information and Communication Technologies not elsewhere classified",
+              "code": "0619",
+              "subtopics": [
+                {
+                  "value": "0619-other",
+                  "label": "Other",
+                  "code": "0619-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "068-inter-disciplinary-programmes-and-qualifications-involving-information-and-communication-technologies",
+          "label": "Inter-disciplinary programmes and qualifications involving information and Communication Technologies",
+          "code": "068",
+          "topics": [
+            {
+              "value": "0688-inter-disciplinary-programmes-and-qualifications-involving-information-and-communication-technologies",
+              "label": "Inter-disciplinary programmes and qualifications involving information and Communication Technologies",
+              "code": "0688",
+              "subtopics": [
+                {
+                  "value": "0688-other",
+                  "label": "Other",
+                  "code": "0688-other"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "07-engineering-manufacturing-and-construction",
+      "label": "Engineering, manufacturing and construction",
+      "code": "07",
+      "subjects": [
+        {
+          "value": "070-engineering-manufacturing-and-construction-not-further-defined",
+          "label": "Engineering, manufacturing and construction not further defined",
+          "code": "070",
+          "topics": [
+            {
+              "value": "0700-engineering-manufacturing-and-construction-not-further-defined",
+              "label": "Engineering, manufacturing and construction not further defined",
+              "code": "0700",
+              "subtopics": [
+                {
+                  "value": "0700-other",
+                  "label": "Other",
+                  "code": "0700-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "071-engineering-and-engineering-trades",
+          "label": "Engineering and engineering trades",
+          "code": "071",
+          "topics": [
+            {
+              "value": "0710-engineering-and-engineering-trades-not-further-defined",
+              "label": "Engineering and engineering trades not further defined",
+              "code": "0710",
+              "subtopics": [
+                {
+                  "value": "0710-other",
+                  "label": "Other",
+                  "code": "0710-other"
+                }
+              ]
+            },
+            {
+              "value": "0711-chemical-engineering-and-processes",
+              "label": "Chemical engineering and processes",
+              "code": "0711",
+              "subtopics": [
+                {
+                  "value": "0711-other",
+                  "label": "Other",
+                  "code": "0711-other"
+                }
+              ]
+            },
+            {
+              "value": "0712-environmental-protection-technology",
+              "label": "Environmental protection technology",
+              "code": "0712",
+              "subtopics": [
+                {
+                  "value": "0712-other",
+                  "label": "Other",
+                  "code": "0712-other"
+                }
+              ]
+            },
+            {
+              "value": "0713-electricity-and-energy",
+              "label": "Electricity and energy",
+              "code": "0713",
+              "subtopics": [
+                {
+                  "value": "0713-other",
+                  "label": "Other",
+                  "code": "0713-other"
+                }
+              ]
+            },
+            {
+              "value": "0714-electronics-and-automation",
+              "label": "Electronics and automation",
+              "code": "0714",
+              "subtopics": [
+                {
+                  "value": "0714-other",
+                  "label": "Other",
+                  "code": "0714-other"
+                }
+              ]
+            },
+            {
+              "value": "0715-mechanics-and-metal-trades",
+              "label": "Mechanics and metal trades",
+              "code": "0715",
+              "subtopics": [
+                {
+                  "value": "0715-other",
+                  "label": "Other",
+                  "code": "0715-other"
+                }
+              ]
+            },
+            {
+              "value": "0716-motor-vehicles-ships-and-aircraft",
+              "label": "Motor vehicles, ships and aircraft",
+              "code": "0716",
+              "subtopics": [
+                {
+                  "value": "0716-other",
+                  "label": "Other",
+                  "code": "0716-other"
+                }
+              ]
+            },
+            {
+              "value": "0719-engineering-and-engineering-trades-not-elsewhere-classified",
+              "label": "Engineering and engineering trades not elsewhere classified",
+              "code": "0719",
+              "subtopics": [
+                {
+                  "value": "0719-other",
+                  "label": "Other",
+                  "code": "0719-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "072-manufacturing-and-processing",
+          "label": "Manufacturing and processing",
+          "code": "072",
+          "topics": [
+            {
+              "value": "0720-manufacturing-and-processing-not-further-defined",
+              "label": "Manufacturing and processing not further defined",
+              "code": "0720",
+              "subtopics": [
+                {
+                  "value": "0720-other",
+                  "label": "Other",
+                  "code": "0720-other"
+                }
+              ]
+            },
+            {
+              "value": "0721-food-processing",
+              "label": "Food processing",
+              "code": "0721",
+              "subtopics": [
+                {
+                  "value": "0721-other",
+                  "label": "Other",
+                  "code": "0721-other"
+                }
+              ]
+            },
+            {
+              "value": "0722-materials-glass-paper-plastic-and-wood",
+              "label": "Materials (glass, paper, plastic and wood)",
+              "code": "0722",
+              "subtopics": [
+                {
+                  "value": "0722-other",
+                  "label": "Other",
+                  "code": "0722-other"
+                }
+              ]
+            },
+            {
+              "value": "0723-textiles-clothes-footwear-and-leather",
+              "label": "Textiles (clothes, footwear and leather)",
+              "code": "0723",
+              "subtopics": [
+                {
+                  "value": "0723-other",
+                  "label": "Other",
+                  "code": "0723-other"
+                }
+              ]
+            },
+            {
+              "value": "0724-mining-and-extraction",
+              "label": "Mining and extraction",
+              "code": "0724",
+              "subtopics": [
+                {
+                  "value": "0724-other",
+                  "label": "Other",
+                  "code": "0724-other"
+                }
+              ]
+            },
+            {
+              "value": "0729-manufacturing-and-processing-not-elsewhere-classified",
+              "label": "Manufacturing and processing not elsewhere classified",
+              "code": "0729",
+              "subtopics": [
+                {
+                  "value": "0729-other",
+                  "label": "Other",
+                  "code": "0729-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "073-architecture-and-construction",
+          "label": "Architecture and construction",
+          "code": "073",
+          "topics": [
+            {
+              "value": "0730-architecture-and-construction-not-further-defined",
+              "label": "Architecture and construction not further defined",
+              "code": "0730",
+              "subtopics": [
+                {
+                  "value": "0730-other",
+                  "label": "Other",
+                  "code": "0730-other"
+                }
+              ]
+            },
+            {
+              "value": "0731-architecture-and-town-planning",
+              "label": "Architecture and town planning",
+              "code": "0731",
+              "subtopics": [
+                {
+                  "value": "0731-other",
+                  "label": "Other",
+                  "code": "0731-other"
+                }
+              ]
+            },
+            {
+              "value": "0732-building-and-civil-engineering",
+              "label": "Building and civil engineering",
+              "code": "0732",
+              "subtopics": [
+                {
+                  "value": "0732-other",
+                  "label": "Other",
+                  "code": "0732-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "078-inter-disciplinary-programmes-and-qualifications-involving-engineering-manufacturing-and-construction",
+          "label": "Inter-disciplinary programmes and qualifications involving engineering, manufacturing and construction",
+          "code": "078",
+          "topics": [
+            {
+              "value": "0788-inter-disciplinary-programmes-and-qualifications-involving-engineering-manufacturing-and-construction",
+              "label": "Inter-disciplinary programmes and qualifications involving engineering, manufacturing and construction",
+              "code": "0788",
+              "subtopics": [
+                {
+                  "value": "0788-other",
+                  "label": "Other",
+                  "code": "0788-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "079-engineering-manufacturing-and-construction-not-elsewhere-classified",
+          "label": "Engineering, manufacturing and construction not elsewhere classified",
+          "code": "079",
+          "topics": [
+            {
+              "value": "0799-engineering-manufacturing-and-construction-not-elsewhere-classified",
+              "label": "Engineering, manufacturing and construction not elsewhere classified",
+              "code": "0799",
+              "subtopics": [
+                {
+                  "value": "0799-other",
+                  "label": "Other",
+                  "code": "0799-other"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "08-agriculture-forestry-fisheries-and-veterinary",
+      "label": "Agriculture, forestry, fisheries and veterinary",
+      "code": "08",
+      "subjects": [
+        {
+          "value": "080-agriculture-forestry-fisheries-and-veterinary-not-further-defined",
+          "label": "Agriculture, forestry, fisheries and veterinary not further defined",
+          "code": "080",
+          "topics": [
+            {
+              "value": "0800-agriculture-forestry-fisheries-and-veterinary-not-further-defined",
+              "label": "Agriculture, forestry, fisheries and veterinary not further defined",
+              "code": "0800",
+              "subtopics": [
+                {
+                  "value": "0800-other",
+                  "label": "Other",
+                  "code": "0800-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "081-agriculture",
+          "label": "Agriculture",
+          "code": "081",
+          "topics": [
+            {
+              "value": "0810-agriculture-not-further-defined",
+              "label": "Agriculture not further defined",
+              "code": "0810",
+              "subtopics": [
+                {
+                  "value": "0810-other",
+                  "label": "Other",
+                  "code": "0810-other"
+                }
+              ]
+            },
+            {
+              "value": "0811-crop-and-livestock-production",
+              "label": "Crop and livestock production",
+              "code": "0811",
+              "subtopics": [
+                {
+                  "value": "0811-other",
+                  "label": "Other",
+                  "code": "0811-other"
+                }
+              ]
+            },
+            {
+              "value": "0812-horticulture",
+              "label": "Horticulture",
+              "code": "0812",
+              "subtopics": [
+                {
+                  "value": "0812-other",
+                  "label": "Other",
+                  "code": "0812-other"
+                }
+              ]
+            },
+            {
+              "value": "0819-agriculture-not-elsewhere-classified",
+              "label": "Agriculture not elsewhere classified",
+              "code": "0819",
+              "subtopics": [
+                {
+                  "value": "0819-other",
+                  "label": "Other",
+                  "code": "0819-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "082-forestry",
+          "label": "Forestry",
+          "code": "082",
+          "topics": [
+            {
+              "value": "0821-forestry",
+              "label": "Forestry",
+              "code": "0821",
+              "subtopics": [
+                {
+                  "value": "0821-other",
+                  "label": "Other",
+                  "code": "0821-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "083-fisheries",
+          "label": "Fisheries",
+          "code": "083",
+          "topics": [
+            {
+              "value": "0831-fisheries",
+              "label": "Fisheries",
+              "code": "0831",
+              "subtopics": [
+                {
+                  "value": "0831-other",
+                  "label": "Other",
+                  "code": "0831-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "084-veterinary",
+          "label": "Veterinary",
+          "code": "084",
+          "topics": [
+            {
+              "value": "0841-veterinary",
+              "label": "Veterinary",
+              "code": "0841",
+              "subtopics": [
+                {
+                  "value": "0841-other",
+                  "label": "Other",
+                  "code": "0841-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "088-inter-disciplinary-programmes-and-qualifications-involving-agriculture-forestry-fisheries-and-veterinary",
+          "label": "Inter-disciplinary programmes and qualifications involving agriculture, forestry, fisheries and veterinary",
+          "code": "088",
+          "topics": [
+            {
+              "value": "0888-inter-disciplinary-programmes-and-qualifications-involving-agriculture-forestry-fisheries-and-veterinary",
+              "label": "Inter-disciplinary programmes and qualifications involving agriculture, forestry, fisheries and veterinary",
+              "code": "0888",
+              "subtopics": [
+                {
+                  "value": "0888-other",
+                  "label": "Other",
+                  "code": "0888-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "089-agriculture-forestry-fisheries-and-veterinary-not-elsewhere-classified",
+          "label": "Agriculture, forestry, fisheries and veterinary not elsewhere classified",
+          "code": "089",
+          "topics": [
+            {
+              "value": "0899-agriculture-forestry-fisheries-and-veterinary-not-elsewhere-classified",
+              "label": "Agriculture, forestry, fisheries and veterinary not elsewhere classified",
+              "code": "0899",
+              "subtopics": [
+                {
+                  "value": "0899-other",
+                  "label": "Other",
+                  "code": "0899-other"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "09-health-and-welfare",
+      "label": "Health and welfare",
+      "code": "09",
+      "subjects": [
+        {
+          "value": "090-health-and-welfare-not-further-defined",
+          "label": "Health and welfare not further defined",
+          "code": "090",
+          "topics": [
+            {
+              "value": "0900-health-and-welfare-not-further-defined",
+              "label": "Health and welfare not further defined",
+              "code": "0900",
+              "subtopics": [
+                {
+                  "value": "0900-other",
+                  "label": "Other",
+                  "code": "0900-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "091-health",
+          "label": "Health",
+          "code": "091",
+          "topics": [
+            {
+              "value": "0910-health-not-further-defined",
+              "label": "Health not further defined",
+              "code": "0910",
+              "subtopics": [
+                {
+                  "value": "0910-other",
+                  "label": "Other",
+                  "code": "0910-other"
+                }
+              ]
+            },
+            {
+              "value": "0911-dental-studies",
+              "label": "Dental studies",
+              "code": "0911",
+              "subtopics": [
+                {
+                  "value": "0911-other",
+                  "label": "Other",
+                  "code": "0911-other"
+                }
+              ]
+            },
+            {
+              "value": "0912-medicine",
+              "label": "Medicine",
+              "code": "0912",
+              "subtopics": [
+                {
+                  "value": "0912-other",
+                  "label": "Other",
+                  "code": "0912-other"
+                }
+              ]
+            },
+            {
+              "value": "0913-nursing-and-midwifery",
+              "label": "Nursing and midwifery",
+              "code": "0913",
+              "subtopics": [
+                {
+                  "value": "0913-other",
+                  "label": "Other",
+                  "code": "0913-other"
+                }
+              ]
+            },
+            {
+              "value": "0914-medical-diagnostic-and-treatment-technology",
+              "label": "Medical diagnostic and treatment technology",
+              "code": "0914",
+              "subtopics": [
+                {
+                  "value": "0914-other",
+                  "label": "Other",
+                  "code": "0914-other"
+                }
+              ]
+            },
+            {
+              "value": "0915-therapy-and-rehabilitation",
+              "label": "Therapy and rehabilitation",
+              "code": "0915",
+              "subtopics": [
+                {
+                  "value": "0915-other",
+                  "label": "Other",
+                  "code": "0915-other"
+                }
+              ]
+            },
+            {
+              "value": "0916-pharmacy",
+              "label": "Pharmacy",
+              "code": "0916",
+              "subtopics": [
+                {
+                  "value": "0916-other",
+                  "label": "Other",
+                  "code": "0916-other"
+                }
+              ]
+            },
+            {
+              "value": "0917-traditional-and-complementary-medicine-and-therapy",
+              "label": "Traditional and complementary medicine and therapy",
+              "code": "0917",
+              "subtopics": [
+                {
+                  "value": "0917-other",
+                  "label": "Other",
+                  "code": "0917-other"
+                }
+              ]
+            },
+            {
+              "value": "0919-health-not-elsewhere-classified",
+              "label": "Health not elsewhere classified",
+              "code": "0919",
+              "subtopics": [
+                {
+                  "value": "0919-other",
+                  "label": "Other",
+                  "code": "0919-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "092-welfare",
+          "label": "Welfare",
+          "code": "092",
+          "topics": [
+            {
+              "value": "0920-welfare-not-further-defined",
+              "label": "Welfare not further defined",
+              "code": "0920",
+              "subtopics": [
+                {
+                  "value": "0920-other",
+                  "label": "Other",
+                  "code": "0920-other"
+                }
+              ]
+            },
+            {
+              "value": "0921-care-of-the-elderly-and-of-disabled-adults",
+              "label": "Care of the elderly and of disabled adults",
+              "code": "0921",
+              "subtopics": [
+                {
+                  "value": "0921-other",
+                  "label": "Other",
+                  "code": "0921-other"
+                }
+              ]
+            },
+            {
+              "value": "0922-child-care-and-youth-services",
+              "label": "Child care and youth services",
+              "code": "0922",
+              "subtopics": [
+                {
+                  "value": "0922-other",
+                  "label": "Other",
+                  "code": "0922-other"
+                }
+              ]
+            },
+            {
+              "value": "0923-social-work-and-counselling",
+              "label": "Social work and counselling",
+              "code": "0923",
+              "subtopics": [
+                {
+                  "value": "0923-other",
+                  "label": "Other",
+                  "code": "0923-other"
+                }
+              ]
+            },
+            {
+              "value": "0929-welfare-not-elsewhere-classified",
+              "label": "Welfare not elsewhere classified",
+              "code": "0929",
+              "subtopics": [
+                {
+                  "value": "0929-other",
+                  "label": "Other",
+                  "code": "0929-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "098-inter-disciplinary-programmes-and-qualifications-involving-health-and-welfare",
+          "label": "Inter-disciplinary programmes and qualifications involving health and welfare",
+          "code": "098",
+          "topics": [
+            {
+              "value": "0988-inter-disciplinary-programmes-and-qualifications-involving-health-and-welfare",
+              "label": "Inter-disciplinary programmes and qualifications involving health and welfare",
+              "code": "0988",
+              "subtopics": [
+                {
+                  "value": "0988-other",
+                  "label": "Other",
+                  "code": "0988-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "099-health-and-welfare-not-elsewhere-classified",
+          "label": "Health and welfare not elsewhere classified",
+          "code": "099",
+          "topics": [
+            {
+              "value": "0999-health-and-welfare-not-elsewhere-classified",
+              "label": "Health and welfare not elsewhere classified",
+              "code": "0999",
+              "subtopics": [
+                {
+                  "value": "0999-other",
+                  "label": "Other",
+                  "code": "0999-other"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "value": "10-services",
+      "label": "Services",
+      "code": "10",
+      "subjects": [
+        {
+          "value": "100-services-not-further-defined",
+          "label": "Services not further defined",
+          "code": "100",
+          "topics": [
+            {
+              "value": "1000-services-not-further-defined",
+              "label": "Services not further defined",
+              "code": "1000",
+              "subtopics": [
+                {
+                  "value": "1000-other",
+                  "label": "Other",
+                  "code": "1000-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "101-personal-services",
+          "label": "Personal services",
+          "code": "101",
+          "topics": [
+            {
+              "value": "1010-personal-services-not-further-defined",
+              "label": "Personal services not further defined",
+              "code": "1010",
+              "subtopics": [
+                {
+                  "value": "1010-other",
+                  "label": "Other",
+                  "code": "1010-other"
+                }
+              ]
+            },
+            {
+              "value": "1011-domestic-services",
+              "label": "Domestic services",
+              "code": "1011",
+              "subtopics": [
+                {
+                  "value": "1011-other",
+                  "label": "Other",
+                  "code": "1011-other"
+                }
+              ]
+            },
+            {
+              "value": "1012-hair-and-beauty-services",
+              "label": "Hair and beauty services",
+              "code": "1012",
+              "subtopics": [
+                {
+                  "value": "1012-other",
+                  "label": "Other",
+                  "code": "1012-other"
+                }
+              ]
+            },
+            {
+              "value": "1013-hotel-restaurants-and-catering",
+              "label": "Hotel, restaurants and catering",
+              "code": "1013",
+              "subtopics": [
+                {
+                  "value": "1013-other",
+                  "label": "Other",
+                  "code": "1013-other"
+                }
+              ]
+            },
+            {
+              "value": "1014-sports",
+              "label": "Sports",
+              "code": "1014",
+              "subtopics": [
+                {
+                  "value": "1014-other",
+                  "label": "Other",
+                  "code": "1014-other"
+                }
+              ]
+            },
+            {
+              "value": "1015-travel-tourism-and-leisure",
+              "label": "Travel, tourism and leisure",
+              "code": "1015",
+              "subtopics": [
+                {
+                  "value": "1015-other",
+                  "label": "Other",
+                  "code": "1015-other"
+                }
+              ]
+            },
+            {
+              "value": "1019-personal-services-not-elsewhere-classified",
+              "label": "Personal services not elsewhere classified",
+              "code": "1019",
+              "subtopics": [
+                {
+                  "value": "1019-other",
+                  "label": "Other",
+                  "code": "1019-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "102-hygiene-and-occupational-health-services",
+          "label": "Hygiene and occupational health services",
+          "code": "102",
+          "topics": [
+            {
+              "value": "1020-hygiene-and-occupational-health-services-not-further-defined",
+              "label": "Hygiene and occupational health services not further defined",
+              "code": "1020",
+              "subtopics": [
+                {
+                  "value": "1020-other",
+                  "label": "Other",
+                  "code": "1020-other"
+                }
+              ]
+            },
+            {
+              "value": "1021-community-sanitation",
+              "label": "Community sanitation",
+              "code": "1021",
+              "subtopics": [
+                {
+                  "value": "1021-other",
+                  "label": "Other",
+                  "code": "1021-other"
+                }
+              ]
+            },
+            {
+              "value": "1022-occupational-health-and-safety",
+              "label": "Occupational health and safety",
+              "code": "1022",
+              "subtopics": [
+                {
+                  "value": "1022-other",
+                  "label": "Other",
+                  "code": "1022-other"
+                }
+              ]
+            },
+            {
+              "value": "1029-hygiene-and-occupational-health-services-not-elsewhere-classified",
+              "label": "Hygiene and occupational health services not elsewhere classified",
+              "code": "1029",
+              "subtopics": [
+                {
+                  "value": "1029-other",
+                  "label": "Other",
+                  "code": "1029-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "103-security-services",
+          "label": "Security services",
+          "code": "103",
+          "topics": [
+            {
+              "value": "1030-security-services-not-further-defined",
+              "label": "Security services not further defined",
+              "code": "1030",
+              "subtopics": [
+                {
+                  "value": "1030-other",
+                  "label": "Other",
+                  "code": "1030-other"
+                }
+              ]
+            },
+            {
+              "value": "1031-military-and-defence",
+              "label": "Military and defence",
+              "code": "1031",
+              "subtopics": [
+                {
+                  "value": "1031-other",
+                  "label": "Other",
+                  "code": "1031-other"
+                }
+              ]
+            },
+            {
+              "value": "1032-protection-of-persons-and-property",
+              "label": "Protection of persons and property",
+              "code": "1032",
+              "subtopics": [
+                {
+                  "value": "1032-other",
+                  "label": "Other",
+                  "code": "1032-other"
+                }
+              ]
+            },
+            {
+              "value": "1039-security-services-not-elsewhere-classified",
+              "label": "Security services not elsewhere classified",
+              "code": "1039",
+              "subtopics": [
+                {
+                  "value": "1039-other",
+                  "label": "Other",
+                  "code": "1039-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "104-transport-services",
+          "label": "Transport services",
+          "code": "104",
+          "topics": [
+            {
+              "value": "1041-transport-services",
+              "label": "Transport services",
+              "code": "1041",
+              "subtopics": [
+                {
+                  "value": "1041-other",
+                  "label": "Other",
+                  "code": "1041-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "108-inter-disciplinary-programmes-and-qualifications-involving-services",
+          "label": "Inter-disciplinary programmes and qualifications involving services",
+          "code": "108",
+          "topics": [
+            {
+              "value": "1088-inter-disciplinary-programmes-and-qualifications-involving-services",
+              "label": "Inter-disciplinary programmes and qualifications involving services",
+              "code": "1088",
+              "subtopics": [
+                {
+                  "value": "1088-other",
+                  "label": "Other",
+                  "code": "1088-other"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "value": "109-services-not-elsewhere-classified",
+          "label": "Services not elsewhere classified",
+          "code": "109",
+          "topics": [
+            {
+              "value": "1099-services-not-elsewhere-classified",
+              "label": "Services not elsewhere classified",
+              "code": "1099",
+              "subtopics": [
+                {
+                  "value": "1099-other",
+                  "label": "Other",
+                  "code": "1099-other"
                 }
               ]
             }

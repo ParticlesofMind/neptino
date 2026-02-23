@@ -1,49 +1,126 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Trash2 } from "lucide-react"
+import {
+  Trash2,
+  BookOpen,
+  Lightbulb,
+  Boxes,
+  Users,
+  NotebookPen,
+  Database,
+  HelpCircle,
+  LayoutTemplate,
+  Trophy,
+  FileText,
+  CheckSquare,
+  BarChart3,
+  Layers,
+} from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import {
   DANGER_ACTION_BUTTON_SM_CLASS,
   PRIMARY_ACTION_BUTTON_CLASS,
-  SaveStatusBar,
   SetupColumn,
   SetupSection,
 } from "@/components/coursebuilder/layout-primitives"
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
+import { TemplateBlueprint } from "@/components/coursebuilder/template-blueprint"
 
-const TEMPLATE_TYPES = ["lesson", "quiz", "assessment", "exam", "certificate"] as const
-type TemplateType = (typeof TEMPLATE_TYPES)[number]
+export const TEMPLATE_TYPES = ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] as const
+export type TemplateType = (typeof TEMPLATE_TYPES)[number]
 
-const TEMPLATE_TYPE_META: Record<TemplateType, { label: string; description: string; badge: string }> = {
+interface TemplateMeta {
+  label: string
+  description: string
+  badge: string
+  icon: React.ReactNode
+}
+
+export const TEMPLATE_TYPE_META: Record<TemplateType, TemplateMeta> = {
   lesson: {
     label: "Lesson",
     description: "Standard instructional lesson page",
     badge: "border-border bg-muted/60 text-foreground",
+    icon: <BookOpen className="h-4 w-4" />,
   },
   quiz: {
     label: "Quiz",
     description: "Short formative assessment",
     badge: "border-border bg-muted/60 text-foreground",
+    icon: <HelpCircle className="h-4 w-4" />,
   },
   assessment: {
     label: "Assessment",
     description: "Formal summative evaluation",
     badge: "border-border bg-muted/60 text-foreground",
+    icon: <LayoutTemplate className="h-4 w-4" />,
   },
   exam: {
     label: "Exam",
     description: "Comprehensive final examination",
     badge: "border-border bg-muted/60 text-foreground",
+    icon: <Trophy className="h-4 w-4" />,
   },
   certificate: {
     label: "Certificate",
     description: "Course completion certificate",
     badge: "border-border bg-muted/60 text-foreground",
+    icon: <Trophy className="h-4 w-4" />,
+  },
+  project: {
+    label: "Project",
+    description: "Long-term capstone or portfolio project",
+    badge: "border-border bg-muted/60 text-foreground",
+    icon: <Database className="h-4 w-4" />,
+  },
+  lab: {
+    label: "Lab",
+    description: "Hands-on practical laboratory exercise",
+    badge: "border-border bg-muted/60 text-foreground",
+    icon: <Boxes className="h-4 w-4" />,
+  },
+  workshop: {
+    label: "Workshop",
+    description: "Intensive collaborative learning session",
+    badge: "border-border bg-muted/60 text-foreground",
+    icon: <Lightbulb className="h-4 w-4" />,
+  },
+  discussion: {
+    label: "Discussion",
+    description: "Structured peer dialogue and debate",
+    badge: "border-border bg-muted/60 text-foreground",
+    icon: <Users className="h-4 w-4" />,
+  },
+  reflection: {
+    label: "Reflection",
+    description: "Guided introspection and learning journal",
+    badge: "border-border bg-muted/60 text-foreground",
+    icon: <NotebookPen className="h-4 w-4" />,
+  },
+  survey: {
+    label: "Survey",
+    description: "Data collection and feedback form",
+    badge: "border-border bg-muted/60 text-foreground",
+    icon: <HelpCircle className="h-4 w-4" />,
   },
 }
 
-type BlockId = "header" | "program" | "resources" | "content" | "assignment" | "scoring" | "footer"
+interface BlockMeta {
+  icon: React.ReactNode
+}
+
+export const BLOCK_META: Record<BlockId, BlockMeta> = {
+  header: { icon: <FileText className="h-4 w-4" /> },
+  program: { icon: <Lightbulb className="h-4 w-4" /> },
+  resources: { icon: <Boxes className="h-4 w-4" /> },
+  content: { icon: <BookOpen className="h-4 w-4" /> },
+  assignment: { icon: <CheckSquare className="h-4 w-4" /> },
+  scoring: { icon: <BarChart3 className="h-4 w-4" /> },
+  footer: { icon: <Layers className="h-4 w-4" /> },
+}
+
+export type BlockId = "header" | "program" | "resources" | "content" | "assignment" | "scoring" | "footer"
 
 interface TemplateBlockConfig {
   id: BlockId
@@ -61,7 +138,7 @@ interface TemplateFieldConfig {
   forTypes: TemplateType[]
 }
 
-type TemplateFieldState = Record<BlockId, Record<string, boolean>>
+export type TemplateFieldState = Record<BlockId, Record<string, boolean>>
 
 type TemplateUiState = {
   activeId: string | null
@@ -74,14 +151,14 @@ type TemplateSettingsPayload = {
   ui?: TemplateUiState
 }
 
-const ALL_BLOCKS: TemplateBlockConfig[] = [
-  { id: "header", label: "Header", description: "Title, date, student name", mandatory: true, previewH: 40, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate"] },
-  { id: "program", label: "Program", description: "Objectives & lesson overview", mandatory: true, previewH: 52, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-  { id: "resources", label: "Resources", description: "Reference materials & links", mandatory: true, previewH: 44, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-  { id: "content", label: "Content", description: "Main body — topics, notes, media", mandatory: true, previewH: 80, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate"] },
-  { id: "assignment", label: "Assignment", description: "Tasks & exercises for students", mandatory: true, previewH: 60, forTypes: ["lesson", "quiz"] },
-  { id: "scoring", label: "Scoring", description: "Rubric & grading criteria", mandatory: true, previewH: 56, forTypes: ["assessment", "exam", "quiz"] },
-  { id: "footer", label: "Footer", description: "Signatures, branding, page number", mandatory: true, previewH: 32, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate"] },
+export const ALL_BLOCKS: TemplateBlockConfig[] = [
+  { id: "header", label: "Header", description: "Title, date, student name", mandatory: true, previewH: 40, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
+  { id: "program", label: "Program", description: "Objectives & lesson overview", mandatory: true, previewH: 52, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+  { id: "resources", label: "Resources", description: "Reference materials & links", mandatory: true, previewH: 44, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+  { id: "content", label: "Content", description: "Main body — topics, notes, media", mandatory: true, previewH: 80, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
+  { id: "assignment", label: "Assignment", description: "Tasks & exercises for students", mandatory: true, previewH: 60, forTypes: ["lesson", "quiz", "lab", "workshop"] },
+  { id: "scoring", label: "Scoring", description: "Rubric & grading criteria", mandatory: true, previewH: 56, forTypes: ["assessment", "exam", "quiz", "project", "lab"] },
+  { id: "footer", label: "Footer", description: "Signatures, branding, page number", mandatory: true, previewH: 32, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
 ]
 
 interface LocalTemplate {
@@ -102,65 +179,69 @@ function defaultEnabled(): Record<BlockId, boolean> {
   return enabled as Record<BlockId, boolean>
 }
 
-const BLOCK_FIELDS: Record<BlockId, TemplateFieldConfig[]> = {
+export const BLOCK_FIELDS: Record<BlockId, TemplateFieldConfig[]> = {
   header: [
-    { key: "lesson_number", label: "Lesson Number", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "lesson_title", label: "Lesson Title", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "module_title", label: "Module Title", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "course_title", label: "Course Title", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate"] },
-    { key: "institution_name", label: "Institution Name", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate"] },
-    { key: "teacher_name", label: "Teacher Name", required: false, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate"] },
-    { key: "date", label: "Date", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
+    { key: "lesson_number", label: "Lesson Number", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "lesson_title", label: "Lesson Title", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "module_title", label: "Module Title", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "course_title", label: "Course Title", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
+    { key: "institution_name", label: "Institution Name", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
+    { key: "teacher_name", label: "Teacher Name", required: false, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
+    { key: "date", label: "Date", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
   ],
   program: [
-    { key: "competence", label: "Competence", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "topic", label: "Topic", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "objective", label: "Objective", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "task", label: "Task", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "program_method", label: "Method", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "program_social_form", label: "Social Form", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "program_time", label: "Time", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
+    { key: "competence", label: "Competence", required: true, forTypes: ["quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "topic", label: "Topic", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "objective", label: "Objective", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "task", label: "Task", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "program_method", label: "Method", required: true, forTypes: ["quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "program_social_form", label: "Social Form", required: true, forTypes: ["quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "program_time", label: "Time", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
   ],
   resources: [
-    { key: "task", label: "Task", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "type", label: "Type", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "origin", label: "Origin", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "state", label: "State", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "quality", label: "Quality", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "notes", label: "Notes", required: false, forTypes: ["lesson", "quiz", "assessment", "exam"] },
+    { key: "task", label: "Task", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "type", label: "Type", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "origin", label: "Origin", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "state", label: "State", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "quality", label: "Quality", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
   ],
   content: [
-    { key: "competence", label: "Competence", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate"] },
-    { key: "competence_time", label: "Competence Time", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "topic", label: "Topic", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate"] },
-    { key: "topic_time", label: "Topic Time", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "objective", label: "Objective", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "objective_time", label: "Objective Time", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "task", label: "Task", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "task_time", label: "Task Time", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "instruction_area", label: "Instruction Area", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "student_area", label: "Student Area", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
-    { key: "teacher_area", label: "Teacher Area", required: true, forTypes: ["lesson", "quiz", "assessment", "exam"] },
+    { key: "competence", label: "Competence", required: true, forTypes: ["quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
+    { key: "competence_time", label: "Competence Time", required: true, forTypes: ["quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "topic", label: "Topic", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
+    { key: "topic_time", label: "Topic Time", required: true, forTypes: ["quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "objective", label: "Objective", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "objective_time", label: "Objective Time", required: true, forTypes: ["quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "task", label: "Task", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "task_time", label: "Task Time", required: true, forTypes: ["quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "instruction_area", label: "Instruction Area", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "student_area", label: "Student Area", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "teacher_area", label: "Teacher Area", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
+    { key: "include_project", label: "Include Project", required: false, forTypes: ["lesson", "quiz", "assessment", "exam", "project", "lab", "workshop"] },
   ],
   assignment: [
-    { key: "competence", label: "Competence", required: true, forTypes: ["lesson", "quiz"] },
-    { key: "topic", label: "Topic", required: true, forTypes: ["lesson", "quiz"] },
-    { key: "objective", label: "Objective", required: true, forTypes: ["lesson", "quiz"] },
-    { key: "task", label: "Task", required: true, forTypes: ["lesson", "quiz"] },
-    { key: "submission_format", label: "Submission Format", required: false, forTypes: ["lesson", "quiz"] },
-    { key: "due_date", label: "Due Date", required: false, forTypes: ["lesson", "quiz"] },
+    { key: "competence", label: "Competence", required: true, forTypes: ["quiz", "lab", "workshop"] },
+    { key: "topic", label: "Topic", required: true, forTypes: ["lesson", "quiz", "lab", "workshop"] },
+    { key: "objective", label: "Objective", required: true, forTypes: ["lesson", "quiz", "lab", "workshop"] },
+    { key: "task", label: "Task", required: true, forTypes: ["lesson", "quiz", "lab", "workshop"] },
+    { key: "instruction_area", label: "Instruction Area", required: true, forTypes: ["lesson"] },
+    { key: "student_area", label: "Student Area", required: true, forTypes: ["lesson"] },
+    { key: "teacher_area", label: "Teacher Area", required: true, forTypes: ["lesson"] },
+    { key: "submission_format", label: "Submission Format", required: false, forTypes: ["quiz", "lab", "workshop"] },
+    { key: "due_date", label: "Due Date", required: false, forTypes: ["quiz", "lab", "workshop"] },
+    { key: "include_project", label: "Include Project", required: false, forTypes: ["lesson", "quiz", "lab", "workshop"] },
   ],
   scoring: [
-    { key: "criterion", label: "Criterion", required: true, forTypes: ["quiz", "assessment", "exam"] },
-    { key: "weight", label: "Weight", required: true, forTypes: ["quiz", "assessment", "exam"] },
-    { key: "max_points", label: "Max Points", required: true, forTypes: ["quiz", "assessment", "exam"] },
-    { key: "feedback", label: "Feedback", required: false, forTypes: ["quiz", "assessment", "exam"] },
+    { key: "criterion", label: "Criterion", required: true, forTypes: ["quiz", "assessment", "exam", "project", "lab"] },
+    { key: "weight", label: "Weight", required: true, forTypes: ["quiz", "assessment", "exam", "project", "lab"] },
+    { key: "max_points", label: "Max Points", required: true, forTypes: ["quiz", "assessment", "exam", "project", "lab"] },
+    { key: "feedback", label: "Feedback", required: false, forTypes: ["quiz", "assessment", "exam", "project", "lab"] },
   ],
   footer: [
-    { key: "copyright", label: "Copyright", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate"] },
-    { key: "page_number", label: "Page Number", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate"] },
-    { key: "teacher_name", label: "Teacher Name", required: false, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate"] },
-    { key: "institution_name", label: "Institution Name", required: false, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate"] },
+    { key: "copyright", label: "Copyright", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
+    { key: "page_number", label: "Page Number", required: true, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
+    { key: "teacher_name", label: "Teacher Name", required: false, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
+    { key: "institution_name", label: "Institution Name", required: false, forTypes: ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] },
   ],
 }
 
@@ -179,10 +260,22 @@ function defaultFieldEnabled(type: TemplateType, enabled: Record<BlockId, boolea
 
 function normalizeTemplate(template: LocalTemplate): LocalTemplate {
   const enabled = template.enabled ?? defaultEnabled()
+  const defaultFields = defaultFieldEnabled(template.type, enabled)
+  
+  // Merge existing fieldEnabled with defaults to ensure new required fields are added
+  const fieldEnabled = template.fieldEnabled 
+    ? Object.fromEntries(
+        Object.keys(defaultFields).map(blockId => [
+          blockId, 
+          { ...defaultFields[blockId as BlockId], ...template.fieldEnabled![blockId as BlockId] }
+        ])
+      ) as TemplateFieldState
+    : defaultFields
+  
   return {
     ...template,
     enabled,
-    fieldEnabled: template.fieldEnabled ?? defaultFieldEnabled(template.type, enabled),
+    fieldEnabled,
     createdAt: template.createdAt ?? new Date().toISOString(),
   }
 }
@@ -231,7 +324,6 @@ function TemplatePreview({
   enabled,
   fieldEnabled,
   name,
-  description,
   isEmpty,
 }: {
   type: TemplateType
@@ -251,170 +343,20 @@ function TemplatePreview({
     )
   }
 
-  const meta = TEMPLATE_TYPE_META[type]
-  const visibleBlocks = ALL_BLOCKS.filter((b) => b.forTypes.includes(type) && (enabled[b.id] || b.mandatory))
-  const visibleBlockIds = new Set(visibleBlocks.map((block) => block.id))
-
-  const visibleFields = (blockId: BlockId) =>
-    BLOCK_FIELDS[blockId]
-      .filter((f) => f.forTypes.includes(type))
-      .filter((f) => f.required || Boolean(fieldEnabled[blockId]?.[f.key]))
-
-  const isFieldVisible = (blockId: BlockId, key: string) =>
-    BLOCK_FIELDS[blockId].some(
-      (field) =>
-        field.key === key &&
-        field.forTypes.includes(type) &&
-        (field.required || Boolean(fieldEnabled[blockId]?.[field.key])),
-    )
-
-  const contentRows = [
-    { label: "Competence", timeLabel: isFieldVisible("content", "competence_time") ? "Competence Time" : "", indent: 0, visible: isFieldVisible("content", "competence"), empty: false },
-    { label: "Topic", timeLabel: isFieldVisible("content", "topic_time") ? "Topic Time" : "", indent: 0, visible: isFieldVisible("content", "topic"), empty: false },
-    { label: "Objective", timeLabel: isFieldVisible("content", "objective_time") ? "Objective Time" : "", indent: 1, visible: isFieldVisible("content", "objective"), empty: false },
-    { label: "Task", timeLabel: isFieldVisible("content", "task_time") ? "Task Time" : "", indent: 1, visible: isFieldVisible("content", "task"), empty: false },
-    { label: "Instruction Area", timeLabel: "", indent: 1, visible: isFieldVisible("content", "instruction_area"), empty: false },
-    { label: "", timeLabel: "", indent: 2, visible: isFieldVisible("content", "instruction_area"), empty: true },
-    { label: "Student Area", timeLabel: "", indent: 1, visible: isFieldVisible("content", "student_area"), empty: false },
-    { label: "", timeLabel: "", indent: 2, visible: isFieldVisible("content", "student_area"), empty: true },
-    { label: "Teacher Area", timeLabel: "", indent: 1, visible: isFieldVisible("content", "teacher_area"), empty: false },
-    { label: "", timeLabel: "", indent: 2, visible: isFieldVisible("content", "teacher_area"), empty: true },
-  ].filter((row) => row.visible)
-
   return (
-    <div>
-      <div className="w-full overflow-hidden rounded-xl border border-border bg-background shadow-sm">
-        <div className="flex items-center justify-between border-b border-border bg-muted/40 px-5 py-4">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-foreground">{name || "Untitled template"}</p>
-            {description.trim() ? (
-              <p className="truncate text-xs text-muted-foreground">{description}</p>
-            ) : null}
-            <p className="text-xs text-muted-foreground">Lesson document preview</p>
-          </div>
-          <span className={`rounded border px-2 py-0.5 text-xs font-semibold ${meta.badge}`}>{meta.label}</span>
-        </div>
-
-        <div className="bg-muted/20 p-4">
-          <div className="mx-auto w-full max-w-3xl rounded-lg border border-border bg-background p-4">
-            <div className="mb-3 grid gap-2 rounded-md border border-border p-3 md:grid-cols-2">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Course</p>
-                <p className="text-xs text-foreground">Course Title / Module Title</p>
-              </div>
-              <div className="md:text-right">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Lesson</p>
-                <p className="text-xs text-foreground">Lesson Number · Lesson Title · Date</p>
-              </div>
-            </div>
-
-            {visibleBlockIds.has("program") && (
-              <div className="mb-3 rounded-md border border-border p-3">
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Program</p>
-                <div className="grid gap-2 md:grid-cols-2">
-                  {visibleFields("program").map((field) => (
-                    <div key={field.key} className="rounded border border-border/70 bg-muted/10 px-2 py-1">
-                      <p className="text-[10px] font-medium text-muted-foreground">{field.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {visibleBlockIds.has("resources") && (
-              <div className="mb-3 rounded-md border border-border p-3">
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Resources</p>
-                <div className="grid gap-2 md:grid-cols-3">
-                  {visibleFields("resources").map((field) => (
-                    <div key={field.key} className="rounded border border-border/70 bg-muted/10 px-2 py-1">
-                      <p className="text-[10px] font-medium text-muted-foreground">{field.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {visibleBlockIds.has("content") && (
-              <div className="mb-3 rounded-md border border-border p-3">
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Content</p>
-                <div className="overflow-x-auto rounded border border-border/70">
-                  <table className="w-full border-collapse text-left text-[10px]">
-                    <thead className="bg-muted/20">
-                      <tr>
-                        <th className="border border-border/60 px-2 py-1 font-semibold uppercase tracking-wide text-muted-foreground">Content</th>
-                        <th className="border border-border/60 px-2 py-1 font-semibold uppercase tracking-wide text-muted-foreground">Time</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {contentRows.map((row, index) => (
-                        <tr key={`${row.label || "empty"}-${index}`}>
-                          <td
-                            className={`border border-border/60 px-2 py-1 text-muted-foreground ${row.empty ? "h-7" : "h-6"}`}
-                            style={{ paddingLeft: `${0.5 + row.indent * 0.75}rem` }}
-                          >
-                            {row.label}
-                          </td>
-                          <td className={`border border-border/60 px-2 py-1 text-muted-foreground ${row.empty ? "h-7" : "h-6"}`}>
-                            {row.timeLabel}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {visibleBlockIds.has("assignment") && (
-              <div className="mb-3 rounded-md border border-border p-3">
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Assignment</p>
-                <div className="grid gap-2 md:grid-cols-2">
-                  {visibleFields("assignment").map((field) => (
-                    <div key={field.key} className="rounded border border-border/70 bg-muted/10 px-2 py-1">
-                      <p className="text-[10px] font-medium text-muted-foreground">{field.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {visibleBlockIds.has("scoring") && (
-              <div className="mb-3 rounded-md border border-border p-3">
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Scoring</p>
-                <div className="grid gap-2 md:grid-cols-2">
-                  {visibleFields("scoring").map((field) => (
-                    <div key={field.key} className="rounded border border-border/70 bg-muted/10 px-2 py-1">
-                      <p className="text-[10px] font-medium text-muted-foreground">{field.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {visibleBlockIds.has("footer") && (
-              <div className="rounded-md border border-border p-3">
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Footer</p>
-                <div className="flex flex-wrap gap-2">
-                  {visibleFields("footer").map((field) => (
-                    <span key={field.key} className="rounded border border-border/70 bg-muted/10 px-2 py-0.5 text-[10px] text-muted-foreground">
-                      {field.label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+    <TemplateBlueprint 
+      type={type}
+      enabled={enabled}
+      fieldEnabled={fieldEnabled}
+      name={name || "Untitled template"}
+      scale="md"
+    />
   )
 }
 
 export function TemplatesSection({ courseId }: { courseId: string | null }) {
   const [templates, setTemplates] = useState<LocalTemplate[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
-  const [saveStatus, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
   const [panelView, setPanelView] = useState<"config" | "preview">("config")
   const [configView, setConfigView] = useState<"idle" | "create" | "edit">("idle")
   const [showTypeOverlay, setShowTypeOverlay] = useState(false)
@@ -467,18 +409,12 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
 
   const persistTemplates = useCallback(async (list: LocalTemplate[]) => {
     if (!courseId) return
-    setSaveStatus("saving")
     const supabase = createClient()
     const payload: TemplateSettingsPayload = {
       templates: list,
       ui: { activeId, panelView, configView },
     }
-    const { error } = await supabase.from("courses").update({ template_settings: payload, updated_at: new Date().toISOString() }).eq("id", courseId)
-    if (error) setSaveStatus("error")
-    else {
-      setLastSavedAt(new Date().toISOString())
-      setSaveStatus("saved")
-    }
+    await supabase.from("courses").update({ template_settings: payload, updated_at: new Date().toISOString() }).eq("id", courseId)
   }, [courseId, activeId, panelView, configView])
 
   const [configType, setConfigType] = useState<TemplateType>("lesson")
@@ -773,58 +709,63 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
 
       <div className="grid flex-1 min-h-0 items-stretch gap-4 lg:grid-cols-2">
         <div className={`${panelView === "preview" ? "hidden lg:block" : "block lg:block"} min-h-0`}>
-          <SetupColumn className="flex h-full min-h-0 flex-col gap-4">
-            <div className="relative min-h-0 flex-1 pt-1">
-              {configView === "idle" && !activeTemplate && (
-                <p className="text-sm italic text-muted-foreground">Select or create a template to configure its settings.</p>
-              )}
-
+          <SetupColumn className="flex h-full min-h-0 flex-col gap-4 !p-0 !border-0">
+            <div className="relative min-h-0 flex-1">
               {showConfigBlocks && (
                 <div className="space-y-5">
                   <div>
                     <div className="space-y-2">
                       {ALL_BLOCKS.filter((b) => b.forTypes.includes(configType)).map((block) => (
                         <div key={block.id} className="rounded-xl border border-border bg-background p-4 shadow-sm">
-                          <div className="flex items-center gap-3">
-                            {!block.mandatory && (
-                              <input
-                                type="checkbox"
-                                checked={configEnabled[block.id]}
-                                onChange={() => toggleBlock(block.id)}
-                                className="h-3.5 w-3.5 accent-primary"
-                              />
-                            )}
+                          <div className="flex items-start gap-3">
+                            <span className="mt-0.5 flex-shrink-0 text-muted-foreground">{BLOCK_META[block.id].icon}</span>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2">
                                 <span className="text-sm font-medium text-foreground">{block.label}</span>
-                                {block.mandatory && (
-                                  <span className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Required</span>
-                                )}
                               </div>
                               <p className="text-xs text-muted-foreground">{block.description}</p>
                             </div>
                           </div>
+                          {!block.mandatory && (
+                            <div className="mt-2.5 flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={configEnabled[block.id]}
+                                onChange={() => toggleBlock(block.id)}
+                                className="h-4 w-4 accent-primary"
+                              />
+                              <span className="text-xs font-medium text-muted-foreground">Include in template</span>
+                            </div>
+                          )}
 
                           {(configEnabled[block.id] || block.mandatory) && (
-                            <div className="mt-3 rounded-lg border border-border/70 bg-muted/5 p-2.5">
-                              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 xl:grid-cols-3">
-                                {BLOCK_FIELDS[block.id]
-                                  .filter((f) => f.forTypes.includes(configType))
-                                  .map((field) => (
-                                    <label
-                                      key={field.key}
-                                      className={`flex items-center gap-2 rounded-md border border-border/60 bg-background/70 px-2 py-1 text-xs text-foreground/80 ${field.required ? "cursor-not-allowed" : "cursor-pointer"}`}
-                                    >
-                                      <input
-                                        type="checkbox"
-                                        checked={field.required || Boolean(configFieldEnabled[block.id]?.[field.key])}
-                                        disabled={field.required}
-                                        onChange={() => toggleField(block.id, field.key)}
-                                        className="h-3 w-3 accent-primary"
-                                      />
-                                      <span>{field.label}</span>
-                                    </label>
-                                  ))}
+                            <div className="mt-3 rounded-lg border border-border/70 bg-muted/5 p-3">
+                              <div className="space-y-3">
+                                {BLOCK_FIELDS[block.id].filter((f) => f.forTypes.includes(configType) && f.required).length > 0 && (
+                                  <div>
+                                    <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 xl:grid-cols-3">
+                                      {BLOCK_FIELDS[block.id].filter((f) => f.forTypes.includes(configType) && f.required).map((field) => (
+                                        <label key={field.key} className="flex items-center gap-2 rounded-md border border-border/60 bg-background/70 px-2 py-1 text-xs text-foreground/80 cursor-not-allowed">
+                                          <input type="checkbox" checked disabled className="h-3 w-3 accent-primary" />
+                                          <span>{field.label}</span>
+                                        </label>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                {BLOCK_FIELDS[block.id].filter((f) => f.forTypes.includes(configType) && !f.required).length > 0 && (
+                                  <div>
+                                    {BLOCK_FIELDS[block.id].filter((f) => f.forTypes.includes(configType) && f.required).length > 0 && <div className="border-t border-border/40 pt-2.5" />}
+                                    <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 xl:grid-cols-3">
+                                      {BLOCK_FIELDS[block.id].filter((f) => f.forTypes.includes(configType) && !f.required).map((field) => (
+                                        <label key={field.key} className="flex items-center gap-2 rounded-md border border-border/60 bg-background/70 px-2 py-1 text-xs text-foreground/80 cursor-pointer">
+                                          <input type="checkbox" checked={Boolean(configFieldEnabled[block.id]?.[field.key])} onChange={() => toggleField(block.id, field.key)} className="h-3 w-3 accent-primary" />
+                                          <span>{field.label}</span>
+                                        </label>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           )}
@@ -839,7 +780,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
         </div>
 
         <div className={`${panelView === "config" ? "hidden lg:block" : "block lg:block"} min-h-0`}>
-          <SetupColumn className="h-full min-h-0">
+          <SetupColumn className="h-full min-h-0 !p-0">
             <TemplatePreview
               type={previewType}
               enabled={previewEnabled}
@@ -851,8 +792,6 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
           </SetupColumn>
         </div>
       </div>
-
-      <SaveStatusBar status={saveStatus} lastSavedAt={lastSavedAt} />
 
       {isConfiguring && showTypeOverlay && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/75 p-4 backdrop-blur-sm">
@@ -872,8 +811,15 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
                         selected ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/40"
                       }`}
                     >
-                      <p className="text-xs font-semibold text-foreground">{meta.label}</p>
-                      <p className="mt-0.5 text-[10px] text-muted-foreground">{meta.description}</p>
+                      <div className="flex items-start gap-2">
+                        <div className="mt-0.5 flex-shrink-0 text-foreground">
+                          {meta.icon}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold text-foreground">{meta.label}</p>
+                          <p className="mt-0.5 text-[10px] text-muted-foreground">{meta.description}</p>
+                        </div>
+                      </div>
                     </button>
                   )
                 })}
@@ -950,7 +896,12 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
                       selected ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/30"
                     }`}
                   >
-                    <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold ${meta.badge}`}>{meta.label}</span>
+                    <div className="flex flex-shrink-0 items-center gap-1.5">
+                      <div className="text-foreground">
+                        {meta.icon}
+                      </div>
+                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${meta.badge}`}>{meta.label}</span>
+                    </div>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium text-foreground">{tpl.name}</span>
                       <span className="block text-[11px] text-muted-foreground">Created: {formatTemplateDate(tpl.createdAt)}</span>

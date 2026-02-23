@@ -9,7 +9,6 @@ import { SetupColumn, SetupPanelLayout, SetupPanels, SetupSection } from "@/comp
 import { ClassificationSection } from "@/components/coursebuilder/sections/classification-section"
 import { CurriculumSection } from "@/components/coursebuilder/sections/curriculum-section"
 import { EssentialsSection } from "@/components/coursebuilder/sections/essentials-section"
-import { GenerationSection } from "@/components/coursebuilder/sections/generation-section"
 import { PedagogySection } from "@/components/coursebuilder/sections/pedagogy-section"
 import { ScheduleSection } from "@/components/coursebuilder/sections/schedule-section"
 import { StudentsSection } from "@/components/coursebuilder/sections/students-section"
@@ -27,7 +26,6 @@ import {
   LayoutTemplate,
   Calendar,
   BookMarked,
-  Zap,
   Eye,
   Store,
   DollarSign,
@@ -41,6 +39,7 @@ import {
   Database,
   Settings,
   Rocket,
+  Check,
 } from "lucide-react"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -77,6 +76,10 @@ interface SectionGroup {
   items: SectionItem[]
 }
 
+function hasText(value: unknown): boolean {
+  return typeof value === "string" && value.trim().length > 0
+}
+
 // ─── Course preview type ─────────────────────────────────────────────────────
 
 interface CourseEssentials {
@@ -105,7 +108,6 @@ const SECTIONS: SectionGroup[] = [
       { id: "templates", label: "Templates", icon: LayoutTemplate },
       { id: "schedule", label: "Schedule", icon: Calendar },
       { id: "curriculum", label: "Curriculum", icon: BookMarked },
-      { id: "generation", label: "Generation", icon: Zap },
     ],
   },
   {
@@ -136,6 +138,8 @@ const SECTIONS: SectionGroup[] = [
     ],
   },
 ]
+
+const SETUP_SECTION_IDS = SECTIONS.find((group) => group.heading === "SETUP")?.items.map((item) => item.id) ?? []
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
 
@@ -1265,7 +1269,6 @@ function SectionContent({
     case "templates":      return <TemplatesSection     courseId={existingCourseId} />
     case "schedule":       return <ScheduleSection      courseId={existingCourseId} />
     case "curriculum":     return <CurriculumSection    courseId={existingCourseId} />
-    case "generation":     return <GenerationSection     courseId={existingCourseId} />
     case "visibility":     return <VisibilitySection    courseId={existingCourseId} />
     case "marketplace":    return <MarketplaceSection   courseId={existingCourseId} />
     case "pricing":        return <PricingSection        courseId={existingCourseId} />
@@ -1308,14 +1311,54 @@ function CourseBuilderPageInner() {
   const [pageConfig, setPageConfig] = useState<CanvasPageConfig | null>(null)
   const [loadingCourse, setLoadingCourse] = useState(!!urlCourseId)
   const [editingTitle, setEditingTitle] = useState(false)
+  const [flashSectionId, setFlashSectionId] = useState<SectionId | null>(null)
+  const [completedSetupSections, setCompletedSetupSections] = useState<Record<string, boolean>>({})
   const titleRef = useRef<HTMLInputElement>(null)
+
+  const hydrateSectionCompletion = useCallback((raw: Record<string, unknown>) => {
+    const classification = (raw.classification_data as Record<string, unknown> | null) ?? {}
+    const students = (raw.students_overview as Record<string, unknown> | null) ?? {}
+    const templateSettings = (raw.template_settings as Record<string, unknown> | null) ?? {}
+    const schedule = (raw.schedule_settings as Record<string, unknown> | null) ?? {}
+    const curriculum = (raw.curriculum_data as Record<string, unknown> | null) ?? {}
+    const courseLayout = (raw.course_layout as Record<string, unknown> | null) ?? {}
+
+    const templates = Array.isArray(templateSettings.templates)
+      ? templateSettings.templates
+      : Array.isArray(templateSettings)
+        ? templateSettings
+        : []
+
+    const generatedEntries = Array.isArray(schedule.generated_entries) ? schedule.generated_entries : []
+    const sessionRows = Array.isArray(curriculum.session_rows) ? curriculum.session_rows : []
+    const studentsTotal = typeof students.total === "number" ? students.total : 0
+    const pedagogy = (courseLayout.pedagogy as Record<string, unknown> | null) ?? null
+
+    const essentialsDone = hasText(raw.course_name) && hasText(raw.course_description) && hasText(raw.course_language) && hasText(raw.course_type)
+    const classificationDone = hasText(classification.domain) && hasText(classification.subject) && hasText(classification.topic)
+    const scheduleDone = generatedEntries.length > 0
+    const curriculumDone = sessionRows.length > 0
+
+    const completion: Record<string, boolean> = {
+      essentials: essentialsDone,
+      classification: classificationDone,
+      students: studentsTotal > 0,
+      pedagogy: pedagogy !== null,
+      templates: templates.length > 0,
+      schedule: scheduleDone,
+      curriculum: curriculumDone,
+      generation: essentialsDone && scheduleDone && curriculumDone,
+    }
+
+    setCompletedSetupSections(completion)
+  }, [])
 
   useEffect(() => {
     if (!urlCourseId) return
     const supabase = createClient()
     supabase
       .from("courses")
-      .select("id, course_name, course_subtitle, course_description, course_language, course_type, course_image, generation_settings")
+      .select("id, course_name, course_subtitle, course_description, course_language, course_type, course_image, generation_settings, classification_data, students_overview, template_settings, schedule_settings, curriculum_data, course_layout")
       .eq("id", urlCourseId)
       .single()
       .then(({ data, error }) => {
@@ -1350,10 +1393,29 @@ function CourseBuilderPageInner() {
               // ignore malformed settings
             }
           }
+
+          hydrateSectionCompletion(data as Record<string, unknown>)
         }
         setLoadingCourse(false)
       })
-  }, [urlCourseId])
+  }, [urlCourseId, hydrateSectionCompletion])
+
+  useEffect(() => {
+    if (!courseId) {
+      setCompletedSetupSections({})
+      return
+    }
+    const supabase = createClient()
+    supabase
+      .from("courses")
+      .select("course_name, course_description, course_language, course_type, classification_data, students_overview, template_settings, schedule_settings, curriculum_data, course_layout")
+      .eq("id", courseId)
+      .single()
+      .then(({ data, error }) => {
+        if (error || !data) return
+        hydrateSectionCompletion(data as Record<string, unknown>)
+      })
+  }, [courseId, activeSection, hydrateSectionCompletion])
 
   const handleCourseCreated = useCallback((id: string, essentials: CourseCreatedData) => {
     setCourseId(id)
@@ -1369,6 +1431,21 @@ function CourseBuilderPageInner() {
     setEditingTitle(true)
     setTimeout(() => titleRef.current?.select(), 10)
   }
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const custom = event as CustomEvent<{ sectionId?: SectionId }>
+      const sectionId = custom.detail?.sectionId
+      if (!sectionId) return
+      setView("setup")
+      setActiveSection(sectionId)
+      setFlashSectionId(sectionId)
+      window.setTimeout(() => setFlashSectionId((prev) => (prev === sectionId ? null : prev)), 1800)
+    }
+
+    window.addEventListener("coursebuilder:navigate-section", handler)
+    return () => window.removeEventListener("coursebuilder:navigate-section", handler)
+  }, [])
 
   return (
     <div className="flex h-full flex-col bg-background">
@@ -1444,10 +1521,14 @@ function CourseBuilderPageInner() {
                       </p>
                       <div className="space-y-0.5">
                         {group.items.map(({ id, label, icon: Icon }) => (
+                          (() => {
+                            const isSetupItem = SETUP_SECTION_IDS.includes(id)
+                            const isCompleted = Boolean(completedSetupSections[id])
+                            return (
                           <button
                             key={id}
                             onClick={() => setActiveSection(id)}
-                            className={`flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-sm transition ${
+                            className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm transition ${
                               activeSection === id
                                 ? "bg-accent text-primary font-medium"
                                 : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
@@ -1455,7 +1536,21 @@ function CourseBuilderPageInner() {
                           >
                             <Icon className="h-3.5 w-3.5 shrink-0" />
                             {label}
+                            {isSetupItem && (
+                              <span
+                                className={`ml-auto inline-flex h-4 w-4 items-center justify-center rounded-full border transition-all ${
+                                  isCompleted
+                                    ? "border-primary bg-primary text-primary-foreground"
+                                    : "border-border bg-background text-transparent"
+                                } ${flashSectionId === id ? "animate-pulse" : ""}`}
+                                aria-hidden
+                              >
+                                <Check className="h-2.5 w-2.5" />
+                              </span>
+                            )}
                           </button>
+                            )
+                          })()
                         ))}
                       </div>
                     </div>
@@ -1464,7 +1559,7 @@ function CourseBuilderPageInner() {
               </aside>
 
               <main className="flex-1 overflow-hidden bg-muted/20 px-4 pt-4 pb-4 md:px-8 md:pb-8">
-                <div className="mx-auto flex h-full min-h-0 max-w-7xl flex-col">
+                <div className="mx-auto flex h-full min-h-0 flex-col">
                   {loadingCourse ? (
                     <div className="flex items-center justify-center h-48">
                       <span className="text-sm text-muted-foreground">Loading course…</span>
@@ -1486,6 +1581,10 @@ function CourseBuilderPageInner() {
               {/* Mobile horizontal section nav — bottom bar */}
               <div className="no-scrollbar flex shrink-0 items-center gap-1 overflow-x-auto border-t border-border bg-background px-2 py-2 md:hidden">
                 {SECTIONS.flatMap((group) => group.items).map(({ id, label, icon: Icon }) => (
+                  (() => {
+                    const isSetupItem = SETUP_SECTION_IDS.includes(id)
+                    const isCompleted = Boolean(completedSetupSections[id])
+                    return (
                   <button
                     key={id}
                     onClick={() => setActiveSection(id)}
@@ -1497,7 +1596,21 @@ function CourseBuilderPageInner() {
                   >
                     <Icon className="h-3 w-3 shrink-0" />
                     {label}
+                    {isSetupItem && (
+                      <span
+                        className={`ml-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border ${
+                          isCompleted
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-transparent"
+                        }`}
+                        aria-hidden
+                      >
+                        <Check className="h-2 w-2" />
+                      </span>
+                    )}
                   </button>
+                    )
+                  })()
                 ))}
               </div>
             </div>
