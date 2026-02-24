@@ -9,6 +9,24 @@ interface TemplateBlueprintProps {
   fieldEnabled: TemplateFieldState
   name?: string
   scale?: "sm" | "md" | "lg"
+  scrollable?: boolean
+  data?: TemplateBlueprintData
+}
+
+export interface TemplateBlueprintData {
+  fieldValues?: Partial<Record<BlockId, Record<string, string>>>
+  programRows?: Array<Record<string, string>>
+  resourceRows?: Array<Record<string, string>>
+  contentItems?: {
+    topics?: string[]
+    objectives?: string[]
+    tasks?: string[]
+  }
+  assignmentItems?: {
+    tasks?: string[]
+  }
+  resourceItems?: string[]
+  scoringItems?: string[]
 }
 
 const SCALE_CONFIG = {
@@ -51,10 +69,12 @@ function TemplateHeaderBlueprint({
   type,
   fieldEnabled,
   scale = "md",
+  fieldValues,
 }: {
   type: TemplateType
   fieldEnabled: TemplateFieldState
   scale?: "sm" | "md" | "lg"
+  fieldValues?: Record<string, string>
 }) {
   const config = SCALE_CONFIG[scale]
   const headerFields = BLOCK_FIELDS.header
@@ -69,7 +89,7 @@ function TemplateHeaderBlueprint({
           <span
             className={`rounded border border-border/60 bg-muted/30 ${config.headerFieldPadding} text-foreground text-xs`}
           >
-            {field.label}
+            {fieldValues?.[field.key] ? `${field.label}: ${fieldValues[field.key]}` : field.label}
           </span>
         </div>
       ))}
@@ -82,11 +102,13 @@ function TemplateBlockBlueprint({
   type,
   fieldEnabled,
   scale = "md",
+  fieldValues,
 }: {
   blockId: BlockId
   type: TemplateType
   fieldEnabled: TemplateFieldState
   scale?: "sm" | "md" | "lg"
+  fieldValues?: Record<string, string>
 }) {
   const config = SCALE_CONFIG[scale]
   const block = ALL_BLOCKS.find((b) => b.id === blockId)
@@ -110,7 +132,7 @@ function TemplateBlockBlueprint({
             key={field.key}
             className={`rounded border border-border/50 bg-background ${config.headerFieldPadding} ${config.fieldSize} text-foreground/80`}
           >
-            {field.label}
+            {fieldValues?.[field.key] ? `${field.label}: ${fieldValues[field.key]}` : field.label}
           </span>
         ))}
       </div>
@@ -118,15 +140,37 @@ function TemplateBlockBlueprint({
   )
 }
 
-// ─── Nested content with proper visual hierarchy ───────────────────────────
-function NestedContent({ 
+function PlaceholderLine({ widthClass = "w-full" }: { widthClass?: string }) {
+  return <div className={`h-2.5 rounded bg-muted/60 ${widthClass}`} />
+}
+
+function DocumentSection({
+  title,
+  children,
+  className,
+}: {
+  title: string
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <section className={`rounded-xl border border-border bg-card ${className ?? ""}`}>
+      <div className="border-b border-border bg-muted/30 px-2 py-1">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
+      </div>
+      <div className="p-1.5">{children}</div>
+    </section>
+  )
+}
+
+function NestedContent({
   topic = true,
   objective = true,
   task = true,
   instructionArea = true,
   studentArea = true,
   teacherArea = true,
-  includeProject
+  includeProject,
 }: {
   topic?: boolean
   objective?: boolean
@@ -136,207 +180,38 @@ function NestedContent({
   teacherArea?: boolean
   includeProject?: boolean
 }) {
-  // Don't render anything if no fields are enabled
-  if (!topic && !objective && !task && !instructionArea && !studentArea && !teacherArea && !includeProject) {
-    return null
-  }
-
-  return (
-    <div style={{
-      background: "#fafaf8",
-      border: "1px solid #d0d0d0",
-      borderRadius: 6,
-      padding: 10,
-      display: "flex",
-      flexDirection: "column",
-      gap: 8,
-    }}>
+  const renderHierarchy = () => (
+    <div className="space-y-1.5">
       {topic && (
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, color: "#666" }}>
-            Topic
-          </div>
-          <div style={{
-            padding: "8px 12px",
-            background: "#ffffff",
-            border: "1px solid #e0e0e0",
-            borderRadius: 4,
-            minHeight: 24,
-          }}>
-            {/* Nested under Topic */}
+        <div className="rounded-lg border border-border/70 bg-background p-1.5">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Topic</p>
+          <div className="mt-1 space-y-1.5 border-l-2 border-border/70 pl-1.5">
+            <PlaceholderLine widthClass="w-10/12" />
             {objective && (
-              <div style={{ marginTop: 8 }}>
-                <div style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, color: "#666" }}>
-                  Objective
-                </div>
-                <div style={{
-                  padding: "8px 12px",
-                  background: "#ffffff",
-                  border: "1px solid #e0e0e0",
-                  borderRadius: 4,
-                  minHeight: 24,
-                }}>
-                  {/* Nested under Objective */}
+              <div className="rounded-md border border-border/60 bg-muted/10 p-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Objective</p>
+                <div className="mt-1 space-y-1.5 border-l-2 border-border/60 pl-1.5">
+                  <PlaceholderLine widthClass="w-9/12" />
                   {task && (
-                    <div style={{ marginTop: 8 }}>
-                      <div style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, color: "#666" }}>
-                        Task
-                      </div>
-                      <div style={{
-                        padding: "8px 12px",
-                        background: "#ffffff",
-                        border: "1px solid #e0e0e0",
-                        borderRadius: 4,
-                        minHeight: 24,
-                      }}>
-                        {/* Nested under Task - the three areas stacked vertically */}
-                        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
-                          {instructionArea && (
-                            <div>
-                              <div style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, color: "#666" }}>
-                                Instruction Area
-                              </div>
-                              <div style={{
-                                padding: "8px 12px",
-                                background: "#ffffff",
-                                border: "1px solid #e0e0e0",
-                                borderRadius: 4,
-                                minHeight: 24,
-                              }} />
-                            </div>
-                          )}
-                          {studentArea && (
-                            <div>
-                              <div style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, color: "#666" }}>
-                                Student Area
-                              </div>
-                              <div style={{
-                                padding: "8px 12px",
-                                background: "#ffffff",
-                                border: "1px solid #e0e0e0",
-                                borderRadius: 4,
-                                minHeight: 24,
-                              }} />
-                            </div>
-                          )}
-                          {teacherArea && (
-                            <div>
-                              <div style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, color: "#666" }}>
-                                Teacher Area
-                              </div>
-                              <div style={{
-                                padding: "8px 12px",
-                                background: "#ffffff",
-                                border: "1px solid #e0e0e0",
-                                borderRadius: 4,
-                                minHeight: 24,
-                              }} />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-      {includeProject && (
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, color: "#666", marginTop: 8 }}>
-            Project
-          </div>
-          <div style={{
-            padding: "8px 12px",
-            background: "#ffffff",
-            border: "1px solid #e0e0e0",
-            borderRadius: 4,
-            minHeight: 24,
-          }}>
-            {/* Project contains the same hierarchy: Topic > Objective > Task > Areas */}
-            {topic && (
-              <div style={{ marginTop: 8 }}>
-                <div style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, color: "#666" }}>
-                  Topic
-                </div>
-                <div style={{
-                  padding: "8px 12px",
-                  background: "#ffffff",
-                  border: "1px solid #e0e0e0",
-                  borderRadius: 4,
-                  minHeight: 24,
-                }}>
-                  {objective && (
-                    <div style={{ marginTop: 8 }}>
-                      <div style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, color: "#666" }}>
-                        Objective
-                      </div>
-                      <div style={{
-                        padding: "8px 12px",
-                        background: "#ffffff",
-                        border: "1px solid #e0e0e0",
-                        borderRadius: 4,
-                        minHeight: 24,
-                      }}>
-                        {task && (
-                          <div style={{ marginTop: 8 }}>
-                            <div style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, color: "#666" }}>
-                              Task
-                            </div>
-                            <div style={{
-                              padding: "8px 12px",
-                              background: "#ffffff",
-                              border: "1px solid #e0e0e0",
-                              borderRadius: 4,
-                              minHeight: 24,
-                            }}>
-                              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
-                                {instructionArea && (
-                                  <div>
-                                    <div style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, color: "#666" }}>
-                                      Instruction Area
-                                    </div>
-                                    <div style={{
-                                      padding: "8px 12px",
-                                      background: "#ffffff",
-                                      border: "1px solid #e0e0e0",
-                                      borderRadius: 4,
-                                      minHeight: 24,
-                                    }} />
-                                  </div>
-                                )}
-                                {studentArea && (
-                                  <div>
-                                    <div style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, color: "#666" }}>
-                                      Student Area
-                                    </div>
-                                    <div style={{
-                                      padding: "8px 12px",
-                                      background: "#ffffff",
-                                      border: "1px solid #e0e0e0",
-                                      borderRadius: 4,
-                                      minHeight: 24,
-                                    }} />
-                                  </div>
-                                )}
-                                {teacherArea && (
-                                  <div>
-                                    <div style={{ fontSize: 11, fontWeight: 500, marginBottom: 4, color: "#666" }}>
-                                      Teacher Area
-                                    </div>
-                                    <div style={{
-                                      padding: "8px 12px",
-                                      background: "#ffffff",
-                                      border: "1px solid #e0e0e0",
-                                      borderRadius: 4,
-                                      minHeight: 24,
-                                    }} />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
+                    <div className="rounded-md border border-border/60 bg-background p-1.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Task</p>
+                      <div className="mt-1 space-y-1.5 border-l-2 border-border/60 pl-1.5">
+                        {instructionArea && (
+                          <div className="rounded-md border border-border/50 bg-muted/10 p-1.5">
+                            <p className="mb-1 text-[10px] font-medium text-muted-foreground">Instruction Area</p>
+                            <PlaceholderLine widthClass="w-11/12" />
+                          </div>
+                        )}
+                        {studentArea && (
+                          <div className="rounded-md border border-border/50 bg-muted/10 p-1.5">
+                            <p className="mb-1 text-[10px] font-medium text-muted-foreground">Student Area</p>
+                            <PlaceholderLine widthClass="w-10/12" />
+                          </div>
+                        )}
+                        {teacherArea && (
+                          <div className="rounded-md border border-border/50 bg-muted/10 p-1.5">
+                            <p className="mb-1 text-[10px] font-medium text-muted-foreground">Teacher Area</p>
+                            <PlaceholderLine widthClass="w-8/12" />
                           </div>
                         )}
                       </div>
@@ -350,290 +225,191 @@ function NestedContent({
       )}
     </div>
   )
+
+  if (!topic && !objective && !task && !instructionArea && !studentArea && !teacherArea && !includeProject) {
+    return null
+  }
+
+  return (
+    <div className="space-y-1.5">
+      {renderHierarchy()}
+      {includeProject && (
+        <div className="rounded-lg border border-border bg-muted/10 p-1.5">
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Project</p>
+          {renderHierarchy()}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function LessonTemplatePreview({
   enabled,
   fieldEnabled,
+  scrollable = true,
+  data,
 }: {
   enabled: Record<BlockId, boolean>
   fieldEnabled: TemplateFieldState
+  scrollable?: boolean
+  data?: TemplateBlueprintData
 }) {
+  const headerFields = BLOCK_FIELDS.header.filter((field) => field.required || Boolean(fieldEnabled.header?.[field.key]))
+  const programFields = BLOCK_FIELDS.program
+    .filter((field) => field.forTypes.includes("lesson"))
+    .filter((field) => field.required || Boolean(fieldEnabled.program?.[field.key]))
+  const resourceFields = BLOCK_FIELDS.resources
+    .filter((field) => field.forTypes.includes("lesson"))
+    .filter((field) => field.required || Boolean(fieldEnabled.resources?.[field.key]))
+  const fieldValues = data?.fieldValues
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#f8f7f4",
-      fontFamily: "'Lora', Georgia, serif",
-      padding: "0 0 40px",
-    }}>
-      <div style={{
-        maxWidth: 900,
-        margin: "0 auto",
-        padding: "24px",
-      }}>
-        {/* Header Block */}
-        {enabled.header && (
-          <div style={{
-            background: "#ffffff",
-            border: "1px solid #d4cfc7",
-            borderRadius: 10,
-            marginBottom: 12,
-            overflow: "hidden",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-          }}>
-            <div style={{ padding: "12px 16px" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                <thead>
-                  <tr>
-                    {fieldEnabled.header?.lesson_number && <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #e0e0e0", fontWeight: 600, color: "#5a5a62", textTransform: "uppercase", fontSize: 10 }}>Lesson No.</th>}
-                    {fieldEnabled.header?.lesson_title && <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #e0e0e0", fontWeight: 600, color: "#5a5a62", textTransform: "uppercase", fontSize: 10 }}>Lesson Title</th>}
-                    {fieldEnabled.header?.module_title && <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #e0e0e0", fontWeight: 600, color: "#5a5a62", textTransform: "uppercase", fontSize: 10 }}>Module</th>}
-                    {fieldEnabled.header?.course_title && <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #e0e0e0", fontWeight: 600, color: "#5a5a62", textTransform: "uppercase", fontSize: 10 }}>Course</th>}
-                    {fieldEnabled.header?.institution_name && <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #e0e0e0", fontWeight: 600, color: "#5a5a62", textTransform: "uppercase", fontSize: 10 }}>Institution</th>}
-                    {fieldEnabled.header?.teacher_name && <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #e0e0e0", fontWeight: 600, color: "#5a5a62", textTransform: "uppercase", fontSize: 10 }}>Teacher</th>}
-                    {fieldEnabled.header?.date && <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #e0e0e0", fontWeight: 600, color: "#5a5a62", textTransform: "uppercase", fontSize: 10 }}>Date</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    {fieldEnabled.header?.lesson_number && <td style={{ padding: "6px 8px", borderBottom: "1px solid #f0f0f0", color: "#999" }}>&nbsp;</td>}
-                    {fieldEnabled.header?.lesson_title && <td style={{ padding: "6px 8px", borderBottom: "1px solid #f0f0f0", color: "#999" }}>&nbsp;</td>}
-                    {fieldEnabled.header?.module_title && <td style={{ padding: "6px 8px", borderBottom: "1px solid #f0f0f0", color: "#999" }}>&nbsp;</td>}
-                    {fieldEnabled.header?.course_title && <td style={{ padding: "6px 8px", borderBottom: "1px solid #f0f0f0", color: "#999" }}>&nbsp;</td>}
-                    {fieldEnabled.header?.institution_name && <td style={{ padding: "6px 8px", borderBottom: "1px solid #f0f0f0", color: "#999" }}>&nbsp;</td>}
-                    {fieldEnabled.header?.teacher_name && <td style={{ padding: "6px 8px", borderBottom: "1px solid #f0f0f0", color: "#999" }}>&nbsp;</td>}
-                    {fieldEnabled.header?.date && <td style={{ padding: "6px 8px", borderBottom: "1px solid #f0f0f0", color: "#999" }}>&nbsp;</td>}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Program Block */}
-        {enabled.program && (
-          <div style={{
-            background: "#ffffff",
-            border: "1px solid #d4cfc7",
-            borderRadius: 10,
-            marginBottom: 12,
-            overflow: "hidden",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-          }}>
-            <div style={{
-              background: "#f0ede8",
-              borderBottom: "1px solid #d4cfc7",
-              padding: "9px 16px",
-            }}>
-              <span style={{
-                fontFamily: "'Playfair Display', Georgia, serif",
-                fontSize: 13,
-                fontWeight: 700,
-                color: "#1a56a0",
-                letterSpacing: "0.03em",
-                textTransform: "uppercase",
-              }}>Program</span>
-            </div>
-            <div style={{ padding: "12px 16px" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                <thead>
-                  <tr>
-                    {fieldEnabled.program?.topic && <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #e0e0e0", fontWeight: 600, color: "#5a5a62", textTransform: "uppercase", fontSize: 10 }}>Topic</th>}
-                    {fieldEnabled.program?.objective && <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #e0e0e0", fontWeight: 600, color: "#5a5a62", textTransform: "uppercase", fontSize: 10 }}>Objective</th>}
-                    {fieldEnabled.program?.task && <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #e0e0e0", fontWeight: 600, color: "#5a5a62", textTransform: "uppercase", fontSize: 10 }}>Task</th>}
-                    {fieldEnabled.program?.program_time && <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #e0e0e0", fontWeight: 600, color: "#5a5a62", textTransform: "uppercase", fontSize: 10 }}>Time</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    {fieldEnabled.program?.topic && <td style={{ padding: "6px 8px", borderBottom: "1px solid #f0f0f0", color: "#999" }}>&nbsp;</td>}
-                    {fieldEnabled.program?.objective && <td style={{ padding: "6px 8px", borderBottom: "1px solid #f0f0f0", color: "#999" }}>&nbsp;</td>}
-                    {fieldEnabled.program?.task && <td style={{ padding: "6px 8px", borderBottom: "1px solid #f0f0f0", color: "#999" }}>&nbsp;</td>}
-                    {fieldEnabled.program?.program_time && <td style={{ padding: "6px 8px", borderBottom: "1px solid #f0f0f0", color: "#999" }}>&nbsp;</td>}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Resources Block */}
-        {enabled.resources && (
-          <div style={{
-            background: "#ffffff",
-            border: "1px solid #d4cfc7",
-            borderRadius: 10,
-            marginBottom: 12,
-            overflow: "hidden",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-          }}>
-            <div style={{
-              background: "#f0ede8",
-              borderBottom: "1px solid #d4cfc7",
-              padding: "9px 16px",
-            }}>
-              <span style={{
-                fontFamily: "'Playfair Display', Georgia, serif",
-                fontSize: 13,
-                fontWeight: 700,
-                color: "#1a56a0",
-                letterSpacing: "0.03em",
-                textTransform: "uppercase",
-              }}>Resources</span>
-            </div>
-            <div style={{ padding: "12px 16px" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                <thead>
-                  <tr>
-                    {fieldEnabled.resources?.task && <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #e0e0e0", fontWeight: 600, color: "#5a5a62", textTransform: "uppercase", fontSize: 10 }}>Task</th>}
-                    {fieldEnabled.resources?.type && <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #e0e0e0", fontWeight: 600, color: "#5a5a62", textTransform: "uppercase", fontSize: 10 }}>Type</th>}
-                    {fieldEnabled.resources?.origin && <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #e0e0e0", fontWeight: 600, color: "#5a5a62", textTransform: "uppercase", fontSize: 10 }}>Origin</th>}
-                    {fieldEnabled.resources?.state && <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #e0e0e0", fontWeight: 600, color: "#5a5a62", textTransform: "uppercase", fontSize: 10 }}>State</th>}
-                    {fieldEnabled.resources?.quality && <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #e0e0e0", fontWeight: 600, color: "#5a5a62", textTransform: "uppercase", fontSize: 10 }}>Quality</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    {fieldEnabled.resources?.task && <td style={{ padding: "6px 8px", borderBottom: "1px solid #f0f0f0", color: "#999" }}>&nbsp;</td>}
-                    {fieldEnabled.resources?.type && <td style={{ padding: "6px 8px", borderBottom: "1px solid #f0f0f0", color: "#999" }}>&nbsp;</td>}
-                    {fieldEnabled.resources?.origin && <td style={{ padding: "6px 8px", borderBottom: "1px solid #f0f0f0", color: "#999" }}>&nbsp;</td>}
-                    {fieldEnabled.resources?.state && <td style={{ padding: "6px 8px", borderBottom: "1px solid #f0f0f0", color: "#999" }}>&nbsp;</td>}
-                    {fieldEnabled.resources?.quality && <td style={{ padding: "6px 8px", borderBottom: "1px solid #f0f0f0", color: "#999" }}>&nbsp;</td>}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Content Block - with nested structure */}
-        {enabled.content && (
-          <div style={{
-            background: "#ffffff",
-            border: "1px solid #d4cfc7",
-            borderRadius: 10,
-            marginBottom: 12,
-            overflow: "hidden",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-          }}>
-            <div style={{
-              background: "#f0ede8",
-              borderBottom: "1px solid #d4cfc7",
-              padding: "9px 16px",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-            }}>
-              <span style={{
-                fontFamily: "'Playfair Display', Georgia, serif",
-                fontSize: 13,
-                fontWeight: 700,
-                color: "#1a56a0",
-                letterSpacing: "0.03em",
-                textTransform: "uppercase",
-              }}>Content</span>
-            </div>
-            <div style={{ padding: "12px 16px" }}>
-              <NestedContent
-                topic={fieldEnabled.content?.topic}
-                objective={fieldEnabled.content?.objective}
-                task={fieldEnabled.content?.task}
-                instructionArea={fieldEnabled.content?.instruction_area}
-                studentArea={fieldEnabled.content?.student_area}
-                teacherArea={fieldEnabled.content?.teacher_area}
-                includeProject={fieldEnabled.content?.include_project}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Assignment Block - with nested structure */}
-        {enabled.assignment && (
-          <div style={{
-            background: "#ffffff",
-            border: "1px solid #d4cfc7",
-            borderRadius: 10,
-            marginBottom: 12,
-            overflow: "hidden",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-          }}>
-            <div style={{
-              background: "#f0ede8",
-              borderBottom: "1px solid #d4cfc7",
-              padding: "9px 16px",
-            }}>
-              <span style={{
-                fontFamily: "'Playfair Display', Georgia, serif",
-                fontSize: 13,
-                fontWeight: 700,
-                color: "#1a56a0",
-                letterSpacing: "0.03em",
-                textTransform: "uppercase",
-              }}>Assignment</span>
-            </div>
-            <div style={{ padding: "12px 16px" }}>
-              <NestedContent
-                topic={fieldEnabled.assignment?.topic}
-                objective={fieldEnabled.assignment?.objective}
-                task={fieldEnabled.assignment?.task}
-                instructionArea={fieldEnabled.assignment?.instruction_area}
-                studentArea={fieldEnabled.assignment?.student_area}
-                teacherArea={fieldEnabled.assignment?.teacher_area}
-                includeProject={fieldEnabled.assignment?.include_project}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Footer Block */}
-        {enabled.footer && (
-          <div style={{
-            background: "#f0ede8",
-            border: "1px solid #d4cfc7",
-            borderRadius: 10,
-            overflow: "hidden",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-          }}>
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: "10px 16px",
-            }}>
-              {fieldEnabled.footer?.copyright && (
-                <div style={{ fontFamily: "monospace", fontSize: 11, color: "#8a8a94" }}>
-                  [Copyright]
+    <div className={`h-full ${scrollable ? "overflow-auto" : "overflow-hidden"} rounded-xl border border-border bg-background p-1.5 md:p-2`}>
+      <div className="mx-auto w-full max-w-4xl space-y-2">
+            {enabled.header && (
+              <DocumentSection title="Header" className="">
+                <div className="flex flex-wrap items-start gap-1">
+                  {headerFields.map((field) => (
+                    <span key={field.key} className="rounded border border-border/70 bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                      {fieldValues?.header?.[field.key] ? `${field.label}: ${fieldValues.header[field.key]}` : field.label}
+                    </span>
+                  ))}
                 </div>
-              )}
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                {fieldEnabled.footer?.institution_name && (
-                  <div style={{ fontFamily: "monospace", fontSize: 11, color: "#5a5a62" }}>
-                    [Institution Name]
+              </DocumentSection>
+            )}
+
+            {enabled.program && (
+              <DocumentSection title="Program" className="">
+                {Array.isArray(data?.programRows) && data.programRows.length > 0 ? (
+                  <div className="space-y-1">
+                    {data.programRows.slice(0, 6).map((row, rowIdx) => (
+                      <div key={`program-row-${rowIdx}`} className="grid gap-1 rounded border border-border/70 bg-background p-1.5 text-[10px] text-muted-foreground md:grid-cols-4">
+                        {programFields.map((field) => (
+                          <span key={`${field.key}-${rowIdx}`} className="truncate">
+                            <span className="font-semibold">{field.label}:</span> {row[field.key] || "—"}
+                          </span>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-start gap-1">
+                    {programFields.map((field) => (
+                      <span key={field.key} className="rounded border border-border/70 bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        {fieldValues?.program?.[field.key] ? `${field.label}: ${fieldValues.program[field.key]}` : field.label}
+                      </span>
+                    ))}
                   </div>
                 )}
-                {fieldEnabled.footer?.teacher_name && (
-                  <div style={{ fontFamily: "monospace", fontSize: 11, color: "#5a5a62" }}>
-                    [Teacher Name]
+              </DocumentSection>
+            )}
+
+            {enabled.resources && (
+              <DocumentSection title="Resources" className="">
+                {Array.isArray(data?.resourceRows) && data.resourceRows.length > 0 ? (
+                  <div className="space-y-1">
+                    {data.resourceRows.slice(0, 6).map((row, rowIdx) => (
+                      <div key={`resource-row-${rowIdx}`} className="grid gap-1 rounded border border-border/70 bg-background p-1.5 text-[10px] text-muted-foreground md:grid-cols-5">
+                        {resourceFields.map((field) => (
+                          <span key={`${field.key}-${rowIdx}`} className="truncate">
+                            <span className="font-semibold">{field.label}:</span> {row[field.key] || "—"}
+                          </span>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                ) : Array.isArray(data?.resourceItems) && data.resourceItems.length > 0 ? (
+                  <div className="space-y-1">
+                    {data.resourceItems.slice(0, 6).map((item, idx) => (
+                      <p key={`resource-item-${idx}`} className="rounded border border-border/70 bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        {item}
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-start gap-1">
+                    {resourceFields.map((field) => (
+                      <span key={field.key} className="rounded border border-border/70 bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        {fieldValues?.resources?.[field.key] ? `${field.label}: ${fieldValues.resources[field.key]}` : field.label}
+                      </span>
+                    ))}
                   </div>
                 )}
-                {fieldEnabled.footer?.page_number && (
-                  <div style={{
-                    fontFamily: "monospace",
-                    fontSize: 11,
-                    background: "#1a56a0",
-                    color: "#fff",
-                    borderRadius: 4,
-                    padding: "2px 9px",
-                    fontWeight: 700,
-                  }}>
-                    p. [Num]
+              </DocumentSection>
+            )}
+
+            {enabled.content && (
+              <DocumentSection title="Content" className="" >
+                {(data?.contentItems?.topics?.length || data?.contentItems?.objectives?.length || data?.contentItems?.tasks?.length) ? (
+                  <div className="space-y-1.5 text-[10px] text-muted-foreground">
+                    {data.contentItems?.topics?.length ? <p><span className="font-semibold">Topics:</span> {data.contentItems.topics.join(" · ")}</p> : null}
+                    {data.contentItems?.objectives?.length ? <p><span className="font-semibold">Objectives:</span> {data.contentItems.objectives.join(" · ")}</p> : null}
+                    {data.contentItems?.tasks?.length ? <p><span className="font-semibold">Tasks:</span> {data.contentItems.tasks.join(" · ")}</p> : null}
                   </div>
+                ) : (
+                  <NestedContent
+                    topic={fieldEnabled.content?.topic}
+                    objective={fieldEnabled.content?.objective}
+                    task={fieldEnabled.content?.task}
+                    instructionArea={fieldEnabled.content?.instruction_area}
+                    studentArea={fieldEnabled.content?.student_area}
+                    teacherArea={fieldEnabled.content?.teacher_area}
+                    includeProject={fieldEnabled.content?.include_project}
+                  />
                 )}
-              </div>
-            </div>
-          </div>
-        )}
+              </DocumentSection>
+            )}
+
+            {enabled.assignment && (
+              <DocumentSection title="Assignment" className="" >
+                {Array.isArray(data?.assignmentItems?.tasks) && data.assignmentItems.tasks.length > 0 ? (
+                  <div className="space-y-1 text-[10px] text-muted-foreground">
+                    {data.assignmentItems.tasks.slice(0, 6).map((task, idx) => (
+                      <p key={`assignment-item-${idx}`} className="rounded border border-border/70 bg-background px-1.5 py-0.5">{task}</p>
+                    ))}
+                  </div>
+                ) : (
+                  <NestedContent
+                    topic={fieldEnabled.assignment?.topic}
+                    objective={fieldEnabled.assignment?.objective}
+                    task={fieldEnabled.assignment?.task}
+                    instructionArea={fieldEnabled.assignment?.instruction_area}
+                    studentArea={fieldEnabled.assignment?.student_area}
+                    teacherArea={fieldEnabled.assignment?.teacher_area}
+                    includeProject={fieldEnabled.assignment?.include_project}
+                  />
+                )}
+              </DocumentSection>
+            )}
+
+            {enabled.scoring && (
+              <DocumentSection title="Scoring" className="" >
+                {Array.isArray(data?.scoringItems) && data.scoringItems.length > 0 ? (
+                  <div className="space-y-1 text-[10px] text-muted-foreground">
+                    {data.scoringItems.slice(0, 6).map((criterion, idx) => (
+                      <p key={`scoring-item-${idx}`} className="rounded border border-border/70 bg-background px-1.5 py-0.5">{criterion}</p>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-[10px] text-muted-foreground">Scoring criteria appear here.</div>
+                )}
+              </DocumentSection>
+            )}
+
+            {enabled.footer && (
+              <DocumentSection title="Footer" className="" >
+                <div className="flex flex-wrap items-center justify-between gap-1">
+                  <div className="flex min-w-[180px] flex-wrap items-center gap-1">
+                    {fieldEnabled.footer?.copyright && <span className="rounded border border-border bg-muted/20 px-1.5 py-0.5 text-[10px] text-muted-foreground">Copyright</span>}
+                    {fieldEnabled.footer?.institution_name && <span className="rounded border border-border bg-muted/20 px-1.5 py-0.5 text-[10px] text-muted-foreground">Institution</span>}
+                    {fieldEnabled.footer?.teacher_name && <span className="rounded border border-border bg-muted/20 px-1.5 py-0.5 text-[10px] text-muted-foreground">Teacher</span>}
+                  </div>
+                  {fieldEnabled.footer?.page_number && (
+                    <span className="rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-semibold text-foreground">Page 1</span>
+                  )}
+                </div>
+              </DocumentSection>
+            )}
       </div>
     </div>
   )
@@ -645,6 +421,8 @@ export function TemplateBlueprint({
   fieldEnabled,
   name,
   scale = "md",
+  scrollable = true,
+  data,
 }: TemplateBlueprintProps) {
   const config = SCALE_CONFIG[scale]
   const meta = TEMPLATE_TYPE_META[type]
@@ -652,14 +430,8 @@ export function TemplateBlueprint({
   // Use lesson-specific styled preview for lesson type
   if (type === "lesson") {
     return (
-      <div style={{
-        width: "100%",
-        height: "100%",
-        overflow: "auto",
-        borderRadius: 12,
-        background: "#f8f7f4",
-      }}>
-        <LessonTemplatePreview enabled={enabled} fieldEnabled={fieldEnabled} />
+      <div className={`h-full w-full ${scrollable ? "overflow-auto" : "overflow-hidden"} rounded-xl bg-background`}>
+        <LessonTemplatePreview enabled={enabled} fieldEnabled={fieldEnabled} scrollable={scrollable} data={data} />
       </div>
     )
   }
@@ -687,11 +459,11 @@ export function TemplateBlueprint({
       </div>
 
       {/* Blueprint Content */}
-      <div className={`flex-1 overflow-y-auto ${config.containerPadding}`}>
+      <div className={`flex-1 ${scrollable ? "overflow-y-auto" : "overflow-hidden"} ${config.containerPadding}`}>
         <div className={`space-y-${scale === "sm" ? "1" : scale === "md" ? "2" : "3"}`}>
           {/* Header Row - Always First */}
           {enabled.header && (
-            <TemplateHeaderBlueprint type={type} fieldEnabled={fieldEnabled} scale={scale} />
+            <TemplateHeaderBlueprint type={type} fieldEnabled={fieldEnabled} scale={scale} fieldValues={data?.fieldValues?.header} />
           )}
 
           {/* Other Blocks */}
@@ -704,6 +476,7 @@ export function TemplateBlueprint({
                 type={type}
                 fieldEnabled={fieldEnabled}
                 scale={scale}
+                fieldValues={data?.fieldValues?.[block.id]}
               />
             ))}
 
@@ -714,6 +487,7 @@ export function TemplateBlueprint({
               type={type}
               fieldEnabled={fieldEnabled}
               scale={scale}
+              fieldValues={data?.fieldValues?.footer}
             />
           )}
         </div>

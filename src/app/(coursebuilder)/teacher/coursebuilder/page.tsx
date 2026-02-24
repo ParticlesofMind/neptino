@@ -9,7 +9,9 @@ import { SetupColumn, SetupPanelLayout, SetupPanels, SetupSection } from "@/comp
 import { ClassificationSection } from "@/components/coursebuilder/sections/classification-section"
 import { CurriculumSection } from "@/components/coursebuilder/sections/curriculum-section"
 import { EssentialsSection } from "@/components/coursebuilder/sections/essentials-section"
+import { LLMSection } from "@/components/coursebuilder/sections/llm-section"
 import { PedagogySection } from "@/components/coursebuilder/sections/pedagogy-section"
+import { ResourcesSection } from "@/components/coursebuilder/sections/resources-section"
 import { ScheduleSection } from "@/components/coursebuilder/sections/schedule-section"
 import { StudentsSection } from "@/components/coursebuilder/sections/students-section"
 import { TemplatesSection } from "@/components/coursebuilder/sections/templates-section"
@@ -19,6 +21,7 @@ import { createClient } from "@/lib/supabase/client"
 import {
   ArrowLeft,
   ArrowRight,
+  Brain,
   FileText,
   AlignJustify,
   Users,
@@ -88,6 +91,9 @@ interface CourseEssentials {
   description: string
   language: string
   courseType: string
+  teacherId: string
+  teacherName: string
+  institution: string
   imageName: string | null
 }
 
@@ -107,6 +113,7 @@ const SECTIONS: SectionGroup[] = [
       { id: "pedagogy", label: "Pedagogy", icon: BookOpen },
       { id: "templates", label: "Templates", icon: LayoutTemplate },
       { id: "schedule", label: "Schedule", icon: Calendar },
+      { id: "resources", label: "Resources", icon: BookOpen },
       { id: "curriculum", label: "Curriculum", icon: BookMarked },
     ],
   },
@@ -132,6 +139,7 @@ const SECTIONS: SectionGroup[] = [
   {
     heading: "SETTINGS",
     items: [
+      { id: "llm", label: "AI Model", icon: Brain },
       { id: "notifications", label: "Notifications", icon: Bell },
       { id: "data-management", label: "Data Management", icon: Database },
       { id: "advanced", label: "Advanced Settings", icon: Settings },
@@ -1268,7 +1276,9 @@ function SectionContent({
     case "pedagogy":       return <PedagogySection       courseId={existingCourseId} />
     case "templates":      return <TemplatesSection     courseId={existingCourseId} />
     case "schedule":       return <ScheduleSection      courseId={existingCourseId} />
+    case "resources":      return <ResourcesSection     courseId={existingCourseId} />
     case "curriculum":     return <CurriculumSection    courseId={existingCourseId} />
+    case "llm":            return <LLMSection           courseId={existingCourseId} />
     case "visibility":     return <VisibilitySection    courseId={existingCourseId} />
     case "marketplace":    return <MarketplaceSection   courseId={existingCourseId} />
     case "pricing":        return <PricingSection        courseId={existingCourseId} />
@@ -1314,6 +1324,9 @@ function CourseBuilderPageInner() {
   const [flashSectionId, setFlashSectionId] = useState<SectionId | null>(null)
   const [completedSetupSections, setCompletedSetupSections] = useState<Record<string, boolean>>({})
   const titleRef = useRef<HTMLInputElement>(null)
+  const completionFetchRef = useRef<{ courseId: string | null; at: number }>({ courseId: null, at: 0 })
+  const lastSectionKeyRef = useRef<string | null>(null)
+  const initializedSectionRef = useRef(false)
 
   const hydrateSectionCompletion = useCallback((raw: Record<string, unknown>) => {
     const classification = (raw.classification_data as Record<string, unknown> | null) ?? {}
@@ -1358,17 +1371,21 @@ function CourseBuilderPageInner() {
     const supabase = createClient()
     supabase
       .from("courses")
-      .select("id, course_name, course_subtitle, course_description, course_language, course_type, course_image, generation_settings, classification_data, students_overview, template_settings, schedule_settings, curriculum_data, course_layout")
+      .select("id, course_name, course_subtitle, course_description, course_language, course_type, course_image, teacher_id, institution, generation_settings, classification_data, students_overview, template_settings, schedule_settings, curriculum_data, course_layout")
       .eq("id", urlCourseId)
       .single()
       .then(({ data, error }) => {
         if (!error && data) {
+          const gs = (data.generation_settings as Record<string, unknown> | null) ?? null
           const loaded: CourseCreatedData = {
             title: data.course_name ?? "",
             subtitle: data.course_subtitle ?? "",
             description: data.course_description ?? "",
             language: data.course_language ?? "",
             courseType: data.course_type ?? "",
+            teacherId: (typeof data.teacher_id === "string" ? data.teacher_id : (typeof gs?.teacher_id === "string" ? gs.teacher_id : "")) ?? "",
+            teacherName: (typeof gs?.teacher_name === "string" ? gs.teacher_name : "") ?? "",
+            institution: data.institution ?? "Independent",
             imageName: null,
             imageUrl: data.course_image ?? null,
           }
@@ -1378,14 +1395,14 @@ function CourseBuilderPageInner() {
           setCourseId(urlCourseId)
 
           // Restore page setup from generation_settings
-          const gs = data.generation_settings as Record<string, unknown> | null
-          if (gs?.page_size) {
+          const gsForPage = data.generation_settings as Record<string, unknown> | null
+          if (gsForPage?.page_size) {
             try {
               const cfg = computePageConfig(
-                gs.page_size as "a4" | "us-letter",
-                (gs.page_orientation as "portrait" | "landscape") ?? "portrait",
-                (gs.page_count as number) ?? 1,
-                (gs.margins_mm as { top: number; right: number; bottom: number; left: number }) ??
+                gsForPage.page_size as "a4" | "us-letter",
+                (gsForPage.page_orientation as "portrait" | "landscape") ?? "portrait",
+                (gsForPage.page_count as number) ?? 1,
+                (gsForPage.margins_mm as { top: number; right: number; bottom: number; left: number }) ??
                   { top: 25.4, right: 19.05, bottom: 25.4, left: 19.05 },
               )
               setPageConfig(cfg)
@@ -1405,6 +1422,11 @@ function CourseBuilderPageInner() {
       setCompletedSetupSections({})
       return
     }
+    const now = Date.now()
+    if (completionFetchRef.current.courseId === courseId && now - completionFetchRef.current.at < 4000) {
+      return
+    }
+    completionFetchRef.current = { courseId, at: now }
     const supabase = createClient()
     supabase
       .from("courses")
@@ -1416,6 +1438,26 @@ function CourseBuilderPageInner() {
         hydrateSectionCompletion(data as Record<string, unknown>)
       })
   }, [courseId, activeSection, hydrateSectionCompletion])
+
+  useEffect(() => {
+    if (!courseId) {
+      lastSectionKeyRef.current = "coursebuilder:last-section:new"
+      return
+    }
+    const key = `coursebuilder:last-section:${courseId}`
+    lastSectionKeyRef.current = key
+    if (initializedSectionRef.current) return
+    const stored = window.localStorage.getItem(key)
+    if (stored) {
+      setActiveSection(stored)
+    }
+    initializedSectionRef.current = true
+  }, [courseId])
+
+  useEffect(() => {
+    const key = lastSectionKeyRef.current ?? "coursebuilder:last-section:new"
+    window.localStorage.setItem(key, activeSection)
+  }, [activeSection])
 
   const handleCourseCreated = useCallback((id: string, essentials: CourseCreatedData) => {
     setCourseId(id)

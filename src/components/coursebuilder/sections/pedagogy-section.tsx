@@ -103,9 +103,9 @@ export function PedagogySection({ courseId }: { courseId: string | null }) {
   const gridRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState({ x: 0, y: 0 })
   const dragging = useRef(false)
-  const [resourceConstraints, setResourceConstraints] = useState("")
   const [saveStatus, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+  const courseLayoutRef = useRef<Record<string, unknown> | null>(null)
 
   useEffect(() => {
     if (!courseId) return
@@ -118,12 +118,10 @@ export function PedagogySection({ courseId }: { courseId: string | null }) {
       .then(({ data, error }) => {
         if (!error && data?.course_layout) {
           const layout = data.course_layout as Record<string, unknown>
+          courseLayoutRef.current = layout
           if (layout.pedagogy) {
             const p = layout.pedagogy as { x: number; y: number }
             setPos({ x: p.x ?? 0, y: p.y ?? 0 })
-          }
-          if (typeof layout.resource_constraints === "string") {
-            setResourceConstraints(layout.resource_constraints)
           }
         }
       })
@@ -133,18 +131,21 @@ export function PedagogySection({ courseId }: { courseId: string | null }) {
     if (!courseId) return
     setSaveStatus("saving")
     const supabase = createClient()
-    const { data: existing } = await supabase.from("courses").select("course_layout").eq("id", courseId).single()
-    const merged = { ...((existing?.course_layout as Record<string, unknown>) ?? {}), pedagogy: { x: pos.x, y: pos.y }, resource_constraints: resourceConstraints || null }
+    const merged = { ...(courseLayoutRef.current ?? {}), pedagogy: { x: pos.x, y: pos.y } }
+    if ("resource_constraints" in merged) {
+      delete merged.resource_constraints
+    }
     const { error } = await supabase
       .from("courses")
       .update({ course_layout: merged, updated_at: new Date().toISOString() })
       .eq("id", courseId)
     if (error) setSaveStatus("error")
     else {
+      courseLayoutRef.current = merged
       setLastSavedAt(new Date().toISOString())
       setSaveStatus("saved")
     }
-  }, [courseId, pos.x, pos.y, resourceConstraints])
+  }, [courseId, pos.x, pos.y])
 
   useDebouncedChangeSave(handleSave, 800, Boolean(courseId))
 
@@ -261,18 +262,6 @@ export function PedagogySection({ courseId }: { courseId: string | null }) {
             ))}
           </div>
 
-          <div className="mt-4 rounded-lg border border-border bg-background p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">Teaching Resource Constraints</p>
-            <p className="text-xs text-muted-foreground mb-2">Describe what&apos;s available or not &mdash; prevents AI from generating unexecutable content.</p>
-            <textarea
-              value={resourceConstraints}
-              onChange={(e) => setResourceConstraints(e.target.value.slice(0, 500))}
-              placeholder="e.g., No lab equipment available. Students have Chromebooks but no internet at home. Textbook: Campbell Biology 12th ed. No projector in classroom."
-              rows={4}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary resize-none"
-            />
-            <p className="mt-1 text-right text-[11px] text-muted-foreground">{resourceConstraints.length}/500</p>
-          </div>
         </SetupColumn>
       </SetupPanelLayout>
     </SetupSection>

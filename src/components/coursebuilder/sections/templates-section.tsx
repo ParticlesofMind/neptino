@@ -21,6 +21,7 @@ import { createClient } from "@/lib/supabase/client"
 import {
   DANGER_ACTION_BUTTON_SM_CLASS,
   PRIMARY_ACTION_BUTTON_CLASS,
+  SECONDARY_ACTION_BUTTON_CLASS,
   SetupColumn,
   SetupSection,
 } from "@/components/coursebuilder/layout-primitives"
@@ -675,7 +676,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
             type="button"
             onClick={beginLoad}
             disabled={templates.length === 0}
-            className={PRIMARY_ACTION_BUTTON_CLASS}
+            className={SECONDARY_ACTION_BUTTON_CLASS}
           >
             Load Template
           </button>

@@ -1,14 +1,30 @@
 "use client"
 
-import { useState, useCallback, useEffect, useMemo, useRef } from "react"
+import { useState, useCallback, useEffect, useMemo } from "react"
+import type { RealtimeChannel } from "@supabase/supabase-js"
 import dynamic from "next/dynamic"
-import type { CanvasPageConfig, CanvasViewportInfo, ToolConfig } from "@/components/canvas/PixiCanvas"
+import { DEFAULT_PAGE_CONFIG, type CanvasPageConfig, type CanvasViewportInfo, type ToolConfig } from "@/components/canvas/PixiCanvas"
+import { createClient } from "@/lib/supabase/client"
+import {
+  createTemplateLookups,
+  formatTemplateFieldValue,
+  normalizeTemplateSettings,
+} from "@/lib/curriculum/template-source-of-truth"
+import {
+  buildTemplateFieldState,
+  projectLessonPages,
+  type LessonCanvasPageProjection,
+  type RawCurriculumSessionRow,
+  type RawScheduleGeneratedEntry,
+} from "@/lib/curriculum/canvas-projection"
+import { TemplateBlueprint, type TemplateBlueprintData } from "@/components/coursebuilder/template-blueprint"
+import { BLOCK_FIELDS, type BlockId } from "@/components/coursebuilder/sections/templates-section"
 import {
   Gamepad2, AreaChart, Bot,
   ChevronUp, ChevronDown, ChevronsUp, ChevronsDown,
-  Layers, Map,
+  Layers, Map as MapIcon,
   // media
-  File, Image, Film, AudioLines, BookOpenText, Blocks, Link,
+  File, Image as ImageIcon, Film, AudioLines, BookOpenText, Blocks, Link,
   // tools
   MousePointer2, PenTool, Paintbrush, Type, Shapes, Table, Eraser,
   // modes / animate
@@ -28,7 +44,10 @@ type PixiCanvasProps = {
   onZoomChange?: (pct: number) => void
   activeTool?: string
   toolConfig?: ToolConfig
+  activePage?: number
+  focusPage?: number
   onViewportChange?: (info: CanvasViewportInfo) => void
+  onActivePageChange?: (page: number) => void
 }
 const PixiCanvas = dynamic<PixiCanvasProps>(
   () => import("@/components/canvas/PixiCanvas").then((m) => m.PixiCanvas),
@@ -50,11 +69,22 @@ type AnimateTool = "selection" | "scene" | "path" | "modify"
 type PanelView = "layers" | "navigation"
 type SnapReference = "canvas" | "object" | "grid"
 
-type TemplateUiState = {
-  activeId: string | null
-}
-
 type OverlayUi = {
+  headerPadding: string
+  headerTitle: string
+  headerMeta: string
+  headerChip: string
+  blockPadding: string
+  blockLabel: string
+  blockCount: string
+  cellLabel: string
+  cellValue: string
+  nestedLabel: string
+  nestedValue: string
+  footerText: string
+  footerChip: string
+  nestedLines: string
+  low: boolean
   // Panels (left/right)
   panelHeaderPadding: string
   panelHeaderText: string
@@ -96,6 +126,30 @@ interface MediaItem {
   iconNode: React.ReactNode
 }
 
+type CurriculumSessionRow = RawCurriculumSessionRow
+type ScheduleGeneratedEntry = RawScheduleGeneratedEntry
+type LessonCanvasPage = LessonCanvasPageProjection
+
+interface MediaAsset {
+  id: string
+  category: string
+  mediaType: string
+  title: string
+  description: string
+  url: string
+}
+
+function normalizeMediaCategory(mediaType: string): string {
+  const normalized = mediaType.toLowerCase()
+  if (normalized.includes("video")) return "videos"
+  if (normalized.includes("audio") || normalized.includes("podcast")) return "audio"
+  if (normalized.includes("image") || normalized.includes("map") || normalized.includes("diagram")) return "images"
+  if (normalized.includes("text") || normalized.includes("article") || normalized.includes("compendium") || normalized.includes("book")) return "text"
+  if (normalized.includes("link")) return "links"
+  if (normalized.includes("plugin")) return "plugins"
+  return "files"
+}
+
 // ─── Resize handle hook ─────────────────────────────────────────────────────────────────
 
 /**
@@ -110,15 +164,13 @@ function useResizeHandle(
   max = 600,
 ) {
   const [width, setWidth] = useState(initial)
-  const ref = useRef({ width: initial, direction, min, max })
-  ref.current.width     = width
-  ref.current.direction = direction
-  ref.current.min       = min
-  ref.current.max       = max
 
   const startResize = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault()
-    const { width: startW, direction: dir, min: mn, max: mx } = ref.current
+    const startW = width
+    const dir = direction
+    const mn = min
+    const mx = max
     const startX = e.clientX
     const onMove = (ev: MouseEvent) => {
       const delta = dir === "right" ? ev.clientX - startX : startX - ev.clientX
@@ -130,14 +182,36 @@ function useResizeHandle(
     }
     window.addEventListener("mousemove", onMove)
     window.addEventListener("mouseup", onUp)
-  }, []) // stable — uses ref snapshot on each call
+  }, [direction, max, min, width])
 
   return { width, setWidth, startResize }
 }
 
+function SnapToggle({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean
+  onChange: () => void
+  label: string
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-2 py-0.5 text-xs">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        className="accent-primary"
+      />
+      {label}
+    </label>
+  )
+}
+
 const MEDIA_ITEMS: MediaItem[] = [
   { id: "files",   label: "Files",   iconNode: <File         className="h-5 w-5" /> },
-  { id: "images",  label: "Images",  iconNode: <Image        className="h-5 w-5" /> },
+  { id: "images",  label: "Images",  iconNode: <ImageIcon    className="h-5 w-5" /> },
   { id: "videos",  label: "Videos",  iconNode: <Film         className="h-5 w-5" /> },
   { id: "audio",   label: "Audio",   iconNode: <AudioLines   className="h-5 w-5" /> },
   { id: "text",    label: "Text",    iconNode: <BookOpenText className="h-5 w-5" /> },
@@ -238,26 +312,6 @@ function SnapMenu({
 
   if (!open) return null
 
-  const SmToggle = ({
-    checked,
-    onChange,
-    label,
-  }: {
-    checked: boolean
-    onChange: () => void
-    label: string
-  }) => (
-    <label className="flex cursor-pointer items-center gap-2 py-0.5 text-xs">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-        className="accent-primary"
-      />
-      {label}
-    </label>
-  )
-
   const refModes: { id: SnapReference; label: string; icon: React.ReactNode }[] = [
     { id: "canvas", label: "Canvas", icon: <Crosshair className="h-4 w-4" /> },
     { id: "object", label: "Object", icon: <Target    className="h-4 w-4" /> },
@@ -269,12 +323,12 @@ function SnapMenu({
       {/* Backdrop */}
       <div className="fixed inset-0 z-20" onClick={onClose} />
       <div className="absolute left-12 top-24 z-30 w-56 rounded-lg border border-border bg-popover p-3 shadow-lg space-y-2 text-sm text-foreground">
-        <SmToggle checked={smartGuides} onChange={() => setSmartGuides(!smartGuides)} label="Smart Guides" />
+        <SnapToggle checked={smartGuides} onChange={() => setSmartGuides(!smartGuides)} label="Smart Guides" />
         <div className="pl-3 space-y-1 border-l border-border">
-          <SmToggle checked={distLabels}   onChange={() => setDistLabels(!distLabels)}     label="Distance Labels" />
-          <SmToggle checked={resizeGuides} onChange={() => setResizeGuides(!resizeGuides)} label="Resize Guides" />
-          <SmToggle checked={smartSel}     onChange={() => setSmartSel(!smartSel)}         label="Smart Selection" />
-          <SmToggle checked={colorCoding}  onChange={() => setColorCoding(!colorCoding)}   label="Color Coding" />
+          <SnapToggle checked={distLabels}   onChange={() => setDistLabels(!distLabels)}     label="Distance Labels" />
+          <SnapToggle checked={resizeGuides} onChange={() => setResizeGuides(!resizeGuides)} label="Resize Guides" />
+          <SnapToggle checked={smartSel}     onChange={() => setSmartSel(!smartSel)}         label="Smart Selection" />
+          <SnapToggle checked={colorCoding}  onChange={() => setColorCoding(!colorCoding)}   label="Color Coding" />
         </div>
 
         <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground pt-1">
@@ -300,7 +354,7 @@ function SnapMenu({
 
         {snapReference === "grid" && (
           <div className="space-y-2 border-t border-border pt-2">
-            <SmToggle checked={showGrid} onChange={() => setShowGrid(!showGrid)} label="Show grid" />
+            <SnapToggle checked={showGrid} onChange={() => setShowGrid(!showGrid)} label="Show grid" />
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">Spacing:</span>
               <input
@@ -341,13 +395,12 @@ function SnapMenu({
 
 export function CreateView({
   canvasConfig,
-  // courseId is reserved for future per-course canvas persistence
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   courseId,
 }: {
   canvasConfig?: CanvasPageConfig | null
   courseId?: string | null
 } = {}) {
+  const supabase = useMemo(() => createClient(), [])
   const [mode, setMode] = useState<Mode>("build")
   const [activeTool, setActiveTool] = useState<BuildTool | AnimateTool>("selection")
 
@@ -357,9 +410,17 @@ export function CreateView({
 
   const [panelView, setPanelView] = useState<PanelView>("layers")
   const [currentPage, setCurrentPage] = useState(1)
-  const totalPages = canvasConfig?.pageCount ?? 1
+  const [courseTitle, setCourseTitle] = useState("Untitled Course")
+  const [courseType, setCourseType] = useState("")
+  const [courseLanguage, setCourseLanguage] = useState("")
+  const [teacherName, setTeacherName] = useState("Teacher")
+  const [institutionName, setInstitutionName] = useState("Independent")
+  const [lessonPages, setLessonPages] = useState<LessonCanvasPage[]>([])
+  const totalPages = lessonPages.length > 0 ? lessonPages.length : (canvasConfig?.pageCount ?? 1)
   const [zoom, setZoom] = useState(100)
   const [viewportInfo, setViewportInfo] = useState<CanvasViewportInfo | null>(null)
+  const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([])
+  const [mediaLoading, setMediaLoading] = useState(false)
 
   // Always-selected media category
   const [activeMedia, setActiveMedia] = useState<string>("files")
@@ -399,64 +460,556 @@ export function CreateView({
   const [pathAdherence, setPathAdherence] = useState(0.5)
   const [modifyTime, setModifyTime] = useState(0)
 
-  const overlayUi = useMemo<OverlayUi>(() => {
-    const low = zoom <= 70
-    const high = zoom >= 140
+  const effectiveCanvasConfig = useMemo<CanvasPageConfig>(() => {
+    const base = canvasConfig ?? DEFAULT_PAGE_CONFIG
+    return {
+      ...base,
+      pageCount: totalPages,
+    }
+  }, [canvasConfig, totalPages])
+
+  const loadCourseContext = useCallback(async () => {
+    if (!courseId) {
+      setLessonPages([])
+      return
+    }
+
+    const { data, error } = await supabase
+      .from("courses")
+      .select("course_name,course_type,course_language,institution,generation_settings,curriculum_data,schedule_settings,template_settings")
+      .eq("id", courseId)
+      .maybeSingle()
+
+    if (error || !data) {
+      return
+    }
+
+    setCourseTitle(String(data.course_name ?? "Untitled Course"))
+    setCourseType(String(data.course_type ?? ""))
+    setCourseLanguage(String(data.course_language ?? ""))
+    setInstitutionName(String(data.institution ?? "Independent"))
+    const generationSettings = (data.generation_settings as Record<string, unknown> | null) ?? {}
+    const resolvedTeacherName =
+      (typeof generationSettings.teacher_name === "string" && generationSettings.teacher_name.trim())
+        ? String(generationSettings.teacher_name)
+        : "Teacher"
+    setTeacherName(resolvedTeacherName)
+    const templates = normalizeTemplateSettings(data.template_settings)
+    const { templateById, templateByType } = createTemplateLookups(templates)
+    const curriculum = (data.curriculum_data as Record<string, unknown> | null) ?? {}
+    const scheduleSettings = (data.schedule_settings as Record<string, unknown> | null) ?? {}
+    const scheduleRows = Array.isArray(scheduleSettings.generated_entries)
+      ? (scheduleSettings.generated_entries as ScheduleGeneratedEntry[])
+      : []
+    const sessionRows = Array.isArray(curriculum.session_rows)
+      ? (curriculum.session_rows as CurriculumSessionRow[])
+      : []
+    const pages = projectLessonPages({
+      curriculum,
+      scheduleRows,
+      sessionRows,
+      templateById,
+      templateByType,
+    })
+
+    setLessonPages(pages)
+  }, [courseId, supabase])
+
+  useEffect(() => {
+    let active = true
+    const initialLoadHandle = window.setTimeout(() => {
+      if (!active) return
+      void loadCourseContext()
+    }, 0)
+
+    let channel: RealtimeChannel | null = null
+    if (courseId) {
+      channel = supabase
+        .channel(`create-view-course-${courseId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "courses",
+            filter: `id=eq.${courseId}`,
+          },
+          () => {
+            if (!active) return
+            void loadCourseContext()
+          },
+        )
+        .subscribe()
+    }
+
+    return () => {
+      active = false
+      window.clearTimeout(initialLoadHandle)
+      if (channel) {
+        void supabase.removeChannel(channel)
+      }
+    }
+  }, [courseId, loadCourseContext, supabase])
+
+  useEffect(() => {
+    let active = true
+
+    async function loadMedia() {
+      setMediaLoading(true)
+      const { data } = await supabase
+        .from("encyclopedia_media")
+        .select("id,media_type,title,description,url")
+        .limit(200)
+
+      if (!active) return
+
+      const fetched = (Array.isArray(data) ? data : []).map((row) => {
+        const mediaType = String((row as Record<string, unknown>).media_type ?? "file")
+        return {
+          id: String((row as Record<string, unknown>).id ?? crypto.randomUUID()),
+          category: normalizeMediaCategory(mediaType),
+          mediaType,
+          title: String((row as Record<string, unknown>).title ?? `${mediaType} resource`),
+          description: String((row as Record<string, unknown>).description ?? ""),
+          url: String((row as Record<string, unknown>).url ?? ""),
+        } satisfies MediaAsset
+      })
+
+      const base = [...fetched]
+      const required: Array<{ category: string; mediaType: string }> = [
+        { category: "images", mediaType: "image" },
+        { category: "videos", mediaType: "video" },
+        { category: "audio", mediaType: "audio" },
+        { category: "text", mediaType: "text" },
+      ]
+
+      required.forEach(({ category, mediaType }) => {
+        const hasCategory = base.some((asset) => asset.category === category)
+        if (!hasCategory) {
+          base.push(
+            {
+              id: `seed-${category}-1`,
+              category,
+              mediaType,
+              title: `Supplemental ${mediaType} item A`,
+              description: "Added for drag-and-drop completeness.",
+              url: "",
+            },
+            {
+              id: `seed-${category}-2`,
+              category,
+              mediaType,
+              title: `Supplemental ${mediaType} item B`,
+              description: "Added for drag-and-drop completeness.",
+              url: "",
+            },
+          )
+        }
+      })
+
+      setMediaAssets(base)
+      setMediaLoading(false)
+    }
+
+    void loadMedia()
+    return () => {
+      active = false
+    }
+  }, [supabase])
+
+  const clampedCurrentPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages))
+
+  const currentLessonPage = useMemo(
+    () => lessonPages.find((page) => page.globalPage === clampedCurrentPage) ?? null,
+    [lessonPages, clampedCurrentPage],
+  )
+
+  const currentEnabledBlocks = useMemo(
+    () => currentLessonPage?.enabledBlocks ?? [],
+    [currentLessonPage?.enabledBlocks],
+  )
+  const hasHeaderBlock = currentEnabledBlocks.includes("header")
+  const hasFooterBlock = currentEnabledBlocks.includes("footer")
+
+  const templateEnabledMap = useMemo<Record<BlockId, boolean>>(() => {
+    const enabledSet = new Set(currentEnabledBlocks)
+    return {
+      header: enabledSet.has("header"),
+      program: enabledSet.has("program"),
+      resources: enabledSet.has("resources"),
+      content: enabledSet.has("content"),
+      assignment: enabledSet.has("assignment"),
+      scoring: enabledSet.has("scoring"),
+      footer: enabledSet.has("footer"),
+    }
+  }, [currentEnabledBlocks])
+
+  const templateFieldEnabled = useMemo(
+    () => currentLessonPage?.enabledFields ?? buildTemplateFieldState(currentLessonPage?.templateType ?? "lesson"),
+    [currentLessonPage?.enabledFields, currentLessonPage?.templateType],
+  )
+
+  const bodyTemplateEnabledMap = useMemo<Record<BlockId, boolean>>(
+    () => ({ ...templateEnabledMap, header: false, footer: false }),
+    [templateEnabledMap],
+  )
+
+  const perPageTemplateEnabledMap = useMemo<Record<BlockId, boolean>>(() => {
+    if (!currentLessonPage) return bodyTemplateEnabledMap
+
+    const localPage = currentLessonPage.localPage ?? 1
+    const totalPages = currentLessonPage.pagesInLesson ?? 1
+
+    const map = { ...bodyTemplateEnabledMap }
+
+    if (localPage === 1) {
+      // Page 1: Program and Resources only
+      map.program = bodyTemplateEnabledMap.program
+      map.resources = bodyTemplateEnabledMap.resources
+      map.content = false
+      map.assignment = false
+    } else if (localPage === 2 && totalPages === 2) {
+      // Page 2 of 2: Content and Assignment together
+      map.program = false
+      map.resources = false
+      map.content = bodyTemplateEnabledMap.content
+      map.assignment = bodyTemplateEnabledMap.assignment
+    } else if (localPage === 2 && totalPages > 2) {
+      // Page 2 of 3+: Content only
+      map.program = false
+      map.resources = false
+      map.content = bodyTemplateEnabledMap.content
+      map.assignment = false
+    } else {
+      // Page 3+: Assignment only
+      map.program = false
+      map.resources = false
+      map.content = false
+      map.assignment = bodyTemplateEnabledMap.assignment
+    }
+
+    return map
+  }, [bodyTemplateEnabledMap, currentLessonPage])
+
+  const headerFieldValues = useMemo(() => {
+    if (!currentLessonPage || !hasHeaderBlock) return [] as Array<{ key: string; value: string }>
+    const context = {
+      lessonNumber: currentLessonPage.lessonNumber,
+      lessonTitle: currentLessonPage.lessonTitle,
+      lessonNotes: currentLessonPage.lessonNotes,
+      moduleName: currentLessonPage.moduleName,
+      courseTitle,
+      courseType,
+      courseLanguage,
+      teacherName,
+      institutionName,
+      templateType: currentLessonPage.templateType,
+      scheduleDay: currentLessonPage.scheduleDay,
+      scheduleDate: currentLessonPage.scheduleDate,
+      scheduleStart: currentLessonPage.scheduleStart,
+      scheduleEnd: currentLessonPage.scheduleEnd,
+      durationMinutes: currentLessonPage.durationMinutes,
+      topics: currentLessonPage.topics,
+      objectives: currentLessonPage.objectives,
+      tasks: currentLessonPage.tasks,
+      currentPage: clampedCurrentPage,
+      totalPages,
+    }
+
+    return BLOCK_FIELDS.header
+      .filter((field) => field.forTypes.includes(currentLessonPage.templateType as never))
+      .filter((field) => field.required || Boolean(templateFieldEnabled.header?.[field.key]))
+      .map((field) => ({
+        key: field.key,
+        value: formatTemplateFieldValue(field.key, context),
+      }))
+  }, [currentLessonPage, hasHeaderBlock, courseTitle, courseType, courseLanguage, teacherName, institutionName, clampedCurrentPage, totalPages, templateFieldEnabled])
+
+  const footerFieldValues = useMemo(() => {
+    if (!currentLessonPage || !hasFooterBlock) return [] as Array<{ key: string; value: string }>
+    const context = {
+      lessonNumber: currentLessonPage.lessonNumber,
+      lessonTitle: currentLessonPage.lessonTitle,
+      lessonNotes: currentLessonPage.lessonNotes,
+      moduleName: currentLessonPage.moduleName,
+      courseTitle,
+      courseType,
+      courseLanguage,
+      teacherName,
+      institutionName,
+      templateType: currentLessonPage.templateType,
+      scheduleDay: currentLessonPage.scheduleDay,
+      scheduleDate: currentLessonPage.scheduleDate,
+      scheduleStart: currentLessonPage.scheduleStart,
+      scheduleEnd: currentLessonPage.scheduleEnd,
+      durationMinutes: currentLessonPage.durationMinutes,
+      topics: currentLessonPage.topics,
+      objectives: currentLessonPage.objectives,
+      tasks: currentLessonPage.tasks,
+      currentPage: clampedCurrentPage,
+      totalPages,
+    }
+
+    return BLOCK_FIELDS.footer
+      .filter((field) => field.forTypes.includes(currentLessonPage.templateType as never))
+      .filter((field) => field.required || Boolean(templateFieldEnabled.footer?.[field.key]))
+      .map((field) => ({
+        key: field.key,
+        value: formatTemplateFieldValue(field.key, context),
+      }))
+  }, [currentLessonPage, hasFooterBlock, courseTitle, courseType, courseLanguage, teacherName, institutionName, clampedCurrentPage, totalPages, templateFieldEnabled])
+
+  const headerFieldMap = useMemo(() => {
+    return Object.fromEntries(headerFieldValues.map((entry) => [entry.key, entry.value]))
+  }, [headerFieldValues])
+
+  const templateData = useMemo<TemplateBlueprintData | undefined>(() => {
+    if (!currentLessonPage) return undefined
+
+    const headerValues = Object.fromEntries(headerFieldValues.map((entry) => [entry.key, entry.value]))
+    const footerValues = Object.fromEntries(footerFieldValues.map((entry) => [entry.key, entry.value]))
+
+    const joinedObjectives = currentLessonPage.objectives.join(" · ")
+    const joinedTasks = currentLessonPage.tasks.join(" · ")
+    const context = {
+      lessonNumber: currentLessonPage.lessonNumber,
+      lessonTitle: currentLessonPage.lessonTitle,
+      lessonNotes: currentLessonPage.lessonNotes,
+      moduleName: currentLessonPage.moduleName,
+      courseTitle,
+      courseType,
+      courseLanguage,
+      teacherName,
+      institutionName,
+      templateType: currentLessonPage.templateType,
+      scheduleDay: currentLessonPage.scheduleDay,
+      scheduleDate: currentLessonPage.scheduleDate,
+      scheduleStart: currentLessonPage.scheduleStart,
+      scheduleEnd: currentLessonPage.scheduleEnd,
+      durationMinutes: currentLessonPage.durationMinutes,
+      topics: currentLessonPage.topics,
+      objectives: currentLessonPage.objectives,
+      tasks: currentLessonPage.tasks,
+      currentPage: clampedCurrentPage,
+      totalPages,
+    }
+
+    const scalarFieldValues: Record<string, string> = {
+      lesson_number: formatTemplateFieldValue("lesson_number", context) || "—",
+      lesson_title: formatTemplateFieldValue("lesson_title", context) || "—",
+      module_title: formatTemplateFieldValue("module_title", context) || "—",
+      course_title: formatTemplateFieldValue("course_title", context) || "—",
+      institution_name: formatTemplateFieldValue("institution_name", context) || "—",
+      teacher_name: formatTemplateFieldValue("teacher_name", context) || "—",
+      date: formatTemplateFieldValue("date", context) || "—",
+      competence: formatTemplateFieldValue("competence", context) || "—",
+      topic: formatTemplateFieldValue("topic", context) || "—",
+      objective: formatTemplateFieldValue("objective", context) || "—",
+      task: formatTemplateFieldValue("task", context) || "—",
+      program_method: currentLessonPage.lessonNotes || "Guided instruction",
+      program_social_form: "Class / Group",
+      program_time: formatTemplateFieldValue("program_time", context) || "—",
+      type: formatTemplateFieldValue("type", context) || "—",
+      origin: formatTemplateFieldValue("origin", context) || "—",
+      state: formatTemplateFieldValue("state", context) || "—",
+      quality: formatTemplateFieldValue("quality", context) || "—",
+      instruction_area: currentLessonPage.lessonNotes || "Instruction guidance",
+      student_area: joinedTasks || "Student practice",
+      teacher_area: joinedObjectives || "Facilitation notes",
+      due_date: formatTemplateFieldValue("due_date", context) || "—",
+      submission_format: formatTemplateFieldValue("submission_format", context) || "—",
+      criterion: formatTemplateFieldValue("criterion", context) || "—",
+      weight: formatTemplateFieldValue("weight", context) || "—",
+      max_points: formatTemplateFieldValue("max_points", context) || "—",
+      feedback: formatTemplateFieldValue("feedback", context) || "—",
+    }
+
+    const buildBlockFieldValues = (blockId: BlockId): Record<string, string> => {
+      const fields = BLOCK_FIELDS[blockId]
+        .filter((field) => field.forTypes.includes(currentLessonPage.templateType as never))
+        .filter((field) => field.required || Boolean(templateFieldEnabled[blockId]?.[field.key]))
+
+      return Object.fromEntries(fields.map((field) => [field.key, scalarFieldValues[field.key] ?? "—"]))
+    }
+
+    const topicsPerLesson = Math.max(1, currentLessonPage.topicCount || currentLessonPage.topics.length || 1)
+    const objectivesPerTopic = Math.max(1, currentLessonPage.objectiveCount || currentLessonPage.objectives.length || 1)
+    const tasksPerObjective = Math.max(1, currentLessonPage.taskCount || currentLessonPage.tasks.length || 1)
+    const totalTaskRows = Math.max(1, topicsPerLesson * objectivesPerTopic * tasksPerObjective)
+    const totalPagesInLesson = Math.max(1, currentLessonPage.pagesInLesson || 1)
+    const localPageIndex = Math.max(0, (currentLessonPage.localPage || 1) - 1)
+    const pageTaskStart = Math.floor((localPageIndex * totalTaskRows) / totalPagesInLesson)
+    const pageTaskEnd = Math.floor(((localPageIndex + 1) * totalTaskRows) / totalPagesInLesson)
+    const pageTaskCount = Math.max(1, pageTaskEnd - pageTaskStart)
+
+    const taskRows = Array.from({ length: pageTaskCount }, (_, pageOffset) => {
+      const flatTaskIndex = pageTaskStart + pageOffset
+      const perTopicTaskCount = objectivesPerTopic * tasksPerObjective
+      const topicIndex = Math.min(topicsPerLesson - 1, Math.floor(flatTaskIndex / perTopicTaskCount))
+      const withinTopicIndex = flatTaskIndex % perTopicTaskCount
+      const objectiveWithinTopicIndex = Math.floor(withinTopicIndex / tasksPerObjective)
+      const taskWithinObjectiveIndex = withinTopicIndex % tasksPerObjective
+      const objectiveLinearIndex = topicIndex * objectivesPerTopic + objectiveWithinTopicIndex
+
+      return {
+        topic: currentLessonPage.topics[topicIndex] || `Topic ${topicIndex + 1}`,
+        objective:
+          currentLessonPage.objectives[objectiveLinearIndex]
+          || `Objective ${topicIndex + 1}.${objectiveWithinTopicIndex + 1}`,
+        task:
+          currentLessonPage.tasks[flatTaskIndex]
+          || `Task ${topicIndex + 1}.${objectiveWithinTopicIndex + 1}.${taskWithinObjectiveIndex + 1}`,
+      }
+    })
+
+    const programRows = taskRows.map((row) => ({
+      topic: row.topic,
+      objective: row.objective,
+      task: row.task,
+      program_time: scalarFieldValues.program_time,
+      program_method: scalarFieldValues.program_method,
+      program_social_form: scalarFieldValues.program_social_form,
+    }))
+    const resourceRows = taskRows.map((row) => ({
+      task: row.task,
+      type: scalarFieldValues.type,
+      origin: scalarFieldValues.origin,
+      state: scalarFieldValues.state,
+      quality: scalarFieldValues.quality,
+    }))
+
+    const isFirstPage = (currentLessonPage.localPage ?? 1) === 1
 
     return {
-      // ── Template overlay (fixed sizes - don't scale with zoom) ──
-      headerPadding: "px-3 py-2",
-      headerTitle: "text-sm",
-      headerMeta: "text-[9px]",
-      headerChip: "text-[8px]",
-      blockPadding: "px-2 py-1",
-      blockLabel: "text-[8px]",
-      blockCount: "text-[7px]",
-      cellLabel: "text-[7px]",
-      cellValue: "text-[8px]",
-      nestedLabel: "text-[7px]",
-      nestedValue: "text-[8px]",
-      footerText: "text-[9px]",
-      footerChip: "text-[8px]",
-      nestedLines: "line-clamp-2",
-      low,
-      // ── Panels (left/right) ──
-      panelHeaderPadding: low ? "px-2 py-1.5" : high ? "px-4 py-2.5" : "px-3 py-2",
-      panelHeaderText: low ? "text-[10px]" : high ? "text-xs" : "text-xs",
-      panelHeaderIcon: low ? "h-2.5 w-2.5" : high ? "h-3.5 w-3.5" : "h-3 w-3",
-      panelSearchPadding: low ? "px-2 py-1.5" : high ? "px-3 py-2.5" : "px-3 py-2.5",
-      panelSearchInput: low ? "px-2 py-1 text-[10px]" : high ? "px-3 py-2 text-xs" : "px-2.5 py-1.5 text-xs",
-      panelContentPadding: low ? "p-1.5" : high ? "p-2.5" : "p-2",
-      panelItemPadding: low ? "px-1 py-0.5" : high ? "px-1.5 py-1" : "px-1 py-1",
-      panelItemText: low ? "text-[10px]" : high ? "text-xs" : "text-xs",
-      panelItemIcon: low ? "h-3 w-3" : high ? "h-4 w-4" : "h-3.5 w-3.5",
-      // ── Media category buttons ──
-      mediaCategoryPadding: low ? "p-1" : high ? "p-2" : "p-1.5",
-      mediaCategoryIcon: low ? "h-4 w-4" : high ? "h-6 w-6" : "h-5 w-5",
-      mediaCategoryLabel: low ? "text-[8px]" : high ? "text-[10px]" : "text-[9px]",
-      // ── Toolbar & controls ──
-      toolbarPadding: low ? "px-2 py-1" : high ? "px-4 py-2" : "px-3 py-1.5",
-      toolbarGap: low ? "gap-1" : high ? "gap-2.5" : "gap-2",
-      toolButtonPadding: low ? "p-1" : high ? "p-2" : "p-1.5",
-      toolButtonIcon: low ? "h-4 w-4" : high ? "h-6 w-6" : "h-5 w-5",
-      toolButtonLabel: low ? "text-[8px]" : high ? "text-[11px]" : "text-[10px]",
-      controlLabel: low ? "text-[8px]" : high ? "text-[11px]" : "text-[10px]",
-      controlInput: low ? "text-[10px] px-1.5 py-0.5" : high ? "text-xs px-2.5 py-1" : "text-xs px-2 py-0.5",
-      controlButton: low ? "text-[10px] px-1.5 py-0.5" : high ? "text-xs px-2.5 py-1" : "text-xs px-2 py-0.5",
-      // ── Zoom & scroll controls ──
-      zoomButtonPadding: low ? "p-0.5" : high ? "p-1.5" : "p-1",
-      zoomButtonIcon: low ? "h-3 w-3" : high ? "h-5 w-5" : "h-4 w-4",
-      zoomValueText: low ? "text-[9px]" : high ? "text-xs" : "text-[10px]",
-      scrollButtonPadding: low ? "p-0.5" : high ? "p-1.5" : "p-1",
-      scrollButtonIcon: low ? "h-3 w-3" : high ? "h-5 w-5" : "h-4 w-4",
-      scrollInputText: low ? "text-[8px] w-8" : high ? "text-xs w-12" : "text-[10px] w-10",
-      scrollPageText: low ? "text-[8px]" : high ? "text-xs" : "text-[10px]",
+      fieldValues: {
+        header: headerValues,
+        program: buildBlockFieldValues("program"),
+        resources: buildBlockFieldValues("resources"),
+        content: buildBlockFieldValues("content"),
+        assignment: buildBlockFieldValues("assignment"),
+        scoring: buildBlockFieldValues("scoring"),
+        footer: footerValues,
+      },
+      programRows: isFirstPage ? programRows : [],
+      resourceRows: isFirstPage ? resourceRows : [],
+      resourceItems: resourceRows.map((row, idx) => `Resource ${idx + 1}: ${row.task}`),
+      scoringItems: currentLessonPage.objectives.map((objective, idx) => `Criterion ${idx + 1}: ${objective}`),
     }
-  }, [zoom])
+  }, [currentLessonPage, headerFieldValues, footerFieldValues, courseTitle, courseType, courseLanguage, teacherName, institutionName, clampedCurrentPage, totalPages, templateFieldEnabled])
+
+  const mediaItems = useMemo(() => {
+    const term = mediaSearch.trim().toLowerCase()
+    return mediaAssets
+      .filter((item) => item.category === activeMedia)
+      .filter((item) => {
+        if (!term) return true
+        return `${item.title} ${item.description}`.toLowerCase().includes(term)
+      })
+      .slice(0, 80)
+  }, [activeMedia, mediaAssets, mediaSearch])
+
+  const lessonNavigation = useMemo(() => {
+    const bySession = new Map<string, { label: string; start: number; end: number }>()
+    lessonPages.forEach((page) => {
+      const existing = bySession.get(page.sessionId)
+      if (!existing) {
+        bySession.set(page.sessionId, {
+          label: `${page.moduleName} · Lesson ${page.lessonNumber}`,
+          start: page.globalPage,
+          end: page.globalPage,
+        })
+      } else {
+        existing.end = page.globalPage
+      }
+    })
+    return Array.from(bySession.values())
+  }, [lessonPages])
+
+  const onDragStartMedia = useCallback((asset: MediaAsset, event: React.DragEvent) => {
+    event.dataTransfer.effectAllowed = "copy"
+    event.dataTransfer.setData("application/json", JSON.stringify(asset))
+  }, [])
+
+  const overlayUi = useMemo<OverlayUi>(() => {
+    return {
+      // ── Template overlay (fixed sizes - don't scale with zoom) ──
+      headerPadding: "px-4 py-3",
+      headerTitle: "text-lg",
+      headerMeta: "text-sm",
+      headerChip: "text-xs",
+      blockPadding: "px-3 py-2",
+      blockLabel: "text-xs",
+      blockCount: "text-xs",
+      cellLabel: "text-xs",
+      cellValue: "text-sm",
+      nestedLabel: "text-xs",
+      nestedValue: "text-sm",
+      footerText: "text-sm",
+      footerChip: "text-xs",
+      nestedLines: "line-clamp-2",
+      low: false,
+      // ── Panels (left/right) ──
+      panelHeaderPadding: "px-3 py-2",
+      panelHeaderText: "text-xs",
+      panelHeaderIcon: "h-3 w-3",
+      panelSearchPadding: "px-3 py-2.5",
+      panelSearchInput: "px-2.5 py-1.5 text-xs",
+      panelContentPadding: "p-2",
+      panelItemPadding: "px-1 py-1",
+      panelItemText: "text-xs",
+      panelItemIcon: "h-3.5 w-3.5",
+      // ── Media category buttons ──
+      mediaCategoryPadding: "p-1.5",
+      mediaCategoryIcon: "h-5 w-5",
+      mediaCategoryLabel: "text-[9px]",
+      // ── Toolbar & controls ──
+      toolbarPadding: "px-3 py-1.5",
+      toolbarGap: "gap-2",
+      toolButtonPadding: "p-1.5",
+      toolButtonIcon: "h-5 w-5",
+      toolButtonLabel: "text-[10px]",
+      controlLabel: "text-[10px]",
+      controlInput: "text-xs px-2 py-0.5",
+      controlButton: "text-xs px-2 py-0.5",
+      // ── Zoom & scroll controls ──
+      zoomButtonPadding: "p-1",
+      zoomButtonIcon: "h-4 w-4",
+      zoomValueText: "text-[10px]",
+      scrollButtonPadding: "p-1",
+      scrollButtonIcon: "h-4 w-4",
+      scrollInputText: "text-[10px] w-10",
+      scrollPageText: "text-[10px]",
+    }
+  }, [])
+
+  const lessonHeaderTooltip = useMemo(() => {
+    if (!currentLessonPage) return ""
+
+    const skipKeys = new Set(["lesson_number", "lesson_title", "module_title", "course_title"])
+    const extraLines = headerFieldValues
+      .filter((entry) => !skipKeys.has(entry.key))
+      .map((entry) => `${entry.key.replace(/_/g, " ")}: ${entry.value}`)
+
+    return [
+      `Lesson ${currentLessonPage.lessonNumber}: ${currentLessonPage.lessonTitle}`,
+      `Module: ${currentLessonPage.moduleName}`,
+      `Course: ${courseTitle}`,
+      ...extraLines,
+    ].join("\n")
+  }, [currentLessonPage, headerFieldValues, courseTitle])
+
+  const lessonMetaText = useMemo(() => {
+    const dateValue = headerFieldMap.date
+    const teacherValue = headerFieldMap.teacher_name
+    const institutionValue = headerFieldMap.institution_name
+    return [dateValue, teacherValue, institutionValue].filter(Boolean).join(" · ")
+  }, [headerFieldMap])
 
   const changePage = useCallback(
-    (next: number) =>
-      setCurrentPage(Math.min(Math.max(1, next), totalPages)),
+    (next: number) => {
+      const normalized = Number.isFinite(next) ? Math.round(next) : 1
+      setCurrentPage(Math.min(Math.max(1, normalized), totalPages))
+    },
     [totalPages],
   )
 
@@ -837,9 +1390,32 @@ export function CreateView({
             />
           </div>
           <div className={`flex-1 overflow-y-auto ${overlayUi.panelContentPadding}`}>
-            <p className={`${overlayUi.panelItemText} italic text-muted-foreground/50 px-1 py-2`}>
-              Select a category to browse assets.
-            </p>
+            {mediaLoading ? (
+              <p className={`${overlayUi.panelItemText} italic text-muted-foreground/50 px-1 py-2`}>
+                Loading encyclopedia media…
+              </p>
+            ) : mediaItems.length === 0 ? (
+              <p className={`${overlayUi.panelItemText} italic text-muted-foreground/50 px-1 py-2`}>
+                No media found in this category.
+              </p>
+            ) : (
+              <ul className="space-y-1">
+                {mediaItems.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      draggable
+                      onDragStart={(event) => onDragStartMedia(item, event)}
+                      className={`w-full rounded border border-border bg-background/70 text-left ${overlayUi.panelItemPadding} transition hover:border-primary/40 hover:bg-accent/40 active:scale-[0.99]`}
+                      title={item.url || item.description || item.title}
+                    >
+                      <p className={`${overlayUi.panelItemText} font-medium text-foreground truncate`}>{item.title}</p>
+                      <p className={`${overlayUi.controlLabel} text-muted-foreground truncate`}>{item.mediaType}</p>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </div>
@@ -858,14 +1434,137 @@ export function CreateView({
         {/* PixiJS canvas fills the center */}
         <div className="absolute inset-0">
           <PixiCanvas
-            config={canvasConfig ?? undefined}
+            config={effectiveCanvasConfig}
             zoom={zoom}
             onZoomChange={setZoom}
             activeTool={canvasTool}
             toolConfig={toolConfig}
+            activePage={clampedCurrentPage}
+            focusPage={clampedCurrentPage}
             onViewportChange={setViewportInfo}
+            onActivePageChange={setCurrentPage}
           />
         </div>
+
+        {viewportInfo && currentLessonPage && (
+          <div
+            key={`${currentLessonPage.sessionId}:${currentLessonPage.localPage}`}
+            className="absolute pointer-events-auto overflow-hidden"
+            style={{
+              left: viewportInfo.pageRect.x,
+              top: viewportInfo.pageRect.y,
+              width: viewportInfo.pageRect.width,
+              height: viewportInfo.pageRect.height,
+            }}
+          >
+            <div
+              className="relative origin-top-left"
+              style={{
+                width: effectiveCanvasConfig.widthPx,
+                height: effectiveCanvasConfig.heightPx,
+                transform: `scale(${viewportInfo.scale})`,
+                transformOrigin: "top left",
+              }}
+            >
+            <div className="relative h-full w-full bg-transparent">
+              {hasHeaderBlock && (
+                <div
+                  className={`absolute top-0 overflow-hidden border-b border-border/60 ${overlayUi.headerPadding}`}
+                  style={{
+                    left: 0,
+                    right: 0,
+                    height: effectiveCanvasConfig.margins.top,
+                  }}
+                >
+                  <div className="flex h-full items-center gap-1.5 overflow-hidden">
+                    {currentLessonPage.templateType === "lesson" ? (
+                      <>
+                        <span className="truncate rounded border border-border/60 bg-muted/20 px-2 py-0.5 text-xs text-foreground">
+                          L{currentLessonPage.lessonNumber}
+                        </span>
+                        <span
+                          className="truncate rounded border border-border/60 bg-muted/20 px-2 py-0.5 text-xs text-foreground"
+                          title={lessonHeaderTooltip}
+                        >
+                          {currentLessonPage.lessonTitle}
+                        </span>
+                        {lessonMetaText && (
+                          <span
+                            className="truncate rounded border border-border/60 bg-muted/20 px-2 py-0.5 text-xs text-foreground"
+                            title={lessonMetaText}
+                          >
+                            {lessonMetaText}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      headerFieldValues.map((value, idx) => (
+                        <span
+                          key={`header-value-${value.key}-${idx}`}
+                          className="truncate rounded border border-border/60 bg-muted/20 px-2 py-0.5 text-xs text-foreground"
+                        >
+                          {value.value}
+                        </span>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div
+                className="absolute overflow-hidden"
+                style={{
+                  left: effectiveCanvasConfig.margins.left,
+                  right: effectiveCanvasConfig.margins.right,
+                  top: hasHeaderBlock ? effectiveCanvasConfig.margins.top : 0,
+                  bottom: hasFooterBlock ? effectiveCanvasConfig.margins.bottom : 0,
+                }}
+              >
+                <div className="h-full w-full overflow-hidden rounded-lg border border-border/70 bg-background/85">
+                  <TemplateBlueprint
+                    type={currentLessonPage.templateType as never}
+                    enabled={perPageTemplateEnabledMap}
+                    fieldEnabled={templateFieldEnabled}
+                    name={currentLessonPage.lessonTitle}
+                    scale="md"
+                    scrollable={false}
+                    data={templateData}
+                  />
+                </div>
+              </div>
+
+              {hasFooterBlock && (
+                <div
+                  className="absolute bottom-0 overflow-hidden border-t border-border/60 px-3 py-1"
+                  style={{
+                    left: 0,
+                    right: 0,
+                    height: effectiveCanvasConfig.margins.bottom,
+                  }}
+                >
+                  <div className="flex h-full items-center justify-between gap-2 overflow-hidden">
+                    <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
+                      {footerFieldValues
+                        .filter((entry) => entry.key !== "page_number")
+                        .map((value, idx) => (
+                          <span
+                            key={`footer-value-${value.key}-${idx}`}
+                            className="truncate rounded border border-border/60 bg-muted/20 px-2 py-0.5 text-xs text-muted-foreground"
+                          >
+                            {value.value}
+                          </span>
+                        ))}
+                    </div>
+                    <span className="shrink-0 rounded border border-border/60 bg-background px-2 py-0.5 text-xs font-semibold text-foreground">
+                      {footerFieldValues.find((entry) => entry.key === "page_number")?.value ?? `Page ${clampedCurrentPage} / ${totalPages}`}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Perspective controls (left side of canvas) ── */}
         <div className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-0.5 rounded-lg border border-border bg-background/90 ${overlayUi.toolButtonPadding} shadow-sm backdrop-blur-sm`}>
@@ -929,7 +1628,7 @@ export function CreateView({
           />
           <EngineBtn
             label="Prev"
-            onClick={() => changePage(currentPage - 1)}
+            onClick={() => changePage(clampedCurrentPage - 1)}
             iconNode={<ChevronUp className={overlayUi.scrollButtonIcon} />}
             overlayUi={overlayUi}
           />
@@ -939,7 +1638,7 @@ export function CreateView({
               type="number"
               min={1}
               max={totalPages}
-              value={currentPage}
+              value={clampedCurrentPage}
               onChange={(e) => changePage(Number(e.target.value))}
               className={`${overlayUi.scrollInputText} rounded border border-border bg-background px-1 py-0.5 text-center focus:outline-none focus:ring-1 focus:ring-ring`}
             />
@@ -947,7 +1646,7 @@ export function CreateView({
           </div>
           <EngineBtn
             label="Next"
-            onClick={() => changePage(currentPage + 1)}
+            onClick={() => changePage(clampedCurrentPage + 1)}
             iconNode={<ChevronDown className={overlayUi.scrollButtonIcon} />}
             overlayUi={overlayUi}
           />
@@ -979,7 +1678,7 @@ export function CreateView({
 
           {/* Tool options (context-sensitive) */}
           <div className={`flex min-w-0 items-center gap-1.5 border-r border-border pr-3 mr-1 h-9`}>
-            <ToolOptions overlayUi={overlayUi} />
+            {ToolOptions({ overlayUi })}
           </div>
 
           {/* Tool buttons */}
@@ -1030,7 +1729,7 @@ export function CreateView({
                 {p === "layers" ? (
                   <Layers className={overlayUi.panelHeaderIcon} />
                 ) : (
-                  <Map className={overlayUi.panelHeaderIcon} />
+                  <MapIcon className={overlayUi.panelHeaderIcon} />
                 )}
                 {p.charAt(0).toUpperCase() + p.slice(1)}
               </button>
@@ -1041,9 +1740,13 @@ export function CreateView({
         {/* Panel content */}
         <div className={`flex-1 overflow-y-auto ${overlayUi.panelContentPadding}`}>
           {panelView === "layers" ? (
-            <LayersPanel overlayUi={overlayUi} />
+            <LayersPanel
+              overlayUi={overlayUi}
+              currentLessonPage={currentLessonPage}
+              droppedCount={0}
+            />
           ) : (
-            <NavigationPanel currentPage={currentPage} totalPages={totalPages} overlayUi={overlayUi} />
+            <NavigationPanel currentPage={clampedCurrentPage} totalPages={totalPages} sections={lessonNavigation} onJump={changePage} overlayUi={overlayUi} />
           )}
         </div>
       </div>
@@ -1062,14 +1765,23 @@ interface Layer {
   indent: number
 }
 
-function LayersPanel({ overlayUi }: { overlayUi: OverlayUi }) {
+function LayersPanel({
+  overlayUi,
+  currentLessonPage,
+  droppedCount,
+}: {
+  overlayUi: OverlayUi
+  currentLessonPage: LessonCanvasPage | null
+  droppedCount: number
+}) {
   const [layers, setLayers] = useState<Layer[]>([
-    { id: "header",   name: "Header",   visible: true, locked: false, indent: 0 },
-    { id: "title",    name: "Title",    visible: true, locked: true,  indent: 1 },
-    { id: "content",  name: "Content",  visible: true, locked: false, indent: 0 },
-    { id: "body-text",name: "Body Text",visible: true, locked: false, indent: 1 },
-    { id: "image-1",  name: "Image 1",  visible: true, locked: false, indent: 1 },
-    { id: "footer",   name: "Footer",   visible: true, locked: false, indent: 0 },
+    { id: "meta", name: "Session Meta", visible: true, locked: true, indent: 0 },
+    { id: "program", name: "Program", visible: true, locked: false, indent: 0 },
+    { id: "resources", name: "Resources", visible: true, locked: false, indent: 0 },
+    { id: "instruction", name: "Instruction Area", visible: true, locked: false, indent: 1 },
+    { id: "student", name: "Student Area", visible: true, locked: false, indent: 1 },
+    { id: "teacher", name: "Teacher Area", visible: true, locked: false, indent: 1 },
+    { id: "footer", name: "Footer Meta", visible: true, locked: true, indent: 0 },
   ])
 
   function toggleVisible(id: string) {
@@ -1090,7 +1802,21 @@ function LayersPanel({ overlayUi }: { overlayUi: OverlayUi }) {
   }
 
   return (
-    <ol className="space-y-0.5">
+    <div className="space-y-2">
+      {currentLessonPage && (
+        <div className="rounded border border-border/70 bg-muted/20 px-2 py-1.5">
+          <p className={`${overlayUi.panelItemText} font-semibold text-foreground`}>
+            {currentLessonPage.moduleName} · Lesson {currentLessonPage.lessonNumber}
+          </p>
+          <p className={`${overlayUi.controlLabel} text-muted-foreground`}>
+            {currentLessonPage.lessonTitle} · {currentLessonPage.templateType}
+          </p>
+          <p className={`${overlayUi.controlLabel} text-muted-foreground`}>
+            Dropped assets: {droppedCount}
+          </p>
+        </div>
+      )}
+      <ol className="space-y-0.5">
       {layers.map((layer) => (
         <li
           key={layer.id}
@@ -1127,35 +1853,45 @@ function LayersPanel({ overlayUi }: { overlayUi: OverlayUi }) {
           </span>
         </li>
       ))}
-    </ol>
+      </ol>
+    </div>
   )
 }
 
 // ─── Navigation Panel ─────────────────────────────────────────────────────────
 
-function NavigationPanel({ currentPage, totalPages, overlayUi }: { currentPage: number; totalPages: number; overlayUi: OverlayUi }) {
-  const sections = [
-    { label: "Header", pages: "1" },
-    { label: "Introduction", pages: "2–5" },
-    { label: "Chapter 1", pages: "6–45" },
-    { label: "Chapter 2", pages: "46–90" },
-    { label: "Exercises", pages: "91–180" },
-    { label: "Assessment", pages: "181–210" },
-    { label: "Appendix", pages: "211–225" },
-  ]
+function NavigationPanel({
+  currentPage,
+  totalPages,
+  sections,
+  onJump,
+  overlayUi,
+}: {
+  currentPage: number
+  totalPages: number
+  sections: Array<{ label: string; start: number; end: number }>
+  onJump: (page: number) => void
+  overlayUi: OverlayUi
+}) {
   return (
     <div className="space-y-1">
       <p className={`px-1 ${overlayUi.controlLabel} font-semibold uppercase tracking-widest text-muted-foreground mb-2`}>
         Course Structure
       </p>
+      {sections.length === 0 && (
+        <p className={`${overlayUi.panelItemText} px-1 text-muted-foreground italic`}>No lesson canvases yet.</p>
+      )}
       {sections.map((s) => (
         <button
           key={s.label}
           type="button"
+          onClick={() => onJump(s.start)}
           className={`flex w-full items-center justify-between rounded ${overlayUi.panelItemPadding} ${overlayUi.panelItemText} text-foreground hover:bg-muted/60 transition`}
         >
           <span className="truncate">{s.label}</span>
-          <span className={`ml-2 shrink-0 ${overlayUi.controlLabel} text-muted-foreground`}>{s.pages}</span>
+          <span className={`ml-2 shrink-0 ${overlayUi.controlLabel} text-muted-foreground`}>
+            {s.start === s.end ? String(s.start) : `${s.start}–${s.end}`}
+          </span>
         </button>
       ))}
       <p className={`px-2 pt-2 ${overlayUi.controlLabel} text-muted-foreground`}>

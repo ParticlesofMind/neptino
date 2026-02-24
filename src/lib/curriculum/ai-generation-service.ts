@@ -73,7 +73,7 @@ export interface GenerationExtras {
   mandatoryTopics?: string[]
   priorKnowledge?: string
   applicationContext?: string
-  resourceConstraints?: string
+  resourcesPreferences?: Array<{ id: string; label: string; priority: string }>
   sequencingMode?: string
   namingRules?: NamingRules
   courseLanguage?: string
@@ -111,7 +111,7 @@ export interface GenerationContext {
   mandatoryTopics?: string[]
   priorKnowledge?: string
   applicationContext?: string
-  resourceConstraints?: string
+  resourcesPreferences?: Array<{ id: string; label: string; priority: string }>
   namingRules?: NamingRules
   students?: StudentsContext
   options: {
@@ -140,6 +140,8 @@ export interface GeneratedCurriculumContent {
     suggestedTasks?: string[]
   }>
 }
+
+export type GenerationAction = "all" | "modules" | "lessons" | "topics" | "objectives" | "tasks"
 
 export interface GenerationResponse {
   success: boolean
@@ -278,7 +280,7 @@ export function buildGenerationContext(
     mandatoryTopics: extras?.mandatoryTopics,
     priorKnowledge: extras?.priorKnowledge,
     applicationContext: extras?.applicationContext,
-    resourceConstraints: extras?.resourceConstraints,
+    resourcesPreferences: extras?.resourcesPreferences,
     namingRules: extras?.namingRules,
     students: extras?.students,
     options,
@@ -288,12 +290,12 @@ export function buildGenerationContext(
 /**
  * Format generation context as prompt for AI
  */
-export function formatGenerationPrompt(context: GenerationContext): string {
+export function formatGenerationPrompt(context: GenerationContext, sourceExcerpts?: string, action: GenerationAction = "all"): string {
   const scheduleInfo = context.options.schedule
     ? `
 ### Schedule Overview
 - ${context.curriculum.sessionRows.length} sessions across ${context.schedule.length} dates
-${context.schedule.slice(0, 5).map((e) => `- ${e.day} ${e.date}${e.start_time ? ` at ${e.start_time}` : ""}`).join("\n")}${context.schedule.length > 5 ? `\n- ... and ${context.schedule.length - 5} more dates` : ""}
+${context.schedule.map((e) => `- ${e.day} ${e.date}${e.start_time ? ` at ${e.start_time}` : ""}`).join("\n")}
 `
     : ""
 
@@ -313,12 +315,12 @@ ${context.schedule.slice(0, 5).map((e) => `- ${e.day} ${e.date}${e.start_time ? 
   const sessionInfo =
     context.curriculum.sessionRows.length > 0
       ? `
-### Sessions to Generate
-${context.curriculum.sessionRows.slice(0, 10).map((s) => {
+### Sessions to Generate (EXACTLY ${context.curriculum.sessionRows.length} lessons required)
+${context.curriculum.sessionRows.map((s) => {
   const duration = s.duration ? ` (${s.duration}min)` : ""
   const customCounts = s.topics || s.objectives || s.tasks ? ` [${s.topics || "?"} topics, ${s.objectives || "?"} objectives, ${s.tasks || "?"} tasks]` : ""
   return `- Session ${s.sessionNumber}: "${s.title}"${duration}${customCounts}`
-}).join("\n")}${context.curriculum.sessionRows.length > 10 ? `\n- ... and ${context.curriculum.sessionRows.length - 10} more sessions` : ""}
+}).join("\n")}
 `
       : ""
 
@@ -389,13 +391,31 @@ ${context.applicationContext}
 `
     : ""
 
-  // Resource constraints
-  const resourceInfo = context.resourceConstraints
+  const sourcePriorityOrder: Record<string, number> = {
+    very_high: 0,
+    high: 1,
+    medium: 2,
+    low: 3,
+    very_low: 4,
+  }
+
+  const resourcesInfo = context.resourcesPreferences && context.resourcesPreferences.length > 0
     ? `
-### Teaching Resource Constraints
-${context.resourceConstraints}
+### Preferred Open Sources (priority order)
+${[...context.resourcesPreferences]
+  .sort((a, b) => (sourcePriorityOrder[a.priority] ?? 99) - (sourcePriorityOrder[b.priority] ?? 99))
+  .map((resource) => `- ${resource.label}: ${resource.priority.replace(/_/g, " ")}`)
+  .join("\n")}
 `
     : ""
+
+  const excerptsInfo = sourceExcerpts
+    ? `
+### Source Excerpts
+${sourceExcerpts}
+`
+    : ""
+
 
   // Sequencing mode
   const sequencingInfo = context.curriculum.sequencingMode && context.curriculum.sequencingMode !== "linear"
@@ -424,6 +444,87 @@ ${context.namingRules.lessonTitleRule ? `- Lesson titles: ${context.namingRules.
     ? `\n**Language:** Generate all content in ${context.courseLanguage}.`
     : ""
 
+  const outputInstructionByAction: Record<GenerationAction, string> = {
+    all: "Generate full curriculum content: module titles, lesson titles, topics, objectives, and tasks.",
+    modules: "Generate ONLY module titles. Do not generate lessons, topics, objectives, or tasks.",
+    lessons: "Generate ONLY lesson titles for each lesson number. Keep topics/objectives/tasks empty arrays.",
+    topics: "Generate ONLY topic titles for each lesson. Keep lesson titles unchanged and keep objectives/tasks empty arrays.",
+    objectives: "Generate ONLY objectives for each lesson. Keep lesson titles unchanged and keep topics/tasks empty arrays.",
+    tasks: "Generate ONLY tasks for each lesson. Keep lesson titles unchanged and keep topics/objectives empty arrays.",
+  }
+
+  const outputSchemaByAction: Record<GenerationAction, string> = {
+    modules: `{
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "..."
+    }
+  ]
+}`,
+    all: `{
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "..."
+    }
+  ],
+  "lessons": [
+    {
+      "lessonNumber": 1,
+      "lessonTitle": "...",
+      "topics": ["Topic 1", "Topic 2", ...],
+      "objectives": ["Objective 1", "Objective 2", ...],
+      "tasks": ["Task 1", "Task 2", ...]
+    }
+  ]
+}`,
+    lessons: `{
+  "lessons": [
+    {
+      "lessonNumber": 1,
+      "lessonTitle": "...",
+      "topics": [],
+      "objectives": [],
+      "tasks": []
+    }
+  ]
+}`,
+    topics: `{
+  "lessons": [
+    {
+      "lessonNumber": 1,
+      "lessonTitle": "",
+      "topics": ["Topic 1", "Topic 2", ...],
+      "objectives": [],
+      "tasks": []
+    }
+  ]
+}`,
+    objectives: `{
+  "lessons": [
+    {
+      "lessonNumber": 1,
+      "lessonTitle": "",
+      "topics": [],
+      "objectives": ["Objective 1", "Objective 2", ...],
+      "tasks": []
+    }
+  ]
+}`,
+    tasks: `{
+  "lessons": [
+    {
+      "lessonNumber": 1,
+      "lessonTitle": "",
+      "topics": [],
+      "objectives": [],
+      "tasks": ["Task 1", "Task 2", ...]
+    }
+  ]
+}`,
+  }
+
   return `Generate a detailed curriculum for the following course:
 
 **Course:** ${context.courseName}${context.courseDescription ? `\n\nDescription: ${context.courseDescription}` : ""}${languageInfo}
@@ -434,44 +535,125 @@ ${priorKnowledgeInfo}
 ${keyTermsInfo}
 ${mandatoryTopicsInfo}
 ${applicationInfo}
-${resourceInfo}
+${resourcesInfo}
+${excerptsInfo}
 ${studentsInfo}
 ${scheduleInfo}
 ${structureInfo}${sequencingInfo}
 ${sessionInfo}
 ${namingInfo}
 
-Please generate:
-1. Clear, descriptive titles for each session/lesson
-2. 2-5 relevant topics per lesson
-3. 2-3 measurable learning objectives per topic
-4. 2-4 concrete, assessable tasks per objective
+Action requested: ${action}
+${outputInstructionByAction[action]}
+
+CRITICAL: You MUST generate EXACTLY ${context.curriculum.lessonCount} lessons — one for each session listed above. Do NOT skip any. Do NOT stop early. Do NOT generate fewer lessons than requested.
+${action === "modules" ? `
+For modules action: generate EXACTLY ${context.curriculum.moduleCount} module titles.
+` : ""}
 
 Ensure the curriculum is progressive, builds on prior knowledge, and aligns with the course goals and schedule.${context.mandatoryTopics && context.mandatoryTopics.length > 0 ? " All mandatory topics MUST appear in the curriculum." : ""}${context.namingRules ? " Follow the naming conventions specified above." : ""}
 
 Return the generated curriculum as a clean JSON object with this structure:
-{
-  "lessons": [
-    {
-      "lessonNumber": 1,
-      "lessonTitle": "...",
-      "topics": ["Topic 1", "Topic 2", ...],
-      "objectives": ["Objective 1", "Objective 2", ...],
-      "tasks": ["Task 1", "Task 2", ...]
-    }
-  ]
-}
+${outputSchemaByAction[action]}
 `
 }
 
 /**
  * Parse AI response and extract structured curriculum
  */
+/**
+ * Attempt to repair common JSON issues produced by LLMs.
+ */
+function repairJSON(raw: string): string {
+  let s = raw
+  // Remove BOM / zero-width chars
+  s = s.replace(/^\uFEFF/, "").replace(/[\u200B-\u200D\uFEFF]/g, "")
+  // Remove control characters except \n, \r, \t
+  // eslint-disable-next-line no-control-regex
+  s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "")
+  // Remove trailing commas before } or ]
+  s = s.replace(/,\s*([}\]])/g, "$1")
+
+  // Close truncated JSON
+  let braces = 0, brackets = 0, inString = false, escape = false
+  for (const ch of s) {
+    if (escape) { escape = false; continue }
+    if (ch === "\\") { escape = true; continue }
+    if (ch === '"') { inString = !inString; continue }
+    if (inString) continue
+    if (ch === "{") braces++
+    else if (ch === "}") braces--
+    else if (ch === "[") brackets++
+    else if (ch === "]") brackets--
+  }
+  if (inString) s += '"'
+  while (brackets > 0) { s += "]"; brackets-- }
+  while (braces > 0) { s += "}"; braces-- }
+  s = s.replace(/,\s*([}\]])/g, "$1")
+  return s
+}
+
+/**
+ * Regex-based fallback: extract individual lesson objects from malformed JSON.
+ * Works even when the overall JSON structure is broken (e.g. truncated mid-lesson).
+ */
+function extractLessonsViaRegex(text: string): Record<string, unknown>[] {
+  const lessons: Record<string, unknown>[] = []
+  const lessonPattern = /\{\s*"lessonNumber"\s*:\s*(\d+)\s*,\s*"lessonTitle"\s*:\s*"([^"]*?)"/g
+  let match
+
+  while ((match = lessonPattern.exec(text)) !== null) {
+    const startIdx = match.index
+
+    // Find closing brace by counting depth
+    let depth = 0, inStr = false, esc = false, endIdx = -1
+    for (let i = startIdx; i < text.length; i++) {
+      const ch = text[i]
+      if (esc) { esc = false; continue }
+      if (ch === "\\") { esc = true; continue }
+      if (ch === '"') { inStr = !inStr; continue }
+      if (inStr) continue
+      if (ch === "{") depth++
+      else if (ch === "}") { depth--; if (depth === 0) { endIdx = i; break } }
+    }
+
+    const fragment = endIdx === -1 ? text.slice(startIdx) : text.slice(startIdx, endIdx + 1)
+    try {
+      const repaired = endIdx === -1 ? repairJSON(fragment) : fragment
+      const obj = JSON.parse(repaired) as Record<string, unknown>
+      if (obj.lessonNumber && obj.lessonTitle) {
+        lessons.push({
+          lessonNumber: obj.lessonNumber,
+          lessonTitle: obj.lessonTitle,
+          topics: Array.isArray(obj.topics) ? obj.topics : [],
+          objectives: Array.isArray(obj.objectives) ? obj.objectives : [],
+          tasks: Array.isArray(obj.tasks) ? obj.tasks : [],
+        })
+      }
+    } catch {
+      // Fragment too broken — skip
+    }
+
+    if (endIdx === -1) break // Truncated = last lesson
+  }
+
+  return lessons
+}
+
 export function parseGenerationResponse(responseText: string): GenerationResponse {
   try {
-    // Try to extract JSON from the response
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) {
+    // Strip any leftover <think> tags or markdown fences
+    let cleaned = responseText
+      .replace(/<think>[\s\S]*?<\/think>/g, "")
+      .replace(/<think>[\s\S]*/g, "")
+      .replace(/```(?:json)?\s*\n?/gi, "")
+      .replace(/\n?```/gi, "")
+      .trim()
+
+    // ── Strategy 1: Standard JSON parse (with repair fallback) ──
+    const jsonStart = cleaned.indexOf("{")
+    const jsonEnd = cleaned.lastIndexOf("}")
+    if (jsonStart === -1) {
       return {
         success: false,
         message: "No JSON found in response",
@@ -479,42 +661,73 @@ export function parseGenerationResponse(responseText: string): GenerationRespons
       }
     }
 
-    const parsed = JSON.parse(jsonMatch[0])
+    let jsonStr = jsonEnd > jsonStart
+      ? cleaned.slice(jsonStart, jsonEnd + 1)
+      : cleaned.slice(jsonStart)
 
-    // Validate structure
-    if (!parsed.lessons || !Array.isArray(parsed.lessons)) {
-      return {
-        success: false,
-        message: "Invalid curriculum structure",
-        error: "Response missing 'lessons' array",
+    let parsed: Record<string, unknown> | null = null
+    try {
+      parsed = JSON.parse(jsonStr)
+    } catch {
+      try {
+        jsonStr = repairJSON(jsonStr)
+        parsed = JSON.parse(jsonStr)
+      } catch {
+        // Strategy 1 failed entirely — fall through to Strategy 2
       }
     }
 
-    // Validate lessons have required fields
-    const validatedLessons = parsed.lessons.filter(
-      (lesson: Record<string, unknown>) =>
-        lesson.lessonNumber &&
-        lesson.lessonTitle &&
-        Array.isArray(lesson.topics) &&
-        Array.isArray(lesson.objectives) &&
-        Array.isArray(lesson.tasks),
-    )
+    // Validate and return if Strategy 1 succeeded
+    const validatedModules = Array.isArray(parsed?.modules)
+      ? (parsed.modules as Record<string, unknown>[]).filter(
+        (module) =>
+          typeof module.moduleNumber === "number"
+          && typeof module.moduleTitle === "string"
+          && module.moduleTitle.trim().length > 0,
+      ) as GeneratedCurriculumContent["modules"]
+      : []
 
-    if (validatedLessons.length === 0) {
+    const validatedLessons = Array.isArray(parsed?.lessons)
+      ? (parsed.lessons as Record<string, unknown>[]).filter(
+        (lesson) =>
+          lesson.lessonNumber &&
+          lesson.lessonTitle &&
+          Array.isArray(lesson.topics) &&
+          Array.isArray(lesson.objectives) &&
+          Array.isArray(lesson.tasks),
+      ) as GeneratedCurriculumContent["lessons"]
+      : []
+
+    if ((validatedLessons?.length ?? 0) > 0 || (validatedModules?.length ?? 0) > 0) {
+      const parts: string[] = []
+      if ((validatedModules?.length ?? 0) > 0) parts.push(`${validatedModules?.length} module(s)`)
+      if ((validatedLessons?.length ?? 0) > 0) parts.push(`${validatedLessons?.length} lesson(s)`)
       return {
-        success: false,
-        message: "No valid lessons in response",
-        error: "Generated lessons do not have required structure",
+        success: true,
+        message: `Successfully generated ${parts.join(" and ")}`,
+        content: {
+          ...(validatedModules && validatedModules.length > 0 ? { modules: validatedModules } : {}),
+          ...(validatedLessons && validatedLessons.length > 0 ? { lessons: validatedLessons } : {}),
+        },
+        generatedAt: new Date().toISOString(),
+      }
+    }
+
+    // ── Strategy 2: Regex-based lesson extraction ──
+    const extractedLessons = extractLessonsViaRegex(cleaned) as GeneratedCurriculumContent["lessons"]
+    if (extractedLessons && extractedLessons.length > 0) {
+      return {
+        success: true,
+        message: `Successfully extracted ${extractedLessons.length} lesson(s) from partial response`,
+        content: { lessons: extractedLessons },
+        generatedAt: new Date().toISOString(),
       }
     }
 
     return {
-      success: true,
-      message: `Successfully generated curriculum for ${validatedLessons.length} lesson(s)`,
-      content: {
-        lessons: validatedLessons,
-      },
-      generatedAt: new Date().toISOString(),
+      success: false,
+      message: "No valid lessons in response",
+      error: "Could not extract any valid lessons from AI response",
     }
   } catch (error) {
     return {
@@ -527,47 +740,146 @@ export function parseGenerationResponse(responseText: string): GenerationRespons
 
 /**
  * Call the curriculum generation API route (which calls Ollama).
- * Falls back to the local keyword-based generator if the API is unreachable.
+ * Does NOT silently fall back — returns explicit errors so the UI can inform the user.
  */
 export async function callGenerationAPI(
   context: GenerationContext,
+  selectedModel?: string,
+  externalSignal?: AbortSignal,
+  action: GenerationAction = "all",
 ): Promise<GenerationResponse> {
-  const prompt = formatGenerationPrompt(context)
+  let sourceExcerpts = ""
+  try {
+    const retrievalController = new AbortController()
+    const retrievalTimeout = setTimeout(() => retrievalController.abort(), 12_000)
+    const retrievalRes = await fetch("/api/retrieve-sources", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        context: {
+          courseName: context.courseName,
+          courseDescription: context.courseDescription,
+          keyTerms: context.keyTerms,
+          mandatoryTopics: context.mandatoryTopics,
+        },
+        resourcesPreferences: context.resourcesPreferences ?? [],
+      }),
+      signal: retrievalController.signal,
+    })
+    clearTimeout(retrievalTimeout)
+
+    if (retrievalRes.ok) {
+      const data = (await retrievalRes.json()) as {
+        excerpts?: Array<{ sourceLabel: string; title: string; excerpt: string; url?: string }>
+        skipped?: Array<{ sourceId: string; reason: string }>
+      }
+      const excerpts = data.excerpts ?? []
+      const excerptLines = excerpts.map((item) => {
+        const url = item.url ? ` (${item.url})` : ""
+        return `- [${item.sourceLabel}] ${item.title}: ${item.excerpt}${url}`
+      })
+      const skippedLines = (data.skipped ?? []).map((item) => `- ${item.sourceId}: ${item.reason}`)
+      sourceExcerpts = [
+        ...excerptLines,
+        ...(skippedLines.length > 0 ? ["", "Notes:", ...skippedLines] : []),
+      ].join("\n")
+    }
+  } catch {
+    // Retrieval is best-effort; continue without excerpts.
+  }
+
+  const prompt = formatGenerationPrompt(context, sourceExcerpts, action)
+  console.log("[callGenerationAPI] Prompt length:", prompt.length, "chars")
+  console.log("[callGenerationAPI] Lesson count requested:", context.curriculum.lessonCount)
+  if (selectedModel) {
+    console.log("[callGenerationAPI] Selected model:", selectedModel)
+  }
+
+  // 10-minute timeout — local models like deepseek-r1 can be very slow
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10 * 60 * 1000)
+  let abortedByCaller = Boolean(externalSignal?.aborted)
+
+  const onExternalAbort = () => {
+    abortedByCaller = true
+    controller.abort()
+  }
+
+  if (externalSignal) {
+    externalSignal.addEventListener("abort", onExternalAbort, { once: true })
+  }
 
   try {
+    console.log("[callGenerationAPI] Calling /api/generate-curriculum …")
     const res = await fetch("/api/generate-curriculum", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt, action, ...(selectedModel && { model: selectedModel }) }),
+      signal: controller.signal,
     })
+
+    clearTimeout(timeoutId)
+    if (externalSignal) {
+      externalSignal.removeEventListener("abort", onExternalAbort)
+    }
 
     if (!res.ok) {
       const errorBody = await res.json().catch(() => ({ error: res.statusText }))
       const errorMsg = (errorBody as { error?: string }).error ?? `HTTP ${res.status}`
-      console.warn("[callGenerationAPI] API route error, falling back to local generator:", errorMsg)
-
-      // Fall back to local generator so the user still gets *something*
-      const localContent = buildLocalGeneratedCurriculum(context)
+      console.error("[callGenerationAPI] API route returned error:", res.status, errorMsg)
       return {
-        success: true,
-        message: `AI service unavailable (${errorMsg}). Used local fallback generator.`,
-        content: localContent,
-        generatedAt: new Date().toISOString(),
+        success: false,
+        message: "AI generation failed",
+        error: `Ollama error: ${errorMsg}`,
       }
     }
 
     const { content: rawText } = (await res.json()) as { content: string }
-    return parseGenerationResponse(rawText)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error"
-    console.warn("[callGenerationAPI] Fetch failed, falling back to local generator:", message)
+    console.log("[callGenerationAPI] Got response, length:", rawText?.length ?? 0)
 
-    const localContent = buildLocalGeneratedCurriculum(context)
+    if (!rawText) {
+      return {
+        success: false,
+        message: "AI returned empty content",
+        error: "The model returned an empty response. Try again.",
+      }
+    }
+
+    const result = parseGenerationResponse(rawText)
+    console.log("[callGenerationAPI] Parse result:", result.success, result.message)
+    if (result.content?.lessons) {
+      console.log("[callGenerationAPI] Lessons generated:", result.content.lessons.length)
+      console.log("[callGenerationAPI] First lesson title:", result.content.lessons[0]?.lessonTitle)
+    }
+    return result
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (externalSignal) {
+      externalSignal.removeEventListener("abort", onExternalAbort)
+    }
+    const message = error instanceof Error ? error.message : "Unknown error"
+
+    if (error instanceof DOMException && error.name === "AbortError") {
+      if (abortedByCaller) {
+        return {
+          success: false,
+          message: "Generation canceled",
+          error: "The generation run was canceled.",
+        }
+      }
+      console.error("[callGenerationAPI] Request timed out after 10 minutes")
+      return {
+        success: false,
+        message: "Generation timed out",
+        error: "The model took longer than 10 minutes to respond. For better performance, try: (1) Reducing lesson count to 20-40 lessons, (2) Using a faster model like Llama 3.2 or Phi 3, or (3) Splitting generation into smaller batches.",
+      }
+    }
+
+    console.error("[callGenerationAPI] Fetch failed:", message)
     return {
-      success: true,
-      message: `AI service unreachable (${message}). Used local fallback generator.`,
-      content: localContent,
-      generatedAt: new Date().toISOString(),
+      success: false,
+      message: "Cannot reach AI service",
+      error: `Could not connect to the generation API: ${message}. Is the dev server running?`,
     }
   }
 }

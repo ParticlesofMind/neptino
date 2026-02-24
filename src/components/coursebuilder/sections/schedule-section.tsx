@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react"
 import {
-  DANGER_ACTION_BUTTON_SM_CLASS,
   DANGER_ACTION_BUTTON_CLASS,
+  DANGER_ACTION_BUTTON_SM_CLASS,
   PRIMARY_ACTION_BUTTON_CLASS,
-  PRIMARY_ACTION_BUTTON_SM_CLASS,
+  SECONDARY_ACTION_BUTTON_CLASS,
   SetupColumn,
   SetupPanelLayout,
   SetupSection,
@@ -598,7 +598,7 @@ export function ScheduleSection({ courseId }: { courseId: string | null }) {
               <button
                 type="button"
                 onClick={() => applyImportedSchedule(importText)}
-                className={PRIMARY_ACTION_BUTTON_SM_CLASS}
+                className={PRIMARY_ACTION_BUTTON_CLASS}
               >
                 Apply Imported Schedule
               </button>
@@ -634,7 +634,7 @@ export function ScheduleSection({ courseId }: { courseId: string | null }) {
                     <button
                       type="button"
                       onClick={() => setBreaks((prev) => prev.filter((_, j) => j !== i))}
-                      className={`${DANGER_ACTION_BUTTON_SM_CLASS} ml-auto px-2 py-1`}
+                      className={`${DANGER_ACTION_BUTTON_CLASS} ml-auto`}
                     >
                       ✕
                     </button>
@@ -644,7 +644,7 @@ export function ScheduleSection({ courseId }: { courseId: string | null }) {
               <button
                 type="button"
                 onClick={() => setBreaks((prev) => [...prev, { start: "10:00", end: "10:15" }])}
-                className={`${PRIMARY_ACTION_BUTTON_SM_CLASS} mt-1 w-full`}
+                className={`${SECONDARY_ACTION_BUTTON_CLASS} mt-1`}
               >
                 + Add Break
               </button>
@@ -656,7 +656,7 @@ export function ScheduleSection({ courseId }: { courseId: string | null }) {
                 type="button"
                 onClick={generateSchedule}
                 disabled={hasSchedule}
-                className={`${PRIMARY_ACTION_BUTTON_CLASS} w-full`}
+                className={PRIMARY_ACTION_BUTTON_CLASS}
               >
                 Generate Schedule
               </button>
@@ -664,7 +664,7 @@ export function ScheduleSection({ courseId }: { courseId: string | null }) {
                 type="button"
                 onClick={deleteSchedule}
                 disabled={!hasSchedule}
-                className={`${DANGER_ACTION_BUTTON_CLASS} w-full`}
+                className={DANGER_ACTION_BUTTON_CLASS}
               >
                 Delete Schedule
               </button>
@@ -673,11 +673,6 @@ export function ScheduleSection({ courseId }: { courseId: string | null }) {
         </SetupColumn>
 
         <SetupColumn>
-          {generatedEntries.length > 0 && (
-            <p className="mb-2 text-xs font-medium text-muted-foreground">
-              {generatedEntries.length} session{generatedEntries.length !== 1 ? "s" : ""} generated
-            </p>
-          )}
           <div className="overflow-hidden rounded-lg border border-border bg-background">
             <div className="grid grid-cols-4 border-b border-border bg-muted/40 px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Day</p>
@@ -707,7 +702,7 @@ export function ScheduleSection({ courseId }: { courseId: string | null }) {
                       <button
                         type="button"
                         onClick={() => removeEntry(idx)}
-                        className={`${DANGER_ACTION_BUTTON_SM_CLASS} px-2 py-1 text-[11px]`}
+                        className={DANGER_ACTION_BUTTON_SM_CLASS}
                       >
                         Remove
                       </button>

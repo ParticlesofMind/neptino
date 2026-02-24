@@ -11,7 +11,7 @@ export interface ContentLoadConfig {
 }
 
 export interface DurationPreset {
-  name: "mini" | "single" | "double" | "triple" | "fullday"
+  name: "mini" | "single" | "double" | "triple" | "fullday" | "marathon"
   minDuration: number
   maxDuration: number
   config: ContentLoadConfig
@@ -22,31 +22,37 @@ const DURATION_PRESETS: DurationPreset[] = [
     name: "mini",
     minDuration: 0,
     maxDuration: 30,
-    config: { topicsPerLesson: 1, objectivesPerTopic: 1, tasksPerObjective: 2 },
+    config: { topicsPerLesson: 1, objectivesPerTopic: 1, tasksPerObjective: 1 },
   },
   {
     name: "single",
     minDuration: 31,
     maxDuration: 60,
-    config: { topicsPerLesson: 2, objectivesPerTopic: 2, tasksPerObjective: 3 },
+    config: { topicsPerLesson: 1, objectivesPerTopic: 2, tasksPerObjective: 1 },
   },
   {
     name: "double",
     minDuration: 61,
     maxDuration: 120,
-    config: { topicsPerLesson: 3, objectivesPerTopic: 3, tasksPerObjective: 4 },
+    config: { topicsPerLesson: 2, objectivesPerTopic: 2, tasksPerObjective: 1 },
   },
   {
     name: "triple",
     minDuration: 121,
     maxDuration: 180,
-    config: { topicsPerLesson: 4, objectivesPerTopic: 4, tasksPerObjective: 5 },
+    config: { topicsPerLesson: 2, objectivesPerTopic: 2, tasksPerObjective: 2 },
   },
   {
     name: "fullday",
     minDuration: 181,
+    maxDuration: 240,
+    config: { topicsPerLesson: 3, objectivesPerTopic: 2, tasksPerObjective: 2 },
+  },
+  {
+    name: "marathon",
+    minDuration: 241,
     maxDuration: Infinity,
-    config: { topicsPerLesson: 5, objectivesPerTopic: 5, tasksPerObjective: 6 },
+    config: { topicsPerLesson: 3, objectivesPerTopic: 3, tasksPerObjective: 2 },
   },
 ]
 
@@ -114,7 +120,7 @@ export function listDurationPresets(): DurationPreset[] {
 export function aggregateContentLoadConfigs(configs: ContentLoadConfig[]): ContentLoadConfig {
   if (configs.length === 0) {
     // Default fallback
-    return { topicsPerLesson: 2, objectivesPerTopic: 2, tasksPerObjective: 3 }
+    return { topicsPerLesson: 1, objectivesPerTopic: 2, tasksPerObjective: 1 }
   }
 
   const avgTopics = Math.round(configs.reduce((sum, c) => sum + c.topicsPerLesson, 0) / configs.length)

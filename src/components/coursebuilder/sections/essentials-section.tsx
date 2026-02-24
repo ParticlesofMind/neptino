@@ -11,6 +11,9 @@ type CourseEssentials = {
   description: string
   language: string
   courseType: string
+  teacherId: string
+  teacherName: string
+  institution: string
   imageName: string | null
 }
 
@@ -73,6 +76,9 @@ export function EssentialsSection({
     description: initialData?.description ?? "",
     language: initialData?.language ?? "",
     courseType: initialData?.courseType ?? "",
+    teacherId: initialData?.teacherId ?? "",
+    teacherName: initialData?.teacherName ?? "",
+    institution: initialData?.institution ?? "Independent",
     imageName: initialData?.imageName ?? null,
   })
   const [loading, setLoading] = useState(false)
@@ -85,11 +91,53 @@ export function EssentialsSection({
   const imageFileRef = useRef<File | null>(null)
   const [courseGoals, setCourseGoals] = useState<string[]>([])
   const [newGoal, setNewGoal] = useState("")
+  const [teacherOptions, setTeacherOptions] = useState<Array<{ id: string; name: string }>>([])
+  const [institutionOptions, setInstitutionOptions] = useState<string[]>(["Independent"])
+  const generationSettingsRef = useRef<Record<string, unknown> | null>(null)
 
   const set = <K extends keyof CourseEssentials>(k: K, v: CourseEssentials[K]) =>
     setData((prev) => ({ ...prev, [k]: v }))
 
   const previewImageUrl = imageObjectUrl ?? initialData?.imageUrl ?? null
+
+  const resolveUserDisplayName = (user: { email?: string | null; user_metadata?: Record<string, unknown> }): string => {
+    const metadata = (user.user_metadata ?? {}) as Record<string, unknown>
+    const fullName = metadata.full_name
+    const displayName = metadata.display_name
+    const name = metadata.name
+    const fallback = user.email?.split("@")[0]
+
+    if (typeof fullName === "string" && fullName.trim()) return fullName.trim()
+    if (typeof displayName === "string" && displayName.trim()) return displayName.trim()
+    if (typeof name === "string" && name.trim()) return name.trim()
+    if (fallback && fallback.trim()) return fallback.trim()
+    return "Me"
+  }
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: authData }) => {
+      const user = authData.user
+      if (!user) return
+
+      const me = { id: user.id, name: resolveUserDisplayName(user) }
+      const metadata = (user.user_metadata ?? {}) as Record<string, unknown>
+      const metadataInstitution =
+        typeof metadata.institution === "string" && metadata.institution.trim().length > 0
+          ? metadata.institution.trim()
+          : ""
+      const options = Array.from(new Set(["Independent", metadataInstitution, initialData?.institution ?? ""].filter(Boolean)))
+
+      setTeacherOptions([me])
+      setInstitutionOptions(options)
+      setData((prev) => ({
+        ...prev,
+        teacherId: prev.teacherId || me.id,
+        teacherName: prev.teacherName || me.name,
+        institution: prev.institution || metadataInstitution || "Independent",
+      }))
+    })
+  }, [initialData?.institution])
 
   // Load course goals from generation_settings on mount
   useEffect(() => {
@@ -104,8 +152,19 @@ export function EssentialsSection({
       .then(({ data: row, error: err }) => {
         if (!err && row?.generation_settings) {
           const gs = row.generation_settings as Record<string, unknown>
+          generationSettingsRef.current = gs
           if (Array.isArray(gs.course_goals)) {
             setCourseGoals(gs.course_goals as string[])
+          }
+
+          const savedTeacherId = typeof gs.teacher_id === "string" ? gs.teacher_id : ""
+          const savedTeacherName = typeof gs.teacher_name === "string" ? gs.teacher_name : ""
+          if (savedTeacherId || savedTeacherName) {
+            setData((prev) => ({
+              ...prev,
+              teacherId: savedTeacherId || prev.teacherId,
+              teacherName: savedTeacherName || prev.teacherName,
+            }))
           }
         }
       })
@@ -121,7 +180,7 @@ export function EssentialsSection({
       setSaveStatus("empty")
       return
     }
-    if (!data.language || !data.courseType) {
+    if (!data.language || !data.courseType || !data.teacherId || !data.teacherName || !data.institution) {
       setSaveStatus("empty")
       return
     }
@@ -158,6 +217,8 @@ export function EssentialsSection({
         course_description: data.description.trim(),
         course_language: data.language,
         course_type: data.courseType,
+        teacher_id: data.teacherId,
+        institution: data.institution,
         course_image: imageUrl,
       }
 
@@ -165,9 +226,13 @@ export function EssentialsSection({
 
       if (activeCourseId) {
         // Merge course_goals into generation_settings
-        const { data: gsRow } = await supabase.from("courses").select("generation_settings").eq("id", activeCourseId).single()
-        const existingGs = (gsRow?.generation_settings as Record<string, unknown>) ?? {}
-        payload.generation_settings = { ...existingGs, course_goals: goalsPayload }
+        const existingGs = generationSettingsRef.current ?? {}
+        payload.generation_settings = {
+          ...existingGs,
+          course_goals: goalsPayload,
+          teacher_id: data.teacherId,
+          teacher_name: data.teacherName,
+        }
 
         const { error: updateError } = await supabase.from("courses").update(payload).eq("id", activeCourseId)
         if (updateError) {
@@ -175,6 +240,7 @@ export function EssentialsSection({
           setSaveStatus("error")
           return
         }
+        generationSettingsRef.current = payload.generation_settings as Record<string, unknown>
         onCourseCreated(activeCourseId, { ...data, title: data.title.trim(), imageUrl })
       } else {
         const { data: course, error: insertError } = await supabase
@@ -182,8 +248,11 @@ export function EssentialsSection({
           .insert({
             ...payload,
             teacher_id: user.id,
-            institution: user.user_metadata?.institution ?? "Independent",
-            generation_settings: { course_goals: goalsPayload },
+            generation_settings: {
+              course_goals: goalsPayload,
+              teacher_id: data.teacherId,
+              teacher_name: data.teacherName,
+            },
             students_overview: { total: 0, synced: 0 },
           })
           .select("id")
@@ -195,6 +264,11 @@ export function EssentialsSection({
           return
         }
         setCreatedCourseId(course.id)
+        generationSettingsRef.current = {
+          course_goals: goalsPayload,
+          teacher_id: data.teacherId,
+          teacher_name: data.teacherName,
+        }
         onCourseCreated(course.id, { ...data, title: data.title.trim(), imageUrl })
       }
 
@@ -259,6 +333,38 @@ export function EssentialsSection({
                 <option value="">Select type...</option>
                 {["In-person", "Online", "Hybrid"].map((t) => (
                   <option key={t}>{t}</option>
+                ))}
+              </SelectInput>
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <FieldLabel>Teacher</FieldLabel>
+              <SelectInput
+                value={data.teacherId}
+                onChange={(e) => {
+                  const selectedId = e.target.value
+                  const selected = teacherOptions.find((option) => option.id === selectedId)
+                  set("teacherId", selectedId)
+                  set("teacherName", selected?.name ?? data.teacherName)
+                }}
+                disabled={teacherOptions.length === 0}
+              >
+                <option value="">Select teacher...</option>
+                {teacherOptions.map((option) => (
+                  <option key={option.id} value={option.id}>{option.name}</option>
+                ))}
+              </SelectInput>
+            </div>
+            <div>
+              <FieldLabel>Institution</FieldLabel>
+              <SelectInput
+                value={data.institution}
+                onChange={(e) => set("institution", e.target.value)}
+              >
+                <option value="">Select institution...</option>
+                {institutionOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
                 ))}
               </SelectInput>
             </div>
@@ -370,7 +476,7 @@ export function EssentialsSection({
               <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
                 {data.description || <span className="italic">No description yet.</span>}
               </p>
-              {(data.language || data.courseType) && (
+              {(data.language || data.courseType || data.teacherName || data.institution) && (
                 <div className="flex flex-wrap gap-2 pt-1.5">
                   {data.language && (
                     <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
@@ -380,6 +486,16 @@ export function EssentialsSection({
                   {data.courseType && (
                     <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
                       {data.courseType}
+                    </span>
+                  )}
+                  {data.teacherName && (
+                    <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
+                      {data.teacherName}
+                    </span>
+                  )}
+                  {data.institution && (
+                    <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
+                      {data.institution}
                     </span>
                   )}
                 </div>

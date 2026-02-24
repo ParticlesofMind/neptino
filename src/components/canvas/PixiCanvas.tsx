@@ -87,7 +87,10 @@ interface PixiCanvasProps {
   onZoomChange?:     (pct: number) => void
   activeTool?:       string
   toolConfig?:       ToolConfig
+  activePage?:       number
+  focusPage?:        number
   onViewportChange?: (info: CanvasViewportInfo) => void
+  onActivePageChange?: (page: number) => void
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -122,7 +125,10 @@ export function PixiCanvas({
   onZoomChange,
   activeTool   = 'selection',
   toolConfig,
+  activePage   = 1,
+  focusPage,
   onViewportChange,
+  onActivePageChange,
 }: PixiCanvasProps) {
   const containerRef   = useRef<HTMLDivElement>(null)
   const appRef         = useRef<Application | null>(null)
@@ -131,27 +137,36 @@ export function PixiCanvas({
   const zoomPct        = useRef(zoom)
   const onZoomCb       = useRef(onZoomChange)
   const onViewportCb   = useRef(onViewportChange)
+  const onActivePageCb = useRef(onActivePageChange)
   const configSnap     = useRef(config)
   const activeToolRef  = useRef(activeTool)
+  const activePageRef  = useRef(activePage)
+  const focusPageRef   = useRef(focusPage)
   const toolConfigRef  = useRef(toolConfig)
+  const baseScaleRef   = useRef(1)
 
   useEffect(() => { onZoomCb.current      = onZoomChange     }, [onZoomChange])
   useEffect(() => { onViewportCb.current  = onViewportChange }, [onViewportChange])
+  useEffect(() => { onActivePageCb.current = onActivePageChange }, [onActivePageChange])
   useEffect(() => { configSnap.current    = config           }, [config])
   useEffect(() => { activeToolRef.current = activeTool       }, [activeTool])
+  useEffect(() => { activePageRef.current = activePage       }, [activePage])
+  useEffect(() => { focusPageRef.current  = focusPage        }, [focusPage])
   useEffect(() => { toolConfigRef.current = toolConfig       }, [toolConfig])
 
-  const emitViewport = (world: Container, cfg: CanvasPageConfig) => {
+  const emitViewport = (world: Container, cfg: CanvasPageConfig, page = activePageRef.current) => {
+    const safePage = Math.min(Math.max(1, page), Math.max(1, cfg.pageCount))
+    const pageOffset = (safePage - 1) * (cfg.heightPx + PAGE_GAP)
     const scale = world.scale.x
     const pageRect = {
       x: world.x,
-      y: world.y,
+      y: world.y + pageOffset * scale,
       width: cfg.widthPx * scale,
       height: cfg.heightPx * scale,
     }
     const contentRect = {
       x: world.x + cfg.margins.left * scale,
-      y: world.y + cfg.margins.top * scale,
+      y: world.y + (pageOffset + cfg.margins.top) * scale,
       width: (cfg.widthPx - cfg.margins.left - cfg.margins.right) * scale,
       height: (cfg.heightPx - cfg.margins.top - cfg.margins.bottom) * scale,
     }
@@ -161,6 +176,10 @@ export function PixiCanvas({
       scale,
       zoomPct: zoomPct.current,
     })
+  }
+
+  const getScaleForZoom = (pct: number) => {
+    return baseScaleRef.current * (pct / 100)
   }
 
   // ── Update canvas cursor when tool changes ─────────────────────────────────
@@ -177,8 +196,8 @@ export function PixiCanvas({
     const app   = appRef.current
     if (!world) { zoomPct.current = zoom; return }
 
-    const oldS = zoomPct.current / 100
-    const newS = zoom            / 100
+    const oldS = getScaleForZoom(zoomPct.current)
+    const newS = getScaleForZoom(zoom)
     if (app) {
       const cx = app.screen.width  / 2
       const cy = app.screen.height / 2
@@ -187,19 +206,52 @@ export function PixiCanvas({
     }
     world.scale.set(newS)
     zoomPct.current = zoom
-    emitViewport(world, configSnap.current)
+    emitViewport(world, configSnap.current, activePageRef.current)
   }, [zoom])
+
+  useEffect(() => {
+    const world = worldRef.current
+    if (!world) return
+    emitViewport(world, configSnap.current, activePage)
+  }, [activePage])
+
+  useEffect(() => {
+    const app = appRef.current
+    const world = worldRef.current
+    const targetPage = focusPageRef.current
+    if (!app || !world || typeof targetPage !== 'number' || Number.isNaN(targetPage)) return
+
+    const cfg = configSnap.current
+    const safePage = Math.min(Math.max(1, Math.round(targetPage)), Math.max(1, cfg.pageCount))
+    centerWorldOnPage(app, world, cfg, safePage)
+    emitViewport(world, cfg, safePage)
+  }, [focusPage])
 
   // ── Redraw pages when config changes (preserve drawing layer) ──────────────
   useEffect(() => {
+    const app       = appRef.current
     const world     = worldRef.current
     const drawLayer = drawLayerRef.current
     if (!world) return
+
+    const prevScale = world.scale.x
     world.removeChildren()
     drawPages(world, config)
     if (drawLayer) world.addChild(drawLayer) // re-attach above pages
-    emitViewport(world, config)
-  }, [config]) // eslint-disable-line react-hooks/exhaustive-deps
+
+    if (app) {
+      const fittedScale = fitWorld(app, world, config, activePageRef.current)
+      baseScaleRef.current = fittedScale
+
+      const nextScale = getScaleForZoom(zoomPct.current)
+      if (Math.abs(nextScale - prevScale) > 0.0001) {
+        world.scale.set(nextScale)
+      }
+      centerWorldOnPage(app, world, config, focusPageRef.current ?? activePageRef.current)
+    }
+
+    emitViewport(world, config, activePageRef.current)
+  }, [config])
 
   // ── Mount once ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -227,7 +279,6 @@ export function PixiCanvas({
       const world = new Container()
       app.stage.addChild(world)
       worldRef.current = world
-      world.scale.set(zoomPct.current / 100)
 
       drawPages(world, configSnap.current)
 
@@ -236,8 +287,37 @@ export function PixiCanvas({
       world.addChild(drawLayer)
       drawLayerRef.current = drawLayer
 
-      fitWorld(app, world, configSnap.current)
-      emitViewport(world, configSnap.current)
+      const fittedScale = fitWorld(app, world, configSnap.current, activePageRef.current)
+      baseScaleRef.current = fittedScale
+
+      const initialScale = getScaleForZoom(zoomPct.current)
+      if (Math.abs(initialScale - fittedScale) > 0.0001) {
+        const cx = app.screen.width / 2
+        const cy = app.screen.height / 2
+        world.x = cx - (cx - world.x) * (initialScale / fittedScale)
+        world.y = cy - (cy - world.y) * (initialScale / fittedScale)
+        world.scale.set(initialScale)
+      }
+      centerWorldOnPage(app, world, configSnap.current, activePageRef.current)
+
+      emitViewport(world, configSnap.current, activePageRef.current)
+
+      const detectActivePageFromView = () => {
+        const cfg = configSnap.current
+        const scale = world.scale.x
+        if (scale <= 0) return
+
+        const viewCenterYInWorld = (app.screen.height / 2 - world.y) / scale
+        const step = cfg.heightPx + PAGE_GAP
+        const page = Math.min(
+          Math.max(1, Math.round((viewCenterYInWorld - cfg.heightPx / 2) / step) + 1),
+          Math.max(1, cfg.pageCount),
+        )
+
+        if (page !== activePageRef.current) {
+          onActivePageCb.current?.(page)
+        }
+      }
 
       // ── Drawing state ──────────────────────────────────────────────────────
       let isPanning    = false
@@ -441,7 +521,8 @@ export function PixiCanvas({
         if (isPanning) {
           world.x = panOrigin.wx + (e.clientX - panOrigin.px)
           world.y = panOrigin.wy + (e.clientY - panOrigin.py)
-          emitViewport(world, configSnap.current)
+          emitViewport(world, configSnap.current, activePageRef.current)
+          detectActivePageFromView()
           return
         }
         if (!isDrawing || !(e.buttons & 1)) return
@@ -491,7 +572,8 @@ export function PixiCanvas({
           const oldPct = zoomPct.current
           const newPct = Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, oldPct * factor)))
           if (newPct === oldPct) return
-          const oldS = oldPct / 100, newS = newPct / 100
+          const oldS = getScaleForZoom(oldPct)
+          const newS = getScaleForZoom(newPct)
           const r  = app.canvas.getBoundingClientRect()
           const mx = e.clientX - r.left, my = e.clientY - r.top
           world.x = mx - (mx - world.x) * (newS / oldS)
@@ -504,7 +586,8 @@ export function PixiCanvas({
           world.x -= e.deltaX
           world.y -= e.deltaY
         }
-        emitViewport(world, configSnap.current)
+        emitViewport(world, configSnap.current, activePageRef.current)
+        detectActivePageFromView()
       }
 
       app.canvas.addEventListener('pointerdown',   onDown)
@@ -524,7 +607,7 @@ export function PixiCanvas({
         drawLayerRef.current = null
       }
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   return <div ref={containerRef} className="relative h-full w-full overflow-hidden" />
 }
@@ -563,16 +646,23 @@ function drawPages(world: Container, cfg: CanvasPageConfig) {
   }
 }
 
-function fitWorld(app: Application, world: Container, cfg: CanvasPageConfig) {
+function centerWorldOnPage(app: Application, world: Container, cfg: CanvasPageConfig, page: number) {
+  const safePage = Math.min(Math.max(1, Math.round(page)), Math.max(1, cfg.pageCount))
+  const scale = world.scale.x
+  world.x = (app.screen.width - cfg.widthPx * scale) / 2
+  const pageCenterY = ((safePage - 1) * (cfg.heightPx + PAGE_GAP) + cfg.heightPx / 2) * scale
+  world.y = app.screen.height / 2 - pageCenterY
+}
+
+function fitWorld(app: Application, world: Container, cfg: CanvasPageConfig, page = 1): number {
   const vw     = app.screen.width
   const vh     = app.screen.height
-  const totalH = cfg.pageCount * (cfg.heightPx + PAGE_GAP) - PAGE_GAP
   const scale  = Math.min(
     (vw * 0.82) / cfg.widthPx,
-    (vh * 0.82) / totalH,
+    (vh * 0.82) / cfg.heightPx,
     1.0,
   )
   world.scale.set(scale)
-  world.x = (vw - cfg.widthPx * scale) / 2
-  world.y = Math.max(24, (vh - totalH * scale) / 2)
+  centerWorldOnPage(app, world, cfg, page)
+  return scale
 }

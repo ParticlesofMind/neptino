@@ -1,20 +1,30 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
-import { PRIMARY_ACTION_BUTTON_CLASS, SetupColumn, SetupPanelLayout, SetupSection } from "@/components/coursebuilder/layout-primitives"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { DANGER_ACTION_BUTTON_CLASS, PRIMARY_ACTION_BUTTON_CLASS, SECONDARY_ACTION_BUTTON_CLASS, SetupColumn, SetupPanelLayout, SetupSection } from "@/components/coursebuilder/layout-primitives"
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
 import { createClient } from "@/lib/supabase/client"
 import { buildGenerationContext, callGenerationAPI } from "@/lib/curriculum/ai-generation-service"
 import type { GenerationExtras, ClassificationContext, PedagogyContext, NamingRules, StudentsContext } from "@/lib/curriculum/ai-generation-service"
 import { getPedagogyApproach } from "@/components/coursebuilder/sections/pedagogy-section"
+import { getModelInfo } from "@/lib/ollama/models"
+import { buildDefaultResourcePreferences, mergeResourcePreferences, type ResourcePreference } from "@/lib/curriculum/resources"
 import {
   calculateSessionDuration,
   getContentLoadConfig,
   listDurationPresets,
 } from "@/lib/curriculum/content-load-service"
+import { normalizeTemplateSettings } from "@/lib/curriculum/template-source-of-truth"
 import type { CurriculumCompetency } from "@/lib/curriculum/competency-types"
 import type { TemplateDesignConfig, TemplateType } from "@/lib/curriculum/template-blocks"
 import { createDefaultTemplateDesign } from "@/lib/curriculum/template-blocks"
+import {
+  buildCertificateLessonIndexes,
+  buildModulesForPreview,
+  deriveTemplateOptions,
+  type CertificateMode,
+  type CourseType,
+} from "@/components/coursebuilder/sections/curriculum-derived"
 
 interface ScheduleGeneratedEntry {
   id: string
@@ -31,6 +41,7 @@ interface CurriculumSessionRow {
   session_number: number
   title: string
   notes: string
+  template_id?: string
   template_type?: TemplateType
   duration_minutes?: number
   topics?: number
@@ -42,9 +53,6 @@ interface CurriculumSessionRow {
   competencies?: CurriculumCompetency[]
   template_design?: TemplateDesignConfig
 }
-
-type CourseType = "minimalist" | "essential" | "complete" | "custom"
-type CertificateMode = "end-module" | "end-course" | "never"
 
 interface SavedTemplateSummary {
   id: string
@@ -60,17 +68,10 @@ const COURSE_TYPE_TEMPLATE_FILTERS: Record<CourseType, string[]> = {
 }
 
 function extractSavedTemplates(raw: unknown): SavedTemplateSummary[] {
-  const settings = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null
-  const templates = Array.isArray(settings?.templates)
-    ? (settings?.templates as Array<Record<string, unknown>>)
-    : Array.isArray(raw)
-      ? (raw as Array<Record<string, unknown>>)
-      : []
-
-  return templates.map((template, index) => ({
-    id: String(template.id ?? `tpl-${index + 1}`),
-    name: String(template.name ?? `Template ${index + 1}`),
-    type: String(template.type ?? "lesson"),
+  return normalizeTemplateSettings(raw).map((template) => ({
+    id: template.id,
+    name: template.name,
+    type: template.type,
   }))
 }
 
@@ -84,43 +85,6 @@ const TEMPLATE_TYPE_OPTIONS: Array<{ value: TemplateType; label: string }> = [
   { value: "assessment", label: "Assessment" },
   { value: "certificate", label: "Certificate" },
 ]
-
-const TEMPLATE_TYPE_COLORS: Record<TemplateType, { border: string; bg: string; text: string; badge: string }> = {
-  assessment: {
-    border: "border-teal-500",
-    bg: "bg-teal-50",
-    text: "text-teal-700",
-    badge: "bg-teal-100 text-teal-800",
-  },
-  quiz: {
-    border: "border-violet-500",
-    bg: "bg-violet-50",
-    text: "text-violet-700",
-    badge: "bg-violet-100 text-violet-800",
-  },
-  exam: {
-    border: "border-rose-500",
-    bg: "bg-rose-50",
-    text: "text-rose-700",
-    badge: "bg-rose-100 text-rose-800",
-  },
-  lesson: {
-    border: "border-sky-500",
-    bg: "bg-sky-50",
-    text: "text-sky-700",
-    badge: "bg-sky-100 text-sky-800",
-  },
-  certificate: {
-    border: "border-yellow-500",
-    bg: "bg-yellow-50",
-    text: "text-yellow-700",
-    badge: "bg-yellow-100 text-yellow-800",
-  },
-}
-
-function getTemplateTypeColor(templateType?: TemplateType) {
-  return TEMPLATE_TYPE_COLORS[templateType ?? "lesson"]
-}
 
 function createRowId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -144,6 +108,7 @@ function extractExistingSessionRows(curriculumData: Record<string, unknown>): Cu
         session_number: (r.session_number as number) || index + 1,
         title: (r.title as string) || `Session ${index + 1}`,
         notes: (r.notes as string) || "",
+        template_id: (r.template_id as string) || undefined,
         template_type: templateType,
         duration_minutes: (r.duration_minutes as number) || undefined,
         topics: topicCount,
@@ -205,6 +170,7 @@ function syncSessionRowsToSchedule(
       session_number: index + 1,
       title: base?.title || `Session ${index + 1}`,
       notes: base?.notes || "",
+      template_id: base?.template_id,
       template_type: templateType,
       duration_minutes: base?.duration_minutes ?? durationMinutes ?? undefined,
       topics: base?.topics ?? contentLoadConfig?.topicsPerLesson,
@@ -277,6 +243,8 @@ function RadioCard({
 }
 
 export function CurriculumSection({ courseId }: { courseId: string | null }) {
+  const generationCooldownMs = 10_000
+  const estimateStorageKey = "curriculum-generation-estimate-v1"
   const [moduleOrg, setModuleOrg] = useState("linear")
   const [contentVolume, setContentVolume] = useState("single")
   const [courseType, setCourseType] = useState("essential")
@@ -301,20 +269,109 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
   const [mandatoryTopics, setMandatoryTopics] = useState<string[]>([])
   const [priorKnowledge, setPriorKnowledge] = useState("")
   const [applicationContext, setApplicationContext] = useState("")
-  const [resourceConstraints, setResourceConstraints] = useState("")
   const [courseLanguage, setCourseLanguage] = useState("")
   const [studentsData, setStudentsData] = useState<StudentsContext | null>(null)
+  const [selectedLLMModel, setSelectedLLMModel] = useState<string | null>(null)
+  const [resourcePreferences, setResourcePreferences] = useState<ResourcePreference[]>(() => buildDefaultResourcePreferences())
   const [optCtx, setOptCtx] = useState({ schedule: true, structure: true, existing: false })
   const [previewMode, setPreviewMode] = useState<PreviewMode>("modules")
   const [lastAction, setLastAction] = useState<GenerationAction | null>(null)
   const [runStatus, setRunStatus] = useState<string | null>(null)
   const [runProgress, setRunProgress] = useState(0)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [activeGenerationAction, setActiveGenerationAction] = useState<GenerationAction | null>(null)
+  const [generationCooldownUntil, setGenerationCooldownUntil] = useState<number | null>(null)
+  const [generationCooldownLeft, setGenerationCooldownLeft] = useState(0)
+  const [avgMsPerUnitByAction, setAvgMsPerUnitByAction] = useState<Partial<Record<GenerationAction, number>>>({})
+  const [ollamaHealthy, setOllamaHealthy] = useState<boolean | null>(null)
+  const [runningModels, setRunningModels] = useState<string[]>([])
+  const [highLoadModelActive, setHighLoadModelActive] = useState(false)
   const [readinessIssues, setReadinessIssues] = useState<string[]>([])
   const [missing, setMissing] = useState<{ essentials: boolean; schedule: boolean; curriculum: boolean }>({
     essentials: false,
     schedule: false,
     curriculum: false,
   })
+  const generationSettingsRef = useRef<Record<string, unknown> | null>(null)
+  const generationLockRef = useRef(false)
+  const generationAbortControllerRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    let isActive = true
+
+    const checkOllamaHealth = async () => {
+      try {
+        const response = await fetch("/api/ollama-health", { cache: "no-store" })
+        const data = (await response.json()) as {
+          healthy?: boolean
+          runningModels?: string[]
+          highLoad?: boolean
+        }
+
+        if (!isActive) return
+        setOllamaHealthy(Boolean(data.healthy))
+        setRunningModels(Array.isArray(data.runningModels) ? data.runningModels : [])
+        setHighLoadModelActive(Boolean(data.highLoad))
+      } catch {
+        if (!isActive) return
+        setOllamaHealthy(false)
+        setRunningModels([])
+        setHighLoadModelActive(false)
+      }
+    }
+
+    void checkOllamaHealth()
+    const interval = setInterval(() => {
+      void checkOllamaHealth()
+    }, 15000)
+
+    return () => {
+      isActive = false
+      clearInterval(interval)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!generationCooldownUntil) {
+      setGenerationCooldownLeft(0)
+      return
+    }
+
+    const tick = () => {
+      const remainingMs = generationCooldownUntil - Date.now()
+      if (remainingMs <= 0) {
+        setGenerationCooldownUntil(null)
+        setGenerationCooldownLeft(0)
+        return
+      }
+      setGenerationCooldownLeft(Math.ceil(remainingMs / 1000))
+    }
+
+    tick()
+    const interval = setInterval(tick, 250)
+    return () => clearInterval(interval)
+  }, [generationCooldownUntil])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    try {
+      const raw = window.localStorage.getItem(estimateStorageKey)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as Partial<Record<GenerationAction, number>>
+      if (parsed && typeof parsed === "object") {
+        setAvgMsPerUnitByAction(parsed)
+      }
+    } catch {
+    }
+  }, [estimateStorageKey])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    try {
+      window.localStorage.setItem(estimateStorageKey, JSON.stringify(avgMsPerUnitByAction))
+    } catch {
+    }
+  }, [avgMsPerUnitByAction, estimateStorageKey])
 
   useEffect(() => {
     if (!courseId) return
@@ -330,6 +387,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
           const s = (data.schedule_settings as Record<string, unknown>) ?? {}
           const gs = (data.generation_settings as Record<string, unknown> | null) ?? {}
           const aiSettings = (gs.ai_generation as Record<string, unknown> | undefined) ?? gs
+          generationSettingsRef.current = gs
           const loadedScheduleEntries = Array.isArray(s.generated_entries)
             ? (s.generated_entries as ScheduleGeneratedEntry[]).map((entry, index) => {
                 const e = entry as ScheduleGeneratedEntry
@@ -343,6 +401,13 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
           // Load course goals from generation_settings
           const loadedGoals = Array.isArray(gs.course_goals) ? (gs.course_goals as string[]) : []
           setCourseGoalsList(loadedGoals)
+
+          // Load selected LLM model
+          const savedModel = (gs.selected_llm_model as string | undefined) ?? null
+          setSelectedLLMModel(savedModel)
+
+          const savedResources = gs.resources_preferences as ResourcePreference[] | undefined
+          setResourcePreferences(mergeResourcePreferences(Array.isArray(savedResources) ? savedResources : null))
 
           setCourseInfo({
             name: (data.course_name as string) ?? "Untitled Course",
@@ -388,7 +453,6 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
               classroomEnvironment: approach.classroomEnvironment,
             })
           }
-          if (typeof layout.resource_constraints === "string") setResourceConstraints(layout.resource_constraints)
 
           // Load students overview for generation context
           const so = (data.students_overview as Record<string, unknown>) ?? {}
@@ -397,14 +461,11 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
             setStudentsData({ totalStudents, method: (so.method as string) ?? "unknown" })
           }
 
-          const optional = aiSettings.optional_context as Record<string, boolean> | undefined
-          if (optional) {
-            setOptCtx({
-              schedule: optional.schedule ?? true,
-              structure: optional.structure ?? true,
-              existing: optional.existing ?? false,
-            })
-          }
+          setOptCtx({
+            schedule: true,
+            structure: true,
+            existing: true,
+          })
           const loadedMode = aiSettings.preview_mode as PreviewMode | undefined
           if (loadedMode) setPreviewMode(loadedMode)
           const loadedAction = aiSettings.last_action as GenerationAction | undefined
@@ -467,29 +528,29 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
   // Initialize/update module names when module config changes
   useEffect(() => {
     const modulesCount = moduleOrg === "linear" ? 1 : moduleOrg === "equal" ? moduleCount : moduleCount
-    const newNames = Array.from({ length: modulesCount }, (_, i) => moduleNames[i] || `Module ${i + 1}`)
-    setModuleNames(newNames)
+    setModuleNames((prev) => {
+      const newNames = Array.from({ length: modulesCount }, (_, i) => prev[i] || `Module ${i + 1}`)
+      const unchanged = prev.length === newNames.length && prev.every((value, idx) => value === newNames[idx])
+      return unchanged ? prev : newNames
+    })
   }, [moduleOrg, moduleCount])
 
   const hasGeneratedSchedule = scheduleEntries.length > 0
   const effectiveLessonCount = hasGeneratedSchedule ? scheduleEntries.length : lessonCount
-  const toggle = (key: keyof typeof optCtx) => setOptCtx((prev) => ({ ...prev, [key]: !prev[key] }))
-  const selectedCourseType = (courseType as CourseType)
-  const filteredTemplates = savedTemplates.filter((template) => {
-    const allowed = COURSE_TYPE_TEMPLATE_FILTERS[selectedCourseType]
-    return allowed.length === 0 || allowed.includes(template.type)
-  })
-  const availableTemplateTypes = Array.from(
-    new Set(
-      filteredTemplates
-        .map((template) => template.type)
-        .filter((type): type is TemplateType => TEMPLATE_TYPE_OPTIONS.some((option) => option.value === type as TemplateType)),
-    ),
+  const selectedCourseType = courseType as CourseType
+  const {
+    filteredTemplates,
+    defaultTemplateOptions,
+    lessonTemplateOptions,
+  } = useMemo(
+    () => deriveTemplateOptions({
+      savedTemplates,
+      selectedCourseType,
+      certificateMode,
+      courseTypeTemplateFilters: COURSE_TYPE_TEMPLATE_FILTERS,
+    }),
+    [savedTemplates, selectedCourseType, certificateMode],
   )
-  const defaultTemplateOptions: TemplateType[] = availableTemplateTypes.length > 0 ? availableTemplateTypes : ["lesson"]
-  const lessonTemplateOptions: TemplateType[] = defaultTemplateOptions.includes("certificate") || certificateMode === "never"
-    ? defaultTemplateOptions
-    : [...defaultTemplateOptions, "certificate"]
 
   useEffect(() => {
     const preferredDefault: TemplateType = defaultTemplateOptions.includes("lesson")
@@ -510,27 +571,75 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
     TEMPLATE_TYPE_OPTIONS.find((option) => option.value === type)?.label
     ?? `${type.charAt(0).toUpperCase()}${type.slice(1)}`
 
-  const certificateLessonIndexes = (() => {
-    if (certificateMode === "never" || effectiveLessonCount < 1) return new Set<number>()
-    if (certificateMode === "end-course") return new Set<number>([effectiveLessonCount - 1])
+  const certificateLessonIndexes = useMemo(
+    () => buildCertificateLessonIndexes({
+      certificateMode,
+      effectiveLessonCount,
+      moduleOrg,
+      moduleCount,
+    }),
+    [certificateMode, effectiveLessonCount, moduleOrg, moduleCount],
+  )
 
-    const modules = Math.max(1, moduleOrg === "linear" ? 1 : moduleCount)
-    const perModule = Math.ceil(effectiveLessonCount / modules)
-    const indexes = new Set<number>()
-
-    for (let moduleIndex = 0; moduleIndex < modules; moduleIndex += 1) {
-      const moduleEnd = Math.min((moduleIndex + 1) * perModule, effectiveLessonCount)
-      indexes.add(Math.max(0, moduleEnd - 1))
-    }
-
-    return indexes
-  })()
-
-  const resolveTemplateTypeForLesson = (row: Partial<CurriculumSessionRow> | undefined, index: number): TemplateType => {
+  const resolveTemplateTypeForLesson = useCallback((row: Partial<CurriculumSessionRow> | undefined, index: number): TemplateType => {
     if (row?.template_type) return row.template_type
     if (certificateLessonIndexes.has(index)) return "certificate"
     return templateDefaultType
-  }
+  }, [certificateLessonIndexes, templateDefaultType])
+
+  useEffect(() => {
+    setSessionRows((prev) => {
+      const targetLessonCount = Math.max(1, effectiveLessonCount)
+      let changed = prev.length !== targetLessonCount
+
+      const next = Array.from({ length: targetLessonCount }, (_, index) => {
+        const existing = prev[index]
+        const schedule = scheduleEntries[index]
+        const resolvedTemplateType = resolveTemplateTypeForLesson(existing, index)
+
+        const nextRow: CurriculumSessionRow = {
+          id: existing?.id ?? createRowId(),
+          schedule_entry_id: existing?.schedule_entry_id ?? schedule?.id ?? "",
+          session_number: index + 1,
+          title: existing?.title ?? `Session ${index + 1}`,
+          notes: existing?.notes ?? "",
+          template_id: existing?.template_id,
+          template_type: resolvedTemplateType,
+          duration_minutes: existing?.duration_minutes,
+          topics,
+          objectives,
+          tasks,
+          topic_names: Array.from({ length: topics }, (_, i) => existing?.topic_names?.[i] ?? ""),
+          objective_names: Array.from({ length: objectives }, (_, i) => existing?.objective_names?.[i] ?? ""),
+          task_names: Array.from({ length: tasks }, (_, i) => existing?.task_names?.[i] ?? ""),
+          competencies: existing?.competencies,
+          template_design: existing?.template_design ?? createDefaultTemplateDesign(resolvedTemplateType),
+        }
+
+        if (!existing) {
+          changed = true
+          return nextRow
+        }
+
+        if (
+          existing.session_number !== nextRow.session_number
+          || existing.topics !== topics
+          || existing.objectives !== objectives
+          || existing.tasks !== tasks
+          || (existing.topic_names?.length ?? 0) !== topics
+          || (existing.objective_names?.length ?? 0) !== objectives
+          || (existing.task_names?.length ?? 0) !== tasks
+          || existing.schedule_entry_id !== nextRow.schedule_entry_id
+        ) {
+          changed = true
+        }
+
+        return nextRow
+      })
+
+      return changed ? next : prev
+    })
+  }, [effectiveLessonCount, scheduleEntries, topics, objectives, tasks, resolveTemplateTypeForLesson])
 
   const handleSave = useCallback(async () => {
     if (!courseId) return
@@ -542,6 +651,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
       session_number: index + 1,
       title: row.title,
       notes: row.notes,
+      template_id: row.template_id,
       template_type: resolveTemplateTypeForLesson(row, index),
       duration_minutes: row.duration_minutes,
       topics: row.topics,
@@ -601,14 +711,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
   const persistGenerationSettings = useCallback(async () => {
     if (!courseId) return
     const supabase = createClient()
-
-    const { data: existing } = await supabase
-      .from("courses")
-      .select("generation_settings")
-      .eq("id", courseId)
-      .single()
-
-    const existingSettings = (existing?.generation_settings as Record<string, unknown> | null) ?? {}
+    const existingSettings = generationSettingsRef.current ?? {}
     const nextSettings = {
       ...existingSettings,
       ai_generation: {
@@ -644,6 +747,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
       .update({ generation_settings: nextSettings, updated_at: new Date().toISOString() })
       .eq("id", courseId)
     if (error) return
+    generationSettingsRef.current = nextSettings
   }, [courseId, optCtx, previewMode, lastAction, moduleOrg, moduleCount, moduleNames, effectiveLessonCount, topics, objectives, tasks, sessionRows])
 
   useDebouncedChangeSave(handleSave, 800, Boolean(courseId))
@@ -656,6 +760,11 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
 
   const clearAllGenerated = useCallback(async () => {
     if (!courseId) return
+    if (isGenerating) {
+      setRunStatus("Generation is currently running. Cancel or wait for it to finish before deleting content.")
+      setTimeout(() => setRunStatus(null), 3000)
+      return
+    }
     setRunStatus("Deleting all generated content…")
     setRunProgress(20)
 
@@ -667,6 +776,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
       session_number: index + 1,
       title: `Session ${index + 1}`,
       notes: "",
+      template_id: row.template_id,
       template_type: row.template_type,
       duration_minutes: row.duration_minutes,
       topics: row.topics,
@@ -720,16 +830,60 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
     setRunProgress(100)
     setRunStatus("All generated content deleted.")
     setTimeout(() => setRunStatus(null), 2000)
-  }, [courseId, sessionRows, moduleNames])
+  }, [courseId, sessionRows, moduleNames, isGenerating])
 
-  const actionButtons: Array<{ key: GenerationAction; label: string; primary?: boolean }> = [
-    { key: "all", label: "Generate All", primary: true },
-    { key: "modules", label: "Generate Module Names" },
-    { key: "lessons", label: "Generate Lesson Names" },
-    { key: "topics", label: "Generate Topic Titles" },
-    { key: "objectives", label: "Generate Objectives" },
-    { key: "tasks", label: "Generate Tasks" },
-  ]
+  const actionButtons = useMemo<Array<{ key: GenerationAction; label: string; description: string; primary?: boolean }>>(() => [
+    { key: "all", label: "Generate All", description: "Modules, lessons, topics, objectives, and tasks.", primary: true },
+    { key: "modules", label: "Generate Module Names", description: "Auto-title modules based on structure." },
+    { key: "lessons", label: "Generate Lesson Names", description: "Create lesson titles for each session." },
+    { key: "topics", label: "Generate Topic Titles", description: "Fill in topics per lesson." },
+    { key: "objectives", label: "Generate Objectives", description: "Add objectives aligned to topics." },
+    { key: "tasks", label: "Generate Tasks", description: "Create tasks per objective." },
+  ], [])
+
+  const modelInfo = selectedLLMModel ? getModelInfo(selectedLLMModel) : undefined
+  const modelSpeed = modelInfo?.speed ?? "medium"
+
+  const actionUnits = useCallback((action: GenerationAction) => {
+    const lessons = Math.max(1, effectiveLessonCount)
+    const modules = Math.max(1, moduleOrg === "linear" ? 1 : moduleCount)
+    const unitsByAction: Record<GenerationAction, number> = {
+      all: lessons * 2.4,
+      modules: modules,
+      lessons: lessons,
+      topics: lessons,
+      objectives: lessons * 1.2,
+      tasks: lessons * 1.4,
+    }
+    return Math.max(1, unitsByAction[action])
+  }, [effectiveLessonCount, moduleOrg, moduleCount])
+
+  const formatEstimate = (totalSeconds: number) => {
+    if (!Number.isFinite(totalSeconds)) return "Est. varies"
+    const seconds = Math.max(15, Math.round(totalSeconds / 10) * 10)
+    if (seconds < 90) return `Est. ${seconds}s`
+    const mins = Math.floor(seconds / 60)
+    const rem = seconds % 60
+    return rem > 0 ? `Est. ${mins}m ${rem}s` : `Est. ${mins}m`
+  }
+
+  const estimateForAction = (action: GenerationAction) => {
+    const units = actionUnits(action)
+    const knownMsPerUnit = avgMsPerUnitByAction[action]
+    if (typeof knownMsPerUnit === "number" && Number.isFinite(knownMsPerUnit) && knownMsPerUnit > 0) {
+      return formatEstimate((knownMsPerUnit * units) / 1000)
+    }
+
+    const learnedValues = Object.values(avgMsPerUnitByAction).filter(
+      (value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0,
+    )
+    if (learnedValues.length > 0) {
+      const avgLearnedMsPerUnit = learnedValues.reduce((sum, value) => sum + value, 0) / learnedValues.length
+      return `${formatEstimate((avgLearnedMsPerUnit * units) / 1000)}*`
+    }
+
+    return modelSpeed === "slow" ? "Est. learning… (likely longer)" : "Est. learning…"
+  }
 
   const modeButtons: Array<{ key: PreviewMode; label: string }> = [
     { key: "modules", label: "Modules" },
@@ -743,6 +897,16 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
   const runGeneration = useCallback(
     async (action: GenerationAction) => {
       if (!courseId || !courseInfo) return
+      if (generationCooldownLeft > 0) {
+        setRunStatus(`Cooling down… wait ${generationCooldownLeft}s before starting another run.`)
+        setTimeout(() => setRunStatus(null), 2000)
+        return
+      }
+      if (generationLockRef.current || isGenerating) {
+        setRunStatus("Generation already in progress. Please wait or cancel the current run.")
+        setTimeout(() => setRunStatus(null), 2500)
+        return
+      }
       if (!isGenerationReady) {
         setRunProgress(0)
         setRunStatus("Generation is locked until required setup data is complete.")
@@ -750,9 +914,16 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
         return
       }
 
+      generationLockRef.current = true
+      setIsGenerating(true)
+      setActiveGenerationAction(action)
+      const abortController = new AbortController()
+      generationAbortControllerRef.current = abortController
+
       setLastAction(action)
       setRunStatus("Building curriculum context…")
       setRunProgress(10)
+      let completedSuccessfully = false
 
       try {
         await new Promise((resolve) => setTimeout(resolve, 200))
@@ -767,7 +938,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
           mandatoryTopics: mandatoryTopics.length > 0 ? mandatoryTopics : undefined,
           priorKnowledge: priorKnowledge || undefined,
           applicationContext: applicationContext || undefined,
-          resourceConstraints: resourceConstraints || undefined,
+          resourcesPreferences: resourcePreferences,
           sequencingMode: sequencingMode !== "linear" ? sequencingMode : undefined,
           namingRules: Object.values(namingRules).some(Boolean) ? namingRules : undefined,
           courseLanguage: courseLanguage || undefined,
@@ -795,15 +966,19 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
         )
 
         await new Promise((resolve) => setTimeout(resolve, 300))
-        setRunStatus("Calling AI generation service…")
+        const modelName = selectedLLMModel ? selectedLLMModel.split("-")[0].charAt(0).toUpperCase() + selectedLLMModel.split("-")[0].slice(1) : "Ollama"
+        setRunStatus(`Calling ${modelName} for ${actionButtons.find((btn) => btn.key === action)?.label ?? "generation"}…`)
         setRunProgress(35)
+        const startedAt = Date.now()
 
-        const response = await callGenerationAPI(context)
+        const response = await callGenerationAPI(context, selectedLLMModel ?? undefined, abortController.signal, action)
         setRunProgress(70)
+
+        console.log("[CurriculumSection] Generation response:", response.success, response.message)
 
         if (!response.success) {
           setRunStatus(`Generation failed: ${response.error || response.message}`)
-          setTimeout(() => setRunStatus(null), 3000)
+          setTimeout(() => setRunStatus(null), 8000)
           return
         }
 
@@ -819,7 +994,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
           if (action === "all" || action === "tasks") { cleared.task_names = [] }
           return { ...row, ...cleared }
         })
-        const wipedModuleNames = (action === "all" || action === "modules")
+        const wipedModuleNames = action === "all"
           ? moduleNames.map((_, i) => `Module ${i + 1}`)
           : moduleNames
 
@@ -855,108 +1030,142 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
         setRunProgress(85)
         await new Promise((resolve) => setTimeout(resolve, 300))
 
-        if (response.content?.lessons) {
-          const supabase = createClient()
-          const { data: existing } = await supabase
-            .from("courses")
-            .select("curriculum_data")
-            .eq("id", courseId)
-            .single()
+        const generatedLessons = response.content?.lessons ?? []
+        const generatedModules = response.content?.modules ?? []
+        const needsLessons = action !== "modules"
+        if (needsLessons && generatedLessons.length === 0) {
+          setRunStatus("Generation returned no lesson data for this action. Please try again.")
+          setTimeout(() => setRunStatus(null), 4000)
+          return
+        }
+        if (action === "modules" && generatedModules.length === 0) {
+          setRunStatus("Generation returned no module names. Please try again.")
+          setTimeout(() => setRunStatus(null), 4000)
+          return
+        }
 
-          const curriculumData = (existing?.curriculum_data as Record<string, unknown> | null) ?? {}
-          const baseRows = wipedRows.length > 0
-            ? wipedRows
-            : (Array.isArray(curriculumData.session_rows) ? (curriculumData.session_rows as CurriculumSessionRow[]) : [])
+        const supabase = createClient()
+        const { data: existing } = await supabase
+          .from("courses")
+          .select("curriculum_data")
+          .eq("id", courseId)
+          .single()
 
-          const generatedLessons = response.content.lessons
-          const seedRows: CurriculumSessionRow[] = baseRows.length > 0
-            ? baseRows
-            : generatedLessons.map((lesson) => ({
-                id: createRowId(),
-                schedule_entry_id: "",
-                session_number: lesson.lessonNumber,
-                title: lesson.lessonTitle,
-                notes: "",
-                template_type: "lesson" as TemplateType,
-              }))
+        const curriculumData = (existing?.curriculum_data as Record<string, unknown> | null) ?? {}
+        const baseRows = wipedRows.length > 0
+          ? wipedRows
+          : (Array.isArray(curriculumData.session_rows) ? (curriculumData.session_rows as CurriculumSessionRow[]) : [])
 
-          const updatedSessionRows = seedRows.map((row, index) => {
-            const generatedLesson = response.content?.lessons?.[index]
-            if (!generatedLesson) return row
+        const seedRows: CurriculumSessionRow[] = baseRows.length > 0
+          ? baseRows
+          : generatedLessons.map((lesson) => ({
+              id: createRowId(),
+              schedule_entry_id: "",
+              session_number: lesson.lessonNumber,
+              title: lesson.lessonTitle,
+              notes: "",
+              template_type: "lesson" as TemplateType,
+            }))
 
-            const updates: Partial<CurriculumSessionRow> = {}
-            if (action === "all" || action === "lessons") updates.title = generatedLesson.lessonTitle
-            if (action === "all" || action === "topics") {
-              updates.topics = generatedLesson.topics?.length ?? row.topics
-              updates.topic_names = generatedLesson.topics ?? []
-            }
-            if (action === "all" || action === "objectives") {
-              updates.objectives = generatedLesson.objectives?.length ?? row.objectives
-              updates.objective_names = generatedLesson.objectives ?? []
-            }
-            if (action === "all" || action === "tasks") {
-              updates.tasks = generatedLesson.tasks?.length ?? row.tasks
-              updates.task_names = generatedLesson.tasks ?? []
-            }
-            return { ...row, ...updates }
+        const updatedSessionRows = seedRows.map((row, index) => {
+          const generatedLesson = generatedLessons[index]
+          if (!generatedLesson) return row
+
+          const updates: Partial<CurriculumSessionRow> = {}
+          if (action === "all" || action === "lessons") updates.title = generatedLesson.lessonTitle
+          if (action === "all" || action === "topics") {
+            updates.topics = generatedLesson.topics?.length ?? row.topics
+            updates.topic_names = generatedLesson.topics ?? []
+          }
+          if (action === "all" || action === "objectives") {
+            updates.objectives = generatedLesson.objectives?.length ?? row.objectives
+            updates.objective_names = generatedLesson.objectives ?? []
+          }
+          if (action === "all" || action === "tasks") {
+            updates.tasks = generatedLesson.tasks?.length ?? row.tasks
+            updates.task_names = generatedLesson.tasks ?? []
+          }
+          return { ...row, ...updates }
+        })
+
+        const generatedModuleNames = generatedModules.length > 0
+          ? generatedModules
+            .sort((a, b) => a.moduleNumber - b.moduleNumber)
+            .map((module) => module.moduleTitle)
+          : moduleNames
+
+        const nextCurriculumData = {
+          ...curriculumData,
+          module_names: generatedModuleNames,
+          session_rows: updatedSessionRows,
+          generated_at: new Date().toISOString(),
+          last_generation_action: action,
+        }
+
+        const { error } = await supabase
+          .from("courses")
+          .update({ curriculum_data: nextCurriculumData, updated_at: new Date().toISOString() })
+          .eq("id", courseId)
+
+        if (error) {
+          setRunStatus(`Failed to save generated curriculum: ${error.message}`)
+          setTimeout(() => setRunStatus(null), 3000)
+          return
+        }
+
+        setSessionRows(updatedSessionRows)
+        setModuleNames(generatedModuleNames)
+
+        const elapsedMs = Date.now() - startedAt
+        const units = actionUnits(action)
+        if (elapsedMs > 0 && units > 0) {
+          const currentMsPerUnit = elapsedMs / units
+          setAvgMsPerUnitByAction((prev) => {
+            const prior = prev[action]
+            const blended = typeof prior === "number" && Number.isFinite(prior)
+              ? prior * 0.7 + currentMsPerUnit * 0.3
+              : currentMsPerUnit
+            return { ...prev, [action]: blended }
           })
-
-          const generatedModuleNames = Array.isArray(response.content.modules)
-            ? response.content.modules.sort((a, b) => a.moduleNumber - b.moduleNumber).map((module) => module.moduleTitle)
-            : moduleNames
-
-          const nextCurriculumData = {
-            ...curriculumData,
-            module_names: generatedModuleNames,
-            session_rows: updatedSessionRows,
-            generated_at: new Date().toISOString(),
-            last_generation_action: action,
-          }
-
-          const { error } = await supabase
-            .from("courses")
-            .update({ curriculum_data: nextCurriculumData, updated_at: new Date().toISOString() })
-            .eq("id", courseId)
-
-          if (error) {
-            setRunStatus(`Failed to save generated curriculum: ${error.message}`)
-            setTimeout(() => setRunStatus(null), 3000)
-            return
-          }
-
-          setSessionRows(updatedSessionRows)
-          setModuleNames(generatedModuleNames)
         }
 
         setRunProgress(100)
         setRunStatus("Generation complete!")
+        completedSuccessfully = true
         setTimeout(() => setRunStatus(null), 2000)
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error"
         setRunStatus(`Error: ${message}`)
         setTimeout(() => setRunStatus(null), 3000)
+      } finally {
+        if (completedSuccessfully) {
+          setGenerationCooldownUntil(Date.now() + generationCooldownMs)
+        }
+        generationLockRef.current = false
+        setIsGenerating(false)
+        setActiveGenerationAction(null)
+        generationAbortControllerRef.current = null
       }
     },
-    [courseId, courseInfo, scheduleEntries, moduleOrg, moduleCount, effectiveLessonCount, topics, objectives, tasks, sessionRows, optCtx, isGenerationReady, moduleNames, classificationData, pedagogyData, courseGoalsList, keyTerms, mandatoryTopics, priorKnowledge, applicationContext, resourceConstraints, sequencingMode, namingRules, courseLanguage, studentsData],
+    [courseId, courseInfo, scheduleEntries, moduleOrg, moduleCount, effectiveLessonCount, topics, objectives, tasks, sessionRows, optCtx, isGenerationReady, moduleNames, classificationData, pedagogyData, courseGoalsList, keyTerms, mandatoryTopics, priorKnowledge, applicationContext, resourcePreferences, sequencingMode, namingRules, courseLanguage, studentsData, selectedLLMModel, isGenerating, generationCooldownLeft, generationCooldownMs, actionButtons, actionUnits],
   )
 
-  const modulesForPreview = (() => {
-    if (moduleOrg === "linear") {
-      return [{ title: moduleNames[0] || "Module 1", lessonStart: 1, lessonEnd: effectiveLessonCount, index: 0 }]
-    }
-    const mods = Math.max(1, moduleCount)
-    const perMod = Math.ceil(effectiveLessonCount / mods)
-    return Array.from({ length: mods }, (_, mi) => {
-      const from = mi * perMod + 1
-      const to = Math.min((mi + 1) * perMod, effectiveLessonCount)
-      return {
-        title: moduleNames[mi] || `Module ${mi + 1}`,
-        lessonStart: from,
-        lessonEnd: Math.max(from, to),
-        index: mi,
-      }
-    })
-  })()
+  const cancelGeneration = useCallback(() => {
+    if (!generationAbortControllerRef.current) return
+    generationAbortControllerRef.current.abort()
+    setRunStatus("Generation canceled.")
+    setTimeout(() => setRunStatus(null), 2000)
+  }, [])
+
+  const modulesForPreview = useMemo(
+    () => buildModulesForPreview({
+      moduleOrg,
+      moduleCount,
+      moduleNames,
+      effectiveLessonCount,
+    }),
+    [moduleOrg, moduleCount, moduleNames, effectiveLessonCount],
+  )
 
   const lessonRowsForPreview = Array.from({ length: effectiveLessonCount }, (_, index) => {
     const row = sessionRows[index]
@@ -968,6 +1177,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
       id: row?.id ?? `lesson-${index + 1}`,
       session_number: row?.session_number ?? index + 1,
       title: row?.title?.trim() || `Lesson ${index + 1}`,
+      template_id: row?.template_id,
       template_type: resolveTemplateTypeForLesson(row, index),
       topics: rowTopics,
       objectives: rowObjectives,
@@ -1018,7 +1228,7 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
                 { value: "equal", title: "Equal Modules", description: "Evenly distributed across modules." },
                 { value: "custom", title: "Custom Modules", description: "Define your own module boundaries." },
               ].map((opt) => (
-                <RadioCard key={opt.value} name="module-org" {...opt} checked={moduleOrg === opt.value} onChange={setModuleOrg} />
+                <RadioCard key={opt.value} name="module-org" {...opt} checked={moduleOrg === opt.value} onChange={setModuleOrg} compact />
               ))}
             </div>
           </div>
@@ -1035,9 +1245,6 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
                 disabled={hasGeneratedSchedule}
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
               />
-              {hasGeneratedSchedule && (
-                <p className="mt-1 text-xs text-muted-foreground">Synced from Schedule ({scheduleEntries.length} sessions).</p>
-              )}
             </div>
             {moduleOrg !== "linear" && (
               <div>
@@ -1062,14 +1269,12 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
               { value: "single", title: "Standard", meta: "≤ 60 min", description: "Normal lesson, balanced." },
               { value: "double", title: "Extended", meta: "≤ 120 min", description: "Double-length with practice." },
               { value: "triple", title: "Intensive", meta: "≤ 180 min", description: "Long block, deeper coverage." },
-              { value: "fullday", title: "Full Day", meta: "> 180 min", description: "Workshop-style." },
+              { value: "fullday", title: "Full Day", meta: "≤ 240 min", description: "Workshop-style." },
+              { value: "marathon", title: "Marathon", meta: "> 240 min", description: "Full immersion sessions." },
             ].map((opt) => (
               <RadioCard key={opt.value} name="content-volume" {...opt} checked={contentVolume === opt.value} onChange={setContentVolume} />
             ))}
           </div>
-
-          <Divider label="Content Density" />
-          <p className="text-sm text-muted-foreground -mt-4 mb-3">Per-lesson detail level.</p>
           <div className="grid gap-4 sm:grid-cols-3">
             {[
               { label: "Topics / lesson", value: topics, set: setTopics, min: 1, max: 10 },
@@ -1194,83 +1399,112 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
           </div>
 
           <Divider label="Generation" />
-          <div className="rounded-xl border border-border bg-card p-4">
-            <div className="mb-3">
-              <h4 className="text-sm font-semibold text-foreground">Optional Context</h4>
-            </div>
-            <div className="space-y-2.5">
-              {(
-                [
-                  { key: "schedule" as const, label: "Schedule Settings" },
-                  { key: "structure" as const, label: "Content Structure" },
-                  { key: "existing" as const, label: "Existing Curriculum Content" },
-                ] as const
-              ).map(({ key, label }) => (
-                <label key={key} className="flex items-center gap-2.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={optCtx[key]}
-                    onChange={() => toggle(key)}
-                    className="h-4 w-4 accent-primary cursor-pointer"
-                  />
-                  <span className="text-sm text-foreground">{label}</span>
-                </label>
-              ))}
-            </div>
-
-            {!isGenerationReady && (
-              <div className="mt-3 rounded-lg border border-amber-500/40 bg-amber-50 px-3 py-3 dark:bg-amber-950/20">
-                <p className="text-xs font-medium text-amber-700 dark:text-amber-300">Generation is locked until setup is complete.</p>
-                <ul className="mt-1 space-y-1">
-                  {readinessIssues.map((issue) => (
-                    <li key={issue} className="text-xs text-amber-700/90 dark:text-amber-300/90">• {issue}</li>
-                  ))}
-                </ul>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {missing.essentials && (
-                    <button type="button" onClick={() => goToSection("essentials")} className="rounded border border-amber-600/30 px-2 py-1 text-[11px] font-medium text-amber-800 hover:bg-amber-100 dark:text-amber-200 dark:hover:bg-amber-900/30">Go to Essentials</button>
-                  )}
-                  {missing.schedule && (
-                    <button type="button" onClick={() => goToSection("schedule")} className="rounded border border-amber-600/30 px-2 py-1 text-[11px] font-medium text-amber-800 hover:bg-amber-100 dark:text-amber-200 dark:hover:bg-amber-900/30">Go to Schedule</button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {actionButtons.map((action) => (
-                <button
-                  key={action.key}
-                  type="button"
-                  onClick={() => runGeneration(action.key)}
-                  disabled={!isGenerationReady}
-                  className={`${action.primary ? `${PRIMARY_ACTION_BUTTON_CLASS} sm:col-span-2` : "w-full rounded-md border border-border bg-background px-3 py-2.5 text-left text-sm font-medium text-foreground hover:border-primary/40 hover:text-primary transition disabled:opacity-50 disabled:cursor-not-allowed"}`}
-                >
-                  {action.label}
-                </button>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={clearAllGenerated}
-              className="mt-2 w-full rounded-md border border-red-300 bg-background px-3 py-2 text-sm font-medium text-red-600 transition hover:border-red-400 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:border-red-600 dark:hover:bg-red-950/30"
+          <p className="-mt-2 text-sm text-muted-foreground">
+            Generation uses your full setup data (essentials, classification, pedagogy, students,
+            schedule, templates, and curriculum structure). It improves accuracy and reduces
+            rework, but it may take longer for larger courses.
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span
+              className={`rounded-md border px-2 py-1 text-[11px] font-medium ${
+                ollamaHealthy === null
+                  ? "border-border bg-muted/40 text-muted-foreground"
+                  : ollamaHealthy
+                    ? "border-emerald-300/70 bg-emerald-100/60 text-emerald-800 dark:border-emerald-600/50 dark:bg-emerald-900/30 dark:text-emerald-200"
+                    : "border-destructive/30 bg-destructive/10 text-destructive"
+              }`}
             >
-              Delete All Generated Content
-            </button>
-
-            {runStatus && (
-              <div className="mt-3 rounded-lg border border-border bg-muted/20 p-3">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="text-xs font-medium text-foreground">{runStatus}</p>
-                  <p className="text-[11px] font-semibold text-muted-foreground">{runProgress}%</p>
-                </div>
-                <div className="h-1.5 w-full overflow-hidden rounded bg-muted">
-                  <div className="h-full bg-primary transition-all" style={{ width: `${runProgress}%` }} />
-                </div>
-              </div>
+              {ollamaHealthy === null ? "Checking Ollama…" : ollamaHealthy ? "Ollama Connected" : "Ollama Disconnected"}
+            </span>
+            {ollamaHealthy !== null && (
+              <span className="rounded-md border border-border bg-background/70 px-2 py-1 text-[11px] text-muted-foreground">
+                Running: {runningModels.length > 0 ? runningModels.join(", ") : "none"}
+              </span>
+            )}
+            {highLoadModelActive && (
+              <span className="rounded-md border border-amber-300/70 bg-amber-100/70 px-2 py-1 text-[11px] font-medium text-amber-800 dark:border-amber-600/50 dark:bg-amber-900/30 dark:text-amber-200">
+                High-load model active
+              </span>
             )}
           </div>
+
+          {!isGenerationReady && (
+            <div className="mt-3 rounded-lg border border-amber-500/40 bg-amber-50 px-3 py-3 dark:bg-amber-950/20">
+              <p className="text-xs font-medium text-amber-700 dark:text-amber-300">Generation is locked until setup is complete.</p>
+              <ul className="mt-1 space-y-1">
+                {readinessIssues.map((issue) => (
+                  <li key={issue} className="text-xs text-amber-700/90 dark:text-amber-300/90">• {issue}</li>
+                ))}
+              </ul>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {missing.essentials && (
+                  <button type="button" onClick={() => goToSection("essentials")} className={PRIMARY_ACTION_BUTTON_CLASS}>Go to Essentials</button>
+                )}
+                {missing.schedule && (
+                  <button type="button" onClick={() => goToSection("schedule")} className={SECONDARY_ACTION_BUTTON_CLASS}>Go to Schedule</button>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {actionButtons.map((action) => (
+              <button
+                key={action.key}
+                type="button"
+                onClick={() => runGeneration(action.key)}
+                disabled={!isGenerationReady || isGenerating || ollamaHealthy === false || generationCooldownLeft > 0}
+                className={`group flex h-full flex-col gap-1 rounded-md border px-3 py-2.5 text-left transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                  action.primary
+                    ? "border-primary/40 bg-accent/70 text-foreground backdrop-blur-sm sm:col-span-2 hover:bg-accent/80"
+                    : "border-border/80 bg-background/60 text-foreground backdrop-blur-sm hover:border-primary/30 hover:bg-background/80"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-semibold">{action.label}</span>
+                  <span className="text-[11px] opacity-70">{estimateForAction(action.key)}</span>
+                </div>
+                <span className="text-xs opacity-70">{action.description}</span>
+              </button>
+            ))}
+          </div>
+
+          {generationCooldownLeft > 0 && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Cooldown active: {generationCooldownLeft}s remaining before the next generation run.
+            </p>
+          )}
+
+          {isGenerating && (
+            <button
+              type="button"
+              onClick={cancelGeneration}
+              className={`mt-3 ${SECONDARY_ACTION_BUTTON_CLASS}`}
+            >
+              Cancel Running Generation{activeGenerationAction ? ` (${actionButtons.find((a) => a.key === activeGenerationAction)?.label ?? "Current Action"})` : ""}
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={clearAllGenerated}
+            disabled={isGenerating}
+            className={`mt-3 ${DANGER_ACTION_BUTTON_CLASS}`}
+          >
+            Delete All Generated Content
+          </button>
+
+          {runStatus && (
+            <div className="mt-3 rounded-lg border border-border bg-muted/20 p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-xs font-medium text-foreground">{runStatus}</p>
+                <p className="text-[11px] font-semibold text-muted-foreground">{runProgress}%</p>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded bg-muted">
+                <div className="h-full bg-primary transition-all" style={{ width: `${runProgress}%` }} />
+              </div>
+            </div>
+          )}
         </SetupColumn>
 
         <SetupColumn>
@@ -1280,10 +1514,10 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
                 key={mode.key}
                 type="button"
                 onClick={() => setPreviewMode(mode.key)}
-                className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${
+                className={`rounded-md border px-2.5 py-1 text-xs font-medium backdrop-blur-sm transition ${
                   previewMode === mode.key
-                    ? "border-primary bg-accent text-primary"
-                    : "border-border bg-background text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                    ? "border-primary/50 bg-accent/70 text-primary"
+                    : "border-border/80 bg-background/60 text-muted-foreground hover:border-primary/30 hover:text-foreground"
                 }`}
               >
                 {mode.label}
@@ -1339,15 +1573,41 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
                           Lesson {index + 1}
                           {schedule && ` · ${schedule.day}`}
                         </label>
-                        <div className="w-[180px]">
+                        <div className="grid w-[360px] grid-cols-2 gap-2">
                           <select
                             value={row.template_type ?? templateDefaultType}
-                            onChange={(e) => upsertSessionRow(index, { template_type: e.target.value as TemplateType })}
+                            onChange={(e) => {
+                              const nextType = e.target.value as TemplateType
+                              const firstMatchingTemplate = filteredTemplates.find((template) => template.type === nextType)
+                              upsertSessionRow(index, {
+                                template_type: nextType,
+                                template_id: firstMatchingTemplate?.id,
+                              })
+                            }}
                             className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
                           >
                             {lessonTemplateOptions.map((type) => (
                               <option key={`${row.id}-${type}`} value={type}>{templateTypeLabel(type)}</option>
                             ))}
+                          </select>
+                          <select
+                            value={row.template_id ?? ""}
+                            onChange={(e) => {
+                              const nextTemplateId = e.target.value || undefined
+                              const matchedTemplate = filteredTemplates.find((template) => template.id === nextTemplateId)
+                              upsertSessionRow(index, {
+                                template_id: nextTemplateId,
+                                template_type: (matchedTemplate?.type as TemplateType | undefined) ?? row.template_type,
+                              })
+                            }}
+                            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
+                          >
+                            <option value="">Template auto</option>
+                            {filteredTemplates
+                              .filter((template) => template.type === (row.template_type ?? templateDefaultType))
+                              .map((template) => (
+                                <option key={`${row.id}-${template.id}`} value={template.id}>{template.name}</option>
+                              ))}
                           </select>
                         </div>
                       </div>
