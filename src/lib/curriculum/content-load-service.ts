@@ -10,6 +10,11 @@ export interface ContentLoadConfig {
   tasksPerObjective: number
 }
 
+export const MIN_TASKS_PER_OBJECTIVE = 2
+
+const DEFAULT_OBJECTIVES_CAP = 5
+const LONG_SESSION_OBJECTIVES_CAP = 2
+
 export interface DurationPreset {
   name: "mini" | "single" | "double" | "triple" | "fullday" | "marathon"
   minDuration: number
@@ -22,39 +27,70 @@ const DURATION_PRESETS: DurationPreset[] = [
     name: "mini",
     minDuration: 0,
     maxDuration: 30,
-    config: { topicsPerLesson: 1, objectivesPerTopic: 1, tasksPerObjective: 1 },
+    config: { topicsPerLesson: 1, objectivesPerTopic: 1, tasksPerObjective: MIN_TASKS_PER_OBJECTIVE },
   },
   {
     name: "single",
     minDuration: 31,
     maxDuration: 60,
-    config: { topicsPerLesson: 1, objectivesPerTopic: 2, tasksPerObjective: 1 },
+    config: { topicsPerLesson: 1, objectivesPerTopic: 2, tasksPerObjective: MIN_TASKS_PER_OBJECTIVE },
   },
   {
     name: "double",
     minDuration: 61,
     maxDuration: 120,
-    config: { topicsPerLesson: 2, objectivesPerTopic: 2, tasksPerObjective: 1 },
+    config: { topicsPerLesson: 2, objectivesPerTopic: 2, tasksPerObjective: MIN_TASKS_PER_OBJECTIVE },
   },
   {
     name: "triple",
     minDuration: 121,
     maxDuration: 180,
-    config: { topicsPerLesson: 2, objectivesPerTopic: 2, tasksPerObjective: 2 },
+    config: { topicsPerLesson: 2, objectivesPerTopic: 2, tasksPerObjective: 3 },
   },
   {
     name: "fullday",
     minDuration: 181,
     maxDuration: 240,
-    config: { topicsPerLesson: 3, objectivesPerTopic: 2, tasksPerObjective: 2 },
+    config: { topicsPerLesson: 3, objectivesPerTopic: 2, tasksPerObjective: 3 },
   },
   {
     name: "marathon",
     minDuration: 241,
     maxDuration: Infinity,
-    config: { topicsPerLesson: 3, objectivesPerTopic: 3, tasksPerObjective: 2 },
+    config: { topicsPerLesson: 3, objectivesPerTopic: 2, tasksPerObjective: 4 },
   },
 ]
+
+function toSafeCount(value: number | undefined, fallback: number): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return fallback
+  return Math.max(1, Math.round(value))
+}
+
+export function getObjectiveCapForDuration(durationMinutes: number | null): number {
+  if (durationMinutes === null) return DEFAULT_OBJECTIVES_CAP
+  return durationMinutes >= 121 ? LONG_SESSION_OBJECTIVES_CAP : DEFAULT_OBJECTIVES_CAP
+}
+
+export function normalizeContentLoadConfig(
+  config: ContentLoadConfig,
+  durationMinutes: number | null = null,
+): ContentLoadConfig {
+  const topicsPerLesson = toSafeCount(config.topicsPerLesson, 1)
+  const objectivesPerTopic = Math.min(
+    getObjectiveCapForDuration(durationMinutes),
+    toSafeCount(config.objectivesPerTopic, 2),
+  )
+  const tasksPerObjective = Math.max(
+    MIN_TASKS_PER_OBJECTIVE,
+    toSafeCount(config.tasksPerObjective, MIN_TASKS_PER_OBJECTIVE),
+  )
+
+  return {
+    topicsPerLesson,
+    objectivesPerTopic,
+    tasksPerObjective,
+  }
+}
 
 /**
  * Parse time string (HH:MM format) to minutes since midnight
@@ -91,7 +127,7 @@ export function getContentLoadConfig(durationMinutes: number | null): ContentLoa
     (p) => durationMinutes >= p.minDuration && durationMinutes <= p.maxDuration,
   )
 
-  return preset?.config ?? null
+  return preset ? normalizeContentLoadConfig(preset.config, durationMinutes) : null
 }
 
 /**
@@ -120,7 +156,7 @@ export function listDurationPresets(): DurationPreset[] {
 export function aggregateContentLoadConfigs(configs: ContentLoadConfig[]): ContentLoadConfig {
   if (configs.length === 0) {
     // Default fallback
-    return { topicsPerLesson: 1, objectivesPerTopic: 2, tasksPerObjective: 1 }
+    return normalizeContentLoadConfig({ topicsPerLesson: 1, objectivesPerTopic: 2, tasksPerObjective: MIN_TASKS_PER_OBJECTIVE })
   }
 
   const avgTopics = Math.round(configs.reduce((sum, c) => sum + c.topicsPerLesson, 0) / configs.length)
@@ -131,9 +167,9 @@ export function aggregateContentLoadConfigs(configs: ContentLoadConfig[]): Conte
     configs.reduce((sum, c) => sum + c.tasksPerObjective, 0) / configs.length,
   )
 
-  return {
-    topicsPerLesson: Math.max(1, avgTopics),
-    objectivesPerTopic: Math.max(1, avgObjectives),
-    tasksPerObjective: Math.max(1, avgTasks),
-  }
+  return normalizeContentLoadConfig({
+    topicsPerLesson: avgTopics,
+    objectivesPerTopic: avgObjectives,
+    tasksPerObjective: avgTasks,
+  })
 }

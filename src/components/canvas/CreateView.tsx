@@ -3,21 +3,26 @@
 import { useState, useCallback, useEffect, useMemo } from "react"
 import type { RealtimeChannel } from "@supabase/supabase-js"
 import dynamic from "next/dynamic"
-import { DEFAULT_PAGE_CONFIG, type CanvasPageConfig, type CanvasViewportInfo, type ToolConfig } from "@/components/canvas/PixiCanvas"
+import { Text as PixiText, TextStyle } from "pixi.js"
+import { DEFAULT_PAGE_CONFIG, type CanvasPageConfig, type CanvasViewportInfo, type PixiTemplateLayoutMeasurement, type PixiTemplateLayoutModel, type PixiTemplateMediaItem, type ToolConfig } from "@/components/canvas/PixiCanvas"
 import { createClient } from "@/lib/supabase/client"
 import {
   createTemplateLookups,
   formatTemplateFieldValue,
+  normalizeTemplateUiSettings,
   normalizeTemplateSettings,
+  DEFAULT_TEMPLATE_VISUAL_DENSITY,
+  type TemplateVisualDensity,
 } from "@/lib/curriculum/template-source-of-truth"
 import {
   buildTemplateFieldState,
+  planLessonBodyLayout,
   projectLessonPages,
   type LessonCanvasPageProjection,
   type RawCurriculumSessionRow,
   type RawScheduleGeneratedEntry,
 } from "@/lib/curriculum/canvas-projection"
-import { TemplateBlueprint, type TemplateBlueprintData } from "@/components/coursebuilder/template-blueprint"
+import { TemplateBlueprint, type TemplateAreaMediaItem, type TemplateBlueprintData } from "@/components/coursebuilder/template-blueprint"
 import { BLOCK_FIELDS, type BlockId } from "@/components/coursebuilder/sections/templates-section"
 import {
   Gamepad2, AreaChart, Bot,
@@ -48,6 +53,11 @@ type PixiCanvasProps = {
   focusPage?: number
   onViewportChange?: (info: CanvasViewportInfo) => void
   onActivePageChange?: (page: number) => void
+  templateLayoutModel?: PixiTemplateLayoutModel | null
+  enableTemplateLayout?: boolean
+  onTemplateMediaActivate?: (media: PixiTemplateMediaItem) => void
+  onTemplateAreaDrop?: (areaKey: string, rawPayload: string) => void
+  onTemplateLayoutMeasured?: (measurement: PixiTemplateLayoutMeasurement) => void
 }
 const PixiCanvas = dynamic<PixiCanvasProps>(
   () => import("@/components/canvas/PixiCanvas").then((m) => m.PixiCanvas),
@@ -139,6 +149,31 @@ interface MediaAsset {
   url: string
 }
 
+interface CanvasDocumentPayload {
+  schemaVersion: number
+  droppedMediaByArea: Record<string, TemplateAreaMediaItem[]>
+}
+
+type WikimediaSearchResponse = {
+  query?: {
+    pages?: Record<string, {
+      pageid?: number
+      title?: string
+      imageinfo?: Array<{ url?: string; mime?: string }>
+    }>
+  }
+}
+
+type WikipediaSearchResponse = {
+  query?: {
+    search?: Array<{
+      pageid?: number
+      title?: string
+      snippet?: string
+    }>
+  }
+}
+
 function normalizeMediaCategory(mediaType: string): string {
   const normalized = mediaType.toLowerCase()
   if (normalized.includes("video")) return "videos"
@@ -148,6 +183,96 @@ function normalizeMediaCategory(mediaType: string): string {
   if (normalized.includes("link")) return "links"
   if (normalized.includes("plugin")) return "plugins"
   return "files"
+}
+
+function stripHtmlTags(value: string): string {
+  return value.replace(/<[^>]*>/g, "").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&").trim()
+}
+
+function dedupeMediaAssets(assets: MediaAsset[]): MediaAsset[] {
+  const seen = new Set<string>()
+  const unique: MediaAsset[] = []
+  assets.forEach((asset) => {
+    const key = `${asset.category}::${asset.url || asset.title}`.toLowerCase()
+    if (seen.has(key)) return
+    seen.add(key)
+    unique.push(asset)
+  })
+  return unique
+}
+
+async function fetchWikimediaAssets(query: string, signal?: AbortSignal): Promise<MediaAsset[]> {
+  const normalizedQuery = query.trim()
+  if (!normalizedQuery) return []
+
+  const commonsUrl = new URL("https://commons.wikimedia.org/w/api.php")
+  commonsUrl.searchParams.set("action", "query")
+  commonsUrl.searchParams.set("format", "json")
+  commonsUrl.searchParams.set("origin", "*")
+  commonsUrl.searchParams.set("generator", "search")
+  commonsUrl.searchParams.set("gsrnamespace", "6")
+  commonsUrl.searchParams.set("gsrlimit", "40")
+  commonsUrl.searchParams.set("gsrsearch", normalizedQuery)
+  commonsUrl.searchParams.set("prop", "imageinfo")
+  commonsUrl.searchParams.set("iiprop", "url|mime")
+
+  const wikipediaUrl = new URL("https://en.wikipedia.org/w/api.php")
+  wikipediaUrl.searchParams.set("action", "query")
+  wikipediaUrl.searchParams.set("format", "json")
+  wikipediaUrl.searchParams.set("origin", "*")
+  wikipediaUrl.searchParams.set("list", "search")
+  wikipediaUrl.searchParams.set("srlimit", "24")
+  wikipediaUrl.searchParams.set("srsearch", normalizedQuery)
+
+  const [commonsResponse, wikipediaResponse] = await Promise.all([
+    fetch(commonsUrl.toString(), { signal }),
+    fetch(wikipediaUrl.toString(), { signal }),
+  ])
+
+  const assets: MediaAsset[] = []
+
+  if (commonsResponse.ok) {
+    const commonsPayload = (await commonsResponse.json()) as WikimediaSearchResponse
+    const pages = Object.values(commonsPayload.query?.pages ?? {})
+    pages.forEach((page) => {
+      const mediaUrl = page.imageinfo?.[0]?.url
+      const mimeType = String(page.imageinfo?.[0]?.mime ?? "")
+      if (!mediaUrl || !mimeType) return
+
+      const category = normalizeMediaCategory(mimeType)
+      if (!["images", "videos", "audio"].includes(category)) return
+
+      const title = String(page.title ?? "Wikimedia media").replace(/^File:/i, "")
+      assets.push({
+        id: `wikimedia-${String(page.pageid ?? crypto.randomUUID())}`,
+        category,
+        mediaType: mimeType,
+        title,
+        description: "Wikimedia Commons",
+        url: mediaUrl,
+      })
+    })
+  }
+
+  if (wikipediaResponse.ok) {
+    const wikipediaPayload = (await wikipediaResponse.json()) as WikipediaSearchResponse
+    const results = wikipediaPayload.query?.search ?? []
+    results.forEach((entry) => {
+      const title = String(entry.title ?? "").trim()
+      if (!title) return
+      const articleUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(title.replace(/\s+/g, "_"))}`
+      assets.push({
+        id: `wikipedia-${String(entry.pageid ?? crypto.randomUUID())}`,
+        category: "text",
+        mediaType: "Wikipedia article",
+        title,
+        description: stripHtmlTags(String(entry.snippet ?? "Wikipedia article")),
+        url: articleUrl,
+      })
+    })
+  }
+
+  return dedupeMediaAssets(assets)
 }
 
 // ─── Resize handle hook ─────────────────────────────────────────────────────────────────
@@ -185,6 +310,32 @@ function useResizeHandle(
   }, [direction, max, min, width])
 
   return { width, setWidth, startResize }
+}
+
+function normalizeDroppedMediaByArea(
+  value: unknown,
+): Record<string, TemplateAreaMediaItem[]> {
+  if (!value || typeof value !== "object") {
+    return {}
+  }
+
+  const entries = Object.entries(value as Record<string, unknown>).map(([areaKey, areaValue]) => {
+    const normalizedItems = Array.isArray(areaValue)
+      ? areaValue
+          .filter((item): item is Partial<TemplateAreaMediaItem> => Boolean(item) && typeof item === "object")
+          .map((item) => ({
+            id: String(item.id ?? crypto.randomUUID()),
+            title: String(item.title ?? "Media"),
+            description: String(item.description ?? ""),
+            mediaType: String(item.mediaType ?? "media"),
+            category: String(item.category ?? normalizeMediaCategory(String(item.mediaType ?? "media"))),
+            url: String(item.url ?? ""),
+          }))
+      : []
+    return [areaKey, normalizedItems] as const
+  })
+
+  return Object.fromEntries(entries)
 }
 
 function SnapToggle({
@@ -254,16 +405,16 @@ function EngineBtn({
   onClick,
   label,
   iconNode,
-  compact,
   title,
+  compact,
   overlayUi,
 }: {
   active?: boolean
   onClick?: () => void
   label?: string
   iconNode?: React.ReactNode
-  compact?: boolean
   title?: string
+  compact?: boolean
   overlayUi?: OverlayUi
 }) {
   return (
@@ -271,17 +422,17 @@ function EngineBtn({
       type="button"
       title={title ?? label}
       onClick={onClick}
-      className={`flex flex-col items-center justify-center gap-0.5 rounded ${overlayUi?.toolButtonPadding ?? "p-1.5"} ${overlayUi?.controlInput ?? "text-xs"} transition select-none
+      className={`flex flex-col items-center justify-center gap-0.5 ${compact ? "h-10 w-10" : "h-12 w-12"} rounded border transition select-none
         ${active
-          ? "bg-accent text-primary"
-          : "text-foreground/70 hover:bg-muted/60 hover:text-foreground"
+          ? "border-primary bg-blue-100 text-primary"
+          : "border-border bg-background text-foreground/70 hover:border-primary/40 hover:bg-muted/30"
         }
-        ${compact ? "min-w-[44px]" : "min-w-[52px]"}
+        ${overlayUi?.controlInput ?? "text-xs"}
       `}
     >
       {iconNode}
       {label && (
-        <span className={`${overlayUi?.toolButtonLabel ?? "text-[10px]"} leading-none font-medium truncate max-w-full mt-0.5`}>
+        <span className={`${overlayUi?.toolButtonLabel ?? "text-[10px]"} leading-none font-medium truncate max-w-full`}>
           {label}
         </span>
       )}
@@ -400,6 +551,7 @@ export function CreateView({
   canvasConfig?: CanvasPageConfig | null
   courseId?: string | null
 } = {}) {
+  const mediaPanelWidthStorageKey = "create-view:media-panel-width"
   const supabase = useMemo(() => createClient(), [])
   const [mode, setMode] = useState<Mode>("build")
   const [activeTool, setActiveTool] = useState<BuildTool | AnimateTool>("selection")
@@ -420,7 +572,16 @@ export function CreateView({
   const [zoom, setZoom] = useState(100)
   const [viewportInfo, setViewportInfo] = useState<CanvasViewportInfo | null>(null)
   const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([])
+  const [wikipediaAssets, setWikipediaAssets] = useState<MediaAsset[]>([])
+  const [droppedMediaByScope, setDroppedMediaByScope] = useState<Record<string, Record<string, TemplateAreaMediaItem[]>>>({})
+  const [canvasDocumentId, setCanvasDocumentId] = useState<string | null>(null)
+  const [documentReadyKey, setDocumentReadyKey] = useState<string | null>(null)
   const [mediaLoading, setMediaLoading] = useState(false)
+  const [wikipediaLoading, setWikipediaLoading] = useState(false)
+  const [mediaDragActive, setMediaDragActive] = useState(false)
+  const [activeCanvasMedia, setActiveCanvasMedia] = useState<TemplateAreaMediaItem | null>(null)
+  const [pixiLayoutPageByScope, setPixiLayoutPageByScope] = useState<Record<string, number>>({})
+  const [pixiMeasuredSectionHeightsByScope, setPixiMeasuredSectionHeightsByScope] = useState<Record<string, Record<string, number>>>({})
 
   // Always-selected media category
   const [activeMedia, setActiveMedia] = useState<string>("files")
@@ -429,8 +590,29 @@ export function CreateView({
   const [snapReference, setSnapReference] = useState<SnapReference>("canvas")
 
   // Resizable panels — can be dragged to 0 (canvas overlays always remain)
-  const leftPanel  = useResizeHandle(288, "right", 0, 480)
+  const leftPanel  = useResizeHandle(320, "right", 0, 520)
   const rightPanel = useResizeHandle(224, "left",  0, 400)
+  const setLeftPanelWidth = leftPanel.setWidth
+
+  useEffect(() => {
+    try {
+      const storedWidth = window.localStorage.getItem(mediaPanelWidthStorageKey)
+      if (!storedWidth) return
+      const parsedWidth = Number.parseInt(storedWidth, 10)
+      if (!Number.isFinite(parsedWidth)) return
+      setLeftPanelWidth(Math.max(0, Math.min(520, parsedWidth)))
+    } catch {
+      // Ignore storage access issues.
+    }
+  }, [mediaPanelWidthStorageKey, setLeftPanelWidth])
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(mediaPanelWidthStorageKey, String(Math.round(leftPanel.width)))
+    } catch {
+      // Ignore storage access issues.
+    }
+  }, [leftPanel.width, mediaPanelWidthStorageKey])
 
   // Tool options state — build
   const [penSize, setPenSize] = useState(2)
@@ -453,6 +635,7 @@ export function CreateView({
   const [tableType, setTableType] = useState("basic")
   const [generateType, setGenerateType] = useState("text")
   const [generatePrompt, setGeneratePrompt] = useState("")
+  const [templateVisualDensity, setTemplateVisualDensity] = useState<TemplateVisualDensity>(DEFAULT_TEMPLATE_VISUAL_DENSITY)
   // Tool options state — animate
   const [selectionMode, setSelectionMode] = useState<"contain" | "intersect">("contain")
   const [aspectRatio, setAspectRatio] = useState("16:9")
@@ -495,7 +678,9 @@ export function CreateView({
         : "Teacher"
     setTeacherName(resolvedTeacherName)
     const templates = normalizeTemplateSettings(data.template_settings)
+    const templateUiSettings = normalizeTemplateUiSettings(data.template_settings)
     const { templateById, templateByType } = createTemplateLookups(templates)
+    setTemplateVisualDensity(templateUiSettings.visualDensity)
     const curriculum = (data.curriculum_data as Record<string, unknown> | null) ?? {}
     const scheduleSettings = (data.schedule_settings as Record<string, unknown> | null) ?? {}
     const scheduleRows = Array.isArray(scheduleSettings.generated_entries)
@@ -575,39 +760,7 @@ export function CreateView({
         } satisfies MediaAsset
       })
 
-      const base = [...fetched]
-      const required: Array<{ category: string; mediaType: string }> = [
-        { category: "images", mediaType: "image" },
-        { category: "videos", mediaType: "video" },
-        { category: "audio", mediaType: "audio" },
-        { category: "text", mediaType: "text" },
-      ]
-
-      required.forEach(({ category, mediaType }) => {
-        const hasCategory = base.some((asset) => asset.category === category)
-        if (!hasCategory) {
-          base.push(
-            {
-              id: `seed-${category}-1`,
-              category,
-              mediaType,
-              title: `Supplemental ${mediaType} item A`,
-              description: "Added for drag-and-drop completeness.",
-              url: "",
-            },
-            {
-              id: `seed-${category}-2`,
-              category,
-              mediaType,
-              title: `Supplemental ${mediaType} item B`,
-              description: "Added for drag-and-drop completeness.",
-              url: "",
-            },
-          )
-        }
-      })
-
-      setMediaAssets(base)
+      setMediaAssets(fetched)
       setMediaLoading(false)
     }
 
@@ -617,11 +770,58 @@ export function CreateView({
     }
   }, [supabase])
 
+  useEffect(() => {
+    const seedQuery = mediaSearch.trim().length >= 2
+      ? mediaSearch.trim()
+      : (courseTitle.trim() && courseTitle.trim().toLowerCase() !== "untitled course"
+        ? courseTitle.trim()
+        : "world history")
+
+    let active = true
+    const controller = new AbortController()
+    const handle = window.setTimeout(async () => {
+      try {
+        setWikipediaLoading(true)
+        const assets = await fetchWikimediaAssets(seedQuery, controller.signal)
+        if (!active) return
+        setWikipediaAssets(assets)
+      } catch {
+        if (!active) return
+        setWikipediaAssets([])
+      } finally {
+        if (active) {
+          setWikipediaLoading(false)
+        }
+      }
+    }, 300)
+
+    return () => {
+      active = false
+      window.clearTimeout(handle)
+      controller.abort()
+    }
+  }, [courseTitle, mediaSearch])
+
   const clampedCurrentPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages))
 
   const currentLessonPage = useMemo(
     () => lessonPages.find((page) => page.globalPage === clampedCurrentPage) ?? null,
     [lessonPages, clampedCurrentPage],
+  )
+
+  const currentDocumentKey = useMemo(() => {
+    if (!courseId || !currentLessonPage) return null
+    return `${courseId}:${currentLessonPage.globalPage}`
+  }, [courseId, currentLessonPage])
+
+  const currentCanvasScopeKey = useMemo(
+    () => currentDocumentKey ?? `local:${clampedCurrentPage}`,
+    [clampedCurrentPage, currentDocumentKey],
+  )
+
+  const currentDroppedMediaByArea = useMemo(
+    () => normalizeDroppedMediaByArea(droppedMediaByScope[currentCanvasScopeKey]),
+    [currentCanvasScopeKey, droppedMediaByScope],
   )
 
   const currentEnabledBlocks = useMemo(
@@ -654,42 +854,69 @@ export function CreateView({
     [templateEnabledMap],
   )
 
-  const perPageTemplateEnabledMap = useMemo<Record<BlockId, boolean>>(() => {
-    if (!currentLessonPage) return bodyTemplateEnabledMap
-
-    const localPage = currentLessonPage.localPage ?? 1
-    const totalPages = currentLessonPage.pagesInLesson ?? 1
-
-    const map = { ...bodyTemplateEnabledMap }
-
-    if (localPage === 1) {
-      // Page 1: Program and Resources only
-      map.program = bodyTemplateEnabledMap.program
-      map.resources = bodyTemplateEnabledMap.resources
-      map.content = false
-      map.assignment = false
-    } else if (localPage === 2 && totalPages === 2) {
-      // Page 2 of 2: Content and Assignment together
-      map.program = false
-      map.resources = false
-      map.content = bodyTemplateEnabledMap.content
-      map.assignment = bodyTemplateEnabledMap.assignment
-    } else if (localPage === 2 && totalPages > 2) {
-      // Page 2 of 3+: Content only
-      map.program = false
-      map.resources = false
-      map.content = bodyTemplateEnabledMap.content
-      map.assignment = false
-    } else {
-      // Page 3+: Assignment only
-      map.program = false
-      map.resources = false
-      map.content = false
-      map.assignment = bodyTemplateEnabledMap.assignment
+  const lessonBlockPagination = useMemo(() => {
+    const emptySlices: Partial<Record<BlockId, { start: number; end: number }>> = {}
+    const emptyContinuation: Partial<Record<BlockId, boolean>> = {}
+    if (!currentLessonPage) {
+      return {
+        slices: emptySlices,
+        activeBlocks: [] as BlockId[],
+        continuation: emptyContinuation,
+      }
     }
 
+    const topicsPerLesson = Math.max(1, currentLessonPage.topicCount || currentLessonPage.topics.length || 1)
+    const objectivesPerTopic = Math.max(1, currentLessonPage.objectiveCount || currentLessonPage.objectives.length || 1)
+    const tasksPerObjective = Math.max(1, currentLessonPage.taskCount || currentLessonPage.tasks.length || 1)
+    const enabledBlocks = [
+      bodyTemplateEnabledMap.program ? "program" : null,
+      bodyTemplateEnabledMap.resources ? "resources" : null,
+      bodyTemplateEnabledMap.content ? "content" : null,
+      bodyTemplateEnabledMap.assignment ? "assignment" : null,
+      bodyTemplateEnabledMap.scoring ? "scoring" : null,
+    ].filter((block): block is "program" | "resources" | "content" | "assignment" | "scoring" => Boolean(block))
+
+    const layoutPlan = planLessonBodyLayout({
+      topicsPerLesson,
+      objectivesPerTopic,
+      tasksPerObjective,
+      enabledBlocks,
+    })
+
+    const localPage = currentLessonPage.localPage ?? 1
+    const chunksOnPage = layoutPlan.chunks.filter((chunk) => chunk.page === localPage)
+    const slices: Partial<Record<BlockId, { start: number; end: number }>> = {}
+    const continuation: Partial<Record<BlockId, boolean>> = {}
+
+    chunksOnPage.forEach((chunk) => {
+      slices[chunk.blockId] = { start: chunk.itemStart, end: chunk.itemEnd }
+      continuation[chunk.blockId] = chunk.continuation
+    })
+
+    return {
+      slices,
+      activeBlocks: chunksOnPage.map((chunk) => chunk.blockId),
+      continuation,
+    }
+  }, [currentLessonPage, bodyTemplateEnabledMap])
+
+  const perPageTemplateEnabledMap = useMemo<Record<BlockId, boolean>>(() => {
+    const map: Record<BlockId, boolean> = {
+      header: false,
+      program: false,
+      resources: false,
+      content: false,
+      assignment: false,
+      scoring: false,
+      footer: false,
+    }
+
+    lessonBlockPagination.activeBlocks.forEach((blockId) => {
+      map[blockId] = true
+    })
+
     return map
-  }, [bodyTemplateEnabledMap, currentLessonPage])
+  }, [lessonBlockPagination.activeBlocks])
 
   const headerFieldValues = useMemo(() => {
     if (!currentLessonPage || !hasHeaderBlock) return [] as Array<{ key: string; value: string }>
@@ -835,50 +1062,117 @@ export function CreateView({
     const topicsPerLesson = Math.max(1, currentLessonPage.topicCount || currentLessonPage.topics.length || 1)
     const objectivesPerTopic = Math.max(1, currentLessonPage.objectiveCount || currentLessonPage.objectives.length || 1)
     const tasksPerObjective = Math.max(1, currentLessonPage.taskCount || currentLessonPage.tasks.length || 1)
-    const totalTaskRows = Math.max(1, topicsPerLesson * objectivesPerTopic * tasksPerObjective)
-    const totalPagesInLesson = Math.max(1, currentLessonPage.pagesInLesson || 1)
-    const localPageIndex = Math.max(0, (currentLessonPage.localPage || 1) - 1)
-    const pageTaskStart = Math.floor((localPageIndex * totalTaskRows) / totalPagesInLesson)
-    const pageTaskEnd = Math.floor(((localPageIndex + 1) * totalTaskRows) / totalPagesInLesson)
-    const pageTaskCount = Math.max(1, pageTaskEnd - pageTaskStart)
+    const lessonDurationMinutes = Math.max(0, Number(currentLessonPage.durationMinutes ?? 0) || 0)
 
-    const taskRows = Array.from({ length: pageTaskCount }, (_, pageOffset) => {
-      const flatTaskIndex = pageTaskStart + pageOffset
-      const perTopicTaskCount = objectivesPerTopic * tasksPerObjective
-      const topicIndex = Math.min(topicsPerLesson - 1, Math.floor(flatTaskIndex / perTopicTaskCount))
-      const withinTopicIndex = flatTaskIndex % perTopicTaskCount
-      const objectiveWithinTopicIndex = Math.floor(withinTopicIndex / tasksPerObjective)
-      const taskWithinObjectiveIndex = withinTopicIndex % tasksPerObjective
-      const objectiveLinearIndex = topicIndex * objectivesPerTopic + objectiveWithinTopicIndex
+    const sliceForBlockPage = <T,>(blockId: BlockId, values: T[]): T[] => {
+      if (values.length === 0) return []
+      const slice = lessonBlockPagination.slices[blockId]
+      if (!slice) return []
+      const start = Math.max(0, Math.min(values.length, slice.start))
+      const end = Math.max(start, Math.min(values.length, slice.end))
+      return values.slice(start, Math.max(start + 1, end))
+    }
+
+    const splitMinutesAcrossTopics = (totalMinutes: number, topicCount: number): number[] => {
+      if (topicCount <= 0 || totalMinutes <= 0) return Array.from({ length: Math.max(1, topicCount) }, () => 0)
+      const baseMinutes = Math.floor(totalMinutes / topicCount)
+      const remainder = totalMinutes % topicCount
+      return Array.from({ length: topicCount }, (_, idx) => baseMinutes + (idx < remainder ? 1 : 0))
+    }
+
+    const resolvedTopics = Array.from({ length: topicsPerLesson }, (_, topicIdx) => (
+      currentLessonPage.topics[topicIdx] || `Topic ${topicIdx + 1}`
+    ))
+    const resolvedObjectives = Array.from({ length: objectivesPerTopic }, (_, objectiveIdx) => (
+      currentLessonPage.objectives[objectiveIdx] || `Objective ${objectiveIdx + 1}`
+    ))
+    const resolvedTasks = Array.from({ length: tasksPerObjective }, (_, taskIdx) => (
+      currentLessonPage.tasks[taskIdx] || `Task ${taskIdx + 1}`
+    ))
+    const topicMinuteAllocations = splitMinutesAcrossTopics(lessonDurationMinutes, resolvedTopics.length)
+
+    const fullProgramRows = resolvedTopics.map((topic, topicIdx) => {
+      const objectiveCell = resolvedObjectives
+        .map((objective, objectiveIdx) => `${topicIdx + 1}.${objectiveIdx + 1} ${objective}`)
+        .join("\n")
+      const taskCell = resolvedObjectives
+        .flatMap((objective, objectiveIdx) => (
+          resolvedTasks.map((task, taskIdx) => `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${objective}: ${task}`)
+        ))
+        .join("\n")
 
       return {
-        topic: currentLessonPage.topics[topicIndex] || `Topic ${topicIndex + 1}`,
-        objective:
-          currentLessonPage.objectives[objectiveLinearIndex]
-          || `Objective ${topicIndex + 1}.${objectiveWithinTopicIndex + 1}`,
-        task:
-          currentLessonPage.tasks[flatTaskIndex]
-          || `Task ${topicIndex + 1}.${objectiveWithinTopicIndex + 1}.${taskWithinObjectiveIndex + 1}`,
+        topic,
+        objective: objectiveCell,
+        task: taskCell,
+        program_time: topicMinuteAllocations[topicIdx] > 0 ? `${topicMinuteAllocations[topicIdx]} min` : scalarFieldValues.program_time,
+        program_method: scalarFieldValues.program_method,
+        program_social_form: scalarFieldValues.program_social_form,
       }
     })
 
-    const programRows = taskRows.map((row) => ({
-      topic: row.topic,
-      objective: row.objective,
-      task: row.task,
-      program_time: scalarFieldValues.program_time,
-      program_method: scalarFieldValues.program_method,
-      program_social_form: scalarFieldValues.program_social_form,
+    const fullResourceRows = resolvedTopics.flatMap((topic, topicIdx) => (
+      resolvedObjectives.flatMap((objective, objectiveIdx) => (
+        resolvedTasks.map((task, taskIdx) => ({
+          task: `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${topic}: ${objective} — ${task}`,
+          type: scalarFieldValues.type,
+          origin: scalarFieldValues.origin,
+          state: scalarFieldValues.state,
+          quality: scalarFieldValues.quality,
+        }))
+      ))
+    ))
+    const fullContentTopicGroups = resolvedTopics.map((topic, topicIdx) => ({
+      topic,
+      objectives: resolvedObjectives.map((objective, objectiveIdx) => ({
+        objective,
+        tasks: resolvedTasks.map((task, taskIdx) => ({
+          task: `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${task}`,
+          instructionArea: scalarFieldValues.instruction_area,
+          studentArea: scalarFieldValues.student_area,
+          teacherArea: scalarFieldValues.teacher_area,
+        })),
+      })),
     }))
-    const resourceRows = taskRows.map((row) => ({
-      task: row.task,
-      type: scalarFieldValues.type,
-      origin: scalarFieldValues.origin,
-      state: scalarFieldValues.state,
-      quality: scalarFieldValues.quality,
-    }))
+    const contentTopicGroups = sliceForBlockPage("content", fullContentTopicGroups)
 
-    const isFirstPage = (currentLessonPage.localPage ?? 1) === 1
+    const fullAssignmentTasks = resolvedTopics.flatMap((topic, topicIdx) => (
+      resolvedObjectives.flatMap((objective, objectiveIdx) => (
+        resolvedTasks.map((task, taskIdx) => `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${topic}: ${objective} — ${task}`)
+      ))
+    ))
+    const assignmentTasks = sliceForBlockPage("assignment", fullAssignmentTasks)
+
+    const fullAssignmentGroups = resolvedTopics.map((topic, topicIdx) => ({
+      topic,
+      objectives: resolvedObjectives.map((objective, objectiveIdx) => ({
+        objective,
+        tasks: resolvedTasks.map((task, taskIdx) => ({
+          task: `${topicIdx + 1}.${objectiveIdx + 1}.${taskIdx + 1} ${task}`,
+          instructionArea: scalarFieldValues.instruction_area,
+          studentArea: scalarFieldValues.student_area,
+          teacherArea: scalarFieldValues.teacher_area,
+        })),
+      })),
+    }))
+    const assignmentGroups = sliceForBlockPage("assignment", fullAssignmentGroups)
+
+    const programRows = sliceForBlockPage("program", fullProgramRows)
+    const resourceRowsPaged = sliceForBlockPage("resources", fullResourceRows)
+    const scoringItemsPaged = sliceForBlockPage("scoring", currentLessonPage.objectives.map((objective, idx) => `Criterion ${idx + 1}: ${objective}`))
+
+    const assignmentGroupsFromContent = contentTopicGroups.map((topicGroup, topicIndex) => ({
+      topic: topicGroup.topic,
+      objectives: topicGroup.objectives.map((objective) => ({
+        objective: objective.objective,
+        tasks: objective.tasks.map((task, taskIndex) => ({
+          task: `${topicIndex + 1}.${taskIndex + 1} ${task.task}`,
+          instructionArea: task.instructionArea,
+          studentArea: task.studentArea,
+          teacherArea: task.teacherArea,
+        })),
+      })),
+    }))
 
     return {
       fieldValues: {
@@ -890,23 +1184,39 @@ export function CreateView({
         scoring: buildBlockFieldValues("scoring"),
         footer: footerValues,
       },
-      programRows: isFirstPage ? programRows : [],
-      resourceRows: isFirstPage ? resourceRows : [],
-      resourceItems: resourceRows.map((row, idx) => `Resource ${idx + 1}: ${row.task}`),
-      scoringItems: currentLessonPage.objectives.map((objective, idx) => `Criterion ${idx + 1}: ${objective}`),
+      programRows,
+      resourceRows: resourceRowsPaged,
+      contentItems: {
+        topics: resolvedTopics,
+        objectives: resolvedObjectives,
+        tasks: resolvedTasks,
+        topicGroups: contentTopicGroups,
+      },
+      assignmentItems: {
+        tasks: assignmentTasks,
+        topicGroups: assignmentGroups.length > 0 ? assignmentGroups : assignmentGroupsFromContent,
+      },
+      resourceItems: resourceRowsPaged.map((row, idx) => `Resource ${idx + 1}: ${row.task}`),
+      scoringItems: scoringItemsPaged,
+      continuation: lessonBlockPagination.continuation,
     }
-  }, [currentLessonPage, headerFieldValues, footerFieldValues, courseTitle, courseType, courseLanguage, teacherName, institutionName, clampedCurrentPage, totalPages, templateFieldEnabled])
+  }, [currentLessonPage, lessonBlockPagination, headerFieldValues, footerFieldValues, courseTitle, courseType, courseLanguage, teacherName, institutionName, clampedCurrentPage, totalPages, templateFieldEnabled])
+
+  const combinedMediaAssets = useMemo(
+    () => dedupeMediaAssets([...mediaAssets, ...wikipediaAssets]),
+    [mediaAssets, wikipediaAssets],
+  )
 
   const mediaItems = useMemo(() => {
     const term = mediaSearch.trim().toLowerCase()
-    return mediaAssets
+    return combinedMediaAssets
       .filter((item) => item.category === activeMedia)
       .filter((item) => {
         if (!term) return true
         return `${item.title} ${item.description}`.toLowerCase().includes(term)
       })
       .slice(0, 80)
-  }, [activeMedia, mediaAssets, mediaSearch])
+  }, [activeMedia, combinedMediaAssets, mediaSearch])
 
   const lessonNavigation = useMemo(() => {
     const bySession = new Map<string, { label: string; start: number; end: number }>()
@@ -926,9 +1236,209 @@ export function CreateView({
   }, [lessonPages])
 
   const onDragStartMedia = useCallback((asset: MediaAsset, event: React.DragEvent) => {
+    setMediaDragActive(true)
     event.dataTransfer.effectAllowed = "copy"
-    event.dataTransfer.setData("application/json", JSON.stringify(asset))
+    const payload = JSON.stringify(asset)
+    event.dataTransfer.setData("application/json", payload)
+    event.dataTransfer.setData("text/plain", payload)
   }, [])
+
+  const parseDraggedMediaPayload = useCallback((raw: string): TemplateAreaMediaItem | null => {
+    try {
+      const parsed = JSON.parse(raw) as Partial<MediaAsset>
+      return {
+        id: String(parsed.id ?? crypto.randomUUID()),
+        title: String(parsed.title ?? "Media"),
+        description: String(parsed.description ?? ""),
+        mediaType: String(parsed.mediaType ?? "media"),
+        category: String(parsed.category ?? normalizeMediaCategory(String(parsed.mediaType ?? "media"))),
+        url: String(parsed.url ?? ""),
+      }
+    } catch {
+      return null
+    }
+  }, [])
+
+  const appendMediaToArea = useCallback((areaKey: string, mediaItem: TemplateAreaMediaItem) => {
+    setDroppedMediaByScope((prev) => {
+      const scopeValue = prev[currentCanvasScopeKey] ?? {}
+      const existing = Array.isArray(scopeValue[areaKey]) ? scopeValue[areaKey] : []
+      const next = existing.some((entry) => entry.id === mediaItem.id || (entry.url && entry.url === mediaItem.url))
+        ? existing
+        : [...existing, mediaItem]
+      return {
+        ...prev,
+        [currentCanvasScopeKey]: {
+          ...scopeValue,
+          [areaKey]: next,
+        },
+      }
+    })
+  }, [currentCanvasScopeKey])
+
+  const recordMediaDropOp = useCallback((areaKey: string, mediaItem: TemplateAreaMediaItem) => {
+    if (!(courseId && currentLessonPage && canvasDocumentId)) return
+    void supabase.from("canvas_document_ops").insert({
+      document_id: canvasDocumentId,
+      course_id: courseId,
+      page_global: currentLessonPage.globalPage,
+      operation_type: "media_drop",
+      operation_payload: {
+        areaKey,
+        media: mediaItem,
+        at: Date.now(),
+      },
+    })
+  }, [canvasDocumentId, courseId, currentLessonPage, supabase])
+
+  const onDropAreaMedia = useCallback((areaKey: string, event: React.DragEvent<HTMLDivElement>) => {
+    let operationMedia: TemplateAreaMediaItem | null = null
+    try {
+      const raw = event.dataTransfer.getData("application/json") || event.dataTransfer.getData("text/plain")
+      if (!raw) return
+      const mediaItem = parseDraggedMediaPayload(raw)
+      if (!mediaItem) return
+      operationMedia = mediaItem
+
+      appendMediaToArea(areaKey, mediaItem)
+    } catch {
+      // ignore malformed payload
+    } finally {
+      setMediaDragActive(false)
+    }
+
+    if (operationMedia) {
+      recordMediaDropOp(areaKey, operationMedia)
+    }
+  }, [appendMediaToArea, parseDraggedMediaPayload, recordMediaDropOp])
+
+  const onPixiAreaDrop = useCallback((areaKey: string, rawPayload: string) => {
+    const mediaItem = parseDraggedMediaPayload(rawPayload)
+    if (!mediaItem) return
+    appendMediaToArea(areaKey, mediaItem)
+    recordMediaDropOp(areaKey, mediaItem)
+    setMediaDragActive(false)
+  }, [appendMediaToArea, parseDraggedMediaPayload, recordMediaDropOp])
+
+  const onRemoveAreaMedia = useCallback((areaKey: string, mediaId: string) => {
+    setDroppedMediaByScope((prev) => {
+      const scopeValue = prev[currentCanvasScopeKey] ?? {}
+      const existing = Array.isArray(scopeValue[areaKey]) ? scopeValue[areaKey] : []
+      const next = existing.filter((entry) => entry.id !== mediaId)
+      if (next.length === 0) {
+        const remainingAreas = Object.fromEntries(
+          Object.entries(scopeValue).filter(([key]) => key !== areaKey),
+        )
+        return {
+          ...prev,
+          [currentCanvasScopeKey]: remainingAreas,
+        }
+      }
+      return {
+        ...prev,
+        [currentCanvasScopeKey]: {
+          ...scopeValue,
+          [areaKey]: next,
+        },
+      }
+    })
+  }, [currentCanvasScopeKey])
+
+  useEffect(() => {
+    if (!courseId || !currentLessonPage || !currentDocumentKey) {
+      setCanvasDocumentId(null)
+      setDocumentReadyKey(null)
+      return
+    }
+
+    let active = true
+    setDocumentReadyKey(null)
+
+    async function loadCanvasDocument() {
+      const { data, error } = await supabase
+        .from("canvas_documents")
+        .select("id,schema_version,document")
+        .eq("course_id", courseId)
+        .eq("page_global", currentLessonPage!.globalPage)
+        .maybeSingle()
+
+      if (!active) return
+
+      if (error) {
+        setCanvasDocumentId(null)
+        setDroppedMediaByScope((prev) => {
+          if (prev[currentCanvasScopeKey]) return prev
+          return {
+            ...prev,
+            [currentCanvasScopeKey]: {},
+          }
+        })
+        setDocumentReadyKey(currentDocumentKey)
+        return
+      }
+
+      if (!data) {
+        setCanvasDocumentId(null)
+        setDroppedMediaByScope((prev) => {
+          if (prev[currentCanvasScopeKey]) return prev
+          return {
+            ...prev,
+            [currentCanvasScopeKey]: {},
+          }
+        })
+        setDocumentReadyKey(currentDocumentKey)
+        return
+      }
+
+      const record = data as { id: string; schema_version?: number; document?: unknown }
+      const payload = (record.document ?? {}) as Partial<CanvasDocumentPayload>
+      setCanvasDocumentId(record.id)
+      setDroppedMediaByScope((prev) => ({
+        ...prev,
+        [currentCanvasScopeKey]: normalizeDroppedMediaByArea(payload.droppedMediaByArea),
+      }))
+      setDocumentReadyKey(currentDocumentKey)
+    }
+
+    void loadCanvasDocument()
+    return () => {
+      active = false
+    }
+  }, [courseId, currentCanvasScopeKey, currentDocumentKey, currentLessonPage, supabase])
+
+  useEffect(() => {
+    if (!courseId || !currentLessonPage || !currentDocumentKey) return
+    if (documentReadyKey !== currentDocumentKey) return
+
+    const documentPayload: CanvasDocumentPayload = {
+      schemaVersion: 1,
+      droppedMediaByArea: currentDroppedMediaByArea,
+    }
+
+    const timeoutHandle = window.setTimeout(async () => {
+      const { data } = await supabase
+        .from("canvas_documents")
+        .upsert(
+          {
+            course_id: courseId,
+            page_global: currentLessonPage.globalPage,
+            schema_version: 1,
+            document: documentPayload,
+          },
+          { onConflict: "course_id,page_global" },
+        )
+        .select("id")
+        .single()
+
+      if (data && typeof (data as { id?: unknown }).id === "string") {
+        setCanvasDocumentId((data as { id: string }).id)
+      }
+    }, 300)
+
+    return () => {
+      window.clearTimeout(timeoutHandle)
+    }
+  }, [courseId, currentDocumentKey, currentDroppedMediaByArea, currentLessonPage, documentReadyKey, supabase])
 
   const overlayUi = useMemo<OverlayUi>(() => {
     return {
@@ -1004,6 +1514,352 @@ export function CreateView({
     const institutionValue = headerFieldMap.institution_name
     return [dateValue, teacherValue, institutionValue].filter(Boolean).join(" · ")
   }, [headerFieldMap])
+
+  const usePixiTemplateLayout = false
+  const measuredSectionHeights = useMemo(
+    () => pixiMeasuredSectionHeightsByScope[currentCanvasScopeKey] ?? {},
+    [currentCanvasScopeKey, pixiMeasuredSectionHeightsByScope],
+  )
+
+  const basePixiTemplateLayoutModel = useMemo<PixiTemplateLayoutModel | null>(() => {
+    if (!currentLessonPage) return null
+
+    const sections: PixiTemplateLayoutModel["sections"] = []
+    const formatList = (values: string[], fallback: string) => (values.length > 0 ? values : [fallback])
+
+    const describeAreaKey = (prefix: "content" | "assignment", areaKey: string): string => {
+      const parts = areaKey.split(":")
+      const topicIdx = Number.parseInt(parts[1] ?? "0", 10)
+      const objectiveIdx = Number.parseInt(parts[2] ?? "0", 10)
+      const taskIdx = Number.parseInt(parts[3] ?? "0", 10)
+      const areaRaw = String(parts[4] ?? "area")
+      const areaLabel = areaRaw.charAt(0).toUpperCase() + areaRaw.slice(1)
+
+      const groups = prefix === "content"
+        ? (templateData?.contentItems?.topicGroups ?? [])
+        : (templateData?.assignmentItems?.topicGroups ?? [])
+      const topicGroup = groups[topicIdx]
+      const objectiveGroup = topicGroup?.objectives?.[objectiveIdx]
+      const taskLabel = objectiveGroup?.tasks?.[taskIdx]?.task
+
+      const topicLabel = topicGroup?.topic ? `Topic ${topicIdx + 1}: ${topicGroup.topic}` : `Topic ${topicIdx + 1}`
+      const objectiveLabel = objectiveGroup?.objective
+        ? `Objective ${objectiveIdx + 1}: ${objectiveGroup.objective}`
+        : `Objective ${objectiveIdx + 1}`
+      const taskLine = taskLabel ? `Task ${taskIdx + 1}: ${taskLabel}` : `Task ${taskIdx + 1}`
+
+      return `${topicLabel} · ${objectiveLabel} · ${taskLine} · ${areaLabel} Area`
+    }
+
+    const mediaZonesForPrefix = (prefix: "content" | "assignment") => {
+      return Object.entries(currentDroppedMediaByArea)
+        .filter(([areaKey]) => areaKey.startsWith(`${prefix}:`))
+        .map(([areaKey, items]) => ({
+          areaKey,
+          title: describeAreaKey(prefix, areaKey),
+          items: items.map((item) => ({
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            url: item.url,
+            mediaType: item.mediaType,
+            category: item.category,
+          })),
+        }))
+    }
+
+    if (perPageTemplateEnabledMap.program) {
+      const rows = templateData?.programRows ?? []
+      sections.push({
+        key: "program",
+        id: "program",
+        title: "Program",
+        lines: rows.length > 0
+          ? rows.slice(0, 5).map((row, idx) => `${idx + 1}. ${row.topic || "Topic"} · ${row.program_time || "—"}`)
+          : ["No program rows on this page"],
+      })
+    }
+
+    if (perPageTemplateEnabledMap.resources) {
+      const rows = templateData?.resourceRows ?? []
+      sections.push({
+        key: "resources",
+        id: "resources",
+        title: "Resources",
+        lines: rows.length > 0
+          ? rows.slice(0, 6).map((row, idx) => `${idx + 1}. ${row.task || "Resource"}`)
+          : ["No resources on this page"],
+      })
+    }
+
+    if (perPageTemplateEnabledMap.content) {
+      const contentGroups = templateData?.contentItems?.topicGroups ?? []
+      const droppedCount = Object.entries(currentDroppedMediaByArea)
+        .filter(([areaKey]) => areaKey.startsWith("content:"))
+        .reduce((acc, [, items]) => acc + items.length, 0)
+      sections.push({
+        key: "content",
+        id: "content",
+        title: "Content",
+        lines: [
+          ...formatList(contentGroups.slice(0, 3).map((group, idx) => `${idx + 1}. ${group.topic}`), "No content groups on this page"),
+          `Dropped media: ${droppedCount}`,
+        ],
+        mediaZones: mediaZonesForPrefix("content"),
+      })
+    }
+
+    if (perPageTemplateEnabledMap.assignment) {
+      const assignmentGroups = templateData?.assignmentItems?.topicGroups ?? []
+      const droppedCount = Object.entries(currentDroppedMediaByArea)
+        .filter(([areaKey]) => areaKey.startsWith("assignment:"))
+        .reduce((acc, [, items]) => acc + items.length, 0)
+      sections.push({
+        key: "assignment",
+        id: "assignment",
+        title: "Assignment",
+        lines: [
+          ...formatList(assignmentGroups.slice(0, 3).map((group, idx) => `${idx + 1}. ${group.topic}`), "No assignment groups on this page"),
+          `Dropped media: ${droppedCount}`,
+        ],
+        mediaZones: mediaZonesForPrefix("assignment"),
+      })
+    }
+
+    if (perPageTemplateEnabledMap.scoring) {
+      const scoring = templateData?.scoringItems ?? []
+      sections.push({
+        key: "scoring",
+        id: "scoring",
+        title: "Scoring",
+        lines: scoring.length > 0 ? scoring.slice(0, 6) : ["No scoring criteria on this page"],
+      })
+    }
+
+    return {
+      title: `Lesson ${currentLessonPage.lessonNumber}: ${currentLessonPage.lessonTitle}`,
+      headerChips: headerFieldValues.map((entry) => entry.value).filter(Boolean).slice(0, 6),
+      sections,
+      footerChips: footerFieldValues
+        .filter((entry) => entry.key !== "page_number")
+        .map((entry) => entry.value)
+        .filter(Boolean)
+        .slice(0, 5),
+      pageLabel: footerFieldValues.find((entry) => entry.key === "page_number")?.value ?? `Page ${clampedCurrentPage} / ${totalPages}`,
+    }
+  }, [clampedCurrentPage, currentDroppedMediaByArea, currentLessonPage, footerFieldValues, headerFieldValues, perPageTemplateEnabledMap, templateData, totalPages])
+
+  const pixiTemplateLayoutPages = useMemo<PixiTemplateLayoutModel[]>(() => {
+    if (!basePixiTemplateLayoutModel) return []
+
+    const contentWidthPx = Math.max(
+      320,
+      effectiveCanvasConfig.widthPx - effectiveCanvasConfig.margins.left - effectiveCanvasConfig.margins.right - 24,
+    )
+    const contentHeightPx = Math.max(
+      260,
+      effectiveCanvasConfig.heightPx - effectiveCanvasConfig.margins.top - effectiveCanvasConfig.margins.bottom - 24,
+    )
+    const headerHeightPx = 96
+    const footerHeightPx = 72
+    const pageBudgetPx = Math.max(160, contentHeightPx - headerHeightPx - footerHeightPx)
+
+    const lineTextStyle = new TextStyle({
+      fontSize: 10,
+      wordWrap: true,
+      wordWrapWidth: Math.max(220, contentWidthPx - 32),
+      breakWords: true,
+    })
+    const sectionTitleStyle = new TextStyle({
+      fontSize: 11,
+      fontWeight: "600",
+      wordWrap: true,
+      wordWrapWidth: Math.max(220, contentWidthPx - 32),
+      breakWords: true,
+    })
+    const zoneTitleStyle = new TextStyle({
+      fontSize: 10,
+      fontWeight: "600",
+      wordWrap: true,
+      wordWrapWidth: Math.max(180, contentWidthPx - 48),
+      breakWords: true,
+    })
+    const mediaItemStyle = new TextStyle({
+      fontSize: 9,
+      wordWrap: true,
+      wordWrapWidth: Math.max(160, contentWidthPx - 64),
+      breakWords: true,
+    })
+
+    const measureTextHeight = (text: string, style: TextStyle) => {
+      const value = String(text || " ")
+      const node = new PixiText({ text: value, style })
+      const height = Math.max(14, Math.ceil(node.height || 0))
+      node.destroy()
+      return height
+    }
+
+    const estimateZoneHeight = (zone: NonNullable<PixiTemplateLayoutModel["sections"][number]["mediaZones"]>[number]) => {
+      const zoneTitleHeight = measureTextHeight(zone.title, zoneTitleStyle)
+      const mediaRowsHeight = zone.items.length > 0
+        ? zone.items.reduce((acc, item) => acc + Math.max(18, measureTextHeight(item.title, mediaItemStyle) + 6), 0)
+        : 18
+      return 14 + zoneTitleHeight + mediaRowsHeight
+    }
+
+    const estimateSectionHeight = (
+      section: PixiTemplateLayoutModel["sections"][number],
+      includeLines: boolean,
+      zones: NonNullable<PixiTemplateLayoutModel["sections"][number]["mediaZones"]>,
+    ) => {
+      const measuredHeight = measuredSectionHeights[section.key]
+      if (typeof measuredHeight === "number" && Number.isFinite(measuredHeight) && measuredHeight > 0) {
+        return measuredHeight
+      }
+      const sectionHeaderHeight = measureTextHeight(section.title, sectionTitleStyle)
+      const linesHeight = includeLines
+        ? section.lines.reduce((acc, line) => acc + measureTextHeight(line, lineTextStyle), 0)
+        : 14
+      const zonesHeight = zones.reduce((acc, zone) => acc + estimateZoneHeight(zone), 0)
+      return 14 + sectionHeaderHeight + linesHeight + zonesHeight
+    }
+
+    const splitSectionIfNeeded = (section: PixiTemplateLayoutModel["sections"][number]) => {
+      const zones = section.mediaZones ?? []
+      if (zones.length === 0) return [section]
+
+      const chunks: PixiTemplateLayoutModel["sections"][number][] = []
+      let currentZones: typeof zones = []
+      let includeLines = true
+
+      for (const zone of zones) {
+        const candidateZones = [...currentZones, zone]
+        const candidateHeight = estimateSectionHeight(section, includeLines, candidateZones)
+        if (candidateHeight > pageBudgetPx * 0.9 && currentZones.length > 0) {
+          const chunkIndex = chunks.length
+          chunks.push({
+            ...section,
+            key: `${section.key}:chunk:${chunkIndex}`,
+            title: chunks.length === 0 ? section.title : `${section.title} (cont.)`,
+            lines: includeLines ? section.lines : ["Continued"],
+            mediaZones: currentZones,
+          })
+          currentZones = [zone]
+          includeLines = false
+          continue
+        }
+        currentZones = candidateZones
+      }
+
+      if (currentZones.length > 0) {
+        const chunkIndex = chunks.length
+        chunks.push({
+          ...section,
+          key: `${section.key}:chunk:${chunkIndex}`,
+          title: chunks.length === 0 ? section.title : `${section.title} (cont.)`,
+          lines: includeLines ? section.lines : ["Continued"],
+          mediaZones: currentZones,
+        })
+      }
+
+      return chunks.length > 0 ? chunks : [section]
+    }
+
+    const sectionChunks = basePixiTemplateLayoutModel.sections.flatMap(splitSectionIfNeeded)
+
+    const pages: PixiTemplateLayoutModel[] = []
+    let currentSections: PixiTemplateLayoutModel["sections"] = []
+    let usedHeight = 0
+
+    for (const section of sectionChunks) {
+      const sectionHeight = estimateSectionHeight(section, true, section.mediaZones ?? [])
+      const wouldOverflow = currentSections.length > 0 && usedHeight + sectionHeight > pageBudgetPx
+      if (wouldOverflow) {
+        pages.push({
+          ...basePixiTemplateLayoutModel,
+          sections: currentSections,
+          pageLabel: "",
+        })
+        currentSections = []
+        usedHeight = 0
+      }
+
+      currentSections.push(section)
+      usedHeight += sectionHeight
+    }
+
+    if (currentSections.length > 0) {
+      pages.push({
+        ...basePixiTemplateLayoutModel,
+        sections: currentSections,
+        pageLabel: "",
+      })
+    }
+
+    if (pages.length === 0) {
+      return [basePixiTemplateLayoutModel]
+    }
+
+    return pages.map((pageModel, index) => ({
+      ...pageModel,
+      pageLabel: `${basePixiTemplateLayoutModel.pageLabel} · Canvas ${index + 1}/${pages.length}`,
+    }))
+  }, [basePixiTemplateLayoutModel, effectiveCanvasConfig.heightPx, effectiveCanvasConfig.margins.bottom, effectiveCanvasConfig.margins.left, effectiveCanvasConfig.margins.right, effectiveCanvasConfig.margins.top, effectiveCanvasConfig.widthPx, measuredSectionHeights])
+
+  const activePixiLayoutPage = useMemo(() => {
+    return Math.min(
+      Math.max(1, pixiLayoutPageByScope[currentCanvasScopeKey] ?? 1),
+      Math.max(1, pixiTemplateLayoutPages.length),
+    )
+  }, [currentCanvasScopeKey, pixiLayoutPageByScope, pixiTemplateLayoutPages.length])
+
+  useEffect(() => {
+    setPixiLayoutPageByScope((prev) => {
+      const current = prev[currentCanvasScopeKey] ?? 1
+      const max = Math.max(1, pixiTemplateLayoutPages.length)
+      if (current <= max) return prev
+      return {
+        ...prev,
+        [currentCanvasScopeKey]: max,
+      }
+    })
+  }, [currentCanvasScopeKey, pixiTemplateLayoutPages.length])
+
+  const activePixiTemplateLayoutModel = useMemo(() => {
+    if (pixiTemplateLayoutPages.length === 0) return null
+    return pixiTemplateLayoutPages[activePixiLayoutPage - 1] ?? pixiTemplateLayoutPages[0]
+  }, [activePixiLayoutPage, pixiTemplateLayoutPages])
+
+  const onPixiMediaActivate = useCallback((media: PixiTemplateMediaItem) => {
+    setActiveCanvasMedia({
+      id: media.id,
+      title: media.title,
+      description: media.description ?? "",
+      mediaType: media.mediaType ?? "media",
+      category: media.category ?? normalizeMediaCategory(media.mediaType ?? "media"),
+      url: media.url ?? "",
+    })
+  }, [])
+
+  const onPixiLayoutMeasured = useCallback((measurement: PixiTemplateLayoutMeasurement) => {
+    setPixiMeasuredSectionHeightsByScope((prev) => {
+      const current = prev[currentCanvasScopeKey] ?? {}
+      let changed = false
+      const merged = { ...current }
+      Object.entries(measurement.sectionHeights).forEach(([key, height]) => {
+        const normalized = Math.max(0, Math.round(height))
+        if (merged[key] !== normalized) {
+          merged[key] = normalized
+          changed = true
+        }
+      })
+      if (!changed) return prev
+      return {
+        ...prev,
+        [currentCanvasScopeKey]: merged,
+      }
+    })
+  }, [currentCanvasScopeKey])
 
   const changePage = useCallback(
     (next: number) => {
@@ -1353,7 +2209,7 @@ export function CreateView({
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-background">
+    <div className="flex h-full w-full overflow-hidden bg-background" onDragEndCapture={() => setMediaDragActive(false)} onDropCapture={() => setMediaDragActive(false)}>
 
       {/* ── Left: Media panel (resizable) ───────────────────────────────────── */}
       {leftPanel.width > 0 && (
@@ -1367,8 +2223,10 @@ export function CreateView({
                 type="button"
                 title={item.label}
                 onClick={() => setActiveMedia(item.id)}
-                className={`flex flex-col items-center gap-0.5 rounded ${overlayUi.mediaCategoryPadding} text-muted-foreground transition hover:bg-muted/60 hover:text-foreground ${
-                  activeMedia === item.id ? "bg-accent text-primary" : ""
+                className={`flex flex-col items-center justify-center gap-0.5 h-12 w-12 rounded border transition ${
+                  activeMedia === item.id
+                    ? "border-primary bg-blue-100 text-primary"
+                    : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-muted/30"
                 }`}
               >
                 <span className={overlayUi.mediaCategoryIcon}>{item.iconNode}</span>
@@ -1390,9 +2248,9 @@ export function CreateView({
             />
           </div>
           <div className={`flex-1 overflow-y-auto ${overlayUi.panelContentPadding}`}>
-            {mediaLoading ? (
+            {mediaLoading || wikipediaLoading ? (
               <p className={`${overlayUi.panelItemText} italic text-muted-foreground/50 px-1 py-2`}>
-                Loading encyclopedia media…
+                Loading encyclopedia and Wikipedia media…
               </p>
             ) : mediaItems.length === 0 ? (
               <p className={`${overlayUi.panelItemText} italic text-muted-foreground/50 px-1 py-2`}>
@@ -1406,9 +2264,24 @@ export function CreateView({
                       type="button"
                       draggable
                       onDragStart={(event) => onDragStartMedia(item, event)}
+                      onDragEnd={() => setMediaDragActive(false)}
                       className={`w-full rounded border border-border bg-background/70 text-left ${overlayUi.panelItemPadding} transition hover:border-primary/40 hover:bg-accent/40 active:scale-[0.99]`}
                       title={item.url || item.description || item.title}
                     >
+                      {item.category === "images" && item.url ? (
+                        <div
+                          className="mb-1 h-20 w-full rounded border border-border/60 bg-cover bg-center"
+                          style={{ backgroundImage: `url(${item.url})` }}
+                          role="img"
+                          aria-label={item.title}
+                        />
+                      ) : item.category === "videos" && item.url ? (
+                        <video src={item.url} className="mb-1 h-20 w-full rounded border border-border/60 object-cover" muted preload="metadata" />
+                      ) : item.category === "audio" ? (
+                        <div className="mb-1 rounded border border-border/60 bg-muted/20 px-2 py-1 text-[10px] text-muted-foreground">Audio preview</div>
+                      ) : item.category === "text" ? (
+                        <div className="mb-1 rounded border border-border/60 bg-muted/20 px-2 py-1 text-[10px] text-muted-foreground">Text resource</div>
+                      ) : null}
                       <p className={`${overlayUi.panelItemText} font-medium text-foreground truncate`}>{item.title}</p>
                       <p className={`${overlayUi.controlLabel} text-muted-foreground truncate`}>{item.mediaType}</p>
                     </button>
@@ -1443,10 +2316,77 @@ export function CreateView({
             focusPage={clampedCurrentPage}
             onViewportChange={setViewportInfo}
             onActivePageChange={setCurrentPage}
+            templateLayoutModel={activePixiTemplateLayoutModel}
+            enableTemplateLayout={false}
+            onTemplateMediaActivate={onPixiMediaActivate}
+            onTemplateAreaDrop={onPixiAreaDrop}
+            onTemplateLayoutMeasured={onPixiLayoutMeasured}
           />
         </div>
 
-        {viewportInfo && currentLessonPage && (
+        {pixiTemplateLayoutPages.length > 1 && (
+          <div className="absolute right-3 top-3 z-30 flex items-center gap-2 rounded border border-border bg-background/90 px-2 py-1 text-xs shadow-sm">
+            <button
+              type="button"
+              onClick={() => setPixiLayoutPageByScope((prev) => ({
+                ...prev,
+                [currentCanvasScopeKey]: Math.max(1, activePixiLayoutPage - 1),
+              }))}
+              className="rounded border border-border px-2 py-0.5 hover:bg-muted/50"
+              disabled={activePixiLayoutPage <= 1}
+            >
+              Prev
+            </button>
+            <span className="tabular-nums text-muted-foreground">{activePixiLayoutPage}/{pixiTemplateLayoutPages.length}</span>
+            <button
+              type="button"
+              onClick={() => setPixiLayoutPageByScope((prev) => ({
+                ...prev,
+                [currentCanvasScopeKey]: Math.min(pixiTemplateLayoutPages.length, activePixiLayoutPage + 1),
+              }))}
+              className="rounded border border-border px-2 py-0.5 hover:bg-muted/50"
+              disabled={activePixiLayoutPage >= pixiTemplateLayoutPages.length}
+            >
+              Next
+            </button>
+          </div>
+        )}
+
+        {activeCanvasMedia && (
+          <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-2xl rounded-lg border border-border bg-background p-3 shadow-xl">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <p className="truncate text-sm font-semibold text-foreground">{activeCanvasMedia.title}</p>
+                <button
+                  type="button"
+                  onClick={() => setActiveCanvasMedia(null)}
+                  className="rounded border border-border px-2 py-1 text-xs text-foreground hover:bg-muted/50"
+                >
+                  Close
+                </button>
+              </div>
+
+              {activeCanvasMedia.category === "videos" && activeCanvasMedia.url ? (
+                <video src={activeCanvasMedia.url} controls className="max-h-[60vh] w-full rounded border border-border/60 bg-black object-contain" preload="metadata" />
+              ) : activeCanvasMedia.category === "audio" && activeCanvasMedia.url ? (
+                <audio src={activeCanvasMedia.url} controls className="w-full" preload="metadata" />
+              ) : activeCanvasMedia.category === "images" && activeCanvasMedia.url ? (
+                <div
+                  className="h-[50vh] w-full rounded border border-border/60 bg-contain bg-center bg-no-repeat"
+                  style={{ backgroundImage: `url(${activeCanvasMedia.url})` }}
+                  role="img"
+                  aria-label={activeCanvasMedia.title}
+                />
+              ) : activeCanvasMedia.url ? (
+                <iframe src={activeCanvasMedia.url} title={activeCanvasMedia.title} className="h-[60vh] w-full rounded border border-border/60" />
+              ) : (
+                <p className="text-xs text-muted-foreground">No preview URL available.</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {!usePixiTemplateLayout && viewportInfo && currentLessonPage && (
           <div
             key={`${currentLessonPage.sessionId}:${currentLessonPage.localPage}`}
             className="absolute pointer-events-auto overflow-hidden"
@@ -1520,15 +2460,20 @@ export function CreateView({
                   bottom: hasFooterBlock ? effectiveCanvasConfig.margins.bottom : 0,
                 }}
               >
-                <div className="h-full w-full overflow-hidden rounded-lg border border-border/70 bg-background/85">
+                <div className="h-full w-full overflow-hidden bg-background/85">
                   <TemplateBlueprint
                     type={currentLessonPage.templateType as never}
                     enabled={perPageTemplateEnabledMap}
                     fieldEnabled={templateFieldEnabled}
                     name={currentLessonPage.lessonTitle}
                     scale="md"
-                    scrollable={false}
+                    scrollable
+                    density={templateVisualDensity}
                     data={templateData}
+                    droppedMediaByArea={currentDroppedMediaByArea}
+                    mediaDragActive={mediaDragActive}
+                    onDropAreaMedia={onDropAreaMedia}
+                    onRemoveAreaMedia={onRemoveAreaMedia}
                   />
                 </div>
               </div>
@@ -1658,6 +2603,16 @@ export function CreateView({
           />
         </div>
 
+        {/* ── Tool options bar (above toolbar) ── */}
+        {(() => {
+          const toolOpts = ToolOptions({ overlayUi })
+          return toolOpts ? (
+            <div className={`absolute bottom-[5rem] left-1/2 z-10 -translate-x-1/2 flex items-center flex-wrap justify-center ${overlayUi.toolbarGap} rounded-xl border border-border bg-background/95 ${overlayUi.toolbarPadding} shadow-md backdrop-blur-sm`}>
+              {toolOpts}
+            </div>
+          ) : null
+        })()}
+
         {/* ── Bottom controls bar ── */}
         <div className={`absolute bottom-2 left-1/2 z-10 -translate-x-1/2 flex items-center ${overlayUi.toolbarGap} rounded-xl border border-border bg-background/95 ${overlayUi.toolbarPadding} shadow-md backdrop-blur-sm`}>
 
@@ -1674,11 +2629,6 @@ export function CreateView({
                 overlayUi={overlayUi}
               />
             ))}
-          </div>
-
-          {/* Tool options (context-sensitive) */}
-          <div className={`flex min-w-0 items-center gap-1.5 border-r border-border pr-3 mr-1 h-9`}>
-            {ToolOptions({ overlayUi })}
           </div>
 
           {/* Tool buttons */}

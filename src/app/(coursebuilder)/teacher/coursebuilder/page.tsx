@@ -9,6 +9,7 @@ import { SetupColumn, SetupPanelLayout, SetupPanels, SetupSection } from "@/comp
 import { ClassificationSection } from "@/components/coursebuilder/sections/classification-section"
 import { CurriculumSection } from "@/components/coursebuilder/sections/curriculum-section"
 import { EssentialsSection } from "@/components/coursebuilder/sections/essentials-section"
+import { InterfaceSection } from "@/components/coursebuilder/sections/interface-section"
 import { LLMSection } from "@/components/coursebuilder/sections/llm-section"
 import { PedagogySection } from "@/components/coursebuilder/sections/pedagogy-section"
 import { ResourcesSection } from "@/components/coursebuilder/sections/resources-section"
@@ -1274,6 +1275,7 @@ function SectionContent({
     case "classification": return <ClassificationSection courseCreatedData={courseCreatedData} courseId={existingCourseId} />
     case "students":       return <StudentsSection courseId={existingCourseId} />
     case "pedagogy":       return <PedagogySection       courseId={existingCourseId} />
+    case "interface":      return <InterfaceSection      courseId={existingCourseId} />
     case "templates":      return <TemplatesSection     courseId={existingCourseId} />
     case "schedule":       return <ScheduleSection      courseId={existingCourseId} />
     case "resources":      return <ResourcesSection     courseId={existingCourseId} />
@@ -1554,40 +1556,47 @@ function CourseBuilderPageInner() {
         {view === "setup" ? (
           <div className="flex flex-1 overflow-hidden p-2 bg-muted/10">
             <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border shadow-sm md:flex-row">
-              <aside className="no-scrollbar hidden w-52 shrink-0 overflow-y-auto border-r border-border bg-background md:block">
-                <nav className="px-3 py-4 space-y-5">
+              <aside className="no-scrollbar hidden w-56 shrink-0 overflow-y-auto border-r border-border bg-muted/5 md:block">
+                <nav className="px-2 py-3 space-y-4">
                   {SECTIONS.map((group) => (
                     <div key={group.heading}>
-                      <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                         {group.heading}
                       </p>
-                      <div className="space-y-0.5">
+                      <div className="space-y-1">
                         {group.items.map(({ id, label, icon: Icon }) => (
                           (() => {
                             const isSetupItem = SETUP_SECTION_IDS.includes(id)
                             const isCompleted = Boolean(completedSetupSections[id])
+                            const isActive = activeSection === id
                             return (
                           <button
                             key={id}
                             onClick={() => setActiveSection(id)}
-                            className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm transition ${
-                              activeSection === id
-                                ? "bg-accent text-primary font-medium"
-                                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                            className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-all duration-200 border ${
+                              isActive
+                                ? "border-primary bg-primary text-white shadow-md"
+                                : "border-border bg-background hover:border-primary/40 hover:bg-muted/30"
                             }`}
                           >
-                            <Icon className="h-3.5 w-3.5 shrink-0" />
-                            {label}
+                            <Icon className={`h-4 w-4 shrink-0 transition-colors ${
+                              isActive ? "text-white" : "text-muted-foreground group-hover:text-foreground"
+                            }`} />
+                            <span className="flex-1">{label}</span>
                             {isSetupItem && (
                               <span
-                                className={`ml-auto inline-flex h-4 w-4 items-center justify-center rounded-full border transition-all ${
+                                className={`shrink-0 inline-flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${
                                   isCompleted
-                                    ? "border-primary bg-primary text-primary-foreground"
-                                    : "border-border bg-background text-transparent"
+                                    ? isActive
+                                      ? "border-white bg-white/20 text-white"
+                                      : "border-primary bg-primary/10 text-primary"
+                                    : isActive
+                                      ? "border-white/40 bg-transparent"
+                                      : "border-border bg-transparent"
                                 } ${flashSectionId === id ? "animate-pulse" : ""}`}
                                 aria-hidden
                               >
-                                <Check className="h-2.5 w-2.5" />
+                                {isCompleted && <Check className="h-3 w-3" />}
                               </span>
                             )}
                           </button>
@@ -1621,34 +1630,29 @@ function CourseBuilderPageInner() {
               </main>
 
               {/* Mobile horizontal section nav — bottom bar */}
-              <div className="no-scrollbar flex shrink-0 items-center gap-1 overflow-x-auto border-t border-border bg-background px-2 py-2 md:hidden">
+              <div className="no-scrollbar flex shrink-0 items-center gap-0.5 overflow-x-auto border-t border-border bg-muted/5 px-1.5 py-1.5 md:hidden">
                 {SECTIONS.flatMap((group) => group.items).map(({ id, label, icon: Icon }) => (
                   (() => {
                     const isSetupItem = SETUP_SECTION_IDS.includes(id)
                     const isCompleted = Boolean(completedSetupSections[id])
+                    const isActive = activeSection === id
                     return (
                   <button
                     key={id}
                     onClick={() => setActiveSection(id)}
-                    className={`flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition ${
-                      activeSection === id
-                        ? "bg-accent text-primary"
-                        : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                    title={label}
+                    className={`flex shrink-0 flex-col items-center justify-center gap-1 rounded-lg px-2.5 py-2 text-[10px] font-medium whitespace-nowrap transition-all duration-200 border ${
+                      isActive
+                        ? "border-primary bg-primary text-white shadow-md"
+                        : "border-border bg-background hover:border-primary/40 hover:bg-muted/30"
                     }`}
                   >
-                    <Icon className="h-3 w-3 shrink-0" />
-                    {label}
-                    {isSetupItem && (
-                      <span
-                        className={`ml-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border ${
-                          isCompleted
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border bg-background text-transparent"
-                        }`}
-                        aria-hidden
-                      >
-                        <Check className="h-2 w-2" />
-                      </span>
+                    <Icon className={`h-4 w-4 transition-colors ${
+                      isActive ? "text-white" : "text-muted-foreground"
+                    }`} />
+                    <span className="hidden sm:block">{label}</span>
+                    {isSetupItem && isCompleted && (
+                      <Check className={`absolute h-3 w-3 ${isActive ? "text-white" : "text-primary"}`} />
                     )}
                   </button>
                     )

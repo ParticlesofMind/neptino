@@ -27,6 +27,7 @@ import {
 } from "@/components/coursebuilder/layout-primitives"
 import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
 import { TemplateBlueprint } from "@/components/coursebuilder/template-blueprint"
+import { DEFAULT_TEMPLATE_VISUAL_DENSITY, type TemplateVisualDensity } from "@/lib/curriculum/template-source-of-truth"
 
 export const TEMPLATE_TYPES = ["lesson", "quiz", "assessment", "exam", "certificate", "project", "lab", "workshop", "discussion", "reflection", "survey"] as const
 export type TemplateType = (typeof TEMPLATE_TYPES)[number]
@@ -145,6 +146,7 @@ type TemplateUiState = {
   activeId: string | null
   panelView: "config" | "preview"
   configView: "idle" | "create" | "edit"
+  visualDensity: TemplateVisualDensity
 }
 
 type TemplateSettingsPayload = {
@@ -325,6 +327,7 @@ function TemplatePreview({
   enabled,
   fieldEnabled,
   name,
+  visualDensity,
   isEmpty,
 }: {
   type: TemplateType
@@ -332,6 +335,7 @@ function TemplatePreview({
   fieldEnabled: TemplateFieldState
   name: string
   description: string
+  visualDensity: TemplateVisualDensity
   isEmpty: boolean
 }) {
   if (isEmpty) {
@@ -351,6 +355,7 @@ function TemplatePreview({
       fieldEnabled={fieldEnabled}
       name={name || "Untitled template"}
       scale="md"
+      density={visualDensity}
     />
   )
 }
@@ -360,6 +365,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [panelView, setPanelView] = useState<"config" | "preview">("config")
   const [configView, setConfigView] = useState<"idle" | "create" | "edit">("idle")
+  const [visualDensity, setVisualDensity] = useState<TemplateVisualDensity>(DEFAULT_TEMPLATE_VISUAL_DENSITY)
   const [showTypeOverlay, setShowTypeOverlay] = useState(false)
   const [showLoadOverlay, setShowLoadOverlay] = useState(false)
   const [pendingTypeSelection, setPendingTypeSelection] = useState<TemplateType | null>(null)
@@ -408,15 +414,20 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
       })
   }, [courseId, uiStorageKey])
 
-  const persistTemplates = useCallback(async (list: LocalTemplate[]) => {
+  const persistTemplates = useCallback(async (list: LocalTemplate[], uiOverrides?: Partial<TemplateUiState>) => {
     if (!courseId) return
     const supabase = createClient()
     const payload: TemplateSettingsPayload = {
       templates: list,
-      ui: { activeId, panelView, configView },
+      ui: {
+        activeId: uiOverrides?.activeId ?? activeId,
+        panelView: uiOverrides?.panelView ?? panelView,
+        configView: uiOverrides?.configView ?? configView,
+        visualDensity: uiOverrides?.visualDensity ?? visualDensity,
+      },
     }
     await supabase.from("courses").update({ template_settings: payload, updated_at: new Date().toISOString() }).eq("id", courseId)
-  }, [courseId, activeId, panelView, configView])
+  }, [courseId, activeId, panelView, configView, visualDensity])
 
   const [configType, setConfigType] = useState<TemplateType>("lesson")
   const [configName, setConfigName] = useState("")
@@ -428,13 +439,13 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
   const isCreating = configView === "create"
   const isEditing = configView === "edit"
   const isConfiguring = isCreating || isEditing
-  const showConfigBlocks = isConfiguring || Boolean(activeTemplate)
+  const showConfigBlocks = true
 
   useEffect(() => {
     if (!uiStorageKey) return
-    const nextState: TemplateUiState = { activeId, panelView, configView }
+    const nextState: TemplateUiState = { activeId, panelView, configView, visualDensity }
     localStorage.setItem(uiStorageKey, JSON.stringify(nextState))
-  }, [uiStorageKey, activeId, panelView, configView])
+  }, [uiStorageKey, activeId, panelView, configView, visualDensity])
 
   useEffect(() => {
     if (!showTypeOverlay && !showLoadOverlay) return
@@ -575,6 +586,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
     const targetTemplate = targetId ? templates.find((t) => t.id === targetId) ?? null : null
     const nextConfigView = targetTemplate ? "edit" : "idle"
     const nextPanelView = savedUi?.panelView
+    const nextDensity = savedUi?.visualDensity ?? DEFAULT_TEMPLATE_VISUAL_DENSITY
 
     queueMicrotask(() => {
       if (targetTemplate) {
@@ -583,6 +595,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
 
       if (nextPanelView) setPanelView(nextPanelView)
       if (nextConfigView) setConfigView(nextConfigView)
+      setVisualDensity(nextDensity)
 
       setUiStateLoaded(true)
     })
@@ -657,7 +670,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
   const previewFieldEnabled = useDraftPreview ? configFieldEnabled : (activeTemplate?.fieldEnabled ?? defaultFieldEnabled(previewType, previewEnabled))
   const previewName = useDraftPreview ? configName : (activeTemplate?.name ?? "")
   const previewDescription = useDraftPreview ? configDesc : (activeTemplate?.description ?? "")
-  const previewIsEmpty = useDraftPreview ? !configName.trim() : !activeTemplate
+  const previewIsEmpty = false
 
   return (
     <SetupSection
@@ -788,6 +801,7 @@ export function TemplatesSection({ courseId }: { courseId: string | null }) {
               fieldEnabled={previewFieldEnabled}
               name={previewName}
               description={previewDescription}
+              visualDensity={visualDensity}
               isEmpty={previewIsEmpty}
             />
           </SetupColumn>

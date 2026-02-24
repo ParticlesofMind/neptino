@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import '@pixi/layout'
 import { Application, Container, Graphics, Text as PixiText } from 'pixi.js'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -42,6 +43,43 @@ export interface ToolConfig {
   eraserSize:       number
   tableRows:        number
   tableCols:        number
+}
+
+export interface PixiTemplateLayoutSection {
+  key: string
+  id: string
+  title: string
+  lines: string[]
+  mediaZones?: PixiTemplateMediaZone[]
+}
+
+export interface PixiTemplateMediaItem {
+  id: string
+  title: string
+  description?: string
+  url?: string
+  mediaType?: string
+  category?: string
+}
+
+export interface PixiTemplateMediaZone {
+  areaKey: string
+  title: string
+  items: PixiTemplateMediaItem[]
+}
+
+export interface PixiTemplateLayoutModel {
+  title: string
+  headerChips: string[]
+  sections: PixiTemplateLayoutSection[]
+  footerChips: string[]
+  pageLabel: string
+}
+
+export interface PixiTemplateLayoutMeasurement {
+  sectionHeights: Record<string, number>
+  bodyHeight: number
+  measuredAt: number
 }
 
 export const DEFAULT_PAGE_CONFIG: CanvasPageConfig = {
@@ -91,6 +129,11 @@ interface PixiCanvasProps {
   focusPage?:        number
   onViewportChange?: (info: CanvasViewportInfo) => void
   onActivePageChange?: (page: number) => void
+  templateLayoutModel?: PixiTemplateLayoutModel | null
+  enableTemplateLayout?: boolean
+  onTemplateMediaActivate?: (media: PixiTemplateMediaItem) => void
+  onTemplateAreaDrop?: (areaKey: string, rawPayload: string) => void
+  onTemplateLayoutMeasured?: (measurement: PixiTemplateLayoutMeasurement) => void
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -129,11 +172,17 @@ export function PixiCanvas({
   focusPage,
   onViewportChange,
   onActivePageChange,
+  templateLayoutModel,
+  enableTemplateLayout = false,
+  onTemplateMediaActivate,
+  onTemplateAreaDrop,
+  onTemplateLayoutMeasured,
 }: PixiCanvasProps) {
   const containerRef   = useRef<HTMLDivElement>(null)
   const appRef         = useRef<Application | null>(null)
   const worldRef       = useRef<Container   | null>(null)
   const drawLayerRef   = useRef<Container   | null>(null)
+  const templateLayerRef = useRef<Container | null>(null)
   const zoomPct        = useRef(zoom)
   const onZoomCb       = useRef(onZoomChange)
   const onViewportCb   = useRef(onViewportChange)
@@ -143,6 +192,12 @@ export function PixiCanvas({
   const activePageRef  = useRef(activePage)
   const focusPageRef   = useRef(focusPage)
   const toolConfigRef  = useRef(toolConfig)
+  const templateLayoutRef = useRef<PixiTemplateLayoutModel | null>(templateLayoutModel ?? null)
+  const templateLayoutEnabledRef = useRef(enableTemplateLayout)
+  const onTemplateMediaActivateRef = useRef(onTemplateMediaActivate)
+  const onTemplateAreaDropRef = useRef(onTemplateAreaDrop)
+  const onTemplateLayoutMeasuredRef = useRef(onTemplateLayoutMeasured)
+  const templateDropZonesRef = useRef<Map<string, Container>>(new Map())
   const baseScaleRef   = useRef(1)
 
   useEffect(() => { onZoomCb.current      = onZoomChange     }, [onZoomChange])
@@ -153,6 +208,11 @@ export function PixiCanvas({
   useEffect(() => { activePageRef.current = activePage       }, [activePage])
   useEffect(() => { focusPageRef.current  = focusPage        }, [focusPage])
   useEffect(() => { toolConfigRef.current = toolConfig       }, [toolConfig])
+  useEffect(() => { templateLayoutRef.current = templateLayoutModel ?? null }, [templateLayoutModel])
+  useEffect(() => { templateLayoutEnabledRef.current = enableTemplateLayout }, [enableTemplateLayout])
+  useEffect(() => { onTemplateMediaActivateRef.current = onTemplateMediaActivate }, [onTemplateMediaActivate])
+  useEffect(() => { onTemplateAreaDropRef.current = onTemplateAreaDrop }, [onTemplateAreaDrop])
+  useEffect(() => { onTemplateLayoutMeasuredRef.current = onTemplateLayoutMeasured }, [onTemplateLayoutMeasured])
 
   const emitViewport = (world: Container, cfg: CanvasPageConfig, page = activePageRef.current) => {
     const safePage = Math.min(Math.max(1, page), Math.max(1, cfg.pageCount))
@@ -227,6 +287,34 @@ export function PixiCanvas({
     emitViewport(world, cfg, safePage)
   }, [focusPage])
 
+  useEffect(() => {
+    const world = worldRef.current
+    const templateLayer = templateLayerRef.current
+    if (!world || !templateLayer) return
+
+    templateLayer.removeChildren()
+    templateDropZonesRef.current.clear()
+    if (!templateLayoutEnabledRef.current || !templateLayoutRef.current) return
+
+    const cfg = configSnap.current
+    const active = Math.min(Math.max(1, activePageRef.current), Math.max(1, cfg.pageCount))
+    const template = createTemplateLayoutContainer(
+      cfg,
+      active,
+      templateLayoutRef.current,
+      (areaKey, zone) => templateDropZonesRef.current.set(areaKey, zone),
+      (media) => onTemplateMediaActivateRef.current?.(media),
+    )
+    templateLayer.addChild(template)
+
+    window.requestAnimationFrame(() => {
+      const measurement = measureTemplateLayout(template)
+      if (measurement) {
+        onTemplateLayoutMeasuredRef.current?.(measurement)
+      }
+    })
+  }, [activePage, config, enableTemplateLayout, templateLayoutModel])
+
   // ── Redraw pages when config changes (preserve drawing layer) ──────────────
   useEffect(() => {
     const app       = appRef.current
@@ -283,9 +371,31 @@ export function PixiCanvas({
       drawPages(world, configSnap.current)
 
       // Drawing layer — above pages, receives all user content
+      const templateLayer = new Container()
+      world.addChild(templateLayer)
+      templateLayerRef.current = templateLayer
+
       const drawLayer = new Container()
       world.addChild(drawLayer)
       drawLayerRef.current = drawLayer
+
+      if (templateLayoutEnabledRef.current && templateLayoutRef.current) {
+        const template = createTemplateLayoutContainer(
+          configSnap.current,
+          activePageRef.current,
+          templateLayoutRef.current,
+          (areaKey, zone) => templateDropZonesRef.current.set(areaKey, zone),
+          (media) => onTemplateMediaActivateRef.current?.(media),
+        )
+        templateLayer.addChild(template)
+
+        window.requestAnimationFrame(() => {
+          const measurement = measureTemplateLayout(template)
+          if (measurement) {
+            onTemplateLayoutMeasuredRef.current?.(measurement)
+          }
+        })
+      }
 
       const fittedScale = fitWorld(app, world, configSnap.current, activePageRef.current)
       baseScaleRef.current = fittedScale
@@ -590,11 +700,35 @@ export function PixiCanvas({
         detectActivePageFromView()
       }
 
+      const onDragOver = (e: DragEvent) => {
+        if (!templateLayoutEnabledRef.current) return
+        e.preventDefault()
+        e.dataTransfer!.dropEffect = 'copy'
+      }
+
+      const onDrop = (e: DragEvent) => {
+        if (!templateLayoutEnabledRef.current) return
+        e.preventDefault()
+        const raw = e.dataTransfer?.getData('application/json') || e.dataTransfer?.getData('text/plain')
+        if (!raw) return
+
+        const cp = toCanvas(e.clientX, e.clientY)
+        for (const [areaKey, zone] of templateDropZonesRef.current.entries()) {
+          const bounds = zone.getBounds()
+          if (cp.x >= bounds.x && cp.x <= bounds.x + bounds.width && cp.y >= bounds.y && cp.y <= bounds.y + bounds.height) {
+            onTemplateAreaDropRef.current?.(areaKey, raw)
+            return
+          }
+        }
+      }
+
       app.canvas.addEventListener('pointerdown',   onDown)
       app.canvas.addEventListener('pointermove',   onMove)
       app.canvas.addEventListener('pointerup',     onUp)
       app.canvas.addEventListener('pointercancel', onUp)
       app.canvas.addEventListener('wheel',         onWheel, { passive: false })
+      app.canvas.addEventListener('dragover',      onDragOver)
+      app.canvas.addEventListener('drop',          onDrop)
     })()
 
     return () => {
@@ -605,6 +739,7 @@ export function PixiCanvas({
         appRef.current       = null
         worldRef.current     = null
         drawLayerRef.current = null
+        templateLayerRef.current = null
       }
     }
   }, [])
@@ -665,4 +800,221 @@ function fitWorld(app: Application, world: Container, cfg: CanvasPageConfig, pag
   world.scale.set(scale)
   centerWorldOnPage(app, world, cfg, page)
   return scale
+}
+
+function createTemplateLayoutContainer(
+  cfg: CanvasPageConfig,
+  page: number,
+  model: PixiTemplateLayoutModel,
+  registerDropZone?: (areaKey: string, zone: Container) => void,
+  onMediaActivate?: (media: PixiTemplateMediaItem) => void,
+): Container {
+  const safePage = Math.min(Math.max(1, Math.round(page)), Math.max(1, cfg.pageCount))
+  const pageOffsetY = (safePage - 1) * (cfg.heightPx + PAGE_GAP)
+  const contentWidth = cfg.widthPx - cfg.margins.left - cfg.margins.right
+  const contentHeight = cfg.heightPx - cfg.margins.top - cfg.margins.bottom
+
+  const root = new Container({
+    layout: {
+      x: cfg.margins.left,
+      y: pageOffsetY + cfg.margins.top,
+      width: contentWidth,
+      height: contentHeight,
+      flexDirection: 'column',
+      gap: 8,
+      padding: 8,
+      overflow: 'hidden',
+    } as never,
+  })
+
+  const header = new Container({
+    layout: {
+      width: '100%',
+      padding: 6,
+      gap: 6,
+      flexDirection: 'column',
+      backgroundColor: 0xf8fafc,
+      borderRadius: 6,
+      borderColor: 0xd1d5db,
+      borderWidth: 1,
+    } as never,
+  })
+  header.addChild(createLayoutText(model.title || 'Template', 13, 0x0f172a, true))
+  if (model.headerChips.length > 0) {
+    const chips = new Container({
+      layout: {
+        width: '100%',
+        flexWrap: 'wrap',
+        gap: 4,
+      } as never,
+    })
+    model.headerChips.slice(0, 6).forEach((chip) => {
+      chips.addChild(createChip(chip))
+    })
+    header.addChild(chips)
+  }
+  root.addChild(header)
+
+  const body = new Container({
+    layout: {
+      width: '100%',
+      flexGrow: 1,
+      flexShrink: 1,
+      gap: 6,
+      overflow: 'hidden',
+    } as never,
+  })
+  ;(body as Container & { __pixiBodyNode?: boolean }).__pixiBodyNode = true
+
+  model.sections.forEach((section) => {
+    const sectionContainer = new Container({
+      layout: {
+        width: '100%',
+        padding: 6,
+        gap: 4,
+        backgroundColor: 0xffffff,
+        borderRadius: 6,
+        borderColor: 0xd1d5db,
+        borderWidth: 1,
+      } as never,
+    })
+    ;(sectionContainer as Container & { __pixiSectionKey?: string }).__pixiSectionKey = section.key
+    sectionContainer.addChild(createLayoutText(section.title, 11, 0x334155, true))
+    section.lines.slice(0, 6).forEach((line) => {
+      sectionContainer.addChild(createLayoutText(line, 10, 0x475569))
+    })
+
+    if (Array.isArray(section.mediaZones) && section.mediaZones.length > 0) {
+      section.mediaZones.slice(0, 8).forEach((zoneDef) => {
+        const zone = new Container({
+          layout: {
+            width: '100%',
+            padding: 6,
+            gap: 4,
+            borderRadius: 6,
+            borderColor: 0x93c5fd,
+            borderWidth: 1,
+            backgroundColor: 0xeff6ff,
+          } as never,
+        })
+        registerDropZone?.(zoneDef.areaKey, zone)
+        zone.addChild(createLayoutText(zoneDef.title || zoneDef.areaKey, 10, 0x1e3a8a, true))
+
+        if (zoneDef.items.length === 0) {
+          zone.addChild(createLayoutText('Drop media here', 9, 0x475569))
+        }
+
+        zoneDef.items.slice(0, 4).forEach((item) => {
+          const mediaRow = new Container({
+            layout: {
+              width: '100%',
+              paddingHorizontal: 6,
+              paddingVertical: 4,
+              borderRadius: 4,
+              borderColor: 0xcbd5e1,
+              borderWidth: 1,
+              backgroundColor: 0xffffff,
+            } as never,
+          })
+          mediaRow.addChild(createLayoutText(item.title, 9, 0x0f172a))
+          mediaRow.eventMode = 'static'
+          mediaRow.cursor = 'pointer'
+          mediaRow.on('pointertap', () => onMediaActivate?.(item))
+          zone.addChild(mediaRow)
+        })
+
+        sectionContainer.addChild(zone)
+      })
+    }
+    body.addChild(sectionContainer)
+  })
+
+  root.addChild(body)
+
+  const footer = new Container({
+    layout: {
+      width: '100%',
+      padding: 6,
+      gap: 4,
+      backgroundColor: 0xf8fafc,
+      borderRadius: 6,
+      borderColor: 0xd1d5db,
+      borderWidth: 1,
+      flexDirection: 'column',
+    } as never,
+  })
+
+  if (model.footerChips.length > 0) {
+    const footerChips = new Container({
+      layout: {
+        width: '100%',
+        flexWrap: 'wrap',
+        gap: 4,
+      } as never,
+    })
+    model.footerChips.slice(0, 5).forEach((chip) => footerChips.addChild(createChip(chip)))
+    footer.addChild(footerChips)
+  }
+  footer.addChild(createLayoutText(model.pageLabel, 10, 0x0f172a, true))
+  root.addChild(footer)
+
+  return root
+}
+
+function measureTemplateLayout(root: Container): PixiTemplateLayoutMeasurement | null {
+  const sectionHeights: Record<string, number> = {}
+  let bodyHeight = 0
+
+  root.children.forEach((child) => {
+    const typedChild = child as Container & { __pixiBodyNode?: boolean; __pixiSectionKey?: string }
+    if (typedChild.__pixiBodyNode) {
+      const bodyBounds = typedChild.getLocalBounds()
+      bodyHeight = Math.max(0, Math.round(bodyBounds.height))
+      typedChild.children.forEach((sectionNode) => {
+        const typedSection = sectionNode as Container & { __pixiSectionKey?: string }
+        const key = typedSection.__pixiSectionKey
+        if (!key) return
+        const bounds = typedSection.getLocalBounds()
+        sectionHeights[key] = Math.max(0, Math.round(bounds.height))
+      })
+    }
+  })
+
+  return {
+    sectionHeights,
+    bodyHeight,
+    measuredAt: Date.now(),
+  }
+}
+
+function createChip(text: string): Container {
+  const chip = new Container({
+    layout: {
+      paddingHorizontal: 6,
+      paddingVertical: 3,
+      borderRadius: 999,
+      borderColor: 0xcbd5e1,
+      borderWidth: 1,
+      backgroundColor: 0xffffff,
+    } as never,
+  })
+  chip.addChild(createLayoutText(text, 9, 0x334155))
+  return chip
+}
+
+function createLayoutText(text: string, size: number, color: number, bold = false): PixiText {
+  const node = new PixiText({
+    text,
+    style: {
+      fontSize: size,
+      fill: color,
+      fontWeight: bold ? '600' : '400',
+      wordWrap: true,
+      wordWrapWidth: 580,
+    },
+    layout: {
+      width: '100%',
+    } as never,
+  } as never)
+  return node
 }

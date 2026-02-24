@@ -9,6 +9,9 @@ export interface RawCurriculumSessionRow {
   title?: string
   notes?: string
   duration_minutes?: number
+  topics?: number
+  objectives?: number
+  tasks?: number
   template_id?: string
   template_type?: TemplateType
   template_design?: TemplateDesignConfig
@@ -53,6 +56,105 @@ export interface LessonCanvasPageProjection {
 }
 
 const TEMPLATE_BLOCK_ORDER: BlockId[] = ["header", "program", "resources", "content", "assignment", "scoring", "footer"]
+type LessonBodyBlockId = "program" | "resources" | "content" | "assignment" | "scoring"
+
+const LESSON_BODY_BLOCK_ORDER: LessonBodyBlockId[] = ["program", "resources", "content", "assignment", "scoring"]
+
+const LESSON_BLOCK_CAPACITY: Record<LessonBodyBlockId, number> = {
+  program: 4,
+  resources: 12,
+  content: 1,
+  assignment: 1,
+  scoring: 8,
+}
+
+const LESSON_BLOCK_LOAD: Record<LessonBodyBlockId, { base: number; variable: number }> = {
+  program: { base: 0.18, variable: 0.42 },
+  resources: { base: 0.16, variable: 0.36 },
+  content: { base: 0.65, variable: 0.3 },
+  assignment: { base: 0.65, variable: 0.3 },
+  scoring: { base: 0.2, variable: 0.25 },
+}
+
+export interface LessonBodyPageChunk {
+  blockId: LessonBodyBlockId
+  page: number
+  chunkIndex: number
+  itemStart: number
+  itemEnd: number
+  continuation: boolean
+}
+
+export interface LessonBodyLayoutPlan {
+  totalPages: number
+  chunks: LessonBodyPageChunk[]
+}
+
+function estimateLessonChunkLoad(blockId: LessonBodyBlockId, itemCount: number): number {
+  const capacity = LESSON_BLOCK_CAPACITY[blockId]
+  const ratio = Math.min(1, Math.max(0, itemCount / Math.max(1, capacity)))
+  const profile = LESSON_BLOCK_LOAD[blockId]
+  return profile.base + profile.variable * ratio
+}
+
+export function planLessonBodyLayout(args: {
+  topicsPerLesson: number
+  objectivesPerTopic: number
+  tasksPerObjective: number
+  enabledBlocks: TemplateBlockType[]
+}): LessonBodyLayoutPlan {
+  const { topicsPerLesson, objectivesPerTopic, tasksPerObjective, enabledBlocks } = args
+  const enabledSet = new Set(enabledBlocks)
+
+  const totalTaskInstances = Math.max(1, topicsPerLesson) * Math.max(1, objectivesPerTopic) * Math.max(1, tasksPerObjective)
+  const itemCounts: Record<LessonBodyBlockId, number> = {
+    program: Math.max(1, topicsPerLesson),
+    resources: Math.max(1, totalTaskInstances),
+    content: Math.max(1, topicsPerLesson),
+    assignment: Math.max(1, topicsPerLesson),
+    scoring: Math.max(1, objectivesPerTopic),
+  }
+
+  const chunks: LessonBodyPageChunk[] = []
+  let currentPage = 1
+  let currentLoad = 0
+
+  LESSON_BODY_BLOCK_ORDER.forEach((blockId) => {
+    if (!enabledSet.has(blockId)) return
+
+    const totalItems = itemCounts[blockId]
+    const capacity = LESSON_BLOCK_CAPACITY[blockId]
+    const chunkCount = Math.max(1, Math.ceil(totalItems / Math.max(1, capacity)))
+
+    for (let chunkIndex = 0; chunkIndex < chunkCount; chunkIndex += 1) {
+      const itemStart = chunkIndex * capacity
+      const itemEnd = Math.min(totalItems, itemStart + capacity)
+      const itemCount = Math.max(1, itemEnd - itemStart)
+      const chunkLoad = estimateLessonChunkLoad(blockId, itemCount)
+
+      if (currentLoad > 0 && currentLoad + chunkLoad > 1) {
+        currentPage += 1
+        currentLoad = 0
+      }
+
+      chunks.push({
+        blockId,
+        page: currentPage,
+        chunkIndex,
+        itemStart,
+        itemEnd,
+        continuation: chunkIndex > 0,
+      })
+
+      currentLoad += chunkLoad
+    }
+  })
+
+  return {
+    totalPages: chunks.length > 0 ? Math.max(...chunks.map((chunk) => chunk.page)) : 1,
+    chunks,
+  }
+}
 
 export function resolveEnabledBlocks(templateType: TemplateType, templateDesign?: TemplateDesignConfig): TemplateBlockType[] {
   const sequence = getDefaultBlocksForType(templateType)
@@ -136,7 +238,21 @@ function estimateSessionPages(session: {
   topicCount: number
   objectiveCount: number
   taskCount: number
+  enabledBlocks: TemplateBlockType[]
 }): number {
+  if (session.templateType === "lesson") {
+    const effectiveTopicCount = Math.max(1, session.topics.length, session.topicCount)
+    const effectiveObjectiveCount = Math.max(1, session.objectives.length, session.objectiveCount)
+    const effectiveTaskCount = Math.max(1, session.tasks.length, session.taskCount)
+
+    return planLessonBodyLayout({
+      topicsPerLesson: effectiveTopicCount,
+      objectivesPerTopic: effectiveObjectiveCount,
+      tasksPerObjective: effectiveTaskCount,
+      enabledBlocks: session.enabledBlocks,
+    }).totalPages
+  }
+
   const effectiveTopicCount = Math.max(session.topics.length, session.topicCount)
   const effectiveObjectiveCount = Math.max(session.objectives.length, session.topicCount * session.objectiveCount)
   const effectiveTaskCount = Math.max(session.tasks.length, session.topicCount * session.objectiveCount * session.taskCount)
@@ -144,16 +260,9 @@ function estimateSessionPages(session: {
   const complexityUnits =
     effectiveTopicCount * 1.2 +
     effectiveObjectiveCount * 1.5 +
-    effectiveTaskCount * (session.templateType === "lesson" ? 2.1 : 1.8)
+    effectiveTaskCount * 1.8
   const baseline = session.templateType === "certificate" ? 1 : 1.4
   return Math.max(1, Math.ceil((complexityUnits + baseline) / 6))
-}
-
-function chunkForPage(values: string[], pageIndex: number, pageCount: number): string[] {
-  if (values.length === 0 || pageCount <= 0) return []
-  const chunkSize = Math.max(1, Math.ceil(values.length / pageCount))
-  const start = pageIndex * chunkSize
-  return values.slice(start, start + chunkSize)
 }
 
 function resolveModuleNameForIndex(
@@ -263,6 +372,7 @@ export function projectLessonPages(args: {
         topicCount,
         objectiveCount,
         taskCount,
+        enabledBlocks,
       }),
     }
   })
@@ -274,7 +384,6 @@ export function projectLessonPages(args: {
 
   sessions.forEach((session) => {
     for (let localPage = 1; localPage <= session.pages; localPage++) {
-      const pageIndex = localPage - 1
       pages.push({
         globalPage,
         sessionId: session.id,
@@ -296,9 +405,9 @@ export function projectLessonPages(args: {
         localPage,
         pagesInLesson: session.pages,
         moduleName: session.moduleName,
-        topics: chunkForPage(session.topics, pageIndex, session.pages),
-        objectives: chunkForPage(session.objectives, pageIndex, session.pages),
-        tasks: chunkForPage(session.tasks, pageIndex, session.pages),
+        topics: session.topics,
+        objectives: session.objectives,
+        tasks: session.tasks,
       })
       globalPage += 1
     }

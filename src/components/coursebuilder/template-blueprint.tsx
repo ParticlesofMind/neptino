@@ -2,6 +2,11 @@
 
 import React from "react"
 import { TEMPLATE_TYPE_META, type TemplateType, ALL_BLOCKS, BLOCK_FIELDS, type BlockId, type TemplateFieldState } from "@/components/coursebuilder/sections/templates-section"
+import {
+  DEFAULT_TEMPLATE_BODY_BLOCK_GAP,
+  DEFAULT_TEMPLATE_VISUAL_DENSITY,
+  type TemplateVisualDensity,
+} from "@/lib/curriculum/template-source-of-truth"
 
 interface TemplateBlueprintProps {
   type: TemplateType
@@ -10,7 +15,34 @@ interface TemplateBlueprintProps {
   name?: string
   scale?: "sm" | "md" | "lg"
   scrollable?: boolean
+  density?: TemplateVisualDensity
+  bodyBlockGap?: number
   data?: TemplateBlueprintData
+  droppedMediaByArea?: Record<string, TemplateAreaMediaItem[]>
+  mediaDragActive?: boolean
+  onDropAreaMedia?: (areaKey: string, event: React.DragEvent<HTMLDivElement>) => void
+  onRemoveAreaMedia?: (areaKey: string, mediaId: string) => void
+}
+
+export interface TemplateAreaMediaItem {
+  id: string
+  title: string
+  description: string
+  mediaType: string
+  category: string
+  url: string
+}
+
+export type TaskAreaKind = "instruction" | "student" | "teacher"
+
+export function buildTaskAreaKey(
+  block: "content" | "assignment",
+  topicIdx: number,
+  objectiveIdx: number,
+  taskIdx: number,
+  area: TaskAreaKind,
+): string {
+  return `${block}:${topicIdx}:${objectiveIdx}:${taskIdx}:${area}`
 }
 
 export interface TemplateBlueprintData {
@@ -21,12 +53,37 @@ export interface TemplateBlueprintData {
     topics?: string[]
     objectives?: string[]
     tasks?: string[]
+    topicGroups?: Array<{
+      topic: string
+      objectives: Array<{
+        objective: string
+        tasks: Array<{
+          task: string
+          instructionArea: string
+          studentArea: string
+          teacherArea: string
+        }>
+      }>
+    }>
   }
   assignmentItems?: {
     tasks?: string[]
+    topicGroups?: Array<{
+      topic: string
+      objectives: Array<{
+        objective: string
+        tasks: Array<{
+          task: string
+          instructionArea: string
+          studentArea: string
+          teacherArea: string
+        }>
+      }>
+    }>
   }
   resourceItems?: string[]
   scoringItems?: string[]
+  continuation?: Partial<Record<BlockId, boolean>>
 }
 
 const SCALE_CONFIG = {
@@ -148,18 +205,260 @@ function DocumentSection({
   title,
   children,
   className,
+  hideTitle = false,
 }: {
   title: string
   children: React.ReactNode
   className?: string
+  hideTitle?: boolean
 }) {
   return (
     <section className={`rounded-xl border border-border bg-card ${className ?? ""}`}>
-      <div className="border-b border-border bg-muted/30 px-2 py-1">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
-      </div>
+      {!hideTitle && (
+        <div className="border-b border-border bg-muted/30 px-2 py-1">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
+        </div>
+      )}
       <div className="p-1.5">{children}</div>
     </section>
+  )
+}
+
+function TaskAreaDropZone({
+  title,
+  seedText,
+  areaKey,
+  droppedMedia,
+  mediaDragActive,
+  onDropAreaMedia,
+  areaHeightClass,
+  onRemoveMedia,
+}: {
+  title: string
+  seedText?: string
+  areaKey: string
+  droppedMedia: TemplateAreaMediaItem[]
+  mediaDragActive: boolean
+  onDropAreaMedia?: (areaKey: string, event: React.DragEvent<HTMLDivElement>) => void
+  areaHeightClass: string
+  onRemoveMedia?: (areaKey: string, mediaId: string) => void
+}) {
+  const resolveEmbedUrl = (url: string): string | null => {
+    const trimmed = url.trim()
+    if (!trimmed) return null
+    try {
+      const parsed = new URL(trimmed)
+      const host = parsed.hostname.replace(/^www\./, "").toLowerCase()
+      if (host === "youtube.com" || host === "youtu.be") {
+        const videoId = host === "youtu.be"
+          ? parsed.pathname.replace(/^\//, "")
+          : parsed.searchParams.get("v")
+        if (!videoId) return null
+        return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`
+      }
+      if (host === "vimeo.com") {
+        const vimeoId = parsed.pathname.replace(/^\//, "")
+        if (!vimeoId) return null
+        return `https://player.vimeo.com/video/${encodeURIComponent(vimeoId)}`
+      }
+      return null
+    } catch {
+      return null
+    }
+  }
+
+  const looksLikeFileType = (url: string, extensions: string[]): boolean => {
+    const normalized = url.toLowerCase().split("?")[0]
+    return extensions.some((extension) => normalized.endsWith(extension))
+  }
+
+  const renderMediaPreview = (media: TemplateAreaMediaItem) => {
+    if (media.category === "images" && media.url) {
+      return (
+        <div
+          className="h-56 w-full rounded border border-border/60 bg-muted/10 bg-contain bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${media.url})` }}
+          role="img"
+          aria-label={media.title}
+        />
+      )
+    }
+
+    if (media.category === "videos" && media.url) {
+      const embedUrl = resolveEmbedUrl(media.url)
+      if (embedUrl) {
+        return (
+          <iframe
+            src={embedUrl}
+            title={media.title}
+            className="h-56 w-full rounded border border-border/60 bg-background"
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowFullScreen
+          />
+        )
+      }
+
+      const canUseVideoTag = looksLikeFileType(media.url, [".mp4", ".webm", ".ogg", ".mov", ".m4v"]) || media.mediaType.toLowerCase().includes("video")
+      if (!canUseVideoTag) {
+        return (
+          <a
+            href={media.url}
+            target="_blank"
+            rel="noreferrer"
+            className="block rounded border border-border/60 bg-background/90 p-2 text-[10px] text-foreground hover:bg-accent/30"
+          >
+            <p className="font-medium">Open video: {media.title}</p>
+            <p className="mt-0.5 text-[9px] text-muted-foreground">This source does not provide a direct playable stream in-canvas.</p>
+          </a>
+        )
+      }
+
+      return (
+        <video
+          src={media.url}
+          controls
+          preload="metadata"
+          className="h-56 w-full rounded border border-border/60 bg-black/80 object-contain"
+        />
+      )
+    }
+
+    if (media.category === "audio" && media.url) {
+      const canUseAudioTag = looksLikeFileType(media.url, [".mp3", ".wav", ".ogg", ".aac", ".m4a", ".flac"]) || media.mediaType.toLowerCase().includes("audio")
+      if (!canUseAudioTag) {
+        return (
+          <a
+            href={media.url}
+            target="_blank"
+            rel="noreferrer"
+            className="block rounded border border-border/60 bg-background/90 p-2 text-[10px] text-foreground hover:bg-accent/30"
+          >
+            <p className="font-medium">Open audio: {media.title}</p>
+            <p className="mt-0.5 text-[9px] text-muted-foreground">This source does not expose an embeddable audio stream.</p>
+          </a>
+        )
+      }
+      return (
+        <div className="rounded border border-border/60 bg-background/90 p-2">
+          <audio src={media.url} controls className="w-full" preload="metadata" />
+        </div>
+      )
+    }
+
+    if (media.category === "text") {
+      if (media.url) {
+        return (
+          <>
+            <iframe
+              src={media.url}
+              title={media.title}
+              className="h-56 w-full rounded border border-border/60 bg-background"
+              loading="lazy"
+            />
+            <a
+              href={media.url}
+              target="_blank"
+              rel="noreferrer"
+              className="block rounded border border-border/60 bg-background/90 p-2 text-[10px] text-foreground hover:bg-accent/30"
+            >
+              Open text source in new tab
+            </a>
+          </>
+        )
+      }
+
+      return (
+        <div className="rounded border border-border/60 bg-background/90 p-2 text-[10px] text-foreground">
+          <p className="font-medium">{media.title}</p>
+          <p className="mt-0.5 whitespace-pre-wrap text-[9px] text-muted-foreground">{media.description || "Text content"}</p>
+        </div>
+      )
+    }
+
+    if (media.url) {
+      return (
+        <a
+          href={media.url}
+          target="_blank"
+          rel="noreferrer"
+          className="block rounded border border-border/60 bg-background/90 p-2 text-[10px] text-foreground hover:bg-accent/30"
+        >
+          <p className="line-clamp-2 font-medium">{media.title}</p>
+          {media.description ? <p className="mt-0.5 line-clamp-2 text-[9px] text-muted-foreground">{media.description}</p> : null}
+        </a>
+      )
+    }
+
+    return (
+      <div className="rounded border border-border/60 bg-background/90 p-2 text-[10px] text-muted-foreground">
+        <p className="font-medium">{media.title}</p>
+        <p className="text-[9px]">{media.mediaType}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-1">
+      <p className="font-medium">{title}</p>
+      <div 
+        className="space-y-1.5"
+        onDragEnter={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+        }}
+        onDragOver={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+        }}
+      >
+        {droppedMedia.map((media, idx) => (
+          <div
+            key={`${areaKey}-${media.id}-${idx}`}
+            className="rounded border border-border/60 bg-muted/5 p-1.5 space-y-1"
+            onDragEnter={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+            }}
+            onDragOver={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+            }}
+          >
+            <div className="flex items-center justify-between gap-1">
+              <p className="truncate text-[10px] font-medium text-foreground flex-1">{media.title}</p>
+              <button
+                type="button"
+                onClick={() => onRemoveMedia?.(areaKey, media.id)}
+                className="shrink-0 rounded text-[10px] px-1.5 py-0.5 bg-destructive/20 text-destructive hover:bg-destructive/30 transition"
+              >
+                Remove
+              </button>
+            </div>
+            {renderMediaPreview(media)}
+          </div>
+        ))}
+        <div
+          className={`${droppedMedia.length > 0 ? "min-h-24" : areaHeightClass} rounded border border-dashed bg-muted/5 p-1.5 pointer-events-auto flex items-center justify-center ${mediaDragActive ? "border-primary/60 bg-primary/5" : "border-border/60"}`}
+          onDragEnter={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+          }}
+          onDragOver={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+          }}
+          onDrop={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            onDropAreaMedia?.(areaKey, event)
+          }}
+        >
+          <p className="text-[9px] text-muted-foreground/70 text-center">
+            {seedText && seedText.trim() ? seedText : "Drop media here"}
+          </p>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -247,12 +546,24 @@ function LessonTemplatePreview({
   enabled,
   fieldEnabled,
   scrollable = true,
+  density = DEFAULT_TEMPLATE_VISUAL_DENSITY,
+  bodyBlockGap = DEFAULT_TEMPLATE_BODY_BLOCK_GAP,
   data,
+  droppedMediaByArea,
+  mediaDragActive = false,
+  onDropAreaMedia,
+  onRemoveAreaMedia,
 }: {
   enabled: Record<BlockId, boolean>
   fieldEnabled: TemplateFieldState
   scrollable?: boolean
+  density?: TemplateVisualDensity
+  bodyBlockGap?: number
   data?: TemplateBlueprintData
+  droppedMediaByArea?: Record<string, TemplateAreaMediaItem[]>
+  mediaDragActive?: boolean
+  onDropAreaMedia?: (areaKey: string, event: React.DragEvent<HTMLDivElement>) => void
+  onRemoveAreaMedia?: (areaKey: string, mediaId: string) => void
 }) {
   const headerFields = BLOCK_FIELDS.header.filter((field) => field.required || Boolean(fieldEnabled.header?.[field.key]))
   const programFields = BLOCK_FIELDS.program
@@ -262,10 +573,24 @@ function LessonTemplatePreview({
     .filter((field) => field.forTypes.includes("lesson"))
     .filter((field) => field.required || Boolean(fieldEnabled.resources?.[field.key]))
   const fieldValues = data?.fieldValues
+  const densityConfig = {
+    compact: {
+      containerPadding: "p-0",
+      areaHeightClass: "h-8",
+    },
+    balanced: {
+      containerPadding: "p-1",
+      areaHeightClass: "h-10",
+    },
+    comfortable: {
+      containerPadding: "p-1.5 md:p-2",
+      areaHeightClass: "h-12",
+    },
+  }[density]
 
   return (
-    <div className={`h-full ${scrollable ? "overflow-auto" : "overflow-hidden"} rounded-xl border border-border bg-background p-1.5 md:p-2`}>
-      <div className="mx-auto w-full max-w-4xl space-y-2">
+    <div className={`h-full ${scrollable ? "overflow-auto" : "overflow-hidden"} bg-background ${densityConfig.containerPadding}`}>
+      <div className="flex w-full flex-col" style={{ rowGap: `${Math.max(0, bodyBlockGap)}px` }}>
             {enabled.header && (
               <DocumentSection title="Header" className="">
                 <div className="flex flex-wrap items-start gap-1">
@@ -279,18 +604,59 @@ function LessonTemplatePreview({
             )}
 
             {enabled.program && (
-              <DocumentSection title="Program" className="">
+              <DocumentSection title="Program" className="" hideTitle={Boolean(data?.continuation?.program)}>
                 {Array.isArray(data?.programRows) && data.programRows.length > 0 ? (
-                  <div className="space-y-1">
-                    {data.programRows.slice(0, 6).map((row, rowIdx) => (
-                      <div key={`program-row-${rowIdx}`} className="grid gap-1 rounded border border-border/70 bg-background p-1.5 text-[10px] text-muted-foreground md:grid-cols-4">
-                        {programFields.map((field) => (
-                          <span key={`${field.key}-${rowIdx}`} className="truncate">
-                            <span className="font-semibold">{field.label}:</span> {row[field.key] || "—"}
-                          </span>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full border-collapse text-[10px] text-muted-foreground">
+                      <thead>
+                        <tr>
+                          {programFields.map((field) => (
+                            <th key={`program-header-${field.key}`} className="border border-border/70 bg-muted/20 px-1.5 py-1 text-left font-semibold uppercase tracking-wide">
+                              {field.label}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.programRows.map((row, rowIdx) => (
+                          <tr key={`program-row-${rowIdx}`}>
+                            {programFields.map((field) => {
+                              const rawValue = row[field.key] || "—"
+                              const segmentedLines =
+                                field.key === "objective" || field.key === "task"
+                                  ? String(rawValue)
+                                      .split("\n")
+                                      .map((line) => line.trim())
+                                      .filter((line) => line.length > 0)
+                                  : []
+
+                              if (segmentedLines.length > 0) {
+                                return (
+                                  <td key={`${field.key}-${rowIdx}`} className="border border-border/70 bg-background p-0 align-top">
+                                    <div className="flex flex-col">
+                                      {segmentedLines.map((line, lineIdx) => (
+                                        <div
+                                          key={`${field.key}-${rowIdx}-line-${lineIdx}`}
+                                          className={`px-1.5 py-1 ${lineIdx > 0 ? "border-t border-border/70" : ""}`}
+                                        >
+                                          {line}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </td>
+                                )
+                              }
+
+                              return (
+                                <td key={`${field.key}-${rowIdx}`} className="whitespace-pre-wrap border border-border/70 bg-background px-1.5 py-1 align-top">
+                                  {rawValue}
+                                </td>
+                              )
+                            })}
+                          </tr>
                         ))}
-                      </div>
-                    ))}
+                      </tbody>
+                    </table>
                   </div>
                 ) : (
                   <div className="flex flex-wrap items-start gap-1">
@@ -305,22 +671,35 @@ function LessonTemplatePreview({
             )}
 
             {enabled.resources && (
-              <DocumentSection title="Resources" className="">
+              <DocumentSection title="Resources" className="" hideTitle={Boolean(data?.continuation?.resources)}>
                 {Array.isArray(data?.resourceRows) && data.resourceRows.length > 0 ? (
-                  <div className="space-y-1">
-                    {data.resourceRows.slice(0, 6).map((row, rowIdx) => (
-                      <div key={`resource-row-${rowIdx}`} className="grid gap-1 rounded border border-border/70 bg-background p-1.5 text-[10px] text-muted-foreground md:grid-cols-5">
-                        {resourceFields.map((field) => (
-                          <span key={`${field.key}-${rowIdx}`} className="truncate">
-                            <span className="font-semibold">{field.label}:</span> {row[field.key] || "—"}
-                          </span>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full border-collapse text-[10px] text-muted-foreground">
+                      <thead>
+                        <tr>
+                          {resourceFields.map((field) => (
+                            <th key={`resource-header-${field.key}`} className="border border-border/70 bg-muted/20 px-1.5 py-1 text-left font-semibold uppercase tracking-wide">
+                              {field.label}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.resourceRows.map((row, rowIdx) => (
+                          <tr key={`resource-row-${rowIdx}`}>
+                            {resourceFields.map((field) => (
+                              <td key={`${field.key}-${rowIdx}`} className="whitespace-pre-wrap border border-border/70 bg-background px-1.5 py-1 align-top">
+                                {row[field.key] || "—"}
+                              </td>
+                            ))}
+                          </tr>
                         ))}
-                      </div>
-                    ))}
+                      </tbody>
+                    </table>
                   </div>
                 ) : Array.isArray(data?.resourceItems) && data.resourceItems.length > 0 ? (
                   <div className="space-y-1">
-                    {data.resourceItems.slice(0, 6).map((item, idx) => (
+                    {data.resourceItems.map((item, idx) => (
                       <p key={`resource-item-${idx}`} className="rounded border border-border/70 bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground">
                         {item}
                       </p>
@@ -339,8 +718,62 @@ function LessonTemplatePreview({
             )}
 
             {enabled.content && (
-              <DocumentSection title="Content" className="" >
-                {(data?.contentItems?.topics?.length || data?.contentItems?.objectives?.length || data?.contentItems?.tasks?.length) ? (
+              <DocumentSection title="Content" className="" hideTitle={Boolean(data?.continuation?.content)}>
+                {Array.isArray(data?.contentItems?.topicGroups) && data.contentItems.topicGroups.length > 0 ? (
+                  <div className="space-y-1.5 text-[10px] text-muted-foreground">
+                    {data.contentItems.topicGroups.map((group, topicIdx) => (
+                      <div key={`content-topic-${topicIdx}`} className="rounded border border-border/70 bg-background p-1.5">
+                        <p className="font-semibold">Topic {topicIdx + 1}: {group.topic}</p>
+                        <div className="mt-1 space-y-1 border-l-2 border-border/60 pl-1.5">
+                          {group.objectives.map((objective, objectiveIdx) => (
+                            <div key={`content-objective-${topicIdx}-${objectiveIdx}`} className="rounded border border-border/60 bg-muted/10 p-1.5">
+                              <p className="font-semibold">Objective {objectiveIdx + 1}: {objective.objective}</p>
+                              <div className="mt-1 space-y-1 border-l-2 border-border/60 pl-1.5">
+                                {objective.tasks.map((task, taskIdx) => (
+                                  <div key={`content-task-${topicIdx}-${objectiveIdx}-${taskIdx}`} className="rounded border border-border/60 bg-background p-1.5">
+                                    <p className="font-semibold">Task {taskIdx + 1}: {task.task}</p>
+                                    <div className="mt-1 space-y-1">
+                                      <TaskAreaDropZone
+                                        title="Instruction Area"
+                                        seedText={task.instructionArea}
+                                        areaKey={buildTaskAreaKey("content", topicIdx, objectiveIdx, taskIdx, "instruction")}
+                                        droppedMedia={droppedMediaByArea?.[buildTaskAreaKey("content", topicIdx, objectiveIdx, taskIdx, "instruction")] ?? []}
+                                        mediaDragActive={mediaDragActive}
+                                        onDropAreaMedia={onDropAreaMedia}
+                                        areaHeightClass={densityConfig.areaHeightClass}
+                                        onRemoveMedia={onRemoveAreaMedia}
+                                      />
+                                      <TaskAreaDropZone
+                                        title="Student Area"
+                                        seedText={task.studentArea}
+                                        areaKey={buildTaskAreaKey("content", topicIdx, objectiveIdx, taskIdx, "student")}
+                                        droppedMedia={droppedMediaByArea?.[buildTaskAreaKey("content", topicIdx, objectiveIdx, taskIdx, "student")] ?? []}
+                                        mediaDragActive={mediaDragActive}
+                                        onDropAreaMedia={onDropAreaMedia}
+                                        areaHeightClass={densityConfig.areaHeightClass}
+                                        onRemoveMedia={onRemoveAreaMedia}
+                                      />
+                                      <TaskAreaDropZone
+                                        title="Teacher Area"
+                                        seedText={task.teacherArea}
+                                        areaKey={buildTaskAreaKey("content", topicIdx, objectiveIdx, taskIdx, "teacher")}
+                                        droppedMedia={droppedMediaByArea?.[buildTaskAreaKey("content", topicIdx, objectiveIdx, taskIdx, "teacher")] ?? []}
+                                        mediaDragActive={mediaDragActive}
+                                        onDropAreaMedia={onDropAreaMedia}
+                                        areaHeightClass={densityConfig.areaHeightClass}
+                                        onRemoveMedia={onRemoveAreaMedia}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (data?.contentItems?.topics?.length || data?.contentItems?.objectives?.length || data?.contentItems?.tasks?.length) ? (
                   <div className="space-y-1.5 text-[10px] text-muted-foreground">
                     {data.contentItems?.topics?.length ? <p><span className="font-semibold">Topics:</span> {data.contentItems.topics.join(" · ")}</p> : null}
                     {data.contentItems?.objectives?.length ? <p><span className="font-semibold">Objectives:</span> {data.contentItems.objectives.join(" · ")}</p> : null}
@@ -361,10 +794,64 @@ function LessonTemplatePreview({
             )}
 
             {enabled.assignment && (
-              <DocumentSection title="Assignment" className="" >
-                {Array.isArray(data?.assignmentItems?.tasks) && data.assignmentItems.tasks.length > 0 ? (
+              <DocumentSection title="Assignment" className="" hideTitle={Boolean(data?.continuation?.assignment)}>
+                {Array.isArray(data?.assignmentItems?.topicGroups) && data.assignmentItems.topicGroups.length > 0 ? (
+                  <div className="space-y-1.5 text-[10px] text-muted-foreground">
+                    {data.assignmentItems.topicGroups.map((topicGroup, topicIdx) => (
+                      <div key={`assignment-topic-${topicIdx}`} className="rounded border border-border/70 bg-background p-1.5">
+                        <p className="font-semibold">Topic {topicIdx + 1}: {topicGroup.topic}</p>
+                        <div className="mt-1 space-y-1 border-l-2 border-border/60 pl-1.5">
+                          {topicGroup.objectives.map((objectiveGroup, objectiveIdx) => (
+                            <div key={`assignment-objective-${topicIdx}-${objectiveIdx}`} className="rounded border border-border/60 bg-muted/10 p-1.5">
+                              <p className="font-semibold">Objective {objectiveIdx + 1}: {objectiveGroup.objective}</p>
+                              <div className="mt-1 space-y-1 border-l-2 border-border/60 pl-1.5">
+                                {objectiveGroup.tasks.map((task, taskIdx) => (
+                                  <div key={`assignment-task-${topicIdx}-${objectiveIdx}-${taskIdx}`} className="rounded border border-border/60 bg-background p-1.5">
+                                    <p className="font-semibold">Task {taskIdx + 1}: {task.task}</p>
+                                    <div className="mt-1 space-y-1">
+                                      <TaskAreaDropZone
+                                        title="Instruction Area"
+                                        seedText={task.instructionArea}
+                                        areaKey={buildTaskAreaKey("assignment", topicIdx, objectiveIdx, taskIdx, "instruction")}
+                                        droppedMedia={droppedMediaByArea?.[buildTaskAreaKey("assignment", topicIdx, objectiveIdx, taskIdx, "instruction")] ?? []}
+                                        mediaDragActive={mediaDragActive}
+                                        onDropAreaMedia={onDropAreaMedia}
+                                        areaHeightClass={densityConfig.areaHeightClass}
+                                        onRemoveMedia={onRemoveAreaMedia}
+                                      />
+                                      <TaskAreaDropZone
+                                        title="Student Area"
+                                        seedText={task.studentArea}
+                                        areaKey={buildTaskAreaKey("assignment", topicIdx, objectiveIdx, taskIdx, "student")}
+                                        droppedMedia={droppedMediaByArea?.[buildTaskAreaKey("assignment", topicIdx, objectiveIdx, taskIdx, "student")] ?? []}
+                                        mediaDragActive={mediaDragActive}
+                                        onDropAreaMedia={onDropAreaMedia}
+                                        areaHeightClass={densityConfig.areaHeightClass}
+                                        onRemoveMedia={onRemoveAreaMedia}
+                                      />
+                                      <TaskAreaDropZone
+                                        title="Teacher Area"
+                                        seedText={task.teacherArea}
+                                        areaKey={buildTaskAreaKey("assignment", topicIdx, objectiveIdx, taskIdx, "teacher")}
+                                        droppedMedia={droppedMediaByArea?.[buildTaskAreaKey("assignment", topicIdx, objectiveIdx, taskIdx, "teacher")] ?? []}
+                                        mediaDragActive={mediaDragActive}
+                                        onDropAreaMedia={onDropAreaMedia}
+                                        areaHeightClass={densityConfig.areaHeightClass}
+                                        onRemoveMedia={onRemoveAreaMedia}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : Array.isArray(data?.assignmentItems?.tasks) && data.assignmentItems.tasks.length > 0 ? (
                   <div className="space-y-1 text-[10px] text-muted-foreground">
-                    {data.assignmentItems.tasks.slice(0, 6).map((task, idx) => (
+                    {data.assignmentItems.tasks.map((task, idx) => (
                       <p key={`assignment-item-${idx}`} className="rounded border border-border/70 bg-background px-1.5 py-0.5">{task}</p>
                     ))}
                   </div>
@@ -383,10 +870,10 @@ function LessonTemplatePreview({
             )}
 
             {enabled.scoring && (
-              <DocumentSection title="Scoring" className="" >
+              <DocumentSection title="Scoring" className="" hideTitle={Boolean(data?.continuation?.scoring)}>
                 {Array.isArray(data?.scoringItems) && data.scoringItems.length > 0 ? (
                   <div className="space-y-1 text-[10px] text-muted-foreground">
-                    {data.scoringItems.slice(0, 6).map((criterion, idx) => (
+                    {data.scoringItems.map((criterion, idx) => (
                       <p key={`scoring-item-${idx}`} className="rounded border border-border/70 bg-background px-1.5 py-0.5">{criterion}</p>
                     ))}
                   </div>
@@ -422,7 +909,13 @@ export function TemplateBlueprint({
   name,
   scale = "md",
   scrollable = true,
+  density = DEFAULT_TEMPLATE_VISUAL_DENSITY,
+  bodyBlockGap = DEFAULT_TEMPLATE_BODY_BLOCK_GAP,
   data,
+  droppedMediaByArea,
+  mediaDragActive = false,
+  onDropAreaMedia,
+  onRemoveAreaMedia,
 }: TemplateBlueprintProps) {
   const config = SCALE_CONFIG[scale]
   const meta = TEMPLATE_TYPE_META[type]
@@ -430,8 +923,19 @@ export function TemplateBlueprint({
   // Use lesson-specific styled preview for lesson type
   if (type === "lesson") {
     return (
-      <div className={`h-full w-full ${scrollable ? "overflow-auto" : "overflow-hidden"} rounded-xl bg-background`}>
-        <LessonTemplatePreview enabled={enabled} fieldEnabled={fieldEnabled} scrollable={scrollable} data={data} />
+      <div className={`h-full w-full ${scrollable ? "overflow-auto" : "overflow-hidden"} bg-background`}>
+        <LessonTemplatePreview
+          enabled={enabled}
+          fieldEnabled={fieldEnabled}
+          scrollable={scrollable}
+          density={density}
+          bodyBlockGap={bodyBlockGap}
+          data={data}
+          droppedMediaByArea={droppedMediaByArea}
+          mediaDragActive={mediaDragActive}
+          onDropAreaMedia={onDropAreaMedia}
+          onRemoveAreaMedia={onRemoveAreaMedia}
+        />
       </div>
     )
   }

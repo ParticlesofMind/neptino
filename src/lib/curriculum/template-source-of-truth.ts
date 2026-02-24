@@ -1,5 +1,9 @@
 import type { TemplateType } from "@/lib/curriculum/template-blocks"
 
+export type TemplateVisualDensity = "compact" | "balanced" | "comfortable"
+export const DEFAULT_TEMPLATE_VISUAL_DENSITY: TemplateVisualDensity = "balanced"
+export const DEFAULT_TEMPLATE_BODY_BLOCK_GAP = 8
+
 export interface NormalizedTemplateConfig {
   id: string
   name: string
@@ -29,6 +33,11 @@ export interface TemplateFieldContext {
   tasks?: string[]
   currentPage: number
   totalPages: number
+}
+
+export interface TemplateUiSettings {
+  visualDensity: TemplateVisualDensity
+  bodyBlockGap: number
 }
 
 export function asTemplateType(value: unknown): TemplateType {
@@ -64,6 +73,33 @@ export function normalizeTemplateSettings(raw: unknown): NormalizedTemplateConfi
       fieldEnabled: (template.fieldEnabled as Record<string, Record<string, boolean>> | undefined) ?? undefined,
     }
   })
+}
+
+export function normalizeTemplateUiSettings(raw: unknown): TemplateUiSettings {
+  const defaultSettings: TemplateUiSettings = {
+    visualDensity: DEFAULT_TEMPLATE_VISUAL_DENSITY,
+    bodyBlockGap: DEFAULT_TEMPLATE_BODY_BLOCK_GAP,
+  }
+
+  if (!raw || typeof raw !== "object") return defaultSettings
+  const uiRaw = (raw as { ui?: unknown }).ui
+  if (!uiRaw || typeof uiRaw !== "object") return defaultSettings
+
+  const visualDensityRaw = (uiRaw as { visualDensity?: unknown }).visualDensity
+  const visualDensity = String(visualDensityRaw ?? "").toLowerCase()
+  const rawGap = Number((uiRaw as { bodyBlockGap?: unknown }).bodyBlockGap)
+  const bodyBlockGap = Number.isFinite(rawGap)
+    ? Math.max(0, Math.min(24, Math.round(rawGap)))
+    : defaultSettings.bodyBlockGap
+
+  if (visualDensity === "compact" || visualDensity === "balanced" || visualDensity === "comfortable") {
+    return { visualDensity, bodyBlockGap }
+  }
+
+  return {
+    visualDensity: defaultSettings.visualDensity,
+    bodyBlockGap,
+  }
 }
 
 export function createTemplateLookups(templates: NormalizedTemplateConfig[]) {

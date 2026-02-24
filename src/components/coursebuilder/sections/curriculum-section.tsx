@@ -12,7 +12,10 @@ import { buildDefaultResourcePreferences, mergeResourcePreferences, type Resourc
 import {
   calculateSessionDuration,
   getContentLoadConfig,
+  getObjectiveCapForDuration,
   listDurationPresets,
+  MIN_TASKS_PER_OBJECTIVE,
+  normalizeContentLoadConfig,
 } from "@/lib/curriculum/content-load-service"
 import { normalizeTemplateSettings } from "@/lib/curriculum/template-source-of-truth"
 import type { CurriculumCompetency } from "@/lib/curriculum/competency-types"
@@ -86,6 +89,15 @@ const TEMPLATE_TYPE_OPTIONS: Array<{ value: TemplateType; label: string }> = [
   { value: "certificate", label: "Certificate" },
 ]
 
+const CONTENT_VOLUME_DURATION_MAP: Record<string, number> = {
+  mini: 30,
+  single: 60,
+  double: 120,
+  triple: 180,
+  fullday: 240,
+  marathon: 241,
+}
+
 function createRowId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID()
@@ -99,9 +111,18 @@ function extractExistingSessionRows(curriculumData: Record<string, unknown>): Cu
     return sessionRows.map((row, index) => {
       const r = row as Record<string, unknown>
       const templateType = ((r.template_type as string) || "lesson") as TemplateType
-      const topicCount = (r.topics as number) || 0
-      const objectiveCount = (r.objectives as number) || 0
-      const taskCount = (r.tasks as number) || 0
+      const durationMinutes = (r.duration_minutes as number) || undefined
+      const normalizedCounts = normalizeContentLoadConfig(
+        {
+          topicsPerLesson: (r.topics as number) || 1,
+          objectivesPerTopic: (r.objectives as number) || 2,
+          tasksPerObjective: (r.tasks as number) || MIN_TASKS_PER_OBJECTIVE,
+        },
+        durationMinutes ?? null,
+      )
+      const topicCount = normalizedCounts.topicsPerLesson
+      const objectiveCount = normalizedCounts.objectivesPerTopic
+      const taskCount = normalizedCounts.tasksPerObjective
       return {
         id: (r.id as string) || createRowId(),
         schedule_entry_id: (r.schedule_entry_id as string) || "",
@@ -110,7 +131,7 @@ function extractExistingSessionRows(curriculumData: Record<string, unknown>): Cu
         notes: (r.notes as string) || "",
         template_id: (r.template_id as string) || undefined,
         template_type: templateType,
-        duration_minutes: (r.duration_minutes as number) || undefined,
+        duration_minutes: durationMinutes,
         topics: topicCount,
         objectives: objectiveCount,
         tasks: taskCount,
@@ -160,6 +181,14 @@ function syncSessionRowsToSchedule(
     // Calculate duration and content load config
     const durationMinutes = calculateSessionDuration(entry.start_time, entry.end_time)
     const contentLoadConfig = durationMinutes ? getContentLoadConfig(durationMinutes) : null
+    const normalizedCounts = normalizeContentLoadConfig(
+      {
+        topicsPerLesson: base?.topics ?? contentLoadConfig?.topicsPerLesson ?? 1,
+        objectivesPerTopic: base?.objectives ?? contentLoadConfig?.objectivesPerTopic ?? 2,
+        tasksPerObjective: base?.tasks ?? contentLoadConfig?.tasksPerObjective ?? MIN_TASKS_PER_OBJECTIVE,
+      },
+      durationMinutes,
+    )
 
     // Determine template type
     const templateType = (base?.template_type || "lesson") as TemplateType
@@ -173,9 +202,9 @@ function syncSessionRowsToSchedule(
       template_id: base?.template_id,
       template_type: templateType,
       duration_minutes: base?.duration_minutes ?? durationMinutes ?? undefined,
-      topics: base?.topics ?? contentLoadConfig?.topicsPerLesson,
-      objectives: base?.objectives ?? contentLoadConfig?.objectivesPerTopic,
-      tasks: base?.tasks ?? contentLoadConfig?.tasksPerObjective,
+      topics: normalizedCounts.topicsPerLesson,
+      objectives: normalizedCounts.objectivesPerTopic,
+      tasks: normalizedCounts.tasksPerObjective,
       competencies: base?.competencies,
       template_design: base?.template_design || createDefaultTemplateDesign(templateType),
     }
@@ -491,9 +520,14 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
           setCertificateMode((c.certificate_mode as CertificateMode) ?? "never")
           setLessonCount(loadedScheduleEntries.length > 0 ? loadedScheduleEntries.length : ((c.lesson_count as number) ?? 8))
           setModuleCount((c.module_count as number) ?? 3)
-          setTopics((c.topics as number) ?? 2)
-          setObjectives((c.objectives as number) ?? 2)
-          setTasks((c.tasks as number) ?? 2)
+          const normalizedContentLoad = normalizeContentLoadConfig({
+            topicsPerLesson: (c.topics as number) ?? 2,
+            objectivesPerTopic: (c.objectives as number) ?? 2,
+            tasksPerObjective: (c.tasks as number) ?? MIN_TASKS_PER_OBJECTIVE,
+          })
+          setTopics(normalizedContentLoad.topicsPerLesson)
+          setObjectives(normalizedContentLoad.objectivesPerTopic)
+          setTasks(normalizedContentLoad.tasksPerObjective)
           setModuleNames(Array.isArray(c.module_names) ? (c.module_names as string[]) : [])
           setScheduleEntries(loadedScheduleEntries)
           setSessionRows(syncedRows)
@@ -519,10 +553,16 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
     const presets = listDurationPresets()
     const preset = presets.find((p) => p.name === contentVolume)
     if (preset) {
-      setTopics(preset.config.topicsPerLesson)
-      setObjectives(preset.config.objectivesPerTopic)
-      setTasks(preset.config.tasksPerObjective)
+      const normalizedPreset = normalizeContentLoadConfig(preset.config, preset.maxDuration)
+      setTopics(normalizedPreset.topicsPerLesson)
+      setObjectives(normalizedPreset.objectivesPerTopic)
+      setTasks(normalizedPreset.tasksPerObjective)
     }
+  }, [contentVolume])
+
+  const objectiveInputMax = useMemo(() => {
+    const representativeDuration = CONTENT_VOLUME_DURATION_MAP[contentVolume] ?? null
+    return getObjectiveCapForDuration(representativeDuration)
   }, [contentVolume])
 
   // Initialize/update module names when module config changes
@@ -596,6 +636,16 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
         const existing = prev[index]
         const schedule = scheduleEntries[index]
         const resolvedTemplateType = resolveTemplateTypeForLesson(existing, index)
+        const scheduleDuration = calculateSessionDuration(schedule?.start_time, schedule?.end_time)
+        const durationForCaps = existing?.duration_minutes ?? scheduleDuration ?? null
+        const normalizedCounts = normalizeContentLoadConfig(
+          {
+            topicsPerLesson: topics,
+            objectivesPerTopic: objectives,
+            tasksPerObjective: tasks,
+          },
+          durationForCaps,
+        )
 
         const nextRow: CurriculumSessionRow = {
           id: existing?.id ?? createRowId(),
@@ -605,13 +655,13 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
           notes: existing?.notes ?? "",
           template_id: existing?.template_id,
           template_type: resolvedTemplateType,
-          duration_minutes: existing?.duration_minutes,
-          topics,
-          objectives,
-          tasks,
-          topic_names: Array.from({ length: topics }, (_, i) => existing?.topic_names?.[i] ?? ""),
-          objective_names: Array.from({ length: objectives }, (_, i) => existing?.objective_names?.[i] ?? ""),
-          task_names: Array.from({ length: tasks }, (_, i) => existing?.task_names?.[i] ?? ""),
+          duration_minutes: existing?.duration_minutes ?? scheduleDuration ?? undefined,
+          topics: normalizedCounts.topicsPerLesson,
+          objectives: normalizedCounts.objectivesPerTopic,
+          tasks: normalizedCounts.tasksPerObjective,
+          topic_names: Array.from({ length: normalizedCounts.topicsPerLesson }, (_, i) => existing?.topic_names?.[i] ?? ""),
+          objective_names: Array.from({ length: normalizedCounts.objectivesPerTopic }, (_, i) => existing?.objective_names?.[i] ?? ""),
+          task_names: Array.from({ length: normalizedCounts.tasksPerObjective }, (_, i) => existing?.task_names?.[i] ?? ""),
           competencies: existing?.competencies,
           template_design: existing?.template_design ?? createDefaultTemplateDesign(resolvedTemplateType),
         }
@@ -623,12 +673,12 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
 
         if (
           existing.session_number !== nextRow.session_number
-          || existing.topics !== topics
-          || existing.objectives !== objectives
-          || existing.tasks !== tasks
-          || (existing.topic_names?.length ?? 0) !== topics
-          || (existing.objective_names?.length ?? 0) !== objectives
-          || (existing.task_names?.length ?? 0) !== tasks
+          || existing.topics !== nextRow.topics
+          || existing.objectives !== nextRow.objectives
+          || existing.tasks !== nextRow.tasks
+          || (existing.topic_names?.length ?? 0) !== (nextRow.topic_names?.length ?? 0)
+          || (existing.objective_names?.length ?? 0) !== (nextRow.objective_names?.length ?? 0)
+          || (existing.task_names?.length ?? 0) !== (nextRow.task_names?.length ?? 0)
           || existing.schedule_entry_id !== nextRow.schedule_entry_id
         ) {
           changed = true
@@ -1071,19 +1121,40 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
           const generatedLesson = generatedLessons[index]
           if (!generatedLesson) return row
 
+          const normalizedCounts = normalizeContentLoadConfig(
+            {
+              topicsPerLesson: row.topics ?? topics,
+              objectivesPerTopic: row.objectives ?? objectives,
+              tasksPerObjective: row.tasks ?? tasks,
+            },
+            row.duration_minutes ?? null,
+          )
+
           const updates: Partial<CurriculumSessionRow> = {}
           if (action === "all" || action === "lessons") updates.title = generatedLesson.lessonTitle
           if (action === "all" || action === "topics") {
-            updates.topics = generatedLesson.topics?.length ?? row.topics
-            updates.topic_names = generatedLesson.topics ?? []
+            const nextTopicNames = (generatedLesson.topics ?? []).slice(0, normalizedCounts.topicsPerLesson)
+            updates.topics = normalizedCounts.topicsPerLesson
+            updates.topic_names = Array.from(
+              { length: normalizedCounts.topicsPerLesson },
+              (_, topicIndex) => nextTopicNames[topicIndex] ?? row.topic_names?.[topicIndex] ?? "",
+            )
           }
           if (action === "all" || action === "objectives") {
-            updates.objectives = generatedLesson.objectives?.length ?? row.objectives
-            updates.objective_names = generatedLesson.objectives ?? []
+            const nextObjectiveNames = (generatedLesson.objectives ?? []).slice(0, normalizedCounts.objectivesPerTopic)
+            updates.objectives = normalizedCounts.objectivesPerTopic
+            updates.objective_names = Array.from(
+              { length: normalizedCounts.objectivesPerTopic },
+              (_, objectiveIndex) => nextObjectiveNames[objectiveIndex] ?? row.objective_names?.[objectiveIndex] ?? "",
+            )
           }
           if (action === "all" || action === "tasks") {
-            updates.tasks = generatedLesson.tasks?.length ?? row.tasks
-            updates.task_names = generatedLesson.tasks ?? []
+            const nextTaskNames = (generatedLesson.tasks ?? []).slice(0, normalizedCounts.tasksPerObjective)
+            updates.tasks = normalizedCounts.tasksPerObjective
+            updates.task_names = Array.from(
+              { length: normalizedCounts.tasksPerObjective },
+              (_, taskIndex) => nextTaskNames[taskIndex] ?? row.task_names?.[taskIndex] ?? "",
+            )
           }
           return { ...row, ...updates }
         })
@@ -1169,9 +1240,17 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
 
   const lessonRowsForPreview = Array.from({ length: effectiveLessonCount }, (_, index) => {
     const row = sessionRows[index]
-    const rowTopics = Math.max(1, row?.topics ?? topics)
-    const rowObjectives = Math.max(1, row?.objectives ?? objectives)
-    const rowTasks = Math.max(1, row?.tasks ?? tasks)
+    const normalizedCounts = normalizeContentLoadConfig(
+      {
+        topicsPerLesson: row?.topics ?? topics,
+        objectivesPerTopic: row?.objectives ?? objectives,
+        tasksPerObjective: row?.tasks ?? tasks,
+      },
+      row?.duration_minutes ?? null,
+    )
+    const rowTopics = normalizedCounts.topicsPerLesson
+    const rowObjectives = normalizedCounts.objectivesPerTopic
+    const rowTasks = normalizedCounts.tasksPerObjective
     return {
       ...(row ?? {}),
       id: row?.id ?? `lesson-${index + 1}`,
@@ -1278,8 +1357,8 @@ export function CurriculumSection({ courseId }: { courseId: string | null }) {
           <div className="grid gap-4 sm:grid-cols-3">
             {[
               { label: "Topics / lesson", value: topics, set: setTopics, min: 1, max: 10 },
-              { label: "Objectives / topic", value: objectives, set: setObjectives, min: 1, max: 5 },
-              { label: "Tasks / objective", value: tasks, set: setTasks, min: 1, max: 5 },
+              { label: "Objectives / topic", value: objectives, set: setObjectives, min: 1, max: objectiveInputMax },
+              { label: "Tasks / objective", value: tasks, set: setTasks, min: MIN_TASKS_PER_OBJECTIVE, max: 5 },
             ].map(({ label, value, set, min, max }) => (
               <div key={label}>
                 <FieldLabel>{label}</FieldLabel>

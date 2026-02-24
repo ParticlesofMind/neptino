@@ -5,6 +5,7 @@
 
 import type { CurriculumCompetency } from "@/lib/curriculum/competency-types"
 import type { TemplateDesignConfig, TemplateType } from "@/lib/curriculum/template-blocks"
+import { MIN_TASKS_PER_OBJECTIVE, normalizeContentLoadConfig } from "@/lib/curriculum/content-load-service"
 
 // Curriculum session row type (mirrors the type in curriculum-section.tsx)
 export interface CurriculumSessionRow {
@@ -201,9 +202,17 @@ function buildLocalGeneratedCurriculum(context: GenerationContext): GeneratedCur
     const baseRow = context.curriculum.sessionRows[lessonIndex]
     const titleSeed = baseRow?.title && !/^session\s+\d+$/i.test(baseRow.title) ? baseRow.title : `${primaryKeyword} Foundations`
     const lessonLabel = `Lesson ${lessonIndex + 1}`
-    const topicCount = Math.max(1, baseRow?.topics ?? context.curriculum.topicsPerLesson ?? 2)
-    const objectiveCount = Math.max(1, baseRow?.objectives ?? context.curriculum.objectivesPerTopic ?? 2)
-    const taskCount = Math.max(1, baseRow?.tasks ?? context.curriculum.tasksPerObjective ?? 2)
+    const normalizedCounts = normalizeContentLoadConfig(
+      {
+        topicsPerLesson: baseRow?.topics ?? context.curriculum.topicsPerLesson ?? 2,
+        objectivesPerTopic: baseRow?.objectives ?? context.curriculum.objectivesPerTopic ?? 2,
+        tasksPerObjective: baseRow?.tasks ?? context.curriculum.tasksPerObjective ?? MIN_TASKS_PER_OBJECTIVE,
+      },
+      baseRow?.duration ?? null,
+    )
+    const topicCount = normalizedCounts.topicsPerLesson
+    const objectiveCount = normalizedCounts.objectivesPerTopic
+    const taskCount = normalizedCounts.tasksPerObjective
 
     const topics = Array.from({ length: topicCount }, (_, topicIndex) => {
       const topicWord = keywords[(topicIndex + lessonIndex) % Math.max(1, keywords.length)]
@@ -249,6 +258,12 @@ export function buildGenerationContext(
   options: { schedule: boolean; structure: boolean; existing: boolean },
   extras?: GenerationExtras,
 ): GenerationContext {
+  const normalizedGlobalCounts = normalizeContentLoadConfig({
+    topicsPerLesson,
+    objectivesPerTopic,
+    tasksPerObjective,
+  })
+
   return {
     courseName,
     courseDescription,
@@ -259,18 +274,30 @@ export function buildGenerationContext(
       moduleOrganization: moduleOrg,
       moduleCount,
       lessonCount,
-      topicsPerLesson,
-      objectivesPerTopic,
-      tasksPerObjective,
+      topicsPerLesson: normalizedGlobalCounts.topicsPerLesson,
+      objectivesPerTopic: normalizedGlobalCounts.objectivesPerTopic,
+      tasksPerObjective: normalizedGlobalCounts.tasksPerObjective,
       sequencingMode: extras?.sequencingMode,
       sessionRows: sessionRows.map((row, index) => ({
+        ...(() => {
+          const normalizedSessionCounts = normalizeContentLoadConfig(
+            {
+              topicsPerLesson: row.topics ?? normalizedGlobalCounts.topicsPerLesson,
+              objectivesPerTopic: row.objectives ?? normalizedGlobalCounts.objectivesPerTopic,
+              tasksPerObjective: row.tasks ?? normalizedGlobalCounts.tasksPerObjective,
+            },
+            row.duration_minutes ?? null,
+          )
+          return {
+            topics: normalizedSessionCounts.topicsPerLesson,
+            objectives: normalizedSessionCounts.objectivesPerTopic,
+            tasks: normalizedSessionCounts.tasksPerObjective,
+          }
+        })(),
         sessionNumber: index + 1,
         title: row.title || `Session ${index + 1}`,
         templateType: row.template_type || "lesson",
         duration: row.duration_minutes ?? null,
-        topics: row.topics ?? null,
-        objectives: row.objectives ?? null,
-        tasks: row.tasks ?? null,
       })),
     },
     classification: extras?.classification,
@@ -569,7 +596,6 @@ function repairJSON(raw: string): string {
   // Remove BOM / zero-width chars
   s = s.replace(/^\uFEFF/, "").replace(/[\u200B-\u200D\uFEFF]/g, "")
   // Remove control characters except \n, \r, \t
-  // eslint-disable-next-line no-control-regex
   s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "")
   // Remove trailing commas before } or ]
   s = s.replace(/,\s*([}\]])/g, "$1")
@@ -643,7 +669,7 @@ function extractLessonsViaRegex(text: string): Record<string, unknown>[] {
 export function parseGenerationResponse(responseText: string): GenerationResponse {
   try {
     // Strip any leftover <think> tags or markdown fences
-    let cleaned = responseText
+    const cleaned = responseText
       .replace(/<think>[\s\S]*?<\/think>/g, "")
       .replace(/<think>[\s\S]*/g, "")
       .replace(/```(?:json)?\s*\n?/gi, "")
