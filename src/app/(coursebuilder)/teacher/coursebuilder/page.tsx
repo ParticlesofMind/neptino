@@ -149,6 +149,11 @@ const SECTIONS: SectionGroup[] = [
 ]
 
 const SETUP_SECTION_IDS = SECTIONS.find((group) => group.heading === "SETUP")?.items.map((item) => item.id) ?? []
+const ALL_SECTION_IDS = SECTIONS.flatMap((group) => group.items.map((item) => item.id))
+
+function isSectionId(value: string | null): value is SectionId {
+  return typeof value === "string" && ALL_SECTION_IDS.includes(value)
+}
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
 
@@ -1310,12 +1315,17 @@ function CourseBuilderPageInner() {
   const searchParams = useSearchParams()
   const urlCourseId = searchParams.get("id")
   const urlView     = searchParams.get("view") as View | null
+  const initialSectionKey = `coursebuilder:last-section:${urlCourseId ?? "new"}`
+  const initialSectionValue =
+    typeof window !== "undefined" ? window.localStorage.getItem(initialSectionKey) : null
   const [view, setView] = useState<View>(
     urlView && (["setup", "create", "preview", "launch"] as string[]).includes(urlView)
       ? urlView
       : "setup"
   )
-  const [activeSection, setActiveSection] = useState<SectionId>("essentials")
+  const [activeSection, setActiveSection] = useState<SectionId>(
+    isSectionId(initialSectionValue) ? initialSectionValue : "essentials"
+  )
   const [courseTitle, setCourseTitle] = useState("Untitled Course")
   const [courseId, setCourseId] = useState<string | null>(urlCourseId)
   const [courseCreatedData, setCourseCreatedData] = useState<CourseCreatedData | null>(null)
@@ -1421,7 +1431,6 @@ function CourseBuilderPageInner() {
 
   useEffect(() => {
     if (!courseId) {
-      setCompletedSetupSections({})
       return
     }
     const now = Date.now()
@@ -1449,10 +1458,6 @@ function CourseBuilderPageInner() {
     const key = `coursebuilder:last-section:${courseId}`
     lastSectionKeyRef.current = key
     if (initializedSectionRef.current) return
-    const stored = window.localStorage.getItem(key)
-    if (stored) {
-      setActiveSection(stored)
-    }
     initializedSectionRef.current = true
   }, [courseId])
 

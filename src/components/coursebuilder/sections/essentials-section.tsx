@@ -1,9 +1,30 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { SetupColumn, SetupPanelLayout, SetupSection } from "@/components/coursebuilder/layout-primitives"
-import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
-import { createClient } from "@/lib/supabase/client"
+import {
+  buildEssentialsGenerationSettings,
+  CharCount,
+  CourseImagePreview,
+  CoursePreviewCard,
+  CoursePreviewChip,
+  FieldLabel,
+  getAuthUserDisplayName,
+  getAuthUserInstitution,
+  getCurrentAuthUser,
+  insertCourseReturningId,
+  mapGenerationSettingsToState,
+  SelectInput,
+  SetupColumn,
+  SetupPanelLayout,
+  SetupSection,
+  TextInput,
+  updateCourseById,
+  uploadCourseImage,
+  useCourseRowLoader,
+  useCourseSectionSave,
+  useDebouncedChangeSave,
+  useStringListInput,
+} from "@/components/coursebuilder"
 
 type CourseEssentials = {
   title: string
@@ -21,44 +42,8 @@ type CourseCreatedData = CourseEssentials & {
   imageUrl: string | null
 }
 
-function FieldLabel({ children, hint }: { children: React.ReactNode; hint?: string }) {
-  return (
-    <div className="mb-1.5">
-      <span className="text-sm font-medium text-foreground">{children}</span>
-      {hint && <span className="ml-2 text-xs text-muted-foreground">{hint}</span>}
-    </div>
-  )
-}
-
-function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input
-      {...props}
-      className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
-    />
-  )
-}
-
-function SelectInput({
-  children,
-  ...props
-}: React.SelectHTMLAttributes<HTMLSelectElement> & { children: React.ReactNode }) {
-  return (
-    <select
-      {...props}
-      className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
-    >
-      {children}
-    </select>
-  )
-}
-
-function CharCount({ value, max }: { value: string; max: number }) {
-  return (
-    <p className="mt-1 text-right text-[11px] text-muted-foreground">
-      {value.length}/{max}
-    </p>
-  )
+type EssentialsSettingsRow = {
+  generation_settings: Record<string, unknown> | null
 }
 
 export function EssentialsSection({
@@ -81,16 +66,13 @@ export function EssentialsSection({
     institution: initialData?.institution ?? "Independent",
     imageName: initialData?.imageName ?? null,
   })
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [saveStatus, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+  const { markEmpty, markError, markSaved, markSaving } = useCourseSectionSave()
   const [createdCourseId, setCreatedCourseId] = useState<string | null>(null)
   const [imageObjectUrl, setImageObjectUrl] = useState<string | null>(null)
   const imageRef = useRef<HTMLInputElement>(null)
   const imageFileRef = useRef<File | null>(null)
-  const [courseGoals, setCourseGoals] = useState<string[]>([])
-  const [newGoal, setNewGoal] = useState("")
+  const courseGoals = useStringListInput({ maxItems: 8, maxDraftLength: 120 })
   const [teacherOptions, setTeacherOptions] = useState<Array<{ id: string; name: string }>>([])
   const [institutionOptions, setInstitutionOptions] = useState<string[]>(["Independent"])
   const generationSettingsRef = useRef<Record<string, unknown> | null>(null)
@@ -98,34 +80,16 @@ export function EssentialsSection({
   const set = <K extends keyof CourseEssentials>(k: K, v: CourseEssentials[K]) =>
     setData((prev) => ({ ...prev, [k]: v }))
 
+  const initialImageUrl = initialData?.imageUrl ?? null
   const previewImageUrl = imageObjectUrl ?? initialData?.imageUrl ?? null
 
-  const resolveUserDisplayName = (user: { email?: string | null; user_metadata?: Record<string, unknown> }): string => {
-    const metadata = (user.user_metadata ?? {}) as Record<string, unknown>
-    const fullName = metadata.full_name
-    const displayName = metadata.display_name
-    const name = metadata.name
-    const fallback = user.email?.split("@")[0]
-
-    if (typeof fullName === "string" && fullName.trim()) return fullName.trim()
-    if (typeof displayName === "string" && displayName.trim()) return displayName.trim()
-    if (typeof name === "string" && name.trim()) return name.trim()
-    if (fallback && fallback.trim()) return fallback.trim()
-    return "Me"
-  }
-
   useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then(({ data: authData }) => {
-      const user = authData.user
+    void (async () => {
+      const user = await getCurrentAuthUser()
       if (!user) return
 
-      const me = { id: user.id, name: resolveUserDisplayName(user) }
-      const metadata = (user.user_metadata ?? {}) as Record<string, unknown>
-      const metadataInstitution =
-        typeof metadata.institution === "string" && metadata.institution.trim().length > 0
-          ? metadata.institution.trim()
-          : ""
+      const me = { id: user.id, name: getAuthUserDisplayName(user) }
+      const metadataInstitution = getAuthUserInstitution(user)
       const options = Array.from(new Set(["Independent", metadataInstitution, initialData?.institution ?? ""].filter(Boolean)))
 
       setTeacherOptions([me])
@@ -136,78 +100,61 @@ export function EssentialsSection({
         teacherName: prev.teacherName || me.name,
         institution: prev.institution || metadataInstitution || "Independent",
       }))
-    })
+    })()
   }, [initialData?.institution])
 
-  // Load course goals from generation_settings on mount
-  useEffect(() => {
-    const id = existingCourseId
-    if (!id) return
-    const supabase = createClient()
-    supabase
-      .from("courses")
-      .select("generation_settings")
-      .eq("id", id)
-      .single()
-      .then(({ data: row, error: err }) => {
-        if (!err && row?.generation_settings) {
-          const gs = row.generation_settings as Record<string, unknown>
-          generationSettingsRef.current = gs
-          if (Array.isArray(gs.course_goals)) {
-            setCourseGoals(gs.course_goals as string[])
-          }
+  useCourseRowLoader<EssentialsSettingsRow>({
+    courseId: existingCourseId ?? null,
+    select: "generation_settings",
+    onLoaded: (row) => {
+      generationSettingsRef.current = row.generation_settings
+      const hydrated = mapGenerationSettingsToState(row.generation_settings)
+      if (!hydrated) return
 
-          const savedTeacherId = typeof gs.teacher_id === "string" ? gs.teacher_id : ""
-          const savedTeacherName = typeof gs.teacher_name === "string" ? gs.teacher_name : ""
-          if (savedTeacherId || savedTeacherName) {
-            setData((prev) => ({
-              ...prev,
-              teacherId: savedTeacherId || prev.teacherId,
-              teacherName: savedTeacherName || prev.teacherName,
-            }))
-          }
-        }
-      })
-  }, [existingCourseId])
+      if (hydrated.goals) {
+        courseGoals.setItems(hydrated.goals)
+      }
+
+      if (hydrated.teacherId || hydrated.teacherName) {
+        setData((prev) => ({
+          ...prev,
+          teacherId: hydrated.teacherId || prev.teacherId,
+          teacherName: hydrated.teacherName || prev.teacherName,
+        }))
+      }
+    },
+  })
 
   const persistEssentials = useCallback(async () => {
     setError(null)
     if (!data.title.trim() || data.title.trim().length < 3) {
-      setSaveStatus("empty")
+      markEmpty()
       return
     }
     if (!data.description.trim() || data.description.trim().length < 10) {
-      setSaveStatus("empty")
+      markEmpty()
       return
     }
     if (!data.language || !data.courseType || !data.teacherId || !data.teacherName || !data.institution) {
-      setSaveStatus("empty")
+      markEmpty()
       return
     }
 
     const activeCourseId = existingCourseId ?? createdCourseId
-    setSaveStatus("saving")
-    setLoading(true)
+    markSaving()
     try {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const user = await getCurrentAuthUser()
       if (!user) {
         setError("You must be signed in.")
-        setSaveStatus("error")
+        markError()
         return
       }
 
-      let imageUrl: string | null = initialData?.imageUrl ?? null
+      let imageUrl: string | null = initialImageUrl
       if (imageFileRef.current) {
-        const file = imageFileRef.current
-        const ext = file.name.split(".").pop()
-        const path = `${user.id}/${crypto.randomUUID()}.${ext}`
-        const { error: uploadError } = await supabase.storage.from("courses").upload(path, file, { upsert: false })
-        if (!uploadError) {
-          const { data: urlData } = supabase.storage.from("courses").getPublicUrl(path)
-          imageUrl = urlData.publicUrl
+        const uploadedImageUrl = await uploadCourseImage(imageFileRef.current, user.id)
+        if (uploadedImageUrl) {
+          imageUrl = uploadedImageUrl
         }
       }
 
@@ -222,62 +169,47 @@ export function EssentialsSection({
         course_image: imageUrl,
       }
 
-      const goalsPayload = courseGoals.filter((g) => g.trim())
+      const generationSettingsPayload = buildEssentialsGenerationSettings({
+        existing: generationSettingsRef.current,
+        goals: courseGoals.items,
+        teacherId: data.teacherId,
+        teacherName: data.teacherName,
+      })
 
       if (activeCourseId) {
-        // Merge course_goals into generation_settings
-        const existingGs = generationSettingsRef.current ?? {}
-        payload.generation_settings = {
-          ...existingGs,
-          course_goals: goalsPayload,
-          teacher_id: data.teacherId,
-          teacher_name: data.teacherName,
-        }
+        payload.generation_settings = generationSettingsPayload
 
-        const { error: updateError } = await supabase.from("courses").update(payload).eq("id", activeCourseId)
+        const { error: updateError } = await updateCourseById(activeCourseId, payload)
         if (updateError) {
           setError(updateError.message)
-          setSaveStatus("error")
+          markError()
           return
         }
         generationSettingsRef.current = payload.generation_settings as Record<string, unknown>
         onCourseCreated(activeCourseId, { ...data, title: data.title.trim(), imageUrl })
       } else {
-        const { data: course, error: insertError } = await supabase
-          .from("courses")
-          .insert({
-            ...payload,
-            teacher_id: user.id,
-            generation_settings: {
-              course_goals: goalsPayload,
-              teacher_id: data.teacherId,
-              teacher_name: data.teacherName,
-            },
-            students_overview: { total: 0, synced: 0 },
-          })
-          .select("id")
-          .single()
+        const { data: course, error: insertError } = await insertCourseReturningId({
+          ...payload,
+          teacher_id: user.id,
+          generation_settings: generationSettingsPayload,
+          students_overview: { total: 0, synced: 0 },
+        })
 
         if (insertError) {
           setError(insertError.message)
-          setSaveStatus("error")
+          markError()
           return
         }
         setCreatedCourseId(course.id)
-        generationSettingsRef.current = {
-          course_goals: goalsPayload,
-          teacher_id: data.teacherId,
-          teacher_name: data.teacherName,
-        }
+        generationSettingsRef.current = generationSettingsPayload
         onCourseCreated(course.id, { ...data, title: data.title.trim(), imageUrl })
       }
 
-      setLastSavedAt(new Date().toISOString())
-      setSaveStatus("saved")
-    } finally {
-      setLoading(false)
+      markSaved()
+    } catch {
+      markError()
     }
-  }, [data, existingCourseId, createdCourseId, initialData?.imageUrl, onCourseCreated, courseGoals])
+  }, [data, existingCourseId, createdCourseId, initialImageUrl, onCourseCreated, courseGoals.items, markEmpty, markError, markSaved, markSaving])
 
   useDebouncedChangeSave(persistEssentials, 800)
 
@@ -373,42 +305,31 @@ export function EssentialsSection({
             <FieldLabel>Course Goals / Outcomes</FieldLabel>
             <p className="mb-2 text-xs text-muted-foreground">Define 3–8 high-level learning outcomes for the course.</p>
             <div className="space-y-1.5">
-              {courseGoals.map((goal, i) => (
+              {courseGoals.items.map((goal, i) => (
                 <div key={i} className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2">
                   <span className="flex-1 text-sm text-foreground">{goal}</span>
                   <button
                     type="button"
-                    onClick={() => setCourseGoals((prev) => prev.filter((_, idx) => idx !== i))}
+                    onClick={() => courseGoals.removeAt(i)}
                     className="text-xs text-muted-foreground hover:text-destructive transition"
                   >
                     ×
                   </button>
                 </div>
               ))}
-              {courseGoals.length < 8 && (
+              {courseGoals.items.length < 8 && (
                 <div className="flex gap-2">
                   <input
-                    value={newGoal}
-                    onChange={(e) => setNewGoal(e.target.value.slice(0, 120))}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && newGoal.trim()) {
-                        e.preventDefault()
-                        setCourseGoals((prev) => [...prev, newGoal.trim()])
-                        setNewGoal("")
-                      }
-                    }}
+                    value={courseGoals.draft}
+                    onChange={(e) => courseGoals.updateDraft(e.target.value)}
+                    onKeyDown={courseGoals.onDraftKeyDown}
                     placeholder="e.g., Understand organic chemistry fundamentals"
                     className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
                   />
                   <button
                     type="button"
-                    disabled={!newGoal.trim()}
-                    onClick={() => {
-                      if (newGoal.trim()) {
-                        setCourseGoals((prev) => [...prev, newGoal.trim()])
-                        setNewGoal("")
-                      }
-                    }}
+                    disabled={!courseGoals.canAdd}
+                    onClick={courseGoals.addDraft}
                     className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition hover:border-primary/40 hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     Add
@@ -416,7 +337,7 @@ export function EssentialsSection({
                 </div>
               )}
             </div>
-            <p className="mt-1 text-right text-[11px] text-muted-foreground">{courseGoals.length}/8 goals</p>
+            <p className="mt-1 text-right text-[11px] text-muted-foreground">{courseGoals.items.length}/8 goals</p>
           </div>
           <div>
             <FieldLabel>Course Image</FieldLabel>
@@ -456,14 +377,13 @@ export function EssentialsSection({
         </SetupColumn>
 
         <SetupColumn className="space-y-3">
-          <div className="overflow-hidden rounded-lg border border-border bg-background">
-            <div className={`relative h-56 ${previewImageUrl ? "overflow-hidden" : "flex items-center justify-center bg-muted/50"}`}>
-              {previewImageUrl ? (
-                <img src={previewImageUrl} alt="Course cover" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-xs italic text-muted-foreground/50">No image uploaded</span>
-              )}
-            </div>
+          <CoursePreviewCard>
+            <CourseImagePreview
+              imageUrl={previewImageUrl}
+              alt="Course cover"
+              heightClassName="h-56"
+              emptyText="No image uploaded"
+            />
             <div className="p-5 space-y-2.5">
               <h3
                 className={`text-lg font-semibold leading-snug ${
@@ -478,30 +398,14 @@ export function EssentialsSection({
               </p>
               {(data.language || data.courseType || data.teacherName || data.institution) && (
                 <div className="flex flex-wrap gap-2 pt-1.5">
-                  {data.language && (
-                    <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
-                      {data.language}
-                    </span>
-                  )}
-                  {data.courseType && (
-                    <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
-                      {data.courseType}
-                    </span>
-                  )}
-                  {data.teacherName && (
-                    <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
-                      {data.teacherName}
-                    </span>
-                  )}
-                  {data.institution && (
-                    <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
-                      {data.institution}
-                    </span>
-                  )}
+                  {data.language && <CoursePreviewChip>{data.language}</CoursePreviewChip>}
+                  {data.courseType && <CoursePreviewChip>{data.courseType}</CoursePreviewChip>}
+                  {data.teacherName && <CoursePreviewChip>{data.teacherName}</CoursePreviewChip>}
+                  {data.institution && <CoursePreviewChip>{data.institution}</CoursePreviewChip>}
                 </div>
               )}
             </div>
-          </div>
+          </CoursePreviewCard>
         </SetupColumn>
       </SetupPanelLayout>
     </SetupSection>

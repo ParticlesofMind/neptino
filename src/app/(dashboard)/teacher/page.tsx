@@ -78,10 +78,6 @@ export default function TeacherHomePage() {
     }
   }, [activeSection])
 
-  const SectionContainer = ({ children }: { children: React.ReactNode }) => (
-    <div className="no-scrollbar h-full overflow-y-auto">{children}</div>
-  )
-
   const HomeView = () => (
     <div className="space-y-7 pb-4">
       <section className="rounded-2xl border border-border bg-background p-6">
@@ -226,68 +222,58 @@ export default function TeacherHomePage() {
     </div>
   )
 
-  const SectionView = () => {
+  const sectionContent = (() => {
     switch (activeSection) {
       case "courses":
-        return (
-          <GenericView
-            title="Courses"
-            subtitle={panelTitle.subtitle}
-            cards={[
-              { title: "Course Catalog", body: "Browse active and draft courses, and keep content updates centralized." },
-              { title: "Publishing Pipeline", body: "Control draft, review, and publish states for each course." },
-              { title: "Curriculum Health", body: "Identify missing modules and lesson gaps before publishing." },
-            ]}
-          />
-        )
+        return GenericView({
+          title: "Courses",
+          subtitle: panelTitle.subtitle,
+          cards: [
+            { title: "Course Catalog", body: "Browse active and draft courses, and keep content updates centralized." },
+            { title: "Publishing Pipeline", body: "Control draft, review, and publish states for each course." },
+            { title: "Curriculum Health", body: "Identify missing modules and lesson gaps before publishing." },
+          ],
+        })
       case "classes":
-        return (
-          <GenericView
-            title="Classes"
-            subtitle={panelTitle.subtitle}
-            cards={[
-              { title: "Session Roster", body: "Track attendance and learner status across all scheduled sessions." },
-              { title: "Upcoming Sessions", body: "Keep your weekly teaching cadence visible and easy to manage." },
-              { title: "Submission Queue", body: "Review learner work and provide feedback from one place." },
-            ]}
-          />
-        )
+        return GenericView({
+          title: "Classes",
+          subtitle: panelTitle.subtitle,
+          cards: [
+            { title: "Session Roster", body: "Track attendance and learner status across all scheduled sessions." },
+            { title: "Upcoming Sessions", body: "Keep your weekly teaching cadence visible and easy to manage." },
+            { title: "Submission Queue", body: "Review learner work and provide feedback from one place." },
+          ],
+        })
       case "messages":
-        return (
-          <GenericView
-            title="Messages"
-            subtitle={panelTitle.subtitle}
-            cards={[
-              { title: "Priority Inbox", body: "See unanswered learner messages and respond quickly." },
-              { title: "Class Channels", body: "Keep class-level communication organized by topic and cohort." },
-              { title: "Recent Threads", body: "Continue recent conversations without context switching." },
-            ]}
-          />
-        )
+        return GenericView({
+          title: "Messages",
+          subtitle: panelTitle.subtitle,
+          cards: [
+            { title: "Priority Inbox", body: "See unanswered learner messages and respond quickly." },
+            { title: "Class Channels", body: "Keep class-level communication organized by topic and cohort." },
+            { title: "Recent Threads", body: "Continue recent conversations without context switching." },
+          ],
+        })
       case "settings":
-        return (
-          <GenericView
-            title="Settings"
-            subtitle={panelTitle.subtitle}
-            cards={[
-              { title: "Profile", body: "Update your teaching profile details and public info." },
-              { title: "Notifications", body: "Tune message, enrollment, and assignment alerts." },
-              { title: "Class Defaults", body: "Set default preferences for sessions and course behavior." },
-            ]}
-          />
-        )
+        return GenericView({
+          title: "Settings",
+          subtitle: panelTitle.subtitle,
+          cards: [
+            { title: "Profile", body: "Update your teaching profile details and public info." },
+            { title: "Notifications", body: "Tune message, enrollment, and assignment alerts." },
+            { title: "Class Defaults", body: "Set default preferences for sessions and course behavior." },
+          ],
+        })
       default:
-        return <HomeView />
+        return HomeView()
     }
-  }
+  })()
 
   return (
     <div className="flex h-[calc(100vh-7.5rem)] gap-8 overflow-hidden">
       <TeacherSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
       <div className="min-w-0 flex-1 overflow-hidden">
-        <SectionContainer>
-          <SectionView />
-        </SectionContainer>
+        <div className="no-scrollbar h-full overflow-y-auto">{sectionContent}</div>
       </div>
     </div>
   )

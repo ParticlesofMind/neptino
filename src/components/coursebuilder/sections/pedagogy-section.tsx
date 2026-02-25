@@ -1,9 +1,16 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import { SetupColumn, SetupPanelLayout, SetupSection } from "@/components/coursebuilder/layout-primitives"
-import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
-import { createClient } from "@/lib/supabase/client"
+import { useCallback, useRef, useState } from "react"
+import {
+  mapPedagogyLayoutToPos,
+  SetupColumn,
+  SetupPanelLayout,
+  SetupSection,
+  updateCourseById,
+  useCourseRowLoader,
+  useCourseSectionSave,
+  useDebouncedChangeSave,
+} from "@/components/coursebuilder"
 
 const PEDAGOGY_PRESETS = [
   { label: "Traditional", x: -75, y: -75 },
@@ -11,6 +18,10 @@ const PEDAGOGY_PRESETS = [
   { label: "Guided Discovery", x: -25, y: 75 },
   { label: "Balanced", x: 0, y: 0 },
 ]
+
+type PedagogyLayoutRow = {
+  course_layout: Record<string, unknown> | null
+}
 
 export function getPedagogyApproach(x: number, y: number) {
   type PedagogyProfile = {
@@ -103,49 +114,43 @@ export function PedagogySection({ courseId }: { courseId: string | null }) {
   const gridRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState({ x: 0, y: 0 })
   const dragging = useRef(false)
-  const [saveStatus, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+  const { runWithSaveState } = useCourseSectionSave()
   const courseLayoutRef = useRef<Record<string, unknown> | null>(null)
 
-  useEffect(() => {
-    if (!courseId) return
-    const supabase = createClient()
-    supabase
-      .from("courses")
-      .select("course_layout")
-      .eq("id", courseId)
-      .single()
-      .then(({ data, error }) => {
-        if (!error && data?.course_layout) {
-          const layout = data.course_layout as Record<string, unknown>
-          courseLayoutRef.current = layout
-          if (layout.pedagogy) {
-            const p = layout.pedagogy as { x: number; y: number }
-            setPos({ x: p.x ?? 0, y: p.y ?? 0 })
-          }
-        }
-      })
-  }, [courseId])
+  useCourseRowLoader<PedagogyLayoutRow>({
+    courseId,
+    select: "course_layout",
+    onLoaded: (row) => {
+      if (!row.course_layout) return
+
+      const layout = row.course_layout
+      courseLayoutRef.current = layout
+      const posFromLayout = mapPedagogyLayoutToPos(layout)
+      if (posFromLayout) {
+        setPos(posFromLayout)
+      }
+    },
+  })
 
   const handleSave = useCallback(async () => {
     if (!courseId) return
-    setSaveStatus("saving")
-    const supabase = createClient()
-    const merged = { ...(courseLayoutRef.current ?? {}), pedagogy: { x: pos.x, y: pos.y } }
-    if ("resource_constraints" in merged) {
-      delete merged.resource_constraints
-    }
-    const { error } = await supabase
-      .from("courses")
-      .update({ course_layout: merged, updated_at: new Date().toISOString() })
-      .eq("id", courseId)
-    if (error) setSaveStatus("error")
-    else {
-      courseLayoutRef.current = merged
-      setLastSavedAt(new Date().toISOString())
-      setSaveStatus("saved")
-    }
-  }, [courseId, pos.x, pos.y])
+    await runWithSaveState(async () => {
+      const merged = { ...(courseLayoutRef.current ?? {}), pedagogy: { x: pos.x, y: pos.y } }
+      if ("resource_constraints" in merged) {
+        delete merged.resource_constraints
+      }
+      const { error } = await updateCourseById(courseId, {
+        course_layout: merged,
+        updated_at: new Date().toISOString(),
+      })
+
+      if (!error) {
+        courseLayoutRef.current = merged
+      }
+
+      return !error
+    })
+  }, [runWithSaveState, courseId, pos.x, pos.y])
 
   useDebouncedChangeSave(handleSave, 800, Boolean(courseId))
 

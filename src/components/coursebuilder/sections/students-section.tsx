@@ -52,8 +52,8 @@ export function StudentsSection({ courseId }: { courseId: string | null }) {
   const [emailError, setEmailError] = useState<string | null>(null)
   const [bulkError, setBulkError] = useState<string | null>(null)
   const [bulkEntry, setBulkEntry] = useState("")
-  const [saveStatus, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+  const [, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
+  const [, setLastSavedAt] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {

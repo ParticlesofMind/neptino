@@ -13,8 +13,8 @@ export function VisibilitySection({ courseId }: { courseId: string | null }) {
     notifications: false,
     publicDiscovery: false,
   })
-  const [saveStatus, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+  const [, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
+  const [, setLastSavedAt] = useState<string | null>(null)
 
   useEffect(() => {
     if (!courseId) return

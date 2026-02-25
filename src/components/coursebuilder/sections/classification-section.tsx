@@ -1,11 +1,26 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
-import { SetupColumn, SetupPanelLayout, SetupSection } from "@/components/coursebuilder/layout-primitives"
-import { useDebouncedChangeSave } from "@/components/coursebuilder/use-debounced-change-save"
-import { SearchableSelect } from "@/components/coursebuilder/searchable-select"
+import { useCallback, useState } from "react"
+import {
+  buildClassificationUpdatePayload,
+  CourseImagePreview,
+  CoursePreviewCard,
+  CoursePreviewChip,
+  FieldLabel,
+  mapClassificationDataToState,
+  SearchableSelect,
+  SetupColumn,
+  SetupPanelLayout,
+  SetupSection,
+  TextInput,
+  updateCourseById,
+  useCourseRowLoader,
+  useCourseSectionSave,
+  useDebouncedChangeSave,
+  useStringListInput,
+  type IscedDomain,
+} from "@/components/coursebuilder"
 import iscedData from "@/data/isced2011.json"
-import { createClient } from "@/lib/supabase/client"
 
 type CourseCreatedData = {
   title: string
@@ -17,36 +32,8 @@ type CourseCreatedData = {
   imageUrl: string | null
 }
 
-function FieldLabel({ children, hint }: { children: React.ReactNode; hint?: string }) {
-  return (
-    <div className="mb-1.5">
-      <span className="text-sm font-medium text-foreground">{children}</span>
-      {hint && <span className="ml-2 text-xs text-muted-foreground">{hint}</span>}
-    </div>
-  )
-}
-
-function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input
-      {...props}
-      className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
-    />
-  )
-}
-
-function SelectInput({
-  children,
-  ...props
-}: React.SelectHTMLAttributes<HTMLSelectElement> & { children: React.ReactNode }) {
-  return (
-    <select
-      {...props}
-      className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-    >
-      {children}
-    </select>
-  )
+type ClassificationRow = {
+  classification_data: Record<string, string> | null
 }
 
 function Divider({ label }: { label: string }) {
@@ -73,113 +60,63 @@ export function ClassificationSection({
   const [prevCourse, setPrevCourse] = useState("")
   const [nextCourse, setNextCourse] = useState("")
   const [priorKnowledge, setPriorKnowledge] = useState("")
-  const [keyTerms, setKeyTerms] = useState<string[]>([])
-  const [newKeyTerm, setNewKeyTerm] = useState("")
-  const [mandatoryTopics, setMandatoryTopics] = useState<string[]>([])
-  const [newMandatoryTopic, setNewMandatoryTopic] = useState("")
+  const keyTerms = useStringListInput({ maxItems: 30, maxDraftLength: 60 })
+  const mandatoryTopics = useStringListInput({ maxItems: 20, maxDraftLength: 100 })
   const [applicationContext, setApplicationContext] = useState("")
-  const [loading, setLoading] = useState(!!courseId)
-  const [saveStatus, setSaveStatus] = useState<"empty" | "saving" | "saved" | "error">("empty")
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+  const { runWithSaveState } = useCourseSectionSave()
 
   // ISCED data types and loading
-  type IscedSubtopic = { value: string; label: string; code: string }
-  type IscedTopic = { value: string; label: string; code: string; subtopics: IscedSubtopic[] }
-  type IscedSubject = { value: string; label: string; code: string; topics: IscedTopic[] }
-  type IscedDomain = { value: string; label: string; code: string; subjects: IscedSubject[] }
   const domains = (iscedData as { domains: IscedDomain[] }).domains
 
-  // Helper to convert DB value to display format
-  const toDisplayFormat = (item: { code: string; label: string } | undefined) => {
-    return item ? `${item.code} — ${item.label}` : ""
-  }
+  const { loading } = useCourseRowLoader<ClassificationRow>({
+    courseId,
+    select: "classification_data",
+    onLoaded: (row) => {
+      const hydrated = mapClassificationDataToState(row.classification_data, domains)
+      if (!hydrated) return
 
-  useEffect(() => {
-    if (!courseId) return
-    const supabase = createClient()
-    supabase
-      .from("courses")
-      .select("classification_data")
-      .eq("id", courseId)
-      .single()
-      .then(({ data, error }) => {
-        if (!error && data?.classification_data) {
-          const c = data.classification_data as Record<string, string>
-          setClassYear(c.class_year ?? "")
-          setFramework(c.curricular_framework ?? "")
-          
-          // Convert DB values to display format for SearchableSelect
-          const dbDomain = domains.find((d) => d.value === c.domain)
-          if (dbDomain) {
-            setDomain(toDisplayFormat(dbDomain))
-            const dbSubject = dbDomain.subjects.find((s) => s.value === c.subject)
-            if (dbSubject) {
-              setSubject(toDisplayFormat(dbSubject))
-              const dbTopic = dbSubject.topics.find((t) => t.value === c.topic)
-              if (dbTopic) {
-                setTopic(toDisplayFormat(dbTopic))
-                const dbSubtopic = dbTopic.subtopics.find((st) => st.value === c.subtopic)
-                if (dbSubtopic) {
-                  setSubtopic(dbSubtopic.label)
-                }
-              }
-            }
-          }
-          
-          setPrevCourse(c.previous_course ?? "")
-          setNextCourse(c.next_course ?? "")
-          setPriorKnowledge(c.prior_knowledge ?? "")
-          if (Array.isArray(c.key_terms)) setKeyTerms(c.key_terms as string[])
-          if (Array.isArray(c.mandatory_topics)) setMandatoryTopics(c.mandatory_topics as string[])
-          setApplicationContext(c.application_context ?? "")
-        }
-        setLoading(false)
-      })
-  }, [courseId])
+      setClassYear(hydrated.classYear)
+      setFramework(hydrated.framework)
+      setDomain(hydrated.domain)
+      setSubject(hydrated.subject)
+      setTopic(hydrated.topic)
+      setSubtopic(hydrated.subtopic)
+      setPrevCourse(hydrated.prevCourse)
+      setNextCourse(hydrated.nextCourse)
+      setPriorKnowledge(hydrated.priorKnowledge)
+      if (hydrated.keyTerms) keyTerms.setItems(hydrated.keyTerms)
+      if (hydrated.mandatoryTopics) mandatoryTopics.setItems(hydrated.mandatoryTopics)
+      setApplicationContext(hydrated.applicationContext)
+    },
+  })
 
   const handleSave = useCallback(async () => {
     if (!courseId) return
-    setSaveStatus("saving")
-    const supabase = createClient()
-    
-    // Convert display format back to clean values for DB storage
-    const domainValue = domains.find((d) => `${d.code} — ${d.label}` === domain || d.value === domain)?.value || ""
-    const allSubjects = domains.flatMap((d) => d.subjects)
-    const subjectValue = allSubjects.find((s) => `${s.code} — ${s.label}` === subject || s.value === subject)?.value || ""
-    const allTopics = allSubjects.flatMap((s) => s.topics)
-    const topicValue = allTopics.find((t) => `${t.code} — ${t.label}` === topic || t.value === topic)?.value || ""
-    const allSubtopics = allTopics.flatMap((t) => t.subtopics)
-    const subtopicValue = subtopic ? (allSubtopics.find((st) => st.label === subtopic || st.value === subtopic)?.value || "") : ""
-    
-    const { error } = await supabase
-      .from("courses")
-      .update({
-        classification_data: {
-          class_year: classYear,
-          curricular_framework: framework,
-          domain: domainValue,
-          subject: subjectValue,
-          topic: topicValue,
-          subtopic: subtopicValue || null,
-          previous_course: prevCourse || null,
-          current_course: courseCreatedData?.title ?? null,
-          next_course: nextCourse || null,
-          prior_knowledge: priorKnowledge || null,
-          key_terms: keyTerms.filter((t) => t.trim()),
-          mandatory_topics: mandatoryTopics.filter((t) => t.trim()),
-          application_context: applicationContext || null,
-          updated_at: new Date().toISOString(),
-        },
-        updated_at: new Date().toISOString(),
+    await runWithSaveState(async () => {
+      const updatedAt = new Date().toISOString()
+      const payload = buildClassificationUpdatePayload({
+        classYear,
+        framework,
+        domain,
+        subject,
+        topic,
+        subtopic,
+        prevCourse,
+        nextCourse,
+        priorKnowledge,
+        keyTerms: keyTerms.items,
+        mandatoryTopics: mandatoryTopics.items,
+        applicationContext,
+        currentCourseTitle: courseCreatedData?.title ?? null,
+        domains,
+        updatedAt,
       })
-      .eq("id", courseId)
-    if (error) {
-      setSaveStatus("error")
-    } else {
-      setLastSavedAt(new Date().toISOString())
-      setSaveStatus("saved")
-    }
-  }, [courseId, classYear, framework, domain, subject, topic, subtopic, prevCourse, nextCourse, courseCreatedData?.title, domains, priorKnowledge, keyTerms, mandatoryTopics, applicationContext])
+
+      const { error } = await updateCourseById(courseId, payload)
+
+      return !error
+    })
+  }, [runWithSaveState, courseId, classYear, framework, domain, subject, topic, subtopic, prevCourse, nextCourse, courseCreatedData?.title, domains, priorKnowledge, keyTerms.items, mandatoryTopics.items, applicationContext])
 
   useDebouncedChangeSave(handleSave, 800, Boolean(courseId) && !loading)
 
@@ -401,77 +338,65 @@ export function ClassificationSection({
           <div>
             <FieldLabel hint="Domain-specific terminology students will encounter">Key Terms / Seed Vocabulary</FieldLabel>
             <div className="flex flex-wrap gap-1.5 mb-2">
-              {keyTerms.map((term, i) => (
+              {keyTerms.items.map((term, i) => (
                 <span key={i} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/30 px-2.5 py-0.5 text-xs text-foreground">
                   {term}
-                  <button type="button" onClick={() => setKeyTerms((prev) => prev.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-destructive transition">×</button>
+                  <button type="button" onClick={() => keyTerms.removeAt(i)} className="text-muted-foreground hover:text-destructive transition">×</button>
                 </span>
               ))}
             </div>
-            {keyTerms.length < 30 && (
+            {keyTerms.items.length < 30 && (
               <div className="flex gap-2">
                 <input
-                  value={newKeyTerm}
-                  onChange={(e) => setNewKeyTerm(e.target.value.slice(0, 60))}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && newKeyTerm.trim()) {
-                      e.preventDefault()
-                      setKeyTerms((prev) => [...prev, newKeyTerm.trim()])
-                      setNewKeyTerm("")
-                    }
-                  }}
+                  value={keyTerms.draft}
+                  onChange={(e) => keyTerms.updateDraft(e.target.value)}
+                  onKeyDown={keyTerms.onDraftKeyDown}
                   placeholder="e.g., photosynthesis"
                   className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
                 />
                 <button
                   type="button"
-                  disabled={!newKeyTerm.trim()}
-                  onClick={() => { if (newKeyTerm.trim()) { setKeyTerms((prev) => [...prev, newKeyTerm.trim()]); setNewKeyTerm("") } }}
+                  disabled={!keyTerms.canAdd}
+                  onClick={keyTerms.addDraft}
                   className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition hover:border-primary/40 hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Add
                 </button>
               </div>
             )}
-            <p className="mt-1 text-right text-[11px] text-muted-foreground">{keyTerms.length}/30 terms</p>
+            <p className="mt-1 text-right text-[11px] text-muted-foreground">{keyTerms.items.length}/30 terms</p>
           </div>
 
           <div>
             <FieldLabel hint="Topics required by curriculum standards">Mandatory Topics</FieldLabel>
             <div className="space-y-1.5 mb-2">
-              {mandatoryTopics.map((t, i) => (
+              {mandatoryTopics.items.map((t, i) => (
                 <div key={i} className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2">
                   <span className="flex-1 text-sm text-foreground">{t}</span>
-                  <button type="button" onClick={() => setMandatoryTopics((prev) => prev.filter((_, idx) => idx !== i))} className="text-xs text-muted-foreground hover:text-destructive transition">×</button>
+                  <button type="button" onClick={() => mandatoryTopics.removeAt(i)} className="text-xs text-muted-foreground hover:text-destructive transition">×</button>
                 </div>
               ))}
             </div>
-            {mandatoryTopics.length < 20 && (
+            {mandatoryTopics.items.length < 20 && (
               <div className="flex gap-2">
                 <input
-                  value={newMandatoryTopic}
-                  onChange={(e) => setNewMandatoryTopic(e.target.value.slice(0, 100))}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && newMandatoryTopic.trim()) {
-                      e.preventDefault()
-                      setMandatoryTopics((prev) => [...prev, newMandatoryTopic.trim()])
-                      setNewMandatoryTopic("")
-                    }
-                  }}
+                  value={mandatoryTopics.draft}
+                  onChange={(e) => mandatoryTopics.updateDraft(e.target.value)}
+                  onKeyDown={mandatoryTopics.onDraftKeyDown}
                   placeholder="e.g., Cell Division and Mitosis"
                   className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-primary"
                 />
                 <button
                   type="button"
-                  disabled={!newMandatoryTopic.trim()}
-                  onClick={() => { if (newMandatoryTopic.trim()) { setMandatoryTopics((prev) => [...prev, newMandatoryTopic.trim()]); setNewMandatoryTopic("") } }}
+                  disabled={!mandatoryTopics.canAdd}
+                  onClick={mandatoryTopics.addDraft}
                   className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition hover:border-primary/40 hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Add
                 </button>
               </div>
             )}
-            <p className="mt-1 text-right text-[11px] text-muted-foreground">{mandatoryTopics.length}/20 topics</p>
+            <p className="mt-1 text-right text-[11px] text-muted-foreground">{mandatoryTopics.items.length}/20 topics</p>
           </div>
 
           <div>
@@ -490,38 +415,26 @@ export function ClassificationSection({
         <SetupColumn className="space-y-4">
           {courseCreatedData && (
             <div>
-              <div className="overflow-hidden rounded-lg border border-border bg-background">
-                <div className={`relative h-52 ${courseCreatedData.imageUrl ? "overflow-hidden" : "flex items-center justify-center bg-muted/50"}`}>
-                  {courseCreatedData.imageUrl ? (
-                    <img src={courseCreatedData.imageUrl} alt="Course" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-xs italic text-muted-foreground/40">No image</span>
-                  )}
-                </div>
+              <CoursePreviewCard>
+                <CourseImagePreview
+                  imageUrl={courseCreatedData.imageUrl}
+                  alt="Course"
+                  heightClassName="h-52"
+                  emptyText="No image"
+                  emptyTextClassName="text-xs italic text-muted-foreground/40"
+                />
                 <div className="p-5 space-y-2">
                   <h3 className="text-lg font-semibold text-foreground leading-snug">{courseCreatedData.title}</h3>
                   {courseCreatedData.subtitle && (
                     <p className="text-sm text-muted-foreground">{courseCreatedData.subtitle}</p>
                   )}
                   <div className="flex flex-wrap gap-2 pt-1">
-                    {courseCreatedData.language && (
-                      <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
-                        {courseCreatedData.language}
-                      </span>
-                    )}
-                    {courseCreatedData.courseType && (
-                      <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
-                        {courseCreatedData.courseType}
-                      </span>
-                    )}
-                    {crumbs[0] && (
-                      <span className="rounded-full border border-primary/30 bg-accent px-2.5 py-0.5 text-xs text-primary">
-                        {crumbs[0]}
-                      </span>
-                    )}
+                    {courseCreatedData.language && <CoursePreviewChip>{courseCreatedData.language}</CoursePreviewChip>}
+                    {courseCreatedData.courseType && <CoursePreviewChip>{courseCreatedData.courseType}</CoursePreviewChip>}
+                    {crumbs[0] && <CoursePreviewChip variant="primary">{crumbs[0]}</CoursePreviewChip>}
                   </div>
                 </div>
-              </div>
+              </CoursePreviewCard>
             </div>
           )}
 
