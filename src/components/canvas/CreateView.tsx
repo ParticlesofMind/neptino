@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect, useMemo, useRef } from "react"
+import { useState, useCallback, useEffect, useMemo } from "react"
 import { Text as PixiText, TextStyle } from "pixi.js"
 import { DEFAULT_PAGE_CONFIG, type CanvasPageConfig, type CanvasViewportInfo, type PixiTemplateLayoutMeasurement, type PixiTemplateLayoutModel, type ToolConfig } from "@/components/canvas/PixiCanvas"
 import { PixiWidgetSurface } from "@/components/canvas/PixiWidgetSurface"
@@ -34,7 +34,6 @@ import {
 
 const DEFAULT_CANVAS_ZOOM = 100
 const ZOOM_STEP = 5
-const PAGE_SCROLL_THRESHOLD = 70
 
 // ─── Resize handle hook ─────────────────────────────────────────────────────────────────
 
@@ -113,6 +112,7 @@ export function CreateView({
 
   const [panelView, setPanelView] = useState<InspectorPanelView>("layers")
   const [currentPage, setCurrentPage] = useState(1)
+  const [focusPageRequest, setFocusPageRequest] = useState<number | null>(null)
   const {
     courseTitle,
     courseType,
@@ -131,7 +131,6 @@ export function CreateView({
   const [mediaDragActive, setMediaDragActive] = useState(false)
   const [dropFeedback, setDropFeedback] = useState<string | null>(null)
   const [scrollDisabled, setScrollDisabled] = useState(false)
-  const overlayWheelAccumulator = useRef(0)
   const [pixiLayoutPageByScope, setPixiLayoutPageByScope] = useState<Record<string, number>>({})
   const [pixiMeasuredSectionHeightsByScope, setPixiMeasuredSectionHeightsByScope] = useState<Record<string, Record<string, number>>>({})
 
@@ -687,7 +686,9 @@ export function CreateView({
   const changePage = useCallback(
     (next: number) => {
       const normalized = Number.isFinite(next) ? Math.round(next) : 1
-      setCurrentPage(Math.min(Math.max(1, normalized), totalPages))
+      const targetPage = Math.min(Math.max(1, normalized), totalPages)
+      setCurrentPage(targetPage)
+      setFocusPageRequest(targetPage)
     },
     [totalPages],
   )
@@ -713,19 +714,12 @@ export function CreateView({
       return
     }
 
-    overlayWheelAccumulator.current += event.deltaY
-    if (Math.abs(overlayWheelAccumulator.current) < PAGE_SCROLL_THRESHOLD) {
-      return
-    }
-
-    const pageSteps = Math.trunc(overlayWheelAccumulator.current / PAGE_SCROLL_THRESHOLD)
-    overlayWheelAccumulator.current -= pageSteps * PAGE_SCROLL_THRESHOLD
-    setCurrentPage((prevPage) => Math.min(Math.max(1, prevPage + pageSteps), totalPages))
-  }, [handleZoomStep, scrollDisabled, totalPages])
-
-  useEffect(() => {
-    overlayWheelAccumulator.current = 0
-  }, [scrollDisabled])
+    window.dispatchEvent(new CustomEvent("neptino-canvas-wheel", {
+      detail: {
+        deltaY: event.deltaY,
+      },
+    }))
+  }, [handleZoomStep, scrollDisabled])
 
   const currentTools = mode === "build" ? BUILD_TOOLS : ANIMATE_TOOLS
   const selectedTool = activeTool as string
@@ -1110,9 +1104,12 @@ export function CreateView({
           activeTool={canvasTool}
           toolConfig={toolConfig}
           activePage={clampedCurrentPage}
-          focusPage={clampedCurrentPage}
+          focusPage={focusPageRequest ?? undefined}
           onViewportChange={setViewportInfo}
-          onActivePageChange={setCurrentPage}
+          onActivePageChange={(page) => {
+            setCurrentPage(page)
+            setFocusPageRequest(null)
+          }}
           templateLayoutModel={usePixiTemplateLayout ? activePixiTemplateLayoutModel : null}
           enableTemplateLayout={usePixiTemplateLayout}
           onTemplateAreaDrop={onPixiAreaDrop}

@@ -8,6 +8,8 @@ import { Application, Container, Graphics, Text as PixiText } from 'pixi.js'
 const PAGE_GAP = 32   // px between pages (world-space)
 const MIN_ZOOM = 10   // %
 const MAX_ZOOM = 400  // %
+const WHEEL_SCROLL_DAMPING = 0.85
+const MAX_WHEEL_SCROLL_DELTA = 90
 
 // ── Config type ───────────────────────────────────────────────────────────────
 export interface CanvasPageConfig {
@@ -145,6 +147,13 @@ function cssToNum(color: string): number {
     hex.length === 3 ? hex.split('').map(c => c + c).join('') : hex,
     16,
   )
+}
+
+function normalizeVerticalWheelDelta(deltaY: number): number {
+  if (!Number.isFinite(deltaY)) return 0
+  const damped = deltaY * WHEEL_SCROLL_DAMPING
+  const magnitude = Math.min(Math.abs(damped), MAX_WHEEL_SCROLL_DELTA)
+  return Math.sign(damped) * magnitude
 }
 
 const TOOL_CURSORS: Record<string, string> = {
@@ -352,6 +361,8 @@ export function PixiCanvas({
     let alive = true
     let textOverlay: HTMLDivElement | null = null
 
+    let detachCanvasEvents: (() => void) | null = null
+
     ;(async () => {
       const app = new Application()
       await app.init({
@@ -417,14 +428,15 @@ export function PixiCanvas({
       emitViewport(world, configSnap.current, activePageRef.current)
 
       const detectActivePageFromView = () => {
+        if (!alive || !appRef.current) return
         const cfg = configSnap.current
         const scale = world.scale.x
         if (scale <= 0) return
 
-        const viewCenterYInWorld = (app.screen.height / 2 - world.y) / scale
+        const viewTopYInWorld = (-world.y) / scale
         const step = cfg.heightPx + PAGE_GAP
         const page = Math.min(
-          Math.max(1, Math.round((viewCenterYInWorld - cfg.heightPx / 2) / step) + 1),
+          Math.max(1, Math.floor(viewTopYInWorld / step) + 1),
           Math.max(1, cfg.pageCount),
         )
 
@@ -700,10 +712,20 @@ export function PixiCanvas({
             emitViewport(world, configSnap.current, activePageRef.current)
             return
           }
-          // Scroll = pan through pages
-          world.x -= e.deltaX
-          world.y -= e.deltaY
+          // Scroll = strictly vertical pan through pages
+          world.y -= normalizeVerticalWheelDelta(e.deltaY)
         }
+        emitViewport(world, configSnap.current, activePageRef.current)
+        detectActivePageFromView()
+      }
+
+      const onExternalWheel = (event: Event) => {
+        if (!alive || !appRef.current || !worldRef.current) return
+        const customEvent = event as CustomEvent<{ deltaY?: number }>
+        const deltaY = customEvent.detail?.deltaY
+        if (!allowWheelScrollRef.current || !Number.isFinite(deltaY)) return
+
+        world.y -= normalizeVerticalWheelDelta(Number(deltaY))
         emitViewport(world, configSnap.current, activePageRef.current)
         detectActivePageFromView()
       }
@@ -737,9 +759,22 @@ export function PixiCanvas({
       app.canvas.addEventListener('wheel',         onWheel, { passive: false })
       app.canvas.addEventListener('dragover',      onDragOver)
       app.canvas.addEventListener('drop',          onDrop)
+      window.addEventListener('neptino-canvas-wheel', onExternalWheel as EventListener)
+
+      detachCanvasEvents = () => {
+        app.canvas.removeEventListener('pointerdown', onDown)
+        app.canvas.removeEventListener('pointermove', onMove)
+        app.canvas.removeEventListener('pointerup', onUp)
+        app.canvas.removeEventListener('pointercancel', onUp)
+        app.canvas.removeEventListener('wheel', onWheel as EventListener)
+        app.canvas.removeEventListener('dragover', onDragOver)
+        app.canvas.removeEventListener('drop', onDrop)
+        window.removeEventListener('neptino-canvas-wheel', onExternalWheel as EventListener)
+      }
     })()
 
     return () => {
+      detachCanvasEvents?.()
       alive = false
       if (textOverlay) { textOverlay.remove(); textOverlay = null }
       if (appRef.current) {
